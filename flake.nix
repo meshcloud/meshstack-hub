@@ -66,8 +66,15 @@
             name = "meshstack-hub";
             packages = (github_actions_preinstalled pkgs) ++ (core_packages pkgs);
           };
-        };
 
+          website = pkgs.mkShell {
+            name = "Website Development Shell";
+            packages = (core_packages pkgs) ++ [
+              pkgs.nodejs_20
+              pkgs.yarn         
+            ];
+          };
+        };
     in
 
     {
