@@ -18,8 +18,9 @@
     "target": "ES2022",
     "module": "ES2022",
     "paths": {
-      "@styles": ["./src/styles.scss"]
-}
+      "@styles": ["./src/styles.scss"],
+      "app/*": ["./src/app/*"]
+  }
   },
   "angularCompilerOptions": {
     "enableI18nLegacyMessageIdFormat": false,
