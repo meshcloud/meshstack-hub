@@ -5,7 +5,7 @@ used in your meshStack as Building Blocks.
 
 See what's out there on [hub.meshcloud.io](https://hub.meshcloud.io)!
 
-![readme IMG](https://github.com/meshcloud/meshstack-hub/raw/main/.github/readme-img.png)
+![readme IMG](https://github.com/meshcloud/meshstack-hub/raw/main/.github/readme_img.png)
 
 ## 📦 Available Modules
 
