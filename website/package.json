@@ -22,6 +22,8 @@
     "@angular/platform-server": "^19.2.0",
     "@angular/router": "^19.2.0",
     "@angular/ssr": "^19.2.3",
+    "@fontsource/montserrat": "^5.2.5",
+    "@fontsource/roboto": "^5.2.5",
     "@ng-bootstrap/ng-bootstrap": "^18.0.0",
     "bootstrap": "^5.3.3",
     "eslint-plugin-import": "^2.31.0",

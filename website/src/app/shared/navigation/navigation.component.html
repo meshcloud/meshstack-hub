@@ -1,0 +1,25 @@
+<div class="container mt-4">
+    <ul class="nav nav-pills justify-content-center">
+        <li class="nav-item">
+            <a class="nav-link" [routerLink]="['/all']" routerLinkActive="active" [class.active]="activeTab === 'All'">
+                All
+            </a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" [routerLink]="['/aws']" routerLinkActive="active" [class.active]="activeTab === 'AWS'">
+                AWS
+            </a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" [routerLink]="['/azure']" routerLinkActive="active"
+                [class.active]="activeTab === 'AZURE'">
+                Azure
+            </a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" [routerLink]="['/gcp']" routerLinkActive="active" [class.active]="activeTab === 'GCP'">
+                GCP
+            </a>
+        </li>
+    </ul>
+</div>

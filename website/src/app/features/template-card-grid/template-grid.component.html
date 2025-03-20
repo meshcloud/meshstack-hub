@@ -1,0 +1,6 @@
+<div class="row pt-5">
+    <div class="col-sm-3 mb-3" *ngFor="let def of filteredTemplates">
+        <app-card [imageUrl]="def.icon" [title]="def.name" [description]="def.description" [detailsRoute]="def.id">
+        </app-card>
+    </div>
+</div>
