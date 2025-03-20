@@ -1,0 +1,14 @@
+<div class="row pt-5">
+  <ng-container *ngIf="templates$ | async as templates">
+    <ng-container *ngIf="templates.length > 0; else noTemplates">
+      <div class="col-sm-3 mb-3" *ngFor="let template of templates">
+        <app-card [imageUrl]="template.imageUrl" [title]="template.name" [description]="template.description"
+          [platformType]="template.platformType" [detailsRoute]="template.id"></app-card>
+      </div>
+    </ng-container>
+    <ng-template #noTemplates>
+      <p class="h-5">No templates found.</p>
+    </ng-template>
+  </ng-container>
+
+</div>
