@@ -1,0 +1,69 @@
+{
+  "apiVersion": "v1",
+  "metadata": {
+    "uuid": null,
+    "markedForDeletionOn": null,
+    "markedForDeletionBy": null,
+    "tags": {
+      "environment": ["dev"],
+      "team": ["devops"]
+    },
+    "ownedByWorkspace": "workspace-123"
+  },
+  "spec": {
+    "displayName": "Example Building Block",
+    "symbol": "EBB",
+    "description": "This is an example building block definition.",
+    "supportedPlatforms": ["aws", "azure"],
+    "useInLandingZonesOnly": false,
+    "supportUrl": "https://example.com/support",
+    "documentationUrl": "https://example.com/docs",
+    "latestVersion": {
+      "number": 1,
+      "onlyApplyOncePerTenant": true,
+      "deletionMode": "DELETE",
+      "implementation": {
+        "terraform": {
+          "terraformVersion": "0.14.7",
+          "repositoryUrl": "https://github.com/example/terraform-repo",
+          "async": false,
+          "repositoryPath": "path/to/module",
+          "sshPrivateKey": "private-key",
+          "refName": "main",
+          "knownHost": null,
+          "useMeshHttpBackendFallback": false
+        }
+      },
+      "inputs": [
+        {
+          "inputKey": "example-input",
+          "displayName": "Example Input",
+          "type": "STRING",
+          "assignmentType": "USER_INPUT",
+          "argument": null,
+          "isEnvironment": false,
+          "isSensitive": false,
+          "updateableByConsumer": true,
+          "selectableValues": ["value1", "value2"],
+          "defaultValue": "value1",
+          "description": "An example input.",
+          "inputValueValidationRegex": "^[a-zA-Z0-9]+$",
+          "validationRegexErrorMessage": "Only alphanumeric characters are allowed."
+        }
+      ],
+      "outputs": [
+        {
+          "outputKey": "example-output",
+          "displayName": "Example Output",
+          "type": "STRING",
+          "assignmentType": "NONE"
+        }
+      ],
+      "state": "DRAFT",
+      "dependencies": ["dependency1", "dependency2"]
+    },
+    "notificationSubscriber": ["user1", "user2"]
+  },
+  "kind": "MeshBuildingBlockDefinition",
+  "meaningfulIdentifier": "meshBuildingBlockDefinition[Example Building Block (123e4567-e89b-12d3-a456-426614174000)]"
+}
