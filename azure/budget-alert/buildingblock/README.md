@@ -10,12 +10,12 @@ This documentation is intended as a reference documentation for cloud foundation
 
 ## How to Use
 
-1. bla bla bla bla blub 
-2. bla bla bla bla blub 
-3. bla bla bla bla blub 
-4. bla bla bla bla blub 
-5. bla bla bla bla blub 
-6. bla bla bla bla blub 
+1. bla bla bla bla blub
+2. bla bla bla bla blub
+3. bla bla bla bla blub
+4. bla bla bla bla blub
+5. bla bla bla bla blub
+6. bla bla bla bla blub
 
 ## Permissions
 
@@ -28,7 +28,8 @@ across all subscriptions underneath a management group (typically the top-level 
 | Name | Version |
 |------|---------|
 | <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.0 |
-| <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) | ~> 3.71.0 |
+| <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) | ~> 3.116.0 |
+| <a name="requirement_time"></a> [time](#requirement\_time) | 0.11.1 |
 
 ## Modules
 
@@ -38,26 +39,24 @@ No modules.
 
 | Name | Type |
 |------|------|
-| [azurerm_role_assignment.buildingblock_deploy](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/role_assignment) | resource |
-| [azurerm_role_definition.buildingblock_deploy](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/role_definition) | resource |
-| [azurerm_subscription.current](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/subscription) | data source |
+| [azurerm_consumption_budget_subscription.subscription_budget](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/consumption_budget_subscription) | resource |
+| [time_static.start_date](https://registry.terraform.io/providers/hashicorp/time/0.11.1/docs/resources/static) | resource |
+| [azurerm_subscription.subscription](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/subscription) | data source |
 
 ## Inputs
 
 | Name | Description | Type | Default | Required |
 |------|-------------|------|---------|:--------:|
-| <a name="input_name"></a> [name](#input\_name) | name of the building block, used for naming resources | `string` | `"budget-alert"` | no |
-| <a name="input_principal_ids"></a> [principal\_ids](#input\_principal\_ids) | set of principal ids that will be granted permissions to deploy the building block | `set(string)` | n/a | yes |
-| <a name="input_scope"></a> [scope](#input\_scope) | Scope where the building block should be deployable, typically the parent of all Landing Zones. | `string` | n/a | yes |
+| <a name="input_actual_threshold_percent"></a> [actual\_threshold\_percent](#input\_actual\_threshold\_percent) | The precise percentage of the monthly budget at which you wish to activate the alert upon reaching. E.g. '15' for 15% or '120' for 120% | `number` | `80` | no |
+| <a name="input_budget_name"></a> [budget\_name](#input\_budget\_name) | Name of the budget alert rule | `string` | `"budget_alert"` | no |
+| <a name="input_contact_emails"></a> [contact\_emails](#input\_contact\_emails) | Comma-separated list of emails of the users who should receive the Budget alert. e.g. 'foo@example.com, bar@example.com' | `string` | n/a | yes |
+| <a name="input_forcasted_threshold_percent"></a> [forcasted\_threshold\_percent](#input\_forcasted\_threshold\_percent) | The forcasted percentage of the monthly budget at which you wish to activate the alert upon reaching. E.g. '15' for 15% or '120' for 120% | `number` | `100` | no |
+| <a name="input_monthly_budget_amount"></a> [monthly\_budget\_amount](#input\_monthly\_budget\_amount) | Set the monthly budget for this subscription in the billing currency. | `number` | n/a | yes |
+| <a name="input_subscription_id"></a> [subscription\_id](#input\_subscription\_id) | The ID of the subscription at which you want to assign the budget | `string` | n/a | yes |
 
 ## Outputs
 
 | Name | Description |
 |------|-------------|
-| <a name="output_documentation_md"></a> [documentation\_md](#output\_documentation\_md) | Markdown documentation with information about the Budget Alert building block backplane |
-| <a name="output_role_assignment_ids"></a> [role\_assignment\_ids](#output\_role\_assignment\_ids) | The IDs of the role assignments for the service principals. |
-| <a name="output_role_assignment_principal_ids"></a> [role\_assignment\_principal\_ids](#output\_role\_assignment\_principal\_ids) | The principal IDs of the service principals that have been assigned the role. |
-| <a name="output_role_definition_id"></a> [role\_definition\_id](#output\_role\_definition\_id) | The ID of the role definition that enables deployment of the building block to subscriptions. |
-| <a name="output_role_definition_name"></a> [role\_definition\_name](#output\_role\_definition\_name) | The name of the role definition that enables deployment of the building block to subscriptions. |
-| <a name="output_scope"></a> [scope](#output\_scope) | The scope where the role definition and role assignments are applied. |
+| <a name="output_budget_amount"></a> [budget\_amount](#output\_budget\_amount) | n/a |
 <!-- END_TF_DOCS -->

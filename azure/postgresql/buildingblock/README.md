@@ -11,12 +11,12 @@ This Terraform project deploys a cost-effective Azure PostgreSQL database with m
 
 ## How to Use
 
-1. bla bla bla bla blub 
-2. bla bla bla bla blub 
-3. bla bla bla bla blub 
-4. bla bla bla bla blub 
-5. bla bla bla bla blub 
-6. bla bla bla bla blub 
+1. bla bla bla bla blub
+2. bla bla bla bla blub
+3. bla bla bla bla blub
+4. bla bla bla bla blub
+5. bla bla bla bla blub
+6. bla bla bla bla blub
 
 
 ## 🛠 Configuration

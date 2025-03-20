@@ -10,12 +10,12 @@ This Terraform module provisions an Azure Key Vault along with necessary role as
 
 ## How to Use
 
-1. bla bla bla bla blub 
-2. bla bla bla bla blub 
-3. bla bla bla bla blub 
-4. bla bla bla bla blub 
-5. bla bla bla bla blub 
-6. bla bla bla bla blub 
+1. bla bla bla bla blub
+2. bla bla bla bla blub
+3. bla bla bla bla blub
+4. bla bla bla bla blub
+5. bla bla bla bla blub
+6. bla bla bla bla blub
 
 
 ## Requirements
