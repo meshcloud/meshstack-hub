@@ -1,0 +1,24 @@
+$color-black: black;
+$color-yellow: yellow;
+$color-yellow-transparent: rgba(255, 255, 0, 0.7);
+
+.nav-link {
+    color: $color-black;
+    background-color: transparent;
+    text-decoration: none;
+    transition: background-color 0.3s, color 0.3s, text-decoration 0.3s;
+
+    &:hover,
+    &.active {
+        background-color: $color-yellow-transparent;
+        color: $color-black;
+        text-decoration: underline;
+        text-decoration-thickness: 2px;
+        text-underline-offset: 5px;
+    }
+
+    &.active {
+        background-color: $color-yellow;
+        font-weight: bold;
+    }
+}
