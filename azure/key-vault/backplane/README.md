@@ -1,9 +1,3 @@
----
-name: Azure Building Block - Azure Key Vault
-summary: |
-  Building block module for adding a Azure Key Vault to a subscription.
----
-
 # Azure Subscription Azure Key Vault
 
 This documentation is intended as a reference documentation for cloud foundation or platform engineers using this module.

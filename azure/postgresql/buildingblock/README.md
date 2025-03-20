@@ -1,48 +1,23 @@
-# Terraform Azure PostgreSQL Deployment
+---
+name: Azure Building Block - Postgresql Deployment
+card_description: |
+ A Building Block for Azure to deploy a Postgresql
+---
+
+# Azure PostgreSQL Deployment
 
 This Terraform project deploys a cost-effective Azure PostgreSQL database with minimal resources and security-conscious configuration.
 
-## ⚙️ Features
-- **Cheapest SKU**: B_Standard_B1ms (1 vCore, 2 GB RAM)
-- **Minimal Storage**: 5 GB
-- **Security-Optimized**:
-  - Public network access disabled
-  - Enforced SSL/TLS encryption (TLS1_2)
-  - Auto-grow disabled to prevent unexpected costs
-  - Automated Admin Password Generation with the random provider
-- **Modular and Configurable** via `variables.tf`
 
-## 🚀 Deployment
+## How to Use
 
-### Prerequisites
-- Terraform (≥ 1.3.0)
-- Azure CLI authenticated (`az login`)
+1. bla bla bla bla blub 
+2. bla bla bla bla blub 
+3. bla bla bla bla blub 
+4. bla bla bla bla blub 
+5. bla bla bla bla blub 
+6. bla bla bla bla blub 
 
-### Steps
-1. **Initialize Terraform**:
-    ```bash
-    terraform init
-    ```
-2. **Preview the deployment**:
-    ```bash
-    terraform plan
-    ```
-3. **Apply the configuration**:
-    ```bash
-    terraform apply -auto-approve
-    ```
-4. **Retrieve PostgreSQL details**:
-    ```bash
-    terraform output
-    ```
-
-## 📚 Notes
-- **Backup Retention**: Minimum is 7 days (Azure limitation).
-- **Geo-Redundant Backup**: Disabled to minimize costs.
-- For **production**:
-  - Consider enabling auto-grow.
-  - Use Key Vault for secrets.
-  - Restrict IPs via firewall rules.
 
 ## 🛠 Configuration
 

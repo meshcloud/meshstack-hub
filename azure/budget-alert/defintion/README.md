@@ -1,4 +1,4 @@
-# Azure Subscription Budget Alert
+# Azure Subscription Budget Alert Definition
 
 This documentation is intended as a reference documentation for cloud foundation or platform engineers using this module.
 

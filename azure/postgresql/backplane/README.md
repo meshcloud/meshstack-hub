@@ -1,10 +1,4 @@
----
-name: Azure Building Block - Azure Postgresql
-summary: |
-  Building block module for adding a Postgresql to a subscription.
----
-
-# Azure Subscription Azure Azure Postgresql
+# Azure Subscription Postgresql
 
 This documentation is intended as a reference documentation for cloud foundation or platform engineers using this module.
 
