@@ -51,7 +51,7 @@ function findReadmes(dir) {
 }
 
 /**
- * Path to platform logo image 
+ * Path to platform logo image
  */
 function findPlatformLogo(platform) {
   const platformDir = path.join(process.cwd(), platform);
@@ -69,7 +69,25 @@ function findPlatformLogo(platform) {
     });
   }
 
-  return logoFiles;
+  return logoFiles.length > 0 ? logoFiles[0] : null;
+}
+
+/**
+ * Path to buildingblock logo image in the same directory as README.md
+ */
+function findBuildingBlockLogo(buildingBlockDir) {
+  const logoFiles = [];
+  const files = fs.readdirSync(buildingBlockDir);
+
+  files.forEach((file) => {
+    if (file.endsWith(".png")) {
+      const filePath = path.join(buildingBlockDir, file);
+      // Entfernt führende Schrägstriche
+      logoFiles.push(filePath.replace(process.cwd(), "").replace(/^\/+/, ""));
+    }
+  });
+
+  return logoFiles.length > 0 ? logoFiles[0] : null;
 }
 
 /**
@@ -102,13 +120,15 @@ function parseReadme(filePath) {
       : [];
 
   const githubUrls = getGithubRemoteUrls();
-  const logoPath = findPlatformLogo(platform);
+  const platformLogoPath = findPlatformLogo(platform);
+  const buildingBlockLogoPath = findBuildingBlockLogo(path.dirname(filePath));
 
   return {
     path: relativePath.replace(/^\/+/, ""),
     cleanPath,
     platform,
-    logo: logoPath,
+    platformLogo: platformLogoPath,
+    buildingBlockLogo: buildingBlockLogoPath,
     githubUrls,
     ...data,
     howToUse: howToMatch ? howToMatch[1].trim() : null,

@@ -1,4 +1,4 @@
-
+{
   description = "Flake for meshstack-hub";
 
   inputs = {
@@ -74,14 +74,14 @@
       devShells = {
         aarch64-darwin = (defaultShellForSystem "aarch64-darwin");
         x86_64-darwin = (defaultShellForSystem "x86_64-darwin");
-        x86_64-linux = (defaumeshstackltShellForSystem "x86_64-linux") // {
+        x86_64-linux = (defaultShellForSystem "x86_64-linux") // {
           # use a smaller/faster shell on github actions
           github_actions =
             let
               pkgs = importNixpkgs "x86_64-linux";
             in
                         pkgs.mkShell {
-              name = "collie-hub-ghactions";
+              name = "meshstack-hub-ghactions";
               packages = (core_packages pkgs);
             };
         };
