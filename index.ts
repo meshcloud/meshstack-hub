@@ -31,7 +31,7 @@ function getGithubRemoteUrls() {
 }
 
 /**
- * Recursively find all README.md files in “buildingblock” folders
+ * Recursively find all README.md files in “buildingblock” folders, excluding .github
  */
 function findReadmes(dir) {
   let results = [];
@@ -41,6 +41,7 @@ function findReadmes(dir) {
     const fullPath = path.join(dir, file.name);
 
     if (file.isDirectory()) {
+      if (file.name === ".github") continue;
       results = results.concat(findReadmes(fullPath));
     } else if (file.name === "README.md" && dir.includes("buildingblock")) {
       results.push(fullPath);
@@ -51,25 +52,26 @@ function findReadmes(dir) {
 }
 
 /**
- * Path to platform logo image
+ * Path to platform logo image, excluding .github
  */
-function findPlatformLogo(platform) {
-  const platformDir = path.join(process.cwd(), platform);
-  const logoFiles = [];
+function findPlatformLogos() {
+  const platformLogos = {};
+  const rootDir = process.cwd();
+  const dirs = fs.readdirSync(rootDir, { withFileTypes: true })
+    .filter(dirent => dirent.isDirectory() && dirent.name !== ".github");
 
-  if (fs.existsSync(platformDir)) {
+  dirs.forEach((dir) => {
+    const platformDir = path.join(rootDir, dir.name);
     const files = fs.readdirSync(platformDir);
 
     files.forEach((file) => {
       if (file.endsWith(".png")) {
-        const filePath = path.join(platformDir, file);
-        // Entfernt führende Schrägstriche
-        logoFiles.push(filePath.replace(process.cwd(), "").replace(/^\/+/, ""));
+        platformLogos[dir.name] = path.join(platformDir, file).replace(rootDir, "").replace(/^\/+/g, "");
       }
     });
-  }
+  });
 
-  return logoFiles.length > 0 ? logoFiles[0] : null;
+  return platformLogos;
 }
 
 /**
@@ -82,8 +84,7 @@ function findBuildingBlockLogo(buildingBlockDir) {
   files.forEach((file) => {
     if (file.endsWith(".png")) {
       const filePath = path.join(buildingBlockDir, file);
-      // Entfernt führende Schrägstriche
-      logoFiles.push(filePath.replace(process.cwd(), "").replace(/^\/+/, ""));
+      logoFiles.push(filePath.replace(process.cwd(), "").replace(/^\/+/g, ""));
     }
   });
 
@@ -93,7 +94,7 @@ function findBuildingBlockLogo(buildingBlockDir) {
 /**
  * Parse README.md and extract relevant data
  */
-function parseReadme(filePath) {
+function parseReadme(filePath, platformLogos) {
   const content = fs.readFileSync(filePath, "utf-8");
   const { data, content: body } = matter(content);
   const relativePath = filePath.replace(process.cwd(), "").replace(/\\/g, "/");
@@ -120,14 +121,13 @@ function parseReadme(filePath) {
       : [];
 
   const githubUrls = getGithubRemoteUrls();
-  const platformLogoPath = findPlatformLogo(platform);
   const buildingBlockLogoPath = findBuildingBlockLogo(path.dirname(filePath));
 
   return {
-    path: relativePath.replace(/^\/+/, ""),
+    path: relativePath.replace(/^\/+/g, ""),
     cleanPath,
     platform,
-    platformLogo: platformLogoPath,
+    platformLogo: platformLogos[platform] || null,
     buildingBlockLogo: buildingBlockLogoPath,
     githubUrls,
     ...data,
@@ -139,9 +139,15 @@ function parseReadme(filePath) {
 }
 
 const repoRoot = path.resolve(__dirname);
+const platformLogos = findPlatformLogos();
 const readmeFiles = findReadmes(repoRoot);
-const jsonData = readmeFiles.map((file) => parseReadme(file));
+const jsonData = readmeFiles.map((file) => parseReadme(file, platformLogos));
 
-fs.writeFileSync("output.json", JSON.stringify(jsonData, null, 2));
+const outputData = {
+  platformLogos,
+  buildingBlocks: jsonData,
+};
+
+fs.writeFileSync("output.json", JSON.stringify(outputData, null, 2));
 
 console.log(`✅ JSON-Daten aus ${readmeFiles.length} READMEs gespeichert in output.json`);
