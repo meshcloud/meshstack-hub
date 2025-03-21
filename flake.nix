@@ -71,10 +71,11 @@
             name = "Website Development Shell";
             packages = (core_packages pkgs) ++ [
               pkgs.nodejs_20
-              pkgs.yarn         
+              pkgs.yarn
             ];
-          };
-        };
+      };
+    };
+
     in
 
     {
