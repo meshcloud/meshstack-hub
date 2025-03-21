@@ -1,0 +1,17 @@
+version: 1
+frontend:
+  buildpath: docs
+  phases:
+    preBuild:
+      commands:
+        - cd website
+        - yarn install
+    build:
+      commands:
+        - yarn build
+  artifacts:
+    baseDirectory: website/dist
+    files:
+      - '**/*'
+  cache:
+    paths: []
