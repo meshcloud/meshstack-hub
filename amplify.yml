@@ -9,7 +9,6 @@ frontend:
     build:
       commands:
         - yarn build
-        - ls -la dist
   artifacts:
     baseDirectory: website/dist/website/browser
     files:
