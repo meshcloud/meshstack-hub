@@ -5,11 +5,11 @@ frontend:
     preBuild:
       commands:
         - cd website
+        - nvm use 20 || nvm install 20 && nvm use 20
         - yarn install
     build:
       commands:
         - yarn build
-        - yarn start
   artifacts:
     baseDirectory: website/dist
     files:
