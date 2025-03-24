@@ -11,6 +11,6 @@ frontend:
         - yarn build
         - ls -la dist
   artifacts:
-    baseDirectory: website/dist
+    baseDirectory: website/dist/website
     files:
       - '**/*'
