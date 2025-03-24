@@ -9,6 +9,7 @@ frontend:
     build:
       commands:
         - yarn build
+        - yarn start
   artifacts:
     baseDirectory: website/dist
     files:
