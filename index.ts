@@ -56,17 +56,17 @@ function findReadmes(dir) {
  */
 function findPlatformLogos() {
   const platformLogos = {};
-  const rootDir = process.cwd();
-  const dirs = fs.readdirSync(rootDir, { withFileTypes: true })
+  const modulesDir = path.resolve(__dirname, 'modules');
+  const dirs = fs.readdirSync(modulesDir, { withFileTypes: true })
     .filter(dirent => dirent.isDirectory() && dirent.name !== ".github");
 
   dirs.forEach((dir) => {
-    const platformDir = path.join(rootDir, dir.name);
+    const platformDir = path.join(modulesDir, dir.name);
     const files = fs.readdirSync(platformDir);
 
     files.forEach((file) => {
       if (file.endsWith(".png")) {
-        platformLogos[dir.name] = path.join(platformDir, file).replace(rootDir, "").replace(/^\/+/g, "");
+        platformLogos[dir.name] = path.join(platformDir, file).replace(modulesDir, "").replace(/^\/+/g, "");
       }
     });
   });
@@ -94,13 +94,13 @@ function findBuildingBlockLogo(buildingBlockDir) {
 /**
  * Parse README.md and extract relevant data
  */
-function parseReadme(filePath, platformLogos) {
+function parseReadme(filePath) {
   const content = fs.readFileSync(filePath, "utf-8");
   const { data, content: body } = matter(content);
   const relativePath = filePath.replace(process.cwd(), "").replace(/\\/g, "/");
   const pathParts = relativePath.split(path.sep).filter(Boolean);
-  const cleanPath = pathParts.slice(0, pathParts.length - 1).join("/");
-  const platform = pathParts.length > 1 ? pathParts[0] : "unknown";
+  const id = pathParts.slice(1, pathParts.length - 2).join("-");
+  const platform = pathParts.length > 1 ? pathParts[1] : "unknown";
   const howToMatch = body.match(/## How to Use([\s\S]*?)(##|$)/);
   const resourcesMatch = body.match(/## Resources([\s\S]*)/);
   const inputsMatch = body.match(/## Inputs([\s\S]*?)## Outputs/);
@@ -124,10 +124,8 @@ function parseReadme(filePath, platformLogos) {
   const buildingBlockLogoPath = findBuildingBlockLogo(path.dirname(filePath));
 
   return {
-    path: relativePath.replace(/^\/+/g, ""),
-    cleanPath,
-    platform,
-    platformLogo: platformLogos[platform] || null,
+    id: id,
+    platformType: platform,
     buildingBlockLogo: buildingBlockLogoPath,
     githubUrls,
     ...data,
@@ -138,10 +136,10 @@ function parseReadme(filePath, platformLogos) {
   };
 }
 
-const repoRoot = path.resolve(__dirname);
+const repoRoot = path.resolve(__dirname, 'modules');
 const platformLogos = findPlatformLogos();
 const readmeFiles = findReadmes(repoRoot);
-const jsonData = readmeFiles.map((file) => parseReadme(file, platformLogos));
+const jsonData = readmeFiles.map((file) => parseReadme(file));
 
 const outputData = {
   platformLogos,
@@ -150,4 +148,4 @@ const outputData = {
 
 fs.writeFileSync("output.json", JSON.stringify(outputData, null, 2));
 
-console.log(`✅ JSON-Daten aus ${readmeFiles.length} READMEs gespeichert in output.json`);
+console.log(`✅ Successfully processed ${readmeFiles.length} README.md files. Output saved to output.json`);
