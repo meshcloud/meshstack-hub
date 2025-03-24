@@ -10,7 +10,7 @@ frontend:
       commands:
         - yarn build
   artifacts:
-    baseDirectory: website/dist
+    baseDirectory: website/dist/browser
     files:
       - '**/*'
   cache:
