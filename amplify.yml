@@ -4,10 +4,13 @@ frontend:
   phases:
     preBuild:
       commands:
-        - cd website
-        - nvm use 20 || nvm install 20 && nvm use 20
-        - yarn install
-    build:
+       preBuild:
+  commands:
+    - cd website
+    - nvm install 20.11.1
+    - nvm use 20.11.1
+    - yarn install
+  build:
       commands:
         - yarn build
   artifacts:
