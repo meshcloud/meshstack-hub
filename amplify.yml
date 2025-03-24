@@ -11,6 +11,7 @@ frontend:
     build:
       commands:
         - yarn build
+        - yarn serve:ssr
   artifacts:
     baseDirectory: website/dist
     files:
