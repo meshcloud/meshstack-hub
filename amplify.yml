@@ -9,11 +9,8 @@ frontend:
     build:
       commands:
         - yarn build
-        - ls -la
+        - ls -la dist
   artifacts:
     baseDirectory: website/dist
     files:
       - '**/*'
-  cache:
-    paths:
-      - website/node_modules/**/*
