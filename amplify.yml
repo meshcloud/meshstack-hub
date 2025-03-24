@@ -14,3 +14,4 @@ frontend:
     baseDirectory: website/dist/website
     files:
       - '**/*'
+      - 'browser/index.html'
