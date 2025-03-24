@@ -5,9 +5,7 @@ frontend:
     preBuild:
       commands:
        - cd website
-       - nvm install 20.11.1
-       - nvm use 20.11.1
-       - yarn install
+       - yarn install --frozen-lockfile
     build:
       commands:
         - yarn build
