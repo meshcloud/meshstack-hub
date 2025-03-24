@@ -3,7 +3,7 @@
   "version": 1,
   "newProjectRoot": "projects",
   "projects": {
-    "meshstack-hub": {
+    "website": {
       "projectType": "application",
       "schematics": {
         "@schematics/angular:component": {
@@ -17,7 +17,7 @@
         "build": {
           "builder": "@angular-devkit/build-angular:application",
           "options": {
-            "outputPath": "dist/meshstack-hub",
+            "outputPath": "dist/website",
             "index": "src/index.html",
             "browser": "src/main.ts",
             "polyfills": [
@@ -69,10 +69,10 @@
           "builder": "@angular-devkit/build-angular:dev-server",
           "configurations": {
             "production": {
-              "buildTarget": "meshstack-hub:build:production"
+              "buildTarget": "website:build:production"
             },
             "development": {
-              "buildTarget": "meshstack-hub:build:development"
+              "buildTarget": "website:build:development"
             }
           },
           "defaultConfiguration": "development"
