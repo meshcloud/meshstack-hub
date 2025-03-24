@@ -9,8 +9,8 @@
     "test": "ng test",
     "lint": "ng lint",
     "lint:fix": "ng lint --fix",
-    "serve:ssr:meshstack-hub": "node dist/meshstack-hub/server/server.mjs"
-  },
+    "serve:ssr": "node dist/website/server/server.mjs"
+    },
   "private": true,
   "dependencies": {
     "@angular/common": "^19.2.0",
