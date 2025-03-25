@@ -1,6 +1,6 @@
 ---
 name: GitHub Actions Integration with AKS
-card_description: |
+description: |
   Building block module for integrating GitHub Actions with Azure Kubernetes Service (AKS)
 ---
 

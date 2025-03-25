@@ -57,6 +57,7 @@ function findReadmes(dir) {
 function findPlatformLogos() {
   const platformLogos = {};
   const modulesDir = path.resolve(__dirname, 'modules');
+  const assetsDir = path.resolve(__dirname, 'website/public/assets/logos');
   const dirs = fs.readdirSync(modulesDir, { withFileTypes: true })
     .filter(dirent => dirent.isDirectory() && dirent.name !== ".github");
 
@@ -66,7 +67,14 @@ function findPlatformLogos() {
 
     files.forEach((file) => {
       if (file.endsWith(".png")) {
-        platformLogos[dir.name] = path.join(platformDir, file).replace(modulesDir, "").replace(/^\/+/g, "");
+        const sourcePath = path.join(platformDir, file);
+        const destinationPath = path.join(assetsDir, dir.name + ".png");
+
+        fs.mkdirSync(assetsDir, { recursive: true });
+
+        fs.copyFileSync(sourcePath, destinationPath);
+
+        platformLogos[dir.name] = destinationPath.replace(path.resolve(__dirname, 'website/public'), "").replace(/^\/+/g, "");
       }
     });
   });
@@ -141,11 +149,12 @@ const platformLogos = findPlatformLogos();
 const readmeFiles = findReadmes(repoRoot);
 const jsonData = readmeFiles.map((file) => parseReadme(file));
 
-const outputData = {
-  platformLogos,
-  buildingBlocks: jsonData,
+const templatesData = {
+  templates: jsonData,
 };
 
-fs.writeFileSync("output.json", JSON.stringify(outputData, null, 2));
+fs.writeFileSync("website/public/assets/templates.json", JSON.stringify(templatesData, null, 2));
+console.log(`✅ Successfully processed ${readmeFiles.length} README.md files. Output saved to templates.json`);
 
-console.log(`✅ Successfully processed ${readmeFiles.length} README.md files. Output saved to output.json`);
+fs.writeFileSync("website/public/assets/platform-logos.json", JSON.stringify(platformLogos, null, 2));
+console.log(`✅ Successfully processed ${Object.entries(platformLogos).length} platform logos. Output saved to platform-logos.json`);

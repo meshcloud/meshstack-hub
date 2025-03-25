@@ -1,6 +1,6 @@
 ---
 name: Azure Building Block - Subscription Budget Alert
-card_description: |
+description: |
   Building block module for adding a simple monthly budget alert to a subscription.
 ---
 

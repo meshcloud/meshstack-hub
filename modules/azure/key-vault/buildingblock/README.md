@@ -1,6 +1,6 @@
 ---
 name: Azure Building Block - Key Vault
-card_description: |
+description: |
   Building block module for adding a Azure Key Vault
 ---
 
