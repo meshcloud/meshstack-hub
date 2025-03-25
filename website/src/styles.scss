@@ -1,1 +1,18 @@
-/* You can add global styles to this file, and also import other style files */
+@use '@fontsource/montserrat';
+@use '@fontsource/roboto';
+
+/* meshcloud colors */
+$mesh-blue: #5ecee8;
+$mesh-yellow: #f7f533;
+$mesh-black: #000000;
+$mesh-white: #FFFFFF;
+
+/* Apply Montserrat for Headings */
+h1, h2, h3, h4, h5, h6 {
+    font-family: 'Montserrat', sans-serif;
+  }
+
+  /* Apply Roboto for Body Text */
+  body {
+    font-family: 'Roboto', sans-serif;
+  }
