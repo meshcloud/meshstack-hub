@@ -1,6 +1,6 @@
 ---
 name: AWS Building Block - S3 Bucket
-card_description: |
+description: |
   Building block module for adding an AWS S3 Bucket
 ---
 

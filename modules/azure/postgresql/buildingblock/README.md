@@ -1,6 +1,6 @@
 ---
 name: Azure Building Block - Postgresql Deployment
-card_description: |
+description: |
  A Building Block for Azure to deploy a Postgresql
 ---
 

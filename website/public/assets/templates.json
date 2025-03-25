@@ -1,0 +1,711 @@
+{
+  "templates": [
+    {
+      "id": "aks-github-connector",
+      "platformType": "aks",
+      "buildingBlockLogo": "modules/aks/github-connector/buildingblock/github_logo.png",
+      "githubUrls": {
+        "ssh": "https://github.com/meshcloud/meshstack-hub.git",
+        "https": "https://github.com/meshcloud/meshstack-hub.git"
+      },
+      "name": "GitHub Actions Integration with AKS",
+      "description": "Building block module for integrating GitHub Actions with Azure Kubernetes Service (AKS)\n",
+      "howToUse": "1. Define the required variables in your Terraform configuration.\n2. Include this module in your Terraform code.\n3. Apply the Terraform plan to provision the resources.\n4. Use the generated GitHub Actions secrets and files to enable CI/CD workflows.\n5. Customize the workflow file as needed for your application.",
+      "resources": [
+        {
+          "name": "",
+          "description": "<a name=\"input_github_repo\"></a> [github\\_repo](#input\\_github\\_repo)",
+          "type": "n/a",
+          "required": false
+        },
+        {
+          "name": "",
+          "description": "<a name=\"input_namespace\"></a> [namespace](#input\\_namespace)",
+          "type": "Associated namespace in AKS.",
+          "required": false
+        }
+      ],
+      "inputs": [
+        {
+          "name": "",
+          "description": "<a name=\"input_github_repo\"></a> [github\\_repo](#input\\_github\\_repo)",
+          "type": "n/a",
+          "required": false
+        },
+        {
+          "name": "",
+          "description": "<a name=\"input_namespace\"></a> [namespace](#input\\_namespace)",
+          "type": "Associated namespace in AKS.",
+          "required": false
+        }
+      ],
+      "outputs": []
+    },
+    {
+      "id": "aks-postgresql",
+      "platformType": "aks",
+      "buildingBlockLogo": "modules/aks/postgresql/buildingblock/postgresql_logo.png",
+      "githubUrls": {
+        "ssh": "https://github.com/meshcloud/meshstack-hub.git",
+        "https": "https://github.com/meshcloud/meshstack-hub.git"
+      },
+      "name": "GitHub Actions Integration with AKS",
+      "description": "Building block module for integrating GitHub Actions with Azure Kubernetes Service (AKS)\n",
+      "howToUse": "1. Define the required variables in your Terraform configuration.\n2. Include this module in your Terraform code.\n3. Apply the Terraform plan to provision the resources.\n4. Use the generated GitHub Actions secrets and files to enable CI/CD workflows.\n5. Customize the workflow file as needed for your application.",
+      "resources": [
+        {
+          "name": "",
+          "description": "<a name=\"input_name\"></a> [name](#input\\_name)",
+          "type": "User selected part of the name.",
+          "required": false
+        },
+        {
+          "name": "",
+          "description": "<a name=\"input_namespace\"></a> [namespace](#input\\_namespace)",
+          "type": "Associated namespace in AKS.",
+          "required": false
+        },
+        {
+          "name": "",
+          "description": "<a name=\"input_project_identifier\"></a> [project\\_identifier](#input\\_project\\_identifier)",
+          "type": "The meshStack project identifier.",
+          "required": false
+        },
+        {
+          "name": "",
+          "description": "<a name=\"input_workspace_identifier\"></a> [workspace\\_identifier](#input\\_workspace\\_identifier)",
+          "type": "The meshStack workspace identifier.",
+          "required": false
+        },
+        {
+          "name": "",
+          "description": "<a name=\"output_secret_name\"></a> [secret\\_name](#output\\_secret\\_name)",
+          "type": "n/a",
+          "required": false
+        }
+      ],
+      "inputs": [
+        {
+          "name": "",
+          "description": "<a name=\"input_name\"></a> [name](#input\\_name)",
+          "type": "User selected part of the name.",
+          "required": false
+        },
+        {
+          "name": "",
+          "description": "<a name=\"input_namespace\"></a> [namespace](#input\\_namespace)",
+          "type": "Associated namespace in AKS.",
+          "required": false
+        },
+        {
+          "name": "",
+          "description": "<a name=\"input_project_identifier\"></a> [project\\_identifier](#input\\_project\\_identifier)",
+          "type": "The meshStack project identifier.",
+          "required": false
+        },
+        {
+          "name": "",
+          "description": "<a name=\"input_workspace_identifier\"></a> [workspace\\_identifier](#input\\_workspace\\_identifier)",
+          "type": "The meshStack workspace identifier.",
+          "required": false
+        }
+      ],
+      "outputs": [
+        {
+          "name": "",
+          "description": "<a name=\"output_secret_name\"></a> [secret\\_name](#output\\_secret\\_name)",
+          "type": "n/a",
+          "required": false
+        }
+      ]
+    },
+    {
+      "id": "aws-s3_bucket",
+      "platformType": "aws",
+      "buildingBlockLogo": "modules/aws/s3_bucket/buildingblock/s3_bucket.png",
+      "githubUrls": {
+        "ssh": "https://github.com/meshcloud/meshstack-hub.git",
+        "https": "https://github.com/meshcloud/meshstack-hub.git"
+      },
+      "name": "AWS Building Block - S3 Bucket",
+      "description": "Building block module for adding an AWS S3 Bucket\n",
+      "howToUse": "1. Define the required variables in your Terraform configuration.\n2. Include this module in your Terraform code.\n3. Apply the Terraform plan to provision the S3 bucket.\n4. Use the outputs to integrate the bucket into your application or infrastructure.\n5. Customize the bucket settings as needed.\n6. Ensure proper IAM policies for access control.",
+      "resources": [
+        {
+          "name": "",
+          "description": "<a name=\"input_bucket_name\"></a> [bucket\\_name](#input\\_bucket\\_name)",
+          "type": "The name of the S3 bucket",
+          "required": false
+        },
+        {
+          "name": "",
+          "description": "<a name=\"input_region\"></a> [region](#input\\_region)",
+          "type": "The AWS region",
+          "required": false
+        },
+        {
+          "name": "",
+          "description": "<a name=\"output_bucket_arn\"></a> [bucket\\_arn](#output\\_bucket\\_arn)",
+          "type": "n/a",
+          "required": false
+        },
+        {
+          "name": "",
+          "description": "<a name=\"output_bucket_domain_name\"></a> [bucket\\_domain\\_name](#output\\_bucket\\_domain\\_name)",
+          "type": "n/a",
+          "required": false
+        },
+        {
+          "name": "",
+          "description": "<a name=\"output_bucket_name\"></a> [bucket\\_name](#output\\_bucket\\_name)",
+          "type": "n/a",
+          "required": false
+        },
+        {
+          "name": "",
+          "description": "<a name=\"output_bucket_regional_domain_name\"></a> [bucket\\_regional\\_domain\\_name](#output\\_bucket\\_regional\\_domain\\_name)",
+          "type": "n/a",
+          "required": false
+        },
+        {
+          "name": "",
+          "description": "<a name=\"output_bucket_uri\"></a> [bucket\\_uri](#output\\_bucket\\_uri)",
+          "type": "n/a",
+          "required": false
+        }
+      ],
+      "inputs": [
+        {
+          "name": "",
+          "description": "<a name=\"input_bucket_name\"></a> [bucket\\_name](#input\\_bucket\\_name)",
+          "type": "The name of the S3 bucket",
+          "required": false
+        },
+        {
+          "name": "",
+          "description": "<a name=\"input_region\"></a> [region](#input\\_region)",
+          "type": "The AWS region",
+          "required": false
+        }
+      ],
+      "outputs": [
+        {
+          "name": "",
+          "description": "<a name=\"output_bucket_arn\"></a> [bucket\\_arn](#output\\_bucket\\_arn)",
+          "type": "n/a",
+          "required": false
+        },
+        {
+          "name": "",
+          "description": "<a name=\"output_bucket_domain_name\"></a> [bucket\\_domain\\_name](#output\\_bucket\\_domain\\_name)",
+          "type": "n/a",
+          "required": false
+        },
+        {
+          "name": "",
+          "description": "<a name=\"output_bucket_name\"></a> [bucket\\_name](#output\\_bucket\\_name)",
+          "type": "n/a",
+          "required": false
+        },
+        {
+          "name": "",
+          "description": "<a name=\"output_bucket_regional_domain_name\"></a> [bucket\\_regional\\_domain\\_name](#output\\_bucket\\_regional\\_domain\\_name)",
+          "type": "n/a",
+          "required": false
+        },
+        {
+          "name": "",
+          "description": "<a name=\"output_bucket_uri\"></a> [bucket\\_uri](#output\\_bucket\\_uri)",
+          "type": "n/a",
+          "required": false
+        }
+      ]
+    },
+    {
+      "id": "azure-budget-alert",
+      "platformType": "azure",
+      "buildingBlockLogo": "modules/azure/budget-alert/buildingblock/budget_logo.png",
+      "githubUrls": {
+        "ssh": "https://github.com/meshcloud/meshstack-hub.git",
+        "https": "https://github.com/meshcloud/meshstack-hub.git"
+      },
+      "name": "Azure Building Block - Subscription Budget Alert",
+      "description": "Building block module for adding a simple monthly budget alert to a subscription.\n",
+      "howToUse": "1. bla bla bla bla blub\n2. bla bla bla bla blub\n3. bla bla bla bla blub\n4. bla bla bla bla blub\n5. bla bla bla bla blub\n6. bla bla bla bla blub",
+      "resources": [
+        {
+          "name": "",
+          "description": "<a name=\"input_actual_threshold_percent\"></a> [actual\\_threshold\\_percent](#input\\_actual\\_threshold\\_percent)",
+          "type": "The precise percentage of the monthly budget at which you wish to activate the alert upon reaching. E.g. '15' for 15% or '120' for 120%",
+          "required": false
+        },
+        {
+          "name": "",
+          "description": "<a name=\"input_budget_name\"></a> [budget\\_name](#input\\_budget\\_name)",
+          "type": "Name of the budget alert rule",
+          "required": false
+        },
+        {
+          "name": "",
+          "description": "<a name=\"input_contact_emails\"></a> [contact\\_emails](#input\\_contact\\_emails)",
+          "type": "Comma-separated list of emails of the users who should receive the Budget alert. e.g. 'foo@example.com, bar@example.com'",
+          "required": false
+        },
+        {
+          "name": "",
+          "description": "<a name=\"input_forcasted_threshold_percent\"></a> [forcasted\\_threshold\\_percent](#input\\_forcasted\\_threshold\\_percent)",
+          "type": "The forcasted percentage of the monthly budget at which you wish to activate the alert upon reaching. E.g. '15' for 15% or '120' for 120%",
+          "required": false
+        },
+        {
+          "name": "",
+          "description": "<a name=\"input_monthly_budget_amount\"></a> [monthly\\_budget\\_amount](#input\\_monthly\\_budget\\_amount)",
+          "type": "Set the monthly budget for this subscription in the billing currency.",
+          "required": false
+        },
+        {
+          "name": "",
+          "description": "<a name=\"input_subscription_id\"></a> [subscription\\_id](#input\\_subscription\\_id)",
+          "type": "The ID of the subscription at which you want to assign the budget",
+          "required": false
+        },
+        {
+          "name": "",
+          "description": "<a name=\"output_budget_amount\"></a> [budget\\_amount](#output\\_budget\\_amount)",
+          "type": "n/a",
+          "required": false
+        }
+      ],
+      "inputs": [
+        {
+          "name": "",
+          "description": "<a name=\"input_actual_threshold_percent\"></a> [actual\\_threshold\\_percent](#input\\_actual\\_threshold\\_percent)",
+          "type": "The precise percentage of the monthly budget at which you wish to activate the alert upon reaching. E.g. '15' for 15% or '120' for 120%",
+          "required": false
+        },
+        {
+          "name": "",
+          "description": "<a name=\"input_budget_name\"></a> [budget\\_name](#input\\_budget\\_name)",
+          "type": "Name of the budget alert rule",
+          "required": false
+        },
+        {
+          "name": "",
+          "description": "<a name=\"input_contact_emails\"></a> [contact\\_emails](#input\\_contact\\_emails)",
+          "type": "Comma-separated list of emails of the users who should receive the Budget alert. e.g. 'foo@example.com, bar@example.com'",
+          "required": false
+        },
+        {
+          "name": "",
+          "description": "<a name=\"input_forcasted_threshold_percent\"></a> [forcasted\\_threshold\\_percent](#input\\_forcasted\\_threshold\\_percent)",
+          "type": "The forcasted percentage of the monthly budget at which you wish to activate the alert upon reaching. E.g. '15' for 15% or '120' for 120%",
+          "required": false
+        },
+        {
+          "name": "",
+          "description": "<a name=\"input_monthly_budget_amount\"></a> [monthly\\_budget\\_amount](#input\\_monthly\\_budget\\_amount)",
+          "type": "Set the monthly budget for this subscription in the billing currency.",
+          "required": false
+        },
+        {
+          "name": "",
+          "description": "<a name=\"input_subscription_id\"></a> [subscription\\_id](#input\\_subscription\\_id)",
+          "type": "The ID of the subscription at which you want to assign the budget",
+          "required": false
+        }
+      ],
+      "outputs": [
+        {
+          "name": "",
+          "description": "<a name=\"output_budget_amount\"></a> [budget\\_amount](#output\\_budget\\_amount)",
+          "type": "n/a",
+          "required": false
+        }
+      ]
+    },
+    {
+      "id": "azure-key-vault",
+      "platformType": "azure",
+      "buildingBlockLogo": "modules/azure/key-vault/buildingblock/key_vault_logo.png",
+      "githubUrls": {
+        "ssh": "https://github.com/meshcloud/meshstack-hub.git",
+        "https": "https://github.com/meshcloud/meshstack-hub.git"
+      },
+      "name": "Azure Building Block - Key Vault",
+      "description": "Building block module for adding a Azure Key Vault\n",
+      "howToUse": "1. bla bla bla bla blub\n2. bla bla bla bla blub\n3. bla bla bla bla blub\n4. bla bla bla bla blub\n5. bla bla bla bla blub\n6. bla bla bla bla blub",
+      "resources": [
+        {
+          "name": "",
+          "description": "<a name=\"input_key_vault_name\"></a> [key\\_vault\\_name](#input\\_key\\_vault\\_name)",
+          "type": "The name of the key vault.",
+          "required": false
+        },
+        {
+          "name": "",
+          "description": "<a name=\"input_key_vault_resource_group_name\"></a> [key\\_vault\\_resource\\_group\\_name](#input\\_key\\_vault\\_resource\\_group\\_name)",
+          "type": "The name of the resource group containing the key vault.",
+          "required": false
+        },
+        {
+          "name": "",
+          "description": "<a name=\"input_location\"></a> [location](#input\\_location)",
+          "type": "The location/region where the key vault is created.",
+          "required": false
+        },
+        {
+          "name": "",
+          "description": "<a name=\"input_public_network_access_enabled\"></a> [public\\_network\\_access\\_enabled](#input\\_public\\_network\\_access\\_enabled)",
+          "type": "n/a",
+          "required": false
+        },
+        {
+          "name": "",
+          "description": "<a name=\"input_subscription_id\"></a> [subscription\\_id](#input\\_subscription\\_id)",
+          "type": "n/a",
+          "required": false
+        },
+        {
+          "name": "",
+          "description": "<a name=\"input_users\"></a> [users](#input\\_users)",
+          "type": "Users and their roles provided by meshStack (Note that users must exist in stackit)",
+          "required": false
+        },
+        {
+          "name": "",
+          "description": "<a name=\"output_key_vault_id\"></a> [key\\_vault\\_id](#output\\_key\\_vault\\_id)",
+          "type": "n/a",
+          "required": false
+        },
+        {
+          "name": "",
+          "description": "<a name=\"output_key_vault_name\"></a> [key\\_vault\\_name](#output\\_key\\_vault\\_name)",
+          "type": "n/a",
+          "required": false
+        },
+        {
+          "name": "",
+          "description": "<a name=\"output_key_vault_resource_group\"></a> [key\\_vault\\_resource\\_group](#output\\_key\\_vault\\_resource\\_group)",
+          "type": "n/a",
+          "required": false
+        }
+      ],
+      "inputs": [
+        {
+          "name": "",
+          "description": "<a name=\"input_key_vault_name\"></a> [key\\_vault\\_name](#input\\_key\\_vault\\_name)",
+          "type": "The name of the key vault.",
+          "required": false
+        },
+        {
+          "name": "",
+          "description": "<a name=\"input_key_vault_resource_group_name\"></a> [key\\_vault\\_resource\\_group\\_name](#input\\_key\\_vault\\_resource\\_group\\_name)",
+          "type": "The name of the resource group containing the key vault.",
+          "required": false
+        },
+        {
+          "name": "",
+          "description": "<a name=\"input_location\"></a> [location](#input\\_location)",
+          "type": "The location/region where the key vault is created.",
+          "required": false
+        },
+        {
+          "name": "",
+          "description": "<a name=\"input_public_network_access_enabled\"></a> [public\\_network\\_access\\_enabled](#input\\_public\\_network\\_access\\_enabled)",
+          "type": "n/a",
+          "required": false
+        },
+        {
+          "name": "",
+          "description": "<a name=\"input_subscription_id\"></a> [subscription\\_id](#input\\_subscription\\_id)",
+          "type": "n/a",
+          "required": false
+        },
+        {
+          "name": "",
+          "description": "<a name=\"input_users\"></a> [users](#input\\_users)",
+          "type": "Users and their roles provided by meshStack (Note that users must exist in stackit)",
+          "required": false
+        }
+      ],
+      "outputs": [
+        {
+          "name": "",
+          "description": "<a name=\"output_key_vault_id\"></a> [key\\_vault\\_id](#output\\_key\\_vault\\_id)",
+          "type": "n/a",
+          "required": false
+        },
+        {
+          "name": "",
+          "description": "<a name=\"output_key_vault_name\"></a> [key\\_vault\\_name](#output\\_key\\_vault\\_name)",
+          "type": "n/a",
+          "required": false
+        },
+        {
+          "name": "",
+          "description": "<a name=\"output_key_vault_resource_group\"></a> [key\\_vault\\_resource\\_group](#output\\_key\\_vault\\_resource\\_group)",
+          "type": "n/a",
+          "required": false
+        }
+      ]
+    },
+    {
+      "id": "azure-postgresql",
+      "platformType": "azure",
+      "buildingBlockLogo": "modules/azure/postgresql/buildingblock/postgres_logo.png",
+      "githubUrls": {
+        "ssh": "https://github.com/meshcloud/meshstack-hub.git",
+        "https": "https://github.com/meshcloud/meshstack-hub.git"
+      },
+      "name": "Azure Building Block - Postgresql Deployment",
+      "description": "A Building Block for Azure to deploy a Postgresql\n",
+      "howToUse": "1. bla bla bla bla blub\n2. bla bla bla bla blub\n3. bla bla bla bla blub\n4. bla bla bla bla blub\n5. bla bla bla bla blub\n6. bla bla bla bla blub",
+      "resources": [
+        {
+          "name": "",
+          "description": "<a name=\"input_administrator_login\"></a> [administrator\\_login](#input\\_administrator\\_login)",
+          "type": "Administrator username for PostgreSQL",
+          "required": false
+        },
+        {
+          "name": "",
+          "description": "<a name=\"input_auto_grow_enabled\"></a> [auto\\_grow\\_enabled](#input\\_auto\\_grow\\_enabled)",
+          "type": "Enable auto-grow for storage",
+          "required": false
+        },
+        {
+          "name": "",
+          "description": "<a name=\"input_backup_retention_days\"></a> [backup\\_retention\\_days](#input\\_backup\\_retention\\_days)",
+          "type": "Backup retention in days",
+          "required": false
+        },
+        {
+          "name": "",
+          "description": "<a name=\"input_geo_redundant_backup_enabled\"></a> [geo\\_redundant\\_backup\\_enabled](#input\\_geo\\_redundant\\_backup\\_enabled)",
+          "type": "Enable geo-redundant backups",
+          "required": false
+        },
+        {
+          "name": "",
+          "description": "<a name=\"input_location\"></a> [location](#input\\_location)",
+          "type": "Azure region",
+          "required": false
+        },
+        {
+          "name": "",
+          "description": "<a name=\"input_postgresql_server_name\"></a> [postgresql\\_server\\_name](#input\\_postgresql\\_server\\_name)",
+          "type": "Name of the PostgreSQL server",
+          "required": false
+        },
+        {
+          "name": "",
+          "description": "<a name=\"input_postgresql_version\"></a> [postgresql\\_version](#input\\_postgresql\\_version)",
+          "type": "PostgreSQL version",
+          "required": false
+        },
+        {
+          "name": "",
+          "description": "<a name=\"input_public_network_access_enabled\"></a> [public\\_network\\_access\\_enabled](#input\\_public\\_network\\_access\\_enabled)",
+          "type": "Enable public network access",
+          "required": false
+        },
+        {
+          "name": "",
+          "description": "<a name=\"input_resource_group_name\"></a> [resource\\_group\\_name](#input\\_resource\\_group\\_name)",
+          "type": "Name of the Azure resource group",
+          "required": false
+        },
+        {
+          "name": "",
+          "description": "<a name=\"input_sku_name\"></a> [sku\\_name](#input\\_sku\\_name)",
+          "type": "The SKU name for the PostgreSQL server",
+          "required": false
+        },
+        {
+          "name": "",
+          "description": "<a name=\"input_ssl_enforcement_enabled\"></a> [ssl\\_enforcement\\_enabled](#input\\_ssl\\_enforcement\\_enabled)",
+          "type": "Enforce SSL connection",
+          "required": false
+        },
+        {
+          "name": "",
+          "description": "<a name=\"input_ssl_minimal_tls_version_enforced\"></a> [ssl\\_minimal\\_tls\\_version\\_enforced](#input\\_ssl\\_minimal\\_tls\\_version\\_enforced)",
+          "type": "Minimum TLS version",
+          "required": false
+        },
+        {
+          "name": "",
+          "description": "<a name=\"input_storage_mb\"></a> [storage\\_mb](#input\\_storage\\_mb)",
+          "type": "Storage size in MB",
+          "required": false
+        },
+        {
+          "name": "",
+          "description": "<a name=\"input_subscription_id\"></a> [subscription\\_id](#input\\_subscription\\_id)",
+          "type": "the Azure subscription id",
+          "required": false
+        },
+        {
+          "name": "",
+          "description": "<a name=\"output_postgresql_admin_username\"></a> [postgresql\\_admin\\_username](#output\\_postgresql\\_admin\\_username)",
+          "type": "The administrator username for PostgreSQL",
+          "required": false
+        },
+        {
+          "name": "",
+          "description": "<a name=\"output_postgresql_fqdn\"></a> [postgresql\\_fqdn](#output\\_postgresql\\_fqdn)",
+          "type": "The fully qualified domain name of the PostgreSQL server",
+          "required": false
+        },
+        {
+          "name": "",
+          "description": "<a name=\"output_postgresql_server_name\"></a> [postgresql\\_server\\_name](#output\\_postgresql\\_server\\_name)",
+          "type": "The name of the PostgreSQL server",
+          "required": false
+        },
+        {
+          "name": "",
+          "description": "<a name=\"output_postgresql_version\"></a> [postgresql\\_version](#output\\_postgresql\\_version)",
+          "type": "The PostgreSQL version",
+          "required": false
+        },
+        {
+          "name": "",
+          "description": "<a name=\"output_psql_admin_password\"></a> [psql\\_admin\\_password](#output\\_psql\\_admin\\_password)",
+          "type": "The administrator password for PostgreSQL",
+          "required": false
+        },
+        {
+          "name": "",
+          "description": "<a name=\"output_resource_group_name\"></a> [resource\\_group\\_name](#output\\_resource\\_group\\_name)",
+          "type": "The name of the resource group in which the PostgreSQL database is created",
+          "required": false
+        }
+      ],
+      "inputs": [
+        {
+          "name": "",
+          "description": "<a name=\"input_administrator_login\"></a> [administrator\\_login](#input\\_administrator\\_login)",
+          "type": "Administrator username for PostgreSQL",
+          "required": false
+        },
+        {
+          "name": "",
+          "description": "<a name=\"input_auto_grow_enabled\"></a> [auto\\_grow\\_enabled](#input\\_auto\\_grow\\_enabled)",
+          "type": "Enable auto-grow for storage",
+          "required": false
+        },
+        {
+          "name": "",
+          "description": "<a name=\"input_backup_retention_days\"></a> [backup\\_retention\\_days](#input\\_backup\\_retention\\_days)",
+          "type": "Backup retention in days",
+          "required": false
+        },
+        {
+          "name": "",
+          "description": "<a name=\"input_geo_redundant_backup_enabled\"></a> [geo\\_redundant\\_backup\\_enabled](#input\\_geo\\_redundant\\_backup\\_enabled)",
+          "type": "Enable geo-redundant backups",
+          "required": false
+        },
+        {
+          "name": "",
+          "description": "<a name=\"input_location\"></a> [location](#input\\_location)",
+          "type": "Azure region",
+          "required": false
+        },
+        {
+          "name": "",
+          "description": "<a name=\"input_postgresql_server_name\"></a> [postgresql\\_server\\_name](#input\\_postgresql\\_server\\_name)",
+          "type": "Name of the PostgreSQL server",
+          "required": false
+        },
+        {
+          "name": "",
+          "description": "<a name=\"input_postgresql_version\"></a> [postgresql\\_version](#input\\_postgresql\\_version)",
+          "type": "PostgreSQL version",
+          "required": false
+        },
+        {
+          "name": "",
+          "description": "<a name=\"input_public_network_access_enabled\"></a> [public\\_network\\_access\\_enabled](#input\\_public\\_network\\_access\\_enabled)",
+          "type": "Enable public network access",
+          "required": false
+        },
+        {
+          "name": "",
+          "description": "<a name=\"input_resource_group_name\"></a> [resource\\_group\\_name](#input\\_resource\\_group\\_name)",
+          "type": "Name of the Azure resource group",
+          "required": false
+        },
+        {
+          "name": "",
+          "description": "<a name=\"input_sku_name\"></a> [sku\\_name](#input\\_sku\\_name)",
+          "type": "The SKU name for the PostgreSQL server",
+          "required": false
+        },
+        {
+          "name": "",
+          "description": "<a name=\"input_ssl_enforcement_enabled\"></a> [ssl\\_enforcement\\_enabled](#input\\_ssl\\_enforcement\\_enabled)",
+          "type": "Enforce SSL connection",
+          "required": false
+        },
+        {
+          "name": "",
+          "description": "<a name=\"input_ssl_minimal_tls_version_enforced\"></a> [ssl\\_minimal\\_tls\\_version\\_enforced](#input\\_ssl\\_minimal\\_tls\\_version\\_enforced)",
+          "type": "Minimum TLS version",
+          "required": false
+        },
+        {
+          "name": "",
+          "description": "<a name=\"input_storage_mb\"></a> [storage\\_mb](#input\\_storage\\_mb)",
+          "type": "Storage size in MB",
+          "required": false
+        },
+        {
+          "name": "",
+          "description": "<a name=\"input_subscription_id\"></a> [subscription\\_id](#input\\_subscription\\_id)",
+          "type": "the Azure subscription id",
+          "required": false
+        }
+      ],
+      "outputs": [
+        {
+          "name": "",
+          "description": "<a name=\"output_postgresql_admin_username\"></a> [postgresql\\_admin\\_username](#output\\_postgresql\\_admin\\_username)",
+          "type": "The administrator username for PostgreSQL",
+          "required": false
+        },
+        {
+          "name": "",
+          "description": "<a name=\"output_postgresql_fqdn\"></a> [postgresql\\_fqdn](#output\\_postgresql\\_fqdn)",
+          "type": "The fully qualified domain name of the PostgreSQL server",
+          "required": false
+        },
+        {
+          "name": "",
+          "description": "<a name=\"output_postgresql_server_name\"></a> [postgresql\\_server\\_name](#output\\_postgresql\\_server\\_name)",
+          "type": "The name of the PostgreSQL server",
+          "required": false
+        },
+        {
+          "name": "",
+          "description": "<a name=\"output_postgresql_version\"></a> [postgresql\\_version](#output\\_postgresql\\_version)",
+          "type": "The PostgreSQL version",
+          "required": false
+        },
+        {
+          "name": "",
+          "description": "<a name=\"output_psql_admin_password\"></a> [psql\\_admin\\_password](#output\\_psql\\_admin\\_password)",
+          "type": "The administrator password for PostgreSQL",
+          "required": false
+        },
+        {
+          "name": "",
+          "description": "<a name=\"output_resource_group_name\"></a> [resource\\_group\\_name](#output\\_resource\\_group\\_name)",
+          "type": "The name of the resource group in which the PostgreSQL database is created",
+          "required": false
+        }
+      ]
+    }
+  ]
+}
