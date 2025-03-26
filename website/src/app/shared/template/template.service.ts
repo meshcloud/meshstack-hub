@@ -18,6 +18,26 @@ export class TemplateService {
     private http: HttpClient
   ) { }
 
+  public search(
+    term: string
+  ): Observable<Template[]> {
+    return this.retrieveData()
+      .pipe(
+        map(data =>
+          data.templates.filter((template: Template) =>
+            template.name.toLowerCase()
+              .includes(term.toLowerCase()) ||
+            template.githubUrls.https.toLowerCase()
+              .includes(term.toLowerCase()) ||
+            template.githubUrls.ssh.toLowerCase()
+              .includes(term.toLowerCase()) ||
+            template.howToUse.toLowerCase()
+              .includes(term.toLowerCase())
+          )
+        )
+      );
+  }
+
   public filterTemplatesByPlatformType(
     platformType: PlatformType | 'all'
   ): Observable<Template[]> {

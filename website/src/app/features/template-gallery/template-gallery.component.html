@@ -1,9 +1,18 @@
 <div class="header pt-0 ps-5 pe-5 pb-2">
   <div class="row w-25">
-    <div class="input-group mt-3 me-auto">
-      <input type="text" class="form-control" placeholder="Search..." aria-label="Search" />
-      <button class="btn btn-primary" type="button"><i class="fa-solid fa-magnifying-glass"></i></button>
-    </div>
+    <form [formGroup]="searchForm" (ngSubmit)="onSearch()">
+      <div class="input-group mt-3 me-auto">
+        <input
+          type="text"
+          class="form-control"
+          aria-label="Search"
+          formControlName="searchTerm"
+          (keyup.enter)="onSearch()"
+          placeholder="Search"
+        />
+        <button class="btn btn-primary" type="button"><i class="fa-solid fa-magnifying-glass"></i></button>
+      </div>
+    </form>
   </div>
   <mst-navigation></mst-navigation>
 </div>
