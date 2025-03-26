@@ -1,0 +1,64 @@
+<div class="pt-5 ps-5 pe-5">
+  <div class="row">
+    <ng-container *ngIf="template$ | async as template">
+      <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+          <li class="breadcrumb-item ps-0"><a href="#">Template Gallery</a></li>
+          <li class="breadcrumb-item active" aria-current="page">{{ template.name }}</li>
+        </ol>
+      </nav>
+
+      <div class="pt-5">
+        <div class="d-flex">
+          <div class="ps-2 pe-2">
+            <img
+              *ngIf="template.imageUrl; else unknownLogo"
+              class="logo"
+              [src]="template.imageUrl"
+              [alt]="template.platformType"
+            />
+            <ng-template #unknownLogo>
+              <img src="assets/meshstack-logo.png" class="logo" alt="Unknown Logo" />
+            </ng-template>
+          </div>
+          <div class="ps-5">
+            <h1 class="fw-bold h3">
+              <span class="pe-4">{{ template.name }}</span>
+              <span class="badge bg-secondary fw-bold">Building Block</span>
+            </h1>
+
+            <div class="pt-3">
+              <p>{{ template.description }}</p>
+
+              <div class="pt-3">
+                <h2 class="fw-bold h4">
+                  <i class="fa-solid fa-code pe-2"></i>
+                  Source
+                </h2>
+                <div class="d-flex align-items-center p-2 bg-light border rounded shadow-sm">
+                  <a [href]="template.source" target="_blank" rel="noopener noreferrer" class="mr-3 flex-grow-1">
+                    {{ template.source }}
+                  </a>
+                  <button (click)="copyToClipboard(template.source)" class="btn btn-light btn-sm">
+                    <i *ngIf="copyLabel === 'Copy'" class="fas fa-copy"></i>
+                    <i *ngIf="copyLabel === 'Copied'" class="fa-solid fa-check"></i>
+                    {{ copyLabel }}
+                  </button>
+                </div>
+              </div>
+
+              <div class="pt-5">
+                <h2 class="fw-bold h4">How to use this template</h2>
+                <p class="pre-wrap-container">{{ template.howToUse }}</p>
+              </div>
+
+              <div class="pt-5 d-flex justify-content-end">
+                <a href="#" class="btn btn-outline-primary">Go Back</a>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </ng-container>
+  </div>
+</div>
