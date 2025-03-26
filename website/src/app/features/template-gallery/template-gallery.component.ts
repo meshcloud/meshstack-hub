@@ -47,7 +47,7 @@ export class TemplateGalleryComponent implements OnInit, OnDestroy {
             templates.map(item => ({
               ...item,
               imageUrl: logos[item.platformType] ?? null,
-              detailsRoute: '', // TODO enable `/template/${item.id}`
+              detailsRoute: `/template/${item.id}`
             }))
           )
         );

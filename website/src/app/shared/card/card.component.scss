@@ -8,6 +8,11 @@
   &:hover {
     transform: scale(1.05);
   }
+
+  &:focus {
+    outline: none;
+    box-shadow: 0 0 1rem rgba(0, 120, 255, 0.8);
+  }
 }
 
 .card-body {

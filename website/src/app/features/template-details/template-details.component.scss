@@ -1,0 +1,28 @@
+.breadcrumb-item a {
+  color: gray;
+  text-decoration: none;
+
+  &:hover {
+    text-decoration: underline;
+  }
+}
+
+.breadcrumb-item.active {
+  color: black;
+  font-weight: bold;
+}
+
+.breadcrumb-item + .breadcrumb-item::before {
+  content: ' > ';
+  padding: 0 5rem;
+}
+
+.logo {
+  width: 5rem;
+  object-fit: contain;
+}
+
+.pre-wrap-container {
+  white-space: pre-wrap;
+  line-height: 2rem;
+}

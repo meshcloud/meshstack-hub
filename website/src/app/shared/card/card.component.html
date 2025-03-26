@@ -1,12 +1,19 @@
-<div class="card text-center" (click)="goToDetails()">
+<div
+  class="card text-center"
+  tabindex="0"
+  role="card"
+  [attr.aria-label]="title"
+  (click)="goToDetails()"
+  (keyup.enter)="goToDetails()"
+>
   <span class="card-label">Building Block</span>
 
   <div class="card-body">
     <div class="d-flex justify-content-center">
       <div class="circle">
-        <img *ngIf="imageUrl; else unknownLogo" [src]="imageUrl" class="circled-image" [alt]="platformType" />
+        <img *ngIf="imageUrl; else unknownLogo" [src]="imageUrl" [alt]="platformType" />
         <ng-template #unknownLogo>
-          <img src="assets/meshstack-logo.png" class="circled-image" alt="Unknown Logo" />
+          <img src="assets/meshstack-logo.png" alt="Unknown Logo" />
         </ng-template>
       </div>
     </div>
