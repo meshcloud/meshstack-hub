@@ -1,6 +1,6 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import { Observable, map, shareReplay, take } from 'rxjs';
+import { Observable, shareReplay, take } from 'rxjs';
 
 import { PlatformLogoData } from './platform-logo-data';
 
