@@ -31,7 +31,7 @@ export class CardComponent {
   constructor(private router: Router) {}
 
   public goToDetails() {
-    // TODO this.router.navigate([this.detailsRoute]);
+    this.router.navigate([this.detailsRoute]);
   }
 }
 
