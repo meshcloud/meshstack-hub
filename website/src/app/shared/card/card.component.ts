@@ -3,24 +3,30 @@ import { Component, Input } from '@angular/core';
 import { Router, RouterModule } from '@angular/router';
 
 @Component({
-  selector: 'app-card',
+  selector: 'mst-card',
   imports: [RouterModule, CommonModule],
   templateUrl: './card.component.html',
   styleUrl: './card.component.scss',
   standalone: true
 })
 export class CardComponent {
-  @Input() imageUrl: string| null = null;
+  @Input()
+  public imageUrl: string| null = null;
 
-  @Input() platformType!: string;
+  @Input()
+  public platformType!: string;
 
-  @Input() title!: string;
+  @Input()
+  public title!: string;
 
-  @Input() description!: string;
+  @Input()
+  public description!: string;
 
-  @Input() date: string | null = null;
+  @Input()
+  public date: string | null = null;
 
-  @Input() detailsRoute!: string;
+  @Input()
+  public detailsRoute!: string;
 
   constructor(private router: Router) {}
 

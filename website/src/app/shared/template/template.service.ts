@@ -1,7 +1,8 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
+import { Observable, map, shareReplay, take } from 'rxjs';
+
 import { PlatformType, Template } from 'app/core';
-import { Observable, map, shareReplay, take, tap } from 'rxjs';
 
 interface GeneratedTemplateData {
   templates: Template[];
@@ -11,11 +12,11 @@ interface GeneratedTemplateData {
   providedIn: 'root'
 })
 export class TemplateService {
+  private data$: Observable<GeneratedTemplateData> | null = null;
+
   constructor(
     private http: HttpClient
   ) { }
-
-  private data$: Observable<GeneratedTemplateData> | null = null;
 
   public filterTemplatesByPlatformType(
     platformType: PlatformType | 'all'
@@ -27,6 +28,23 @@ export class TemplateService {
             ? data.templates
             : data.templates.filter((template: Template) => template.platformType === platformType)
         )
+      );
+  }
+
+  public getTemplateById(
+    id: string
+  ): Observable<Template> {
+    return this.retrieveData()
+      .pipe(
+        map(data => {
+          const template = data.templates.find((t: Template) => t.id === id);
+
+          if (!template) {
+            throw new Error(`Template with id ${id} not found`);
+          }
+
+          return template;
+        })
       );
   }
 

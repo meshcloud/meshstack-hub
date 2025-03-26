@@ -1,18 +1,17 @@
 @import '@styles';
 
 .header {
-    background-color: $mesh-blue;
-    padding: 5rem 5rem 1rem 5rem;
+  background-color: $mesh-blue;
 
-    .logo {
-        height: 10rem;
-        object-fit: contain;
-    }
+  .logo {
+    height: 10rem;
+    object-fit: contain;
+  }
 
-    .title {
-        color: $mesh-black;
-        font-weight: bold;
-        align-self: center;
-        margin-top: 2.5rem;
-    }
+  .title {
+    color: $mesh-black;
+    font-weight: bold;
+    align-self: center;
+    margin-top: 2.5rem;
+  }
 }

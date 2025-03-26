@@ -1,19 +1,22 @@
 import { CommonModule } from '@angular/common';
 import { Component, OnDestroy, OnInit } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
+import { Observable, Subscription, forkJoin, map, take } from 'rxjs';
+
 import { PlatformType, Template } from 'app/core';
 import { CardComponent } from 'app/shared/card';
+import { NavigationComponent } from 'app/shared/navigation';
 import { PlatformLogoService } from 'app/shared/platform-logo';
 import { TemplateService } from 'app/shared/template';
-import { Observable, Subscription, forkJoin, map, take } from 'rxjs';
 
 interface TemplateVm extends Template {
   imageUrl: string | null;
+  detailsRoute: string;
 }
 
 @Component({
-  selector: 'app-template-gallery',
-  imports: [CommonModule, CardComponent],
+  selector: 'mst-template-gallery',
+  imports: [CommonModule, CardComponent, NavigationComponent],
   templateUrl: './template-gallery.component.html',
   styleUrl: './template-gallery.component.scss',
   standalone: true
@@ -43,7 +46,8 @@ export class TemplateGalleryComponent implements OnInit, OnDestroy {
           map(({ templates, logos }) =>
             templates.map(item => ({
               ...item,
-              imageUrl: logos[item.platformType] ?? null
+              imageUrl: logos[item.platformType] ?? null,
+              detailsRoute: '', // TODO enable `/template/${item.id}`
             }))
           )
         );

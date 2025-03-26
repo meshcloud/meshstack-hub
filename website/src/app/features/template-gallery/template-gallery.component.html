@@ -1,14 +1,29 @@
-<div class="row pt-5">
-  <ng-container *ngIf="templates$ | async as templates">
-    <ng-container *ngIf="templates.length > 0; else noTemplates">
-      <div class="col-sm-3 mb-3" *ngFor="let template of templates">
-        <app-card [imageUrl]="template.imageUrl" [title]="template.name" [description]="template.description"
-          [platformType]="template.platformType" [detailsRoute]="template.id"></app-card>
-      </div>
+<div class="header ps-5 pe-5 pb-2">
+  <div class="row w-25">
+    <div class="input-group mt-3 me-auto">
+      <input type="text" class="form-control" placeholder="Search..." aria-label="Search" />
+      <button class="btn btn-primary" type="button"><i class="fa-solid fa-magnifying-glass"></i></button>
+    </div>
+  </div>
+  <mst-navigation></mst-navigation>
+</div>
+<div class="pt-5 ps-5 pe-5">
+  <div class="row pt-5">
+    <ng-container *ngIf="templates$ | async as templates">
+      <ng-container *ngIf="templates.length > 0; else noTemplates">
+        <div class="col-sm-3 mb-3" *ngFor="let template of templates">
+          <mst-card
+            [imageUrl]="template.imageUrl"
+            [title]="template.name"
+            [description]="template.description"
+            [platformType]="template.platformType"
+            [detailsRoute]="template.id"
+          ></mst-card>
+        </div>
+      </ng-container>
+      <ng-template #noTemplates>
+        <p class="h-5">No templates found.</p>
+      </ng-template>
     </ng-container>
-    <ng-template #noTemplates>
-      <p class="h-5">No templates found.</p>
-    </ng-template>
-  </ng-container>
-
+  </div>
 </div>

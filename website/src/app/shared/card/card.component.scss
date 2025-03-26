@@ -1,43 +1,42 @@
 .card {
-    display: flex;
-    flex-direction: column;
-    height: 100%;
-    transition: transform 0.3s;
-    cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  transition: transform 0.3s;
+  cursor: pointer;
 
-    &:hover {
-        transform: scale(1.05);
-    }
+  &:hover {
+    transform: scale(1.05);
+  }
 }
 
 .card-body {
-    flex-grow: 1;
+  flex-grow: 1;
 }
 
 .card-label {
-    position: absolute;
-    top: 0px;
-    left: 0px;
-    background-color: gray;
-    color: white;
-    padding: 0.25rem 0.5rem;
-    font-size: 1rem;
-    border-radius: var(--bs-card-border-radius) 0 var(--bs-card-border-radius) 0;
+  position: absolute;
+  top: 0px;
+  left: 0px;
+  background-color: gray;
+  color: white;
+  padding: 0.25rem 0.5rem;
+  font-size: 1rem;
+  border-radius: var(--bs-card-border-radius) 0 var(--bs-card-border-radius) 0;
 }
 
 .circle {
-    width: 5rem;
-    height: 5rem;
-    border-radius: 50%;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    border: 1px solid gray;
-  
-    img {
-      width: 75%;
-      height: 75%;
-      object-fit: contain;
-     
-    }
+  width: 5rem;
+  height: 5rem;
+  border-radius: 50%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  border: 1px solid gray;
+
+  img {
+    width: 75%;
+    height: 75%;
+    object-fit: contain;
   }
+}
