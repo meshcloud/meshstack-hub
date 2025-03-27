@@ -4,6 +4,8 @@ frontend:
   phases:
     preBuild:
       commands:
+       - npm install gray-matter
+       - node index.ts
        - cd website
        - yarn install --frozen-lockfile
     build:

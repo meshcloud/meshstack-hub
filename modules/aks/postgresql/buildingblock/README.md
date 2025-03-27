@@ -1,34 +1,37 @@
 ---
-name: GitHub Actions Integration with AKS
+name: Postgresql Integration with AKS
+supported_platforms:
+  - aks
 description: |
-  Building block module for integrating GitHub Actions with Azure Kubernetes Service (AKS)
+  Building Block module for a Postgresql Instance integrated to Azure Kubernetes Service (AKS)
 ---
 
-# GitHub Actions Integration with AKS
+# Postgresql Integration with AKS
 
-This Terraform module provisions the necessary resources to integrate GitHub Actions with an AKS cluster. It sets up service accounts, secrets, and workflows for seamless CI/CD.
-
-## How to Use
-
-1. Define the required variables in your Terraform configuration.
-2. Include this module in your Terraform code.
-3. Apply the Terraform plan to provision the resources.
-4. Use the generated GitHub Actions secrets and files to enable CI/CD workflows.
-5. Customize the workflow file as needed for your application.
+This Terraform module provisions the necessary resources to integrate Postgres with an AKS cluster.
 
 ## Requirements
-- Terraform `>= 1.0`
-- GitHub Provider `6.5.0`
-- Kubernetes Provider `2.35.1`
+
+- Terraform `>= 1.3`
+- AzureRM Provider `>= 3.70.0`
+- Kubernetes Provider `>= 2.30.0`
+- Random Provider `>= 3.6.3`
 
 ## Providers
 
 ```hcl
 terraform {
+  required_version = ">= 1.0"
+
   required_providers {
-    github = {
-      source  = "integrations/github"
-      version = "6.5.0"
+    azurerm = {
+      source  = "hashicorp/azurerm"
+      version = "4.4.0"
+    }
+
+    random = {
+      source  = "hashicorp/random"
+      version = "3.6.3"
     }
 
     kubernetes = {
@@ -37,6 +40,7 @@ terraform {
     }
   }
 }
+```
 
 <!-- BEGIN_TF_DOCS -->
 ## Requirements

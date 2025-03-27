@@ -1,5 +1,7 @@
 ---
 name: GitHub Actions Integration with AKS
+supported_platforms:
+  - aks
 description: |
   Building block module for integrating GitHub Actions with Azure Kubernetes Service (AKS)
 ---
@@ -7,14 +9,6 @@ description: |
 # GitHub Actions Integration with AKS
 
 This Terraform module provisions the necessary resources to integrate GitHub Actions with an AKS cluster. It sets up service accounts, secrets, and workflows for seamless CI/CD.
-
-## How to Use
-
-1. Define the required variables in your Terraform configuration.
-2. Include this module in your Terraform code.
-3. Apply the Terraform plan to provision the resources.
-4. Use the generated GitHub Actions secrets and files to enable CI/CD workflows.
-5. Customize the workflow file as needed for your application.
 
 ## Requirements
 - Terraform `>= 1.0`
@@ -37,6 +31,8 @@ terraform {
     }
   }
 }
+```
+
 <!-- BEGIN_TF_DOCS -->
 ## Requirements
 
