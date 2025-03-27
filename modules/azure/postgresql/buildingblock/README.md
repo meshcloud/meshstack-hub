@@ -1,23 +1,14 @@
 ---
 name: Azure Building Block - Postgresql Deployment
-card_description: |
+supported_platforms:
+  - azure
+description: |
  A Building Block for Azure to deploy a Postgresql
 ---
 
 # Azure PostgreSQL Deployment
 
 This Terraform project deploys a cost-effective Azure PostgreSQL database with minimal resources and security-conscious configuration.
-
-
-## How to Use
-
-1. bla bla bla bla blub
-2. bla bla bla bla blub
-3. bla bla bla bla blub
-4. bla bla bla bla blub
-5. bla bla bla bla blub
-6. bla bla bla bla blub
-
 
 ## 🛠 Configuration
 

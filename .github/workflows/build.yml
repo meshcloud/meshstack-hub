@@ -1,0 +1,26 @@
+name: build
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+  merge_group:
+
+jobs:
+  pre-commit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: meshcloud/setup-collie@main
+
+      - uses: nixbuild/nix-quick-install-action@v26
+        with:
+          nix_on_tmpfs: true
+
+      - uses: rrbutani/use-nix-shell-action@v1
+        with:
+          devShell: .#github_actions # use a special github actions shell
+
+      - name: ensure all pre-commit hooks pass
+        run: pre-commit run --all-files --show-diff-on-failure
