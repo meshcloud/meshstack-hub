@@ -166,7 +166,7 @@
             "avoidEscape": true
           }
         ],
-        // Note: you must disable the base rule as it can report incorrect errors and enable "@typescript-eslint/semi": "error" 
+        // Note: you must disable the base rule as it can report incorrect errors and enable "@typescript-eslint/semi": "error"
         // https://typescript-eslint.io/rules/semi/
         "semi": "off",
         "spaced-comment": [
@@ -251,7 +251,7 @@
               "UntypedFormControl": {
                 "message": "Use FormControl instead",
                 "suggest": ["FormControl"]
-              },          
+              },
               "UntypedFormGroup": {
                 "message": "Use FormGroup instead",
                 "suggest": ["FormGroup"]
@@ -267,16 +267,16 @@
             }
           }
         ],
-        // Note: you must disable the base rule as it can report incorrect errors and enable "@typescript-eslint/no-shadow": "error" 
+        // Note: you must disable the base rule as it can report incorrect errors and enable "@typescript-eslint/no-shadow": "error"
         // https://typescript-eslint.io/rules/no-shadow/
         "no-shadow": "off",
         "no-throw-literal": "error",
         "no-undef-init": "error",
         "no-underscore-dangle": "off",
-        // Note: you must disable the base rule as it can report incorrect errors and enable "@typescript-eslint/no-unused-expressions": "error" 
+        // Note: you must disable the base rule as it can report incorrect errors and enable "@typescript-eslint/no-unused-expressions": "error"
         // https://typescript-eslint.io/rules/no-unused-expressions/
         "no-unused-expressions": "off",
-        // Note: you must disable the base rule as it can report incorrect errors and enable "@typescript-eslint/no-unused-vars": "error" 
+        // Note: you must disable the base rule as it can report incorrect errors and enable "@typescript-eslint/no-unused-vars": "error"
         // https://typescript-eslint.io/rules/no-unused-vars/
         "no-unused-vars": "off",
         "no-irregular-whitespace": [
@@ -387,7 +387,7 @@
         // ESLint Accessibility ARIA Rules
         "@angular-eslint/template/valid-aria": "warn",
         "@angular-eslint/template/role-has-required-aria": "warn",
-        
+
         // ESLint Accessibility HTML Content
         "@angular-eslint/template/alt-text": "warn",
         "@angular-eslint/template/elements-content": "warn",

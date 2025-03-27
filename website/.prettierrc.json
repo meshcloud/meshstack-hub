@@ -1,9 +1,9 @@
 {
-  "printWidth": 120,       
-  "tabWidth": 2,          
-  "useTabs": false,        
+  "printWidth": 120,
+  "tabWidth": 2,
+  "useTabs": false,
   "singleQuote": true,
-  "bracketSameLine": false, 
-  "htmlWhitespaceSensitivity": "ignore", 
-  "endOfLine": "lf"       
+  "bracketSameLine": false,
+  "htmlWhitespaceSensitivity": "ignore",
+  "endOfLine": "lf"
 }
