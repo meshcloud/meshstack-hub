@@ -1,5 +1,7 @@
 ---
 name: Azure Building Block - Subscription Budget Alert
+supported_platforms:
+  - azure
 description: |
   Building block module for adding a simple monthly budget alert to a subscription.
 ---
@@ -8,14 +10,6 @@ description: |
 
 This documentation is intended as a reference documentation for cloud foundation or platform engineers using this module.
 
-## How to Use
-
-1. bla bla bla bla blub
-2. bla bla bla bla blub
-3. bla bla bla bla blub
-4. bla bla bla bla blub
-5. bla bla bla bla blub
-6. bla bla bla bla blub
 
 ## Permissions
 

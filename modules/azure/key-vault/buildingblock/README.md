@@ -1,5 +1,7 @@
 ---
 name: Azure Building Block - Key Vault
+supported_platforms:
+  - azure
 description: |
   Building block module for adding a Azure Key Vault
 ---
@@ -7,15 +9,6 @@ description: |
 # Azure Key Vault
 
 This Terraform module provisions an Azure Key Vault along with necessary role assignments.
-
-## How to Use
-
-1. bla bla bla bla blub
-2. bla bla bla bla blub
-3. bla bla bla bla blub
-4. bla bla bla bla blub
-5. bla bla bla bla blub
-6. bla bla bla bla blub
 
 
 ## Requirements
