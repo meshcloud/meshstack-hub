@@ -18,7 +18,7 @@ function convertGitToHttpUrl(gitUrl) {
  */
 function getGithubRemoteUrls() {
   try {
-    const remoteUrl = execSync("git config --get remote.origin.url").toString().trim();
+    const remoteUrl = execSync("git config --get remote.origin.url").toString().trim().replace(/https?:\/\/.*?@github\.com\//, "https://github.com/");
     const httpUrl = convertGitToHttpUrl(remoteUrl);
     return {
       ssh: remoteUrl,
