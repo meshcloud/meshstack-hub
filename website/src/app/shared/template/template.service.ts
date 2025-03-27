@@ -27,11 +27,7 @@ export class TemplateService {
           data.templates.filter((template: Template) =>
             template.name.toLowerCase()
               .includes(term.toLowerCase()) ||
-            template.githubUrls.https.toLowerCase()
-              .includes(term.toLowerCase()) ||
-            template.githubUrls.ssh.toLowerCase()
-              .includes(term.toLowerCase()) ||
-            template.howToUse.toLowerCase()
+            template.description.toLowerCase()
               .includes(term.toLowerCase())
           )
         )
