@@ -67,7 +67,7 @@ No modules.
 | <a name="input_location"></a> [location](#input\_location) | The location/region where the key vault is created. | `string` | n/a | yes |
 | <a name="input_public_network_access_enabled"></a> [public\_network\_access\_enabled](#input\_public\_network\_access\_enabled) | n/a | `bool` | `false` | no |
 | <a name="input_subscription_id"></a> [subscription\_id](#input\_subscription\_id) | n/a | `string` | n/a | yes |
-| <a name="input_users"></a> [users](#input\_users) | Users and their roles provided by meshStack (Note that users must exist in stackit) | <pre>list(object(<br/>    {<br/>      meshIdentifier = string<br/>      username       = string<br/>      firstName      = string<br/>      lastName       = string<br/>      email          = string<br/>      euid           = string<br/>      roles          = list(string)<br/>    }<br/>  ))</pre> | n/a | yes |
+| <a name="input_users"></a> [users](#input\_users) | Users and their roles provided by meshStack (Note that users must exist in stackit) | <pre>list(object(<br>    {<br>      meshIdentifier = string<br>      username       = string<br>      firstName      = string<br>      lastName       = string<br>      email          = string<br>      euid           = string<br>      roles          = list(string)<br>    }<br>  ))</pre> | n/a | yes |
 
 ## Outputs
 
