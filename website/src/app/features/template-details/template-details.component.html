@@ -49,11 +49,25 @@
 
               <div class="pt-5">
                 <h2 class="fw-bold h4">How to use this template</h2>
-                <p class="pre-wrap-container">{{ template.howToUse }}</p>
+                <ol>
+                  <li>You can directly use this template in meshStack</li>
+                </ol>
+                <div class="pt-2 pb-2">
+                  <b>OR</b>
+                </div>
+                <ol>
+                  <li>You can copy the files in your own repository</li>
+                  <li>Go to meshStack and start the wizard to create a new building block definition</li>
+                  <li>Follow the instructions in the wizard and make sure you select "Terraform" as implementation type</li>
+                  <li>Add the link to your repository, you copied the files and connect it to meshStack</li>
+                  <li>meshStack will automatically add the inputs and outputs</li>
+                  <li>Add the end click <b>Create Definition</b> to finish</li>
+                </ol>
               </div>
 
               <div class="pt-5 d-flex justify-content-end">
-                <a href="#" class="btn btn-outline-primary">Go Back</a>
+                <a href="#" class="btn btn-outline-primary me-2">Go Back</a>
+                <button class="btn btn-primary" (click)="open()">Use template</button>
               </div>
             </div>
           </div>
