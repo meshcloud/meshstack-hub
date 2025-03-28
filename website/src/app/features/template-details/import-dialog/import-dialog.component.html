@@ -1,0 +1,36 @@
+<div class="modal-header border-0">
+  <button type="button" class="btn-close" aria-label="Close" (click)="activeModal.dismiss('Cross click')"></button>
+</div>
+<div class="modal-body">
+  <div class="d-flex justify-content-center">
+    <img class="logo" src="assets/meshstack-logo.png" alt="meshStack-logo" />
+  </div>
+  <div class="w-100 d-flex justify-content-center mt-3">
+    <div class="text-center">
+      <h4 class="card-title fw-bold">Provide link of your meshStack</h4>
+      <h5 class="card-text mt-3">to continue using this building block template</h5>
+      <div class="pt-4 text-start">
+        <form [formGroup]="form" (ngSubmit)="open()">
+          <label class="form-label" for="meshStackUrl">Your meshStack URL</label>
+          <input type="text" class="form-control" aria-label="meshStack URL" formControlName="meshStackUrl"
+            (keyup.enter)="open()" placeholder="Enter your meshStack URL" />
+        </form>
+      </div>
+      <a [href]="meshStackUrl" class="btn btn-primary mt-4" (click)="open()" target="_blank" rel="noopener noreferrer">Add to meshStack <i
+          class="fa-solid fa-arrow-up-right-from-square ms-2"></i>
+      </a>
+      <hr>
+      <div class="pt-3">
+        <p>Don't use meshStack yet?</p>
+        <p>Check out and how it can help your platform team</p>
+        <a href="https://www.meshcloud.io/en/book-demo" class="btn btn-outline-primary mt-2" (click)="open()">
+          Disover meshSack
+          <img src="assets/meshstack-logo.png" alt="meshStack Logo"
+            class="button-image">
+        </a>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="modal-footer border-0">
+</div>

@@ -1,10 +1,13 @@
 import { CommonModule } from '@angular/common';
 import { Component, OnDestroy, OnInit } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
+import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
 import { Observable, Subscription, map } from 'rxjs';
 
 import { PlatformType } from 'app/core';
 import { TemplateService } from 'app/shared/template';
+
+import { ImportDialogComponent } from './import-dialog/import-dialog.component';
 
 interface TemplateDetailsVm {
   imageUrl: string | null;
@@ -32,7 +35,8 @@ export class TemplateDetailsComponent implements OnInit, OnDestroy {
 
   constructor(
     private route: ActivatedRoute,
-    private templateService: TemplateService
+    private templateService: TemplateService,
+    private modalService: NgbModal
   ) { }
 
   public ngOnInit(): void {
@@ -68,6 +72,10 @@ export class TemplateDetailsComponent implements OnInit, OnDestroy {
         }, 1000);
       })
       .catch(e => console.log(e));
+  }
+
+  public open() {
+    this.modalService.open(ImportDialogComponent, { size: 'lg', centered: true });
   }
 
 }
