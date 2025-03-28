@@ -1,6 +1,6 @@
 ---
 name: GitHub Repository Building Block
-supported_platforms:
+supportedPlatforms:
   - github
 description: |
   Building Block for creating a GitHub repository

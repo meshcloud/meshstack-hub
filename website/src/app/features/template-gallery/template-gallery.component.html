@@ -2,36 +2,29 @@
   <div class="row w-25">
     <form [formGroup]="searchForm" (ngSubmit)="onSearch()">
       <div class="input-group mt-3 me-auto">
-        <input
-          type="text"
-          class="form-control"
-          aria-label="Search"
-          formControlName="searchTerm"
-          (keyup.enter)="onSearch()"
-          placeholder="Search"
-        />
-        <button class="btn btn-primary" type="button"><i class="fa-solid fa-magnifying-glass"></i></button>
+        <input type="text" class="form-control" aria-label="Search" formControlName="searchTerm"
+          (keyup.enter)="onSearch()" placeholder="Search" />
+        <button class="btn btn-primary" type="button" (click)="onSearch()"><i
+            class="fa-solid fa-magnifying-glass"></i></button>
       </div>
     </form>
   </div>
-  <mst-navigation></mst-navigation>
+  <div class="pt-5">
+    <mst-navigation></mst-navigation>
+  </div>
 </div>
+
 <div class="pt-5 ps-5 pe-5">
-  <div class="row pt-5">
+  <div class="row">
     <ng-container *ngIf="templates$ | async as templates">
+      <p class="pb-2" *ngIf="templates.length">{{ templates.length }} templates shown</p>
       <ng-container *ngIf="templates.length > 0; else noTemplates">
         <div class="col-sm-3 mb-3" *ngFor="let template of templates">
-          <mst-card
-            [imageUrl]="template.imageUrl"
-            [title]="template.name"
-            [description]="template.description"
-            [platformType]="template.platformType"
-            [detailsRoute]="template.detailsRoute"
-          ></mst-card>
+          <mst-card [card]="template"></mst-card>
         </div>
       </ng-container>
       <ng-template #noTemplates>
-        <p class="h-5">No templates found.</p>
+        <p class="p-2">No templates found</p>
       </ng-template>
     </ng-container>
   </div>

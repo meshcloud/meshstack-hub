@@ -1,6 +1,6 @@
 ---
 name: Azure Building Block - Postgresql Deployment
-supported_platforms:
+supportedPlatforms:
   - azure
 description: |
  A Building Block for Azure to deploy a Postgresql

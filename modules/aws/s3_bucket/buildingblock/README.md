@@ -1,6 +1,6 @@
 ---
 name: AWS Building Block - S3 Bucket
-supported_platforms:
+supportedPlatforms:
   - aws
 description: |
   Building Block module for adding an AWS S3 Bucket
