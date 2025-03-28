@@ -1,10 +1,9 @@
 import { CommonModule } from '@angular/common';
 import { Component, OnDestroy, OnInit } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
-import { Observable, Subscription, forkJoin, map } from 'rxjs';
+import { Observable, Subscription, map } from 'rxjs';
 
 import { PlatformType } from 'app/core';
-import { PlatformLogoService } from 'app/shared/platform-logo';
 import { TemplateService } from 'app/shared/template';
 
 interface TemplateDetailsVm {
@@ -33,10 +32,8 @@ export class TemplateDetailsComponent implements OnInit, OnDestroy {
 
   constructor(
     private route: ActivatedRoute,
-    private templateService: TemplateService,
-    private platformLogoService: PlatformLogoService
+    private templateService: TemplateService
   ) { }
-
 
   public ngOnInit(): void {
     this.routeSubscription = this.route.paramMap.subscribe(params => {
@@ -46,15 +43,11 @@ export class TemplateDetailsComponent implements OnInit, OnDestroy {
         throw new Error('Template ID is required');
       }
 
-      const logos$ = this.platformLogoService.getLogoUrls();
-      this.template$ = forkJoin({
-        template: this.templateService.getTemplateById(id),
-        logos: logos$
-      })
+      this.template$ = this.templateService.getTemplateById(id)
         .pipe(
-          map(({ template, logos }) => ({
+          map((template) => ({
             ...template,
-            imageUrl: logos[template.platformType] ?? null,
+            imageUrl: template.logo,
             source: template.githubUrls.https,
             howToUse: template.howToUse
           }))

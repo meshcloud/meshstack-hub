@@ -87,12 +87,18 @@ function findPlatformLogos() {
  */
 function findBuildingBlockLogo(buildingBlockDir) {
   const logoFiles = [];
+  const assetsDir = path.resolve(__dirname, 'website/public/assets/building-block-logos');
   const files = fs.readdirSync(buildingBlockDir);
 
   files.forEach((file) => {
     if (file.endsWith(".png")) {
-      const filePath = path.join(buildingBlockDir, file);
-      logoFiles.push(filePath.replace(process.cwd(), "").replace(/^\/+/g, ""));
+      const sourcePath = path.join(buildingBlockDir, file);
+      const destinationPath = path.join(assetsDir, path.basename(file));
+
+      fs.mkdirSync(assetsDir, { recursive: true });
+      fs.copyFileSync(sourcePath, destinationPath);
+
+      logoFiles.push(destinationPath.replace(path.resolve(__dirname, 'website/public'), "").replace(/^\/+/g, ""));
     }
   });
 
@@ -134,7 +140,7 @@ function parseReadme(filePath) {
   return {
     id: id,
     platformType: platform,
-    buildingBlockLogo: buildingBlockLogoPath,
+    logo: buildingBlockLogoPath,
     githubUrls,
     ...data,
     howToUse: howToMatch ? howToMatch[1].trim() : null,

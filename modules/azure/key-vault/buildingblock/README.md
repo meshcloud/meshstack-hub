@@ -1,6 +1,6 @@
 ---
 name: Azure Building Block - Key Vault
-supported_platforms:
+supportedPlatforms:
   - azure
 description: |
   Building block module for adding a Azure Key Vault

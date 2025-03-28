@@ -1,6 +1,6 @@
 ---
 name: Postgresql Integration with AKS
-supported_platforms:
+supportedPlatforms:
   - aks
 description: |
   Building Block module for a Postgresql Instance integrated to Azure Kubernetes Service (AKS)

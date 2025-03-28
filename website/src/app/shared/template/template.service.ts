@@ -68,8 +68,7 @@ export class TemplateService {
     if (!this.data$) {
       this.data$ = this.http.get<GeneratedTemplateData>('/assets/templates.json')
         .pipe(
-          take(1),
-          shareReplay(1)
+          take(1)
         );
     }
 

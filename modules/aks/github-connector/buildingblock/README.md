@@ -1,6 +1,6 @@
 ---
 name: GitHub Actions Integration with AKS
-supported_platforms:
+supportedPlatforms:
   - aks
 description: |
   Building block module for integrating GitHub Actions with Azure Kubernetes Service (AKS)

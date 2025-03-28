@@ -2,6 +2,8 @@ import { CommonModule } from '@angular/common';
 import { Component, Input } from '@angular/core';
 import { Router, RouterModule } from '@angular/router';
 
+import { Card } from './card';
+
 @Component({
   selector: 'mst-card',
   imports: [RouterModule, CommonModule],
@@ -11,27 +13,13 @@ import { Router, RouterModule } from '@angular/router';
 })
 export class CardComponent {
   @Input()
-  public imageUrl: string| null = null;
-
-  @Input()
-  public platformType!: string;
-
-  @Input()
-  public title!: string;
-
-  @Input()
-  public description!: string;
-
-  @Input()
-  public date: string | null = null;
-
-  @Input()
-  public detailsRoute!: string;
+  public card!:Card;
 
   constructor(private router: Router) {}
 
   public goToDetails() {
-    this.router.navigate([this.detailsRoute]);
+    console.log('Navigating to details route', this.card.detailsRoute);
+    this.router.navigate([this.card.detailsRoute]);
   }
 }
 

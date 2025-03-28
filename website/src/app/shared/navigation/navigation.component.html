@@ -1,18 +1,19 @@
-<div class="container mt-4">
-  <ul class="nav nav-pills justify-content-center">
-    <li class="nav-item">
-      <a class="nav-link" [routerLink]="['/all']" routerLinkActive="active" [class.active]="activeTab === 'all'">All</a>
-    </li>
-    <li class="nav-item">
-      <a class="nav-link" [routerLink]="['/aws']" routerLinkActive="active" [class.active]="activeTab === 'aws'">AWS</a>
-    </li>
-    <li class="nav-item">
-      <a class="nav-link" [routerLink]="['/azure']" routerLinkActive="active" [class.active]="activeTab === 'azure'">
-        Azure
-      </a>
-    </li>
-    <li class="nav-item">
-      <a class="nav-link" [routerLink]="['/gcp']" routerLinkActive="active" [class.active]="activeTab === 'gcp'">GCP</a>
-    </li>
-  </ul>
-</div>
+<ul class="nav nav-pills">
+  <li class="nav-item pe-2">
+    <a class="nav-link" [routerLink]="['/all']" routerLinkActive="active" >All</a>
+  </li>
+  <li class="nav-item pe-2">
+    <a class="nav-link" [routerLink]="['/aws']" routerLinkActive="active">AWS</a>
+  </li>
+  <li class="nav-item pe-2">
+    <a class="nav-link" [routerLink]="['/azure']" routerLinkActive="active">
+      Azure
+    </a>
+  </li>
+  <li class="nav-item pe-2">
+    <a class="nav-link" [routerLink]="['/github']" routerLinkActive="active">GitHub</a>
+  </li>
+  <li class="nav-item pe-2">
+    <a class="nav-link" [routerLink]="['/gcp']" routerLinkActive="active">GCP</a>
+  </li>
+</ul>
