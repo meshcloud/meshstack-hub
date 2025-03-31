@@ -2,7 +2,7 @@ import { CommonModule } from '@angular/common';
 import { Component, OnDestroy, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, ReactiveFormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
-import { Observable, Subscription, forkJoin, map } from 'rxjs';
+import { Observable, Subscription, forkJoin, map, tap } from 'rxjs';
 
 import { PlatformType } from 'app/core';
 import { CardComponent } from 'app/shared/card';
@@ -24,6 +24,8 @@ export class TemplateGalleryComponent implements OnInit, OnDestroy {
 
   public searchForm!: FormGroup;
 
+  public isSearch = false;
+
   private paramSubscription!: Subscription;
 
   private logos$!: Observable<PlatformLogoData>;
@@ -43,11 +45,7 @@ export class TemplateGalleryComponent implements OnInit, OnDestroy {
 
     this.paramSubscription = this.route.paramMap.subscribe(params => {
       const type = params.get('type') ?? 'all';
-      const term = this.route.snapshot.queryParams['term'];
 
-      if(term) {
-        this.onSearch()
-      }
       const templateObs$ = this.templateService.filterTemplatesByPlatformType(type as PlatformType);
       this.logos$ = this.platformLogoService.getLogoUrls();
       this.templates$ = forkJoin({
@@ -55,6 +53,7 @@ export class TemplateGalleryComponent implements OnInit, OnDestroy {
         logos: this.logos$
       })
         .pipe(
+          tap(() => this.isSearch = false),
           map(({ templates, logos }) => templates.map(item => ({
             cardLogo: item.logo,
             title: item.name,
@@ -62,7 +61,8 @@ export class TemplateGalleryComponent implements OnInit, OnDestroy {
             detailsRoute: `/template/${item.id}`,
             supportedPlatforms: item.supportedPlatforms.map(platform => ({ platformType: platform, imageUrl: logos[item.platformType] ?? null }))
           }))
-          )
+          ),
+
         );
     });
   }
@@ -73,12 +73,14 @@ export class TemplateGalleryComponent implements OnInit, OnDestroy {
 
   public onSearch(): void {
     const searchTerm = this.searchForm.value.searchTerm;
-
     this.templates$ = forkJoin({
       templates: this.templateService.search(searchTerm),
       logos: this.logos$
     })
       .pipe(
+        tap(() => {
+          this.isSearch = !!searchTerm
+        }),
         map(({ templates, logos }) => templates.map(item => ({
           cardLogo: item.logo,
           title: item.name,
