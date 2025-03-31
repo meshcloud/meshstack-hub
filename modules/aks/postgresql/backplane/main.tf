@@ -27,7 +27,7 @@ resource "azurerm_role_assignment" "terraform_state" {
 
 resource "azurerm_resource_group" "bb_postgresql" {
   name     = "bb-postgresql"
-  location = "North Europe"
+  location = "West Europe"
 }
 
 data "azurerm_virtual_network" "aks" {
