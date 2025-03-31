@@ -9,10 +9,8 @@ resource "random_password" "administrator_password" {
 }
 
 resource "azurerm_postgresql_flexible_server" "db_instance" {
-  name                = "${var.workspace_identifier}-${var.project_identifier}-${var.name}"
-  resource_group_name = local.resource_group_name
-  location            = "West Europe"
-
+  name                          = "${var.workspace_identifier}-${var.project_identifier}-${var.name}"
+  location                      = "North Europe"
   delegated_subnet_id           = local.subnet_id
   private_dns_zone_id           = local.private_dns_zone_id
   public_network_access_enabled = false
