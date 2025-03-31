@@ -30,7 +30,6 @@ resource "azurerm_postgresql_flexible_server" "db_instance" {
     ignore_changes = [zone]
   }
 }
-
 resource "kubernetes_secret" "credentials" {
   metadata {
     namespace = var.namespace
