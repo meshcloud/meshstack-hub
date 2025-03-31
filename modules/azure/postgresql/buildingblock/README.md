@@ -1,9 +1,9 @@
 ---
-name: Azure Building Block - Postgresql Deployment
+name: Azure PostgreSQL Deployment
 supportedPlatforms:
   - azure
 description: |
- A Building Block for Azure to deploy a Postgresql
+ Provides an Azure Database for PostgreSQL instance, offering a fully managed, scalable, and secure relational database service. It supports enterprise-grade PostgreSQL workloads with automated maintenance, high availability, and built-in security features.
 ---
 
 # Azure PostgreSQL Deployment

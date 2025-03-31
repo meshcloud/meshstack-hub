@@ -1,9 +1,9 @@
 ---
-name: GitHub Repository Building Block
+name: GitHub Repository Creation
 supportedPlatforms:
   - github
 description: |
-  Building Block for creating a GitHub repository
+   Provides an automated way to create and manage GitHub repositories for application teams. It ensures repositories are set up with predefined configurations, including access control, branch protection rules, and compliance settings.
 ---
 
 # GitHub Repository Building Block
