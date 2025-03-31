@@ -6,6 +6,8 @@
   .logo {
     height: 10rem;
     object-fit: contain;
+    position: relative;
+    left: -2rem; /* Moves the logo 2rem to the left so its edge aligns with the edge of the header */
   }
 
   .title {

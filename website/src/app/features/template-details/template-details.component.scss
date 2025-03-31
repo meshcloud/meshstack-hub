@@ -26,3 +26,10 @@
   white-space: pre-wrap;
   line-height: 2rem;
 }
+
+.breadcrumb-item+.breadcrumb-item::before {
+  content: "\f054";
+  font-family: "Font Awesome 6 Free";
+  font-weight: 900;
+  color: gray
+}

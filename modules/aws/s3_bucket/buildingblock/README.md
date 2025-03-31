@@ -1,9 +1,9 @@
 ---
-name: AWS Building Block - S3 Bucket
+name: AWS S3 Bucket
 supportedPlatforms:
   - aws
 description: |
-  Building Block module for adding an AWS S3 Bucket
+  Provides an AWS S3 bucket for object storage. It enables application teams to store and retrieve data securely with configurable access controls, lifecycle policies, and encryption.
 ---
 
 # AWS S3 Bucket

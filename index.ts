@@ -16,10 +16,13 @@ function convertGitToHttpUrl(gitUrl) {
 /**
  * Get GitHub remote URLs in HTTP and SSH format
  */
-function getGithubRemoteUrls() {
+function getGithubRemoteUrls(filePath) {
   try {
     const remoteUrl = execSync("git config --get remote.origin.url").toString().trim().replace(/https?:\/\/.*?@github\.com\//, "https://github.com/");
-    const httpUrl = convertGitToHttpUrl(remoteUrl);
+    const httpUrl = convertGitToHttpUrl(remoteUrl).replace(
+      /\.git$/,
+      `/tree/main/modules${filePath.replace(path.resolve(__dirname, 'modules'), '').replace(/\/README\.md$/, '')}`
+    );
     return {
       ssh: remoteUrl,
       https: httpUrl
@@ -66,9 +69,9 @@ function findPlatformLogos() {
     const files = fs.readdirSync(platformDir);
 
     files.forEach((file) => {
-      if (file.endsWith(".png")) {
+      if (file.endsWith(".png") || file.endsWith(".svg")) {
         const sourcePath = path.join(platformDir, file);
-        const destinationPath = path.join(assetsDir, dir.name + ".png");
+        const destinationPath = path.join(assetsDir, `${dir.name}${path.extname(file)}`);
 
         fs.mkdirSync(assetsDir, { recursive: true });
 
@@ -91,7 +94,7 @@ function findBuildingBlockLogo(buildingBlockDir) {
   const files = fs.readdirSync(buildingBlockDir);
 
   files.forEach((file) => {
-    if (file.endsWith(".png")) {
+    if (file.endsWith(".png") || file.endsWith(".svg")) {
       const sourcePath = path.join(buildingBlockDir, file);
       const destinationPath = path.join(assetsDir, path.basename(file));
 
@@ -123,18 +126,21 @@ function parseReadme(filePath) {
   const parseTable = (match) =>
     match
       ? match[1]
-          .split("\n")
-          .filter((line) => line.startsWith("| <a name"))
-          .map((line) => line.split("|").map((s) => s.trim()))
-          .map(([name, description, type, _default, required]) => ({
-            name: name.replace(/<a name=".*?_(.*?)".*?>/, "$1"),
-            description,
-            type,
-            required: required === "yes",
-          }))
+        .split("\n")
+        .filter((line) => line.startsWith("| <a name"))
+        .map((line) => line.split("|").map((s) => s.trim()))
+        .map(([name, description, type, _default, required]) => ({
+          name: name.replace(/<a name=".*?_(.*?)".*?>/, "$1"),
+          description,
+          type,
+          required: required === "yes",
+        }))
       : [];
 
-  const githubUrls = getGithubRemoteUrls();
+  const githubUrls = getGithubRemoteUrls(filePath);
+  console.log(`🔗 GitHub remote URLs: ${JSON.stringify(githubUrls)}`);
+  console.log(`🔗 File path: ${filePath}`);
+
   const buildingBlockLogoPath = findBuildingBlockLogo(path.dirname(filePath));
 
   return {

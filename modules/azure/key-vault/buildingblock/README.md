@@ -1,9 +1,9 @@
 ---
-name: Azure Building Block - Key Vault
+name: Azure Key Vault
 supportedPlatforms:
   - azure
 description: |
-  Building block module for adding a Azure Key Vault
+  Provides an Azure Key Vault for secure storage and management of secrets, keys, and certificates. It helps application teams protect sensitive data, manage access control, and integrate securely with their applications.
 ---
 
 # Azure Key Vault

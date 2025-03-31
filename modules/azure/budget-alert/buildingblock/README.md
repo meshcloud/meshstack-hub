@@ -1,9 +1,9 @@
 ---
-name: Azure Building Block - Subscription Budget Alert
+name: Azure Subscription Budget Alert
 supportedPlatforms:
   - azure
 description: |
-  Building block module for adding a simple monthly budget alert to a subscription.
+  Provides a budget alert for an Azure subscription. This module helps teams monitor cloud spending and avoid unexpected cost overruns by setting up automated budget alerts.
 ---
 
 # Azure Subscription Budget Alert

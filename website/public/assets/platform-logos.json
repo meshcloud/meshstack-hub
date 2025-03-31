@@ -1,7 +1,7 @@
 {
-  "aks": "assets/logos/aks.png",
-  "aws": "assets/logos/aws.png",
-  "azure": "assets/logos/azure.png",
+  "aks": "assets/logos/aks.svg",
+  "aws": "assets/logos/aws.svg",
+  "azure": "assets/logos/azure.svg",
   "github": "assets/logos/github.png",
   "ovh": "assets/logos/ovh.png",
   "sapbtp": "assets/logos/sapbtp.png"
