@@ -16,10 +16,13 @@ function convertGitToHttpUrl(gitUrl) {
 /**
  * Get GitHub remote URLs in HTTP and SSH format
  */
-function getGithubRemoteUrls() {
+function getGithubRemoteUrls(filePath) {
   try {
     const remoteUrl = execSync("git config --get remote.origin.url").toString().trim().replace(/https?:\/\/.*?@github\.com\//, "https://github.com/");
-    const httpUrl = convertGitToHttpUrl(remoteUrl);
+    const httpUrl = convertGitToHttpUrl(remoteUrl).replace(
+      /\.git$/,
+      `/tree/main/modules${filePath.replace(path.resolve(__dirname, 'modules'), '').replace(/\/README\.md$/, '')}`
+    );
     return {
       ssh: remoteUrl,
       https: httpUrl
@@ -134,7 +137,10 @@ function parseReadme(filePath) {
         }))
       : [];
 
-  const githubUrls = getGithubRemoteUrls();
+  const githubUrls = getGithubRemoteUrls(filePath);
+  console.log(`🔗 GitHub remote URLs: ${JSON.stringify(githubUrls)}`);
+  console.log(`🔗 File path: ${filePath}`);
+
   const buildingBlockLogoPath = findBuildingBlockLogo(path.dirname(filePath));
 
   return {

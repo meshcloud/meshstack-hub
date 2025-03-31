@@ -6,7 +6,7 @@
       "logo": "assets/building-block-logos/gc-aks.png",
       "githubUrls": {
         "ssh": "https://github.com/meshcloud/meshstack-hub.git",
-        "https": "https://github.com/meshcloud/meshstack-hub.git"
+        "https": "https://github.com/meshcloud/meshstack-hub/tree/main/modules/aks/github-connector/buildingblock"
       },
       "name": "GitHub Actions Integration with AKS",
       "supportedPlatforms": [
@@ -50,7 +50,7 @@
       "logo": "assets/building-block-logos/postgresql_logo.png",
       "githubUrls": {
         "ssh": "https://github.com/meshcloud/meshstack-hub.git",
-        "https": "https://github.com/meshcloud/meshstack-hub.git"
+        "https": "https://github.com/meshcloud/meshstack-hub/tree/main/modules/aks/postgresql/buildingblock"
       },
       "name": "PostgreSQL Integration with AKS",
       "supportedPlatforms": [
@@ -131,7 +131,7 @@
       "logo": "assets/building-block-logos/s3_bucket.png",
       "githubUrls": {
         "ssh": "https://github.com/meshcloud/meshstack-hub.git",
-        "https": "https://github.com/meshcloud/meshstack-hub.git"
+        "https": "https://github.com/meshcloud/meshstack-hub/tree/main/modules/aws/s3_bucket/buildingblock"
       },
       "name": "AWS S3 Bucket",
       "supportedPlatforms": [
@@ -236,7 +236,7 @@
       "logo": "assets/building-block-logos/budget_logo.png",
       "githubUrls": {
         "ssh": "https://github.com/meshcloud/meshstack-hub.git",
-        "https": "https://github.com/meshcloud/meshstack-hub.git"
+        "https": "https://github.com/meshcloud/meshstack-hub/tree/main/modules/azure/budget-alert/buildingblock"
       },
       "name": "Azure Subscription Budget Alert",
       "supportedPlatforms": [
@@ -341,7 +341,7 @@
       "logo": "assets/building-block-logos/key-vault.svg",
       "githubUrls": {
         "ssh": "https://github.com/meshcloud/meshstack-hub.git",
-        "https": "https://github.com/meshcloud/meshstack-hub.git"
+        "https": "https://github.com/meshcloud/meshstack-hub/tree/main/modules/azure/key-vault/buildingblock"
       },
       "name": "Azure Key Vault",
       "supportedPlatforms": [
@@ -470,7 +470,7 @@
       "logo": "assets/building-block-logos/postgres_logo.png",
       "githubUrls": {
         "ssh": "https://github.com/meshcloud/meshstack-hub.git",
-        "https": "https://github.com/meshcloud/meshstack-hub.git"
+        "https": "https://github.com/meshcloud/meshstack-hub/tree/main/modules/azure/postgresql/buildingblock"
       },
       "name": "Azure PostgreSQL Deployment",
       "supportedPlatforms": [
@@ -731,7 +731,7 @@
       "logo": "assets/building-block-logos/git-repo.svg",
       "githubUrls": {
         "ssh": "https://github.com/meshcloud/meshstack-hub.git",
-        "https": "https://github.com/meshcloud/meshstack-hub.git"
+        "https": "https://github.com/meshcloud/meshstack-hub/tree/main/modules/github/repository/buildingblock"
       },
       "name": "GitHub Repository Creation",
       "supportedPlatforms": [
