@@ -48,3 +48,4 @@ resource "kubernetes_secret" "credentials" {
 output "secret_name" {
   value = kubernetes_secret.credentials.metadata[0].name
 }
+
