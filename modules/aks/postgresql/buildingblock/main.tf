@@ -11,7 +11,7 @@ resource "random_password" "administrator_password" {
 resource "azurerm_postgresql_flexible_server" "db_instance" {
   name                = "${var.workspace_identifier}-${var.project_identifier}-${var.name}"
   resource_group_name = local.resource_group_name
-  location            = "West Europe"
+  location            = local.location
 
   delegated_subnet_id           = local.subnet_id
   private_dns_zone_id           = local.private_dns_zone_id
@@ -30,6 +30,7 @@ resource "azurerm_postgresql_flexible_server" "db_instance" {
     ignore_changes = [zone]
   }
 }
+
 resource "kubernetes_secret" "credentials" {
   metadata {
     namespace = var.namespace
