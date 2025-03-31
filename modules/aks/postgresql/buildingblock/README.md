@@ -1,9 +1,9 @@
 ---
-name: Postgresql Integration with AKS
+name: PostgreSQL Integration with AKS
 supportedPlatforms:
   - aks
 description: |
-  Building Block module for a Postgresql Instance integrated to Azure Kubernetes Service (AKS)
+  Provides an Azure Database for PostgreSQL instance integrated with Azure Kubernetes Service (AKS). It enables application teams to use a fully managed PostgreSQL database while ensuring seamless connectivity and security with their AKS workloads.
 ---
 
 # Postgresql Integration with AKS
