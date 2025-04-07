@@ -15,27 +15,32 @@
       <h4 class="card-title fw-bold">Provide link of your meshStack</h4>
       <h5 class="card-text mt-3">to continue using this building block template</h5>
       <div class="pt-4 text-start">
-        <form [formGroup]="form" (ngSubmit)="open()">
-          <label class="form-label" for="meshStackUrl">meshStack URL</label>
+        <form [formGroup]="form" (ngSubmit)="openMeshStackUrl()">
+          <label class="form-label" for="meshStackUrl">Your meshStack URL</label>
           <input
             type="text"
             class="form-control"
             aria-label="meshStack URL"
             formControlName="meshStackUrl"
-            (keyup.enter)="open()"
             placeholder="Enter your meshStack URL"
           />
         </form>
       </div>
-      <a [href]="meshStackUrl" class="btn btn-primary mt-4" (click)="open()" target="_blank" rel="noopener noreferrer">
+      <button
+        type="submit"
+        class="btn btn-primary mt-4"
+        [disabled]="!form.valid"
+        aria-label="Open up meshStack to add template"
+        (click)="openMeshStackUrl()"
+      >
         Add to meshStack
         <i class="fa-solid fa-arrow-up-right-from-square ms-2"></i>
-      </a>
+      </button>
       <hr />
       <div class="pt-3">
         <p>Don't use meshStack yet?</p>
-        <p>Check out and how it can help your platform team</p>
-        <a href="https://www.meshcloud.io/en/book-demo" class="btn btn-outline-primary mt-2" (click)="open()">
+        <p>Check it out and how it can help your platform team</p>
+        <a href="https://www.meshcloud.io/en/book-demo" class="btn btn-outline-primary mt-2">
           Discover meshStack
           <img src="assets/meshstack-logo.png" alt="meshStack Logo" class="button-image" />
         </a>
