@@ -3,16 +3,16 @@
     {
       "id": "aks-github-connector",
       "platformType": "aks",
-      "logo": "assets/building-block-logos/gc-aks.png",
+      "logo": "assets/building-block-logos/aks-github-connector.png",
       "githubUrls": {
-        "ssh": "https://github.com/meshcloud/meshstack-hub.git",
+        "ssh": "git@github.com:meshcloud/meshstack-hub.git",
         "https": "https://github.com/meshcloud/meshstack-hub/tree/main/modules/aks/github-connector/buildingblock"
       },
       "name": "GitHub Actions Integration with AKS",
       "supportedPlatforms": [
         "aks"
       ],
-      "description": "Provides an automated CI/CD pipeline using GitHub Actions to deploy applications to Azure Kubernetes Service (AKS). It enables application teams to build, test, and deploy containerized applications seamlessly while following best practices for security and scalability.\n",
+      "description": "CI/CD pipeline using GitHub Actions for secure, scalable AKS deployment.\n",
       "howToUse": null,
       "resources": [
         {
@@ -47,16 +47,16 @@
     {
       "id": "aks-postgresql",
       "platformType": "aks",
-      "logo": "assets/building-block-logos/postgresql_logo.png",
+      "logo": "assets/building-block-logos/aks-postgresql.png",
       "githubUrls": {
-        "ssh": "https://github.com/meshcloud/meshstack-hub.git",
+        "ssh": "git@github.com:meshcloud/meshstack-hub.git",
         "https": "https://github.com/meshcloud/meshstack-hub/tree/main/modules/aks/postgresql/buildingblock"
       },
       "name": "PostgreSQL Integration with AKS",
       "supportedPlatforms": [
         "aks"
       ],
-      "description": "Provides an Azure Database for PostgreSQL instance integrated with Azure Kubernetes Service (AKS). It enables application teams to use a fully managed PostgreSQL database while ensuring seamless connectivity and security with their AKS workloads.\n",
+      "description": "Provides managed PostgreSQL with direct integration to AKS for secure access.\n",
       "howToUse": null,
       "resources": [
         {
@@ -128,16 +128,16 @@
     {
       "id": "aws-s3_bucket",
       "platformType": "aws",
-      "logo": "assets/building-block-logos/s3_bucket.png",
+      "logo": "assets/building-block-logos/aws-s3_bucket.png",
       "githubUrls": {
-        "ssh": "https://github.com/meshcloud/meshstack-hub.git",
+        "ssh": "git@github.com:meshcloud/meshstack-hub.git",
         "https": "https://github.com/meshcloud/meshstack-hub/tree/main/modules/aws/s3_bucket/buildingblock"
       },
       "name": "AWS S3 Bucket",
       "supportedPlatforms": [
         "aws"
       ],
-      "description": "Provides an AWS S3 bucket for object storage. It enables application teams to store and retrieve data securely with configurable access controls, lifecycle policies, and encryption.\n",
+      "description": "Provides an AWS S3 bucket for object storage with access controls, lifecycle policies, and encryption.\n",
       "howToUse": null,
       "resources": [
         {
@@ -233,16 +233,16 @@
     {
       "id": "azure-budget-alert",
       "platformType": "azure",
-      "logo": "assets/building-block-logos/budget_logo.png",
+      "logo": "assets/building-block-logos/azure-budget-alert.png",
       "githubUrls": {
-        "ssh": "https://github.com/meshcloud/meshstack-hub.git",
+        "ssh": "git@github.com:meshcloud/meshstack-hub.git",
         "https": "https://github.com/meshcloud/meshstack-hub/tree/main/modules/azure/budget-alert/buildingblock"
       },
       "name": "Azure Subscription Budget Alert",
       "supportedPlatforms": [
         "azure"
       ],
-      "description": "Provides a budget alert for an Azure subscription. This module helps teams monitor cloud spending and avoid unexpected cost overruns by setting up automated budget alerts.\n",
+      "description": "Sets up budget alerts for an Azure subscription to monitor spending and prevent cost overruns.\n",
       "howToUse": null,
       "resources": [
         {
@@ -338,16 +338,16 @@
     {
       "id": "azure-key-vault",
       "platformType": "azure",
-      "logo": "assets/building-block-logos/key-vault.svg",
+      "logo": "assets/building-block-logos/azure-key-vault.png",
       "githubUrls": {
-        "ssh": "https://github.com/meshcloud/meshstack-hub.git",
+        "ssh": "git@github.com:meshcloud/meshstack-hub.git",
         "https": "https://github.com/meshcloud/meshstack-hub/tree/main/modules/azure/key-vault/buildingblock"
       },
       "name": "Azure Key Vault",
       "supportedPlatforms": [
         "azure"
       ],
-      "description": "Provides an Azure Key Vault for secure storage and management of secrets, keys, and certificates. It helps application teams protect sensitive data, manage access control, and integrate securely with their applications.\n",
+      "description": "Provides an Azure Key Vault to securely store and manage secrets, keys, and certificates with access control.\n",
       "howToUse": null,
       "resources": [
         {
@@ -467,16 +467,16 @@
     {
       "id": "azure-postgresql",
       "platformType": "azure",
-      "logo": "assets/building-block-logos/postgres_logo.png",
+      "logo": "assets/building-block-logos/azure-postgresql.png",
       "githubUrls": {
-        "ssh": "https://github.com/meshcloud/meshstack-hub.git",
+        "ssh": "git@github.com:meshcloud/meshstack-hub.git",
         "https": "https://github.com/meshcloud/meshstack-hub/tree/main/modules/azure/postgresql/buildingblock"
       },
       "name": "Azure PostgreSQL Deployment",
       "supportedPlatforms": [
         "azure"
       ],
-      "description": "Provides an Azure Database for PostgreSQL instance, offering a fully managed, scalable, and secure relational database service. It supports enterprise-grade PostgreSQL workloads with automated maintenance, high availability, and built-in security features.\n",
+      "description": "Provides a managed Azure PostgreSQL database with scalability, security, and high availability.\n",
       "howToUse": null,
       "resources": [
         {
@@ -728,16 +728,16 @@
     {
       "id": "github-repository",
       "platformType": "github",
-      "logo": "assets/building-block-logos/git-repo.svg",
+      "logo": "assets/building-block-logos/github-repository.png",
       "githubUrls": {
-        "ssh": "https://github.com/meshcloud/meshstack-hub.git",
+        "ssh": "git@github.com:meshcloud/meshstack-hub.git",
         "https": "https://github.com/meshcloud/meshstack-hub/tree/main/modules/github/repository/buildingblock"
       },
       "name": "GitHub Repository Creation",
       "supportedPlatforms": [
         "github"
       ],
-      "description": "Provides an automated way to create and manage GitHub repositories for application teams. It ensures repositories are set up with predefined configurations, including access control, branch protection rules, and compliance settings.\n",
+      "description": "Automates GitHub repository setup with predefined configurations and access control.\n",
       "howToUse": null,
       "resources": [
         {
