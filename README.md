@@ -26,14 +26,17 @@ A single module is structured as follows:
 
 ```
 module_name/
-    building_block/ -- This is the *actual* Terraform module that provisions resources.
+    building_block/ -- This is the *actual* Terraform module that provisions resources for application teams.
         main.tf
         provider.tf
         outputs.tf
         variables.tf
+        README.md -- This explains the module and how to use it from a platform engineering perspective.
+        APP_TEAM_README.md -- This explains the module and how to use it from an application team perspective.
+        logo.png -- This is the logo that is shown in the meshStack Hub and in the meshStack UI (if imported).
     backplane/ -- This is the Terraform code that provisions all supporting resources such as roles & techical users.
         <... Terraform files ...>
-    README.md -- This describes the module and how to use it.
+        README.md -- This explains the backplane module and how to use it. (optional)
 ```
 
 ## 🔧 Usage

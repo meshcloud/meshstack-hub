@@ -3,7 +3,7 @@ name: AWS S3 Bucket
 supportedPlatforms:
   - aws
 description: |
-  Provides an AWS S3 bucket for object storage. It enables application teams to store and retrieve data securely with configurable access controls, lifecycle policies, and encryption.
+  Provides an AWS S3 bucket for object storage with access controls, lifecycle policies, and encryption.
 ---
 
 # AWS S3 Bucket

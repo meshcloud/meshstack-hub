@@ -3,7 +3,7 @@ name: Azure Key Vault
 supportedPlatforms:
   - azure
 description: |
-  Provides an Azure Key Vault for secure storage and management of secrets, keys, and certificates. It helps application teams protect sensitive data, manage access control, and integrate securely with their applications.
+  Provides an Azure Key Vault to securely store and manage secrets, keys, and certificates with access control.
 ---
 
 # Azure Key Vault

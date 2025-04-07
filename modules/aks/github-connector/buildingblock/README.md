@@ -3,7 +3,7 @@ name: GitHub Actions Integration with AKS
 supportedPlatforms:
   - aks
 description: |
-  Provides an automated CI/CD pipeline using GitHub Actions to deploy applications to Azure Kubernetes Service (AKS). It enables application teams to build, test, and deploy containerized applications seamlessly while following best practices for security and scalability.
+  CI/CD pipeline using GitHub Actions for secure, scalable AKS deployment.
 ---
 
 # GitHub Actions Integration with AKS

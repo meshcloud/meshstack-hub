@@ -3,7 +3,7 @@ name: Azure Subscription Budget Alert
 supportedPlatforms:
   - azure
 description: |
-  Provides a budget alert for an Azure subscription. This module helps teams monitor cloud spending and avoid unexpected cost overruns by setting up automated budget alerts.
+  Sets up budget alerts for an Azure subscription to monitor spending and prevent cost overruns.
 ---
 
 # Azure Subscription Budget Alert
