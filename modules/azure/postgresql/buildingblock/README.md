@@ -3,7 +3,7 @@ name: Azure PostgreSQL Deployment
 supportedPlatforms:
   - azure
 description: |
- Provides an Azure Database for PostgreSQL instance, offering a fully managed, scalable, and secure relational database service. It supports enterprise-grade PostgreSQL workloads with automated maintenance, high availability, and built-in security features.
+  Provides a managed Azure PostgreSQL database with scalability, security, and high availability.
 ---
 
 # Azure PostgreSQL Deployment

@@ -95,8 +95,9 @@ function findBuildingBlockLogo(buildingBlockDir) {
 
   files.forEach((file) => {
     if (file.endsWith(".png") || file.endsWith(".svg")) {
+      const { id, platform } = getIdAndPlatform(buildingBlockDir);
       const sourcePath = path.join(buildingBlockDir, file);
-      const destinationPath = path.join(assetsDir, path.basename(file));
+      const destinationPath = path.join(assetsDir, `${id}${path.extname(file)}`);
 
       fs.mkdirSync(assetsDir, { recursive: true });
       fs.copyFileSync(sourcePath, destinationPath);
@@ -112,12 +113,10 @@ function findBuildingBlockLogo(buildingBlockDir) {
  * Parse README.md and extract relevant data
  */
 function parseReadme(filePath) {
+  const buildingBlockDir = path.dirname(filePath);
   const content = fs.readFileSync(filePath, "utf-8");
   const { data, content: body } = matter(content);
-  const relativePath = filePath.replace(process.cwd(), "").replace(/\\/g, "/");
-  const pathParts = relativePath.split(path.sep).filter(Boolean);
-  const id = pathParts.slice(1, pathParts.length - 2).join("-");
-  const platform = pathParts.length > 1 ? pathParts[1] : "unknown";
+  const { id, platform } = getIdAndPlatform(buildingBlockDir);
   const howToMatch = body.match(/## How to Use([\s\S]*?)(##|$)/);
   const resourcesMatch = body.match(/## Resources([\s\S]*)/);
   const inputsMatch = body.match(/## Inputs([\s\S]*?)## Outputs/);
@@ -141,7 +140,7 @@ function parseReadme(filePath) {
   console.log(`🔗 GitHub remote URLs: ${JSON.stringify(githubUrls)}`);
   console.log(`🔗 File path: ${filePath}`);
 
-  const buildingBlockLogoPath = findBuildingBlockLogo(path.dirname(filePath));
+  const buildingBlockLogoPath = findBuildingBlockLogo(buildingBlockDir);
 
   return {
     id: id,
@@ -154,6 +153,21 @@ function parseReadme(filePath) {
     inputs: parseTable(inputsMatch),
     outputs: parseTable(outputsMatch),
   };
+}
+
+/**
+ * This returns the id and platform type from the file path.
+ *
+ * @param filePath The buildingblock directory
+ */
+function getIdAndPlatform(filePath) {
+  const relativePath = filePath.replace(process.cwd(), "").replace(/\\/g, "/");
+  const pathParts = relativePath.split(path.sep).filter(Boolean);
+  // pathParts = [modules, <platform>, <module-name>, buildingblock]
+  const id = pathParts.slice(1, pathParts.length - 1).join("-");
+  const platform = pathParts.length > 1 ? pathParts[1] : "unknown";
+
+  return { id, platform };
 }
 
 const repoRoot = path.resolve(__dirname, 'modules');

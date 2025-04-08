@@ -3,7 +3,7 @@ name: GitHub Repository Creation
 supportedPlatforms:
   - github
 description: |
-   Provides an automated way to create and manage GitHub repositories for application teams. It ensures repositories are set up with predefined configurations, including access control, branch protection rules, and compliance settings.
+  Automates GitHub repository setup with predefined configurations and access control.
 ---
 
 # GitHub Repository Building Block
