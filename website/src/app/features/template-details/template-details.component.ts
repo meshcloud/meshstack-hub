@@ -71,11 +71,25 @@ export class TemplateDetailsComponent implements OnInit, OnDestroy {
           this.copyLabel = 'Copy';
         }, 1000);
       })
-      .catch(e => console.log(e));
+      .catch(e =>
+        /* eslint-disable-next-line */
+        console.log(e)
+      );
   }
 
-  public open() {
-    this.modalService.open(ImportDialogComponent, { size: 'lg', centered: true });
+  public open(template: TemplateDetailsVm) {
+    const regex = /modules\/[^\/]+\/[^\/]+/;
+    const match = template.source.match(regex);
+    const modulePath = match ? match[0] : '';
+
+    if (!modulePath) {
+      /* eslint-disable-next-line */
+      console.error('Module path not found in source URL');
+    } else {
+      const component = this.modalService.open(ImportDialogComponent, { size: 'lg', centered: true }).componentInstance;
+      component.name = template.name;
+      component.modulePath = modulePath;
+    }
   }
 
 }
