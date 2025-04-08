@@ -26,7 +26,7 @@ A single module is structured as follows:
 
 ```
 module_name/
-    building_block/ -- This is the *actual* Terraform module that provisions resources for application teams.
+    buildingblock/ -- This is the *actual* Terraform module that provisions resources for application teams.
         main.tf
         provider.tf
         outputs.tf
