@@ -73,6 +73,10 @@ resource "github_repository_file" "workflow" {
   commit_message      = "Worflow for building and deploying container images to AKS"
   overwrite_on_create = true
 
+  depends_on = [
+    github_repository_file.dockerfile,      # workflow needs dockerfile to build image
+    kubernetes_role_binding.github_actions, # workflow needs role binding to deploy
+  ]
   lifecycle {
     ignore_changes = [content]
   }
