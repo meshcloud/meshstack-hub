@@ -1,4 +1,4 @@
-import { isPlatformBrowser } from '@angular/common';
+import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { Component, Inject, Input, OnInit, PLATFORM_ID } from '@angular/core';
 import { FormBuilder, FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { NgbActiveModal } from '@ng-bootstrap/ng-bootstrap';
@@ -9,9 +9,10 @@ interface ImportDialogForm {
 
 @Component({
   selector: 'mst-import-dialog',
-  imports: [ReactiveFormsModule],
+  imports: [CommonModule, ReactiveFormsModule],
   templateUrl: './import-dialog.component.html',
-  styleUrl: './import-dialog.component.scss'
+  styleUrl: './import-dialog.component.scss',
+  standalone: true
 })
 export class ImportDialogComponent implements OnInit {
 
@@ -38,9 +39,7 @@ export class ImportDialogComponent implements OnInit {
   public openMeshStackUrl() {
     // Only runs in browser, not during SSR
     if (isPlatformBrowser(this.platformId)) {
-      const url = new URL(this.getSanitizedMeshStackUrl());
-      url.searchParams.set('module-path', this.modulePath);
-      url.searchParams.set('name', this.name);
+      const url = this.getSanitizedMeshStackUrl() + '/#/building-block-definition-import?name=' + this.name + '&module-path=' + this.modulePath;
       window.open(url.toString(), '_blank', 'noopener,noreferrer');
     }
   }
