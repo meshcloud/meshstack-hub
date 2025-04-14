@@ -17,13 +17,21 @@
       <div class="pt-4 text-start">
         <form [formGroup]="form" (ngSubmit)="openMeshStackUrl()">
           <label class="form-label" for="meshStackUrl">Your meshStack URL</label>
-          <input
-            type="text"
-            class="form-control"
-            aria-label="meshStack URL"
-            formControlName="meshStackUrl"
-            placeholder="Enter your meshStack URL"
-          />
+          <div class="ms-2">
+            <input
+              type="text"
+              class="form-control"
+              aria-label="meshStack URL"
+              formControlName="meshStackUrl"
+              placeholder="Enter your meshStack URL"
+            />
+            <div
+              *ngIf="form.controls.meshStackUrl.invalid && form.controls.meshStackUrl.touched"
+              class="mt-1 text-danger small"
+            >
+              Please enter a valid URL.
+            </div>
+          </div>
         </form>
       </div>
       <button
