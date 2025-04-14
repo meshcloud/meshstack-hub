@@ -39,7 +39,7 @@
                   <a [href]="template.source" target="_blank" rel="noopener noreferrer" class="mr-3 flex-grow-1">
                     {{ template.source }}
                   </a>
-                  <button (click)="copyToClipboard(template.source)" class="btn btn-light btn-sm">
+                  <button type="button" (click)="copyToClipboard(template.source)" class="btn btn-light btn-sm">
                     <i *ngIf="copyLabel === 'Copy'" class="fas fa-copy"></i>
                     <i *ngIf="copyLabel === 'Copied'" class="fa-solid fa-check"></i>
                     {{ copyLabel }}
@@ -79,7 +79,7 @@
 
               <div class="pt-5 d-flex justify-content-end">
                 <a href="#" class="btn btn-outline-primary me-2">Go Back</a>
-                <button class="btn btn-primary" (click)="open(template)">Add to meshStack</button>
+                <button type="button" class="btn btn-primary" (click)="open(template)">Add to meshStack</button>
               </div>
             </div>
           </div>

@@ -78,7 +78,7 @@ export class TemplateDetailsComponent implements OnInit, OnDestroy {
   }
 
   public open(template: TemplateDetailsVm) {
-    const regex = /modules\/[^\/]+\/[^\/]+/;
+    const regex = /modules\/[^/]+\/[^/]+/;
     const match = template.source.match(regex);
     const modulePath = match ? match[0] : '';
 

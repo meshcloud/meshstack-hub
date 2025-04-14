@@ -8,7 +8,7 @@ export interface Template {
 	githubUrls: {
 		ssh: string;
 		https: string;
-	},
+	};
 	supportedPlatforms: PlatformType[];
 }
 
