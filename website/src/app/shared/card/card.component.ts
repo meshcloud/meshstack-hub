@@ -13,12 +13,11 @@ import { Card } from './card';
 })
 export class CardComponent {
   @Input()
-  public card!:Card;
+  public card!: Card;
 
   constructor(private router: Router) {}
 
   public goToDetails() {
-    console.log('Navigating to details route', this.card.detailsRoute);
     this.router.navigate([this.card.detailsRoute]);
   }
 }

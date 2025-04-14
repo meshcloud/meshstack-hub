@@ -29,7 +29,7 @@ export class ImportDialogComponent implements OnInit {
     private fb: FormBuilder
   ) { }
 
-  ngOnInit(): void {
+  public ngOnInit(): void {
     this.form = this.fb.group({
       meshStackUrl: this.fb.nonNullable.control('', [Validators.required, Validators.pattern(/^(https?:\/\/).*/)]),
     });
@@ -47,10 +47,16 @@ export class ImportDialogComponent implements OnInit {
 
   private getSanitizedMeshStackUrl(): string {
     let meshStackUrl = this.form.controls.meshStackUrl.value;
-      if (meshStackUrl.endsWith('/')) {
-        meshStackUrl = meshStackUrl.slice(0, -1);
-      }
+    const hashIndex = meshStackUrl.indexOf('#');
 
-      return meshStackUrl;
+    if (hashIndex !== -1) {
+      meshStackUrl = meshStackUrl.substring(0, hashIndex);
+    }
+
+    if (meshStackUrl.endsWith('/')) {
+      meshStackUrl = meshStackUrl.slice(0, -1);
+    }
+
+    return meshStackUrl;
   }
 }
