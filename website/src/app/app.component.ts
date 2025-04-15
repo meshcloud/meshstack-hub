@@ -18,7 +18,7 @@ export class AppComponent {
     this.loadPlausible();
   }
 
-  loadPlausible() {
+  public loadPlausible() {
     // Ensure we are in the browser (not SSR)
     if (isPlatformBrowser(this.platformId)) {
       const script = document.createElement('script');
