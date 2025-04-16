@@ -31,7 +31,7 @@ export class ImportDialogComponent implements OnInit {
   ) { }
 
   public ngOnInit(): void {
-    const originUrl = sessionStorage.getItem('referrerUrl') ?? '';
+    const originUrl = localStorage.getItem('referrerUrl') ?? '';
     this.form = this.fb.group({
       meshStackUrl: this.fb.nonNullable.control(
         originUrl, [Validators.required, Validators.pattern(/^(https?:\/\/).*/)]

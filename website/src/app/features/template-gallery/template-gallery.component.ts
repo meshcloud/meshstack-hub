@@ -1,5 +1,5 @@
-import { CommonModule, isPlatformBrowser } from '@angular/common';
-import { Component, Inject, OnDestroy, OnInit, PLATFORM_ID } from '@angular/core';
+import { CommonModule } from '@angular/common';
+import { Component, OnDestroy, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, ReactiveFormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { Observable, Subscription, forkJoin, map, tap } from 'rxjs';
@@ -34,19 +34,16 @@ export class TemplateGalleryComponent implements OnInit, OnDestroy {
     private route: ActivatedRoute,
     private fb: FormBuilder,
     private templateService: TemplateService,
-    private platformLogoService: PlatformLogoService,
-    @Inject(PLATFORM_ID) private platformId: Object
+    private platformLogoService: PlatformLogoService
   ) {}
 
   public ngOnInit(): void {
     this.initializeSearchForm();
     this.subscribeToRouteParams();
-    this.setupMessageListener();
   }
 
   public ngOnDestroy(): void {
     this.paramSubscription.unsubscribe();
-    this.removeMessageListener();
   }
 
   public onSearch(): void {
@@ -94,23 +91,4 @@ export class TemplateGalleryComponent implements OnInit, OnDestroy {
       );
   }
 
-  private setupMessageListener(): void {
-    if (isPlatformBrowser(this.platformId)) {
-      window.addEventListener('message', this.handleMessage.bind(this), false);
-    }
-  }
-
-  private removeMessageListener(): void {
-    if (isPlatformBrowser(this.platformId)) {
-      window.removeEventListener('message', this.handleMessage.bind(this), false);
-    }
-  }
-
-  private handleMessage(event: MessageEvent): void {
-    const originUrl = event.data.originUrl;
-
-    if (typeof originUrl === 'string') {
-      sessionStorage.setItem('referrerUrl', originUrl);
-    }
-  }
 }
