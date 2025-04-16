@@ -26,7 +26,7 @@
             <div class="pt-3">
               <p>{{ template.description }}</p>
 
-              <div class="pt-3">
+              <div class="mt-4">
                 <h2 class="fw-bold h4">
                   <i class="fa-solid fa-code pe-2"></i>
                   Source
@@ -50,21 +50,34 @@
                 </div>
               </div>
 
-              <div class="pt-4">
-                <h2 class="fw-bold h4">How to use this template</h2>
+              <div class="mt-4">
+                <h2 class="fw-bold h4">How to use this definition</h2>
                 <div class="pt-2">
-                  <h3 class="fw-bold h6">Option 1: Directly reference this Template</h3>
-                  <p>
-                    Click the button “Use template” below and enter your meshStack URL. meshStack will automatically
-                    import all necessary information and references the public GitHub repository. You will only need to
-                    fill in some missing inputs, for example for secrets.
-                  </p>
+                  <h3 class="fw-bold h6">Option 1: Directly reference this definition</h3>
+                  <ol>
+                    <li *ngIf="template.backplaneUrl">
+                      Prepare for adding the definition into meshStack by running the
+                      <a [href]="template.backplaneUrl" target="_blank" rel="noopener noreferrer">Terraform backplane
+                        files</a>
+                    </li>
+                    <li>Click the button "Add to meshStack" below</li>
+                    <li>Enter your meshStack URL</li>
+                    <li>meshStack will automatically import all necessary information and reference the public GitHub
+                      repository.</li>
+                    <li>Fill in the missing inputs, such as secrets</li>
+                  </ol>
                 </div>
+                <div class="fw-bold pt-2 pb-2">OR</div>
                 <div class="pt-2">
                   <h3 class="fw-bold h6">Option 2: Copy the Files into your own Repository</h3>
                   <p>Alternatively, you can copy the Terraform files needed and take ownership of the code.</p>
                   <ol>
                     <li>Copy the files in your own repository</li>
+                    <li *ngIf="template.backplaneUrl">
+                      Prepare for adding the definition into meshStack by running the
+                      <a [href]="template.backplaneUrl" target="_blank" rel="noopener noreferrer">Terraform backplane
+                        files</a>
+                    </li>
                     <li>Open meshStack and create a new building block definition</li>
                     <li>
                       Follow the instructions in the wizard and make sure you select "Terraform" as implementation type

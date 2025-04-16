@@ -5,10 +5,8 @@ export interface Template {
 	description: string;
 	platformType: PlatformType;
 	howToUse: string;
-	githubUrls: {
-		ssh: string;
-		https: string;
-	};
+	buildingBlockUrl: string;
+	backplaneUrl: string | null;
 	supportedPlatforms: PlatformType[];
 }
 
