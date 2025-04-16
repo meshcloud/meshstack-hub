@@ -4,10 +4,8 @@
       "id": "aks-github-connector",
       "platformType": "aks",
       "logo": "assets/building-block-logos/aks-github-connector.png",
-      "githubUrls": {
-        "ssh": "git@github.com:meshcloud/meshstack-hub.git",
-        "https": "https://github.com/meshcloud/meshstack-hub/tree/main/modules/aks/github-connector/buildingblock"
-      },
+      "buildingBlockUrl": "https://github.com/meshcloud/meshstack-hub/tree/main/modules/aks/github-connector/buildingblock",
+      "backplaneUrl": "https://github.com/meshcloud/meshstack-hub/tree/main/modules/aks/github-connector/backplane",
       "name": "GitHub Actions Integration with AKS",
       "supportedPlatforms": [
         "aks"
@@ -48,10 +46,8 @@
       "id": "aks-postgresql",
       "platformType": "aks",
       "logo": "assets/building-block-logos/aks-postgresql.png",
-      "githubUrls": {
-        "ssh": "git@github.com:meshcloud/meshstack-hub.git",
-        "https": "https://github.com/meshcloud/meshstack-hub/tree/main/modules/aks/postgresql/buildingblock"
-      },
+      "buildingBlockUrl": "https://github.com/meshcloud/meshstack-hub/tree/main/modules/aks/postgresql/buildingblock",
+      "backplaneUrl": "https://github.com/meshcloud/meshstack-hub/tree/main/modules/aks/postgresql/backplane",
       "name": "PostgreSQL Integration with AKS",
       "supportedPlatforms": [
         "aks"
@@ -129,10 +125,8 @@
       "id": "aws-s3_bucket",
       "platformType": "aws",
       "logo": "assets/building-block-logos/aws-s3_bucket.png",
-      "githubUrls": {
-        "ssh": "git@github.com:meshcloud/meshstack-hub.git",
-        "https": "https://github.com/meshcloud/meshstack-hub/tree/main/modules/aws/s3_bucket/buildingblock"
-      },
+      "buildingBlockUrl": "https://github.com/meshcloud/meshstack-hub/tree/main/modules/aws/s3_bucket/buildingblock",
+      "backplaneUrl": "https://github.com/meshcloud/meshstack-hub/tree/main/modules/aws/s3_bucket/backplane",
       "name": "AWS S3 Bucket",
       "supportedPlatforms": [
         "aws"
@@ -234,10 +228,8 @@
       "id": "azure-budget-alert",
       "platformType": "azure",
       "logo": "assets/building-block-logos/azure-budget-alert.png",
-      "githubUrls": {
-        "ssh": "git@github.com:meshcloud/meshstack-hub.git",
-        "https": "https://github.com/meshcloud/meshstack-hub/tree/main/modules/azure/budget-alert/buildingblock"
-      },
+      "buildingBlockUrl": "https://github.com/meshcloud/meshstack-hub/tree/main/modules/azure/budget-alert/buildingblock",
+      "backplaneUrl": "https://github.com/meshcloud/meshstack-hub/tree/main/modules/azure/budget-alert/backplane",
       "name": "Azure Subscription Budget Alert",
       "supportedPlatforms": [
         "azure"
@@ -339,10 +331,8 @@
       "id": "azure-key-vault",
       "platformType": "azure",
       "logo": "assets/building-block-logos/azure-key-vault.png",
-      "githubUrls": {
-        "ssh": "git@github.com:meshcloud/meshstack-hub.git",
-        "https": "https://github.com/meshcloud/meshstack-hub/tree/main/modules/azure/key-vault/buildingblock"
-      },
+      "buildingBlockUrl": "https://github.com/meshcloud/meshstack-hub/tree/main/modules/azure/key-vault/buildingblock",
+      "backplaneUrl": "https://github.com/meshcloud/meshstack-hub/tree/main/modules/azure/key-vault/backplane",
       "name": "Azure Key Vault",
       "supportedPlatforms": [
         "azure"
@@ -468,10 +458,8 @@
       "id": "azure-postgresql",
       "platformType": "azure",
       "logo": "assets/building-block-logos/azure-postgresql.png",
-      "githubUrls": {
-        "ssh": "git@github.com:meshcloud/meshstack-hub.git",
-        "https": "https://github.com/meshcloud/meshstack-hub/tree/main/modules/azure/postgresql/buildingblock"
-      },
+      "buildingBlockUrl": "https://github.com/meshcloud/meshstack-hub/tree/main/modules/azure/postgresql/buildingblock",
+      "backplaneUrl": "https://github.com/meshcloud/meshstack-hub/tree/main/modules/azure/postgresql/backplane",
       "name": "Azure PostgreSQL Deployment",
       "supportedPlatforms": [
         "azure"
@@ -729,10 +717,8 @@
       "id": "github-repository",
       "platformType": "github",
       "logo": "assets/building-block-logos/github-repository.png",
-      "githubUrls": {
-        "ssh": "git@github.com:meshcloud/meshstack-hub.git",
-        "https": "https://github.com/meshcloud/meshstack-hub/tree/main/modules/github/repository/buildingblock"
-      },
+      "buildingBlockUrl": "https://github.com/meshcloud/meshstack-hub/tree/main/modules/github/repository/buildingblock",
+      "backplaneUrl": null,
       "name": "GitHub Repository Creation",
       "supportedPlatforms": [
         "github"
