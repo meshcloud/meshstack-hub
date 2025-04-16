@@ -16,6 +16,7 @@ interface TemplateDetailsVm {
   description: string;
   howToUse: string;
   source: string;
+  backplaneUrl: string | null;
 }
 
 @Component({
@@ -52,7 +53,7 @@ export class TemplateDetailsComponent implements OnInit, OnDestroy {
           map((template) => ({
             ...template,
             imageUrl: template.logo,
-            source: template.githubUrls.https,
+            source: template.buildingBlockUrl,
             howToUse: template.howToUse
           }))
         );
