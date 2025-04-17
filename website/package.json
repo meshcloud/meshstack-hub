@@ -31,6 +31,7 @@
     "@typescript-eslint/eslint-plugin": "7",
     "@typescript-eslint/parser": "7",
     "bootstrap": "^5.3.3",
+    "colorthief": "^2.6.0",
     "eslint-plugin-import": "^2.31.0",
     "eslint-plugin-jsdoc": "^50.6.8",
     "express": "^4.18.2",

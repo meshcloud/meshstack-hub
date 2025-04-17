@@ -1,12 +1,9 @@
 <div class="pt-5 ps-5 pe-5">
   <div class="row">
     <ng-container *ngIf="template$ | async as template">
-      <nav aria-label="breadcrumb">
-        <ol class="breadcrumb">
-          <li class="breadcrumb-item ps-0"><a href="#">Overview</a></li>
-          <li class="breadcrumb-item active" aria-current="page">{{ template.name }}</li>
-        </ol>
-      </nav>
+      <ng-container *ngIf="breadcrumbs$ | async as breadcrumbs">
+        <mst-breadcrumb [breadcrumbs]="breadcrumbs"></mst-breadcrumb>
+      </ng-container>
 
       <div class="pt-5">
         <div class="d-flex">

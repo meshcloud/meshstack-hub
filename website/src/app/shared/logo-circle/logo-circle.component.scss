@@ -1,0 +1,19 @@
+.circle {
+  width: 5.5rem;
+  height: 5.5rem;
+  border-radius: 50%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+
+  &.circle-sm {
+    width: 3rem;
+    height: 3rem;
+  }
+
+  img {
+    width: 75%;
+    height: 75%;
+    object-fit: contain;
+  }
+}

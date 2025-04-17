@@ -1,17 +1,16 @@
-<ul class="nav nav-pills">
-  <li class="nav-item pe-2">
-    <a class="nav-link" [routerLink]="['/all']" routerLinkActive="active">All</a>
-  </li>
-  <li class="nav-item pe-2">
-    <a class="nav-link" [routerLink]="['/aws']" routerLinkActive="active">AWS</a>
-  </li>
-  <li class="nav-item pe-2">
-    <a class="nav-link" [routerLink]="['/azure']" routerLinkActive="active">Azure</a>
-  </li>
-  <li class="nav-item pe-2">
-    <a class="nav-link" [routerLink]="['/github']" routerLinkActive="active">GitHub</a>
-  </li>
-  <li class="nav-item pe-2">
-    <a class="nav-link" [routerLink]="['/gcp']" routerLinkActive="active">GCP</a>
-  </li>
-</ul>
+<div class="row" *ngIf="cards$ | async as cards">
+  <div class="col-md-3 mb-3" *ngFor="let card of cards; let i = index">
+    <mst-card [routePath]="card.routePath" [label]="card.title" [borderColorSourceImage]="card.cardLogo">
+      <div
+        class="card-body d-flex flex-column justify-content-center align-items-center"
+        [style.height]="i < 4 ? '15rem' : 'auto'"
+        card-body
+      >
+        <mst-logo-circle [title]="card.title" [sourceImage]="card.cardLogo" [size]="'md'"></mst-logo-circle>
+        <h5 class="card-title text-center fw-bold mt-3">
+          {{ card.title }}
+        </h5>
+      </div>
+    </mst-card>
+  </div>
+</div>

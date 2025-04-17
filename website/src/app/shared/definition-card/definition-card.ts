@@ -1,9 +1,9 @@
 import { PlatformType } from 'app/core';
 
-export interface Card {
+export interface DefinitionCard {
   cardLogo: string | null;
   title: string;
-  description: string;
-  detailsRoute: string;
+  description: string | null;
+  routePath: string;
   supportedPlatforms: { platformType: PlatformType; imageUrl: string }[];
 }

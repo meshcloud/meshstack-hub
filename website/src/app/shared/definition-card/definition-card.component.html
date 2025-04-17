@@ -1,0 +1,20 @@
+<mst-card [routePath]="card.routePath" [label]="card.title">
+  <div class="card-body" card-body>
+    <div class="d-flex flex-column align-items-center justify-content-center mt-2">
+      <mst-logo-circle [title]="card.title" [sourceImage]="card.cardLogo" [size]="'md'"></mst-logo-circle>
+      <h5 class="card-title text-center fw-bold mt-3">
+        {{ card.title }}
+      </h5>
+    </div>
+    <div class="d-flex mt-3 justify-content-center">
+      <p class="card-text ps-3 pe-3">{{ card.description }}</p>
+    </div>
+  </div>
+  <div class="card-footer" card-footer>
+    <div class="d-flex flex-row-reverse justify-content-between">
+      <ng-container *ngFor="let platform of card.supportedPlatforms">
+        <img [src]="platform.imageUrl" [alt]="platform.platformType" class="footer-icon" />
+      </ng-container>
+    </div>
+  </div>
+</mst-card>

@@ -1,37 +1,23 @@
-<div class="header pt-0 ps-5 pe-5 pb-2">
-  <div class="row w-25">
-    <form [formGroup]="searchForm" (ngSubmit)="onSearch()">
-      <div class="input-group mt-3 me-auto">
-        <input
-          type="text"
-          class="form-control"
-          aria-label="Search"
-          formControlName="searchTerm"
-          (keyup.enter)="onSearch()"
-          placeholder="Search"
-        />
-        <button class="btn btn-primary" type="submit" (click)="onSearch()">
-          <i class="fa-solid fa-magnifying-glass"></i>
-        </button>
-      </div>
-    </form>
-  </div>
-  <div class="pt-5">
+<div class="pt-5 ps-5 pe-5">
+  <ng-container *ngIf="!isSearch">
     <mst-navigation></mst-navigation>
-  </div>
-</div>
+    <div class="pt-5 pb-4">
+      <h2>All building block definitions</h2>
+      These are pre-configured Terraform modules for automating common cloud tasks across AWS, Azure, GCP, and custom
+      cloud platforms, enabling rapid and consistent infrastructure provisioning and management
+    </div>
+  </ng-container>
 
-<div class="pt-4 ps-5 pe-5">
   <div class="row">
     <ng-container *ngIf="templates$ | async as templates">
-      <p class="pb-2" *ngIf="isSearch && templates.length">{{ templates.length }} templates found</p>
+      <p class="pb-2" *ngIf="isSearch && templates.length">{{ templates.length }} building block definitions found</p>
       <ng-container *ngIf="templates.length > 0; else noTemplates">
         <div class="col-sm-3 mb-3" *ngFor="let template of templates">
-          <mst-card [card]="template"></mst-card>
+          <mst-definition-card [card]="template"></mst-definition-card>
         </div>
       </ng-container>
       <ng-template #noTemplates>
-        <p class="p-2">No templates found</p>
+        <p class="p-2">No building block definitions found</p>
       </ng-template>
     </ng-container>
   </div>
