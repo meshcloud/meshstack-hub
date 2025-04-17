@@ -1,0 +1,15 @@
+<form [formGroup]="searchForm" (ngSubmit)="onSearch()">
+  <div class="input-group me-auto">
+    <input
+      type="text"
+      class="form-control"
+      aria-label="Search"
+      formControlName="searchTerm"
+      (keyup.enter)="onSearch()"
+      placeholder="Search"
+    />
+    <button class="btn btn-primary" type="submit" (click)="onSearch()">
+      <i class="fa-solid fa-magnifying-glass"></i>
+    </button>
+  </div>
+</form>

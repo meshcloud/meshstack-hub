@@ -1,14 +1,15 @@
 import { CommonModule } from '@angular/common';
 import { Component, OnDestroy, OnInit } from '@angular/core';
-import { FormBuilder, FormGroup, ReactiveFormsModule } from '@angular/forms';
+import { ReactiveFormsModule } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
-import { Observable, Subscription, forkJoin, map, tap } from 'rxjs';
+import { Observable, Subscription, forkJoin, map } from 'rxjs';
 
 import { PlatformType } from 'app/core';
 import { CardComponent } from 'app/shared/card';
 import { Card } from 'app/shared/card/card';
 import { NavigationComponent } from 'app/shared/navigation';
 import { PlatformLogoData, PlatformLogoService } from 'app/shared/platform-logo';
+import { SearchService } from 'app/shared/search-bar/search.service';
 import { TemplateService } from 'app/shared/template';
 
 @Component({
@@ -21,42 +22,35 @@ import { TemplateService } from 'app/shared/template';
 export class TemplateGalleryComponent implements OnInit, OnDestroy {
   public templates$!: Observable<Card[]>;
 
-  public searchForm!: FormGroup;
-
-  public isSearch = false;
+  public isSearch$!: Observable<boolean>;
 
   private paramSubscription!: Subscription;
+
+  private searchSubscription!: Subscription;
 
   private logos$!: Observable<PlatformLogoData>;
 
   constructor(
     private router: Router,
     private route: ActivatedRoute,
-    private fb: FormBuilder,
     private templateService: TemplateService,
+    private searchService: SearchService,
     private platformLogoService: PlatformLogoService
-  ) {}
+  ) { }
 
   public ngOnInit(): void {
-    this.initializeSearchForm();
     this.subscribeToRouteParams();
+    this.subscribeToSearchTerm();
+    this.isSearch$ = this.searchService.getSearchTerm$()
+      .pipe(
+        map(searchTerm =>
+          searchTerm === '' ? false : true)
+      );
   }
 
   public ngOnDestroy(): void {
     this.paramSubscription.unsubscribe();
-  }
-
-  public onSearch(): void {
-    const searchTerm = this.searchForm.value.searchTerm;
-    this.templates$ = this.getTemplatesWithLogos(this.templateService.search(searchTerm));
-    this.isSearch = !!searchTerm;
-    this.router.navigate(['/all']);
-  }
-
-  private initializeSearchForm(): void {
-    this.searchForm = this.fb.group({
-      searchTerm: ['']
-    });
+    this.searchSubscription.unsubscribe();
   }
 
   private subscribeToRouteParams(): void {
@@ -69,19 +63,25 @@ export class TemplateGalleryComponent implements OnInit, OnDestroy {
     });
   }
 
+  private subscribeToSearchTerm(): void {
+    this.searchSubscription = this.searchService.searchTerm$.subscribe(searchTerm => {
+      this.templates$ = this.getTemplatesWithLogos(this.templateService.search(searchTerm));
+      this.router.navigate(['/all']);
+    });
+  }
+
   private getTemplatesWithLogos(templateObs$: Observable<any>): Observable<Card[]> {
     return forkJoin({
       templates: templateObs$,
       logos: this.logos$
     })
       .pipe(
-        tap(() => (this.isSearch = false)),
         map(({ templates, logos }) =>
           templates.map(item => ({
             cardLogo: item.logo,
             title: item.name,
             description: item.description,
-            detailsRoute: `/template/${item.id}`,
+            routePath: `/template/${item.id}`,
             supportedPlatforms: item.supportedPlatforms.map(platform => ({
               platformType: platform,
               imageUrl: logos[item.platformType] ?? null
@@ -90,5 +90,4 @@ export class TemplateGalleryComponent implements OnInit, OnDestroy {
         )
       );
   }
-
 }

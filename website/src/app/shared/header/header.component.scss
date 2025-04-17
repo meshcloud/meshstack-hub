@@ -4,16 +4,14 @@
   background-color: $mesh-blue;
 
   .logo {
-    height: 10rem;
+    height: 5rem;
     object-fit: contain;
     position: relative;
-    left: -2rem; /* Moves the logo 2rem to the left so its edge aligns with the edge of the header */
   }
 
   .title {
     color: $mesh-black;
     font-weight: bold;
     align-self: center;
-    margin-top: 2.5rem;
   }
 }
