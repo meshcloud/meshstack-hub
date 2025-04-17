@@ -1,94 +1,81 @@
 import { CommonModule } from '@angular/common';
 import { Component, OnDestroy, OnInit } from '@angular/core';
-import { FormBuilder, FormGroup, ReactiveFormsModule } from '@angular/forms';
-import { ActivatedRoute, Router } from '@angular/router';
-import { Observable, Subscription, forkJoin, map, tap } from 'rxjs';
+import { ActivatedRoute } from '@angular/router';
+import { Observable, Subscription, forkJoin, map } from 'rxjs';
 
-import { PlatformType } from 'app/core';
-import { CardComponent } from 'app/shared/card';
-import { Card } from 'app/shared/card/card';
+import { DefinitionCard } from 'app/shared/definition-card/definition-card';
+import { DefinitionCardComponent } from 'app/shared/definition-card/definition-card.component';
 import { NavigationComponent } from 'app/shared/navigation';
-import { PlatformLogoData, PlatformLogoService } from 'app/shared/platform-logo';
+import { PlatformData, PlatformService } from 'app/shared/platform-logo';
 import { TemplateService } from 'app/shared/template';
 
 @Component({
   selector: 'mst-template-gallery',
-  imports: [CommonModule, ReactiveFormsModule, CardComponent, NavigationComponent],
+  imports: [CommonModule, DefinitionCardComponent, NavigationComponent],
   templateUrl: './template-gallery.component.html',
   styleUrl: './template-gallery.component.scss',
   standalone: true
 })
 export class TemplateGalleryComponent implements OnInit, OnDestroy {
-  public templates$!: Observable<Card[]>;
-
-  public searchForm!: FormGroup;
+  public templates$!: Observable<DefinitionCard[]>;
 
   public isSearch = false;
 
-  private paramSubscription!: Subscription;
+  private searchSubscription!: Subscription;
 
-  private logos$!: Observable<PlatformLogoData>;
+  private platformData$!: Observable<PlatformData>;
 
   constructor(
-    private router: Router,
     private route: ActivatedRoute,
-    private fb: FormBuilder,
     private templateService: TemplateService,
-    private platformLogoService: PlatformLogoService
+    private platformLogoService: PlatformService
   ) {}
 
   public ngOnInit(): void {
-    this.initializeSearchForm();
-    this.subscribeToRouteParams();
+    this.platformData$ = this.platformLogoService.getAllPlatformData();
+    this.subscribeToSearchTerm();
   }
 
   public ngOnDestroy(): void {
-    this.paramSubscription.unsubscribe();
+    this.searchSubscription?.unsubscribe();
   }
 
-  public onSearch(): void {
-    const searchTerm = this.searchForm.value.searchTerm;
-    this.templates$ = this.getTemplatesWithLogos(this.templateService.search(searchTerm));
-    this.isSearch = !!searchTerm;
-    this.router.navigate(['/all']);
-  }
+  private subscribeToSearchTerm(): void {
+    this.searchSubscription = this.route.queryParams.subscribe(params => {
+      const searchTerm = params['searchTerm'];
+      const templateObs$ = searchTerm
+        ? this.handleSearch(searchTerm)
+        : this.templateService.filterTemplatesByPlatformType('all');
 
-  private initializeSearchForm(): void {
-    this.searchForm = this.fb.group({
-      searchTerm: ['']
-    });
-  }
-
-  private subscribeToRouteParams(): void {
-    this.paramSubscription = this.route.paramMap.subscribe(params => {
-      const type = params.get('type') ?? 'all';
-      const templateObs$ = this.templateService.filterTemplatesByPlatformType(type as PlatformType);
-
-      this.logos$ = this.platformLogoService.getLogoUrls();
       this.templates$ = this.getTemplatesWithLogos(templateObs$);
     });
   }
 
-  private getTemplatesWithLogos(templateObs$: Observable<any>): Observable<Card[]> {
-    return forkJoin({
-      templates: templateObs$,
-      logos: this.logos$
-    })
+  private handleSearch(searchTerm: string): Observable<any> {
+    this.isSearch = true;
+
+    return this.templateService.search(searchTerm);
+  }
+
+  private getTemplatesWithLogos(templateObs$: Observable<any>): Observable<DefinitionCard[]> {
+    return forkJoin({ templates: templateObs$, platforms: this.platformData$ })
       .pipe(
-        tap(() => (this.isSearch = false)),
-        map(({ templates, logos }) =>
-          templates.map(item => ({
-            cardLogo: item.logo,
-            title: item.name,
-            description: item.description,
-            detailsRoute: `/template/${item.id}`,
-            supportedPlatforms: item.supportedPlatforms.map(platform => ({
-              platformType: platform,
-              imageUrl: logos[item.platformType] ?? null
-            }))
-          }))
+        map(({ templates, platforms }) =>
+          templates.map(template => this.mapToDefinitionCard(template, platforms))
         )
       );
   }
 
+  private mapToDefinitionCard(template: any, platformData: PlatformData): DefinitionCard {
+    return {
+      cardLogo: template.logo,
+      title: template.name,
+      description: template.description,
+      routePath: `/definitions/${template.id}`,
+      supportedPlatforms: template.supportedPlatforms.map(platform => ({
+        platformType: platform,
+        imageUrl: platformData[platform].logo ?? null
+      }))
+    };
+  }
 }

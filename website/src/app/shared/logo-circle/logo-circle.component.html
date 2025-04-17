@@ -1,0 +1,6 @@
+<div class="circle shadow" [ngClass]="{ 'circle-sm': size === 'sm' }">
+  <img *ngIf="sourceImage; else unknownLogo" [src]="sourceImage" [alt]="title" />
+  <ng-template #unknownLogo>
+    <img src="assets/meshstack-logo.png" alt="Unknown Logo" />
+  </ng-template>
+</div>

@@ -1,35 +1,13 @@
 <div
-  class="card text-center"
+  class="card"
+  [attr.aria-label]="label"
   tabindex="0"
-  role="card"
-  [attr.aria-label]="card.title"
-  (click)="goToDetails()"
-  (keyup.enter)="goToDetails()"
+  role="button"
+  (click)="navigateToRoutePath()"
+  (keyup.enter)="navigateToRoutePath()"
+  [ngClass]="{ clickable: routePath !== '' }"
+  [ngStyle]="borderColor ? { 'border-color': borderColor, 'border-width': '0.12rem' } : {}"
 >
-  <span class="card-label">Building Block</span>
-
-  <div class="card-body">
-    <div class="d-flex justify-content-center">
-      <div class="circle">
-        <img *ngIf="card.cardLogo; else unknownLogo" [src]="card.cardLogo" [alt]="'Logo for ' + card.title" />
-        <ng-template #unknownLogo>
-          <img src="assets/meshstack-logo.png" alt="Unknown Logo" />
-        </ng-template>
-      </div>
-    </div>
-    <div class="d-flex justify-content-center mt-3">
-      <div class="container">
-        <h5 class="card-title fw-bold">{{ card.title }}</h5>
-        <p class="card-text text-start mt-3">{{ card.description }}</p>
-      </div>
-    </div>
-  </div>
-
-  <div class="card-footer">
-    <div class="d-flex flex-row-reverse justify-content-between">
-      <ng-container *ngFor="let platform of card.supportedPlatforms">
-        <img [src]="platform.imageUrl" [alt]="platform.platformType" class="footer-icon" />
-      </ng-container>
-    </div>
-  </div>
+  <ng-content select="[card-body]"></ng-content>
+  <ng-content select="[card-footer]"></ng-content>
 </div>
