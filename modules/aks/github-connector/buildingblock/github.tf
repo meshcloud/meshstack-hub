@@ -23,27 +23,42 @@ locals {
   kubeconfig = merge(local.aks_kubeconfig_stub, local.kubeconfig_user)
 }
 
-resource "github_actions_secret" "kubeconfig" {
-  repository      = var.github_repo
+resource "github_repository_environment" "env" {
+  environment = var.namespace
+  repository  = var.github_repo
+}
+
+resource "github_actions_environment_secret" "kubeconfig" {
+  environment     = var.namespace
+  repository      = github_repository_environment.env.repository
   secret_name     = "KUBECONFIG"
   plaintext_value = yamlencode(local.kubeconfig)
+
+  depends_on = [
+    github_repository_environment.env
+  ]
 }
 
 
-resource "github_actions_secret" "container_registry" {
+resource "github_actions_environment_secret" "container_registry" {
   for_each = {
     host     = local.acr.host
     username = local.acr.username
     password = local.acr.password
   }
 
-  repository      = var.github_repo
+  environment     = var.namespace
+  repository      = github_repository_environment.env.repository
   secret_name     = "aks_container_registry_${each.key}"
   plaintext_value = each.value
+
+  depends_on = [
+    github_repository_environment.env
+  ]
 }
 
 resource "github_repository_file" "dockerfile" {
-  repository = var.github_repo
+  repository = github_repository_environment.env.repository
 
   file    = "Dockerfile"
   content = file("${path.module}/repo_content/Dockerfile")
@@ -57,9 +72,9 @@ resource "github_repository_file" "dockerfile" {
 }
 
 resource "github_repository_file" "workflow" {
-  repository = var.github_repo
+  repository = github_repository_environment.env.repository
 
-  file = ".github/workflows/build-deploy.yml"
+  file = ".github/workflows/${var.namespace}-deploy.yml"
   content = templatefile(
     "${path.module}/repo_content/workflow.yml",
     {
