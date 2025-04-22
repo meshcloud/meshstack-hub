@@ -23,7 +23,8 @@ locals {
   kubeconfig = merge(local.aks_kubeconfig_stub, local.kubeconfig_user)
 }
 
-resource "github_actions_secret" "kubeconfig" {
+resource "github_actions_environment_secret" "kubeconfig" {
+  environment     = var.namespace
   repository      = var.github_repo
   secret_name     = "KUBECONFIG"
   plaintext_value = yamlencode(local.kubeconfig)
@@ -59,9 +60,9 @@ resource "github_repository_file" "dockerfile" {
 resource "github_repository_file" "workflow" {
   repository = var.github_repo
 
-  file = ".github/workflows/build-deploy.yml"
+  file = ".github/workflows/${var.namespace}-deploy.yml"
   content = templatefile(
-    "${path.module}/repo_content/${var.namespace}-workflow.yml",
+    "${path.module}/repo_content/build-workflow.yml",
     {
       namespace         = var.namespace,
       image_name        = var.github_repo,
