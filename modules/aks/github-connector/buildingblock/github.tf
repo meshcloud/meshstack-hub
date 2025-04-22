@@ -33,6 +33,10 @@ resource "github_actions_environment_secret" "kubeconfig" {
   repository      = github_repository_environment.env.repository
   secret_name     = "KUBECONFIG"
   plaintext_value = yamlencode(local.kubeconfig)
+
+  depends_on = [
+    github_repository_environment.env
+  ]
 }
 
 
@@ -47,6 +51,10 @@ resource "github_actions_environment_secret" "container_registry" {
   repository      = github_repository_environment.env.repository
   secret_name     = "aks_container_registry_${each.key}"
   plaintext_value = each.value
+
+  depends_on = [
+    github_repository_environment.env
+  ]
 }
 
 resource "github_repository_file" "dockerfile" {
