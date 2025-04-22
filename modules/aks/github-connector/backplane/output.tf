@@ -8,7 +8,7 @@ output "config_tf" {
     client_certificate = base64decode("${data.azurerm_kubernetes_cluster.aks.kube_admin_config[0].client_certificate}")
     client_key = base64decode("${data.azurerm_kubernetes_cluster.aks.kube_admin_config[0].client_key}")
   }
-  
+
   locals {
     aks_kubeconfig_stub = {
       apiVersion = "v1"
