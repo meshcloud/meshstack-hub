@@ -62,7 +62,7 @@ resource "github_repository_file" "workflow" {
 
   file = ".github/workflows/${var.namespace}-deploy.yml"
   content = templatefile(
-    "${path.module}/repo_content/build-workflow.yml",
+    "${path.module}/repo_content/workflow.yml",
     {
       namespace         = var.namespace,
       image_name        = var.github_repo,
