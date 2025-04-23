@@ -1,9 +1,12 @@
 import { CommonModule } from '@angular/common';
 import { Component, OnDestroy, OnInit } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
-import { Observable, Subscription, forkJoin, map } from 'rxjs';
+import { Observable, Subscription, forkJoin, map, switchMap } from 'rxjs';
 
 import { PlatformType } from 'app/core';
+import { BreadcrumbComponent } from 'app/shared/breadcrumb';
+import { BreadCrumbService } from 'app/shared/breadcrumb/bread-crumb.service';
+import { BreadcrumbItem } from 'app/shared/breadcrumb/breadcrumb';
 import { CardComponent } from 'app/shared/card';
 import { DefinitionCard } from 'app/shared/definition-card/definition-card';
 import { DefinitionCardComponent } from 'app/shared/definition-card/definition-card.component';
@@ -18,13 +21,15 @@ interface PlatformVM {
 
 @Component({
   selector: 'mst-platform-view',
-  imports: [CommonModule, DefinitionCardComponent, CardComponent, LogoCircleComponent],
+  imports: [CommonModule, DefinitionCardComponent, CardComponent, LogoCircleComponent, BreadcrumbComponent],
   templateUrl: './platform-view.component.html',
   styleUrl: './platform-view.component.scss',
   standalone: true
 })
 export class PlatformViewComponent implements OnInit, OnDestroy {
   public platform$!: Observable<PlatformVM>;
+
+  public breadcrumbs$!: Observable<BreadcrumbItem[]>;
 
   public templates$!: Observable<DefinitionCard[]>;
 
@@ -36,11 +41,14 @@ export class PlatformViewComponent implements OnInit, OnDestroy {
     private router: Router,
     private route: ActivatedRoute,
     private templateService: TemplateService,
-    private platformLogoService: PlatformService
+    private platformLogoService: PlatformService,
+    private breadcrumbService: BreadCrumbService
   ) { }
 
   public ngOnInit(): void {
     this.subscribeToRouteParams();
+    this.breadcrumbs$ = this.route.paramMap.pipe(switchMap(x => this.breadcrumbService.getBreadcrumbs(x)));
+
   }
 
   public ngOnDestroy(): void {

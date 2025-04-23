@@ -1,23 +1,25 @@
 <div class="pt-5 ps-5 pe-5">
-  <ng-container *ngIf="!isSearch">
-    <mst-navigation></mst-navigation>
-    <div class="pt-5 pb-4">
-      <h2>All building block definitions</h2>
-      These are pre-configured Terraform modules for automating common cloud tasks across AWS, Azure, GCP, and custom
-      cloud platforms, enabling rapid and consistent infrastructure provisioning and management
-    </div>
-  </ng-container>
+  <div class="pb-2" *ngIf="isSearch">
+    <mst-breadcrumb [breadcrumbs]="breadcrumbs"></mst-breadcrumb>
+  </div>
+  <mst-platform-cards [searchTerm]="searchTerm" (resultCount)="updateCount($event)"></mst-platform-cards>
+  <div class="pt-5 pb-4">
+    <h2>All building block definitions</h2>
+    <p *ngIf="!isSearch">These are pre-configured Terraform modules for automating common cloud tasks across AWS, Azure,
+      GCP, and custom
+      cloud platforms, enabling rapid and consistent infrastructure provisioning and management </p>
+  </div>
+
 
   <div class="row">
     <ng-container *ngIf="templates$ | async as templates">
-      <p class="pb-2" *ngIf="isSearch && templates.length">{{ templates.length }} building block definitions found</p>
       <ng-container *ngIf="templates.length > 0; else noTemplates">
         <div class="col-sm-3 mb-3" *ngFor="let template of templates">
           <mst-definition-card [card]="template"></mst-definition-card>
         </div>
       </ng-container>
       <ng-template #noTemplates>
-        <p class="p-2">No building block definitions found</p>
+        <p class="p-2">No building block definitions</p>
       </ng-template>
     </ng-container>
   </div>

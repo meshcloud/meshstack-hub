@@ -2,12 +2,12 @@ import { CommonModule } from '@angular/common';
 import { Component, OnDestroy, OnInit } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
-import { Observable, Subscription, map, of, switchMap } from 'rxjs';
+import { Observable, Subscription, map, switchMap } from 'rxjs';
 
 import { PlatformType } from 'app/core';
+import { BreadCrumbService } from 'app/shared/breadcrumb/bread-crumb.service';
 import { BreadcrumbItem } from 'app/shared/breadcrumb/breadcrumb';
 import { BreadcrumbComponent } from 'app/shared/breadcrumb/breadcrumb.component';
-import { PlatformService } from 'app/shared/platform-logo';
 import { TemplateService } from 'app/shared/template';
 
 import { ImportDialogComponent } from './import-dialog/import-dialog.component';
@@ -33,6 +33,8 @@ export class TemplateDetailsComponent implements OnInit, OnDestroy {
 
   public breadcrumbs$!: Observable<BreadcrumbItem[]>;
 
+  public backPath$!: Observable<string>;
+
   public copyLabel = 'Copy';
 
   private routeSubscription!: Subscription;
@@ -40,13 +42,18 @@ export class TemplateDetailsComponent implements OnInit, OnDestroy {
   constructor(
     private route: ActivatedRoute,
     private templateService: TemplateService,
-    private platformService: PlatformService,
-    private modalService: NgbModal
+    private modalService: NgbModal,
+    private breadcrumbService: BreadCrumbService
   ) { }
 
   public ngOnInit(): void {
-    this.initializeBreadcrumbs();
     this.initializeTemplate();
+    this.breadcrumbs$ = this.route.paramMap.pipe(switchMap(x => this.breadcrumbService.getBreadcrumbs(x)));
+    this.backPath$ = this.breadcrumbs$.pipe(map(breadcrumbs => {
+      const secondLastBreadcrumb = breadcrumbs[breadcrumbs.length - 2].routePath;
+
+      return secondLastBreadcrumb ? secondLastBreadcrumb : '/';
+    }));
   }
 
   public ngOnDestroy(): void {
@@ -78,56 +85,6 @@ export class TemplateDetailsComponent implements OnInit, OnDestroy {
     const match = source.match(regex);
 
     return match ? match[0] : '';
-  }
-
-  private initializeBreadcrumbs(): void {
-    this.breadcrumbs$ = this.route.paramMap.pipe(
-      switchMap(params => {
-        const id = params.get('id');
-        const type = params.get('type');
-
-        if (!id) {
-          throw new Error('Template ID is required');
-        }
-
-        return this.getPlatformData(type)
-          .pipe(
-            switchMap((platformName) =>
-              this.templateService.getTemplateById(id)
-                .pipe(
-                  map(template => this.buildBreadcrumbs(template.name, platformName, type))
-                )
-            )
-          );
-      })
-    );
-  }
-
-  private getPlatformData(type: string | null): Observable<string|null> {
-    if (!type) {
-      return of(null);
-    }
-
-    return this.platformService.getPlatformData(type)
-      .pipe(
-        map(x => x.name)
-      );
-  }
-
-  private buildBreadcrumbs(
-    templateName: string,
-    platformName: string | null,
-    type: string | null,
-  ): BreadcrumbItem[] {
-    const breadcrumbs: BreadcrumbItem[] = [{ label: 'Overview', routePath: '/' }];
-
-    if (platformName) {
-      breadcrumbs.push({ label: platformName, routePath: `/platforms/${type}` });
-    }
-
-    breadcrumbs.push({ label: templateName, routePath: '' });
-
-    return breadcrumbs;
   }
 
   private initializeTemplate(): void {

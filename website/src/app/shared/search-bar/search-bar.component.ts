@@ -1,7 +1,8 @@
 import { CommonModule } from '@angular/common';
-import { Component, OnInit } from '@angular/core';
+import { Component, OnDestroy, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, ReactiveFormsModule } from '@angular/forms';
-import { Router } from '@angular/router';
+import { NavigationEnd, Router } from '@angular/router';
+import { Subscription } from 'rxjs';
 
 @Component({
   selector: 'mst-search-bar',
@@ -9,8 +10,10 @@ import { Router } from '@angular/router';
   templateUrl: './search-bar.component.html',
   standalone: true
 })
-export class SearchBarComponent implements OnInit {
+export class SearchBarComponent implements OnInit, OnDestroy {
   public searchForm!: FormGroup;
+
+  private routerSubscription!: Subscription;
 
   constructor(
     private router: Router,
@@ -19,6 +22,17 @@ export class SearchBarComponent implements OnInit {
 
   public ngOnInit(): void {
     this.initializeSearchForm();
+    this.routerSubscription = this.router.events.subscribe(event => {
+      if (event instanceof NavigationEnd) {
+        if (!this.router.url.startsWith('/all')) {
+          this.searchForm.reset();
+        }
+      }
+    });
+  }
+
+  public ngOnDestroy(): void {
+    this.routerSubscription.unsubscribe();
   }
 
   public onSearch(): void {

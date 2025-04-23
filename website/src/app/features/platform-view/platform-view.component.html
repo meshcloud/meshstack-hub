@@ -1,5 +1,8 @@
-<div class="pt-5 ps-5 pe-5" >
-  <div class="pb-5" *ngIf="platform$ | async as platform">
+<div class="pt-5 ps-5 pe-5" *ngIf="platform$ | async as platform">
+  <ng-container *ngIf="breadcrumbs$ | async as breadcrumbs">
+    <mst-breadcrumb [breadcrumbs]="breadcrumbs"></mst-breadcrumb>
+  </ng-container>
+  <div class="pt-5 pb-5">
     <mst-card [label]="platform.title" [borderColorSourceImage]="platform.logo">
       <div class="card-body d-flex" card-body>
         <mst-logo-circle [title]="platform.title" [sourceImage]="platform.logo" [size]="'md'"></mst-logo-circle>
@@ -10,19 +13,19 @@
     </mst-card>
   </div>
 
-  <h2>Platform building block definitions</h2>
-  These building block definitions provide pre-configured Terraform modules for automating common cloud tasks
+  <ng-container *ngIf="templates$ | async as templates">
+    <h2 class="fw-bold">{{ platform.title }} building block definitions</h2>
+    <p class="mt-2 mb-5" *ngIf="templates.length; else noTemplates">These <b>{{ platform.title }} building block
+        definitions</b> provide pre-configured Terraform modules
+      for automating common cloud tasks</p>
+    <ng-template #noTemplates>
+      <p class="mt-2">No building block definitions</p>
+    </ng-template>
 
-  <div class="row mt-4">
-    <ng-container *ngIf="templates$ | async as templates">
-      <ng-container *ngIf="templates.length > 0; else noTemplates">
-        <div class="col-sm-3 mb-3" *ngFor="let template of templates">
-          <mst-definition-card [card]="template"></mst-definition-card>
-        </div>
-      </ng-container>
-      <ng-template #noTemplates>
-        <p class="p-2">No building block definitions</p>
-      </ng-template>
-    </ng-container>
-  </div>
+    <div class="row mt-4">
+      <div class="col-sm-3 mb-3" *ngFor="let template of templates">
+        <mst-definition-card [card]="template"></mst-definition-card>
+      </div>
+    </div>
+  </ng-container>
 </div>
