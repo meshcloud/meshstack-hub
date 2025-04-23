@@ -2,20 +2,20 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { By } from '@angular/platform-browser';
 import { RouterTestingModule } from '@angular/router/testing';
 
-import { NavigationComponent } from './navigation.component';
+import { PlatformCardsComponent } from './platform-cards.component';
 
 
 describe('NavigationComponent', () => {
-  let component: NavigationComponent;
-  let fixture: ComponentFixture<NavigationComponent>;
+  let component: PlatformCardsComponent;
+  let fixture: ComponentFixture<PlatformCardsComponent>;
 
   beforeEach(async () => {
     await TestBed.configureTestingModule({
-      imports: [NavigationComponent, RouterTestingModule]
+      imports: [PlatformCardsComponent, RouterTestingModule]
     })
       .compileComponents();
 
-    fixture = TestBed.createComponent(NavigationComponent);
+    fixture = TestBed.createComponent(PlatformCardsComponent);
     component = fixture.componentInstance;
     fixture.detectChanges();
   });

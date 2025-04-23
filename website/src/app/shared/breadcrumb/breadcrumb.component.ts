@@ -11,7 +11,7 @@ import { BreadcrumbItem } from './breadcrumb';
   styleUrl: './breadcrumb.component.scss',
   standalone: true
 })
-export class BreadcrumbComponent {
+export class BreadcrumbComponent  {
   @Input()
   public breadcrumbs: BreadcrumbItem[] = [];
 }

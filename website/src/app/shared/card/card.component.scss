@@ -5,10 +5,10 @@
   transition: transform 0.3s;
   cursor: pointer;
   border-radius: 0.5rem; // Added to make the card border rounder
-  box-shadow: 0 0.5rem 1rem rgba(black, 0.15);
+ 
 
   &.clickable:hover {
-    transform: scale(1.05);
+    box-shadow: 0 0.5rem 1rem rgba(black, 0.15);
   }
 
   &.clickable:focus {
