@@ -1,5 +1,5 @@
 <div class="pt-5 ps-5 pe-5">
-  <div class="pb-2" *ngIf="isSearch"> 
+  <div class="pb-2" *ngIf="isSearch">
     <mst-breadcrumb [breadcrumbs]="breadcrumbs"></mst-breadcrumb>
   </div>
   <mst-platform-cards [searchTerm]="searchTerm" (resultCount)="updateCount($event)"></mst-platform-cards>
