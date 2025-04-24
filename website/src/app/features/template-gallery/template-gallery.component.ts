@@ -1,7 +1,7 @@
 import { CommonModule } from '@angular/common';
 import { Component, OnDestroy, OnInit } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
-import { Observable, Subscription, forkJoin, map, tap } from 'rxjs';
+import { Observable, Subscription, combineLatest, forkJoin, map } from 'rxjs';
 
 import { BreadcrumbComponent } from 'app/shared/breadcrumb';
 import { BreadcrumbItem } from 'app/shared/breadcrumb/breadcrumb';
@@ -11,6 +11,7 @@ import { PlatformData, PlatformService } from 'app/shared/platform-logo';
 import { TemplateService } from 'app/shared/template';
 
 import { PlatformCardsComponent } from './platform-cards';
+import { PlatformCard } from './platform-cards/platform-card';
 
 @Component({
   selector: 'mst-template-gallery',
@@ -22,28 +23,24 @@ import { PlatformCardsComponent } from './platform-cards';
 export class TemplateGalleryComponent implements OnInit, OnDestroy {
   public templates$!: Observable<DefinitionCard[]>;
 
-  public breadcrumbs: BreadcrumbItem[] = [];
+  public platformCards$!: Observable<PlatformCard[]>;
+
+  public breadcrumbs$!: Observable<BreadcrumbItem[]>;
 
   public isSearch = false;
-
-  public searchTerm = '';
-
-  public resultsCount = 0;
 
   private searchSubscription!: Subscription;
 
   private platformData$!: Observable<PlatformData>;
 
-  private definitionsCount = 0;
-
   constructor(
     private route: ActivatedRoute,
     private templateService: TemplateService,
-    private platformLogoService: PlatformService
-  ) { }
+    private platformService: PlatformService
+  ) {}
 
   public ngOnInit(): void {
-    this.platformData$ = this.platformLogoService.getAllPlatformData();
+    this.platformData$ = this.platformService.getAllPlatformData();
     this.subscribeToSearchTerm();
   }
 
@@ -51,28 +48,21 @@ export class TemplateGalleryComponent implements OnInit, OnDestroy {
     this.searchSubscription?.unsubscribe();
   }
 
-  public updateCount(count: number): void {
-    this.resultsCount = count + this.definitionsCount;
-  }
-
   private subscribeToSearchTerm(): void {
     this.searchSubscription = this.route.queryParams.subscribe(params => {
       const searchTerm = params['searchTerm'];
-      const templateObs$ = searchTerm
-        ? this.handleSearch(searchTerm)
-        : this.templateService.filterTemplatesByPlatformType('all');
+      this.isSearch = searchTerm !== undefined;
 
-      this.templates$ = this.getTemplatesWithLogos(templateObs$)
-        .pipe(tap(x => this.definitionsCount = x.length));
+      this.templates$ = this.getTemplatesWithLogos(
+        searchTerm
+          ? this.templateService.search(searchTerm)
+          : this.templateService.filterTemplatesByPlatformType('all')
+      );
+
+      this.platformCards$ = this.getFilteredPlatformCards(searchTerm);
+
+      this.breadcrumbs$ = this.getBreadcrumbs();
     });
-  }
-
-  private handleSearch(searchTerm: string): Observable<any> {
-    this.searchTerm = searchTerm;
-    this.isSearch = true;
-    this.breadcrumbs = this.createBreadcrumbs();
-
-    return this.templateService.search(searchTerm);
   }
 
   private getTemplatesWithLogos(templateObs$: Observable<any>): Observable<DefinitionCard[]> {
@@ -84,6 +74,20 @@ export class TemplateGalleryComponent implements OnInit, OnDestroy {
       );
   }
 
+  private getFilteredPlatformCards(searchTerm: string | undefined): Observable<PlatformCard[]> {
+    return this.platformData$.pipe(
+      map(logos => this.mapLogosToPlatformCards(logos)),
+      map(cards => this.filterCardsBySearchTerm(cards, searchTerm))
+    );
+  }
+
+  private getBreadcrumbs(): Observable<BreadcrumbItem[]> {
+    return combineLatest([this.templates$, this.platformCards$])
+      .pipe(
+        map(([templates, platforms]) => this.createBreadcrumbs(templates.length + platforms.length))
+      );
+  }
+
   private mapToDefinitionCard(template: any, platformData: PlatformData): DefinitionCard {
     return {
       cardLogo: template.logo,
@@ -92,15 +96,33 @@ export class TemplateGalleryComponent implements OnInit, OnDestroy {
       routePath: `/definitions/${template.id}`,
       supportedPlatforms: template.supportedPlatforms.map(platform => ({
         platformType: platform,
-        imageUrl: platformData[platform].logo ?? null
+        imageUrl: platformData[platform]?.logo ?? null
       }))
     };
   }
 
-  private createBreadcrumbs(): BreadcrumbItem[] {
-    return  [
-      { label: 'Overview', routePath: '/all' },
-      { label: `${this.resultsCount} results found`, routePath: '' }
+  private createBreadcrumbs(resultsCount: number): BreadcrumbItem[] {
+    return [
+      { label: 'Home', routePath: '/all' },
+      { label: `${resultsCount} results found`, routePath: '' }
     ];
+  }
+
+  private mapLogosToPlatformCards(data: PlatformData): PlatformCard[] {
+    return Object.entries(data)
+      .map(([key, platform]) =>
+        this.createPlatformCard(platform.name, platform.logo, `/platforms/${key}`)
+      );
+  }
+
+  private createPlatformCard(title: string, logoUrl: string, routePath: string): PlatformCard {
+    return { cardLogo: logoUrl, title, routePath };
+  }
+
+  private filterCardsBySearchTerm(cards: PlatformCard[], searchTerm: string | undefined): PlatformCard[] {
+    const searchTermLower = (searchTerm ?? '').toLowerCase();
+
+    return cards.filter(card => card.title.toLowerCase()
+      .includes(searchTermLower));
   }
 }

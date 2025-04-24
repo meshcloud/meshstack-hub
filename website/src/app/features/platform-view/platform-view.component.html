@@ -15,9 +15,11 @@
 
   <ng-container *ngIf="templates$ | async as templates">
     <h2 class="fw-bold">{{ platform.title }} building block definitions</h2>
-    <p class="mt-2 mb-5" *ngIf="templates.length; else noTemplates">These <b>{{ platform.title }} building block
-        definitions</b> provide pre-configured Terraform modules
-      for automating common cloud tasks</p>
+    <p class="mt-2 mb-5" *ngIf="templates.length; else noTemplates">
+      These
+      <b>{{ platform.title }} building block definitions</b>
+      provide pre-configured Terraform modules for automating common cloud tasks
+    </p>
     <ng-template #noTemplates>
       <p class="mt-2">No building block definitions</p>
     </ng-template>

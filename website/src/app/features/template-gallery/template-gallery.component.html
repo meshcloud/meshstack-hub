@@ -1,15 +1,17 @@
 <div class="pt-5 ps-5 pe-5">
-  <div class="pb-2" *ngIf="isSearch">
+  <div class="pb-2" *ngIf="isSearch && (breadcrumbs$ | async) as breadcrumbs">
     <mst-breadcrumb [breadcrumbs]="breadcrumbs"></mst-breadcrumb>
   </div>
-  <mst-platform-cards [searchTerm]="searchTerm" (resultCount)="updateCount($event)"></mst-platform-cards>
+  <ng-container *ngIf="platformCards$ | async as platformCards">
+    <mst-platform-cards [cards]="platformCards"></mst-platform-cards>
+  </ng-container>
   <div class="pt-5 pb-4">
     <h2>All building block definitions</h2>
-    <p *ngIf="!isSearch">These are pre-configured Terraform modules for automating common cloud tasks across AWS, Azure,
-      GCP, and custom
-      cloud platforms, enabling rapid and consistent infrastructure provisioning and management </p>
+    <p *ngIf="!isSearch">
+      These are pre-configured Terraform modules for automating common cloud tasks across AWS, Azure, GCP, and custom
+      cloud platforms, enabling rapid and consistent infrastructure provisioning and management
+    </p>
   </div>
-
 
   <div class="row">
     <ng-container *ngIf="templates$ | async as templates">
