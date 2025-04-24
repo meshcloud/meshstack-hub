@@ -2,7 +2,14 @@
   "aks": "assets/logos/aks.svg",
   "aws": "assets/logos/aws.svg",
   "azure": "assets/logos/azure.svg",
+  "cloudfoundry": "assets/logos/cloudfoundry.png",
+  "datadog": "assets/logos/datadog.png",
+  "gcp": "assets/logos/gcp.png",
   "github": "assets/logos/github.png",
+  "ionos": "assets/logos/ionos.png",
+  "openshift": "assets/logos/openshift.png",
+  "openstack": "assets/logos/openstack.png",
   "ovh": "assets/logos/ovh.png",
-  "sapbtp": "assets/logos/sapbtp.png"
+  "sapbtp": "assets/logos/sapbtp.png",
+  "tencentcloud": "assets/logos/tencentcloud.png"
 }

@@ -7,7 +7,7 @@ import { BreadcrumbComponent } from 'app/shared/breadcrumb';
 import { BreadcrumbItem } from 'app/shared/breadcrumb/breadcrumb';
 import { DefinitionCard } from 'app/shared/definition-card/definition-card';
 import { DefinitionCardComponent } from 'app/shared/definition-card/definition-card.component';
-import { PlatformData, PlatformService } from 'app/shared/platform-logo';
+import { PlatformData, PlatformService } from 'app/shared/platform';
 import { TemplateService } from 'app/shared/template';
 
 import { PlatformCardsComponent } from './platform-cards';
@@ -122,7 +122,29 @@ export class TemplateGalleryComponent implements OnInit, OnDestroy {
   private filterCardsBySearchTerm(cards: PlatformCard[], searchTerm: string | undefined): PlatformCard[] {
     const searchTermLower = (searchTerm ?? '').toLowerCase();
 
-    return cards.filter(card => card.title.toLowerCase()
-      .includes(searchTermLower));
+    return cards
+      .filter(card => card.title.toLowerCase()
+        .includes(searchTermLower))
+      .sort((a, b) => this.sortByPriorityAndTitle(a, b));
+  }
+
+  private sortByPriorityAndTitle(a: PlatformCard, b: PlatformCard): number {
+    const priority = ['Azure', 'Amazon Web Services', 'Google Cloud', 'GitHub'];
+    const priorityIndexA = priority.indexOf(a.title);
+    const priorityIndexB = priority.indexOf(b.title);
+
+    if (priorityIndexA !== -1 && priorityIndexB !== -1) {
+      return priorityIndexA - priorityIndexB;
+    }
+
+    if (priorityIndexA !== -1) {
+      return -1;
+    }
+
+    if (priorityIndexB !== -1) {
+      return 1;
+    }
+
+    return a.title.localeCompare(b.title);
   }
 }
