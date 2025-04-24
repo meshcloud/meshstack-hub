@@ -51,7 +51,7 @@ export class TemplateGalleryComponent implements OnInit, OnDestroy {
   private subscribeToSearchTerm(): void {
     this.searchSubscription = this.route.queryParams.subscribe(params => {
       const searchTerm = params['searchTerm'];
-      this.isSearch = searchTerm !== undefined;
+      this.isSearch = !!searchTerm;
 
       this.templates$ = this.getTemplatesWithLogos(
         searchTerm
