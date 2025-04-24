@@ -4,11 +4,17 @@
   </ng-container>
   <div class="pt-5 pb-5">
     <mst-card [label]="platform.title" [borderColorSourceImage]="platform.logo">
-      <div class="card-body d-flex" card-body>
-        <mst-logo-circle [title]="platform.title" [sourceImage]="platform.logo" [size]="'md'"></mst-logo-circle>
-        <h5 class="ms-3 card-title fw-bold align-self-center">
-          {{ platform.title }}
-        </h5>
+      <div class="card-body d-flex justify-content-between align-items-center" card-body>
+        <div class="d-flex align-items-center">
+          <mst-logo-circle [title]="platform.title" [sourceImage]="platform.logo" [size]="'md'"></mst-logo-circle>
+          <h5 class="ms-3 card-title fw-bold">
+            {{ platform.title }}
+          </h5>
+        </div>
+        <a href="https://docs.meshcloud.io/docs/meshstack.how-to.integrate-meshplatform.html" target="_blank"
+          rel="noopener noreferrer" class="btn btn-primary">
+          <i class="fa-solid fa-arrow-up-right-from-square me-2"></i>Read more in our docs
+        </a>
       </div>
     </mst-card>
   </div>
