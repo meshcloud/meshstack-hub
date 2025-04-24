@@ -1,4 +1,4 @@
-<div class="row" *ngIf="cards$ | async as cards">
+<div class="row">
   <div class="col-md-3 mb-3" *ngFor="let card of cards; let i = index">
     <mst-card [routePath]="card.routePath" [label]="card.title" [borderColorSourceImage]="card.cardLogo">
       <div

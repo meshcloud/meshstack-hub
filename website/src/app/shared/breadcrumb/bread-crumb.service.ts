@@ -47,7 +47,7 @@ export class BreadCrumbService {
     platformName: string | null,
     type: string | null
   ): BreadcrumbItem[] {
-    const breadcrumbs: BreadcrumbItem[] = [{ label: 'Overview', routePath: '/' }];
+    const breadcrumbs: BreadcrumbItem[] = [{ label: 'Home', routePath: '/' }];
 
     if (platformName) {
       breadcrumbs.push({ label: platformName, routePath: `/platforms/${type}` });

@@ -1,0 +1,1 @@
+export * from './definition-card.component';

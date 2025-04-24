@@ -10,7 +10,7 @@ import { BreadcrumbItem } from 'app/shared/breadcrumb/breadcrumb';
 import { CardComponent } from 'app/shared/card';
 import { DefinitionCard } from 'app/shared/definition-card/definition-card';
 import { DefinitionCardComponent } from 'app/shared/definition-card/definition-card.component';
-import { LogoCircleComponent } from 'app/shared/logo-circle/logo-circle.component';
+import { LogoCircleComponent } from 'app/shared/logo-circle';
 import { PlatformData, PlatformService } from 'app/shared/platform-logo';
 import { TemplateService } from 'app/shared/template';
 
