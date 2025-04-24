@@ -2,7 +2,7 @@ import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Observable, map, shareReplay, take } from 'rxjs';
 
-import { Platform, PlatformData, PlatformLogoData } from './platform-logo-data';
+import { Platform, PlatformData, PlatformLogoData } from './platform-data';
 
 @Injectable({
   providedIn: 'root'
@@ -53,13 +53,29 @@ export class PlatformService {
     case 'azure':
       return { name: 'Azure', logo: logoUrl };
     case 'aws':
-      return { name: 'AWS', logo: logoUrl };
+      return { name: 'Amazon Web Services', logo: logoUrl };
     case 'gcp':
-      return { name: 'GCP', logo: logoUrl };
+      return { name: 'Google Cloud', logo: logoUrl };
     case 'github':
       return { name: 'GitHub', logo: logoUrl };
     case 'aks':
       return { name: 'Azure Kubernetes Service', logo: logoUrl };
+    case 'ionos':
+      return { name: 'IONOS', logo: logoUrl };
+    case 'datadog':
+      return { name: 'DataDog', logo: logoUrl };
+    case 'cloudfoundry':
+      return { name: 'Cloud Foundry', logo: logoUrl };
+    case 'ovh':
+      return { name: 'OVHcloud', logo: logoUrl };
+    case 'sapbtp':
+      return { name: 'SAP Business Technology Platform', logo: logoUrl };
+    case 'openstack':
+      return { name: 'OpenStack', logo: logoUrl };
+    case 'openshift':
+      return { name: 'OpenShift', logo: logoUrl };
+    case 'tencentcloud':
+      return { name: 'Tencent Cloud', logo: logoUrl };
     default:
       return { name: key, logo: logoUrl };
     }

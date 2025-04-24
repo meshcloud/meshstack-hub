@@ -2,8 +2,9 @@ import { Injectable } from '@angular/core';
 import { ParamMap } from '@angular/router';
 import { Observable,combineLatest, map, of } from 'rxjs';
 
-import { PlatformService } from '../platform-logo';
-import { TemplateService } from '../template';
+import { PlatformService } from 'app/shared/platform';
+import { TemplateService } from 'app/shared/template';
+
 import { BreadcrumbItem } from './breadcrumb';
 
 @Injectable({
