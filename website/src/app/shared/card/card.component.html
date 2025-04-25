@@ -6,7 +6,7 @@
   (click)="navigateToRoutePath()"
   (keyup.enter)="navigateToRoutePath()"
   [ngClass]="{ clickable: routePath !== '' }"
-  [ngStyle]="borderColor ? { 'border-color': borderColor, 'border-width': '0.12rem' } : {}"
+  [ngStyle]="borderColor ? { 'border-color': borderColor } : {}"
 >
   <ng-content select="[card-body]"></ng-content>
   <ng-content select="[card-footer]"></ng-content>
