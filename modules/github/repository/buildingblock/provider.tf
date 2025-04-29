@@ -13,9 +13,5 @@ terraform {
 
 provider "github" {
   owner = var.github_org
-  app_auth {
-    id              = var.github_app_id
-    installation_id = var.github_app_installation_id
-    pem_file        = var.github_app_pem_file
-  }
+  app_auth {} # When using `GITHUB_APP_XXX` environment variables
 }
