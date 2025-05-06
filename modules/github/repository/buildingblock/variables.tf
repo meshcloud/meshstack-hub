@@ -1,8 +1,3 @@
-variable "github_org" {
-  type        = string
-  description = "Name of the GitHub organization"
-}
-
 variable "repo_description" {
   type        = string
   default     = "created by github-repo-building-block"

@@ -11,7 +11,4 @@ terraform {
   }
 }
 
-provider "github" {
-  owner = var.github_org
-  app_auth {} # When using `GITHUB_APP_XXX` environment variables
-}
+provider "github" {}
