@@ -15,8 +15,7 @@ This documentation is intended as a reference documentation for cloud foundation
 
 | Name | Version |
 |------|---------|
-| <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) | 3.116.0 |
-| <a name="requirement_github"></a> [github](#requirement\_github) | 5.42.0 |
+| <a name="requirement_github"></a> [github](#requirement\_github) | 6.6.0 |
 
 ## Modules
 
@@ -26,7 +25,7 @@ No modules.
 
 | Name | Type |
 |------|------|
-| [github_repository.repository](https://registry.terraform.io/providers/integrations/github/5.42.0/docs/resources/repository) | resource |
+| [github_repository.repository](https://registry.terraform.io/providers/integrations/github/6.6.0/docs/resources/repository) | resource |
 
 ## Inputs
 
