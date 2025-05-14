@@ -33,3 +33,9 @@ variable "use_template" {
   description = "Flag to indicate whether to create a repo based on a Template Repository"
   default     = false
 }
+
+variable "auto_init" {
+  type        = bool
+  description = "Flag to indicate whether to create an initial commit with an empty README file"
+  default     = false
+}
