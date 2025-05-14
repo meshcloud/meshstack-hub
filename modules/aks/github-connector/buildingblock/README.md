@@ -51,6 +51,7 @@ No modules.
 |------|------|
 | [github_actions_environment_secret.container_registry](https://registry.terraform.io/providers/integrations/github/6.5.0/docs/resources/actions_environment_secret) | resource |
 | [github_actions_environment_secret.kubeconfig](https://registry.terraform.io/providers/integrations/github/6.5.0/docs/resources/actions_environment_secret) | resource |
+| [github_branch.branch](https://registry.terraform.io/providers/integrations/github/6.5.0/docs/resources/branch) | resource |
 | [github_repository_environment.env](https://registry.terraform.io/providers/integrations/github/6.5.0/docs/resources/repository_environment) | resource |
 | [github_repository_file.dockerfile](https://registry.terraform.io/providers/integrations/github/6.5.0/docs/resources/repository_file) | resource |
 | [github_repository_file.workflow](https://registry.terraform.io/providers/integrations/github/6.5.0/docs/resources/repository_file) | resource |
@@ -64,7 +65,8 @@ No modules.
 
 | Name | Description | Type | Default | Required |
 |------|-------------|------|---------|:--------:|
-| <a name="input_github_repo"></a> [github\_repo](#input\_github\_repo) | n/a | `string` | n/a | yes |
+| <a name="input_github_branch"></a> [github\_branch](#input\_github\_branch) | The branch of the GitHub repository to be used. | `string` | n/a | yes |
+| <a name="input_github_repo"></a> [github\_repo](#input\_github\_repo) | The GitHub repository to be connected. | `string` | n/a | yes |
 | <a name="input_namespace"></a> [namespace](#input\_namespace) | Associated namespace in AKS. | `string` | n/a | yes |
 
 ## Outputs

@@ -3,7 +3,7 @@ name: ${namespace}
 on:
   push:
     branches:
-      - main
+      - ${branch}
 
 jobs:
   deploy:

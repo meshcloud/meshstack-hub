@@ -4,5 +4,11 @@ variable "namespace" {
 }
 
 variable "github_repo" {
-  type = string
+  description = "The GitHub repository to be connected."
+  type        = string
+}
+
+variable "github_branch" {
+  description = "The branch of the GitHub repository to be used."
+  type        = string
 }

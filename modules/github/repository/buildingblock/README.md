@@ -31,6 +31,7 @@ No modules.
 
 | Name | Description | Type | Default | Required |
 |------|-------------|------|---------|:--------:|
+| <a name="input_auto_init"></a> [auto\_init](#input\_auto\_init) | Flag to indicate whether to create an initial commit with an empty README file | `bool` | `false` | no |
 | <a name="input_repo_description"></a> [repo\_description](#input\_repo\_description) | Description of the GitHub repository | `string` | `"created by github-repo-building-block"` | no |
 | <a name="input_repo_name"></a> [repo\_name](#input\_repo\_name) | Name of the GitHub repository | `string` | `"github-repo"` | no |
 | <a name="input_repo_visibility"></a> [repo\_visibility](#input\_repo\_visibility) | Visibility of the GitHub repository | `string` | `"private"` | no |

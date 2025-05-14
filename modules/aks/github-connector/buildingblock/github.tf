@@ -57,11 +57,16 @@ resource "github_actions_environment_secret" "container_registry" {
   ]
 }
 
+resource "github_branch" "branch" {
+  repository = var.github_repo
+  branch     = var.github_branch
+}
+
 resource "github_repository_file" "dockerfile" {
   repository = github_repository_environment.env.repository
-
-  file    = "Dockerfile"
-  content = file("${path.module}/repo_content/Dockerfile")
+  branch     = github_branch.branch.branch
+  file       = "Dockerfile"
+  content    = file("${path.module}/repo_content/Dockerfile")
 
   commit_message      = "Basic Dockerfile"
   overwrite_on_create = true
@@ -73,8 +78,8 @@ resource "github_repository_file" "dockerfile" {
 
 resource "github_repository_file" "workflow" {
   repository = github_repository_environment.env.repository
-
-  file = ".github/workflows/${var.namespace}-deploy.yml"
+  branch     = github_branch.branch.branch
+  file       = ".github/workflows/${var.namespace}-deploy.yml"
   content = templatefile(
     "${path.module}/repo_content/workflow.yml",
     {
@@ -82,6 +87,7 @@ resource "github_repository_file" "workflow" {
       image_name        = var.github_repo,
       registry          = local.acr.host
       image_pull_secret = kubernetes_secret.image_pull.metadata[0].name
+      branch            = github_branch.branch.branch
     }
   )
 
