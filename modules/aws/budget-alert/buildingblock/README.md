@@ -1,9 +1,9 @@
 ---
 name: AWS Budget Alert
-description: |
-  Deploys an AWS Budget Alert to an AWS account.
 supportedPlatforms:
 - aws
+description: |
+  Deploys an AWS Budget Alert to an AWS account.
 ---
 
 This Terraform module provisions AWS Budget Alerts to help you monitor and control your cloud spending.
