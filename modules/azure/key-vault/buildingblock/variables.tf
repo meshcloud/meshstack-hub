@@ -15,25 +15,6 @@ variable "location" {
   description = "The location/region where the key vault is created."
 }
 
-variable "subscription_id" {
-  type = string
-}
-
-variable "users" {
-  type = list(object(
-    {
-      meshIdentifier = string
-      username       = string
-      firstName      = string
-      lastName       = string
-      email          = string
-      euid           = string
-      roles          = list(string)
-    }
-  ))
-  description = "Users and their roles provided by meshStack (Note that users must exist in stackit)"
-}
-
 variable "public_network_access_enabled" {
   type    = bool
   default = false
