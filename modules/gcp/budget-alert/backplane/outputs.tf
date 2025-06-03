@@ -10,7 +10,7 @@ output "service_account_id" {
 
 output "credentials_json" {
   description = "The JSON credentials for the backplane service account"
-  value       = google_service_account_key.backplane.private_key
+  value       = base64decode(google_service_account_key.backplane.private_key)
   sensitive   = true
 }
 
