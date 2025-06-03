@@ -35,7 +35,7 @@ No modules.
 
 | Name | Description | Type | Default | Required |
 |------|-------------|------|---------|:--------:|
-| <a name="input_alert_thresholds_yaml"></a> [alert\_thresholds\_yaml](#input\_alert\_thresholds\_yaml) | YAML string defining alert thresholds with fields threshold\_percent and spend\_basis | `string` | `"- percent: 80\n  basis: ACTUAL\n- percent: 100\n  basis: FORECASTED\n"` | no |
+| <a name="input_alert_thresholds_yaml"></a> [alert\_thresholds\_yaml](#input\_alert\_thresholds\_yaml) | YAML string defining alert thresholds as a list of objects having fields 'percent' and 'basis' | `string` | `"- percent: 80\n  basis: ACTUAL\n- percent: 100\n  basis: FORECASTED\n"` | no |
 | <a name="input_backplane_project_id"></a> [backplane\_project\_id](#input\_backplane\_project\_id) | The project ID where the backplane resources will be created | `string` | n/a | yes |
 | <a name="input_billing_account_id"></a> [billing\_account\_id](#input\_billing\_account\_id) | The ID of the billing account to which the budget will be applied | `string` | n/a | yes |
 | <a name="input_budget_currency"></a> [budget\_currency](#input\_budget\_currency) | The currency for the budget amount, e.g., EUR | `string` | `"EUR"` | no |

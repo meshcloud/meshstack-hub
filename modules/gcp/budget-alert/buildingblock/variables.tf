@@ -35,7 +35,7 @@ variable "contact_email" {
 }
 
 variable "alert_thresholds_yaml" {
-  description = "YAML string defining alert thresholds with fields threshold_percent and spend_basis"
+  description = "YAML string defining alert thresholds as a list of objects having fields 'percent' and 'basis'"
   type        = string
   default     = <<EOT
 - percent: 80
