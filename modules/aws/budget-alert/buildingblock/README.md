@@ -3,17 +3,14 @@ name: AWS Budget Alert
 supportedPlatforms:
 - aws
 description: |
-  Deploys an AWS Budget Alert to an AWS account.
+  Sets up budget alerts for an AWS account to monitor spending and prevent cost overruns.
 ---
 
 This Terraform module provisions AWS Budget Alerts to help you monitor and control your cloud spending.
 
-## Features
+## Permissions
 
-- Set monthly budget amounts for your AWS accounts
-- Configure email notifications based on actual spend thresholds
-- Configure email notifications based on forecasted spend thresholds
-- Easy integration with meshStack
+Please reference the [backplane implementation](../backplane/) for the required permissions to deploy this building block.
 
 <!-- BEGIN_TF_DOCS -->
 ## Requirements

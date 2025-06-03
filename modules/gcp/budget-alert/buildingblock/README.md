@@ -1,60 +1,16 @@
 ---
-name: "GCP Budget Alert"
-summary: |
-  Deploy a GCP budget alert to monitor and alert on project spending.
-
-  This buildingblock creates a budget for a GCP project with configurable alert thresholds.
-  It monitors actual spend and forecasted spend against the budget amount, sending notifications
-  when thresholds are exceeded.
-
-  The module includes:
-  - Budget resource with configurable amount and time period
-  - Alert thresholds at 80% (warning) and 100% (critical)
-  - Integration with notification channels for alerting
-  - Support for both actual and forecasted spend monitoring
-
-compliance: []
+name: GCP Project Budget Alert
+supportedPlatforms:
+  - gcp
+description: |
+  Sets up budget alerts for a GCP project to monitor spending and prevent cost overruns.
 ---
-
-# GCP Budget Alert
 
 This buildingblock deploys a GCP budget alert to monitor project spending and send notifications when budget thresholds are exceeded.
 
-## Usage
+## Permissions
 
-Configure the budget alert in your `terragrunt.hcl`:
-
-```hcl
-inputs = {
-  project_id    = "my-gcp-project"
-  budget_amount = 1000
-  alert_thresholds = {
-    warning  = 0.8   # Alert at 80%
-    critical = 1.0   # Alert at 100%
-  }
-}
-```
-
-## Features
-
-- **Budget Monitoring**: Tracks actual and forecasted spend against budget
-- **Configurable Thresholds**: Set warning and critical alert levels
-- **Notification Integration**: Alerts via configured notification channels
-- **Time Period Support**: Monthly budget cycles with calendar month alignment
-
-## Requirements
-
-- GCP project with billing enabled
-- Appropriate IAM permissions for budget management
-- Notification channels configured in the target project
-
-## Alert Behavior
-
-- **Warning Alert (80%)**: Sent when actual or forecasted spend reaches 80% of budget
-- **Critical Alert (100%)**: Sent when actual or forecasted spend reaches 100% of budget
-- **Forecasted Alerts**: Help prevent budget overruns by alerting on projected spend
-
-The budget resets at the beginning of each calendar month.
+Please reference the [backplane implementation](../backplane/) for the required permissions to deploy this building block.
 
 <!-- BEGIN_TF_DOCS -->
 ## Requirements
