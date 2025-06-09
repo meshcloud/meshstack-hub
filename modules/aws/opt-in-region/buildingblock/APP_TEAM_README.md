@@ -1,18 +1,20 @@
-# AWS Opt-In Region Building Block
+This building block enables AWS regions that require explicit opt-in for your AWS account.
 
-The AWS Opt-In Region building block enables you to enable AWS regions that require explicit opt-in for your AWS account. This is particularly useful for managing access to newer AWS regions or regions with specific compliance requirements.
+## Usage Motivation
 
-## When to use this
+This building block is designed for platform engineers and application teams who need to manage access to specific AWS regions, particularly newer regions or those with specific compliance requirements. It ensures that only approved regions are enabled for your AWS account, providing better control and security.
 
-Use this building block when you need to:
+## Usage Examples
 
-- **Enable new regions**: Grant access to newer AWS regions that require explicit opt-in
-- **Compliance requirements**: Enable specific regions to meet data residency or compliance needs
+**Example 1: Enabling a new AWS Region**
 
-## Common opt-in regions
+To enable a new AWS region, simply configure the building block with the desired region code (e.g., `eu-south-2`). The building block will then enable the region for your AWS account.
 
-Some regions that typically require opt-in include:
-- Asia Pacific regions (ap-southeast-3, ap-south-2, etc.)
-- Middle East regions (me-south-1, me-central-1)
-- Africa regions (af-south-1)
-- Europe regions (eu-south-1, eu-south-2)
+### Shared Responsibility
+
+| Responsibility          | Platform Team (Managed & Provided) | Application Team (Responsible) |
+| ------------------------- | ------------------------------------ | -------------------------------- |
+| Region Enablement         | ✅                                  | ❌                               |
+| AWS Account Configuration | ✅                                  | ❌                               |
+| Input Configuration       | ❌                                  | ✅                               |
+| Compliance Verification   | ✅                                  | ❌                                 |
