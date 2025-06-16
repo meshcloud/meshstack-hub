@@ -14,7 +14,7 @@ variable "enabled" {
   default     = true
 }
 
-variable "region_name" {
+variable "region" {
   type        = string
   description = "The region name to manage (e.g., ap-southeast-3, me-central-1, af-south-1)"
 }

@@ -1,5 +1,5 @@
-output "region_name" {
-  value       = aws_account_region.region.region_name
+output "region" {
+  value       = aws_account_region.region.region
   description = "The region name"
 }
 

@@ -3,12 +3,12 @@
 
 run "verify" {
   variables {
-    region_name = "eu-south-2"
-    enabled     = true
+    region  = "eu-south-2"
+    enabled = true
   }
 
   assert {
     condition     = output.opt_status == "ENABLED"
-    error_message = "incorrect opt-in status for region ${var.region_name}"
+    error_message = "incorrect opt-in status for region ${var.region}"
   }
 }
