@@ -1,10 +1,11 @@
 name: build
 on:
   push:
-    branches: [ main ]
+    branches: [ main, feature/* ]
   pull_request:
     branches: [ main ]
   merge_group:
+
 
 jobs:
   pre-commit:
@@ -24,3 +25,6 @@ jobs:
 
       - name: ensure all pre-commit hooks pass
         run: pre-commit run --all-files --show-diff-on-failure
+
+      - name: Run validation script
+        run: ci/validate_modules.sh
