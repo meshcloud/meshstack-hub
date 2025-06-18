@@ -1,4 +1,5 @@
 name: build
+
 on:
   push:
     branches: [ main, feature/* ]
@@ -6,25 +7,32 @@ on:
     branches: [ main ]
   merge_group:
 
-
 jobs:
   pre-commit:
     runs-on: ubuntu-latest
+
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
-      - uses: meshcloud/setup-collie@main
+      - name: Set up meshcloud collie CLI
+        uses: meshcloud/setup-collie@main
 
-      - uses: nixbuild/nix-quick-install-action@v26
+      - name: Install Nix
+        uses: nixbuild/nix-quick-install-action@v26
         with:
           nix_on_tmpfs: true
 
-      - uses: rrbutani/use-nix-shell-action@v1
+      - name: Enter nix dev shell
+        uses: rrbutani/use-nix-shell-action@v1
         with:
-          devShell: .#github_actions # use a special github actions shell
+          devShell: .#github_actions
 
-      - name: ensure all pre-commit hooks pass
+      - name: Run pre-commit checks
         run: pre-commit run --all-files --show-diff-on-failure
 
-      - name: Run validation script
-        run: ci/validate_modules.sh
+      - name: Run validation script and write summary
+        run: |
+          export GITHUB_STEP_SUMMARY="$GITHUB_STEP_SUMMARY"
+          chmod +x ci/validate_modules.sh
+          ci/validate_modules.sh

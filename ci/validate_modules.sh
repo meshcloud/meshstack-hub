@@ -1,18 +1,12 @@
 #!/bin/bash
 
-# CLI output colors
+# Colors for output
 RED='\033[0;31m'
 YELLOW='\033[1;33m'
-NC='\033[0m' # No Color
+NC='\033[0m'
 
 errors=()
 warnings=()
-
-# Check if Terraform is installed
-if ! command -v terraform >/dev/null 2>&1; then
-	echo -e "${RED}Error:${NC} Terraform is not installed or not in PATH"
-	exit 1
-fi
 
 check_readme_format() {
 	local readme_path="$1"
@@ -22,29 +16,59 @@ check_readme_format() {
 		return 1
 	fi
 
-	# Check for valid YAML front matter
-	if ! awk '/^---/{f=1; next} /^---$/{if(f){exit 0}} END{exit 1}' "$readme_path"; then
-		errors+=("README.md at $readme_path does not have a valid YAML front matter block (start and end with '---')")
+	# 1. Check that the first line is exactly ---
+	local first_line
+	first_line=$(head -n 1 "$readme_path")
+	if [[ "$first_line" != "---" ]]; then
+		errors+=("Missing starting '---' in README.md at $readme_path")
 		return 1
 	fi
 
-	# Extract YAML block
-	local yaml_header
-	yaml_header=$(awk '/^---/{f=1; next} /^---$/{f=0} f' "$readme_path")
-
-	# Check for required fields
-	if ! grep -q "name:" <<< "$yaml_header"; then
-		errors+=("Missing 'name' in YAML header of README.md at $readme_path")
-	fi
-	if ! grep -q "supportedPlatforms:" <<< "$yaml_header"; then
-		errors+=("Missing 'supportedPlatforms' in YAML header of README.md at $readme_path")
-	fi
-	if ! grep -q "description:" <<< "$yaml_header"; then
-		errors+=("Missing 'description' in YAML header of README.md at $readme_path")
+	# 2. Find end of YAML block
+	local end_line
+	end_line=$(awk 'NR>1 && /^---$/ { print NR; exit }' "$readme_path")
+	if [[ -z "$end_line" ]]; then
+		errors+=("Missing closing '---' in README.md at $readme_path")
+		return 1
 	fi
 
-	return 0
+	# 3. Extract YAML block
+	local yaml
+	yaml=$(head -n "$((end_line - 1))" "$readme_path" | tail -n +2)
+
+	# 4. Check for required fields and that they are not empty
+
+	# name
+	if ! grep -q "^name:" <<< "$yaml"; then
+		errors+=("Missing 'name:' field in YAML header of README.md at $readme_path")
+	elif [[ -z $(grep "^name:" <<< "$yaml" | cut -d':' -f2 | xargs) ]]; then
+		errors+=("Field 'name:' is empty in README.md at $readme_path")
+	fi
+
+	# supportedPlatforms
+	if ! grep -q "^supportedPlatforms:" <<< "$yaml"; then
+		errors+=("Missing 'supportedPlatforms:' field in YAML header of README.md at $readme_path")
+	else
+		local platforms_count
+		platforms_count=$(awk '/^supportedPlatforms:/ {found=1; next} /^ *[^- ]/ {found=0} found && /^ *-/{count++} END{print count+0}' <<< "$yaml")
+		if [[ "$platforms_count" -eq 0 ]]; then
+			errors+=("Field 'supportedPlatforms:' is empty in README.md at $readme_path")
+		fi
+	fi
+
+	# description
+	if ! grep -q "^description:" <<< "$yaml"; then
+		errors+=("Missing 'description:' field in YAML header of README.md at $readme_path")
+	else
+		local desc_start desc_content
+		desc_start=$(awk '/^description:/ {print NR; exit}' <<< "$yaml")
+		desc_content=$(echo "$yaml" | tail -n +"$((desc_start + 1))" | awk 'NF {print; exit}')
+		if [[ -z "$desc_content" ]]; then
+			errors+=("Field 'description:' is empty in README.md at $readme_path")
+		fi
+	fi
 }
+
 
 check_png_naming() {
 	local png_path="$1"
@@ -59,33 +83,44 @@ check_png_naming() {
 check_terraform_files() {
 	local buildingblock_path="$1"
 
-	# Check if any .tf files exist
-	if ! find "$buildingblock_path" -maxdepth 1 -name '*.tf' | grep -q .; then
+	# Check for at least one .tf file (excluding .terraform subfolder)
+	if ! find "$buildingblock_path" -maxdepth 1 -type f -name '*.tf' | grep -q .; then
 		errors+=("No Terraform (.tf) files found in $buildingblock_path")
 		return 1
 	fi
 
-	# Optional: Check for recommended files
-	local required_tf_files=("main.tf" "variables.tf" "outputs.tf" "provider.tf" "versions.tf")
-	for tf_file in "${required_tf_files[@]}"; do
+	# Optional recommended file check
+	local recommended_tf_files=("main.tf" "variables.tf" "outputs.tf", "provider.tf" "versions.tf")
+	for tf_file in "${recommended_tf_files[@]}"; do
 		if [[ ! -f "$buildingblock_path/$tf_file" ]]; then
 			warnings+=("Recommended file '$tf_file' is missing in $buildingblock_path")
 		fi
 	done
 
-	# Validate Terraform configuration
+	# Run terraform init + validate with visible output
 	pushd "$buildingblock_path" > /dev/null || return 1
+	rm -rf .terraform/ > /dev/null 2>&1
 
-	if ! terraform init -backend=false -input=false > /dev/null 2>&1; then
+	echo "🔄 Running terraform init in $buildingblock_path"
+	if ! terraform init -backend=false -input=false; then
+		echo -e "❌ ${RED}Terraform init failed in $buildingblock_path${NC}"
 		errors+=("Terraform init failed in $buildingblock_path")
-	elif ! terraform validate > /dev/null 2>&1; then
+		popd > /dev/null
+		return 1
+	fi
+
+	echo "🔄 Running terraform validate in $buildingblock_path"
+	if terraform validate; then
+		echo -e "✅ ${buildingblock_path} validated successfully"
+	else
+		echo -e "❌ ${RED}Terraform validate failed in $buildingblock_path${NC}"
 		errors+=("Terraform validate failed in $buildingblock_path")
 	fi
 
-	popd > /dev/null || return 1
+	popd > /dev/null
 }
 
-# Ensure the script is run from repo root
+# Ensure script is run from repo root
 cd "$(dirname "$0")/.." || exit 1
 modules_path="modules"
 
@@ -96,42 +131,55 @@ fi
 
 modules_glob="$modules_path/*/*/buildingblock"
 
-# Check all README.md files
-find $modules_glob -name 'README.md' -print0 | while IFS= read -r -d '' readme_file; do
+# Check README.md files only directly inside each buildingblock
+for readme_file in $(find $modules_glob -maxdepth 1 -name 'README.md'); do
 	check_readme_format "$readme_file"
 done
 
-# Check all PNG files
-find $modules_glob -name '*.png' -print0 | while IFS= read -r -d '' png_file; do
+# Check PNG files only directly inside each buildingblock
+for png_file in $(find $modules_glob -maxdepth 1 -name '*.png'); do
 	check_png_naming "$png_file"
 done
 
-# Check all Terraform buildingblock directories
-find $modules_glob -type d -name 'buildingblock' -print0 | while IFS= read -r -d '' buildingblock_dir; do
+Check each buildingblock directory
+for buildingblock_dir in $(find $modules_glob -type d -name 'buildingblock'); do
 	check_terraform_files "$buildingblock_dir"
 done
 
-# Print results
+# Output summary
 echo ""
 echo "Number of errors: ${#errors[@]}"
 echo "Number of warnings: ${#warnings[@]}"
 echo ""
 
 if [[ ${#errors[@]} -gt 0 ]]; then
-	echo -e "${RED}Errors found:${NC}"
-	for error in "${errors[@]}"; do
-		echo -e "- $error"
+	echo -e "${RED}Errors:${NC}"
+	for e in "${errors[@]}"; do
+		echo "- $e"
 	done
-	echo ""
 	exit 1
 elif [[ ${#warnings[@]} -gt 0 ]]; then
-	echo -e "${YELLOW}Warnings found:${NC}"
-	for warning in "${warnings[@]}"; do
-		echo -e "- $warning"
+	echo -e "${YELLOW}Warnings:${NC}"
+	for w in "${warnings[@]}"; do
+		echo "- $w"
 	done
-	echo ""
 	exit 0
 else
 	echo "✅ All checks passed successfully."
 	exit 0
+fi
+
+if [[ -n "$GITHUB_STEP_SUMMARY" ]]; then
+  {
+    echo "## 🧪 Module Validation Summary"
+    echo ""
+    echo "**Errors:** ${#errors[@]}"
+    for e in "${errors[@]}"; do echo "- ❌ $e"; done
+    echo ""
+    echo "**Warnings:** ${#warnings[@]}"
+    for w in "${warnings[@]}"; do echo "- ⚠️ $w"; done
+    if [[ ${#errors[@]} -eq 0 && ${#warnings[@]} -eq 0 ]]; then
+      echo "- ✅ All checks passed successfully."
+    fi
+  }
 fi
