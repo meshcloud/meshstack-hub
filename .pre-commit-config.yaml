@@ -3,7 +3,7 @@ repos:
     hooks:
       - id: check-terraform-structure
         name: Check Terraform module structure
-        entry: bash ci/check_tf_structure.sh
+        entry: bash ci/check_tf_structure.sh modules/**/{backplane,buildingblock}
         language: system
         pass_filenames: false
   - repo: local
@@ -23,9 +23,11 @@ repos:
       - id: terraform_fmt
       - id: terragrunt_fmt
       - id: terraform_validate
+        exclude:
+          #some of the validation have to be excluded because the provider.tf cant be validated
+          ^modules/(github/repository|aks/(github-connector|postgresql))/buildingblock/
+
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v4.4.0  # Use the ref you want to point at
     hooks:
       - id: trailing-whitespace
-        exclude: "^compliance/"
-

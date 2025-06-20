@@ -1,7 +1,7 @@
 data "aws_caller_identity" "current" {}
 
 resource "aws_iam_user" "buildingblock_s3_user" {
-  name = "buildingblock-s3-user"
+  name = var.aws_s3_iam_user
 }
 
 data "aws_iam_policy_document" "s3_full_access" {
