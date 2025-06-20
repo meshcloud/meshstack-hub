@@ -2,7 +2,8 @@
 name: AWS S3 Bucket
 supportedPlatforms:
   - aws
-description: Provides an AWS S3 bucket for object storage with access controls, lifecycle policies, and encryption.
+description: |
+  Provides an AWS S3 bucket for object storage with access controls, lifecycle policies, and encryption.
 ---
 
 # AWS S3 Bucket
@@ -25,9 +26,7 @@ terraform {
   }
 }
 
-provider "aws" {
-  region = var.region
-}
+provider "aws" {}
 ````
 
 <!-- BEGIN_TF_DOCS -->
