@@ -30,9 +30,3 @@ jobs:
 
       - name: Run pre-commit checks
         run: pre-commit run --all-files --show-diff-on-failure
-
-      - name: Run validation script and write summary
-        run: |
-          export GITHUB_STEP_SUMMARY="$GITHUB_STEP_SUMMARY"
-          chmod +x ci/validate_modules.sh
-          ci/validate_modules.sh

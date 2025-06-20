@@ -1,4 +1,19 @@
 repos:
+  - repo: local
+    hooks:
+      - id: check-terraform-structure
+        name: Check Terraform module structure
+        entry: bash ci/check_tf_structure.sh
+        language: system
+        pass_filenames: false
+  - repo: local
+    hooks:
+      - id: validate-buildingblock
+        name: Validate README and PNG in buildingblocks
+        entry: bash ci/validate_modules.sh
+        language: system
+        pass_filenames: false
+
   - repo: https://github.com/antonbabenko/pre-commit-terraform
     rev: v1.81.0
     hooks:
@@ -7,8 +22,10 @@ repos:
             - --args=--config=.terraform-docs.yml
       - id: terraform_fmt
       - id: terragrunt_fmt
+      - id: terraform_validate
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v4.4.0  # Use the ref you want to point at
     hooks:
       - id: trailing-whitespace
         exclude: "^compliance/"
+

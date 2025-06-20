@@ -80,46 +80,6 @@ check_png_naming() {
 	fi
 }
 
-check_terraform_files() {
-	local buildingblock_path="$1"
-
-	# Check for at least one .tf file (excluding .terraform subfolder)
-	if ! find "$buildingblock_path" -maxdepth 1 -type f -name '*.tf' | grep -q .; then
-		errors+=("No Terraform (.tf) files found in $buildingblock_path")
-		return 1
-	fi
-
-	# Optional recommended file check
-	local recommended_tf_files=("main.tf" "variables.tf" "outputs.tf", "provider.tf" "versions.tf")
-	for tf_file in "${recommended_tf_files[@]}"; do
-		if [[ ! -f "$buildingblock_path/$tf_file" ]]; then
-			warnings+=("Recommended file '$tf_file' is missing in $buildingblock_path")
-		fi
-	done
-
-	# Run terraform init + validate with visible output
-	pushd "$buildingblock_path" > /dev/null || return 1
-	rm -rf .terraform/ > /dev/null 2>&1
-
-	echo "🔄 Running terraform init in $buildingblock_path"
-	if ! terraform init -backend=false -input=false; then
-		echo -e "❌ ${RED}Terraform init failed in $buildingblock_path${NC}"
-		errors+=("Terraform init failed in $buildingblock_path")
-		popd > /dev/null
-		return 1
-	fi
-
-	echo "🔄 Running terraform validate in $buildingblock_path"
-	if terraform validate; then
-		echo -e "✅ ${buildingblock_path} validated successfully"
-	else
-		echo -e "❌ ${RED}Terraform validate failed in $buildingblock_path${NC}"
-		errors+=("Terraform validate failed in $buildingblock_path")
-	fi
-
-	popd > /dev/null
-}
-
 # Ensure script is run from repo root
 cd "$(dirname "$0")/.." || exit 1
 modules_path="modules"
@@ -141,13 +101,6 @@ for png_file in $(find $modules_glob -maxdepth 1 -name '*.png'); do
 	check_png_naming "$png_file"
 done
 
-Check each buildingblock directory
-for buildingblock_dir in $(find $modules_glob -type d -name 'buildingblock'); do
-	check_terraform_files "$buildingblock_dir"
-done
-
-# Output summary
-echo ""
 echo "Number of errors: ${#errors[@]}"
 echo "Number of warnings: ${#warnings[@]}"
 echo ""
@@ -167,19 +120,4 @@ elif [[ ${#warnings[@]} -gt 0 ]]; then
 else
 	echo "✅ All checks passed successfully."
 	exit 0
-fi
-
-if [[ -n "$GITHUB_STEP_SUMMARY" ]]; then
-  {
-    echo "## 🧪 Module Validation Summary"
-    echo ""
-    echo "**Errors:** ${#errors[@]}"
-    for e in "${errors[@]}"; do echo "- ❌ $e"; done
-    echo ""
-    echo "**Warnings:** ${#warnings[@]}"
-    for w in "${warnings[@]}"; do echo "- ⚠️ $w"; done
-    if [[ ${#errors[@]} -eq 0 && ${#warnings[@]} -eq 0 ]]; then
-      echo "- ✅ All checks passed successfully."
-    fi
-  }
 fi
