@@ -54,6 +54,7 @@ No modules.
 |------|-------------|------|---------|:--------:|
 | <a name="input_bucket_name"></a> [bucket\_name](#input\_bucket\_name) | The name of the S3 bucket | `string` | n/a | yes |
 | <a name="input_region"></a> [region](#input\_region) | The AWS region | `string` | `"eu-central-1"` | no |
+| <a name="input_tags"></a> [tags](#input\_tags) | List of tags to apply to the resource | `list(string)` | <pre>[<br>  "env:dev",<br>  "team:backend",<br>  "project:myapp"<br>]</pre> | no |
 
 ## Outputs
 
