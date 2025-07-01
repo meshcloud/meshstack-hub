@@ -3,7 +3,7 @@ name: SAP BTP subdirectory
 supportedPlatforms:
   - sapbtp
 description: |
-This building block Creates a subdirectory in SAP BTP.
+  This building block Creates a subdirectory in SAP BTP.
 ---
 
 # SAP BTP subdirectory
