@@ -10,11 +10,6 @@ description: |
 
 This Terraform module provisions the necessary resources to integrate GitHub Actions with an AKS cluster. It sets up service accounts, secrets, and workflows for seamless CI/CD.
 
-## Requirements
-- Terraform `>= 1.0`
-- GitHub Provider `6.5.0`
-- Kubernetes Provider `2.35.1`
-
 ## Providers
 
 ```hcl
