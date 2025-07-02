@@ -2,12 +2,6 @@
 data "azurerm_subscription" "current" {
 }
 
-resource "azurerm_role_assignment" "terraform_state" {
-  role_definition_name = "Storage Blob Data Owner"
-  principal_id         = azuread_service_principal.starterkit.object_id
-  scope                = var.tfstates_resource_manager_id
-}
-
 # DESIGN: we don't want to permanently hold permissions on all subscriptions via the MG hierarchy
 # this is mean to work in conjunction with the conditional assignment below
 resource "azurerm_role_definition" "starterkit_access" {
