@@ -71,3 +71,38 @@ End users provide:
 
 - **username**: Must be a `@meshcloud.io` email address (validated)
 - **budget_amount**: Monthly budget limit for cost alerts
+
+<!-- BEGIN_TF_DOCS -->
+## Requirements
+
+| Name | Version |
+|------|---------|
+| <a name="requirement_meshstack"></a> [meshstack](#requirement\_meshstack) | 0.7.1 |
+
+## Modules
+
+No modules.
+
+## Resources
+
+| Name | Type |
+|------|------|
+| [meshstack_buildingblock.budget_alert](https://registry.terraform.io/providers/meshcloud/meshstack/0.7.1/docs/resources/buildingblock) | resource |
+| [meshstack_buildingblock.enable_eu_south_2_region](https://registry.terraform.io/providers/meshcloud/meshstack/0.7.1/docs/resources/buildingblock) | resource |
+| [meshstack_project.sandbox](https://registry.terraform.io/providers/meshcloud/meshstack/0.7.1/docs/resources/project) | resource |
+| [meshstack_tenant.sandbox](https://registry.terraform.io/providers/meshcloud/meshstack/0.7.1/docs/resources/tenant) | resource |
+| [random_string.suffix](https://registry.terraform.io/providers/hashicorp/random/latest/docs/resources/string) | resource |
+
+## Inputs
+
+| Name | Description | Type | Default | Required |
+|------|-------------|------|---------|:--------:|
+| <a name="input_budget_amount"></a> [budget\_amount](#input\_budget\_amount) | Monthly budget amount. You will receive an alert when the budget is exceeded. | `number` | n/a | yes |
+| <a name="input_composition_config_yaml"></a> [composition\_config\_yaml](#input\_composition\_config\_yaml) | YAML configuration for landing zone and building blocks. Expected structure:<pre>yaml<br>landing_zone:<br>  landing_zone_identifier: "my-landing-zone"<br>  platform_identifier: "my-platform"<br>budget_alert_building_block:<br>  definition_uuid: "uuid-here"<br>  definition_version: 1<br>enable_eu_south_2_region_building_block:<br>  definition_uuid: "uuid-here"<br>  definition_version: 1<br>project:<br>  default_tags:<br>    environment: "sandbox"<br>    cost_center: "engineering"<br>  owner_tag_key: "project_owner"  # optional, if not set no project owner tag will be set</pre> | `string` | n/a | yes |
+| <a name="input_username"></a> [username](#input\_username) | meshStack username of the project contact. This should be an email. | `string` | n/a | yes |
+| <a name="input_workspace_identifier"></a> [workspace\_identifier](#input\_workspace\_identifier) | Identifier for the owning workspace | `string` | n/a | yes |
+
+## Outputs
+
+No outputs.
+<!-- END_TF_DOCS -->
