@@ -3,8 +3,8 @@ name: Agentic Coding Sandbox
 supportedPlatforms:
 - aws
 description: |
-  A composition building block that provides developers with a sandboxed AWS environment 
-  to access agentic coding tools like Claude via AWS Bedrock, with automatic budget alerts 
+  A composition building block that provides developers with a sandboxed AWS environment
+  to access agentic coding tools like Claude via AWS Bedrock, with automatic budget alerts
   and region enablement for AI model access.
 ---
 # Agentic Coding Sandbox
