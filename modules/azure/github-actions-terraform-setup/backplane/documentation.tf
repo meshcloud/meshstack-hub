@@ -18,7 +18,7 @@ on the cloud quickly.
 The easiest way to get started with a Starter Kit is to search for "Starter Kit" in the Likvid Bank Cloud Portal
 Marketplace and let the portal help you add it to a Sandbox Subscription (or create a new one if you don't have one yet).
 
-Starter Kits will create a (private) GitHub repository for you in our [GitHub Organization](https://github.com/${var.github_org}).
+Starter Kits will create a (private) GitHub repository for you in our [GitHub Organization](https://github.com/your_github_org).
 You will find the URL for your repository in the Starter Kit building block output tab. Please review the `README.md`
 of that repository for further instructions and inspiration for working with the starter kit.
 
