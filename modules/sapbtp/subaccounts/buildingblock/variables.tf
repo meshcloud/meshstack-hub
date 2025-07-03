@@ -19,9 +19,9 @@ variable "project_identifier" {
   description = "The meshStack project identifier."
 }
 
-variable "parent_id" {
-  description = "The ID of the parent resource."
+variable "subfolder" {
   type        = string
+  description = "The subfolder to use for the SAP BTP resources. This is used to create a folder structure in the SAP BTP cockpit."
 }
 
 # note: these permissions are passed in from meshStack and automatically updated whenever something changes

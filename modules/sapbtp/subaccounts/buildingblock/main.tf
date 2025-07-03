@@ -1,14 +1,32 @@
+data "btp_directories" "all" {}
+
 # iterate through the list of users and redue to a map of user with only their euid
 locals {
   reader = { for user in var.users : user.euid => user if contains(user.roles, "reader") }
   admin  = { for user in var.users : user.euid => user if contains(user.roles, "admin") }
   user   = { for user in var.users : user.euid => user if contains(user.roles, "user") }
+
+
+  subfolders = [
+    for dir in data.btp_directories.all.values : {
+      id   = dir.id
+      name = dir.name
+    }
+  ]
+
+  selected_subfolder_id = try(
+    one([
+      for sf in local.subfolders : sf.id
+      if sf.name == var.subfolder
+    ]),
+    null
+  )
 }
 
 resource "btp_subaccount" "subaccount" {
   name      = var.project_identifier
   subdomain = var.project_identifier
-  parent_id = var.parent_id
+  parent_id = local.selected_subfolder_id
   region    = var.region
 }
 
