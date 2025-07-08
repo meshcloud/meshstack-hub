@@ -1,16 +1,3 @@
----
-name: Starter Kits
-summary: |
-  Offers templates for application teams to get started quickly with deploying their applications on the cloud while following best practices.
-compliance:
-- control: cfmm/service-ecosystem/managed-devops-toolchain
-  statement: |
-    Provides a GitHub repository set up to deploy against Azure Subscriptions using Workload Identity Federation.
-- control: cfmm/iam/service-account-management
-  statement:  |
-    Automatically manages service principals for CI/CD pipelines using Workload Identity Federation.
----
-
 # Starter Kits
 
 This is an implementation of "Cloud Starter Kits" that provides application teams with
@@ -77,8 +64,6 @@ flowchart TD
   BB --> github
   BB --> Azure
   bbspn --Storage Blob Owner--> bbsubtfstate
-
-
 ```
 
 ### Deployment of a Building Block
@@ -97,7 +82,7 @@ flowchart TD
     end
     ghrepotemplate[GitHub Template Repository]
   end
-  subgraph Azure 
+  subgraph Azure
     subgraph bbsub[Building Block Backplane Subscription]
       bbsubtfstate[StarterKit BB TF State]
       bbspn[StarterKit SPN]
@@ -194,7 +179,6 @@ No modules.
 | [azuread_service_principal.starterkit](https://registry.terraform.io/providers/hashicorp/azuread/3.0.2/docs/resources/service_principal) | resource |
 | [azuread_service_principal_password.starterkit](https://registry.terraform.io/providers/hashicorp/azuread/3.0.2/docs/resources/service_principal_password) | resource |
 | [azurerm_role_assignment.starterkit_access](https://registry.terraform.io/providers/hashicorp/azurerm/4.4.0/docs/resources/role_assignment) | resource |
-| [azurerm_role_assignment.terraform_state](https://registry.terraform.io/providers/hashicorp/azurerm/4.4.0/docs/resources/role_assignment) | resource |
 | [azurerm_role_definition.starterkit_access](https://registry.terraform.io/providers/hashicorp/azurerm/4.4.0/docs/resources/role_definition) | resource |
 | [azurerm_role_definition.starterkit_deploy](https://registry.terraform.io/providers/hashicorp/azurerm/4.4.0/docs/resources/role_definition) | resource |
 | [time_rotating.key_rotation](https://registry.terraform.io/providers/hashicorp/time/0.11.1/docs/resources/rotating) | resource |
@@ -208,20 +192,13 @@ No modules.
 | Name | Description | Type | Default | Required |
 |------|-------------|------|---------|:--------:|
 | <a name="input_application_name"></a> [application\_name](#input\_application\_name) | n/a | `string` | n/a | yes |
-| <a name="input_github_app_id"></a> [github\_app\_id](#input\_github\_app\_id) | id of your GitHub App | `number` | n/a | yes |
-| <a name="input_github_app_installation_id"></a> [github\_app\_installation\_id](#input\_github\_app\_installation\_id) | id of your GitHub App installation as it appears in URLs on GitHub.com | `number` | n/a | yes |
-| <a name="input_github_org"></a> [github\_org](#input\_github\_org) | id of your GitHub organization as it appears in URLs on GitHub.com | `string` | n/a | yes |
 | <a name="input_location"></a> [location](#input\_location) | Azure location for deploying the building block terraform state storage account | `string` | n/a | yes |
 | <a name="input_scope"></a> [scope](#input\_scope) | Scope where the building block should be deployable, typically a Sandbox Landing Zone Management Group | `string` | n/a | yes |
-| <a name="input_tfstates_resource_group_name"></a> [tfstates\_resource\_group\_name](#input\_tfstates\_resource\_group\_name) | n/a | `string` | n/a | yes |
-| <a name="input_tfstates_resource_manager_id"></a> [tfstates\_resource\_manager\_id](#input\_tfstates\_resource\_manager\_id) | n/a | `string` | n/a | yes |
-| <a name="input_tfstates_storage_account_name"></a> [tfstates\_storage\_account\_name](#input\_tfstates\_storage\_account\_name) | n/a | `string` | n/a | yes |
-| <a name="input_tfstates_storage_container_name"></a> [tfstates\_storage\_container\_name](#input\_tfstates\_storage\_container\_name) | n/a | `string` | n/a | yes |
 
 ## Outputs
 
 | Name | Description |
 |------|-------------|
-| <a name="output_config_tf"></a> [config\_tf](#output\_config\_tf) | Generates a config.tf that can be dropped into meshStack's BuildingBlockDefinition as an encrypted file input to configure this building block. |
 | <a name="output_documentation_md"></a> [documentation\_md](#output\_documentation\_md) | n/a |
+| <a name="output_provider_config"></a> [provider\_config](#output\_provider\_config) | ENVIRONMENT VARIABLES for the AzureRM and AzureAD Providers, which you can use to configure your Building Block Definition. |
 <!-- END_TF_DOCS -->
