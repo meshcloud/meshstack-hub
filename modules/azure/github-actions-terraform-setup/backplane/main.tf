@@ -1,4 +1,3 @@
-# configure our logging subscription
 data "azurerm_subscription" "current" {
 }
 
