@@ -10,7 +10,7 @@ provider "azurerm" {
     }
   }
 
-  resource_provider_registrations = "core"
+  resource_provider_registrations = "extended"
 
   storage_use_azuread = true
 }
