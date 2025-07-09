@@ -1,6 +1,8 @@
+# note: this building block is expected to be executed with pre configured output by the "backplane" module in the
+# parent dir, this needs to provided in the BB execution enviornment
+
 data "azurerm_subscription" "current" {}
 data "azuread_client_config" "current" {}
-
 
 # note: it's important that all other azure resources transitively depend on this role assignment or else they will fail
 resource "azurerm_role_assignment" "starterkit_deploy" {
