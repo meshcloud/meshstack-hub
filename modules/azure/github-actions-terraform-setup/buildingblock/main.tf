@@ -16,7 +16,7 @@ resource "azurerm_role_assignment" "starterkit_deploy" {
 }
 
 resource "time_sleep" "wait" {
-  depends_on = [azurerm_role_assignment.starterkit_deploy]
+  depends_on = [azurerm_role_assignment.starterkit_deploy, data.azuread_group.project_admins]
 
   create_duration = "2m"
 }
