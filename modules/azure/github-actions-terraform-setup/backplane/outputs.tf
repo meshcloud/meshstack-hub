@@ -12,6 +12,7 @@ ARM_CLIENT_SECRET   = "${azuread_service_principal_password.starterkit.value}"
 
 # The Role definition ID to assign to the GitHub Actions App Service Managed Identity. This is used to deploy resources via Terraform.
 
+role_definition_display_name = "${azuread_service_principal.starterkit.display_name}-deploy"
 var.deploy_role_definition_id = "${azurerm_role_definition.starterkit_deploy.role_definition_id}"
 
 EOF
