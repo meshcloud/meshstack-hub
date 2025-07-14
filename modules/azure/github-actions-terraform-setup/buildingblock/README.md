@@ -40,7 +40,6 @@ No modules.
 | [azurerm_role_assignment.ghactions_app](https://registry.terraform.io/providers/hashicorp/azurerm/4.4.0/docs/resources/role_assignment) | resource |
 | [azurerm_role_assignment.ghactions_register](https://registry.terraform.io/providers/hashicorp/azurerm/4.4.0/docs/resources/role_assignment) | resource |
 | [azurerm_role_assignment.project_admins_blobs](https://registry.terraform.io/providers/hashicorp/azurerm/4.4.0/docs/resources/role_assignment) | resource |
-| [azurerm_role_assignment.starterkit_deploy](https://registry.terraform.io/providers/hashicorp/azurerm/4.4.0/docs/resources/role_assignment) | resource |
 | [azurerm_role_definition.ghactions](https://registry.terraform.io/providers/hashicorp/azurerm/4.4.0/docs/resources/role_definition) | resource |
 | [azurerm_role_definition.ghactions_register](https://registry.terraform.io/providers/hashicorp/azurerm/4.4.0/docs/resources/role_definition) | resource |
 | [azurerm_storage_account.tfstates](https://registry.terraform.io/providers/hashicorp/azurerm/4.4.0/docs/resources/storage_account) | resource |
@@ -52,10 +51,7 @@ No modules.
 | [github_repository_file.backend_tf](https://registry.terraform.io/providers/integrations/github/6.3.0/docs/resources/repository_file) | resource |
 | [github_repository_file.provider_tf](https://registry.terraform.io/providers/integrations/github/6.3.0/docs/resources/repository_file) | resource |
 | [random_string.resource_code](https://registry.terraform.io/providers/hashicorp/random/3.6.3/docs/resources/string) | resource |
-| [time_sleep.wait](https://registry.terraform.io/providers/hashicorp/time/0.11.1/docs/resources/sleep) | resource |
-| [azuread_client_config.current](https://registry.terraform.io/providers/hashicorp/azuread/3.0.2/docs/data-sources/client_config) | data source |
 | [azuread_group.project_admins](https://registry.terraform.io/providers/hashicorp/azuread/3.0.2/docs/data-sources/group) | data source |
-| [azurerm_subscription.current](https://registry.terraform.io/providers/hashicorp/azurerm/4.4.0/docs/data-sources/subscription) | data source |
 | [github_repository.repository](https://registry.terraform.io/providers/integrations/github/6.3.0/docs/data-sources/repository) | data source |
 
 ## Inputs
