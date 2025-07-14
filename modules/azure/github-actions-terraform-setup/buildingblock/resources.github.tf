@@ -30,7 +30,6 @@ resource "github_repository_environment_deployment_policy" "sandbox_all" {
   branch_pattern = "*"
 }
 
-
 #
 # Files
 #
@@ -71,11 +70,18 @@ resource "github_repository_file" "provider_tf" {
 EOT
 }
 
+# it takes some time until the permissions of the UAMI are propagated in Azure
+resource "time_sleep" "wait" {
+  create_duration = "2m"
+}
+
 resource "github_repository_file" "backend_tf" {
   depends_on = [
+    time_sleep.wait,
     azurerm_role_assignment.ghaction_tfstate,
     azurerm_role_assignment.ghactions_register,
     azurerm_role_assignment.ghactions_app
+
   ] # Wait with creating the Repo until the UAMI all the permissions needed to execute the pipeline
 
   repository     = data.github_repository.repository.name
