@@ -1,6 +1,4 @@
 resource "azurerm_resource_group" "cicd" {
-  depends_on = [time_sleep.wait]
-
   name     = "ci-cd"
   location = var.location
 }
