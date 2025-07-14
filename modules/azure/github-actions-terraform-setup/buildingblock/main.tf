@@ -1,3 +1,12 @@
+# note: this building block is expected to be executed with pre configured output by the "backplane" module in the
+# parent dir, this needs to provided in the BB execution enviornment
+#
+# additionaly:
+# there is pre_role_assignemnt Building Block which is expected to be executed before this BB
+
+data "azurerm_subscription" "current" {}
+data "azuread_client_config" "current" {}
+
 #
 # configure developer access
 #
