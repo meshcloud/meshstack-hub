@@ -72,7 +72,7 @@ EOT
 
 # it takes some time until the permissions of the UAMI are propagated in Azure
 resource "time_sleep" "wait" {
-  create_duration = "2m"
+  create_duration = "4m"
 }
 
 resource "github_repository_file" "backend_tf" {
