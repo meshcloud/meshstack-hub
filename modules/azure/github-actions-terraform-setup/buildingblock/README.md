@@ -9,7 +9,11 @@ description: |
 # Azure GitHub Actions Terraform Setup
 
 ## Structure of this Kit module
-This kit module consists of three components, each enabling the deployment of the next. It serves as the foundational building block — a Terraform module that defines an instance of the starter kit for a specific application team. This includes setting up a GitHub repository and a GitHub Actions pipeline.
+This kit module consists of four components, each enabling the deployment of the next. It serves as the foundational building block — a Terraform module that defines an instance of the starter kit for a specific application team.
+This includes setting up a GitHub repository and configuring a GitHub Actions pipeline.
+
+For the deployment of a role_assignment required by the GitHub pipeline, we use a helper or pre-executed building block. This step is performed before the main building block is executed. The challenge is that the login context must be refreshed —
+a separate login is required to run the automation correctly. This preliminary building block is located in the buildingblock/pre_role_assignment directory.
 
 For more information, refer to the backplane documentation of the [Azure GitHub Actions Terraform Setup Module](https://github.com/meshcloud/meshstack-hub/modules/azure/github-actions-terraform-setup/backplane/README.md).
 
@@ -40,7 +44,6 @@ No modules.
 | [azurerm_role_assignment.ghactions_app](https://registry.terraform.io/providers/hashicorp/azurerm/4.4.0/docs/resources/role_assignment) | resource |
 | [azurerm_role_assignment.ghactions_register](https://registry.terraform.io/providers/hashicorp/azurerm/4.4.0/docs/resources/role_assignment) | resource |
 | [azurerm_role_assignment.project_admins_blobs](https://registry.terraform.io/providers/hashicorp/azurerm/4.4.0/docs/resources/role_assignment) | resource |
-| [azurerm_role_assignment.starterkit_deploy](https://registry.terraform.io/providers/hashicorp/azurerm/4.4.0/docs/resources/role_assignment) | resource |
 | [azurerm_role_definition.ghactions](https://registry.terraform.io/providers/hashicorp/azurerm/4.4.0/docs/resources/role_definition) | resource |
 | [azurerm_role_definition.ghactions_register](https://registry.terraform.io/providers/hashicorp/azurerm/4.4.0/docs/resources/role_definition) | resource |
 | [azurerm_storage_account.tfstates](https://registry.terraform.io/providers/hashicorp/azurerm/4.4.0/docs/resources/storage_account) | resource |

@@ -1,6 +1,4 @@
 resource "azurerm_resource_group" "app" {
-  depends_on = [time_sleep.wait]
-
   name     = "app"
   location = var.location
 }
