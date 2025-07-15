@@ -65,7 +65,7 @@ resource "github_repository_file" "provider_tf" {
 EOT
 }
 
-# it takes some time until the permissions of the UAMI are propagated in Azure
+# Wait with creating the Repo until the UAMI all the permissions needed to execute the pipeline
 resource "time_sleep" "wait" {
   create_duration = "4m"
 }
@@ -76,8 +76,7 @@ resource "github_repository_file" "backend_tf" {
     azurerm_role_assignment.ghaction_tfstate,
     azurerm_role_assignment.ghactions_register,
     azurerm_role_assignment.ghactions_app
-
-  ] # Wait with creating the Repo until the UAMI all the permissions needed to execute the pipeline
+  ]
 
   repository     = data.github_repository.repository.name
   commit_message = "Configuring terraform backend to store state in your subscription"
