@@ -31,11 +31,6 @@ resource "github_repository_environment_deployment_policy" "sandbox_all" {
 }
 
 #
-# Files
-#
-
-
-#
 # add pipeline file to repo
 #
 

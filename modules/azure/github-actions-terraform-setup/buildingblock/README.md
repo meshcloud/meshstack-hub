@@ -9,7 +9,11 @@ description: |
 # Azure GitHub Actions Terraform Setup
 
 ## Structure of this Kit module
-This kit module consists of three components, each enabling the deployment of the next. It serves as the foundational building block — a Terraform module that defines an instance of the starter kit for a specific application team. This includes setting up a GitHub repository and a GitHub Actions pipeline.
+This kit module consists of four components, each enabling the deployment of the next. It serves as the foundational building block — a Terraform module that defines an instance of the starter kit for a specific application team.
+This includes setting up a GitHub repository and configuring a GitHub Actions pipeline.
+
+For the deployment of a role_assignment required by the GitHub pipeline, we use a helper or pre-executed building block. This step is performed before the main building block is executed. The challenge is that the login context must be refreshed —
+a separate login is required to run the automation correctly. This preliminary building block is located in the buildingblock/pre_role_assignment directory.
 
 For more information, refer to the backplane documentation of the [Azure GitHub Actions Terraform Setup Module](https://github.com/meshcloud/meshstack-hub/modules/azure/github-actions-terraform-setup/backplane/README.md).
 
@@ -51,7 +55,10 @@ No modules.
 | [github_repository_file.backend_tf](https://registry.terraform.io/providers/integrations/github/6.3.0/docs/resources/repository_file) | resource |
 | [github_repository_file.provider_tf](https://registry.terraform.io/providers/integrations/github/6.3.0/docs/resources/repository_file) | resource |
 | [random_string.resource_code](https://registry.terraform.io/providers/hashicorp/random/3.6.3/docs/resources/string) | resource |
+| [time_sleep.wait](https://registry.terraform.io/providers/hashicorp/time/0.11.1/docs/resources/sleep) | resource |
+| [azuread_client_config.current](https://registry.terraform.io/providers/hashicorp/azuread/3.0.2/docs/data-sources/client_config) | data source |
 | [azuread_group.project_admins](https://registry.terraform.io/providers/hashicorp/azuread/3.0.2/docs/data-sources/group) | data source |
+| [azurerm_subscription.current](https://registry.terraform.io/providers/hashicorp/azurerm/4.4.0/docs/data-sources/subscription) | data source |
 | [github_repository.repository](https://registry.terraform.io/providers/integrations/github/6.3.0/docs/data-sources/repository) | data source |
 
 ## Inputs
