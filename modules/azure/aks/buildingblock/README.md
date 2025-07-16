@@ -1,12 +1,12 @@
 ---
-name: Azure AKS Cluster
+name: AKS Cluster
 supportedPlatforms:
  - azure
 description: |
   Provision a production-grade Azure Kubernetes Service (AKS) cluster with Azure AD, OIDC, Workload Identity, Log Analytics and custom VNet using Terraform."
 ---
 
-# Azure AKS Terraform Module
+# AKS Building Block
 
 This Terraform module provisions a production-ready [Azure Kubernetes Service (AKS)](https://learn.microsoft.com/en-us/azure/aks/) cluster including:
 
