@@ -62,6 +62,8 @@ export class PlatformService {
       return { name: 'Azure Kubernetes Service', logo: logoUrl };
     case 'ionos':
       return { name: 'IONOS', logo: logoUrl };
+    case 'stackit':
+      return { name: 'STACKIT', logo: logoUrl };
     case 'datadog':
       return { name: 'DataDog', logo: logoUrl };
     case 'cloudfoundry':
