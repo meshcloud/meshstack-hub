@@ -39,7 +39,6 @@ resource "github_actions_environment_secret" "kubeconfig" {
   ]
 }
 
-
 resource "github_actions_environment_secret" "container_registry" {
   for_each = {
     host     = local.acr.host
@@ -80,8 +79,9 @@ resource "github_repository_file" "workflow" {
     {
       namespace         = var.namespace,
       image_name        = var.github_repo,
-      registry          = local.acr.host
-      image_pull_secret = kubernetes_secret.image_pull.metadata[0].name
+      registry          = local.acr.host,
+      image_pull_secret = kubernetes_secret.image_pull.metadata[0].name,
+      branch            = var.branch
     }
   )
 
@@ -95,4 +95,16 @@ resource "github_repository_file" "workflow" {
   lifecycle {
     ignore_changes = [content]
   }
+}
+
+# Create branch if it's not main - after files are committed to main
+resource "github_branch" "custom_branch" {
+  count      = var.branch != "main" ? 1 : 0
+  repository = var.github_repo
+  branch     = var.branch
+
+  depends_on = [
+    github_repository_file.dockerfile,
+    github_repository_file.workflow
+  ]
 }
