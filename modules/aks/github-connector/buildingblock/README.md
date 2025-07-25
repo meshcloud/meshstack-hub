@@ -57,6 +57,7 @@ No modules.
 | [github_branch.custom_branch](https://registry.terraform.io/providers/integrations/github/6.5.0/docs/resources/branch) | resource |
 | [github_repository_environment.env](https://registry.terraform.io/providers/integrations/github/6.5.0/docs/resources/repository_environment) | resource |
 | [github_repository_file.dockerfile](https://registry.terraform.io/providers/integrations/github/6.5.0/docs/resources/repository_file) | resource |
+| [github_repository_file.readme](https://registry.terraform.io/providers/integrations/github/6.5.0/docs/resources/repository_file) | resource |
 | [github_repository_file.workflow](https://registry.terraform.io/providers/integrations/github/6.5.0/docs/resources/repository_file) | resource |
 | [kubernetes_role.github_actions](https://registry.terraform.io/providers/hashicorp/kubernetes/2.35.1/docs/resources/role) | resource |
 | [kubernetes_role_binding.github_actions](https://registry.terraform.io/providers/hashicorp/kubernetes/2.35.1/docs/resources/role_binding) | resource |

@@ -56,6 +56,25 @@ resource "github_actions_environment_secret" "container_registry" {
   ]
 }
 
+resource "github_repository_file" "readme" {
+  repository = github_repository_environment.env.repository
+
+  file = "README.md"
+  content = templatefile(
+    "${path.module}/repo_content/README.MD",
+    {
+      github_repo = var.github_repo
+    }
+  )
+
+  commit_message      = "README for GitHub actions setup"
+  overwrite_on_create = true
+
+  lifecycle {
+    ignore_changes = [content]
+  }
+}
+
 resource "github_repository_file" "dockerfile" {
   repository = github_repository_environment.env.repository
 
@@ -64,6 +83,10 @@ resource "github_repository_file" "dockerfile" {
 
   commit_message      = "Basic Dockerfile"
   overwrite_on_create = true
+
+  depends_on = [
+    github_repository_file.readme, # depend on readme to make sure commits happen sequentially
+  ]
 
   lifecycle {
     ignore_changes = [content]
@@ -85,13 +108,14 @@ resource "github_repository_file" "workflow" {
     }
   )
 
-  commit_message      = "Worflow for building and deploying container images to AKS"
+  commit_message      = "Workflow for building and deploying container images to AKS namespace ${var.namespace}"
   overwrite_on_create = true
 
   depends_on = [
     github_repository_file.dockerfile,      # workflow needs dockerfile to build image
     kubernetes_role_binding.github_actions, # workflow needs role binding to deploy
   ]
+
   lifecycle {
     ignore_changes = [content]
   }
