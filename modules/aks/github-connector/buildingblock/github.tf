@@ -108,7 +108,7 @@ resource "github_repository_file" "workflow" {
     }
   )
 
-  commit_message      = "Workflow for building and deploying container images to AKS namespace ${var.namespace}"
+  commit_message      = "GH Actions Workflow for ${var.namespace}"
   overwrite_on_create = true
 
   depends_on = [

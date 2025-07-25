@@ -53,6 +53,9 @@ jobs:
                   - name: ${image_name}
                     image: ${registry}/${image_name}:$${{ github.sha }}
                     resources:
+                      requests:
+                        memory: "48Mi"
+                        cpu: "25m"
                       limits:
                         memory: "64Mi"
                         cpu: "100m"
