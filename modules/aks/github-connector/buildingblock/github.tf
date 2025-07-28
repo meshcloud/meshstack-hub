@@ -75,6 +75,12 @@ resource "github_repository_file" "readme" {
   }
 }
 
+# Add explicit delay to prevent race conditions with quick successive commits to GitHub
+resource "time_sleep" "after_readme" {
+  depends_on      = [github_repository_file.readme]
+  create_duration = "2s"
+}
+
 resource "github_repository_file" "dockerfile" {
   repository = github_repository_environment.env.repository
 
@@ -85,12 +91,19 @@ resource "github_repository_file" "dockerfile" {
   overwrite_on_create = true
 
   depends_on = [
-    github_repository_file.readme, # depend on readme to make sure commits happen sequentially
+    time_sleep.after_readme,          # wait after readme is created
+    github_repository_environment.env # ensure environment exists first
   ]
 
   lifecycle {
     ignore_changes = [content]
   }
+}
+
+# Add explicit delay to prevent race conditions with quick successive commits to GitHub
+resource "time_sleep" "after_dockerfile" {
+  depends_on      = [github_repository_file.dockerfile]
+  create_duration = "2s"
 }
 
 resource "github_repository_file" "workflow" {
@@ -112,13 +125,19 @@ resource "github_repository_file" "workflow" {
   overwrite_on_create = true
 
   depends_on = [
-    github_repository_file.dockerfile,      # workflow needs dockerfile to build image
+    time_sleep.after_dockerfile,            # wait after dockerfile is created
     kubernetes_role_binding.github_actions, # workflow needs role binding to deploy
   ]
 
   lifecycle {
     ignore_changes = [content]
   }
+}
+
+# Add explicit delay to prevent race conditions with quick successive commits to GitHub
+resource "time_sleep" "after_workflow" {
+  depends_on      = [github_repository_file.workflow]
+  create_duration = "2s"
 }
 
 # Create branch if it's not main - after files are committed to main
@@ -128,7 +147,6 @@ resource "github_branch" "custom_branch" {
   branch     = var.branch
 
   depends_on = [
-    github_repository_file.dockerfile,
-    github_repository_file.workflow
+    time_sleep.after_workflow # ensure all files are created before branch
   ]
 }
