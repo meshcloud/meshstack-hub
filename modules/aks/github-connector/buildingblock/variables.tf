@@ -12,9 +12,3 @@ variable "branch" {
   type        = string
   default     = "main"
 }
-
-variable "init_shared_files" {
-  description = "Whether to initialize shared files (README.md and Dockerfile) in the repository"
-  type        = bool
-  default     = true
-}

@@ -56,46 +56,6 @@ resource "github_actions_environment_secret" "container_registry" {
   ]
 }
 
-resource "github_repository_file" "readme" {
-  count      = var.init_shared_files ? 1 : 0
-  repository = github_repository_environment.env.repository
-
-  file = "README.md"
-  content = templatefile(
-    "${path.module}/repo_content/README.MD",
-    {
-      github_repo = var.github_repo
-    }
-  )
-
-  commit_message      = "README for GitHub actions setup"
-  overwrite_on_create = true
-
-  lifecycle {
-    ignore_changes = [content]
-  }
-}
-
-resource "github_repository_file" "dockerfile" {
-  count      = var.init_shared_files ? 1 : 0
-  repository = github_repository_environment.env.repository
-
-  file    = "Dockerfile"
-  content = file("${path.module}/repo_content/Dockerfile")
-
-  commit_message      = "Basic Dockerfile"
-  overwrite_on_create = true
-
-  depends_on = [
-    github_repository_environment.env, # ensure environment exists first
-    github_repository_file.readme      # make sure files are created sequentially
-  ]
-
-  lifecycle {
-    ignore_changes = [content]
-  }
-}
-
 resource "github_repository_file" "workflow" {
   repository = github_repository_environment.env.repository
 
@@ -116,7 +76,6 @@ resource "github_repository_file" "workflow" {
 
   depends_on = [
     kubernetes_role_binding.github_actions, # workflow needs role binding to deploy
-    github_repository_file.dockerfile       # workflow requires dockerfile to be present
   ]
 
   lifecycle {
@@ -131,6 +90,6 @@ resource "github_branch" "custom_branch" {
   branch     = var.branch
 
   depends_on = [
-    github_repository_file.workflow # ensure all files are created before branch, so all data is also available on the custom branch
+    github_repository_file.workflow # ensure workflow file is created before branch, so all data is also available on the custom branch
   ]
 }

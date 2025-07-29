@@ -57,8 +57,6 @@ No modules.
 | [github_actions_environment_secret.kubeconfig](https://registry.terraform.io/providers/integrations/github/6.5.0/docs/resources/actions_environment_secret) | resource |
 | [github_branch.custom_branch](https://registry.terraform.io/providers/integrations/github/6.5.0/docs/resources/branch) | resource |
 | [github_repository_environment.env](https://registry.terraform.io/providers/integrations/github/6.5.0/docs/resources/repository_environment) | resource |
-| [github_repository_file.dockerfile](https://registry.terraform.io/providers/integrations/github/6.5.0/docs/resources/repository_file) | resource |
-| [github_repository_file.readme](https://registry.terraform.io/providers/integrations/github/6.5.0/docs/resources/repository_file) | resource |
 | [github_repository_file.workflow](https://registry.terraform.io/providers/integrations/github/6.5.0/docs/resources/repository_file) | resource |
 | [kubernetes_role.github_actions](https://registry.terraform.io/providers/hashicorp/kubernetes/2.35.1/docs/resources/role) | resource |
 | [kubernetes_role_binding.github_actions](https://registry.terraform.io/providers/hashicorp/kubernetes/2.35.1/docs/resources/role_binding) | resource |
@@ -72,7 +70,6 @@ No modules.
 |------|-------------|------|---------|:--------:|
 | <a name="input_branch"></a> [branch](#input\_branch) | Branch to use for deployments. If not provided, defaults to 'main'. If a custom branch is provided, it will be created if it doesn't exist. | `string` | `"main"` | no |
 | <a name="input_github_repo"></a> [github\_repo](#input\_github\_repo) | n/a | `string` | n/a | yes |
-| <a name="input_init_shared_files"></a> [init\_shared\_files](#input\_init\_shared\_files) | Whether to initialize shared files (README.md and Dockerfile) in the repository | `bool` | `true` | no |
 | <a name="input_namespace"></a> [namespace](#input\_namespace) | Associated namespace in AKS. | `string` | n/a | yes |
 
 ## Outputs

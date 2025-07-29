@@ -10,6 +10,9 @@ This building block is for application teams that want to automate deployments t
 - A development team pushes new code to GitHub, triggering an automated pipeline that builds a Docker image, pushes it to Azure Container Registry (ACR), and deploys it to AKS.
 - A DevOps team sets up GitHub Actions workflows to run security scans and compliance checks before deploying applications to AKS.
 
+## Prerequisites
+- A `Dockerfile` must be present in the used repository, as the GitHub Actions workflow will deploy this `Dockerfile`.
+
 ## Shared Responsibility
 
 | Responsibility          | Platform Team | Application Team |
