@@ -57,6 +57,7 @@ resource "github_actions_environment_secret" "container_registry" {
 }
 
 resource "github_repository_file" "readme" {
+  count      = var.init_shared_files ? 1 : 0
   repository = github_repository_environment.env.repository
 
   file = "README.md"
@@ -75,13 +76,8 @@ resource "github_repository_file" "readme" {
   }
 }
 
-# Add explicit delay to prevent race conditions with quick successive commits to GitHub
-resource "time_sleep" "after_readme" {
-  depends_on      = [github_repository_file.readme]
-  create_duration = "2s"
-}
-
 resource "github_repository_file" "dockerfile" {
+  count      = var.init_shared_files ? 1 : 0
   repository = github_repository_environment.env.repository
 
   file    = "Dockerfile"
@@ -91,19 +87,13 @@ resource "github_repository_file" "dockerfile" {
   overwrite_on_create = true
 
   depends_on = [
-    time_sleep.after_readme,          # wait after readme is created
-    github_repository_environment.env # ensure environment exists first
+    github_repository_environment.env, # ensure environment exists first
+    github_repository_file.readme      # make sure files are created sequentially
   ]
 
   lifecycle {
     ignore_changes = [content]
   }
-}
-
-# Add explicit delay to prevent race conditions with quick successive commits to GitHub
-resource "time_sleep" "after_dockerfile" {
-  depends_on      = [github_repository_file.dockerfile]
-  create_duration = "2s"
 }
 
 resource "github_repository_file" "workflow" {
@@ -125,19 +115,13 @@ resource "github_repository_file" "workflow" {
   overwrite_on_create = true
 
   depends_on = [
-    time_sleep.after_dockerfile,            # wait after dockerfile is created
     kubernetes_role_binding.github_actions, # workflow needs role binding to deploy
+    github_repository_file.dockerfile       # workflow requires dockerfile to be present
   ]
 
   lifecycle {
     ignore_changes = [content]
   }
-}
-
-# Add explicit delay to prevent race conditions with quick successive commits to GitHub
-resource "time_sleep" "after_workflow" {
-  depends_on      = [github_repository_file.workflow]
-  create_duration = "2s"
 }
 
 # Create branch if it's not main - after files are committed to main
@@ -147,6 +131,6 @@ resource "github_branch" "custom_branch" {
   branch     = var.branch
 
   depends_on = [
-    time_sleep.after_workflow # ensure all files are created before branch
+    github_repository_file.workflow # ensure all files are created before branch, so all data is also available on the custom branch
   ]
 }
