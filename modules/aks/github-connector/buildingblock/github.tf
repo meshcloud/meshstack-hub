@@ -83,6 +83,17 @@ resource "github_repository_file" "workflow" {
   }
 }
 
+# Add a small delay to ensure file operations are fully settled, because otherwise GitHub may run into
+# some SHA conflicts as it messes up with the workflow file being present in the default and the custom branch.
+resource "time_sleep" "wait_for_file_settlement" {
+  count           = var.branch != "main" ? 1 : 0
+  create_duration = "5s"
+
+  depends_on = [
+    github_repository_file.workflow
+  ]
+}
+
 # Create branch if it's not main - after files are committed to main
 resource "github_branch" "custom_branch" {
   count      = var.branch != "main" ? 1 : 0
@@ -90,6 +101,6 @@ resource "github_branch" "custom_branch" {
   branch     = var.branch
 
   depends_on = [
-    github_repository_file.workflow # ensure workflow file is created before branch, so all data is also available on the custom branch
+    time_sleep.wait_for_file_settlement # ensure workflow file is fully settled before branch creation
   ]
 }
