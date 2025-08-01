@@ -1,3 +1,5 @@
+# TODO: this is currently not used. We might provide it as an output to
+# the github actions connector building block.
 name: ${namespace}
 
 on:
@@ -29,38 +31,10 @@ jobs:
       - name: Deploy to AKS
         env:
           KUBECONFIG_CONTENT: $${{ secrets.KUBECONFIG }}
+          IMAGE_TAG: ${{ github.sha }}
         run: |
           echo "$KUBECONFIG_CONTENT" > kubeconfig
-          cat > deployment.yml <<EOF
-          apiVersion: apps/v1
-          kind: Deployment
-          metadata:
-            name: ${image_name}
-            namespace: ${namespace}
-            labels:
-              app: ${image_name}
-          spec:
-            replicas: 1
-            selector:
-              matchLabels:
-                app: ${image_name}
-            template:
-              metadata:
-                labels:
-                  app: ${image_name}
-              spec:
-                containers:
-                  - name: ${image_name}
-                    image: ${registry}/${image_name}:$${{ github.sha }}
-                    resources:
-                      requests:
-                        memory: "48Mi"
-                        cpu: "25m"
-                      limits:
-                        memory: "64Mi"
-                        cpu: "100m"
-                imagePullSecrets:
-                  - name: ${image_pull_secret}
-          EOF
-
-          kubectl --kubeconfig ./kubeconfig apply -f deployment.yml
+          for file in k8s/*.yml; do
+            echo "Applying $file with IMAGE_TAG=$IMAGE_TAG"
+            envsubst < "$file" | kubectl --kubeconfig ./kubeconfig -n ${namespace} apply -f -
+          done
