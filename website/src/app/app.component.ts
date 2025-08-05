@@ -5,6 +5,7 @@ import { NgbModule } from '@ng-bootstrap/ng-bootstrap';
 
 import { HeaderComponent } from 'app/shared/header/header.component';
 
+import { ReferrerService } from './referrer.service';
 import { FooterComponent } from './shared/footer';
 
 @Component({
@@ -13,8 +14,11 @@ import { FooterComponent } from './shared/footer';
   templateUrl: './app.component.html',
   standalone: true
 })
-export class AppComponent implements OnDestroy{
-  constructor(@Inject(PLATFORM_ID) private platformId: Object) {
+export class AppComponent implements OnDestroy {
+  constructor(
+    @Inject(PLATFORM_ID) private platformId: object,
+    private referrerService: ReferrerService
+  ) {
     // Ensure we are in the browser (not SSR)
     if (isPlatformBrowser(this.platformId)) {
       this.loadPlausible();
@@ -50,7 +54,7 @@ export class AppComponent implements OnDestroy{
     const originUrl = event.data.originUrl;
 
     if (typeof originUrl === 'string') {
-      localStorage.setItem('referrerUrl', originUrl);
+      this.referrerService.saveMeshstackUrl(originUrl);
     }
   }
 }
