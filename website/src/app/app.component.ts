@@ -1,5 +1,5 @@
 import { CommonModule, isPlatformBrowser } from '@angular/common';
-import { Component, Inject, OnDestroy, PLATFORM_ID } from '@angular/core';
+import { Component, HostListener, Inject, PLATFORM_ID } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
 import { NgbModule } from '@ng-bootstrap/ng-bootstrap';
 
@@ -14,7 +14,7 @@ import { FooterComponent } from './shared/footer';
   templateUrl: './app.component.html',
   standalone: true
 })
-export class AppComponent implements OnDestroy {
+export class AppComponent {
   constructor(
     @Inject(PLATFORM_ID) private platformId: object,
     private referrerService: ReferrerService
@@ -22,12 +22,7 @@ export class AppComponent implements OnDestroy {
     // Ensure we are in the browser (not SSR)
     if (isPlatformBrowser(this.platformId)) {
       this.loadPlausible();
-      this.setupMessageListener();
     }
-  }
-
-  public ngOnDestroy(): void {
-    this.removeMessageListener();
   }
 
   public loadPlausible() {
@@ -38,19 +33,8 @@ export class AppComponent implements OnDestroy {
     document.head.appendChild(script);
   }
 
-  private setupMessageListener(): void {
-    if (isPlatformBrowser(this.platformId)) {
-      window.addEventListener('message', this.handleMessage.bind(this), false);
-    }
-  }
-
-  private removeMessageListener(): void {
-    if (isPlatformBrowser(this.platformId)) {
-      window.removeEventListener('message', this.handleMessage.bind(this), false);
-    }
-  }
-
-  private handleMessage(event: MessageEvent): void {
+  @HostListener('window:message', ['$event'])
+  public handleWindowMessage(event: MessageEvent): void {
     const originUrl = event.data.originUrl;
 
     if (typeof originUrl === 'string') {
