@@ -36,6 +36,37 @@ resource "kubernetes_role_binding" "github_actions" {
   }
 }
 
+# The ClusterIssuer is needed so that SSL certificates can be issued for projects using the GitHub Actions Connector.
+resource "kubernetes_cluster_role" "clusterissuer_reader" {
+  metadata {
+    name = "clusterissuer-reader"
+  }
+
+  rule {
+    api_groups = ["cert-manager.io"]
+    resources  = ["clusterissuers"]
+    verbs      = ["get"]
+  }
+}
+
+resource "kubernetes_cluster_role_binding" "github_actions_clusterissuer_access" {
+  metadata {
+    name = "github-actions-clusterissuer-access"
+  }
+
+  role_ref {
+    api_group = "rbac.authorization.k8s.io"
+    kind      = "ClusterRole"
+    name      = kubernetes_cluster_role.clusterissuer_reader.metadata[0].name
+  }
+
+  subject {
+    kind      = "ServiceAccount"
+    name      = kubernetes_service_account.github_actions.metadata[0].name
+    namespace = var.namespace
+  }
+}
+
 resource "kubernetes_secret" "image_pull" {
   metadata {
     name      = "acr-image-pull"
