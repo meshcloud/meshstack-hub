@@ -20,7 +20,6 @@ locals {
       }
     ]
   }
-
   kubeconfig = merge(local.aks_kubeconfig_stub, local.kubeconfig_user)
 }
 
