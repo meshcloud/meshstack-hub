@@ -8,15 +8,13 @@ description: |
 
 # GitHub Actions Integration with AKS
 
-This Terraform module provisions the necessary resources to integrate GitHub Actions with an AKS cluster. It sets up service accounts, secrets, and workflows for seamless CI/CD.
+This Terraform module provisions the necessary resources to integrate GitHub Actions with an AKS cluster.
+It sets up service accounts, secrets, and workflows for seamless CI/CD.
 
 ## Features
 
-- Configurable branch deployment: Deploy from `main` branch by default, or specify a custom branch
-- Automatic branch creation: If a custom branch is specified, it will be created automatically
 - Secure authentication using Kubernetes service accounts and GitHub environment secrets
 - Container registry integration for image building and pushing
-- Automated deployment workflows
 
 ## Providers
 
