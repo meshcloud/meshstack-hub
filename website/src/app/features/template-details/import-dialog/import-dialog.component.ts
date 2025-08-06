@@ -3,6 +3,8 @@ import { Component, Inject, Input, OnInit, PLATFORM_ID } from '@angular/core';
 import { FormBuilder, FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { NgbActiveModal } from '@ng-bootstrap/ng-bootstrap';
 
+import { ReferrerService } from 'app/referrer.service';
+
 interface ImportDialogForm {
   meshStackUrl: FormControl<string>;
 }
@@ -27,11 +29,12 @@ export class ImportDialogComponent implements OnInit {
   constructor(
     @Inject(PLATFORM_ID) private platformId: object,
     public activeModal: NgbActiveModal,
-    private fb: FormBuilder
+    private fb: FormBuilder,
+    private referrerService: ReferrerService
   ) { }
 
   public ngOnInit(): void {
-    const originUrl = localStorage.getItem('referrerUrl') ?? '';
+    const originUrl = this.referrerService.getMeshstackUrl();
     this.form = this.fb.group({
       meshStackUrl: this.fb.nonNullable.control(
         originUrl, [Validators.required, Validators.pattern(/^(https?:\/\/).*/)]
