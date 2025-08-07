@@ -55,6 +55,7 @@ No modules.
 | [github_actions_environment_secret.kubeconfig](https://registry.terraform.io/providers/integrations/github/6.5.0/docs/resources/actions_environment_secret) | resource |
 | [github_actions_environment_variable.additional](https://registry.terraform.io/providers/integrations/github/6.5.0/docs/resources/actions_environment_variable) | resource |
 | [github_repository_environment.env](https://registry.terraform.io/providers/integrations/github/6.5.0/docs/resources/repository_environment) | resource |
+| [kubernetes_cluster_role_binding.github_actions_clusterissuer_access](https://registry.terraform.io/providers/hashicorp/kubernetes/2.35.1/docs/resources/cluster_role_binding) | resource |
 | [kubernetes_role_binding.github_actions](https://registry.terraform.io/providers/hashicorp/kubernetes/2.35.1/docs/resources/role_binding) | resource |
 | [kubernetes_secret.github_actions](https://registry.terraform.io/providers/hashicorp/kubernetes/2.35.1/docs/resources/secret) | resource |
 | [kubernetes_secret.image_pull](https://registry.terraform.io/providers/hashicorp/kubernetes/2.35.1/docs/resources/secret) | resource |
