@@ -24,12 +24,12 @@ locals {
 }
 
 resource "github_repository_environment" "env" {
-  environment = var.namespace
+  environment = var.github_environment_name
   repository  = var.github_repo
 }
 
 resource "github_actions_environment_secret" "kubeconfig" {
-  environment     = var.namespace
+  environment     = var.github_environment_name
   repository      = github_repository_environment.env.repository
   secret_name     = "KUBECONFIG"
   plaintext_value = yamlencode(local.kubeconfig)
@@ -46,7 +46,7 @@ resource "github_actions_environment_secret" "container_registry" {
     password = local.acr.password
   }
 
-  environment     = var.namespace
+  environment     = var.github_environment_name
   repository      = github_repository_environment.env.repository
   secret_name     = "aks_container_registry_${each.key}"
   plaintext_value = each.value
@@ -56,40 +56,13 @@ resource "github_actions_environment_secret" "container_registry" {
   ]
 }
 
-resource "github_repository_file" "workflow" {
-  repository = github_repository_environment.env.repository
-
-  file = ".github/workflows/${var.namespace}-deploy.yml"
-  content = templatefile(
-    "${path.module}/repo_content/workflow.yml",
-    {
-      namespace         = var.namespace,
-      image_name        = var.github_repo,
-      registry          = local.acr.host,
-      image_pull_secret = kubernetes_secret.image_pull.metadata[0].name,
-      branch            = var.branch
-    }
-  )
-
-  commit_message      = "GH Actions Workflow for ${var.namespace}"
-  overwrite_on_create = true
-
+resource "github_actions_environment_variable" "additional" {
+  for_each      = var.additional_environment_variables
+  environment   = var.github_environment_name
+  repository    = github_repository_environment.env.repository
+  variable_name = each.key
+  value         = each.value
   depends_on = [
-    kubernetes_role_binding.github_actions, # workflow needs role binding to deploy
-  ]
-
-  lifecycle {
-    ignore_changes = [content]
-  }
-}
-
-# Create branch if it's not main - after files are committed to main
-resource "github_branch" "custom_branch" {
-  count      = var.branch != "main" ? 1 : 0
-  repository = var.github_repo
-  branch     = var.branch
-
-  depends_on = [
-    github_repository_file.workflow # ensure workflow file is created before branch, so all data is also available on the custom branch
+    github_repository_environment.env
   ]
 }

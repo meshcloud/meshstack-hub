@@ -18,28 +18,6 @@ resource "kubernetes_secret" "github_actions" {
   type = "kubernetes.io/service-account-token"
 }
 
-resource "kubernetes_role" "github_actions" {
-  metadata {
-    name      = "github-actions"
-    namespace = var.namespace
-  }
-
-  # manage a secret for pulling images from GitHub container registry
-  rule {
-    api_groups     = [""]
-    resources      = ["secrets"]
-    resource_names = ["github-image-pull"]
-    verbs          = ["*"]
-  }
-
-  # manage deployments
-  rule {
-    api_groups = ["apps"]
-    resources  = ["deployments"]
-    verbs      = ["*"]
-  }
-}
-
 resource "kubernetes_role_binding" "github_actions" {
   metadata {
     name      = "github-actions"
@@ -47,8 +25,26 @@ resource "kubernetes_role_binding" "github_actions" {
   }
   role_ref {
     api_group = "rbac.authorization.k8s.io"
-    kind      = "Role"
-    name      = kubernetes_role.github_actions.metadata[0].name
+    kind      = "ClusterRole"
+    name      = "edit"
+  }
+
+  subject {
+    kind      = "ServiceAccount"
+    name      = kubernetes_service_account.github_actions.metadata[0].name
+    namespace = var.namespace
+  }
+}
+
+resource "kubernetes_cluster_role_binding" "github_actions_clusterissuer_access" {
+  metadata {
+    name = "github-actions-clusterissuer-access-${var.namespace}"
+  }
+
+  role_ref {
+    api_group = "rbac.authorization.k8s.io"
+    kind      = "ClusterRole"
+    name      = "clusterissuer-reader" # This role is created in the backplane module
   }
 
   subject {

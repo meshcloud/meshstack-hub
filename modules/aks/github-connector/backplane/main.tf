@@ -77,3 +77,16 @@ resource "azurerm_role_assignment" "bb_github_connector_acr" {
   role_definition_name = "Contributor"
   principal_id         = azuread_service_principal.bb_github_connector_acr.object_id
 }
+
+# The ClusterIssuer is needed so that SSL certificates can be issued for projects using the GitHub Actions Connector.
+resource "kubernetes_cluster_role" "clusterissuer_reader" {
+  metadata {
+    name = "clusterissuer-reader"
+  }
+
+  rule {
+    api_groups = ["cert-manager.io"]
+    resources  = ["clusterissuers"]
+    verbs      = ["get"]
+  }
+}
