@@ -1,0 +1,67 @@
+variable "workspace_identifier" {
+  type = string
+}
+
+variable "name" {
+  type        = string
+  description = "Name of of the resources and the repository to connect."
+}
+
+variable "full_platform_identifier" {
+  type        = string
+  description = "Full platform identifier for the tenant."
+}
+
+variable "landing_zone_dev_identifier" {
+  type        = string
+  description = "Landing zone identifier for the development tenant."
+}
+
+variable "landing_zone_prod_identifier" {
+  type        = string
+  description = "Landing zone identifier for the production tenant."
+}
+
+variable "github_repo_definition_version_uuid" {
+  type        = string
+  description = "UUID of the GitHub repository building block definition version."
+}
+
+variable "github_actions_connector_definition_version_uuid" {
+  type        = string
+  description = "UUID of the GitHub Actions connector building block definition version."
+}
+
+variable "github_repo_definition_uuid" {
+  type        = string
+  description = "UUID of the GitHub repository building block definition."
+}
+
+variable "github_repo_input_repo_visibility" {
+  type        = string
+  description = "Visibility of the GitHub repository (e.g., public, private)."
+  default     = "private"
+}
+
+variable "github_org" {
+  type        = string
+  description = "GitHub organization name. Used only for display purposes."
+}
+
+variable "creator" {
+  type = object({
+    type        = string
+    identifier  = string
+    displayName = string
+    username    = optional(string)
+    email       = optional(string)
+    euid        = optional(string)
+  })
+  description = "Information about the creator of the resources who will be assigned Project Admin role"
+}
+
+variable "repo_admin" {
+  type        = string
+  description = "GitHub handle of the user who will be assigned as the repository admin. Delete building block definition input if not needed."
+  default     = null
+}
