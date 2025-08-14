@@ -3,7 +3,7 @@ name: AKS Starterkit
 supportedPlatforms:
   - aks
 description: |
-  The AKS Starterkit provides application teams with a pre-configured Kubernetes environment following the organization's best practices. It includes a Git repository, a CI/CD pipeline using GitHub Actions, and a secure container registry integration.
+  The AKS Starterkit provides application teams with a pre-configured Kubernetes environment following the organization's best practices. It includes two Kubernetes namespaces (dev&prod), a Git repository, a CI/CD pipeline using GitHub Actions, and a secure container registry integration.
 ---
 
 # AKS Starterkit Building Block
@@ -42,15 +42,15 @@ No modules.
 | Name | Description | Type | Default | Required |
 |------|-------------|------|---------|:--------:|
 | <a name="input_creator"></a> [creator](#input\_creator) | Information about the creator of the resources who will be assigned Project Admin role | <pre>object({<br>    type        = string<br>    identifier  = string<br>    displayName = string<br>    username    = optional(string)<br>    email       = optional(string)<br>    euid        = optional(string)<br>  })</pre> | n/a | yes |
-| <a name="input_full_platform_identifier"></a> [full\_platform\_identifier](#input\_full\_platform\_identifier) | Full platform identifier for the tenant. | `string` | n/a | yes |
+| <a name="input_full_platform_identifier"></a> [full\_platform\_identifier](#input\_full\_platform\_identifier) | Full platform identifier of the AKS Namespace platform. | `string` | n/a | yes |
 | <a name="input_github_actions_connector_definition_version_uuid"></a> [github\_actions\_connector\_definition\_version\_uuid](#input\_github\_actions\_connector\_definition\_version\_uuid) | UUID of the GitHub Actions connector building block definition version. | `string` | n/a | yes |
 | <a name="input_github_org"></a> [github\_org](#input\_github\_org) | GitHub organization name. Used only for display purposes. | `string` | n/a | yes |
 | <a name="input_github_repo_definition_uuid"></a> [github\_repo\_definition\_uuid](#input\_github\_repo\_definition\_uuid) | UUID of the GitHub repository building block definition. | `string` | n/a | yes |
 | <a name="input_github_repo_definition_version_uuid"></a> [github\_repo\_definition\_version\_uuid](#input\_github\_repo\_definition\_version\_uuid) | UUID of the GitHub repository building block definition version. | `string` | n/a | yes |
 | <a name="input_github_repo_input_repo_visibility"></a> [github\_repo\_input\_repo\_visibility](#input\_github\_repo\_input\_repo\_visibility) | Visibility of the GitHub repository (e.g., public, private). | `string` | `"private"` | no |
-| <a name="input_landing_zone_dev_identifier"></a> [landing\_zone\_dev\_identifier](#input\_landing\_zone\_dev\_identifier) | Landing zone identifier for the development tenant. | `string` | n/a | yes |
-| <a name="input_landing_zone_prod_identifier"></a> [landing\_zone\_prod\_identifier](#input\_landing\_zone\_prod\_identifier) | Landing zone identifier for the production tenant. | `string` | n/a | yes |
-| <a name="input_name"></a> [name](#input\_name) | Name of of the resources and the repository to connect. | `string` | n/a | yes |
+| <a name="input_landing_zone_dev_identifier"></a> [landing\_zone\_dev\_identifier](#input\_landing\_zone\_dev\_identifier) | AKS Landing zone identifier for the development tenant. | `string` | n/a | yes |
+| <a name="input_landing_zone_prod_identifier"></a> [landing\_zone\_prod\_identifier](#input\_landing\_zone\_prod\_identifier) | AKS Landing zone identifier for the production tenant. | `string` | n/a | yes |
+| <a name="input_name"></a> [name](#input\_name) | This name will be used for the created projects, AKS namespaces and GitHub repository. | `string` | n/a | yes |
 | <a name="input_repo_admin"></a> [repo\_admin](#input\_repo\_admin) | GitHub handle of the user who will be assigned as the repository admin. Delete building block definition input if not needed. | `string` | `null` | no |
 | <a name="input_workspace_identifier"></a> [workspace\_identifier](#input\_workspace\_identifier) | n/a | `string` | n/a | yes |
 
