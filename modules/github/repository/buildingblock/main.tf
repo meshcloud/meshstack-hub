@@ -17,7 +17,7 @@ resource "github_repository" "repository" {
 }
 
 resource "github_repository_collaborator" "repo_owner" {
-  count      = var.repo_owner != null ? 1 : 0
+  count      = var.repo_owner != null && var.repo_owner != "null" ? 1 : 0 # We have to check for 'null' string as optional inputs are not possible atm
   repository = github_repository.repository.name
   username   = var.repo_owner
   permission = "admin"
