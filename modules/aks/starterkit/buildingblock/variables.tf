@@ -4,22 +4,22 @@ variable "workspace_identifier" {
 
 variable "name" {
   type        = string
-  description = "Name of of the resources and the repository to connect."
+  description = "This name will be used for the created projects, AKS namespaces and GitHub repository."
 }
 
 variable "full_platform_identifier" {
   type        = string
-  description = "Full platform identifier for the tenant."
+  description = "Full platform identifier of the AKS Namespace platform."
 }
 
 variable "landing_zone_dev_identifier" {
   type        = string
-  description = "Landing zone identifier for the development tenant."
+  description = "AKS Landing zone identifier for the development tenant."
 }
 
 variable "landing_zone_prod_identifier" {
   type        = string
-  description = "Landing zone identifier for the production tenant."
+  description = "AKS Landing zone identifier for the production tenant."
 }
 
 variable "github_repo_definition_version_uuid" {
