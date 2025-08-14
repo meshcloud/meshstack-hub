@@ -34,6 +34,7 @@ No modules.
 | [meshstack_project_user_binding.creator_prod_admin](https://registry.terraform.io/providers/meshcloud/meshstack/0.9.0/docs/resources/project_user_binding) | resource |
 | [meshstack_tenant_v4.dev](https://registry.terraform.io/providers/meshcloud/meshstack/0.9.0/docs/resources/tenant_v4) | resource |
 | [meshstack_tenant_v4.prod](https://registry.terraform.io/providers/meshcloud/meshstack/0.9.0/docs/resources/tenant_v4) | resource |
+| [meshstack_building_block_v2.repo_data](https://registry.terraform.io/providers/meshcloud/meshstack/0.9.0/docs/data-sources/building_block_v2) | data source |
 | [meshstack_tenant_v4.aks-dev](https://registry.terraform.io/providers/meshcloud/meshstack/0.9.0/docs/data-sources/tenant_v4) | data source |
 | [meshstack_tenant_v4.aks-prod](https://registry.terraform.io/providers/meshcloud/meshstack/0.9.0/docs/data-sources/tenant_v4) | data source |
 
