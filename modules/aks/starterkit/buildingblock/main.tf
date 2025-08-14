@@ -127,34 +127,14 @@ resource "meshstack_building_block_v2" "repo" {
   }
 }
 
-# takes a while until github repo and aks namespace are ready
-resource "time_sleep" "wait_45_seconds" {
-  depends_on = [meshstack_building_block_v2.repo]
-
-  create_duration = "45s"
-}
-
-# Fetch the GitHub building block after creation to get outputs
-data "meshstack_building_block_v2" "repo_data" {
-  depends_on = [time_sleep.wait_45_seconds]
-
-  metadata = {
-    uuid = meshstack_building_block_v2.repo.metadata.uuid
-  }
-}
-
 # We need to fetch both dev&prod tenant data after creation to get the platform tenant ID
 data "meshstack_tenant_v4" "aks-dev" {
-  depends_on = [time_sleep.wait_45_seconds]
-
   metadata = {
     uuid = meshstack_tenant_v4.dev.metadata.uuid
   }
 }
 
 data "meshstack_tenant_v4" "aks-prod" {
-  depends_on = [time_sleep.wait_45_seconds]
-
   metadata = {
     uuid = meshstack_tenant_v4.prod.metadata.uuid
   }
