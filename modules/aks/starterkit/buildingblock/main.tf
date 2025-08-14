@@ -143,9 +143,14 @@ data "meshstack_tenant_v4" "aks-prod" {
   }
 }
 
-resource "meshstack_building_block_v2" "github_actions_dev" {
-  depends_on = [meshstack_building_block_v2.repo, meshstack_tenant_v4.dev]
+# only to fetch data from GitHub building block after creation
+data "meshstack_building_block_v2" "repo_data" {
+  metadata = {
+    uuid = meshstack_building_block_v2.repo.metadata.uuid
+  }
+}
 
+resource "meshstack_building_block_v2" "github_actions_dev" {
   spec = {
     building_block_definition_version_ref = {
       uuid = var.github_actions_connector_definition_version_uuid
@@ -174,7 +179,7 @@ resource "meshstack_building_block_v2" "github_actions_dev" {
 }
 
 resource "meshstack_building_block_v2" "github_actions_prod" {
-  depends_on = [meshstack_building_block_v2.repo, meshstack_building_block_v2.github_actions_dev]
+  depends_on = [meshstack_building_block_v2.github_actions_dev]
 
   spec = {
     display_name = "GHA Connector Prod"
