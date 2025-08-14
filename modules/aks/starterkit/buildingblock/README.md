@@ -3,7 +3,7 @@ name: AKS Starterkit
 supportedPlatforms:
   - aks
 description: |
-  The AKS Starterkit provides application teams with a pre-configured Kubernetes environment following the organization's best practices. It includes two Kubernetes namespaces (dev&prod), a Git repository, a CI/CD pipeline using GitHub Actions, and a secure container registry integration.
+  The AKS Starterkit provides application teams with a pre-configured Kubernetes environment. It includes two Kubernetes namespaces (dev&prod), a Git repository, a CI/CD pipeline using GitHub Actions, and a secure container registry integration.
 ---
 
 # AKS Starterkit Building Block
