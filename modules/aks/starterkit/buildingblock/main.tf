@@ -2,6 +2,9 @@ locals {
   # Create a purely alphanumeric identifier from the display name
   # Remove special characters, convert to lowercase, and replace spaces/hyphens with nothing
   identifier = lower(replace(replace(var.name, "/[^a-zA-Z0-9\\s\\-\\_]/", ""), "/[\\s\\-\\_]+/", "-"))
+
+  # Decode project tags YAML configuration
+  project_tags_config = yamldecode(var.project_tags_yaml)
 }
 
 resource "meshstack_project" "dev" {
@@ -11,7 +14,7 @@ resource "meshstack_project" "dev" {
   }
   spec = {
     display_name = "${var.name} Dev"
-    tags         = {}
+    tags         = try(local.project_tags_config.dev, {})
   }
 }
 
@@ -22,7 +25,7 @@ resource "meshstack_project" "prod" {
   }
   spec = {
     display_name = "${var.name} Prod"
-    tags         = {}
+    tags         = try(local.project_tags_config.prod, {})
   }
 }
 
