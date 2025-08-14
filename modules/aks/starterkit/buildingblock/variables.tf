@@ -4,7 +4,7 @@ variable "workspace_identifier" {
 
 variable "name" {
   type        = string
-  description = "This name will be used for the created projects, AKS namespaces and GitHub repository."
+  description = "This name will be used for the created projects, app subdomain and GitHub repository."
 }
 
 variable "full_platform_identifier" {
