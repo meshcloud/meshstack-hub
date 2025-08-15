@@ -12,4 +12,3 @@ You need to manually create an API Key in meshStack and fill in the variables in
 2. Create a new API Key with the following permissions:
 ![alt text](permissions.png)
 3. Copy the key ID to MESHSTACK_API_KEY and secret to MESHSTACK_API_SECRET
-4. Set the MESHSTACK_ENDPOINT to your meshStack API endpoint, e.g., `https://api.<your-meshstack-domain>`

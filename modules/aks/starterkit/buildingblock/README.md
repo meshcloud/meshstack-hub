@@ -3,7 +3,7 @@ name: AKS Starterkit
 supportedPlatforms:
   - aks
 description: |
-  The AKS Starterkit provides application teams with a pre-configured Kubernetes environment following the organization's best practices. It includes two Kubernetes namespaces (dev&prod), a Git repository, a CI/CD pipeline using GitHub Actions, and a secure container registry integration.
+  The AKS Starterkit provides application teams with a pre-configured Kubernetes environment. It includes two Kubernetes namespaces (dev&prod), a Git repository, a CI/CD pipeline using GitHub Actions, and a secure container registry integration.
 ---
 
 # AKS Starterkit Building Block
@@ -34,6 +34,7 @@ No modules.
 | [meshstack_project_user_binding.creator_prod_admin](https://registry.terraform.io/providers/meshcloud/meshstack/0.9.0/docs/resources/project_user_binding) | resource |
 | [meshstack_tenant_v4.dev](https://registry.terraform.io/providers/meshcloud/meshstack/0.9.0/docs/resources/tenant_v4) | resource |
 | [meshstack_tenant_v4.prod](https://registry.terraform.io/providers/meshcloud/meshstack/0.9.0/docs/resources/tenant_v4) | resource |
+| [meshstack_building_block_v2.repo_data](https://registry.terraform.io/providers/meshcloud/meshstack/0.9.0/docs/data-sources/building_block_v2) | data source |
 | [meshstack_tenant_v4.aks-dev](https://registry.terraform.io/providers/meshcloud/meshstack/0.9.0/docs/data-sources/tenant_v4) | data source |
 | [meshstack_tenant_v4.aks-prod](https://registry.terraform.io/providers/meshcloud/meshstack/0.9.0/docs/data-sources/tenant_v4) | data source |
 
@@ -50,7 +51,8 @@ No modules.
 | <a name="input_github_repo_input_repo_visibility"></a> [github\_repo\_input\_repo\_visibility](#input\_github\_repo\_input\_repo\_visibility) | Visibility of the GitHub repository (e.g., public, private). | `string` | `"private"` | no |
 | <a name="input_landing_zone_dev_identifier"></a> [landing\_zone\_dev\_identifier](#input\_landing\_zone\_dev\_identifier) | AKS Landing zone identifier for the development tenant. | `string` | n/a | yes |
 | <a name="input_landing_zone_prod_identifier"></a> [landing\_zone\_prod\_identifier](#input\_landing\_zone\_prod\_identifier) | AKS Landing zone identifier for the production tenant. | `string` | n/a | yes |
-| <a name="input_name"></a> [name](#input\_name) | This name will be used for the created projects, AKS namespaces and GitHub repository. | `string` | n/a | yes |
+| <a name="input_name"></a> [name](#input\_name) | This name will be used for the created projects, app subdomain and GitHub repository. | `string` | n/a | yes |
+| <a name="input_project_tags_yaml"></a> [project\_tags\_yaml](#input\_project\_tags\_yaml) | YAML configuration for project tags that will be applied to dev and prod projects. Expected structure:<pre>yaml<br>dev:<br>  key1:<br>    - "value1"<br>    - "value2"<br>  key2:<br>    - "value3"<br>prod:<br>  key1:<br>    - "value4"<br>  key2:<br>    - "value5"<br>    - "value6"</pre> | `string` | `"dev: {}\nprod: {}\n"` | no |
 | <a name="input_repo_admin"></a> [repo\_admin](#input\_repo\_admin) | GitHub handle of the user who will be assigned as the repository admin. Delete building block definition input if not needed. | `string` | `null` | no |
 | <a name="input_workspace_identifier"></a> [workspace\_identifier](#input\_workspace\_identifier) | n/a | `string` | n/a | yes |
 

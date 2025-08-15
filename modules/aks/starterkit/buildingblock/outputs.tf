@@ -25,9 +25,9 @@ This starter kit has set up the following resources in workspace `${var.workspac
 
 - **GitHub Repository**: [${local.identifier}](<${data.meshstack_building_block_v2.repo_data.status.outputs.repo_html_url.value_string}>)
 - **Development Project**: [${meshstack_project.dev.spec.display_name}](/#/w/${var.workspace_identifier}/p/${meshstack_project.dev.metadata.name}/tenants)
-  - **AKS Namespace**: [${data.meshstack_tenant_v4.aks-dev.spec.platform_tenant_id}](/#/w/${var.workspace_identifier}/p/${meshstack_project.dev.metadata.name}/i/aks.eu-de-central/overview/azure_kubernetes_service)
+  - **AKS Namespace**: [${data.meshstack_tenant_v4.aks-dev.spec.platform_tenant_id}](/#/w/${var.workspace_identifier}/p/${meshstack_project.dev.metadata.name}/i/${meshstack_tenant_v4.dev.spec.platform_tenant_id}/overview/azure_kubernetes_service)
 - **Production Project**: [${meshstack_project.prod.spec.display_name}](/#/w/${var.workspace_identifier}/p/${meshstack_project.prod.metadata.name}/tenants)
-  - **AKS Namespace**: [${data.meshstack_tenant_v4.aks-prod.spec.platform_tenant_id}](/#/w/${var.workspace_identifier}/p/${meshstack_project.prod.metadata.name}/i/aks.eu-de-central/overview/azure_kubernetes_service)
+  - **AKS Namespace**: [${data.meshstack_tenant_v4.aks-prod.spec.platform_tenant_id}](/#/w/${var.workspace_identifier}/p/${meshstack_project.prod.metadata.name}/i/${meshstack_tenant_v4.prod.spec.platform_tenant_id}/overview/azure_kubernetes_service)
 
 ---
 
