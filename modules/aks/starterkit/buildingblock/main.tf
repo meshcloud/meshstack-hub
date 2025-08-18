@@ -130,26 +130,6 @@ resource "meshstack_building_block_v2" "repo" {
   }
 }
 
-# We need to fetch both dev&prod tenant data after creation to get the platform tenant ID
-data "meshstack_tenant_v4" "aks-dev" {
-  metadata = {
-    uuid = meshstack_tenant_v4.dev.metadata.uuid
-  }
-}
-
-data "meshstack_tenant_v4" "aks-prod" {
-  metadata = {
-    uuid = meshstack_tenant_v4.prod.metadata.uuid
-  }
-}
-
-# only to fetch data from GitHub building block after creation
-data "meshstack_building_block_v2" "repo_data" {
-  metadata = {
-    uuid = meshstack_building_block_v2.repo.metadata.uuid
-  }
-}
-
 resource "meshstack_building_block_v2" "github_actions_dev" {
   spec = {
     building_block_definition_version_ref = {
@@ -171,7 +151,7 @@ resource "meshstack_building_block_v2" "github_actions_dev" {
       additional_environment_variables = {
         value_code = jsonencode({
           "DOMAIN_NAME"        = "${local.identifier}-dev"
-          "AKS_NAMESPACE_NAME" = data.meshstack_tenant_v4.aks-dev.spec.platform_tenant_id
+          "AKS_NAMESPACE_NAME" = meshstack_tenant_v4.dev.spec.platform_tenant_id
         })
       }
     }
@@ -201,7 +181,7 @@ resource "meshstack_building_block_v2" "github_actions_prod" {
       additional_environment_variables = {
         value_code = jsonencode({
           "DOMAIN_NAME"        = local.identifier
-          "AKS_NAMESPACE_NAME" = data.meshstack_tenant_v4.aks-prod.spec.platform_tenant_id
+          "AKS_NAMESPACE_NAME" = meshstack_tenant_v4.prod.spec.platform_tenant_id
         })
       }
     }

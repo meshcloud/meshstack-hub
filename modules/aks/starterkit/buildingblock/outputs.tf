@@ -11,7 +11,7 @@ output "prod-link" {
 
 output "github_repo_url" {
   description = "URL of the created GitHub repository"
-  value       = data.meshstack_building_block_v2.repo_data.status.outputs.repo_html_url.value_string
+  value       = meshstack_building_block_v2.repo.status.outputs.repo_html_url.value_string
 }
 
 output "summary" {
@@ -23,11 +23,11 @@ output "summary" {
 
 This starter kit has set up the following resources in workspace `${var.workspace_identifier}`:
 
-- **GitHub Repository**: [${local.identifier}](<${data.meshstack_building_block_v2.repo_data.status.outputs.repo_html_url.value_string}>)
+- **GitHub Repository**: [${local.identifier}](<${meshstack_building_block_v2.repo.status.outputs.repo_html_url.value_string}>)
 - **Development Project**: [${meshstack_project.dev.spec.display_name}](/#/w/${var.workspace_identifier}/p/${meshstack_project.dev.metadata.name}/tenants)
-  - **AKS Namespace**: [${data.meshstack_tenant_v4.aks-dev.spec.platform_tenant_id}](/#/w/${var.workspace_identifier}/p/${meshstack_project.dev.metadata.name}/i/${meshstack_tenant_v4.dev.spec.platform_tenant_id}/overview/azure_kubernetes_service)
+  - **AKS Namespace**: [${meshstack_tenant_v4.dev.spec.platform_tenant_id}](/#/w/${var.workspace_identifier}/p/${meshstack_project.dev.metadata.name}/i/${meshstack_tenant_v4.dev.spec.platform_identifier}/overview/azure_kubernetes_service)
 - **Production Project**: [${meshstack_project.prod.spec.display_name}](/#/w/${var.workspace_identifier}/p/${meshstack_project.prod.metadata.name}/tenants)
-  - **AKS Namespace**: [${data.meshstack_tenant_v4.aks-prod.spec.platform_tenant_id}](/#/w/${var.workspace_identifier}/p/${meshstack_project.prod.metadata.name}/i/${meshstack_tenant_v4.prod.spec.platform_tenant_id}/overview/azure_kubernetes_service)
+  - **AKS Namespace**: [${meshstack_tenant_v4.prod.spec.platform_tenant_id}](/#/w/${var.workspace_identifier}/p/${meshstack_project.prod.metadata.name}/i/${meshstack_tenant_v4.prod.spec.platform_identifier}/overview/azure_kubernetes_service)
 
 ---
 
@@ -48,7 +48,7 @@ Trigger a deployment by:
 - Pushing to the **main** branch (deploys to **dev**)
 - Merging **main** into **release** via PR (deploys to **prod**)
 
-View deployment status: [GitHub Actions](${data.meshstack_building_block_v2.repo_data.status.outputs.repo_html_url.value_string}/actions/workflows/k8s-deploy.yml)
+View deployment status: [GitHub Actions](${meshstack_building_block_v2.repo.status.outputs.repo_html_url.value_string}/actions/workflows/k8s-deploy.yml)
 
 - **Dev**: [${local.identifier}-dev.likvid-k8s.msh.host](https://${local.identifier}-dev.likvid-k8s.msh.host)
 - **Prod**: [${local.identifier}.likvid-k8s.msh.host](https://${local.identifier}.likvid-k8s.msh.host)
@@ -62,7 +62,7 @@ View deployment status: [GitHub Actions](${data.meshstack_building_block_v2.repo
 - Merge PR from **main → release** → deploys to **prod**
 
 ### 2. Monitor
-- Check workflow status in the [Actions tab](<${data.meshstack_building_block_v2.repo_data.status.outputs.repo_html_url.value_string}/actions>)
+- Check workflow status in the [Actions tab](<${meshstack_building_block_v2.repo.status.outputs.repo_html_url.value_string}/actions>)
 
 ### 3. Access AKS Namespaces
 - [Dev Namespace](/#/w/${var.workspace_identifier}/p/${meshstack_project.dev.metadata.name}/i/aks.eu-de-central/overview/azure_kubernetes_service)
