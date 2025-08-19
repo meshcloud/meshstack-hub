@@ -34,7 +34,10 @@ No modules.
 
 ## Inputs
 
-No inputs.
+| Name | Description | Type | Default | Required |
+|------|-------------|------|---------|:--------:|
+| <a name="input_aws_s3_iam_user"></a> [aws\_s3\_iam\_user](#input\_aws\_s3\_iam\_user) | The IAM user to use for the S3 bucket | `string` | `"buildingblock-s3-user"` | no |
+| <a name="input_location"></a> [location](#input\_location) | The location of the S3 bucket | `string` | n/a | yes |
 
 ## Outputs
 
