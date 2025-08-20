@@ -18,7 +18,7 @@ variable "dns_prefix" {
   default = "prodaks"
 }
 
-variable "agent_count" {
+variable "node_count" {
   type    = number
   default = 3
 }
@@ -38,3 +38,8 @@ variable "aks_admin_group_object_id" {
   description = "Object ID of the Azure AD group used for AKS admin access"
 }
 
+variable "log_analytics_workspace_name" {
+  description = "Name of the Log Analytics Workspace. If null, no LAW or monitoring will be created."
+  type        = string
+  default     = null
+}

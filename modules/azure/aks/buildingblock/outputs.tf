@@ -16,7 +16,7 @@ output "aks_identity_client_id" {
 
 output "law_id" {
   description = "Log Analytics Workspace ID"
-  value       = azurerm_log_analytics_workspace.law.id
+  value       = length(azurerm_log_analytics_workspace.law) > 0 ? azurerm_log_analytics_workspace.law[0].id : null
 }
 
 output "subnet_id" {
