@@ -7,7 +7,7 @@ variable "repo_description" {
 variable "repo_name" {
   type        = string
   default     = "github-repo"
-  description = "Name of the GitHub repository. Note that this will be used to create a new repository if it does not exist. If the repository already exists, this will be used to reference it and inputs related to repository settings will be ignored."
+  description = "Name of the GitHub repository"
 }
 
 variable "repo_visibility" {
@@ -38,10 +38,4 @@ variable "repo_owner" {
   type        = string
   default     = null
   description = "Username of the GitHub user who will be set as the owner/admin of the repository. If not set, no collaborator will be added."
-}
-
-variable "allow_using_existing_repo" {
-  type        = bool
-  default     = false
-  description = "If true, the building block will not attempt to create a new repository if one with the same name already exists. Instead, it will use the existing repository."
 }
