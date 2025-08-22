@@ -27,13 +27,14 @@ No modules.
 |------|------|
 | [github_repository.repository](https://registry.terraform.io/providers/integrations/github/6.6.0/docs/resources/repository) | resource |
 | [github_repository_collaborator.repo_owner](https://registry.terraform.io/providers/integrations/github/6.6.0/docs/resources/repository_collaborator) | resource |
+| [github_repository.existing](https://registry.terraform.io/providers/integrations/github/6.6.0/docs/data-sources/repository) | data source |
 
 ## Inputs
 
 | Name | Description | Type | Default | Required |
 |------|-------------|------|---------|:--------:|
 | <a name="input_repo_description"></a> [repo\_description](#input\_repo\_description) | Description of the GitHub repository | `string` | `"created by github-repo-building-block"` | no |
-| <a name="input_repo_name"></a> [repo\_name](#input\_repo\_name) | Name of the GitHub repository | `string` | `"github-repo"` | no |
+| <a name="input_repo_name"></a> [repo\_name](#input\_repo\_name) | Name of the GitHub repository. Note that this will be used to create a new repository if it does not exist. If the repository already exists, this will be used to reference it and inputs related to repository settings will be ignored. | `string` | `"github-repo"` | no |
 | <a name="input_repo_owner"></a> [repo\_owner](#input\_repo\_owner) | Username of the GitHub user who will be set as the owner/admin of the repository. If not set, no collaborator will be added. | `string` | `null` | no |
 | <a name="input_repo_visibility"></a> [repo\_visibility](#input\_repo\_visibility) | Visibility of the GitHub repository | `string` | `"private"` | no |
 | <a name="input_template_owner"></a> [template\_owner](#input\_template\_owner) | Owner of the template repository | `string` | `"template-owner"` | no |
