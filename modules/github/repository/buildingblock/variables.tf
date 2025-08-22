@@ -7,7 +7,7 @@ variable "repo_description" {
 variable "repo_name" {
   type        = string
   default     = "github-repo"
-  description = "Name of the GitHub repository"
+  description = "Name of the GitHub repository. Note that this will be used to create a new repository if it does not exist. If the repository already exists, this will be used to reference it and inputs related to repository settings will be ignored."
 }
 
 variable "repo_visibility" {
