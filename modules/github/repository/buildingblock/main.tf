@@ -6,7 +6,7 @@ data "github_repository" "existing" {
 
 locals {
   # Determine if we are using an existing repository or creating a new one
-  use_existing_repo = length(data.github_repository.existing) > 0 && try(data.github_repository.existing[0].name, null) != null && var.allow_using_existing_repo
+  use_existing_repo = length(data.github_repository.existing) > 0 && try(data.github_repository.existing[0].name, null) != null && var.allow_using_existing_repo && length(github_repository.repository) == 0
 
   # Archived repositories are read-only, so this check is important if we want to add collaborators
   repo_is_archived = local.use_existing_repo ? try(data.github_repository.existing[0].archived, false) : try(github_repository.repository[0].archived, false)
