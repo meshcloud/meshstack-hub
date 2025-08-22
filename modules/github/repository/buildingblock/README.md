@@ -33,6 +33,7 @@ No modules.
 
 | Name | Description | Type | Default | Required |
 |------|-------------|------|---------|:--------:|
+| <a name="input_allow_using_existing_repo"></a> [allow\_using\_existing\_repo](#input\_allow\_using\_existing\_repo) | If true, the building block will not attempt to create a new repository if one with the same name already exists. Instead, it will use the existing repository. | `bool` | `false` | no |
 | <a name="input_repo_description"></a> [repo\_description](#input\_repo\_description) | Description of the GitHub repository | `string` | `"created by github-repo-building-block"` | no |
 | <a name="input_repo_name"></a> [repo\_name](#input\_repo\_name) | Name of the GitHub repository. Note that this will be used to create a new repository if it does not exist. If the repository already exists, this will be used to reference it and inputs related to repository settings will be ignored. | `string` | `"github-repo"` | no |
 | <a name="input_repo_owner"></a> [repo\_owner](#input\_repo\_owner) | Username of the GitHub user who will be set as the owner/admin of the repository. If not set, no collaborator will be added. | `string` | `null` | no |

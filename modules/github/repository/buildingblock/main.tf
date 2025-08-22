@@ -1,6 +1,15 @@
 # Data source to check if repository exists
 data "github_repository" "existing" {
-  name = var.repo_name
+  count = var.allow_using_existing_repo ? 1 : 0
+  name  = var.repo_name
+}
+
+locals {
+  # Determine if we are using an existing repository or creating a new one
+  use_existing_repo = length(data.github_repository.existing) > 0 && try(data.github_repository.existing[0].name, null) != null && var.allow_using_existing_repo
+
+  # Archived repositories are read-only, so this check is important if we want to add collaborators
+  repo_is_archived = local.use_existing_repo ? try(data.github_repository.existing[0].archived, false) : try(github_repository.repository[0].archived, false)
 }
 
 moved {
@@ -10,7 +19,7 @@ moved {
 
 resource "github_repository" "repository" {
   # If the repository exists, we don't create a new one
-  count                = data.github_repository.existing.name != null ? 0 : 1
+  count                = local.use_existing_repo ? 0 : 1
   name                 = var.repo_name
   description          = var.repo_description
   visibility           = var.repo_visibility
@@ -29,7 +38,8 @@ resource "github_repository" "repository" {
 }
 
 resource "github_repository_collaborator" "repo_owner" {
-  count      = var.repo_owner != null && var.repo_owner != "null" ? 1 : 0 # We have to check for 'null' string as optional inputs are not possible atm
+  # Only add the collaborator if the repository is not archived and the repo_owner is set
+  count      = var.repo_owner != null && var.repo_owner != "null" && (local.repo_is_archived != true) ? 1 : 0 # We have to check for 'null' string as optional inputs are not possible atm
   repository = var.repo_name
   username   = var.repo_owner
   permission = "admin"

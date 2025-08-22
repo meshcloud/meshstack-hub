@@ -39,3 +39,9 @@ variable "repo_owner" {
   default     = null
   description = "Username of the GitHub user who will be set as the owner/admin of the repository. If not set, no collaborator will be added."
 }
+
+variable "allow_using_existing_repo" {
+  type        = bool
+  default     = false
+  description = "If true, the building block will not attempt to create a new repository if one with the same name already exists. Instead, it will use the existing repository."
+}
