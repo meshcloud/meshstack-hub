@@ -14,3 +14,8 @@ variable "backplane_service_account_name" {
   description = "The name of the service account to be created for the backplane"
   default     = "building-block-budget-alert"
 }
+
+variable "region" {
+  type        = string
+  description = "The region where the backplane resources will be deployed"
+}

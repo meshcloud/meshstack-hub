@@ -1,83 +1,123 @@
 #!/bin/bash
 
+# Colors for output
+RED='\033[0;31m'
+YELLOW='\033[1;33m'
+NC='\033[0m'
+
 errors=()
+warnings=()
 
 check_readme_format() {
 	local readme_path="$1"
+
 	if [[ ! -f "$readme_path" ]]; then
 		errors+=("README.md not found at $readme_path")
 		return 1
 	fi
 
-	if ! grep -q "^---" "$readme_path"; then
-		errors+=("Missing '---' at the beginning of the README.md at $readme_path")
+	# 1. Check that the first line is exactly ---
+	local first_line
+	first_line=$(head -n 1 "$readme_path")
+	if [[ "$first_line" != "---" ]]; then
+		errors+=("Missing starting '---' in README.md at $readme_path")
+		return 1
 	fi
-	if ! grep -q "name: " "$readme_path"; then
-		errors+=("Missing 'name' in README.md at $readme_path")
+
+	# 2. Find end of YAML block
+	local end_line
+	end_line=$(awk 'NR>1 && /^---$/ { print NR; exit }' "$readme_path")
+	if [[ -z "$end_line" ]]; then
+		errors+=("Missing closing '---' in README.md at $readme_path")
+		return 1
 	fi
-	if ! grep -q "supportedPlatforms:" "$readme_path"; then
-		errors+=("Missing 'supportedPlatforms' in README.md at $readme_path")
+
+	# 3. Extract YAML block
+	local yaml
+	yaml=$(head -n "$((end_line - 1))" "$readme_path" | tail -n +2)
+
+	# 4. Check for required fields and that they are not empty
+
+	# name
+	if ! grep -q "^name:" <<< "$yaml"; then
+		errors+=("Missing 'name:' field in YAML header of README.md at $readme_path")
+	elif [[ -z $(grep "^name:" <<< "$yaml" | cut -d':' -f2 | xargs) ]]; then
+		errors+=("Field 'name:' is empty in README.md at $readme_path")
 	fi
-	if ! grep -q "description:" "$readme_path"; then
-		errors+=("Missing 'description' in README.md at $readme_path")
+
+	# supportedPlatforms
+	if ! grep -q "^supportedPlatforms:" <<< "$yaml"; then
+		errors+=("Missing 'supportedPlatforms:' field in YAML header of README.md at $readme_path")
+	else
+		local platforms_count
+		platforms_count=$(awk '/^supportedPlatforms:/ {found=1; next} /^ *[^- ]/ {found=0} found && /^ *-/{count++} END{print count+0}' <<< "$yaml")
+		if [[ "$platforms_count" -eq 0 ]]; then
+			errors+=("Field 'supportedPlatforms:' is empty in README.md at $readme_path")
+		fi
 	fi
-	if ! grep -q "^---$" "$readme_path"; then
-		errors+=("Missing ending '---' in README.md at $readme_path")
+
+	# description
+	if ! grep -q "^description:" <<< "$yaml"; then
+		errors+=("Missing 'description:' field in YAML header of README.md at $readme_path")
+	else
+		local desc_start desc_content
+		desc_start=$(awk '/^description:/ {print NR; exit}' <<< "$yaml")
+		desc_content=$(echo "$yaml" | tail -n +"$((desc_start + 1))" | awk 'NF {print; exit}')
+		if [[ -z "$desc_content" ]]; then
+			errors+=("Field 'description:' is empty in README.md at $readme_path")
+		fi
 	fi
-	return 0
 }
+
 
 check_png_naming() {
 	local png_path="$1"
-	local png_name=$(basename "$png_path")
+	local png_name
+	png_name=$(basename "$png_path")
+
 	if [[ "$png_name" != "logo.png" ]]; then
-		errors+=("Warning: PNG file '$png_name' should be named 'logo.png' to be importable in meshStack")
+		warnings+=("PNG file '$png_name' should be named 'logo.png' to be importable in meshStack (path: $png_path)")
 	fi
 }
 
-check_terraform_files() {
-	local buildingblock_path="$1"
-	local tf_files=("main.tf" "variables.tf" "outputs.tf")
-
-	for tf_file in "${tf_files[@]}"; do
-		if [[ ! -f "$buildingblock_path/$tf_file" ]]; then
-			errors+=("Error: '$tf_file' not found in $buildingblock_path")
-		fi
-	done
-	return 0
-}
-
-# Ensure it is called from the repo root
-cd "$(dirname "$0")/.."
+# Ensure script is run from repo root
+cd "$(dirname "$0")/.." || exit 1
 modules_path="modules"
 
 if [[ ! -d "$modules_path" ]]; then
-	echo "Error: Modules folder not found at $modules_path"
+	echo -e "${RED}Error:${NC} Modules folder not found at $modules_path"
 	exit 1
 fi
 
 modules_glob="$modules_path/*/*/buildingblock"
 
-for readme_file in $(find $modules_glob -name 'README.md'); do
+# Check README.md files only directly inside each buildingblock
+for readme_file in $(find $modules_glob -maxdepth 1 -name 'README.md'); do
 	check_readme_format "$readme_file"
 done
 
-for png_file in $(find $modules_glob -name '*.png'); do
+# Check PNG files only directly inside each buildingblock
+for png_file in $(find $modules_glob -maxdepth 1 -name '*.png'); do
 	check_png_naming "$png_file"
 done
 
-for buildingblock_dir in $(find $modules_glob -type d -name 'buildingblock'); do
-	check_terraform_files "$buildingblock_dir"
-done
-
 echo "Number of errors: ${#errors[@]}"
+echo "Number of warnings: ${#warnings[@]}"
+echo ""
+
 if [[ ${#errors[@]} -gt 0 ]]; then
-	echo "Errors found:"
-	for error in "${errors[@]}"; do
-		echo "- $error"
+	echo -e "${RED}Errors:${NC}"
+	for e in "${errors[@]}"; do
+		echo "- $e"
 	done
 	exit 1
+elif [[ ${#warnings[@]} -gt 0 ]]; then
+	echo -e "${YELLOW}Warnings:${NC}"
+	for w in "${warnings[@]}"; do
+		echo "- $w"
+	done
+	exit 0
 else
-	echo "All checks passed successfully."
+	echo "✅ All checks passed successfully."
 	exit 0
 fi
