@@ -1,14 +1,14 @@
 ---
-name: Azure Key Vault
+name: Azure Storage Account
 supportedPlatforms:
   - azure
 description: |
-  Provides an Azure Key Vault to securely store and manage secrets, keys, and certificates with access control.
+  Provides an Azure Storage Account as a highly scalable, durable, and secure container that groups together a set of Azure Storage services.
 ---
 
-# Azure Key Vault
+# Azure Storage Account
 
-This Terraform module provisions an Azure Key Vault along with necessary role assignments.
+This Terraform module provisions an Azure Storage Account along with necessary role assignments.
 
 
 ## Requirements
@@ -49,8 +49,8 @@ No modules.
 
 | Name | Type |
 |------|------|
-| [azurerm_key_vault.key_vault](https://registry.terraform.io/providers/hashicorp/azurerm/4.18.0/docs/resources/key_vault) | resource |
-| [azurerm_resource_group.key_vault](https://registry.terraform.io/providers/hashicorp/azurerm/4.18.0/docs/resources/resource_group) | resource |
+| [azurerm_storage_account.storage_account](https://registry.terraform.io/providers/hashicorp/azurerm/4.18.0/docs/resources/storage_account) | resource |
+| [azurerm_resource_group.storage_account_rg](https://registry.terraform.io/providers/hashicorp/azurerm/4.18.0/docs/resources/resource_group) | resource |
 | [random_string.resource_code](https://registry.terraform.io/providers/hashicorp/random/3.6.3/docs/resources/string) | resource |
 | [azurerm_client_config.current](https://registry.terraform.io/providers/hashicorp/azurerm/4.18.0/docs/data-sources/client_config) | data source |
 | [azurerm_subscription.current](https://registry.terraform.io/providers/hashicorp/azurerm/4.18.0/docs/data-sources/subscription) | data source |
@@ -59,16 +59,15 @@ No modules.
 
 | Name | Description | Type | Default | Required |
 |------|-------------|------|---------|:--------:|
-| <a name="input_key_vault_name"></a> [key\_vault\_name](#input\_key\_vault\_name) | The name of the key vault. | `string` | n/a | yes |
-| <a name="input_key_vault_resource_group_name"></a> [key\_vault\_resource\_group\_name](#input\_key\_vault\_resource\_group\_name) | The name of the resource group containing the key vault. | `string` | n/a | yes |
-| <a name="input_location"></a> [location](#input\_location) | The location/region where the key vault is created. | `string` | n/a | yes |
-| <a name="input_public_network_access_enabled"></a> [public\_network\_access\_enabled](#input\_public\_network\_access\_enabled) | n/a | `bool` | `false` | no |
+| <a name="input_storage_account_name"></a> [storage\_account\_name](#input\_storage\_account\_name) | The name of the Storage Account. | `string` | n/a | yes |
+| <a name="input_storage_account_resource_group_name"></a> [storage\_account\_resource\_group\_name](#input\_storage\_account\_resource\_group\_name) | The name of the resource group containing the Storage Account. | `string` | n/a | yes |
+| <a name="input_location"></a> [location](#input\_location) | The location/region where the Storage Account is created. | `string` | n/a | yes |
 
 ## Outputs
 
 | Name | Description |
 |------|-------------|
-| <a name="output_key_vault_id"></a> [key\_vault\_id](#output\_key\_vault\_id) | n/a |
-| <a name="output_key_vault_name"></a> [key\_vault\_name](#output\_key\_vault\_name) | n/a |
-| <a name="output_key_vault_resource_group"></a> [key\_vault\_resource\_group](#output\_key\_vault\_resource\_group) | n/a |
+| <a name="output_storage_account_id"></a> [storage\_account\_id](#output\_storage\_account\_id) | n/a |
+| <a name="output_storage_account_name"></a> [storage\_account\_name](#output\_storage\_account\_name) | n/a |
+| <a name="output_storage_account_resource_group"></a> [storage\_account\_resource\_group](#output\_storage\_account\_resource\_group) | n/a |
 <!-- END_TF_DOCS -->

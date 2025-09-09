@@ -33,7 +33,7 @@ No modules.
 
 | Name | Description | Type | Default | Required |
 |------|-------------|------|---------|:--------:|
-| <a name="input_name"></a> [name](#input\_name) | Name of the building block, used for naming resources. Must be unique across entire Azure region, not just within the subscription | `string` | n/a | yes |
+| <a name="input_name"></a> [name](#input\_name) | Name of the building block, used for naming resources. | `string` | n/a | yes |
 | <a name="input_principal_ids"></a> [principal\_ids](#input\_principal\_ids) | Set of principal ids that will be granted permissions to deploy the building block | `set(string)` | n/a | yes |
 | <a name="input_scope"></a> [scope](#input\_scope) | Scope where the building block should be deployable, typically the parent of all Landing Zones. | `string` | n/a | yes |
 

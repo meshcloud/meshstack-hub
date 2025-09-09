@@ -1,10 +1,10 @@
-variable "key_vault_name" {
+variable "storage_account_name" {
   type        = string
   nullable    = false
-  description = "The name of the key vault."
+  description = "The name of the key vault. Must be unique across entire Azure Region, not just within a Subscription."
 }
 
-variable "key_vault_resource_group_name" {
+variable "storage_account_resource_group_name" {
   type        = string
   nullable    = false
   description = "The name of the resource group containing the key vault."
@@ -13,9 +13,4 @@ variable "key_vault_resource_group_name" {
 variable "location" {
   type        = string
   description = "The location/region where the key vault is created."
-}
-
-variable "public_network_access_enabled" {
-  type    = bool
-  default = false
 }

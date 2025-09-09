@@ -1,11 +1,11 @@
-output "key_vault_id" {
-  value = azurerm_key_vault.key_vault.id
+output "storage_account_id" {
+  value = azurerm_storage_account.storage_account.id
 }
 
-output "key_vault_name" {
-  value = azurerm_key_vault.key_vault.name
+output "storage_account_name" {
+  value = azurerm_storage_account.storage_account.name
 }
 
-output "key_vault_resource_group" {
-  value = azurerm_resource_group.key_vault.name
+output "storage_account_resource_group" {
+  value = azurerm_resource_group.storage_account_rg.name
 }
