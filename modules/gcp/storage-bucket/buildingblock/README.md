@@ -9,28 +9,6 @@ description: Provides a GCP Cloud Storage bucket for object storage with access 
 
 This Terraform module provisions a GCP Cloud Storage bucket with basic configurations.
 
-## Requirements
-- Terraform `>= 1.0`
-- Google Provider `~> 6.0`
-
-## Providers
-
-```hcl
-terraform {
-  required_providers {
-    google = {
-      source  = "hashicorp/google"
-      version = "~> 6.0"
-    }
-  }
-}
-
-provider "google" {
-  project = var.project_id
-  region  = var.location
-}
-```
-
 <!-- BEGIN_TF_DOCS -->
 ## Requirements
 
@@ -65,5 +43,5 @@ No modules.
 | <a name="output_bucket_name"></a> [bucket\_name](#output\_bucket\_name) | n/a |
 | <a name="output_bucket_self_link"></a> [bucket\_self\_link](#output\_bucket\_self\_link) | n/a |
 | <a name="output_bucket_url"></a> [bucket\_url](#output\_bucket\_url) | n/a |
-| <a name="output_summary"></a> [summary](#output\_summary) | Markdown summary of the created resources |
+| <a name="output_summary"></a> [summary](#output\_summary) | Markdown summary output of the building block |
 <!-- END_TF_DOCS -->

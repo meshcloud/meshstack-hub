@@ -11,11 +11,11 @@ output "bucket_self_link" {
 }
 
 output "summary" {
-  description = "Markdown summary of the created resources"
+  description = "Markdown summary output of the building block"
   value       = <<EOT
 # GCP Storage Bucket
 
-Your GCP Storage Bucket has been created!
+Your GCP Storage Bucket was successfully created!
 
 ## Details
 
