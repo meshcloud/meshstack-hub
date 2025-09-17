@@ -59,9 +59,9 @@ No modules.
 
 | Name | Description | Type | Default | Required |
 |------|-------------|------|---------|:--------:|
-| <a name="input_location"></a> [location](#input\_location) | The location/region where the key vault is created. | `string` | n/a | yes |
-| <a name="input_storage_account_name"></a> [storage\_account\_name](#input\_storage\_account\_name) | The name of the key vault. Must be unique across entire Azure Region, not just within a Subscription. | `string` | n/a | yes |
-| <a name="input_storage_account_resource_group_name"></a> [storage\_account\_resource\_group\_name](#input\_storage\_account\_resource\_group\_name) | The name of the resource group containing the key vault. | `string` | n/a | yes |
+| <a name="input_location"></a> [location](#input\_location) | The location/region where the storage account is created. | `string` | n/a | yes |
+| <a name="input_storage_account_name"></a> [storage\_account\_name](#input\_storage\_account\_name) | The name of the storage account. Must be unique across entire Azure Region, not just within a Subscription. | `string` | n/a | yes |
+| <a name="input_storage_account_resource_group_name"></a> [storage\_account\_resource\_group\_name](#input\_storage\_account\_resource\_group\_name) | The name of the resource group containing the storage account. | `string` | n/a | yes |
 
 ## Outputs
 
