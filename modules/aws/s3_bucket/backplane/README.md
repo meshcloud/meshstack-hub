@@ -9,6 +9,20 @@ summary: |
 
 This will deploy an IAM user with full S3 access (`s3:*`)
 
+## Usage
+
+```hcl
+module "aws_s3_bucket_backplane" {
+  source = "git::https://github.com/meshcloud/meshstack-hub.git//modules/aws/s3_bucket/backplane"
+
+  workload_identity_federation = {
+    issuer   = "https://your-oidc-issuer"
+    audience = "your-audience"
+    subject  = "system:serviceaccount:your-namespace:your-service-account-name"
+  } # Optional, if not provided, workload identity federation will not be set up and IAM access keys will be created
+}
+```
+
 <!-- BEGIN_TF_DOCS -->
 ## Requirements
 
