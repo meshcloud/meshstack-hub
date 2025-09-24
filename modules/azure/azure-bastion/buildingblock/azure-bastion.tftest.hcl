@@ -10,6 +10,27 @@ run "valid_bastion_configuration" {
     enable_resource_locks    = false
     enable_observability     = true
 
+    alert_email_receivers = [
+      {
+        meshIdentifier = "identifier1"
+        username       = "likvid-tom@meshcloud.io"
+        firstName      = "likvid"
+        lastName       = "tom"
+        email          = "likvid-tom@meshcloud.io"
+        euid           = "likvid-tom@meshcloud.io"
+        roles          = ["editor"]
+      },
+      {
+        meshIdentifier = "identifier2"
+        username       = "likvid-anna@meshcloud.io"
+        firstName      = "likvid"
+        lastName       = "anna"
+        email          = "likvid-anna@meshcloud.io"
+        euid           = "likvid-anna@meshcloud.io"
+        roles          = ["admin"]
+      }
+    ]
+
     tags = {
       Environment = "Test"
       Purpose     = "Bastion Testing"

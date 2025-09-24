@@ -245,7 +245,7 @@ resource "azurerm_monitor_action_group" "sandbox_alerts" {
   dynamic "email_receiver" {
     for_each = var.alert_email_receivers
     content {
-      name          = email_receiver.value.name
+      name          = "${email_receiver.value.firstName} ${email_receiver.value.lastName}"
       email_address = email_receiver.value.email
     }
   }
