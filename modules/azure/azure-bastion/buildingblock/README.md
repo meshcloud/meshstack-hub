@@ -149,8 +149,7 @@ No modules.
 | [azurerm_management_lock.bastion_lock](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/management_lock) | resource |
 | [azurerm_management_lock.subnet_lock](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/management_lock) | resource |
 | [azurerm_management_lock.vnet_lock](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/management_lock) | resource |
-| [azurerm_management_lock.workload_subnet_1_lock](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/management_lock) | resource |
-| [azurerm_management_lock.workload_subnet_2_lock](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/management_lock) | resource |
+| [azurerm_management_lock.workload_subnet_lock](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/management_lock) | resource |
 | [azurerm_monitor_action_group.sandbox_alerts](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/monitor_action_group) | resource |
 | [azurerm_monitor_activity_log_alert.admin_activity](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/monitor_activity_log_alert) | resource |
 | [azurerm_monitor_activity_log_alert.bastion_resource_health](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/monitor_activity_log_alert) | resource |
@@ -158,9 +157,9 @@ No modules.
 | [azurerm_monitor_activity_log_alert.subscription_resource_health](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/monitor_activity_log_alert) | resource |
 | [azurerm_network_security_group.bastion_nsg](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/network_security_group) | resource |
 | [azurerm_public_ip.bastion_pip](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/public_ip) | resource |
+| [azurerm_resource_group.bastion](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/resource_group) | resource |
 | [azurerm_subnet.bastion_subnet](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/subnet) | resource |
-| [azurerm_subnet.workload_subnet_1](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/subnet) | resource |
-| [azurerm_subnet.workload_subnet_2](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/subnet) | resource |
+| [azurerm_subnet.workload_subnet](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/subnet) | resource |
 | [azurerm_subnet_network_security_group_association.bastion_nsg_association](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/subnet_network_security_group_association) | resource |
 | [azurerm_virtual_network.vnet](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/virtual_network) | resource |
 | [time_sleep.wait_for_subnet](https://registry.terraform.io/providers/hashicorp/time/latest/docs/resources/sleep) | resource |
@@ -170,7 +169,7 @@ No modules.
 
 | Name | Description | Type | Default | Required |
 |------|-------------|------|---------|:--------:|
-| <a name="input_alert_email_receivers"></a> [alert\_email\_receivers](#input\_alert\_email\_receivers) | List of email receivers for alerts | <pre>list(object({<br>    name  = string<br>    email = string<br>  }))</pre> | `[]` | no |
+| <a name="input_alert_email_receivers"></a> [alert\_email\_receivers](#input\_alert\_email\_receivers) | List of email receivers for alerts provided by meshStack | <pre>list(object(<br>    {<br>      meshIdentifier = string<br>      username       = string<br>      firstName      = string<br>      lastName       = string<br>      email          = string<br>      euid           = string<br>      roles          = list(string)<br>    }<br>  ))</pre> | `[]` | no |
 | <a name="input_alert_webhook_receivers"></a> [alert\_webhook\_receivers](#input\_alert\_webhook\_receivers) | List of webhook receivers for alerts (Teams, Slack, etc.) | <pre>list(object({<br>    name = string<br>    uri  = string<br>  }))</pre> | `[]` | no |
 | <a name="input_azure_delay_seconds"></a> [azure\_delay\_seconds](#input\_azure\_delay\_seconds) | Delay in seconds to wait for Azure resources to be ready | `number` | `30` | no |
 | <a name="input_bastion_sku"></a> [bastion\_sku](#input\_bastion\_sku) | SKU of the Azure Bastion Host | `string` | `"Basic"` | no |
@@ -201,8 +200,5 @@ No modules.
 | <a name="output_vnet_address_space"></a> [vnet\_address\_space](#output\_vnet\_address\_space) | The address space of the POC Virtual Network |
 | <a name="output_vnet_id"></a> [vnet\_id](#output\_vnet\_id) | The ID of the POC Virtual Network |
 | <a name="output_vnet_name"></a> [vnet\_name](#output\_vnet\_name) | The name of the POC Virtual Network |
-| <a name="output_workload_subnet_1_address_prefixes"></a> [workload\_subnet\_1\_address\_prefixes](#output\_workload\_subnet\_1\_address\_prefixes) | The address prefixes of workload subnet 1 |
-| <a name="output_workload_subnet_1_id"></a> [workload\_subnet\_1\_id](#output\_workload\_subnet\_1\_id) | The ID of workload subnet 1 |
-| <a name="output_workload_subnet_2_address_prefixes"></a> [workload\_subnet\_2\_address\_prefixes](#output\_workload\_subnet\_2\_address\_prefixes) | The address prefixes of workload subnet 2 |
-| <a name="output_workload_subnet_2_id"></a> [workload\_subnet\_2\_id](#output\_workload\_subnet\_2\_id) | The ID of workload subnet 2 |
+| <a name="output_workload_subnet_id"></a> [workload\_subnet\_id](#output\_workload\_subnet\_id) | The ID of workload subnet |
 <!-- END_TF_DOCS -->
