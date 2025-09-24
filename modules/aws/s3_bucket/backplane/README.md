@@ -7,11 +7,15 @@ summary: |
 
 # AWS S3 Buildingblock Backplane
 
-This will deploy an IAM user with full S3 access (`s3:*`)
+This will deploy an IAM user (or role only in case of using `workload_identity_federation`) with full S3 access (`s3:*`)
 
 ## Usage
 
 ```hcl
+provider "aws" {
+  region = "your-region" # e.g. eu-central-1
+}
+
 module "aws_s3_bucket_backplane" {
   source = "git::https://github.com/meshcloud/meshstack-hub.git//modules/aws/s3_bucket/backplane"
 
@@ -20,6 +24,10 @@ module "aws_s3_bucket_backplane" {
     audience = "your-audience"
     subject  = "system:serviceaccount:your-namespace:your-service-account-name"
   } # Optional, if not provided, workload identity federation will not be set up and IAM access keys will be created
+}
+
+output "aws_s3_bucket_backplane" {
+  value = module.aws_s3_bucket_backplane
 }
 ```
 
