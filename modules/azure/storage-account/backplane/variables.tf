@@ -30,3 +30,12 @@ variable "create_service_principal_name" {
     error_message = "Service principal name can only contain alphanumeric characters, hyphens, and underscores"
   }
 }
+
+variable "workload_identity_federation" {
+  type = object({
+    issuer  = string
+    subject = string
+  })
+  default     = null
+  description = "Configuration for workload identity federation. If not provided, an application password will be created instead."
+}

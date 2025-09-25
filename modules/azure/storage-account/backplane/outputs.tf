@@ -37,6 +37,26 @@ output "created_application" {
   description = "Information about the created Azure AD application."
 }
 
+output "workload_identity_federation" {
+  value = var.create_service_principal_name != null && var.workload_identity_federation != null ? {
+    credential_id = azuread_application_federated_identity_credential.buildingblock_deploy[0].credential_id
+    display_name  = azuread_application_federated_identity_credential.buildingblock_deploy[0].display_name
+    issuer        = azuread_application_federated_identity_credential.buildingblock_deploy[0].issuer
+    subject       = azuread_application_federated_identity_credential.buildingblock_deploy[0].subject
+    audiences     = azuread_application_federated_identity_credential.buildingblock_deploy[0].audiences
+  } : null
+  description = "Information about the created workload identity federation credential."
+}
+
+output "application_password" {
+  value = var.create_service_principal_name != null && var.workload_identity_federation == null ? {
+    key_id       = azuread_application_password.buildingblock_deploy[0].key_id
+    display_name = azuread_application_password.buildingblock_deploy[0].display_name
+  } : null
+  description = "Information about the created application password (excludes the actual password value for security)."
+  sensitive   = true
+}
+
 output "scope" {
   value       = var.scope
   description = "The scope where the role definition and role assignments are applied."
