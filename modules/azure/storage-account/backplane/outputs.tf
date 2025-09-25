@@ -10,12 +10,31 @@ output "role_definition_name" {
 
 output "role_assignment_ids" {
   value       = [for id in azurerm_role_assignment.buildingblock_deploy : id.id]
-  description = "The IDs of the role assignments for the service principals."
+  description = "The IDs of the role assignments for all service principals."
 }
 
 output "role_assignment_principal_ids" {
   value       = [for id in azurerm_role_assignment.buildingblock_deploy : id.principal_id]
-  description = "The principal IDs of the service principals that have been assigned the role."
+  description = "The principal IDs of all service principals that have been assigned the role."
+}
+
+output "created_service_principal" {
+  value = var.create_service_principal_name != null ? {
+    object_id    = azuread_service_principal.buildingblock_deploy[0].object_id
+    client_id    = azuread_service_principal.buildingblock_deploy[0].client_id
+    display_name = azuread_service_principal.buildingblock_deploy[0].display_name
+    name         = var.create_service_principal_name
+  } : null
+  description = "Information about the created service principal."
+}
+
+output "created_application" {
+  value = var.create_service_principal_name != null ? {
+    object_id    = azuread_application.buildingblock_deploy[0].object_id
+    client_id    = azuread_application.buildingblock_deploy[0].client_id
+    display_name = azuread_application.buildingblock_deploy[0].display_name
+  } : null
+  description = "Information about the created Azure AD application."
 }
 
 output "scope" {
