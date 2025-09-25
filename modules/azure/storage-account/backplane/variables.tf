@@ -14,8 +14,19 @@ variable "scope" {
   description = "Scope where the building block should be deployable, typically the parent of all Landing Zones."
 }
 
-variable "principal_ids" {
+variable "existing_principal_ids" {
   type        = set(string)
-  nullable    = false
-  description = "set of principal ids that will be granted permissions to deploy the building block"
+  default     = []
+  description = "set of existing principal ids that will be granted permissions to deploy the building block"
+}
+
+variable "create_service_principal_name" {
+  type        = string
+  default     = null
+  description = "name of a service principal to create and grant permissions to deploy the building block"
+
+  validation {
+    condition     = var.create_service_principal_name == null ? true : can(regex("^[-a-zA-Z0-9_]+$", var.create_service_principal_name))
+    error_message = "Service principal name can only contain alphanumeric characters, hyphens, and underscores"
+  }
 }
