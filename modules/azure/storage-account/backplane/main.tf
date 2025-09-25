@@ -12,6 +12,26 @@ resource "azuread_service_principal" "buildingblock_deploy" {
   app_role_assignment_required = false
 }
 
+
+# Create federated identity credentials
+resource "azuread_application_federated_identity_credential" "buildingblock_deploy" {
+  count = var.create_service_principal_name != null && var.workload_identity_federation != null ? 1 : 0
+
+  application_id = azuread_application.buildingblock_deploy[0].id
+  display_name   = var.create_service_principal_name
+  audiences      = ["api://AzureADTokenExchange"]
+  issuer         = var.workload_identity_federation.issuer
+  subject        = var.workload_identity_federation.subject
+}
+
+# Create application password (when not using workload identity federation)
+resource "azuread_application_password" "buildingblock_deploy" {
+  count = var.create_service_principal_name != null && var.workload_identity_federation == null ? 1 : 0
+
+  application_id = azuread_application.buildingblock_deploy[0].id
+  display_name   = "${var.create_service_principal_name}-password"
+}
+
 # Role Definition
 resource "azurerm_role_definition" "buildingblock_deploy" {
   name        = "${var.name}-deploy"

@@ -12,6 +12,13 @@ The module supports two modes of operation:
 1. **Existing Service Principals**: Use `existing_principal_ids` to grant permissions to already existing service principals
 2. **Create New Service Principal**: Use `create_service_principal_name` to create a single new service principal and automatically grant it permissions
 
+## Authentication Methods
+
+When creating a new service principal, you can choose between two authentication methods:
+
+- **Application Password** (default): A traditional client secret will be created
+- **Workload Identity Federation**: Configure federated identity credentials for passwordless authentication (e.g., from GitHub Actions, Azure DevOps, or other OIDC providers)
+
 ## Usage Examples
 
 ### Using Existing Service Principals
@@ -40,6 +47,23 @@ module "storage_account_backplane" {
   scope = "/providers/Microsoft.Management/managementGroups/my-mg"
 
   create_service_principal_name = "deployment-sp"
+}
+```
+
+### Creating a New Service Principal with Workload Identity Federation
+
+```hcl
+module "storage_account_backplane" {
+  source = "./modules/azure/storage-account/backplane"
+
+  name  = "my-storage-account"
+  scope = "/providers/Microsoft.Management/managementGroups/my-mg"
+
+  create_service_principal_name = "deployment-sp"
+  workload_identity_federation = {
+    issuer  = "https://token.actions.githubusercontent.com"
+    subject = "repo:my-org/my-repo:ref:refs/heads/main"
+  }
 }
 ```
 
@@ -78,6 +102,8 @@ No modules.
 | Name | Type |
 |------|------|
 | [azuread_application.buildingblock_deploy](https://registry.terraform.io/providers/hashicorp/azuread/latest/docs/resources/application) | resource |
+| [azuread_application_federated_identity_credential.buildingblock_deploy](https://registry.terraform.io/providers/hashicorp/azuread/latest/docs/resources/application_federated_identity_credential) | resource |
+| [azuread_application_password.buildingblock_deploy](https://registry.terraform.io/providers/hashicorp/azuread/latest/docs/resources/application_password) | resource |
 | [azuread_service_principal.buildingblock_deploy](https://registry.terraform.io/providers/hashicorp/azuread/latest/docs/resources/service_principal) | resource |
 | [azurerm_role_assignment.buildingblock_deploy](https://registry.terraform.io/providers/hashicorp/azurerm/3.116.0/docs/resources/role_assignment) | resource |
 | [azurerm_role_definition.buildingblock_deploy](https://registry.terraform.io/providers/hashicorp/azurerm/3.116.0/docs/resources/role_definition) | resource |
@@ -90,11 +116,13 @@ No modules.
 | <a name="input_existing_principal_ids"></a> [existing\_principal\_ids](#input\_existing\_principal\_ids) | set of existing principal ids that will be granted permissions to deploy the building block | `set(string)` | `[]` | no |
 | <a name="input_name"></a> [name](#input\_name) | name of the building block, used for naming resources | `string` | n/a | yes |
 | <a name="input_scope"></a> [scope](#input\_scope) | Scope where the building block should be deployable, typically the parent of all Landing Zones. | `string` | n/a | yes |
+| <a name="input_workload_identity_federation"></a> [workload\_identity\_federation](#input\_workload\_identity\_federation) | Configuration for workload identity federation. If not provided, an application password will be created instead. | <pre>object({<br>    issuer  = string<br>    subject = string<br>  })</pre> | `null` | no |
 
 ## Outputs
 
 | Name | Description |
 |------|-------------|
+| <a name="output_application_password"></a> [application\_password](#output\_application\_password) | Information about the created application password (excludes the actual password value for security). |
 | <a name="output_created_application"></a> [created\_application](#output\_created\_application) | Information about the created Azure AD application. |
 | <a name="output_created_service_principal"></a> [created\_service\_principal](#output\_created\_service\_principal) | Information about the created service principal. |
 | <a name="output_documentation_md"></a> [documentation\_md](#output\_documentation\_md) | Markdown documentation with information about the Storage Account Building Block building block backplane |
@@ -103,4 +131,5 @@ No modules.
 | <a name="output_role_definition_id"></a> [role\_definition\_id](#output\_role\_definition\_id) | The ID of the role definition that enables deployment of the building block to subscriptions. |
 | <a name="output_role_definition_name"></a> [role\_definition\_name](#output\_role\_definition\_name) | The name of the role definition that enables deployment of the building block to subscriptions. |
 | <a name="output_scope"></a> [scope](#output\_scope) | The scope where the role definition and role assignments are applied. |
+| <a name="output_workload_identity_federation"></a> [workload\_identity\_federation](#output\_workload\_identity\_federation) | Information about the created workload identity federation credential. |
 <!-- END_TF_DOCS -->
