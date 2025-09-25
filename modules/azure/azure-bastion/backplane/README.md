@@ -1,46 +1,46 @@
 # Azure Bastion Building Block
 
-This documentation is intended as a reference documentation for platform engineers using this module.
+Diese Dokumentation dient als Referenzdokumentation für Plattform-Engineers, die dieses Modul verwenden.
 
-## Permissions
+## Berechtigungen
 
-This building block requires permissions to deploy Azure Bastion resources including:
-- Bastion Host creation and management
-- Public IP address provisioning
-- Virtual network subnet creation and modification
-- Network Security Group management
-- Resource locking capabilities
+Dieser Building Block benötigt Berechtigungen zur Bereitstellung von Azure Bastion-Ressourcen, einschließlich:
+- Bastion Host-Erstellung und -Verwaltung
+- Public IP Address-Bereitstellung
+- Virtual Network Subnet-Erstellung und -Änderung
+- Network Security Group-Verwaltung
+- Resource Locking-Funktionen
 
-The backplane establishes the necessary role definitions and assignments for secure deployment.
+Die Backplane etabliert die notwendigen Role Definitions und Assignments für eine sichere Bereitstellung.
 
-## Architecture
+## Architektur
 
-The building block creates:
-- **Azure Bastion Host**: Provides secure RDP/SSH connectivity
-- **AzureBastionSubnet**: Dedicated subnet with minimum /27 CIDR requirement
-- **Public IP Address**: Standard SKU for Bastion connectivity
-- **Network Security Group**: Pre-configured with all required Bastion rules
-- **Resource Locks**: Optional protection against accidental deletion/modification
+Der Building Block erstellt:
+- **Azure Bastion Host**: Bietet sichere RDP/SSH-Konnektivität
+- **AzureBastionSubnet**: Dediziertes Subnet mit mindestens /27 CIDR-Anforderung
+- **Public IP Address**: Standard-SKU für Bastion-Konnektivität
+- **Network Security Group**: Vorkonfiguriert mit allen erforderlichen Bastion-Regeln
+- **Resource Locks**: Optionaler Schutz vor versehentlicher Löschung/Änderung
 
-## Security Implementation
+## Sicherheitsimplementierung
 
-### Network Security Group Rules
-**Inbound:**
-- HTTPS (443) from Internet for user connections
-- HTTPS (443) from GatewayManager for Azure control plane
-- HTTPS (443) from AzureLoadBalancer for health probes
-- Ports 8080, 5701 from VirtualNetwork for inter-Bastion communication
+### Network Security Group-Regeln
+**Eingehend:**
+- HTTPS (443) vom Internet für Benutzerverbindungen
+- HTTPS (443) vom GatewayManager für Azure-Kontrollebene
+- HTTPS (443) vom AzureLoadBalancer für Health Probes
+- Ports 8080, 5701 vom VirtualNetwork für Inter-Bastion-Kommunikation
 
-**Outbound:**
-- SSH (22) and RDP (3389) to VirtualNetwork for VM connections
-- HTTPS (443) to AzureCloud for Azure services
-- Ports 8080, 5701 to VirtualNetwork for Bastion communication
-- HTTP (80) to Internet for session metadata
+**Ausgehend:**
+- SSH (22) und RDP (3389) zum VirtualNetwork für VM-Verbindungen
+- HTTPS (443) zu AzureCloud für Azure-Dienste
+- Ports 8080, 5701 zum VirtualNetwork für Bastion-Kommunikation
+- HTTP (80) zum Internet für Session-Metadaten
 
-### Resource Protection
-- Management locks prevent accidental deletion of Bastion host
-- Subnet locks prevent modification of critical network configuration
-- RBAC integration ensures proper access control
+### Ressourcenschutz
+- Management Locks verhindern versehentliche Löschung des Bastion Hosts
+- Subnet Locks verhindern Änderungen an kritischen Netzwerkkonfigurationen
+- RBAC-Integration gewährleistet ordnungsgemäße Zugriffskontrolle
 
 <!-- BEGIN_TF_DOCS -->
 ## Requirements

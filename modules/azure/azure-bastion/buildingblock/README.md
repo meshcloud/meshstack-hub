@@ -2,44 +2,44 @@
 name: Azure Bastion Host
 supportedPlatforms:
   - azure
-description: Provides secure RDP and SSH connectivity to virtual machines in Azure virtual networks without exposing them to the public internet, with comprehensive monitoring and alerting.
+description: Bietet sichere RDP- und SSH-Konnektivität zu Virtual Machines in Azure Virtual Networks, ohne diese dem öffentlichen Internet auszusetzen, mit umfassendem Monitoring und Alerting.
 category: networking
 ---
 
-# Azure Bastion Building Block with Comprehensive Observability
+# Azure Bastion Building Block mit umfassender Observability
 
-This building block deploys an Azure Bastion Host to provide secure RDP and SSH connectivity to virtual machines in your Azure virtual network, along with comprehensive monitoring and alerting for your entire sandbox subscription.
+Dieser Building Block stellt einen Azure Bastion Host bereit, um sichere RDP- und SSH-Konnektivität zu Virtual Machines in Ihrem Azure Virtual Network zu bieten, zusammen mit umfassendem Monitoring und Alerting für Ihr gesamtes Sandbox-Abonnement.
 
 ## Features
 
-- **Secure VM Access**: Provides secure RDP/SSH access to VMs without exposing them to the public internet
-- **Dedicated Subnet**: Creates the required AzureBastionSubnet with proper network security group rules
-- **Resource Protection**: Optional resource locks to prevent accidental deletion or modification
-- **Standard Compliance**: Implements all required NSG rules for Azure Bastion functionality
-- **Comprehensive Observability**: Complete monitoring solution for sandbox environments
-- **Centralized Alerting**: Action Group with email, Teams, and webhook notifications
-- **Health Monitoring**: Service Health and Resource Health alerts for all subscription resources
-- **Administrative Monitoring**: Alerts for deployment failures and critical administrative activities
+- **Sicherer VM-Zugriff**: Bietet sicheren RDP/SSH-Zugriff auf VMs, ohne diese dem öffentlichen Internet auszusetzen
+- **Dediziertes Subnet**: Erstellt das erforderliche AzureBastionSubnet mit ordnungsgemäßen Network Security Group-Regeln
+- **Ressourcenschutz**: Optionale Resource Locks zur Verhinderung versehentlicher Löschung oder Änderung
+- **Standard-Compliance**: Implementiert alle erforderlichen NSG-Regeln für Azure Bastion-Funktionalität
+- **Umfassende Observability**: Vollständige Monitoring-Lösung für Sandbox-Umgebungen
+- **Zentralisiertes Alerting**: Action Group mit E-Mail-, Teams- und Webhook-Benachrichtigungen
+- **Health Monitoring**: Service Health und Resource Health Alerts für alle Subscription-Ressourcen
+- **Administrative Überwachung**: Alerts für Deployment-Fehler und kritische administrative Aktivitäten
 
-## Architecture
+## Architektur
 
-The building block creates:
+Der Building Block erstellt:
 
-**Bastion Infrastructure:**
+**Bastion-Infrastruktur:**
 - Azure Bastion Host
-- AzureBastionSubnet (minimum /27 required)
-- Public IP address for Bastion
-- Network Security Group with required rules
-- Optional resource locks for protection
+- AzureBastionSubnet (mindestens /27 erforderlich)
+- Public IP Address für Bastion
+- Network Security Group mit erforderlichen Regeln
+- Optionale Resource Locks zum Schutz
 
-**Observability Infrastructure:**
-- Action Group for centralized notifications (email, Teams, webhooks)
-- Service Health Alerts for Azure service issues
-- Resource Health Alerts for all subscription resources
-- Administrative Activity Alerts for deployment failures
-- Bastion-specific Resource Health monitoring
+**Observability-Infrastruktur:**
+- Action Group für zentralisierte Benachrichtigungen (E-Mail, Teams, Webhooks)
+- Service Health Alerts für Azure-Service-Probleme
+- Resource Health Alerts für alle Subscription-Ressourcen
+- Administrative Activity Alerts für Deployment-Fehler
+- Bastion-spezifisches Resource Health Monitoring
 
-## Usage
+## Verwendung
 
 ```hcl
 module "azure_bastion_with_observability" {
@@ -55,7 +55,7 @@ module "azure_bastion_with_observability" {
   bastion_sku            = "Basic"
   enable_resource_locks  = true
 
-  # Observability configuration
+  # Observability-Konfiguration
   enable_observability = true
   alert_email_receivers = [
     {
@@ -81,53 +81,53 @@ module "azure_bastion_with_observability" {
 }
 ```
 
-## Variables
+## Variablen
 
-| Name | Description | Type | Default | Required |
-|------|-------------|------|---------|----------|
-| name | Name of the Azure Bastion deployment | string | - | yes |
-| location | Azure region where resources will be deployed | string | - | yes |
-| resource_group_name | Name of the resource group where Bastion will be deployed | string | - | yes |
-| vnet_name | Name of the virtual network where Bastion subnet will be created | string | - | yes |
-| vnet_resource_group_name | Name of the resource group containing the virtual network | string | - | yes |
-| bastion_subnet_cidr | CIDR block for the AzureBastionSubnet (minimum /27) | string | - | yes |
-| bastion_sku | SKU of the Azure Bastion Host (Basic or Standard) | string | "Basic" | no |
-| enable_resource_locks | Enable resource locks to prevent accidental deletion/modification | bool | true | no |
-| azure_delay_seconds | Delay in seconds to wait for Azure resources to be ready | number | 30 | no |
-| tags | Tags to apply to all resources | map(string) | {} | no |
+| Name | Beschreibung | Typ | Standard | Erforderlich |
+|------|-------------|------|---------|--------------|
+| name | Name des Azure Bastion Deployments | string | - | ja |
+| location | Azure-Region, in der Ressourcen bereitgestellt werden | string | - | ja |
+| resource_group_name | Name der Resource Group, in der Bastion bereitgestellt wird | string | - | ja |
+| vnet_name | Name des Virtual Networks, in dem das Bastion Subnet erstellt wird | string | - | ja |
+| vnet_resource_group_name | Name der Resource Group, die das Virtual Network enthält | string | - | ja |
+| bastion_subnet_cidr | CIDR-Block für das AzureBastionSubnet (mindestens /27) | string | - | ja |
+| bastion_sku | SKU des Azure Bastion Hosts (Basic oder Standard) | string | "Basic" | nein |
+| enable_resource_locks | Resource Locks aktivieren zur Verhinderung versehentlicher Löschung/Änderung | bool | true | nein |
+| azure_delay_seconds | Verzögerung in Sekunden, um auf Azure-Ressourcen zu warten | number | 30 | nein |
+| tags | Tags, die auf alle Ressourcen angewendet werden | map(string) | {} | nein |
 
 ## Outputs
 
-| Name | Description |
+| Name | Beschreibung |
 |------|-------------|
-| bastion_host_id | The ID of the Azure Bastion Host |
-| bastion_host_name | The name of the Azure Bastion Host |
-| bastion_host_fqdn | The FQDN of the Azure Bastion Host |
-| bastion_public_ip | The public IP address of the Azure Bastion Host |
-| bastion_subnet_id | The ID of the AzureBastionSubnet |
-| bastion_nsg_id | The ID of the Bastion Network Security Group |
+| bastion_host_id | Die ID des Azure Bastion Hosts |
+| bastion_host_name | Der Name des Azure Bastion Hosts |
+| bastion_host_fqdn | Der FQDN des Azure Bastion Hosts |
+| bastion_public_ip | Die öffentliche IP-Adresse des Azure Bastion Hosts |
+| bastion_subnet_id | Die ID des AzureBastionSubnets |
+| bastion_nsg_id | Die ID der Bastion Network Security Group |
 
-## Requirements
+## Anforderungen
 
-- The virtual network must already exist
-- The Bastion subnet CIDR must be at least /27 (32 IP addresses)
-- The subnet will be named "AzureBastionSubnet" as required by Azure
+- Das Virtual Network muss bereits existieren
+- Das Bastion Subnet CIDR muss mindestens /27 (32 IP-Adressen) betragen
+- Das Subnet wird "AzureBastionSubnet" benannt, wie von Azure erforderlich
 
-## Security
+## Sicherheit
 
-This building block implements all required network security group rules for Azure Bastion:
+Dieser Building Block implementiert alle erforderlichen Network Security Group-Regeln für Azure Bastion:
 
-**Inbound Rules:**
-- HTTPS (443) from Internet for user connections
-- HTTPS (443) from GatewayManager for Azure management
-- HTTPS (443) from AzureLoadBalancer for health probes
-- Ports 8080, 5701 from VirtualNetwork for Bastion communication
+**Eingehende Regeln:**
+- HTTPS (443) vom Internet für Benutzerverbindungen
+- HTTPS (443) vom GatewayManager für Azure-Management
+- HTTPS (443) vom AzureLoadBalancer für Health Probes
+- Ports 8080, 5701 vom VirtualNetwork für Bastion-Kommunikation
 
-**Outbound Rules:**
-- SSH (22) and RDP (3389) to VirtualNetwork for VM connections
-- HTTPS (443) to AzureCloud for Azure services
-- Ports 8080, 5701 to VirtualNetwork for Bastion communication
-- HTTP (80) to Internet for session information
+**Ausgehende Regeln:**
+- SSH (22) und RDP (3389) zum VirtualNetwork für VM-Verbindungen
+- HTTPS (443) zu AzureCloud für Azure-Services
+- Ports 8080, 5701 zum VirtualNetwork für Bastion-Kommunikation
+- HTTP (80) zum Internet für Session-Informationen
 <!-- BEGIN_TF_DOCS -->
 ## Requirements
 
