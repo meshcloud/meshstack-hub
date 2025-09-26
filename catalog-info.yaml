@@ -1,0 +1,10 @@
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: meshstack-hub
+  annotations:
+    github.com/project-slug: meshcloud/meshstack-hub
+spec:
+  type: other
+  lifecycle: unknown
+  owner: flock-peng
