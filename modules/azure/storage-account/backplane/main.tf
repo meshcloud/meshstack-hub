@@ -39,6 +39,7 @@ resource "azurerm_role_definition" "buildingblock_deploy" {
   scope       = var.scope
   permissions {
     actions = [
+      # storage accounts
       "Microsoft.Storage/storageAccounts/write",
       "Microsoft.Storage/storageAccounts/read",
       "Microsoft.Storage/storageAccounts/delete",
@@ -47,7 +48,23 @@ resource "azurerm_role_definition" "buildingblock_deploy" {
       "Microsoft.Storage/storageAccounts/managementPolicies/delete",
       "Microsoft.Storage/storageAccounts/objectReplicationPolicies/write",
       "Microsoft.Storage/storageAccounts/objectReplicationPolicies/read",
-      "Microsoft.Storage/storageAccounts/objectReplicationPolicies/delete"
+      "Microsoft.Storage/storageAccounts/objectReplicationPolicies/delete",
+      "Microsoft.Storage/storageAccounts/listKeys/action",
+
+      # resource groups
+      "Microsoft.Resources/subscriptions/resourcegroups/read",
+      "Microsoft.Resources/subscriptions/resourcegroups/write",
+      "Microsoft.Resources/subscriptions/resourcegroups/delete",
+
+      # sub-resources
+      "Microsoft.Storage/storageAccounts/blobServices/read",
+      "Microsoft.Storage/storageAccounts/blobServices/write",
+      "Microsoft.Storage/storageAccounts/fileServices/read",
+      "Microsoft.Storage/storageAccounts/fileServices/write",
+      "Microsoft.Storage/storageAccounts/queueServices/read",
+      "Microsoft.Storage/storageAccounts/queueServices/write",
+      "Microsoft.Storage/storageAccounts/tableServices/read",
+      "Microsoft.Storage/storageAccounts/tableServices/write",
     ]
   }
 }
