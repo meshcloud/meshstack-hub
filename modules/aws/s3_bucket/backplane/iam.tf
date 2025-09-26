@@ -19,7 +19,7 @@ data "aws_iam_policy_document" "s3_full_access" {
 }
 
 resource "aws_iam_policy" "buildingblock_s3_policy" {
-  name        = "S3BuildingBlockPolicy"
+  name        = var.workload_identity_federation == null ? "S3BuildingBlockPolicy" : "S3BuildingBlockFederatedPolicy"
   description = "Policy for the S3 Building Block"
   policy      = data.aws_iam_policy_document.s3_full_access.json
 }
