@@ -9,12 +9,18 @@ output "role_definition_name" {
 }
 
 output "role_assignment_ids" {
-  value       = [for id in azurerm_role_assignment.buildingblock_deploy : id.id]
+  value = concat(
+    [for id in azurerm_role_assignment.existing_principals : id.id],
+    var.create_service_principal_name != null ? [azurerm_role_assignment.created_principal[0].id] : []
+  )
   description = "The IDs of the role assignments for all service principals."
 }
 
 output "role_assignment_principal_ids" {
-  value       = [for id in azurerm_role_assignment.buildingblock_deploy : id.principal_id]
+  value = concat(
+    [for id in azurerm_role_assignment.existing_principals : id.principal_id],
+    var.create_service_principal_name != null ? [azurerm_role_assignment.created_principal[0].principal_id] : []
+  )
   description = "The principal IDs of all service principals that have been assigned the role."
 }
 
