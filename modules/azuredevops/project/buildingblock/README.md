@@ -100,6 +100,16 @@ module "azure_devops_project" {
 | `version_control` | Version control system | `string` | `"Git"` | no |
 | `users` | List of users from authoritative system | `list(object)` | `[]` | no |
 
+## Default Project Features
+
+The building block creates projects with the following default features:
+
+- **Boards**: `enabled` - Agile planning and tracking
+- **Repositories**: `enabled` - Git repositories
+- **Pipelines**: `enabled` - CI/CD pipelines
+- **Test Plans**: `disabled` - Manual testing (can be expensive)
+- **Artifacts**: `enabled` - Package management
+
 ## User Roles
 
 Users are assigned to default Azure DevOps project groups based on their roles list:
@@ -120,6 +130,7 @@ Users can have multiple roles and will be assigned to all corresponding groups.
 | `project_url` | URL of the project |
 | `user_assignments` | Map of users and their assigned roles |
 | `group_memberships` | Information about group memberships |
+| `project_features` | Enabled/disabled project features |
 
 ## Important Notes
 

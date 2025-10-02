@@ -5,6 +5,8 @@ resource "azuredevops_project" "main" {
   visibility         = var.project_visibility
   version_control    = var.version_control
   work_item_template = var.work_item_template
+
+  features = var.project_features
 }
 
 # Data source to get built-in project groups

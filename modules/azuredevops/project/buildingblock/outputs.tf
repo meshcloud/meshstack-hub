@@ -52,7 +52,7 @@ output "group_memberships" {
 
 
 
-# output "project_features" {
-#   description = "Enabled/disabled project features"
-#   value       = {}  # Features configuration not yet implemented
-# }
+output "project_features" {
+  description = "Enabled/disabled project features"
+  value = var.project_features
+}
