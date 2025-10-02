@@ -10,7 +10,6 @@ resource "azuredevops_project" "main" {
 
   lifecycle {
     ignore_changes = [
-
       version_control,
       work_item_template
     ]
