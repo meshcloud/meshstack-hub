@@ -5,8 +5,6 @@ resource "azuredevops_project" "main" {
   visibility         = var.project_visibility
   version_control    = var.version_control
   work_item_template = var.work_item_template
-
-  features = var.project_features
 }
 
 # Data source to get built-in project groups
@@ -25,86 +23,67 @@ data "azuredevops_group" "project_administrators" {
   name       = "Project Administrators"
 }
 
-# Create user entitlements and assign licenses
-resource "azuredevops_user_entitlement" "users" {
-  for_each = {
-    for user in var.users : user.principal_name => user
-  }
-
-  principal_name       = each.value.principal_name
-  account_license_type = each.value.license_type
-}
+# Note: License assignment is handled by the authoritative system
+# Users are provided with their roles already assigned
 
 # Group users by their roles for easier management
 locals {
   readers = [
-    for user in var.users : user.principal_name
-    if user.role == "reader"
+    for user in var.users : user.email
+    if contains(user.roles, "reader")
   ]
-  
+
   contributors = [
-    for user in var.users : user.principal_name
-    if user.role == "contributor"
+    for user in var.users : user.email
+    if contains(user.roles, "user")
   ]
-  
+
   administrators = [
-    for user in var.users : user.principal_name
-    if user.role == "administrator"
+    for user in var.users : user.email
+    if contains(user.roles, "admin")
   ]
+}
+
+# Get user descriptors for existing users
+data "azuredevops_users" "all_users" {
+  # This will get all users in the organization
+}
+
+locals {
+  # Create a map of email to user descriptor for easy lookup
+  user_descriptors = {
+    for user in data.azuredevops_users.all_users.users : user.principal_name => user.descriptor
+  }
 }
 
 # Add users to project groups based on their roles
 resource "azuredevops_group_membership" "readers" {
   count = length(local.readers) > 0 ? 1 : 0
-  
+
   group = data.azuredevops_group.project_readers.descriptor
   members = [
-    for email in local.readers : azuredevops_user_entitlement.users[email].descriptor
+    for email in local.readers : local.user_descriptors[email]
   ]
   mode = "add"
 }
 
 resource "azuredevops_group_membership" "contributors" {
   count = length(local.contributors) > 0 ? 1 : 0
-  
+
   group = data.azuredevops_group.project_contributors.descriptor
   members = [
-    for email in local.contributors : azuredevops_user_entitlement.users[email].descriptor
+    for email in local.contributors : local.user_descriptors[email]
   ]
   mode = "add"
 }
 
 resource "azuredevops_group_membership" "administrators" {
   count = length(local.administrators) > 0 ? 1 : 0
-  
+
   group = data.azuredevops_group.project_administrators.descriptor
   members = [
-    for email in local.administrators : azuredevops_user_entitlement.users[email].descriptor
+    for email in local.administrators : local.user_descriptors[email]
   ]
   mode = "add"
 }
 
-# Optional: Create custom groups if requested
-resource "azuredevops_group" "custom_readers" {
-  count = var.create_custom_groups ? 1 : 0
-  
-  scope        = azuredevops_project.main.id
-  display_name = "${var.project_name} Custom Readers"
-  description  = "Custom readers group for ${var.project_name} project"
-}
-
-resource "azuredevops_group" "custom_contributors" {
-  count = var.create_custom_groups ? 1 : 0
-  
-  scope        = azuredevops_project.main.id
-  display_name = "${var.project_name} Custom Contributors"
-  description  = "Custom contributors group for ${var.project_name} project"
-}
-
-resource "azuredevops_group" "custom_administrators" {
-  count = var.create_custom_groups ? 1 : 0
-  
-  scope        = azuredevops_project.main.id
-  display_name = "${var.project_name} Custom Administrators" 
-  description  = "Custom administrators group for ${var.project_name} project"
-}

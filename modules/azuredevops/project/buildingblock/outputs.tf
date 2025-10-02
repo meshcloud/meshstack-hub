@@ -18,12 +18,16 @@ output "project_visibility" {
   value       = azuredevops_project.main.visibility
 }
 
-output "user_entitlements" {
-  description = "Map of user entitlements created"
+output "user_assignments" {
+  description = "Map of users and their assigned roles"
   value = {
-    for email, user in azuredevops_user_entitlement.users : email => {
-      descriptor   = user.descriptor
-      license_type = user.account_license_type
+    for user in var.users : user.email => {
+      meshIdentifier = user.meshIdentifier
+      username       = user.username
+      firstName      = user.firstName
+      lastName       = user.lastName
+      euid           = user.euid
+      roles          = user.roles
     }
   }
 }
@@ -46,28 +50,9 @@ output "group_memberships" {
   }
 }
 
-output "custom_groups" {
-  description = "Information about custom groups created"
-  value = var.create_custom_groups ? {
-    readers = {
-      id          = azuredevops_group.custom_readers[0].id
-      descriptor  = azuredevops_group.custom_readers[0].descriptor
-      display_name = azuredevops_group.custom_readers[0].display_name
-    }
-    contributors = {
-      id          = azuredevops_group.custom_contributors[0].id
-      descriptor  = azuredevops_group.custom_contributors[0].descriptor
-      display_name = azuredevops_group.custom_contributors[0].display_name
-    }
-    administrators = {
-      id          = azuredevops_group.custom_administrators[0].id
-      descriptor  = azuredevops_group.custom_administrators[0].descriptor
-      display_name = azuredevops_group.custom_administrators[0].display_name
-    }
-  } : {}
-}
 
-output "project_features" {
-  description = "Enabled/disabled project features"
-  value       = var.project_features
-}
+
+# output "project_features" {
+#   description = "Enabled/disabled project features"
+#   value       = {}  # Features configuration not yet implemented
+# }

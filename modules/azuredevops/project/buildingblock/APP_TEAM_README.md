@@ -5,8 +5,8 @@ Create and manage Azure DevOps projects with automatic user licensing and role-b
 ## ✨ What You Get
 
 - **New Azure DevOps Project** with your chosen configuration
-- **Automatic User Licensing** with Stakeholder licenses for cost-effective access
-- **Role-Based Groups** organizing users by their responsibilities
+- **User Assignment** from authoritative system to appropriate groups
+- **Role-Based Groups** mapping user roles to Azure DevOps project groups
 - **Secure Authentication** through Azure Key Vault managed credentials
 
 ## 🎯 Quick Start
@@ -18,49 +18,53 @@ module "my_devops_project" {
   # Basic project setup
   project_name = "amazing-product"
   
-  # Add your team members
-  users = [
-    {
-      principal_name = "developer@company.com"
-      role          = "contributor"
-      license_type  = "stakeholder"  # Cost-effective!
-    },
-    {
-      principal_name = "manager@company.com"
-      role          = "administrator" 
-      license_type  = "basic"
-    }
-  ]
+   # Users provided by authoritative system
+   users = [
+     {
+       meshIdentifier = "dev-001"
+       username       = "developer"
+       firstName      = "John"
+       lastName       = "Developer"
+       email          = "developer@company.com"
+       euid           = "john.developer"
+       roles          = ["user"]
+     },
+     {
+       meshIdentifier = "mgr-001"
+       username       = "manager"
+       firstName      = "Jane"
+       lastName       = "Manager"
+       email          = "manager@company.com"
+       euid           = "jane.manager"
+       roles          = ["admin", "reader"]
+     }
+   ]
 }
 ```
 
 ## 👥 User Roles Explained
 
-| Role | What They Can Do | Best For |
-|------|-----------------|----------|
-| **Reader** | View project items, browse code | Stakeholders, managers |
-| **Contributor** | Create work items, contribute code, run builds | Developers, testers |
-| **Administrator** | Full project control, manage users | Project leads, DevOps engineers |
+| Role in User.roles | Azure DevOps Group | What They Can Do | Best For |
+|--------------------|------------------|-----------------|----------|
+| **reader** | Readers | View project items, browse code | Stakeholders, managers |
+| **user** | Contributors | Create work items, contribute code, run builds | Developers, testers |
+| **admin** | Project Administrators | Full project control, manage users | Project leads, DevOps engineers |
 
-## 💰 License Types
+## 🔐 License Management
 
-| License | Cost | Features | Recommended For |
-|---------|------|----------|----------------|
-| **Stakeholder** | FREE | Basic work item access, limited features | Most users, viewers, managers |
-| **Basic** | Paid | Full development features | Active developers |
-| **Advanced** | Premium | Testing tools, advanced analytics | Test managers, analysts |
-
-💡 **Tip**: Start with Stakeholder licenses for most users - you can always upgrade later!
+User licenses are managed externally by the authoritative system. This module focuses on assigning users to the appropriate Azure DevOps project groups based on their roles.
 
 ## 🔄 Shared Responsibility Matrix
 
 | Task | Your Responsibility | Building Block Handles |
 |------|-------------------|----------------------|
-| **User Accounts** | Create users in Azure AD | Assign licenses & project access |
-| **PAT Token** | Create & store in Key Vault | Retrieve & use for authentication |
-| **Project Config** | Define requirements | Create project with settings |
-| **Team Structure** | Define user roles | Organize into appropriate groups |
-| **Ongoing Management** | Update user lists | Apply changes automatically |
+| **User Accounts** | Create users in Azure AD | ✅ Authoritative system manages | - |
+| **User Licenses** | - | ✅ Authoritative system assigns | - |
+| **User Roles** | - | ✅ Authoritative system defines | Map roles to Azure DevOps groups |
+| **PAT Token** | Create & store in Key Vault | - | Retrieve & use for authentication |
+| **Project Config** | Define requirements | - | Create project with settings |
+| **Team Structure** | - | Provide user data with roles | Apply group memberships |
+| **Ongoing Management** | Update user lists | Update user data | Apply changes automatically |
 
 ## 💡 Best Practices
 
@@ -70,9 +74,9 @@ module "my_devops_project" {
 - Choose `Agile` work item template for flexibility
 
 ### 👤 User Management
-- **Start Small**: Begin with Stakeholder licenses for most users
-- **Review Regularly**: Audit user access quarterly
-- **Use Groups**: Leverage role-based groups instead of individual permissions
+- **Role Assignment**: Ensure users have appropriate roles in the authoritative system
+- **Review Regularly**: Audit user access and roles quarterly
+- **Group Mapping**: Users are automatically assigned to Azure DevOps groups based on their roles
 
 ### 🔐 Security
 - **Rotate PAT Tokens**: Update tokens every 6 months minimum
@@ -80,8 +84,8 @@ module "my_devops_project" {
 - **Monitor Access**: Regular review of user permissions
 
 ### 💸 Cost Optimization
-- **Stakeholder First**: Use free Stakeholder licenses when possible
-- **License Hygiene**: Remove unused user entitlements
+- **License Management**: Coordinate with authoritative system for license optimization
+- **Role Hygiene**: Ensure users only have necessary roles
 - **Feature Control**: Disable unused project features
 
 ## 🚨 Important Notes

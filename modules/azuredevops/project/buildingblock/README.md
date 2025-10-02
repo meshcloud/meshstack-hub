@@ -13,16 +13,16 @@ This building block creates an Azure DevOps project and manages user access with
 ## Features
 
 - **Project Creation**: Creates Azure DevOps projects with configurable settings
-- **User Management**: Assigns licenses (including Stakeholder) to existing users
-- **Role-Based Access**: Organizes users into project groups based on their roles
-- **Custom Groups**: Optional creation of custom project groups
-- **Feature Control**: Configure enabled/disabled project features
+- **User Management**: Assigns users from authoritative system to project groups
+- **Role-Based Access**: Maps user roles to default Azure DevOps project groups
+- **No License Management**: Licenses are managed by the authoritative system
 
 ## Prerequisites
 
 - Azure DevOps organization
-- Users must already exist in your identity provider (Azure AD, MSA, etc.)
+- Users provided by authoritative system with assigned roles
 - Personal Access Token with required scopes (managed by backplane)
+- User licenses managed externally by authoritative system
 
 ## Architecture
 
@@ -31,11 +31,11 @@ This building block creates an Azure DevOps project and manages user access with
 │   Backplane     │───▶│  Building Block │───▶│ Azure DevOps Org │
 │                 │    │                 │    │                  │
 │ • Service       │    │ • Project       │    │ • Project        │
-│   Principal     │    │   Creation      │    │ • Users with     │
-│ • Key Vault     │    │ • User          │    │   Stakeholder    │
-│ • PAT Storage   │    │   Entitlements  │    │   licenses       │
-│                 │    │ • Group         │    │ • Group          │
-│                 │    │   Memberships   │    │   memberships    │
+│   Principal     │    │   Creation      │    │ • Users assigned │
+│ • Key Vault     │    │ • User Role     │    │   to groups      │
+│ • PAT Storage   │    │   Mapping       │    │ • No license     │
+│                 │    │ • Group         │    │   management     │
+│                 │    │   Memberships   │    │                  │
 └─────────────────┘    └─────────────────┘    └──────────────────┘
 ```
 
@@ -56,24 +56,27 @@ module "azure_devops_project" {
   project_visibility  = "private"
   work_item_template  = "Agile"
   
-  # User management
-  users = [
-    {
-      principal_name = "developer1@company.com"
-      role          = "contributor"
-      license_type  = "stakeholder"
-    },
-    {
-      principal_name = "manager@company.com"  
-      role          = "administrator"
-      license_type  = "basic"
-    },
-    {
-      principal_name = "viewer@company.com"
-      role          = "reader"
-      license_type  = "stakeholder"
-    }
-  ]
+   # Users provided by authoritative system
+   users = [
+     {
+       meshIdentifier = "user-001"
+       username       = "developer1"
+       firstName      = "John"
+       lastName       = "Doe"
+       email          = "developer1@company.com"
+       euid           = "john.doe"
+       roles          = ["user"]
+     },
+     {
+       meshIdentifier = "user-002"
+       username       = "manager1"
+       firstName      = "Jane"
+       lastName       = "Smith"
+       email          = "manager@company.com"
+       euid           = "jane.smith"
+       roles          = ["admin", "reader"]
+     }
+   ]
   
   # Optional: Disable certain features
   project_features = {
@@ -95,20 +98,19 @@ module "azure_devops_project" {
 | `project_visibility` | Project visibility (private/public) | `string` | `"private"` | no |
 | `work_item_template` | Work item template | `string` | `"Agile"` | no |
 | `version_control` | Version control system | `string` | `"Git"` | no |
-| `users` | List of users with roles and licenses | `list(object)` | `[]` | no |
-| `create_custom_groups` | Create custom project groups | `bool` | `true` | no |
+| `users` | List of users from authoritative system | `list(object)` | `[]` | no |
 
 ## User Roles
 
-- **reader**: Read-only access to project artifacts
-- **contributor**: Can contribute code, work items, and builds
-- **administrator**: Full project administration rights
+Users are assigned to default Azure DevOps project groups based on their roles list:
 
-## License Types
+- **reader** in roles list: Assigned to "Readers" group - Read-only access to project artifacts
+- **user** in roles list: Assigned to "Contributors" group - Can contribute code, work items, and builds
+- **admin** in roles list: Assigned to "Project Administrators" group - Full project administration rights
 
-- **stakeholder**: Free license with limited access (recommended for most users)
-- **basic**: Standard license with full development features
-- **advanced**: Premium license with advanced testing and analytics
+Users can have multiple roles and will be assigned to all corresponding groups.
+
+
 
 ## Outputs
 
@@ -116,16 +118,16 @@ module "azure_devops_project" {
 |------|-------------|
 | `project_id` | ID of the created project |
 | `project_url` | URL of the project |
-| `user_entitlements` | Map of created user entitlements |
+| `user_assignments` | Map of users and their assigned roles |
 | `group_memberships` | Information about group memberships |
-| `custom_groups` | Information about custom groups |
 
 ## Important Notes
 
-- **User Creation**: This module cannot create new users. Users must exist in your identity provider.
-- **License Assignment**: Requires appropriate organizational permissions.
+- **User Management**: Users are provided by authoritative system with pre-assigned roles.
+- **License Management**: User licenses are managed externally by the authoritative system.
 - **PAT Requirements**: The Personal Access Token needs specific scopes (managed by backplane).
-- **Group Management**: Uses built-in project groups plus optional custom groups.
+- **Group Management**: Uses built-in Azure DevOps project groups for access control.
+- **Role Mapping**: Users with multiple roles will be assigned to all corresponding groups.
 
 ## Troubleshooting
 

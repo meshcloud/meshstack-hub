@@ -66,40 +66,29 @@ variable "project_features" {
   description = "Project features to enable/disable"
   type = object({
     boards      = optional(string, "enabled")
-    repositories = optional(string, "enabled")  
+    repositories = optional(string, "enabled")
     pipelines   = optional(string, "enabled")
     testplans   = optional(string, "disabled")
     artifacts   = optional(string, "enabled")
   })
-  default = {}
+  default = {
+    boards      = "enabled"
+    repositories = "disabled"
+    pipelines   = "disabled"
+    testplans   = "disabled"
+    artifacts   = "disabled"
+  }
 }
 
 variable "users" {
-  description = "List of users with their permissions and license types"
+  description = "List of users from authoritative system"
   type = list(object({
-    principal_name = string # Email address or UPN
-    role          = string # "reader", "contributor", "administrator"
-    license_type   = optional(string, "stakeholder") # "stakeholder", "basic", "advanced"
+    meshIdentifier = string
+    username       = string
+    firstName      = string
+    lastName       = string
+    email          = string
+    euid           = string
+    roles          = list(string)
   }))
-  default = []
-  
-  validation {
-    condition = alltrue([
-      for user in var.users : contains(["reader", "contributor", "administrator"], user.role)
-    ])
-    error_message = "User role must be one of: reader, contributor, administrator."
-  }
-  
-  validation {
-    condition = alltrue([
-      for user in var.users : contains(["stakeholder", "basic", "advanced"], user.license_type)
-    ])
-    error_message = "User license_type must be one of: stakeholder, basic, advanced."
-  }
-}
-
-variable "create_custom_groups" {
-  description = "Whether to create custom groups for role-based access"
-  type        = bool
-  default     = true
 }

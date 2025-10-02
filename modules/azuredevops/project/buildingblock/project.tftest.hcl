@@ -10,9 +10,13 @@ run "valid_project_creation" {
     
     users = [
       {
-        principal_name = "test.user@example.com"
-        role          = "contributor"
-        license_type  = "stakeholder"
+        meshIdentifier = "test-user-001"
+        username       = "testuser"
+        firstName      = "Test"
+        lastName       = "User"
+        email          = "test.user@example.com"
+        euid           = "test.user"
+        roles          = ["user"]
       }
     ]
   }
@@ -33,7 +37,7 @@ run "valid_project_creation" {
   }
 }
 
-run "user_entitlement_validation" {
+run "user_role_assignment_validation" {
   command = plan
 
   variables {
@@ -41,40 +45,51 @@ run "user_entitlement_validation" {
     key_vault_name               = "kv-test-devops"
     resource_group_name          = "rg-test-devops"
     project_name                = "test-project"
-    
+
     users = [
       {
-        principal_name = "stakeholder@example.com"
-        role          = "reader"
-        license_type  = "stakeholder"
+        meshIdentifier = "reader-001"
+        username       = "readeruser"
+        firstName      = "Reader"
+        lastName       = "User"
+        email          = "reader@example.com"
+        euid           = "reader.user"
+        roles          = ["reader"]
       },
       {
-        principal_name = "developer@example.com"
-        role          = "contributor"
-        license_type  = "basic"
+        meshIdentifier = "dev-001"
+        username       = "developer"
+        firstName      = "Dev"
+        lastName       = "User"
+        email          = "developer@example.com"
+        euid           = "dev.user"
+        roles          = ["user"]
       },
       {
-        principal_name = "admin@example.com"
-        role          = "administrator"
-        license_type  = "advanced"
+        meshIdentifier = "admin-001"
+        username       = "adminuser"
+        firstName      = "Admin"
+        lastName       = "User"
+        email          = "admin@example.com"
+        euid           = "admin.user"
+        roles          = ["admin"]
       }
     ]
   }
 
   assert {
-    condition = length([
-      for user in azuredevops_user_entitlement.users : user
-      if user.account_license_type == "stakeholder"
-    ]) == 1
-    error_message = "Should create one user with stakeholder license"
+    condition = length(local.readers) == 1
+    error_message = "Should identify one user with reader role"
   }
 
   assert {
-    condition = length([
-      for user in azuredevops_user_entitlement.users : user
-      if user.account_license_type == "basic"
-    ]) == 1
-    error_message = "Should create one user with basic license"
+    condition = length(local.contributors) == 1
+    error_message = "Should identify one user with user role"
+  }
+
+  assert {
+    condition = length(local.administrators) == 1
+    error_message = "Should identify one user with admin role"
   }
 }
 
@@ -92,47 +107,79 @@ run "invalid_project_name" {
   }
 }
 
-run "invalid_user_role" {
+run "user_with_multiple_roles" {
   command = plan
-  expect_failures = [
-    var.users
-  ]
 
   variables {
     azure_devops_organization_url = "https://dev.azure.com/testorg"
     key_vault_name               = "kv-test-devops"
     resource_group_name          = "rg-test-devops"
     project_name                = "test-project"
-    
+
     users = [
       {
-        principal_name = "test@example.com"
-        role          = "invalid-role"  # Invalid role
-        license_type  = "stakeholder"
+        meshIdentifier = "multi-001"
+        username       = "multiuser"
+        firstName      = "Multi"
+        lastName       = "User"
+        email          = "multi@example.com"
+        euid           = "multi.user"
+        roles          = ["admin", "reader", "user"]  # Multiple roles
       }
     ]
   }
+
+  assert {
+    condition = length(local.readers) == 1
+    error_message = "User with multiple roles should be in readers group"
+  }
+
+  assert {
+    condition = length(local.contributors) == 1
+    error_message = "User with multiple roles should be in contributors group"
+  }
+
+  assert {
+    condition = length(local.administrators) == 1
+    error_message = "User with multiple roles should be in administrators group"
+  }
 }
 
-run "invalid_license_type" {
+run "user_without_relevant_roles" {
   command = plan
-  expect_failures = [
-    var.users
-  ]
 
   variables {
     azure_devops_organization_url = "https://dev.azure.com/testorg"
     key_vault_name               = "kv-test-devops"
     resource_group_name          = "rg-test-devops"
     project_name                = "test-project"
-    
+
     users = [
       {
-        principal_name = "test@example.com"
-        role          = "contributor"
-        license_type  = "invalid-license"  # Invalid license type
+        meshIdentifier = "norole-001"
+        username       = "noroleuser"
+        firstName      = "No"
+        lastName       = "Role"
+        email          = "norole@example.com"
+        euid           = "no.role"
+        roles          = ["some-other-role"]  # No Azure DevOps relevant roles
       }
     ]
+  }
+
+  assert {
+    condition = length(local.readers) == 0
+    error_message = "User without reader role should not be in readers group"
+  }
+
+  assert {
+    condition = length(local.contributors) == 0
+    error_message = "User without user role should not be in contributors group"
+  }
+
+  assert {
+    condition = length(local.administrators) == 0
+    error_message = "User without admin role should not be in administrators group"
   }
 }
 
@@ -165,56 +212,3 @@ run "project_features_configuration" {
   }
 }
 
-run "custom_groups_creation" {
-  command = plan
-
-  variables {
-    azure_devops_organization_url = "https://dev.azure.com/testorg"
-    key_vault_name               = "kv-test-devops"
-    resource_group_name          = "rg-test-devops"
-    project_name                = "test-project"
-    create_custom_groups         = true
-  }
-
-  assert {
-    condition     = length(azuredevops_group.custom_readers) == 1
-    error_message = "Should create custom readers group when enabled"
-  }
-
-  assert {
-    condition     = length(azuredevops_group.custom_contributors) == 1
-    error_message = "Should create custom contributors group when enabled"
-  }
-
-  assert {
-    condition     = length(azuredevops_group.custom_administrators) == 1
-    error_message = "Should create custom administrators group when enabled"
-  }
-}
-
-run "no_custom_groups" {
-  command = plan
-
-  variables {
-    azure_devops_organization_url = "https://dev.azure.com/testorg"
-    key_vault_name               = "kv-test-devops"
-    resource_group_name          = "rg-test-devops"
-    project_name                = "test-project"
-    create_custom_groups         = false
-  }
-
-  assert {
-    condition     = length(azuredevops_group.custom_readers) == 0
-    error_message = "Should not create custom readers group when disabled"
-  }
-
-  assert {
-    condition     = length(azuredevops_group.custom_contributors) == 0
-    error_message = "Should not create custom contributors group when disabled"
-  }
-
-  assert {
-    condition     = length(azuredevops_group.custom_administrators) == 0
-    error_message = "Should not create custom administrators group when disabled"
-  }
-}
