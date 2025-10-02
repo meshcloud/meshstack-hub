@@ -7,6 +7,14 @@ resource "azuredevops_project" "main" {
   work_item_template = var.work_item_template
 
   features = var.project_features
+
+  lifecycle {
+    ignore_changes = [
+
+      version_control,
+      work_item_template
+    ]
+  }
 }
 
 # Data source to get built-in project groups

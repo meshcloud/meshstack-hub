@@ -14,5 +14,4 @@ provider "azuredevops" {
 }
 provider "azurerm" {
   features {}
-  # Configuration options
 }
