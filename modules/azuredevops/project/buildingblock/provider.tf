@@ -4,7 +4,7 @@ data "azurerm_key_vault" "devops" {
 }
 
 data "azurerm_key_vault_secret" "azure_devops_pat" {
-  name         = "azure-devops-pat"
+  name         = var.pat_secret_name
   key_vault_id = data.azurerm_key_vault.devops.id
 }
 

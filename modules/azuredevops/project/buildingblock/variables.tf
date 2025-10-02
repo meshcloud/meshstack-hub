@@ -1,3 +1,9 @@
+variable "pat_secret_name" {
+  default = "Name of the Azure DevOps PAT Token stored in the KeyVault"
+  sensitive = true
+  type = string
+}
+
 variable "azure_devops_organization_url" {
   description = "Azure DevOps organization URL (e.g., https://dev.azure.com/myorg)"
   type        = string
