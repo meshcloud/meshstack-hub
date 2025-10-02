@@ -183,7 +183,7 @@ run "user_without_relevant_roles" {
   }
 }
 
-run "project_features_configuration" {
+run "default_project_features" {
   command = plan
 
   variables {
@@ -191,24 +191,31 @@ run "project_features_configuration" {
     key_vault_name               = "kv-test-devops"
     resource_group_name          = "rg-test-devops"
     project_name                = "test-project"
-    
-    project_features = {
-      boards      = "enabled"
-      repositories = "enabled"
-      pipelines   = "enabled"
-      testplans   = "disabled"
-      artifacts   = "disabled"
-    }
+  }
+
+  assert {
+    condition     = azuredevops_project.main.features.boards == "enabled"
+    error_message = "Boards should be enabled by default"
+  }
+
+  assert {
+    condition     = azuredevops_project.main.features.repositories == "diabled"
+    error_message = "Repositories should be diabled by default"
+  }
+
+  assert {
+    condition     = azuredevops_project.main.features.pipelines == "diabled"
+    error_message = "Pipelines should be diabled by default"
   }
 
   assert {
     condition     = azuredevops_project.main.features.testplans == "disabled"
-    error_message = "Test plans should be disabled"
+    error_message = "Test plans should be disabled by default"
   }
 
   assert {
-    condition     = azuredevops_project.main.features.artifacts == "disabled"
-    error_message = "Artifacts should be disabled"
+    condition     = azuredevops_project.main.features.artifacts == "diabled"
+    error_message = "Artifacts should be diabled by default"
   }
 }
 
