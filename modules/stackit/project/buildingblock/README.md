@@ -1,81 +1,81 @@
+---
+name: StackIt Project
+supportedPlatforms:
+  - stackit
+description: |
+  Creates a new StackIt project and manages user access permissions with role-based access control.
+---
+
 # StackIt Project Building Block
 
-This building block creates and manages StackIt projects with user access control.
-
-## Features
-
-- **Project Creation**: Creates new StackIt projects within specified parent containers
-- **User Management**: Assigns users with admin, user, or reader permissions
-- **Service Accounts**: Optional creation of service accounts for automation
-- **Label Support**: Applies labels for organization and network area placement
-- **Experimental IAM**: Uses StackIt's experimental IAM features for role assignments
+This Terraform module provisions a StackIt project with user access control and optional service accounts.
 
 ## Requirements
 
-- StackIt service account with project creation permissions
-- Parent container ID (organization or folder)
-- Valid user emails for role assignments
+- Terraform `>= 1.6.0`
+- StackIt Provider `>= 0.60.0`
 
-## Usage
+## Providers
 
 ```hcl
-module "stackit_project" {
-  source = "./modules/stackit/project/buildingblock"
-
-  parent_container_id = "organization-abc123"
-  project_name        = "my-application"
-  owner_email         = "project-owner@company.com"
-
-  labels = {
-    environment = "production"
-    team        = "platform"
-    cost-center = "engineering"
-  }
-
-  users = [
-    {
-      email = "admin@company.com"
-      role  = "admin"
-    },
-    {
-      email = "developer@company.com"
-      role  = "user"
-    },
-    {
-      email = "auditor@company.com"
-      role  = "reader"
+terraform {
+  required_providers {
+    stackit = {
+      source  = "stackitcloud/stackit"
+      version = ">= 0.60.0"
     }
-  ]
-
-  create_service_account = true
-  service_account_name   = "ci-cd-automation"
+  }
 }
-```
 
-## Authentication
-
-This building block requires authentication with StackIt. Configure the StackIt provider with:
-
-```hcl
 provider "stackit" {
   service_account_key_path = "/path/to/service-account-key.json"
   experiments             = ["iam"]
 }
 ```
 
+<!-- BEGIN_TF_DOCS -->
+## Requirements
+
+| Name | Version |
+|------|---------|
+| <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.6.0 |
+| <a name="requirement_stackit"></a> [stackit](#requirement\_stackit) | >= 0.60.0 |
+
+## Modules
+
+No modules.
+
+## Resources
+
+| Name | Type |
+|------|------|
+| [stackit_authorization_project_role_assignment.admin_assignments](https://registry.terraform.io/providers/stackitcloud/stackit/latest/docs/resources/authorization_project_role_assignment) | resource |
+| [stackit_authorization_project_role_assignment.reader_assignments](https://registry.terraform.io/providers/stackitcloud/stackit/latest/docs/resources/authorization_project_role_assignment) | resource |
+| [stackit_authorization_project_role_assignment.user_assignments](https://registry.terraform.io/providers/stackitcloud/stackit/latest/docs/resources/authorization_project_role_assignment) | resource |
+| [stackit_resourcemanager_project.project](https://registry.terraform.io/providers/stackitcloud/stackit/latest/docs/resources/resourcemanager_project) | resource |
+| [stackit_service_account.automation](https://registry.terraform.io/providers/stackitcloud/stackit/latest/docs/resources/service_account) | resource |
+
+## Inputs
+
+| Name | Description | Type | Default | Required |
+|------|-------------|------|---------|:--------:|
+| <a name="input_create_service_account"></a> [create\_service\_account](#input\_create\_service\_account) | Whether to create a service account for automation purposes. | `bool` | `false` | no |
+| <a name="input_environment"></a> [environment](#input\_environment) | The environment type (production, staging, development). If not set, uses parent_container_id directly. | `string` | `null` | no |
+| <a name="input_labels"></a> [labels](#input\_labels) | Labels to apply to the project. Use 'networkArea' to specify the STACKIT Network Area. | `map(string)` | `{}` | no |
+| <a name="input_owner_email"></a> [owner\_email](#input\_owner\_email) | The email address of the project owner. | `string` | n/a | yes |
+| <a name="input_parent_container_id"></a> [parent\_container\_id](#input\_parent\_container\_id) | The parent container ID (organization or folder) where the project will be created. | `string` | n/a | yes |
+| <a name="input_parent_container_ids"></a> [parent\_container\_ids](#input\_parent\_container\_ids) | Parent container IDs for different environments. If environment is set, the corresponding container ID will be used. | <pre>object({<br>    development = optional(string)<br>    production  = optional(string)<br>    staging     = optional(string)<br>  })</pre> | `{}` | no |
+| <a name="input_project_name"></a> [project\_name](#input\_project\_name) | The name of the StackIt project to create. | `string` | n/a | yes |
+| <a name="input_service_account_name"></a> [service\_account\_name](#input\_service\_account\_name) | Name of the service account to create (if create_service_account is true). | `string` | `"automation-sa"` | no |
+| <a name="input_users"></a> [users](#input\_users) | List of users from authoritative system | <pre>list(object({<br>    email          = string<br>    euid           = string<br>    firstName      = string<br>    lastName       = string<br>    meshIdentifier = string<br>    roles          = list(string)<br>    username       = string<br>  }))</pre> | `[]` | no |
+
 ## Outputs
 
-- `project_id`: UUID of the created project
-- `container_id`: User-friendly container ID
-- `project_name`: Project name
-- `service_account_email`: Email of created service account (if applicable)
-
-## Testing
-
-Run the included Terraform tests:
-
-```bash
-terraform test
-```
-
-Tests include both full configuration and minimal setup scenarios.
+| Name | Description |
+|------|-------------|
+| <a name="output_container_id"></a> [container\_id](#output\_container\_id) | The user-friendly container ID of the created StackIt project. |
+| <a name="output_project_id"></a> [project\_id](#output\_project\_id) | The UUID of the created StackIt project. |
+| <a name="output_project_name"></a> [project\_name](#output\_project\_name) | The name of the created StackIt project. |
+| <a name="output_project_url"></a> [project\_url](#output\_project\_url) | The deep link URL to access the project in the StackIt portal. |
+| <a name="output_service_account_email"></a> [service\_account\_email](#output\_service\_account\_email) | The email of the created service account (if created). |
+<!-- END_TF_DOCS -->
