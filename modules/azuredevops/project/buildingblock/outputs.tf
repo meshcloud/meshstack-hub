@@ -33,19 +33,19 @@ output "user_assignments" {
 }
 
 output "group_memberships" {
-  description = "Information about group memberships" 
+  description = "Information about group memberships"
   value = {
     readers = {
       group_descriptor = data.azuredevops_group.project_readers.descriptor
-      members         = local.readers
+      members          = local.readers
     }
     contributors = {
       group_descriptor = data.azuredevops_group.project_contributors.descriptor
-      members         = local.contributors
+      members          = local.contributors
     }
     administrators = {
       group_descriptor = data.azuredevops_group.project_administrators.descriptor
-      members         = local.administrators  
+      members          = local.administrators
     }
   }
 }
@@ -54,5 +54,5 @@ output "group_memberships" {
 
 output "project_features" {
   description = "Enabled/disabled project features"
-  value = var.project_features
+  value       = var.project_features
 }

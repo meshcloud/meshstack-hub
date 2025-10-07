@@ -1,7 +1,7 @@
 variable "pat_secret_name" {
-  default = "Name of the Azure DevOps PAT Token stored in the KeyVault"
+  default   = "Name of the Azure DevOps PAT Token stored in the KeyVault"
   sensitive = true
-  type = string
+  type      = string
 }
 
 variable "azure_devops_organization_url" {
@@ -22,7 +22,7 @@ variable "resource_group_name" {
 variable "project_name" {
   description = "Name of the Azure DevOps project"
   type        = string
-  
+
   validation {
     condition     = length(var.project_name) >= 1 && length(var.project_name) <= 64
     error_message = "Project name must be between 1 and 64 characters."
@@ -39,7 +39,7 @@ variable "project_visibility" {
   description = "Visibility of the project (private or public)"
   type        = string
   default     = "private"
-  
+
   validation {
     condition     = contains(["private", "public"], var.project_visibility)
     error_message = "Project visibility must be either 'private' or 'public'."
@@ -50,7 +50,7 @@ variable "work_item_template" {
   description = "Work item process template"
   type        = string
   default     = "Agile"
-  
+
   validation {
     condition     = contains(["Agile", "Basic", "CMMI", "Scrum"], var.work_item_template)
     error_message = "Work item template must be one of: Agile, Basic, CMMI, Scrum."
@@ -61,7 +61,7 @@ variable "version_control" {
   description = "Version control system for the project"
   type        = string
   default     = "Git"
-  
+
   validation {
     condition     = contains(["Git", "Tfvc"], var.version_control)
     error_message = "Version control must be either 'Git' or 'Tfvc'."
@@ -71,18 +71,18 @@ variable "version_control" {
 variable "project_features" {
   description = "Project features to enable/disable"
   type = object({
-    boards      = optional(string, "enabled")
+    boards       = optional(string, "enabled")
     repositories = optional(string, "enabled")
-    pipelines   = optional(string, "enabled")
-    testplans   = optional(string, "disabled")
-    artifacts   = optional(string, "enabled")
+    pipelines    = optional(string, "enabled")
+    testplans    = optional(string, "disabled")
+    artifacts    = optional(string, "enabled")
   })
   default = {
-    boards      = "enabled"
+    boards       = "enabled"
     repositories = "disabled"
-    pipelines   = "disabled"
-    testplans   = "disabled"
-    artifacts   = "disabled"
+    pipelines    = "disabled"
+    testplans    = "disabled"
+    artifacts    = "disabled"
   }
 }
 

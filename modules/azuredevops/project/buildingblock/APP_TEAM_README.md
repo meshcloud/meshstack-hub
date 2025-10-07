@@ -14,10 +14,10 @@ Create and manage Azure DevOps projects with automatic user licensing and role-b
 ```hcl
 module "my_devops_project" {
   source = "path/to/azuredevops/project/buildingblock"
-  
+
   # Basic project setup
   project_name = "amazing-product"
-  
+
    # Users provided by authoritative system
    users = [
      {
@@ -110,7 +110,7 @@ users = [
   },
   {
     principal_name = "dev1@company.com"
-    role          = "contributor" 
+    role          = "contributor"
     license_type  = "basic"
   },
   {

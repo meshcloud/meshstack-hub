@@ -44,18 +44,18 @@ This building block creates an Azure DevOps project and manages user access with
 ```hcl
 module "azure_devops_project" {
   source = "path/to/azuredevops/project/buildingblock"
-  
+
   # Connection settings (from backplane)
   azure_devops_organization_url = "https://dev.azure.com/myorg"
   key_vault_name               = "kv-azdevops-terraform"
   resource_group_name          = "rg-azdevops-terraform"
-  
+
   # Project configuration
   project_name        = "my-new-project"
   project_description = "Project for development team"
   project_visibility  = "private"
   work_item_template  = "Agile"
-  
+
    # Users provided by authoritative system
    users = [
      {
@@ -77,7 +77,7 @@ module "azure_devops_project" {
        roles          = ["admin", "reader"]
      }
    ]
-  
+
   # Optional: Disable certain features
   project_features = {
     testplans = "disabled"
@@ -159,3 +159,59 @@ If you get permission errors:
 1. Verify PAT scopes include "Project & Team (Read, Write, & Manage)"
 2. Check the service principal has access to the Key Vault
 3. Ensure the PAT hasn't expired
+<!-- BEGIN_TF_DOCS -->
+## Requirements
+
+| Name | Version |
+|------|---------|
+| <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.0 |
+| <a name="requirement_azuredevops"></a> [azuredevops](#requirement\_azuredevops) | ~> 1.1.1 |
+| <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) | ~> 3.116.0 |
+
+## Modules
+
+No modules.
+
+## Resources
+
+| Name | Type |
+|------|------|
+| [azuredevops_group_membership.administrators](https://registry.terraform.io/providers/microsoft/azuredevops/latest/docs/resources/group_membership) | resource |
+| [azuredevops_group_membership.contributors](https://registry.terraform.io/providers/microsoft/azuredevops/latest/docs/resources/group_membership) | resource |
+| [azuredevops_group_membership.readers](https://registry.terraform.io/providers/microsoft/azuredevops/latest/docs/resources/group_membership) | resource |
+| [azuredevops_project.main](https://registry.terraform.io/providers/microsoft/azuredevops/latest/docs/resources/project) | resource |
+| [azuredevops_group.project_administrators](https://registry.terraform.io/providers/microsoft/azuredevops/latest/docs/data-sources/group) | data source |
+| [azuredevops_group.project_contributors](https://registry.terraform.io/providers/microsoft/azuredevops/latest/docs/data-sources/group) | data source |
+| [azuredevops_group.project_readers](https://registry.terraform.io/providers/microsoft/azuredevops/latest/docs/data-sources/group) | data source |
+| [azuredevops_users.all_users](https://registry.terraform.io/providers/microsoft/azuredevops/latest/docs/data-sources/users) | data source |
+| [azurerm_key_vault.devops](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/key_vault) | data source |
+| [azurerm_key_vault_secret.azure_devops_pat](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/key_vault_secret) | data source |
+
+## Inputs
+
+| Name | Description | Type | Default | Required |
+|------|-------------|------|---------|:--------:|
+| <a name="input_azure_devops_organization_url"></a> [azure\_devops\_organization\_url](#input\_azure\_devops\_organization\_url) | Azure DevOps organization URL (e.g., https://dev.azure.com/myorg) | `string` | n/a | yes |
+| <a name="input_key_vault_name"></a> [key\_vault\_name](#input\_key\_vault\_name) | Name of the Key Vault containing the Azure DevOps PAT | `string` | n/a | yes |
+| <a name="input_pat_secret_name"></a> [pat\_secret\_name](#input\_pat\_secret\_name) | n/a | `string` | `"Name of the Azure DevOps PAT Token stored in the KeyVault"` | no |
+| <a name="input_project_description"></a> [project\_description](#input\_project\_description) | Description of the Azure DevOps project | `string` | `"Managed by Terraform"` | no |
+| <a name="input_project_features"></a> [project\_features](#input\_project\_features) | Project features to enable/disable | <pre>object({<br>    boards      = optional(string, "enabled")<br>    repositories = optional(string, "enabled")<br>    pipelines   = optional(string, "enabled")<br>    testplans   = optional(string, "disabled")<br>    artifacts   = optional(string, "enabled")<br>  })</pre> | <pre>{<br>  "artifacts": "disabled",<br>  "boards": "enabled",<br>  "pipelines": "disabled",<br>  "repositories": "disabled",<br>  "testplans": "disabled"<br>}</pre> | no |
+| <a name="input_project_name"></a> [project\_name](#input\_project\_name) | Name of the Azure DevOps project | `string` | n/a | yes |
+| <a name="input_project_visibility"></a> [project\_visibility](#input\_project\_visibility) | Visibility of the project (private or public) | `string` | `"private"` | no |
+| <a name="input_resource_group_name"></a> [resource\_group\_name](#input\_resource\_group\_name) | Resource group name containing the Key Vault | `string` | n/a | yes |
+| <a name="input_users"></a> [users](#input\_users) | List of users from authoritative system | <pre>list(object({<br>    meshIdentifier = string<br>    username       = string<br>    firstName      = string<br>    lastName       = string<br>    email          = string<br>    euid           = string<br>    roles          = list(string)<br>  }))</pre> | n/a | yes |
+| <a name="input_version_control"></a> [version\_control](#input\_version\_control) | Version control system for the project | `string` | `"Git"` | no |
+| <a name="input_work_item_template"></a> [work\_item\_template](#input\_work\_item\_template) | Work item process template | `string` | `"Agile"` | no |
+
+## Outputs
+
+| Name | Description |
+|------|-------------|
+| <a name="output_group_memberships"></a> [group\_memberships](#output\_group\_memberships) | Information about group memberships |
+| <a name="output_project_features"></a> [project\_features](#output\_project\_features) | Enabled/disabled project features |
+| <a name="output_project_id"></a> [project\_id](#output\_project\_id) | ID of the created Azure DevOps project |
+| <a name="output_project_name"></a> [project\_name](#output\_project\_name) | Name of the created Azure DevOps project |
+| <a name="output_project_url"></a> [project\_url](#output\_project\_url) | URL of the created Azure DevOps project |
+| <a name="output_project_visibility"></a> [project\_visibility](#output\_project\_visibility) | Visibility of the project |
+| <a name="output_user_assignments"></a> [user\_assignments](#output\_user\_assignments) | Map of users and their assigned roles |
+<!-- END_TF_DOCS -->
