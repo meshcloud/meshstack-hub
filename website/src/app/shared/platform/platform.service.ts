@@ -50,36 +50,38 @@ export class PlatformService {
 
   private getPlatform(key: string, logoUrl: string): Platform {
     switch (key) {
-    case 'azure':
-      return { name: 'Azure', logo: logoUrl };
-    case 'aws':
-      return { name: 'Amazon Web Services', logo: logoUrl };
-    case 'gcp':
-      return { name: 'Google Cloud', logo: logoUrl };
-    case 'github':
-      return { name: 'GitHub', logo: logoUrl };
-    case 'aks':
-      return { name: 'Azure Kubernetes Service', logo: logoUrl };
-    case 'ionos':
-      return { name: 'IONOS', logo: logoUrl };
-    case 'stackit':
-      return { name: 'STACKIT', logo: logoUrl };
-    case 'datadog':
-      return { name: 'DataDog', logo: logoUrl };
-    case 'cloudfoundry':
-      return { name: 'Cloud Foundry', logo: logoUrl };
-    case 'ovh':
-      return { name: 'OVHcloud', logo: logoUrl };
-    case 'sapbtp':
-      return { name: 'SAP Business Technology Platform', logo: logoUrl };
-    case 'openstack':
-      return { name: 'OpenStack', logo: logoUrl };
-    case 'openshift':
-      return { name: 'OpenShift', logo: logoUrl };
-    case 'tencentcloud':
-      return { name: 'Tencent Cloud', logo: logoUrl };
-    default:
-      return { name: key, logo: logoUrl };
+      case 'azure':
+        return { name: 'Azure', logo: logoUrl };
+      case 'aws':
+        return { name: 'Amazon Web Services', logo: logoUrl };
+      case 'gcp':
+        return { name: 'Google Cloud', logo: logoUrl };
+      case 'github':
+        return { name: 'GitHub', logo: logoUrl };
+      case 'aks':
+        return { name: 'Azure Kubernetes Service', logo: logoUrl };
+      case 'ionos':
+        return { name: 'IONOS', logo: logoUrl };
+      case 'stackit':
+        return { name: 'STACKIT', logo: logoUrl };
+      case 'datadog':
+        return { name: 'DataDog', logo: logoUrl };
+      case 'cloudfoundry':
+        return { name: 'Cloud Foundry', logo: logoUrl };
+      case 'ovh':
+        return { name: 'OVHcloud', logo: logoUrl };
+      case 'sapbtp':
+        return { name: 'SAP Business Technology Platform', logo: logoUrl };
+      case 'azuredevops':
+        return { name: 'Azure DevOps', logo: logoUrl };
+      case 'openstack':
+        return { name: 'OpenStack', logo: logoUrl };
+      case 'openshift':
+        return { name: 'OpenShift', logo: logoUrl };
+      case 'tencentcloud':
+        return { name: 'Tencent Cloud', logo: logoUrl };
+      default:
+        return { name: key, logo: logoUrl };
     }
   }
 
