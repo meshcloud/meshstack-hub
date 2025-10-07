@@ -1,0 +1,117 @@
+{
+  "name": "stackit-project",
+  "displayName": "StackIt Project",
+  "description": "Creates a new StackIt project and manages user access permissions",
+  "category": "Infrastructure",
+  "platform": "stackit",
+  "tags": ["project", "iam", "access-control", "governance"],
+  "version": "1.0.0",
+  "schema": {
+    "inputs": {
+      "parent_container_id": {
+        "type": "string",
+        "description": "Parent container ID (organization or folder)",
+        "required": true
+      },
+      "project_name": {
+        "type": "string",
+        "description": "Name of the project",
+        "required": true
+      },
+      "owner_email": {
+        "type": "string",
+        "description": "Email of the project owner",
+        "required": true
+      },
+      "labels": {
+        "type": "object",
+        "description": "Project labels",
+        "required": false
+      },
+      "users": {
+        "type": "array",
+        "description": "List of users from authoritative system",
+        "required": false,
+        "items": {
+          "type": "object",
+          "properties": {
+            "meshIdentifier": {
+              "type": "string",
+              "description": "Mesh identifier for the user"
+            },
+            "username": {
+              "type": "string",
+              "description": "Username"
+            },
+            "firstName": {
+              "type": "string",
+              "description": "User's first name"
+            },
+            "lastName": {
+              "type": "string",
+              "description": "User's last name"
+            },
+            "email": {
+              "type": "string",
+              "description": "User email address"
+            },
+            "euid": {
+              "type": "string",
+              "description": "External user ID"
+            },
+            "roles": {
+              "type": "array",
+              "description": "List of roles assigned to the user",
+              "items": {
+                "type": "string",
+                "enum": ["admin", "user", "reader"]
+              }
+            }
+          },
+          "required": ["meshIdentifier", "username", "firstName", "lastName", "email", "euid", "roles"]
+        }
+      },
+      "create_service_account": {
+        "type": "boolean",
+        "description": "Create automation service account",
+        "required": false,
+        "default": false
+      },
+      "service_account_name": {
+        "type": "string",
+        "description": "Name of service account",
+        "required": false,
+        "default": "automation-sa"
+      }
+    },
+    "outputs": {
+      "project_id": {
+        "type": "string",
+        "description": "Project UUID"
+      },
+      "container_id": {
+        "type": "string",
+        "description": "Container ID"
+      },
+      "project_name": {
+        "type": "string",
+        "description": "Project name"
+      },
+      "service_account_email": {
+        "type": "string",
+        "description": "Service account email"
+      },
+      "project_url": {
+        "type": "string",
+        "description": "Deep link URL to the project in StackIt portal"
+      }
+    }
+  },
+  "documentation": {
+    "readme": "buildingblock/README.md",
+    "userGuide": "buildingblock/APP_TEAM_README.md"
+  },
+  "buildingblock": {
+    "path": "buildingblock"
+  }
+}
