@@ -1,3 +1,40 @@
+
+# Note: License assignment is handled by the authoritative system
+# Users are provided with their roles already assigned
+
+# Group users by their roles for easier management
+locals {
+  readers = [
+    for user in var.users : user.email
+    if contains(user.roles, "reader")
+  ]
+
+  contributors = [
+    for user in var.users : user.email
+    if contains(user.roles, "user")
+  ]
+
+  administrators = [
+    for user in var.users : user.email
+    if contains(user.roles, "admin")
+  ]
+  # Create a map of email to user descriptor for easy lookup
+  user_descriptors = {
+    for user in data.azuredevops_users.all_users.users : user.principal_name => user.descriptor
+  }
+}
+
+# Get relevant secrets from Azure KeyVault
+data "azurerm_key_vault" "devops" {
+  name                = var.key_vault_name
+  resource_group_name = var.resource_group_name
+}
+
+data "azurerm_key_vault_secret" "azure_devops_pat" {
+  name         = var.pat_secret_name
+  key_vault_id = data.azurerm_key_vault.devops.id
+}
+
 # Create the Azure DevOps project
 resource "azuredevops_project" "main" {
   name               = var.project_name
@@ -32,38 +69,12 @@ data "azuredevops_group" "project_administrators" {
   name       = "Project Administrators"
 }
 
-# Note: License assignment is handled by the authoritative system
-# Users are provided with their roles already assigned
-
-# Group users by their roles for easier management
-locals {
-  readers = [
-    for user in var.users : user.email
-    if contains(user.roles, "reader")
-  ]
-
-  contributors = [
-    for user in var.users : user.email
-    if contains(user.roles, "user")
-  ]
-
-  administrators = [
-    for user in var.users : user.email
-    if contains(user.roles, "admin")
-  ]
-}
 
 # Get user descriptors for existing users
 data "azuredevops_users" "all_users" {
   # This will get all users in the organization
 }
 
-locals {
-  # Create a map of email to user descriptor for easy lookup
-  user_descriptors = {
-    for user in data.azuredevops_users.all_users.users : user.principal_name => user.descriptor
-  }
-}
 
 # Add users to project groups based on their roles
 resource "azuredevops_group_membership" "readers" {
