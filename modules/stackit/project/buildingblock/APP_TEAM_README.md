@@ -37,11 +37,13 @@ This building block is designed for application teams that need to:
 ## Configuration Options
 
 ### Required Parameters
-- `parent_container_id`: Organization or folder ID where the project will be created
+- `parent_container_id`: Organization or folder ID where the project will be created (used as default if no environment is specified)
 - `project_name`: Human-readable name for the project
 - `owner_email`: Email of the project owner
 
 ### Optional Parameters
+- `environment`: Environment type (production, staging, development) to automatically select the appropriate parent container
+- `parent_container_ids`: Map of environment names to their corresponding parent container IDs
 - `labels`: Key-value pairs for project organization and filtering
 - `users`: List of users from the authoritative system with their roles
 - `create_service_account`: Whether to create an automation service account
@@ -70,3 +72,21 @@ Users can be assigned one or more roles from the authoritative system:
 - **reader**: Read-only access (equivalent to StackIt viewer role)
 
 **Note**: If a user has multiple roles, the highest privilege role takes precedence (admin > user > reader).
+
+### Environment-Based Parent Container Selection
+
+The building block supports automatic parent container selection based on environment type:
+
+```hcl
+# Example configuration
+environment = "production"
+parent_container_ids = {
+  production  = "organization-prod-123"
+  staging     = "organization-staging-456"
+  development = "organization-dev-789"
+}
+```
+
+- If `environment` is set, the corresponding container ID from `parent_container_ids` will be used
+- If `environment` is not set or the environment key doesn't exist in `parent_container_ids`, it falls back to `parent_container_id`
+- This allows for automatic placement of projects in the correct organizational structure based on environment

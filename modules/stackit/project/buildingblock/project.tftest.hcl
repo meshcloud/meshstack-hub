@@ -51,3 +51,17 @@ run "verify_minimal" {
     owner_email         = "minimal-owner@stackit.cloud"
   }
 }
+
+run "verify_environment_based" {
+  variables {
+    parent_container_id = "organization-default"
+    project_name        = "env-based-project"
+    owner_email         = "env-owner@stackit.cloud"
+    environment         = "production"
+    parent_container_ids = {
+      production  = "organization-prod-123"
+      staging     = "organization-staging-456"
+      development = "organization-dev-789"
+    }
+  }
+}

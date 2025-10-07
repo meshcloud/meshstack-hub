@@ -4,6 +4,22 @@ variable "parent_container_id" {
   description = "The parent container ID (organization or folder) where the project will be created."
 }
 
+variable "environment" {
+  type        = string
+  default     = null
+  description = "The environment type (production, staging, development). If not set, uses parent_container_id directly."
+}
+
+variable "parent_container_ids" {
+  type = object({
+    production  = optional(string)
+    staging     = optional(string)
+    development = optional(string)
+  })
+  default     = {}
+  description = "Parent container IDs for different environments. If environment is set, the corresponding container ID will be used."
+}
+
 variable "project_name" {
   type        = string
   nullable    = false
