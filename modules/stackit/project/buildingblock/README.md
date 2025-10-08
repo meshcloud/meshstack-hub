@@ -59,7 +59,7 @@ No modules.
 | Name | Description | Type | Default | Required |
 |------|-------------|------|---------|:--------:|
 | <a name="input_environment"></a> [environment](#input\_environment) | The environment type (production, staging, development). If not set, uses parent\_container\_id directly. | `string` | `null` | no |
-| <a name="input_labels"></a> [labels](#input\_labels) | Labels to apply to the project. Use 'networkArea' to specify the STACKIT Network Area. | `map(string)` | `null` | no |
+| <a name="input_labels"></a> [labels](#input\_labels) | Labels to apply to the project. Use 'networkArea' to specify the STACKIT Network Area. | `map(string)` | `{}` | no |
 | <a name="input_service_account_email"></a> [service\_account\_email](#input\_service\_account\_email) | The email address of the service account that will own this project. | `string` | n/a | yes |
 | <a name="input_parent_container_id"></a> [parent\_container\_id](#input\_parent\_container\_id) | The parent container ID (organization or folder) where the project will be created. | `string` | n/a | yes |
 | <a name="input_parent_container_ids"></a> [parent\_container\_ids](#input\_parent\_container\_ids) | Parent container IDs for different environments. If environment is set, the corresponding container ID will be used. | <pre>object({<br>    development = optional(string)<br>    production  = optional(string)<br>    staging     = optional(string)<br>  })</pre> | `{}` | no |

@@ -34,7 +34,7 @@ variable "service_account_email" {
 
 variable "labels" {
   type        = map(string)
-  default     = null
+  default     = {}
   description = "Labels to apply to the project. Use 'networkArea' to specify the STACKIT Network Area."
 }
 

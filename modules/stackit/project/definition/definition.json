@@ -50,8 +50,7 @@
       "labels": {
         "type": "object",
         "description": "Project labels",
-        "required": false,
-        "default": null
+        "required": false
       },
       "users": {
         "type": "array",
