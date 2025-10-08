@@ -31,6 +31,10 @@ resource "ionoscloud_user" "readers" {
   password       = var.default_user_password
   administrator  = false
   force_sec_auth = var.force_sec_auth
+
+  lifecycle {
+    ignore_changes = [first_name, last_name, email]
+  }
 }
 
 # Create standard users
@@ -42,6 +46,10 @@ resource "ionoscloud_user" "users" {
   password       = var.default_user_password
   administrator  = false
   force_sec_auth = var.force_sec_auth
+
+  lifecycle {
+    ignore_changes = [first_name, last_name, email]
+  }
 }
 
 # Create admin users
@@ -53,6 +61,10 @@ resource "ionoscloud_user" "administrators" {
   password       = var.default_user_password
   administrator  = true
   force_sec_auth = var.force_sec_auth
+
+  lifecycle {
+    ignore_changes = [first_name, last_name, email]
+  }
 }
 
 # Create a group for readers (read-only access)
