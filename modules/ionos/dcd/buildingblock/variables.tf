@@ -7,10 +7,10 @@ variable "datacenter_location" {
   description = "Location for the IONOS datacenter"
   type        = string
   default     = "de/fra"
-  
+
   validation {
     condition = contains([
-      "us/las", "us/ewr", "de/fra", "de/fkb", "de/txl", 
+      "us/las", "us/ewr", "de/fra", "de/fkb", "de/txl",
       "gb/lhr", "es/vit", "fr/par"
     ], var.datacenter_location)
     error_message = "Datacenter location must be one of the supported IONOS locations."

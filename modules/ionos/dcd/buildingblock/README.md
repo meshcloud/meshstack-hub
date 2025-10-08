@@ -97,7 +97,7 @@ module "ionos_dcd" {
 ## Supported Datacenter Locations
 
 - `us/las` - Las Vegas, USA
-- `us/ewr` - Newark, USA  
+- `us/ewr` - Newark, USA
 - `de/fra` - Frankfurt, Germany
 - `de/fkb` - Karlsruhe, Germany
 - `de/txl` - Berlin, Germany
@@ -110,7 +110,7 @@ module "ionos_dcd" {
 Users are assigned to IONOS groups based on their roles list:
 
 - **reader** in roles list: Read-only access group with monitoring permissions
-- **user** in roles list: Standard user group with VM/network management permissions  
+- **user** in roles list: Standard user group with VM/network management permissions
 - **admin** in roles list: Administrator group with full datacenter management permissions
 
 Users can have multiple roles and will be assigned to all corresponding groups.
@@ -122,7 +122,7 @@ Users can have multiple roles and will be assigned to all corresponding groups.
 - Access monitoring: ✅
 - All other permissions: ❌
 
-### Users Group  
+### Users Group
 - Create snapshots: ✅
 - Reserve IP addresses: ✅
 - Access activity log: ✅
@@ -177,3 +177,53 @@ If you get permission errors:
 1. Verify authenticating user has admin privileges
 2. Check datacenter access permissions
 3. Ensure group permissions are correctly configured
+<!-- BEGIN_TF_DOCS -->
+## Requirements
+
+| Name | Version |
+|------|---------|
+| <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.0 |
+| <a name="requirement_ionoscloud"></a> [ionoscloud](#requirement\_ionoscloud) | ~> 6.4.0 |
+
+## Modules
+
+No modules.
+
+## Resources
+
+| Name | Type |
+|------|------|
+| [ionoscloud_datacenter.main](https://registry.terraform.io/providers/ionos-cloud/ionoscloud/latest/docs/resources/datacenter) | resource |
+| [ionoscloud_group.administrators](https://registry.terraform.io/providers/ionos-cloud/ionoscloud/latest/docs/resources/group) | resource |
+| [ionoscloud_group.readers](https://registry.terraform.io/providers/ionos-cloud/ionoscloud/latest/docs/resources/group) | resource |
+| [ionoscloud_group.users](https://registry.terraform.io/providers/ionos-cloud/ionoscloud/latest/docs/resources/group) | resource |
+| [ionoscloud_share.administrators](https://registry.terraform.io/providers/ionos-cloud/ionoscloud/latest/docs/resources/share) | resource |
+| [ionoscloud_share.readers](https://registry.terraform.io/providers/ionos-cloud/ionoscloud/latest/docs/resources/share) | resource |
+| [ionoscloud_share.users](https://registry.terraform.io/providers/ionos-cloud/ionoscloud/latest/docs/resources/share) | resource |
+| [ionoscloud_user.administrators](https://registry.terraform.io/providers/ionos-cloud/ionoscloud/latest/docs/resources/user) | resource |
+| [ionoscloud_user.readers](https://registry.terraform.io/providers/ionos-cloud/ionoscloud/latest/docs/resources/user) | resource |
+| [ionoscloud_user.users](https://registry.terraform.io/providers/ionos-cloud/ionoscloud/latest/docs/resources/user) | resource |
+
+## Inputs
+
+| Name | Description | Type | Default | Required |
+|------|-------------|------|---------|:--------:|
+| <a name="input_datacenter_description"></a> [datacenter\_description](#input\_datacenter\_description) | Description of the datacenter | `string` | `"Managed by Terraform"` | no |
+| <a name="input_datacenter_location"></a> [datacenter\_location](#input\_datacenter\_location) | Location for the IONOS datacenter | `string` | `"de/fra"` | no |
+| <a name="input_datacenter_name"></a> [datacenter\_name](#input\_datacenter\_name) | Name of the IONOS DCD datacenter | `string` | n/a | yes |
+| <a name="input_default_user_password"></a> [default\_user\_password](#input\_default\_user\_password) | Default password for created users | `string` | n/a | yes |
+| <a name="input_force_sec_auth"></a> [force\_sec\_auth](#input\_force\_sec\_auth) | Force two-factor authentication for users | `bool` | `true` | no |
+| <a name="input_ionos_token"></a> [ionos\_token](#input\_ionos\_token) | IONOS API token for authentication | `string` | n/a | yes |
+| <a name="input_users"></a> [users](#input\_users) | List of users from authoritative system | <pre>list(object({<br>    meshIdentifier = string<br>    username       = string<br>    firstName      = string<br>    lastName       = string<br>    email          = string<br>    euid           = string<br>    roles          = list(string)<br>  }))</pre> | n/a | yes |
+
+## Outputs
+
+| Name | Description |
+|------|-------------|
+| <a name="output_datacenter_id"></a> [datacenter\_id](#output\_datacenter\_id) | ID of the created IONOS datacenter |
+| <a name="output_datacenter_location"></a> [datacenter\_location](#output\_datacenter\_location) | Location of the created IONOS datacenter |
+| <a name="output_datacenter_name"></a> [datacenter\_name](#output\_datacenter\_name) | Name of the created IONOS datacenter |
+| <a name="output_dcd_url"></a> [dcd\_url](#output\_dcd\_url) | Direct URL to access the IONOS DCD datacenter |
+| <a name="output_group_memberships"></a> [group\_memberships](#output\_group\_memberships) | Information about group memberships |
+| <a name="output_user_assignments"></a> [user\_assignments](#output\_user\_assignments) | Map of users and their assigned roles |
+<!-- END_TF_DOCS -->

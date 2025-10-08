@@ -4,10 +4,10 @@ Welcome to your new IONOS Data Center Designer (DCD) environment! This guide wil
 
 ## What's Been Created
 
-✅ **IONOS Datacenter**: A new DCD environment in **{{ datacenter_location }}**  
-✅ **User Accounts**: Individual accounts for each team member  
-✅ **Access Groups**: Role-based groups with appropriate permissions  
-✅ **Resource Sharing**: Datacenter access configured for your team  
+✅ **IONOS Datacenter**: A new DCD environment in **{{ datacenter_location }}**
+✅ **User Accounts**: Individual accounts for each team member
+✅ **Access Groups**: Role-based groups with appropriate permissions
+✅ **Resource Sharing**: Datacenter access configured for your team
 
 ## Access Your Environment
 
@@ -26,7 +26,7 @@ Based on your assigned roles, you have access to:
 - Access monitoring and activity logs
 - Read-only access to all resources
 
-### Users 🔧  
+### Users 🔧
 - Create and manage virtual machines
 - Configure networks and storage
 - Create snapshots and backups
@@ -74,11 +74,11 @@ Based on your assigned roles, you have access to:
 
 ## Best Practices
 
-✅ **Always use descriptive names** for your resources  
-✅ **Tag your resources** for better organization  
-✅ **Set up monitoring alerts** for critical systems  
-✅ **Regular backups** of important data  
-✅ **Follow security guidelines** provided by your organization  
+✅ **Always use descriptive names** for your resources
+✅ **Tag your resources** for better organization
+✅ **Set up monitoring alerts** for critical systems
+✅ **Regular backups** of important data
+✅ **Follow security guidelines** provided by your organization
 
 ---
 
