@@ -24,14 +24,14 @@ This building block is designed for application teams that need to:
 | Defining project naming conventions | ✅ | ❌ |
 | Monitoring project usage and costs | ✅ | ❌ |
 | Setting up network areas and labels | ✅ | ❌ |
-| Managing service accounts | ❌ | ✅ |
+
 
 ## Recommendations for Secure and Efficient Project Usage
 - **Use descriptive project names**: Follow organizational naming conventions for easy identification.
 - **Apply appropriate labels**: Use labels for cost tracking, environment identification, and network area placement.
 - **Grant least privilege access**: Assign users the minimum permissions they need (reader < user < admin).
 - **Regular access reviews**: Periodically review and update user permissions as team composition changes.
-- **Service account management**: Create service accounts only when needed for automation and CI/CD pipelines.
+
 - **Network area planning**: Choose appropriate network areas based on compliance and connectivity requirements.
 
 ## Configuration Options
@@ -46,8 +46,6 @@ This building block is designed for application teams that need to:
 - `parent_container_ids`: Map of environment names to their corresponding parent container IDs
 - `labels`: Key-value pairs for project organization and filtering
 - `users`: List of users from the authoritative system with their roles
-- `create_service_account`: Whether to create an automation service account
-- `service_account_name`: Name for the service account (if created)
 
 ### User Structure
 Users are provided from the authoritative system with the following structure:

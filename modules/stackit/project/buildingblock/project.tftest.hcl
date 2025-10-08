@@ -39,8 +39,6 @@ run "verify" {
         roles          = ["reader"]
       }
     ]
-    create_service_account = true
-    service_account_name   = "test-automation-sa"
   }
 }
 

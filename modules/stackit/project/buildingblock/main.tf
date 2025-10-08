@@ -12,7 +12,7 @@ resource "stackit_resourcemanager_project" "project" {
   parent_container_id = local.selected_parent_container_id
   name                = var.project_name
   owner_email         = var.owner_email
-  labels              = var.labels
+  labels              = var.labels != null ? var.labels : {}
 }
 
 # User role assignments (experimental IAM feature)
@@ -40,10 +40,3 @@ resource "stackit_authorization_project_role_assignment" "reader_assignments" {
   subject     = each.value.email
 }
 
-# Optional service account creation
-resource "stackit_service_account" "automation" {
-  count = var.create_service_account ? 1 : 0
-
-  project_id = stackit_resourcemanager_project.project.project_id
-  name       = var.service_account_name
-}

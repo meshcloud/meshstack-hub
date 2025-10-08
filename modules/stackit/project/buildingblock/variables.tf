@@ -34,7 +34,7 @@ variable "owner_email" {
 
 variable "labels" {
   type        = map(string)
-  default     = {}
+  default     = null
   description = "Labels to apply to the project. Use 'networkArea' to specify the STACKIT Network Area."
 }
 
@@ -52,14 +52,3 @@ variable "users" {
   default = []
 }
 
-variable "create_service_account" {
-  type        = bool
-  default     = false
-  description = "Whether to create a service account for automation purposes."
-}
-
-variable "service_account_name" {
-  type        = string
-  default     = "automation-sa"
-  description = "Name of the service account to create (if create_service_account is true)."
-}

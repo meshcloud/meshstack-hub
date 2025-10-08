@@ -8,7 +8,7 @@ description: |
 
 # StackIt Project Building Block
 
-This Terraform module provisions a StackIt project with user access control and optional service accounts.
+This Terraform module provisions a StackIt project with user access control.
 
 ## Requirements
 
@@ -53,20 +53,17 @@ No modules.
 | [stackit_authorization_project_role_assignment.reader_assignments](https://registry.terraform.io/providers/stackitcloud/stackit/latest/docs/resources/authorization_project_role_assignment) | resource |
 | [stackit_authorization_project_role_assignment.user_assignments](https://registry.terraform.io/providers/stackitcloud/stackit/latest/docs/resources/authorization_project_role_assignment) | resource |
 | [stackit_resourcemanager_project.project](https://registry.terraform.io/providers/stackitcloud/stackit/latest/docs/resources/resourcemanager_project) | resource |
-| [stackit_service_account.automation](https://registry.terraform.io/providers/stackitcloud/stackit/latest/docs/resources/service_account) | resource |
 
 ## Inputs
 
 | Name | Description | Type | Default | Required |
 |------|-------------|------|---------|:--------:|
-| <a name="input_create_service_account"></a> [create\_service\_account](#input\_create\_service\_account) | Whether to create a service account for automation purposes. | `bool` | `false` | no |
 | <a name="input_environment"></a> [environment](#input\_environment) | The environment type (production, staging, development). If not set, uses parent\_container\_id directly. | `string` | `null` | no |
 | <a name="input_labels"></a> [labels](#input\_labels) | Labels to apply to the project. Use 'networkArea' to specify the STACKIT Network Area. | `map(string)` | `{}` | no |
 | <a name="input_owner_email"></a> [owner\_email](#input\_owner\_email) | The email address of the project owner. | `string` | n/a | yes |
 | <a name="input_parent_container_id"></a> [parent\_container\_id](#input\_parent\_container\_id) | The parent container ID (organization or folder) where the project will be created. | `string` | n/a | yes |
 | <a name="input_parent_container_ids"></a> [parent\_container\_ids](#input\_parent\_container\_ids) | Parent container IDs for different environments. If environment is set, the corresponding container ID will be used. | <pre>object({<br>    production  = optional(string)<br>    staging     = optional(string)<br>    development = optional(string)<br>  })</pre> | `{}` | no |
 | <a name="input_project_name"></a> [project\_name](#input\_project\_name) | The name of the StackIt project to create. | `string` | n/a | yes |
-| <a name="input_service_account_name"></a> [service\_account\_name](#input\_service\_account\_name) | Name of the service account to create (if create\_service\_account is true). | `string` | `"automation-sa"` | no |
 | <a name="input_users"></a> [users](#input\_users) | List of users from authoritative system | <pre>list(object({<br>    meshIdentifier = string<br>    username       = string<br>    firstName      = string<br>    lastName       = string<br>    email          = string<br>    euid           = string<br>    roles          = list(string)<br>  }))</pre> | `[]` | no |
 
 ## Outputs
@@ -77,5 +74,4 @@ No modules.
 | <a name="output_project_id"></a> [project\_id](#output\_project\_id) | The UUID of the created StackIt project. |
 | <a name="output_project_name"></a> [project\_name](#output\_project\_name) | The name of the created StackIt project. |
 | <a name="output_project_url"></a> [project\_url](#output\_project\_url) | The deep link URL to access the project in the StackIt portal. |
-| <a name="output_service_account_email"></a> [service\_account\_email](#output\_service\_account\_email) | The email of the created service account (if created). |
 <!-- END_TF_DOCS -->
