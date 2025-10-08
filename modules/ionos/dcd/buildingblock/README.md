@@ -50,10 +50,7 @@ module "ionos_dcd" {
   datacenter_description = "Development environment for team"
 
   # Authentication (from backplane)
-  ionos_username = var.ionos_username
-  ionos_password = var.ionos_password
-  # OR use token instead:
-  # ionos_token = var.ionos_token
+  ionos_token = var.ionos_token
 
   # User management
   default_user_password = var.user_password
@@ -90,14 +87,12 @@ module "ionos_dcd" {
 | `datacenter_name` | Name of the IONOS DCD datacenter | `string` | - | yes |
 | `datacenter_location` | Location for the datacenter | `string` | `"de/fra"` | no |
 | `datacenter_description` | Description of the datacenter | `string` | `"Managed by Terraform"` | no |
-| `ionos_username` | IONOS username for authentication | `string` | - | yes |
-| `ionos_password` | IONOS password for authentication | `string` | - | yes* |
-| `ionos_token` | IONOS API token (alternative to username/password) | `string` | `null` | yes* |
+| `ionos_token` | IONOS API token for authentication | `string` | - | yes |
 | `default_user_password` | Default password for created users | `string` | - | yes |
 | `force_sec_auth` | Force two-factor authentication | `bool` | `true` | no |
 | `users` | List of users from authoritative system | `list(object)` | - | yes |
 
-*Either `ionos_password` or `ionos_token` is required.
+
 
 ## Supported Datacenter Locations
 
@@ -151,6 +146,7 @@ Users can have multiple roles and will be assigned to all corresponding groups.
 | `datacenter_id` | ID of the created datacenter |
 | `datacenter_name` | Name of the created datacenter |
 | `datacenter_location` | Location of the datacenter |
+| `dcd_url` | Direct URL to access the IONOS DCD datacenter |
 | `user_assignments` | Map of users and their assigned roles |
 | `group_memberships` | Information about group memberships |
 

@@ -6,8 +6,7 @@ run "setup" {
     datacenter_location    = "de/fra"
     datacenter_description = "Test datacenter for Terraform validation"
     
-    ionos_username        = "test-user"
-    ionos_password        = "test-password"
+    ionos_token           = "test-token"
     default_user_password = "TestPassword123!"
     force_sec_auth       = false
     

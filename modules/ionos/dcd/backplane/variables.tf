@@ -15,20 +15,8 @@ variable "group_name" {
   default     = "DCD-Managers"
 }
 
-variable "ionos_username" {
-  description = "IONOS username for authentication"
-  type        = string
-}
-
-variable "ionos_password" {
-  description = "IONOS password for authentication"
-  type        = string
-  sensitive   = true
-}
-
 variable "ionos_token" {
-  description = "IONOS API token for authentication (alternative to username/password)"
+  description = "IONOS API token for authentication"
   type        = string
   sensitive   = true
-  default     = null
 }

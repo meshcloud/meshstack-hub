@@ -8,7 +8,5 @@ terraform {
 }
 
 provider "ionoscloud" {
-  username = var.ionos_username
-  password = var.ionos_password
-  token    = var.ionos_token
+  token = var.ionos_token
 }

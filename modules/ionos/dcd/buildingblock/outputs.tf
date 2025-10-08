@@ -13,6 +13,11 @@ output "datacenter_location" {
   value       = ionoscloud_datacenter.main.location
 }
 
+output "dcd_url" {
+  description = "Direct URL to access the IONOS DCD datacenter"
+  value       = "https://dcd.ionos.com/latest/datacenter/${ionoscloud_datacenter.main.id}"
+}
+
 output "user_assignments" {
   description = "Map of users and their assigned roles"
   value = {
