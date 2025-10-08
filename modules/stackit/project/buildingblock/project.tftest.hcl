@@ -3,8 +3,8 @@
 
 run "verify" {
   variables {
-    parent_container_id = "organization-test123"
-    project_name        = "test-project"
+    parent_container_id   = "organization-test123"
+    project_name          = "test-project"
     service_account_email = "test-sa@sa.stackit.cloud"
     labels = {
       environment = "test"
@@ -44,18 +44,18 @@ run "verify" {
 
 run "verify_minimal" {
   variables {
-    parent_container_id = "organization-test123"
-    project_name        = "minimal-project"
+    parent_container_id   = "organization-test123"
+    project_name          = "minimal-project"
     service_account_email = "minimal-sa@sa.stackit.cloud"
   }
 }
 
 run "verify_environment_based" {
   variables {
-    parent_container_id = "organization-default"
-    project_name        = "env-based-project"
+    parent_container_id   = "organization-default"
+    project_name          = "env-based-project"
     service_account_email = "env-sa@sa.stackit.cloud"
-    environment         = "production"
+    environment           = "production"
     parent_container_ids = {
       production  = "organization-prod-123"
       staging     = "organization-staging-456"
