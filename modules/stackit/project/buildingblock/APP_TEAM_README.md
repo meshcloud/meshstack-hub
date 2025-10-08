@@ -39,7 +39,7 @@ This building block is designed for application teams that need to:
 ### Required Parameters
 - `parent_container_id`: Organization or folder ID where the project will be created (used as default if no environment is specified)
 - `project_name`: Human-readable name for the project
-- `owner_email`: Email of the project owner
+- `service_account_email`: Email of the service account that will own this project
 
 ### Optional Parameters
 - `environment`: Environment type (production, staging, development) to automatically select the appropriate parent container
@@ -88,3 +88,9 @@ parent_container_ids = {
 - If `environment` is set, the corresponding container ID from `parent_container_ids` will be used
 - If `environment` is not set or the environment key doesn't exist in `parent_container_ids`, it falls back to `parent_container_id`
 - This allows for automatic placement of projects in the correct organizational structure based on environment
+
+### Service Account Owner
+
+The `service_account_email` parameter must be set to the email address of a StackIt service account, not a human user. This service account will be the technical owner of the project and should have the necessary permissions to manage project resources.
+
+**Important**: Service account emails in StackIt typically follow the format: `service-account-name@sa.stackit.cloud`

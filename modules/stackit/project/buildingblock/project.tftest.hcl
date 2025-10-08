@@ -5,7 +5,7 @@ run "verify" {
   variables {
     parent_container_id = "organization-test123"
     project_name        = "test-project"
-    owner_email         = "test-owner@stackit.cloud"
+    service_account_email = "test-sa@sa.stackit.cloud"
     labels = {
       environment = "test"
       team        = "platform"
@@ -46,7 +46,7 @@ run "verify_minimal" {
   variables {
     parent_container_id = "organization-test123"
     project_name        = "minimal-project"
-    owner_email         = "minimal-owner@stackit.cloud"
+    service_account_email = "minimal-sa@sa.stackit.cloud"
   }
 }
 
@@ -54,7 +54,7 @@ run "verify_environment_based" {
   variables {
     parent_container_id = "organization-default"
     project_name        = "env-based-project"
-    owner_email         = "env-owner@stackit.cloud"
+    service_account_email = "env-sa@sa.stackit.cloud"
     environment         = "production"
     parent_container_ids = {
       production  = "organization-prod-123"

@@ -42,15 +42,16 @@
         "description": "Name of the project",
         "required": true
       },
-      "owner_email": {
+      "service_account_email": {
         "type": "string",
-        "description": "Email of the project owner",
+        "description": "Email of the service account that will own this project",
         "required": true
       },
       "labels": {
         "type": "object",
         "description": "Project labels",
-        "required": false
+        "required": false,
+        "default": null
       },
       "users": {
         "type": "array",
@@ -94,18 +95,6 @@
           },
           "required": ["meshIdentifier", "username", "firstName", "lastName", "email", "euid", "roles"]
         }
-      },
-      "create_service_account": {
-        "type": "boolean",
-        "description": "Create automation service account",
-        "required": false,
-        "default": false
-      },
-      "service_account_name": {
-        "type": "string",
-        "description": "Name of service account",
-        "required": false,
-        "default": "automation-sa"
       }
     },
     "outputs": {
@@ -120,10 +109,6 @@
       "project_name": {
         "type": "string",
         "description": "Project name"
-      },
-      "service_account_email": {
-        "type": "string",
-        "description": "Service account email"
       },
       "project_url": {
         "type": "string",

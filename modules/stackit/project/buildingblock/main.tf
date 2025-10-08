@@ -11,7 +11,7 @@ locals {
 resource "stackit_resourcemanager_project" "project" {
   parent_container_id = local.selected_parent_container_id
   name                = var.project_name
-  owner_email         = var.owner_email
+  owner_email         = var.service_account_email
   labels              = var.labels != null ? var.labels : {}
 }
 

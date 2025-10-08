@@ -26,10 +26,10 @@ variable "project_name" {
   description = "The name of the StackIt project to create."
 }
 
-variable "owner_email" {
+variable "service_account_email" {
   type        = string
   nullable    = false
-  description = "The email address of the project owner."
+  description = "The email address of the service account that will own this project."
 }
 
 variable "labels" {
