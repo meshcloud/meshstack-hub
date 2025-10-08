@@ -22,27 +22,27 @@ output "user_assignments" {
   description = "Map of users and their assigned roles"
   value = {
     readers = [
-      for i, user in local.readers : {
+      for user in local.all_reader_users : {
         email   = user.email
-        name    = "${user.firstName} ${user.lastName}"
-        user_id = ionoscloud_user.readers[i].id
-        roles   = user.roles
+        name    = "${user.first_name} ${user.last_name}"
+        user_id = user.id
+        roles   = ["reader"]
       }
     ]
     users = [
-      for i, user in local.users : {
+      for user in local.all_standard_users : {
         email   = user.email
-        name    = "${user.firstName} ${user.lastName}"
-        user_id = ionoscloud_user.users[i].id
-        roles   = user.roles
+        name    = "${user.first_name} ${user.last_name}"
+        user_id = user.id
+        roles   = ["user"]
       }
     ]
     administrators = [
-      for i, user in local.administrators : {
+      for user in local.all_admin_users : {
         email   = user.email
-        name    = "${user.firstName} ${user.lastName}"
-        user_id = ionoscloud_user.administrators[i].id
-        roles   = user.roles
+        name    = "${user.first_name} ${user.last_name}"
+        user_id = user.id
+        roles   = ["admin"]
       }
     ]
   }

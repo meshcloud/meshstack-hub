@@ -13,6 +13,22 @@ locals {
     for user in var.users : user
     if contains(user.roles, "admin")
   ]
+
+  # Combine existing and new users for group membership
+  all_reader_users = concat(
+    [for d in data.ionoscloud_user.existing_readers : d if try(d.id, "") != ""],
+    ionoscloud_user.new_readers
+  )
+  
+  all_standard_users = concat(
+    [for d in data.ionoscloud_user.existing_users : d if try(d.id, "") != ""],
+    ionoscloud_user.new_users
+  )
+  
+  all_admin_users = concat(
+    [for d in data.ionoscloud_user.existing_administrators : d if try(d.id, "") != ""],
+    ionoscloud_user.new_administrators
+  )
 }
 
 # Create the datacenter
@@ -22,49 +38,63 @@ resource "ionoscloud_datacenter" "main" {
   description = var.datacenter_description
 }
 
-# Create reader users
-resource "ionoscloud_user" "readers" {
-  count          = length(local.readers)
+# Try to find existing users first
+data "ionoscloud_user" "existing_readers" {
+  count = length(local.readers)
+  email = local.readers[count.index].email
+}
+
+data "ionoscloud_user" "existing_users" {
+  count = length(local.users)
+  email = local.users[count.index].email
+}
+
+data "ionoscloud_user" "existing_administrators" {
+  count = length(local.administrators)
+  email = local.administrators[count.index].email
+}
+
+# Only create users that don't exist
+resource "ionoscloud_user" "new_readers" {
+  count = length([
+    for i, user in local.readers : user
+    if try(data.ionoscloud_user.existing_readers[i].id, "") == ""
+  ])
+  
   first_name     = local.readers[count.index].firstName
   last_name      = local.readers[count.index].lastName
   email          = local.readers[count.index].email
   password       = var.default_user_password
   administrator  = false
   force_sec_auth = var.force_sec_auth
-
-  lifecycle {
-    ignore_changes = [first_name, last_name, email]
-  }
 }
 
-# Create standard users
-resource "ionoscloud_user" "users" {
-  count          = length(local.users)
+resource "ionoscloud_user" "new_users" {
+  count = length([
+    for i, user in local.users : user
+    if try(data.ionoscloud_user.existing_users[i].id, "") == ""
+  ])
+  
   first_name     = local.users[count.index].firstName
   last_name      = local.users[count.index].lastName
   email          = local.users[count.index].email
   password       = var.default_user_password
   administrator  = false
   force_sec_auth = var.force_sec_auth
-
-  lifecycle {
-    ignore_changes = [first_name, last_name, email]
-  }
 }
 
-# Create admin users
-resource "ionoscloud_user" "administrators" {
-  count          = length(local.administrators)
+resource "ionoscloud_user" "new_administrators" {
+  count = length([
+    for i, user in local.administrators : user
+    if try(data.ionoscloud_user.existing_administrators[i].id, "") == ""
+  ])
+  
   first_name     = local.administrators[count.index].firstName
   last_name      = local.administrators[count.index].lastName
   email          = local.administrators[count.index].email
   password       = var.default_user_password
   administrator  = true
   force_sec_auth = var.force_sec_auth
-
-  lifecycle {
-    ignore_changes = [first_name, last_name, email]
-  }
 }
 
 # Create a group for readers (read-only access)
@@ -84,7 +114,7 @@ resource "ionoscloud_group" "readers" {
   access_and_manage_monitoring   = true
   access_and_manage_certificates = false
 
-  user_ids = [for user in ionoscloud_user.readers : user.id]
+  user_ids = [for user in local.all_reader_users : user.id]
 }
 
 # Create a group for standard users
@@ -104,7 +134,7 @@ resource "ionoscloud_group" "users" {
   access_and_manage_monitoring   = true
   access_and_manage_certificates = false
 
-  user_ids = [for user in ionoscloud_user.users : user.id]
+  user_ids = [for user in local.all_standard_users : user.id]
 }
 
 # Create a group for administrators
@@ -124,7 +154,7 @@ resource "ionoscloud_group" "administrators" {
   access_and_manage_monitoring   = true
   access_and_manage_certificates = true
 
-  user_ids = [for user in ionoscloud_user.administrators : user.id]
+  user_ids = [for user in local.all_admin_users : user.id]
 }
 
 # Grant group access to the datacenter
