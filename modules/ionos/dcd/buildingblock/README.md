@@ -200,9 +200,12 @@ No modules.
 | [ionoscloud_share.administrators](https://registry.terraform.io/providers/ionos-cloud/ionoscloud/latest/docs/resources/share) | resource |
 | [ionoscloud_share.readers](https://registry.terraform.io/providers/ionos-cloud/ionoscloud/latest/docs/resources/share) | resource |
 | [ionoscloud_share.users](https://registry.terraform.io/providers/ionos-cloud/ionoscloud/latest/docs/resources/share) | resource |
-| [ionoscloud_user.administrators](https://registry.terraform.io/providers/ionos-cloud/ionoscloud/latest/docs/resources/user) | resource |
-| [ionoscloud_user.readers](https://registry.terraform.io/providers/ionos-cloud/ionoscloud/latest/docs/resources/user) | resource |
-| [ionoscloud_user.users](https://registry.terraform.io/providers/ionos-cloud/ionoscloud/latest/docs/resources/user) | resource |
+| [ionoscloud_user.new_administrators](https://registry.terraform.io/providers/ionos-cloud/ionoscloud/latest/docs/resources/user) | resource |
+| [ionoscloud_user.new_readers](https://registry.terraform.io/providers/ionos-cloud/ionoscloud/latest/docs/resources/user) | resource |
+| [ionoscloud_user.new_users](https://registry.terraform.io/providers/ionos-cloud/ionoscloud/latest/docs/resources/user) | resource |
+| [ionoscloud_user.existing_administrators](https://registry.terraform.io/providers/ionos-cloud/ionoscloud/latest/docs/data-sources/user) | data source |
+| [ionoscloud_user.existing_readers](https://registry.terraform.io/providers/ionos-cloud/ionoscloud/latest/docs/data-sources/user) | data source |
+| [ionoscloud_user.existing_users](https://registry.terraform.io/providers/ionos-cloud/ionoscloud/latest/docs/data-sources/user) | data source |
 
 ## Inputs
 
