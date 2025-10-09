@@ -74,11 +74,30 @@ Based on your assigned roles, you have access to:
 
 ## Best Practices
 
-✅ **Always use descriptive names** for your resources
-✅ **Tag your resources** for better organization
-✅ **Set up monitoring alerts** for critical systems
-✅ **Regular backups** of important data
-✅ **Follow security guidelines** provided by your organization
+✅ **Always use descriptive names** for your resources  
+✅ **Tag your resources** for better organization  
+✅ **Set up monitoring alerts** for critical systems  
+✅ **Regular backups** of important data  
+✅ **Follow security guidelines** provided by your organization  
+
+## 🔄 Shared Responsibility
+
+| Responsibility | Platform Team | Application Team |
+|---------------|--------------|----------------|
+| **IONOS Account & Contract** | ✅ Manage IONOS contract and billing | ❌ |
+| **DCD Infrastructure Setup** | ✅ Provision datacenter and base infrastructure | ❌ |
+| **User Account Creation** | ✅ Create IONOS user accounts via Terraform | ❌ |
+| **Role-Based Access Control** | ✅ Configure groups and permissions | ❌ |
+| **API Token Management** | ✅ Secure API token storage and rotation | ❌ |
+| **User Management** | ❌ | ✅ Provide user data and role assignments |
+| **Virtual Machine Management** | ❌ | ✅ Create, configure, and manage VMs |
+| **Network Configuration** | ❌ | ✅ Set up LANs, firewalls, and IP addressing |
+| **Storage Management** | ❌ | ✅ Manage volumes, snapshots, and backups |
+| **Application Deployment** | ❌ | ✅ Deploy and configure applications |
+| **Resource Monitoring** | ❌ | ✅ Monitor resource usage and performance |
+| **Cost Optimization** | ❌ | ✅ Right-size resources and manage costs |
+| **Security Configuration** | ❌ | ✅ Configure VM security and access controls |
+| **Data Backup & Recovery** | ❌ | ✅ Implement backup strategies for applications |
 
 ---
 
