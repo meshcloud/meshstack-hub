@@ -35,12 +35,6 @@ variable "force_sec_auth" {
   default     = true
 }
 
-variable "ionos_token" {
-  description = "IONOS API token for authentication"
-  type        = string
-  sensitive   = true
-}
-
 variable "users" {
   description = "List of users from authoritative system"
   type = list(object({
