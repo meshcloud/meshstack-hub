@@ -191,6 +191,7 @@ No modules.
 | [ionoscloud_group.administrators](https://registry.terraform.io/providers/ionos-cloud/ionoscloud/latest/docs/resources/group) | resource |
 | [ionoscloud_group.readers](https://registry.terraform.io/providers/ionos-cloud/ionoscloud/latest/docs/resources/group) | resource |
 | [ionoscloud_group.users](https://registry.terraform.io/providers/ionos-cloud/ionoscloud/latest/docs/resources/group) | resource |
+| [ionoscloud_share.administrators](https://registry.terraform.io/providers/ionos-cloud/ionoscloud/latest/docs/resources/share) | resource |
 | [ionoscloud_share.readers](https://registry.terraform.io/providers/ionos-cloud/ionoscloud/latest/docs/resources/share) | resource |
 | [ionoscloud_share.users](https://registry.terraform.io/providers/ionos-cloud/ionoscloud/latest/docs/resources/share) | resource |
 | [ionoscloud_user.administrators](https://registry.terraform.io/providers/ionos-cloud/ionoscloud/latest/docs/data-sources/user) | data source |

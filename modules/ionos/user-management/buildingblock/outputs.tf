@@ -34,9 +34,9 @@ output "all_users" {
 output "user_summary" {
   description = "Summary of user management"
   value = {
-    total_readers      = length(local.all_reader_users)
-    total_users        = length(local.all_standard_users)
-    total_admins       = length(local.all_admin_users)
-    new_users_created  = length(ionoscloud_user.new_readers) + length(ionoscloud_user.new_users) + length(ionoscloud_user.new_administrators)
+    total_readers     = length(local.all_reader_users)
+    total_users       = length(local.all_standard_users)
+    total_admins      = length(local.all_admin_users)
+    new_users_created = length(ionoscloud_user.new_readers) + length(ionoscloud_user.new_users) + length(ionoscloud_user.new_administrators)
   }
 }

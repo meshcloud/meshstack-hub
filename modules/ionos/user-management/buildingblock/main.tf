@@ -37,7 +37,7 @@ resource "ionoscloud_user" "new_readers" {
     for i, user in local.readers : user
     if try(data.ionoscloud_user.existing_readers[i].id, "") == ""
   ])
-  
+
   first_name     = local.readers[count.index].firstName
   last_name      = local.readers[count.index].lastName
   email          = local.readers[count.index].email
@@ -47,7 +47,7 @@ resource "ionoscloud_user" "new_readers" {
 
   lifecycle {
     prevent_destroy = true
-    ignore_changes = [password]
+    ignore_changes  = [password]
   }
 }
 
@@ -56,7 +56,7 @@ resource "ionoscloud_user" "new_users" {
     for i, user in local.users : user
     if try(data.ionoscloud_user.existing_users[i].id, "") == ""
   ])
-  
+
   first_name     = local.users[count.index].firstName
   last_name      = local.users[count.index].lastName
   email          = local.users[count.index].email
@@ -66,7 +66,7 @@ resource "ionoscloud_user" "new_users" {
 
   lifecycle {
     prevent_destroy = true
-    ignore_changes = [password]
+    ignore_changes  = [password]
   }
 }
 
@@ -75,7 +75,7 @@ resource "ionoscloud_user" "new_administrators" {
     for i, user in local.administrators : user
     if try(data.ionoscloud_user.existing_administrators[i].id, "") == ""
   ])
-  
+
   first_name     = local.administrators[count.index].firstName
   last_name      = local.administrators[count.index].lastName
   email          = local.administrators[count.index].email
@@ -85,7 +85,7 @@ resource "ionoscloud_user" "new_administrators" {
 
   lifecycle {
     prevent_destroy = true
-    ignore_changes = [password]
+    ignore_changes  = [password]
   }
 }
 
@@ -95,12 +95,12 @@ locals {
     [for d in data.ionoscloud_user.existing_readers : d if try(d.id, "") != ""],
     ionoscloud_user.new_readers
   )
-  
+
   all_standard_users = concat(
     [for d in data.ionoscloud_user.existing_users : d if try(d.id, "") != ""],
     ionoscloud_user.new_users
   )
-  
+
   all_admin_users = concat(
     [for d in data.ionoscloud_user.existing_administrators : d if try(d.id, "") != ""],
     ionoscloud_user.new_administrators

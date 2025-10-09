@@ -21,7 +21,7 @@ module "ionos_users" {
   # Authentication
   ionos_token = var.ionos_token
 
-  # User configuration  
+  # User configuration
   default_user_password = var.default_user_password
   force_sec_auth       = true
 
@@ -64,15 +64,15 @@ module "ionos_users" {
 # dcd-development.tf
 module "dev_datacenter" {
   source = "./modules/ionos/dcd/buildingblock"
-  
+
   # Datacenter configuration
   datacenter_name        = "development-env"
   datacenter_location    = "de/fra"
   datacenter_description = "Development environment"
-  
+
   # Authentication
   ionos_token = var.ionos_token
-  
+
   # Users (same list as user management)
   users = [
     {
@@ -99,15 +99,15 @@ module "dev_datacenter" {
 # dcd-production.tf
 module "prod_datacenter" {
   source = "./modules/ionos/dcd/buildingblock"
-  
+
   # Datacenter configuration
   datacenter_name        = "production-env"
   datacenter_location    = "de/fra"
   datacenter_description = "Production environment"
-  
+
   # Authentication
   ionos_token = var.ionos_token
-  
+
   # Users (different subset for production)
   users = [
     {
@@ -180,10 +180,10 @@ terraform apply -target=module.dev_datacenter  # Recreate safely
 
 ## Benefits of This Architecture
 
-✅ **User Persistence**: Users survive environment changes  
-✅ **Flexible Environments**: Different user sets per datacenter  
-✅ **Safe Operations**: Destroy/recreate environments without user impact  
-✅ **Cost Effective**: Users are created once, used by multiple environments  
+✅ **User Persistence**: Users survive environment changes
+✅ **Flexible Environments**: Different user sets per datacenter
+✅ **Safe Operations**: Destroy/recreate environments without user impact
+✅ **Cost Effective**: Users are created once, used by multiple environments
 ✅ **Role Separation**: Clear separation between user management and infrastructure
 
 ## Common Scenarios

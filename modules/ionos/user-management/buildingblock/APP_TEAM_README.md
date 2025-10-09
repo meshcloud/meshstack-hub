@@ -4,10 +4,10 @@ Welcome to the IONOS User Management system! This guide explains how users are c
 
 ## What This Module Does
 
-✅ **Creates IONOS Users**: Automatically creates user accounts in IONOS Cloud  
-✅ **Manages Existing Users**: Detects and works with users that already exist  
-✅ **Role Organization**: Organizes users by their assigned roles (reader, user, admin)  
-✅ **Lifecycle Protection**: Protects user accounts from accidental deletion  
+✅ **Creates IONOS Users**: Automatically creates user accounts in IONOS Cloud
+✅ **Manages Existing Users**: Detects and works with users that already exist
+✅ **Role Organization**: Organizes users by their assigned roles (reader, user, admin)
+✅ **Lifecycle Protection**: Protects user accounts from accidental deletion
 
 ## How It Works
 
@@ -24,7 +24,7 @@ Welcome to the IONOS User Management system! This guide explains how users are c
 - Typically for monitoring and reporting access
 
 **Users 🔧**
-- Users assigned the "user" role  
+- Users assigned the "user" role
 - Standard operational permissions
 
 **Administrators 🛡️**
@@ -63,10 +63,10 @@ Welcome to the IONOS User Management system! This guide explains how users are c
 
 ## Security Best Practices
 
-✅ **Change default passwords** immediately on first login  
-✅ **Enable two-factor authentication** when available  
-✅ **Follow your organization's** security guidelines  
-✅ **Report suspicious activity** to your security team  
+✅ **Change default passwords** immediately on first login
+✅ **Enable two-factor authentication** when available
+✅ **Follow your organization's** security guidelines
+✅ **Report suspicious activity** to your security team
 
 ---
 
