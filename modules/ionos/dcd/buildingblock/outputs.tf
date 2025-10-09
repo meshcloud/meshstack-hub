@@ -22,7 +22,7 @@ output "user_assignments" {
   description = "Map of users and their assigned roles"
   value = {
     readers = [
-      for user in local.all_reader_users : {
+      for i, user in data.ionoscloud_user.readers : {
         email   = user.email
         name    = "${user.first_name} ${user.last_name}"
         user_id = user.id
@@ -30,7 +30,7 @@ output "user_assignments" {
       }
     ]
     users = [
-      for user in local.all_standard_users : {
+      for i, user in data.ionoscloud_user.users : {
         email   = user.email
         name    = "${user.first_name} ${user.last_name}"
         user_id = user.id
@@ -38,7 +38,7 @@ output "user_assignments" {
       }
     ]
     administrators = [
-      for user in local.all_admin_users : {
+      for i, user in data.ionoscloud_user.administrators : {
         email   = user.email
         name    = "${user.first_name} ${user.last_name}"
         user_id = user.id
@@ -53,6 +53,6 @@ output "group_memberships" {
   value = {
     readers_group_id        = length(local.readers) > 0 ? ionoscloud_group.readers[0].id : null
     users_group_id          = length(local.users) > 0 ? ionoscloud_group.users[0].id : null
-    administrators_group_id = length(local.administrators) > 0 ? ionoscloud_group.administrators[0].id : null
+    administrators_group_id = null # Administrators don't use groups
   }
 }

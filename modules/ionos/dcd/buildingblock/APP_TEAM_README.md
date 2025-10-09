@@ -74,11 +74,11 @@ Based on your assigned roles, you have access to:
 
 ## Best Practices
 
-✅ **Always use descriptive names** for your resources  
-✅ **Tag your resources** for better organization  
-✅ **Set up monitoring alerts** for critical systems  
-✅ **Regular backups** of important data  
-✅ **Follow security guidelines** provided by your organization  
+✅ **Always use descriptive names** for your resources
+✅ **Tag your resources** for better organization
+✅ **Set up monitoring alerts** for critical systems
+✅ **Regular backups** of important data
+✅ **Follow security guidelines** provided by your organization
 
 ## 🔄 Shared Responsibility
 

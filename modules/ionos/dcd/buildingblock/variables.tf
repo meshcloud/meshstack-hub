@@ -23,16 +23,10 @@ variable "datacenter_description" {
   default     = "Managed by Terraform"
 }
 
-variable "default_user_password" {
-  description = "Default password for created users"
+variable "ionos_token" {
+  description = "IONOS API token for authentication"
   type        = string
   sensitive   = true
-}
-
-variable "force_sec_auth" {
-  description = "Force two-factor authentication for users"
-  type        = bool
-  default     = true
 }
 
 variable "users" {
