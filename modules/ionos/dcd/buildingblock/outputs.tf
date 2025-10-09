@@ -53,6 +53,6 @@ output "group_memberships" {
   value = {
     readers_group_id        = length(local.readers) > 0 ? ionoscloud_group.readers[0].id : null
     users_group_id          = length(local.users) > 0 ? ionoscloud_group.users[0].id : null
-    administrators_group_id = null # Administrators don't use groups
+    administrators_group_id = length(local.administrators) > 0 ? ionoscloud_group.administrators[0].id : null
   }
 }

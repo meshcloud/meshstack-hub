@@ -78,10 +78,24 @@ resource "ionoscloud_group" "users" {
   user_ids = [for user in data.ionoscloud_user.users : user.id]
 }
 
-# Note: Administrators don't need groups as they have global access
-# Create administrator group only if needed for organizational purposes
+# Create a group for administrators (same privileges as users)
 resource "ionoscloud_group" "administrators" {
-  count = 0 # Disabled as admins don't need group permissions
+  count                          = length(local.administrators) > 0 ? 1 : 0
+  name                           = "${var.datacenter_name}-administrators"
+  create_datacenter              = false
+  create_snapshot                = true
+  reserve_ip                     = true
+  access_activity_log            = true
+  s3_privilege                   = true
+  create_backup_unit             = true
+  create_internet_access         = true
+  create_k8s_cluster             = false
+  create_pcc                     = false
+  create_flow_log                = true
+  access_and_manage_monitoring   = true
+  access_and_manage_certificates = false
+
+  user_ids = [for user in data.ionoscloud_user.administrators : user.id]
 }
 
 # Grant group access to the datacenter
@@ -101,4 +115,10 @@ resource "ionoscloud_share" "users" {
   share_privilege = false
 }
 
-# No datacenter sharing for administrators - they have global access
+resource "ionoscloud_share" "administrators" {
+  count           = length(local.administrators) > 0 ? 1 : 0
+  group_id        = ionoscloud_group.administrators[0].id
+  resource_id     = ionoscloud_datacenter.main.id
+  edit_privilege  = true
+  share_privilege = false
+}
