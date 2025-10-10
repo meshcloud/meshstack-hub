@@ -1,3 +1,3 @@
 provider "ionoscloud" {
-  token = var.ionos_token
+  # Token is provided via IONOS_TOKEN environment variable
 }

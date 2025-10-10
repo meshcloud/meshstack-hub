@@ -1,42 +1,23 @@
 output "all_users" {
-  description = "All users (existing and newly created) organized by role"
-  value = {
-    readers = [
-      for user in local.all_reader_users : {
-        id         = user.id
-        email      = user.email
-        first_name = user.first_name
-        last_name  = user.last_name
-        roles      = ["reader"]
-      }
-    ]
-    users = [
-      for user in local.all_standard_users : {
-        id         = user.id
-        email      = user.email
-        first_name = user.first_name
-        last_name  = user.last_name
-        roles      = ["user"]
-      }
-    ]
-    administrators = [
-      for user in local.all_admin_users : {
-        id         = user.id
-        email      = user.email
-        first_name = user.first_name
-        last_name  = user.last_name
-        roles      = ["admin"]
-      }
-    ]
-  }
+  description = "All users (existing and newly created)"
+  value = [
+    for user in local.all_users : {
+      id         = user.id
+      email      = user.email
+      first_name = user.first_name
+      last_name  = user.last_name
+      administrator = user.administrator
+    }
+  ]
 }
 
 output "user_summary" {
   description = "Summary of user management"
   value = {
-    total_readers     = length(local.all_reader_users)
-    total_users       = length(local.all_standard_users)
-    total_admins      = length(local.all_admin_users)
-    new_users_created = length(ionoscloud_user.new_readers) + length(ionoscloud_user.new_users) + length(ionoscloud_user.new_administrators)
+    total_users       = length(local.all_users)
+    new_users_created = length(ionoscloud_user.new_users)
+    workspace_owners  = length([for user in var.users : user if contains(user.roles, "Workspace Owner")])
+    workspace_managers = length([for user in var.users : user if contains(user.roles, "Workspace Manager")])
+    workspace_members = length([for user in var.users : user if contains(user.roles, "Workspace Member")])
   }
 }

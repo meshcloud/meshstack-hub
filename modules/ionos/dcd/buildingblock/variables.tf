@@ -23,11 +23,7 @@ variable "datacenter_description" {
   default     = "Managed by Terraform"
 }
 
-variable "ionos_token" {
-  description = "IONOS API token for authentication"
-  type        = string
-  sensitive   = true
-}
+
 
 variable "users" {
   description = "List of users from authoritative system"
