@@ -18,8 +18,7 @@ The IONOS modules are split into two components:
 module "ionos_users" {
   source = "./modules/ionos/user-management/buildingblock"
 
-  # Authentication
-  ionos_token = var.ionos_token
+  # Authentication is handled via IONOS_TOKEN environment variable
 
   # User configuration
   default_user_password = var.default_user_password
@@ -70,8 +69,7 @@ module "dev_datacenter" {
   datacenter_location    = "de/fra"
   datacenter_description = "Development environment"
 
-  # Authentication
-  ionos_token = var.ionos_token
+  # Authentication is handled via IONOS_TOKEN environment variable
 
   # Users (same list as user management)
   users = [
@@ -105,8 +103,7 @@ module "prod_datacenter" {
   datacenter_location    = "de/fra"
   datacenter_description = "Production environment"
 
-  # Authentication
-  ionos_token = var.ionos_token
+  # Authentication is handled via IONOS_TOKEN environment variable
 
   # Users (different subset for production)
   users = [
@@ -136,11 +133,7 @@ module "prod_datacenter" {
 
 ```hcl
 # variables.tf
-variable "ionos_token" {
-  description = "IONOS API token"
-  type        = string
-  sensitive   = true
-}
+
 
 variable "default_user_password" {
   description = "Default password for IONOS users"
@@ -153,8 +146,18 @@ variable "default_user_password" {
 
 ```hcl
 # terraform.tfvars (example - use your own values)
-ionos_token           = "your-ionos-api-token"
+# Set IONOS_TOKEN environment variable instead:
+# export IONOS_TOKEN="your-ionos-api-token"
 default_user_password = "ChangeMe123!"
+```
+
+## Environment Setup
+
+Before deploying, set up the required environment variable:
+
+```bash
+# Set your IONOS API token
+export IONOS_TOKEN="your-ionos-api-token-here"
 ```
 
 ## Deployment Sequence

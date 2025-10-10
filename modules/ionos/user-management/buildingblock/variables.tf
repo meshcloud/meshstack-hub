@@ -10,11 +10,7 @@ variable "force_sec_auth" {
   default     = true
 }
 
-variable "ionos_token" {
-  description = "IONOS API token for authentication"
-  type        = string
-  sensitive   = true
-}
+
 
 variable "users" {
   description = "List of users from authoritative system"
@@ -25,6 +21,15 @@ variable "users" {
     lastName       = string
     email          = string
     euid           = string
-    roles          = list(string)
+    roles          = list(string) # Now expects: Workspace Owner, Workspace Manager, Workspace Member
   }))
+
+  validation {
+    condition = alltrue([
+      for user in var.users : alltrue([
+        for role in user.roles : contains(["Workspace Owner", "Workspace Manager", "Workspace Member"], role)
+      ])
+    ])
+    error_message = "User roles must be one of: Workspace Owner, Workspace Manager, Workspace Member."
+  }
 }
