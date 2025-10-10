@@ -160,6 +160,17 @@ Before deploying, set up the required environment variable:
 export IONOS_TOKEN="your-ionos-api-token-here"
 ```
 
+## Automatic Existing User Handling
+
+The user management module automatically detects and handles existing users:
+
+- ✅ **Automatically detects** existing users via IONOS API
+- ✅ **Skips creation** for users that already exist
+- ✅ **Creates only new users** that don't exist yet
+- ✅ **No manual imports** or special handling needed
+
+Just run terraform apply - existing users will be detected and handled automatically!
+
 ## Deployment Sequence
 
 ### Initial Deployment

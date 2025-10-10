@@ -12,10 +12,11 @@ This building block creates and manages IONOS Cloud users from the authoritative
 
 ## Features
 
-- **User Creation**: Creates IONOS users that don't already exist
+- **Smart User Detection**: Automatically detects existing users and skips creation
+- **No Import Required**: Works with existing users without manual imports
 - **Role-Based Management**: Organizes users by their assigned roles
-- **Lifecycle Protection**: Prevents accidental user deletion
-- **Existing User Detection**: Automatically detects and incorporates existing users
+- **Lifecycle Protection**: Prevents accidental user deletion and recreation
+- **Idempotent Operations**: Safe to run multiple times without side effects
 
 ## Prerequisites
 
@@ -97,13 +98,34 @@ Users are organized into three categories based on their roles:
 | `all_users` | All users organized by role with complete information |
 | `user_summary` | Summary statistics of user management |
 
+## Automatic Existing User Detection
+
+This module automatically detects existing users in IONOS Cloud and skips creating them. Here's how it works:
+
+### Smart User Creation Process
+1. **Pre-flight Check**: Uses IONOS API to check which users already exist
+2. **Skip Existing**: Automatically skips users that already exist
+3. **Create New**: Only creates users that don't exist yet
+4. **Combine Results**: Provides unified output of all users (existing + new)
+
+### No Manual Imports Needed
+- ✅ **No "user already exists" errors**
+- ✅ **No need to import existing users**
+- ✅ **No need to remove users from lists**
+- ✅ **Automatic detection and handling**
+
+### Prerequisites for Detection
+- **IONOS_TOKEN environment variable** must be set
+- **API token must have read permissions** to list users
+- **jq command** must be available (usually pre-installed on most systems)
+
 ## Important Notes
 
-- **Lifecycle Protection**: Users are protected from accidental deletion with `prevent_destroy = true`
+- **Automatic Detection**: Existing users are automatically detected and included in outputs
+- **Lifecycle Protection**: New users are protected from accidental deletion with `prevent_destroy = true`
 - **Password Management**: Initial passwords are set but ignored on subsequent runs
-- **Existing Users**: Automatically detects and incorporates existing IONOS users
-- **No User Deletion**: This module does not delete users - only creates them
-- **Role Organization**: Users are categorized by their primary role for use by other modules
+- **No User Deletion**: This module does not delete users - only creates and manages them
+- **API-Driven**: Uses IONOS Cloud API to make intelligent decisions about user creation
 
 ## Integration with DCD Module
 
@@ -136,7 +158,8 @@ No modules.
 | Name | Type |
 |------|------|
 | [ionoscloud_user.new_users](https://registry.terraform.io/providers/ionos-cloud/ionoscloud/latest/docs/resources/user) | resource |
-| [ionoscloud_user.existing_users](https://registry.terraform.io/providers/ionos-cloud/ionoscloud/latest/docs/data-sources/user) | data source |
+| [external_external.user_exists](https://registry.terraform.io/providers/hashicorp/external/latest/docs/data-sources/external) | data source |
+| [ionoscloud_user.existing](https://registry.terraform.io/providers/ionos-cloud/ionoscloud/latest/docs/data-sources/user) | data source |
 
 ## Inputs
 
@@ -151,5 +174,7 @@ No modules.
 | Name | Description |
 |------|-------------|
 | <a name="output_all_users"></a> [all\_users](#output\_all\_users) | All users (existing and newly created) |
+| <a name="output_created_users"></a> [created\_users](#output\_created\_users) | Users that were newly created |
+| <a name="output_existing_users"></a> [existing\_users](#output\_existing\_users) | Users that already existed in IONOS |
 | <a name="output_user_summary"></a> [user\_summary](#output\_user\_summary) | Summary of user management |
 <!-- END_TF_DOCS -->
