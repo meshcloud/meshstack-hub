@@ -1,8 +1,7 @@
 #!/bin/bash
 # Script to check if an IONOS user exists
 # Usage: ./check_user_exists.sh <email>
-
-set -e
+set -euo pipefail
 
 EMAIL="$1"
 
