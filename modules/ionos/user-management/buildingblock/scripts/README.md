@@ -35,20 +35,6 @@ Returns JSON with user existence information:
 }
 ```
 
-### `test_user_check.sh`
-Test script to validate the user checking functionality.
-
-**Usage:**
-```bash
-./test_user_check.sh
-```
-
-## Dependencies
-
-Make sure these tools are installed:
-- `curl` - for making HTTP requests to IONOS API
-- `jq` - for parsing JSON responses
-
 ### Installing jq
 
 **macOS:**
