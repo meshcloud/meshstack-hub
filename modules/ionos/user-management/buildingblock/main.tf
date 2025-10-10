@@ -10,7 +10,7 @@ resource "ionoscloud_user" "new_users" {
     for i, user in var.users : user
     if try(data.ionoscloud_user.existing_users[i].id, "") == ""
   ])
-  
+
   first_name     = var.users[count.index].firstName
   last_name      = var.users[count.index].lastName
   email          = var.users[count.index].email
@@ -20,7 +20,7 @@ resource "ionoscloud_user" "new_users" {
 
   lifecycle {
     prevent_destroy = true
-    ignore_changes = [password]
+    ignore_changes  = [password]
   }
 }
 

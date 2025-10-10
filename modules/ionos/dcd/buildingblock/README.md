@@ -49,8 +49,7 @@ module "ionos_dcd" {
   datacenter_location    = "de/fra"
   datacenter_description = "Development environment for team"
 
-  # Authentication
-  ionos_token = var.ionos_token
+  # Authentication is handled via IONOS_TOKEN environment variable
 
   # Users provided by authoritative system
   users = [
@@ -83,7 +82,7 @@ module "ionos_dcd" {
 | `datacenter_name` | Name of the IONOS DCD datacenter | `string` | - | yes |
 | `datacenter_location` | Location for the datacenter | `string` | `"de/fra"` | no |
 | `datacenter_description` | Description of the datacenter | `string` | `"Managed by Terraform"` | no |
-| `ionos_token` | IONOS API token for authentication | `string` | - | yes |
+
 | `users` | List of users from authoritative system | `list(object)` | - | yes |
 
 
@@ -205,7 +204,6 @@ No modules.
 | <a name="input_datacenter_description"></a> [datacenter\_description](#input\_datacenter\_description) | Description of the datacenter | `string` | `"Managed by Terraform"` | no |
 | <a name="input_datacenter_location"></a> [datacenter\_location](#input\_datacenter\_location) | Location for the IONOS datacenter | `string` | `"de/fra"` | no |
 | <a name="input_datacenter_name"></a> [datacenter\_name](#input\_datacenter\_name) | Name of the IONOS DCD datacenter | `string` | n/a | yes |
-| <a name="input_ionos_token"></a> [ionos\_token](#input\_ionos\_token) | IONOS API token for authentication | `string` | n/a | yes |
 | <a name="input_users"></a> [users](#input\_users) | List of users from authoritative system | <pre>list(object({<br>    meshIdentifier = string<br>    username       = string<br>    firstName      = string<br>    lastName       = string<br>    email          = string<br>    euid           = string<br>    roles          = list(string)<br>  }))</pre> | n/a | yes |
 
 ## Outputs

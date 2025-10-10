@@ -21,9 +21,9 @@ variable "users" {
     lastName       = string
     email          = string
     euid           = string
-    roles          = list(string)  # Now expects: Workspace Owner, Workspace Manager, Workspace Member
+    roles          = list(string) # Now expects: Workspace Owner, Workspace Manager, Workspace Member
   }))
-  
+
   validation {
     condition = alltrue([
       for user in var.users : alltrue([

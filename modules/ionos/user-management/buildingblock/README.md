@@ -136,11 +136,7 @@ No modules.
 
 | Name | Type |
 |------|------|
-| [ionoscloud_user.new_administrators](https://registry.terraform.io/providers/ionos-cloud/ionoscloud/latest/docs/resources/user) | resource |
-| [ionoscloud_user.new_readers](https://registry.terraform.io/providers/ionos-cloud/ionoscloud/latest/docs/resources/user) | resource |
 | [ionoscloud_user.new_users](https://registry.terraform.io/providers/ionos-cloud/ionoscloud/latest/docs/resources/user) | resource |
-| [ionoscloud_user.existing_administrators](https://registry.terraform.io/providers/ionos-cloud/ionoscloud/latest/docs/data-sources/user) | data source |
-| [ionoscloud_user.existing_readers](https://registry.terraform.io/providers/ionos-cloud/ionoscloud/latest/docs/data-sources/user) | data source |
 | [ionoscloud_user.existing_users](https://registry.terraform.io/providers/ionos-cloud/ionoscloud/latest/docs/data-sources/user) | data source |
 
 ## Inputs
@@ -149,13 +145,12 @@ No modules.
 |------|-------------|------|---------|:--------:|
 | <a name="input_default_user_password"></a> [default\_user\_password](#input\_default\_user\_password) | Default password for created users | `string` | n/a | yes |
 | <a name="input_force_sec_auth"></a> [force\_sec\_auth](#input\_force\_sec\_auth) | Force two-factor authentication for users | `bool` | `true` | no |
-| <a name="input_ionos_token"></a> [ionos\_token](#input\_ionos\_token) | IONOS API token for authentication | `string` | n/a | yes |
-| <a name="input_users"></a> [users](#input\_users) | List of users from authoritative system | <pre>list(object({<br>    meshIdentifier = string<br>    username       = string<br>    firstName      = string<br>    lastName       = string<br>    email          = string<br>    euid           = string<br>    roles          = list(string)<br>  }))</pre> | n/a | yes |
+| <a name="input_users"></a> [users](#input\_users) | List of users from authoritative system | <pre>list(object({<br>    meshIdentifier = string<br>    username       = string<br>    firstName      = string<br>    lastName       = string<br>    email          = string<br>    euid           = string<br>    roles          = list(string)  # Now expects: Workspace Owner, Workspace Manager, Workspace Member<br>  }))</pre> | n/a | yes |
 
 ## Outputs
 
 | Name | Description |
 |------|-------------|
-| <a name="output_all_users"></a> [all\_users](#output\_all\_users) | All users (existing and newly created) organized by role |
+| <a name="output_all_users"></a> [all\_users](#output\_all\_users) | All users (existing and newly created) |
 | <a name="output_user_summary"></a> [user\_summary](#output\_user\_summary) | Summary of user management |
 <!-- END_TF_DOCS -->
