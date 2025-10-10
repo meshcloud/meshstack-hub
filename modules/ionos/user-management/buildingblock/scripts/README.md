@@ -1,3 +1,11 @@
+---
+name: IONOS User Management Scripts
+supportedPlatforms:
+  - ionos
+description: Helper scripts for detecting existing users and managing IONOS Cloud user creation with smart detection capabilities.
+category: utilities
+---
+
 # User Management Scripts
 
 This directory contains helper scripts for the IONOS user management module.
