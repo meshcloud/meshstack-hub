@@ -19,8 +19,7 @@ module "ionos_dcd_backplane" {
   initial_password   = var.service_password
   group_name         = "DCD-Terraform-Managers"
 
-  # Authentication
-  ionos_token = var.ionos_admin_token
+  # Authentication is handled via IONOS_TOKEN environment variable
 }
 ```
 

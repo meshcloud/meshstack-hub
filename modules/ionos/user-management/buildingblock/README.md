@@ -20,7 +20,7 @@ This building block creates and manages IONOS Cloud users from the authoritative
 ## Prerequisites
 
 - IONOS Cloud account with user management permissions
-- IONOS API token with sufficient privileges
+- IONOS API token with sufficient privileges (set as `IONOS_TOKEN` environment variable)
 - Users provided by authoritative system with assigned roles
 
 ## Architecture
@@ -43,8 +43,7 @@ This building block creates and manages IONOS Cloud users from the authoritative
 module "ionos_users" {
   source = "path/to/ionos/user-management/buildingblock"
 
-  # Authentication
-  ionos_token = var.ionos_token
+  # Authentication is handled via IONOS_TOKEN environment variable
 
   # User configuration
   default_user_password = var.user_password
@@ -78,7 +77,7 @@ module "ionos_users" {
 
 | Name | Description | Type | Default | Required |
 |------|-------------|------|---------|----------|
-| `ionos_token` | IONOS API token for authentication | `string` | - | yes |
+
 | `default_user_password` | Default password for created users | `string` | - | yes |
 | `force_sec_auth` | Force two-factor authentication | `bool` | `true` | no |
 | `users` | List of users from authoritative system | `list(object)` | - | yes |
@@ -145,7 +144,7 @@ No modules.
 |------|-------------|------|---------|:--------:|
 | <a name="input_default_user_password"></a> [default\_user\_password](#input\_default\_user\_password) | Default password for created users | `string` | n/a | yes |
 | <a name="input_force_sec_auth"></a> [force\_sec\_auth](#input\_force\_sec\_auth) | Force two-factor authentication for users | `bool` | `true` | no |
-| <a name="input_users"></a> [users](#input\_users) | List of users from authoritative system | <pre>list(object({<br>    meshIdentifier = string<br>    username       = string<br>    firstName      = string<br>    lastName       = string<br>    email          = string<br>    euid           = string<br>    roles          = list(string)  # Now expects: Workspace Owner, Workspace Manager, Workspace Member<br>  }))</pre> | n/a | yes |
+| <a name="input_users"></a> [users](#input\_users) | List of users from authoritative system | <pre>list(object({<br>    meshIdentifier = string<br>    username       = string<br>    firstName      = string<br>    lastName       = string<br>    email          = string<br>    euid           = string<br>    roles          = list(string) # Now expects: Workspace Owner, Workspace Manager, Workspace Member<br>  }))</pre> | n/a | yes |
 
 ## Outputs
 

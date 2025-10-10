@@ -20,7 +20,7 @@ This building block creates an IONOS Data Center Designer (DCD) environment and 
 ## Prerequisites
 
 - IONOS Cloud account with appropriate permissions
-- IONOS API credentials (username/password or API token)
+- IONOS API token (set as `IONOS_TOKEN` environment variable)
 - Users provided by authoritative system with assigned roles
 
 ## Architecture
