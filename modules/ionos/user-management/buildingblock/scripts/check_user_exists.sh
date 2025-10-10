@@ -42,23 +42,23 @@ USERS_RESPONSE=$(curl -s -H "Authorization: Bearer $IONOS_TOKEN" \
 if echo "$USERS_RESPONSE" | jq -e '.items' >/dev/null 2>&1; then
     # Step 2: For each user ID, get detailed info and check email
     USER_IDS=$(echo "$USERS_RESPONSE" | jq -r '.items[].id' 2>/dev/null)
-    
+
     for user_id in $USER_IDS; do
         # Get detailed user information
         USER_DETAILS=$(curl -s -H "Authorization: Bearer $IONOS_TOKEN" \
             -H "Content-Type: application/json" \
             "$API_URL/$user_id" 2>/dev/null || echo '{}')
-        
+
         # Extract email from user details (try multiple possible locations)
         USER_EMAIL=$(echo "$USER_DETAILS" | jq -r '.properties.email // .email // ""' 2>/dev/null || echo "")
-        
+
         # Check if this user's email matches what we're looking for
         if [ "$USER_EMAIL" = "$EMAIL" ]; then
             echo "{\"exists\": \"true\", \"user_id\": \"$user_id\", \"error\": \"\"}"
             exit 0
         fi
     done
-    
+
     # If we get here, user doesn't exist
     echo "{\"exists\": \"false\", \"user_id\": \"\", \"error\": \"\"}"
 else
