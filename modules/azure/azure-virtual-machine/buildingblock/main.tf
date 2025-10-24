@@ -69,6 +69,38 @@ resource "azurerm_network_security_group" "vm_nsg" {
   tags = var.tags
 }
 
+# NSG Rule: Allow SSH for Linux VMs with public IP
+resource "azurerm_network_security_rule" "allow_ssh" {
+  count                       = var.os_type == "Linux" && var.enable_public_ip ? 1 : 0
+  name                        = "AllowSSH"
+  priority                    = 1000
+  direction                   = "Inbound"
+  access                      = "Allow"
+  protocol                    = "Tcp"
+  source_port_range           = "*"
+  destination_port_range      = "22"
+  source_address_prefix       = "*"
+  destination_address_prefix  = "*"
+  resource_group_name         = azurerm_resource_group.vm_rg.name
+  network_security_group_name = azurerm_network_security_group.vm_nsg.name
+}
+
+# NSG Rule: Allow RDP for Windows VMs with public IP
+resource "azurerm_network_security_rule" "allow_rdp" {
+  count                       = var.os_type == "Windows" && var.enable_public_ip ? 1 : 0
+  name                        = "AllowRDP"
+  priority                    = 1001
+  direction                   = "Inbound"
+  access                      = "Allow"
+  protocol                    = "Tcp"
+  source_port_range           = "*"
+  destination_port_range      = "3389"
+  source_address_prefix       = "*"
+  destination_address_prefix  = "*"
+  resource_group_name         = azurerm_resource_group.vm_rg.name
+  network_security_group_name = azurerm_network_security_group.vm_nsg.name
+}
+
 # NSG Association
 resource "azurerm_network_interface_security_group_association" "vm_nsg_association" {
   network_interface_id      = azurerm_network_interface.vm_nic.id
