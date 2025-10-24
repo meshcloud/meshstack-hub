@@ -81,6 +81,9 @@ resource "azurerm_role_definition" "buildingblock_deploy" {
 
       # Managed Identities (for system-assigned identity)
       "Microsoft.ManagedIdentity/userAssignedIdentities/assign/action",
+
+      # Permission we need to activate/register required Resource Providers
+      "*/register/action"
     ]
   }
 }
