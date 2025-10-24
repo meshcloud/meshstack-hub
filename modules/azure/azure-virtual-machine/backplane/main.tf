@@ -65,6 +65,11 @@ resource "azurerm_role_definition" "buildingblock_deploy" {
       "Microsoft.Network/networkSecurityGroups/delete",
       "Microsoft.Network/networkSecurityGroups/join/action",
 
+      # Network Security Rules
+      "Microsoft.Network/networkSecurityGroups/securityRules/read",
+      "Microsoft.Network/networkSecurityGroups/securityRules/write",
+      "Microsoft.Network/networkSecurityGroups/securityRules/delete",
+
       # Virtual Network and Subnet
       "Microsoft.Network/virtualNetworks/read",
       "Microsoft.Network/virtualNetworks/write",
