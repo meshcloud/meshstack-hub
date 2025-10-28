@@ -18,7 +18,7 @@ This building block is designed for application teams that need to develop and d
 
 **Cloud Foundry Environment**: Optionally provision a Cloud Foundry space for application deployment and development.
 
-**Custom Identity Provider**: Configure external identity providers like SAP IAS for single sign-on authentication.
+**Trust Configuration**: Configure external identity providers like SAP IAS for single sign-on authentication.
 
 **Shared Responsibility**
 

@@ -80,7 +80,7 @@ resource "btp_subaccount_subscription" "subscription" {
   subaccount_id = btp_subaccount.subaccount.id
   app_name      = each.value.app_name
   plan_name     = each.value.plan_name
-  parameters    = each.value.parameters
+  parameters    = jsonencode(each.value.parameters)
 
   depends_on = [btp_subaccount_entitlement.entitlement]
 }
@@ -93,7 +93,10 @@ resource "btp_subaccount_environment_instance" "cloudfoundry" {
   environment_type = var.cloudfoundry_instance.environment
   service_name     = var.cloudfoundry_instance.environment
   plan_name        = var.cloudfoundry_instance.plan_name
-  parameters       = jsonencode(var.cloudfoundry_instance.parameters)
+  parameters = jsonencode(merge(
+    var.cloudfoundry_instance.parameters,
+    { instance_name = var.cloudfoundry_instance.name }
+  ))
 }
 
 resource "btp_subaccount_trust_configuration" "custom_idp" {
@@ -101,6 +104,4 @@ resource "btp_subaccount_trust_configuration" "custom_idp" {
 
   subaccount_id     = btp_subaccount.subaccount.id
   identity_provider = var.trust_configuration.identity_provider
-  name              = var.trust_configuration.name
-  origin            = var.trust_configuration.origin
 }

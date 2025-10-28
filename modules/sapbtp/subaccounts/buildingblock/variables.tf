@@ -47,9 +47,9 @@ variable "entitlements" {
   type = list(object({
     service_name = string
     plan_name    = string
-    amount       = optional(number, 1)
+    amount       = optional(number)
   }))
-  description = "List of entitlements to assign to the subaccount. Entitlements must be configured before subscriptions can be created."
+  description = "List of entitlements to assign to the subaccount. For quota-based services, specify 'amount'. For multitenant applications (category APPLICATION), omit 'amount' or set to null. Entitlements must be configured before subscriptions can be created."
   default     = []
 }
 
@@ -77,9 +77,7 @@ variable "cloudfoundry_instance" {
 variable "trust_configuration" {
   type = object({
     identity_provider = string
-    name              = optional(string, "Custom IDP")
-    origin            = string
   })
-  description = "Trust configuration for external Identity Provider (e.g., SAP IAS). Set to null to skip configuration."
+  description = "Trust configuration for external Identity Provider (e.g., SAP IAS). Set to null to skip configuration. Only identity_provider is required; origin and other attributes are computed."
   default     = null
 }
