@@ -52,3 +52,55 @@ resource "btp_subaccount_role_collection_assignment" "subaccount_viewer" {
   subaccount_id        = btp_subaccount.subaccount.id
   user_name            = each.key
 }
+
+locals {
+  entitlements_map = {
+    for idx, entitlement in var.entitlements :
+    "${entitlement.service_name}-${entitlement.plan_name}" => entitlement
+  }
+
+  subscriptions_map = {
+    for idx, subscription in var.subscriptions :
+    "${subscription.app_name}-${subscription.plan_name}" => subscription
+  }
+}
+
+resource "btp_subaccount_entitlement" "entitlement" {
+  for_each = local.entitlements_map
+
+  subaccount_id = btp_subaccount.subaccount.id
+  service_name  = each.value.service_name
+  plan_name     = each.value.plan_name
+  amount        = each.value.amount
+}
+
+resource "btp_subaccount_subscription" "subscription" {
+  for_each = local.subscriptions_map
+
+  subaccount_id = btp_subaccount.subaccount.id
+  app_name      = each.value.app_name
+  plan_name     = each.value.plan_name
+  parameters    = each.value.parameters
+
+  depends_on = [btp_subaccount_entitlement.entitlement]
+}
+
+resource "btp_subaccount_environment_instance" "cloudfoundry" {
+  count = var.cloudfoundry_instance != null ? 1 : 0
+
+  subaccount_id    = btp_subaccount.subaccount.id
+  name             = var.cloudfoundry_instance.name
+  environment_type = var.cloudfoundry_instance.environment
+  service_name     = var.cloudfoundry_instance.environment
+  plan_name        = var.cloudfoundry_instance.plan_name
+  parameters       = jsonencode(var.cloudfoundry_instance.parameters)
+}
+
+resource "btp_subaccount_trust_configuration" "custom_idp" {
+  count = var.trust_configuration != null ? 1 : 0
+
+  subaccount_id     = btp_subaccount.subaccount.id
+  identity_provider = var.trust_configuration.identity_provider
+  name              = var.trust_configuration.name
+  origin            = var.trust_configuration.origin
+}

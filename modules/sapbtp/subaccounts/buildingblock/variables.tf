@@ -42,3 +42,44 @@ variable "users" {
   description = "Users and their roles provided by meshStack"
   default     = []
 }
+
+variable "entitlements" {
+  type = list(object({
+    service_name = string
+    plan_name    = string
+    amount       = optional(number, 1)
+  }))
+  description = "List of entitlements to assign to the subaccount. Entitlements must be configured before subscriptions can be created."
+  default     = []
+}
+
+variable "subscriptions" {
+  type = list(object({
+    app_name   = string
+    plan_name  = string
+    parameters = optional(map(string), {})
+  }))
+  description = "List of application subscriptions to create in the subaccount (e.g., SAP Build Code, Process Automation)."
+  default     = []
+}
+
+variable "cloudfoundry_instance" {
+  type = object({
+    name        = optional(string, "cf-instance")
+    environment = optional(string, "cloudfoundry")
+    plan_name   = string
+    parameters  = optional(map(string), {})
+  })
+  description = "Configuration for Cloud Foundry environment instance. Set to null to skip creation."
+  default     = null
+}
+
+variable "trust_configuration" {
+  type = object({
+    identity_provider = string
+    name              = optional(string, "Custom IDP")
+    origin            = string
+  })
+  description = "Trust configuration for external Identity Provider (e.g., SAP IAS). Set to null to skip configuration."
+  default     = null
+}
