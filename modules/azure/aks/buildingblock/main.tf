@@ -49,15 +49,14 @@ resource "azurerm_kubernetes_cluster" "aks" {
   kubernetes_version  = var.kubernetes_version
 
   default_node_pool {
-    name                = "system"
-    node_count          = var.enable_auto_scaling ? null : var.node_count
-    min_count           = var.enable_auto_scaling ? var.min_node_count : null
-    max_count           = var.enable_auto_scaling ? var.max_node_count : null
-    enable_auto_scaling = var.enable_auto_scaling
-    vm_size             = var.vm_size
-    os_disk_size_gb     = var.os_disk_size_gb
-    vnet_subnet_id      = azurerm_subnet.aks_subnet.id
-    type                = "VirtualMachineScaleSets"
+    name            = "system"
+    node_count      = var.enable_auto_scaling ? null : var.node_count
+    min_count       = var.enable_auto_scaling ? var.min_node_count : null
+    max_count       = var.enable_auto_scaling ? var.max_node_count : null
+    vm_size         = var.vm_size
+    os_disk_size_gb = var.os_disk_size_gb
+    vnet_subnet_id  = azurerm_subnet.aks_subnet.id
+    type            = "VirtualMachineScaleSets"
 
     upgrade_settings {
       max_surge = "10%"
@@ -70,8 +69,11 @@ resource "azurerm_kubernetes_cluster" "aks" {
 
   role_based_access_control_enabled = true
 
-  azure_active_directory_role_based_access_control {
-    admin_group_object_ids = [var.aks_admin_group_object_id]
+  dynamic "azure_active_directory_role_based_access_control" {
+    for_each = var.aks_admin_group_object_id != null ? [1] : []
+    content {
+      admin_group_object_ids = [var.aks_admin_group_object_id]
+    }
   }
 
   network_profile {
@@ -123,8 +125,7 @@ resource "azurerm_monitor_diagnostic_setting" "aks_monitoring" {
     category = "kube-audit"
   }
 
-  metric {
+  enabled_metric {
     category = "AllMetrics"
-    enabled  = true
   }
 }

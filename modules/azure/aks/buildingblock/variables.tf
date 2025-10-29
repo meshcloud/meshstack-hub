@@ -119,7 +119,7 @@ variable "os_disk_size_gb" {
 variable "kubernetes_version" {
   type        = string
   description = "Kubernetes version for the AKS cluster"
-  default     = "1.29.2"
+  default     = "1.33.0"
 
   validation {
     condition     = can(regex("^[0-9]+\\.[0-9]+\\.[0-9]+$", var.kubernetes_version))
@@ -129,11 +129,12 @@ variable "kubernetes_version" {
 
 variable "aks_admin_group_object_id" {
   type        = string
-  description = "Object ID of the Azure AD group used for AKS admin access"
+  description = "Object ID of the Azure AD group used for AKS admin access. If null, Azure AD RBAC will not be configured."
+  default     = null
 
   validation {
-    condition     = can(regex("^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$", var.aks_admin_group_object_id))
-    error_message = "Admin group object ID must be a valid GUID."
+    condition     = var.aks_admin_group_object_id == null || can(regex("^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$", var.aks_admin_group_object_id))
+    error_message = "Admin group object ID must be a valid GUID or null."
   }
 }
 

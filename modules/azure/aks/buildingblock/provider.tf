@@ -3,4 +3,3 @@ provider "azurerm" {
 }
 
 provider "azuread" {}
-
