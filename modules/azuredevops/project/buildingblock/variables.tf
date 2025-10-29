@@ -79,10 +79,10 @@ variable "project_features" {
   })
   default = {
     boards       = "enabled"
-    repositories = "disabled"
-    pipelines    = "disabled"
+    repositories = "enabled"
+    pipelines    = "enabled"
     testplans    = "disabled"
-    artifacts    = "disabled"
+    artifacts    = "enabled"
   }
 }
 
