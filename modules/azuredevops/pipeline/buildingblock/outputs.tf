@@ -27,3 +27,8 @@ output "yaml_path" {
   description = "Path to the YAML pipeline definition"
   value       = var.yaml_path
 }
+
+output "pipeline_url" {
+  description = "Deep link URL to the pipeline in Azure DevOps"
+  value       = "${var.azure_devops_organization_url}/${var.project_id}/_build?definitionId=${azuredevops_build_definition.main.id}"
+}
