@@ -1,0 +1,40 @@
+{
+  "name": "IONOS DCD Environment",
+  "description": "Creates and manages IONOS Data Center Designer environments with user onboarding and role-based access control",
+  "category": "infrastructure",
+  "platform": "ionos",
+  "version": "1.0.0",
+  "supportedPlatforms": ["ionos"],
+  "inputs": [
+    {
+      "name": "datacenter_name",
+      "type": "string",
+      "required": true,
+      "description": "Name of the IONOS DCD datacenter"
+    },
+    {
+      "name": "datacenter_location",
+      "type": "string",
+      "required": false,
+      "default": "de/fra",
+      "description": "Location for the IONOS datacenter",
+      "options": ["us/las", "us/ewr", "de/fra", "de/fkb", "de/txl", "gb/lhr", "es/vit", "fr/par"]
+    },
+    {
+      "name": "users",
+      "type": "array",
+      "required": true,
+      "description": "List of users from authoritative system with roles"
+    }
+  ],
+  "outputs": [
+    {
+      "name": "datacenter_id",
+      "description": "ID of the created IONOS datacenter"
+    },
+    {
+      "name": "user_assignments",
+      "description": "Map of users and their assigned roles"
+    }
+  ]
+}
