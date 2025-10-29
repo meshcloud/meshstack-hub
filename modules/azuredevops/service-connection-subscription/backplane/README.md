@@ -1,6 +1,6 @@
-# Azure DevOps Service Connection Backplane
+# Azure DevOps Service Connection (Subscription) Backplane
 
-This module provisions the infrastructure required to support the Azure DevOps Service Connection building block.
+This module provisions the infrastructure required to support the Azure DevOps Service Connection (Subscription) building block.
 
 ## What It Provisions
 

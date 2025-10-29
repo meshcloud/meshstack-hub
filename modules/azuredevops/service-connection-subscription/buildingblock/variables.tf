@@ -40,15 +40,20 @@ variable "azure_subscription_id" {
   type        = string
 }
 
-variable "azure_role" {
-  description = "Azure role to assign to the service principal on the target subscription"
+variable "service_principal_id" {
+  description = "Client ID of the existing Azure AD service principal"
   type        = string
-  default     = "Contributor"
+}
 
-  validation {
-    condition     = contains(["Owner", "Contributor", "Reader"], var.azure_role)
-    error_message = "azure_role must be one of: Owner, Contributor, Reader"
-  }
+variable "service_principal_key" {
+  description = "Client secret of the existing Azure AD service principal"
+  type        = string
+  sensitive   = true
+}
+
+variable "azure_tenant_id" {
+  description = "Azure AD Tenant ID"
+  type        = string
 }
 
 variable "authorize_all_pipelines" {

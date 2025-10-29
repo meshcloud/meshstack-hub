@@ -47,6 +47,7 @@ resource "azuredevops_project" "main" {
 
   lifecycle {
     ignore_changes = [
+      visibility,
       version_control,
       work_item_template
     ]

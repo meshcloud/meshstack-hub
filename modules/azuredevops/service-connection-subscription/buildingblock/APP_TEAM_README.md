@@ -1,4 +1,4 @@
-# Azure DevOps Service Connection
+# Azure DevOps Service Connection (Subscription)
 
 Connect your Azure DevOps pipelines to Azure subscriptions to deploy and manage cloud resources automatically.
 
@@ -17,10 +17,15 @@ module "azure_prod_connection" {
   project_id              = "12345678-1234-1234-1234-123456789012"
   service_connection_name = "Azure-Production"
   azure_subscription_id   = "87654321-4321-4321-4321-210987654321"
+  service_principal_id    = "11111111-1111-1111-1111-111111111111"
+  service_principal_key   = var.service_principal_secret
+  azure_tenant_id         = "22222222-2222-2222-2222-222222222222"
 }
 ```
 
 ### Read-Only Connection
+
+For monitoring or compliance pipelines that don't need write access, use a service principal with Reader role:
 
 ```hcl
 module "azure_readonly" {
@@ -33,7 +38,9 @@ module "azure_readonly" {
   project_id              = "12345678-1234-1234-1234-123456789012"
   service_connection_name = "Azure-ReadOnly"
   azure_subscription_id   = "87654321-4321-4321-4321-210987654321"
-  azure_role              = "Reader"
+  service_principal_id    = "33333333-3333-3333-3333-333333333333"  # SP with Reader role
+  service_principal_key   = var.readonly_sp_secret
+  azure_tenant_id         = "22222222-2222-2222-2222-222222222222"
   description             = "Read-only access for monitoring pipelines"
 }
 ```
@@ -51,6 +58,9 @@ module "azure_dev" {
   project_id              = "12345678-1234-1234-1234-123456789012"
   service_connection_name = "Azure-Development"
   azure_subscription_id   = "11111111-1111-1111-1111-111111111111"
+  service_principal_id    = "44444444-4444-4444-4444-444444444444"
+  service_principal_key   = var.dev_sp_secret
+  azure_tenant_id         = "22222222-2222-2222-2222-222222222222"
   authorize_all_pipelines = true
 }
 ```
@@ -62,7 +72,10 @@ module "azure_dev" {
 | Deploy backplane infrastructure | ✅ | ❌ |
 | Store Azure DevOps PAT in Key Vault | ✅ | ❌ |
 | Create Azure DevOps project | ✅ | ❌ |
+| Create service principal for Azure access | ✅ | ❌ |
+| Assign Azure roles to service principal | ✅ | ❌ |
 | Create service connection (via Terraform) | ✅ | ❌ |
+| Provide service principal credentials | ✅ | ❌ |
 | Authorize pipelines to use connection | ⚠️ (If manual) | ⚠️ (If manual) |
 | Use service connection in pipelines | ❌ | ✅ |
 | Deploy Azure resources via pipelines | ❌ | ✅ |
@@ -91,7 +104,9 @@ module "azure_dev" {
 
 **Why**: Follow least privilege principle to minimize security risks.
 
-**When to Use Each Role**:
+**Note**: The service principal's role must be assigned outside this module (typically by the Platform Team).
+
+**When to Request Each Role**:
 
 **Reader**:
 - Monitoring and reporting pipelines
@@ -126,28 +141,35 @@ module "azure_dev" {
 
 ### Multi-Environment Setup
 
-**Pattern**: Separate service connections per environment
+**Pattern**: Separate service connections per environment with dedicated service principals
 
 ```hcl
 module "azure_dev" {
   source                  = "./buildingblock"
   service_connection_name = "Azure-Development"
   azure_subscription_id   = var.dev_subscription_id
+  service_principal_id    = var.dev_sp_id
+  service_principal_key   = var.dev_sp_secret
+  azure_tenant_id         = var.azure_tenant_id
   authorize_all_pipelines = true
 }
 
 module "azure_staging" {
-  source                  = "./buildingblock"
+  source                = "./buildingblock"
   service_connection_name = "Azure-Staging"
   azure_subscription_id   = var.staging_subscription_id
-  azure_role              = "Contributor"
+  service_principal_id    = var.staging_sp_id
+  service_principal_key   = var.staging_sp_secret
+  azure_tenant_id         = var.azure_tenant_id
 }
 
 module "azure_prod" {
   source                  = "./buildingblock"
   service_connection_name = "Azure-Production"
   azure_subscription_id   = var.prod_subscription_id
-  azure_role              = "Contributor"
+  service_principal_id    = var.prod_sp_id
+  service_principal_key   = var.prod_sp_secret
+  azure_tenant_id         = var.azure_tenant_id
   authorize_all_pipelines = false
 }
 ```
@@ -290,10 +312,11 @@ steps:
 
 ## ⚠️ Important Notes
 
-- Service principal credentials are managed automatically by Terraform
+- Service principal must be created and configured outside this module
+- Service principal credentials are provided as input variables
 - Changing `service_connection_name` requires recreating the connection
-- Deleting the Terraform resource removes the service connection and service principal
-- Service principal has subscription-level permissions only
+- Deleting the Terraform resource removes the service connection (but not the service principal)
+- Service principal permissions are managed separately from this module
 - Manual authorization is more secure for production environments
 
 ## 🆘 Troubleshooting
@@ -312,27 +335,24 @@ steps:
 **Cause**: Service principal lacks required permissions
 
 **Solution**:
-1. Check `azure_role` is appropriate for the task
+1. Contact Platform Team to verify service principal role assignment
 2. Verify role assignment in Azure portal:
    ```bash
    az role assignment list --assignee <service_principal_id> --subscription <subscription_id>
    ```
-3. May need `Owner` role for certain operations
+3. Request appropriate role for the operation (Contributor or Owner)
 
 ### Service connection shows as invalid
 
 **Cause**: Service principal credentials expired or deleted
 
-**Solution**: Run `terraform apply` to regenerate credentials
+**Solution**: Contact Platform Team to verify service principal status and rotate credentials if needed
 
 ### Cannot deploy to resource group
 
-**Cause**: Reader role assigned (read-only)
+**Cause**: Service principal has Reader role (read-only)
 
-**Solution**: Change to Contributor role:
-```hcl
-azure_role = "Contributor"
-```
+**Solution**: Contact Platform Team to assign Contributor role to the service principal
 
 ### Pipeline authorization keeps prompting
 
@@ -342,15 +362,15 @@ azure_role = "Contributor"
 
 ## 🔄 Credential Rotation
 
-Service principal secrets are automatically rotated when:
-- Terraform detects configuration changes
-- Resource is tainted and recreated
+Service principal secrets must be rotated by the Platform Team outside this module.
 
-**Manual Rotation**:
-```bash
-terraform taint module.azure_connection.azuread_application_password.service_connection
-terraform apply
-```
+**To request rotation**: Contact Platform Team with:
+- Service principal ID
+- Subscription ID
+- Environment name
+- Reason for rotation
+
+**After rotation**: Platform Team will update the secret and re-run Terraform to update the service connection.
 
 ## 📚 Related Documentation
 
