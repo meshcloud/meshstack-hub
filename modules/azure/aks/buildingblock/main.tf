@@ -2,22 +2,29 @@
 resource "azurerm_resource_group" "aks" {
   name     = var.resource_group_name
   location = var.location
+  tags     = var.tags
 }
 
 # Virtual Network
 resource "azurerm_virtual_network" "vnet" {
-  name                = "aks-vnet"
-  address_space       = ["10.0.0.0/8"]
+  name                = "${var.aks_cluster_name}-vnet"
+  address_space       = [var.vnet_address_space]
   location            = var.location
   resource_group_name = azurerm_resource_group.aks.name
+  tags                = var.tags
 }
 
 # Subnet
 resource "azurerm_subnet" "aks_subnet" {
-  name                 = "aks-subnet"
+  name                 = "${var.aks_cluster_name}-subnet"
   resource_group_name  = azurerm_resource_group.aks.name
   virtual_network_name = azurerm_virtual_network.vnet.name
-  address_prefixes     = ["10.240.0.0/16"]
+  address_prefixes     = [var.subnet_address_prefix]
+}
+
+resource "time_sleep" "wait_for_subnet" {
+  depends_on      = [azurerm_subnet.aks_subnet]
+  create_duration = "30s"
 }
 
 # Log Analytics
@@ -27,11 +34,14 @@ resource "azurerm_log_analytics_workspace" "law" {
   location            = var.location
   resource_group_name = azurerm_resource_group.aks.name
   sku                 = "PerGB2018"
-  retention_in_days   = 30
+  retention_in_days   = var.log_retention_days
+  tags                = var.tags
 }
 
 # AKS Cluster
 resource "azurerm_kubernetes_cluster" "aks" {
+  depends_on = [time_sleep.wait_for_subnet]
+
   name                = var.aks_cluster_name
   location            = var.location
   resource_group_name = azurerm_resource_group.aks.name
@@ -39,17 +49,21 @@ resource "azurerm_kubernetes_cluster" "aks" {
   kubernetes_version  = var.kubernetes_version
 
   default_node_pool {
-    name            = "system"
-    node_count      = var.node_count
-    vm_size         = var.vm_size
-    os_disk_size_gb = 100
-    vnet_subnet_id  = azurerm_subnet.aks_subnet.id
-    type            = "VirtualMachineScaleSets"
+    name                = "system"
+    node_count          = var.enable_auto_scaling ? null : var.node_count
+    min_count           = var.enable_auto_scaling ? var.min_node_count : null
+    max_count           = var.enable_auto_scaling ? var.max_node_count : null
+    enable_auto_scaling = var.enable_auto_scaling
+    vm_size             = var.vm_size
+    os_disk_size_gb     = var.os_disk_size_gb
+    vnet_subnet_id      = azurerm_subnet.aks_subnet.id
+    type                = "VirtualMachineScaleSets"
 
     upgrade_settings {
       max_surge = "10%"
     }
   }
+
   identity {
     type = "SystemAssigned"
   }
@@ -61,10 +75,10 @@ resource "azurerm_kubernetes_cluster" "aks" {
   }
 
   network_profile {
-    network_plugin    = "azure"
-    network_policy    = "azure"
-    service_cidr      = "10.0.0.0/16"
-    dns_service_ip    = "10.0.0.10"
+    network_plugin    = var.network_plugin
+    network_policy    = var.network_policy
+    service_cidr      = var.service_cidr
+    dns_service_ip    = var.dns_service_ip
     load_balancer_sku = "standard"
     outbound_type     = "loadBalancer"
   }
@@ -72,15 +86,17 @@ resource "azurerm_kubernetes_cluster" "aks" {
   oidc_issuer_enabled       = true
   workload_identity_enabled = true
 
-  tags = {
-    Environment = "production"
-  }
+  tags = merge(
+    var.tags,
+    {
+      ManagedBy = "Terraform"
+    }
+  )
 
   lifecycle {
     ignore_changes = [
       default_node_pool[0].node_count,
       default_node_pool[0].upgrade_settings
-
     ]
   }
 }

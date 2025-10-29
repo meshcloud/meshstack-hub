@@ -55,18 +55,25 @@ aws/
 
 ## Provider Version Strategy
 
-**Pinning Guidelines:**
-- **Use `~>` for stable APIs:** AWS (`~> 5.0`), Azure (`~> 3.116.0`)
-- **Use exact versions for frequent breaking changes:** Google (`6.12.0`)
-- **Review provider versions quarterly** to stay current with security patches
-- **Exception:** Pin to exact versions when a specific feature is required
+**Provider versions are module-specific, not repository-wide.** Each module should declare the minimum provider version it requires based on testing and feature needs.
 
-**Current Latest Versions:**
-- AWS Provider: `~> 5.0`
-- Azure Provider: `~> 3.116.0`
-- Google Provider: `6.12.0` (exact due to API volatility)
-- SAP BTP Provider: `~> 1.8.0`
-- Time Provider: `~> 0.11.1`
+**Version Selection Criteria:**
+
+When choosing a provider version for a module, consider:
+
+1. **Feature Requirements** - Does the module need specific APIs/resources from newer versions?
+2. **Testing Validation** - Which version has been tested with this module?
+3. **Breaking Changes** - Are there known breaking changes to avoid?
+4. **Stability** - Prefer versions with `~>` for patch updates unless there's a specific reason
+5. **Backwards Compatibility** - Will this work with existing deployments?
+
+**Version Constraint Best Practices:**
+
+- **Use `~> X.Y.Z`** to allow patch updates (recommended for most cases)
+- **Use exact versions** (`X.Y.Z`) only for providers with frequent breaking changes
+- **Document in the module's README** why a specific version is required
+- **Test against specific versions** - Each module should be validated with the provider version it declares
+- **Review provider versions quarterly** to stay current with security patches and new features
 
 ## Terraform Version Requirements
 

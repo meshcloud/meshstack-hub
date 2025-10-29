@@ -12,8 +12,8 @@ across all subscriptions underneath a management group (typically the top-level 
 
 | Name | Version |
 |------|---------|
-| <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.5.0 |
-| <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) | 4.36.0 |
+| <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.3.0 |
+| <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) | ~> 4.36.0 |
 
 ## Modules
 
@@ -23,8 +23,8 @@ No modules.
 
 | Name | Type |
 |------|------|
-| [azurerm_role_assignment.buildingblock_deploy](https://registry.terraform.io/providers/hashicorp/azurerm/4.36.0/docs/resources/role_assignment) | resource |
-| [azurerm_role_definition.buildingblock_deploy](https://registry.terraform.io/providers/hashicorp/azurerm/4.36.0/docs/resources/role_definition) | resource |
+| [azurerm_role_assignment.buildingblock_deploy](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/role_assignment) | resource |
+| [azurerm_role_definition.buildingblock_deploy](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/role_definition) | resource |
 
 ## Inputs
 
