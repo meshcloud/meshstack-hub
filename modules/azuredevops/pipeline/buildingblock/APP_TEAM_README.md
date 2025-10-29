@@ -361,7 +361,7 @@ trigger:
 
 **Cause**: Variable group ID doesn't exist or no permissions
 
-**Solution**: 
+**Solution**:
 1. Verify variable group exists in project
 2. Check variable group ID is correct
 3. Ensure permissions to link variable groups

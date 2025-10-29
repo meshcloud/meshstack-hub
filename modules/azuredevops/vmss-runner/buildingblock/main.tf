@@ -16,15 +16,15 @@ resource "azuredevops_agent_queue" "vmss" {
 }
 
 resource "azuredevops_elastic_pool" "vmss" {
-  name              = var.vmss_name
-  service_endpoint_id     = var.service_endpoint_id
-  service_endpoint_scope  = var.azuredevops_project_id
-  desired_idle            = var.desired_idle_agents
-  max_capacity            = var.max_capacity
-  azure_resource_id       = azurerm_linux_virtual_machine_scale_set.vmss.id
-  agent_interactive_ui    = false
-  time_to_live_minutes    = var.time_to_live_minutes
-  recycle_after_each_use  = var.recycle_after_each_use
+  name                   = var.vmss_name
+  service_endpoint_id    = var.service_endpoint_id
+  service_endpoint_scope = var.azuredevops_project_id
+  desired_idle           = var.desired_idle_agents
+  max_capacity           = var.max_capacity
+  azure_resource_id      = azurerm_linux_virtual_machine_scale_set.vmss.id
+  agent_interactive_ui   = false
+  time_to_live_minutes   = var.time_to_live_minutes
+  recycle_after_each_use = var.recycle_after_each_use
 
   depends_on = [
     azuredevops_agent_pool.vmss

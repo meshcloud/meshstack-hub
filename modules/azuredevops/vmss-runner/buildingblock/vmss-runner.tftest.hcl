@@ -1,17 +1,17 @@
 variables {
-  azuredevops_org_url         = "https://dev.azure.com/test-org"
-  azuredevops_project_id      = "12345678-1234-1234-1234-123456789012"
-  azuredevops_pat             = "test-pat-token"
-  service_endpoint_id         = "87654321-4321-4321-4321-210987654321"
-  agent_pool_name             = "test-vmss-pool"
-  vmss_name                   = "test-vmss-runners"
-  azure_subscription_id       = "11111111-2222-3333-4444-555555555555"
-  azure_resource_group_name   = "test-rg"
-  azure_location              = "eastus"
-  spoke_vnet_name             = "spoke-vnet"
-  spoke_subnet_name           = "spoke-subnet"
-  spoke_resource_group_name   = "spoke-rg"
-  ssh_public_key              = "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQC test@example.com"
+  azuredevops_org_url       = "https://dev.azure.com/test-org"
+  azuredevops_project_id    = "12345678-1234-1234-1234-123456789012"
+  azuredevops_pat           = "test-pat-token"
+  service_endpoint_id       = "87654321-4321-4321-4321-210987654321"
+  agent_pool_name           = "test-vmss-pool"
+  vmss_name                 = "test-vmss-runners"
+  azure_subscription_id     = "11111111-2222-3333-4444-555555555555"
+  azure_resource_group_name = "test-rg"
+  azure_location            = "eastus"
+  spoke_vnet_name           = "spoke-vnet"
+  spoke_subnet_name         = "spoke-subnet"
+  spoke_resource_group_name = "spoke-rg"
+  ssh_public_key            = "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQC test@example.com"
 }
 
 run "valid_vmss_runner_minimal" {
@@ -27,10 +27,10 @@ run "valid_vmss_runner_with_custom_capacity" {
   command = plan
 
   variables {
-    agent_pool_name      = "custom-capacity-pool"
-    vmss_name            = "custom-capacity-vmss"
-    desired_idle_agents  = 2
-    max_capacity         = 20
+    agent_pool_name     = "custom-capacity-pool"
+    vmss_name           = "custom-capacity-vmss"
+    desired_idle_agents = 2
+    max_capacity        = 20
   }
 }
 

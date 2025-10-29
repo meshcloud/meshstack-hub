@@ -191,3 +191,71 @@ The elastic pool automatically:
 - Ensure subnet NSG allows required traffic
 - Verify VNet has route to internet for Azure DevOps access
 - Check subnet has sufficient IP addresses
+
+<!-- BEGIN_TF_DOCS -->
+## Requirements
+
+| Name | Version |
+|------|---------|
+| <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.3.0 |
+| <a name="requirement_azuredevops"></a> [azuredevops](#requirement\_azuredevops) | ~> 1.1.1 |
+| <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) | ~> 3.116.0 |
+
+## Modules
+
+No modules.
+
+## Resources
+
+| Name | Type |
+|------|------|
+| [azuredevops_agent_pool.vmss](https://registry.terraform.io/providers/microsoft/azuredevops/latest/docs/resources/agent_pool) | resource |
+| [azuredevops_agent_queue.vmss](https://registry.terraform.io/providers/microsoft/azuredevops/latest/docs/resources/agent_queue) | resource |
+| [azuredevops_elastic_pool.vmss](https://registry.terraform.io/providers/microsoft/azuredevops/latest/docs/resources/elastic_pool) | resource |
+| [azurerm_linux_virtual_machine_scale_set.vmss](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/linux_virtual_machine_scale_set) | resource |
+| [azurerm_role_assignment.vmss_contributor](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/role_assignment) | resource |
+| [azurerm_subnet.spoke](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/subnet) | data source |
+
+## Inputs
+
+| Name | Description | Type | Default | Required |
+|------|-------------|------|---------|:--------:|
+| <a name="input_agent_pool_name"></a> [agent\_pool\_name](#input\_agent\_pool\_name) | Name of the Azure DevOps agent pool | `string` | n/a | yes |
+| <a name="input_agent_script_url"></a> [agent\_script\_url](#input\_agent\_script\_url) | URL to the agent installation script | `string` | `"https://raw.githubusercontent.com/microsoft/azure-pipelines-agent/master/docs/start/envlinux.md"` | no |
+| <a name="input_azure_location"></a> [azure\_location](#input\_azure\_location) | Azure region for VMSS deployment | `string` | n/a | yes |
+| <a name="input_azure_resource_group_name"></a> [azure\_resource\_group\_name](#input\_azure\_resource\_group\_name) | Name of the Azure resource group for VMSS | `string` | n/a | yes |
+| <a name="input_azure_subscription_id"></a> [azure\_subscription\_id](#input\_azure\_subscription\_id) | Azure subscription ID where VMSS will be created | `string` | n/a | yes |
+| <a name="input_azuredevops_org_url"></a> [azuredevops\_org\_url](#input\_azuredevops\_org\_url) | Azure DevOps organization URL (e.g., https://dev.azure.com/myorg) | `string` | n/a | yes |
+| <a name="input_azuredevops_pat"></a> [azuredevops\_pat](#input\_azuredevops\_pat) | Azure DevOps Personal Access Token for agent registration | `string` | n/a | yes |
+| <a name="input_azuredevops_project_id"></a> [azuredevops\_project\_id](#input\_azuredevops\_project\_id) | ID of the Azure DevOps project | `string` | n/a | yes |
+| <a name="input_desired_idle_agents"></a> [desired\_idle\_agents](#input\_desired\_idle\_agents) | Number of idle agents to maintain | `number` | `1` | no |
+| <a name="input_image_offer"></a> [image\_offer](#input\_image\_offer) | Offer of the VM image | `string` | `"0001-com-ubuntu-server-jammy"` | no |
+| <a name="input_image_publisher"></a> [image\_publisher](#input\_image\_publisher) | Publisher of the VM image | `string` | `"Canonical"` | no |
+| <a name="input_image_sku"></a> [image\_sku](#input\_image\_sku) | SKU of the VM image | `string` | `"22_04-lts-gen2"` | no |
+| <a name="input_image_version"></a> [image\_version](#input\_image\_version) | Version of the VM image | `string` | `"latest"` | no |
+| <a name="input_max_capacity"></a> [max\_capacity](#input\_max\_capacity) | Maximum number of agents in the pool | `number` | `10` | no |
+| <a name="input_os_disk_type"></a> [os\_disk\_type](#input\_os\_disk\_type) | Type of OS disk storage | `string` | `"Premium_LRS"` | no |
+| <a name="input_recycle_after_each_use"></a> [recycle\_after\_each\_use](#input\_recycle\_after\_each\_use) | Whether to recycle the agent after each job | `bool` | `false` | no |
+| <a name="input_service_endpoint_id"></a> [service\_endpoint\_id](#input\_service\_endpoint\_id) | ID of the Azure service connection for VMSS management | `string` | n/a | yes |
+| <a name="input_spoke_resource_group_name"></a> [spoke\_resource\_group\_name](#input\_spoke\_resource\_group\_name) | Name of the resource group containing the spoke virtual network | `string` | n/a | yes |
+| <a name="input_spoke_subnet_name"></a> [spoke\_subnet\_name](#input\_spoke\_subnet\_name) | Name of the subnet in the spoke virtual network | `string` | n/a | yes |
+| <a name="input_spoke_vnet_name"></a> [spoke\_vnet\_name](#input\_spoke\_vnet\_name) | Name of the spoke virtual network | `string` | n/a | yes |
+| <a name="input_ssh_public_key"></a> [ssh\_public\_key](#input\_ssh\_public\_key) | SSH public key for VM access | `string` | n/a | yes |
+| <a name="input_tags"></a> [tags](#input\_tags) | Tags to apply to Azure resources | `map(string)` | `{}` | no |
+| <a name="input_time_to_live_minutes"></a> [time\_to\_live\_minutes](#input\_time\_to\_live\_minutes) | Time in minutes before an idle agent is removed | `number` | `30` | no |
+| <a name="input_vm_sku"></a> [vm\_sku](#input\_vm\_sku) | SKU of the virtual machines in the scale set | `string` | `"Standard_D2s_v3"` | no |
+| <a name="input_vmss_name"></a> [vmss\_name](#input\_vmss\_name) | Name of the Virtual Machine Scale Set | `string` | n/a | yes |
+
+## Outputs
+
+| Name | Description |
+|------|-------------|
+| <a name="output_agent_pool_id"></a> [agent\_pool\_id](#output\_agent\_pool\_id) | ID of the Azure DevOps agent pool |
+| <a name="output_agent_pool_name"></a> [agent\_pool\_name](#output\_agent\_pool\_name) | Name of the Azure DevOps agent pool |
+| <a name="output_agent_queue_id"></a> [agent\_queue\_id](#output\_agent\_queue\_id) | ID of the agent queue in the project |
+| <a name="output_elastic_pool_id"></a> [elastic\_pool\_id](#output\_elastic\_pool\_id) | ID of the elastic pool configuration |
+| <a name="output_subnet_id"></a> [subnet\_id](#output\_subnet\_id) | ID of the subnet where VMSS is deployed |
+| <a name="output_vmss_id"></a> [vmss\_id](#output\_vmss\_id) | ID of the Virtual Machine Scale Set |
+| <a name="output_vmss_name"></a> [vmss\_name](#output\_vmss\_name) | Name of the Virtual Machine Scale Set |
+| <a name="output_vmss_principal_id"></a> [vmss\_principal\_id](#output\_vmss\_principal\_id) | Managed identity principal ID of the VMSS |
+<!-- END_TF_DOCS -->

@@ -13,10 +13,10 @@ This building block provides you with **scalable, self-hosted Azure DevOps pipel
 
 Use VMSS runners when you need:
 
-✅ **Private Network Access**: Pipelines need to reach internal resources  
-✅ **Custom Software**: Pre-installed tools not available on Microsoft-hosted agents  
-✅ **Higher Resource Limits**: Need more CPU, memory, or disk than hosted agents provide  
-✅ **Compliance Requirements**: Must run builds in specific networks or subscriptions  
+✅ **Private Network Access**: Pipelines need to reach internal resources
+✅ **Custom Software**: Pre-installed tools not available on Microsoft-hosted agents
+✅ **Higher Resource Limits**: Need more CPU, memory, or disk than hosted agents provide
+✅ **Compliance Requirements**: Must run builds in specific networks or subscriptions
 ✅ **Cost Optimization**: High pipeline usage makes self-hosted agents more economical
 
 **Don't use this if:**

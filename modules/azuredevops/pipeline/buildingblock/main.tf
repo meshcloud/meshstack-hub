@@ -28,9 +28,9 @@ resource "azuredevops_build_definition" "main" {
   dynamic "variable" {
     for_each = var.pipeline_variables
     content {
-      name  = variable.value.name
-      value = variable.value.value
-      is_secret = lookup(variable.value, "is_secret", false)
+      name           = variable.value.name
+      value          = variable.value.value
+      is_secret      = lookup(variable.value, "is_secret", false)
       allow_override = lookup(variable.value, "allow_override", true)
     }
   }

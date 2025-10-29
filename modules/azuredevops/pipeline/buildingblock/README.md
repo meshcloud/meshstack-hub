@@ -185,3 +185,53 @@ steps:
 - Pipeline definition must be YAML-based (classic pipelines not supported)
 - YAML file must exist in the repository before pipeline creation
 - Repository must be accessible with the provided credentials
+
+<!-- BEGIN_TF_DOCS -->
+## Requirements
+
+| Name | Version |
+|------|---------|
+| <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.0 |
+| <a name="requirement_azuredevops"></a> [azuredevops](#requirement\_azuredevops) | ~> 1.1.1 |
+| <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) | ~> 3.116.0 |
+
+## Modules
+
+No modules.
+
+## Resources
+
+| Name | Type |
+|------|------|
+| [azuredevops_build_definition.main](https://registry.terraform.io/providers/microsoft/azuredevops/latest/docs/resources/build_definition) | resource |
+| [azurerm_key_vault.devops](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/key_vault) | data source |
+| [azurerm_key_vault_secret.azure_devops_pat](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/key_vault_secret) | data source |
+
+## Inputs
+
+| Name | Description | Type | Default | Required |
+|------|-------------|------|---------|:--------:|
+| <a name="input_azure_devops_organization_url"></a> [azure\_devops\_organization\_url](#input\_azure\_devops\_organization\_url) | Azure DevOps organization URL (e.g., https://dev.azure.com/myorg) | `string` | n/a | yes |
+| <a name="input_branch_name"></a> [branch\_name](#input\_branch\_name) | Default branch for the pipeline | `string` | `"refs/heads/main"` | no |
+| <a name="input_key_vault_name"></a> [key\_vault\_name](#input\_key\_vault\_name) | Name of the Key Vault containing the Azure DevOps PAT | `string` | n/a | yes |
+| <a name="input_pat_secret_name"></a> [pat\_secret\_name](#input\_pat\_secret\_name) | Name of the secret in Key Vault that contains the Azure DevOps PAT | `string` | `"azdo-pat"` | no |
+| <a name="input_pipeline_name"></a> [pipeline\_name](#input\_pipeline\_name) | Name of the pipeline to create | `string` | n/a | yes |
+| <a name="input_pipeline_variables"></a> [pipeline\_variables](#input\_pipeline\_variables) | List of pipeline variables to create | <pre>list(object({<br>    name           = string<br>    value          = string<br>    is_secret      = optional(bool, false)<br>    allow_override = optional(bool, true)<br>  }))</pre> | `[]` | no |
+| <a name="input_project_id"></a> [project\_id](#input\_project\_id) | Azure DevOps Project ID where the pipeline will be created | `string` | n/a | yes |
+| <a name="input_repository_id"></a> [repository\_id](#input\_repository\_id) | Repository ID or name where the pipeline YAML file is located | `string` | n/a | yes |
+| <a name="input_repository_type"></a> [repository\_type](#input\_repository\_type) | Type of repository. Options: TfsGit, GitHub, GitHubEnterprise, Bitbucket | `string` | `"TfsGit"` | no |
+| <a name="input_resource_group_name"></a> [resource\_group\_name](#input\_resource\_group\_name) | Name of the resource group containing the Key Vault | `string` | n/a | yes |
+| <a name="input_variable_group_ids"></a> [variable\_group\_ids](#input\_variable\_group\_ids) | List of variable group IDs to link to this pipeline | `list(number)` | `[]` | no |
+| <a name="input_yaml_path"></a> [yaml\_path](#input\_yaml\_path) | Path to the YAML pipeline definition file in the repository | `string` | `"azure-pipelines.yml"` | no |
+
+## Outputs
+
+| Name | Description |
+|------|-------------|
+| <a name="output_pipeline_id"></a> [pipeline\_id](#output\_pipeline\_id) | ID of the created pipeline |
+| <a name="output_pipeline_name"></a> [pipeline\_name](#output\_pipeline\_name) | Name of the created pipeline |
+| <a name="output_pipeline_revision"></a> [pipeline\_revision](#output\_pipeline\_revision) | Revision number of the pipeline |
+| <a name="output_project_id"></a> [project\_id](#output\_project\_id) | Project ID where the pipeline was created |
+| <a name="output_repository_id"></a> [repository\_id](#output\_repository\_id) | Repository ID linked to the pipeline |
+| <a name="output_yaml_path"></a> [yaml\_path](#output\_yaml\_path) | Path to the YAML pipeline definition |
+<!-- END_TF_DOCS -->
