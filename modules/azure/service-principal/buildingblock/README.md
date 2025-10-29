@@ -2,25 +2,25 @@
 name: Azure Service Principal
 supportedPlatforms:
   - azure
-description: Creates an Azure AD application registration and service principal with role assignment for automated access to Azure resources
+description: Creates an Entra ID application registration and service principal with role assignment for automated access to Azure resources
 category: security
 ---
 
 # Azure Service Principal Building Block
 
-Creates and manages an Azure AD application registration, service principal, and role assignment for automated access to Azure subscriptions.
+Creates and manages an Entra ID application registration, service principal, and role assignment for automated access to Azure subscriptions.
 
 This documentation is intended as a reference for cloud foundation or platform engineers using this module.
 
 ## Prerequisites
 
 - Azure subscription with appropriate permissions
-- Permissions to create Azure AD applications and service principals
+- Permissions to create Entra ID applications and service principals
 - Permissions to assign roles at subscription scope
 
 ## Features
 
-- Creates Azure AD application registration
+- Creates Entra ID application registration
 - Creates service principal linked to the application
 - Generates client secret with configurable expiration
 - Assigns Azure RBAC role at subscription scope
@@ -148,7 +148,7 @@ module "azuredevops_service_connection" {
 - `service_principal_id` - Service principal client ID (same as application_id)
 - `service_principal_object_id` - Service principal object ID
 - `client_secret` - Client secret (sensitive)
-- `tenant_id` - Azure AD tenant ID
+- `tenant_id` - Entra ID tenant ID
 - `subscription_id` - Subscription ID where role was assigned
 - `azure_role` - Assigned Azure role
 - `secret_expiration_date` - Secret expiration date
@@ -201,8 +201,8 @@ No modules.
 |------|-------------|------|---------|:--------:|
 | <a name="input_azure_role"></a> [azure\_role](#input\_azure\_role) | Azure RBAC role to assign to the service principal on the subscription | `string` | `"Contributor"` | no |
 | <a name="input_azure_subscription_id"></a> [azure\_subscription\_id](#input\_azure\_subscription\_id) | Azure Subscription ID where role assignments will be created | `string` | n/a | yes |
-| <a name="input_description"></a> [description](#input\_description) | Description for the Azure AD application | `string` | `"Service principal managed by Terraform"` | no |
-| <a name="input_display_name"></a> [display\_name](#input\_display\_name) | Display name for the Azure AD application and service principal | `string` | n/a | yes |
+| <a name="input_description"></a> [description](#input\_description) | Description for the Entra ID application | `string` | `"Service principal managed by Terraform"` | no |
+| <a name="input_display_name"></a> [display\_name](#input\_display\_name) | Display name for the Entra ID application and service principal | `string` | n/a | yes |
 | <a name="input_owners"></a> [owners](#input\_owners) | List of object IDs to set as owners of the application (defaults to current user) | `list(string)` | `[]` | no |
 | <a name="input_secret_rotation_days"></a> [secret\_rotation\_days](#input\_secret\_rotation\_days) | Number of days before the service principal secret expires | `number` | `90` | no |
 
@@ -210,13 +210,13 @@ No modules.
 
 | Name | Description |
 |------|-------------|
-| <a name="output_application_id"></a> [application\_id](#output\_application\_id) | Application (client) ID of the Azure AD application |
-| <a name="output_application_object_id"></a> [application\_object\_id](#output\_application\_object\_id) | Object ID of the Azure AD application |
+| <a name="output_application_id"></a> [application\_id](#output\_application\_id) | Application (client) ID of the Entra ID application |
+| <a name="output_application_object_id"></a> [application\_object\_id](#output\_application\_object\_id) | Object ID of the Entra ID application |
 | <a name="output_azure_role"></a> [azure\_role](#output\_azure\_role) | Azure role assigned to the service principal |
 | <a name="output_client_secret"></a> [client\_secret](#output\_client\_secret) | Client secret for the service principal |
 | <a name="output_secret_expiration_date"></a> [secret\_expiration\_date](#output\_secret\_expiration\_date) | Date when the service principal secret will expire |
 | <a name="output_service_principal_id"></a> [service\_principal\_id](#output\_service\_principal\_id) | Client ID of the service principal (same as application_id) |
 | <a name="output_service_principal_object_id"></a> [service\_principal\_object\_id](#output\_service\_principal\_object\_id) | Object ID of the service principal |
 | <a name="output_subscription_id"></a> [subscription\_id](#output\_subscription\_id) | Azure Subscription ID where role assignment was created |
-| <a name="output_tenant_id"></a> [tenant\_id](#output\_tenant\_id) | Azure AD Tenant ID |
+| <a name="output_tenant_id"></a> [tenant\_id](#output\_tenant\_id) | Entra ID Tenant ID |
 <!-- END_TF_DOCS -->

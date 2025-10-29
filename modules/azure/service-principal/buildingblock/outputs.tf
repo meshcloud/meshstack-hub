@@ -1,10 +1,10 @@
 output "application_id" {
-  description = "Application (client) ID of the Azure AD application"
+  description = "Application (client) ID of the Entra ID application"
   value       = azuread_application.main.client_id
 }
 
 output "application_object_id" {
-  description = "Object ID of the Azure AD application"
+  description = "Object ID of the Entra ID application"
   value       = azuread_application.main.object_id
 }
 
@@ -25,7 +25,7 @@ output "client_secret" {
 }
 
 output "tenant_id" {
-  description = "Azure AD Tenant ID"
+  description = "Entra ID Tenant ID"
   value       = data.azurerm_client_config.current.tenant_id
 }
 

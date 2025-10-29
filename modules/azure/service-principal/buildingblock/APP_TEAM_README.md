@@ -241,10 +241,10 @@ When secrets approach expiration:
 
 ### "Insufficient privileges" error during creation
 
-**Cause**: User lacks permissions to create Azure AD applications
+**Cause**: User lacks permissions to create Entra ID applications
 
 **Solution**: 
-- Request "Application Developer" role in Azure AD
+- Request "Application Developer" role in Entra ID
 - Or request "Cloud Application Administrator" role for full access
 
 ### Secret expired
@@ -374,7 +374,7 @@ module "prod_sp" {
 
 ## 📚 Related Documentation
 
-- [Azure AD Service Principals](https://learn.microsoft.com/en-us/azure/active-directory/develop/app-objects-and-service-principals)
+- [Entra ID Service Principals](https://learn.microsoft.com/en-us/entra/identity-platform/app-objects-and-service-principals)
 - [Azure RBAC Roles](https://learn.microsoft.com/en-us/azure/role-based-access-control/built-in-roles)
-- [Best Practices for Service Principals](https://learn.microsoft.com/en-us/azure/active-directory/develop/howto-create-service-principal-portal)
-- [Credential Management](https://learn.microsoft.com/en-us/azure/active-directory/develop/howto-create-service-principal-portal#option-2-create-a-new-application-secret)
+- [Best Practices for Service Principals](https://learn.microsoft.com/en-us/entra/identity-platform/howto-create-service-principal-portal)
+- [Credential Management](https://learn.microsoft.com/en-us/entra/identity-platform/howto-create-service-principal-portal#option-3-create-a-new-client-secret)

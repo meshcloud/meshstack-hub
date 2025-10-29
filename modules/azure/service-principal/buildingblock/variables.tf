@@ -1,10 +1,10 @@
 variable "display_name" {
-  description = "Display name for the Azure AD application and service principal"
+  description = "Display name for the Entra ID application and service principal"
   type        = string
 }
 
 variable "description" {
-  description = "Description for the Azure AD application"
+  description = "Description for the Entra ID application"
   type        = string
   default     = "Service principal managed by Terraform"
 }
