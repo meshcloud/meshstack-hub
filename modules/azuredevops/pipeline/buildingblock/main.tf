@@ -23,7 +23,7 @@ resource "azuredevops_build_definition" "main" {
     yml_path    = var.yaml_path
   }
 
-  variable_groups = var.variable_group_ids
+  variable_groups = length(var.variable_group_ids) > 0 ? var.variable_group_ids : null
 
   dynamic "variable" {
     for_each = var.pipeline_variables
