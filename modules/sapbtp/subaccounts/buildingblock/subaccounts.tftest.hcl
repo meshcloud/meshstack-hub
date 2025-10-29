@@ -1,10 +1,10 @@
 run "verify" {
   variables {
-    parent_id            = "99f8ad5f-255e-46a5-a72d-f6d652c90525"
-    globalaccount        = "meshcloudgmbh"
-    workspace_identifier = "sapbtp"
-    project_identifier   = "testsubaccount"
-    subfolder            = "test"
+    parent_id     = "99f8ad5f-255e-46a5-a72d-f6d652c90525"
+    globalaccount = "meshcloudgmbh"
+    #workspace_identifier = "sapbtp"
+    project_identifier = "testsubaccount"
+    subfolder          = "test"
     users = [
       {
         meshIdentifier = "identifier1"
@@ -36,10 +36,10 @@ run "verify" {
 
 run "verify_with_subscriptions_and_entitlements" {
   variables {
-    globalaccount        = "meshcloudgmbh"
-    workspace_identifier = "sapbtp"
-    project_identifier   = "testsubaccount-apps"
-    subfolder            = "test"
+    globalaccount = "meshcloudgmbh"
+    #workspace_identifier = "sapbtp"
+    project_identifier = "testsubaccount-apps"
+    subfolder          = "test"
 
     entitlements = [
       {
@@ -70,10 +70,10 @@ run "verify_with_subscriptions_and_entitlements" {
 
 run "verify_with_cloudfoundry" {
   variables {
-    globalaccount        = "meshcloudgmbh"
-    workspace_identifier = "sapbtp"
-    project_identifier   = "testsubaccount-cf"
-    subfolder            = "test"
+    globalaccount = "meshcloudgmbh"
+    #workspace_identifier = "sapbtp"
+    project_identifier = "testsubaccount-cf"
+    subfolder          = "test"
 
     cloudfoundry_instance = {
       name      = "cf-dev"
@@ -95,10 +95,10 @@ run "verify_with_trust_configuration" {
   }
 
   variables {
-    globalaccount        = "meshcloudgmbh"
-    workspace_identifier = "sapbtp"
-    project_identifier   = "testsubaccount-idp"
-    subfolder            = "test"
+    globalaccount = "meshcloudgmbh"
+    #workspace_identifier = "sapbtp"
+    project_identifier = "testsubaccount-idp"
+    subfolder          = "test"
 
     trust_configuration = {
       identity_provider = "test.accounts.ondemand.com"
@@ -113,10 +113,10 @@ run "verify_with_trust_configuration" {
 
 run "verify_without_optional_features" {
   variables {
-    globalaccount        = "meshcloudgmbh"
-    workspace_identifier = "sapbtp"
-    project_identifier   = "testsubaccount-minimal"
-    subfolder            = "test"
+    globalaccount = "meshcloudgmbh"
+    #workspace_identifier = "sapbtp"
+    project_identifier = "testsubaccount-minimal"
+    subfolder          = "test"
   }
 
   assert {
