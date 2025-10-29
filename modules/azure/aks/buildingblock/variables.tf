@@ -188,3 +188,39 @@ variable "tags" {
   description = "Tags to apply to all resources"
   default     = {}
 }
+
+variable "private_cluster_enabled" {
+  type        = bool
+  description = "Enable private cluster (API server only accessible via private endpoint)"
+  default     = false
+}
+
+variable "private_dns_zone_id" {
+  type        = string
+  description = "Private DNS Zone ID for private cluster. Use 'System' for Azure-managed zone, or provide custom zone ID. Only used when private_cluster_enabled is true."
+  default     = "System"
+}
+
+variable "private_cluster_public_fqdn_enabled" {
+  type        = bool
+  description = "Enable public FQDN for private cluster (allows public DNS resolution but API server remains private)"
+  default     = false
+}
+
+variable "hub_subscription_id" {
+  type        = string
+  description = "Subscription ID of the hub network. Required when private_cluster_enabled is true and connecting to a hub."
+  default     = null
+}
+
+variable "hub_resource_group_name" {
+  type        = string
+  description = "Resource group name of the hub virtual network. Required when private_cluster_enabled is true and connecting to a hub."
+  default     = null
+}
+
+variable "hub_vnet_name" {
+  type        = string
+  description = "Name of the hub virtual network to peer with. Required when private_cluster_enabled is true and connecting to a hub."
+  default     = null
+}

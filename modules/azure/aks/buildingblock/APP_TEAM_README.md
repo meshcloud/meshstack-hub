@@ -1,7 +1,7 @@
 # Azure Kubernetes Service (AKS)
 
 ## Description
-This building block provides a production-grade Azure Kubernetes Service (AKS) cluster with integrated security, monitoring, and networking features. It delivers a fully managed Kubernetes environment with Azure AD authentication, workload identity support, and comprehensive observability through Log Analytics.
+This building block provides a production-grade Azure Kubernetes Service (AKS) cluster with integrated security, monitoring, and networking features. It delivers a fully managed Kubernetes environment with Azure AD authentication, workload identity support, and comprehensive observability through Log Analytics. The cluster supports both public and private deployment scenarios with optional hub-and-spoke network connectivity.
 
 ## Usage Motivation
 This building block is for application teams that need to deploy containerized applications on a secure, scalable, and managed Kubernetes platform. The AKS cluster comes pre-configured with enterprise-grade security features, eliminating the operational complexity of managing Kubernetes infrastructure while maintaining the flexibility to run any containerized workload.
@@ -21,6 +21,7 @@ This building block is for application teams that need to deploy containerized a
 | Configuring Azure AD authentication and RBAC | ✅ | ❌ |
 | Setting up Log Analytics and monitoring infrastructure | ✅ | ❌ |
 | Managing virtual network and subnet configuration | ✅ | ❌ |
+| Managing hub network peering (for private clusters) | ✅ | ❌ |
 | Deploying and managing applications and workloads | ❌ | ✅ |
 | Configuring application-level resource limits and quotas | ❌ | ✅ |
 | Managing Kubernetes namespaces and RBAC within the cluster | ❌ | ✅ |
@@ -56,25 +57,102 @@ This building block is for application teams that need to deploy containerized a
 ## Cluster Features
 
 ### Authentication & Authorization
-- **Azure AD Integration**: Cluster uses Azure AD for authentication, enabling centralized identity management
+- **Azure AD Integration**: Cluster uses Azure AD for authentication, enabling centralized identity management (optional)
 - **OIDC Issuer**: Workload Identity enabled for secure pod-to-Azure-resource authentication
 
 ### Monitoring & Logging
-- **Log Analytics Workspace**: Centralized logging for cluster and application logs
+- **Log Analytics Workspace**: Centralized logging for cluster and application logs (optional)
 - **Container Insights**: Integrated monitoring for container performance and health
 - **Diagnostic Settings**: Cluster metrics and logs forwarded to Log Analytics
 
 ### Networking
 - **Custom VNet**: Dedicated virtual network and subnet for cluster isolation
 - **Azure CNI**: Advanced networking capabilities with pod-level networking
+- **Private Cluster**: Optional private API server accessible only via private endpoint
+- **Hub Connectivity**: Optional VNet peering to central hub network for on-premises connectivity
 
 ### Auto-Scaling
-- **Cluster Autoscaler**: Automatically adjusts node count based on resource requirements
-- **System Node Pool**: Dedicated node pool for system workloads with auto-scaling enabled
+- **Cluster Autoscaler**: Automatically adjusts node count based on resource requirements (when enabled)
+- **System Node Pool**: Dedicated node pool for system workloads with optional auto-scaling
+
+## Deployment Scenarios
+
+### Public Cluster (Default)
+```hcl
+module "aks" {
+  source = "./buildingblock"
+
+  aks_cluster_name             = "my-public-aks"
+  resource_group_name          = "aks-rg"
+  location                     = "West Europe"
+  aks_admin_group_object_id    = "12345678-1234-1234-1234-123456789012"
+  log_analytics_workspace_name = "my-law"
+}
+```
+
+### Private Cluster with Hub Connectivity
+```hcl
+provider "azurerm" {
+  alias           = "hub"
+  subscription_id = "hub-subscription-id"
+  # hub credentials
+}
+
+module "aks" {
+  source = "./buildingblock"
+
+  providers = {
+    azurerm     = azurerm
+    azurerm.hub = azurerm.hub
+  }
+
+  aks_cluster_name             = "my-private-aks"
+  resource_group_name          = "aks-rg"
+  location                     = "West Europe"
+
+  # Private cluster settings
+  private_cluster_enabled           = true
+  private_dns_zone_id               = "System"
+  private_cluster_public_fqdn_enabled = false
+
+  # Hub connectivity
+  hub_subscription_id      = "hub-subscription-id"
+  hub_resource_group_name  = "hub-network-rg"
+  hub_vnet_name            = "hub-vnet"
+
+  # Azure AD and monitoring
+  aks_admin_group_object_id    = "12345678-1234-1234-1234-123456789012"
+  log_analytics_workspace_name = "my-law"
+}
+```
+
+### Private Cluster without Hub (Isolated)
+```hcl
+module "aks" {
+  source = "./buildingblock"
+
+  aks_cluster_name                  = "my-isolated-aks"
+  resource_group_name               = "aks-rg"
+  location                          = "West Europe"
+  private_cluster_enabled           = true
+  private_dns_zone_id               = "System"
+  aks_admin_group_object_id         = "12345678-1234-1234-1234-123456789012"
+  log_analytics_workspace_name      = "my-law"
+}
+```
 
 ## Getting Started
 
-1. **Access the cluster**: Use `az aks get-credentials` to configure kubectl access
+### Public Cluster
+1. **Access the cluster**: Use `az aks get-credentials --resource-group <rg> --name <cluster-name>` to configure kubectl access
 2. **Verify connectivity**: Run `kubectl get nodes` to confirm cluster connectivity
 3. **Deploy your application**: Use `kubectl apply` or Helm to deploy applications
 4. **Monitor your workloads**: View logs and metrics in Azure Monitor or Log Analytics
+
+### Private Cluster
+1. **Ensure network connectivity**: Access must be from a network peered with the AKS VNet or the hub network
+2. **Access the cluster**: Use `az aks get-credentials --resource-group <rg> --name <cluster-name>` from a machine with network access
+3. **Use Azure Bastion or VPN**: Connect via Azure Bastion, VPN Gateway, or ExpressRoute for management access
+4. **Verify connectivity**: Run `kubectl get nodes` to confirm cluster connectivity
+5. **Deploy your application**: Use `kubectl apply` or Helm to deploy applications
+6. **Monitor your workloads**: View logs and metrics in Azure Monitor or Log Analytics

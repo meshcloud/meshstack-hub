@@ -48,6 +48,10 @@ resource "azurerm_kubernetes_cluster" "aks" {
   dns_prefix          = var.dns_prefix
   kubernetes_version  = var.kubernetes_version
 
+  private_cluster_enabled             = var.private_cluster_enabled
+  private_dns_zone_id                 = var.private_cluster_enabled ? var.private_dns_zone_id : null
+  private_cluster_public_fqdn_enabled = var.private_cluster_enabled ? var.private_cluster_public_fqdn_enabled : false
+
   default_node_pool {
     name            = "system"
     node_count      = var.enable_auto_scaling ? null : var.node_count
@@ -82,7 +86,7 @@ resource "azurerm_kubernetes_cluster" "aks" {
     service_cidr      = var.service_cidr
     dns_service_ip    = var.dns_service_ip
     load_balancer_sku = "standard"
-    outbound_type     = "loadBalancer"
+    outbound_type     = var.private_cluster_enabled && var.hub_vnet_name != null ? "userDefinedRouting" : "loadBalancer"
   }
 
   oidc_issuer_enabled       = true
@@ -128,4 +132,44 @@ resource "azurerm_monitor_diagnostic_setting" "aks_monitoring" {
   enabled_metric {
     category = "AllMetrics"
   }
+}
+
+data "azurerm_resource_group" "hub_rg" {
+  count    = var.private_cluster_enabled && var.hub_resource_group_name != null ? 1 : 0
+  provider = azurerm.hub
+  name     = var.hub_resource_group_name
+}
+
+data "azurerm_virtual_network" "hub_vnet" {
+  count               = var.private_cluster_enabled && var.hub_vnet_name != null ? 1 : 0
+  provider            = azurerm.hub
+  name                = var.hub_vnet_name
+  resource_group_name = data.azurerm_resource_group.hub_rg[0].name
+}
+
+resource "azurerm_virtual_network_peering" "aks_to_hub" {
+  count                     = var.private_cluster_enabled && var.hub_vnet_name != null ? 1 : 0
+  name                      = "${var.aks_cluster_name}-to-hub"
+  resource_group_name       = azurerm_resource_group.aks.name
+  virtual_network_name      = azurerm_virtual_network.vnet.name
+  remote_virtual_network_id = data.azurerm_virtual_network.hub_vnet[0].id
+
+  allow_virtual_network_access = true
+  allow_forwarded_traffic      = true
+  allow_gateway_transit        = false
+  use_remote_gateways          = true
+}
+
+resource "azurerm_virtual_network_peering" "hub_to_aks" {
+  count                     = var.private_cluster_enabled && var.hub_vnet_name != null ? 1 : 0
+  provider                  = azurerm.hub
+  name                      = "hub-to-${var.aks_cluster_name}"
+  resource_group_name       = data.azurerm_resource_group.hub_rg[0].name
+  virtual_network_name      = data.azurerm_virtual_network.hub_vnet[0].name
+  remote_virtual_network_id = azurerm_virtual_network.vnet.id
+
+  allow_virtual_network_access = true
+  allow_forwarded_traffic      = true
+  allow_gateway_transit        = true
+  use_remote_gateways          = false
 }
