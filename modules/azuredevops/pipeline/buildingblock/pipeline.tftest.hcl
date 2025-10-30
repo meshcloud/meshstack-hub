@@ -1,16 +1,17 @@
 variables {
-  azure_devops_organization_url = "https://dev.azure.com/testorg"
-  key_vault_name                = "kv-test-azdo"
-  resource_group_name           = "rg-test-azdo"
+  azure_devops_organization_url = "https://dev.azure.com/meshcloud-prod"
+  key_vault_name                = "ado-demo"
+  resource_group_name           = "rg-devops"
+  pat_secret_name              = "ado-pat"
+      project_id    = "eece6ccc-c821-46a1-9214-80df6da9e13f"
+    repository_id = "e5612cf3-36f1-4db5-b9d4-6431704233f3"
 }
 
 run "valid_pipeline_configuration" {
   command = plan
 
   variables {
-    project_id    = "12345678-1234-1234-1234-123456789012"
     pipeline_name = "test-pipeline"
-    repository_id = "test-repo"
   }
 
   assert {
@@ -19,12 +20,12 @@ run "valid_pipeline_configuration" {
   }
 
   assert {
-    condition     = azuredevops_build_definition.main.project_id == "12345678-1234-1234-1234-123456789012"
+    condition     = azuredevops_build_definition.main.project_id == "eece6ccc-c821-46a1-9214-80df6da9e13f"
     error_message = "Pipeline should be created in the specified project"
   }
 
   assert {
-    condition     = azuredevops_build_definition.main.repository[0].repo_id == "test-repo"
+    condition     = azuredevops_build_definition.main.repository[0].repo_id == "e5612cf3-36f1-4db5-b9d4-6431704233f3"
     error_message = "Pipeline should reference the correct repository"
   }
 }
@@ -33,9 +34,7 @@ run "pipeline_with_custom_yaml_path" {
   command = plan
 
   variables {
-    project_id    = "12345678-1234-1234-1234-123456789012"
     pipeline_name = "custom-pipeline"
-    repository_id = "test-repo"
     yaml_path     = "ci/custom-pipeline.yml"
   }
 
@@ -49,9 +48,7 @@ run "pipeline_with_custom_branch" {
   command = plan
 
   variables {
-    project_id    = "12345678-1234-1234-1234-123456789012"
     pipeline_name = "develop-pipeline"
-    repository_id = "test-repo"
     branch_name   = "refs/heads/develop"
   }
 
@@ -65,9 +62,7 @@ run "pipeline_with_variables" {
   command = plan
 
   variables {
-    project_id    = "12345678-1234-1234-1234-123456789012"
     pipeline_name = "var-pipeline"
-    repository_id = "test-repo"
 
     pipeline_variables = [
       {
@@ -92,9 +87,7 @@ run "pipeline_with_variable_groups" {
   command = plan
 
   variables {
-    project_id    = "12345678-1234-1234-1234-123456789012"
     pipeline_name = "vg-pipeline"
-    repository_id = "test-repo"
 
     variable_group_ids = [10, 20, 30]
   }
@@ -109,10 +102,8 @@ run "github_repository_pipeline" {
   command = plan
 
   variables {
-    project_id      = "12345678-1234-1234-1234-123456789012"
     pipeline_name   = "github-pipeline"
     repository_type = "GitHub"
-    repository_id   = "myorg/myrepo"
   }
 
   assert {
@@ -121,7 +112,7 @@ run "github_repository_pipeline" {
   }
 
   assert {
-    condition     = azuredevops_build_definition.main.repository[0].repo_id == "myorg/myrepo"
+    condition     = azuredevops_build_definition.main.repository[0].repo_id == "e5612cf3-36f1-4db5-b9d4-6431704233f3"
     error_message = "Pipeline should reference GitHub repository"
   }
 }
@@ -130,10 +121,8 @@ run "tfsgit_repository_pipeline" {
   command = plan
 
   variables {
-    project_id      = "12345678-1234-1234-1234-123456789012"
     pipeline_name   = "tfsgit-pipeline"
     repository_type = "TfsGit"
-    repository_id   = "azure-repo"
   }
 
   assert {
@@ -146,9 +135,7 @@ run "invalid_repository_type" {
   command = plan
 
   variables {
-    project_id      = "12345678-1234-1234-1234-123456789012"
     pipeline_name   = "test-pipeline"
-    repository_id   = "test-repo"
     repository_type = "InvalidType"
   }
 
@@ -161,9 +148,7 @@ run "pipeline_with_default_values" {
   command = plan
 
   variables {
-    project_id    = "12345678-1234-1234-1234-123456789012"
     pipeline_name = "default-pipeline"
-    repository_id = "test-repo"
   }
 
   assert {
@@ -186,14 +171,12 @@ run "pipeline_with_empty_variable_groups" {
   command = plan
 
   variables {
-    project_id         = "12345678-1234-1234-1234-123456789012"
     pipeline_name      = "no-vg-pipeline"
-    repository_id      = "test-repo"
     variable_group_ids = []
   }
 
   assert {
-    condition     = length(azuredevops_build_definition.main.variable_groups) == 0
+    condition     = length(coalesce(azuredevops_build_definition.main.variable_groups, [])) == 0
     error_message = "Pipeline should have no variable groups"
   }
 }

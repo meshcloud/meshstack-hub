@@ -1,24 +1,25 @@
 variables {
-  azure_devops_organization_url = "https://dev.azure.com/testorg"
-  key_vault_name                = "kv-test-azdo"
-  resource_group_name           = "rg-test-azdo"
+  azure_devops_organization_url = "https://dev.azure.com/meshcloud-prod"
+  key_vault_name                = "ado-demo"
+  resource_group_name           = "rg-devops"
+  pat_secret_name               = "ado-pat"
+  project_id                    = "eece6ccc-c821-46a1-9214-80df6da9e13f"
+  repository_name                = "test-repo"
 }
 
 run "valid_repository_configuration" {
   command = plan
 
   variables {
-    project_id      = "12345678-1234-1234-1234-123456789012"
-    repository_name = "test-repository"
   }
 
   assert {
-    condition     = azuredevops_git_repository.main.name == "test-repository"
+    condition     = azuredevops_git_repository.main.name == "test-repo"
     error_message = "Repository name should match input variable"
   }
 
   assert {
-    condition     = azuredevops_git_repository.main.project_id == "12345678-1234-1234-1234-123456789012"
+    condition     = azuredevops_git_repository.main.project_id == "eece6ccc-c821-46a1-9214-80df6da9e13f"
     error_message = "Repository should be created in the specified project"
   }
 }
@@ -27,8 +28,6 @@ run "repository_with_branch_policies" {
   command = plan
 
   variables {
-    project_id             = "12345678-1234-1234-1234-123456789012"
-    repository_name        = "protected-repo"
     enable_branch_policies = true
     minimum_reviewers      = 3
   }
@@ -53,8 +52,6 @@ run "repository_without_branch_policies" {
   command = plan
 
   variables {
-    project_id             = "12345678-1234-1234-1234-123456789012"
-    repository_name        = "unprotected-repo"
     enable_branch_policies = false
   }
 
@@ -73,8 +70,6 @@ run "uninitialized_repository" {
   command = plan
 
   variables {
-    project_id      = "12345678-1234-1234-1234-123456789012"
-    repository_name = "empty-repo"
     init_type       = "Uninitialized"
   }
 
@@ -88,7 +83,6 @@ run "clean_initialization" {
   command = plan
 
   variables {
-    project_id      = "12345678-1234-1234-1234-123456789012"
     repository_name = "new-repo"
     init_type       = "Clean"
   }
@@ -103,8 +97,6 @@ run "invalid_init_type" {
   command = plan
 
   variables {
-    project_id      = "12345678-1234-1234-1234-123456789012"
-    repository_name = "test-repo"
     init_type       = "Invalid"
   }
 
@@ -117,8 +109,6 @@ run "minimum_reviewers_out_of_range" {
   command = plan
 
   variables {
-    project_id        = "12345678-1234-1234-1234-123456789012"
-    repository_name   = "test-repo"
     minimum_reviewers = 15
   }
 
@@ -131,8 +121,6 @@ run "minimum_reviewers_zero" {
   command = plan
 
   variables {
-    project_id        = "12345678-1234-1234-1234-123456789012"
-    repository_name   = "test-repo"
     minimum_reviewers = 0
   }
 
