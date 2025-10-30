@@ -99,6 +99,14 @@ aws/
 - Creates custom role definitions with specific permissions
 - Uses role assignments for principal access
 - Scoped to subscription or management group level
+- **Service Principal Creation (Optional):**
+  - Can create Azure AD application and service principal
+  - Supports **Workload Identity Federation (WIF)** for passwordless authentication
+  - Falls back to application password if WIF not configured
+  - Automatically assigns created principals to role definitions
+- **Two-tier permissions for networking:**
+  - `buildingblock_deploy` role: Main deployment permissions
+  - `buildingblock_deploy_hub` role: Hub-specific permissions for VNet peering (e.g., ACR, Key Vault)
 
 **GCP Backplane Pattern:** *TBD - To be documented*
 
@@ -195,10 +203,12 @@ category: storage
 
 - **Cost Management:** Budget alerts (AWS, Azure, GCP)
 - **Storage:** S3 buckets, Azure storage accounts, GCS buckets
+- **Container Registries:** Azure Container Registry (ACR) with private networking
 - **Networking:** VPCs, spoke networks, subnets
 - **Databases:** PostgreSQL, managed database instances
 - **Security:** Key Vault, IAM roles, secret management
 - **CI/CD:** GitHub Actions integration, service connections
+- **Compute:** Virtual machines (Azure), AKS integration
 
 ## Best Practices for New Modules
 
