@@ -62,7 +62,7 @@ module "acr" {
     azurerm     = azurerm
     azurerm.hub = azurerm.hub
   }
-  
+
   # ... configuration
 }
 ```
