@@ -2,21 +2,22 @@ run "valid_project_creation" {
   command = plan
 
   variables {
-    azure_devops_organization_url = "https://dev.azure.com/testorg"
-    key_vault_name                = "kv-test-devops"
-    resource_group_name           = "rg-test-devops"
+    azure_devops_organization_url = "https://dev.azure.com/meshcloud-prod"
+    key_vault_name                = "ado-demo"
+    resource_group_name           = "rg-devops"
     project_name                  = "test-project"
     project_description           = "Test project for validation"
+    pat_secret_name              = "ado-pat"
 
     users = [
       {
-        meshIdentifier = "test-user-001"
-        username       = "testuser"
-        firstName      = "Test"
-        lastName       = "User"
-        email          = "test.user@example.com"
-        euid           = "test.user"
-        roles          = ["user"]
+        meshIdentifier = "likvid-tom-user"
+        username       = "likvid-tom@meshcloud.io"
+        firstName      = "Tom"
+        lastName       = "Livkid"
+        email          = "likvid-tom@meshcloud.io"
+        euid           = "likvid-tom@meshcloud.io"
+        roles          = ["admin", "Workspace Owner"]
       }
     ]
   }
@@ -41,38 +42,38 @@ run "user_role_assignment_validation" {
   command = plan
 
   variables {
-    azure_devops_organization_url = "https://dev.azure.com/testorg"
-    key_vault_name                = "kv-test-devops"
-    resource_group_name           = "rg-test-devops"
+    azure_devops_organization_url = "https://dev.azure.com/meshcloud-prod"
+    key_vault_name                = "ado-demo"
+    resource_group_name           = "rg-devops"
     project_name                  = "test-project"
-
+    pat_secret_name              = "ado-pat"
     users = [
       {
-        meshIdentifier = "reader-001"
-        username       = "readeruser"
-        firstName      = "Reader"
-        lastName       = "User"
-        email          = "reader@example.com"
-        euid           = "reader.user"
-        roles          = ["reader"]
+        meshIdentifier = "likvid-anna-user"
+        username       = "likvid-anna@meshcloud.io"
+        firstName      = "Anna"
+        lastName       = "Livkid"
+        email          = "likvid-anna@meshcloud.io"
+        euid           = "likvid-anna@meshcloud.io"
+        roles          = ["reader", "Workspace Member"]
       },
       {
-        meshIdentifier = "dev-001"
-        username       = "developer"
-        firstName      = "Dev"
-        lastName       = "User"
-        email          = "developer@example.com"
-        euid           = "dev.user"
-        roles          = ["user"]
+        meshIdentifier = "likvid-daniela-user"
+        username       = "likvid-daniela@meshcloud.io"
+        firstName      = "Daniela"
+        lastName       = "Livkid"
+        email          = "likvid-daniela@meshcloud.io"
+        euid           = "likvid-daniela@meshcloud.io"
+        roles          = ["user", "Workspace Manager"]
       },
       {
-        meshIdentifier = "admin-001"
-        username       = "adminuser"
-        firstName      = "Admin"
-        lastName       = "User"
-        email          = "admin@example.com"
-        euid           = "admin.user"
-        roles          = ["admin"]
+        meshIdentifier = "likvid-tom-user"
+        username       = "likvid-tom@meshcloud.io"
+        firstName      = "Tom"
+        lastName       = "Livkid"
+        email          = "likvid-tom@meshcloud.io"
+        euid           = "likvid-tom@meshcloud.io"
+        roles          = ["admin", "Workspace Owner"]
       }
     ]
   }
@@ -93,17 +94,55 @@ run "user_role_assignment_validation" {
   }
 }
 
-run "invalid_project_name" {
+run "invalid_project_name_empty" {
   command = plan
   expect_failures = [
     var.project_name
   ]
 
   variables {
-    azure_devops_organization_url = "https://dev.azure.com/testorg"
-    key_vault_name                = "kv-test-devops"
-    resource_group_name           = "rg-test-devops"
-    project_name                  = "" # Invalid: empty name
+    azure_devops_organization_url = "https://dev.azure.com/meshcloud-prod"
+    key_vault_name                = "ado-demo"
+    resource_group_name           = "rg-devops"
+    project_name                  = ""
+    pat_secret_name               = "ado-pat"
+    users = [
+      {
+        meshIdentifier = "likvid-tom-user"
+        username       = "likvid-tom@meshcloud.io"
+        firstName      = "Tom"
+        lastName       = "Livkid"
+        email          = "likvid-tom@meshcloud.io"
+        euid           = "likvid-tom@meshcloud.io"
+        roles          = ["admin", "Workspace Owner"]
+      }
+    ]
+  }
+}
+
+run "invalid_project_name_too_long" {
+  command = plan
+  expect_failures = [
+    var.project_name
+  ]
+
+  variables {
+    azure_devops_organization_url = "https://dev.azure.com/meshcloud-prod"
+    key_vault_name                = "ado-demo"
+    resource_group_name           = "rg-devops"
+    project_name                  = "ThisProjectNameIsWayTooLongAndExceedsTheMaximumAllowedCharacterLimitOf64Characters"
+    pat_secret_name               = "ado-pat"
+    users = [
+      {
+        meshIdentifier = "likvid-tom-user"
+        username       = "likvid-tom@meshcloud.io"
+        firstName      = "Tom"
+        lastName       = "Livkid"
+        email          = "likvid-tom@meshcloud.io"
+        euid           = "likvid-tom@meshcloud.io"
+        roles          = ["admin", "Workspace Owner"]
+      }
+    ]
   }
 }
 
@@ -111,20 +150,21 @@ run "user_with_multiple_roles" {
   command = plan
 
   variables {
-    azure_devops_organization_url = "https://dev.azure.com/testorg"
-    key_vault_name                = "kv-test-devops"
-    resource_group_name           = "rg-test-devops"
+    azure_devops_organization_url = "https://dev.azure.com/meshcloud-prod"
+    key_vault_name                = "ado-demo"
+    resource_group_name           = "rg-devops"
     project_name                  = "test-project"
+        pat_secret_name              = "ado-pat"
 
     users = [
       {
-        meshIdentifier = "multi-001"
-        username       = "multiuser"
-        firstName      = "Multi"
-        lastName       = "User"
-        email          = "multi@example.com"
-        euid           = "multi.user"
-        roles          = ["admin", "reader", "user"] # Multiple roles
+        meshIdentifier = "likvid-tom-user"
+        username       = "likvid-tom@meshcloud.io"
+        firstName      = "Tom"
+        lastName       = "Livkid"
+        email          = "likvid-tom@meshcloud.io"
+        euid           = "likvid-tom@meshcloud.io"
+        roles          = ["admin", "reader", "user", "Workspace Owner"] # Multiple roles
       }
     ]
   }
@@ -149,20 +189,20 @@ run "user_without_relevant_roles" {
   command = plan
 
   variables {
-    azure_devops_organization_url = "https://dev.azure.com/testorg"
-    key_vault_name                = "kv-test-devops"
-    resource_group_name           = "rg-test-devops"
+    azure_devops_organization_url = "https://dev.azure.com/meshcloud-prod"
+    key_vault_name                = "ado-demo"
+    resource_group_name           = "rg-devops"
     project_name                  = "test-project"
-
+    pat_secret_name              = "ado-pat"
     users = [
       {
-        meshIdentifier = "norole-001"
-        username       = "noroleuser"
-        firstName      = "No"
-        lastName       = "Role"
-        email          = "norole@example.com"
-        euid           = "no.role"
-        roles          = ["some-other-role"] # No Azure DevOps relevant roles
+        meshIdentifier = "likvid-daniela-user"
+        username       = "likvid-daniela@meshcloud.io"
+        firstName      = "Daniela"
+        lastName       = "Livkid"
+        email          = "likvid-daniela@meshcloud.io"
+        euid           = "likvid-daniela@meshcloud.io"
+        roles          = ["NONE Exisiting Role"] # No Azure DevOps relevant roles
       }
     ]
   }
@@ -187,10 +227,22 @@ run "default_project_features" {
   command = plan
 
   variables {
-    azure_devops_organization_url = "https://dev.azure.com/testorg"
-    key_vault_name                = "kv-test-devops"
-    resource_group_name           = "rg-test-devops"
+    azure_devops_organization_url = "https://dev.azure.com/meshcloud-prod"
+    key_vault_name                = "ado-demo"
+    resource_group_name           = "rg-devops"
     project_name                  = "test-project"
+    pat_secret_name               = "ado-pat"
+    users = [
+      {
+        meshIdentifier = "likvid-tom-user"
+        username       = "likvid-tom@meshcloud.io"
+        firstName      = "Tom"
+        lastName       = "Livkid"
+        email          = "likvid-tom@meshcloud.io"
+        euid           = "likvid-tom@meshcloud.io"
+        roles          = ["admin", "Workspace Owner"]
+      }
+    ]
   }
 
   assert {
@@ -199,13 +251,13 @@ run "default_project_features" {
   }
 
   assert {
-    condition     = azuredevops_project.main.features.repositories == "diabled"
-    error_message = "Repositories should be diabled by default"
+    condition     = azuredevops_project.main.features.repositories == "enabled"
+    error_message = "Repositories should be enabled by default"
   }
 
   assert {
-    condition     = azuredevops_project.main.features.pipelines == "diabled"
-    error_message = "Pipelines should be diabled by default"
+    condition     = azuredevops_project.main.features.pipelines == "enabled"
+    error_message = "Pipelines should be enabled by default"
   }
 
   assert {
@@ -214,8 +266,8 @@ run "default_project_features" {
   }
 
   assert {
-    condition     = azuredevops_project.main.features.artifacts == "diabled"
-    error_message = "Artifacts should be diabled by default"
+    condition     = azuredevops_project.main.features.artifacts == "enabled"
+    error_message = "Artifacts should be enabled by default"
   }
 }
 

@@ -6,17 +6,18 @@
 locals {
   readers = [
     for user in var.users : user.email
-    if contains(user.roles, "reader")
+    if contains(user.roles, "reader") || contains(user.roles, "Workspace Member")
   ]
 
   contributors = [
     for user in var.users : user.email
-    if contains(user.roles, "user")
+    if contains(user.roles, "user") || contains(user.roles, "Workspace Manager")
   ]
 
   administrators = [
     for user in var.users : user.email
-    if contains(user.roles, "admin")
+    if contains(user.roles, "admin") || contains(user.roles, "Workspace Owner")
+
   ]
   # Create a map of email to user descriptor for easy lookup
   user_descriptors = {
