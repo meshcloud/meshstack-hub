@@ -1,14 +1,16 @@
+
+variables {
+  azure_devops_organization_url = "https://dev.azure.com/meshcloud-prod"
+  key_vault_name                = "ado-demo"
+  resource_group_name           = "rg-devops"
+  pat_secret_name               = "ado-pat"
+}
+
 run "valid_project_creation" {
   command = plan
-
   variables {
-    azure_devops_organization_url = "https://dev.azure.com/meshcloud-prod"
-    key_vault_name                = "ado-demo"
-    resource_group_name           = "rg-devops"
-    project_name                  = "test-project"
-    project_description           = "Test project for validation"
-    pat_secret_name              = "ado-pat"
-
+    project_name         = "test-project"
+    project_description  = "Test project for validation"
     users = [
       {
         meshIdentifier = "likvid-tom-user"
@@ -42,11 +44,7 @@ run "user_role_assignment_validation" {
   command = plan
 
   variables {
-    azure_devops_organization_url = "https://dev.azure.com/meshcloud-prod"
-    key_vault_name                = "ado-demo"
-    resource_group_name           = "rg-devops"
-    project_name                  = "test-project"
-    pat_secret_name              = "ado-pat"
+    project_name         = "test-project"
     users = [
       {
         meshIdentifier = "likvid-anna-user"
@@ -101,11 +99,7 @@ run "invalid_project_name_empty" {
   ]
 
   variables {
-    azure_devops_organization_url = "https://dev.azure.com/meshcloud-prod"
-    key_vault_name                = "ado-demo"
-    resource_group_name           = "rg-devops"
-    project_name                  = ""
-    pat_secret_name               = "ado-pat"
+    project_name = ""
     users = [
       {
         meshIdentifier = "likvid-tom-user"
