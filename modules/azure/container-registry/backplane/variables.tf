@@ -12,13 +12,13 @@ variable "name" {
 variable "scope" {
   type        = string
   nullable    = false
-  description = "Scope where the building block should be deployable, typically the parent of all Landing Zones."
+  description = "Scope where the building block should be deployable (management group or subscription), typically the parent of all Landing Zones."
 }
 
 variable "hub_scope" {
   type        = string
   nullable    = false
-  description = "Scope of the hub subscription where VNet peering will be created (typically a different subscription than 'scope')"
+  description = "Scope for hub VNet peering permissions (management group or subscription). Typically a hub subscription, but can be a management group containing hub resources."
 }
 
 variable "existing_principal_ids" {

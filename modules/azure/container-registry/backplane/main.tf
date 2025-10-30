@@ -73,7 +73,7 @@ resource "azurerm_role_definition" "buildingblock_deploy" {
       "Microsoft.ContainerRegistry/registries/delete",
       "Microsoft.ContainerRegistry/registries/listCredentials/action",
       "Microsoft.ContainerRegistry/registries/regenerateCredential/action",
-      "Microsoft.ContainerRegistry/registries/listUsages/action",
+      "Microsoft.ContainerRegistry/registries/listUsages/read",
       "Microsoft.ContainerRegistry/registries/importImage/action",
       "Microsoft.ContainerRegistry/registries/webhooks/read",
       "Microsoft.ContainerRegistry/registries/webhooks/write",

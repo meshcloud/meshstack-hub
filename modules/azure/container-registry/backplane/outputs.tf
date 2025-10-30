@@ -1,11 +1,11 @@
 output "role_definition_id" {
   value       = azurerm_role_definition.buildingblock_deploy.id
-  description = "The ID of the role definition that enables deployment of the building block to subscriptions."
+  description = "The ID of the role definition that enables deployment of the building block."
 }
 
 output "role_definition_name" {
   value       = azurerm_role_definition.buildingblock_deploy.name
-  description = "The name of the role definition that enables deployment of the building block to subscriptions."
+  description = "The name of the role definition that enables deployment of the building block."
 }
 
 output "role_assignment_ids" {
@@ -70,7 +70,7 @@ output "scope" {
 
 output "hub_scope" {
   value       = var.hub_scope
-  description = "The scope of the hub subscription where VNet peering role is applied."
+  description = "The scope (management group or subscription) where VNet peering role is applied."
 }
 
 output "hub_role_definition_id" {
