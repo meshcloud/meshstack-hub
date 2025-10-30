@@ -22,9 +22,10 @@ This documentation is intended as a reference for cloud foundation or platform e
 
 - Creates Entra ID application registration
 - Creates service principal linked to the application
-- Generates client secret with configurable expiration
+- Optional client secret generation with configurable expiration
+- Supports workload identity federation (OIDC) when secrets are disabled
 - Assigns Azure RBAC role at subscription scope
-- Automatic secret rotation based on time interval
+- Automatic secret rotation based on time interval (when enabled)
 - Supports Owner, Contributor, and Reader roles
 
 ## Usage
@@ -81,6 +82,29 @@ module "long_lived_sp" {
 }
 ```
 
+### Service Principal for Workload Identity Federation (No Secret)
+
+```hcl
+module "oidc_sp" {
+  source = "./buildingblock"
+
+  display_name          = "workload-identity-service-principal"
+  description           = "Service principal for OIDC/workload identity federation"
+  azure_subscription_id = "12345678-1234-1234-1234-123456789012"
+  azure_role            = "Contributor"
+  create_client_secret  = false
+}
+
+# Add federated identity credential separately
+resource "azuread_application_federated_identity_credential" "github" {
+  application_id = module.oidc_sp.application_object_id
+  display_name   = "github-actions-federated-credential"
+  audiences      = ["api://AzureADTokenExchange"]
+  issuer         = "https://token.actions.githubusercontent.com"
+  subject        = "repo:myorg/myrepo:ref:refs/heads/main"
+}
+```
+
 ### Service Principal with Custom Owners
 
 ```hcl
@@ -104,25 +128,49 @@ module "managed_sp" {
 - **Contributor**: Full management access except role assignments (recommended)
 - **Reader**: Read-only access to resources
 
-## Secret Management
+## Authentication Methods
 
-The module automatically manages service principal secrets with:
+### Client Secret (Default)
+
+When `create_client_secret = true` (default), the module creates a client secret with:
 - Configurable expiration period (30-730 days)
 - Automatic rotation based on time_rotating resource
 - Default rotation period: 90 days
 
 **Note**: After secret rotation, you must retrieve the new secret from Terraform state or outputs.
 
-## Integration with Azure DevOps Service Connection
+### Workload Identity Federation (OIDC)
+
+When `create_client_secret = false`, no client secret is created. Instead, configure federated identity credentials for:
+- GitHub Actions
+- Azure DevOps
+- GitLab CI
+- Other OIDC-compatible platforms
+
+**Benefits**:
+- No secrets to manage or rotate
+- Enhanced security with short-lived tokens
+- Compliance-friendly authentication
+
+## Integration with Azure DevOps Service Connection (OIDC)
 
 ```hcl
 module "devops_service_principal" {
   source = "./buildingblock"
 
   display_name          = "azuredevops-deployment-sp"
-  description           = "Service principal for Azure DevOps pipelines"
+  description           = "Service principal for Azure DevOps pipelines with OIDC"
   azure_subscription_id = var.subscription_id
   azure_role            = "Contributor"
+  create_client_secret  = false
+}
+
+resource "azuread_application_federated_identity_credential" "azdo" {
+  application_id = module.devops_service_principal.application_object_id
+  display_name   = "azuredevops-federated-credential"
+  audiences      = ["api://AzureADTokenExchange"]
+  issuer         = "https://vstoken.dev.azure.com/${var.azdo_org_id}"
+  subject        = "sc://${var.azdo_org_name}/${var.azdo_project_name}/Azure-Production"
 }
 
 module "azuredevops_service_connection" {
@@ -136,7 +184,6 @@ module "azuredevops_service_connection" {
   service_connection_name = "Azure-Production"
   azure_subscription_id   = var.subscription_id
   service_principal_id    = module.devops_service_principal.service_principal_id
-  service_principal_key   = module.devops_service_principal.client_secret
   azure_tenant_id         = module.devops_service_principal.tenant_id
 }
 ```
@@ -147,18 +194,20 @@ module "azuredevops_service_connection" {
 - `application_object_id` - Application object ID
 - `service_principal_id` - Service principal client ID (same as application_id)
 - `service_principal_object_id` - Service principal object ID
-- `client_secret` - Client secret (sensitive)
+- `client_secret` - Client secret (sensitive, null if create_client_secret is false)
 - `tenant_id` - Entra ID tenant ID
 - `subscription_id` - Subscription ID where role was assigned
 - `azure_role` - Assigned Azure role
-- `secret_expiration_date` - Secret expiration date
+- `secret_expiration_date` - Secret expiration date (null if create_client_secret is false)
+- `authentication_method` - Authentication method (client_secret or workload_identity_federation)
 
 ## Security Considerations
 
-- Store client secrets securely (Key Vault, secret management system)
+- **Prefer workload identity federation** (set `create_client_secret = false`) when possible for enhanced security
+- Store client secrets securely (Key Vault, secret management system) if using client secret authentication
 - Use least privilege principle - prefer Reader or Contributor over Owner
-- Monitor secret expiration dates
-- Rotate secrets regularly
+- Monitor secret expiration dates (when using client secrets)
+- Rotate secrets regularly (when using client secrets)
 - Limit application owners to trusted administrators
 - Review role assignments periodically
 

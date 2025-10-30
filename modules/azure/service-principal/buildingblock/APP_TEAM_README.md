@@ -7,6 +7,7 @@ This building block creates a service principal in Azure Entra ID (formerly Azur
 - A development team creates a service principal to **automate deployments** from their CI/CD pipelines to Azure resources.
 - A DevOps engineer sets up separate service principals for **development, staging, and production** environments with appropriate permissions.
 - A team configures a read-only service principal for **monitoring and compliance tools** that need to scan infrastructure without making changes.
+- A team uses **workload identity federation (OIDC)** with GitHub Actions or Azure DevOps to authenticate without managing secrets.
 
 ## 🔄 Shared Responsibility
 
@@ -14,11 +15,13 @@ This building block creates a service principal in Azure Entra ID (formerly Azur
 |----------------|---------------|------------------|
 | Create service principal | ✅ | ❌ |
 | Assign Azure roles to service principal | ✅ | ❌ |
-| Provide service principal credentials | ✅ | ❌ |
-| Store client secret securely | ❌ | ✅ |
+| Choose authentication method (secret vs OIDC) | ⚠️ | ⚠️ |
+| Provide service principal credentials (if using secrets) | ✅ | ❌ |
+| Configure federated identity (if using OIDC) | ✅ | ❌ |
+| Store client secret securely (if using secrets) | ❌ | ✅ |
 | Use service principal in pipelines/applications | ❌ | ✅ |
-| Monitor secret expiration | ❌ | ✅ |
-| Request secret rotation before expiration | ❌ | ✅ |
+| Monitor secret expiration (if using secrets) | ❌ | ✅ |
+| Request secret rotation before expiration (if using secrets) | ❌ | ✅ |
 | Use least privilege roles | ⚠️ | ✅ |
 | Review and audit service principal usage | ✅ | ✅ |
 | Request removal of unused service principals | ❌ | ✅ |
@@ -94,7 +97,46 @@ This building block creates a service principal in Azure Entra ID (formerly Azur
 - ✅ Rotate secrets before expiration
 - ✅ Use separate service principals per environment
 
+## 🔐 Authentication Methods
+
+Service principals support two authentication methods. Choose based on your use case:
+
+### Method 1: Client Secret (Traditional)
+
+**How it works**: A password is generated and used for authentication.
+
+**Best for**:
+- Legacy applications
+- Environments without OIDC support
+- Simple script-based automation
+
+**Limitations**:
+- Secrets expire and require rotation
+- Secrets must be stored securely
+- Risk of secret exposure
+
+### Method 2: Workload Identity Federation (OIDC) - Recommended
+
+**How it works**: Uses OpenID Connect tokens from trusted identity providers (GitHub, Azure DevOps, etc.) without storing secrets.
+
+**Best for**:
+- GitHub Actions workflows
+- Azure DevOps pipelines
+- GitLab CI/CD
+- Modern cloud-native applications
+
+**Benefits**:
+- ✅ No secrets to manage or rotate
+- ✅ Automatic token rotation
+- ✅ Reduced security risk
+- ✅ Simplified credential management
+- ✅ Audit trail tied to identity provider
+
+**Request from Platform Team**: "Please create a service principal with workload identity federation for GitHub Actions" (or your platform)
+
 ## 📝 Receiving Service Principal Credentials
+
+### For Client Secret Authentication
 
 After the Platform Team creates your service principal, you'll receive:
 - **Client ID** (Service Principal ID / Application ID)
@@ -104,9 +146,21 @@ After the Platform Team creates your service principal, you'll receive:
 
 **Store these values securely immediately** - the client secret cannot be retrieved again without rotation.
 
+### For Workload Identity Federation (OIDC)
+
+After the Platform Team configures your service principal, you'll receive:
+- **Client ID** (Service Principal ID / Application ID)
+- **Tenant ID** (Azure AD Directory ID)
+- **Subscription ID** (Target Azure subscription)
+- Federated credential configuration details (issuer, subject, audience)
+
+**No secrets to store** - authentication uses short-lived tokens from your CI/CD platform.
+
 ## 🔐 Using Service Principal for Authentication
 
-### Azure CLI
+### With Client Secret
+
+#### Azure CLI
 
 ```bash
 az login --service-principal \
@@ -115,7 +169,7 @@ az login --service-principal \
   --tenant <tenant_id>
 ```
 
-### Terraform
+#### Terraform
 
 ```hcl
 provider "azurerm" {
@@ -128,11 +182,7 @@ provider "azurerm" {
 }
 ```
 
-### Azure DevOps Service Connection
-
-Service principals are commonly used with Azure DevOps service connections. The Platform Team will configure the service connection using your service principal credentials, allowing your pipelines to authenticate to Azure.
-
-### GitHub Actions
+#### GitHub Actions (with secrets)
 
 ```yaml
 - name: Azure Login
@@ -147,7 +197,85 @@ Service principals are commonly used with Azure DevOps service connections. The 
       }
 ```
 
+### With Workload Identity Federation (OIDC)
+
+#### GitHub Actions (recommended)
+
+```yaml
+name: Deploy to Azure
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      
+      - name: Azure Login with OIDC
+        uses: azure/login@v1
+        with:
+          client-id: ${{ secrets.AZURE_CLIENT_ID }}
+          tenant-id: ${{ secrets.AZURE_TENANT_ID }}
+          subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
+      
+      - name: Azure CLI commands
+        run: |
+          az account show
+          az group list
+```
+
+**Key differences**:
+- ✅ No `client-secret` needed
+- ✅ Must set `permissions: id-token: write`
+- ✅ GitHub generates short-lived tokens automatically
+
+#### Azure DevOps Pipelines (recommended)
+
+```yaml
+trigger:
+  - main
+
+pool:
+  vmImage: 'ubuntu-latest'
+
+steps:
+  - task: AzureCLI@2
+    inputs:
+      azureSubscription: 'MyServiceConnection'  # Uses OIDC
+      scriptType: 'bash'
+      scriptLocation: 'inlineScript'
+      inlineScript: |
+        az account show
+        az group list
+```
+
+**Service connection is configured by Platform Team with OIDC** - no secrets in Azure DevOps.
+
+#### Terraform with OIDC
+
+```hcl
+provider "azurerm" {
+  features {}
+  
+  use_oidc        = true
+  client_id       = var.service_principal_id
+  tenant_id       = var.tenant_id
+  subscription_id = var.subscription_id
+  
+  # OIDC token automatically provided by CI/CD platform
+}
+```
+
 ## 🔄 Secret Rotation Process
+
+**Note**: This section only applies to service principals using **client secret authentication**. Service principals using **workload identity federation (OIDC)** do not require secret rotation.
 
 When secrets approach expiration (you should receive alerts):
 
@@ -170,19 +298,39 @@ When secrets approach expiration (you should receive alerts):
 
 6. **Confirm completion** with Platform Team
 
+**Consider migrating to OIDC** to eliminate secret rotation requirements.
+
 ## ⚠️ Important Notes
+
+### Authentication Method Choice
+
+- **Prefer OIDC** for GitHub Actions, Azure DevOps, and modern CI/CD platforms
+- **Use client secrets** only for legacy systems or when OIDC is not supported
+- Discuss authentication method with Platform Team during request
+
+### Client Secret Authentication
 
 - **Save credentials immediately** - client secrets cannot be retrieved after initial provisioning
 - Secret rotation must be requested from Platform Team before expiration
+- Old secrets are automatically revoked after rotation
+
+### OIDC Authentication
+
+- No secrets to store or rotate
+- Requires federated credential configuration by Platform Team
+- Must include `permissions: id-token: write` in workflows (GitHub Actions)
+- Subject claims must match your repository/project configuration
+
+### General
+
 - Service principal names should be descriptive and follow naming conventions
 - Role assignments are at subscription scope
 - Common roles: Owner, Contributor, Reader (request appropriate level)
-- Old secrets are automatically revoked after rotation
 - Always use separate service principals per environment (dev, staging, prod)
 
 ## 🆘 Troubleshooting
 
-### Secret expired
+### Secret expired (Client Secret Authentication)
 
 **Cause**: Secret has passed expiration date
 
@@ -192,16 +340,44 @@ When secrets approach expiration (you should receive alerts):
 3. Receive new credentials from Platform Team
 4. Update all services using the credential as quickly as possible
 
+**Prevention**: Migrate to workload identity federation (OIDC) to eliminate secret expiration.
+
 ### Service principal authentication fails
 
 **Cause**: Multiple possible causes
 
 **Solution**:
+
+**For Client Secret Authentication**:
 1. Verify client ID, tenant ID, and secret are correct
 2. Check if secret has expired (contact Platform Team)
 3. Verify you're authenticating to the correct subscription
 4. Ensure service principal has required role assignment
 5. Contact Platform Team to verify service principal status
+
+**For OIDC Authentication**:
+1. Verify `permissions: id-token: write` is set in workflow (GitHub Actions)
+2. Confirm client ID and tenant ID are correct
+3. Check federated credential configuration with Platform Team
+4. Verify issuer and subject claims match your CI/CD platform
+5. Ensure service principal has required role assignment
+6. Review CI/CD platform logs for token generation errors
+
+### OIDC token validation fails
+
+**Cause**: Federated credential misconfiguration
+
+**Common Issues**:
+- **GitHub**: Subject claim doesn't match repository/branch/environment
+- **Azure DevOps**: Service connection not configured for workload identity federation
+- **Issuer mismatch**: Federated credential issuer doesn't match token issuer
+
+**Solution**:
+1. Contact Platform Team with error message
+2. Verify workflow/pipeline configuration matches federated credential
+3. Check subject claim format for your platform:
+   - GitHub: `repo:<org>/<repo>:ref:refs/heads/<branch>`
+   - Azure DevOps: `sc://<org>/<project>/<service-connection-name>`
 
 ### Need to remove service principal
 
@@ -215,6 +391,8 @@ When secrets approach expiration (you should receive alerts):
 
 ## 📊 Monitoring Secret Expiration
 
+**Note**: This section only applies to service principals using **client secret authentication**. Service principals using **workload identity federation (OIDC)** automatically rotate tokens and do not require monitoring.
+
 **Platform Team Responsibilities**:
 - Monitor secret expiration dates
 - Send alerts 30 days before expiration
@@ -227,34 +405,101 @@ When secrets approach expiration (you should receive alerts):
 - Update credentials in all locations after rotation
 - Test services after rotation
 
-**Recommendation**: Maintain an inventory of where each service principal is used for quick rotation.
+**Recommendation**: Maintain an inventory of where each service principal is used for quick rotation, or migrate to OIDC to eliminate this overhead.
 
 ## 🔗 Common Integration Patterns
 
-### Complete CI/CD Setup with Azure DevOps
+### Pattern 1: GitHub Actions with OIDC (Recommended)
 
 **Request from Platform Team**:
-1. Service principal for Azure access (Contributor role)
-2. Azure DevOps service connection using that service principal
-3. Store credentials in Key Vault
+1. Service principal with **workload identity federation** for GitHub
+2. Contributor role on target subscription
+3. Federated credential configured for your repository
+
+**Example Request**: "Please create a service principal with OIDC for `myorg/myrepo` repository with Contributor access"
+
+**Your Setup**:
+1. Receive client ID, tenant ID, subscription ID
+2. Add as GitHub repository secrets:
+   - `AZURE_CLIENT_ID`
+   - `AZURE_TENANT_ID`
+   - `AZURE_SUBSCRIPTION_ID`
+3. Use in workflows (see OIDC examples above)
+
+**Benefits**:
+- ✅ No secrets to manage
+- ✅ Automatic token rotation
+- ✅ GitHub's identity system provides audit trail
+
+### Pattern 2: Azure DevOps with OIDC (Recommended)
+
+**Request from Platform Team**:
+1. Service principal with **workload identity federation** for Azure DevOps
+2. Service connection configured with OIDC
+3. Contributor role on target subscription
+
+**Example Request**: "Please create an Azure DevOps service connection with OIDC for `myproject` with Contributor access"
+
+**Your Setup**:
+1. Platform Team configures service connection
+2. Use service connection name in pipelines
+3. No credentials to store in Azure DevOps
+
+**Benefits**:
+- ✅ Seamless pipeline integration
+- ✅ No secret management
+- ✅ Azure DevOps manages token lifecycle
+
+### Pattern 3: Legacy CI/CD with Client Secrets
+
+**Request from Platform Team**:
+1. Service principal with **client secret authentication**
+2. Contributor role on target subscription
+3. Store credentials in Key Vault (recommended)
 
 **Your Setup**:
 1. Receive service principal credentials
-2. Configure Azure DevOps service connection (or verify Platform Team configuration)
-3. Use service connection in pipelines (see Azure DevOps Service Connection documentation)
+2. Store in secret management system
+3. Configure CI/CD platform with credentials
+4. Monitor expiration and rotate before deadline
 
-### Multi-Environment Setup
+**Use when**:
+- Platform doesn't support OIDC
+- Legacy automation scripts
+- Temporary/prototype setups
 
-**Request separate service principals per environment**:
+**Consider migrating to OIDC** when possible.
+
+### Pattern 4: Multi-Environment Setup
+
+**With OIDC (Recommended)**:
+Request separate service principals per environment:
+- **Development**: `myapp-dev-sp` with OIDC, Contributor role
+- **Staging**: `myapp-staging-sp` with OIDC, Contributor role
+- **Production**: `myapp-prod-sp` with OIDC, Contributor role
+
+**With Client Secrets (If OIDC Not Available)**:
 - **Development**: `myapp-dev-sp` with Contributor role, 180-day rotation
 - **Staging**: `myapp-staging-sp` with Contributor role, 90-day rotation
 - **Production**: `myapp-prod-sp` with Contributor role, 60-day rotation
 
 **Benefits**:
-- Isolated credentials per environment
-- Different rotation schedules based on risk
+- Isolated identities per environment
 - Easier to revoke access to specific environments
 - Better audit trail
+- Different security policies per environment
+
+### Pattern 5: Read-Only Monitoring
+
+**Request from Platform Team**:
+1. Service principal with Reader role
+2. OIDC (if monitoring runs in CI/CD) or client secret (if external tool)
+
+**Use Cases**:
+- Cost analysis dashboards
+- Compliance scanning tools
+- Infrastructure monitoring
+- Security auditing tools
 
 ## 📚 Related Documentation
 

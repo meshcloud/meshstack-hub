@@ -16,15 +16,19 @@ resource "azuread_service_principal" "main" {
 }
 
 resource "time_rotating" "secret_rotation" {
+  count = var.create_client_secret ? 1 : 0
+
   rotation_days = var.secret_rotation_days
 }
 
 resource "azuread_application_password" "main" {
+  count = var.create_client_secret ? 1 : 0
+
   application_id = azuread_application.main.id
   display_name   = "Terraform-managed secret"
 
   rotate_when_changed = {
-    rotation = time_rotating.secret_rotation.id
+    rotation = time_rotating.secret_rotation[0].id
   }
 }
 

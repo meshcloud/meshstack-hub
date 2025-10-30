@@ -25,8 +25,14 @@ variable "azure_role" {
   }
 }
 
+variable "create_client_secret" {
+  description = "Whether to create a client secret for the service principal (set to false for workload identity federation)"
+  type        = bool
+  default     = true
+}
+
 variable "secret_rotation_days" {
-  description = "Number of days before the service principal secret expires"
+  description = "Number of days before the service principal secret expires (only used if create_client_secret is true)"
   type        = number
   default     = 90
 
