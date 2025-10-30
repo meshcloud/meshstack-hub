@@ -169,6 +169,18 @@ variable "hub_vnet_name" {
   default     = null
 }
 
+variable "use_remote_gateways" {
+  type        = bool
+  description = "Use remote gateways from hub VNet. Set to true only if hub has a VPN/ExpressRoute gateway configured."
+  default     = false
+}
+
+variable "allow_gateway_transit_from_hub" {
+  type        = bool
+  description = "Allow gateway transit from hub to spoke. Set to true if hub has a gateway and you want spoke to use it."
+  default     = false
+}
+
 variable "aks_managed_identity_principal_id" {
   type        = string
   description = "Principal ID of the AKS managed identity to grant AcrPull access. If provided, AcrPull role will be assigned automatically."

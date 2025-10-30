@@ -137,3 +137,61 @@ output "hub_application_password" {
   description = "Information about the created hub application password (excludes the actual password value for security)."
   sensitive   = true
 }
+
+output "provider_tf" {
+  value = var.create_service_principal_name != null && var.create_hub_service_principal_name != null ? (
+    var.workload_identity_federation == null && var.hub_workload_identity_federation == null ? <<-EOT
+      provider "azurerm" {
+        features {}
+
+        client_id       = "${azuread_service_principal.buildingblock_deploy[0].client_id}"
+        client_secret   = "${azuread_application_password.buildingblock_deploy[0].value}"
+        subscription_id = "<LANDING_ZONE_ID>"
+        tenant_id       = "${data.azurerm_subscription.current.tenant_id}"
+      }
+
+      provider "azurerm" {
+        alias = "hub"
+        features {}
+
+        client_id       = "${azuread_service_principal.buildingblock_deploy_hub[0].client_id}"
+        client_secret   = "${azuread_application_password.buildingblock_deploy_hub[0].value}"
+        subscription_id = "<HUB_SUBSCRIPTION_ID>"
+        tenant_id       = "${data.azurerm_subscription.current.tenant_id}"
+      }
+    EOT
+    : <<-EOT
+      terraform {
+        required_providers {
+          azurerm = {
+            source  = "hashicorp/azurerm"
+            version = "~> 4.36.0"
+          }
+        }
+      }
+
+      provider "azurerm" {
+        features {}
+
+        client_id       = "${azuread_service_principal.buildingblock_deploy[0].client_id}"
+        use_oidc        = true
+        subscription_id = "<LANDING_ZONE_SUBSCRIPTION_ID>"
+        tenant_id       = "${data.azurerm_subscription.current.tenant_id}"
+      }
+
+      provider "azurerm" {
+        alias = "hub"
+        features {}
+
+        client_id       = "${azuread_service_principal.buildingblock_deploy_hub[0].client_id}"
+        use_oidc        = true
+        subscription_id = "<HUB_SUBSCRIPTION_ID>"
+        tenant_id       = "${data.azurerm_subscription.current.tenant_id}"
+      }
+    EOT
+  ) : null
+  description = "Ready-to-use provider.tf configuration for buildingblock deployment"
+  sensitive   = true
+}
+
+

@@ -75,6 +75,8 @@ resource "azurerm_role_definition" "buildingblock_deploy" {
       "Microsoft.ContainerRegistry/registries/regenerateCredential/action",
       "Microsoft.ContainerRegistry/registries/listUsages/read",
       "Microsoft.ContainerRegistry/registries/importImage/action",
+      "Microsoft.ContainerRegistry/registries/operationStatuses/read",
+      "Microsoft.ContainerRegistry/registries/PrivateEndpointConnectionsApproval/action",
       "Microsoft.ContainerRegistry/registries/webhooks/read",
       "Microsoft.ContainerRegistry/registries/webhooks/write",
       "Microsoft.ContainerRegistry/registries/webhooks/delete",
@@ -100,12 +102,14 @@ resource "azurerm_role_definition" "buildingblock_deploy" {
       "Microsoft.Network/privateDnsZones/read",
       "Microsoft.Network/privateDnsZones/write",
       "Microsoft.Network/privateDnsZones/delete",
+      "Microsoft.Network/privateDnsZones/join/action",
       "Microsoft.Network/privateDnsZones/virtualNetworkLinks/read",
       "Microsoft.Network/privateDnsZones/virtualNetworkLinks/write",
       "Microsoft.Network/privateDnsZones/virtualNetworkLinks/delete",
       "Microsoft.Network/privateDnsZones/A/read",
       "Microsoft.Network/privateDnsZones/A/write",
       "Microsoft.Network/privateDnsZones/A/delete",
+      "Microsoft.Network/privateDnsZones/SOA/read",
 
       # Virtual Networks
       "Microsoft.Network/virtualNetworks/read",
@@ -115,6 +119,7 @@ resource "azurerm_role_definition" "buildingblock_deploy" {
       "Microsoft.Network/virtualNetworks/subnets/write",
       "Microsoft.Network/virtualNetworks/subnets/delete",
       "Microsoft.Network/virtualNetworks/subnets/join/action",
+      "Microsoft.Network/virtualNetworks/join/action",
       "Microsoft.Network/virtualNetworks/virtualNetworkPeerings/read",
       "Microsoft.Network/virtualNetworks/virtualNetworkPeerings/write",
       "Microsoft.Network/virtualNetworks/virtualNetworkPeerings/delete",
@@ -171,6 +176,33 @@ resource "azurerm_role_definition" "buildingblock_deploy_hub" {
   }
 }
 
+resource "azurerm_role_definition" "buildingblock_hub_to_landingzone" {
+  name        = "${var.name}-hub-to-landingzone"
+  description = "Allows hub service principal to peer back to landing zone vnets"
+  scope       = var.scope
+
+  permissions {
+    actions = [
+      "Microsoft.Network/virtualNetworks/read",
+      "Microsoft.Network/virtualNetworks/peer/action",
+    ]
+  }
+}
+
+resource "azurerm_role_definition" "buildingblock_landingzone_to_hub" {
+  name        = "${var.name}-landingzone-to-hub"
+  description = "Allows landing zone service principal to peer to hub vnets"
+  scope       = var.hub_scope
+
+  permissions {
+    actions = [
+      "Microsoft.Resources/subscriptions/resourceGroups/read",
+      "Microsoft.Network/virtualNetworks/read",
+      "Microsoft.Network/virtualNetworks/peer/action",
+    ]
+  }
+}
+
 resource "azurerm_role_assignment" "existing_principals_hub" {
   for_each = var.existing_hub_principal_ids
 
@@ -186,5 +218,37 @@ resource "azurerm_role_assignment" "created_principal_hub" {
   role_definition_id = azurerm_role_definition.buildingblock_deploy_hub.role_definition_resource_id
   description        = azurerm_role_definition.buildingblock_deploy_hub.description
   principal_id       = azuread_service_principal.buildingblock_deploy_hub[0].object_id
+  scope              = var.hub_scope
+}
+
+resource "azurerm_role_assignment" "existing_principals_hub_to_landingzone" {
+  for_each = var.existing_hub_principal_ids
+
+  role_definition_id = azurerm_role_definition.buildingblock_hub_to_landingzone.role_definition_resource_id
+  principal_id       = each.value
+  scope              = var.scope
+}
+
+resource "azurerm_role_assignment" "created_principal_hub_to_landingzone" {
+  count = var.create_hub_service_principal_name != null ? 1 : 0
+
+  role_definition_id = azurerm_role_definition.buildingblock_hub_to_landingzone.role_definition_resource_id
+  principal_id       = azuread_service_principal.buildingblock_deploy_hub[0].object_id
+  scope              = var.scope
+}
+
+resource "azurerm_role_assignment" "existing_principals_landingzone_to_hub" {
+  for_each = var.existing_principal_ids
+
+  role_definition_id = azurerm_role_definition.buildingblock_landingzone_to_hub.role_definition_resource_id
+  principal_id       = each.value
+  scope              = var.hub_scope
+}
+
+resource "azurerm_role_assignment" "created_principal_landingzone_to_hub" {
+  count = var.create_service_principal_name != null ? 1 : 0
+
+  role_definition_id = azurerm_role_definition.buildingblock_landingzone_to_hub.role_definition_resource_id
+  principal_id       = azuread_service_principal.buildingblock_deploy[0].object_id
   scope              = var.hub_scope
 }

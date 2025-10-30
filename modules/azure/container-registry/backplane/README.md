@@ -107,7 +107,7 @@ module "acr_backplane" {
   # Create service principals with password authentication
   create_service_principal_name     = "acr-deployer"
   create_hub_service_principal_name = "acr-hub-peering"
-  
+
   # Do NOT set workload_identity_federation - passwords will be auto-generated
   # Retrieve passwords from Terraform state or Azure portal
 }
@@ -130,13 +130,6 @@ module "acr_backplane" {
 | <a name="requirement_azuread"></a> [azuread](#requirement\_azuread) | ~> 3.6.0 |
 | <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) | ~> 4.36.0 |
 
-## Providers
-
-| Name | Version |
-|------|---------|
-| <a name="provider_azuread"></a> [azuread](#provider\_azuread) | ~> 3.6.0 |
-| <a name="provider_azurerm"></a> [azurerm](#provider\_azurerm) | ~> 4.36.0 |
-
 ## Modules
 
 No modules.
@@ -155,10 +148,16 @@ No modules.
 | [azuread_service_principal.buildingblock_deploy_hub](https://registry.terraform.io/providers/hashicorp/azuread/latest/docs/resources/service_principal) | resource |
 | [azurerm_role_assignment.created_principal](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/role_assignment) | resource |
 | [azurerm_role_assignment.created_principal_hub](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/role_assignment) | resource |
+| [azurerm_role_assignment.created_principal_hub_to_landingzone](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/role_assignment) | resource |
+| [azurerm_role_assignment.created_principal_landingzone_to_hub](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/role_assignment) | resource |
 | [azurerm_role_assignment.existing_principals](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/role_assignment) | resource |
 | [azurerm_role_assignment.existing_principals_hub](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/role_assignment) | resource |
+| [azurerm_role_assignment.existing_principals_hub_to_landingzone](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/role_assignment) | resource |
+| [azurerm_role_assignment.existing_principals_landingzone_to_hub](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/role_assignment) | resource |
 | [azurerm_role_definition.buildingblock_deploy](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/role_definition) | resource |
 | [azurerm_role_definition.buildingblock_deploy_hub](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/role_definition) | resource |
+| [azurerm_role_definition.buildingblock_hub_to_landingzone](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/role_definition) | resource |
+| [azurerm_role_definition.buildingblock_landingzone_to_hub](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/role_definition) | resource |
 | [azurerm_subscription.current](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/subscription) | data source |
 
 ## Inputs
@@ -170,10 +169,10 @@ No modules.
 | <a name="input_existing_hub_principal_ids"></a> [existing\_hub\_principal\_ids](#input\_existing\_hub\_principal\_ids) | set of existing principal ids that will be granted permissions to peer with the hub VNet | `set(string)` | `[]` | no |
 | <a name="input_existing_principal_ids"></a> [existing\_principal\_ids](#input\_existing\_principal\_ids) | set of existing principal ids that will be granted permissions to deploy the building block | `set(string)` | `[]` | no |
 | <a name="input_hub_scope"></a> [hub\_scope](#input\_hub\_scope) | Scope for hub VNet peering permissions (management group or subscription). Typically a hub subscription, but can be a management group containing hub resources. | `string` | n/a | yes |
-| <a name="input_hub_workload_identity_federation"></a> [hub\_workload\_identity\_federation](#input\_hub\_workload\_identity\_federation) | Configuration for workload identity federation for hub service principal. If not provided, an application password will be created instead. | <pre>object({<br/>    issuer  = string<br/>    subject = string<br/>  })</pre> | `null` | no |
+| <a name="input_hub_workload_identity_federation"></a> [hub\_workload\_identity\_federation](#input\_hub\_workload\_identity\_federation) | Configuration for workload identity federation for hub service principal. If not provided, an application password will be created instead. | <pre>object({<br>    issuer  = string<br>    subject = string<br>  })</pre> | `null` | no |
 | <a name="input_name"></a> [name](#input\_name) | name of the building block, used for naming resources | `string` | `"container-registry"` | no |
 | <a name="input_scope"></a> [scope](#input\_scope) | Scope where the building block should be deployable (management group or subscription), typically the parent of all Landing Zones. | `string` | n/a | yes |
-| <a name="input_workload_identity_federation"></a> [workload\_identity\_federation](#input\_workload\_identity\_federation) | Configuration for workload identity federation. If not provided, an application password will be created instead. | <pre>object({<br/>    issuer  = string<br/>    subject = string<br/>  })</pre> | `null` | no |
+| <a name="input_workload_identity_federation"></a> [workload\_identity\_federation](#input\_workload\_identity\_federation) | Configuration for workload identity federation. If not provided, an application password will be created instead. | <pre>object({<br>    issuer  = string<br>    subject = string<br>  })</pre> | `null` | no |
 
 ## Outputs
 
@@ -192,6 +191,7 @@ No modules.
 | <a name="output_hub_role_definition_name"></a> [hub\_role\_definition\_name](#output\_hub\_role\_definition\_name) | The name of the role definition that enables deployment of the building block to the hub. |
 | <a name="output_hub_scope"></a> [hub\_scope](#output\_hub\_scope) | The scope (management group or subscription) where VNet peering role is applied. |
 | <a name="output_hub_workload_identity_federation"></a> [hub\_workload\_identity\_federation](#output\_hub\_workload\_identity\_federation) | Information about the created hub workload identity federation credential. |
+| <a name="output_provider_tf"></a> [provider\_tf](#output\_provider\_tf) | Ready-to-use provider.tf configuration for buildingblock deployment |
 | <a name="output_role_assignment_ids"></a> [role\_assignment\_ids](#output\_role\_assignment\_ids) | The IDs of the role assignments for all service principals. |
 | <a name="output_role_assignment_principal_ids"></a> [role\_assignment\_principal\_ids](#output\_role\_assignment\_principal\_ids) | The principal IDs of all service principals that have been assigned the role. |
 | <a name="output_role_definition_id"></a> [role\_definition\_id](#output\_role\_definition\_id) | The ID of the role definition that enables deployment of the building block. |

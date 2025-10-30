@@ -62,6 +62,8 @@ resource "azurerm_container_registry" "acr" {
   anonymous_pull_enabled        = var.anonymous_pull_enabled
   data_endpoint_enabled         = var.data_endpoint_enabled && var.sku == "Premium" ? true : false
   network_rule_bypass_option    = var.network_rule_bypass_option
+  retention_policy_in_days      = var.sku == "Premium" && var.retention_days > 0 ? var.retention_days : null
+  trust_policy_enabled          = var.sku == "Premium" ? var.trust_policy_enabled : false
 
   dynamic "network_rule_set" {
     for_each = length(var.allowed_ip_ranges) > 0 ? [1] : []
@@ -75,21 +77,6 @@ resource "azurerm_container_registry" "acr" {
           ip_range = ip_rule.value
         }
       }
-    }
-  }
-
-  dynamic "retention_policy" {
-    for_each = var.sku == "Premium" && var.retention_days > 0 ? [1] : []
-    content {
-      days    = var.retention_days
-      enabled = true
-    }
-  }
-
-  dynamic "trust_policy" {
-    for_each = var.sku == "Premium" && var.trust_policy_enabled ? [1] : []
-    content {
-      enabled = true
     }
   }
 
@@ -126,10 +113,10 @@ resource "azurerm_private_endpoint" "acr_pe" {
   }
 
   dynamic "private_dns_zone_group" {
-    for_each = var.private_dns_zone_id == "System" ? [] : [1]
+    for_each = var.private_dns_zone_id != null ? [1] : []
     content {
       name                 = "default"
-      private_dns_zone_ids = [var.private_dns_zone_id]
+      private_dns_zone_ids = var.private_dns_zone_id == "System" ? [azurerm_private_dns_zone.acr_dns[0].id] : [var.private_dns_zone_id]
     }
   }
 
@@ -150,16 +137,6 @@ resource "azurerm_private_dns_zone_virtual_network_link" "acr_dns_link" {
   private_dns_zone_name = azurerm_private_dns_zone.acr_dns[0].name
   virtual_network_id    = local.vnet_id
   tags                  = var.tags
-}
-
-resource "azurerm_private_dns_a_record" "acr_dns_record" {
-  count               = var.private_endpoint_enabled && var.private_dns_zone_id == "System" ? 1 : 0
-  name                = azurerm_container_registry.acr.name
-  zone_name           = azurerm_private_dns_zone.acr_dns[0].name
-  resource_group_name = azurerm_resource_group.acr.name
-  ttl                 = 300
-  records             = [azurerm_private_endpoint.acr_pe[0].private_service_connection[0].private_ip_address]
-  tags                = var.tags
 }
 
 data "azurerm_resource_group" "hub_rg" {
@@ -185,7 +162,7 @@ resource "azurerm_virtual_network_peering" "acr_to_hub" {
   allow_virtual_network_access = true
   allow_forwarded_traffic      = true
   allow_gateway_transit        = false
-  use_remote_gateways          = true
+  use_remote_gateways          = var.use_remote_gateways
 }
 
 resource "azurerm_virtual_network_peering" "hub_to_acr" {
@@ -198,7 +175,7 @@ resource "azurerm_virtual_network_peering" "hub_to_acr" {
 
   allow_virtual_network_access = true
   allow_forwarded_traffic      = true
-  allow_gateway_transit        = true
+  allow_gateway_transit        = var.allow_gateway_transit_from_hub
   use_remote_gateways          = false
 }
 
