@@ -1,23 +1,25 @@
 # Azure DevOps Pipeline
 
-Create and manage CI/CD pipelines in Azure DevOps to automate your build, test, and deployment processes.
+This building block provides automated CI/CD pipelines in Azure DevOps to streamline your build, test, and deployment processes. Pipelines are configured via meshStack and run based on YAML definitions in your repository.
 
-## 🔄 Shared Responsibility Matrix
+## 🚀 Usage Examples
 
-| Task | Platform Team | App Team |
-|------|--------------|----------|
-| Deploy backplane infrastructure | ✅ | ❌ |
-| Store Azure DevOps PAT in Key Vault | ✅ | ❌ |
+- A development team sets up a pipeline to **automatically build and test** their application on every commit to the main branch.
+- A DevOps engineer configures a multi-stage pipeline to **deploy to staging and production** environments with approval gates.
+- A team creates separate pipelines for different environments (dev, staging, production) with environment-specific variables.
+
+## 🔄 Shared Responsibility
+
+| Responsibility | Platform Team | Application Team |
+|----------------|---------------|------------------|
 | Create Azure DevOps project | ✅ | ❌ |
 | Create repository | ✅ | ❌ |
-| Create pipeline (via Terraform) | ✅ | ❌ |
+| Create pipeline configuration | ✅ | ❌ |
 | Write YAML pipeline definition | ❌ | ✅ |
 | Commit pipeline YAML to repository | ❌ | ✅ |
-| Run pipelines | ❌ | ✅ |
-| View pipeline results | ❌ | ✅ |
-| Create variable groups | ✅ | ⚠️ (With permissions) |
-| Modify pipeline settings | ⚠️ (Via Terraform) | ⚠️ (Limited) |
-| Rotate Azure DevOps PAT | ✅ | ❌ |
+| Run and monitor pipelines | ❌ | ✅ |
+| Manage pipeline variables | ⚠️ | ✅ |
+| Troubleshoot pipeline failures | ❌ | ✅ |
 
 ## 💡 Best Practices
 
@@ -57,21 +59,10 @@ Create and manage CI/CD pipelines in Azure DevOps to automate your build, test, 
 **Why**: Protect sensitive data and credentials from exposure.
 
 **Best Practices**:
-- Use `is_secret = true` for sensitive variables
+- Use secret variables for sensitive data
 - Link variable groups for shared secrets
 - Never commit secrets to YAML files
 - Rotate secrets regularly
-
-**Example**:
-```hcl
-pipeline_variables = [
-  {
-    name      = "api_key"
-    value     = "secret-value"
-    is_secret = true
-  }
-]
-```
 
 ### Variable Groups
 
@@ -82,42 +73,12 @@ pipeline_variables = [
 - Environment-specific settings
 - Shared secrets (connection strings, credentials)
 
-**Example**:
-```hcl
-variable_group_ids = [10, 20]  # Shared config + secrets
-```
-
 ### Branch Configuration
 
 **Default Branch Patterns**:
 - Main branch: `refs/heads/main` (default)
 - Development: `refs/heads/develop`
 - Release: `refs/heads/release/*`
-
-**Example**:
-```hcl
-branch_name = "refs/heads/main"
-```
-
-### Multi-Environment Setup
-
-**Pattern**: Create separate pipelines for each environment
-
-```hcl
-module "dev_pipeline" {
-  source        = "./buildingblock"
-  pipeline_name = "myapp-dev"
-  yaml_path     = "pipelines/dev.yml"
-  # ... dev configuration
-}
-
-module "prod_pipeline" {
-  source        = "./buildingblock"
-  pipeline_name = "myapp-prod"
-  yaml_path     = "pipelines/prod.yml"
-  # ... prod configuration
-}
-```
 
 ## 📝 Creating Your Pipeline YAML
 
@@ -126,7 +87,6 @@ Your repository must contain a YAML file at the specified path. Here's a starter
 ### Basic Build Pipeline
 
 ```yaml
-# azure-pipelines.yml
 trigger:
   - main
 
@@ -203,9 +163,9 @@ stages:
           - script: echo Deploying application
 ```
 
-## 🔍 Using Pipeline Variables in YAML
+## 🔍 Using Pipeline Variables
 
-Access Terraform-defined variables in your YAML:
+Access configured variables in your YAML:
 
 ```yaml
 steps:
@@ -214,6 +174,15 @@ steps:
 
   - script: echo Deploying to $(api_endpoint)
     displayName: 'Deploy to endpoint'
+```
+
+For secret variables, map them explicitly:
+
+```yaml
+steps:
+  - script: echo $(api_key)
+    env:
+      API_KEY: $(api_key)
 ```
 
 ## 🏃 Running Your Pipeline
@@ -235,9 +204,8 @@ After pipeline creation:
 
 ## ⚠️ Important Notes
 
-- YAML file must exist in repository before creating pipeline
-- Pipeline triggers based on YAML configuration, not Terraform
-- Deleting the Terraform resource deletes the pipeline (but not run history)
+- YAML file must exist in repository before pipeline is configured
+- Pipeline triggers based on YAML configuration
 - Variable group IDs must reference existing variable groups
 - Secret variables are masked in logs but can be accessed in pipeline tasks
 
@@ -247,10 +215,9 @@ After pipeline creation:
 
 **Cause**: YAML file doesn't exist at specified path in repository
 
-**Solution**: Commit YAML file to repository first, then create pipeline
+**Solution**: Commit YAML file to repository first
 
 ```bash
-# Create and commit YAML file
 echo "trigger: [main]" > azure-pipelines.yml
 git add azure-pipelines.yml
 git commit -m "Add pipeline YAML"
@@ -265,17 +232,8 @@ git push
 
 ```yaml
 trigger:
-  - main  # Enable CI trigger
+  - main
 ```
-
-### "Variable group not found" error
-
-**Cause**: Variable group ID doesn't exist or no permissions
-
-**Solution**:
-1. Verify variable group exists in project
-2. Check variable group ID is correct
-3. Ensure permissions to link variable groups
 
 ### Secret variables not working
 
@@ -287,14 +245,8 @@ trigger:
 steps:
   - script: echo $(api_key)
     env:
-      API_KEY: $(api_key)  # Map the secret variable
+      API_KEY: $(api_key)
 ```
-
-### GitHub repository authentication fails
-
-**Cause**: Missing service connection
-
-**Solution**: Create GitHub service connection in Azure DevOps first
 
 ## 📚 Related Documentation
 

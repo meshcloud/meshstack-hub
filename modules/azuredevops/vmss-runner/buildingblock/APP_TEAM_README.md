@@ -1,119 +1,115 @@
-# Azure DevOps VMSS Runner - App Team Guide
+# Azure DevOps VMSS Runner
 
-## 🚀 What is this?
+This building block provides scalable, self-hosted Azure DevOps pipeline runners that automatically scale based on your CI/CD workload. Unlike Microsoft-hosted agents, these runners run in your Azure subscription with direct access to private resources.
 
-This building block provides you with **scalable, self-hosted Azure DevOps pipeline runners** that automatically scale based on your CI/CD workload. Unlike Microsoft-hosted agents, these runners:
+## 🚀 Usage Examples
 
-- Run in **your Azure subscription** within your spoke network
-- Have **direct access** to private resources (databases, internal APIs, etc.)
-- **Auto-scale** from 0 to your maximum capacity
-- Can be **customized** with pre-installed tools and dependencies
+- A development team deploys VMSS runners to **access private databases and internal APIs** during CI/CD pipelines without exposing them to the internet.
+- A DevOps team configures auto-scaling runners to **handle variable pipeline workloads** efficiently, scaling from 0 to 50 agents based on demand.
+- An organization uses self-hosted runners with **custom software pre-installed** (compilers, SDKs, tools) not available on Microsoft-hosted agents.
+
+## 🔄 Shared Responsibility
+
+| Responsibility | Platform Team | Application Team |
+|----------------|---------------|------------------|
+| Provision VMSS and agent pool | ✅ | ❌ |
+| Configure spoke network integration | ✅ | ❌ |
+| Create Azure service connection | ✅ | ❌ |
+| Define VM size and scaling limits | ⚠️ | ✅ |
+| Choose OS image and storage type | ⚠️ | ✅ |
+| Configure agent recycling policy | ⚠️ | ✅ |
+| Request specific tools/software | ❌ | ✅ |
+| Monitor VMSS health | ✅ | ⚠️ |
+| Monitor agent pool capacity | ✅ | ✅ |
+| Update VM images | ✅ | ❌ |
+| Configure pipelines to use pool | ❌ | ✅ |
+| Monitor pipeline performance | ❌ | ✅ |
+| Optimize pipeline efficiency | ❌ | ✅ |
+| Report agent pool issues | ❌ | ✅ |
 
 ## 🎯 When to Use This
 
-Use VMSS runners when you need:
-
-✅ **Private Network Access**: Pipelines need to reach internal resources
-✅ **Custom Software**: Pre-installed tools not available on Microsoft-hosted agents
-✅ **Higher Resource Limits**: Need more CPU, memory, or disk than hosted agents provide
-✅ **Compliance Requirements**: Must run builds in specific networks or subscriptions
-✅ **Cost Optimization**: High pipeline usage makes self-hosted agents more economical
+**Use VMSS runners when you need:**
+- ✅ Private network access to internal resources (databases, APIs, services)
+- ✅ Custom software pre-installed on agents
+- ✅ Higher resource limits (CPU, memory, disk) than Microsoft-hosted agents
+- ✅ Compliance requirements for running builds in specific networks
+- ✅ Cost optimization for high pipeline usage
 
 **Don't use this if:**
-- Your pipelines only access public resources → Use Microsoft-hosted agents
-- You run very few pipelines → Overhead not worth it
+- ❌ Pipelines only access public resources → Use Microsoft-hosted agents
+- ❌ Very low pipeline volume → Overhead not worth it
+- ❌ No private network requirements → Microsoft-hosted agents are simpler
 
-## 📋 Prerequisites
+## 💡 Configuration Guidance
 
-Before requesting this building block, you need:
+### VM Size Selection
 
-1. **Azure DevOps Project ID**: Get this from your project settings
-2. **Azure Subscription ID**: Where the runners will be deployed
-3. **Spoke Network Details**: VNet name, subnet name, and resource group
-4. **Azure Service Connection**: Created via the `service-connection` building block
-5. **SSH Public Key**: For emergency VM access (rarely needed)
+| VM SKU | vCPU | RAM | Use Case | Cost Tier |
+|--------|------|-----|----------|-----------|
+| `Standard_D2s_v3` | 2 | 8GB | Light builds, linting, testing | $ |
+| `Standard_D4s_v3` | 4 | 16GB | Standard builds and tests | $$ |
+| `Standard_D8s_v3` | 8 | 32GB | Heavy builds, parallel testing | $$$ |
+| `Standard_D16s_v3` | 16 | 64GB | Very large builds, compilation | $$$$ |
 
-## 🔄 Shared Responsibility Matrix
+**Start small and scale up based on actual usage metrics.**
 
-| Responsibility | Platform Team | App Team |
-|----------------|---------------|----------|
-| **Setup & Infrastructure** |
-| Provision VMSS and agent pool | ✅ | |
-| Configure spoke network integration | ✅ | |
-| Create Azure service connection | ✅ | |
-| Set up backplane (Key Vault, SP) | ✅ | |
-| **Configuration** |
-| Define VM size and scaling limits | | ✅ |
-| Choose OS image and storage type | | ✅ |
-| Configure agent recycling policy | | ✅ |
-| Request specific tools/software | | ✅ |
-| **Operations** |
-| Monitor VMSS health | ✅ | |
-| Monitor agent pool capacity | ✅ | ✅ |
-| Update VM images | ✅ | |
-| Troubleshoot scaling issues | ✅ | |
-| **Pipeline Usage** |
-| Configure pipelines to use pool | | ✅ |
-| Monitor pipeline performance | | ✅ |
-| Optimize pipeline efficiency | | ✅ |
-| Report agent pool issues | | ✅ |
+### Scaling Strategy
 
-## 💡 Configuration Guide
+**Conservative (Low Cost)**:
+- No idle agents (scale from 0)
+- Moderate max capacity (10 agents)
+- Longer agent lifetime (60 minutes)
+- Best for: Infrequent pipelines, cost-sensitive projects
 
-### Basic Configuration
+**Balanced (Recommended)**:
+- Small pool of ready agents (2 idle)
+- Reasonable max capacity (20 agents)
+- Standard lifetime (30 minutes)
+- Best for: Regular development workflows
 
-```hcl
-# Minimal setup - good for testing
-agent_pool_name     = "my-team-runners"
-vmss_name           = "my-team-vmss"
-desired_idle_agents = 1
-max_capacity        = 5
-```
+**Aggressive (High Performance)**:
+- Always have agents ready (5 idle)
+- High max capacity (50 agents)
+- Quick scale-down (15 minutes)
+- Best for: Continuous deployment, high-frequency pipelines
 
-### Production Configuration
+### Storage Options
 
-```hcl
-# Production setup - auto-scales for high throughput
-agent_pool_name        = "prod-runners"
-vmss_name              = "prod-vmss"
-vm_sku                 = "Standard_D4s_v3"      # 4 vCPU, 16GB RAM
-desired_idle_agents    = 3                       # Always ready
-max_capacity           = 50                      # Peak capacity
-recycle_after_each_use = true                    # Fresh environment per job
-time_to_live_minutes   = 15                      # Quick scale-down
-os_disk_type           = "Premium_LRS"           # Fast storage
+**Standard SSD (`StandardSSD_LRS`)**:
+- Lower cost
+- Sufficient for most workloads
+- Good for development environments
 
-tags = {
-  environment = "production"
-  team        = "platform"
-  cost_center = "engineering"
-}
-```
+**Premium SSD (`Premium_LRS`)**:
+- Higher performance
+- Faster build times
+- Recommended for production pipelines
 
-### Development Configuration
+### Agent Recycling
 
-```hcl
-# Dev setup - cost-optimized
-agent_pool_name     = "dev-runners"
-vmss_name           = "dev-vmss"
-vm_sku              = "Standard_D2s_v3"          # Smaller VM
-desired_idle_agents = 0                           # No idle agents
-max_capacity        = 10                          # Limited scale
-time_to_live_minutes = 60                         # Longer TTL
-os_disk_type         = "StandardSSD_LRS"          # Cheaper storage
-```
+**Recycle After Each Use (`true`)**:
+- Fresh environment per job
+- Better security and isolation
+- Slightly longer startup time
+- Recommended for: Production, sensitive workloads
 
-## 🛠️ Using VMSS Runners in Pipelines
+**Keep Agents Running (`false`)**:
+- Faster subsequent job execution
+- Shared state between jobs
+- Lower cost (fewer VM restarts)
+- Recommended for: Development, non-sensitive workloads
 
-### YAML Pipeline Example
+## 📝 Using VMSS Runners in Pipelines
+
+### Basic Pipeline
 
 ```yaml
-# azure-pipelines.yml
 trigger:
   - main
 
 pool:
-  name: 'my-team-runners'  # Your agent pool name
+  name: 'my-team-runners'
 
 jobs:
   - job: Build
@@ -124,7 +120,6 @@ jobs:
         displayName: 'Build Application'
 
       - script: |
-          # Access private resources in spoke network
           curl http://internal-api.private:8080/health
         displayName: 'Health Check Internal API'
 ```
@@ -150,77 +145,37 @@ stages:
     jobs:
       - job: IntegrationTests
         steps:
-          - script: |
-              # Can access private database in spoke
-              npm run test:integration
+          - script: npm run test:integration
+            displayName: 'Run integration tests'
 ```
 
-### Specific Pool in Job
+### Mixed Agent Types
+
+Use VMSS runners for jobs requiring private access, Microsoft-hosted for simple tasks:
 
 ```yaml
 jobs:
-  - job: LargeCompute
+  - job: HeavyBuild
     pool:
-      name: 'prod-runners'  # Use VMSS pool
+      name: 'prod-runners'
     steps:
-      - script: heavy-computation.sh
+      - script: |
+          # Access private database
+          ./run-heavy-build.sh
 
   - job: QuickLint
     pool:
-      vmImage: 'ubuntu-latest'  # Use Microsoft-hosted
+      vmImage: 'ubuntu-latest'
     steps:
       - script: npm run lint
 ```
 
-## 📊 Capacity Planning
-
-### VM Size Selection
-
-| VM SKU | vCPU | RAM | Use Case | Cost Tier |
-|--------|------|-----|----------|-----------|
-| `Standard_D2s_v3` | 2 | 8GB | Light builds, linting | $ |
-| `Standard_D4s_v3` | 4 | 16GB | Standard builds, tests | $$ |
-| `Standard_D8s_v3` | 8 | 32GB | Heavy builds, parallel tests | $$$ |
-| `Standard_D16s_v3` | 16 | 64GB | Very large builds | $$$$ |
-
-### Scaling Strategy
-
-**Conservative (Low Cost)**
-```hcl
-desired_idle_agents  = 0
-max_capacity         = 10
-time_to_live_minutes = 60
-```
-- No idle agents (save money)
-- Scale up only when needed
-- Keep agents longer to reduce churn
-
-**Balanced (Most Common)**
-```hcl
-desired_idle_agents  = 2
-max_capacity         = 20
-time_to_live_minutes = 30
-```
-- Small pool always ready
-- Moderate max capacity
-- Standard TTL
-
-**Aggressive (High Performance)**
-```hcl
-desired_idle_agents  = 5
-max_capacity         = 50
-time_to_live_minutes = 15
-```
-- Always have agents ready
-- High peak capacity
-- Quick scale-down
-
 ## 🔒 Security Best Practices
 
 ### Network Security
-- ✅ Runners are isolated in spoke subnet
-- ✅ Use NSG rules to restrict outbound access
-- ✅ Limit access to only required internal resources
+- ✅ Runners are isolated in spoke subnet with NSG rules
+- ✅ Restrict outbound access to only required resources
+- ✅ Use private endpoints for Azure services
 - ❌ Don't expose runners to public internet
 
 ### Credential Management
@@ -230,10 +185,31 @@ time_to_live_minutes = 15
 - ❌ Never hardcode credentials in pipelines
 
 ### Agent Hygiene
-- ✅ Enable `recycle_after_each_use` for sensitive workloads
-- ✅ Regularly update VM images
+- ✅ Enable agent recycling for sensitive workloads
+- ✅ Regularly update VM images with security patches
 - ✅ Monitor agent pool for unusual activity
 - ❌ Don't persist sensitive data on agent disks
+
+## 📊 Capacity Planning
+
+### Configuration Examples
+
+**Development Environment**:
+- VM Size: `Standard_D2s_v3`
+- Idle Agents: 0
+- Max Capacity: 10
+- Time to Live: 60 minutes
+- Storage: StandardSSD_LRS
+- **Cost**: Low, scales to zero when not in use
+
+**Production Environment**:
+- VM Size: `Standard_D4s_v3`
+- Idle Agents: 3
+- Max Capacity: 50
+- Time to Live: 15 minutes
+- Storage: Premium_LRS
+- Recycle After Use: true
+- **Cost**: Higher, but optimized for performance and security
 
 ## 🐛 Troubleshooting
 
@@ -242,7 +218,7 @@ time_to_live_minutes = 15
 **Symptoms**: Pipeline queued but no agents pick it up
 
 **Solutions**:
-1. Check `desired_idle_agents` > 0 or increase `max_capacity`
+1. Check idle agent count is > 0, or increase max capacity
 2. Verify VMSS has quota in Azure subscription
 3. Check agent pool status in Azure DevOps settings
 4. Ensure service connection has correct permissions
@@ -252,10 +228,10 @@ time_to_live_minutes = 15
 **Symptoms**: Long wait time between job queue and start
 
 **Solutions**:
-1. Increase `desired_idle_agents` to pre-warm pool
-2. Reduce `time_to_live_minutes` to keep agents warm longer
+1. Increase idle agent count to pre-warm pool
+2. Reduce time-to-live to keep agents warm longer
 3. Consider larger VM SKU for faster boot times
-4. Optimize custom script in agent installation
+4. Optimize custom installation scripts
 
 ### Pipelines Failing on Private Resource Access
 
@@ -272,30 +248,42 @@ time_to_live_minutes = 15
 **Symptoms**: Azure bill shows high VMSS costs
 
 **Solutions**:
-1. Reduce `desired_idle_agents` to 0 or lower value
-2. Use smaller VM SKU (e.g., D2s instead of D4s)
-3. Enable `recycle_after_each_use = false` if not needed
-4. Increase `time_to_live_minutes` to reduce churn
-5. Review pipeline efficiency - reduce unnecessary runs
+1. Reduce idle agent count to 0 or lower value
+2. Use smaller VM SKU
+3. Disable recycling if not required
+4. Increase time-to-live to reduce churn
+5. Review pipeline efficiency - optimize build times
+
+### Agent Pool Shows No Capacity
+
+**Symptoms**: Agent pool exists but shows 0/0 agents
+
+**Solutions**:
+1. Check VMSS status in Azure Portal
+2. Verify service principal permissions
+3. Review VMSS activity logs for errors
+4. Contact Platform Team for infrastructure issues
 
 ## 📈 Monitoring
 
 ### Azure DevOps Portal
 
 1. Navigate to **Project Settings** → **Agent pools**
-2. Select your pool (e.g., "my-team-runners")
+2. Select your pool
 3. Monitor:
    - Number of online agents
    - Queued jobs
    - Recent job history
+   - Agent capacity trends
 
 ### Azure Portal
 
 1. Navigate to your VMSS resource
 2. Check **Metrics**:
-   - VM instance count
+   - VM instance count (current vs desired)
    - CPU utilization
    - Network traffic
+   - Disk IOPS
 3. Review **Activity Log** for scaling events
 
 ### Recommended Alerts
@@ -304,24 +292,27 @@ Set up alerts for:
 - VMSS instance count reaches max capacity (scale limit hit)
 - No online agents for > 10 minutes (configuration issue)
 - High CPU utilization > 80% for > 15 minutes (undersized VM)
+- Frequent scaling events (possible configuration issue)
 
 ## 💰 Cost Optimization Tips
 
-1. **Use Spot VMs** (advanced): Can reduce costs by up to 90% but agents may be evicted
-2. **Right-size VMs**: Don't over-provision - start small and scale up if needed
-3. **Scale to zero**: Set `desired_idle_agents = 0` for dev/test environments
-4. **Scheduled scaling**: Use Azure Automation to scale down outside business hours
-5. **Optimize pipelines**: Faster pipelines = fewer agent hours
+1. **Scale to Zero**: Set idle agents to 0 for dev/test environments
+2. **Right-Size VMs**: Don't over-provision - start with D2s and scale up if needed
+3. **Use Spot VMs** (advanced): Up to 90% savings for fault-tolerant workloads
+4. **Optimize Pipelines**: Faster pipelines = fewer agent hours
+5. **Scheduled Scaling**: Scale down during off-hours (requires additional setup)
+6. **Disable Recycling**: For dev environments where security is less critical
+7. **Storage Selection**: Use Standard SSD for non-production
 
 ## 📞 Getting Help
 
 **Questions about:**
 - **Setup/Configuration**: Contact Platform Team
 - **Pipeline Usage**: Check Azure DevOps documentation
-- **Costs**: Review with Platform Team and FinOps
-- **Network Issues**: Contact Network Team
+- **Network Connectivity**: Contact Network Team
+- **Costs/Optimization**: Review with Platform Team and FinOps
 
-**Useful Resources:**
-- [Azure DevOps Agent Pools Documentation](https://docs.microsoft.com/azure/devops/pipelines/agents/pools-queues)
-- [VMSS Scaling Documentation](https://docs.microsoft.com/azure/virtual-machine-scale-sets/virtual-machine-scale-sets-autoscale-overview)
+**Useful Resources**:
+- [Azure DevOps Agent Pools](https://docs.microsoft.com/azure/devops/pipelines/agents/pools-queues)
+- [VMSS Scaling](https://docs.microsoft.com/azure/virtual-machine-scale-sets/virtual-machine-scale-sets-autoscale-overview)
 - [Pipeline YAML Schema](https://docs.microsoft.com/azure/devops/pipelines/yaml-schema)

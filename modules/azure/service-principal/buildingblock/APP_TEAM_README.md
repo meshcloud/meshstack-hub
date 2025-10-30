@@ -1,60 +1,27 @@
 # Azure Service Principal
 
+This building block creates a service principal in Azure Entra ID (formerly Azure Active Directory) with role-based access to your Azure subscription. Service principals are used for automated authentication and authorization in CI/CD pipelines, applications, and automation scripts.
+
 ## 🚀 Usage Examples
 
-### Basic Service Principal for CI/CD
+- A development team creates a service principal to **automate deployments** from their CI/CD pipelines to Azure resources.
+- A DevOps engineer sets up separate service principals for **development, staging, and production** environments with appropriate permissions.
+- A team configures a read-only service principal for **monitoring and compliance tools** that need to scan infrastructure without making changes.
 
-```hcl
-module "cicd_service_principal" {
-  source = "./buildingblock"
+## 🔄 Shared Responsibility
 
-  display_name          = "my-app-cicd-sp"
-  description           = "Service principal for automated deployments"
-  azure_subscription_id = "12345678-1234-1234-1234-123456789012"
-  azure_role            = "Contributor"
-}
-```
-
-### Read-Only Service Principal for Monitoring
-
-```hcl
-module "monitoring_sp" {
-  source = "./buildingblock"
-
-  display_name          = "monitoring-readonly-sp"
-  description           = "Read-only access for monitoring tools"
-  azure_subscription_id = "12345678-1234-1234-1234-123456789012"
-  azure_role            = "Reader"
-}
-```
-
-### Service Principal with Extended Secret Lifetime
-
-```hcl
-module "long_lived_sp" {
-  source = "./buildingblock"
-
-  display_name          = "backup-service-sp"
-  description           = "Service principal for backup automation"
-  azure_subscription_id = "12345678-1234-1234-1234-123456789012"
-  azure_role            = "Contributor"
-  secret_rotation_days  = 180
-}
-```
-
-## 🔄 Shared Responsibility Matrix
-
-| Task | Platform Team | App Team |
-|------|--------------|----------|
-| Provide service principal building block | ✅ | ❌ |
-| Create service principal via Terraform | ⚠️ | ⚠️ |
+| Responsibility | Platform Team | Application Team |
+|----------------|---------------|------------------|
+| Create service principal | ✅ | ❌ |
+| Assign Azure roles to service principal | ✅ | ❌ |
+| Provide service principal credentials | ✅ | ❌ |
 | Store client secret securely | ❌ | ✅ |
-| Configure role assignments | ⚠️ | ⚠️ |
+| Use service principal in pipelines/applications | ❌ | ✅ |
 | Monitor secret expiration | ❌ | ✅ |
-| Rotate secrets before expiration | ❌ | ✅ |
-| Use least privilege roles | ❌ | ✅ |
+| Request secret rotation before expiration | ❌ | ✅ |
+| Use least privilege roles | ⚠️ | ✅ |
 | Review and audit service principal usage | ✅ | ✅ |
-| Remove unused service principals | ❌ | ✅ |
+| Request removal of unused service principals | ❌ | ✅ |
 
 ## 💡 Best Practices
 
@@ -127,17 +94,15 @@ module "long_lived_sp" {
 - ✅ Rotate secrets before expiration
 - ✅ Use separate service principals per environment
 
-## 📝 Retrieving Service Principal Credentials
+## 📝 Receiving Service Principal Credentials
 
-After creating the service principal, retrieve the credentials:
+After the Platform Team creates your service principal, you'll receive:
+- **Client ID** (Service Principal ID / Application ID)
+- **Client Secret** (Password)
+- **Tenant ID** (Azure AD Directory ID)
+- **Subscription ID** (Target Azure subscription)
 
-```bash
-terraform output service_principal_id
-terraform output tenant_id
-terraform output -raw client_secret
-```
-
-**Store these values securely** - the client secret cannot be retrieved again without rotation.
+**Store these values securely immediately** - the client secret cannot be retrieved again without rotation.
 
 ## 🔐 Using Service Principal for Authentication
 
@@ -165,24 +130,7 @@ provider "azurerm" {
 
 ### Azure DevOps Service Connection
 
-```hcl
-module "service_principal" {
-  source = "./buildingblock"
-  
-  display_name          = "azuredevops-deployment-sp"
-  azure_subscription_id = var.subscription_id
-  azure_role            = "Contributor"
-}
-
-module "azuredevops_connection" {
-  source = "../../azuredevops/service-connection-subscription/buildingblock"
-  
-  service_principal_id  = module.service_principal.service_principal_id
-  service_principal_key = module.service_principal.client_secret
-  azure_tenant_id       = module.service_principal.tenant_id
-  # ... other configuration
-}
-```
+Service principals are commonly used with Azure DevOps service connections. The Platform Team will configure the service connection using your service principal credentials, allowing your pipelines to authenticate to Azure.
 
 ### GitHub Actions
 
@@ -201,61 +149,48 @@ module "azuredevops_connection" {
 
 ## 🔄 Secret Rotation Process
 
-When secrets approach expiration:
+When secrets approach expiration (you should receive alerts):
 
-1. **Update rotation period** (if needed):
-   ```hcl
-   secret_rotation_days = 90
-   ```
+1. **Request rotation from Platform Team**:
+   - Provide service principal name
+   - Indicate urgency (days until expiration)
+   - List affected services/pipelines
 
-2. **Run Terraform apply**:
-   ```bash
-   terraform apply
-   ```
+2. **Receive new credentials** from Platform Team
 
-3. **Retrieve new secret**:
-   ```bash
-   terraform output -raw client_secret
-   ```
+3. **Update credentials in all locations**:
+   - Azure Key Vault secrets
+   - CI/CD pipeline secrets
+   - Application configuration
+   - Environment variables
 
-4. **Update secret in Key Vault or secret management system**:
-   ```bash
-   az keyvault secret set \
-     --vault-name <key-vault-name> \
-     --name <secret-name> \
-     --value <new-secret>
-   ```
+4. **Test authentication** with new credentials
 
-5. **Verify services using the service principal are updated**
+5. **Verify all services** using the service principal are working
+
+6. **Confirm completion** with Platform Team
 
 ## ⚠️ Important Notes
 
-- Client secrets are stored in Terraform state (ensure state is encrypted and secured)
-- Secret cannot be retrieved after creation without rotation
-- Changing `display_name` recreates the application and service principal
-- Role assignments are at subscription scope only
-- Only Owner, Contributor, and Reader roles are supported
+- **Save credentials immediately** - client secrets cannot be retrieved after initial provisioning
+- Secret rotation must be requested from Platform Team before expiration
+- Service principal names should be descriptive and follow naming conventions
+- Role assignments are at subscription scope
+- Common roles: Owner, Contributor, Reader (request appropriate level)
 - Old secrets are automatically revoked after rotation
+- Always use separate service principals per environment (dev, staging, prod)
 
 ## 🆘 Troubleshooting
-
-### "Insufficient privileges" error during creation
-
-**Cause**: User lacks permissions to create Entra ID applications
-
-**Solution**: 
-- Request "Application Developer" role in Entra ID
-- Or request "Cloud Application Administrator" role for full access
 
 ### Secret expired
 
 **Cause**: Secret has passed expiration date
 
 **Solution**:
-1. Update `secret_rotation_days` if needed
-2. Run `terraform apply` to generate new secret
-3. Retrieve and store new secret
-4. Update all services using the credential
+1. Contact Platform Team immediately to request emergency rotation
+2. Provide list of affected services for impact assessment
+3. Receive new credentials from Platform Team
+4. Update all services using the credential as quickly as possible
 
 ### Service principal authentication fails
 
@@ -263,114 +198,63 @@ When secrets approach expiration:
 
 **Solution**:
 1. Verify client ID, tenant ID, and secret are correct
-2. Check role assignment:
-   ```bash
-   az role assignment list --assignee <service_principal_id>
-   ```
-3. Ensure secret hasn't expired:
-   ```bash
-   terraform output secret_expiration_date
-   ```
-4. Verify subscription ID is correct
+2. Check if secret has expired (contact Platform Team)
+3. Verify you're authenticating to the correct subscription
+4. Ensure service principal has required role assignment
+5. Contact Platform Team to verify service principal status
 
-### Cannot delete service principal
+### Need to remove service principal
 
-**Cause**: Service principal is in use or has dependencies
+**Cause**: Service principal no longer needed
 
 **Solution**:
-1. Remove all role assignments first
-2. Check for dependencies in Azure DevOps, GitHub, etc.
-3. Run `terraform destroy` to properly clean up
+1. Document all locations where credentials are used
+2. Remove credentials from all pipelines and applications
+3. Contact Platform Team to request service principal deletion
+4. Confirm no services are affected after removal
 
 ## 📊 Monitoring Secret Expiration
 
-Set up monitoring for secret expiration:
+**Platform Team Responsibilities**:
+- Monitor secret expiration dates
+- Send alerts 30 days before expiration
+- Provide rotation services
 
-```bash
-# Check expiration date
-terraform output secret_expiration_date
+**Your Responsibilities**:
+- Respond to expiration alerts promptly
+- Request rotation at least 2 weeks before expiration
+- Track where credentials are used
+- Update credentials in all locations after rotation
+- Test services after rotation
 
-# Calculate days until expiration
-EXPIRY=$(terraform output -raw secret_expiration_date)
-DAYS_LEFT=$(( ($(date -d "$EXPIRY" +%s) - $(date +%s)) / 86400 ))
-echo "Secret expires in $DAYS_LEFT days"
-```
+**Recommendation**: Maintain an inventory of where each service principal is used for quick rotation.
 
-**Recommendation**: Set up alerts 30 days before expiration.
-
-## 🔗 Integration Examples
+## 🔗 Common Integration Patterns
 
 ### Complete CI/CD Setup with Azure DevOps
 
-```hcl
-# Create service principal for Azure access
-module "azure_sp" {
-  source = "./buildingblock"
-  
-  display_name          = "myapp-cicd-sp"
-  description           = "CI/CD pipeline service principal"
-  azure_subscription_id = var.azure_subscription_id
-  azure_role            = "Contributor"
-  secret_rotation_days  = 90
-}
+**Request from Platform Team**:
+1. Service principal for Azure access (Contributor role)
+2. Azure DevOps service connection using that service principal
+3. Store credentials in Key Vault
 
-# Store secret in Key Vault
-resource "azurerm_key_vault_secret" "sp_secret" {
-  name         = "myapp-sp-secret"
-  value        = module.azure_sp.client_secret
-  key_vault_id = var.key_vault_id
-}
-
-# Create Azure DevOps service connection
-module "azdo_connection" {
-  source = "../../azuredevops/service-connection-subscription/buildingblock"
-  
-  azure_devops_organization_url = var.azdo_org_url
-  key_vault_name                = var.key_vault_name
-  resource_group_name           = var.resource_group_name
-  
-  project_id              = var.azdo_project_id
-  service_connection_name = "Azure-Production"
-  azure_subscription_id   = var.azure_subscription_id
-  service_principal_id    = module.azure_sp.service_principal_id
-  service_principal_key   = module.azure_sp.client_secret
-  azure_tenant_id         = module.azure_sp.tenant_id
-}
-```
+**Your Setup**:
+1. Receive service principal credentials
+2. Configure Azure DevOps service connection (or verify Platform Team configuration)
+3. Use service connection in pipelines (see Azure DevOps Service Connection documentation)
 
 ### Multi-Environment Setup
 
-```hcl
-# Development
-module "dev_sp" {
-  source = "./buildingblock"
-  
-  display_name          = "myapp-dev-sp"
-  azure_subscription_id = var.dev_subscription_id
-  azure_role            = "Contributor"
-  secret_rotation_days  = 180
-}
+**Request separate service principals per environment**:
+- **Development**: `myapp-dev-sp` with Contributor role, 180-day rotation
+- **Staging**: `myapp-staging-sp` with Contributor role, 90-day rotation
+- **Production**: `myapp-prod-sp` with Contributor role, 60-day rotation
 
-# Staging
-module "staging_sp" {
-  source = "./buildingblock"
-  
-  display_name          = "myapp-staging-sp"
-  azure_subscription_id = var.staging_subscription_id
-  azure_role            = "Contributor"
-  secret_rotation_days  = 90
-}
-
-# Production
-module "prod_sp" {
-  source = "./buildingblock"
-  
-  display_name          = "myapp-prod-sp"
-  azure_subscription_id = var.prod_subscription_id
-  azure_role            = "Contributor"
-  secret_rotation_days  = 60
-}
-```
+**Benefits**:
+- Isolated credentials per environment
+- Different rotation schedules based on risk
+- Easier to revoke access to specific environments
+- Better audit trail
 
 ## 📚 Related Documentation
 

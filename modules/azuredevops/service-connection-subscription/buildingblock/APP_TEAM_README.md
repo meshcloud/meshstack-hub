@@ -1,92 +1,33 @@
 # Azure DevOps Service Connection (Subscription)
 
-Connect your Azure DevOps pipelines to Azure subscriptions to deploy and manage cloud resources automatically.
+This building block connects your Azure DevOps pipelines to Azure subscriptions, enabling automated deployment and management of cloud resources. Service connections are configured via meshStack with secure authentication using service principals.
 
 ## 🚀 Usage Examples
 
-### Basic Service Connection
+- A development team configures a service connection to **automatically deploy applications** to their Azure subscription via CI/CD pipelines.
+- A DevOps engineer creates separate service connections for **development, staging, and production** environments with appropriate permissions.
+- A team sets up a read-only service connection for **monitoring and compliance** pipelines that validate infrastructure without modifying it.
 
-```hcl
-module "azure_prod_connection" {
-  source = "./buildingblock"
+## 🔄 Shared Responsibility
 
-  azure_devops_organization_url = "https://dev.azure.com/myorg"
-  key_vault_name                = "kv-azdo-prod"
-  resource_group_name           = "rg-azdo-prod"
-
-  project_id              = "12345678-1234-1234-1234-123456789012"
-  service_connection_name = "Azure-Production"
-  azure_subscription_id   = "87654321-4321-4321-4321-210987654321"
-  service_principal_id    = "11111111-1111-1111-1111-111111111111"
-  service_principal_key   = var.service_principal_secret
-  azure_tenant_id         = "22222222-2222-2222-2222-222222222222"
-}
-```
-
-### Read-Only Connection
-
-For monitoring or compliance pipelines that don't need write access, use a service principal with Reader role:
-
-```hcl
-module "azure_readonly" {
-  source = "./buildingblock"
-
-  azure_devops_organization_url = "https://dev.azure.com/myorg"
-  key_vault_name                = "kv-azdo-prod"
-  resource_group_name           = "rg-azdo-prod"
-
-  project_id              = "12345678-1234-1234-1234-123456789012"
-  service_connection_name = "Azure-ReadOnly"
-  azure_subscription_id   = "87654321-4321-4321-4321-210987654321"
-  service_principal_id    = "33333333-3333-3333-3333-333333333333"  # SP with Reader role
-  service_principal_key   = var.readonly_sp_secret
-  azure_tenant_id         = "22222222-2222-2222-2222-222222222222"
-  description             = "Read-only access for monitoring pipelines"
-}
-```
-
-### Development Environment (Auto-Authorized)
-
-```hcl
-module "azure_dev" {
-  source = "./buildingblock"
-
-  azure_devops_organization_url = "https://dev.azure.com/myorg"
-  key_vault_name                = "kv-azdo-prod"
-  resource_group_name           = "rg-azdo-prod"
-
-  project_id              = "12345678-1234-1234-1234-123456789012"
-  service_connection_name = "Azure-Development"
-  azure_subscription_id   = "11111111-1111-1111-1111-111111111111"
-  service_principal_id    = "44444444-4444-4444-4444-444444444444"
-  service_principal_key   = var.dev_sp_secret
-  azure_tenant_id         = "22222222-2222-2222-2222-222222222222"
-  authorize_all_pipelines = true
-}
-```
-
-## 🔄 Shared Responsibility Matrix
-
-| Task | Platform Team | App Team |
-|------|--------------|----------|
-| Deploy backplane infrastructure | ✅ | ❌ |
-| Store Azure DevOps PAT in Key Vault | ✅ | ❌ |
+| Responsibility | Platform Team | Application Team |
+|----------------|---------------|------------------|
 | Create Azure DevOps project | ✅ | ❌ |
 | Create service principal for Azure access | ✅ | ❌ |
 | Assign Azure roles to service principal | ✅ | ❌ |
-| Create service connection (via Terraform) | ✅ | ❌ |
+| Create service connection | ✅ | ❌ |
 | Provide service principal credentials | ✅ | ❌ |
-| Authorize pipelines to use connection | ⚠️ (If manual) | ⚠️ (If manual) |
+| Authorize pipelines to use connection | ⚠️ | ⚠️ |
 | Use service connection in pipelines | ❌ | ✅ |
 | Deploy Azure resources via pipelines | ❌ | ✅ |
-| Monitor service principal permissions | ✅ | ❌ |
-| Rotate service principal credentials | ✅ | ❌ |
+| Monitor deployments | ❌ | ✅ |
+| Request credential rotation | ❌ | ✅ |
 
 ## 💡 Best Practices
 
 ### Service Connection Naming
 
-**Why**: Clear names help identify environment and purpose instantly.
+**Why**: Clear names help identify environment and purpose instantly in pipeline YAML.
 
 **Recommended Patterns**:
 - Include cloud provider: `Azure-Production`
@@ -97,89 +38,76 @@ module "azure_dev" {
 - ✅ `Azure-Production`
 - ✅ `Azure-Dev-Subscription`
 - ✅ `Azure-Shared-Services`
+- ✅ `Azure-ReadOnly-Monitoring`
 - ❌ `connection1`
 - ❌ `my-connection`
 
-### Role Selection
+### Authorization Strategy
 
-**Why**: Follow least privilege principle to minimize security risks.
+**Manual Authorization** (Recommended for Production):
+- Explicit approval required before pipelines can use the connection
+- More secure - prevents unauthorized access
+- Best for production environments and sensitive subscriptions
+- Compliance-friendly
 
-**Note**: The service principal's role must be assigned outside this module (typically by the Platform Team).
+**Automatic Authorization** (Development/Testing):
+- All pipelines can immediately use the connection
+- Convenient for development workflows
+- Less secure but faster to use
+- Best for dev/test environments only
 
-**When to Request Each Role**:
+### Service Principal Roles
 
-**Reader**:
+The service principal's role determines what pipelines can do in Azure. The Platform Team assigns these roles outside this module.
+
+**Common Role Assignments**:
+
+**Reader** (Read-Only):
+- View resources and configuration
 - Monitoring and reporting pipelines
 - Compliance checking
 - Read-only validation tasks
 
-**Contributor** (Recommended):
-- Deploying applications
-- Managing resources
+**Contributor** (Recommended for Deployments):
+- Deploy applications
+- Manage most resources (VMs, storage, networking)
+- Cannot modify role assignments or permissions
 - Standard CI/CD operations
-- Cannot modify role assignments
 
 **Owner** (Use Sparingly):
+- Full subscription control
+- Can manage role assignments
 - Infrastructure as Code managing RBAC
-- Creating additional service principals
-- Full subscription management
-- ⚠️ Only use when absolutely necessary
-
-### Authorization Strategy
-
-**Manual Authorization** (`authorize_all_pipelines = false`):
-- ✅ Production environments
-- ✅ Sensitive subscriptions
-- ✅ Compliance requirements
-- Explicit pipeline approval required
-
-**Automatic Authorization** (`authorize_all_pipelines = true`):
-- ✅ Development environments
-- ✅ Testing/sandbox subscriptions
-- ✅ Internal tools
-- ⚠️ Less secure but more convenient
+- Only use when absolutely necessary
 
 ### Multi-Environment Setup
 
-**Pattern**: Separate service connections per environment with dedicated service principals
+**Best Practice**: Create separate service connections per environment, each using dedicated service principals with environment-appropriate permissions.
 
-```hcl
-module "azure_dev" {
-  source                  = "./buildingblock"
-  service_connection_name = "Azure-Development"
-  azure_subscription_id   = var.dev_subscription_id
-  service_principal_id    = var.dev_sp_id
-  service_principal_key   = var.dev_sp_secret
-  azure_tenant_id         = var.azure_tenant_id
-  authorize_all_pipelines = true
-}
+**Example Structure**:
+- `Azure-Development`: Auto-authorized, Contributor role, dev subscription
+- `Azure-Staging`: Manual authorization, Contributor role, staging subscription
+- `Azure-Production`: Manual authorization, Contributor role, production subscription
 
-module "azure_staging" {
-  source                = "./buildingblock"
-  service_connection_name = "Azure-Staging"
-  azure_subscription_id   = var.staging_subscription_id
-  service_principal_id    = var.staging_sp_id
-  service_principal_key   = var.staging_sp_secret
-  azure_tenant_id         = var.azure_tenant_id
-}
+### Security Recommendations
 
-module "azure_prod" {
-  source                  = "./buildingblock"
-  service_connection_name = "Azure-Production"
-  azure_subscription_id   = var.prod_subscription_id
-  service_principal_id    = var.prod_sp_id
-  service_principal_key   = var.prod_sp_secret
-  azure_tenant_id         = var.azure_tenant_id
-  authorize_all_pipelines = false
-}
-```
+**Do**:
+- Use manual authorization for production environments
+- Request minimal required permissions (Reader when possible, Contributor when needed)
+- Coordinate with Platform Team for credential rotation
+- Monitor pipeline activity logs regularly
 
-## 📝 Using Service Connection in Your Pipeline
+**Don't**:
+- Share service principal credentials outside of pipelines
+- Store credentials in pipeline YAML or code repositories
+- Use Owner role unless absolutely necessary
+- Auto-authorize production service connections
+
+## 📝 Using Service Connection in Pipelines
 
 ### Azure CLI Task
 
 ```yaml
-# azure-pipelines.yml
 trigger:
   - main
 
@@ -190,12 +118,13 @@ steps:
   - task: AzureCLI@2
     displayName: 'Deploy Resources'
     inputs:
-      azureSubscription: 'Azure-Production'  # Your service connection name
+      azureSubscription: 'Azure-Production'
       scriptType: 'bash'
       scriptLocation: 'inlineScript'
       inlineScript: |
         az group create --name myResourceGroup --location eastus
-        az storage account create --name mystorageaccount --resource-group myResourceGroup --sku Standard_LRS
+        az storage account create --name mystorageaccount \
+          --resource-group myResourceGroup --sku Standard_LRS
 ```
 
 ### Azure PowerShell Task
@@ -257,23 +186,22 @@ steps:
 
 ### Manual Authorization (Recommended for Production)
 
-If `authorize_all_pipelines = false`:
+If manual authorization is configured:
 
 1. Run your pipeline - it will pause for authorization
-2. Azure DevOps will prompt: "This pipeline needs permission to access a resource"
+2. Azure DevOps prompts: "This pipeline needs permission to access a resource"
 3. Click **View** and then **Permit**
 4. Pipeline continues execution
 
-**First-Time Setup**:
-```yaml
-# Pipeline will fail first time with authorization required
-# Go to: Project Settings → Service connections → Your connection
-# Click "Security" → Authorize specific pipelines
-```
+**To authorize permanently**:
+1. Go to **Project Settings** → **Service connections**
+2. Select your service connection
+3. Click **Security** → Authorize specific pipelines
+4. Select pipelines that should always have access
 
 ### Automatic Authorization
 
-If `authorize_all_pipelines = true`:
+If automatic authorization is configured:
 - No action needed
 - All pipelines can immediately use the connection
 
@@ -285,11 +213,13 @@ After creation, verify in Azure DevOps:
 2. Go to **Service connections**
 3. Find your service connection name
 4. Verify:
-   - ✅ Connection status is green
-   - ✅ Subscription name matches
+   - ✅ Connection status is green (verified)
+   - ✅ Subscription name matches expected
    - ✅ Service principal is valid
 
 ### Testing the Connection
+
+Create a simple test pipeline:
 
 ```yaml
 # test-connection.yml
@@ -310,14 +240,15 @@ steps:
         az group list --output table
 ```
 
+Run manually to verify connectivity and permissions.
+
 ## ⚠️ Important Notes
 
-- Service principal must be created and configured outside this module
-- Service principal credentials are provided as input variables
-- Changing `service_connection_name` requires recreating the connection
-- Deleting the Terraform resource removes the service connection (but not the service principal)
-- Service principal permissions are managed separately from this module
+- Service principal must be created and configured by Platform Team
+- Service connection name is used in pipeline YAML (case-sensitive)
+- Service principal permissions are managed outside this module
 - Manual authorization is more secure for production environments
+- Credential rotation must be coordinated with Platform Team
 
 ## 🆘 Troubleshooting
 
@@ -326,51 +257,72 @@ steps:
 **Cause**: Service connection name mismatch or not authorized
 
 **Solution**:
-1. Verify service connection name matches exactly (case-sensitive)
+1. Verify service connection name matches exactly in YAML (case-sensitive)
 2. Check if manual authorization is required
-3. Ensure connection exists in project
+3. Ensure connection exists in project settings
 
 ### "Insufficient permissions" error
 
-**Cause**: Service principal lacks required permissions
+**Cause**: Service principal lacks required permissions for the operation
 
 **Solution**:
 1. Contact Platform Team to verify service principal role assignment
-2. Verify role assignment in Azure portal:
-   ```bash
-   az role assignment list --assignee <service_principal_id> --subscription <subscription_id>
-   ```
-3. Request appropriate role for the operation (Contributor or Owner)
+2. Verify required role for your operation:
+   - Resource creation/modification: Contributor
+   - Read-only operations: Reader
+   - RBAC modifications: Owner
+3. Check scope of role assignment (subscription/resource group level)
 
 ### Service connection shows as invalid
 
 **Cause**: Service principal credentials expired or deleted
 
-**Solution**: Contact Platform Team to verify service principal status and rotate credentials if needed
+**Solution**:
+1. Contact Platform Team to verify service principal status
+2. Request credential rotation if needed
+3. Platform Team will update the service connection after rotation
 
 ### Cannot deploy to resource group
 
 **Cause**: Service principal has Reader role (read-only)
 
-**Solution**: Contact Platform Team to assign Contributor role to the service principal
+**Solution**: Contact Platform Team to assign Contributor role to the service principal at the appropriate scope
 
 ### Pipeline authorization keeps prompting
 
-**Cause**: Manual authorization required each time
+**Cause**: Manual authorization required for each pipeline run
 
-**Solution**: Set `authorize_all_pipelines = true` or authorize pipeline permanently
+**Solution**:
+1. Authorize the pipeline permanently (see "Authorizing Pipelines" section above)
+2. Or request automatic authorization if appropriate for the environment
+
+### "Subscription not found" error
+
+**Cause**: Service principal doesn't have access to the subscription
+
+**Solution**: Contact Platform Team to verify:
+- Service principal exists
+- Service principal has role assignment on the subscription
+- Subscription ID is correct
 
 ## 🔄 Credential Rotation
 
-Service principal secrets must be rotated by the Platform Team outside this module.
+Service principal credentials should be rotated regularly (recommended every 6-12 months) by the Platform Team.
 
-**To request rotation**: Contact Platform Team with:
-- Service principal ID
-- Subscription ID
-- Environment name
-- Reason for rotation
+**To request rotation**:
+1. Contact Platform Team with:
+   - Service connection name
+   - Azure subscription ID
+   - Environment name
+   - Reason for rotation (scheduled/security incident)
 
-**After rotation**: Platform Team will update the secret and re-run Terraform to update the service connection.
+2. Platform Team will:
+   - Generate new service principal credentials
+   - Update service connection configuration
+   - Verify connection still works
+   - Notify you when complete
+
+**No downtime**: Credential rotation is performed seamlessly without pipeline interruption.
 
 ## 📚 Related Documentation
 
