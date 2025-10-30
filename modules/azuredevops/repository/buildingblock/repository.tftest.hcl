@@ -4,7 +4,7 @@ variables {
   resource_group_name           = "rg-devops"
   pat_secret_name               = "ado-pat"
   project_id                    = "eece6ccc-c821-46a1-9214-80df6da9e13f"
-  repository_name                = "test-repo"
+  repository_name               = "test-repo"
 }
 
 run "valid_repository_configuration" {
@@ -70,7 +70,7 @@ run "uninitialized_repository" {
   command = plan
 
   variables {
-    init_type       = "Uninitialized"
+    init_type = "Uninitialized"
   }
 
   assert {
@@ -97,7 +97,7 @@ run "invalid_init_type" {
   command = plan
 
   variables {
-    init_type       = "Invalid"
+    init_type = "Invalid"
   }
 
   expect_failures = [

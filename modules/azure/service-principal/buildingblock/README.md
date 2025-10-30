@@ -250,10 +250,11 @@ No modules.
 |------|-------------|------|---------|:--------:|
 | <a name="input_azure_role"></a> [azure\_role](#input\_azure\_role) | Azure RBAC role to assign to the service principal on the subscription | `string` | `"Contributor"` | no |
 | <a name="input_azure_subscription_id"></a> [azure\_subscription\_id](#input\_azure\_subscription\_id) | Azure Subscription ID where role assignments will be created | `string` | n/a | yes |
+| <a name="input_create_client_secret"></a> [create\_client\_secret](#input\_create\_client\_secret) | Whether to create a client secret for the service principal (set to false for workload identity federation) | `bool` | `true` | no |
 | <a name="input_description"></a> [description](#input\_description) | Description for the Entra ID application | `string` | `"Service principal managed by Terraform"` | no |
 | <a name="input_display_name"></a> [display\_name](#input\_display\_name) | Display name for the Entra ID application and service principal | `string` | n/a | yes |
 | <a name="input_owners"></a> [owners](#input\_owners) | List of object IDs to set as owners of the application (defaults to current user) | `list(string)` | `[]` | no |
-| <a name="input_secret_rotation_days"></a> [secret\_rotation\_days](#input\_secret\_rotation\_days) | Number of days before the service principal secret expires | `number` | `90` | no |
+| <a name="input_secret_rotation_days"></a> [secret\_rotation\_days](#input\_secret\_rotation\_days) | Number of days before the service principal secret expires (only used if create\_client\_secret is true) | `number` | `90` | no |
 
 ## Outputs
 
@@ -261,9 +262,10 @@ No modules.
 |------|-------------|
 | <a name="output_application_id"></a> [application\_id](#output\_application\_id) | Application (client) ID of the Entra ID application |
 | <a name="output_application_object_id"></a> [application\_object\_id](#output\_application\_object\_id) | Object ID of the Entra ID application |
+| <a name="output_authentication_method"></a> [authentication\_method](#output\_authentication\_method) | Authentication method for the service principal |
 | <a name="output_azure_role"></a> [azure\_role](#output\_azure\_role) | Azure role assigned to the service principal |
-| <a name="output_client_secret"></a> [client\_secret](#output\_client\_secret) | Client secret for the service principal |
-| <a name="output_secret_expiration_date"></a> [secret\_expiration\_date](#output\_secret\_expiration\_date) | Date when the service principal secret will expire |
+| <a name="output_client_secret"></a> [client\_secret](#output\_client\_secret) | Client secret for the service principal (null if create\_client\_secret is false) |
+| <a name="output_secret_expiration_date"></a> [secret\_expiration\_date](#output\_secret\_expiration\_date) | Date when the service principal secret will expire (null if create\_client\_secret is false) |
 | <a name="output_service_principal_id"></a> [service\_principal\_id](#output\_service\_principal\_id) | Client ID of the service principal (same as application\_id) |
 | <a name="output_service_principal_object_id"></a> [service\_principal\_object\_id](#output\_service\_principal\_object\_id) | Object ID of the service principal |
 | <a name="output_subscription_id"></a> [subscription\_id](#output\_subscription\_id) | Azure Subscription ID where role assignment was created |
