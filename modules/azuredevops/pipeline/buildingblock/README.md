@@ -231,6 +231,7 @@ No modules.
 | <a name="output_pipeline_id"></a> [pipeline\_id](#output\_pipeline\_id) | ID of the created pipeline |
 | <a name="output_pipeline_name"></a> [pipeline\_name](#output\_pipeline\_name) | Name of the created pipeline |
 | <a name="output_pipeline_revision"></a> [pipeline\_revision](#output\_pipeline\_revision) | Revision number of the pipeline |
+| <a name="output_pipeline_url"></a> [pipeline\_url](#output\_pipeline\_url) | Deep link URL to the pipeline in Azure DevOps |
 | <a name="output_project_id"></a> [project\_id](#output\_project\_id) | Project ID where the pipeline was created |
 | <a name="output_repository_id"></a> [repository\_id](#output\_repository\_id) | Repository ID linked to the pipeline |
 | <a name="output_yaml_path"></a> [yaml\_path](#output\_yaml\_path) | Path to the YAML pipeline definition |

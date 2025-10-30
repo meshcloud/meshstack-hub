@@ -120,7 +120,7 @@ az login --service-principal \
 ```hcl
 provider "azurerm" {
   features {}
-  
+
   client_id       = var.service_principal_id
   client_secret   = var.client_secret
   tenant_id       = var.tenant_id
