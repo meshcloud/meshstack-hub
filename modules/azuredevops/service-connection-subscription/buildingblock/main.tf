@@ -13,13 +13,13 @@ data "azurerm_subscription" "target" {
 }
 
 resource "azuredevops_serviceendpoint_azurerm" "main" {
-  project_id            = var.project_id
-  service_endpoint_name = var.service_connection_name
-  description           = var.description
+  project_id                             = var.project_id
+  service_endpoint_name                  = var.service_connection_name
+  description                            = var.description
+  service_endpoint_authentication_scheme = "WorkloadIdentityFederation"
 
   credentials {
-    serviceprincipalid  = var.service_principal_id
-    serviceprincipalkey = var.service_principal_key
+    serviceprincipalid = var.service_principal_id
   }
 
   azurerm_spn_tenantid      = var.azure_tenant_id

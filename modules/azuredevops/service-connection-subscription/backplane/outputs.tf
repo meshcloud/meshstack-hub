@@ -32,3 +32,13 @@ output "azure_devops_organization_url" {
   description = "Azure DevOps organization URL"
   value       = var.azure_devops_organization_url
 }
+
+output "federated_credential_issuer" {
+  description = "Issuer URL for workload identity federation"
+  value       = "https://vstoken.dev.azure.com/${var.azure_devops_organization_id}"
+}
+
+output "federated_credential_subject" {
+  description = "Subject identifier for workload identity federation"
+  value       = "sc://${var.azure_devops_organization_url}/${var.azure_devops_project_name}/${var.service_connection_name}"
+}

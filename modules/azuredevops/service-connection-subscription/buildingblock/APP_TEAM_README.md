@@ -1,6 +1,6 @@
 # Azure DevOps Service Connection (Subscription)
 
-This building block connects your Azure DevOps pipelines to Azure subscriptions, enabling automated deployment and management of cloud resources. Service connections are configured via meshStack with secure authentication using service principals.
+This building block connects your Azure DevOps pipelines to Azure subscriptions, enabling automated deployment and management of cloud resources. Service connections are configured via meshStack with secure authentication using workload identity federation (OIDC) - no secrets required.
 
 ## 🚀 Usage Examples
 
@@ -21,7 +21,7 @@ This building block connects your Azure DevOps pipelines to Azure subscriptions,
 | Use service connection in pipelines | ❌ | ✅ |
 | Deploy Azure resources via pipelines | ❌ | ✅ |
 | Monitor deployments | ❌ | ✅ |
-| Request credential rotation | ❌ | ✅ |
+| Manage federated credentials | ✅ | ❌ |
 
 ## 💡 Best Practices
 
@@ -89,17 +89,30 @@ The service principal's role determines what pipelines can do in Azure. The Plat
 - `Azure-Staging`: Manual authorization, Contributor role, staging subscription
 - `Azure-Production`: Manual authorization, Contributor role, production subscription
 
+### Authentication Method
+
+This service connection uses **Workload Identity Federation (OIDC)** exclusively:
+
+**Key Benefits**:
+- **No secrets required** - uses OpenID Connect tokens instead of passwords
+- **Automatic token rotation** - short-lived tokens are refreshed automatically
+- **Enhanced security** - no long-lived credentials that can be compromised
+- **Compliance-friendly** - meets modern security standards
+- **Zero maintenance** - no credential rotation needed
+
+**How it works**: Azure DevOps requests a token from Azure AD, which Azure validates using the federated identity credential configured by the Platform Team. The token is short-lived and automatically refreshed.
+
 ### Security Recommendations
 
 **Do**:
 - Use manual authorization for production environments
 - Request minimal required permissions (Reader when possible, Contributor when needed)
-- Coordinate with Platform Team for credential rotation
 - Monitor pipeline activity logs regularly
+- Leverage workload identity federation's automatic token rotation
 
 **Don't**:
-- Share service principal credentials outside of pipelines
-- Store credentials in pipeline YAML or code repositories
+- Try to manage service principal credentials (they don't exist with OIDC!)
+- Store any credentials in pipeline YAML or code repositories
 - Use Owner role unless absolutely necessary
 - Auto-authorize production service connections
 
@@ -248,7 +261,7 @@ Run manually to verify connectivity and permissions.
 - Service connection name is used in pipeline YAML (case-sensitive)
 - Service principal permissions are managed outside this module
 - Manual authorization is more secure for production environments
-- Credential rotation must be coordinated with Platform Team
+- No credential rotation required - workload identity federation handles authentication automatically
 
 ## 🆘 Troubleshooting
 
@@ -275,12 +288,14 @@ Run manually to verify connectivity and permissions.
 
 ### Service connection shows as invalid
 
-**Cause**: Service principal credentials expired or deleted
+**Cause**: Service principal or federated credential configuration issue
 
 **Solution**:
-1. Contact Platform Team to verify service principal status
-2. Request credential rotation if needed
-3. Platform Team will update the service connection after rotation
+1. Contact Platform Team to verify:
+   - Service principal exists and is active
+   - Federated identity credential is properly configured
+   - Azure DevOps organization ID matches the issuer
+2. Platform Team will investigate and fix the federated credential configuration
 
 ### Cannot deploy to resource group
 
@@ -305,24 +320,30 @@ Run manually to verify connectivity and permissions.
 - Service principal has role assignment on the subscription
 - Subscription ID is correct
 
-## 🔄 Credential Rotation
+## 🔄 Credential Management
 
-Service principal credentials should be rotated regularly (recommended every 6-12 months) by the Platform Team.
+### No Credential Rotation Required!
 
-**To request rotation**:
-1. Contact Platform Team with:
-   - Service connection name
-   - Azure subscription ID
-   - Environment name
-   - Reason for rotation (scheduled/security incident)
+This service connection uses **Workload Identity Federation (OIDC)**, which means:
 
-2. Platform Team will:
-   - Generate new service principal credentials
-   - Update service connection configuration
-   - Verify connection still works
-   - Notify you when complete
+✅ **No secrets to manage** - authentication uses short-lived tokens
+✅ **Automatic token rotation** - tokens expire quickly and are refreshed automatically
+✅ **Zero maintenance** - no manual credential rotation needed
+✅ **Better security** - no long-lived credentials that can leak or be compromised
 
-**No downtime**: Credential rotation is performed seamlessly without pipeline interruption.
+### What This Means for You
+
+**You don't need to**:
+- Request credential rotation
+- Worry about expiring passwords or secrets
+- Schedule maintenance windows for credential updates
+- Update pipeline configurations for credential changes
+
+**The Platform Team manages**:
+- Service principal configuration
+- Federated identity credential setup
+- Azure role assignments
+- Trust relationship between Azure DevOps and Azure AD
 
 ## 📚 Related Documentation
 

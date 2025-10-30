@@ -29,3 +29,18 @@ variable "scope" {
   description = "Azure scope for role definitions (subscription or management group)"
   type        = string
 }
+
+variable "azure_devops_organization_id" {
+  description = "Azure DevOps organization ID (GUID) for workload identity federation"
+  type        = string
+}
+
+variable "azure_devops_project_name" {
+  description = "Azure DevOps project name for workload identity federation"
+  type        = string
+}
+
+variable "service_connection_name" {
+  description = "Azure DevOps service connection name for workload identity federation"
+  type        = string
+}

@@ -8,6 +8,7 @@ This module provisions the infrastructure required to support the Azure DevOps S
 - **Azure Key Vault**: Stores Azure DevOps Personal Access Token (PAT)
 - **Custom Role Definition**: Minimal permissions for reading Key Vault secrets
 - **Role Assignment**: Grants the service principal access to Key Vault
+- **Federated Identity Credential** (optional): For workload identity federation (OIDC) authentication
 
 ## Prerequisites
 
@@ -19,6 +20,8 @@ This module provisions the infrastructure required to support the Azure DevOps S
 - Azure DevOps PAT with `Service Connections (Read, Query & Manage)` scope
 
 ## Usage
+
+### Basic Backplane (Service Principal Authentication)
 
 ```hcl
 module "azuredevops_service_connection_backplane" {
@@ -33,6 +36,25 @@ module "azuredevops_service_connection_backplane" {
 }
 ```
 
+### Backplane with Workload Identity Federation
+
+```hcl
+module "azuredevops_service_connection_backplane" {
+  source = "./backplane"
+
+  azure_devops_organization_url      = "https://dev.azure.com/myorg"
+  service_principal_name             = "azuredevops-serviceconn-terraform"
+  key_vault_name                     = "kv-azdo-sc-prod"
+  resource_group_name                = "rg-azdo-sc-prod"
+  location                           = "West Europe"
+  scope                              = "/subscriptions/00000000-0000-0000-0000-000000000000"
+  enable_workload_identity_federation = true
+  azure_devops_organization_id       = "33333333-3333-3333-3333-333333333333"
+  azure_devops_project_name          = "MyProject"
+  service_connection_name            = "Azure-Production-Federated"
+}
+```
+
 ## Post-Deployment Steps
 
 1. Create an Azure DevOps PAT with `Service Connections (Read, Query & Manage)` scope
@@ -41,12 +63,24 @@ module "azuredevops_service_connection_backplane" {
    az keyvault secret set --vault-name <key_vault_name> --name azdo-pat --value <your_pat>
    ```
 
+## Workload Identity Federation
+
+When `enable_workload_identity_federation = true`, this module configures:
+- **Issuer**: `https://vstoken.dev.azure.com/{organization_id}`
+- **Subject**: `sc://{org_url}/{project}/{connection_name}`
+- **Audience**: `api://AzureADTokenExchange`
+
+This eliminates the need for client secrets by using OIDC token exchange.
+
 ## Outputs
 
 - `service_principal_client_id` - For authentication
 - `key_vault_name` - Where to store the PAT
 - `key_vault_uri` - For programmatic access
 - `azure_devops_organization_url` - Organization URL passed through
+- `workload_identity_federation_enabled` - Whether federation is enabled
+- `federated_credential_issuer` - Issuer URL for federation
+- `federated_credential_subject` - Subject identifier for federation
 
 ## Security Considerations
 

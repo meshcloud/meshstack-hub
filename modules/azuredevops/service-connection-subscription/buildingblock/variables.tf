@@ -45,12 +45,6 @@ variable "service_principal_id" {
   type        = string
 }
 
-variable "service_principal_key" {
-  description = "Client secret of the existing Azure AD service principal"
-  type        = string
-  sensitive   = true
-}
-
 variable "azure_tenant_id" {
   description = "Azure AD Tenant ID"
   type        = string

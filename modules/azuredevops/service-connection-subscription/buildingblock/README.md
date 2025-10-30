@@ -17,14 +17,14 @@ Creates and manages Azure subscription service connections in Azure DevOps proje
 - Azure subscription ID to connect to
 - Azure DevOps PAT stored in Key Vault with `Service Connections (Read, Query & Manage)` scope
 - Existing Azure AD service principal with appropriate permissions on the target subscription
-- Service principal client ID and secret
+- Service principal with federated identity credential configured for Azure DevOps
 
 ## Features
 
-- Configures Azure DevOps service connection using existing service principal credentials
+- Configures Azure DevOps service connection using workload identity federation (OIDC)
+- No client secrets required - uses secure token-based authentication
 - Optional automatic authorization for all pipelines
-- Supports workload identity integration
-- Secure credential management through Azure DevOps
+- Enhanced security through short-lived tokens
 
 ## Usage
 
@@ -43,7 +43,6 @@ module "azuredevops_service_connection" {
   service_connection_name = "Azure-Production"
   azure_subscription_id   = "87654321-4321-4321-4321-210987654321"
   service_principal_id    = "11111111-1111-1111-1111-111111111111"
-  service_principal_key   = var.service_principal_secret
   azure_tenant_id         = "22222222-2222-2222-2222-222222222222"
 }
 ```
@@ -58,24 +57,36 @@ module "authorized_service_connection" {
   key_vault_name                = "kv-azdo-sc-prod"
   resource_group_name           = "rg-azdo-sc-prod"
 
-  project_id                = "12345678-1234-1234-1234-123456789012"
-  service_connection_name   = "Azure-Dev"
-  azure_subscription_id     = "87654321-4321-4321-4321-210987654321"
-  service_principal_id      = "11111111-1111-1111-1111-111111111111"
-  service_principal_key     = var.service_principal_secret
-  azure_tenant_id           = "22222222-2222-2222-2222-222222222222"
-  authorize_all_pipelines   = true
-  description               = "Development environment service connection"
+  project_id              = "12345678-1234-1234-1234-123456789012"
+  service_connection_name = "Azure-Dev"
+  azure_subscription_id   = "87654321-4321-4321-4321-210987654321"
+  service_principal_id    = "11111111-1111-1111-1111-111111111111"
+  azure_tenant_id         = "22222222-2222-2222-2222-222222222222"
+  authorize_all_pipelines = true
+  description             = "Development environment service connection"
 }
 ```
 
-## Service Principal Requirements
+## Authentication Method
 
-This module uses an **existing** Azure AD service principal. The service principal must:
-1. Be created and configured outside this module (e.g., in the backplane or separately)
+This module exclusively uses **Workload Identity Federation (OIDC)** for enhanced security.
+
+### Requirements
+
+The service principal must:
+1. Be created and configured outside this module (typically in the backplane)
 2. Have appropriate role assignments on the target Azure subscription
-3. Have a valid client secret
-4. Be accessible via client ID and tenant ID
+3. Have a federated identity credential configured for Azure DevOps with:
+   - Issuer: `https://vstoken.dev.azure.com/{organization_id}` (GUID, not name)
+   - Subject: `sc://{org_name}/{project_name}/{connection_name}`
+   - Audience: `api://AzureADTokenExchange`
+
+### Benefits
+
+- **No client secrets** - eliminates secret management burden
+- **Automatic token rotation** - tokens are short-lived and rotated automatically
+- **Enhanced security** - no long-lived credentials to compromise
+- **Compliance-friendly** - meets security requirements without credential storage
 
 ## Pipeline Authorization
 
@@ -112,7 +123,6 @@ module "azure_connection" {
   service_connection_name = "Azure-Prod"
   azure_subscription_id   = "87654321-4321-4321-4321-210987654321"
   service_principal_id    = var.service_principal_id
-  service_principal_key   = var.service_principal_secret
   azure_tenant_id         = var.azure_tenant_id
 }
 ```
@@ -145,21 +155,26 @@ steps:
 - `service_principal_id` - Client ID of the service principal used
 - `azure_subscription_id` - Connected Azure subscription ID
 - `azure_subscription_name` - Connected Azure subscription name
+- `authentication_method` - Authentication method used (always "workload_identity_federation")
+- `authorized_all_pipelines` - Whether all pipelines are authorized to use this connection
+- `workload_identity_federation_issuer` - Issuer URL for workload identity federation (read from Azure DevOps)
+- `workload_identity_federation_subject` - Subject identifier for workload identity federation (read from Azure DevOps)
 
 ## Security Considerations
 
 - Service principal must be created and managed outside this module
-- Service principal credentials are stored securely in Azure DevOps
+- Workload identity federation uses short-lived tokens (no secrets stored)
 - Use least privilege principle when assigning roles to the service principal
 - Enable manual authorization for production service connections
-- Regularly review service principal permissions and rotate secrets
+- Regularly review service principal permissions
+- No credential rotation needed (tokens are automatically rotated)
 
 ## Limitations
 
-- Service connection uses service principal authentication (workload identity federation supported if configured in service principal)
 - Service principal must be created and managed separately
 - Changing service connection name requires recreation
-- Service principal secret rotation must be managed outside this module
+- Federated identity credential must be configured in the service principal (typically via backplane)
+- Only workload identity federation is supported (no client secret authentication)
 
 <!-- BEGIN_TF_DOCS -->
 ## Requirements
