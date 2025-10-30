@@ -104,36 +104,35 @@ This building block is for application teams that need a secure and reliable con
 
 ## Deployment Scenarios
 
-### Public ACR (Default)
-```hcl
-module "acr" {
-  source = "./buildingblock"
+### Scenario Matrix
 
-  acr_name            = "mycompanyacr"
-  resource_group_name = "acr-rg"
-  location            = "West Europe"
-  sku                 = "Standard"
-  admin_enabled       = false
+This building block supports 4 deployment scenarios based on your networking and security requirements:
 
-  # Optional: IP allowlist
-  allowed_ip_ranges = [
-    "203.0.113.0/24",  # Office network
-    "198.51.100.5/32"  # CI/CD runner
-  ]
+| # | Scenario | Private Endpoint | VNet Type | Hub Peering | Use Case |
+|---|----------|-----------------|-----------|-------------|----------|
+| **1** | **New VNet + Hub Peering** | ✅ | New (created) | ✅ Created | Isolated workload needing hub/on-prem access |
+| **2** | **Existing Shared VNet** | ✅ | Existing (shared) | ❌ Skipped | Multi-tenant with shared connectivity |
+| **3** | **Private Isolated** | ✅ | New or Existing | ❌ None | Secure workload, same-VNet access only |
+| **4** | **Completely Public** | ❌ | Not applicable | ❌ None | Dev/test, public CI/CD access |
 
-  tags = {
-    Environment = "Production"
-    CostCenter  = "Engineering"
-  }
-}
-```
+**Configuration Quick Reference:**
 
-### Private ACR with Hub Connectivity
+| Scenario | `private_endpoint_enabled` | `vnet_name` | `hub_vnet_name` |
+|----------|---------------------------|-------------|-----------------|
+| **1 - New VNet + Hub** | `true` | `null` | Set (creates peering) |
+| **2 - Existing Shared VNet** | `true` | Set (existing) | Omit/null (no peering) |
+| **3 - Private Isolated** | `true` | `null` or Set | `null` |
+| **4 - Public** | `false` | Any | Any |
+
+---
+
+### Scenario 1: New VNet + Hub Peering
+Ideal for isolated workloads that need connectivity to hub network and on-premises resources.
+
 ```hcl
 provider "azurerm" {
   alias           = "hub"
   subscription_id = "hub-subscription-id"
-  # hub credentials
 }
 
 module "acr" {
@@ -151,18 +150,17 @@ module "acr" {
   admin_enabled                 = false
   public_network_access_enabled = false
 
-  # Private endpoint settings
+  # Private endpoint - creates new VNet
   private_endpoint_enabled = true
   private_dns_zone_id      = "System"
   vnet_address_space       = "10.250.0.0/16"
   subnet_address_prefix    = "10.250.1.0/24"
 
-  # Hub connectivity
+  # Hub connectivity - peering created automatically
   hub_subscription_id     = "hub-subscription-id"
   hub_resource_group_name = "hub-network-rg"
   hub_vnet_name           = "hub-vnet"
 
-  # Retention policy
   retention_days       = 30
   trust_policy_enabled = true
 
@@ -171,6 +169,96 @@ module "acr" {
   }
 }
 ```
+
+### Scenario 2: Existing Shared Connectivity VNet
+Ideal for multi-tenant environments with a shared connectivity VNet already peered to hub.
+
+```hcl
+module "acr" {
+  source = "./buildingblock"
+
+  acr_name                      = "mycompanyacr"
+  resource_group_name           = "acr-rg"
+  location                      = "West Europe"
+  sku                           = "Premium"
+  admin_enabled                 = false
+  public_network_access_enabled = false
+
+  # Private endpoint in existing shared VNet
+  private_endpoint_enabled          = true
+  private_dns_zone_id               = "System"
+  vnet_name                         = "shared-connectivity-vnet"
+  existing_vnet_resource_group_name = "connectivity-rg"
+  subnet_name                       = "acr-subnet"
+
+  # No hub peering - VNet already connected to hub
+  # hub variables omitted
+
+  tags = {
+    Environment = "Production"
+  }
+}
+```
+
+### Scenario 3: Private Isolated (No Hub)
+Ideal for secure workloads that only need access within the same VNet (e.g., AKS in same VNet).
+
+```hcl
+module "acr" {
+  source = "./buildingblock"
+
+  acr_name                      = "mycompanyacr"
+  resource_group_name           = "acr-rg"
+  location                      = "West Europe"
+  sku                           = "Premium"
+  admin_enabled                 = false
+  public_network_access_enabled = false
+
+  # Private endpoint - new isolated VNet
+  private_endpoint_enabled = true
+  private_dns_zone_id      = "System"
+  vnet_address_space       = "10.250.0.0/16"
+  subnet_address_prefix    = "10.250.1.0/24"
+
+  # No hub connectivity
+  # hub variables omitted
+
+  tags = {
+    Environment = "Production"
+  }
+}
+```
+
+### Scenario 4: Completely Public ACR
+Ideal for development/test environments or public CI/CD pipelines.
+
+```hcl
+module "acr" {
+  source = "./buildingblock"
+
+  acr_name            = "mycompanyacr"
+  resource_group_name = "acr-rg"
+  location            = "West Europe"
+  sku                 = "Standard"  # Can use cheaper SKU
+  admin_enabled       = false
+  public_network_access_enabled = true
+
+  # No private endpoint
+  private_endpoint_enabled = false
+
+  # Optional: IP allowlist for security
+  allowed_ip_ranges = [
+    "203.0.113.0/24",  # Office network
+    "198.51.100.5/32"  # CI/CD runner
+  ]
+
+  tags = {
+    Environment = "Development"
+  }
+}
+```
+
+---
 
 ### Private ACR with AKS Integration
 ```hcl

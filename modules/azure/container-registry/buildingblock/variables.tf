@@ -123,6 +123,12 @@ variable "vnet_name" {
   default     = null
 }
 
+variable "existing_vnet_resource_group_name" {
+  type        = string
+  description = "Resource group name of the existing VNet. Only used when vnet_name is provided. Defaults to the ACR resource group if not specified."
+  default     = null
+}
+
 variable "vnet_address_space" {
   type        = string
   description = "Address space for the VNet (only used if vnet_name is not provided)"

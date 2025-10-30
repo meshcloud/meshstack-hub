@@ -24,7 +24,7 @@ resource "azurerm_virtual_network" "vnet" {
 data "azurerm_virtual_network" "existing_vnet" {
   count               = var.private_endpoint_enabled && var.vnet_name != null ? 1 : 0
   name                = var.vnet_name
-  resource_group_name = var.resource_group_name
+  resource_group_name = var.existing_vnet_resource_group_name != null ? var.existing_vnet_resource_group_name : var.resource_group_name
 }
 
 locals {
@@ -38,13 +38,15 @@ resource "azurerm_subnet" "pe_subnet" {
   resource_group_name  = azurerm_resource_group.acr.name
   virtual_network_name = local.vnet_name
   address_prefixes     = [var.subnet_address_prefix]
+
+  private_endpoint_network_policies = "NetworkSecurityGroupEnabled"
 }
 
 data "azurerm_subnet" "existing_subnet" {
   count                = var.private_endpoint_enabled && var.subnet_name != null ? 1 : 0
   name                 = var.subnet_name
   virtual_network_name = var.vnet_name
-  resource_group_name  = var.resource_group_name
+  resource_group_name  = var.existing_vnet_resource_group_name != null ? var.existing_vnet_resource_group_name : var.resource_group_name
 }
 
 locals {
@@ -153,7 +155,7 @@ data "azurerm_virtual_network" "hub_vnet" {
 }
 
 resource "azurerm_virtual_network_peering" "acr_to_hub" {
-  count                     = var.private_endpoint_enabled && var.hub_vnet_name != null ? 1 : 0
+  count                     = var.private_endpoint_enabled && var.vnet_name == null && var.hub_vnet_name != null ? 1 : 0
   name                      = "${var.acr_name}-to-hub"
   resource_group_name       = azurerm_resource_group.acr.name
   virtual_network_name      = local.vnet_name
@@ -166,7 +168,7 @@ resource "azurerm_virtual_network_peering" "acr_to_hub" {
 }
 
 resource "azurerm_virtual_network_peering" "hub_to_acr" {
-  count                     = var.private_endpoint_enabled && var.hub_vnet_name != null ? 1 : 0
+  count                     = var.private_endpoint_enabled && var.vnet_name == null && var.hub_vnet_name != null ? 1 : 0
   provider                  = azurerm.hub
   name                      = "hub-to-${var.acr_name}"
   resource_group_name       = data.azurerm_resource_group.hub_rg[0].name
