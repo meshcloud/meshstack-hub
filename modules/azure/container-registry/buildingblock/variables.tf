@@ -95,16 +95,6 @@ variable "trust_policy_enabled" {
   default     = false
 }
 
-variable "georeplications" {
-  type = list(object({
-    location                  = string
-    zone_redundancy_enabled   = bool
-    regional_endpoint_enabled = bool
-  }))
-  description = "List of geo-replication configurations (Premium SKU only)"
-  default     = []
-}
-
 variable "private_endpoint_enabled" {
   type        = bool
   description = "Enable private endpoint for ACR (Premium SKU required)"

@@ -32,7 +32,7 @@ output "resource_group_name" {
 
 output "private_endpoint_ip" {
   description = "Private IP address of the ACR private endpoint"
-  value       = var.private_endpoint_enabled ? azurerm_private_endpoint.acr_pe[0].private_service_connection[0].private_ip_address : null
+  value       = var.private_endpoint_enabled && var.sku == "Premium" ? azurerm_private_endpoint.acr_pe[0].private_service_connection[0].private_ip_address : null
 }
 
 output "vnet_id" {
@@ -47,5 +47,5 @@ output "subnet_id" {
 
 output "private_dns_zone_id" {
   description = "ID of the private DNS zone (when System-managed)"
-  value       = var.private_endpoint_enabled && var.private_dns_zone_id == "System" ? azurerm_private_dns_zone.acr_dns[0].id : null
+  value       = var.private_endpoint_enabled && var.sku == "Premium" && var.private_dns_zone_id == "System" ? azurerm_private_dns_zone.acr_dns[0].id : null
 }
