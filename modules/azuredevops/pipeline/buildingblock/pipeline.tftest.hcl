@@ -2,9 +2,9 @@ variables {
   azure_devops_organization_url = "https://dev.azure.com/meshcloud-prod"
   key_vault_name                = "ado-demo"
   resource_group_name           = "rg-devops"
-  pat_secret_name              = "ado-pat"
-      project_id    = "eece6ccc-c821-46a1-9214-80df6da9e13f"
-    repository_id = "e5612cf3-36f1-4db5-b9d4-6431704233f3"
+  pat_secret_name               = "ado-pat"
+  project_id                    = "eece6ccc-c821-46a1-9214-80df6da9e13f"
+  repository_id                 = "e5612cf3-36f1-4db5-b9d4-6431704233f3"
 }
 
 run "valid_pipeline_configuration" {

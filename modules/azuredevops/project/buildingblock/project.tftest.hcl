@@ -9,8 +9,8 @@ variables {
 run "valid_project_creation" {
   command = plan
   variables {
-    project_name         = "test-project"
-    project_description  = "Test project for validation"
+    project_name        = "test-project"
+    project_description = "Test project for validation"
     users = [
       {
         meshIdentifier = "likvid-tom-user"
@@ -44,7 +44,7 @@ run "user_role_assignment_validation" {
   command = plan
 
   variables {
-    project_name         = "test-project"
+    project_name = "test-project"
     users = [
       {
         meshIdentifier = "likvid-anna-user"
@@ -148,7 +148,7 @@ run "user_with_multiple_roles" {
     key_vault_name                = "ado-demo"
     resource_group_name           = "rg-devops"
     project_name                  = "test-project"
-        pat_secret_name              = "ado-pat"
+    pat_secret_name               = "ado-pat"
 
     users = [
       {
@@ -187,7 +187,7 @@ run "user_without_relevant_roles" {
     key_vault_name                = "ado-demo"
     resource_group_name           = "rg-devops"
     project_name                  = "test-project"
-    pat_secret_name              = "ado-pat"
+    pat_secret_name               = "ado-pat"
     users = [
       {
         meshIdentifier = "likvid-daniela-user"

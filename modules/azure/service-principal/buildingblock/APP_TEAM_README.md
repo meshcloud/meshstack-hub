@@ -217,14 +217,14 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-      
+
       - name: Azure Login with OIDC
         uses: azure/login@v1
         with:
           client-id: ${{ secrets.AZURE_CLIENT_ID }}
           tenant-id: ${{ secrets.AZURE_TENANT_ID }}
           subscription-id: ${{ secrets.AZURE_SUBSCRIPTION_ID }}
-      
+
       - name: Azure CLI commands
         run: |
           az account show
@@ -263,12 +263,12 @@ steps:
 ```hcl
 provider "azurerm" {
   features {}
-  
+
   use_oidc        = true
   client_id       = var.service_principal_id
   tenant_id       = var.tenant_id
   subscription_id = var.subscription_id
-  
+
   # OIDC token automatically provided by CI/CD platform
 }
 ```

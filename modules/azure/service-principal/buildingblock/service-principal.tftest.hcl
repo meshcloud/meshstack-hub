@@ -7,9 +7,9 @@ run "valid_contributor_service_principal" {
   command = plan
 
   variables {
-    display_name          = "test-sp-contributor"
-    azure_role            = "Contributor"
-    description           = "Test service principal with Contributor role"
+    display_name = "test-sp-contributor"
+    azure_role   = "Contributor"
+    description  = "Test service principal with Contributor role"
   }
 
   assert {
@@ -27,8 +27,8 @@ run "valid_reader_service_principal" {
   command = plan
 
   variables {
-    display_name          = "test-sp-reader"
-    azure_role            = "Reader"
+    display_name = "test-sp-reader"
+    azure_role   = "Reader"
   }
 
   assert {
@@ -41,8 +41,8 @@ run "valid_owner_service_principal" {
   command = plan
 
   variables {
-    display_name          = "test-sp-owner"
-    azure_role            = "Owner"
+    display_name = "test-sp-owner"
+    azure_role   = "Owner"
   }
 
   assert {
@@ -55,8 +55,8 @@ run "invalid_role_validation" {
   command = plan
 
   variables {
-    display_name          = "test-sp-invalid"
-    azure_role            = "CustomRole"
+    display_name = "test-sp-invalid"
+    azure_role   = "CustomRole"
   }
 
   expect_failures = [
@@ -68,9 +68,9 @@ run "custom_secret_rotation" {
   command = plan
 
   variables {
-    display_name          = "test-sp-rotation"
-    secret_rotation_days  = 180
-    create_client_secret  = true
+    display_name         = "test-sp-rotation"
+    secret_rotation_days = 180
+    create_client_secret = true
   }
 
   assert {
@@ -83,8 +83,8 @@ run "invalid_secret_rotation_too_short" {
   command = plan
 
   variables {
-    display_name          = "test-sp-short-rotation"
-    secret_rotation_days  = 15
+    display_name         = "test-sp-short-rotation"
+    secret_rotation_days = 15
   }
 
   expect_failures = [
@@ -96,8 +96,8 @@ run "invalid_secret_rotation_too_long" {
   command = plan
 
   variables {
-    display_name          = "test-sp-long-rotation"
-    secret_rotation_days  = 800
+    display_name         = "test-sp-long-rotation"
+    secret_rotation_days = 800
   }
 
   expect_failures = [
@@ -109,8 +109,8 @@ run "custom_description" {
   command = plan
 
   variables {
-    display_name          = "test-sp-description"
-    description           = "Custom service principal for CI/CD pipelines"
+    display_name = "test-sp-description"
+    description  = "Custom service principal for CI/CD pipelines"
   }
 
   assert {
@@ -123,9 +123,9 @@ run "service_principal_without_secret" {
   command = plan
 
   variables {
-    display_name          = "test-sp-oidc"
-    create_client_secret  = false
-    description           = "Service principal for OIDC authentication"
+    display_name         = "test-sp-oidc"
+    create_client_secret = false
+    description          = "Service principal for OIDC authentication"
   }
 
   assert {

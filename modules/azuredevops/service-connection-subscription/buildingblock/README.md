@@ -214,16 +214,18 @@ No modules.
 | <a name="input_resource_group_name"></a> [resource\_group\_name](#input\_resource\_group\_name) | Name of the resource group containing the Key Vault | `string` | n/a | yes |
 | <a name="input_service_connection_name"></a> [service\_connection\_name](#input\_service\_connection\_name) | Name of the service connection to create | `string` | n/a | yes |
 | <a name="input_service_principal_id"></a> [service\_principal\_id](#input\_service\_principal\_id) | Client ID of the existing Azure AD service principal | `string` | n/a | yes |
-| <a name="input_service_principal_key"></a> [service\_principal\_key](#input\_service\_principal\_key) | Client secret of the existing Azure AD service principal | `string` | n/a | yes |
 
 ## Outputs
 
 | Name | Description |
 |------|-------------|
+| <a name="output_authentication_method"></a> [authentication\_method](#output\_authentication\_method) | Authentication method used |
 | <a name="output_authorized_all_pipelines"></a> [authorized\_all\_pipelines](#output\_authorized\_all\_pipelines) | Whether all pipelines are authorized to use this connection |
 | <a name="output_azure_subscription_id"></a> [azure\_subscription\_id](#output\_azure\_subscription\_id) | Azure Subscription ID connected |
 | <a name="output_azure_subscription_name"></a> [azure\_subscription\_name](#output\_azure\_subscription\_name) | Azure Subscription name connected |
 | <a name="output_service_connection_id"></a> [service\_connection\_id](#output\_service\_connection\_id) | ID of the created service connection |
 | <a name="output_service_connection_name"></a> [service\_connection\_name](#output\_service\_connection\_name) | Name of the created service connection |
 | <a name="output_service_principal_id"></a> [service\_principal\_id](#output\_service\_principal\_id) | Client ID of the service principal |
+| <a name="output_workload_identity_federation_issuer"></a> [workload\_identity\_federation\_issuer](#output\_workload\_identity\_federation\_issuer) | Issuer URL for workload identity federation |
+| <a name="output_workload_identity_federation_subject"></a> [workload\_identity\_federation\_subject](#output\_workload\_identity\_federation\_subject) | Subject identifier for workload identity federation |
 <!-- END_TF_DOCS -->

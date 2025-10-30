@@ -107,6 +107,7 @@ No modules.
 | Name | Type |
 |------|------|
 | [azuread_application.azure_devops](https://registry.terraform.io/providers/hashicorp/azuread/latest/docs/resources/application) | resource |
+| [azuread_application_federated_identity_credential.azure_devops](https://registry.terraform.io/providers/hashicorp/azuread/latest/docs/resources/application_federated_identity_credential) | resource |
 | [azuread_service_principal.azure_devops](https://registry.terraform.io/providers/hashicorp/azuread/latest/docs/resources/service_principal) | resource |
 | [azurerm_key_vault.devops](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/key_vault) | resource |
 | [azurerm_resource_group.devops](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/resource_group) | resource |
@@ -119,11 +120,14 @@ No modules.
 
 | Name | Description | Type | Default | Required |
 |------|-------------|------|---------|:--------:|
+| <a name="input_azure_devops_organization_id"></a> [azure\_devops\_organization\_id](#input\_azure\_devops\_organization\_id) | Azure DevOps organization ID (GUID) for workload identity federation | `string` | n/a | yes |
 | <a name="input_azure_devops_organization_url"></a> [azure\_devops\_organization\_url](#input\_azure\_devops\_organization\_url) | Azure DevOps organization URL (e.g., https://dev.azure.com/myorg) | `string` | n/a | yes |
+| <a name="input_azure_devops_project_name"></a> [azure\_devops\_project\_name](#input\_azure\_devops\_project\_name) | Azure DevOps project name for workload identity federation | `string` | n/a | yes |
 | <a name="input_key_vault_name"></a> [key\_vault\_name](#input\_key\_vault\_name) | Name of the Key Vault to store the Azure DevOps PAT | `string` | n/a | yes |
 | <a name="input_location"></a> [location](#input\_location) | Azure region for resources | `string` | `"West Europe"` | no |
 | <a name="input_resource_group_name"></a> [resource\_group\_name](#input\_resource\_group\_name) | Resource group name for the Key Vault | `string` | n/a | yes |
 | <a name="input_scope"></a> [scope](#input\_scope) | Azure scope for role definitions (subscription or management group) | `string` | n/a | yes |
+| <a name="input_service_connection_name"></a> [service\_connection\_name](#input\_service\_connection\_name) | Azure DevOps service connection name for workload identity federation | `string` | n/a | yes |
 | <a name="input_service_principal_name"></a> [service\_principal\_name](#input\_service\_principal\_name) | Name for the Azure DevOps service principal | `string` | `"azure-devops-terraform"` | no |
 
 ## Outputs
@@ -131,6 +135,8 @@ No modules.
 | Name | Description |
 |------|-------------|
 | <a name="output_azure_devops_organization_url"></a> [azure\_devops\_organization\_url](#output\_azure\_devops\_organization\_url) | Azure DevOps organization URL |
+| <a name="output_federated_credential_issuer"></a> [federated\_credential\_issuer](#output\_federated\_credential\_issuer) | Issuer URL for workload identity federation |
+| <a name="output_federated_credential_subject"></a> [federated\_credential\_subject](#output\_federated\_credential\_subject) | Subject identifier for workload identity federation |
 | <a name="output_key_vault_id"></a> [key\_vault\_id](#output\_key\_vault\_id) | ID of the Key Vault for storing Azure DevOps PAT |
 | <a name="output_key_vault_name"></a> [key\_vault\_name](#output\_key\_vault\_name) | Name of the Key Vault for storing Azure DevOps PAT |
 | <a name="output_key_vault_uri"></a> [key\_vault\_uri](#output\_key\_vault\_uri) | URI of the Key Vault for storing Azure DevOps PAT |
