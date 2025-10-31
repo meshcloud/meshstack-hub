@@ -163,15 +163,6 @@ steps:
     displayName: 'Run a multi-line script'
 ```
 
-## Outputs
-
-- `pipeline_id` - Unique identifier for the pipeline
-- `pipeline_name` - Name of the pipeline
-- `pipeline_revision` - Current revision number
-- `project_id` - Project where pipeline is created
-- `repository_id` - Linked repository
-- `yaml_path` - Path to YAML definition
-
 ## Security Considerations
 
 - Use secret variables for sensitive data
@@ -193,7 +184,7 @@ steps:
 |------|---------|
 | <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.0 |
 | <a name="requirement_azuredevops"></a> [azuredevops](#requirement\_azuredevops) | ~> 1.1.1 |
-| <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) | ~> 3.116.0 |
+| <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) | ~> 4.51.0 |
 
 ## Modules
 

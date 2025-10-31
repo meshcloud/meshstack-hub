@@ -148,18 +148,6 @@ steps:
         az group list
 ```
 
-## Outputs
-
-- `service_connection_id` - Unique identifier for the service connection
-- `service_connection_name` - Name of the service connection
-- `service_principal_id` - Client ID of the service principal used
-- `azure_subscription_id` - Connected Azure subscription ID
-- `azure_subscription_name` - Connected Azure subscription name
-- `authentication_method` - Authentication method used (always "workload_identity_federation")
-- `authorized_all_pipelines` - Whether all pipelines are authorized to use this connection
-- `workload_identity_federation_issuer` - Issuer URL for workload identity federation (read from Azure DevOps)
-- `workload_identity_federation_subject` - Subject identifier for workload identity federation (read from Azure DevOps)
-
 ## Security Considerations
 
 - Service principal must be created and managed outside this module
@@ -183,7 +171,7 @@ steps:
 |------|---------|
 | <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.0 |
 | <a name="requirement_azuredevops"></a> [azuredevops](#requirement\_azuredevops) | ~> 1.1.1 |
-| <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) | ~> 3.116.0 |
+| <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) | ~> 4.51.0 |
 
 ## Modules
 

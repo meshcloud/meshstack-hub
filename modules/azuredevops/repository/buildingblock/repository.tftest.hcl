@@ -8,7 +8,6 @@ variables {
 }
 
 run "valid_repository_configuration" {
-  command = plan
 
   variables {
   }
@@ -25,7 +24,6 @@ run "valid_repository_configuration" {
 }
 
 run "repository_with_branch_policies" {
-  command = plan
 
   variables {
     enable_branch_policies = true
@@ -49,7 +47,6 @@ run "repository_with_branch_policies" {
 }
 
 run "repository_without_branch_policies" {
-  command = plan
 
   variables {
     enable_branch_policies = false
@@ -67,7 +64,6 @@ run "repository_without_branch_policies" {
 }
 
 run "uninitialized_repository" {
-  command = plan
 
   variables {
     init_type = "Uninitialized"
@@ -80,7 +76,6 @@ run "uninitialized_repository" {
 }
 
 run "clean_initialization" {
-  command = plan
 
   variables {
     repository_name = "new-repo"
@@ -94,7 +89,6 @@ run "clean_initialization" {
 }
 
 run "invalid_init_type" {
-  command = plan
 
   variables {
     init_type = "Invalid"
@@ -106,7 +100,6 @@ run "invalid_init_type" {
 }
 
 run "minimum_reviewers_out_of_range" {
-  command = plan
 
   variables {
     minimum_reviewers = 15
@@ -118,7 +111,6 @@ run "minimum_reviewers_out_of_range" {
 }
 
 run "minimum_reviewers_zero" {
-  command = plan
 
   variables {
     minimum_reviewers = 0

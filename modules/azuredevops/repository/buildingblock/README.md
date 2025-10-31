@@ -79,14 +79,6 @@ module "app_repository" {
 }
 ```
 
-## Outputs
-
-- `repository_id` - Unique identifier for the repository
-- `repository_url` - Git clone URL (HTTPS)
-- `ssh_url` - Git clone URL (SSH)
-- `web_url` - Browser URL for the repository
-- `default_branch` - Name of the default branch
-
 ## Security Considerations
 
 - Branch policies help enforce code review standards
@@ -101,7 +93,7 @@ module "app_repository" {
 |------|---------|
 | <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.0 |
 | <a name="requirement_azuredevops"></a> [azuredevops](#requirement\_azuredevops) | ~> 1.1.1 |
-| <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) | ~> 3.116.0 |
+| <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) | ~> 4.51.0 |
 
 ## Modules
 

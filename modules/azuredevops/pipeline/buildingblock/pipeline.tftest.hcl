@@ -8,7 +8,6 @@ variables {
 }
 
 run "valid_pipeline_configuration" {
-  command = plan
 
   variables {
     pipeline_name = "test-pipeline"
@@ -31,7 +30,6 @@ run "valid_pipeline_configuration" {
 }
 
 run "pipeline_with_custom_yaml_path" {
-  command = plan
 
   variables {
     pipeline_name = "custom-pipeline"
@@ -45,7 +43,6 @@ run "pipeline_with_custom_yaml_path" {
 }
 
 run "pipeline_with_custom_branch" {
-  command = plan
 
   variables {
     pipeline_name = "develop-pipeline"
@@ -59,7 +56,6 @@ run "pipeline_with_custom_branch" {
 }
 
 run "pipeline_with_variables" {
-  command = plan
 
   variables {
     pipeline_name = "var-pipeline"
@@ -84,7 +80,6 @@ run "pipeline_with_variables" {
 }
 
 run "pipeline_with_variable_groups" {
-  command = plan
 
   variables {
     pipeline_name = "vg-pipeline"
@@ -99,7 +94,6 @@ run "pipeline_with_variable_groups" {
 }
 
 run "github_repository_pipeline" {
-  command = plan
 
   variables {
     pipeline_name   = "github-pipeline"
@@ -118,7 +112,6 @@ run "github_repository_pipeline" {
 }
 
 run "tfsgit_repository_pipeline" {
-  command = plan
 
   variables {
     pipeline_name   = "tfsgit-pipeline"
@@ -132,7 +125,6 @@ run "tfsgit_repository_pipeline" {
 }
 
 run "invalid_repository_type" {
-  command = plan
 
   variables {
     pipeline_name   = "test-pipeline"
@@ -145,7 +137,6 @@ run "invalid_repository_type" {
 }
 
 run "pipeline_with_default_values" {
-  command = plan
 
   variables {
     pipeline_name = "default-pipeline"
@@ -168,7 +159,6 @@ run "pipeline_with_default_values" {
 }
 
 run "pipeline_with_empty_variable_groups" {
-  command = plan
 
   variables {
     pipeline_name      = "no-vg-pipeline"

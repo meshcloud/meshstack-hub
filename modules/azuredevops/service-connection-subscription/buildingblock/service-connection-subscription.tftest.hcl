@@ -13,7 +13,6 @@ variables {
 }
 
 run "valid_service_connection_basic" {
-  command = plan
 
   variables {
     service_connection_name = "valid-service-connection"
@@ -22,7 +21,6 @@ run "valid_service_connection_basic" {
 }
 
 run "valid_service_connection_with_auto_authorize" {
-  command = plan
 
   variables {
     service_connection_name = "auto-auth-connection"
@@ -31,7 +29,6 @@ run "valid_service_connection_with_auto_authorize" {
 }
 
 run "valid_service_connection_with_description" {
-  command = plan
 
   variables {
     service_connection_name = "documented-connection"
@@ -40,7 +37,6 @@ run "valid_service_connection_with_description" {
 }
 
 run "minimal_required_variables" {
-  command = plan
 
   variables {
     service_connection_name = "minimal-connection"
@@ -48,7 +44,6 @@ run "minimal_required_variables" {
 }
 
 run "service_connection_with_custom_description" {
-  command = plan
 
   variables {
     service_connection_name = "custom-desc-connection"

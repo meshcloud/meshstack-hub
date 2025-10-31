@@ -87,20 +87,6 @@ module "azure_devops_project" {
 }
 ```
 
-## Variables
-
-| Name | Description | Type | Default | Required |
-|------|-------------|------|---------|----------|
-| `azure_devops_organization_url` | Azure DevOps organization URL | `string` | - | yes |
-| `key_vault_name` | Key Vault name containing PAT | `string` | - | yes |
-| `resource_group_name` | Resource group containing Key Vault | `string` | - | yes |
-| `project_name` | Name of the Azure DevOps project | `string` | - | yes |
-| `project_description` | Project description | `string` | `"Managed by Terraform"` | no |
-| `project_visibility` | Project visibility (private/public) | `string` | `"private"` | no |
-| `work_item_template` | Work item template | `string` | `"Agile"` | no |
-| `version_control` | Version control system | `string` | `"Git"` | no |
-| `users` | List of users from authoritative system | `list(object)` | `[]` | no |
-
 ## Default Project Features
 
 The building block creates projects with the following default features:
@@ -120,18 +106,6 @@ Users are assigned to default Azure DevOps project groups based on their roles l
 - **admin** in roles list: Assigned to "Project Administrators" group - Full project administration rights
 
 Users can have multiple roles and will be assigned to all corresponding groups.
-
-
-
-## Outputs
-
-| Name | Description |
-|------|-------------|
-| `project_id` | ID of the created project |
-| `project_url` | URL of the project |
-| `user_assignments` | Map of users and their assigned roles |
-| `group_memberships` | Information about group memberships |
-| `project_features` | Enabled/disabled project features |
 
 ## Important Notes
 
@@ -167,7 +141,7 @@ If you get permission errors:
 |------|---------|
 | <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.0 |
 | <a name="requirement_azuredevops"></a> [azuredevops](#requirement\_azuredevops) | ~> 1.1.1 |
-| <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) | ~> 3.116.0 |
+| <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) | ~> 4.51.0 |
 
 ## Modules
 

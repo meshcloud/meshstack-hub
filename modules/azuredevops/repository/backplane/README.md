@@ -41,13 +41,6 @@ module "azuredevops_repository_backplane" {
    az keyvault secret set --vault-name <key_vault_name> --name azdo-pat --value <your_pat>
    ```
 
-## Outputs
-
-- `service_principal_client_id` - For authentication
-- `key_vault_name` - Where to store the PAT
-- `key_vault_uri` - For programmatic access
-- `azure_devops_organization_url` - Organization URL passed through
-
 ## Security Considerations
 
 - Service principal has read-only access to Key Vault secrets
@@ -60,8 +53,8 @@ module "azuredevops_repository_backplane" {
 | Name | Version |
 |------|---------|
 | <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.0 |
-| <a name="requirement_azuread"></a> [azuread](#requirement\_azuread) | ~> 2.53.1 |
-| <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) | ~> 3.116.0 |
+| <a name="requirement_azuread"></a> [azuread](#requirement\_azuread) | ~> 3.6.0 |
+| <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) | ~> 4.51.0 |
 
 ## Modules
 

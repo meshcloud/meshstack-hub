@@ -7,7 +7,6 @@ variables {
 }
 
 run "valid_project_creation" {
-  command = plan
   variables {
     project_name        = "test-project"
     project_description = "Test project for validation"
@@ -41,7 +40,6 @@ run "valid_project_creation" {
 }
 
 run "user_role_assignment_validation" {
-  command = plan
 
   variables {
     project_name = "test-project"
@@ -93,7 +91,6 @@ run "user_role_assignment_validation" {
 }
 
 run "invalid_project_name_empty" {
-  command = plan
   expect_failures = [
     var.project_name
   ]
@@ -115,7 +112,6 @@ run "invalid_project_name_empty" {
 }
 
 run "invalid_project_name_too_long" {
-  command = plan
   expect_failures = [
     var.project_name
   ]
@@ -141,7 +137,6 @@ run "invalid_project_name_too_long" {
 }
 
 run "user_with_multiple_roles" {
-  command = plan
 
   variables {
     azure_devops_organization_url = "https://dev.azure.com/meshcloud-prod"
@@ -180,7 +175,6 @@ run "user_with_multiple_roles" {
 }
 
 run "user_without_relevant_roles" {
-  command = plan
 
   variables {
     azure_devops_organization_url = "https://dev.azure.com/meshcloud-prod"
@@ -218,7 +212,6 @@ run "user_without_relevant_roles" {
 }
 
 run "default_project_features" {
-  command = plan
 
   variables {
     azure_devops_organization_url = "https://dev.azure.com/meshcloud-prod"
