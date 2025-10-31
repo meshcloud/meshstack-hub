@@ -19,8 +19,8 @@ output "service_principal_object_id" {
 }
 
 output "client_secret" {
-  description = "Client secret for the service principal (null if create_client_secret is false)"
-  value       = var.create_client_secret ? azuread_application_password.main[0].value : null
+  description = "Client secret for the service principal (\"null\" if create_client_secret is false)"
+  value       = var.create_client_secret ? azuread_application_password.main[0].value : "null"
   sensitive   = true
 }
 
@@ -40,8 +40,8 @@ output "azure_role" {
 }
 
 output "secret_expiration_date" {
-  description = "Date when the service principal secret will expire (null if create_client_secret is false)"
-  value       = var.create_client_secret ? azuread_application_password.main[0].end_date : null
+  description = "Date when the service principal secret will expire (\"null\" if create_client_secret is false)"
+  value       = var.create_client_secret ? azuread_application_password.main[0].end_date : "null"
 }
 
 output "authentication_method" {
