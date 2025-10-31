@@ -4,8 +4,6 @@ variables {
 }
 
 run "valid_contributor_service_principal" {
-  command = plan
-
   variables {
     display_name = "test-sp-contributor"
     azure_role   = "Contributor"
@@ -24,8 +22,6 @@ run "valid_contributor_service_principal" {
 }
 
 run "valid_reader_service_principal" {
-  command = plan
-
   variables {
     display_name = "test-sp-reader"
     azure_role   = "Reader"
@@ -38,8 +34,6 @@ run "valid_reader_service_principal" {
 }
 
 run "valid_owner_service_principal" {
-  command = plan
-
   variables {
     display_name = "test-sp-owner"
     azure_role   = "Owner"
@@ -52,8 +46,6 @@ run "valid_owner_service_principal" {
 }
 
 run "invalid_role_validation" {
-  command = plan
-
   variables {
     display_name = "test-sp-invalid"
     azure_role   = "CustomRole"
@@ -65,8 +57,6 @@ run "invalid_role_validation" {
 }
 
 run "custom_secret_rotation" {
-  command = plan
-
   variables {
     display_name         = "test-sp-rotation"
     secret_rotation_days = 180
@@ -80,8 +70,6 @@ run "custom_secret_rotation" {
 }
 
 run "invalid_secret_rotation_too_short" {
-  command = plan
-
   variables {
     display_name         = "test-sp-short-rotation"
     secret_rotation_days = 15
@@ -93,7 +81,6 @@ run "invalid_secret_rotation_too_short" {
 }
 
 run "invalid_secret_rotation_too_long" {
-  command = plan
 
   variables {
     display_name         = "test-sp-long-rotation"
@@ -106,7 +93,6 @@ run "invalid_secret_rotation_too_long" {
 }
 
 run "custom_description" {
-  command = plan
 
   variables {
     display_name = "test-sp-description"
@@ -120,7 +106,6 @@ run "custom_description" {
 }
 
 run "service_principal_without_secret" {
-  command = plan
 
   variables {
     display_name         = "test-sp-oidc"

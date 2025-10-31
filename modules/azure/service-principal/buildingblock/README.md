@@ -188,19 +188,6 @@ module "azuredevops_service_connection" {
 }
 ```
 
-## Outputs
-
-- `application_id` - Application (client) ID
-- `application_object_id` - Application object ID
-- `service_principal_id` - Service principal client ID (same as application_id)
-- `service_principal_object_id` - Service principal object ID
-- `client_secret` - Client secret (sensitive, null if create_client_secret is false)
-- `tenant_id` - Entra ID tenant ID
-- `subscription_id` - Subscription ID where role was assigned
-- `azure_role` - Assigned Azure role
-- `secret_expiration_date` - Secret expiration date (null if create_client_secret is false)
-- `authentication_method` - Authentication method (client_secret or workload_identity_federation)
-
 ## Security Considerations
 
 - **Prefer workload identity federation** (set `create_client_secret = false`) when possible for enhanced security
@@ -224,8 +211,8 @@ module "azuredevops_service_connection" {
 | Name | Version |
 |------|---------|
 | <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.3.0 |
-| <a name="requirement_azuread"></a> [azuread](#requirement\_azuread) | ~> 2.53.1 |
-| <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) | ~> 3.116.0 |
+| <a name="requirement_azuread"></a> [azuread](#requirement\_azuread) | ~> 3.6.0 |
+| <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) | ~> 4.51.0 |
 | <a name="requirement_time"></a> [time](#requirement\_time) | ~> 0.11.1 |
 
 ## Modules
