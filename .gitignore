@@ -20,3 +20,4 @@ yarn-error.log*
 *tfvars*
 
 .terraform.lock.hcl
+.env

@@ -24,7 +24,7 @@ variable "project_name" {
   type        = string
 
   validation {
-    condition     = length(var.project_name) >= 1 && length(var.project_name) <= 64
+    condition     = length(var.project_name) > 0 && length(var.project_name) <= 64
     error_message = "Project name must be between 1 and 64 characters."
   }
 }
@@ -79,10 +79,10 @@ variable "project_features" {
   })
   default = {
     boards       = "enabled"
-    repositories = "disabled"
-    pipelines    = "disabled"
+    repositories = "enabled"
+    pipelines    = "enabled"
     testplans    = "disabled"
-    artifacts    = "disabled"
+    artifacts    = "enabled"
   }
 }
 

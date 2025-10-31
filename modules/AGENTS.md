@@ -140,6 +140,43 @@ aws/
 - **Negative scenarios:** Invalid inputs that should fail gracefully
 - **Naming collision tests:** Prevent resource conflicts
 - **Cross-provider consistency:** Similar test patterns across clouds
+- **Test Users:** Use the following test users:
+  - **User Tom:**
+    ```json
+          {
+            meshIdentifier = "likvid-tom-user"
+            username       = "likvid-tom@meshcloud.io"
+            firstName      = "Tom"
+            lastName       = "Livkid"
+            email          = "likvid-tom@meshcloud.io"
+            euid           = "likvid-tom@meshcloud.io"
+            roles          = ["admin", "Workspace Owner"]
+          }
+    ```
+    - **User Daniela:**
+    ```json
+          {
+            meshIdentifier = "likvid-daniela-user"
+            username       = "likvid-daniela@meshcloud.io"
+            firstName      = "Daniela"
+            lastName       = "Livkid"
+            email          = "likvid-daniela@meshcloud.io"
+            euid           = "likvid-daniela@meshcloud.io"
+            roles          = ["user", "Workspace Manager"]
+          }
+    ```
+    - **User Anna:**
+    ```json
+          {
+            meshIdentifier = "likvid-anna-user"
+            username       = "likvid-anna@meshcloud.io"
+            firstName      = "Anna"
+            lastName       = "Livkid"
+            email          = "likvid-anna@meshcloud.io"
+            euid           = "likvid-anna@meshcloud.io"
+            roles          = ["reader", "Workspace Member"]
+          }
+    ```
 
 **Example Test Structure:**
 ```hcl
