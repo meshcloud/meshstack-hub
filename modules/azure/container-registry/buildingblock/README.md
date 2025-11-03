@@ -199,7 +199,7 @@ No modules.
 | <a name="input_public_network_access_enabled"></a> [public\_network\_access\_enabled](#input\_public\_network\_access\_enabled) | Enable public network access to the ACR | `bool` | `true` | no |
 | <a name="input_resource_group_name"></a> [resource\_group\_name](#input\_resource\_group\_name) | Name of the resource group to create for the ACR | `string` | `"acr-rg"` | no |
 | <a name="input_retention_days"></a> [retention\_days](#input\_retention\_days) | Number of days to retain untagged manifests (Premium SKU only, 0 to disable) | `number` | `7` | no |
-| <a name="input_sku"></a> [sku](#input\_sku) | SKU tier for the ACR (Basic, Standard, Premium). Premium required for private endpoints and geo-replication. | `string` | `"Premium"` | no |
+| <a name="input_sku"></a> [sku](#input\_sku) | SKU tier for the ACR (Basic, Standard, Premium). Premium required for private endpoints. | `string` | `"Premium"` | no |
 | <a name="input_subnet_address_prefix"></a> [subnet\_address\_prefix](#input\_subnet\_address\_prefix) | Address prefix for the private endpoint subnet (only used if subnet\_name is not provided) | `string` | `"10.250.1.0/24"` | no |
 | <a name="input_subnet_name"></a> [subnet\_name](#input\_subnet\_name) | Name of the subnet for private endpoint. If not provided, a new subnet will be created. | `string` | `null` | no |
 | <a name="input_tags"></a> [tags](#input\_tags) | Tags to apply to all resources | `map(string)` | `{}` | no |

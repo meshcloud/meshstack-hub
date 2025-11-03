@@ -22,7 +22,7 @@ variable "acr_name" {
 
 variable "sku" {
   type        = string
-  description = "SKU tier for the ACR (Basic, Standard, Premium). Premium required for private endpoints and geo-replication."
+  description = "SKU tier for the ACR (Basic, Standard, Premium). Premium required for private endpoints."
   default     = "Premium"
 
   validation {

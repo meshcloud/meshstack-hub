@@ -1,7 +1,7 @@
 # Azure Container Registry (ACR)
 
 ## Description
-This building block provides a production-grade Azure Container Registry (ACR) for storing and managing Docker container images and OCI artifacts. It delivers a fully managed, geo-replicated, and secure container registry with support for both public and private deployments, optional hub connectivity, and seamless integration with Azure Kubernetes Service (AKS).
+This building block provides a production-grade Azure Container Registry (ACR) for storing and managing Docker container images and OCI artifacts. It delivers a fully managed and secure container registry with support for both public and private deployments, optional hub connectivity, and seamless integration with Azure Kubernetes Service (AKS).
 
 ## Usage Motivation
 This building block is for application teams that need a secure and reliable container registry to store Docker images, Helm charts, and other OCI artifacts. The ACR comes pre-configured with enterprise-grade security features including private endpoints, network access controls, and Azure AD authentication, eliminating the complexity of managing container registries while ensuring compliance with security policies.
@@ -9,7 +9,6 @@ This building block is for application teams that need a secure and reliable con
 ## 🚀 Usage Examples
 - A development team stores and versions Docker images for microservices applications
 - A CI/CD pipeline pushes built container images to ACR and deploys them to AKS clusters
-- An operations team distributes container images across multiple Azure regions using geo-replication
 - A security team implements content trust and vulnerability scanning for container images
 - A data science team stores and manages ML model containers and training environments
 
@@ -20,7 +19,6 @@ This building block is for application teams that need a secure and reliable con
 | Provisioning and configuring the ACR | ✅ | ❌ |
 | Managing network configuration and private endpoints | ✅ | ❌ |
 | Setting up hub network peering (for private ACR) | ✅ | ❌ |
-| Configuring geo-replication (if enabled) | ✅ | ❌ |
 | Managing IAM roles and permissions | ✅ | ❌ |
 | Pushing and managing container images | ❌ | ✅ |
 | Implementing image tagging strategies | ❌ | ✅ |
@@ -48,7 +46,6 @@ This building block is for application teams that need a secure and reliable con
 - **Scan before push**: Scan images locally before pushing to ACR
 
 ### Performance & Reliability
-- **Enable geo-replication**: For global applications, replicate images to regions close to compute resources
 - **Use dedicated data endpoints**: Enable data endpoints in Premium SKU for improved performance
 - **Enable zone redundancy**: For high availability, enable zone redundancy in supported regions
 - **Monitor registry metrics**: Track storage usage, pull/push operations, and throttling in Azure Monitor
@@ -76,7 +73,6 @@ This building block is for application teams that need a secure and reliable con
 |---------|-------|----------|---------|
 | Storage (GB) | 10 | 100 | 500 |
 | Webhooks | 2 | 10 | 500 |
-| Geo-replication | ❌ | ❌ | ✅ |
 | Private endpoints | ❌ | ❌ | ✅ |
 | Content trust | ❌ | ❌ | ✅ |
 | Customer-managed keys | ❌ | ❌ | ✅ |
@@ -98,7 +94,6 @@ This building block is for application teams that need a secure and reliable con
 - **Service Endpoints**: VNet service endpoints for controlled access
 
 ### High Availability
-- **Geo-Replication**: Replicate images to multiple Azure regions (Premium SKU)
 - **Zone Redundancy**: Deploy across availability zones (Premium SKU, select regions)
 - **SLA**: 99.9% uptime SLA for Standard and Premium SKUs
 
