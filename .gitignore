@@ -15,6 +15,9 @@ yarn-error.log*
 *.iml
 .angular/
 
-.terraform
+*.terraform*
+*.tfstate*
+*tfvars*
+
 .terraform.lock.hcl
 .env
