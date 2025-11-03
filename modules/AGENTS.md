@@ -106,6 +106,14 @@ When choosing a provider version for a module, consider:
 - Creates custom role definitions with specific permissions
 - Uses role assignments for principal access
 - Scoped to subscription or management group level
+- **Service Principal Creation (Optional):**
+  - Can create Azure AD application and service principal
+  - Supports **Workload Identity Federation (WIF)** for passwordless authentication
+  - Falls back to application password if WIF not configured
+  - Automatically assigns created principals to role definitions
+- **Two-tier permissions for networking:**
+  - `buildingblock_deploy` role: Main deployment permissions
+  - `buildingblock_deploy_hub` role: Hub-specific permissions for VNet peering (e.g., ACR, Key Vault)
 
 **GCP Backplane Pattern:** *TBD - To be documented*
 
@@ -139,6 +147,43 @@ When choosing a provider version for a module, consider:
 - **Negative scenarios:** Invalid inputs that should fail gracefully
 - **Naming collision tests:** Prevent resource conflicts
 - **Cross-provider consistency:** Similar test patterns across clouds
+- **Test Users:** Use the following test users:
+  - **User Tom:**
+    ```json
+          {
+            meshIdentifier = "likvid-tom-user"
+            username       = "likvid-tom@meshcloud.io"
+            firstName      = "Tom"
+            lastName       = "Livkid"
+            email          = "likvid-tom@meshcloud.io"
+            euid           = "likvid-tom@meshcloud.io"
+            roles          = ["admin", "Workspace Owner"]
+          }
+    ```
+    - **User Daniela:**
+    ```json
+          {
+            meshIdentifier = "likvid-daniela-user"
+            username       = "likvid-daniela@meshcloud.io"
+            firstName      = "Daniela"
+            lastName       = "Livkid"
+            email          = "likvid-daniela@meshcloud.io"
+            euid           = "likvid-daniela@meshcloud.io"
+            roles          = ["user", "Workspace Manager"]
+          }
+    ```
+    - **User Anna:**
+    ```json
+          {
+            meshIdentifier = "likvid-anna-user"
+            username       = "likvid-anna@meshcloud.io"
+            firstName      = "Anna"
+            lastName       = "Livkid"
+            email          = "likvid-anna@meshcloud.io"
+            euid           = "likvid-anna@meshcloud.io"
+            roles          = ["reader", "Workspace Member"]
+          }
+    ```
 
 **Example Test Structure:**
 ```hcl
@@ -202,10 +247,12 @@ category: storage
 
 - **Cost Management:** Budget alerts (AWS, Azure, GCP)
 - **Storage:** S3 buckets, Azure storage accounts, GCS buckets
+- **Container Registries:** Azure Container Registry (ACR) with private networking
 - **Networking:** VPCs, spoke networks, subnets
 - **Databases:** PostgreSQL, managed database instances
 - **Security:** Key Vault, IAM roles, secret management
 - **CI/CD:** GitHub Actions integration, service connections
+- **Compute:** Virtual machines (Azure), AKS integration
 
 ## Best Practices for New Modules
 

@@ -2,7 +2,8 @@
 name: Azure DevOps Project
 supportedPlatforms:
   - azuredevops
-description: Creates and manages Azure DevOps projects with user entitlements, stakeholder licenses, and role-based group memberships.
+description: |
+  Creates and manages Azure DevOps projects with user entitlements, stakeholder licenses, and role-based group memberships.
 category: devops
 ---
 
@@ -86,20 +87,6 @@ module "azure_devops_project" {
 }
 ```
 
-## Variables
-
-| Name | Description | Type | Default | Required |
-|------|-------------|------|---------|----------|
-| `azure_devops_organization_url` | Azure DevOps organization URL | `string` | - | yes |
-| `key_vault_name` | Key Vault name containing PAT | `string` | - | yes |
-| `resource_group_name` | Resource group containing Key Vault | `string` | - | yes |
-| `project_name` | Name of the Azure DevOps project | `string` | - | yes |
-| `project_description` | Project description | `string` | `"Managed by Terraform"` | no |
-| `project_visibility` | Project visibility (private/public) | `string` | `"private"` | no |
-| `work_item_template` | Work item template | `string` | `"Agile"` | no |
-| `version_control` | Version control system | `string` | `"Git"` | no |
-| `users` | List of users from authoritative system | `list(object)` | `[]` | no |
-
 ## Default Project Features
 
 The building block creates projects with the following default features:
@@ -119,18 +106,6 @@ Users are assigned to default Azure DevOps project groups based on their roles l
 - **admin** in roles list: Assigned to "Project Administrators" group - Full project administration rights
 
 Users can have multiple roles and will be assigned to all corresponding groups.
-
-
-
-## Outputs
-
-| Name | Description |
-|------|-------------|
-| `project_id` | ID of the created project |
-| `project_url` | URL of the project |
-| `user_assignments` | Map of users and their assigned roles |
-| `group_memberships` | Information about group memberships |
-| `project_features` | Enabled/disabled project features |
 
 ## Important Notes
 
@@ -166,7 +141,7 @@ If you get permission errors:
 |------|---------|
 | <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.0 |
 | <a name="requirement_azuredevops"></a> [azuredevops](#requirement\_azuredevops) | ~> 1.1.1 |
-| <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) | ~> 3.116.0 |
+| <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) | ~> 4.51.0 |
 
 ## Modules
 
@@ -195,7 +170,7 @@ No modules.
 | <a name="input_key_vault_name"></a> [key\_vault\_name](#input\_key\_vault\_name) | Name of the Key Vault containing the Azure DevOps PAT | `string` | n/a | yes |
 | <a name="input_pat_secret_name"></a> [pat\_secret\_name](#input\_pat\_secret\_name) | n/a | `string` | `"Name of the Azure DevOps PAT Token stored in the KeyVault"` | no |
 | <a name="input_project_description"></a> [project\_description](#input\_project\_description) | Description of the Azure DevOps project | `string` | `"Managed by Terraform"` | no |
-| <a name="input_project_features"></a> [project\_features](#input\_project\_features) | Project features to enable/disable | <pre>object({<br>    boards       = optional(string, "enabled")<br>    repositories = optional(string, "enabled")<br>    pipelines    = optional(string, "enabled")<br>    testplans    = optional(string, "disabled")<br>    artifacts    = optional(string, "enabled")<br>  })</pre> | <pre>{<br>  "artifacts": "disabled",<br>  "boards": "enabled",<br>  "pipelines": "disabled",<br>  "repositories": "disabled",<br>  "testplans": "disabled"<br>}</pre> | no |
+| <a name="input_project_features"></a> [project\_features](#input\_project\_features) | Project features to enable/disable | <pre>object({<br>    boards       = optional(string, "enabled")<br>    repositories = optional(string, "enabled")<br>    pipelines    = optional(string, "enabled")<br>    testplans    = optional(string, "disabled")<br>    artifacts    = optional(string, "enabled")<br>  })</pre> | <pre>{<br>  "artifacts": "enabled",<br>  "boards": "enabled",<br>  "pipelines": "enabled",<br>  "repositories": "enabled",<br>  "testplans": "disabled"<br>}</pre> | no |
 | <a name="input_project_name"></a> [project\_name](#input\_project\_name) | Name of the Azure DevOps project | `string` | n/a | yes |
 | <a name="input_project_visibility"></a> [project\_visibility](#input\_project\_visibility) | Visibility of the project (private or public) | `string` | `"private"` | no |
 | <a name="input_resource_group_name"></a> [resource\_group\_name](#input\_resource\_group\_name) | Resource group name containing the Key Vault | `string` | n/a | yes |
@@ -207,11 +182,15 @@ No modules.
 
 | Name | Description |
 |------|-------------|
+| <a name="output_azure_devops_organization_url"></a> [azure\_devops\_organization\_url](#output\_azure\_devops\_organization\_url) | Azure DevOps organization URL |
 | <a name="output_group_memberships"></a> [group\_memberships](#output\_group\_memberships) | Information about group memberships |
+| <a name="output_key_vault_name"></a> [key\_vault\_name](#output\_key\_vault\_name) | Name of the Key Vault containing the Azure DevOps PAT |
+| <a name="output_pat_secret_name"></a> [pat\_secret\_name](#output\_pat\_secret\_name) | Name of the Azure DevOps PAT secret in Key Vault |
 | <a name="output_project_features"></a> [project\_features](#output\_project\_features) | Enabled/disabled project features |
 | <a name="output_project_id"></a> [project\_id](#output\_project\_id) | ID of the created Azure DevOps project |
 | <a name="output_project_name"></a> [project\_name](#output\_project\_name) | Name of the created Azure DevOps project |
 | <a name="output_project_url"></a> [project\_url](#output\_project\_url) | URL of the created Azure DevOps project |
 | <a name="output_project_visibility"></a> [project\_visibility](#output\_project\_visibility) | Visibility of the project |
+| <a name="output_resource_group_name"></a> [resource\_group\_name](#output\_resource\_group\_name) | Resource group name containing the Key Vault |
 | <a name="output_user_assignments"></a> [user\_assignments](#output\_user\_assignments) | Map of users and their assigned roles |
 <!-- END_TF_DOCS -->

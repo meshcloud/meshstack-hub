@@ -10,7 +10,7 @@ output "project_name" {
 
 output "project_url" {
   description = "URL of the created Azure DevOps project"
-  value       = "${var.azure_devops_organization_url}/${azuredevops_project.main.name}"
+  value       = "${var.azure_devops_organization_url}/${replace(azuredevops_project.main.name, " ", "%20")}"
 }
 
 output "project_visibility" {
@@ -55,4 +55,25 @@ output "group_memberships" {
 output "project_features" {
   description = "Enabled/disabled project features"
   value       = var.project_features
+}
+
+output "azure_devops_organization_url" {
+  description = "Azure DevOps organization URL"
+  value       = var.azure_devops_organization_url
+}
+
+output "key_vault_name" {
+  description = "Name of the Key Vault containing the Azure DevOps PAT"
+  value       = var.key_vault_name
+}
+
+output "resource_group_name" {
+  description = "Resource group name containing the Key Vault"
+  value       = var.resource_group_name
+}
+
+output "pat_secret_name" {
+  description = "Name of the Azure DevOps PAT secret in Key Vault"
+  value       = var.pat_secret_name
+  sensitive   = true
 }

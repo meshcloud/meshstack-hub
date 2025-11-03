@@ -1,67 +1,52 @@
-# Azure DevOps Project Backplane
+# Azure DevOps Pipeline Backplane
 
-This backplane module provisions the necessary Azure infrastructure and permissions for managing Azure DevOps projects through Terraform.
+This module provisions the infrastructure required to support the Azure DevOps Pipeline building block.
 
-> **Platform Separation**: Azure DevOps is treated as a dedicated DevOps platform, separate from Azure cloud infrastructure, following the same pattern as GitHub, SAP BTP, and other platforms.
+## What It Provisions
 
-## Architecture
-
-The backplane creates:
-
-1. **Azure AD Service Principal** - For Azure DevOps API authentication
-2. **Azure Key Vault** - Secure storage for Azure DevOps Personal Access Token (PAT)
-3. **Custom Role Definition** - Minimal permissions for Key Vault access
-4. **Role Assignment** - Grants the service principal access to retrieve the PAT
+- **Azure AD Service Principal**: For pipeline management automation
+- **Azure Key Vault**: Stores Azure DevOps Personal Access Token (PAT)
+- **Custom Role Definition**: Minimal permissions for reading Key Vault secrets
+- **Role Assignment**: Grants the service principal access to Key Vault
 
 ## Prerequisites
 
-- Azure DevOps organization with appropriate permissions
-- Personal Access Token (PAT) with the following scopes:
-  - **Project & Team**: Read, Write, & Manage
-  - **Member Entitlement Management**: Read & Write
-  - **Work Items**: Read
-
-## Setup Steps
-
-1. Deploy this backplane module
-2. Create a Personal Access Token in your Azure DevOps organization
-3. Store the PAT in the created Key Vault as a secret named `azure-devops-pat`
-
-```bash
-# Store PAT in Key Vault
-az keyvault secret set \
-  --vault-name <key-vault-name> \
-  --name "azure-devops-pat" \
-  --value "<your-pat-token>"
-```
+- Azure subscription with permissions to create:
+  - Azure AD applications and service principals
+  - Key Vault instances
+  - Custom role definitions and assignments
+- Azure DevOps organization with Administrator access
+- Azure DevOps PAT with `Build (Read & Execute)` scope
 
 ## Usage
 
 ```hcl
-module "azure_devops_backplane" {
-  source = "path/to/azuredevops/project/backplane"
+module "azuredevops_pipeline_backplane" {
+  source = "./backplane"
 
   azure_devops_organization_url = "https://dev.azure.com/myorg"
-  service_principal_name        = "azure-devops-terraform"
-  key_vault_name               = "kv-azdevops-terraform"
-  resource_group_name          = "rg-azdevops-terraform"
-  location                     = "West Europe"
-  scope                        = "/subscriptions/12345678-1234-1234-1234-123456789012"
+  service_principal_name        = "azuredevops-pipeline-terraform"
+  key_vault_name                = "kv-azdo-pipeline-prod"
+  resource_group_name           = "rg-azdo-pipeline-prod"
+  location                      = "West Europe"
+  scope                         = "/subscriptions/00000000-0000-0000-0000-000000000000"
 }
 ```
 
+## Post-Deployment Steps
+
+1. Create an Azure DevOps PAT with `Build (Read & Execute)` scope
+2. Store the PAT in the provisioned Key Vault:
+   ```bash
+   az keyvault secret set --vault-name <key_vault_name> --name azdo-pat --value <your_pat>
+   ```
+
 ## Security Considerations
 
-- The service principal has minimal permissions (Key Vault read-only)
-- PAT tokens should be rotated regularly
-- Key Vault access is restricted to necessary principals only
-- All secrets are stored securely in Key Vault
+- Service principal has read-only access to Key Vault secrets
+- PAT should be rotated regularly (recommended: every 90 days)
+- Use separate backplane instances for different environments
 
-## Required Azure DevOps Permissions
-
-To create the PAT token, you need:
-- Organization-level **Project Collection Administrators** permissions
-- Or **Project Administrator** permissions for specific projects
 <!-- BEGIN_TF_DOCS -->
 ## Requirements
 

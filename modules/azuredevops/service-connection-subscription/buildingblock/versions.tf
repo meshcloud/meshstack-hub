@@ -6,9 +6,9 @@ terraform {
       source  = "hashicorp/azurerm"
       version = "~> 4.51.0"
     }
-    azuread = {
-      source  = "hashicorp/azuread"
-      version = "~> 3.6.0"
+    azuredevops = {
+      source  = "microsoft/azuredevops"
+      version = "~> 1.1.1"
     }
   }
 }
