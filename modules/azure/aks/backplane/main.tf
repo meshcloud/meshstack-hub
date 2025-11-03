@@ -119,6 +119,7 @@ resource "azurerm_role_definition" "buildingblock_deploy" {
       "Microsoft.OperationalInsights/workspaces/read",
       "Microsoft.OperationalInsights/workspaces/write",
       "Microsoft.OperationalInsights/workspaces/delete",
+      "Microsoft.OperationalInsights/workspaces/sharedKeys/action",
       "Microsoft.Insights/diagnosticSettings/read",
       "Microsoft.Insights/diagnosticSettings/write",
       "Microsoft.Insights/diagnosticSettings/delete",

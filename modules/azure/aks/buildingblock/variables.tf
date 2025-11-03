@@ -34,7 +34,7 @@ variable "dns_prefix" {
 
 variable "vnet_address_space" {
   type        = string
-  description = "Address space for the AKS virtual network"
+  description = "Address space for the AKS virtual network (only used if vnet_name is not provided)"
   default     = "10.240.0.0/16"
 
   validation {
@@ -43,15 +43,33 @@ variable "vnet_address_space" {
   }
 }
 
+variable "vnet_name" {
+  type        = string
+  description = "Name of the virtual network for AKS. If not provided, a new VNet will be created."
+  default     = null
+}
+
+variable "existing_vnet_resource_group_name" {
+  type        = string
+  description = "Resource group name of the existing VNet. Only used when vnet_name is provided. Defaults to the AKS resource group if not specified."
+  default     = null
+}
+
 variable "subnet_address_prefix" {
   type        = string
-  description = "Address prefix for the AKS subnet"
+  description = "Address prefix for the AKS subnet (only used if subnet_name is not provided)"
   default     = "10.240.0.0/20"
 
   validation {
     condition     = can(cidrhost(var.subnet_address_prefix, 0))
     error_message = "Subnet address prefix must be a valid CIDR block."
   }
+}
+
+variable "subnet_name" {
+  type        = string
+  description = "Name of the subnet for AKS. If not provided, a new subnet will be created."
+  default     = null
 }
 
 variable "service_cidr" {
@@ -102,7 +120,7 @@ variable "max_node_count" {
 variable "vm_size" {
   type        = string
   description = "Size of the virtual machines for the default node pool"
-  default     = "Standard_DS3_v2"
+  default     = "Standard_A2_v2"
 }
 
 variable "os_disk_size_gb" {
@@ -223,4 +241,10 @@ variable "hub_vnet_name" {
   type        = string
   description = "Name of the hub virtual network to peer with. Required when private_cluster_enabled is true and connecting to a hub."
   default     = null
+}
+
+variable "allow_gateway_transit_from_hub" {
+  type        = bool
+  description = "Allow gateway transit from hub to spoke. Set to true if hub has a gateway and you want spoke to use it."
+  default     = false
 }

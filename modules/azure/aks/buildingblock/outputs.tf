@@ -21,5 +21,5 @@ output "law_id" {
 
 output "subnet_id" {
   description = "Subnet ID used by AKS"
-  value       = azurerm_subnet.aks_subnet.id
+  value       = local.subnet_id
 }
