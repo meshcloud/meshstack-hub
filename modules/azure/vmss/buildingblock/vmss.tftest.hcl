@@ -1,16 +1,14 @@
 variables {
   vmss_name                = "test-vmss"
   resource_group_name      = "test-vmss-rg"
-  location                 = "eastus"
+  location                 = "germanywestcentral"
   vnet_name                = "spoke-vnet"
-  vnet_resource_group_name = "network-rg"
-  subnet_name              = "workload-subnet"
-  ssh_public_key           = "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQC7IvkwN test@example.com"
+  vnet_resource_group_name = "rg-vmss-test"
+  subnet_name              = "default"
+  ssh_public_key           = "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIMj8wxyAbcTkUt60GnyDKE5i5e6dXZQJMVgdg4F5KzzA testkey"
 }
 
 run "valid_linux_vmss" {
-  command = plan
-
   variables {
     vmss_name = "linux-vmss"
     os_type   = "Linux"
@@ -35,8 +33,6 @@ run "valid_linux_vmss" {
 }
 
 run "windows_vmss" {
-  command = plan
-
   variables {
     vmss_name       = "windows-vmss"
     os_type         = "Windows"
@@ -60,8 +56,6 @@ run "windows_vmss" {
 }
 
 run "vmss_with_autoscaling" {
-  command = plan
-
   variables {
     vmss_name               = "autoscale-vmss"
     instances               = 2
@@ -89,8 +83,6 @@ run "vmss_with_autoscaling" {
 }
 
 run "vmss_without_autoscaling" {
-  command = plan
-
   variables {
     vmss_name          = "no-autoscale-vmss"
     instances          = 3
@@ -104,8 +96,6 @@ run "vmss_without_autoscaling" {
 }
 
 run "vmss_with_load_balancer" {
-  command = plan
-
   variables {
     vmss_name            = "lb-vmss"
     enable_load_balancer = true
@@ -136,8 +126,6 @@ run "vmss_with_load_balancer" {
 }
 
 run "vmss_without_load_balancer" {
-  command = plan
-
   variables {
     vmss_name            = "no-lb-vmss"
     enable_load_balancer = false
@@ -150,8 +138,6 @@ run "vmss_without_load_balancer" {
 }
 
 run "vmss_with_availability_zones" {
-  command = plan
-
   variables {
     vmss_name = "zone-vmss"
     zones     = ["1", "2", "3"]
@@ -169,8 +155,6 @@ run "vmss_with_availability_zones" {
 }
 
 run "vmss_with_spot_instances" {
-  command = plan
-
   variables {
     vmss_name             = "spot-vmss"
     enable_spot_instances = true
@@ -190,8 +174,6 @@ run "vmss_with_spot_instances" {
 }
 
 run "vmss_with_rolling_upgrade" {
-  command = plan
-
   variables {
     vmss_name                 = "rolling-vmss"
     upgrade_mode              = "Rolling"
@@ -213,8 +195,6 @@ run "vmss_with_rolling_upgrade" {
 }
 
 run "invalid_vmss_name" {
-  command = plan
-
   variables {
     vmss_name = "INVALID_NAME_123"
   }
@@ -225,8 +205,6 @@ run "invalid_vmss_name" {
 }
 
 run "invalid_instances_too_high" {
-  command = plan
-
   variables {
     vmss_name = "test-vmss"
     instances = 1001
@@ -238,8 +216,6 @@ run "invalid_instances_too_high" {
 }
 
 run "invalid_os_type" {
-  command = plan
-
   variables {
     vmss_name = "test-vmss"
     os_type   = "MacOS"
@@ -251,8 +227,6 @@ run "invalid_os_type" {
 }
 
 run "vmss_with_custom_data" {
-  command = plan
-
   variables {
     vmss_name   = "custom-data-vmss"
     custom_data = "#!/bin/bash\napt-get update\napt-get install -y nginx"
@@ -285,8 +259,6 @@ run "vmss_with_ssh_access" {
 }
 
 run "vmss_with_rdp_access" {
-  command = plan
-
   variables {
     vmss_name         = "rdp-vmss"
     os_type           = "Windows"
