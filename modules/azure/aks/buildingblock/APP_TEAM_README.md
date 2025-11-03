@@ -66,80 +66,41 @@ This building block is for application teams that need to deploy containerized a
 - **Diagnostic Settings**: Cluster metrics and logs forwarded to Log Analytics
 
 ### Networking
-- **Custom VNet**: Dedicated virtual network and subnet for cluster isolation
+- **Flexible VNet Options**:
+  - Create new VNet and subnet automatically (default)
+  - Use existing VNet and subnet (for shared platform networking)
 - **Azure CNI**: Advanced networking capabilities with pod-level networking
 - **Private Cluster**: Optional private API server accessible only via private endpoint
 - **Hub Connectivity**: Optional VNet peering to central hub network for on-premises connectivity
+  - Only created when deploying with new VNet (`vnet_name == null`)
+  - Use existing VNet scenario for centrally-managed peering
 
 ### Auto-Scaling
 - **Cluster Autoscaler**: Automatically adjusts node count based on resource requirements (when enabled)
 - **System Node Pool**: Dedicated node pool for system workloads with optional auto-scaling
 
-## Deployment Scenarios
+## Configuration Variables
 
-### Public Cluster (Default)
-```hcl
-module "aks" {
-  source = "./buildingblock"
+### Networking Configuration
 
-  aks_cluster_name             = "my-public-aks"
-  resource_group_name          = "aks-rg"
-  location                     = "West Europe"
-  aks_admin_group_object_id    = "12345678-1234-1234-1234-123456789012"
-  log_analytics_workspace_name = "my-law"
-}
-```
+| Variable | Description | Required | Default |
+|----------|-------------|----------|---------|
+| `vnet_name` | Name of existing VNet to use. If `null`, creates new VNet. | No | `null` (creates new) |
+| `existing_vnet_resource_group_name` | Resource group of existing VNet. Only used when `vnet_name` is provided. | No | Same as AKS RG |
+| `subnet_name` | Name of existing subnet to use. If `null`, creates new subnet. | No | `null` (creates new) |
+| `vnet_address_space` | Address space for new VNet. Only used when `vnet_name == null`. | No | `10.240.0.0/16` |
+| `subnet_address_prefix` | Address prefix for new subnet. Only used when `subnet_name == null`. | No | `10.240.0.0/20` |
+| `allow_gateway_transit_from_hub` | Allow gateway transit from hub for on-premises connectivity. | No | `true` |
 
-### Private Cluster with Hub Connectivity
-```hcl
-provider "azurerm" {
-  alias           = "hub"
-  subscription_id = "hub-subscription-id"
-  # hub credentials
-}
+### Hub Connectivity (for Private Clusters)
 
-module "aks" {
-  source = "./buildingblock"
+| Variable | Description | Required | Default |
+|----------|-------------|----------|---------|
+| `hub_subscription_id` | Subscription ID of hub network. Required for hub peering. | Conditional | `null` |
+| `hub_resource_group_name` | Resource group of hub VNet. Required for hub peering. | Conditional | `null` |
+| `hub_vnet_name` | Name of hub VNet to peer with. Set to `null` to disable peering. | No | `null` |
 
-  providers = {
-    azurerm     = azurerm
-    azurerm.hub = azurerm.hub
-  }
-
-  aks_cluster_name             = "my-private-aks"
-  resource_group_name          = "aks-rg"
-  location                     = "West Europe"
-
-  # Private cluster settings
-  private_cluster_enabled           = true
-  private_dns_zone_id               = "System"
-  private_cluster_public_fqdn_enabled = false
-
-  # Hub connectivity
-  hub_subscription_id      = "hub-subscription-id"
-  hub_resource_group_name  = "hub-network-rg"
-  hub_vnet_name            = "hub-vnet"
-
-  # Azure AD and monitoring
-  aks_admin_group_object_id    = "12345678-1234-1234-1234-123456789012"
-  log_analytics_workspace_name = "my-law"
-}
-```
-
-### Private Cluster without Hub (Isolated)
-```hcl
-module "aks" {
-  source = "./buildingblock"
-
-  aks_cluster_name                  = "my-isolated-aks"
-  resource_group_name               = "aks-rg"
-  location                          = "West Europe"
-  private_cluster_enabled           = true
-  private_dns_zone_id               = "System"
-  aks_admin_group_object_id         = "12345678-1234-1234-1234-123456789012"
-  log_analytics_workspace_name      = "my-law"
-}
-```
+**Note:** Hub peering is **only created when `vnet_name == null`** (new VNet scenario). If using an existing VNet, peering must be managed externally.
 
 ## Getting Started
 
