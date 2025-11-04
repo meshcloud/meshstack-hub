@@ -102,7 +102,7 @@ No modules.
 
 | Name | Description |
 |------|-------------|
-| <a name="output_application_id"></a> [application\_id](#output\_application\_id) | Application (client) ID of the Azure AD application for federated credential setup |
+| <a name="output_application_object_id"></a> [application\_object\_id](#output\_application\_object\_id) | Application Object ID (not client ID) of the Azure AD application for federated identity credential setup |
 | <a name="output_azure_devops_organization_url"></a> [azure\_devops\_organization\_url](#output\_azure\_devops\_organization\_url) | Azure DevOps organization URL |
 | <a name="output_key_vault_id"></a> [key\_vault\_id](#output\_key\_vault\_id) | ID of the Key Vault for storing Azure DevOps PAT |
 | <a name="output_key_vault_name"></a> [key\_vault\_name](#output\_key\_vault\_name) | Name of the Key Vault for storing Azure DevOps PAT |

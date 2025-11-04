@@ -209,7 +209,7 @@ No modules.
 
 | Name | Description | Type | Default | Required |
 |------|-------------|------|---------|:--------:|
-| <a name="input_application_id"></a> [application\_id](#input\_application\_id) | Azure AD Application ID for federated identity credential | `string` | n/a | yes |
+| <a name="input_application_object_id"></a> [application\_object\_id](#input\_application\_object\_id) | Azure AD Application Object ID (not client ID) - use azuread\_application.*.object\_id | `string` | n/a | yes |
 | <a name="input_authorize_all_pipelines"></a> [authorize\_all\_pipelines](#input\_authorize\_all\_pipelines) | Automatically authorize all pipelines to use this service connection | `bool` | `false` | no |
 | <a name="input_azure_devops_organization_url"></a> [azure\_devops\_organization\_url](#input\_azure\_devops\_organization\_url) | Azure DevOps organization URL (e.g., https://dev.azure.com/myorg) | `string` | n/a | yes |
 | <a name="input_azure_subscription_id"></a> [azure\_subscription\_id](#input\_azure\_subscription\_id) | Azure Subscription ID to connect to | `string` | n/a | yes |
