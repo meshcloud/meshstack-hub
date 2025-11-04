@@ -1,6 +1,15 @@
-# Azure Virtual Machine Scale Set Building Block
+---
+name: Azure Virtual Machine Scale Set
+supportedPlatforms:
+  - azure
+description: |
+  Creates an Azure Virtual Machine Scale Set (VMSS) with comprehensive configuration options for scalable, highly available compute infrastructure.
+category: compute
+---
 
-This building block creates an Azure Virtual Machine Scale Set (VMSS) with comprehensive configuration options for scalable, highly available compute infrastructure. The VMSS is deployed into an existing spoke VNet, following Azure landing zone best practices.
+# Azure Virtual Machine Scale Set
+
+This Terraform module provisions an Azure Virtual Machine Scale Set (VMSS) with comprehensive configuration options for scalable, highly available compute infrastructure. The VMSS is deployed into an existing spoke VNet, following Azure landing zone best practices.
 
 ## Features
 
