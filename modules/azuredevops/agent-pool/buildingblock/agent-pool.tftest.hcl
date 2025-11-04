@@ -15,7 +15,7 @@ run "valid_agent_pool_configuration" {
   }
 
   assert {
-    condition     = azuredevops_agent_pool.main.name == "test-elastic-pool"
+    condition     = azuredevops_elastic_pool.main.name == "test-elastic-pool"
     error_message = "Agent pool name should be 'test-elastic-pool'"
   }
 

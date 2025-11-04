@@ -1,11 +1,11 @@
 output "agent_pool_id" {
   description = "ID of the created Azure DevOps agent pool"
-  value       = azuredevops_agent_pool.main.id
+  value       = azuredevops_elastic_pool.main.id
 }
 
 output "agent_pool_name" {
   description = "Name of the created Azure DevOps agent pool"
-  value       = azuredevops_agent_pool.main.name
+  value       = azuredevops_elastic_pool.main.name
 }
 
 output "elastic_pool_id" {
