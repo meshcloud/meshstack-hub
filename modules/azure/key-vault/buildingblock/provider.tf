@@ -1,4 +1,8 @@
 provider "azurerm" {
   features {}
-  # Configuration options
+}
+
+provider "azurerm" {
+  alias = "hub"
+  features {}
 }
