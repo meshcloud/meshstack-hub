@@ -1,4 +1,4 @@
-# AKS CLuster
+# AKS Cluster
 
 This documentation is intended as a reference documentation for cloud foundation or platform engineers using this module.
 

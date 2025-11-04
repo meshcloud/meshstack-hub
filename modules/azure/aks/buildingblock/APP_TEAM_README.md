@@ -90,7 +90,7 @@ This building block is for application teams that need to deploy containerized a
 | `subnet_name` | Name of existing subnet to use. If `null`, creates new subnet. | No | `null` (creates new) |
 | `vnet_address_space` | Address space for new VNet. Only used when `vnet_name == null`. | No | `10.240.0.0/16` |
 | `subnet_address_prefix` | Address prefix for new subnet. Only used when `subnet_name == null`. | No | `10.240.0.0/20` |
-| `allow_gateway_transit_from_hub` | Allow gateway transit from hub for on-premises connectivity. | No | `true` |
+| `allow_gateway_transit_from_hub` | Allow gateway transit from hub for on-premises connectivity. | No | `false` |
 
 ### Hub Connectivity (for Private Clusters)
 

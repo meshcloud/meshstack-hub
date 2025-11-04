@@ -146,7 +146,7 @@ output "provider_tf" {
 
         client_id       = "${azuread_service_principal.buildingblock_deploy[0].client_id}"
         client_secret   = "${azuread_application_password.buildingblock_deploy[0].value}"
-        subscription_id = "<LANDING_ZONE_ID>"
+        subscription_id = "<SUBSCRIPTION_ID>"
         tenant_id       = "${data.azurerm_subscription.current.tenant_id}"
       }
 
