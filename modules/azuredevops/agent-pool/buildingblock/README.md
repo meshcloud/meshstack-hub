@@ -16,7 +16,6 @@ This building block creates an Azure DevOps agent pool with elastic pool configu
 - **Agent Pool Creation**: Creates organization-level Azure DevOps agent pool
 - **Elastic Pool Integration**: Connects to existing Azure VMSS for automatic scaling
 - **Project Authorization**: Optional project-level queue and pipeline authorization
-- **User Management**: Assigns administrators to Agent Pool Administrators group
 - **Auto-scaling**: Dynamically scales agents based on demand
 
 ## Prerequisites
@@ -25,7 +24,6 @@ This building block creates an Azure DevOps agent pool with elastic pool configu
 - Existing Azure Virtual Machine Scale Set with Azure DevOps agent image
 - Azure service connection with access to the VMSS resource group
 - Personal Access Token with required scopes (managed by backplane)
-- Users provided by authoritative system with assigned roles
 
 ## Architecture
 
@@ -74,18 +72,6 @@ module "azure_devops_agent_pool" {
   recycle_after_each_use = false
 
   project_id = "project-123"
-
-  users = [
-    {
-      meshIdentifier = "user-001"
-      username       = "devops-admin"
-      firstName      = "DevOps"
-      lastName       = "Admin"
-      email          = "devops-admin@company.com"
-      euid           = "devops.admin"
-      roles          = ["admin"]
-    }
-  ]
 }
 ```
 
@@ -104,9 +90,16 @@ module "azure_devops_agent_pool" {
 - **auto_update**: Automatically update agents
 - **agent_interactive_ui**: Enable interactive UI for agents
 
-## User Roles
+## Agent Pool Administrators
 
-Users with **admin** or **Workspace Owner** roles are assigned to the "Agent Pool Administrators" group with permissions to:
+Agent pool administration is managed at the **organization level** in Azure DevOps. After creating the pool with Terraform, administrators must be assigned manually:
+
+1. Navigate to **Organization Settings** → **Agent pools** in Azure DevOps
+2. Select your agent pool
+3. Go to **Security** tab
+4. Add users/groups to **Administrator** role
+
+**Permissions granted to administrators**:
 - Manage agent pool settings
 - View and manage agents
 - Configure elastic pool properties
@@ -119,6 +112,7 @@ Users with **admin** or **Workspace Owner** roles are assigned to the "Agent Poo
 - **Service Connection**: Requires Azure service connection with read access to VMSS
 - **PAT Requirements**: Personal Access Token needs Agent Pools (Read & Manage) scope
 - **Project Authorization**: Optional but recommended for pipeline access
+- **User Management**: Agent pool administrators must be assigned manually in Azure DevOps portal
 
 ## Troubleshooting
 

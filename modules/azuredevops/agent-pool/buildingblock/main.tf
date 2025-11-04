@@ -1,14 +1,3 @@
-locals {
-  administrators = [
-    for user in var.users : user.email
-    if contains(user.roles, "admin") || contains(user.roles, "Workspace Owner")
-  ]
-
-  user_descriptors = {
-    for user in data.azuredevops_users.all_users.users : user.principal_name => user.descriptor
-  }
-}
-
 data "azurerm_key_vault" "devops" {
   name                = var.key_vault_name
   resource_group_name = var.resource_group_name
@@ -45,9 +34,6 @@ resource "azuredevops_elastic_pool" "main" {
   depends_on = [azuredevops_agent_pool.main]
 }
 
-data "azuredevops_users" "all_users" {
-}
-
 resource "azuredevops_agent_queue" "main" {
   count = var.project_id != null ? 1 : 0
 
@@ -61,18 +47,4 @@ resource "azuredevops_pipeline_authorization" "main" {
   project_id  = var.project_id
   resource_id = azuredevops_agent_queue.main[0].id
   type        = "queue"
-}
-
-data "azuredevops_group" "agent_pool_administrators" {
-  name = "Agent Pool Administrators"
-}
-
-resource "azuredevops_group_membership" "administrators" {
-  count = length(local.administrators) > 0 ? 1 : 0
-
-  group = data.azuredevops_group.agent_pool_administrators.descriptor
-  members = [
-    for email in local.administrators : local.user_descriptors[email]
-  ]
-  mode = "add"
 }

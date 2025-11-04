@@ -12,18 +12,6 @@ run "valid_agent_pool_configuration" {
     service_endpoint_scope        = "project-12345"
     max_capacity                  = 10
     desired_idle                  = 2
-
-    users = [
-      {
-        meshIdentifier = "likvid-tom-user"
-        username       = "likvid-tom@meshcloud.io"
-        firstName      = "Tom"
-        lastName       = "Livkid"
-        email          = "likvid-tom@meshcloud.io"
-        euid           = "likvid-tom@meshcloud.io"
-        roles          = ["admin", "Workspace Owner"]
-      }
-    ]
   }
 
   assert {
@@ -77,27 +65,6 @@ run "high_capacity_pool" {
     max_capacity                  = 50
     desired_idle                  = 10
     recycle_after_each_use        = true
-
-    users = [
-      {
-        meshIdentifier = "likvid-daniela-user"
-        username       = "likvid-daniela@meshcloud.io"
-        firstName      = "Daniela"
-        lastName       = "Livkid"
-        email          = "likvid-daniela@meshcloud.io"
-        euid           = "likvid-daniela@meshcloud.io"
-        roles          = ["user", "Workspace Manager"]
-      },
-      {
-        meshIdentifier = "likvid-anna-user"
-        username       = "likvid-anna@meshcloud.io"
-        firstName      = "Anna"
-        lastName       = "Livkid"
-        email          = "likvid-anna@meshcloud.io"
-        euid           = "likvid-anna@meshcloud.io"
-        roles          = ["reader", "Workspace Member"]
-      }
-    ]
   }
 
   assert {
@@ -124,18 +91,6 @@ run "with_project_authorization" {
     service_endpoint_id           = "12345678-1234-1234-1234-123456789012"
     service_endpoint_scope        = "project-12345"
     project_id                    = "test-project-id"
-
-    users = [
-      {
-        meshIdentifier = "likvid-tom-user"
-        username       = "likvid-tom@meshcloud.io"
-        firstName      = "Tom"
-        lastName       = "Livkid"
-        email          = "likvid-tom@meshcloud.io"
-        euid           = "likvid-tom@meshcloud.io"
-        roles          = ["admin"]
-      }
-    ]
   }
 
   assert {

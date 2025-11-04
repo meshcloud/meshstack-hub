@@ -112,17 +112,3 @@ variable "project_id" {
   type        = string
   default     = null
 }
-
-variable "users" {
-  description = "List of users from authoritative system"
-  type = list(object({
-    meshIdentifier = string
-    username       = string
-    firstName      = string
-    lastName       = string
-    email          = string
-    euid           = string
-    roles          = list(string)
-  }))
-  default = []
-}

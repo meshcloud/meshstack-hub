@@ -32,10 +32,3 @@ output "desired_idle" {
   description = "Number of desired idle agents"
   value       = azuredevops_elastic_pool.main.desired_idle
 }
-
-output "user_assignments" {
-  description = "Map of users and their assigned roles"
-  value = {
-    administrators = local.administrators
-  }
-}
