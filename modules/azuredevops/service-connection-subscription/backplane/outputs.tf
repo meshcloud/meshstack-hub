@@ -34,6 +34,6 @@ output "azure_devops_organization_url" {
 }
 
 output "application_id" {
-  description = "Application (client) ID of the Azure AD application for federated credential setup"
-  value       = azuread_application.azure_devops.id
+  description = "Application (client) ID of the Azure AD application"
+  value       = azuread_application.azure_devops.client_id
 }

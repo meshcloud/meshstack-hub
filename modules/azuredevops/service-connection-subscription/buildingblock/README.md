@@ -45,7 +45,7 @@ module "azuredevops_service_connection" {
   azure_subscription_id   = "87654321-4321-4321-4321-210987654321"
   service_principal_id    = "11111111-1111-1111-1111-111111111111"
   azure_tenant_id         = "22222222-2222-2222-2222-222222222222"
-  application_id          = azuread_application.azure_devops.id
+  application_id          = azuread_application.azure_devops.client_id
 }
 ```
 
@@ -128,6 +128,7 @@ module "azure_connection" {
   azure_subscription_id   = "87654321-4321-4321-4321-210987654321"
   service_principal_id    = var.service_principal_id
   azure_tenant_id         = var.azure_tenant_id
+  application_id          = module.backplane.application_id
 }
 ```
 
