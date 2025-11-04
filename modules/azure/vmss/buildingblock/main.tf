@@ -244,7 +244,7 @@ resource "azurerm_windows_virtual_machine_scale_set" "vmss" {
   single_placement_group      = var.single_placement_group
   zones                       = var.zones
   zone_balance                = length(var.zones) > 0 ? true : false
-  platform_fault_domain_count = var.single_placement_group ? 5 : 1
+  platform_fault_domain_count = var.enable_spot_instances ? 1 : (var.single_placement_group ? 5 : 1)
   priority                    = var.enable_spot_instances ? "Spot" : "Regular"
   eviction_policy             = var.enable_spot_instances ? var.spot_eviction_policy : null
   max_bid_price               = var.enable_spot_instances ? var.spot_max_bid_price : null

@@ -44,7 +44,7 @@ output "load_balancer_frontend_ip" {
 }
 
 output "public_ip_address" {
-  value       = var.enable_load_balancer && var.enable_public_ip ? azurerm_public_ip.lb_public_ip[0].ip_address : null
+  value       = var.enable_load_balancer && var.enable_public_ip ? azurerm_public_ip.lb_public_ip[0].ip_address : "no public IP assigned"
   description = "The public IP address of the load balancer (if enabled)"
 }
 

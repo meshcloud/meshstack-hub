@@ -1,6 +1,6 @@
 variables {
-  vmss_name                = "test-vmss"
-  resource_group_name      = "test-vmss-rg"
+  vmss_name                = "hcl-test-vmss"
+  resource_group_name      = "hcl-test-vmss-rg"
   location                 = "germanywestcentral"
   vnet_name                = "spoke-vnet"
   vnet_resource_group_name = "rg-vmss-test"
@@ -34,7 +34,7 @@ run "valid_linux_vmss" {
 
 run "windows_vmss" {
   variables {
-    vmss_name       = "windows-vmss"
+    vmss_name       = "win-vmss"
     os_type         = "Windows"
     sku             = "Standard_B2s"
     instances       = 3
@@ -42,10 +42,11 @@ run "windows_vmss" {
     image_publisher = "MicrosoftWindowsServer"
     image_offer     = "WindowsServer"
     image_sku       = "2022-Datacenter"
+    os_disk_size_gb = 128
   }
 
   assert {
-    condition     = azurerm_windows_virtual_machine_scale_set.vmss[0].name == "windows-vmss"
+    condition     = azurerm_windows_virtual_machine_scale_set.vmss[0].name == "win-vmss"
     error_message = "Windows VMSS name should match input"
   }
 
@@ -267,6 +268,7 @@ run "vmss_with_rdp_access" {
     image_publisher   = "MicrosoftWindowsServer"
     image_offer       = "WindowsServer"
     image_sku         = "2022-Datacenter"
+    os_disk_size_gb   = 127
   }
 
   assert {
