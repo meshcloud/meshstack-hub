@@ -69,6 +69,7 @@ resource "azurerm_role_definition" "buildingblock_deploy" {
     actions = [
       "Microsoft.ContainerService/managedClusters/read",
       "Microsoft.ContainerService/managedClusters/write",
+      "*/register/action",
       "Microsoft.ContainerService/managedClusters/delete",
       "Microsoft.ContainerService/managedClusters/listClusterAdminCredential/action",
       "Microsoft.ContainerService/managedClusters/listClusterUserCredential/action",
