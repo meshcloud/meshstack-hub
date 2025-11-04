@@ -32,18 +32,15 @@ resource "azuredevops_agent_pool" "main" {
 }
 
 resource "azuredevops_elastic_pool" "main" {
-  name                        = var.agent_pool_name
-  service_endpoint_id         = var.service_endpoint_id
-  service_endpoint_scope      = var.service_endpoint_scope
-  azure_resource_id           = data.azurerm_virtual_machine_scale_set.existing.id
-  max_capacity                = var.max_capacity
-  desired_idle                = var.desired_idle
-  recycle_after_each_use      = var.recycle_after_each_use
-  max_saved_node_count        = var.max_saved_node_count
-  time_to_live_minutes        = var.time_to_live_minutes
-  agent_interactive_ui        = var.agent_interactive_ui
-  desired_size                = var.desired_size
-  orchestration_type          = "Uniform"
+  name                   = var.agent_pool_name
+  service_endpoint_id    = var.service_endpoint_id
+  service_endpoint_scope = var.service_endpoint_scope
+  azure_resource_id      = data.azurerm_virtual_machine_scale_set.existing.id
+  max_capacity           = var.max_capacity
+  desired_idle           = var.desired_idle
+  recycle_after_each_use = var.recycle_after_each_use
+  time_to_live_minutes   = var.time_to_live_minutes
+  agent_interactive_ui   = var.agent_interactive_ui
 
   depends_on = [azuredevops_agent_pool.main]
 }

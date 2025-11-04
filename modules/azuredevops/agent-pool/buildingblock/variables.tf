@@ -90,17 +90,6 @@ variable "recycle_after_each_use" {
   default     = false
 }
 
-variable "max_saved_node_count" {
-  description = "Maximum number of machines to keep in the pool"
-  type        = number
-  default     = 0
-
-  validation {
-    condition     = var.max_saved_node_count >= 0
-    error_message = "Max saved node count must be 0 or greater."
-  }
-}
-
 variable "time_to_live_minutes" {
   description = "Time in minutes to keep idle agents before removing them"
   type        = number
@@ -116,17 +105,6 @@ variable "agent_interactive_ui" {
   description = "Enable agents to run with interactive UI"
   type        = bool
   default     = false
-}
-
-variable "desired_size" {
-  description = "Initial size of the elastic pool"
-  type        = number
-  default     = 1
-
-  validation {
-    condition     = var.desired_size >= 0
-    error_message = "Desired size must be 0 or greater."
-  }
 }
 
 variable "project_id" {

@@ -66,7 +66,6 @@ recycle_after_each_use = true  # Clean state for each build
 **Tips**:
 - Set `time_to_live_minutes` to automatically remove idle agents (e.g., 30 minutes)
 - Use `desired_idle = 0` for pools with infrequent usage
-- Set `max_saved_node_count` to limit standing agents
 - Consider separate pools for different workload patterns
 - Use smaller VM sizes for simpler build jobs
 
@@ -141,11 +140,10 @@ For organizations with hundreds of builds daily:
 ```hcl
 max_capacity           = 50
 desired_idle           = 10
-max_saved_node_count   = 10
 time_to_live_minutes   = 60
 ```
 
-**Why**: Keeps 10 agents always ready, scales to 50 during peak times, maintains up to 10 idle agents for fast response.
+**Why**: Keeps 10 agents always ready, scales to 50 during peak times, longer TTL for faster response to load spikes.
 
 ### Scenario 4: Weekend Testing Pool
 
@@ -234,9 +232,8 @@ If you don't provide `project_id`:
 **Solution**:
 1. Reduce `desired_idle` to minimum needed
 2. Lower `time_to_live_minutes` to remove idle agents faster
-3. Set `max_saved_node_count` to limit standing agents
-4. Review actual usage patterns and adjust capacity
-5. Consider using smaller VM sizes
+3. Review actual usage patterns and adjust capacity
+4. Consider using smaller VM sizes
 
 ### Service Connection Error
 

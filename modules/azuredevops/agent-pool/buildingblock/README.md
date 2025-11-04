@@ -68,7 +68,6 @@ module "azure_devops_agent_pool" {
 
   max_capacity   = 10
   desired_idle   = 2
-  desired_size   = 1
 
   auto_provision         = false
   auto_update            = true
@@ -96,9 +95,7 @@ module "azure_devops_agent_pool" {
 
 - **max_capacity**: Maximum number of VMs in the scale set (1-1000)
 - **desired_idle**: Number of agents to keep idle and ready (0+)
-- **desired_size**: Initial size of the elastic pool (0+)
 - **recycle_after_each_use**: Whether to tear down VM after each job
-- **max_saved_node_count**: Maximum VMs to keep in the pool
 - **time_to_live_minutes**: Time to keep idle agents before removal
 
 ### Agent Pool Settings
