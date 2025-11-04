@@ -55,3 +55,8 @@ variable "authorize_all_pipelines" {
   type        = bool
   default     = false
 }
+
+variable "application_id" {
+  description = "Azure AD Application ID for federated identity credential"
+  type        = string
+}

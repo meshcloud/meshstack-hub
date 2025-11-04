@@ -67,12 +67,3 @@ resource "azurerm_role_assignment" "azure_devops_manager" {
   role_definition_id = azurerm_role_definition.azure_devops_manager.role_definition_resource_id
   principal_id       = azuread_service_principal.azure_devops.object_id
 }
-
-resource "azuread_application_federated_identity_credential" "azure_devops" {
-  application_id = azuread_application.azure_devops.id
-  display_name   = "${var.service_connection_name}-federated-credential"
-  description    = "Federated identity credential for Azure DevOps service connection"
-  audiences      = ["api://AzureADTokenExchange"]
-  issuer         = "https://vstoken.dev.azure.com/${var.azure_devops_organization_id}"
-  subject        = "sc://${var.azure_devops_organization_url}/${var.azure_devops_project_name}/${var.service_connection_name}"
-}
