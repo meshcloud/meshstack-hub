@@ -17,7 +17,17 @@ Creates and manages Azure subscription service connections in Azure DevOps proje
 - Azure subscription ID to connect to
 - Azure DevOps PAT stored in Key Vault with `Service Connections (Read, Query & Manage)` scope
 - Existing Azure AD service principal with appropriate permissions on the target subscription
-- Application ID from the backplane for federated credential setup
+- **Application Object ID** (not client ID) from the backplane for federated credential setup
+
+## Important: Application Object ID vs Client ID
+
+⚠️ **Critical**: The `application_object_id` variable requires the **Application Object ID**, not the Client ID (Application ID).
+
+- ✅ **Use**: `azuread_application.*.object_id` - Returns the Object ID (GUID)
+- ❌ **Don't use**: `azuread_application.*.client_id` - Returns the Client ID (wrong ID)
+- ❌ **Don't use**: `azuread_application.*.id` - Returns `/applications/{object_id}` format (will be double-formatted)
+
+The module transforms the Object ID to `/applications/{object_id}` format required by the federated identity credential resource.
 
 ## Features
 
@@ -45,7 +55,7 @@ module "azuredevops_service_connection" {
   azure_subscription_id   = "87654321-4321-4321-4321-210987654321"
   service_principal_id    = "11111111-1111-1111-1111-111111111111"
   azure_tenant_id         = "22222222-2222-2222-2222-222222222222"
-  application_id          = azuread_application.azure_devops.client_id
+  application_object_id   = azuread_application.azure_devops.object_id
 }
 ```
 
@@ -69,7 +79,7 @@ module "azure_connection" {
   azure_subscription_id   = "87654321-4321-4321-4321-210987654321"
   service_principal_id    = var.service_principal_id
   azure_tenant_id         = var.azure_tenant_id
-  application_id          = module.backplane.application_id
+  application_object_id   = module.backplane.application_object_id
 }
 ```
 
@@ -128,7 +138,7 @@ module "azure_connection" {
   azure_subscription_id   = "87654321-4321-4321-4321-210987654321"
   service_principal_id    = var.service_principal_id
   azure_tenant_id         = var.azure_tenant_id
-  application_id          = module.backplane.application_id
+  application_object_id   = module.backplane.application_object_id
 }
 ```
 

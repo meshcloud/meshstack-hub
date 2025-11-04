@@ -8,7 +8,7 @@ variables {
   service_connection_name = "test-service-connection"
   azure_subscription_id   = "f808fff2-adda-415a-9b77-2833c041aacf"
   service_principal_id    = "53cc4637-18e2-44f6-8721-dfc08c030dde"
-  application_id          = "53cc4637-18e2-44f6-8721-dfc08c030dde"
+  application_object_id   = "53cc4637-18e2-44f6-8721-dfc08c030dde"
   azure_tenant_id         = "5f0e994b-6436-4f58-be96-4dc7bebff827"
 }
 

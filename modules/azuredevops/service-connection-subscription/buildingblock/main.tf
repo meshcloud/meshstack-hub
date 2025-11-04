@@ -43,7 +43,7 @@ resource "azuredevops_resource_authorization" "main" {
 }
 
 resource "azuread_application_federated_identity_credential" "azure_devops" {
-  application_id = "/applications/${var.application_id}"
+  application_id = "/applications/${var.application_object_id}"
   display_name   = "${var.service_connection_name}-federated-credential"
   description    = "Federated identity credential for Azure DevOps service connection"
   audiences      = ["api://AzureADTokenExchange"]

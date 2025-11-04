@@ -33,7 +33,7 @@ output "azure_devops_organization_url" {
   value       = var.azure_devops_organization_url
 }
 
-output "application_id" {
-  description = "Application (client) ID of the Azure AD application"
-  value       = azuread_application.azure_devops.client_id
+output "application_object_id" {
+  description = "Application Object ID (not client ID) of the Azure AD application for federated identity credential setup"
+  value       = azuread_application.azure_devops.object_id
 }
