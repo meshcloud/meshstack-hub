@@ -193,5 +193,3 @@ output "provider_tf" {
   description = "Ready-to-use provider.tf configuration for buildingblock deployment"
   sensitive   = true
 }
-
-
