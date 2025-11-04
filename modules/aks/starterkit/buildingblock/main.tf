@@ -95,7 +95,20 @@ resource "meshstack_tenant_v4" "prod" {
   }
 }
 
+resource "time_sleep" "wait_before_repo" {
+  depends_on = [
+    meshstack_project.dev,
+    meshstack_project.prod,
+    meshstack_tenant_v4.dev,
+    meshstack_tenant_v4.prod
+  ]
+
+  create_duration = "30s"
+}
+
 resource "meshstack_building_block_v2" "repo" {
+  depends_on = [time_sleep.wait_before_repo]
+
   spec = {
     building_block_definition_version_ref = {
       uuid = var.github_repo_definition_version_uuid
