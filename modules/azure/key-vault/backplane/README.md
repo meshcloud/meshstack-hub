@@ -12,9 +12,9 @@ across all subscriptions underneath a management group (typically the top-level 
 
 | Name | Version |
 |------|---------|
-| <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.0 |
-| <a name="requirement_azuread"></a> [azuread](#requirement\_azuread) | 3.1.0 |
-| <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) | 3.116.0 |
+| <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.3.0 |
+| <a name="requirement_azuread"></a> [azuread](#requirement\_azuread) | ~> 3.6.0 |
+| <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) | ~> 4.36.0 |
 
 ## Modules
 
@@ -24,30 +24,30 @@ No modules.
 
 | Name | Type |
 |------|------|
-| [azuread_application.buildingblock_deploy](https://registry.terraform.io/providers/hashicorp/azuread/3.1.0/docs/resources/application) | resource |
-| [azuread_application.buildingblock_deploy_hub](https://registry.terraform.io/providers/hashicorp/azuread/3.1.0/docs/resources/application) | resource |
-| [azuread_application_federated_identity_credential.buildingblock_deploy](https://registry.terraform.io/providers/hashicorp/azuread/3.1.0/docs/resources/application_federated_identity_credential) | resource |
-| [azuread_application_federated_identity_credential.buildingblock_deploy_hub](https://registry.terraform.io/providers/hashicorp/azuread/3.1.0/docs/resources/application_federated_identity_credential) | resource |
-| [azuread_application_password.buildingblock_deploy](https://registry.terraform.io/providers/hashicorp/azuread/3.1.0/docs/resources/application_password) | resource |
-| [azuread_application_password.buildingblock_deploy_hub](https://registry.terraform.io/providers/hashicorp/azuread/3.1.0/docs/resources/application_password) | resource |
-| [azuread_directory_role.directory_readers](https://registry.terraform.io/providers/hashicorp/azuread/3.1.0/docs/resources/directory_role) | resource |
-| [azuread_directory_role_assignment.directory_readers_created](https://registry.terraform.io/providers/hashicorp/azuread/3.1.0/docs/resources/directory_role_assignment) | resource |
-| [azuread_directory_role_assignment.directory_readers_existing](https://registry.terraform.io/providers/hashicorp/azuread/3.1.0/docs/resources/directory_role_assignment) | resource |
-| [azuread_service_principal.buildingblock_deploy](https://registry.terraform.io/providers/hashicorp/azuread/3.1.0/docs/resources/service_principal) | resource |
-| [azuread_service_principal.buildingblock_deploy_hub](https://registry.terraform.io/providers/hashicorp/azuread/3.1.0/docs/resources/service_principal) | resource |
-| [azurerm_role_assignment.created_principal](https://registry.terraform.io/providers/hashicorp/azurerm/3.116.0/docs/resources/role_assignment) | resource |
-| [azurerm_role_assignment.created_principal_hub](https://registry.terraform.io/providers/hashicorp/azurerm/3.116.0/docs/resources/role_assignment) | resource |
-| [azurerm_role_assignment.created_principal_hub_to_landingzone](https://registry.terraform.io/providers/hashicorp/azurerm/3.116.0/docs/resources/role_assignment) | resource |
-| [azurerm_role_assignment.created_principal_landingzone_to_hub](https://registry.terraform.io/providers/hashicorp/azurerm/3.116.0/docs/resources/role_assignment) | resource |
-| [azurerm_role_assignment.existing_principals](https://registry.terraform.io/providers/hashicorp/azurerm/3.116.0/docs/resources/role_assignment) | resource |
-| [azurerm_role_assignment.existing_principals_hub](https://registry.terraform.io/providers/hashicorp/azurerm/3.116.0/docs/resources/role_assignment) | resource |
-| [azurerm_role_assignment.existing_principals_hub_to_landingzone](https://registry.terraform.io/providers/hashicorp/azurerm/3.116.0/docs/resources/role_assignment) | resource |
-| [azurerm_role_assignment.existing_principals_landingzone_to_hub](https://registry.terraform.io/providers/hashicorp/azurerm/3.116.0/docs/resources/role_assignment) | resource |
-| [azurerm_role_definition.buildingblock_deploy](https://registry.terraform.io/providers/hashicorp/azurerm/3.116.0/docs/resources/role_definition) | resource |
-| [azurerm_role_definition.buildingblock_deploy_hub](https://registry.terraform.io/providers/hashicorp/azurerm/3.116.0/docs/resources/role_definition) | resource |
-| [azurerm_role_definition.buildingblock_hub_to_landingzone](https://registry.terraform.io/providers/hashicorp/azurerm/3.116.0/docs/resources/role_definition) | resource |
-| [azurerm_role_definition.buildingblock_landingzone_to_hub](https://registry.terraform.io/providers/hashicorp/azurerm/3.116.0/docs/resources/role_definition) | resource |
-| [azurerm_subscription.current](https://registry.terraform.io/providers/hashicorp/azurerm/3.116.0/docs/data-sources/subscription) | data source |
+| [azuread_application.buildingblock_deploy](https://registry.terraform.io/providers/hashicorp/azuread/latest/docs/resources/application) | resource |
+| [azuread_application.buildingblock_deploy_hub](https://registry.terraform.io/providers/hashicorp/azuread/latest/docs/resources/application) | resource |
+| [azuread_application_federated_identity_credential.buildingblock_deploy](https://registry.terraform.io/providers/hashicorp/azuread/latest/docs/resources/application_federated_identity_credential) | resource |
+| [azuread_application_federated_identity_credential.buildingblock_deploy_hub](https://registry.terraform.io/providers/hashicorp/azuread/latest/docs/resources/application_federated_identity_credential) | resource |
+| [azuread_application_password.buildingblock_deploy](https://registry.terraform.io/providers/hashicorp/azuread/latest/docs/resources/application_password) | resource |
+| [azuread_application_password.buildingblock_deploy_hub](https://registry.terraform.io/providers/hashicorp/azuread/latest/docs/resources/application_password) | resource |
+| [azuread_directory_role.directory_readers](https://registry.terraform.io/providers/hashicorp/azuread/latest/docs/resources/directory_role) | resource |
+| [azuread_directory_role_assignment.directory_readers_created](https://registry.terraform.io/providers/hashicorp/azuread/latest/docs/resources/directory_role_assignment) | resource |
+| [azuread_directory_role_assignment.directory_readers_existing](https://registry.terraform.io/providers/hashicorp/azuread/latest/docs/resources/directory_role_assignment) | resource |
+| [azuread_service_principal.buildingblock_deploy](https://registry.terraform.io/providers/hashicorp/azuread/latest/docs/resources/service_principal) | resource |
+| [azuread_service_principal.buildingblock_deploy_hub](https://registry.terraform.io/providers/hashicorp/azuread/latest/docs/resources/service_principal) | resource |
+| [azurerm_role_assignment.created_principal](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/role_assignment) | resource |
+| [azurerm_role_assignment.created_principal_hub](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/role_assignment) | resource |
+| [azurerm_role_assignment.created_principal_hub_to_landingzone](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/role_assignment) | resource |
+| [azurerm_role_assignment.created_principal_landingzone_to_hub](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/role_assignment) | resource |
+| [azurerm_role_assignment.existing_principals](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/role_assignment) | resource |
+| [azurerm_role_assignment.existing_principals_hub](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/role_assignment) | resource |
+| [azurerm_role_assignment.existing_principals_hub_to_landingzone](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/role_assignment) | resource |
+| [azurerm_role_assignment.existing_principals_landingzone_to_hub](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/role_assignment) | resource |
+| [azurerm_role_definition.buildingblock_deploy](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/role_definition) | resource |
+| [azurerm_role_definition.buildingblock_deploy_hub](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/role_definition) | resource |
+| [azurerm_role_definition.buildingblock_hub_to_landingzone](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/role_definition) | resource |
+| [azurerm_role_definition.buildingblock_landingzone_to_hub](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/role_definition) | resource |
+| [azurerm_subscription.current](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/subscription) | data source |
 
 ## Inputs
 
