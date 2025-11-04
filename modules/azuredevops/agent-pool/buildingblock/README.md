@@ -152,3 +152,62 @@ Agent pool administration is managed at the **organization level** in Azure DevO
 1. Verify project_id is correct
 2. Check PAT has project-level permissions
 3. Ensure agent pool exists before authorization
+
+<!-- BEGIN_TF_DOCS -->
+## Requirements
+
+| Name | Version |
+|------|---------|
+| <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.3.0 |
+| <a name="requirement_azuredevops"></a> [azuredevops](#requirement\_azuredevops) | ~> 1.1.1 |
+| <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) | ~> 4.51.0 |
+
+## Modules
+
+No modules.
+
+## Resources
+
+| Name | Type |
+|------|------|
+| [azuredevops_agent_queue.main](https://registry.terraform.io/providers/microsoft/azuredevops/latest/docs/resources/agent_queue) | resource |
+| [azuredevops_elastic_pool.main](https://registry.terraform.io/providers/microsoft/azuredevops/latest/docs/resources/elastic_pool) | resource |
+| [azuredevops_pipeline_authorization.main](https://registry.terraform.io/providers/microsoft/azuredevops/latest/docs/resources/pipeline_authorization) | resource |
+| [azurerm_key_vault.devops](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/key_vault) | data source |
+| [azurerm_key_vault_secret.azure_devops_pat](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/key_vault_secret) | data source |
+| [azurerm_virtual_machine_scale_set.existing](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/virtual_machine_scale_set) | data source |
+
+## Inputs
+
+| Name | Description | Type | Default | Required |
+|------|-------------|------|---------|:--------:|
+| <a name="input_agent_interactive_ui"></a> [agent\_interactive\_ui](#input\_agent\_interactive\_ui) | Enable agents to run with interactive UI | `bool` | `false` | no |
+| <a name="input_agent_pool_name"></a> [agent\_pool\_name](#input\_agent\_pool\_name) | Name of the Azure DevOps agent pool | `string` | n/a | yes |
+| <a name="input_auto_provision"></a> [auto\_provision](#input\_auto\_provision) | Automatically provision projects with this agent pool | `bool` | `false` | no |
+| <a name="input_auto_update"></a> [auto\_update](#input\_auto\_update) | Automatically update agents in this pool | `bool` | `true` | no |
+| <a name="input_azure_devops_organization_url"></a> [azure\_devops\_organization\_url](#input\_azure\_devops\_organization\_url) | Azure DevOps organization URL (e.g., https://dev.azure.com/myorg) | `string` | n/a | yes |
+| <a name="input_desired_idle"></a> [desired\_idle](#input\_desired\_idle) | Number of agents to keep idle and ready to run jobs | `number` | `1` | no |
+| <a name="input_key_vault_name"></a> [key\_vault\_name](#input\_key\_vault\_name) | Name of the Key Vault containing the Azure DevOps PAT | `string` | n/a | yes |
+| <a name="input_max_capacity"></a> [max\_capacity](#input\_max\_capacity) | Maximum number of virtual machines in the scale set | `number` | `10` | no |
+| <a name="input_pat_secret_name"></a> [pat\_secret\_name](#input\_pat\_secret\_name) | Name of the Azure DevOps PAT Token stored in the KeyVault | `string` | `"azure-devops-pat"` | no |
+| <a name="input_project_id"></a> [project\_id](#input\_project\_id) | Azure DevOps project ID to authorize the agent pool (optional) | `string` | `null` | no |
+| <a name="input_recycle_after_each_use"></a> [recycle\_after\_each\_use](#input\_recycle\_after\_each\_use) | Tear down the virtual machine after each use | `bool` | `false` | no |
+| <a name="input_resource_group_name"></a> [resource\_group\_name](#input\_resource\_group\_name) | Resource group name containing the Key Vault | `string` | n/a | yes |
+| <a name="input_service_endpoint_id"></a> [service\_endpoint\_id](#input\_service\_endpoint\_id) | ID of the Azure service connection for the elastic pool | `string` | n/a | yes |
+| <a name="input_service_endpoint_scope"></a> [service\_endpoint\_scope](#input\_service\_endpoint\_scope) | Project ID where the service endpoint is defined | `string` | n/a | yes |
+| <a name="input_time_to_live_minutes"></a> [time\_to\_live\_minutes](#input\_time\_to\_live\_minutes) | Time in minutes to keep idle agents before removing them | `number` | `30` | no |
+| <a name="input_vmss_name"></a> [vmss\_name](#input\_vmss\_name) | Name of the existing Azure Virtual Machine Scale Set | `string` | n/a | yes |
+| <a name="input_vmss_resource_group_name"></a> [vmss\_resource\_group\_name](#input\_vmss\_resource\_group\_name) | Resource group name containing the VMSS | `string` | n/a | yes |
+
+## Outputs
+
+| Name | Description |
+|------|-------------|
+| <a name="output_agent_pool_id"></a> [agent\_pool\_id](#output\_agent\_pool\_id) | ID of the created Azure DevOps agent pool |
+| <a name="output_agent_pool_name"></a> [agent\_pool\_name](#output\_agent\_pool\_name) | Name of the created Azure DevOps agent pool |
+| <a name="output_agent_queue_id"></a> [agent\_queue\_id](#output\_agent\_queue\_id) | ID of the agent queue in the project |
+| <a name="output_desired_idle"></a> [desired\_idle](#output\_desired\_idle) | Number of desired idle agents |
+| <a name="output_elastic_pool_id"></a> [elastic\_pool\_id](#output\_elastic\_pool\_id) | ID of the elastic pool configuration |
+| <a name="output_max_capacity"></a> [max\_capacity](#output\_max\_capacity) | Maximum capacity of the elastic pool |
+| <a name="output_vmss_id"></a> [vmss\_id](#output\_vmss\_id) | Azure Resource ID of the VMSS |
+<!-- END_TF_DOCS -->
