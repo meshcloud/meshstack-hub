@@ -4,11 +4,12 @@ This module provisions the infrastructure required to support the Azure DevOps S
 
 ## What It Provisions
 
-- **Azure AD Service Principal**: For service connection management automation
+- **Azure AD Application and Service Principal**: For service connection management automation
 - **Azure Key Vault**: Stores Azure DevOps Personal Access Token (PAT)
 - **Custom Role Definition**: Minimal permissions for reading Key Vault secrets
 - **Role Assignment**: Grants the service principal access to Key Vault
-- **Federated Identity Credential** (optional): For workload identity federation (OIDC) authentication
+
+**Note**: Federated identity credentials are now created automatically by the building block module using the actual service connection details from Azure DevOps.
 
 ## Prerequisites
 
@@ -21,7 +22,7 @@ This module provisions the infrastructure required to support the Azure DevOps S
 
 ## Usage
 
-### Basic Backplane (Service Principal Authentication)
+### Basic Backplane
 
 ```hcl
 module "azuredevops_service_connection_backplane" {
@@ -36,25 +37,6 @@ module "azuredevops_service_connection_backplane" {
 }
 ```
 
-### Backplane with Workload Identity Federation
-
-```hcl
-module "azuredevops_service_connection_backplane" {
-  source = "./backplane"
-
-  azure_devops_organization_url      = "https://dev.azure.com/myorg"
-  service_principal_name             = "azuredevops-serviceconn-terraform"
-  key_vault_name                     = "kv-azdo-sc-prod"
-  resource_group_name                = "rg-azdo-sc-prod"
-  location                           = "West Europe"
-  scope                              = "/subscriptions/00000000-0000-0000-0000-000000000000"
-  enable_workload_identity_federation = true
-  azure_devops_organization_id       = "33333333-3333-3333-3333-333333333333"
-  azure_devops_project_name          = "MyProject"
-  service_connection_name            = "Azure-Production-Federated"
-}
-```
-
 ## Post-Deployment Steps
 
 1. Create an Azure DevOps PAT with `Service Connections (Read, Query & Manage)` scope
@@ -65,9 +47,9 @@ module "azuredevops_service_connection_backplane" {
 
 ## Workload Identity Federation
 
-When `enable_workload_identity_federation = true`, this module configures:
-- **Issuer**: `https://vstoken.dev.azure.com/{organization_id}`
-- **Subject**: `sc://{org_url}/{project}/{connection_name}`
+Federated identity credentials are automatically created by the building block module after the service connection is provisioned. This ensures the issuer and subject values exactly match what Azure DevOps generates:
+- **Issuer**: Automatically determined by Azure DevOps
+- **Subject**: Automatically determined based on service connection details
 - **Audience**: `api://AzureADTokenExchange`
 
 This eliminates the need for client secrets by using OIDC token exchange.
@@ -97,7 +79,6 @@ No modules.
 | Name | Type |
 |------|------|
 | [azuread_application.azure_devops](https://registry.terraform.io/providers/hashicorp/azuread/latest/docs/resources/application) | resource |
-| [azuread_application_federated_identity_credential.azure_devops](https://registry.terraform.io/providers/hashicorp/azuread/latest/docs/resources/application_federated_identity_credential) | resource |
 | [azuread_service_principal.azure_devops](https://registry.terraform.io/providers/hashicorp/azuread/latest/docs/resources/service_principal) | resource |
 | [azurerm_key_vault.devops](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/key_vault) | resource |
 | [azurerm_resource_group.devops](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/resource_group) | resource |
@@ -110,23 +91,19 @@ No modules.
 
 | Name | Description | Type | Default | Required |
 |------|-------------|------|---------|:--------:|
-| <a name="input_azure_devops_organization_id"></a> [azure\_devops\_organization\_id](#input\_azure\_devops\_organization\_id) | Azure DevOps organization ID (GUID) for workload identity federation | `string` | n/a | yes |
 | <a name="input_azure_devops_organization_url"></a> [azure\_devops\_organization\_url](#input\_azure\_devops\_organization\_url) | Azure DevOps organization URL (e.g., https://dev.azure.com/myorg) | `string` | n/a | yes |
-| <a name="input_azure_devops_project_name"></a> [azure\_devops\_project\_name](#input\_azure\_devops\_project\_name) | Azure DevOps project name for workload identity federation | `string` | n/a | yes |
 | <a name="input_key_vault_name"></a> [key\_vault\_name](#input\_key\_vault\_name) | Name of the Key Vault to store the Azure DevOps PAT | `string` | n/a | yes |
 | <a name="input_location"></a> [location](#input\_location) | Azure region for resources | `string` | `"West Europe"` | no |
 | <a name="input_resource_group_name"></a> [resource\_group\_name](#input\_resource\_group\_name) | Resource group name for the Key Vault | `string` | n/a | yes |
 | <a name="input_scope"></a> [scope](#input\_scope) | Azure scope for role definitions (subscription or management group) | `string` | n/a | yes |
-| <a name="input_service_connection_name"></a> [service\_connection\_name](#input\_service\_connection\_name) | Azure DevOps service connection name for workload identity federation | `string` | n/a | yes |
 | <a name="input_service_principal_name"></a> [service\_principal\_name](#input\_service\_principal\_name) | Name for the Azure DevOps service principal | `string` | `"azure-devops-terraform"` | no |
 
 ## Outputs
 
 | Name | Description |
 |------|-------------|
+| <a name="output_application_object_id"></a> [application\_object\_id](#output\_application\_object\_id) | Application Object ID (not client ID) of the Azure AD application for federated identity credential setup |
 | <a name="output_azure_devops_organization_url"></a> [azure\_devops\_organization\_url](#output\_azure\_devops\_organization\_url) | Azure DevOps organization URL |
-| <a name="output_federated_credential_issuer"></a> [federated\_credential\_issuer](#output\_federated\_credential\_issuer) | Issuer URL for workload identity federation |
-| <a name="output_federated_credential_subject"></a> [federated\_credential\_subject](#output\_federated\_credential\_subject) | Subject identifier for workload identity federation |
 | <a name="output_key_vault_id"></a> [key\_vault\_id](#output\_key\_vault\_id) | ID of the Key Vault for storing Azure DevOps PAT |
 | <a name="output_key_vault_name"></a> [key\_vault\_name](#output\_key\_vault\_name) | Name of the Key Vault for storing Azure DevOps PAT |
 | <a name="output_key_vault_uri"></a> [key\_vault\_uri](#output\_key\_vault\_uri) | URI of the Key Vault for storing Azure DevOps PAT |

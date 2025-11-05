@@ -41,3 +41,12 @@ resource "azuredevops_resource_authorization" "main" {
   authorized  = true
   type        = "endpoint"
 }
+
+resource "azuread_application_federated_identity_credential" "azure_devops" {
+  application_id = "/applications/${var.application_object_id}"
+  display_name   = "${var.service_connection_name}-federated-credential"
+  description    = "Federated identity credential for Azure DevOps service connection"
+  audiences      = ["api://AzureADTokenExchange"]
+  issuer         = azuredevops_serviceendpoint_azurerm.main.workload_identity_federation_issuer
+  subject        = azuredevops_serviceendpoint_azurerm.main.workload_identity_federation_subject
+}

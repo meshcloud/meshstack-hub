@@ -55,3 +55,8 @@ variable "authorize_all_pipelines" {
   type        = bool
   default     = false
 }
+
+variable "application_object_id" {
+  description = "Azure AD Application Object ID (not client ID) - use azuread_application.*.object_id"
+  type        = string
+}

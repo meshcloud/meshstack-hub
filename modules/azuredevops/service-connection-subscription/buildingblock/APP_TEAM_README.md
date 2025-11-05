@@ -17,11 +17,11 @@ This building block connects your Azure DevOps pipelines to Azure subscriptions,
 | Assign Azure roles to service principal | ✅ | ❌ |
 | Create service connection | ✅ | ❌ |
 | Provide service principal credentials | ✅ | ❌ |
+| Automatically configure federated credentials | ✅ | ❌ |
 | Authorize pipelines to use connection | ⚠️ | ⚠️ |
 | Use service connection in pipelines | ❌ | ✅ |
 | Deploy Azure resources via pipelines | ❌ | ✅ |
 | Monitor deployments | ❌ | ✅ |
-| Manage federated credentials | ✅ | ❌ |
 
 ## 💡 Best Practices
 
@@ -293,9 +293,9 @@ Run manually to verify connectivity and permissions.
 **Solution**:
 1. Contact Platform Team to verify:
    - Service principal exists and is active
-   - Federated identity credential is properly configured
-   - Azure DevOps organization ID matches the issuer
-2. Platform Team will investigate and fix the federated credential configuration
+   - Backplane was deployed successfully
+   - Azure AD application is configured correctly
+2. The federated credential is automatically created - if there are issues, the Platform Team will need to check the Terraform deployment logs
 
 ### Cannot deploy to resource group
 
@@ -324,12 +324,13 @@ Run manually to verify connectivity and permissions.
 
 ### No Credential Rotation Required!
 
-This service connection uses **Workload Identity Federation (OIDC)**, which means:
+This service connection uses **Workload Identity Federation (OIDC)** with **automatic federated credential setup**, which means:
 
 ✅ **No secrets to manage** - authentication uses short-lived tokens
 ✅ **Automatic token rotation** - tokens expire quickly and are refreshed automatically
 ✅ **Zero maintenance** - no manual credential rotation needed
 ✅ **Better security** - no long-lived credentials that can leak or be compromised
+✅ **Automatic configuration** - federated credentials are created automatically by the Platform Team
 
 ### What This Means for You
 
@@ -341,9 +342,11 @@ This service connection uses **Workload Identity Federation (OIDC)**, which mean
 
 **The Platform Team manages**:
 - Service principal configuration
-- Federated identity credential setup
+- Automated federated identity credential setup
 - Azure role assignments
 - Trust relationship between Azure DevOps and Azure AD
+
+The federated credential is automatically created when your service connection is provisioned, using the exact values from Azure DevOps to ensure perfect compatibility.
 
 ## 📚 Related Documentation
 

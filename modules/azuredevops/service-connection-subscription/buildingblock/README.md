@@ -17,11 +17,22 @@ Creates and manages Azure subscription service connections in Azure DevOps proje
 - Azure subscription ID to connect to
 - Azure DevOps PAT stored in Key Vault with `Service Connections (Read, Query & Manage)` scope
 - Existing Azure AD service principal with appropriate permissions on the target subscription
-- Service principal with federated identity credential configured for Azure DevOps
+- **Application Object ID** (not client ID) from the backplane for federated credential setup
+
+## Important: Application Object ID vs Client ID
+
+⚠️ **Critical**: The `application_object_id` variable requires the **Application Object ID**, not the Client ID (Application ID).
+
+- ✅ **Use**: `azuread_application.*.object_id` - Returns the Object ID (GUID)
+- ❌ **Don't use**: `azuread_application.*.client_id` - Returns the Client ID (wrong ID)
+- ❌ **Don't use**: `azuread_application.*.id` - Returns `/applications/{object_id}` format (will be double-formatted)
+
+The module transforms the Object ID to `/applications/{object_id}` format required by the federated identity credential resource.
 
 ## Features
 
 - Configures Azure DevOps service connection using workload identity federation (OIDC)
+- Automatically creates federated identity credential with actual Azure DevOps values
 - No client secrets required - uses secure token-based authentication
 - Optional automatic authorization for all pipelines
 - Enhanced security through short-lived tokens
@@ -44,26 +55,31 @@ module "azuredevops_service_connection" {
   azure_subscription_id   = "87654321-4321-4321-4321-210987654321"
   service_principal_id    = "11111111-1111-1111-1111-111111111111"
   azure_tenant_id         = "22222222-2222-2222-2222-222222222222"
+  application_object_id   = azuread_application.azure_devops.object_id
 }
 ```
 
 ### Service Connection with Auto-Authorization
 
 ```hcl
-module "authorized_service_connection" {
+module "backplane" {
+  source = "./backplane"
+  # backplane configuration
+}
+
+module "azure_connection" {
   source = "./buildingblock"
 
-  azure_devops_organization_url = "https://dev.azure.com/myorg"
-  key_vault_name                = "kv-azdo-sc-prod"
-  resource_group_name           = "rg-azdo-sc-prod"
+  azure_devops_organization_url = module.backplane.azure_devops_organization_url
+  key_vault_name                = module.backplane.key_vault_name
+  resource_group_name           = module.backplane.resource_group_name
 
-  project_id              = "12345678-1234-1234-1234-123456789012"
-  service_connection_name = "Azure-Dev"
+  project_id              = module.azuredevops_project.project_id
+  service_connection_name = "Azure-Prod"
   azure_subscription_id   = "87654321-4321-4321-4321-210987654321"
-  service_principal_id    = "11111111-1111-1111-1111-111111111111"
-  azure_tenant_id         = "22222222-2222-2222-2222-222222222222"
-  authorize_all_pipelines = true
-  description             = "Development environment service connection"
+  service_principal_id    = var.service_principal_id
+  azure_tenant_id         = var.azure_tenant_id
+  application_object_id   = module.backplane.application_object_id
 }
 ```
 
@@ -76,10 +92,8 @@ This module exclusively uses **Workload Identity Federation (OIDC)** for enhance
 The service principal must:
 1. Be created and configured outside this module (typically in the backplane)
 2. Have appropriate role assignments on the target Azure subscription
-3. Have a federated identity credential configured for Azure DevOps with:
-   - Issuer: `https://vstoken.dev.azure.com/{organization_id}` (GUID, not name)
-   - Subject: `sc://{org_name}/{project_name}/{connection_name}`
-   - Audience: `api://AzureADTokenExchange`
+
+The federated identity credential is automatically created by this module after the service connection is provisioned, using the actual issuer and subject values from Azure DevOps. This ensures perfect alignment between the service connection and the federated credential configuration.
 
 ### Benefits
 
@@ -124,6 +138,7 @@ module "azure_connection" {
   azure_subscription_id   = "87654321-4321-4321-4321-210987654321"
   service_principal_id    = var.service_principal_id
   azure_tenant_id         = var.azure_tenant_id
+  application_object_id   = module.backplane.application_object_id
 }
 ```
 
@@ -151,6 +166,7 @@ steps:
 ## Security Considerations
 
 - Service principal must be created and managed outside this module
+- Federated identity credential is automatically created using actual Azure DevOps values
 - Workload identity federation uses short-lived tokens (no secrets stored)
 - Use least privilege principle when assigning roles to the service principal
 - Enable manual authorization for production service connections
@@ -160,8 +176,8 @@ steps:
 ## Limitations
 
 - Service principal must be created and managed separately
-- Changing service connection name requires recreation
-- Federated identity credential must be configured in the service principal (typically via backplane)
+- Changing service connection name requires recreation of both the connection and federated credential
+- Federated identity credential is automatically managed by this module
 - Only workload identity federation is supported (no client secret authentication)
 
 <!-- BEGIN_TF_DOCS -->
@@ -170,6 +186,7 @@ steps:
 | Name | Version |
 |------|---------|
 | <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.0 |
+| <a name="requirement_azuread"></a> [azuread](#requirement\_azuread) | ~> 3.6.0 |
 | <a name="requirement_azuredevops"></a> [azuredevops](#requirement\_azuredevops) | ~> 1.1.1 |
 | <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) | ~> 4.51.0 |
 
@@ -181,6 +198,7 @@ No modules.
 
 | Name | Type |
 |------|------|
+| [azuread_application_federated_identity_credential.azure_devops](https://registry.terraform.io/providers/hashicorp/azuread/latest/docs/resources/application_federated_identity_credential) | resource |
 | [azuredevops_resource_authorization.main](https://registry.terraform.io/providers/microsoft/azuredevops/latest/docs/resources/resource_authorization) | resource |
 | [azuredevops_serviceendpoint_azurerm.main](https://registry.terraform.io/providers/microsoft/azuredevops/latest/docs/resources/serviceendpoint_azurerm) | resource |
 | [azurerm_key_vault.devops](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/key_vault) | data source |
@@ -191,6 +209,7 @@ No modules.
 
 | Name | Description | Type | Default | Required |
 |------|-------------|------|---------|:--------:|
+| <a name="input_application_object_id"></a> [application\_object\_id](#input\_application\_object\_id) | Azure AD Application Object ID (not client ID) - use azuread\_application.*.object\_id | `string` | n/a | yes |
 | <a name="input_authorize_all_pipelines"></a> [authorize\_all\_pipelines](#input\_authorize\_all\_pipelines) | Automatically authorize all pipelines to use this service connection | `bool` | `false` | no |
 | <a name="input_azure_devops_organization_url"></a> [azure\_devops\_organization\_url](#input\_azure\_devops\_organization\_url) | Azure DevOps organization URL (e.g., https://dev.azure.com/myorg) | `string` | n/a | yes |
 | <a name="input_azure_subscription_id"></a> [azure\_subscription\_id](#input\_azure\_subscription\_id) | Azure Subscription ID to connect to | `string` | n/a | yes |
