@@ -67,9 +67,11 @@ resource "azurerm_role_definition" "buildingblock_deploy" {
 
   permissions {
     actions = [
+      # Register resource providers in Azure Resource Manager
+      "*/register/action",
+
       "Microsoft.ContainerService/managedClusters/read",
       "Microsoft.ContainerService/managedClusters/write",
-      "*/register/action",
       "Microsoft.ContainerService/managedClusters/delete",
       "Microsoft.ContainerService/managedClusters/listClusterAdminCredential/action",
       "Microsoft.ContainerService/managedClusters/listClusterUserCredential/action",

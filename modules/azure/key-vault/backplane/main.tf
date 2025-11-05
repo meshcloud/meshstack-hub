@@ -67,9 +67,11 @@ resource "azurerm_role_definition" "buildingblock_deploy" {
 
   permissions {
     actions = [
+      # Register resource providers in Azure Resource Manager
+      "*/register/action",
+
       # Key Vault
       "Microsoft.KeyVault/vaults/read",
-      "*/register/action",
       "Microsoft.KeyVault/vaults/write",
       "Microsoft.KeyVault/vaults/delete",
       "Microsoft.KeyVault/locations/deletedVaults/read",
