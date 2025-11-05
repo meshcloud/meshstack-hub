@@ -3,7 +3,6 @@ name: Azure DevOps Git Repository
 supportedPlatforms:
   - azuredevops
 description: Provides a Git repository in Azure DevOps with optional branch protection policies
-category: devops
 ---
 
 # Azure DevOps Repository Building Block

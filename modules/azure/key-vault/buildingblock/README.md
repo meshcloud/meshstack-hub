@@ -4,7 +4,6 @@ supportedPlatforms:
   - azure
 description: |
   Provides an Azure Key Vault for secure storage and management of secrets, keys, and certificates with RBAC authorization, optional private endpoint support, and hub connectivity.
-category: security
 ---
 
 # Azure Key Vault

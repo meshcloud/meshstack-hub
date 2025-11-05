@@ -3,7 +3,6 @@ name: Azure DevOps Pipeline
 supportedPlatforms:
   - azuredevops
 description: Provides a CI/CD pipeline in Azure DevOps linked to a repository with YAML-based configuration
-category: devops
 ---
 
 # Azure DevOps Pipeline Building Block

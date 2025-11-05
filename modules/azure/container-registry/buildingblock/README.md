@@ -4,7 +4,6 @@ supportedPlatforms:
   - azure
 description: |
   Provides a production-grade Azure Container Registry for storing and managing Docker container images and OCI artifacts with private networking support.
-category: container-registry
 ---
 
 # Azure Container Registry Building Block

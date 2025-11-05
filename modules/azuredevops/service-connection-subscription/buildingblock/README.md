@@ -3,7 +3,6 @@ name: Azure DevOps Service Connection (Subscription)
 supportedPlatforms:
   - azuredevops
 description: Provides an Azure subscription service connection in Azure DevOps for pipeline integration with Azure subscriptions
-category: devops
 ---
 
 # Azure DevOps Service Connection (Subscription) Building Block

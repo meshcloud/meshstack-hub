@@ -3,7 +3,6 @@ name: IONOS User Management
 supportedPlatforms:
   - ionos
 description: Creates and manages IONOS Cloud users with role-based access. This is a foundational module that should be deployed before DCD environments.
-category: identity
 ---
 
 # IONOS User Management Building Block
