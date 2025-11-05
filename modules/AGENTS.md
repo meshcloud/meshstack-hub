@@ -55,18 +55,25 @@ aws/
 
 ## Provider Version Strategy
 
-**Pinning Guidelines:**
-- **Use `~>` for stable APIs:** AWS (`~> 5.0`), Azure (`~> 3.116.0`)
-- **Use exact versions for frequent breaking changes:** Google (`6.12.0`)
-- **Review provider versions quarterly** to stay current with security patches
-- **Exception:** Pin to exact versions when a specific feature is required
+**Provider versions are module-specific, not repository-wide.** Each module should declare the minimum provider version it requires based on testing and feature needs.
 
-**Current Latest Versions:**
-- AWS Provider: `~> 5.0`
-- Azure Provider: `~> 3.116.0`
-- Google Provider: `6.12.0` (exact due to API volatility)
-- SAP BTP Provider: `~> 1.8.0`
-- Time Provider: `~> 0.11.1`
+**Version Selection Criteria:**
+
+When choosing a provider version for a module, consider:
+
+1. **Feature Requirements** - Does the module need specific APIs/resources from newer versions?
+2. **Testing Validation** - Which version has been tested with this module?
+3. **Breaking Changes** - Are there known breaking changes to avoid?
+4. **Stability** - Prefer versions with `~>` for patch updates unless there's a specific reason
+5. **Backwards Compatibility** - Will this work with existing deployments?
+
+**Version Constraint Best Practices:**
+
+- **Use `~> X.Y.Z`** to allow patch updates (recommended for most cases)
+- **Use exact versions** (`X.Y.Z`) only for providers with frequent breaking changes
+- **Document in the module's README** why a specific version is required
+- **Test against specific versions** - Each module should be validated with the provider version it declares
+- **Review provider versions quarterly** to stay current with security patches and new features
 
 ## Terraform Version Requirements
 
@@ -99,6 +106,14 @@ aws/
 - Creates custom role definitions with specific permissions
 - Uses role assignments for principal access
 - Scoped to subscription or management group level
+- **Service Principal Creation (Optional):**
+  - Can create Azure AD application and service principal
+  - Supports **Workload Identity Federation (WIF)** for passwordless authentication
+  - Falls back to application password if WIF not configured
+  - Automatically assigns created principals to role definitions
+- **Two-tier permissions for networking:**
+  - `buildingblock_deploy` role: Main deployment permissions
+  - `buildingblock_deploy_hub` role: Hub-specific permissions for VNet peering (e.g., ACR, Key Vault)
 
 **GCP Backplane Pattern:** *TBD - To be documented*
 
@@ -141,6 +156,43 @@ aws/
 - **Negative scenarios:** Invalid inputs that should fail gracefully
 - **Naming collision tests:** Prevent resource conflicts
 - **Cross-provider consistency:** Similar test patterns across clouds
+- **Test Users:** Use the following test users:
+  - **User Tom:**
+    ```json
+          {
+            meshIdentifier = "likvid-tom-user"
+            username       = "likvid-tom@meshcloud.io"
+            firstName      = "Tom"
+            lastName       = "Livkid"
+            email          = "likvid-tom@meshcloud.io"
+            euid           = "likvid-tom@meshcloud.io"
+            roles          = ["admin", "Workspace Owner"]
+          }
+    ```
+    - **User Daniela:**
+    ```json
+          {
+            meshIdentifier = "likvid-daniela-user"
+            username       = "likvid-daniela@meshcloud.io"
+            firstName      = "Daniela"
+            lastName       = "Livkid"
+            email          = "likvid-daniela@meshcloud.io"
+            euid           = "likvid-daniela@meshcloud.io"
+            roles          = ["user", "Workspace Manager"]
+          }
+    ```
+    - **User Anna:**
+    ```json
+          {
+            meshIdentifier = "likvid-anna-user"
+            username       = "likvid-anna@meshcloud.io"
+            firstName      = "Anna"
+            lastName       = "Livkid"
+            email          = "likvid-anna@meshcloud.io"
+            euid           = "likvid-anna@meshcloud.io"
+            roles          = ["reader", "Workspace Member"]
+          }
+    ```
 
 **Example Test Structure:**
 ```hcl
@@ -167,7 +219,6 @@ name: Service Name Building Block
 supportedPlatforms:
   - aws|azure|gcp|btp
 description: Brief description for catalog explaining what this building block provides
-category: "cost-management|security|networking|storage"
 ---
 ```
 
@@ -178,7 +229,6 @@ name: AWS S3 Bucket
 supportedPlatforms:
   - aws
 description: Provides an AWS S3 bucket for object storage with access controls, lifecycle policies, and encryption.
-category: storage
 ---
 ```
 
@@ -204,10 +254,12 @@ category: storage
 
 - **Cost Management:** Budget alerts (AWS, Azure, GCP)
 - **Storage:** S3 buckets, Azure storage accounts, GCS buckets
+- **Container Registries:** Azure Container Registry (ACR) with private networking
 - **Networking:** VPCs, spoke networks, subnets
 - **Databases:** PostgreSQL, managed database instances
 - **Security:** Key Vault, IAM roles, secret management
 - **CI/CD:** GitHub Actions integration, service connections
+- **Compute:** Virtual machines (Azure), AKS integration
 
 ## Best Practices for New Modules
 
