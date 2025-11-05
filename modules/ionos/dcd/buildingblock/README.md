@@ -3,7 +3,6 @@ name: IONOS DCD (Data Center Designer)
 supportedPlatforms:
   - ionos
 description: Creates and manages IONOS Data Center Designer environments with user onboarding, role-based access control, and datacenter provisioning.
-category: infrastructure
 ---
 
 # IONOS DCD Building Block

@@ -3,7 +3,6 @@ name: Azure Bastion Host
 supportedPlatforms:
   - azure
 description: Provides secure RDP and SSH connectivity to virtual machines in Azure virtual networks without exposing them to the public internet, with comprehensive monitoring and alerting.
-category: networking
 ---
 
 # Azure Bastion Building Block with Comprehensive Observability

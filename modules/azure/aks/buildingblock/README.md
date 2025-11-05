@@ -4,7 +4,6 @@ supportedPlatforms:
  - azure
 description: |
   Provision a production-grade Azure Kubernetes Service (AKS) cluster with Azure AD, OIDC, Workload Identity, Log Analytics and custom VNet using Terraform.
-category: compute
 ---
 
 # AKS Building Block

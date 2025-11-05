@@ -210,7 +210,6 @@ name: Service Name Building Block
 supportedPlatforms:
   - aws|azure|gcp|btp
 description: Brief description for catalog explaining what this building block provides
-category: "cost-management|security|networking|storage"
 ---
 ```
 
@@ -221,7 +220,6 @@ name: AWS S3 Bucket
 supportedPlatforms:
   - aws
 description: Provides an AWS S3 bucket for object storage with access controls, lifecycle policies, and encryption.
-category: storage
 ---
 ```
 

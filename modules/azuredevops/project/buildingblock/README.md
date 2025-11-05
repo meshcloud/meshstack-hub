@@ -4,7 +4,6 @@ supportedPlatforms:
   - azuredevops
 description: |
   Creates and manages Azure DevOps projects with user entitlements, stakeholder licenses, and role-based group memberships.
-category: devops
 ---
 
 # Azure DevOps Project Building Block

@@ -3,7 +3,6 @@ name: Azure Service Principal
 supportedPlatforms:
   - azure
 description: Creates an Entra ID application registration and service principal with role assignment for automated access to Azure resources
-category: security
 ---
 
 # Azure Service Principal Building Block
