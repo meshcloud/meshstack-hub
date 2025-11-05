@@ -292,7 +292,7 @@ run "private_endpoint_subresource_name" {
   }
 
   assert {
-    condition     = contains(one(azurerm_private_endpoint.key_vault_pe[*].private_service_connection[*].subresource_names), "vault")
+    condition     = contains(azurerm_private_endpoint.key_vault_pe[0].private_service_connection[0].subresource_names, "vault")
     error_message = "Private endpoint should use 'vault' subresource name"
   }
 }
