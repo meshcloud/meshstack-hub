@@ -1,7 +1,9 @@
 locals {
   quota_based_services = ["postgresql-db", "redis-cache", "hana-cloud", "auditlog-viewer"]
 
-  raw_entitlements = var.entitlements != "" ? split(",", var.entitlements) : []
+  raw_entitlements = var.entitlements != "" ? (
+    can(jsondecode(var.entitlements)) ? jsondecode(var.entitlements) : split(",", var.entitlements)
+  ) : []
 
   parsed_entitlements = [
     for e in local.raw_entitlements :
@@ -23,7 +25,9 @@ locals {
     e if e.amount == null
   ]
 
-  raw_subscriptions = var.subscriptions != "" ? split(",", var.subscriptions) : []
+  raw_subscriptions = var.subscriptions != "" ? (
+    can(jsondecode(var.subscriptions)) ? jsondecode(var.subscriptions) : split(",", var.subscriptions)
+  ) : []
 
   parsed_subscriptions = [
     for s in local.raw_subscriptions :
@@ -35,7 +39,9 @@ locals {
     if trimspace(s) != ""
   ]
 
-  raw_cf_services = var.cf_services != "" ? split(",", var.cf_services) : []
+  raw_cf_services = var.cf_services != "" ? (
+    can(jsondecode(var.cf_services)) ? jsondecode(var.cf_services) : split(",", var.cf_services)
+  ) : []
 
   parsed_cf_services = [
     for s in local.raw_cf_services :
