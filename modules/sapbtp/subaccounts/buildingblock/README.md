@@ -27,69 +27,20 @@ This building block provides the following optional capabilities:
 ### Basic Subaccount with Applications
 
 ```hcl
-entitlements = [
-  {
-    service_name = "build-code"
-    plan_name    = "standard"
-  }
-]
+entitlements = "build-code.standard"
 
-subscriptions = [
-  {
-    app_name   = "build-code"
-    plan_name  = "standard"
-    parameters = {}
-  }
-]
+subscriptions = "build-code.standard"
 ```
 
 ### Development Environment with Cloud Foundry Services
 
 ```hcl
-entitlements = [
-  {
-    service_name = "hana-cloud"
-    plan_name    = "hana"
-    amount       = 1
-  },
-  {
-    service_name = "PostgreSQL"
-    plan_name    = "small"
-    amount       = 1
-  },
-  {
-    service_name = "destination"
-    plan_name    = "lite"
-  },
-  {
-    service_name = "xsuaa"
-    plan_name    = "application"
-  }
-]
+entitlements = "hana-cloud.hana,postgresql-db.small,destination.lite,xsuaa.application"
 
-cloudfoundry_instance = {
-  name      = "dev-cf"
-  plan_name = "standard"
-}
+enable_cloudfoundry = true
+cloudfoundry_plan   = "standard"
 
-cloudfoundry_services = {
-  postgresql_instances = [
-    {
-      name       = "my-postgres-db"
-      plan_name  = "small"
-      parameters = {}
-    }
-  ]
-  xsuaa_instances = [
-    {
-      name       = "my-xsuaa"
-      plan_name  = "application"
-      parameters = {
-        xsappname = "my-app"
-      }
-    }
-  ]
-}
+cf_services = "postgresql.small,destination.lite,xsuaa.application"
 ```
 
 ## Common SAP BTP Services
@@ -130,30 +81,17 @@ cloudfoundry_services = {
 
 ## Cloud Foundry Service Instances
 
-When `cloudfoundry_instance` is configured, you can provision service instances:
+When `enable_cloudfoundry = true` is configured, you can provision service instances using the `cf_services` variable:
 
 ```hcl
-cloudfoundry_services = {
-  postgresql_instances = [
-    {
-      name       = "my-postgres"
-      plan_name  = "small"
-      parameters = {}
-    }
-  ]
-  xsuaa_instances = [
-    {
-      name       = "my-xsuaa"
-      plan_name  = "application"
-      parameters = {
-        xsappname = "my-app"
-      }
-    }
-  ]
-}
+enable_cloudfoundry = true
+
+cf_services = "postgresql.small,redis.medium,destination.lite,xsuaa.application"
 ```
 
-Supported: postgresql_instances, redis_instances, destination_instances, connectivity_instances, xsuaa_instances, application_logs_instances, html5_repo_instances, job_scheduler_instances, credstore_instances, objectstore_instances
+Each service instance is created with the name format: `{service}-{plan}` (e.g., `postgresql-small`, `destination-lite`)
+
+**Supported services:** postgresql, redis, destination, connectivity, xsuaa, application-logs, html5-apps-repo, job-scheduler, credstore, objectstore
 
 ## Providers
 
