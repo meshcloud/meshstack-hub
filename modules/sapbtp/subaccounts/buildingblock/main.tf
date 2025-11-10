@@ -198,7 +198,11 @@ resource "btp_subaccount_service_instance" "cf_service" {
   subaccount_id  = btp_subaccount.subaccount.id
   name           = each.value.name
   serviceplan_id = data.btp_subaccount_service_plan.cf_service_plan[each.key].id
-  parameters     = jsonencode(each.value.parameters)
+  parameters     = length(each.value.parameters) > 0 ? jsonencode(each.value.parameters) : null
+
+  lifecycle {
+    ignore_changes = [parameters]
+  }
 
   depends_on = [
     btp_subaccount_environment_instance.cloudfoundry
