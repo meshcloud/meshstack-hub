@@ -1,8 +1,10 @@
-# import-resources.sh - Dynamic SAP BTP Resource Importer
+# Dynamic SAP BTP Resource Importer
 
 ## Overview
 
-Automatically imports existing SAP BTP resources into OpenTofu state by reading configuration from `terraform.tfvars` and discovering resource IDs from outputs.
+Automatically imports existing SAP BTP resources into OpenTofu state by reading configuration from `terraform.tfvars` and discovering resource IDs from state.
+
+Available for both **Bash** (Linux/macOS) and **PowerShell** (Windows).
 
 ## Features
 
@@ -14,8 +16,14 @@ Automatically imports existing SAP BTP resources into OpenTofu state by reading 
 
 ## Usage
 
+**Bash (Linux/macOS):**
 ```bash
 ./import-resources.sh
+```
+
+**PowerShell (Windows):**
+```powershell
+./import-resources.ps1
 ```
 
 That's it! The script does everything automatically.
@@ -89,17 +97,25 @@ Next steps:
 
 ## Requirements
 
+**Common (All Platforms):**
 - `tofu` (OpenTofu) installed and configured
-- `jq` for JSON parsing (version 1.6+)
 - Valid BTP provider credentials (set via environment variables)
 - Existing `terraform.tfvars` with configuration
 - BTP CLI (`btp`) for manual ID lookup (if starting from empty state)
 - Cloud Foundry CLI (`cf`) for service instance GUIDs (if importing CF services)
 
+**Bash Script (Linux/macOS):**
+- Bash 3.2+ (macOS default) or higher
+- `jq` for JSON parsing (version 1.6+)
+
+**PowerShell Script (Windows):**
+- PowerShell 5.1+ or PowerShell Core 7+
+
 ## Workflow
 
 ### Initial Import (No State)
 
+**Bash:**
 ```bash
 # 1. Ensure terraform.tfvars exists with correct configuration
 cat terraform.tfvars
@@ -117,17 +133,42 @@ tofu plan
 tofu apply
 ```
 
+**PowerShell:**
+```powershell
+# 1. Ensure terraform.tfvars exists with correct configuration
+Get-Content terraform.tfvars
+
+# 2. Run the import script
+./import-resources.ps1
+
+# 3. Verify the imported resources
+tofu state list
+
+# 4. Check what still needs to be created
+tofu plan
+
+# 5. Apply remaining resources (entitlements, role assignments)
+tofu apply
+```
+
 ### Re-running (State Exists)
 
+**Bash:**
 ```bash
-# Safe to run - will skip already imported resources
 ./import-resources.sh
+```
+
+**PowerShell:**
+```powershell
+./import-resources.ps1
 ```
 
 Output:
 ```
 ⊙ ALREADY IMPORTED (skipping)
 ```
+
+Both scripts are idempotent and safe to run multiple times.
 
 ## Configuration Examples
 
@@ -201,6 +242,7 @@ tofu state list | grep <resource-name>
 
 ### Resource Discovery Logic
 
+**Bash Script:**
 1. **State (Primary)**
    ```bash
    tofu show -json | jq -r '.values.root_module.resources[]...'
@@ -209,7 +251,18 @@ tofu state list | grep <resource-name>
 2. **Manual Input (If State Empty)**
    ```bash
    read -p "Enter Subaccount ID: "
-   # Provides CLI commands to find IDs
+   ```
+
+**PowerShell Script:**
+1. **State (Primary)**
+   ```powershell
+   tofu show -json | ConvertFrom-Json
+   $stateJson.values.root_module.resources | Where-Object {...}
+   ```
+
+2. **Manual Input (If State Empty)**
+   ```powershell
+   Read-Host "Enter Subaccount ID"
    ```
 
 ### Resource Naming Pattern
@@ -226,16 +279,28 @@ Instance name: "destination-lite"
 
 - **Role assignments** cannot be imported (SAP BTP provider limitation)
 - **Entitlements** don't need import (managed declaratively)
-- Requires **jq** for JSON parsing
-- Needs **existing outputs** or state to discover IDs
+- Bash script requires **jq** for JSON parsing
+- PowerShell script requires **PowerShell 5.1+**
 
 ## Exit Codes
 
 - `0` - All imports successful
 - `1` - One or more imports failed
 
+## Platform Notes
+
+### macOS/Linux
+- Uses bash 3.2+ compatible syntax (macOS default shell)
+- Requires `jq` for JSON parsing: `brew install jq`
+
+### Windows
+- PowerShell 5.1+ included by default in Windows 10+
+- PowerShell Core 7+ recommended for cross-platform consistency
+- Native JSON parsing with `ConvertFrom-Json`
+
 ## See Also
 
-- [IMPORT_SUCCESS.md](./IMPORT_SUCCESS.md) - Detailed import report
+- [import-resources.sh](./import-resources.sh) - Bash script for Linux/macOS
+- [import-resources.ps1](./import-resources.ps1) - PowerShell script for Windows
 - [terraform.tfvars](./terraform.tfvars) - Configuration file
 - [main.tf](./main.tf) - Resource definitions
