@@ -6,11 +6,11 @@ Automatically imports existing SAP BTP resources into OpenTofu state by reading 
 
 ## Features
 
-✅ **Fully Automatic** - No manual resource ID lookup required  
-✅ **Idempotent** - Safe to run multiple times  
-✅ **Smart Discovery** - Reads `terraform.tfvars` to know what to import  
-✅ **Error Handling** - Tracks successful and failed imports  
-✅ **Skip Already Imported** - Detects and skips resources already in state  
+✅ **Fully Automatic** - No manual resource ID lookup required
+✅ **Idempotent** - Safe to run multiple times
+✅ **Smart Discovery** - Reads `terraform.tfvars` to know what to import
+✅ **Error Handling** - Tracks successful and failed imports
+✅ **Skip Already Imported** - Detects and skips resources already in state
 
 ## Usage
 

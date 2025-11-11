@@ -49,14 +49,14 @@ Write-Host "  Subaccount ID: $SUBACCOUNT_ID"
 $CF_ENV_ID = ""
 if ($ENABLE_CF -eq "true") {
     $CF_ENV_ID = ($stateJson.values.root_module.resources | Where-Object { $_.type -eq "btp_subaccount_environment_instance" -and $_.name -eq "cloudfoundry" } | Select-Object -First 1).values.id
-    
+
     if (-not $CF_ENV_ID) {
         Write-Host ""
         Write-Host "Cloud Foundry Environment ID not found in state."
         Write-Host "You can find it with: btp list accounts/environment-instance --subaccount $SUBACCOUNT_ID"
         $CF_ENV_ID = Read-Host "Enter CF Environment ID"
     }
-    
+
     Write-Host "  CF Environment ID: $CF_ENV_ID"
 }
 
@@ -78,16 +78,16 @@ if ($CF_SERVICE_IDS.Count -eq 0 -and $CF_SERVICES -and $CF_SERVICES -ne '""') {
     Write-Host "You can find them with: btp list services/instance --subaccount $SUBACCOUNT_ID"
     Write-Host ""
     Write-Host "Please enter service instance IDs for each service:"
-    
+
     # Parse services and prompt for each ID
     $serviceArray = $CF_SERVICES -split ',' | ForEach-Object { $_.Trim() }
-    
+
     foreach ($serviceEntry in $serviceArray) {
         if ($serviceEntry) {
             $serviceName, $planName = $serviceEntry -split '\.'
             $instanceName = "$serviceName-$planName"
             $resourceKey = "$instanceName-$planName"
-            
+
             $serviceId = Read-Host "  Enter ID for $serviceName.$planName (name: $instanceName)"
             $CF_SERVICE_IDS[$resourceKey] = $serviceId
         }
@@ -105,11 +105,11 @@ function Import-Resource {
         [string]$ResourceId,
         [string]$Description
     )
-    
+
     Write-Host "Importing: $Description"
     Write-Host "  Resource: $ResourceAddress"
     Write-Host "  ID: $ResourceId"
-    
+
     # Check if already imported
     $stateCheck = tofu state show $ResourceAddress 2>$null
     if ($LASTEXITCODE -eq 0) {
@@ -118,7 +118,7 @@ function Import-Resource {
         Write-Host ""
         return $true
     }
-    
+
     $importResult = tofu import $ResourceAddress $ResourceId 2>$null
     if ($LASTEXITCODE -eq 0) {
         $script:SUCCESSFUL_IMPORTS += $Description
@@ -140,15 +140,15 @@ Import-Resource -ResourceAddress "btp_subaccount.subaccount" -ResourceId $SUBACC
 # Import entitlements
 if ($ENTITLEMENTS -and $ENTITLEMENTS -ne '""' -and $ENTITLEMENTS -ne "") {
     Write-Host "Importing entitlements..."
-    
+
     # Parse entitlements (format: service.plan,service.plan)
     $entitlementArray = $ENTITLEMENTS -split ',' | ForEach-Object { $_.Trim() }
-    
+
     foreach ($entitlementEntry in $entitlementArray) {
         if ($entitlementEntry) {
             $serviceName, $planName = $entitlementEntry -split '\.'
             $resourceKey = "$serviceName-$planName"
-            
+
             # Entitlement import ID format: subaccount_id,service_name,plan_name
             Import-Resource `
                 -ResourceAddress "btp_subaccount_entitlement.entitlement_without_quota[`"$resourceKey`"]" `
@@ -169,22 +169,22 @@ if ($ENABLE_CF -eq "true" -and $CF_ENV_ID) {
 # Import CF service instances
 if ($CF_SERVICES -and $CF_SERVICES -ne '""' -and $CF_SERVICES -ne "") {
     Write-Host "Importing CF service instances..."
-    
+
     # Parse services from cf_services variable (format: service.plan,service.plan)
     $serviceArray = $CF_SERVICES -split ',' | ForEach-Object { $_.Trim() }
-    
+
     foreach ($serviceEntry in $serviceArray) {
         if ($serviceEntry) {
             # service.plan -> name-plan format (e.g., destination.lite -> destination-lite)
             $serviceName, $planName = $serviceEntry -split '\.'
             $instanceName = "$serviceName-$planName"
-            
+
             # The resource key is name-plan-plan (e.g., destination-lite-lite)
             $resourceKey = "$instanceName-$planName"
-            
+
             # Get instance ID from hashtable
             $instanceId = $CF_SERVICE_IDS[$resourceKey]
-            
+
             if ($instanceId) {
                 Import-Resource `
                     -ResourceAddress "btp_subaccount_service_instance.cf_service[`"$resourceKey`"]" `

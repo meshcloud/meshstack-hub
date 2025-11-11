@@ -47,14 +47,14 @@ echo "  Subaccount ID: $SUBACCOUNT_ID"
 CF_ENV_ID=""
 if [ "$ENABLE_CF" = "true" ]; then
     CF_ENV_ID=$(tofu show -json 2>/dev/null | jq -r '.values.root_module.resources[] | select(.type == "btp_subaccount_environment_instance" and .name == "cloudfoundry") | .values.id' 2>/dev/null || echo "")
-    
+
     if [ -z "$CF_ENV_ID" ]; then
         echo ""
         echo "Cloud Foundry Environment ID not found in state."
         echo "You can find it with: btp list accounts/environment-instance --subaccount $SUBACCOUNT_ID"
         read -p "Enter CF Environment ID: " CF_ENV_ID
     fi
-    
+
     echo "  CF Environment ID: $CF_ENV_ID"
 fi
 
@@ -71,11 +71,11 @@ if [ "$CF_SERVICES_IN_STATE" = "0" ] && [ -n "$CF_SERVICES" ] && [ "$CF_SERVICES
     echo "You can find them with: btp list services/instance --subaccount $SUBACCOUNT_ID"
     echo ""
     echo "Please enter service instance IDs for each service:"
-    
+
     # Parse services and prompt for each ID
     IFS=',' read -ra SERVICE_ARRAY <<< "$CF_SERVICES"
     CF_SERVICE_IDS_MANUAL="{}"
-    
+
     for service_entry in "${SERVICE_ARRAY[@]}"; do
         service_entry=$(echo "$service_entry" | xargs)
         if [ -n "$service_entry" ]; then
@@ -83,12 +83,12 @@ if [ "$CF_SERVICES_IN_STATE" = "0" ] && [ -n "$CF_SERVICES" ] && [ "$CF_SERVICES
             plan_name=$(echo "$service_entry" | cut -d'.' -f2)
             instance_name="${service_name}-${plan_name}"
             resource_key="${instance_name}-${plan_name}"
-            
+
             read -p "  Enter ID for $service_name.$plan_name (name: $instance_name): " service_id
             CF_SERVICE_IDS_MANUAL=$(echo "$CF_SERVICE_IDS_MANUAL" | jq --arg key "$resource_key" --arg val "$service_id" '.[$key] = $val')
         fi
     done
-    
+
     CF_SERVICE_IDS_JSON="$CF_SERVICE_IDS_MANUAL"
 fi
 
@@ -103,11 +103,11 @@ import_resource() {
     local resource_address="$1"
     local resource_id="$2"
     local description="$3"
-    
+
     echo "Importing: $description"
     echo "  Resource: $resource_address"
     echo "  ID: $resource_id"
-    
+
     # Check if already imported
     if tofu state show "$resource_address" >/dev/null 2>&1; then
         echo "  ⊙ ALREADY IMPORTED (skipping)"
@@ -115,7 +115,7 @@ import_resource() {
         echo ""
         return 0
     fi
-    
+
     if tofu import "$resource_address" "$resource_id" >/dev/null 2>&1; then
         SUCCESSFUL_IMPORTS+=("$description")
         echo "  ✓ SUCCESS"
@@ -138,17 +138,17 @@ import_resource \
 # Import entitlements
 if [ -n "$ENTITLEMENTS" ] && [ "$ENTITLEMENTS" != '""' ] && [ "$ENTITLEMENTS" != "" ]; then
     echo "Importing entitlements..."
-    
+
     # Parse entitlements (format: service.plan,service.plan)
     IFS=',' read -ra ENTITLEMENT_ARRAY <<< "$ENTITLEMENTS"
-    
+
     for entitlement_entry in "${ENTITLEMENT_ARRAY[@]}"; do
         entitlement_entry=$(echo "$entitlement_entry" | xargs) # trim whitespace
         if [ -n "$entitlement_entry" ]; then
             service_name=$(echo "$entitlement_entry" | cut -d'.' -f1)
             plan_name=$(echo "$entitlement_entry" | cut -d'.' -f2)
             resource_key="${service_name}-${plan_name}"
-            
+
             # Entitlement import ID format: subaccount_id,service_name,plan_name
             import_resource \
                 "btp_subaccount_entitlement.entitlement_without_quota[\"$resource_key\"]" \
@@ -169,10 +169,10 @@ fi
 # Import CF service instances
 if [ -n "$CF_SERVICES" ] && [ "$CF_SERVICES" != '""' ] && [ "$CF_SERVICES" != "" ]; then
     echo "Importing CF service instances..."
-    
+
     # Parse services from cf_services variable (format: service.plan,service.plan)
     IFS=',' read -ra SERVICE_ARRAY <<< "$CF_SERVICES"
-    
+
     for service_entry in "${SERVICE_ARRAY[@]}"; do
         service_entry=$(echo "$service_entry" | xargs) # trim whitespace
         if [ -n "$service_entry" ]; then
@@ -180,13 +180,13 @@ if [ -n "$CF_SERVICES" ] && [ "$CF_SERVICES" != '""' ] && [ "$CF_SERVICES" != ""
             service_name=$(echo "$service_entry" | cut -d'.' -f1)
             plan_name=$(echo "$service_entry" | cut -d'.' -f2)
             instance_name="${service_name}-${plan_name}"
-            
+
             # The resource key is name-plan-plan (e.g., destination-lite-lite)
             resource_key="${instance_name}-${plan_name}"
-            
+
             # Get instance ID from state JSON
             instance_id=$(echo "$CF_SERVICE_IDS_JSON" | jq -r --arg key "$resource_key" '.[$key] // empty')
-            
+
             if [ -n "$instance_id" ]; then
                 import_resource \
                     "btp_subaccount_service_instance.cf_service[\"$resource_key\"]" \
