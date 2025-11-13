@@ -1,0 +1,87 @@
+{
+  "name": "SAP BTP Cloud Foundry",
+  "displayName": "SAP BTP Cloud Foundry",
+  "description": "Enables Cloud Foundry environment and manages CF service instances for application deployment",
+  "category": "Platform Services",
+  "platform": "sapbtp",
+  "tags": ["cloudfoundry", "btp", "paas", "services", "runtime"],
+  "version": "1.0.0",
+  "supportedPlatforms": ["sapbtp"],
+  "schema": {
+    "inputs": {
+      "globalaccount": {
+        "type": "string",
+        "description": "Global account subdomain",
+        "required": true
+      },
+      "subaccount_id": {
+        "type": "string",
+        "description": "BTP Subaccount ID (from dependency or manual input)",
+        "required": true
+      },
+      "project_identifier": {
+        "type": "string",
+        "description": "Project identifier for CF environment naming",
+        "required": true
+      },
+      "cloudfoundry_plan": {
+        "type": "string",
+        "description": "Cloud Foundry environment plan",
+        "required": false,
+        "default": "standard",
+        "options": ["standard", "free", "trial"]
+      },
+      "cf_services": {
+        "type": "string",
+        "description": "Select Cloud Foundry services (meshStack will join as comma-separated: service.plan)",
+        "required": false,
+        "default": "",
+        "selectableValues": [
+          "postgresql.small",
+          "postgresql.medium",
+          "postgresql.large",
+          "redis.small",
+          "redis.medium",
+          "redis.large",
+          "destination.lite",
+          "connectivity.lite",
+          "connectivity.connectivity_proxy",
+          "xsuaa.application",
+          "xsuaa.broker",
+          "xsuaa.apiaccess",
+          "application-logs.lite",
+          "application-logs.standard",
+          "html5-apps-repo.app-host",
+          "html5-apps-repo.app-runtime",
+          "jobscheduler.lite",
+          "jobscheduler.standard",
+          "credstore.free",
+          "credstore.standard",
+          "objectstore.s3-standard"
+        ]
+      }
+    },
+    "outputs": {
+      "subaccount_id": {
+        "type": "string",
+        "description": "BTP Subaccount ID (passthrough)"
+      },
+      "cloudfoundry_instance_id": {
+        "type": "string",
+        "description": "Cloud Foundry environment instance ID"
+      },
+      "cloudfoundry_instance_state": {
+        "type": "string",
+        "description": "Cloud Foundry environment state"
+      },
+      "cloudfoundry_services": {
+        "type": "object",
+        "description": "Map of created CF service instances"
+      }
+    }
+  },
+  "documentation": {
+    "readme": "README.md",
+    "userGuide": "APP_TEAM_README.md"
+  }
+}
