@@ -154,3 +154,43 @@ cf target -o {org-name} -s {space-name}
 ```
 
 Find your org name in BTP Cockpit → Cloud Foundry → Organizations
+
+<!-- BEGIN_TF_DOCS -->
+## Requirements
+
+| Name | Version |
+|------|---------|
+| <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.3.0 |
+| <a name="requirement_btp"></a> [btp](#requirement\_btp) | ~> 1.8.0 |
+
+## Modules
+
+No modules.
+
+## Resources
+
+| Name | Type |
+|------|------|
+| [btp_subaccount_environment_instance.cloudfoundry](https://registry.terraform.io/providers/sap/btp/latest/docs/resources/subaccount_environment_instance) | resource |
+| [btp_subaccount_service_instance.cf_service](https://registry.terraform.io/providers/sap/btp/latest/docs/resources/subaccount_service_instance) | resource |
+| [btp_subaccount_service_plan.cf_service_plan](https://registry.terraform.io/providers/sap/btp/latest/docs/data-sources/subaccount_service_plan) | data source |
+
+## Inputs
+
+| Name | Description | Type | Default | Required |
+|------|-------------|------|---------|:--------:|
+| <a name="input_cf_services"></a> [cf\_services](#input\_cf\_services) | Comma-separated list of Cloud Foundry service instances in format: service.plan (e.g., 'postgresql.small,destination.lite,redis.medium') | `string` | `""` | no |
+| <a name="input_cloudfoundry_plan"></a> [cloudfoundry\_plan](#input\_cloudfoundry\_plan) | Cloud Foundry environment plan (standard, free, or trial) | `string` | `"standard"` | no |
+| <a name="input_globalaccount"></a> [globalaccount](#input\_globalaccount) | The subdomain of the global account in which you want to manage resources. | `string` | n/a | yes |
+| <a name="input_project_identifier"></a> [project\_identifier](#input\_project\_identifier) | The meshStack project identifier (used for CF environment naming). | `string` | n/a | yes |
+| <a name="input_subaccount_id"></a> [subaccount\_id](#input\_subaccount\_id) | The ID of the subaccount where Cloud Foundry should be enabled. | `string` | n/a | yes |
+
+## Outputs
+
+| Name | Description |
+|------|-------------|
+| <a name="output_cloudfoundry_instance_id"></a> [cloudfoundry\_instance\_id](#output\_cloudfoundry\_instance\_id) | ID of the Cloud Foundry environment instance |
+| <a name="output_cloudfoundry_instance_state"></a> [cloudfoundry\_instance\_state](#output\_cloudfoundry\_instance\_state) | State of the Cloud Foundry environment instance |
+| <a name="output_cloudfoundry_services"></a> [cloudfoundry\_services](#output\_cloudfoundry\_services) | Map of Cloud Foundry service instances created in this subaccount |
+| <a name="output_subaccount_id"></a> [subaccount\_id](#output\_subaccount\_id) | The subaccount ID (passthrough for dependency chaining) |
+<!-- END_TF_DOCS -->

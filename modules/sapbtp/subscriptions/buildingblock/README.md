@@ -101,3 +101,37 @@ subscriptions = "integrationsuite.enterprise_agreement,mobile-services.standard"
 ```
 subscriptions = "sap-build-apps.standard,build-workzone.standard"
 ```
+
+<!-- BEGIN_TF_DOCS -->
+## Requirements
+
+| Name | Version |
+|------|---------|
+| <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.3.0 |
+| <a name="requirement_btp"></a> [btp](#requirement\_btp) | ~> 1.8.0 |
+
+## Modules
+
+No modules.
+
+## Resources
+
+| Name | Type |
+|------|------|
+| [btp_subaccount_subscription.subscription](https://registry.terraform.io/providers/sap/btp/latest/docs/resources/subaccount_subscription) | resource |
+
+## Inputs
+
+| Name | Description | Type | Default | Required |
+|------|-------------|------|---------|:--------:|
+| <a name="input_globalaccount"></a> [globalaccount](#input\_globalaccount) | The subdomain of the global account in which you want to manage resources. | `string` | n/a | yes |
+| <a name="input_subaccount_id"></a> [subaccount\_id](#input\_subaccount\_id) | The ID of the subaccount where subscriptions should be added. | `string` | n/a | yes |
+| <a name="input_subscriptions"></a> [subscriptions](#input\_subscriptions) | Comma-separated list of application subscriptions in format: app.plan (e.g., 'build-workzone.standard,integrationsuite.enterprise\_agreement') | `string` | `""` | no |
+
+## Outputs
+
+| Name | Description |
+|------|-------------|
+| <a name="output_subaccount_id"></a> [subaccount\_id](#output\_subaccount\_id) | The subaccount ID (passthrough for dependency chaining) |
+| <a name="output_subscriptions"></a> [subscriptions](#output\_subscriptions) | Map of application subscriptions created in this subaccount |
+<!-- END_TF_DOCS -->

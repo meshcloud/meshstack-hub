@@ -103,3 +103,35 @@ entitlements = "postgresql-db.small,redis-cache.medium"
 ```
 entitlements = "sapappstudio.standard-edition,sap-build-apps.standard"
 ```
+
+<!-- BEGIN_TF_DOCS -->
+## Requirements
+
+No requirements.
+
+## Modules
+
+No modules.
+
+## Resources
+
+| Name | Type |
+|------|------|
+| [btp_subaccount_entitlement.entitlement_with_quota](https://registry.terraform.io/providers/hashicorp/btp/latest/docs/resources/subaccount_entitlement) | resource |
+| [btp_subaccount_entitlement.entitlement_without_quota](https://registry.terraform.io/providers/hashicorp/btp/latest/docs/resources/subaccount_entitlement) | resource |
+
+## Inputs
+
+| Name | Description | Type | Default | Required |
+|------|-------------|------|---------|:--------:|
+| <a name="input_entitlements"></a> [entitlements](#input\_entitlements) | Comma-separated list of service entitlements in format: service.plan (e.g., 'postgresql-db.trial,destination.lite,xsuaa.application') | `string` | `""` | no |
+| <a name="input_globalaccount"></a> [globalaccount](#input\_globalaccount) | The subdomain of the global account in which you want to manage resources. | `string` | n/a | yes |
+| <a name="input_subaccount_id"></a> [subaccount\_id](#input\_subaccount\_id) | The ID of the subaccount where entitlements should be added. | `string` | n/a | yes |
+
+## Outputs
+
+| Name | Description |
+|------|-------------|
+| <a name="output_entitlements"></a> [entitlements](#output\_entitlements) | Map of entitlements created for this subaccount |
+| <a name="output_subaccount_id"></a> [subaccount\_id](#output\_subaccount\_id) | The subaccount ID (passthrough for dependency chaining) |
+<!-- END_TF_DOCS -->
