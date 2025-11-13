@@ -12,7 +12,7 @@ if [ ! -f "terraform.tfvars" ]; then
     exit 1
 fi
 
-QUOTA_BASED_SERVICES=("postgresql-db" "redis-cache" "hana-cloud" "auditlog-viewer" "APPLICATION_RUNTIME" "cloudfoundry" "sapappstudio" "sap-build-apps")
+QUOTA_BASED_SERVICES=("postgresql-db" "redis-cache" "hana-cloud" "auditlog-viewer" "APPLICATION_RUNTIME" "sapappstudio" "sap-build-apps")
 
 is_quota_based() {
     local service="$1"

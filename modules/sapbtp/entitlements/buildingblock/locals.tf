@@ -1,5 +1,5 @@
 locals {
-  quota_based_services = ["postgresql-db", "redis-cache", "hana-cloud", "auditlog-viewer", "APPLICATION_RUNTIME", "cloudfoundry", "sapappstudio", "sap-build-apps"]
+  quota_based_services = ["postgresql-db", "redis-cache", "hana-cloud", "auditlog-viewer", "APPLICATION_RUNTIME", "sapappstudio", "sap-build-apps"]
 
   raw_entitlements = var.entitlements != "" ? (
     can(jsondecode(var.entitlements)) ? jsondecode(var.entitlements) : split(",", var.entitlements)
