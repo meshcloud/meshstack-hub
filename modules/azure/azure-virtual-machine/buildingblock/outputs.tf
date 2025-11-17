@@ -63,8 +63,8 @@ Your Azure Virtual Machine was successfully created!
 ## VM Details
 
 - **Name**: ${var.vm_name}
-- **Resource Group**: ${azurerm_resource_group.vm_rg.name}
-- **Location**: ${azurerm_resource_group.vm_rg.location}
+- **Resource Group**: ${local.rg_name}
+- **Location**: ${local.rg_location}
 - **Operating System**: ${var.os_type}
 - **VM Size**: ${var.vm_size}
 - **Private IP**: ${azurerm_network_interface.vm_nic.private_ip_address}${var.enable_public_ip ? "\n- **Public IP**: ${azurerm_public_ip.vm_public_ip[0].ip_address}" : ""}
@@ -113,7 +113,7 @@ ${var.enable_spot_instance ? "## Spot Instance Notice\n\n⚠️ This VM is runni
 
 ## Resources Created
 
-- Resource Group: `${azurerm_resource_group.vm_rg.name}`
+- Resource Group: `${local.rg_name}`
 - Virtual Network: `${azurerm_virtual_network.vm_vnet.name}`
 - Subnet: `${azurerm_subnet.vm_subnet.name}`
 - Virtual Machine: `${var.vm_name}`
