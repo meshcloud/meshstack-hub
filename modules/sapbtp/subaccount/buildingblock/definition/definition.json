@@ -1,0 +1,94 @@
+{
+  "name": "SAP BTP Subaccount",
+  "displayName": "SAP BTP Subaccount",
+  "description": "Creates and manages SAP BTP subaccounts with user role assignments. Foundation for all other BTP building blocks.",
+  "category": "Infrastructure",
+  "platform": "sapbtp",
+  "tags": ["subaccount", "btp", "foundation", "core"],
+  "version": "3.0.0",
+  "supportedPlatforms": ["sapbtp"],
+  "schema": {
+    "inputs": {
+      "subfolder": {
+        "type": "string",
+        "description": "BTP directory/folder name",
+        "required": false,
+        "default": ""
+      },
+      "region": {
+        "type": "string",
+        "description": "BTP region for the subaccount",
+        "required": true,
+        "default": "eu10",
+        "options": ["us10", "eu10", "eu20", "ap21", "jp20", "us20", "us21", "eu11", "ap10", "ap11"]
+      },
+      "users": {
+        "type": "array",
+        "description": "List of users from authoritative system with roles",
+        "required": false,
+        "default": [],
+        "items": {
+          "type": "object",
+          "properties": {
+            "meshIdentifier": {
+              "type": "string"
+            },
+            "username": {
+              "type": "string"
+            },
+            "firstName": {
+              "type": "string"
+            },
+            "lastName": {
+              "type": "string"
+            },
+            "email": {
+              "type": "string"
+            },
+            "euid": {
+              "type": "string"
+            },
+            "roles": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "enum": ["admin", "user", "reader"]
+              }
+            }
+          }
+        }
+      },
+      "project_identifier": {
+        "type": "string",
+        "description": "Project identifier from meshStack",
+        "required": true
+      }
+    },
+    "outputs": {
+      "subaccount_id": {
+        "type": "string",
+        "description": "BTP Subaccount ID"
+      },
+      "subaccount_name": {
+        "type": "string",
+        "description": "BTP Subaccount name"
+      },
+      "subaccount_subdomain": {
+        "type": "string",
+        "description": "BTP Subaccount subdomain"
+      },
+      "subaccount_region": {
+        "type": "string",
+        "description": "BTP Subaccount region"
+      },
+      "subaccount_login_link": {
+        "type": "string",
+        "description": "Link to BTP Cockpit for this subaccount"
+      }
+    }
+  },
+  "documentation": {
+    "readme": "README.md",
+    "userGuide": "APP_TEAM_README.md"
+  }
+}
