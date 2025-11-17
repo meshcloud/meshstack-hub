@@ -19,7 +19,7 @@ output "vm_public_ip" {
 }
 
 output "resource_group_name" {
-  value       = azurerm_resource_group.vm_rg.name
+  value       = local.rg_name
   description = "The name of the resource group"
 }
 
@@ -49,7 +49,7 @@ output "vm_identity_principal_id" {
 }
 
 output "azure_portal_url" {
-  value       = "https://portal.azure.com/#@${data.azurerm_client_config.current.tenant_id}/resource/subscriptions/${data.azurerm_subscription.current.subscription_id}/resourceGroups/${azurerm_resource_group.vm_rg.name}/providers/Microsoft.Compute/virtualMachines/${var.vm_name}/overview"
+  value       = "https://portal.azure.com/#@${data.azurerm_client_config.current.tenant_id}/resource/subscriptions/${data.azurerm_subscription.current.subscription_id}/resourceGroups/${local.rg_name}/providers/Microsoft.Compute/virtualMachines/${var.vm_name}/overview"
   description = "Direct link to the VM in Azure Portal"
 }
 
