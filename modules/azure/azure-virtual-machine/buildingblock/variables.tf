@@ -5,7 +5,8 @@ variable "vm_name" {
 
 variable "resource_group_name" {
   type        = string
-  description = "The name of the resource group"
+  description = "The name of the resource group. If not provided, a new resource group will be created."
+  default     = null
 }
 
 variable "location" {

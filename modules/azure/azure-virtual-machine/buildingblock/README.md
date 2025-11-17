@@ -168,6 +168,7 @@ No modules.
 | [azurerm_windows_virtual_machine.vm](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/windows_virtual_machine) | resource |
 | [random_string.resource_code](https://registry.terraform.io/providers/hashicorp/random/latest/docs/resources/string) | resource |
 | [azurerm_client_config.current](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/client_config) | data source |
+| [azurerm_resource_group.vm_rg](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/resource_group) | data source |
 | [azurerm_subscription.current](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/subscription) | data source |
 
 ## Inputs
@@ -188,7 +189,7 @@ No modules.
 | <a name="input_os_disk_size_gb"></a> [os\_disk\_size\_gb](#input\_os\_disk\_size\_gb) | The size of the OS disk in GB | `number` | `30` | no |
 | <a name="input_os_disk_storage_type"></a> [os\_disk\_storage\_type](#input\_os\_disk\_storage\_type) | The storage account type for the OS disk | `string` | `"Standard_LRS"` | no |
 | <a name="input_os_type"></a> [os\_type](#input\_os\_type) | The operating system type (Linux or Windows) | `string` | `"Linux"` | no |
-| <a name="input_resource_group_name"></a> [resource\_group\_name](#input\_resource\_group\_name) | The name of the resource group | `string` | n/a | yes |
+| <a name="input_resource_group_name"></a> [resource\_group\_name](#input\_resource\_group\_name) | The name of the resource group. If not provided, a new resource group will be created. | `string` | `null` | no |
 | <a name="input_spot_eviction_policy"></a> [spot\_eviction\_policy](#input\_spot\_eviction\_policy) | Eviction policy for spot instances (Deallocate or Delete) | `string` | `"Deallocate"` | no |
 | <a name="input_spot_max_bid_price"></a> [spot\_max\_bid\_price](#input\_spot\_max\_bid\_price) | Maximum price to pay for spot instance per hour. -1 means pay up to on-demand price. Default is -1 for maximum availability | `number` | `-1` | no |
 | <a name="input_ssh_public_key"></a> [ssh\_public\_key](#input\_ssh\_public\_key) | SSH public key for Linux VM authentication (required for Linux) | `string` | `null` | no |

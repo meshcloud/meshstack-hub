@@ -2,6 +2,13 @@ data "azurerm_subscription" "current" {}
 
 data "azurerm_client_config" "current" {}
 
+locals {
+  # Use provided resource group name or create a new one
+  resource_group_name = var.resource_group_name != null ? var.resource_group_name : "${var.vm_name}-rg"
+  # Determine if we need to create a resource group
+  create_resource_group = var.resource_group_name == null
+}
+
 resource "random_string" "resource_code" {
   length  = 5
   special = false
@@ -9,16 +16,28 @@ resource "random_string" "resource_code" {
 }
 
 resource "azurerm_resource_group" "vm_rg" {
-  name     = var.resource_group_name
+  count    = local.create_resource_group ? 1 : 0
+  name     = local.resource_group_name
   location = var.location
   tags     = var.tags
+}
+
+data "azurerm_resource_group" "vm_rg" {
+  count = local.create_resource_group ? 0 : 1
+  name  = local.resource_group_name
+}
+
+locals {
+  # Get the actual resource group object (either created or existing)
+  rg_name     = local.create_resource_group ? azurerm_resource_group.vm_rg[0].name : data.azurerm_resource_group.vm_rg[0].name
+  rg_location = local.create_resource_group ? azurerm_resource_group.vm_rg[0].location : data.azurerm_resource_group.vm_rg[0].location
 }
 
 # Virtual Network
 resource "azurerm_virtual_network" "vm_vnet" {
   name                = "${var.vm_name}-vnet"
-  location            = azurerm_resource_group.vm_rg.location
-  resource_group_name = azurerm_resource_group.vm_rg.name
+  location            = local.rg_location
+  resource_group_name = local.rg_name
   address_space       = [var.vnet_address_space]
 
   tags = var.tags
@@ -27,7 +46,7 @@ resource "azurerm_virtual_network" "vm_vnet" {
 # Subnet
 resource "azurerm_subnet" "vm_subnet" {
   name                 = "${var.vm_name}-subnet"
-  resource_group_name  = azurerm_resource_group.vm_rg.name
+  resource_group_name  = local.rg_name
   virtual_network_name = azurerm_virtual_network.vm_vnet.name
   address_prefixes     = [var.subnet_address_prefix]
 }
@@ -35,8 +54,8 @@ resource "azurerm_subnet" "vm_subnet" {
 # Network Interface
 resource "azurerm_network_interface" "vm_nic" {
   name                = "${var.vm_name}-nic"
-  location            = azurerm_resource_group.vm_rg.location
-  resource_group_name = azurerm_resource_group.vm_rg.name
+  location            = local.rg_location
+  resource_group_name = local.rg_name
 
   ip_configuration {
     name                          = "internal"
@@ -52,8 +71,8 @@ resource "azurerm_network_interface" "vm_nic" {
 resource "azurerm_public_ip" "vm_public_ip" {
   count               = var.enable_public_ip ? 1 : 0
   name                = "${var.vm_name}-pip"
-  location            = azurerm_resource_group.vm_rg.location
-  resource_group_name = azurerm_resource_group.vm_rg.name
+  location            = local.rg_location
+  resource_group_name = local.rg_name
   allocation_method   = "Static"
   sku                 = "Standard"
 
@@ -63,8 +82,8 @@ resource "azurerm_public_ip" "vm_public_ip" {
 # Network Security Group
 resource "azurerm_network_security_group" "vm_nsg" {
   name                = "${var.vm_name}-nsg"
-  location            = azurerm_resource_group.vm_rg.location
-  resource_group_name = azurerm_resource_group.vm_rg.name
+  location            = local.rg_location
+  resource_group_name = local.rg_name
 
   tags = var.tags
 }
@@ -81,7 +100,7 @@ resource "azurerm_network_security_rule" "allow_ssh" {
   destination_port_range      = "22"
   source_address_prefix       = "*"
   destination_address_prefix  = "*"
-  resource_group_name         = azurerm_resource_group.vm_rg.name
+  resource_group_name         = local.rg_name
   network_security_group_name = azurerm_network_security_group.vm_nsg.name
 }
 
@@ -97,7 +116,7 @@ resource "azurerm_network_security_rule" "allow_rdp" {
   destination_port_range      = "3389"
   source_address_prefix       = "*"
   destination_address_prefix  = "*"
-  resource_group_name         = azurerm_resource_group.vm_rg.name
+  resource_group_name         = local.rg_name
   network_security_group_name = azurerm_network_security_group.vm_nsg.name
 }
 
@@ -111,8 +130,8 @@ resource "azurerm_network_interface_security_group_association" "vm_nsg_associat
 resource "azurerm_linux_virtual_machine" "vm" {
   count               = var.os_type == "Linux" ? 1 : 0
   name                = var.vm_name
-  location            = azurerm_resource_group.vm_rg.location
-  resource_group_name = azurerm_resource_group.vm_rg.name
+  location            = local.rg_location
+  resource_group_name = local.rg_name
   size                = var.vm_size
   admin_username      = var.admin_username
 
@@ -155,8 +174,8 @@ resource "azurerm_linux_virtual_machine" "vm" {
 resource "azurerm_windows_virtual_machine" "vm" {
   count               = var.os_type == "Windows" ? 1 : 0
   name                = var.vm_name
-  location            = azurerm_resource_group.vm_rg.location
-  resource_group_name = azurerm_resource_group.vm_rg.name
+  location            = local.rg_location
+  resource_group_name = local.rg_name
   size                = var.vm_size
   admin_username      = var.admin_username
   admin_password      = var.admin_password
@@ -193,8 +212,8 @@ resource "azurerm_windows_virtual_machine" "vm" {
 resource "azurerm_managed_disk" "data_disk" {
   count                = var.data_disk_size_gb > 0 ? 1 : 0
   name                 = "${var.vm_name}-data-disk"
-  location             = azurerm_resource_group.vm_rg.location
-  resource_group_name  = azurerm_resource_group.vm_rg.name
+  location             = local.rg_location
+  resource_group_name  = local.rg_name
   storage_account_type = var.data_disk_storage_type
   create_option        = "Empty"
   disk_size_gb         = var.data_disk_size_gb
