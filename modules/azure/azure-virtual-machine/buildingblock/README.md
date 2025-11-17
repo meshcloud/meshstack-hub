@@ -202,6 +202,7 @@ No modules.
 
 | Name | Description |
 |------|-------------|
+| <a name="output_azure_portal_url"></a> [azure\_portal\_url](#output\_azure\_portal\_url) | Direct link to the VM in Azure Portal |
 | <a name="output_network_interface_id"></a> [network\_interface\_id](#output\_network\_interface\_id) | The ID of the network interface |
 | <a name="output_resource_group_name"></a> [resource\_group\_name](#output\_resource\_group\_name) | The name of the resource group |
 | <a name="output_subnet_id"></a> [subnet\_id](#output\_subnet\_id) | The ID of the subnet |
