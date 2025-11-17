@@ -3,8 +3,15 @@ data "azurerm_subscription" "current" {}
 data "azurerm_client_config" "current" {}
 
 locals {
-  # Use provided resource group name or create a new one
-  resource_group_name = var.resource_group_name != null ? var.resource_group_name : "${var.vm_name}-rg"
+  # Determine if input is a resource ID (starts with /) or a name
+  is_resource_id = var.resource_group_name != null ? startswith(var.resource_group_name, "/") : false
+
+  # Extract resource group name from resource ID if applicable
+  rg_name_from_id = local.is_resource_id ? element(split("/", var.resource_group_name), length(split("/", var.resource_group_name)) - 1) : null
+
+  # Use provided resource group name/ID or create a new one
+  resource_group_name = var.resource_group_name != null ? (local.is_resource_id ? local.rg_name_from_id : var.resource_group_name) : "${var.vm_name}-rg"
+
   # Determine if we need to create a resource group
   create_resource_group = var.resource_group_name == null
 }

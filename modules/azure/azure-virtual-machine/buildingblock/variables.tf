@@ -5,7 +5,7 @@ variable "vm_name" {
 
 variable "resource_group_name" {
   type        = string
-  description = "The name of the resource group. If not provided, a new resource group will be created."
+  description = "The name or full resource ID of the resource group (e.g., '/subscriptions/.../resourceGroups/my-rg'). If not provided, a new resource group will be created."
   default     = null
 }
 
