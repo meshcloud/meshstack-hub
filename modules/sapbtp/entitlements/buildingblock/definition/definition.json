@@ -1,0 +1,82 @@
+{
+  "name": "SAP BTP Entitlements",
+  "displayName": "SAP BTP Entitlements",
+  "description": "Manages service entitlements in an SAP BTP subaccount, enabling access to platform services and setting quota allocations",
+  "category": "Platform Services",
+  "platform": "sapbtp",
+  "tags": ["entitlements", "btp", "services", "quota"],
+  "version": "1.0.0",
+  "supportedPlatforms": ["sapbtp"],
+  "schema": {
+    "inputs": {
+      "globalaccount": {
+        "type": "string",
+        "description": "Global account subdomain",
+        "required": true
+      },
+      "subaccount_id": {
+        "type": "string",
+        "description": "BTP Subaccount ID (from dependency or manual input)",
+        "required": true
+      },
+      "entitlements": {
+        "type": "string",
+        "description": "Select service entitlements (meshStack will join as comma-separated: service.plan)",
+        "required": false,
+        "default": "",
+        "selectableValues": [
+          "postgresql-db.trial",
+          "postgresql-db.small",
+          "postgresql-db.medium",
+          "postgresql-db.large",
+          "redis-cache.small",
+          "redis-cache.medium",
+          "redis-cache.large",
+          "hana-cloud.hana",
+          "hana-cloud.hana-cloud-trial",
+          "destination.lite",
+          "connectivity.lite",
+          "connectivity.connectivity_proxy",
+          "xsuaa.application",
+          "xsuaa.broker",
+          "xsuaa.apiaccess",
+          "application-logs.lite",
+          "application-logs.standard",
+          "html5-apps-repo.app-host",
+          "html5-apps-repo.app-runtime",
+          "jobscheduler.lite",
+          "jobscheduler.standard",
+          "credstore.free",
+          "credstore.standard",
+          "objectstore.s3-standard",
+          "auditlog-viewer.default",
+          "auditlog-management.default",
+          "feature-flags.lite",
+          "feature-flags.standard",
+          "service-manager.container",
+          "workflow.standard",
+          "portal.standard",
+          "cloudfoundry.standard",
+          "cloudfoundry.free",
+          "APPLICATION_RUNTIME.MEMORY",
+          "sapappstudio.standard-edition",
+          "sap-build-apps.standard"
+        ]
+      }
+    },
+    "outputs": {
+      "subaccount_id": {
+        "type": "string",
+        "description": "BTP Subaccount ID (passthrough)"
+      },
+      "entitlements": {
+        "type": "object",
+        "description": "Map of created entitlements"
+      }
+    }
+  },
+  "documentation": {
+    "readme": "README.md",
+    "userGuide": "APP_TEAM_README.md"
+  }
+}
