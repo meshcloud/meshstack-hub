@@ -1,3 +1,10 @@
+---
+name: meshStack Payment Method
+supportedPlatforms:
+  - meshstack
+description: |
+  Creates a new meshStack Payment Method for a Workspace
+---
 # meshStack Payment Method Building Block
 
 This Terraform module creates a payment method for a specific workspace in meshStack.
