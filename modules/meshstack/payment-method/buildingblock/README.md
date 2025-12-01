@@ -26,8 +26,8 @@ module "payment_method" {
   expiration_date     = "2025-12-31T23:59:59Z"
 
   tags = {
-    team        = "development"
-    environment = "production"
+    team        = ["development"]
+    environment = ["production"]
   }
 }
 ```
