@@ -37,7 +37,7 @@ module "payment_method" {
 | Name | Version |
 |------|---------|
 | terraform | >= 1.0 |
-| meshstack | ~> 0.1.0 |
+| meshstack | ~> 0.14.0 |
 
 ## Inputs
 
