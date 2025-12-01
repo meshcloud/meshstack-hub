@@ -81,9 +81,9 @@ No modules.
 | Name | Description | Type | Default | Required |
 |------|-------------|------|---------|:--------:|
 | <a name="input_amount"></a> [amount](#input\_amount) | The budget amount for this payment method | `number` | n/a | yes |
-| <a name="input_expiration_date"></a> [expiration\_date](#input\_expiration\_date) | The expiration date of the payment method in RFC3339 format (e.g., '2025-12-31T23:59:59Z') | `string` | `null` | no |
+| <a name="input_expiration_date"></a> [expiration\_date](#input\_expiration\_date) | The expiration date of the payment method in RFC3339 format (e.g., '2025-12-31') | `string` | `null` | no |
 | <a name="input_payment_method_name"></a> [payment\_method\_name](#input\_payment\_method\_name) | Name of the payment method | `string` | `"default-payment-method"` | no |
-| <a name="input_tags"></a> [tags](#input\_tags) | Additional tags to apply to the payment method | `map(string)` | `{}` | no |
+| <a name="input_tags"></a> [tags](#input\_tags) | Additional tags to apply to the payment method | `map(list(string))` | `{}` | no |
 | <a name="input_workspace_id"></a> [workspace\_id](#input\_workspace\_id) | The ID of the workspace to which this payment method will be assigned | `string` | n/a | yes |
 
 ## Outputs
@@ -91,7 +91,6 @@ No modules.
 | Name | Description |
 |------|-------------|
 | <a name="output_amount"></a> [amount](#output\_amount) | The budget amount for this payment method |
-| <a name="output_payment_method_id"></a> [payment\_method\_id](#output\_payment\_method\_id) | The ID of the created payment method |
 | <a name="output_payment_method_name"></a> [payment\_method\_name](#output\_payment\_method\_name) | The name of the payment method |
 | <a name="output_workspace_id"></a> [workspace\_id](#output\_workspace\_id) | The workspace ID associated with this payment method |
 <!-- END_TF_DOCS -->
