@@ -47,7 +47,7 @@ module "payment_method" {
 | workspace_id | The ID of the workspace to which this payment method will be assigned | string | n/a | yes |
 | amount | The budget amount for this payment method | number | n/a | yes |
 | expiration_date | The expiration date in RFC3339 format (e.g., '2025-12-31T23:59:59Z') | string | null | no |
-| tags | Additional tags to apply to the payment method | map(string) | {} | no |
+| tags | Additional tags to apply to the payment method | map(list(string)) | {} | no |
 
 ## Outputs
 
