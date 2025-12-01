@@ -16,12 +16,12 @@ variable "amount" {
 
 variable "expiration_date" {
   type        = string
-  description = "The expiration date of the payment method in RFC3339 format (e.g., '2025-12-31T23:59:59Z')"
+  description = "The expiration date of the payment method in RFC3339 format (e.g., '2025-12-31')"
   default     = null
 }
 
 variable "tags" {
-  type        = map(string)
+  type        = list(string)
   description = "Additional tags to apply to the payment method"
-  default     = {}
+  default     = []
 }
