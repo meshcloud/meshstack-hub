@@ -53,7 +53,6 @@ module "payment_method" {
 
 | Name | Description |
 |------|-------------|
-| payment_method_id | The ID of the created payment method |
 | payment_method_name | The name of the payment method |
 | workspace_id | The workspace ID associated with this payment method |
 | amount | The budget amount for this payment method |
