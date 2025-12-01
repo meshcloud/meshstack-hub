@@ -21,7 +21,7 @@ variable "expiration_date" {
 }
 
 variable "tags" {
-  type        = list(string)
+  type        = map(list(string))
   description = "Additional tags to apply to the payment method"
-  default     = []
+  default     = {}
 }
