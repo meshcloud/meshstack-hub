@@ -60,6 +60,8 @@ export class PlatformService {
         return { name: 'GitHub', logo: logoUrl };
       case 'aks':
         return { name: 'Azure Kubernetes Service', logo: logoUrl };
+      case 'kubernetes':
+        return { name: 'Kubernetes', logo: logoUrl };
       case 'ionos':
         return { name: 'IONOS', logo: logoUrl };
       case 'stackit':
