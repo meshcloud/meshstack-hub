@@ -22,8 +22,11 @@ module "aws_s3_bucket_backplane" {
   workload_identity_federation = {
     issuer   = "https://your-oidc-issuer"
     audience = "your-audience"
-    subject  = "system:serviceaccount:your-namespace:your-service-account-name"
-  } # Optional, if not provided, workload identity federation will not be set up and IAM access keys will be created
+    subjects = [
+      "system:serviceaccount:your-namespace:your-service-account-name",  # Exact match
+      "system:serviceaccount:your-namespace:*",                          # Wildcard match
+    ]
+  } # Optional, if not provided, IAM access keys will be created instead
 }
 
 output "aws_s3_bucket_backplane" {
@@ -62,7 +65,7 @@ No modules.
 
 | Name | Description | Type | Default | Required |
 |------|-------------|------|---------|:--------:|
-| <a name="input_workload_identity_federation"></a> [workload\_identity\_federation](#input\_workload\_identity\_federation) | Set these options to add a trusted identity provider from meshStack to allow workload identity federation for authentication which can be used instead of access keys. | <pre>object({<br>    issuer   = string,<br>    audience = string,<br>    subject  = string,<br>  })</pre> | `null` | no |
+| <a name="input_workload_identity_federation"></a> [workload\_identity\_federation](#input\_workload\_identity\_federation) | Set these options to add a trusted identity provider from meshStack to allow workload identity federation for authentication which can be used instead of access keys. Supports multiple subjects for migration paths and wildcard patterns (e.g., 'system:serviceaccount:namespace:*'). | <pre>object({<br>    issuer   = string,<br>    audience = string,<br>    subjects = list(string)<br>  })</pre> | `null` | no |
 
 ## Outputs
 

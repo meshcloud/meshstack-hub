@@ -66,10 +66,10 @@ data "aws_iam_policy_document" "workload_identity_federation" {
     }
 
     condition {
-      test     = "StringEquals"
+      test     = "StringLike"
       variable = "${trimprefix(var.workload_identity_federation.issuer, "https://")}:sub"
 
-      values = [var.workload_identity_federation.subject]
+      values = var.workload_identity_federation.subjects
     }
   }
 }
