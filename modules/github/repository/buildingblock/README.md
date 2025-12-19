@@ -32,6 +32,7 @@ No modules.
 
 | Name | Description | Type | Default | Required |
 |------|-------------|------|---------|:--------:|
+| <a name="input_archive_repo_on_destroy"></a> [archive\_repo\_on\_destroy](#input\_archive\_repo\_on\_destroy) | Whether to archive github repository when destroying the terraform resource, or delete it. Defaults to true (archive). | `bool` | `true` | no |
 | <a name="input_repo_description"></a> [repo\_description](#input\_repo\_description) | Description of the GitHub repository | `string` | `"created by github-repo-building-block"` | no |
 | <a name="input_repo_name"></a> [repo\_name](#input\_repo\_name) | Name of the GitHub repository | `string` | `"github-repo"` | no |
 | <a name="input_repo_owner"></a> [repo\_owner](#input\_repo\_owner) | Username of the GitHub user who will be set as the owner/admin of the repository. If not set, no collaborator will be added. | `string` | `null` | no |

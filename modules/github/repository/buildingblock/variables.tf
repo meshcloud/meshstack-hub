@@ -1,3 +1,9 @@
+variable "archive_repo_on_destroy" {
+  type        = bool
+  default     = true
+  description = "Whether to archive github repository when destroying the terraform resource, or delete it. Defaults to true (archive)."
+}
+
 variable "repo_description" {
   type        = string
   default     = "created by github-repo-building-block"

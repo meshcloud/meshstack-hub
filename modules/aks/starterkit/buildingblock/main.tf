@@ -5,6 +5,13 @@ locals {
 
   # Decode project tags YAML configuration
   project_tags_config = yamldecode(var.project_tags_yaml)
+
+  repo_name = "${local.identifier}-${random_id.repo_suffix.hex}"
+}
+
+# Generate a random suffix for the repository name to ensure uniqueness
+resource "random_id" "repo_suffix" {
+  byte_length = 4 // 8 hex characters
 }
 
 resource "meshstack_project" "dev" {
@@ -109,7 +116,10 @@ resource "meshstack_building_block_v2" "repo" {
 
     inputs = {
       repo_name = {
-        value_string = local.identifier
+        value_string = local.repo_name
+      }
+      archive_repo_on_destroy = {
+        value_bool = var.archive_repo_on_destroy
       }
       repo_owner = {
         value_string = var.repo_admin != null ? var.repo_admin : "null"

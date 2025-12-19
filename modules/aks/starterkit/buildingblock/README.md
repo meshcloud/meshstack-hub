@@ -34,11 +34,13 @@ No modules.
 | [meshstack_project_user_binding.creator_prod_admin](https://registry.terraform.io/providers/meshcloud/meshstack/0.15.0/docs/resources/project_user_binding) | resource |
 | [meshstack_tenant_v4.dev](https://registry.terraform.io/providers/meshcloud/meshstack/0.15.0/docs/resources/tenant_v4) | resource |
 | [meshstack_tenant_v4.prod](https://registry.terraform.io/providers/meshcloud/meshstack/0.15.0/docs/resources/tenant_v4) | resource |
+| [random_id.repo_suffix](https://registry.terraform.io/providers/hashicorp/random/latest/docs/resources/id) | resource |
 
 ## Inputs
 
 | Name | Description | Type | Default | Required |
 |------|-------------|------|---------|:--------:|
+| <a name="input_archive_repo_on_destroy"></a> [archive\_repo\_on\_destroy](#input\_archive\_repo\_on\_destroy) | Whether to archive github repository when destroying the terraform resource, or delete it. Defaults to true (archive). | `bool` | `true` | no |
 | <a name="input_creator"></a> [creator](#input\_creator) | Information about the creator of the resources who will be assigned Project Admin role | <pre>object({<br>    type        = string<br>    identifier  = string<br>    displayName = string<br>    username    = optional(string)<br>    email       = optional(string)<br>    euid        = optional(string)<br>  })</pre> | n/a | yes |
 | <a name="input_full_platform_identifier"></a> [full\_platform\_identifier](#input\_full\_platform\_identifier) | Full platform identifier of the AKS Namespace platform. | `string` | n/a | yes |
 | <a name="input_github_actions_connector_definition_version_uuid"></a> [github\_actions\_connector\_definition\_version\_uuid](#input\_github\_actions\_connector\_definition\_version\_uuid) | UUID of the GitHub Actions connector building block definition version. | `string` | n/a | yes |
