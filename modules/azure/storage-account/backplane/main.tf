@@ -2,7 +2,7 @@
 resource "azuread_application" "buildingblock_deploy" {
   count = var.create_service_principal_name != null ? 1 : 0
 
-  display_name = "${var.name}-${var.create_service_principal_name}"
+  display_name = var.create_service_principal_name
 }
 
 resource "azuread_service_principal" "buildingblock_deploy" {
@@ -13,17 +13,16 @@ resource "azuread_service_principal" "buildingblock_deploy" {
 }
 
 
-# Create federated identity credentials
+# Create federated identity credentials (one per subject)
 resource "azuread_application_federated_identity_credential" "buildingblock_deploy" {
-  count = var.create_service_principal_name != null && var.workload_identity_federation != null ? 1 : 0
+  for_each = var.create_service_principal_name != null && var.workload_identity_federation != null ? toset(var.workload_identity_federation.subjects) : toset([])
 
   application_id = azuread_application.buildingblock_deploy[0].id
-  display_name   = var.create_service_principal_name
+  display_name   = reverse(split(":", each.value))[0]
   audiences      = ["api://AzureADTokenExchange"]
   issuer         = var.workload_identity_federation.issuer
-  subject        = var.workload_identity_federation.subject
+  subject        = each.value
 }
-
 # Create application password (when not using workload identity federation)
 resource "azuread_application_password" "buildingblock_deploy" {
   count = var.create_service_principal_name != null && var.workload_identity_federation == null ? 1 : 0

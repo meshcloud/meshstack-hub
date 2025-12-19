@@ -33,9 +33,9 @@ variable "create_service_principal_name" {
 
 variable "workload_identity_federation" {
   type = object({
-    issuer  = string
-    subject = string
+    issuer   = string
+    subjects = list(string)
   })
   default     = null
-  description = "Configuration for workload identity federation. If not provided, an application password will be created instead."
+  description = "Configuration for workload identity federation. If not provided, an application password will be created instead. Supports multiple subjects."
 }

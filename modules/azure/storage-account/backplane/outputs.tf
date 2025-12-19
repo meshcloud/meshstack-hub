@@ -42,16 +42,16 @@ output "created_application" {
   } : null
   description = "Information about the created Azure AD application."
 }
-
 output "workload_identity_federation" {
-  value = var.create_service_principal_name != null && var.workload_identity_federation != null ? {
-    credential_id = azuread_application_federated_identity_credential.buildingblock_deploy[0].credential_id
-    display_name  = azuread_application_federated_identity_credential.buildingblock_deploy[0].display_name
-    issuer        = azuread_application_federated_identity_credential.buildingblock_deploy[0].issuer
-    subject       = azuread_application_federated_identity_credential.buildingblock_deploy[0].subject
-    audiences     = azuread_application_federated_identity_credential.buildingblock_deploy[0].audiences
-  } : null
-  description = "Information about the created workload identity federation credential."
+  value = var.create_service_principal_name != null && var.workload_identity_federation != null ? [
+    for wif in azuread_application_federated_identity_credential.buildingblock_deploy : {
+      credential_id = wif.credential_id
+      display_name  = wif.display_name
+      issuer        = wif.issuer
+      subject       = wif.subject
+      audiences     = wif.audiences
+  }] : null
+  description = "Information about the created workload identity federation credentials."
 }
 
 output "application_password" {

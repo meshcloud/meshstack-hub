@@ -16,15 +16,20 @@ resource "google_iam_workload_identity_pool_provider" "meshstack" {
   description = "OIDC identity provider for meshStack building blocks"
 
   oidc {
-    allowed_audiences = [var.workload_identity_federation.audience]
     issuer_uri        = var.workload_identity_federation.issuer
+    allowed_audiences = [var.workload_identity_federation.audience]
   }
 
+  # Map the OIDC token's `sub` claim to google.subject
   attribute_mapping = {
     "google.subject" = "assertion.sub"
   }
 
-  attribute_condition = "google.subject == '${var.workload_identity_federation.subject}'"
+  # Restrict token acceptance to configured subjects
+  attribute_condition = join(" || ", [
+    for subject in var.workload_identity_federation.subjects :
+    "google.subject.startsWith('${subject}')"
+  ])
 }
 
 resource "google_service_account" "buildingblock_storage_sa" {
@@ -33,12 +38,13 @@ resource "google_service_account" "buildingblock_storage_sa" {
   description  = "Service account for storage bucket building block"
 }
 
-resource "google_service_account_iam_member" "workload_identity_binding" {
+resource "google_service_account_iam_binding" "workload_identity_binding" {
   count = var.workload_identity_federation == null ? 0 : 1
 
   service_account_id = google_service_account.buildingblock_storage_sa.name
   role               = "roles/iam.workloadIdentityUser"
-  member             = "principal://iam.googleapis.com/${google_iam_workload_identity_pool.meshstack[0].name}/subject/${var.workload_identity_federation.subject}"
+
+  members = ["principalSet://iam.googleapis.com/${google_iam_workload_identity_pool.meshstack[0].name}/*"]
 }
 
 resource "google_project_iam_member" "storage_admin" {
