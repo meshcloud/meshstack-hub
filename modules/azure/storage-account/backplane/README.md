@@ -61,9 +61,27 @@ module "storage_account_backplane" {
 
   create_service_principal_name = "deployment-sp"
   workload_identity_federation = {
-    issuer  = "https://token.actions.githubusercontent.com"
-    subject = "repo:my-org/my-repo:ref:refs/heads/main"
+    issuer = "https://token.actions.githubusercontent.com"
+    subjects = [
+      "repo:my-org/my-repo:ref:refs/heads/main",
+      "repo:my-org/my-repo:environment:production",
+    ]
   }
+}
+```
+
+### Subject Matching
+
+**Only exact matching is supported for subjects.** Each subject in the `subjects` list will create a separate federated identity credential.
+
+When using Kubernetes service accounts, provide the full subject identifier:
+```hcl
+workload_identity_federation = {
+  issuer = "https://your-oidc-issuer"
+  subjects = [
+    "system:serviceaccount:namespace1:service-account-1",
+    "system:serviceaccount:namespace1:service-account-2",
+  ]
 }
 ```
 
@@ -90,7 +108,7 @@ module "storage_account_backplane" {
 | Name | Version |
 |------|---------|
 | <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.0 |
-| <a name="requirement_azuread"></a> [azuread](#requirement\_azuread) | ~> 3.5.0 |
+| <a name="requirement_azuread"></a> [azuread](#requirement\_azuread) | ~> 3.7.0 |
 | <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) | 3.116.0 |
 
 ## Modules
@@ -117,7 +135,7 @@ No modules.
 | <a name="input_existing_principal_ids"></a> [existing\_principal\_ids](#input\_existing\_principal\_ids) | set of existing principal ids that will be granted permissions to deploy the building block | `set(string)` | `[]` | no |
 | <a name="input_name"></a> [name](#input\_name) | name of the building block, used for naming resources | `string` | n/a | yes |
 | <a name="input_scope"></a> [scope](#input\_scope) | Scope where the building block should be deployable, typically the parent of all Landing Zones. | `string` | n/a | yes |
-| <a name="input_workload_identity_federation"></a> [workload\_identity\_federation](#input\_workload\_identity\_federation) | Configuration for workload identity federation. If not provided, an application password will be created instead. | <pre>object({<br>    issuer  = string<br>    subject = string<br>  })</pre> | `null` | no |
+| <a name="input_workload_identity_federation"></a> [workload\_identity\_federation](#input\_workload\_identity\_federation) | Configuration for workload identity federation. If not provided, an application password will be created instead. Supports multiple subjects. | <pre>object({<br>    issuer   = string<br>    subjects = list(string)<br>  })</pre> | `null` | no |
 
 ## Outputs
 
@@ -132,5 +150,5 @@ No modules.
 | <a name="output_role_definition_id"></a> [role\_definition\_id](#output\_role\_definition\_id) | The ID of the role definition that enables deployment of the building block to subscriptions. |
 | <a name="output_role_definition_name"></a> [role\_definition\_name](#output\_role\_definition\_name) | The name of the role definition that enables deployment of the building block to subscriptions. |
 | <a name="output_scope"></a> [scope](#output\_scope) | The scope where the role definition and role assignments are applied. |
-| <a name="output_workload_identity_federation"></a> [workload\_identity\_federation](#output\_workload\_identity\_federation) | Information about the created workload identity federation credential. |
+| <a name="output_workload_identity_federation"></a> [workload\_identity\_federation](#output\_workload\_identity\_federation) | Information about the created workload identity federation credentials. |
 <!-- END_TF_DOCS -->
