@@ -4,7 +4,7 @@ resource "github_repository" "repository" {
   visibility           = var.repo_visibility
   auto_init            = false
   vulnerability_alerts = true
-  archive_on_destroy   = true
+  archive_on_destroy   = var.archive_repo_on_destroy
 
   dynamic "template" {
     for_each = var.use_template ? [1] : []

@@ -43,6 +43,12 @@ variable "github_repo_input_repo_visibility" {
   default     = "private"
 }
 
+variable "archive_repo_on_destroy" {
+  type        = bool
+  description = "Whether to archive github repository when destroying the terraform resource, or delete it. Defaults to true (archive)."
+  default     = true
+}
+
 variable "github_org" {
   type        = string
   description = "GitHub organization name. Used only for display purposes."
