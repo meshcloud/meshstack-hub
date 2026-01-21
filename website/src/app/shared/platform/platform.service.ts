@@ -80,6 +80,8 @@ export class PlatformService {
         return { name: 'OpenStack', logo: logoUrl };
       case 'openshift':
         return { name: 'OpenShift', logo: logoUrl };
+      case 'oci':
+        return { name: 'Oracle Cloud Infrastructure', logo: logoUrl };
       case 'tencentcloud':
         return { name: 'Tencent Cloud', logo: logoUrl };
       default:
