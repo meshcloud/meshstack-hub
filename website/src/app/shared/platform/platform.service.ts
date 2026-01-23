@@ -51,37 +51,37 @@ export class PlatformService {
   private getPlatform(key: string, logoUrl: string): Platform {
     switch (key) {
       case 'azure':
-        return { name: 'Azure', logo: logoUrl };
+        return { name: 'Azure', logo: logoUrl, description: 'Cloud services by Microsoft', category: 'hyperscaler' };
       case 'aws':
-        return { name: 'Amazon Web Services', logo: logoUrl };
+        return { name: 'Amazon Web Services', logo: logoUrl, description: 'Amazon\'s scalable cloud platform', category: 'hyperscaler' };
       case 'gcp':
-        return { name: 'Google Cloud', logo: logoUrl };
+        return { name: 'Google Cloud', logo: logoUrl, description: 'Cloud solutions by Google', category: 'hyperscaler' };
       case 'github':
-        return { name: 'GitHub', logo: logoUrl };
+        return { name: 'GitHub', logo: logoUrl, description: 'Version control platform', category: 'devops' };
       case 'aks':
-        return { name: 'Azure Kubernetes Service', logo: logoUrl };
+        return { name: 'Azure Kubernetes Service', logo: logoUrl, description: 'Managed Kubernetes service on Azure', category: 'hyperscaler' };
       case 'kubernetes':
-        return { name: 'Kubernetes', logo: logoUrl };
+        return { name: 'Kubernetes', logo: logoUrl, description: 'Container orchestration platform', category: 'devops' };
       case 'ionos':
-        return { name: 'IONOS', logo: logoUrl };
+        return { name: 'IONOS', logo: logoUrl, description: 'European cloud and hosting provider', category: 'european' };
       case 'stackit':
-        return { name: 'STACKIT', logo: logoUrl };
+        return { name: 'STACKIT', logo: logoUrl, description: 'Cloud platform by Schwarz IT', category: 'european' };
       case 'datadog':
-        return { name: 'DataDog', logo: logoUrl };
+        return { name: 'DataDog', logo: logoUrl, description: 'Monitoring and analytics platform', category: 'devops' };
       case 'cloudfoundry':
-        return { name: 'Cloud Foundry', logo: logoUrl };
+        return { name: 'Cloud Foundry', logo: logoUrl, description: 'Open-source cloud application platform', category: 'private-cloud' };
       case 'ovh':
-        return { name: 'OVHcloud', logo: logoUrl };
+        return { name: 'OVHcloud', logo: logoUrl, description: 'European cloud service provider', category: 'european' };
       case 'sapbtp':
-        return { name: 'SAP Business Technology Platform', logo: logoUrl };
+        return { name: 'SAP Business Technology Platform', logo: logoUrl, description: 'SAP\'s platform-as-a-service solution', category: 'european' };
       case 'azuredevops':
-        return { name: 'Azure DevOps', logo: logoUrl };
+        return { name: 'Azure DevOps', logo: logoUrl, description: 'DevOps tools and services by Microsoft', category: 'devops' };
       case 'openstack':
-        return { name: 'OpenStack', logo: logoUrl };
+        return { name: 'OpenStack', logo: logoUrl, description: 'Open-source cloud infrastructure platform', category: 'private-cloud' };
       case 'openshift':
-        return { name: 'OpenShift', logo: logoUrl };
+        return { name: 'OpenShift', logo: logoUrl, description: 'Enterprise Kubernetes platform by Red Hat', category: 'private-cloud' };
       case 'tencentcloud':
-        return { name: 'Tencent Cloud', logo: logoUrl };
+        return { name: 'Tencent Cloud', logo: logoUrl, description: 'Cloud services by Tencent', category: 'china' };
       default:
         return { name: key, logo: logoUrl };
     }

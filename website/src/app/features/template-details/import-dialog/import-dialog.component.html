@@ -1,59 +1,73 @@
-<div class="modal-header border-0">
-  <button
-    type="button"
-    class="btn-close text-muted"
-    aria-label="Close"
-    (click)="activeModal.dismiss('Cross click')"
-  ></button>
-</div>
-<div class="modal-body">
-  <div class="d-flex justify-content-center">
-    <img class="logo" src="assets/meshstack-logo.png" alt="meshStack-logo" />
+<div class="bg-white rounded-xl shadow-2xl overflow-hidden">
+  <div class="border-b border-slate-200 px-6 py-4 flex items-center justify-between">
+    <h4 class="text-lg font-semibold text-slate-900 m-0">Add to meshStack</h4>
+    <button
+      type="button"
+      class="text-slate-400 hover:text-slate-600 transition-colors"
+      aria-label="Close"
+      (click)="dialogRef.close()">
+      <i class="fa-solid fa-xmark text-xl"></i>
+    </button>
   </div>
-  <div class="w-100 d-flex justify-content-center mt-3">
-    <div class="text-center">
-      <h4 class="card-title fw-bold">Provide link of your meshStack</h4>
-      <h5 class="card-text mt-3">to continue using this building block template</h5>
-      <div class="pt-4 text-start">
-        <form [formGroup]="form" (ngSubmit)="openMeshStackUrl()">
-          <label class="form-label" for="meshStackUrl">Your meshStack URL</label>
-          <div class="ms-2">
-            <input
-              type="text"
-              class="form-control"
-              aria-label="meshStack URL"
-              formControlName="meshStackUrl"
-              placeholder="Enter your meshStack URL"
-            />
-            <div
-              *ngIf="form.controls.meshStackUrl.invalid && form.controls.meshStackUrl.touched"
-              class="mt-1 text-danger small"
-            >
-              Please enter a valid URL.
-            </div>
-          </div>
-        </form>
+  <div class="p-6">
+    <div class="text-center mb-6">
+      <div class="w-20 h-20 mx-auto mb-4 flex items-center justify-center bg-slate-50 rounded-xl p-3">
+        <img class="max-w-full max-h-full object-contain" src="assets/meshstack-logo.png" alt="meshStack" />
       </div>
+      <h5 class="text-xl font-semibold text-slate-900 mb-2">Connect to your meshStack</h5>
+      <p class="text-slate-600 text-sm max-w-md mx-auto">
+        Enter your meshStack URL to continue using this building block template
+      </p>
+    </div>
+
+    <form [formGroup]="form" (ngSubmit)="openMeshStackUrl()">
+      <div class="mb-6">
+        <label class="form-label" for="meshStackUrl">meshStack URL</label>
+        <input
+          type="text"
+          class="form-control"
+          id="meshStackUrl"
+          aria-label="meshStack URL"
+          formControlName="meshStackUrl"
+          placeholder="https://your-meshstack-instance.com"
+        />
+        <div
+          *ngIf="form.controls.meshStackUrl.invalid && form.controls.meshStackUrl.touched"
+          class="mt-2 text-red-600 text-sm flex items-center gap-1">
+          <i class="fa-solid fa-circle-exclamation"></i>
+          <span>Please enter a valid URL</span>
+        </div>
+      </div>
+
       <button
         type="submit"
-        class="btn btn-primary mt-4"
+        class="btn btn-primary w-full"
         [disabled]="!form.valid"
-        aria-label="Open up meshStack to add template"
-        (click)="openMeshStackUrl()"
-      >
+        aria-label="Open up meshStack to add template">
+        <i class="fa-solid fa-plus mr-2"></i>
         Add to meshStack
-        <i class="fa-solid fa-arrow-up-right-from-square ms-2"></i>
       </button>
-      <hr />
-      <div class="pt-3">
-        <p>Don't use meshStack yet?</p>
-        <p>Check it out and how it can help your platform team</p>
-        <a href="https://www.meshcloud.io/en/book-demo" class="btn btn-outline-primary mt-2">
-          Discover meshStack
-          <img src="assets/meshstack-logo-black-white.png" alt="meshStack Logo" class="button-image" />
-        </a>
+    </form>
+
+    <div class="relative my-6">
+      <div class="absolute inset-0 flex items-center">
+        <div class="w-full border-t border-slate-200"></div>
       </div>
+      <div class="relative flex justify-center text-sm">
+        <span class="px-4 bg-white text-slate-500 font-medium">OR</span>
+      </div>
+    </div>
+
+    <div class="text-center">
+      <p class="text-slate-600 text-sm mb-2">Don't use meshStack yet?</p>
+      <p class="text-slate-500 text-xs mb-4">See how it can help your platform team</p>
+      <a href="https://www.meshcloud.io/en/book-demo"
+         class="btn btn-outline-primary"
+         target="_blank"
+         rel="noopener noreferrer">
+        <i class="fa-solid fa-external-link mr-2"></i>
+        Discover meshStack
+      </a>
     </div>
   </div>
 </div>
-<div class="modal-footer border-0"></div>

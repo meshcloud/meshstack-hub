@@ -1,7 +1,7 @@
 import { CommonModule } from '@angular/common';
 import { Component, OnDestroy, OnInit } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
-import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
+import { Dialog } from '@angular/cdk/dialog';
 import { Observable, Subscription, map, switchMap } from 'rxjs';
 
 import { PlatformType } from 'app/core';
@@ -43,7 +43,7 @@ export class TemplateDetailsComponent implements OnInit, OnDestroy {
   constructor(
     private route: ActivatedRoute,
     private templateService: TemplateService,
-    private modalService: NgbModal,
+    private dialog: Dialog,
     private breadcrumbService: BreadCrumbService
   ) { }
 
@@ -76,9 +76,10 @@ export class TemplateDetailsComponent implements OnInit, OnDestroy {
       return;
     }
 
-    const component = this.modalService.open(ImportDialogComponent, { size: 'lg', centered: true }).componentInstance;
-    component.name = template.name;
-    component.modulePath = modulePath;
+    this.dialog.open(ImportDialogComponent, {
+      width: '600px',
+      data: { name: template.name, modulePath }
+    });
   }
 
   private extractModulePath(source: string): string {

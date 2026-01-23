@@ -1,13 +1,19 @@
-<nav aria-label="breadcrumb" *ngIf="breadcrumbs">
-  <ol class="breadcrumb">
+<nav aria-label="breadcrumb" *ngIf="breadcrumbs" class="py-3">
+  <ol class="flex items-center flex-wrap gap-2 text-sm">
     <li
-      class="breadcrumb-item"
       *ngFor="let item of breadcrumbs; let last = last"
-      [ngClass]="{ active: last }"
+      class="flex items-center"
+      [class.font-medium]="last"
+      [class.text-slate-900]="last"
+      [class.text-slate-600]="!last"
       [attr.aria-current]="last ? 'page' : null"
     >
       <ng-container *ngIf="!last && item.routePath; else current">
-        <a [routerLink]="item.routePath">{{ item.label }}</a>
+        <a [routerLink]="item.routePath"
+           class="hover:text-primary-600 transition-colors">
+          {{ item.label }}
+        </a>
+        <i class="fa-solid fa-chevron-right text-slate-400 text-xs mx-2"></i>
       </ng-container>
       <ng-template #current>{{ item.label }}</ng-template>
     </li>

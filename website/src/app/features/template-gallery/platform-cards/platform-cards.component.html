@@ -1,16 +1,53 @@
-<div class="row">
-  <div class="col-md-3 mb-3" *ngFor="let card of cards; let i = index">
-    <mst-card [routePath]="card.routePath" [label]="card.title" [borderColorSourceImage]="card.cardLogo">
-      <div
-        class="card-body d-flex flex-column justify-content-center align-items-center"
-        [style.height]="i < 4 ? '15rem' : 'auto'"
-        card-body
-      >
-        <mst-logo-circle [title]="card.title" [sourceImage]="card.cardLogo" [size]="'md'"></mst-logo-circle>
-        <h5 class="card-title text-center fw-bold mt-3">
-          {{ card.title }}
-        </h5>
-      </div>
-    </mst-card>
+<div class="mb-12">
+  <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+    <div *ngFor="let card of cards">
+      <mst-card [routePath]="card.routePath"
+                [label]="card.title"
+                [logoSourceImage]="card.cardLogo"
+                (backgroundColorExtracted)="onBackgroundColorExtracted(card.title, $event)">
+        <div class="p-4 flex flex-col justify-between min-h-[9rem]" card-body>
+          <!-- Title with Logo - Left Aligned -->
+          <div class="flex items-center gap-2 mb-2">
+            <div class="w-10 h-10 flex-shrink-0 flex items-center justify-center rounded-lg transition-colors"
+                 [ngStyle]="{'background-color': logoBackgroundColors[card.title] || 'rgba(203, 213, 225, 0.3)'}">
+              <img *ngIf="card.cardLogo; else unknownLogo"
+                   [src]="card.cardLogo"
+                   [alt]="card.title"
+                   class="w-6 h-6 object-contain" />
+              <ng-template #unknownLogo>
+                <img src="assets/meshstack-logo.png" alt="Unknown Logo" class="w-6 h-6 object-contain" />
+              </ng-template>
+            </div>
+            <h5 class="font-semibold text-slate-900 mb-0 text-base leading-tight">
+              {{ card.title }}
+            </h5>
+          </div>
+
+          <!-- Description -->
+          <p *ngIf="card.description" class="text-slate-600 text-sm line-clamp-2 mb-2 leading-snug">
+            {{ card.description }}
+          </p>
+
+          <!-- Building Block Count and Category Label -->
+          <div class="mt-auto pt-2 border-t border-slate-100">
+            <div class="flex items-center justify-between gap-2">
+              <div class="flex items-center gap-1.5 text-slate-500">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path>
+                </svg>
+                <span class="text-sm font-medium">
+                  {{ card.buildingBlockCount || 0 }} building block{{ (card.buildingBlockCount || 0) !== 1 ? 's' : '' }}
+                </span>
+              </div>
+              <span *ngIf="getCategoryLabel(card.category) as label"
+                    class="inline-flex items-center gap-1 px-2 py-0.5 bg-slate-100 text-slate-700 text-xs font-medium rounded">
+                <span>{{ label.emoji }}</span>
+                <span>{{ label.text }}</span>
+              </span>
+            </div>
+          </div>
+        </div>
+      </mst-card>
+    </div>
   </div>
 </div>

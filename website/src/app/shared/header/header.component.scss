@@ -1,24 +1,2 @@
-@import '@styles';
+// Styles are now handled by Tailwind utility classes in the template
 
-.header {
-  background-color: $mesh-blue;
-
-  .logo {
-    height: 5rem;
-    object-fit: contain;
-    position: relative;
-  }
-
-  .title {
-    color: $mesh-black;
-    font-weight: bold;
-    align-self: center;
-  }
-}
-
-.github-btn {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  height: 2.5rem;
-}
