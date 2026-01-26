@@ -1,31 +1,41 @@
-<header class="header ps-5 pe-5 pt-4 pb-4">
-  <div class="d-flex flex-column flex-md-row align-items-start align-items-md-center justify-content-between">
-    <div class="d-flex flex-column flex-md-row align-items-start align-items-md-center">
-      <a href="/">
-        <img class="logo" src="assets/meshstack-logo.png" alt="meshStack-logo" />
-      </a>
-      <div class="ms-0 ms-md-3">
-        <h1 class="title h3">Welcome to meshStack Hub!</h1>
-        <mst-search-bar class="mt-2 d-md-none"></mst-search-bar>
-        <a href="https://www.meshcloud.io/en/book-demo" class="btn btn-light mt-2 d-md-none" target="_blank"
-          rel="noopener noreferrer">
+<header class="sticky top-0 z-50 bg-white border-b border-slate-200 shadow-sm">
+  <div class="container mx-auto px-4 py-3">
+    <div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-3">
+      <!-- Logo and Title Section -->
+      <div class="flex items-center gap-3">
+        <a href="/" class="transition-opacity hover:opacity-80">
+          <img class="h-12 object-contain" src="assets/meshstack-logo.png" alt="meshStack Hub" />
+        </a>
+        <h1 class="text-2xl font-bold text-slate-900 tracking-tight mb-0">meshStack Hub</h1>
+      </div>
+
+      <!-- Search Bar - Desktop -->
+      <div class="hidden md:flex flex-grow justify-center mx-4 max-w-lg min-w-[300px]">
+        <mst-search-bar class="w-full"></mst-search-bar>
+      </div>
+
+      <!-- Action Buttons -->
+      <div class="hidden md:flex items-center gap-2">
+        <a href="https://github.com/meshcloud/meshstack-hub"
+           class="p-2 border border-slate-200 rounded-lg bg-white hover:bg-slate-50 hover:border-slate-300 transition-all"
+           target="_blank"
+           rel="noopener noreferrer"
+           aria-label="View on GitHub"
+           title="Contribute on GitHub">
+          <img src="assets/logos/github.png" alt="GitHub" class="w-5 h-5" />
+        </a>
+        <a href="https://www.meshcloud.io/en/book-demo"
+           class="btn btn-primary"
+           target="_blank"
+           rel="noopener noreferrer">
           Discover meshStack
-          <img src="assets/meshstack-logo-black-white.png" alt="meshStack Logo" class="button-image" />
         </a>
       </div>
-      <div class="vr ms-3 me-3 d-none d-md-block"></div>
-      <mst-search-bar class="d-none d-md-block"></mst-search-bar>
     </div>
-    <div class="d-flex flex-grow-1 align-items-center">
+
+    <!-- Mobile Search -->
+    <div class="md:hidden mt-3">
+      <mst-search-bar></mst-search-bar>
     </div>
-    <a href="https://www.meshcloud.io/en/book-demo" class="btn btn-light d-none d-md-block ms-3" target="_blank"
-      rel="noopener noreferrer">
-      Discover meshStack
-      <img src="assets/meshstack-logo-black-white.png" alt="meshStack Logo" class="button-image" />
-    </a>
-    <a href="https://github.com/meshcloud/meshstack-hub" class="btn btn-light d-none d-lg-block ms-3" target="_blank"
-      rel="noopener noreferrer" aria-label="View on GitHub" ngbTooltip="Contribute on GitHub" placement="bottom">
-      <img src="assets/logos/github.png" alt="GitHub Logo" class="button-image" />
-    </a>
   </div>
 </header>

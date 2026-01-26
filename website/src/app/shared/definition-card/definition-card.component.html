@@ -1,20 +1,36 @@
 <mst-card [routePath]="card.routePath" [label]="card.title">
-  <div class="card-body" card-body>
-    <div class="d-flex flex-column align-items-center justify-content-center mt-2">
-      <mst-logo-circle [title]="card.title" [sourceImage]="card.cardLogo" [size]="'md'"></mst-logo-circle>
-      <h5 class="card-title text-center fw-bold mt-3">
+  <div class="p-4 flex flex-col h-full" card-body>
+    <!-- Logo and Title - Left Aligned -->
+    <div class="flex items-center gap-2 mb-2">
+      <div class="w-10 h-10 flex-shrink-0 relative">
+        <!-- Building Block Logo -->
+        <div class="w-full h-full flex items-center justify-center">
+          <img *ngIf="card.cardLogo; else unknownLogo"
+               [src]="card.cardLogo"
+               [alt]="card.title"
+               class="w-8 h-8 object-contain" />
+          <ng-template #unknownLogo>
+            <img src="assets/meshstack-logo.png" alt="Unknown Logo" class="w-8 h-8 object-contain" />
+          </ng-template>
+        </div>
+
+        <!-- Platform Logo Overlay - Bottom Right -->
+        <div *ngIf="card.supportedPlatforms && card.supportedPlatforms.length > 0"
+             class="absolute -bottom-1 -right-1 w-5 h-5 rounded-full bg-white shadow-md flex items-center justify-center p-0.5 ring-2 ring-white">
+          <img [src]="card.supportedPlatforms[0].imageUrl"
+               [alt]="card.supportedPlatforms[0].platformType"
+               [title]="card.supportedPlatforms[0].platformType"
+               class="w-full h-full object-contain" />
+        </div>
+      </div>
+      <h5 class="font-semibold text-slate-900 mb-0 text-base leading-tight">
         {{ card.title }}
       </h5>
     </div>
-    <div class="d-flex mt-3 justify-content-center">
-      <p class="card-text ps-3 pe-3">{{ card.description }}</p>
-    </div>
-  </div>
-  <div class="card-footer" card-footer>
-    <div class="d-flex flex-row-reverse justify-content-between">
-      <ng-container *ngFor="let platform of card.supportedPlatforms">
-        <img [src]="platform.imageUrl" [alt]="platform.platformType" class="footer-icon" />
-      </ng-container>
+
+    <!-- Description -->
+    <div class="flex-1">
+      <p class="mb-0 text-slate-600 text-sm line-clamp-3 leading-snug">{{ card.description }}</p>
     </div>
   </div>
 </mst-card>

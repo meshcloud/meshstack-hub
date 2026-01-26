@@ -1,41 +1,55 @@
-<div class="pt-5 ps-5 pe-5" *ngIf="platform$ | async as platform">
-  <ng-container *ngIf="breadcrumbs$ | async as breadcrumbs">
-    <mst-breadcrumb [breadcrumbs]="breadcrumbs"></mst-breadcrumb>
-  </ng-container>
-  <div class="pt-5 pb-5">
-    <mst-card [label]="platform.title" [borderColorSourceImage]="platform.logo">
-      <div class="card-body d-flex justify-content-between align-items-center flex-wrap" card-body>
-        <div class="d-flex align-items-center ps-2">
-          <mst-logo-circle [title]="platform.title" [sourceImage]="platform.logo" [size]="'md'"></mst-logo-circle>
-          <h5 class="ms-3 card-title fw-bold">
-            {{ platform.title }}
-          </h5>
-        </div>
-        <div class="mt-3 mt-sm-0 pe-4">
-          <a href="https://docs.meshcloud.io/docs/meshstack.how-to.integrate-meshplatform.html" target="_blank"
-            rel="noopener noreferrer" class="btn btn-primary">
-            <i class="fa-solid fa-arrow-up-right-from-square me-2"></i>Read more in our docs
-          </a>
-        </div>
+<div class="bg-slate-50 min-h-screen" *ngIf="platform$ | async as platform">
+  <div class="container mx-auto px-4 lg:px-8 py-8">
+    <!-- Breadcrumb -->
+    <ng-container *ngIf="breadcrumbs$ | async as breadcrumbs">
+      <div class="mb-6">
+        <mst-breadcrumb [breadcrumbs]="breadcrumbs"></mst-breadcrumb>
       </div>
-    </mst-card>
-  </div>
+    </ng-container>
 
-  <ng-container *ngIf="templates$ | async as templates">
-    <h2 class="fw-bold">{{ platform.title }} building block definitions</h2>
-    <p class="mt-2 mb-5" *ngIf="templates.length; else noTemplates">
-      These
-      <b>{{ platform.title }} building block definitions</b>
-      provide pre-configured Terraform modules for automating common cloud tasks
-    </p>
-    <ng-template #noTemplates>
-      <p class="mt-2">No building block definitions</p>
-    </ng-template>
-
-    <div class="row mt-4">
-      <div class="col-sm-3 mb-3" *ngFor="let template of templates">
-        <mst-definition-card [card]="template"></mst-definition-card>
-      </div>
+    <!-- Platform Header Card -->
+    <div class="mb-12">
+      <mst-card [label]="platform.title" [logoSourceImage]="platform.logo">
+        <div class="p-6 lg:p-8 flex flex-col md:flex-row justify-between items-start md:items-center gap-6" card-body>
+          <div class="flex items-center gap-4">
+            <div class="w-16 h-16 flex-shrink-0 flex items-center justify-center rounded-lg bg-slate-100">
+              <img [src]="platform.logo" [alt]="platform.title" class="w-12 h-12 object-contain" />
+            </div>
+            <div>
+              <h1 class="text-2xl lg:text-3xl font-bold text-slate-900">{{ platform.title }}</h1>
+              <p class="text-lg text-slate-600">{{ platform.description }}</p>
+            </div>
+          </div>
+          <div>
+            <a href="https://docs.meshcloud.io/docs/meshstack.how-to.integrate-meshplatform.html"
+               target="_blank"
+               rel="noopener noreferrer"
+               class="btn btn-primary whitespace-nowrap">
+              <i class="fa-solid fa-book mr-2"></i>Read Documentation
+            </a>
+          </div>
+        </div>
+      </mst-card>
     </div>
-  </ng-container>
+
+    <!-- Templates Section -->
+    <ng-container *ngIf="templates$ | async as templates">
+      <div class="mb-8">
+        <h2 class="text-3xl font-bold text-slate-900 mb-3">{{ platform.title }} Building Block Definitions</h2>
+        <p class="text-lg text-slate-600" *ngIf="templates.length; else noTemplates">
+          Pre-configured Terraform modules for automating common {{ platform.title }} cloud tasks
+        </p>
+        <ng-template #noTemplates>
+          <p class="text-lg text-slate-500">No building block definitions available</p>
+        </ng-template>
+      </div>
+
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+        <div *ngFor="let template of templates">
+          <mst-definition-card [card]="template"></mst-definition-card>
+        </div>
+      </div>
+    </ng-container>
+  </div>
 </div>
+

@@ -9,4 +9,6 @@ export interface PlatformData {
 export interface Platform {
 	name: string;
 	logo: string;
+	description?: string;
+	category?: 'hyperscaler' | 'european' | 'china' | 'devops' | 'private-cloud';
 }

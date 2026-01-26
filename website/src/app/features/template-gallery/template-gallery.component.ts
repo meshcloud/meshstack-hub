@@ -29,6 +29,10 @@ export class TemplateGalleryComponent implements OnInit, OnDestroy {
 
   public isSearch = false;
 
+  public platformCount = 0;
+
+  public buildingBlockCount = 0;
+
   private searchSubscription!: Subscription;
 
   private platformData$!: Observable<PlatformData>;
@@ -62,6 +66,15 @@ export class TemplateGalleryComponent implements OnInit, OnDestroy {
       this.platformCards$ = this.getFilteredPlatformCards(searchTerm);
 
       this.breadcrumbs$ = this.getBreadcrumbs();
+
+      // Calculate counts for hero section
+      this.platformCards$.subscribe(cards => {
+        this.platformCount = cards.length;
+      });
+
+      this.templates$.subscribe(templates => {
+        this.buildingBlockCount = templates.length;
+      });
     });
   }
 
@@ -75,8 +88,8 @@ export class TemplateGalleryComponent implements OnInit, OnDestroy {
   }
 
   private getFilteredPlatformCards(searchTerm: string | undefined): Observable<PlatformCard[]> {
-    return this.platformData$.pipe(
-      map(logos => this.mapLogosToPlatformCards(logos)),
+    return combineLatest([this.platformData$, this.templateService.filterTemplatesByPlatformType('all')]).pipe(
+      map(([logos, templates]) => this.mapLogosToPlatformCards(logos, templates)),
       map(cards => this.filterCardsBySearchTerm(cards, searchTerm))
     );
   }
@@ -108,15 +121,16 @@ export class TemplateGalleryComponent implements OnInit, OnDestroy {
     ];
   }
 
-  private mapLogosToPlatformCards(data: PlatformData): PlatformCard[] {
+  private mapLogosToPlatformCards(data: PlatformData, templates: any[]): PlatformCard[] {
     return Object.entries(data)
-      .map(([key, platform]) =>
-        this.createPlatformCard(platform.name, platform.logo, `/platforms/${key}`)
-      );
+      .map(([key, platform]) => {
+        const buildingBlockCount = templates.filter(t => t.platformType === key).length;
+        return this.createPlatformCard(platform.name, platform.logo, `/platforms/${key}`, platform.description, buildingBlockCount, platform.category);
+      });
   }
 
-  private createPlatformCard(title: string, logoUrl: string, routePath: string): PlatformCard {
-    return { cardLogo: logoUrl, title, routePath };
+  private createPlatformCard(title: string, logoUrl: string, routePath: string, description?: string, buildingBlockCount?: number, category?: 'hyperscaler' | 'european' | 'china' | 'devops' | 'private-cloud'): PlatformCard {
+    return { cardLogo: logoUrl, title, routePath, description, buildingBlockCount, category };
   }
 
   private filterCardsBySearchTerm(cards: PlatformCard[], searchTerm: string | undefined): PlatformCard[] {
