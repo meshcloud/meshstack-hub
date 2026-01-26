@@ -1,104 +1,145 @@
-<div class="pt-5 ps-5 pe-5">
-  <div class="row">
+<div class="bg-slate-50 min-h-screen">
+  <div class="container mx-auto px-4 lg:px-8 py-8">
     <ng-container *ngIf="template$ | async as template">
+      <!-- Breadcrumb -->
       <ng-container *ngIf="breadcrumbs$ | async as breadcrumbs">
-        <mst-breadcrumb [breadcrumbs]="breadcrumbs"></mst-breadcrumb>
+        <div class="mb-6">
+          <mst-breadcrumb [breadcrumbs]="breadcrumbs"></mst-breadcrumb>
+        </div>
       </ng-container>
-      <div class="pt-5">
-        <div class="row">
-          <div class="col-12 col-md-auto text-center mb-3 mb-md-0">
-            <img
-              *ngIf="template.imageUrl; else unknownLogo"
-              class="logo img-fluid"
-              [src]="template.imageUrl"
-              [alt]="template.platformType"
-            />
-            <ng-template #unknownLogo>
-              <img src="assets/meshstack-logo.png" class="logo img-fluid" alt="Unknown Logo" />
-            </ng-template>
+
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <!-- Main Content - Left Column (2/3) -->
+        <div class="lg:col-span-2 space-y-6">
+          <!-- Template Header Card -->
+          <div class="bg-white border border-slate-200 rounded-xl p-6 shadow-sm">
+            <div class="flex items-start gap-4 mb-4">
+              <div class="flex-shrink-0">
+                <div class="w-16 h-16 flex items-center justify-center bg-slate-50 rounded-lg p-2">
+                  <img
+                    *ngIf="template.imageUrl; else unknownLogo"
+                    class="max-w-full max-h-full object-contain"
+                    [src]="template.imageUrl"
+                    [alt]="template.platformType"
+                  />
+                  <ng-template #unknownLogo>
+                    <img src="assets/meshstack-logo.png" class="max-w-full max-h-full object-contain" alt="Unknown Logo" />
+                  </ng-template>
+                </div>
+              </div>
+              <div class="flex-1 min-w-0">
+                <h1 class="text-2xl lg:text-3xl font-bold text-slate-900 mb-2">{{ template.name }}</h1>
+                <p class="text-base text-slate-600 mb-0">{{ template.description }}</p>
+              </div>
+            </div>
+
+            <!-- Source Code Link -->
+            <div class="flex items-center gap-3 p-3 bg-slate-50 border border-slate-200 rounded-lg">
+              <i class="fa-brands fa-github text-slate-600 text-lg"></i>
+              <a
+                [href]="template.source"
+                target="_blank"
+                rel="noopener noreferrer"
+                class="flex-1 hover:text-primary-700 font-mono text-sm transition-colors truncate"
+              >
+                {{ template.source }}
+              </a>
+              <button type="button" (click)="copyToClipboard(template.source)" class="btn btn-light btn-sm">
+                <i *ngIf="copyLabel === 'Copy'" class="fas fa-copy"></i>
+                <i *ngIf="copyLabel === 'Copied'" class="fa-solid fa-check"></i>
+              </button>
+            </div>
           </div>
-          <div class="col-12 col-md">
-            <h1 class="fw-bold h3">
-              <span class="pe-4">{{ template.name }}</span>
-              <span class="badge bg-secondary fw-bold">Building Block</span>
-            </h1>
 
-            <div class="pt-3">
-              <p>{{ template.description }}</p>
+          <!-- Quick Start Guide -->
+          <div class="bg-white border border-slate-200 rounded-xl p-6 shadow-sm">
+            <h2 class="text-xl font-bold text-slate-900 mb-4 flex items-center gap-2">
+              <i class="fa-solid fa-rocket text-primary-600"></i>
+              Quick Start
+            </h2>
 
-              <div class="mt-4">
-                <h2 class="fw-bold h4">
-                  <i class="fa-solid fa-code pe-2"></i>
-                  Source
-                </h2>
-                <div
-                  class="d-flex flex-column flex-md-row align-items-start align-items-md-center p-2 bg-light border rounded shadow-sm"
-                >
-                  <a
-                    [href]="template.source"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    class="mb-2 mb-md-0 me-md-3 flex-grow-1"
-                  >
-                    {{ template.source }}
-                  </a>
-                  <button type="button" (click)="copyToClipboard(template.source)" class="btn btn-light btn-sm">
-                    <i *ngIf="copyLabel === 'Copy'" class="fas fa-copy"></i>
-                    <i *ngIf="copyLabel === 'Copied'" class="fa-solid fa-check"></i>
-                    {{ copyLabel }}
-                  </button>
+            <div class="space-y-4">
+              <!-- Direct Integration -->
+              <div class="flex gap-3">
+                <div class="flex-shrink-0 w-6 h-6 rounded-full bg-primary-100 text-primary-600 flex items-center justify-center text-sm font-semibold">
+                  1
+                </div>
+                <div class="flex-1">
+                  <p class="text-slate-700 font-medium mb-1">Add to your meshStack</p>
+                  <p class="text-slate-600 text-sm">Click the button to import this building block directly into your meshStack instance.</p>
                 </div>
               </div>
 
-              <div class="mt-4">
-                <h2 class="fw-bold h4">How to use this definition</h2>
-                <div class="pt-2">
-                  <h3 class="fw-bold h6">Option 1: Directly reference this definition</h3>
-                  <ol>
-                    <li *ngIf="template.backplaneUrl">
-                      Prepare for adding the definition into meshStack by running the
-                      <a [href]="template.backplaneUrl" target="_blank" rel="noopener noreferrer">Terraform backplane
-                        files</a>
-                    </li>
-                    <li>Click the button "Add to meshStack" below</li>
-                    <li>Enter your meshStack URL</li>
-                    <li>meshStack will automatically import all necessary information and reference the public GitHub
-                      repository.</li>
-                    <li>Fill in the missing inputs, such as secrets</li>
-                  </ol>
+              <!-- Backplane (if exists) -->
+              <div *ngIf="template.backplaneUrl" class="flex gap-3">
+                <div class="flex-shrink-0 w-6 h-6 rounded-full bg-primary-100 text-primary-600 flex items-center justify-center text-sm font-semibold">
+                  2
                 </div>
-                <div class="fw-bold pt-2 pb-2">OR</div>
-                <div class="pt-2">
-                  <h3 class="fw-bold h6">Option 2: Copy the Files into your own Repository</h3>
-                  <p>Alternatively, you can copy the Terraform files needed and take ownership of the code.</p>
-                  <ol>
-                    <li>Copy the files in your own repository</li>
-                    <li *ngIf="template.backplaneUrl">
-                      Prepare for adding the definition into meshStack by running the
-                      <a [href]="template.backplaneUrl" target="_blank" rel="noopener noreferrer">Terraform backplane
-                        files</a>
-                    </li>
-                    <li>Open meshStack and create a new building block definition</li>
-                    <li>
-                      Follow the instructions in the wizard and make sure you select "Terraform" as implementation type
-                    </li>
-                    <li>Add the link to your repository, you copied the files and connect it to meshStack</li>
-                    <li>meshStack will automatically add the inputs and outputs. Fill in the missing information.</li>
-                    <li>
-                      At the end click
-                      <b>Create Definition</b>
-                      to finish
-                    </li>
-                  </ol>
+                <div class="flex-1">
+                  <p class="text-slate-700 font-medium mb-1">Set up infrastructure (optional)</p>
+                  <p class="text-slate-600 text-sm">
+                    Run the
+                    <a [href]="template.backplaneUrl" target="_blank" rel="noopener noreferrer"
+                       class="text-primary-600 hover:text-primary-700 underline">
+                      backplane Terraform files
+                    </a>
+                    to prepare your cloud environment.
+                  </p>
                 </div>
               </div>
 
-              <div class="pt-5 d-flex flex-column flex-md-row justify-content-end">
-                <ng-container *ngIf="backPath$ | async as backPath">
-                  <a [href]="backPath" class="btn btn-outline-primary mb-2 mb-md-0 me-md-2">Go Back</a>
-                </ng-container>
-                <button type="button" class="btn btn-primary" (click)="open(template)">Add to meshStack</button>
+              <!-- Configure -->
+              <div class="flex gap-3">
+                <div class="flex-shrink-0 w-6 h-6 rounded-full bg-primary-100 text-primary-600 flex items-center justify-center text-sm font-semibold">
+                  {{ template.backplaneUrl ? '3' : '2' }}
+                </div>
+                <div class="flex-1">
+                  <p class="text-slate-700 font-medium mb-1">Configure and deploy</p>
+                  <p class="text-slate-600 text-sm">Fill in required inputs and secrets, then deploy to your platforms.</p>
+                </div>
               </div>
+            </div>
+
+            <!-- Alternative: Manual Setup -->
+            <div class="mt-6 p-4 bg-slate-50 rounded-lg border border-slate-200">
+              <p class="text-slate-700 font-medium mb-2 flex items-center gap-2">
+                <i class="fa-solid fa-code-branch text-slate-500"></i>
+                Prefer manual setup?
+              </p>
+              <p class="text-slate-600 text-sm mb-0">
+                Copy the Terraform files from the repository above into your own repo, then create a building block definition in meshStack pointing to your repository.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Sidebar - Right Column (1/3) -->
+        <div class="lg:col-span-1">
+          <!-- Prominent CTA Card -->
+          <div class="bg-gradient-to-br from-primary-50 via-primary-100 to-blue-50 rounded-xl p-6 shadow-lg border border-primary-200 sticky top-8">
+            <div class="text-center mb-6">
+              <div class="w-16 h-16 mx-auto mb-4 bg-white rounded-xl p-3 flex items-center justify-center shadow-sm">
+                <img src="assets/meshstack-logo.png" alt="meshStack" class="w-full h-full object-contain" />
+              </div>
+              <h3 class="text-xl font-bold mb-2 text-slate-900">Ready to deploy?</h3>
+              <p class="text-slate-600 text-sm">Import this building block into your meshStack instance</p>
+            </div>
+
+            <button
+              type="button"
+              class="btn btn-primary w-full font-semibold text-lg py-3 mb-4 shadow-md"
+              (click)="open(template)">
+              <i class="fas fa-plus mr-2"></i>Add to meshStack
+            </button>
+
+            <div class="text-center">
+              <a
+                href="https://www.meshcloud.io/en/book-demo"
+                target="_blank"
+                rel="noopener noreferrer"
+                class="text-slate-600 hover:text-slate-900 text-sm underline transition-colors">
+                Don't have meshStack yet?
+              </a>
             </div>
           </div>
         </div>
@@ -106,3 +147,4 @@
     </ng-container>
   </div>
 </div>
+

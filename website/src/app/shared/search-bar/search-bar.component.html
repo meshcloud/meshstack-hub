@@ -1,15 +1,12 @@
-<form [formGroup]="searchForm" (ngSubmit)="onSearch()">
-  <div class="input-group me-auto">
+<form [formGroup]="searchForm" (ngSubmit)="onSearch()" class="w-full">
+  <div class="relative">
+    <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none"></i>
     <input
       type="text"
-      class="form-control"
+      class="w-full pl-10 pr-4 py-2.5 border border-slate-300 rounded-lg text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent transition-all"
       aria-label="Search"
       formControlName="searchTerm"
-      (keyup.enter)="onSearch()"
-      placeholder="Search"
+      placeholder="Search building blocks..."
     />
-    <button class="btn btn-primary" type="submit" (click)="onSearch()">
-      <i class="fa-solid fa-magnifying-glass"></i>
-    </button>
   </div>
 </form>

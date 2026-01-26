@@ -1,28 +1,74 @@
-<div class="pt-5 ps-5 pe-5">
-  <div class="pb-2" *ngIf="isSearch && (breadcrumbs$ | async) as breadcrumbs">
-    <mst-breadcrumb [breadcrumbs]="breadcrumbs"></mst-breadcrumb>
-  </div>
-  <ng-container *ngIf="platformCards$ | async as platformCards">
-    <mst-platform-cards [cards]="platformCards"></mst-platform-cards>
-  </ng-container>
-  <div class="pt-5 pb-4">
-    <h2>All building block definitions</h2>
-    <p *ngIf="!isSearch">
-      These are pre-configured Terraform modules for automating common cloud tasks across AWS, Azure, GCP, and custom
-      cloud platforms, enabling rapid and consistent infrastructure provisioning and management
-    </p>
+<div class="bg-gray-50 min-h-screen">
+  <!-- Hero Section - Full Width -->
+  <div class="bg-gradient-to-br from-primary-50 to-blue-50 border-b border-primary-100" *ngIf="!isSearch">
+    <div class="container mx-auto px-4 py-12 md:py-16">
+      <div class="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-8">
+        <!-- Left: Description -->
+        <div class="flex-1">
+          <h2 class="text-3xl md:text-4xl font-bold text-slate-900 mb-4">
+            Welcome to meshStack Hub
+          </h2>
+          <p class="text-lg text-slate-700 leading-relaxed max-w-2xl">
+            A central hub for open-source building block definitions and platform configurations that integrate seamlessly with meshStack. Discover Terraform modules for AWS, Azure, GCP, and more—designed for consistent, secure, and efficient cloud automation.
+          </p>
+        </div>
+
+        <!-- Right: Statistics -->
+        <div class="flex gap-6 lg:gap-8">
+          <div class="text-center">
+            <div class="bg-white rounded-xl p-6 shadow-md border border-slate-200 min-w-[120px]">
+              <div class="text-4xl font-bold text-primary-600 mb-2">{{ platformCount }}</div>
+              <div class="text-sm font-medium text-slate-600 uppercase tracking-wide">Platforms</div>
+            </div>
+          </div>
+          <div class="text-center">
+            <div class="bg-white rounded-xl p-6 shadow-md border border-slate-200 min-w-[120px]">
+              <div class="text-4xl font-bold text-primary-600 mb-2">{{ buildingBlockCount }}</div>
+              <div class="text-sm font-medium text-slate-600 uppercase tracking-wide">Building Blocks</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
 
-  <div class="row">
-    <ng-container *ngIf="templates$ | async as templates">
-      <ng-container *ngIf="templates.length > 0; else noTemplates">
-        <div class="col-sm-3 mb-3" *ngFor="let template of templates">
-          <mst-definition-card [card]="template"></mst-definition-card>
-        </div>
-      </ng-container>
-      <ng-template #noTemplates>
-        <p class="p-2">No building block definitions</p>
-      </ng-template>
+  <div class="container mx-auto px-4 py-8">
+    <!-- Breadcrumb -->
+    <div class="mb-6" *ngIf="isSearch && (breadcrumbs$ | async) as breadcrumbs">
+      <mst-breadcrumb [breadcrumbs]="breadcrumbs"></mst-breadcrumb>
+    </div>
+
+    <!-- Platform Cards -->
+    <ng-container *ngIf="platformCards$ | async as platformCards">
+      <div class="mb-12">
+        <mst-platform-cards [cards]="platformCards"></mst-platform-cards>
+      </div>
     </ng-container>
+
+    <!-- Section Header -->
+    <div class="mb-8">
+      <h2 class="text-3xl font-bold text-slate-900 mb-3">All Building Block Definitions</h2>
+      <p class="text-lg text-slate-600 max-w-4xl" *ngIf="!isSearch">
+        Building block definitions are pre-configured Terraform modules for automating cloud tasks. Application teams can easily use them to simplify and accelerate their workflows.
+      </p>
+    </div>
+
+    <!-- Template Cards Grid -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+      <ng-container *ngIf="templates$ | async as templates">
+        <ng-container *ngIf="templates.length > 0; else noTemplates">
+          <div *ngFor="let template of templates">
+            <mst-definition-card [card]="template"></mst-definition-card>
+          </div>
+        </ng-container>
+        <ng-template #noTemplates>
+          <div class="col-span-full">
+            <div class="bg-white border border-slate-200 rounded-xl p-12 text-center">
+              <p class="text-slate-500 mb-0">No building block definitions found</p>
+            </div>
+          </div>
+        </ng-template>
+      </ng-container>
+    </div>
   </div>
 </div>

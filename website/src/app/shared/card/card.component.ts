@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, Input } from '@angular/core';
+import { Component, Input, Output, EventEmitter } from '@angular/core';
 import { Router, RouterModule } from '@angular/router';
 import ColorThief from 'colorthief';
 
@@ -18,18 +18,22 @@ export class CardComponent {
   public routePath = '';
 
   @Input()
-  public set borderColorSourceImage(value: string | null) {
-    this._borderColorSourceImage = value;
-    this.updateBorderColor();
+  public accentColor = '';
+
+  @Input()
+  public set logoSourceImage(value: string | null) {
+    this._logoSourceImage = value;
+    this.extractLogoColor();
   }
 
-  public get borderColorSourceImage(): string | null {
-    return this._borderColorSourceImage;
+  public get logoSourceImage(): string | null {
+    return this._logoSourceImage;
   }
 
-  public borderColor = '';
+  @Output()
+  public backgroundColorExtracted = new EventEmitter<string>();
 
-  private _borderColorSourceImage: string| null = '';
+  private _logoSourceImage: string | null = '';
 
   constructor(private router: Router) { }
 
@@ -39,20 +43,18 @@ export class CardComponent {
     }
   }
 
-  private updateBorderColor(): void {
-    if (!this.borderColorSourceImage) {
-      this.borderColor = '';
-
+  private extractLogoColor(): void {
+    if (!this.logoSourceImage) {
       return;
     }
 
     if (typeof window !== 'undefined') {
       const img = new Image();
-      img.src = this.borderColorSourceImage;
+      img.src = this.logoSourceImage;
       img.onload = () => {
         const colorThief = new ColorThief();
         const dominantColor = colorThief.getColor(img);
-        this.borderColor = `rgb(${dominantColor.join(',')})`;
+        this.backgroundColorExtracted.emit(`rgba(${dominantColor.join(',')}, 0.1)`);
       };
     }
   }

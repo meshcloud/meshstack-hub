@@ -10,18 +10,18 @@ import { BreadcrumbItem } from 'app/shared/breadcrumb/breadcrumb';
 import { CardComponent } from 'app/shared/card';
 import { DefinitionCard } from 'app/shared/definition-card/definition-card';
 import { DefinitionCardComponent } from 'app/shared/definition-card/definition-card.component';
-import { LogoCircleComponent } from 'app/shared/logo-circle';
 import { PlatformData, PlatformService } from 'app/shared/platform';
 import { TemplateService } from 'app/shared/template';
 
 interface PlatformVM {
   logo: string | null;
   title: string;
+  description: string; // Added description property
 }
 
 @Component({
   selector: 'mst-platform-view',
-  imports: [CommonModule, DefinitionCardComponent, CardComponent, LogoCircleComponent, BreadcrumbComponent],
+  imports: [CommonModule, DefinitionCardComponent, CardComponent, BreadcrumbComponent],
   templateUrl: './platform-view.component.html',
   styleUrl: './platform-view.component.scss',
   standalone: true
@@ -65,10 +65,9 @@ export class PlatformViewComponent implements OnInit, OnDestroy {
         this.platform$ = this.platformData$.pipe(
           map(platformData => ({
             logo: platformData[type]?.logo ?? null,
-            title: platformData[type]?.name ?? ''
-          }),
-
-          )
+            title: platformData[type]?.name ?? '',
+            description: platformData[type]?.description ?? '' // Correctly mapped description
+          }))
         );
         this.templates$ = this.getTemplatesWithLogos(templateObs$, type);
 

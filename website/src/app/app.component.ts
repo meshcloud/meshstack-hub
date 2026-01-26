@@ -1,7 +1,6 @@
 import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { Component, HostListener, Inject, PLATFORM_ID } from '@angular/core';
 import { RouterOutlet } from '@angular/router';
-import { NgbModule } from '@ng-bootstrap/ng-bootstrap';
 
 import { HeaderComponent } from 'app/shared/header/header.component';
 
@@ -10,8 +9,9 @@ import { FooterComponent } from './shared/footer';
 
 @Component({
   selector: 'mst-root',
-  imports: [CommonModule, RouterOutlet, HeaderComponent, FooterComponent, NgbModule],
+  imports: [CommonModule, RouterOutlet, HeaderComponent, FooterComponent],
   templateUrl: './app.component.html',
+  styleUrl: './app.component.scss',
   standalone: true
 })
 export class AppComponent {

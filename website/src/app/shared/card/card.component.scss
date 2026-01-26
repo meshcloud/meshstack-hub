@@ -1,17 +1,2 @@
-.card {
-  display: flex;
-  flex-direction: column;
-  height: 100%;
-  transition: transform 0.3s;
-  cursor: pointer;
-  border-radius: 0.5rem; // Added to make the card border rounder
+/* Using Tailwind CSS classes in template - no custom styles needed */
 
-  &.clickable:hover {
-    box-shadow: 0 0.5rem 1rem rgba(black, 0.15);
-  }
-
-  &.clickable:focus {
-    outline: none;
-    box-shadow: 0 0 1rem rgba(0, 120, 255, 0.8);
-  }
-}

@@ -1,12 +1,17 @@
 import { CommonModule, isPlatformBrowser } from '@angular/common';
-import { Component, Inject, Input, OnInit, PLATFORM_ID } from '@angular/core';
+import { Component, Inject, OnInit, PLATFORM_ID } from '@angular/core';
 import { FormBuilder, FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
-import { NgbActiveModal } from '@ng-bootstrap/ng-bootstrap';
+import { DialogRef, DIALOG_DATA } from '@angular/cdk/dialog';
 
 import { ReferrerService } from 'app/referrer.service';
 
 interface ImportDialogForm {
   meshStackUrl: FormControl<string>;
+}
+
+interface ImportDialogData {
+  name: string;
+  modulePath: string;
 }
 
 @Component({
@@ -18,17 +23,12 @@ interface ImportDialogForm {
 })
 export class ImportDialogComponent implements OnInit {
 
-  @Input()
-  public name!: string;
-
-  @Input()
-  public modulePath!: string;
-
   public form!: FormGroup<ImportDialogForm>;
 
   constructor(
     @Inject(PLATFORM_ID) private platformId: object,
-    public activeModal: NgbActiveModal,
+    public dialogRef: DialogRef<ImportDialogComponent>,
+    @Inject(DIALOG_DATA) public data: ImportDialogData,
     private fb: FormBuilder,
     private referrerService: ReferrerService
   ) { }
@@ -45,8 +45,9 @@ export class ImportDialogComponent implements OnInit {
   public openMeshStackUrl() {
     // Only runs in browser, not during SSR
     if (isPlatformBrowser(this.platformId)) {
-      const url = this.getSanitizedMeshStackUrl() + '/#/building-block-definition-import?name=' + this.name + '&module-path=' + this.modulePath;
+      const url = this.getSanitizedMeshStackUrl() + '/#/building-block-definition-import?name=' + this.data.name + '&module-path=' + this.data.modulePath;
       window.open(url.toString(), '_blank', 'noopener,noreferrer');
+      this.dialogRef.close();
     }
   }
 

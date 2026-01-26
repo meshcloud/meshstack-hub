@@ -6,7 +6,7 @@ const loadPlatformView = () => import('./features/platform-view').then(m => m.Pl
 
 export const routes: Routes = [
   {
-    path: 'all',
+    path: '',
     loadComponent: loadTemplateGallery
   },
   {
@@ -20,6 +20,5 @@ export const routes: Routes = [
   {
     path: 'definitions/:id',
     loadComponent: loadTemplateDetails
-  },
-  { path: '', redirectTo: '/all', pathMatch: 'full' },
+  }
 ];

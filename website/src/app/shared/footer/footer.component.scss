@@ -1,12 +1,2 @@
-@import '@styles';
+// Styles are now handled by Tailwind utility classes in the template
 
-.footer {
-  width: 100%;
-  background-color: $mesh-blue;
-  text-align: center;
-  padding: 0.5rem 0;
-
-  a {
-    color: black;
-  }
-}
