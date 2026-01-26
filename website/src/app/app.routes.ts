@@ -20,5 +20,6 @@ export const routes: Routes = [
   {
     path: 'definitions/:id',
     loadComponent: loadTemplateDetails
-  }
+  },
+  { path: 'all', redirectTo: '', pathMatch: 'full' },
 ];
