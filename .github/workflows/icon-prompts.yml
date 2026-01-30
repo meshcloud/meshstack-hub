@@ -53,7 +53,7 @@ jobs:
           result-encoding: string
           script: |
             const prompts = JSON.parse(process.env.PROMPTS_JSON);
-            
+
             if (prompts.length === 0) {
               return '';
             }
