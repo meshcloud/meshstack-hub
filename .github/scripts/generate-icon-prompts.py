@@ -78,15 +78,15 @@ def parse_readme_frontmatter(readme_path):
     """Extract YAML frontmatter from README.md"""
     with open(readme_path, 'r', encoding='utf-8') as f:
         content = f.read()
-    
+
     if not content.startswith('---'):
         return None
-    
+
     # Extract frontmatter between --- delimiters
     parts = content.split('---', 2)
     if len(parts) < 3:
         return None
-    
+
     try:
         frontmatter = yaml.safe_load(parts[1])
         return frontmatter
@@ -105,16 +105,16 @@ def get_platform_from_frontmatter(frontmatter):
 def generate_icon_prompt(name, platform, description):
     """Generate an AI image generation prompt for an icon"""
     platform_colors = PLATFORM_COLORS.get(platform)
-    
+
     if not platform_colors:
         # Fallback to generic bright colors
         color_scheme = "bright, vibrant colors"
     else:
         color_scheme = platform_colors["name"]
-    
+
     # Clean up description
     clean_description = description.strip().replace('\n', ' ')
-    
+
     # Generate AI prompt
     ai_prompt = f"""Create a professional flat design icon for the meshcloud Building Block ecosystem.
 
@@ -138,7 +138,7 @@ Composition:
 
 Style: Enterprise professional, instantly recognizable at small sizes, similar to app icons or logos.
 Dimensions: 800x800 pixels"""
-    
+
     # Generate post-processing instructions
     post_processing = """**Step 1: Remove white background with GIMP (free)**
 
@@ -162,7 +162,7 @@ g) Set Compression level to 9 → Export
 - This reduces file size by 60-80% while maintaining quality
 
 **Target specs:** 800x800px PNG with transparent background, under 100KB"""
-    
+
     return {
         'ai_prompt': ai_prompt,
         'post_processing': post_processing
@@ -171,23 +171,23 @@ g) Set Compression level to 9 → Export
 def find_missing_logos(modules_dir):
     """Find all buildingblock directories missing logo.png"""
     missing = []
-    
+
     for root, dirs, files in os.walk(modules_dir):
         if 'buildingblock' in root:
             buildingblock_path = Path(root)
             readme_path = buildingblock_path / 'README.md'
             logo_path = buildingblock_path / 'logo.png'
-            
+
             if readme_path.exists() and not logo_path.exists():
                 frontmatter = parse_readme_frontmatter(readme_path)
                 if frontmatter:
                     platform = get_platform_from_frontmatter(frontmatter)
                     name = frontmatter.get('name', 'Unknown')
                     description = frontmatter.get('description', '')
-                    
+
                     # Get relative path from modules directory
                     rel_path = buildingblock_path.relative_to(modules_dir)
-                    
+
                     missing.append({
                         'path': str(rel_path),
                         'name': name,
@@ -196,21 +196,21 @@ def find_missing_logos(modules_dir):
                         'readme_path': str(readme_path),
                         'logo_path': str(logo_path)
                     })
-    
+
     return missing
 
 def main():
     # Get modules directory
     repo_root = Path(__file__).parent.parent.parent
     modules_dir = repo_root / 'modules'
-    
+
     if not modules_dir.exists():
         print(f"ERROR: Modules directory not found: {modules_dir}", file=sys.stderr)
         sys.exit(1)
-    
+
     # Find missing logos
     missing_logos = find_missing_logos(modules_dir)
-    
+
     # Generate prompts for each missing logo
     results = []
     for item in missing_logos:
@@ -219,7 +219,7 @@ def main():
             item['platform'] or 'generic',
             item['description']
         )
-        
+
         results.append({
             'name': item['name'],
             'platform': item['platform'],
@@ -228,7 +228,7 @@ def main():
             'ai_prompt': prompt_data['ai_prompt'],
             'post_processing': prompt_data['post_processing']
         })
-    
+
     # Output as JSON for GitHub Action to consume
     print(json.dumps(results, indent=2))
 
