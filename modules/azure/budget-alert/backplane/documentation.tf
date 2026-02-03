@@ -24,7 +24,7 @@ This module automates the deployment of a Budget Alert building block within Azu
 
 | Principal ID |
 | --- |
-| ${join("\n", [for assignment in azurerm_role_assignment.buildingblock_deploy : assignment.principal_id])} |
+| ${join("\n", concat([for assignment in azurerm_role_assignment.existing_principals : assignment.principal_id], var.create_service_principal_name != null ? [azurerm_role_assignment.created_principal[0].principal_id] : []))} |
 
 ## 🎯 Scope
 
