@@ -79,7 +79,9 @@ export class PlatformService {
       case 'openstack':
         return { name: 'OpenStack', logo: logoUrl, description: 'Open-source cloud infrastructure platform', category: 'private-cloud' };
       case 'openshift':
-        return { name: 'OpenShift', logo: logoUrl, description: 'Enterprise Kubernetes platform by Red Hat', category: 'private-cloud' };
+        return { name: 'OpenShift', logo: logoUrl };
+      case 'oci':
+        return { name: 'Oracle Cloud Infrastructure', logo: logoUrl };
       case 'tencentcloud':
         return { name: 'Tencent Cloud', logo: logoUrl, description: 'Cloud services by Tencent', category: 'china' };
       default:

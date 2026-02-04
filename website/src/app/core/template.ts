@@ -10,4 +10,4 @@ export interface Template {
 	supportedPlatforms: PlatformType[];
 }
 
-export type PlatformType = 'azure' | 'aws' | 'gcp' | 'github';
+export type PlatformType = 'aks' | 'aws' | 'azure' | 'azuredevops' | 'cloudfoundry' | 'datadog' | 'gcp' | 'github' | 'ionos' | 'kubernetes' | 'oci' | 'openshift' | 'openstack' | 'ovh' | 'sapbtp' | 'stackit' | 'tencentcloud';
