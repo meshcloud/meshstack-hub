@@ -1,10 +1,13 @@
 terraform {
   required_providers {
     meshstack = {
-      source = "meshcloud/meshstack"
+      source  = "meshcloud/meshstack"
+      version = "0.17.3"
+
     }
     oci = {
-      source = "oracle/oci"
+      source  = "oracle/oci"
+      version = "7.32.0"
     }
   }
 }
