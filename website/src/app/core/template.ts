@@ -3,11 +3,9 @@ export interface Template {
 	id: string;
 	logo: string;
 	description: string;
-	platformType: PlatformType;
+	platformType: string;
 	howToUse: string;
 	buildingBlockUrl: string;
 	backplaneUrl: string | null;
-	supportedPlatforms: PlatformType[];
+	supportedPlatforms: string[];
 }
-
-export type PlatformType = 'aks' | 'aws' | 'azure' | 'azuredevops' | 'cloudfoundry' | 'datadog' | 'gcp' | 'github' | 'ionos' | 'kubernetes' | 'oci' | 'openshift' | 'openstack' | 'ovh' | 'sapbtp' | 'stackit' | 'tencentcloud';

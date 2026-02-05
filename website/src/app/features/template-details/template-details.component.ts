@@ -4,7 +4,6 @@ import { ActivatedRoute } from '@angular/router';
 import { Dialog } from '@angular/cdk/dialog';
 import { Observable, Subscription, map, switchMap } from 'rxjs';
 
-import { PlatformType } from 'app/core';
 import { BreadCrumbService } from 'app/shared/breadcrumb/bread-crumb.service';
 import { BreadcrumbItem } from 'app/shared/breadcrumb/breadcrumb';
 import { BreadcrumbComponent } from 'app/shared/breadcrumb/breadcrumb.component';
@@ -15,7 +14,7 @@ import { ImportDialogComponent } from './import-dialog/import-dialog.component';
 interface TemplateDetailsVm {
   imageUrl: string | null;
   name: string;
-  platformType: PlatformType;
+  platformType: string;
   description: string;
   howToUse: string;
   source: string;

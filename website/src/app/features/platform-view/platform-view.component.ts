@@ -1,17 +1,16 @@
 import { CommonModule } from '@angular/common';
 import { Component, OnDestroy, OnInit } from '@angular/core';
-import { ActivatedRoute, Router } from '@angular/router';
-import { Observable, Subscription, forkJoin, map, switchMap } from 'rxjs';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
+import { Observable, Subscription, map, switchMap, of } from 'rxjs';
 
-import { PlatformType } from 'app/core';
 import { BreadcrumbComponent } from 'app/shared/breadcrumb';
 import { BreadCrumbService } from 'app/shared/breadcrumb/bread-crumb.service';
 import { BreadcrumbItem } from 'app/shared/breadcrumb/breadcrumb';
-import { CardComponent } from 'app/shared/card';
 import { DefinitionCard } from 'app/shared/definition-card/definition-card';
 import { DefinitionCardComponent } from 'app/shared/definition-card/definition-card.component';
-import { PlatformData, PlatformService } from 'app/shared/platform';
+import { Platform, PlatformService } from 'app/shared/platform';
 import { TemplateService } from 'app/shared/template';
+import { extractLogoColor } from 'app/shared/util/logo-color.util';
 
 interface PlatformVM {
   logo: string | null;
@@ -21,7 +20,7 @@ interface PlatformVM {
 
 @Component({
   selector: 'mst-platform-view',
-  imports: [CommonModule, DefinitionCardComponent, CardComponent, BreadcrumbComponent],
+  imports: [CommonModule, DefinitionCardComponent, BreadcrumbComponent, RouterLink],
   templateUrl: './platform-view.component.html',
   styleUrl: './platform-view.component.scss',
   standalone: true
@@ -33,22 +32,25 @@ export class PlatformViewComponent implements OnInit, OnDestroy {
 
   public templates$!: Observable<DefinitionCard[]>;
 
+  public hasIntegration: boolean = false;
+
+  public currentPlatformType: string = '';
+
   private paramSubscription!: Subscription;
 
-  private platformData$!: Observable<PlatformData>;
+  public logoBackgroundColor$!: Observable<string>;
 
   constructor(
     private router: Router,
     private route: ActivatedRoute,
     private templateService: TemplateService,
-    private platformLogoService: PlatformService,
+    private platformService: PlatformService,
     private breadcrumbService: BreadCrumbService
   ) { }
 
   public ngOnInit(): void {
     this.subscribeToRouteParams();
     this.breadcrumbs$ = this.route.paramMap.pipe(switchMap(x => this.breadcrumbService.getBreadcrumbs(x)));
-
   }
 
   public ngOnDestroy(): void {
@@ -60,16 +62,39 @@ export class PlatformViewComponent implements OnInit, OnDestroy {
       const type = params.get('type');
 
       if (type) {
-        const templateObs$ = this.templateService.filterTemplatesByPlatformType(type as PlatformType);
-        this.platformData$ = this.platformLogoService.getAllPlatformData();
-        this.platform$ = this.platformData$.pipe(
-          map(platformData => ({
-            logo: platformData[type]?.logo ?? null,
-            title: platformData[type]?.name ?? '',
-            description: platformData[type]?.description ?? '' // Correctly mapped description
-          }))
+        this.currentPlatformType = type;
+        this.platform$ = this.platformService.getAllPlatforms()
+          .pipe(
+            map(platforms => {
+              const templateObs$ = this.templateService.filterTemplatesByPlatformType(type);
+              this.templates$ = this.getTemplatesWithLogos(templateObs$, platforms, type);
+
+              const platform = platforms.find(p => p.platformType === type);
+
+              if (!platform) {
+                throw new Error(`Platform ${type} not found`);
+              }
+
+              this.hasIntegration = !!platform.terraformSnippet;
+              return {
+                logo: platform.logo,
+                title: platform.name,
+                description: platform.description
+              };
+            })
         );
-        this.templates$ = this.getTemplatesWithLogos(templateObs$, type);
+        // Compose logoBackgroundColor$ reactively from platform$
+        const DEFAULT_LOGO_BG_COLOR = 'rgba(203,213,225,0.3)';
+        this.logoBackgroundColor$ = this.platform$.pipe(
+          switchMap(platform =>
+            platform.logo
+              ? extractLogoColor(platform.logo).pipe(
+                  map(color => color || DEFAULT_LOGO_BG_COLOR)
+                )
+              : of(DEFAULT_LOGO_BG_COLOR)
+          )
+        );
+
 
       } else {
         this.router.navigate(['/all']);
@@ -77,13 +102,14 @@ export class PlatformViewComponent implements OnInit, OnDestroy {
     });
   }
 
-  private getTemplatesWithLogos(templateObs$: Observable<any>, type: string): Observable<DefinitionCard[]> {
-    return forkJoin({
-      templates: templateObs$,
-      platforms: this.platformData$
-    })
+  private getTemplatesWithLogos(
+    templateObs$: Observable<any>,
+    platforms: Platform[],
+    type: string
+  ): Observable<DefinitionCard[]> {
+    return templateObs$
       .pipe(
-        map(({ templates, platforms }) =>
+        map(templates =>
           templates.map(item => ({
             cardLogo: item.logo,
             title: item.name,
@@ -91,7 +117,7 @@ export class PlatformViewComponent implements OnInit, OnDestroy {
             routePath: `/platforms/${type}/definitions/${item.id}`,
             supportedPlatforms: item.supportedPlatforms.map(platform => ({
               platformType: platform,
-              imageUrl: platforms[item.platformType].logo ?? null
+              imageUrl: platforms.find(p => p.platformType === item.platformType)?.logo ?? null
             }))
           }))
         )

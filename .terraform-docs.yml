@@ -4,7 +4,6 @@ version: ""
 
 recursive:
   enabled: false
-  path: kit
 
 content: ""
 

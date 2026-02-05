@@ -1,0 +1,96 @@
+<div class="bg-slate-50 min-h-screen" *ngIf="platform$ | async as platform">
+  <!-- Breadcrumb -->
+  <div class="border-b border-slate-200 w-full">
+    <div class="container mx-auto px-4 lg:px-8">
+      <ng-container *ngIf="breadcrumbs$ | async as breadcrumbs">
+        <mst-breadcrumb [breadcrumbs]="breadcrumbs"></mst-breadcrumb>
+      </ng-container>
+    </div>
+  </div>
+
+  <!-- Full Width Header -->
+  <div class="bg-gradient-to-br from-primary-50 to-blue-50 border-b border-primary-100">
+    <div class="container mx-auto px-4 py-6 md:py-8">
+      <div class="flex flex-col md:flex-row items-start md:items-center gap-8">
+        <div class="w-20 h-20 flex-shrink-0 flex items-center justify-center rounded-lg" [ngStyle]="{'background-color': (headerBgColor$ | async)}">
+          <img *ngIf="platform.logo" [src]="platform.logo" [alt]="platform.name" class="w-14 h-14 object-contain" />
+        </div>
+        <div class="flex-1 flex flex-col gap-2">
+          <h1 class="text-2xl lg:text-3xl font-bold text-slate-900">Integrate {{ platform.name }} into meshStack</h1>
+          <p class="text-base text-slate-700 mb-3">{{ platform.readme }}</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main Content -->
+  <div class="container mx-auto px-4 lg:px-8 py-8">
+    <!-- Integration Guide + How To + Terraform Snippet Combined -->
+    <div class="mb-8">
+      <div class="grid grid-cols-1 md:grid-cols-[1fr_1.2fr] gap-6 items-start">
+        <mst-card label="Quick Start" class="h-fit">
+          <div class="px-5 py-6 max-w-none text-base" card-body>
+            <h2 class="text-xl font-bold text-slate-900 mb-4 flex items-center gap-2">
+              <i class="fa-solid fa-rocket text-primary-600"></i>
+              Quick Start
+            </h2>
+            <div class="space-y-4">
+              <div class="flex gap-3 items-start">
+                <div class="flex-shrink-0 w-6 h-6 rounded-full bg-primary-100 text-primary-600 flex items-center justify-center text-sm font-semibold">1</div>
+                <div class="flex-1">
+                  <div class="text-slate-700 font-medium mb-1 text-base">Add the OpenTofu snippet</div>
+                  <div class="text-slate-600 text-sm">Copy the provided OpenTofu code from the right and add it to your infrastructure codebase.</div>
+                </div>
+              </div>
+              <div class="flex gap-3 items-start">
+                <div class="flex-shrink-0 w-6 h-6 rounded-full bg-primary-100 text-primary-600 flex items-center justify-center text-sm font-semibold">2</div>
+                <div class="flex-1">
+                  <div class="text-slate-700 font-medium mb-1 text-base">Provider setup and configure variables</div>
+                  <div class="text-slate-600 text-sm">
+                    Ensure you enter your API key in the <span class="font-mono bg-slate-100 px-1 py-0.5 rounded text-sm">provider</span> block and update the required variables in the <span class="font-mono bg-slate-100 px-1 py-0.5 rounded text-sm">locals</span> block as needed for your environment.
+                  </div>
+                </div>
+              </div>
+              <div class="flex gap-3 items-start">
+                <div class="flex-shrink-0 w-6 h-6 rounded-full bg-primary-100 text-primary-600 flex items-center justify-center text-sm font-semibold">3</div>
+                <div class="flex-1">
+                  <div class="text-slate-700 font-medium mb-1 text-base">Deploy with OpenTofu</div>
+                  <div class="text-slate-600 text-sm">Run <span class="font-mono bg-slate-100 px-1 py-0.5 rounded text-sm">tofu init</span>, <span class="font-mono bg-slate-100 px-1 py-0.5 rounded text-sm">tofu plan</span>, and <span class="font-mono bg-slate-100 px-1 py-0.5 rounded text-sm">tofu apply</span> to provision the integration.</div>
+                </div>
+              </div>
+              <div class="flex gap-3 items-start">
+                <div class="flex-shrink-0 w-6 h-6 rounded-full bg-green-100 text-green-600 flex items-center justify-center text-base font-bold">✓</div>
+                <div class="flex-1">
+                  <div class="text-slate-700 font-medium mb-1 text-base">Success!</div>
+                  <div class="text-slate-600 text-sm">The platform is now integrated and you can start using it to provision tenants, assign users and collect costs.</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </mst-card>
+        <div class="relative w-full">
+          <button
+            (click)="copyTerraform(platform.terraformSnippet!!)"
+            class="absolute top-3 right-4 btn btn-xs btn-primary z-10 font-bold flex items-center gap-2"
+            [class.btn-success]="copiedTerraform">
+            <i class="fa-solid" [class.fa-check]="copiedTerraform" [class.fa-copy]="!copiedTerraform"></i>
+            <span>{{ copiedTerraform ? 'Copied!' : 'Copy' }}</span>
+          </button>
+          <pre class="bg-slate-900 text-slate-100 p-2 md:p-3 rounded-xl border border-slate-200 overflow-x-auto text-xs md:text-sm mt-0"><code class="language-terraform">{{ platform?.terraformSnippet }}</code></pre>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Not Found State -->
+<div class="bg-slate-50 min-h-screen flex items-center justify-center" *ngIf="!(platform$ | async)">
+  <div class="text-center">
+    <i class="fa-solid fa-circle-exclamation text-6xl text-slate-400 mb-4"></i>
+    <h2 class="text-2xl font-bold text-slate-900 mb-2">Integration Not Found</h2>
+    <p class="text-slate-600 mb-4">This platform does not have an integration available yet.</p>
+    <a routerLink="/" class="btn btn-primary">
+      <i class="fa-solid fa-home mr-2"></i>Back to Home
+    </a>
+  </div>
+</div>

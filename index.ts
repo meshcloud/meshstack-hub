@@ -3,6 +3,9 @@ const path = require("path");
 const matter = require("gray-matter");
 const { execSync } = require("child_process");
 
+const repoRoot = path.resolve(__dirname, "modules");
+const assetsDir = path.resolve(__dirname, "website/public/assets/logos");
+
 function getGitHubRemoteUrl() {
   try {
     const remoteUrl = execSync("git config --get remote.origin.url")
@@ -38,44 +41,76 @@ function findReadmes(dir){
   });
 }
 
-function copyFilesToAssets(
-  sourceDir,
-  destinationDir,
-  fileFilter
-){
-  const copiedFiles = {};
+function findPlatforms(): Platform[] {
+  fs.mkdirSync(assetsDir, { recursive: true });
 
-  fs.readdirSync(sourceDir, { withFileTypes: true })
+  return fs.readdirSync(repoRoot, { withFileTypes: true })
     .filter((dirent) => dirent.isDirectory() && dirent.name !== ".github")
-    .forEach((dir) => {
-      const platformDir = path.join(sourceDir, dir.name);
-      fs.readdirSync(platformDir)
-        .filter(fileFilter)
-        .forEach((file) => {
-          const sourcePath = path.join(platformDir, file);
-          const destinationPath = path.join(
-            destinationDir,
-            `${dir.name}${path.extname(file)}`
-          );
+    .map((dir) => {
+      const platformDir: string = path.join(repoRoot, dir.name);
+      const platformLogo = getPlatformLogoOrThrow(platformDir, dir.name);
+      const platformReadme = getPlatformReadmeOrThrow(platformDir);
+      const { name, description, content } = extractReadmeFrontMatter(platformReadme);
+      const terraformSnippet = getTerraformSnippet(platformDir);
 
-          fs.mkdirSync(destinationDir, { recursive: true });
-          fs.copyFileSync(sourcePath, destinationPath);
-
-          copiedFiles[dir.name] = destinationPath
-            .replace(path.resolve(__dirname, "website/public"), "")
-            .replace(/^\/+/g, "");
-        });
+      return {
+        platformType: dir.name,
+        name,
+        description,
+        logo: platformLogo,
+        readme: content,
+        terraformSnippet
+      };
     });
-
-  return copiedFiles;
 }
 
-function copyPlatformLogosToAssets() {
-  const modulesDir = path.resolve(__dirname, "modules");
-  const assetsDir = path.resolve(__dirname, "website/public/assets/logos");
-  return copyFilesToAssets(modulesDir, assetsDir, (file) =>
-    file.endsWith(".png") || file.endsWith(".svg")
-  );
+// Finds the logo, copies it to website assets and returns the path.
+function getPlatformLogoOrThrow(platformDir: string, platformType: string): string {
+  const logoFile = fs.readdirSync(platformDir).find(f => f.endsWith('.png') || f.endsWith('.svg'));
+  if (logoFile) {
+    const sourcePath = path.join(platformDir, logoFile);
+    const destPath = path.join(assetsDir, `${platformType}${path.extname(logoFile)}`);
+    fs.copyFileSync(sourcePath, destPath);
+    return destPath.replace(path.resolve(__dirname, "website/public"), "").replace(/^\/+/g, "");
+  }
+
+  throw new Error(`Logo file not found for platform: ${platformType} in directory: ${platformDir}. Each platform should have a logo.`);
+}
+
+function getPlatformReadmeOrThrow(platformDir: string) {
+  try {
+    return fs.readFileSync(path.join(platformDir, "README.md"), "utf-8");
+  } catch {
+    throw new Error('Platform README.md not found. Each platform should have a README.md file.');
+  }
+}
+
+function extractReadmeFrontMatter(platformReadme: string): { name: string; description: string; content: string } {
+  const { data, content } = matter(platformReadme);
+
+  const name = data.name;
+  if (!name) {
+    throw new Error('Property "name" is missing in the front matter of the platform README.md. Each platform README.md should have a name defined in the front matter.');
+  }
+
+  const description = data.description;
+  if (!description) {
+    throw new Error('Property "description" is missing in the front matter of the platform README.md. Each platform README.md should have a description defined in the front matter.');
+  }
+
+  return {
+    name,
+    description,
+    content
+  }
+}
+
+function getTerraformSnippet(platformDir: string): string | null {
+  try {
+    return fs.readFileSync(path.join(platformDir, "meshstack_integration.tf"), "utf-8")
+  } catch {
+    return null;
+  }
 }
 
 function copyBuildingBlockLogoToAssets(buildingBlockDir) {
@@ -161,15 +196,13 @@ function getIdAndPlatform(filePath) {
 
 // Main execution
 function main() {
-  const repoRoot = path.resolve(__dirname, "modules");
-
-  const platformLogos = copyPlatformLogosToAssets();
+  const platforms = findPlatforms();
   fs.writeFileSync(
-    "website/public/assets/platform-logos.json",
-    JSON.stringify(platformLogos, null, 2)
+    "website/public/assets/platform.json",
+    JSON.stringify(platforms, null, 2)
   );
   console.log(
-    `✅ Successfully processed ${Object.entries(platformLogos).length} platform logos. Output saved to platform-logos.json`
+    `✅ Successfully processed ${platforms.length} platforms. Output saved to platform.json`
   );
 
   const readmeFiles = findReadmes(repoRoot);
@@ -184,3 +217,12 @@ function main() {
 }
 
 main();
+
+export interface Platform {
+  platformType: string;
+  name: string;
+  description: string;
+  logo: string;
+  readme: string;
+  terraformSnippet?: string;
+}

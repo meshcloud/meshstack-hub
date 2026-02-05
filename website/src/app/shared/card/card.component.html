@@ -1,10 +1,11 @@
 <div
-  class="bg-white rounded-xl border border-slate-200 shadow-sm transition-all duration-300 cursor-pointer h-full flex flex-col overflow-hidden"
+  class="bg-white rounded-xl border border-slate-200 shadow-sm transition-all duration-300 h-full flex flex-col overflow-hidden"
   [class.hover:shadow-lg]="routePath !== ''"
   [class.hover:-translate-y-1]="routePath !== ''"
   [class.focus:outline-none]="routePath !== ''"
   [class.focus:ring-2]="routePath !== ''"
   [class.focus:ring-primary-500]="routePath !== ''"
+  [class.cursor-pointer]="routePath !== ''"
   [attr.aria-label]="label"
   [tabindex]="routePath !== '' ? 0 : -1"
   [attr.role]="routePath !== '' ? 'button' : null"
