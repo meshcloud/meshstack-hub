@@ -117,6 +117,7 @@ resource "azurerm_role_definition" "buildingblock_deploy" {
       "Microsoft.Resources/subscriptions/resourceGroups/read",
       "Microsoft.Resources/subscriptions/resourceGroups/write",
       "Microsoft.Resources/subscriptions/resourceGroups/delete",
+      "Microsoft.Resources/subscriptions/providers/read",
 
       # Deployments
       "Microsoft.Resources/deployments/read",

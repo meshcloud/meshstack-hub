@@ -59,6 +59,12 @@ PLATFORM_COLORS = {
         "accent": "#7AB8FF",
         "name": "Kubernetes colors: blue (#326CE5), cyan (#00D3E0), and light blue (#7AB8FF)"
     },
+    "oci": {
+        "primary": "#F80000",
+        "secondary": "#312D2A",
+        "accent": "#C74634",
+        "name": "Oracle colors: red (#F80000), charcoal (#312D2A), and burnt orange (#C74634)"
+    },
     "sapbtp": {
         "primary": "#0070AD",
         "secondary": "#F0AB00",
@@ -72,6 +78,7 @@ PLATFORM_COLORS = {
         "name": "STACKIT colors: green (#00A859), dark green (#007A3D), and lime (#7FBA00)"
     }
 }
+
 
 
 def parse_readme_frontmatter(readme_path):
