@@ -2,7 +2,7 @@ import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 import { Observable, map, take } from 'rxjs';
 
-import { PlatformType, Template } from 'app/core';
+import { Template } from 'app/core';
 
 interface GeneratedTemplateData {
   templates: Template[];
@@ -35,7 +35,7 @@ export class TemplateService {
   }
 
   public filterTemplatesByPlatformType(
-    platformType: PlatformType | 'all'
+    platformType: string | 'all'
   ): Observable<Template[]> {
     return this.retrieveData()
       .pipe(

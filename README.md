@@ -21,6 +21,10 @@ AWS S3 Module – Provision S3 buckets with encryption and logging.
 All Terraform modules are listed in the `modules/` directory.
 This directory is split into subdirectories for each platform.
 In a platform's directory, you will find all modules that are available for that platform.
+Additionally, you might also find a `meshstack_integration.tf` and `README.md` file in a platform
+directory. These allow you to integrate a given platform directly with meshStack.
+
+```
 
 A single module is structured as follows:
 

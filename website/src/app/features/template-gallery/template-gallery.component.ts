@@ -7,7 +7,7 @@ import { BreadcrumbComponent } from 'app/shared/breadcrumb';
 import { BreadcrumbItem } from 'app/shared/breadcrumb/breadcrumb';
 import { DefinitionCard } from 'app/shared/definition-card/definition-card';
 import { DefinitionCardComponent } from 'app/shared/definition-card/definition-card.component';
-import { PlatformData, PlatformService } from 'app/shared/platform';
+import { Platform, PlatformService } from 'app/shared/platform';
 import { TemplateService } from 'app/shared/template';
 
 import { PlatformCardsComponent } from './platform-cards';
@@ -35,7 +35,7 @@ export class TemplateGalleryComponent implements OnInit, OnDestroy {
 
   private searchSubscription!: Subscription;
 
-  private platformData$!: Observable<PlatformData>;
+  private platforms$!: Observable<Platform[]>;
 
   constructor(
     private route: ActivatedRoute,
@@ -44,7 +44,7 @@ export class TemplateGalleryComponent implements OnInit, OnDestroy {
   ) {}
 
   public ngOnInit(): void {
-    this.platformData$ = this.platformService.getAllPlatformData();
+    this.platforms$ = this.platformService.getAllPlatforms();
     this.subscribeToSearchTerm();
   }
 
@@ -79,7 +79,7 @@ export class TemplateGalleryComponent implements OnInit, OnDestroy {
   }
 
   private getTemplatesWithLogos(templateObs$: Observable<any>): Observable<DefinitionCard[]> {
-    return forkJoin({ templates: templateObs$, platforms: this.platformData$ })
+    return forkJoin({ templates: templateObs$, platforms: this.platforms$ })
       .pipe(
         map(({ templates, platforms }) =>
           templates.map(template => this.mapToDefinitionCard(template, platforms))
@@ -88,8 +88,8 @@ export class TemplateGalleryComponent implements OnInit, OnDestroy {
   }
 
   private getFilteredPlatformCards(searchTerm: string | undefined): Observable<PlatformCard[]> {
-    return combineLatest([this.platformData$, this.templateService.filterTemplatesByPlatformType('all')]).pipe(
-      map(([logos, templates]) => this.mapLogosToPlatformCards(logos, templates)),
+    return combineLatest([this.platforms$, this.templateService.filterTemplatesByPlatformType('all')]).pipe(
+      map(([platforms, templates]) => this.mapLogosToPlatformCards(platforms, templates)),
       map(cards => this.filterCardsBySearchTerm(cards, searchTerm))
     );
   }
@@ -101,7 +101,7 @@ export class TemplateGalleryComponent implements OnInit, OnDestroy {
       );
   }
 
-  private mapToDefinitionCard(template: any, platformData: PlatformData): DefinitionCard {
+  private mapToDefinitionCard(template: any, platforms: Platform[]): DefinitionCard {
     return {
       cardLogo: template.logo,
       title: template.name,
@@ -109,7 +109,7 @@ export class TemplateGalleryComponent implements OnInit, OnDestroy {
       routePath: `/definitions/${template.id}`,
       supportedPlatforms: template.supportedPlatforms.map(platform => ({
         platformType: platform,
-        imageUrl: platformData[platform]?.logo ?? null
+        imageUrl: platforms.find(p => p.platformType === platform)?.logo ?? null
       }))
     };
   }
@@ -121,12 +121,18 @@ export class TemplateGalleryComponent implements OnInit, OnDestroy {
     ];
   }
 
-  private mapLogosToPlatformCards(data: PlatformData, templates: any[]): PlatformCard[] {
-    return Object.entries(data)
-      .map(([key, platform]) => {
-        const buildingBlockCount = templates.filter(t => t.platformType === key).length;
-        return this.createPlatformCard(platform.name, platform.logo, `/platforms/${key}`, platform.description, buildingBlockCount, platform.category);
-      });
+  private mapLogosToPlatformCards(data: Platform[], templates: any[]): PlatformCard[] {
+    return data.map(platform => {
+      const buildingBlockCount = templates.filter(t => t.platformType === platform.platformType).length;
+      return this.createPlatformCard(
+        platform.name,
+        platform.logo,
+        `/platforms/${platform.platformType}`,
+        platform.description,
+        buildingBlockCount,
+        platform.category
+      );
+    });
   }
 
   private createPlatformCard(title: string, logoUrl: string, routePath: string, description?: string, buildingBlockCount?: number, category?: 'hyperscaler' | 'european' | 'china' | 'devops' | 'private-cloud'): PlatformCard {
