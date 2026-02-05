@@ -5,7 +5,7 @@ repos:
       - id: terraform_docs
         args:
             - --args=--config=.terraform-docs.yml
-        exclude: ^modules/[^/]+/README\.md$ # Ignore README.md files in module directories (platform integrations)
+        files: ^modules/[^/]+/[^/]+/.+\.tf$ # Only run on .tf files in modules/*/*/ directories
       - id: terraform_fmt
       - id: terragrunt_fmt
   - repo: https://github.com/pre-commit/pre-commit-hooks
