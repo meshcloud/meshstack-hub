@@ -2,7 +2,7 @@ terraform {
   required_providers {
     meshstack = {
       source  = "meshcloud/meshstack"
-      version = ">= 0.17.3"
+      version = "~> 0.17.3"
     }
   }
 }
@@ -10,8 +10,8 @@ terraform {
 provider "meshstack" {
   # Configure meshStack API credentials here or use environment variables.
   # endpoint  = "https://api.my.meshstack.io"
-  # apikey    = "37abbe45-aba7-4617-b87d-93f4cbf95832"
-  # apisecret = "eUp1jPMfM2RyNOjdVRuLmHGOYCvzZrN5"
+  # apikey    = "00000000-0000-0000-0000-000000000000"
+  # apisecret = "uFOu4OjbE4JiewPxezDuemSP3DUrCYmw"
 }
 
 # Change these values according to your AKS and meshStack setup.
@@ -24,6 +24,7 @@ locals {
 
   # meshStack workspace that will manage the platform
   aks_platform_workspace = "platform-aks"
+  aks_location_name      = "aks"
   aks_platform_name      = "aks"
 }
 
@@ -57,7 +58,7 @@ module "aks_meshplatform" {
 # Use a dedicated location for this platform
 resource "meshstack_location" "aks" {
   metadata = {
-    name = local.aks_platform_name
+    name = local.aks_location_name
   }
 
   spec = {
