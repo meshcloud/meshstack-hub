@@ -15,7 +15,7 @@ This documentation is intended as a reference documentation for cloud foundation
 
 | Name | Version |
 |------|---------|
-| <a name="requirement_meshstack"></a> [meshstack](#requirement\_meshstack) | 0.15.0 |
+| <a name="requirement_meshstack"></a> [meshstack](#requirement\_meshstack) | 0.17.3 |
 
 ## Modules
 
@@ -25,15 +25,15 @@ No modules.
 
 | Name | Type |
 |------|------|
-| [meshstack_building_block_v2.github_actions_dev](https://registry.terraform.io/providers/meshcloud/meshstack/0.15.0/docs/resources/building_block_v2) | resource |
-| [meshstack_building_block_v2.github_actions_prod](https://registry.terraform.io/providers/meshcloud/meshstack/0.15.0/docs/resources/building_block_v2) | resource |
-| [meshstack_building_block_v2.repo](https://registry.terraform.io/providers/meshcloud/meshstack/0.15.0/docs/resources/building_block_v2) | resource |
-| [meshstack_project.dev](https://registry.terraform.io/providers/meshcloud/meshstack/0.15.0/docs/resources/project) | resource |
-| [meshstack_project.prod](https://registry.terraform.io/providers/meshcloud/meshstack/0.15.0/docs/resources/project) | resource |
-| [meshstack_project_user_binding.creator_dev_admin](https://registry.terraform.io/providers/meshcloud/meshstack/0.15.0/docs/resources/project_user_binding) | resource |
-| [meshstack_project_user_binding.creator_prod_admin](https://registry.terraform.io/providers/meshcloud/meshstack/0.15.0/docs/resources/project_user_binding) | resource |
-| [meshstack_tenant_v4.dev](https://registry.terraform.io/providers/meshcloud/meshstack/0.15.0/docs/resources/tenant_v4) | resource |
-| [meshstack_tenant_v4.prod](https://registry.terraform.io/providers/meshcloud/meshstack/0.15.0/docs/resources/tenant_v4) | resource |
+| [meshstack_building_block_v2.github_actions_dev](https://registry.terraform.io/providers/meshcloud/meshstack/0.17.3/docs/resources/building_block_v2) | resource |
+| [meshstack_building_block_v2.github_actions_prod](https://registry.terraform.io/providers/meshcloud/meshstack/0.17.3/docs/resources/building_block_v2) | resource |
+| [meshstack_building_block_v2.repo](https://registry.terraform.io/providers/meshcloud/meshstack/0.17.3/docs/resources/building_block_v2) | resource |
+| [meshstack_project.dev](https://registry.terraform.io/providers/meshcloud/meshstack/0.17.3/docs/resources/project) | resource |
+| [meshstack_project.prod](https://registry.terraform.io/providers/meshcloud/meshstack/0.17.3/docs/resources/project) | resource |
+| [meshstack_project_user_binding.creator_dev_admin](https://registry.terraform.io/providers/meshcloud/meshstack/0.17.3/docs/resources/project_user_binding) | resource |
+| [meshstack_project_user_binding.creator_prod_admin](https://registry.terraform.io/providers/meshcloud/meshstack/0.17.3/docs/resources/project_user_binding) | resource |
+| [meshstack_tenant_v4.dev](https://registry.terraform.io/providers/meshcloud/meshstack/0.17.3/docs/resources/tenant_v4) | resource |
+| [meshstack_tenant_v4.prod](https://registry.terraform.io/providers/meshcloud/meshstack/0.17.3/docs/resources/tenant_v4) | resource |
 | [random_id.repo_suffix](https://registry.terraform.io/providers/hashicorp/random/latest/docs/resources/id) | resource |
 
 ## Inputs
