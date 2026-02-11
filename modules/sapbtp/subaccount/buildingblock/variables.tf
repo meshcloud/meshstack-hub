@@ -5,13 +5,8 @@ variable "globalaccount" {
 
 variable "region" {
   type        = string
-  default     = "eu30"
+  default     = "eu10"
   description = "The region of the subaccount."
-}
-
-variable "workspace_identifier" {
-  type        = string
-  description = "The meshStack workspace identifier."
 }
 
 variable "project_identifier" {
@@ -21,12 +16,16 @@ variable "project_identifier" {
 
 variable "subfolder" {
   type        = string
-  description = "The subfolder to use for the SAP BTP resources. This is used to create a folder structure in the SAP BTP cockpit."
+  default     = ""
+  description = "The subfolder name to use for the SAP BTP resources. This is used to create a folder structure in the SAP BTP cockpit. Mutually exclusive with parent_id."
 }
 
-# note: these permissions are passed in from meshStack and automatically updated whenever something changes
-# atm. we are not using them inside this building block implementation, but they give us a trigger to often reconcile
-# the permissions
+variable "parent_id" {
+  type        = string
+  default     = ""
+  description = "The parent directory ID for the subaccount. Use this when importing existing subaccounts. Mutually exclusive with subfolder."
+}
+
 variable "users" {
   type = list(object(
     {
