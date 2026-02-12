@@ -2,7 +2,7 @@ terraform {
   required_providers {
     meshstack = {
       source  = "meshcloud/meshstack"
-      version = "~> 0.17.3"
+      version = "~> 0.17.4"
     }
   }
 }
@@ -14,6 +14,15 @@ provider "meshstack" {
   # apisecret = "uFOu4OjbE4JiewPxezDuemSP3DUrCYmw"
 }
 
+# Configure required providers
+provider "azurerm" {
+  features {}
+  subscription_id = local.aks_subscription_id
+}
+
+provider "kubernetes" {
+}
+
 # Change these values according to your AKS and meshStack setup.
 locals {
   # Existing AKS cluster config.
@@ -23,9 +32,9 @@ locals {
   aks_resource_group  = "my-resource-group"
 
   # meshStack workspace that will manage the platform
-  aks_platform_workspace = "platform-aks"
-  aks_location_name      = "aks"
-  aks_platform_name      = "aks"
+  aks_platform_workspace  = "platform-aks"
+  aks_platform_identifier = "aks"
+  aks_location_identifier = "global"
 }
 
 # For workload identity federation config
@@ -55,21 +64,9 @@ module "aks_meshplatform" {
   }
 }
 
-# Use a dedicated location for this platform
-resource "meshstack_location" "aks" {
-  metadata = {
-    name = local.aks_location_name
-  }
-
-  spec = {
-    display_name = "AKS"
-    description  = "Azure Kubernetes Service"
-  }
-}
-
 resource "meshstack_platform" "aks" {
   metadata = {
-    name               = local.aks_platform_name
+    name               = local.aks_platform_identifier
     owned_by_workspace = local.aks_platform_workspace
   }
 
@@ -78,7 +75,9 @@ resource "meshstack_platform" "aks" {
     display_name = "AKS Namespace"
     endpoint     = local.aks_base_url
 
-    location_ref = meshstack_location.aks.ref
+    location_ref = {
+      name = local.aks_location_identifier
+    }
 
     # This platform is available to all users
     availability = {
@@ -136,7 +135,7 @@ resource "meshstack_platform" "aks" {
 
 resource "meshstack_landingzone" "aks_default" {
   metadata = {
-    name               = "${local.aks_platform_name}-default"
+    name               = "${local.aks_platform_identifier}-default"
     owned_by_workspace = local.aks_platform_workspace
   }
 
