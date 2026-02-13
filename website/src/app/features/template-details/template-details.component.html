@@ -1,138 +1,203 @@
-<div class="bg-slate-50 min-h-screen">
-  <div class="container mx-auto px-4 lg:px-8 py-8">
-    <ng-container *ngIf="template$ | async as template">
-      <!-- Breadcrumb -->
+<div class="bg-slate-50 min-h-screen" *ngIf="template$ | async as template">
+  <!-- Breadcrumb -->
+  <div class="border-b border-slate-200 w-full">
+    <div class="container mx-auto px-4 lg:px-8">
       <ng-container *ngIf="breadcrumbs$ | async as breadcrumbs">
-        <div class="mb-6">
-          <mst-breadcrumb [breadcrumbs]="breadcrumbs"></mst-breadcrumb>
-        </div>
+        <mst-breadcrumb [breadcrumbs]="breadcrumbs"></mst-breadcrumb>
       </ng-container>
+    </div>
+  </div>
 
-      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <!-- Main Content - Left Column (2/3) -->
-        <div class="lg:col-span-2 space-y-6">
-          <!-- Template Header Card -->
-          <div class="bg-white border border-slate-200 rounded-xl p-6 shadow-sm">
-            <div class="flex items-start gap-4 mb-4">
-              <div class="flex-shrink-0">
-                <div class="w-16 h-16 flex items-center justify-center bg-slate-50 rounded-lg p-2">
-                  <img
-                    *ngIf="template.imageUrl; else unknownLogo"
-                    class="max-w-full max-h-full object-contain"
-                    [src]="template.imageUrl"
-                    [alt]="template.platformType"
-                  />
-                  <ng-template #unknownLogo>
-                    <img src="assets/meshstack-logo.png" class="max-w-full max-h-full object-contain" alt="Unknown Logo" />
-                  </ng-template>
-                </div>
-              </div>
-              <div class="flex-1 min-w-0">
-                <h1 class="text-2xl lg:text-3xl font-bold text-slate-900 mb-2">{{ template.name }}</h1>
-                <p class="text-base text-slate-600 mb-0">{{ template.description }}</p>
-              </div>
+  <!-- Full Width Header -->
+  <div class="bg-gradient-to-br from-primary-50 to-blue-50 border-b border-primary-100">
+    <div class="container mx-auto px-4 py-6 md:py-8">
+      <div class="flex flex-col md:flex-row items-start gap-6">
+        <div class="w-20 h-20 flex-shrink-0 flex items-center justify-center rounded-lg" [ngStyle]="{'background-color': (headerBgColor$ | async)}">
+          <img
+            *ngIf="template.imageUrl; else unknownLogo"
+            class="w-14 h-14 object-contain"
+            [src]="template.imageUrl"
+            [alt]="template.platformType"
+          />
+          <ng-template #unknownLogo>
+            <img src="assets/meshstack-logo.png" class="w-14 h-14 object-contain" alt="Unknown Logo" />
+          </ng-template>
+        </div>
+        <div class="flex-1 flex flex-col gap-3">
+          <div class="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
+            <div class="flex-1">
+              <h1 class="text-2xl lg:text-3xl font-bold text-slate-900">{{ template.name }}</h1>
+              <p class="text-base text-slate-700 mt-2">{{ template.description }}</p>
             </div>
-
-            <!-- Source Code Link -->
-            <div class="flex items-center gap-3 p-3 bg-slate-50 border border-slate-200 rounded-lg">
-              <i class="fa-brands fa-github text-slate-600 text-lg"></i>
+            <!-- View Source Code Button -->
+            <div class="flex-shrink-0">
               <a
                 [href]="template.source"
                 target="_blank"
                 rel="noopener noreferrer"
-                class="flex-1 hover:text-primary-700 font-mono text-sm transition-colors truncate"
-              >
-                {{ template.source }}
+                class="inline-flex items-center gap-2 px-4 py-2 bg-slate-700 hover:bg-slate-800 text-white rounded-lg font-medium transition-colors whitespace-nowrap">
+                <i class="fa-brands fa-github text-lg"></i>
+                <span>View Source Code</span>
+                <i class="fa-solid fa-arrow-up-right-from-square text-xs opacity-70"></i>
               </a>
-              <button type="button" (click)="copyToClipboard(template.source)" class="btn btn-light btn-sm">
-                <i *ngIf="copyLabel === 'Copy'" class="fas fa-copy"></i>
-                <i *ngIf="copyLabel === 'Copied'" class="fa-solid fa-check"></i>
+            </div>
+          </div>
+
+          <!-- Backplane Info (when backplane exists) -->
+          <div *ngIf="template.backplaneUrl" class="flex items-start gap-2 text-sm text-slate-700">
+            <i class="fa-solid fa-layer-group text-slate-500 mt-0.5"></i>
+            <span>
+              This building block has a
+              <a [href]="template.backplaneUrl" target="_blank" rel="noopener noreferrer"
+                 class="text-primary-600 hover:text-primary-700 underline font-medium">backplane</a>
+              that prepares all required resources in the cloud platform.
+            </span>
+          </div>
+
+          <!-- UI Import Shoutout (only when terraform snippet exists) -->
+          <div *ngIf="template.terraformSnippet" class="mt-2 p-3 bg-primary-100/50 border border-primary-300 rounded-lg">
+            <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-2">
+              <p class="text-sm text-slate-700 mb-0">
+                <i class="fa-solid fa-lightbulb text-primary-600 mr-2"></i>
+                <strong>Prefer UI over code?</strong> You can also import this building block via the meshStack UI instead of using Terraform.
+              </p>
+              <button
+                type="button"
+                (click)="open(template)"
+                class="inline-flex items-center gap-2 px-4 py-2 bg-primary-600 hover:bg-primary-700 text-white rounded-lg font-medium transition-colors whitespace-nowrap shadow-md mt-2 md:mt-0">
+                <i class="fa-solid fa-plus text-lg"></i>
+                <span>Add to meshStack</span>
               </button>
             </div>
           </div>
+        </div>
+      </div>
+    </div>
+  </div>
 
-          <!-- Quick Start Guide -->
-          <div class="bg-white border border-slate-200 rounded-xl p-6 shadow-sm">
+  <!-- Main Content -->
+  <div class="container mx-auto px-4 lg:px-8 py-8">
+    <!-- Terraform Snippet Section (if available) -->
+    <div *ngIf="template.terraformSnippet; else noTerraformSnippet" class="mb-8">
+      <div class="grid grid-cols-1 md:grid-cols-[1fr_1.2fr] gap-6 items-start">
+        <mst-card label="Setup Guide" class="h-fit">
+          <div class="px-5 py-6" card-body>
             <h2 class="text-xl font-bold text-slate-900 mb-4 flex items-center gap-2">
               <i class="fa-solid fa-rocket text-primary-600"></i>
-              Quick Start
+              Setup with OpenTofu/Terraform
             </h2>
-
+            <p class="text-slate-600 text-sm mb-4">
+              Use this Terraform configuration to create the building block definition directly in meshStack.
+            </p>
             <div class="space-y-4">
-              <!-- Direct Integration -->
-              <div class="flex gap-3">
-                <div class="flex-shrink-0 w-6 h-6 rounded-full bg-primary-100 text-primary-600 flex items-center justify-center text-sm font-semibold">
-                  1
-                </div>
+              <div class="flex gap-3 items-start">
+                <div class="flex-shrink-0 w-6 h-6 rounded-full bg-primary-100 text-primary-600 flex items-center justify-center text-sm font-semibold">1</div>
                 <div class="flex-1">
-                  <p class="text-slate-700 font-medium mb-1">Add to your meshStack</p>
-                  <p class="text-slate-600 text-sm">Click the button to import this building block directly into your meshStack instance.</p>
+                  <div class="text-slate-700 font-medium mb-1 text-base">Add the OpenTofu snippet</div>
+                  <div class="text-slate-600 text-sm">Copy the provided OpenTofu code from the right and add it to your infrastructure codebase.</div>
                 </div>
               </div>
-
-              <!-- Backplane (if exists) -->
-              <div *ngIf="template.backplaneUrl" class="flex gap-3">
-                <div class="flex-shrink-0 w-6 h-6 rounded-full bg-primary-100 text-primary-600 flex items-center justify-center text-sm font-semibold">
-                  2
-                </div>
+              <div class="flex gap-3 items-start">
+                <div class="flex-shrink-0 w-6 h-6 rounded-full bg-primary-100 text-primary-600 flex items-center justify-center text-sm font-semibold">2</div>
                 <div class="flex-1">
-                  <p class="text-slate-700 font-medium mb-1">Set up infrastructure (optional)</p>
-                  <p class="text-slate-600 text-sm">
-                    Run the
-                    <a [href]="template.backplaneUrl" target="_blank" rel="noopener noreferrer"
-                       class="text-primary-600 hover:text-primary-700 underline">
-                      backplane Terraform files
-                    </a>
-                    to prepare your cloud environment.
-                  </p>
+                  <div class="text-slate-700 font-medium mb-1 text-base">Configure variables</div>
+                  <div class="text-slate-600 text-sm">
+                    Update the required variables in the <span class="font-mono bg-slate-100 px-1 py-0.5 rounded text-sm">locals</span> block and configure your meshStack provider credentials.
+                  </div>
                 </div>
               </div>
-
-              <!-- Configure -->
-              <div class="flex gap-3">
-                <div class="flex-shrink-0 w-6 h-6 rounded-full bg-primary-100 text-primary-600 flex items-center justify-center text-sm font-semibold">
-                  {{ template.backplaneUrl ? '3' : '2' }}
-                </div>
+              <div class="flex gap-3 items-start">
+                <div class="flex-shrink-0 w-6 h-6 rounded-full bg-primary-100 text-primary-600 flex items-center justify-center text-sm font-semibold">3</div>
                 <div class="flex-1">
-                  <p class="text-slate-700 font-medium mb-1">Configure and deploy</p>
-                  <p class="text-slate-600 text-sm">Fill in required inputs and secrets, then deploy to your platforms.</p>
+                  <div class="text-slate-700 font-medium mb-1 text-base">Deploy with OpenTofu</div>
+                  <div class="text-slate-600 text-sm">Run <span class="font-mono bg-slate-100 px-1 py-0.5 rounded text-sm">tofu init</span>, <span class="font-mono bg-slate-100 px-1 py-0.5 rounded text-sm">tofu plan</span>, and <span class="font-mono bg-slate-100 px-1 py-0.5 rounded text-sm">tofu apply</span> to create the building block definition.</div>
                 </div>
               </div>
-            </div>
-
-            <!-- Alternative: Manual Setup -->
-            <div class="mt-6 p-4 bg-slate-50 rounded-lg border border-slate-200">
-              <p class="text-slate-700 font-medium mb-2 flex items-center gap-2">
-                <i class="fa-solid fa-code-branch text-slate-500"></i>
-                Prefer manual setup?
-              </p>
-              <p class="text-slate-600 text-sm mb-0">
-                Copy the Terraform files from the repository above into your own repo, then create a building block definition in meshStack pointing to your repository.
-              </p>
+              <div class="flex gap-3 items-start">
+                <div class="flex-shrink-0 w-6 h-6 rounded-full bg-green-100 text-green-600 flex items-center justify-center text-base font-bold">✓</div>
+                <div class="flex-1">
+                  <div class="text-slate-700 font-medium mb-1 text-base">Success!</div>
+                  <div class="text-slate-600 text-sm">The building block definition is now available in your meshStack.</div>
+                </div>
+              </div>
             </div>
           </div>
+        </mst-card>
+        <div class="relative w-full">
+          <button
+            (click)="copyTerraform(template.terraformSnippet)"
+            class="absolute top-3 right-4 btn btn-xs btn-primary z-10 font-bold flex items-center gap-2"
+            [class.btn-success]="copiedTerraform">
+            <i class="fa-solid" [class.fa-check]="copiedTerraform" [class.fa-copy]="!copiedTerraform"></i>
+            <span>{{ copiedTerraform ? 'Copied!' : 'Copy' }}</span>
+          </button>
+          <pre class="bg-slate-900 text-slate-100 p-2 md:p-3 rounded-xl border border-slate-200 overflow-x-auto text-xs md:text-sm mt-0"><code class="language-terraform">{{ template.terraformSnippet }}</code></pre>
         </div>
+      </div>
+    </div>
 
-        <!-- Sidebar - Right Column (1/3) -->
-        <div class="lg:col-span-1">
-          <!-- Prominent CTA Card -->
-          <div class="bg-gradient-to-br from-primary-50 via-primary-100 to-blue-50 rounded-xl p-6 shadow-lg border border-primary-200 sticky top-8">
-            <div class="text-center mb-6">
-              <div class="w-16 h-16 mx-auto mb-4 bg-white rounded-xl p-3 flex items-center justify-center shadow-sm">
-                <img src="assets/meshstack-logo.png" alt="meshStack" class="w-full h-full object-contain" />
+    <!-- No Terraform Snippet: Show Deployment Options -->
+    <ng-template #noTerraformSnippet>
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+        <!-- Option 1: UI Import -->
+        <mst-card label="Import via meshStack UI" class="h-fit">
+          <div class="p-6" card-body>
+            <div class="mb-4 pb-4 border-b border-slate-200">
+              <h2 class="text-xl font-bold text-slate-900 mb-2 flex items-center gap-2">
+                <i class="fa-solid fa-window-restore text-primary-600"></i>
+                Import via UI
+              </h2>
+              <p class="text-slate-600 text-sm mb-0">Quick and easy setup directly from meshStack</p>
+            </div>
+
+            <div class="space-y-4 mb-6">
+              <div class="flex gap-3 items-start">
+                <div class="flex-shrink-0 w-6 h-6 rounded-full bg-primary-100 text-primary-600 flex items-center justify-center text-sm font-semibold">1</div>
+                <div class="flex-1">
+                  <div class="text-slate-700 font-medium mb-1 text-base">Click the "Add to meshStack" button</div>
+                  <div class="text-slate-600 text-sm">This will open the import wizard to guide you through the setup process.</div>
+                </div>
               </div>
-              <h3 class="text-xl font-bold mb-2 text-slate-900">Ready to deploy?</h3>
-              <p class="text-slate-600 text-sm">Import this building block into your meshStack instance</p>
+              <div class="flex gap-3 items-start">
+                <div class="flex-shrink-0 w-6 h-6 rounded-full bg-primary-100 text-primary-600 flex items-center justify-center text-sm font-semibold">2</div>
+                <div class="flex-1">
+                  <div class="text-slate-700 font-medium mb-1 text-base">Run through the wizard in your meshStack</div>
+                  <div class="text-slate-600 text-sm">Follow the import wizard in your meshStack to set up the building block definition.</div>
+                </div>
+              </div>
+              <div *ngIf="template.backplaneUrl" class="flex gap-3 items-start">
+                <div class="flex-shrink-0 w-6 h-6 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center text-sm font-semibold">3</div>
+                <div class="flex-1">
+                  <div class="text-slate-700 font-medium mb-1 text-base">
+                    <span class="bg-blue-100 text-blue-700 text-xs font-semibold px-2 py-0.5 rounded mr-1">Optional</span>
+                    Apply the backplane Terraform files
+                  </div>
+                  <div class="text-slate-600 text-sm">
+                    Run the
+                    <a [href]="template.backplaneUrl" target="_blank" rel="noopener noreferrer"
+                       class="text-primary-600 hover:text-primary-700 underline font-medium">backplane Terraform files</a>
+                    to prepare all necessary resources in your cloud platform.
+                  </div>
+                </div>
+              </div>
+              <div class="flex gap-3 items-start">
+                <div class="flex-shrink-0 w-6 h-6 rounded-full bg-green-100 text-green-600 flex items-center justify-center text-base font-bold">✓</div>
+                <div class="flex-1">
+                  <div class="text-slate-700 font-medium mb-1 text-base">Success!</div>
+                  <div class="text-slate-600 text-sm">The building block definition is now available in your meshStack and ready to use.</div>
+                </div>
+              </div>
             </div>
 
             <button
               type="button"
-              class="btn btn-primary w-full font-semibold text-lg py-3 mb-4 shadow-md"
+              class="btn btn-primary w-full font-semibold py-3"
               (click)="open(template)">
               <i class="fas fa-plus mr-2"></i>Add to meshStack
             </button>
 
-            <div class="text-center">
+
+            <div class="mt-4 text-center">
               <a
                 href="https://www.meshcloud.io/en/book-demo"
                 target="_blank"
@@ -142,9 +207,51 @@
               </a>
             </div>
           </div>
-        </div>
+        </mst-card>
+
+        <!-- Option 2: Manual Terraform Setup -->
+        <mst-card label="Manual setup with Terraform" class="h-fit">
+          <div class="p-6" card-body>
+            <div class="mb-4 pb-4 border-b border-slate-200">
+              <h2 class="text-xl font-bold text-slate-900 mb-2 flex items-center gap-2">
+                <i class="fa-solid fa-code text-slate-600"></i>
+                Manual Setup
+              </h2>
+              <p class="text-slate-600 text-sm mb-0">For users who prefer to own the Terraform code</p>
+            </div>
+
+            <div class="space-y-4 mb-4">
+              <div class="flex gap-3 items-start">
+                <div class="flex-shrink-0 w-6 h-6 rounded-full bg-slate-100 text-slate-600 flex items-center justify-center text-sm font-semibold">1</div>
+                <div class="flex-1">
+                  <div class="text-slate-700 font-medium mb-1 text-base">Copy the Terraform files from the repository</div>
+                  <div class="text-slate-600 text-sm">Clone or download the building block code from GitHub and add it to your own repository.</div>
+                </div>
+              </div>
+              <div class="flex gap-3 items-start">
+                <div class="flex-shrink-0 w-6 h-6 rounded-full bg-slate-100 text-slate-600 flex items-center justify-center text-sm font-semibold">2</div>
+                <div class="flex-1">
+                  <div class="text-slate-700 font-medium mb-1 text-base">Create building block definition</div>
+                  <div class="text-slate-600 text-sm">In meshStack, create a new building block definition pointing to your repository location.</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </mst-card>
       </div>
-    </ng-container>
+    </ng-template>
+  </div>
+</div>
+
+<!-- Not Found State -->
+<div class="bg-slate-50 min-h-screen flex items-center justify-center" *ngIf="!(template$ | async)">
+  <div class="text-center">
+    <i class="fa-solid fa-circle-exclamation text-6xl text-slate-400 mb-4"></i>
+    <h2 class="text-2xl font-bold text-slate-900 mb-2">Building Block Not Found</h2>
+    <p class="text-slate-600 mb-4">This building block does not exist or has been removed.</p>
+    <a routerLink="/" class="btn btn-primary">
+      <i class="fa-solid fa-home mr-2"></i>Back to Home
+    </a>
   </div>
 </div>
 
