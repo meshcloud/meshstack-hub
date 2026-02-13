@@ -5,7 +5,8 @@ repos:
       - id: terraform_docs
         args:
             - --args=--config=.terraform-docs.yml
-        files: ^modules/[^/]+/[^/]+/.+\.tf$ # Only run on .tf files in modules/*/*/ directories
+        # Only run terraform_docs on .tf files inside 'backplane' or 'buildingblock' folders
+        files: ^modules/[^/]+/[^/]+/(backplane|buildingblock)/.+\.tf$
       - id: terraform_fmt
       - id: terragrunt_fmt
   - repo: https://github.com/pre-commit/pre-commit-hooks
