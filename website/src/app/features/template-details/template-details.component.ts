@@ -1,15 +1,19 @@
 import { CommonModule } from '@angular/common';
 import { Component, OnDestroy, OnInit } from '@angular/core';
-import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, RouterLink } from '@angular/router';
 import { Dialog } from '@angular/cdk/dialog';
-import { Observable, Subscription, map, switchMap } from 'rxjs';
+import { Observable, Subscription, map, switchMap, of } from 'rxjs';
 
 import { BreadCrumbService } from 'app/shared/breadcrumb/bread-crumb.service';
 import { BreadcrumbItem } from 'app/shared/breadcrumb/breadcrumb';
 import { BreadcrumbComponent } from 'app/shared/breadcrumb/breadcrumb.component';
+import { CardComponent } from 'app/shared/card';
 import { TemplateService } from 'app/shared/template';
+import { extractLogoColor } from 'app/shared/util/logo-color.util';
 
 import { ImportDialogComponent } from './import-dialog/import-dialog.component';
+
+const DEFAULT_HEADER_BG_COLOR = 'rgba(203,213,225,0.3)';
 
 interface TemplateDetailsVm {
   imageUrl: string | null;
@@ -19,11 +23,12 @@ interface TemplateDetailsVm {
   howToUse: string;
   source: string;
   backplaneUrl: string | null;
+  terraformSnippet?: string;
 }
 
 @Component({
   selector: 'mst-template-details',
-  imports: [CommonModule, BreadcrumbComponent],
+  imports: [CommonModule, BreadcrumbComponent, CardComponent, RouterLink],
   templateUrl: './template-details.component.html',
   styleUrl: './template-details.component.scss',
   standalone: true
@@ -36,6 +41,10 @@ export class TemplateDetailsComponent implements OnInit, OnDestroy {
   public backPath$!: Observable<string>;
 
   public copyLabel = 'Copy';
+
+  public copiedTerraform = false;
+
+  public headerBgColor$!: Observable<string>;
 
   private routeSubscription!: Subscription;
 
@@ -54,6 +63,17 @@ export class TemplateDetailsComponent implements OnInit, OnDestroy {
 
       return secondLastBreadcrumb ? secondLastBreadcrumb : '/';
     }));
+
+    // Reactive header background color
+    this.headerBgColor$ = this.template$.pipe(
+      switchMap(template =>
+        template && template.imageUrl
+          ? extractLogoColor(template.imageUrl).pipe(
+              map(color => color || DEFAULT_HEADER_BG_COLOR)
+            )
+          : of(DEFAULT_HEADER_BG_COLOR)
+      )
+    );
   }
 
   public ngOnDestroy(): void {
@@ -63,6 +83,16 @@ export class TemplateDetailsComponent implements OnInit, OnDestroy {
   public copyToClipboard(value: string): void {
     navigator.clipboard.writeText(value)
       .then(() => this.updateCopyLabel());
+  }
+
+  public copyTerraform(value: string): void {
+    navigator.clipboard.writeText(value)
+      .then(() => {
+        this.copiedTerraform = true;
+        setTimeout(() => {
+          this.copiedTerraform = false;
+        }, 2000);
+      });
   }
 
   public open(template: TemplateDetailsVm): void {
@@ -102,7 +132,8 @@ export class TemplateDetailsComponent implements OnInit, OnDestroy {
             ...template,
             imageUrl: template.logo,
             source: template.buildingBlockUrl,
-            howToUse: template.howToUse
+            howToUse: template.howToUse,
+            terraformSnippet: template.terraformSnippet
           }))
         );
     });
