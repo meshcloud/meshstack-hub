@@ -8,4 +8,5 @@ export interface Template {
 	buildingBlockUrl: string;
 	backplaneUrl: string | null;
 	supportedPlatforms: string[];
+	terraformSnippet?: string;
 }

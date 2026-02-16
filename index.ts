@@ -50,13 +50,14 @@ function findPlatforms(): Platform[] {
       const platformDir: string = path.join(repoRoot, dir.name);
       const platformLogo = getPlatformLogoOrThrow(platformDir, dir.name);
       const platformReadme = getPlatformReadmeOrThrow(platformDir);
-      const { name, description, content } = extractReadmeFrontMatter(platformReadme);
+      const { name, description, category, content } = extractReadmeFrontMatter(platformReadme);
       const terraformSnippet = getTerraformSnippet(platformDir);
 
       return {
         platformType: dir.name,
         name,
         description,
+        category,
         logo: platformLogo,
         readme: content,
         terraformSnippet
@@ -81,11 +82,11 @@ function getPlatformReadmeOrThrow(platformDir: string) {
   try {
     return fs.readFileSync(path.join(platformDir, "README.md"), "utf-8");
   } catch {
-    throw new Error('Platform README.md not found. Each platform should have a README.md file.');
+    throw new Error(`Platform README.md not found for ${platformDir}. Each platform should have a README.md file.`);
   }
 }
 
-function extractReadmeFrontMatter(platformReadme: string): { name: string; description: string; content: string } {
+function extractReadmeFrontMatter(platformReadme: string): { name: string; description: string; category?: string; content: string } {
   const { data, content } = matter(platformReadme);
 
   const name = data.name;
@@ -98,10 +99,13 @@ function extractReadmeFrontMatter(platformReadme: string): { name: string; descr
     throw new Error('Property "description" is missing in the front matter of the platform README.md. Each platform README.md should have a description defined in the front matter.');
   }
 
+  const category = data.category;
+
   return {
     name,
     description,
-    content
+    content,
+    category
   }
 }
 
@@ -169,12 +173,16 @@ function parseReadme(filePath) {
       ? getBuildingBlockFolderUrl(backplaneDir)
       : null;
 
+  const terraformSnippetDir = path.join(buildingBlockDir, "..");
+  const terraformSnippet = getTerraformSnippet(terraformSnippetDir);
+
   return {
     id,
     platformType: platform,
     logo: buildingBlockLogoPath,
     buildingBlockUrl,
     backplaneUrl,
+    terraformSnippet,
     ...data,
     howToUse: extractSection(/## How to Use([\s\S]*?)(##|$)/),
     resources: parseTable(body.match(/## Resources([\s\S]*)/)),
@@ -224,5 +232,6 @@ export interface Platform {
   description: string;
   logo: string;
   readme: string;
+  category?: string;
   terraformSnippet?: string;
 }

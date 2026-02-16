@@ -15,6 +15,25 @@ export class PlatformCardsComponent {
   @Input()
   public cards!: PlatformCard[];
 
+  /**
+   * Define your custom order here. Use the property that uniquely identifies the platform (e.g., title or id).
+   * Example: ['Azure', 'AWS', 'GCP']
+   */
+  public customOrder: string[] = ['Microsoft Azure', 'Amazon Web Services', 'Google Cloud Platform', 'Azure Kubernetes Service', 'STACKIT']; // <-- customize as needed
+
+  /**
+   * Returns the cards sorted by customOrder, with others following in original order.
+   */
+  public get sortedCards(): PlatformCard[] {
+    console.log(this.cards);
+    if (!this.cards) return [];
+    const order = this.customOrder;
+    return [
+      ...this.cards.filter(card => order.includes(card.title)).sort((a, b) => order.indexOf(a.title) - order.indexOf(b.title)),
+      ...this.cards.filter(card => !order.includes(card.title))
+    ];
+  }
+
   public logoBackgroundColors: { [key: string]: string } = {};
 
   public onBackgroundColorExtracted(cardTitle: string, color: string): void {
