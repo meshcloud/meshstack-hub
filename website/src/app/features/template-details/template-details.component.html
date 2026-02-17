@@ -126,7 +126,7 @@
         <div class="relative w-full">
           <button
             (click)="copyTerraform(template.terraformSnippet)"
-            class="absolute top-3 right-4 btn btn-xs btn-primary z-10 font-bold flex items-center gap-2"
+            class="absolute top-3 right-4 btn btn-xs btn-primary z-10 font-bold flex items-center gap-2 plausible-event-name=Copy+BBD+Terraform"
             [class.btn-success]="copiedTerraform">
             <i class="fa-solid" [class.fa-check]="copiedTerraform" [class.fa-copy]="!copiedTerraform"></i>
             <span>{{ copiedTerraform ? 'Copied!' : 'Copy' }}</span>
