@@ -1,9 +1,13 @@
 data "aws_caller_identity" "current" {}
 
+resource "random_string" "name_suffix" {
+  length  = 4
+  special = false
+}
+
 resource "aws_iam_user" "buildingblock_s3_user" {
   count = var.workload_identity_federation == null ? 1 : 0
-
-  name = "buildingblock-s3-user"
+  name  = "buildingblock-s3-user-${random_string.name_suffix.result}"
 }
 
 data "aws_iam_policy_document" "s3_full_access" {
@@ -19,7 +23,7 @@ data "aws_iam_policy_document" "s3_full_access" {
 }
 
 resource "aws_iam_policy" "buildingblock_s3_policy" {
-  name        = var.workload_identity_federation == null ? "S3BuildingBlockPolicy" : "S3BuildingBlockFederatedPolicy"
+  name        = var.workload_identity_federation == null ? "S3BuildingBlockPolicy-${random_string.name_suffix.result}" : "S3BuildingBlockFederatedPolicy-${random_string.name_suffix.result}"
   description = "Policy for the S3 Building Block"
   policy      = data.aws_iam_policy_document.s3_full_access.json
 }
@@ -77,7 +81,7 @@ data "aws_iam_policy_document" "workload_identity_federation" {
 resource "aws_iam_role" "assume_federated_role" {
   count = var.workload_identity_federation != null ? 1 : 0
 
-  name               = "BuildingBlockS3IdentityFederation"
+  name               = "BuildingBlockS3IdentityFederation-${random_string.name_suffix.result}"
   assume_role_policy = data.aws_iam_policy_document.workload_identity_federation[0].json
 }
 
