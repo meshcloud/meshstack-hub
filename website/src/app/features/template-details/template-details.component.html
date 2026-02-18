@@ -79,7 +79,7 @@
   <div class="container mx-auto px-4 lg:px-8 py-8">
     <!-- Terraform Snippet Section (if available) -->
     <div *ngIf="template.terraformSnippet; else noTerraformSnippet" class="mb-8">
-      <div class="grid grid-cols-1 md:grid-cols-[1fr_1.2fr] gap-6 items-start">
+      <div class="grid grid-cols-1 md:grid-cols-[0.8fr_1.5fr] gap-6 items-start">
         <mst-card label="Setup Guide" class="h-fit">
           <div class="px-5 py-6" card-body>
             <h2 class="text-xl font-bold text-slate-900 mb-4 flex items-center gap-2">
@@ -123,7 +123,7 @@
             </div>
           </div>
         </mst-card>
-        <div class="relative w-full">
+        <div class="relative w-full overflow-hidden">
           <button
             (click)="copyTerraform(template.terraformSnippet)"
             class="absolute top-3 right-4 btn btn-xs btn-primary z-10 font-bold flex items-center gap-2 plausible-event-name=Copy+BBD+Terraform"
@@ -131,7 +131,7 @@
             <i class="fa-solid" [class.fa-check]="copiedTerraform" [class.fa-copy]="!copiedTerraform"></i>
             <span>{{ copiedTerraform ? 'Copied!' : 'Copy' }}</span>
           </button>
-          <pre class="bg-slate-900 text-slate-100 p-2 md:p-3 rounded-xl border border-slate-200 overflow-x-auto text-xs md:text-sm mt-0"><code class="language-terraform">{{ template.terraformSnippet }}</code></pre>
+          <pre class="bg-slate-900 text-slate-100 p-2 md:p-3 rounded-xl border border-slate-200 overflow-x-auto text-xs md:text-sm mt-0 w-full whitespace-pre"><code class="language-terraform">{{ template.terraformSnippet }}</code></pre>
         </div>
       </div>
     </div>
