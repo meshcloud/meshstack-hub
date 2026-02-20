@@ -78,10 +78,14 @@ data "aws_iam_policy_document" "workload_identity_federation" {
   }
 }
 
+locals {
+  assume_federated_role_name = "BuildingBlockS3IdentityFederation-${random_string.name_suffix.result}"
+}
+
 resource "aws_iam_role" "assume_federated_role" {
   count = var.workload_identity_federation != null ? 1 : 0
 
-  name               = "BuildingBlockS3IdentityFederation-${random_string.name_suffix.result}"
+  name               = local.assume_federated_role_name
   assume_role_policy = data.aws_iam_policy_document.workload_identity_federation[0].json
 }
 

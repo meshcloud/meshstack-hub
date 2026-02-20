@@ -66,12 +66,12 @@ No modules.
 
 | Name | Description | Type | Default | Required |
 |------|-------------|------|---------|:--------:|
-| <a name="input_workload_identity_federation"></a> [workload\_identity\_federation](#input\_workload\_identity\_federation) | Set these options to add a trusted identity provider from meshStack to allow workload identity federation for authentication which can be used instead of access keys. Supports multiple subjects and wildcard patterns (e.g., 'system:serviceaccount:namespace:*'). | <pre>object({<br>    issuer   = string,<br>    audience = string,<br>    subjects = list(string)<br>  })</pre> | `null` | no |
+| <a name="input_workload_identity_federation"></a> [workload\_identity\_federation](#input\_workload\_identity\_federation) | Set these options to add a trusted identity provider from meshStack to allow workload identity federation for authentication, which can be used instead of access keys.<br>Supports multiple subjects and wildcard patterns (e.g., 'system:serviceaccount:namespace:*'). | <pre>object({<br>    issuer   = string,<br>    audience = string,<br>    subjects = list(string)<br>  })</pre> | `null` | no |
 
 ## Outputs
 
 | Name | Description |
 |------|-------------|
-| <a name="output_credentials"></a> [credentials](#output\_credentials) | n/a |
-| <a name="output_workload_identity_federation_role"></a> [workload\_identity\_federation\_role](#output\_workload\_identity\_federation\_role) | n/a |
+| <a name="output_credentials"></a> [credentials](#output\_credentials) | Access credentials for the S3 bucket, only available if workload\_identity\_federation variable is null. |
+| <a name="output_workload_identity_federation_role_arn"></a> [workload\_identity\_federation\_role\_arn](#output\_workload\_identity\_federation\_role\_arn) | Workload identity federation role ARN |
 <!-- END_TF_DOCS -->
