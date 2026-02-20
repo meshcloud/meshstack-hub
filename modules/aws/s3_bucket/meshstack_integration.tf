@@ -2,114 +2,21 @@ locals {
   env                  = "demo"
   workspace_identifier = "m25-platform"
   region               = "eu-central-1"
-  issuer = "https://container.googleapis.com/v1/projects/meshcloud-meshcloud--bc0/locations/europe-west1/clusters/meshstacks-ha"
-  audience = "aws-workload-identity-provider:meshcloud-demo"
-  role_name = "BuildingBlockS3IdentityFederation-${random_string.name_suffix.result}"
+  issuer               = "https://container.googleapis.com/v1/projects/meshcloud-meshcloud--bc0/locations/europe-west1/clusters/meshstacks-ha"
+  audience             = "aws-workload-identity-provider:meshcloud-demo"
 }
 
-terraform {
-  required_version = ">= 1.0"
+module "backplane" {
+  source = "./backplane"
 
-  required_providers {
-    aws = {
-      source  = "hashicorp/aws"
-      version = "~> 6.12.0"
-    }
-    meshstack = {
-      source  = "meshcloud/meshstack"
-      version = "0.18.0"
-    }
+  workload_identity_federation = {
+    issuer   = local.issuer
+    audience = local.audience
+    subjects = ["system:serviceaccount:meshcloud-demo:workspace.${local.workspace_identifier}.buildingblockdefinition.${meshstack_building_block_definition.this.metadata.uuid}"]
   }
 }
 
-# fill in your meshStack API endpoint and credentials here
-provider "meshstack" {
-}
-
-provider "aws" {
-  region = local.region
-}
-
-# backplane
-
-resource "random_string" "name_suffix" {
-  length  = 4
-  special = false
-}
-
-data "aws_iam_policy_document" "s3_full_access" {
-  statement {
-    actions = [
-      "s3:*",
-    ]
-
-    resources = [
-      "arn:aws:s3:::*",
-    ]
-  }
-}
-
-resource "aws_iam_policy" "buildingblock_s3_policy" {
-  name        = "S3BuildingBlockFederatedPolicy-${random_string.name_suffix.result}"
-  description = "Policy for the S3 Building Block"
-  policy      = data.aws_iam_policy_document.s3_full_access.json
-}
-
-# Workload Identity Federation
-
-resource "aws_iam_openid_connect_provider" "buildingblock_oidc_provider" {
-  url            = local.issuer
-  client_id_list = [local.audience]
-}
-
-data "aws_iam_policy_document" "workload_identity_federation" {
-  version = "2012-10-17"
-
-  statement {
-    effect = "Allow"
-    principals {
-      type        = "Federated"
-      identifiers = [aws_iam_openid_connect_provider.buildingblock_oidc_provider.arn]
-    }
-    actions = ["sts:AssumeRoleWithWebIdentity"]
-
-    condition {
-      test     = "StringEquals"
-      variable = "${trimprefix(local.issuer, "https://")}:aud"
-
-      values = [local.audience]
-    }
-
-    condition {
-      test     = "StringLike"
-      variable = "${trimprefix(local.issuer, "https://")}:sub"
-
-      values = ["system:serviceaccount:meshcloud-demo:workspace.${local.workspace_identifier}.buildingblockdefinition.${meshstack_building_block_definition.awsS3Bucket.metadata.uuid}"]
-    }
-  }
-}
-
-resource "aws_iam_role" "assume_federated_role" {
-  name               = local.role_name
-  assume_role_policy = data.aws_iam_policy_document.workload_identity_federation.json
-}
-
-resource "aws_iam_role_policy_attachment" "buildingblock_s3" {
-  role       = aws_iam_role.assume_federated_role.name
-  policy_arn = aws_iam_policy.buildingblock_s3_policy.arn
-}
-
-
-output "workload_identity_federation_role" {
-  value = aws_iam_role.assume_federated_role.arn
-}
-
-output "definition_uuid" {
-  value = meshstack_building_block_definition.awsS3Bucket.metadata.uuid
-}
-
-# Import the building block definition into meshStack
-resource "meshstack_building_block_definition" "awsS3Bucket" {
+resource "meshstack_building_block_definition" "this" {
   metadata = {
     owned_by_workspace = local.workspace_identifier
     tags = {
@@ -148,7 +55,7 @@ resource "meshstack_building_block_definition" "awsS3Bucket" {
         description     = "The ARN of the AWS role to assume for provisioning the S3 bucket",
         assignment_type = "STATIC",
         is_environment  = true
-        argument        = jsonencode("arn:aws:iam::${split(":", aws_iam_openid_connect_provider.buildingblock_oidc_provider.arn)[4]}:role/${local.role_name}")
+        argument        = jsonencode(module.backplane.workload_identity_federation_role_arn)
       },
       AWS_WEB_IDENTITY_TOKEN_FILE = {
         type            = "STRING",
@@ -206,4 +113,40 @@ resource "meshstack_building_block_definition" "awsS3Bucket" {
       }
     }
   }
+}
+
+# Output for demo purposes
+output "building_block_definition_uuid" {
+  value = meshstack_building_block_definition.this.metadata.uuid
+}
+
+# The provider setup below is optional and can be part of a shared terraform.tf file
+terraform {
+  required_version = ">= 1.11"
+
+  required_providers {
+    aws = {
+      source  = "hashicorp/aws"
+      version = "6.12.0"
+    }
+    meshstack = {
+      source  = "meshcloud/meshstack"
+      version = "0.19.0"
+    }
+  }
+}
+
+
+provider "meshstack" {
+  # Provide the following environment:
+  # MESHSTACK_ENDPOINT
+  # MESHSTACK_API_KEY
+  # MESHSTACK_API_SECRET
+}
+
+
+provider "aws" {
+  region = local.region
+  # Ensure to select the right profile from you aws CLI
+  # using the env variable AWS_PROFILE
 }
