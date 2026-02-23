@@ -131,7 +131,7 @@
             <i class="fa-solid" [class.fa-check]="copiedTerraform" [class.fa-copy]="!copiedTerraform"></i>
             <span>{{ copiedTerraform ? 'Copied!' : 'Copy' }}</span>
           </button>
-          <pre class="bg-slate-900 text-slate-100 p-2 md:p-3 rounded-xl border border-slate-200 overflow-x-auto text-xs md:text-sm mt-0 w-full whitespace-pre"><code class="language-terraform">{{ template.terraformSnippet }}</code></pre>
+          <pre class="bg-slate-900 text-slate-100 p-2 md:p-3 rounded-xl border border-slate-200 overflow-x-auto text-xs md:text-sm mt-0 w-full whitespace-pre"><code class="language-hcl" highlight>{{ template.terraformSnippet }}</code></pre>
         </div>
       </div>
     </div>
