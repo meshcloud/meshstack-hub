@@ -1,8 +1,10 @@
-@import '@fontsource/inter/400.css';
-@import '@fontsource/inter/500.css';
-@import '@fontsource/inter/600.css';
-@import '@fontsource/inter/700.css';
-@import '@fortawesome/fontawesome-free/css/all.min.css';
+@use '@fontsource/inter/400.css' as *;
+@use '@fontsource/inter/500.css' as *;
+@use '@fontsource/inter/600.css' as *;
+@use '@fontsource/inter/700.css' as *;
+@use '@fortawesome/fontawesome-free/css/all.min.css' as *;
+@use 'prismjs/themes/prism-tomorrow' as *;
+@use 'styles/prism-custom' as *;
 
 @tailwind base;
 @tailwind components;

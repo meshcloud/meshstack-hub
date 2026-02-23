@@ -12,6 +12,7 @@ import { TemplateService } from 'app/shared/template';
 import { extractLogoColor } from 'app/shared/util/logo-color.util';
 
 import { ImportDialogComponent } from './import-dialog/import-dialog.component';
+import { HighlightDirective } from 'app/shared/directives';
 
 const DEFAULT_HEADER_BG_COLOR = 'rgba(203,213,225,0.3)';
 
@@ -28,7 +29,7 @@ interface TemplateDetailsVm {
 
 @Component({
   selector: 'mst-template-details',
-  imports: [CommonModule, BreadcrumbComponent, CardComponent, RouterLink],
+  imports: [CommonModule, BreadcrumbComponent, CardComponent, RouterLink, HighlightDirective],
   templateUrl: './template-details.component.html',
   styleUrl: './template-details.component.scss',
   standalone: true

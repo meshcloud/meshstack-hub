@@ -1,0 +1,33 @@
+/* Custom Prism Syntax Highlighting Theme */
+$bg: #1e293b;
+$text: #e2e8f0;
+$keyword: #60a5fa;
+$string: #34d399;
+$number: #fbbf24;
+$comment: #64748b;
+$punctuation: #cbd5e1;
+$operator: #818cf8;
+$function: #a78bfa;
+
+code[class*="language-"],
+pre[class*="language-"] {
+  background-color: $bg !important;
+  color: $text !important;
+  margin: initial;
+}
+
+.token {
+  &.keyword { color: $keyword !important; }
+  &.string { color: $string !important; }
+  &.number { color: $number !important; }
+  &.comment,
+  &.prolog,
+  &.doctype,
+  &.cdata { color: $comment !important; }
+  &.punctuation { color: $punctuation !important; }
+  &.operator { color: $operator !important; }
+  &.function { color: $function !important; }
+  &.attr-name { color: #fb7185 !important; }
+  &.attr-value { color: #86efac !important; }
+}
+

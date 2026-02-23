@@ -9,12 +9,13 @@ import { BreadcrumbItem } from 'app/shared/breadcrumb/breadcrumb';
 import { CardComponent } from 'app/shared/card';
 import { PlatformService, Platform } from 'app/shared/platform';
 import { extractLogoColor } from 'app/shared/util/logo-color.util';
+import { HighlightDirective } from 'app/shared/directives';
 
 const DEFAULT_HEADER_BG_COLOR = 'rgba(203,213,225,0.3)';
 
 @Component({
   selector: 'mst-platform-integration',
-  imports: [CommonModule, CardComponent, BreadcrumbComponent, RouterLink],
+  imports: [CommonModule, CardComponent, BreadcrumbComponent, RouterLink, HighlightDirective],
   templateUrl: './platform-integration.component.html',
   styleUrl: './platform-integration.component.scss',
   standalone: true

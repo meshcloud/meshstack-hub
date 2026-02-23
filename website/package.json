@@ -35,6 +35,7 @@
     "eslint-plugin-jsdoc": "^50.6.8",
     "express": "^4.18.2",
     "marked": "^15.0.12",
+    "prismjs": "^1.30.0",
     "rxjs": "~7.8.0",
     "tslib": "^2.3.0",
     "zone.js": "~0.15.0"
