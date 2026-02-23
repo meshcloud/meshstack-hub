@@ -1,11 +1,9 @@
 data "btp_directories" "all" {}
 
-# iterate through the list of users and redue to a map of user with only their euid
 locals {
   reader = { for user in var.users : user.euid => user if contains(user.roles, "reader") }
   admin  = { for user in var.users : user.euid => user if contains(user.roles, "admin") }
   user   = { for user in var.users : user.euid => user if contains(user.roles, "user") }
-
 
   subfolders = [
     for dir in data.btp_directories.all.values : {
@@ -14,7 +12,8 @@ locals {
     }
   ]
 
-  selected_subfolder_id = try(
+  # Support both subfolder name (meshStack pattern) and parent_id (import pattern)
+  selected_subfolder_id = var.parent_id != "" ? var.parent_id : try(
     one([
       for sf in local.subfolders : sf.id
       if sf.name == var.subfolder
@@ -37,7 +36,6 @@ resource "btp_subaccount_role_collection_assignment" "subaccount_admin" {
   user_name            = each.key
 }
 
-# btp_subaccount_role_collection_assignment.subaccount_admin_sysuser will be created
 resource "btp_subaccount_role_collection_assignment" "subaccount_service_admininstrator" {
   for_each             = local.user
   role_collection_name = "Subaccount Service Administrator"
@@ -45,7 +43,6 @@ resource "btp_subaccount_role_collection_assignment" "subaccount_service_adminin
   user_name            = each.key
 }
 
-# btp_subaccount_role_collection_assignment.subaccount_viewer will be created
 resource "btp_subaccount_role_collection_assignment" "subaccount_viewer" {
   for_each             = local.reader
   role_collection_name = "Subaccount Viewer"

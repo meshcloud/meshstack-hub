@@ -1,0 +1,60 @@
+{
+  "name": "SAP BTP Subscriptions",
+  "displayName": "SAP BTP Subscriptions",
+  "description": "Manages application subscriptions in an SAP BTP subaccount, enabling access to SaaS applications",
+  "category": "Platform Services",
+  "platform": "sapbtp",
+  "tags": ["subscriptions", "btp", "saas", "applications"],
+  "version": "1.0.0",
+  "supportedPlatforms": ["sapbtp"],
+  "schema": {
+    "inputs": {
+      "globalaccount": {
+        "type": "string",
+        "description": "Global account subdomain",
+        "required": true
+      },
+      "subaccount_id": {
+        "type": "string",
+        "description": "BTP Subaccount ID (from dependency or manual input)",
+        "required": true
+      },
+      "subscriptions": {
+        "type": "string",
+        "description": "Select application subscriptions (meshStack will join as comma-separated: app.plan)",
+        "required": false,
+        "default": "",
+        "selectableValues": [
+          "build-workzone.standard",
+          "build-workzone.free",
+          "integrationsuite.enterprise_agreement",
+          "integrationsuite.trial",
+          "sap-build-apps.standard",
+          "sap-build-apps.free",
+          "sapappstudio.standard-edition",
+          "cicd-service.default",
+          "cicd-service.trial",
+          "business-rules.standard",
+          "mobile-services.standard",
+          "web-analytics.standard",
+          "workflow.standard",
+          "auditlog-viewer.free"
+        ]
+      }
+    },
+    "outputs": {
+      "subaccount_id": {
+        "type": "string",
+        "description": "BTP Subaccount ID (passthrough)"
+      },
+      "subscriptions": {
+        "type": "object",
+        "description": "Map of created subscriptions"
+      }
+    }
+  },
+  "documentation": {
+    "readme": "README.md",
+    "userGuide": "APP_TEAM_README.md"
+  }
+}

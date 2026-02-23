@@ -117,7 +117,16 @@ When choosing a provider version for a module, consider:
 
 **GCP Backplane Pattern:** *TBD - To be documented*
 
-**SAP BTP Backplane Pattern:** *TBD - To be documented*
+**SAP BTP Backplane Pattern:**
+- **No backplane directory** - SAP BTP modules use direct provider configuration
+- Authentication via environment variables (set in meshStack):
+  - `BTP_USERNAME` - Username for SAP BTP authentication
+  - `BTP_PASSWORD` - Password for SAP BTP authentication
+  - `BTP_GLOBALACCOUNT` - Global account subdomain
+- Provider configuration in `buildingblock/provider.tf` uses `globalaccount` variable
+- No cross-account role assumption required
+- Direct API access to BTP Global Account and Subaccounts
+- All resources managed within the building block layer without separate backplane infrastructure
 
 ## Building Block Patterns
 
