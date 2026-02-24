@@ -25,3 +25,8 @@ variable "tags" {
   description = "Additional tags to apply to the payment method"
   default     = {}
 }
+
+variable "approval" {
+  type = bool
+  description = "Payment method validation"
+}
