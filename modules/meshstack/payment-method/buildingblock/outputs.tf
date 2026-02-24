@@ -12,3 +12,9 @@ output "amount" {
   value       = try(meshstack_payment_method.payment_method[0].spec.amount,0)
   description = "The budget amount for this payment method"
 }
+
+output "summary" {
+  value = <<EOT
+- **Approval status**: ${var.approval ? "The payment method request was approved." : "The payment method request was rejected."}
+EOT
+}
