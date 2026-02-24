@@ -8,11 +8,13 @@ resource "aws_organizations_organizational_unit" "bedrock" {
 # eu.anthropic.claude-sonnet-4-20250514-v1:0
 
 locals {
-  # see https://docs.aws.amazon.com/bedrock/latest/userguide/model-access-permissions.html
+  # see https://docs.aws.amazon.com/bedrock/latest/userguide/model-access-product-ids.html
   allowed_models = [
     "prod-4dlfvry4v5hbi", // Anthropic Claude 3.7 Sonnet
     "prod-m5ilt4siql27k", // Anthropic Claude 3.5 Sonnet
     "prod-4pmewlybdftbs", // Anthropic Claude 4.0 Sonnet
+    "prod-5ukwuglpt66kg", // Anthropic Claude 4.6 Sonnet
+    "prod-xdkflymybwmvi", // Anthropic Claude 4.5 Haiku
   ]
 
   # EU regions where Bedrock is allowed
