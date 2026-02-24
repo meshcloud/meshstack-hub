@@ -1,28 +1,3 @@
-terraform {
-  required_providers {
-    meshstack = {
-      source  = "meshcloud/meshstack"
-      version = "~> 0.18.2"
-    }
-  }
-}
-
-provider "meshstack" {
-  # Configure meshStack API credentials here or use environment variables.
-  # endpoint  = "https://api.my.meshstack.io"
-  # apikey    = "00000000-0000-0000-0000-000000000000"
-  # apisecret = "uFOu4OjbE4JiewPxezDuemSP3DUrCYmw"
-}
-
-# Configure required providers
-provider "azurerm" {
-  features {}
-  subscription_id = local.aks_subscription_id
-}
-
-provider "kubernetes" {
-}
-
 # Change these values according to your AKS and meshStack setup.
 locals {
   # Existing AKS cluster config.
@@ -35,14 +10,6 @@ locals {
   aks_platform_workspace  = "platform-aks"
   aks_platform_identifier = "aks"
   aks_location_identifier = "global"
-}
-
-# For workload identity federation config
-data "meshstack_integrations" "integrations" {}
-
-# For Entra tenant name
-data "azuread_domains" "aad_domains" {
-  only_initial = true
 }
 
 module "aks_meshplatform" {
@@ -105,7 +72,9 @@ resource "meshstack_platform" "aks" {
 
           # Direct k8s access does not use workload identity federation
           access_token = {
-            plaintext = module.aks_meshplatform.replicator_token
+            secret_value = module.aks_meshplatform.replicator_token
+            # Use this to detect secret changes. Unfortunately, kubernets TF provider does not support ephemeral resources at the moment.
+            secret_version = sha256(module.aks_meshplatform.replicator_token)
           }
 
           group_name_pattern     = "aks-#{workspaceIdentifier}.#{projectIdentifier}-#{platformGroupAlias}"
@@ -123,7 +92,9 @@ resource "meshstack_platform" "aks" {
         metering = {
           client_config = {
             access_token = {
-              plaintext = module.aks_meshplatform.metering_token
+              secret_value = module.aks_meshplatform.metering_token
+              # Use this to detect secret changes. Unfortunately, kubernets TF provider does not support ephemeral resources at the moment.
+              secret_version = sha256(module.aks_meshplatform.metering_token)
             }
           }
           processing = {}
@@ -179,4 +150,37 @@ resource "meshstack_landingzone" "aks_default" {
       }
     }
   }
+}
+
+# For workload identity federation config
+data "meshstack_integrations" "integrations" {}
+
+# For Entra tenant name
+data "azuread_domains" "aad_domains" {
+  only_initial = true
+}
+
+terraform {
+  required_providers {
+    meshstack = {
+      source  = "meshcloud/meshstack"
+      version = "~> 0.19.1"
+    }
+  }
+}
+
+provider "meshstack" {
+  # Configure meshStack API credentials here or use environment variables.
+  # endpoint  = "https://api.my.meshstack.io"
+  # apikey    = "00000000-0000-0000-0000-000000000000"
+  # apisecret = "uFOu4OjbE4JiewPxezDuemSP3DUrCYmw"
+}
+
+# Configure required providers
+provider "azurerm" {
+  features {}
+  subscription_id = local.aks_subscription_id
+}
+
+provider "kubernetes" {
 }
