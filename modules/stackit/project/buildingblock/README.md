@@ -1,19 +1,19 @@
 ---
-name: StackIt Project
+name: STACKIT Project
 supportedPlatforms:
   - stackit
 description: |
-  Creates a new StackIt project and manages user access permissions with role-based access control.
+  Creates a new STACKIT project and manages user access permissions with role-based access control.
 ---
 
-# StackIt Project Building Block
+# STACKIT Project Building Block
 
-This Terraform module provisions a StackIt project with user access control.
+This Terraform module provisions a STACKIT project with user access control.
 
 ## Requirements
 
 - Terraform `>= 1.6.0`
-- StackIt Provider `>= 0.60.0`
+- STACKIT Provider `>= 0.60.0`
 
 ## Providers
 
