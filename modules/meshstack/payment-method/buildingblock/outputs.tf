@@ -1,10 +1,10 @@
 output "payment_method_name" {
-  value       = try(meshstack_payment_method.payment_method[0].metadata.name, null)
+  value       = var.payment_method_name
   description = "The name of the payment method"
 }
 
 output "workspace_id" {
-  value       = try(meshstack_payment_method.payment_method[0].metadata.owned_by_workspace, null)
+  value       = var.workspace_id
   description = "The workspace ID associated with this payment method"
 }
 
