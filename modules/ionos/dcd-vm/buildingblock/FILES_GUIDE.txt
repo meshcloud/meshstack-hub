@@ -1,0 +1,329 @@
+================================================================================
+IONOS DCD VM BUILDING BLOCK - FILES GUIDE
+================================================================================
+
+This document explains each file in the building block and its purpose.
+
+================================================================================
+CORE TERRAFORM FILES (Configuration & Logic)
+================================================================================
+
+📄 versions.tf (164 bytes)
+   Purpose: Terraform version requirements and provider version constraints
+   Content:
+   • Terraform >= 1.0 requirement
+   • IONOS Cloud provider version ~> 6.4.0
+   Use Case: Ensures compatibility and prevents breaking changes
+
+📄 provider.tf (301 bytes)
+   Purpose: IONOS Cloud provider configuration
+   Content:
+   • Provider block declaration
+   • Authentication via environment variables (IONOS_TOKEN)
+   Use Case: Configures IONOS API connectivity
+
+📄 variables.tf (3,056 bytes)
+   Purpose: Input variable definitions with validation
+   Content:
+   • datacenter_id (required) - Target DCD datacenter
+   • vm_name (required) - VM name with 1-63 character validation
+   • template (optional) - Preset or custom configuration
+   • vm_specs (optional) - Custom CPU, RAM, storage specs
+   • Network configuration options
+   • Storage configuration options
+   • Local values for template presets
+   Use Case: Allows flexible VM configuration with built-in validation
+
+📄 main.tf (3,360 bytes)
+   Purpose: Core Terraform resource definitions
+   Content:
+   • ionoscloud_server - Main VM resource
+   • ionoscloud_volume - Boot and data volumes
+   • ionoscloud_nic - Network interface
+   • ionoscloud_lan - Network configuration
+   • ionoscloud_ipblock - Public IP allocation
+   • ionoscloud_cdrom - Boot CD for OS installation
+   Use Case: Provisions all IONOS cloud resources for the VM
+
+📄 outputs.tf (2,709 bytes)
+   Purpose: Output values for consumption by other modules
+   Content:
+   • Server identification (ID, name, details)
+   • Network configuration (NIC ID, LAN details)
+   • Storage information (volume IDs)
+   • Public IP details
+   • Effective VM specifications
+   Use Case: Exports key information for downstream integrations
+
+================================================================================
+DOCUMENTATION FILES (For Understanding & Using the Module)
+================================================================================
+
+📖 README.md (13.3 KB)
+   Audience: Engineers, Infrastructure teams
+   Content:
+   • Feature overview
+   • Architecture diagram
+   • Prerequisites and requirements
+   • Basic and advanced usage examples
+   • Variable documentation
+   • Template and OS image options
+   • Troubleshooting guide
+   • Version requirements
+   • Integration patterns
+   • Important notes and limitations
+   Use Case: Complete technical reference for implementation
+
+📖 APP_TEAM_README.md (10.9 KB)
+   Audience: Application teams, DevOps operators
+   Content:
+   • Quick start guide
+   • Common use cases (web server, database, etc.)
+   • VM sizing guide
+   • OS selection guidance
+   • Networking explained
+   • Storage guide with mounting instructions
+   • Cost optimization tips
+   • Complete deployment examples
+   • Troubleshooting for common issues
+   • Shared responsibility matrix
+   • Best practices
+   • FAQ
+   Use Case: User-friendly guide for deploying and managing VMs
+
+📖 INTEGRATION_EXAMPLES.md (7.8 KB)
+   Audience: Developers, architects
+   Content:
+   • Complete DCD + VM integration example
+   • Multi-environment deployment pattern
+   • Microservices architecture example
+   • 3-tier application stack example
+   • Backup and disaster recovery pattern
+   • Deployment workflow
+   • Cost optimization strategy
+   • Integration with other IONOS modules
+   Use Case: Real-world deployment patterns and examples
+
+📖 FILES_GUIDE.txt (This file)
+   Purpose: Explain each file's purpose and content
+   Use Case: Navigation guide for the module
+
+================================================================================
+TESTING FILE
+================================================================================
+
+🧪 dcd-vm.tftest.hcl (8.0 KB)
+   Purpose: Automated test scenarios for the module
+   Content:
+   • Valid configuration tests:
+     - Small template test
+     - Medium template test
+     - Large template test
+     - Custom template test
+     - Data disk attachment test
+     - Public IP optional test
+     - Existing network attachment test
+   • Invalid configuration tests (expect_failure):
+     - Invalid template name
+     - Empty VM name
+     - VM name too long
+     - Invalid CPU specs
+     - Invalid memory specs
+     - Invalid storage specs
+     - CPU too high
+     - Missing network configuration
+   • Output validation tests
+   Use Case: Validates module works correctly and fails appropriately
+
+Number of test scenarios: 20+
+Coverage: Positive, negative, and edge cases
+
+================================================================================
+ASSET FILES
+================================================================================
+
+🖼️ logo.png (13.4 KB)
+   Purpose: Visual brand identifier for IONOS
+   Content: IONOS Cloud logo
+   Use Case: Display in dashboards, documentation, and UIs
+
+================================================================================
+FILE SIZE SUMMARY
+================================================================================
+
+Terraform Code:
+  • versions.tf          164 bytes
+  • provider.tf          301 bytes
+  • variables.tf         3,056 bytes
+  • main.tf              3,360 bytes
+  • outputs.tf           2,709 bytes
+  Subtotal:              9,590 bytes (~9.6 KB)
+
+Documentation:
+  • README.md            13,349 bytes (~13.3 KB)
+  • APP_TEAM_README.md   10,910 bytes (~10.9 KB)
+  • INTEGRATION_EXAMPLES.md 7,887 bytes (~7.9 KB)
+  • FILES_GUIDE.txt      (this file)
+  Subtotal:              ~32+ KB
+
+Testing:
+  • dcd-vm.tftest.hcl    7,984 bytes (~8.0 KB)
+
+Assets:
+  • logo.png             13,385 bytes (~13.4 KB)
+
+TOTAL: ~1,988 lines of code and documentation, ~64 KB
+
+================================================================================
+HOW TO USE THIS MODULE
+================================================================================
+
+1. READ: Start with APP_TEAM_README.md for user-facing guide
+   └─ Best for: Understanding concepts and getting started
+
+2. REVIEW: Check README.md for technical details
+   └─ Best for: Configuration options and troubleshooting
+
+3. EXPLORE: Look at INTEGRATION_EXAMPLES.md for patterns
+   └─ Best for: Real-world deployment scenarios
+
+4. IMPLEMENT: Use variables.tf and main.tf as reference
+   └─ Best for: Customizing deployments
+
+5. TEST: Run tests from dcd-vm.tftest.hcl
+   └─ Best for: Validating configurations
+
+================================================================================
+FILE DEPENDENCIES
+================================================================================
+
+versions.tf
+  └─ Required by: All other Terraform files
+     Defines minimum Terraform and provider versions
+
+provider.tf
+  └─ Required by: main.tf
+     Configures IONOS API connection
+
+variables.tf
+  └─ Used by: main.tf, outputs.tf
+     Defines input parameters
+
+main.tf
+  └─ Uses: variables.tf, provider.tf
+     Creates all cloud resources
+
+outputs.tf
+  └─ Uses: main.tf
+     Exports resource information
+
+dcd-vm.tftest.hcl
+  └─ Tests: main.tf, variables.tf, outputs.tf
+     Validates all configurations
+
+================================================================================
+WORKFLOW USING THESE FILES
+================================================================================
+
+1. Planning Phase:
+   • Read: APP_TEAM_README.md, INTEGRATION_EXAMPLES.md
+   • Understand: Deployment patterns and best practices
+
+2. Configuration Phase:
+   • Reference: variables.tf for available options
+   • Review: README.md for detailed configuration
+   • Design: Your specific VM deployment
+
+3. Implementation Phase:
+   • Setup: Terraform with provider.tf and versions.tf
+   • Configure: Use variables.tf to customize
+   • Deploy: Use main.tf resources
+
+4. Validation Phase:
+   • Test: Run tests from dcd-vm.tftest.hcl
+   • Verify: Check outputs.tf values
+   • Troubleshoot: Use README.md troubleshooting section
+
+5. Operations Phase:
+   • Monitor: Using outputs and IONOS console
+   • Update: Modify variables.tf for changes
+   • Support: Refer to APP_TEAM_README.md for help
+
+================================================================================
+QUICK FILE REFERENCE
+================================================================================
+
+Need to...                          See File...
+─────────────────────────────────────────────────────────────
+Get started quickly                 APP_TEAM_README.md
+Understand technical details        README.md
+See deployment examples             INTEGRATION_EXAMPLES.md
+Configure a VM                      variables.tf
+Add custom validation               variables.tf
+Understand available variables      variables.tf (locals section)
+See what resources are created      main.tf
+Get resource information            outputs.tf
+Run automated tests                 dcd-vm.tftest.hcl
+Set provider versions               versions.tf
+Configure authentication            provider.tf
+Troubleshoot issues                 README.md (Troubleshooting)
+Find common use cases               APP_TEAM_README.md (Use Cases)
+Understand cost implications        APP_TEAM_README.md (Costs)
+
+================================================================================
+FILE MODIFICATION GUIDELINES
+================================================================================
+
+⚠️  DO NOT modify:
+    • versions.tf - Provider versions are tested and stable
+    • provider.tf - Authentication configuration is standard
+    • dcd-vm.tftest.hcl - Tests ensure quality
+
+✅  OK to modify:
+    • variables.tf - Can add new variables or adjust defaults
+    • main.tf - Can add additional resources if needed
+    • outputs.tf - Can add new outputs for integration
+    • Documentation - Can enhance with your notes
+
+⚠️  Careful when modifying:
+    • variables.tf validations - May break deployments
+    • main.tf resource dependencies - May cause errors
+    • outputs.tf variable references - May break integrations
+
+================================================================================
+DOCUMENTATION CROSS-REFERENCES
+================================================================================
+
+README.md
+├─ Architecture section → See main.tf for resources
+├─ Variables section → See variables.tf for validation
+├─ Outputs section → See outputs.tf for export details
+├─ Troubleshooting → Common issues and solutions
+└─ Integration → See INTEGRATION_EXAMPLES.md
+
+APP_TEAM_README.md
+├─ Quick Start → vars: datacenter_id, vm_name, template
+├─ Use Cases → examples of different deployments
+├─ Networking → how network management works
+├─ Storage → how data disks are mounted
+└─ Troubleshooting → user-facing issues and fixes
+
+INTEGRATION_EXAMPLES.md
+├─ Complete integration → Uses DCD + VM modules together
+├─ Multi-environment → for_each patterns
+├─ Microservices → Service discovery patterns
+└─ Deployment workflow → terraform apply steps
+
+================================================================================
+NEXT STEPS
+================================================================================
+
+1. Open APP_TEAM_README.md to understand the module
+2. Review INTEGRATION_EXAMPLES.md for your use case
+3. Customize variables.tf for your environment
+4. Run dcd-vm.tftest.hcl to validate
+5. Deploy your first VM using main.tf
+6. Reference outputs.tf for integration
+7. Check README.md for troubleshooting if needed
+
+================================================================================
