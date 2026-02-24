@@ -1,15 +1,14 @@
 output "payment_method_name" {
-  # Returns the name if created, or null if count was 0
-  value       = one(meshstack_payment_method.payment_method[*].metadata.name)
+  value       = try(meshstack_payment_method.payment_method[0].metadata.name, null)
   description = "The name of the payment method"
 }
 
 output "workspace_id" {
-  value       = one(meshstack_payment_method.payment_method[*].metadata.owned_by_workspace)
+  value       = try(meshstack_payment_method.payment_method[0].metadata.owned_by_workspace, null)
   description = "The workspace ID associated with this payment method"
 }
 
 output "amount" {
-  value       = one(meshstack_payment_method.payment_method[*].spec.amount)
+  value       = try(meshstack_payment_method.payment_method[0].spec.amount,0)
   description = "The budget amount for this payment method"
 }
