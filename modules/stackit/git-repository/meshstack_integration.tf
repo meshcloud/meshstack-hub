@@ -30,7 +30,7 @@ variable "owning_workspace_identifier" {
 }
 
 variable "meshstack_hub_git_ref" {
-  type = string
+  type    = string
   default = "main"
 }
 
