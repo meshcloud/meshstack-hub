@@ -12,7 +12,7 @@ The refactored AKS starterkit uses a **composition pattern**:
 - **`starterkit/backplane/`** — Terraform module that references child BBD `meshstack_integration.tf` modules:
   - `modules/github/repository` → registers the GitHub Repo BBD
   - `modules/aks/github-connector` → registers the GitHub Actions Connector BBD
-  - `modules/azure/postgresql` → (optional) registers the PostgreSQL BBD
+  - ~~`modules/azure/postgresql` → (optional) registers the PostgreSQL BBD~~ *(out of scope for SKE)*
 - **`starterkit/meshstack_integration.tf`** — Single-file module that:
   - Calls `module "backplane" { source = "./backplane" }` to register child BBDs
   - Registers the starterkit BBD itself, wiring child BBD UUIDs as static inputs
@@ -39,7 +39,7 @@ The STACKIT equivalent would:
 1. Create a Kubernetes service account + RBAC in the SKE namespace (same pattern)
 2. Generate a kubeconfig for the service account
 3. Store secrets in the Forgejo repository (using Gitea provider's `gitea_actions_secret` or via API)
-4. No ACR — STACKIT uses its own container registry (or none initially)
+4. No container registry credentials initially (out of scope)
 
 **Note**: Forgejo Actions are similar to GitHub Actions (they share the same runner spec). The connector module pattern is analogous — the difference is the secret storage target (Forgejo repo secrets vs GitHub environment secrets).
 
@@ -64,8 +64,8 @@ New hub module analogous to `modules/aks/github-connector/`:
 ### 3. `ske-starterkit-backplane` — Create `modules/stackit/ske/starterkit/backplane/`
 New backplane following AKS pattern:
 - `main.tf` — References child BBDs:
-  - `module "git_repo_bbd"` → sources `../../git-repository` (relative path to `modules/stackit/git-repository`)
-  - `module "forgejo_connector_bbd"` → sources `../forgejo-connector` (relative path, once created)
+  - `module "git_repo_bbd"` → sources `../../git-repository` (the existing STACKIT git-repository module)
+  - `module "forgejo_connector_bbd"` → sources `../forgejo-connector` (from step 2)
 - `variables.tf` — `var.hub`, `var.meshstack`, `var.gitea` (Forgejo credentials)
 - `outputs.tf` — child BBD UUIDs for wiring
 - `versions.tf` — provider pins
@@ -85,5 +85,8 @@ Refactor to match AKS pattern:
 ## Open Questions / Decisions
 
 1. **Forgejo Actions secrets API**: Does the Gitea Terraform provider support `gitea_actions_secret`? If not, we may need `null_resource` + `curl` to the Forgejo API (similar to the existing webhook pattern in `stackit/git-repository/buildingblock/main.tf`).
-2. **Container registry**: AKS has ACR credentials pushed as secrets. Does STACKIT have an equivalent container registry, or should this be left out initially?
-3. **Scope of this PR**: Should the Forgejo connector module be a separate PR/branch, or part of this SKE starterkit refactoring?
+2. **Container registry**: Out of scope for now — no registry credentials will be pushed (unlike AKS/ACR). Can be added later.
+
+## Out of Scope
+
+- PostgreSQL / persistence building block (AKS has `azure/postgresql` — not relevant for initial SKE starterkit)

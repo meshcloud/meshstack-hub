@@ -182,3 +182,13 @@ resource "meshstack_building_block_definition" "stackit_git_repo" {
     }
   }
 }
+
+output "bbd_uuid" {
+  description = "UUID of the STACKIT Git repository building block definition."
+  value       = meshstack_building_block_definition.stackit_git_repo.ref.uuid
+}
+
+output "bbd_version_uuid" {
+  description = "UUID of the latest version of the STACKIT Git repository building block definition."
+  value       = meshstack_building_block_definition.stackit_git_repo.version_latest.uuid
+}
