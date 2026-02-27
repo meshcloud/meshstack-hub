@@ -1,0 +1,16 @@
+version: '3'
+
+tasks:
+  build:
+    cmds:
+      - go build .
+
+  lint:
+    desc: Run golangci-lint
+    cmds:
+      - golangci-lint run {{.CLI_ARGS}}
+
+  test:
+    cmds:
+      - go test ./... -v {{.CLI_ARGS}}
+

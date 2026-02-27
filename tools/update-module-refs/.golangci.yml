@@ -1,0 +1,57 @@
+version: "2"
+
+issues:
+  max-same-issues: 0
+
+formatters:
+  enable:
+    - gci
+    - gofmt
+  settings:
+    gci:
+      sections:
+        - standard
+        - default
+        - localmodule
+
+linters:
+  default: none
+  enable:
+    - depguard
+    - durationcheck
+    - errcheck
+    - copyloopvar
+    - forcetypeassert
+    - godot
+    - ineffassign
+    - makezero
+    - misspell
+    - nilerr
+    - predeclared
+    - staticcheck
+    - usetesting
+    - unconvert
+    - unparam
+    - unused
+    - govet
+  settings:
+    depguard:
+      rules:
+        main:
+          files:
+            - "!$test"
+          list-mode: strict
+          allow:
+            - $gostd
+            - github.com/meshcloud/meshstack-hub/tools/update-module-refs
+            - github.com/hashicorp/hcl/v2
+            - github.com/zclconf/go-cty
+        test:
+          files:
+            - "$test"
+          list-mode: strict
+          allow:
+            - $gostd
+            - github.com/meshcloud/meshstack-hub/tools/update-module-refs
+            - github.com/hashicorp/hcl/v2
+            - github.com/stretchr/testify
