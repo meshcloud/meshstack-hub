@@ -1,0 +1,45 @@
+name: update-module-refs
+
+on:
+  push:
+    branches: [main]
+    paths: &paths
+      - 'modules/**'
+      - 'tools/update-module-refs/**'
+  pull_request:
+    branches: [main]
+    paths: *paths
+
+permissions:
+  contents: write
+
+jobs:
+  update-module-refs:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          # Full history needed for git log to resolve commit SHAs
+          fetch-depth: 0
+          ref: ${{ github.event.pull_request.head.ref || github.ref_name }}
+
+      - uses: actions/setup-go@v6
+        with:
+          go-version-file: tools/update-module-refs/go.mod
+          cache-dependency-path: tools/update-module-refs/go.sum
+
+      - name: Build
+        working-directory: tools/update-module-refs
+        run: go build -o update-module-refs .
+
+      - name: Update module refs
+        working-directory: modules
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          ../tools/update-module-refs/update-module-refs
+
+      - name: Push ref updates${{ github.event_name == 'pull_request' && ' (dry-run)' || '' }}
+        run: |
+          git diff --patch-with-stat --color-words @{upstream}
+          git push ${{ github.event_name == 'pull_request' && '--dry-run' || '' }}
