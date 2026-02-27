@@ -44,6 +44,15 @@
         pre-commit
       ];
 
+    # Go toolchain for tools/ development
+    go_packages = pkgs:
+      with pkgs;
+      [
+        go
+        golangci-lint
+        go-task
+      ];
+
     importNixpkgs = system: import nixpkgs { inherit system; };
 
     defaultShellForSystem = system:
@@ -52,7 +61,7 @@
       in {
         default = pkgs.mkShell {
           name = "meshstack-hub";
-          packages = (github_actions_preinstalled pkgs) ++ (core_packages pkgs);
+          packages = (github_actions_preinstalled pkgs) ++ (core_packages pkgs) ++ (go_packages pkgs);
         };
 
         website = pkgs.mkShell {

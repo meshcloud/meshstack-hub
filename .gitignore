@@ -26,3 +26,7 @@ website/public/assets/building-block-logos/
 website/public/assets/logos/
 website/public/assets/*.json
 .worktrees/
+
+# Go
+.nix-go/
+tools/update-module-refs/update-module-refs
