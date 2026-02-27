@@ -41,9 +41,7 @@ modules/<cloud-provider>/<service-name>/
 Each `meshstack_integration.tf` is a **self-contained single-file Terraform module**. It must
 include `variable`, `output`, `terraform {}`, `locals`, and `resource` blocks all in one file —
 do **not** create separate `variables.tf`, `outputs.tf`, or `versions.tf` alongside it.
-This keeps the integration compact and easy to call as a sub-module from composition modules
-(e.g. the AKS starterkit calls `../../github/repository` as a module source, which loads only
-this single file).
+This keeps the integration compact and easy to call as a sub-module from composition modules.
 
 ### Building block logos / symbols
 
@@ -129,6 +127,32 @@ module "backplane" {
 }
 ```
 
+### Cross-module references (composition modules)
+
+When a `meshstack_integration.tf` needs to call **another hub module** (e.g. the AKS starterkit
+calling `modules/github/repository`), use a **git URL** with a **hardcoded ref** — never a
+relative `../../` path. Relative upward traversal breaks when the module is sourced via a git URL
+from LCF/ICF/meshkube, because Terraform only downloads the specified subdirectory.
+
+```hcl
+# ✅ Cross-module reference — git URL with hardcoded ref
+module "github_repo_bbd" {
+  source = "github.com/meshcloud/meshstack-hub//modules/github/repository?ref=main"
+  # ...
+}
+```
+
+**Rules:**
+- `./backplane` → relative path (same module subtree, always works)
+- `../../other/module` → **git URL** with hardcoded `?ref=<tag-or-branch>` (cross-module)
+- `var.hub.git_ref` → used only in `implementation.terraform.ref_name` of BBD resources, NOT
+  in `source` arguments (Terraform does not support variable interpolation in `source`)
+
+**Ref management:** The hardcoded refs in git URL `source` lines default to `"main"` during
+development. A Go CI tool (planned) will walk the hub module dependency tree bottom-up and
+update these refs to specific tags on release. Leaf modules (no cross-module deps) are updated
+first, then composition modules.
+
 ### ❌ Avoid these patterns
 
 ```hcl
@@ -141,9 +165,14 @@ locals {
 # ❌ provider blocks inside mesh_integration.tf — the Hub UI renders these
 provider "meshstack" { ... }
 
-# ❌ absolute GitHub source URL in module block — use relative path instead
+# ❌ absolute GitHub source URL for backplane — use relative path instead
 module "backplane" {
   source = "github.com/meshcloud/meshstack-hub//modules/aws/s3_bucket/backplane?ref=main"
+}
+
+# ❌ relative path for cross-module refs — breaks when sourced via git URL
+module "github_repo_bbd" {
+  source = "../../github/repository"
 }
 
 # ❌ standalone meshstack_hub_git_ref variable — use variable "hub" { type = object({git_ref=string}) } instead
