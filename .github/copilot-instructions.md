@@ -36,6 +36,32 @@ modules/<cloud-provider>/<service-name>/
 └── meshstack_integration.tf   # Example wiring into a meshStack instance
 ```
 
+### `meshstack_integration.tf` as a single-file module
+
+Each `meshstack_integration.tf` is a **self-contained single-file Terraform module**. It must
+include `variable`, `output`, `terraform {}`, `locals`, and `resource` blocks all in one file —
+do **not** create separate `variables.tf`, `outputs.tf`, or `versions.tf` alongside it.
+This keeps the integration compact and easy to call as a sub-module from composition modules
+(e.g. the AKS starterkit calls `../../github/repository` as a module source, which loads only
+this single file).
+
+### Building block logos / symbols
+
+Use `provider::meshstack::load_image_file()` (requires meshstack provider `>= 0.19.3`) to set
+the `symbol` attribute on `meshstack_building_block_definition` resources. Reference the
+`logo.png` already present in the `buildingblock/` directory:
+
+```hcl
+resource "meshstack_building_block_definition" "example" {
+  spec = {
+    symbol = provider::meshstack::load_image_file("${path.module}/buildingblock/logo.png")
+    # ...
+  }
+}
+```
+
+This keeps logo management inside the hub — callers don't need to provide their own assets.
+
 ---
 
 ## `meshstack_integration.tf` Conventions
