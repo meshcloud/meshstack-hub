@@ -9,7 +9,7 @@ output "workspace_id" {
 }
 
 output "amount" {
-  value       = try(meshstack_payment_method.payment_method[0].spec.amount,0)
+  value       = var.amount
   description = "The budget amount for this payment method"
 }
 
