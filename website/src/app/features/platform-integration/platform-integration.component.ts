@@ -74,6 +74,7 @@ export class PlatformIntegrationComponent implements OnInit {
     navigator.clipboard.writeText(content).then(() => {
       this.copiedTerraform = true;
       setTimeout(() => this.copiedTerraform = false, 2000);
+      (window as any).plausible('Copy Platform Terraform');
     });
   }
 }
