@@ -93,6 +93,7 @@ export class TemplateDetailsComponent implements OnInit, OnDestroy {
         setTimeout(() => {
           this.copiedTerraform = false;
         }, 2000);
+        (window as any).plausible('Copy BBD Terraform');
       });
   }
 

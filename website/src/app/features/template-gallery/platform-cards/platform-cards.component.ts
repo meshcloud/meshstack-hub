@@ -25,7 +25,6 @@ export class PlatformCardsComponent {
    * Returns the cards sorted by customOrder, with others following in original order.
    */
   public get sortedCards(): PlatformCard[] {
-    console.log(this.cards);
     if (!this.cards) return [];
     const order = this.customOrder;
     return [
