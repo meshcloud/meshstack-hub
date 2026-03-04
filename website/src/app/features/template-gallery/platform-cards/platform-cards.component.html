@@ -5,9 +5,9 @@
                 [label]="card.title"
                 [logoSourceImage]="card.cardLogo"
                 (backgroundColorExtracted)="onBackgroundColorExtracted(card.title, $event)">
-        <div class="p-4 flex flex-col min-h-[10rem] h-full" card-body>
+        <div class="p-4 flex flex-col h-full" card-body>
           <!-- Title with Logo - Left Aligned -->
-          <div class="flex items-center gap-2 mb-1">
+          <div class="flex items-center gap-2 mb-3">
             <div class="w-9 h-9 flex-shrink-0 flex items-center justify-center rounded-lg transition-colors"
                  [ngStyle]="{'background-color': logoBackgroundColors[card.title] || 'rgba(203, 213, 225, 0.3)'}">
               <img *ngIf="card.cardLogo; else unknownLogo"
@@ -22,12 +22,6 @@
               {{ card.title }}
             </h5>
           </div>
-
-          <!-- Description -->
-          <p *ngIf="card.description" class="text-slate-600 text-sm line-clamp-2 mb-1 leading-snug max-h-10 overflow-hidden text-ellipsis">
-            {{ card.description }}
-          </p>
-
           <!-- Building Block Count and Category Label -->
           <div class="mt-auto pt-2 border-t border-slate-100">
             <div class="flex items-center justify-between gap-2">
