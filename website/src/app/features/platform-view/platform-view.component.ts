@@ -15,7 +15,8 @@ import { extractLogoColor } from 'app/shared/util/logo-color.util';
 interface PlatformVM {
   logo: string | null;
   title: string;
-  description: string; // Added description property
+  description: string;
+  benefits?: string[];
 }
 
 @Component({
@@ -79,7 +80,8 @@ export class PlatformViewComponent implements OnInit, OnDestroy {
               return {
                 logo: platform.logo,
                 title: platform.name,
-                description: platform.description
+                description: platform.description,
+                benefits: platform.benefits
               };
             })
         );

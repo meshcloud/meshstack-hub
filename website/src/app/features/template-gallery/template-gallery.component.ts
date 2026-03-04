@@ -130,13 +130,14 @@ export class TemplateGalleryComponent implements OnInit, OnDestroy {
         `/platforms/${platform.platformType}`,
         platform.description,
         buildingBlockCount,
-        platform.category
+        platform.category,
+        platform.benefits
       );
     });
   }
 
-  private createPlatformCard(title: string, logoUrl: string, routePath: string, description?: string, buildingBlockCount?: number, category?: 'hyperscaler' | 'european' | 'china' | 'devops' | 'private-cloud'): PlatformCard {
-    return { cardLogo: logoUrl, title, routePath, description, buildingBlockCount, category };
+  private createPlatformCard(title: string, logoUrl: string, routePath: string, description?: string, buildingBlockCount?: number, category?: 'hyperscaler' | 'european' | 'china' | 'devops' | 'private-cloud', benefits?: string[]): PlatformCard {
+    return { cardLogo: logoUrl, title, routePath, description, buildingBlockCount, category, benefits };
   }
 
   private filterCardsBySearchTerm(cards: PlatformCard[], searchTerm: string | undefined): PlatformCard[] {
