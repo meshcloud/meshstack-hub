@@ -51,7 +51,11 @@ variable "project_tags_yaml" {
       environment:
         - "prod"
   YAML
+}
 
+variable "icon" {
+  type    = string
+  default = "https://raw.githubusercontent.com/meshcloud/meshstack-hub/main/modules/stackit/ske-starterkit/buildingblock/logo.png"
 }
 
 resource "meshstack_building_block_definition" "ske_starterkit" {
@@ -63,6 +67,7 @@ resource "meshstack_building_block_definition" "ske_starterkit" {
   spec = {
     description              = "The SKE Starterkit provides application teams with a pre-configured Kubernetes environment on STACKIT SKE following best practices. It automates the creation of dev and prod projects with dedicated SKE tenants."
     display_name             = "SKE Starterkit"
+    symbol                   = var.icon
     notification_subscribers = var.notification_subscribers
 
     readme = chomp(<<EOT
@@ -176,7 +181,9 @@ EOT
         updateable_by_consumer = false
       }
     }
+
     outputs = {}
+
     permissions = [
       "BUILDINGBLOCK_LIST",
       "BUILDINGBLOCK_SAVE",
