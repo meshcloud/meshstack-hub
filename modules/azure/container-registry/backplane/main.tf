@@ -149,6 +149,7 @@ resource "azurerm_role_definition" "buildingblock_deploy" {
 resource "azurerm_role_assignment" "existing_principals" {
   for_each = var.existing_principal_ids
 
+  principal_type     = "ServicePrincipal"
   role_definition_id = azurerm_role_definition.buildingblock_deploy.role_definition_resource_id
   principal_id       = each.value
   scope              = var.scope
@@ -157,6 +158,7 @@ resource "azurerm_role_assignment" "existing_principals" {
 resource "azurerm_role_assignment" "created_principal" {
   count = var.create_service_principal_name != null ? 1 : 0
 
+  principal_type     = "ServicePrincipal"
   role_definition_id = azurerm_role_definition.buildingblock_deploy.role_definition_resource_id
   principal_id       = azuread_service_principal.buildingblock_deploy[0].object_id
   scope              = var.scope
@@ -209,6 +211,7 @@ resource "azurerm_role_definition" "buildingblock_landingzone_to_hub" {
 resource "azurerm_role_assignment" "existing_principals_hub" {
   for_each = var.existing_hub_principal_ids
 
+  principal_type     = "ServicePrincipal"
   role_definition_id = azurerm_role_definition.buildingblock_deploy_hub.role_definition_resource_id
   description        = azurerm_role_definition.buildingblock_deploy_hub.description
   principal_id       = each.value
@@ -218,6 +221,7 @@ resource "azurerm_role_assignment" "existing_principals_hub" {
 resource "azurerm_role_assignment" "created_principal_hub" {
   count = var.create_hub_service_principal_name != null ? 1 : 0
 
+  principal_type     = "ServicePrincipal"
   role_definition_id = azurerm_role_definition.buildingblock_deploy_hub.role_definition_resource_id
   description        = azurerm_role_definition.buildingblock_deploy_hub.description
   principal_id       = azuread_service_principal.buildingblock_deploy_hub[0].object_id
@@ -227,6 +231,7 @@ resource "azurerm_role_assignment" "created_principal_hub" {
 resource "azurerm_role_assignment" "existing_principals_hub_to_landingzone" {
   for_each = var.existing_hub_principal_ids
 
+  principal_type     = "ServicePrincipal"
   role_definition_id = azurerm_role_definition.buildingblock_hub_to_landingzone.role_definition_resource_id
   principal_id       = each.value
   scope              = var.scope
@@ -235,6 +240,7 @@ resource "azurerm_role_assignment" "existing_principals_hub_to_landingzone" {
 resource "azurerm_role_assignment" "created_principal_hub_to_landingzone" {
   count = var.create_hub_service_principal_name != null ? 1 : 0
 
+  principal_type     = "ServicePrincipal"
   role_definition_id = azurerm_role_definition.buildingblock_hub_to_landingzone.role_definition_resource_id
   principal_id       = azuread_service_principal.buildingblock_deploy_hub[0].object_id
   scope              = var.scope
@@ -243,6 +249,7 @@ resource "azurerm_role_assignment" "created_principal_hub_to_landingzone" {
 resource "azurerm_role_assignment" "existing_principals_landingzone_to_hub" {
   for_each = var.existing_principal_ids
 
+  principal_type     = "ServicePrincipal"
   role_definition_id = azurerm_role_definition.buildingblock_landingzone_to_hub.role_definition_resource_id
   principal_id       = each.value
   scope              = var.hub_scope
@@ -251,6 +258,7 @@ resource "azurerm_role_assignment" "existing_principals_landingzone_to_hub" {
 resource "azurerm_role_assignment" "created_principal_landingzone_to_hub" {
   count = var.create_service_principal_name != null ? 1 : 0
 
+  principal_type     = "ServicePrincipal"
   role_definition_id = azurerm_role_definition.buildingblock_landingzone_to_hub.role_definition_resource_id
   principal_id       = azuread_service_principal.buildingblock_deploy[0].object_id
   scope              = var.hub_scope
