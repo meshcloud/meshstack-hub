@@ -1,7 +1,9 @@
 ---
 name: GitHub
-description: Code hosting platform for version control and collaboration
+description: meshStack integration with GitHub automates repository creation and access management, ensuring secure and consistent collaboration for your teams.
 category: devops
+benefits:
+  - Repository Creation
+  - Team Membership Assignment
 ---
 
-meshStack integration with GitHub automates repository creation and access management, ensuring secure and consistent collaboration for your teams.

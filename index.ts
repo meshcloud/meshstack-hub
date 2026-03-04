@@ -50,7 +50,7 @@ function findPlatforms(): Platform[] {
       const platformDir: string = path.join(repoRoot, dir.name);
       const platformLogo = getPlatformLogoOrThrow(platformDir, dir.name);
       const platformReadme = getPlatformReadmeOrThrow(platformDir);
-      const { name, description, category, content } = extractReadmeFrontMatter(platformReadme);
+      const { name, description, category, benefits, content } = extractReadmeFrontMatter(platformReadme);
       const terraformSnippet = getTerraformSnippet(platformDir);
 
       return {
@@ -58,6 +58,7 @@ function findPlatforms(): Platform[] {
         name,
         description,
         category,
+        benefits,
         logo: platformLogo,
         readme: content,
         terraformSnippet
@@ -86,7 +87,7 @@ function getPlatformReadmeOrThrow(platformDir: string) {
   }
 }
 
-function extractReadmeFrontMatter(platformReadme: string): { name: string; description: string; category?: string; content: string } {
+function extractReadmeFrontMatter(platformReadme: string): { name: string; description: string; category?: string; benefits?: string[]; content: string } {
   const { data, content } = matter(platformReadme);
 
   const name = data.name;
@@ -100,12 +101,14 @@ function extractReadmeFrontMatter(platformReadme: string): { name: string; descr
   }
 
   const category = data.category;
+  const benefits = data.benefits;
 
   return {
     name,
     description,
     content,
-    category
+    category,
+    benefits
   }
 }
 
@@ -233,5 +236,6 @@ export interface Platform {
   logo: string;
   readme: string;
   category?: string;
+  benefits?: string[];
   terraformSnippet?: string;
 }

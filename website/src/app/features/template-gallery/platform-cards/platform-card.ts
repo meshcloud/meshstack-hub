@@ -5,4 +5,5 @@ export interface PlatformCard {
     description?: string;
     buildingBlockCount?: number;
     category?: 'hyperscaler' | 'european' | 'china' | 'devops' | 'private-cloud';
+    benefits?: string[];
   }

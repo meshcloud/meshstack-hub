@@ -1,7 +1,10 @@
 ---
 name: Oracle Cloud Infrastructure
-description: Cloud computing services platform by Oracle
+description: meshStack integration with Oracle Cloud Infrastructure (OCI) automates tenancy and compartment provisioning, enforces governance, and enables unified billing for your OCI resources.
 category: hyperscaler
+benefits:
+  - Tenancy and Compartment Provisioning
+  - Policy Assignment
+  - Unified Billing
 ---
 
-meshStack integration with Oracle Cloud Infrastructure (OCI) automates tenancy and compartment provisioning, enforces governance, and enables unified billing for your OCI resources.

@@ -17,7 +17,15 @@
         </div>
         <div class="flex-1 flex flex-col gap-2">
           <h1 class="text-2xl lg:text-3xl font-bold text-slate-900">Integrate {{ platform.name }} into meshStack</h1>
-          <p class="text-base text-slate-700 mb-3">{{ platform.readme }}</p>
+          <p class="text-base text-slate-700 mb-1">{{ platform.description }}</p>
+
+          <!-- Benefits -->
+          <div *ngIf="platform.benefits && platform.benefits.length > 0" class="flex flex-wrap gap-4 mb-2">
+            <span *ngFor="let benefit of platform.benefits" class="inline-flex items-center gap-1.5 text-sm text-slate-600">
+              <i class="fa-solid fa-circle-check text-green-600"></i>
+              <span>{{ benefit }}</span>
+            </span>
+          </div>
         </div>
       </div>
     </div>
