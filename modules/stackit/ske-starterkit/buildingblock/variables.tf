@@ -54,10 +54,7 @@ prod:
     - "value6"
 ```
 EOF
-  default = yamlencode({
-    dev  = {}
-    prod = {}
-  })
+  default     = "{\"dev\": {}, \"prod\": {}}"
 
   validation {
     condition     = can(yamldecode(var.project_tags_yaml))

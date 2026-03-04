@@ -1,9 +1,6 @@
 locals {
-  # Create a purely alphanumeric identifier from the display name
-  # Remove special characters, convert to lowercase, and replace spaces/hyphens with nothing
-  identifier = lower(replace(replace(var.name, "/[^a-zA-Z0-9\\s\\-\\_]/", ""), "/[\\s\\-\\_]+/", "-"))
-
-  # Decode project tags YAML configuration
+  # Create a lowercase alphanumeric identifier with hyphens from the display name
+  # Remove other special characters and normalize spaces/hyphens/underscores into a single "-"
   project_tags_config = try(yamldecode(var.project_tags_yaml), {})
 }
 

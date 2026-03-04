@@ -15,82 +15,81 @@ PLATFORM_COLORS = {
         "primary": "#FF9900",
         "secondary": "#232F3E",
         "accent": "#7FBA00",
-        "name": "AWS colors: orange (#FF9900), dark blue (#232F3E), and lime green (#7FBA00)"
+        "name": "AWS colors: orange (#FF9900), dark blue (#232F3E), and lime green (#7FBA00)",
     },
     "azure": {
         "primary": "#0078D4",
         "secondary": "#00BCF2",
         "accent": "#50E6FF",
-        "name": "Azure colors: blue (#0078D4), cyan (#00BCF2), and light blue (#50E6FF)"
+        "name": "Azure colors: blue (#0078D4), cyan (#00BCF2), and light blue (#50E6FF)",
     },
     "aks": {
         "primary": "#326CE5",
         "secondary": "#0078D4",
         "accent": "#00BCF2",
-        "name": "Kubernetes/Azure colors: blue (#326CE5), Azure blue (#0078D4), and cyan (#00BCF2)"
+        "name": "Kubernetes/Azure colors: blue (#326CE5), Azure blue (#0078D4), and cyan (#00BCF2)",
     },
     "azuredevops": {
         "primary": "#0078D4",
         "secondary": "#00BCF2",
         "accent": "#005A9E",
-        "name": "Azure DevOps colors: blue (#0078D4), teal (#00BCF2), and dark blue (#005A9E)"
+        "name": "Azure DevOps colors: blue (#0078D4), teal (#00BCF2), and dark blue (#005A9E)",
     },
     "gcp": {
         "primary": "#4285F4",
         "secondary": "#EA4335",
         "accent": "#FBBC04",
-        "name": "Google colors: blue (#4285F4), red (#EA4335), yellow (#FBBC04), and green (#34A853)"
+        "name": "Google colors: blue (#4285F4), red (#EA4335), yellow (#FBBC04), and green (#34A853)",
     },
     "github": {
         "primary": "#6e5494",
         "secondary": "#24292e",
         "accent": "#8b5cf6",
-        "name": "GitHub colors: purple (#6e5494), dark gray (#24292e), and bright purple (#8b5cf6)"
+        "name": "GitHub colors: purple (#6e5494), dark gray (#24292e), and bright purple (#8b5cf6)",
     },
     "ionos": {
         "primary": "#003D7A",
         "secondary": "#FF6600",
         "accent": "#0096D6",
-        "name": "IONOS colors: blue (#003D7A), orange (#FF6600), and light blue (#0096D6)"
+        "name": "IONOS colors: blue (#003D7A), orange (#FF6600), and light blue (#0096D6)",
     },
     "kubernetes": {
         "primary": "#326CE5",
         "secondary": "#00D3E0",
         "accent": "#7AB8FF",
-        "name": "Kubernetes colors: blue (#326CE5), cyan (#00D3E0), and light blue (#7AB8FF)"
+        "name": "Kubernetes colors: blue (#326CE5), cyan (#00D3E0), and light blue (#7AB8FF)",
     },
     "oci": {
         "primary": "#F80000",
         "secondary": "#312D2A",
         "accent": "#C74634",
-        "name": "Oracle colors: red (#F80000), charcoal (#312D2A), and burnt orange (#C74634)"
+        "name": "Oracle colors: red (#F80000), charcoal (#312D2A), and burnt orange (#C74634)",
     },
     "sapbtp": {
         "primary": "#0070AD",
         "secondary": "#F0AB00",
         "accent": "#0078D4",
-        "name": "SAP colors: blue (#0070AD), gold (#F0AB00), and light blue (#0078D4)"
+        "name": "SAP colors: blue (#0070AD), gold (#F0AB00), and light blue (#0078D4)",
     },
     "stackit": {
-        "primary": "#00A859",
-        "secondary": "#007A3D",
-        "accent": "#7FBA00",
-        "name": "STACKIT colors: green (#00A859), dark green (#007A3D), and lime (#7FBA00)"
-    }
+        "primary": "#01C3CD",
+        "secondary": "#091724",
+        "accent": "#FFCD00",
+        "name": "STACKIT colors: cyan (#01C3CD), deep navy (#091724), and vibrant yellow (#FFCD00)",
+    },
 }
-
 
 
 def parse_readme_frontmatter(readme_path):
     """Extract YAML frontmatter from README.md"""
-    with open(readme_path, 'r', encoding='utf-8') as f:
+    with open(readme_path, "r", encoding="utf-8") as f:
         content = f.read()
 
-    if not content.startswith('---'):
+    if not content.startswith("---"):
         return None
 
     # Extract frontmatter between --- delimiters
-    parts = content.split('---', 2)
+    parts = content.split("---", 2)
     if len(parts) < 3:
         return None
 
@@ -103,7 +102,7 @@ def parse_readme_frontmatter(readme_path):
 
 def get_platform_from_frontmatter(frontmatter):
     """Get the primary platform from supportedPlatforms list"""
-    platforms = frontmatter.get('supportedPlatforms', [])
+    platforms = frontmatter.get("supportedPlatforms", [])
     if not platforms:
         return None
     return platforms[0]  # Use first platform
@@ -120,7 +119,7 @@ def generate_icon_prompt(name, platform, description):
         color_scheme = platform_colors["name"]
 
     # Clean up description
-    clean_description = description.strip().replace('\n', ' ')
+    clean_description = description.strip().replace("\n", " ")
 
     # Generate AI prompt
     ai_prompt = f"""Create a professional flat design icon for the meshcloud Building Block ecosystem.
@@ -170,46 +169,47 @@ g) Set Compression level to 9 → Export
 
 **Target specs:** 800x800px PNG with transparent background, under 100KB"""
 
-    return {
-        'ai_prompt': ai_prompt,
-        'post_processing': post_processing
-    }
+    return {"ai_prompt": ai_prompt, "post_processing": post_processing}
+
 
 def find_missing_logos(modules_dir):
     """Find all buildingblock directories missing logo.png"""
     missing = []
 
     for root, dirs, files in os.walk(modules_dir):
-        if 'buildingblock' in root:
+        if "buildingblock" in root:
             buildingblock_path = Path(root)
-            readme_path = buildingblock_path / 'README.md'
-            logo_path = buildingblock_path / 'logo.png'
+            readme_path = buildingblock_path / "README.md"
+            logo_path = buildingblock_path / "logo.png"
 
             if readme_path.exists() and not logo_path.exists():
                 frontmatter = parse_readme_frontmatter(readme_path)
                 if frontmatter:
                     platform = get_platform_from_frontmatter(frontmatter)
-                    name = frontmatter.get('name', 'Unknown')
-                    description = frontmatter.get('description', '')
+                    name = frontmatter.get("name", "Unknown")
+                    description = frontmatter.get("description", "")
 
                     # Get relative path from modules directory
                     rel_path = buildingblock_path.relative_to(modules_dir)
 
-                    missing.append({
-                        'path': str(rel_path),
-                        'name': name,
-                        'platform': platform,
-                        'description': description,
-                        'readme_path': str(readme_path),
-                        'logo_path': str(logo_path)
-                    })
+                    missing.append(
+                        {
+                            "path": str(rel_path),
+                            "name": name,
+                            "platform": platform,
+                            "description": description,
+                            "readme_path": str(readme_path),
+                            "logo_path": str(logo_path),
+                        }
+                    )
 
     return missing
+
 
 def main():
     # Get modules directory
     repo_root = Path(__file__).parent.parent.parent
-    modules_dir = repo_root / 'modules'
+    modules_dir = repo_root / "modules"
 
     if not modules_dir.exists():
         print(f"ERROR: Modules directory not found: {modules_dir}", file=sys.stderr)
@@ -222,22 +222,23 @@ def main():
     results = []
     for item in missing_logos:
         prompt_data = generate_icon_prompt(
-            item['name'],
-            item['platform'] or 'generic',
-            item['description']
+            item["name"], item["platform"] or "generic", item["description"]
         )
 
-        results.append({
-            'name': item['name'],
-            'platform': item['platform'],
-            'path': item['path'],
-            'logo_path': item['logo_path'],
-            'ai_prompt': prompt_data['ai_prompt'],
-            'post_processing': prompt_data['post_processing']
-        })
+        results.append(
+            {
+                "name": item["name"],
+                "platform": item["platform"],
+                "path": item["path"],
+                "logo_path": item["logo_path"],
+                "ai_prompt": prompt_data["ai_prompt"],
+                "post_processing": prompt_data["post_processing"],
+            }
+        )
 
     # Output as JSON for GitHub Action to consume
     print(json.dumps(results, indent=2))
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     main()
