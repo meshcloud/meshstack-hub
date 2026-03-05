@@ -25,17 +25,6 @@ locals {
   }
 }
 
-# Get relevant secrets from Azure KeyVault
-data "azurerm_key_vault" "devops" {
-  name                = var.key_vault_name
-  resource_group_name = var.resource_group_name
-}
-
-data "azurerm_key_vault_secret" "azure_devops_pat" {
-  name         = var.pat_secret_name
-  key_vault_id = data.azurerm_key_vault.devops.id
-}
-
 # Create the Azure DevOps project
 resource "azuredevops_project" "main" {
   name               = var.project_name
