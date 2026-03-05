@@ -15,6 +15,6 @@ output "amount" {
 
 output "summary" {
   value = <<EOT
-- **Approval status**: ${var.approval ? "The payment method request was approved." : "The payment method request was rejected."}
+- **Approval status**: ${var.approval ? "The payment method request was approved." : "The payment method request was **rejected**."}
 EOT
 }
