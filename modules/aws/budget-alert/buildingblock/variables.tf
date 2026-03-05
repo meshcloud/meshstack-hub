@@ -33,10 +33,10 @@ variable "account_id" {
   type        = string
 }
 
-variable "assume_role_name" {
+/*variable "assume_role_name" {
   type        = string
   description = "The name of the role to assume in target account identified by account_id"
-}
+}*/
 
 variable "aws_partition" {
   type        = string
