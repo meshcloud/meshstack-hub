@@ -3,27 +3,27 @@
 # Users are provided with their roles already assigned
 
 # Group users by their roles for easier management
-locals {
-  readers = [
-    for user in var.users : user.email
-    if contains(user.roles, "reader") || contains(user.roles, "Workspace Member")
-  ]
+# locals {
+#   readers = [
+#     for user in var.users : user.email
+#     if contains(user.roles, "reader") || contains(user.roles, "Workspace Member")
+#   ]
 
-  contributors = [
-    for user in var.users : user.email
-    if contains(user.roles, "user") || contains(user.roles, "Workspace Manager")
-  ]
+#   contributors = [
+#     for user in var.users : user.email
+#     if contains(user.roles, "user") || contains(user.roles, "Workspace Manager")
+#   ]
 
-  administrators = [
-    for user in var.users : user.email
-    if contains(user.roles, "admin") || contains(user.roles, "Workspace Owner")
+#   administrators = [
+#     for user in var.users : user.email
+#     if contains(user.roles, "admin") || contains(user.roles, "Workspace Owner")
 
-  ]
-  # Create a map of email to user descriptor for easy lookup
-  user_descriptors = {
-    for user in data.azuredevops_users.all_users.users : user.principal_name => user.descriptor
-  }
-}
+#   ]
+#   # Create a map of email to user descriptor for easy lookup
+#   user_descriptors = {
+#     for user in data.azuredevops_users.all_users.users : user.principal_name => user.descriptor
+#   }
+# }
 
 # Create the Azure DevOps project
 resource "azuredevops_project" "main" {
@@ -45,56 +45,56 @@ resource "azuredevops_project" "main" {
 }
 
 # Data source to get built-in project groups
-data "azuredevops_group" "project_readers" {
-  project_id = azuredevops_project.main.id
-  name       = "Readers"
-}
+# data "azuredevops_group" "project_readers" {
+#   project_id = azuredevops_project.main.id
+#   name       = "Readers"
+# }
 
-data "azuredevops_group" "project_contributors" {
-  project_id = azuredevops_project.main.id
-  name       = "Contributors"
-}
+# data "azuredevops_group" "project_contributors" {
+#   project_id = azuredevops_project.main.id
+#   name       = "Contributors"
+# }
 
-data "azuredevops_group" "project_administrators" {
-  project_id = azuredevops_project.main.id
-  name       = "Project Administrators"
-}
+# data "azuredevops_group" "project_administrators" {
+#   project_id = azuredevops_project.main.id
+#   name       = "Project Administrators"
+# }
 
 
 # Get user descriptors for existing users
-data "azuredevops_users" "all_users" {
-  # This will get all users in the organization
-}
+# data "azuredevops_users" "all_users" {
+#   # This will get all users in the organization
+# }
 
 
 # Add users to project groups based on their roles
-resource "azuredevops_group_membership" "readers" {
-  count = length(local.readers) > 0 ? 1 : 0
+# resource "azuredevops_group_membership" "readers" {
+#   count = length(local.readers) > 0 ? 1 : 0
 
-  group = data.azuredevops_group.project_readers.descriptor
-  members = [
-    for email in local.readers : local.user_descriptors[email]
-  ]
-  mode = "add"
-}
+#   group = data.azuredevops_group.project_readers.descriptor
+#   members = [
+#     for email in local.readers : local.user_descriptors[email]
+#   ]
+#   mode = "add"
+# }
 
-resource "azuredevops_group_membership" "contributors" {
-  count = length(local.contributors) > 0 ? 1 : 0
+# resource "azuredevops_group_membership" "contributors" {
+#   count = length(local.contributors) > 0 ? 1 : 0
 
-  group = data.azuredevops_group.project_contributors.descriptor
-  members = [
-    for email in local.contributors : local.user_descriptors[email]
-  ]
-  mode = "add"
-}
+#   group = data.azuredevops_group.project_contributors.descriptor
+#   members = [
+#     for email in local.contributors : local.user_descriptors[email]
+#   ]
+#   mode = "add"
+# }
 
-resource "azuredevops_group_membership" "administrators" {
-  count = length(local.administrators) > 0 ? 1 : 0
+# resource "azuredevops_group_membership" "administrators" {
+#   count = length(local.administrators) > 0 ? 1 : 0
 
-  group = data.azuredevops_group.project_administrators.descriptor
-  members = [
-    for email in local.administrators : local.user_descriptors[email]
-  ]
-  mode = "add"
-}
+#   group = data.azuredevops_group.project_administrators.descriptor
+#   members = [
+#     for email in local.administrators : local.user_descriptors[email]
+#   ]
+#   mode = "add"
+# }
 
