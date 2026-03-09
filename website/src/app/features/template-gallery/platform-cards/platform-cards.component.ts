@@ -19,7 +19,13 @@ export class PlatformCardsComponent {
    * Define your custom order here. Use the property that uniquely identifies the platform (e.g., title or id).
    * Example: ['Azure', 'AWS', 'GCP']
    */
-  public customOrder: string[] = ['Microsoft Azure', 'Amazon Web Services', 'Google Cloud Platform', 'Azure Kubernetes Service', 'STACKIT']; // <-- customize as needed
+  public customOrder: string[] = [
+    'Microsoft Azure',
+    'Amazon Web Services',
+    'Google Cloud Platform',
+    'Azure Kubernetes Service',
+    'STACKIT',
+    'STACKIT Kubernetes Enginge',]; // <-- customize as needed
 
   /**
    * Returns the cards sorted by customOrder, with others following in original order.

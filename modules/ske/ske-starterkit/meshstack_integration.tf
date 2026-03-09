@@ -55,7 +55,7 @@ variable "project_tags_yaml" {
 
 variable "icon" {
   type    = string
-  default = "https://raw.githubusercontent.com/meshcloud/meshstack-hub/main/modules/stackit/ske-starterkit/buildingblock/logo.png"
+  default = "https://raw.githubusercontent.com/meshcloud/meshstack-hub/main/modules/ske/ske-starterkit/buildingblock/logo.png"
 }
 
 resource "meshstack_building_block_definition" "ske_starterkit" {
@@ -117,7 +117,7 @@ EOT
         terraform_version              = "1.9.0"
         async                          = false
         ref_name                       = var.meshstack_hub_git_ref
-        repository_path                = "modules/stackit/ske-starterkit/buildingblock"
+        repository_path                = "modules/ske/ske-starterkit/buildingblock"
         use_mesh_http_backend_fallback = true
       }
     }
