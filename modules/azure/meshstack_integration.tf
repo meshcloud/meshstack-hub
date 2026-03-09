@@ -48,7 +48,7 @@ locals {
   # meshStack workspace that will manage the platform
   meshstack_platform_workspace = "platform-azure"
   meshstack_platform_name      = "azure"
-  meshstack_location_name      = "azure"
+  meshstack_location_name      = "global"
 }
 
 # For workload identity federation config
@@ -121,19 +121,6 @@ module "azure_meshplatform" {
   }
 }
 
-# Use a dedicated location for this platform
-resource "meshstack_location" "azure" {
-  metadata = {
-    name               = local.meshstack_location_name
-    owned_by_workspace = local.meshstack_platform_workspace
-  }
-
-  spec = {
-    display_name = "Azure"
-    description  = "Microsoft Azure"
-  }
-}
-
 # Configure meshStack platform
 resource "meshstack_platform" "azure" {
   metadata = {
@@ -146,7 +133,9 @@ resource "meshstack_platform" "azure" {
     display_name = "Azure Subscription"
     endpoint     = "https://portal.azure.com"
 
-    location_ref = meshstack_location.azure.ref
+    location_ref = {
+      name = local.meshstack_location_name
+    }
 
     # To make this platform visible and accessible to all users, you must request publishing
     # it through the meshStack panel.
