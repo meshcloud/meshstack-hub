@@ -40,14 +40,22 @@ modules/<cloud-provider>/<service-name>/
 
 ## `meshstack_integration.tf` Conventions
 
-These files are **examples** showing how to register a module in a meshStack instance.
-They are starting points to be adapted, not production configs.
+These files are examples showing how to integrate building block and platform modules with a meshStack instance.
+They are starting points that should cover the simplest use case.
+A secondary purpose of these files is to serve as a ready-to-use Terraform module root that IaC runtimes can source directly.
 
-### Shared variable conventions
+- Must use variables for required user inputs.
+- Must include `required_providers`.
+- Never include `provider` configuration.
+- Reference modules using Git URLs and ref names. Use interpolation in module source, it's supported by OpenTofu.
 
-All `meshstack_integration.tf` files must use a consistent set of `variable` blocks so that
-IaC runtimes (LCF/ICF) can wire them together uniformly. Use structured `object({})` types to
-group related variables:
+### Shared Variable Conventions
+
+The following variables must appear in every `meshstack_integration.tf`.
+
+To source modules from the hub, include a hub variable which determines the git reference to use.
+You may extend `variable "hub"` with additional fields as needed (e.g. `base_url`), but `git_ref`
+is always required.
 
 ```hcl
 # Shared Hub reference — always include this variable
@@ -60,71 +68,36 @@ variable "hub" {
   }
   description = "Hub release reference. Set git_ref to a tag (e.g. 'v1.2.3') or branch for the meshstack-hub repo."
 }
+```
 
+Integrating with meshStack requires context, like a workspace where the resource will be managed.
+
+```hcl
 # Shared meshStack context — always include this variable
 variable "meshstack" {
   type = object({
     owning_workspace_identifier = string
   })
-  description = "Shared meshStack context passed down from the IaC runtime."
 }
 ```
 
-Use these variables in the implementation block:
+Use these variables in the implementation block of building block definitions.
 
 ```hcl
-implementation = {
-  terraform = {
-    repository_url  = "https://github.com/meshcloud/meshstack-hub.git"
-    repository_path = "modules/<provider>/<service>/buildingblock"
-    ref_name        = var.hub.git_ref   # always use var.hub.git_ref, never hardcode "main"
-  }
-}
-
 resource "meshstack_building_block_definition" "this" {
   metadata = {
     owned_by_workspace = var.meshstack.owning_workspace_identifier
   }
-  ...
-}
-```
-
-You may extend `variable "hub"` with additional fields as needed (e.g. `base_url`), but `git_ref`
-is always required.
-
-### Backplane module reference
-
-Always reference the backplane with a **relative path**:
-
-```hcl
-module "backplane" {
-  source = "./backplane"
+  # ... other required fields ...
+    implementation = {
+      terraform = {
+        repository_url  = "https://github.com/meshcloud/meshstack-hub.git"
+        repository_path = "modules/<provider>/<service>/buildingblock"
+        ref_name        = var.hub.git_ref   # always use var.hub.git_ref, never hardcode "main"
+      }
+    }
   # ...
 }
-```
-
-### ❌ Avoid these patterns
-
-```hcl
-# ❌ locals instead of variables — makes values non-configurable by runtimes
-locals {
-  owning_workspace_identifier = "my-workspace"
-  github_org                  = "my-org"
-}
-
-# ❌ provider blocks inside mesh_integration.tf — the Hub UI renders these
-provider "meshstack" { ... }
-
-# ❌ absolute GitHub source URL in module block — use relative path instead
-module "backplane" {
-  source = "github.com/meshcloud/meshstack-hub//modules/aws/s3_bucket/backplane?ref=main"
-}
-
-# ❌ standalone meshstack_hub_git_ref variable — use variable "hub" { type = object({git_ref=string}) } instead
-variable "meshstack_hub_git_ref" { ... }
-
-# ❌ hardcoded ref — always use var.hub.git_ref
-ref_name = "main"
 ```
 
 ---
@@ -134,6 +107,7 @@ ref_name = "main"
 **AWS:** IAM users + CloudFormation StackSets for cross-account roles; assume role for target account access.
 
 **Azure:**
+
 - Custom role definitions scoped to subscription or management group
 - Optional service principal creation with Workload Identity Federation (WIF); falls back to app password
 - Two-tier networking roles: `buildingblock_deploy` (main) and `buildingblock_deploy_hub` (VNet peering, ACR, Key Vault)
@@ -157,12 +131,13 @@ ref_name = "main"
 ---
 name: <Human-readable name>
 supportedPlatforms:
-  - <platform-id>   # e.g. aws, azure, stackit
+  - <platform-id> # e.g. aws, azure, stackit
 description: One-sentence description of what the module provisions.
 ---
 ```
 
 **`buildingblock/APP_TEAM_README.md`** — user-facing; must include:
+
 - What the building block does and when to use it
 - Usage examples
 - Shared responsibility matrix (platform team vs. application team)
@@ -173,6 +148,7 @@ description: One-sentence description of what the module provisions.
 ## Testing
 
 Test files (`.tftest.hcl`) must cover:
+
 - Positive scenarios (valid configurations)
 - Negative scenarios (invalid inputs / validation rules)
 - Naming collision prevention
@@ -217,14 +193,12 @@ Do **not** commit these relative paths; switch back to the Hub GitHub URL before
 ## Checklist for New Modules
 
 - [ ] `backplane/` and `buildingblock/` with all required files
+- [ ] `meshstack_integration.tf` present at the module root
 - [ ] Provider versions pinned with `~>`
 - [ ] Variables in `snake_case`
 - [ ] `buildingblock/README.md` with YAML front-matter
 - [ ] `buildingblock/APP_TEAM_README.md` with shared responsibility matrix
-- [ ] `meshstack_integration.tf` uses `variable "hub" { type = object({git_ref = string}) }` and `variable "meshstack" { type = object({owning_workspace_identifier = string}) }`
-- [ ] `meshstack_integration.tf` uses relative `./backplane` source (no absolute GitHub URL)
 - [ ] `ref_name` uses `var.hub.git_ref` — no hardcoded `"main"`
-- [ ] No `provider` blocks in `meshstack_integration.tf`
 - [ ] Test file covering positive, negative, and naming collision scenarios
 - [ ] `logo.png` included in `buildingblock/`
 - [ ] No trailing whitespace
