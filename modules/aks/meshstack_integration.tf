@@ -1,15 +1,41 @@
 # Change these values according to your AKS and meshStack setup.
-locals {
-  # Existing AKS cluster config.
-  aks_base_url        = "https://my-cluster.abc.europe.azmk8s.io"
-  aks_subscription_id = "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
-  aks_cluster_name    = "my-cluster"
-  aks_resource_group  = "my-resource-group"
 
-  # meshStack workspace that will manage the platform
-  aks_platform_workspace  = "platform-aks"
-  aks_platform_identifier = "aks"
-  aks_location_identifier = "global"
+# Existing AKS cluster config.
+variable "aks_base_url" {
+  type        = string
+  description = "Base URL of the AKS cluster API server, e.g. `https://my-cluster.abc.europe.azmk8s.io`."
+}
+
+variable "aks_subscription_id" {
+  type        = string
+  description = "Azure subscription ID containing the AKS cluster."
+}
+
+variable "aks_cluster_name" {
+  type        = string
+  description = "Name of the AKS cluster."
+}
+
+variable "aks_resource_group" {
+  type        = string
+  description = "Resource group containing the AKS cluster."
+}
+
+# meshStack workspace that will manage the platform
+variable "aks_platform_workspace" {
+  type        = string
+  description = "meshStack workspace that will manage the AKS platform."
+}
+
+variable "aks_platform_identifier" {
+  type        = string
+  description = "meshStack platform identifier for AKS."
+}
+
+variable "aks_location_identifier" {
+  type        = string
+  description = "meshStack location identifier for AKS."
+  default     = "global"
 }
 
 module "aks_meshplatform" {
@@ -17,7 +43,7 @@ module "aks_meshplatform" {
   version = "~> 0.2.0"
 
   namespace = "meshcloud"
-  scope     = local.aks_subscription_id
+  scope     = var.aks_subscription_id
 
   replicator_enabled     = true
   service_principal_name = "replicator-service-principal"
@@ -33,17 +59,17 @@ module "aks_meshplatform" {
 
 resource "meshstack_platform" "aks" {
   metadata = {
-    name               = local.aks_platform_identifier
-    owned_by_workspace = local.aks_platform_workspace
+    name               = var.aks_platform_identifier
+    owned_by_workspace = var.aks_platform_workspace
   }
 
   spec = {
     description  = "Azure Kubernetes Service (AKS). Create a k8s namespace in our AKS cluster."
     display_name = "AKS Namespace"
-    endpoint     = local.aks_base_url
+    endpoint     = var.aks_base_url
 
     location_ref = {
-      name = local.aks_location_identifier
+      name = var.aks_location_identifier
     }
 
     # This platform is available to all users
@@ -54,7 +80,7 @@ resource "meshstack_platform" "aks" {
 
     config = {
       aks = {
-        base_url               = local.aks_base_url
+        base_url               = var.aks_base_url
         disable_ssl_validation = true # Usually the case for Kubernetes clusters
 
         replication = {
@@ -83,9 +109,9 @@ resource "meshstack_platform" "aks" {
           user_lookup_strategy       = "UserByMailLookupStrategy"
           send_azure_invitation_mail = false
 
-          aks_subscription_id = local.aks_subscription_id
-          aks_cluster_name    = local.aks_cluster_name
-          aks_resource_group  = local.aks_resource_group
+          aks_subscription_id = var.aks_subscription_id
+          aks_cluster_name    = var.aks_cluster_name
+          aks_resource_group  = var.aks_resource_group
 
         }
 
@@ -106,8 +132,8 @@ resource "meshstack_platform" "aks" {
 
 resource "meshstack_landingzone" "aks_default" {
   metadata = {
-    name               = "${local.aks_platform_identifier}-default"
-    owned_by_workspace = local.aks_platform_workspace
+    name               = "${var.aks_platform_identifier}-default"
+    owned_by_workspace = var.aks_platform_workspace
   }
 
   spec = {
@@ -179,7 +205,7 @@ provider "meshstack" {
 # Configure required providers
 provider "azurerm" {
   features {}
-  subscription_id = local.aks_subscription_id
+  subscription_id = var.aks_subscription_id
 }
 
 provider "kubernetes" {

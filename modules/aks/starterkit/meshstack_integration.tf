@@ -1,37 +1,78 @@
-locals {
-  owning_workspace_identifier                      = "my-workspace"
-  full_platform_identifier                         = "aks.k8s"
-  github_actions_connector_definition_version_uuid = "61f8de01-551d-4f1f-b9c4-ba94323910cd"
-  github_org                                       = "my-org"
-  github_repo_definition_uuid                      = "11240216-2b3c-42db-8e15-c7b595cf207a"
-  github_repo_definition_version_uuid              = "24654b9d-aedd-4dd3-94b0-0bc3bef52cb7"
-  landing_zone_dev_identifier                      = "aks-dev"
-  landing_zone_prod_identifier                     = "aks-prod"
-  tags = {
-  }
-  notification_subscribers = [
-  ]
-  project_tags_yaml = trimspace(<<-YAML
-dev:
-  environment:
-    - "dev"
-prod:
-  environment:
-    - "prod"
-YAML
-  )
+variable "owning_workspace_identifier" {
+  type        = string
+  description = "meshStack workspace that owns the building block definition."
+}
+
+variable "full_platform_identifier" {
+  type        = string
+  description = "Full platform identifier for AKS (e.g. 'aks.k8s')."
+}
+
+variable "github_actions_connector_definition_version_uuid" {
+  type        = string
+  description = "UUID of the GitHub Actions connector building block definition version."
+}
+
+variable "github_org" {
+  type        = string
+  description = "GitHub organization under which repositories will be created."
+}
+
+variable "github_repo_definition_uuid" {
+  type        = string
+  description = "UUID of the GitHub repository building block definition."
+}
+
+variable "github_repo_definition_version_uuid" {
+  type        = string
+  description = "UUID of the GitHub repository building block definition version."
+}
+
+variable "landing_zone_dev_identifier" {
+  type        = string
+  description = "Identifier of the AKS dev landing zone."
+}
+
+variable "landing_zone_prod_identifier" {
+  type        = string
+  description = "Identifier of the AKS prod landing zone."
+}
+
+variable "tags" {
+  type        = map(list(string))
+  description = "Tags to apply to the building block definition."
+  default     = {}
+}
+
+variable "notification_subscribers" {
+  type        = list(string)
+  description = "List of email addresses to notify on building block events."
+  default     = []
+}
+
+variable "project_tags_yaml" {
+  type        = string
+  description = "YAML string defining project tags for dev and prod environments."
+  default     = <<-YAML
+    dev:
+      environment:
+        - "dev"
+    prod:
+      environment:
+        - "prod"
+    YAML
 }
 
 resource "meshstack_building_block_definition" "aks_starterkit" {
   metadata = {
-    owned_by_workspace = local.owning_workspace_identifier
-    tags               = local.tags
+    owned_by_workspace = var.owning_workspace_identifier
+    tags               = var.tags
   }
 
   spec = {
     description              = "The AKS Starterkit provides application teams with a pre-configured Kubernetes environment following Likvid Bank's best practices. It includes a Git repository, a CI/CD pipeline using GitHub Actions, and a secure container registry integration."
     display_name             = "AKS Starterkit"
-    notification_subscribers = local.notification_subscribers
+    notification_subscribers = var.notification_subscribers
     readme = chomp(<<EOT
 ## What is it?
 
@@ -48,7 +89,7 @@ This building block is ideal for teams that:
 ## Usage Examples
 
 1.  **Deploying a microservice**: A developer can use this building block to create a Git repository and CI/CD pipeline for a new microservice. The pipeline will build and scan container images before deploying them into separate Kubernetes namespaces for development and production.
-2.  **Setting up a new project**: A new project team can quickly get started with an opinionated AKS setup that ensures compliance with Likvid Bank’s security and operational standards.
+2.  **Setting up a new project**: A new project team can quickly get started with an opinionated AKS setup that ensures compliance with Likvid Bank's security and operational standards.
 
 ## Resources Created
 
@@ -104,7 +145,7 @@ EOT
         updateable_by_consumer = false
       }
       "full_platform_identifier" = {
-        argument               = jsonencode(local.full_platform_identifier)
+        argument               = jsonencode(var.full_platform_identifier)
         assignment_type        = "STATIC"
         display_name           = "Full Platform Identifier"
         is_environment         = false
@@ -112,7 +153,7 @@ EOT
         updateable_by_consumer = false
       }
       "github_actions_connector_definition_version_uuid" = {
-        argument               = jsonencode(local.github_actions_connector_definition_version_uuid)
+        argument               = jsonencode(var.github_actions_connector_definition_version_uuid)
         assignment_type        = "STATIC"
         display_name           = "Github Actions Connector Definition Version Uuid"
         is_environment         = false
@@ -120,7 +161,7 @@ EOT
         updateable_by_consumer = false
       }
       "github_org" = {
-        argument               = jsonencode(local.github_org)
+        argument               = jsonencode(var.github_org)
         assignment_type        = "STATIC"
         display_name           = "Github Org"
         is_environment         = false
@@ -128,7 +169,7 @@ EOT
         updateable_by_consumer = false
       }
       "github_repo_definition_uuid" = {
-        argument               = jsonencode(local.github_repo_definition_uuid)
+        argument               = jsonencode(var.github_repo_definition_uuid)
         assignment_type        = "STATIC"
         display_name           = "Github Repo Definition Uuid"
         is_environment         = false
@@ -136,7 +177,7 @@ EOT
         updateable_by_consumer = false
       }
       "github_repo_definition_version_uuid" = {
-        argument               = jsonencode(local.github_repo_definition_version_uuid)
+        argument               = jsonencode(var.github_repo_definition_version_uuid)
         assignment_type        = "STATIC"
         display_name           = "Github Repo Definition Version Uuid"
         is_environment         = false
@@ -152,7 +193,7 @@ EOT
         updateable_by_consumer = false
       }
       "landing_zone_dev_identifier" = {
-        argument               = jsonencode(local.landing_zone_dev_identifier)
+        argument               = jsonencode(var.landing_zone_dev_identifier)
         assignment_type        = "STATIC"
         display_name           = "Landing Zone Dev Identifier"
         is_environment         = false
@@ -160,7 +201,7 @@ EOT
         updateable_by_consumer = false
       }
       "landing_zone_prod_identifier" = {
-        argument               = jsonencode(local.landing_zone_prod_identifier)
+        argument               = jsonencode(var.landing_zone_prod_identifier)
         assignment_type        = "STATIC"
         display_name           = "Landing Zone Prod Identifier"
         is_environment         = false
@@ -176,7 +217,7 @@ EOT
         updateable_by_consumer = false
       }
       "project_tags_yaml" = {
-        argument               = jsonencode(local.project_tags_yaml)
+        argument               = jsonencode(trimspace(var.project_tags_yaml))
         assignment_type        = "STATIC"
         description            = ""
         display_name           = "Project Tags"

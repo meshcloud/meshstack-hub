@@ -1,26 +1,39 @@
-locals {
-  env                  = "demo"
-  workspace_identifier = "m25-platform"
-  region               = "eu-central-1"
-  issuer               = "https://container.googleapis.com/v1/projects/meshcloud-meshcloud--bc0/locations/europe-west1/clusters/meshstacks-ha"
-  audience             = "aws-workload-identity-provider:meshcloud-demo"
+variable "env" {
+  type        = string
+  description = "Environment label applied as a building block tag."
+  default     = "demo"
 }
+
+variable "workspace_identifier" {
+  type        = string
+  description = "meshStack workspace that owns the building block definition."
+  default     = "m25-platform"
+}
+
+variable "region" {
+  type        = string
+  description = "AWS region where S3 buckets will be created."
+  default     = "eu-central-1"
+}
+
+# Retrieve the workload identity federation configuration from meshStack.
+data "meshstack_integrations" "integrations" {}
 
 module "backplane" {
   source = "github.com/meshcloud/meshstack-hub//modules/aws/s3_bucket/backplane?ref=main"
 
   workload_identity_federation = {
-    issuer   = local.issuer
-    audience = local.audience
-    subjects = ["system:serviceaccount:meshcloud-demo:workspace.${local.workspace_identifier}.buildingblockdefinition.${meshstack_building_block_definition.this.metadata.uuid}"]
+    issuer   = data.meshstack_integrations.integrations.workload_identity_federation.replicator.issuer
+    audience = data.meshstack_integrations.integrations.workload_identity_federation.replicator.aws.audience
+    subjects = ["${trimsuffix(data.meshstack_integrations.integrations.workload_identity_federation.replicator.subject, ":replicator")}:workspace.${var.workspace_identifier}.buildingblockdefinition.${meshstack_building_block_definition.this.metadata.uuid}"]
   }
 }
 
 resource "meshstack_building_block_definition" "this" {
   metadata = {
-    owned_by_workspace = local.workspace_identifier
+    owned_by_workspace = var.workspace_identifier
     tags = {
-      "BBEnvironment" = [local.env]
+      "BBEnvironment" = [var.env]
     }
   }
 
@@ -70,7 +83,7 @@ resource "meshstack_building_block_definition" "this" {
         assignment_type = "STATIC",
         display_name    = "AWS Region"
         description     = "The AWS region where the S3 bucket will be created"
-        argument        = jsonencode(local.region)
+        argument        = jsonencode(var.region)
       },
       bucket_name = {
         type            = "STRING"
@@ -146,7 +159,7 @@ provider "meshstack" {
 
 
 provider "aws" {
-  region = local.region
+  region = var.region
   # Ensure to select the right profile from you aws CLI
   # using the env variable AWS_PROFILE
 }

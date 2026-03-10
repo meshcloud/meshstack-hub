@@ -1,7 +1,13 @@
-locals {
-  workspace_identifier = "<WORKSPACE_IDENTIFIER>"
-  gcp_project          = "<GCP_PROJECT_ID>"
+variable "workspace_identifier" {
+  type        = string
+  description = "meshStack workspace where the building block definition will be managed."
 }
+
+variable "gcp_project" {
+  type        = string
+  description = "GCP project where storage buckets will be created."
+}
+
 
 terraform {
   required_providers {
@@ -31,7 +37,7 @@ data "meshstack_integrations" "integrations" {}
 module "backplane" {
   source = "github.com/meshcloud/meshstack-hub//modules/gcp/storage-bucket/backplane?ref=main"
 
-  project_id = local.gcp_project
+  project_id = var.gcp_project
   workload_identity_federation = {
     workload_identity_pool_identifier = "meshstack-building-block-pool"
     audience                          = data.meshstack_integrations.integrations.workload_identity_federation.replicator.gcp.audience
@@ -43,7 +49,7 @@ module "backplane" {
       # (The BBD UUID is only available after resources are created)
       # The subject prefix is derived from the replicator subject, which shares the same
       # "system:serviceaccount:<meshstack_identifier>" namespace prefix as building block runners.
-      "${trimsuffix(data.meshstack_integrations.integrations.workload_identity_federation.replicator.subject, ":replicator")}:workspace.${local.workspace_identifier}.buildingblockdefinition"
+      "${trimsuffix(data.meshstack_integrations.integrations.workload_identity_federation.replicator.subject, ":replicator")}:workspace.${var.workspace_identifier}.buildingblockdefinition"
     ]
     subject_token_file_path = "/var/run/secrets/workload-identity/gcp/token"
   }
@@ -51,7 +57,7 @@ module "backplane" {
 
 resource "meshstack_building_block_definition" "gcp_storage_bucket" {
   metadata = {
-    owned_by_workspace = local.workspace_identifier
+    owned_by_workspace = var.workspace_identifier
   }
 
   spec = {
@@ -111,7 +117,7 @@ EOT
         assignment_type = "STATIC"
         display_name    = "GCP Project ID",
         description     = "The ID of the GCP project where the storage bucket will be created."
-        argument        = jsonencode(local.gcp_project)
+        argument        = jsonencode(var.gcp_project)
       }
       location = {
         type            = "STRING"
