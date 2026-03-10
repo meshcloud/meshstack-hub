@@ -15,20 +15,6 @@ terraform {
   }
 }
 
-provider "meshstack" {
-  # Configure meshStack API credentials here or use environment variables.
-  # endpoint  = "https://api.my.meshstack.io"
-  # apikey    = "00000000-0000-0000-0000-000000000000"
-  # apisecret = "uFOu4OjbE4JiewPxezDuemSP3DUrCYmw"
-}
-
-provider "azurerm" {
-  features {}
-  resource_provider_registrations = "none"
-}
-
-provider "azuread" {}
-
 # Change these values according to your Azure and meshStack setup.
 locals {
   # Existing Azure management group which will be used for resources managed by meshStack
