@@ -1,6 +1,6 @@
 module github.com/meshcloud/meshstack-hub/tools/render-meshstack-integration-tf
 
-go 1.25.7
+go 1.24 // version must fit to AWS Linux 2024 Build Image Go version
 
 require github.com/hashicorp/hcl/v2 v2.24.0
 

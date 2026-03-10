@@ -5,6 +5,8 @@ frontend:
     preBuild:
       commands:
        - npm install gray-matter
+       - sudo yum install -y golang
+       - ( cd tools/render-meshstack-integration-tf; GOPATH=$PWD/.go go build . )
        - node index.ts
        - cd website
        - yarn install --frozen-lockfile
