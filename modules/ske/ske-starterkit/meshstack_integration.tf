@@ -7,8 +7,10 @@ terraform {
   }
 }
 
-variable "owned_by_workspace" {
-  type = string
+variable "meshstack" {
+  type = object({
+    owning_workspace_identifier = string
+  })
 }
 
 variable "full_platform_identifier" {
@@ -36,9 +38,14 @@ variable "notification_subscribers" {
   default = []
 }
 
-variable "meshstack_hub_git_ref" {
-  type    = string
-  default = "main"
+variable "hub" {
+  type = object({
+    git_ref = string
+  })
+  default = {
+    git_ref = "main"
+  }
+  description = "Hub release reference. Set git_ref to a tag (e.g. 'v1.2.3') or branch for the meshstack-hub repo."
 }
 
 variable "project_tags_yaml" {
@@ -53,21 +60,16 @@ variable "project_tags_yaml" {
   YAML
 }
 
-variable "icon" {
-  type    = string
-  default = "https://raw.githubusercontent.com/meshcloud/meshstack-hub/main/modules/ske/ske-starterkit/buildingblock/logo.png"
-}
-
 resource "meshstack_building_block_definition" "ske_starterkit" {
   metadata = {
-    owned_by_workspace = var.owned_by_workspace
+    owned_by_workspace = var.meshstack.owning_workspace_identifier
     tags               = var.tags
   }
 
   spec = {
     description              = "The SKE Starterkit provides application teams with a pre-configured Kubernetes environment on STACKIT SKE following best practices. It automates the creation of dev and prod projects with dedicated SKE tenants."
     display_name             = "SKE Starterkit"
-    symbol                   = var.icon
+    symbol                   = "https://raw.githubusercontent.com/meshcloud/meshstack-hub/main/modules/ske/ske-starterkit/buildingblock/logo.png"
     notification_subscribers = var.notification_subscribers
 
     readme = chomp(<<EOT
@@ -116,7 +118,7 @@ EOT
         repository_url                 = "https://github.com/meshcloud/meshstack-hub.git"
         terraform_version              = "1.9.0"
         async                          = false
-        ref_name                       = var.meshstack_hub_git_ref
+        ref_name                       = var.hub.git_ref
         repository_path                = "modules/ske/ske-starterkit/buildingblock"
         use_mesh_http_backend_fallback = true
       }
