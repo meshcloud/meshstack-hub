@@ -45,9 +45,25 @@ They are starting points that should cover the simplest use case.
 A secondary purpose of these files is to serve as a ready-to-use Terraform module root that IaC runtimes can source directly.
 
 - Must use variables for required user inputs.
-- Must include `required_providers` (place the `terraform { required_providers { ... } }` block at the **bottom** of the file — resources and variables should come first so readers see the important configuration before technical boilerplate).
+- Must include `required_providers` block at the **bottom** of the file — resources and variables should come first so readers see the important configuration before technical boilerplate).
 - Never include `provider` configuration.
 - Reference modules using Git URLs and a ref pointing to the feature branch when developing. Once merged into main, the `update-module-refs` tooling in CI pins the ref to an appropriate commit.
+
+### Required providers
+
+Every `meshstack_integration.tf` must declare the `meshcloud/meshstack` provider in a
+`required_providers` block.
+
+```hcl
+terraform {
+  required_providers {
+    meshstack = {
+      source  = "meshcloud/meshstack"
+      version = ">= 0.19.3"
+    }
+  }
+}
+```
 
 ### Shared Variable Conventions
 
@@ -67,7 +83,7 @@ variable "hub" {
   default     = {}
   description = <<-EOT
   `git_ref`: Hub release reference. Set to a tag (e.g. 'v1.2.3') or branch or commit sha of the meshstack-hub repo.
-  `bbd_draft`: If true, the building block definition version is kept in draft mode, which allows changing it (useful during development in LCF/ICF).
+  `bbd_draft`: If true, the building block definition version is kept in draft mode.
   EOT
 }
 ```
@@ -92,7 +108,9 @@ Integrating with meshStack requires context, like a workspace where the resource
 variable "meshstack" {
   type = object({
     owning_workspace_identifier = string
+    tags                         = optional(map(list(string)), {})
   })
+  description = "Shared meshStack context. Tags are optional and propagated to building block definition metadata."
 }
 ```
 
@@ -102,6 +120,7 @@ Use these variables in the implementation block of building block definitions.
 resource "meshstack_building_block_definition" "this" {
   metadata = {
     owned_by_workspace = var.meshstack.owning_workspace_identifier
+    tags               = var.meshstack.tags
   }
   # ... other required fields ...
     implementation = {
@@ -173,6 +192,9 @@ Do **not** commit these relative paths; switch back to the Hub GitHub URL before
 - [ ] Variables in `snake_case`
 - [ ] `buildingblock/README.md` with YAML front-matter
 - [ ] `buildingblock/APP_TEAM_README.md` with shared responsibility matrix
+- [ ] `meshstack_integration.tf` declares `meshcloud/meshstack` in `required_providers`
+- [ ] `meshstack_integration.tf` uses `variable "hub" { type = object({git_ref = string}) }` and `variable "meshstack" { type = object({owning_workspace_identifier = string}) }`
+- [ ] `meshstack_integration.tf` uses relative `./backplane` source (no absolute GitHub URL)
 - [ ] `ref_name` uses `var.hub.git_ref` — no hardcoded `"main"`
 - [ ] `version_spec.draft` uses `var.hub.bbd_draft`
 - [ ] `building_block_definition_version_uuid` output uses `bbd_draft ? version_latest.uuid : version_latest_release.uuid`

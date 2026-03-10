@@ -1,6 +1,6 @@
 repos:
   - repo: https://github.com/antonbabenko/pre-commit-terraform
-    rev: v1.81.0
+    rev: v1.105.0
     hooks:
       - id: terraform_docs
         args:
@@ -17,7 +17,7 @@ repos:
     hooks:
       - id: validate-modules
         name: Validate modules
-        entry: sh -c 'bash ci/validate_modules.sh'
+        entry: sh -c 'bash ci/validate_modules.sh --fix'
         language: system
         pass_filenames: true
         always_run: true
