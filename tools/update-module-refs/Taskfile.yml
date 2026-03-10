@@ -1,0 +1,22 @@
+version: '3'
+
+tasks:
+  build:
+    desc: Build the update-module-refs tool
+    cmds:
+      - go build -o update-module-refs .
+
+  lint:
+    desc: Run golangci-lint
+    cmds:
+      - golangci-lint run {{.CLI_ARGS}}
+
+  test:
+    desc: Run tests
+    cmds:
+      - go test ./... -v {{.CLI_ARGS}}
+
+  clean:
+    desc: Clean build artifacts
+    cmds:
+      - rm -f update-module-refs
