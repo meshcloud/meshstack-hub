@@ -113,9 +113,14 @@ function extractReadmeFrontMatter(platformReadme: string): { name: string; descr
 }
 
 function getTerraformSnippet(platformDir: string): string | null {
+  const tfFile = path.join(platformDir, "meshstack_integration.tf");
+  if (!fs.existsSync(tfFile)) return null;
+
   try {
-    return fs.readFileSync(path.join(platformDir, "meshstack_integration.tf"), "utf-8")
-  } catch {
+    const renderTool = path.resolve(__dirname, "tools/render-meshstack-integration-tf/render-meshstack-integration-tf");
+    return execSync(`${renderTool} ${tfFile}`, { encoding: "utf-8" });
+  } catch (error) {
+    console.error(`Error rendering terraform snippet for ${platformDir}:`, error.message);
     return null;
   }
 }
