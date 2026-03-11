@@ -1,3 +1,5 @@
+### forgejo
+
 variable "forgejo_host" {
   description = "The URL of the Forgejo instance."
   type        = string
@@ -25,5 +27,12 @@ variable "action_secret_name" {
 
 variable "action_secret_secret" {
   description = "The action secret holding the secret of the push robot accessing the container registry."
+  type        = string
+}
+
+### kubernetes
+
+variable "namespace" {
+  description = "Associated namespace in kubernetes cluster."
   type        = string
 }
