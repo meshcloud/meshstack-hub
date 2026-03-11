@@ -90,6 +90,8 @@ resource "meshstack_building_block_definition" "aks_starterkit" {
     description              = "The AKS Starterkit provides application teams with a pre-configured Kubernetes environment following Likvid Bank's best practices. It includes a Git repository, a CI/CD pipeline using GitHub Actions, and a secure container registry integration."
     display_name             = "AKS Starterkit"
     notification_subscribers = var.notification_subscribers
+    symbol                   = "https://raw.githubusercontent.com/meshcloud/meshstack-hub/main/modules/aks/starterkit/buildingblock/logo.png"
+
     readme = chomp(<<EOT
 ## What is it?
 
