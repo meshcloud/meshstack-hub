@@ -16,12 +16,16 @@ permissions:
 jobs:
   update-module-refs:
     runs-on: ubuntu-latest
+    environment: ${{ github.event_name == 'push' && 'main' || '' }}
     steps:
       - uses: actions/checkout@v6
         with:
           # Full history needed for git log to resolve commit SHAs
           fetch-depth: 0
           ref: ${{ github.event.pull_request.head.ref || github.ref_name }}
+          # On main: use SSH deploy key so the push is authenticated via the deploy key.
+          # On PRs: secret is empty, checkout falls back to GITHUB_TOKEN (push is dry-run anyway).
+          ssh-key: ${{ secrets.REPO_DEPLOY_KEY }}
 
       - uses: actions/setup-go@v6
         with:
