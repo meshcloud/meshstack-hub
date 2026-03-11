@@ -87,7 +87,7 @@ resource "meshstack_building_block_definition" "aks_starterkit" {
   }
 
   spec = {
-    description              = "The AKS Starterkit provides application teams with a pre-configured Kubernetes environment following Likvid Bank's best practices. It includes a Git repository, a CI/CD pipeline using GitHub Actions, and a secure container registry integration."
+    description              = "The AKS Starterkit provides application teams with a pre-configured Kubernetes environment following best practices. It includes a Git repository, a CI/CD pipeline using GitHub Actions, and a secure container registry integration."
     display_name             = "AKS Starterkit"
     notification_subscribers = var.notification_subscribers
     symbol                   = "https://raw.githubusercontent.com/meshcloud/meshstack-hub/main/modules/aks/starterkit/buildingblock/logo.png"
@@ -95,7 +95,7 @@ resource "meshstack_building_block_definition" "aks_starterkit" {
     readme = chomp(<<EOT
 ## What is it?
 
-The **AKS Starterkit** provides application teams with a pre-configured Kubernetes environment following Likvid Bank's best practices. It automates the creation of essential infrastructure, including a Git repository, a CI/CD pipeline using GitHub Actions, and a secure container registry integration.
+The **AKS Starterkit** provides application teams with a pre-configured Kubernetes environment following best practices. It automates the creation of essential infrastructure, including a Git repository, a CI/CD pipeline using GitHub Actions, and a secure container registry integration.
 
 ## When to use it?
 
@@ -108,7 +108,7 @@ This building block is ideal for teams that:
 ## Usage Examples
 
 1.  **Deploying a microservice**: A developer can use this building block to create a Git repository and CI/CD pipeline for a new microservice. The pipeline will build and scan container images before deploying them into separate Kubernetes namespaces for development and production.
-2.  **Setting up a new project**: A new project team can quickly get started with an opinionated AKS setup that ensures compliance with Likvid Bank’s security and operational standards.
+2.  **Setting up a new project**: A new project team can quickly get started with an opinionated AKS setup that ensures compliance with the organization's security and operational standards.
 
 ## Resources Created
 
@@ -124,8 +124,8 @@ This building block automates the creation of the following resources:
 
 ## Shared Responsibilities
 
-| Responsibility                               | Platform Team (Likvid Bank) | Application Team |
-| -------------------------------------------- | --------------------------- | ------------------ |
+| Responsibility                               | Platform Team | Application Team |
+| -------------------------------------------- | ------------- | ---------------- |
 | Provision and manage AKS cluster             | ✅                         | ❌                |
 | Create and manage Git repository             | ✅                         | ❌                |
 | Set up GitHub Actions CI/CD pipeline        | ✅                         | ❌                |
