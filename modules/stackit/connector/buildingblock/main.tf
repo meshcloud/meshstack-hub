@@ -1,53 +1,21 @@
-# harbor project
-resource "harbor_project" "harbor_project" {
-  name                        = var.harbor_project_id
-  public                      = false
-  vulnerability_scanning      = true
-  enable_content_trust        = true
-  enable_content_trust_cosign = false
-  auto_sbom_generation        = true
+### forgejo ###
+
+# pre-created repository which will have the action secrets added
+data "forgejo_repository" "this" {
+  name  = var.forgejo_repository_name
+  owner = var.forgejo_repository_owner
 }
 
-# robot account for forgejo
-resource "harbor_robot_account" "forgejo_robot" {
-  name  = "forgejo_robot-${harbor_project.harbor_project.name}"
-  level = "project"
-  permissions {
-    access {
-      action   = "pull"
-      resource = "repository"
-    }
-    access {
-      action   = "push"
-      resource = "repository"
-    }
-    kind      = "project"
-    namespace = harbor_project.harbor_project.name
-  }
+# action secret holding push robot name
+resource "forgejo_repository_action_secret" "push_robot_name" {
+  repository_id = data.forgejo_repository.this.id
+  name          = "push_robot_name"
+  data          = var.action_secret_name
 }
 
-# robot account for k8s
-resource "harbor_robot_account" "k8s_image_pull_robot" {
-  name  = "k8s_image_pull_robot-${harbor_project.harbor_project.name}"
-  level = "project"
-  permissions {
-    access {
-      action   = "pull"
-      resource = "repository"
-    }
-    kind      = "project"
-    namespace = harbor_project.harbor_project.name
-  }
-}
-
-# k8s service account for forgejo action
-module "k8s_service_account" {
-  source                 = "github.com/meshcloud/meshstack-hub//modules/kubernetes/service-account?ref=main"
-  name                   = var.sa_name
-  namespace              = var.namespace
-  cluster_role           = var.sa_cluster_role
-  cluster_ca_certificate = var.cluster_ca_certificate
-  cluster_endpoint       = var.cluster_endpoint
-  token                  = var.token
-  context                = var.context
+# action secret holding push robot secret
+resource "forgejo_repository_action_secret" "push_robot_secret" {
+  repository_id = data.forgejo_repository.this.id
+  name          = "push_robot_secret"
+  data          = var.action_secret_secret
 }
