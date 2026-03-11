@@ -1,6 +1,7 @@
 package tf
 
 import (
+	"fmt"
 	"io/fs"
 	"strings"
 
@@ -66,7 +67,7 @@ func Load(fsys fs.FS) ([]File, error) {
 
 		file, diags := hclwrite.ParseConfig(content, entry.Name(), hcl.InitialPos)
 		if diags.HasErrors() {
-			continue
+			return nil, fmt.Errorf("parsing %s: %s", entry.Name(), diags.Error())
 		}
 
 		var modules []ModuleSource

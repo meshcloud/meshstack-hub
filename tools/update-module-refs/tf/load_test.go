@@ -49,3 +49,10 @@ func TestLoad(t *testing.T) {
 		assert.NotNil(t, f.HCL, "file %q: HCL should not be nil", f.Path)
 	}
 }
+
+func TestLoadInvalidHCL(t *testing.T) {
+	fsys := os.DirFS("testdata/invalid")
+	_, err := tf.Load(fsys)
+	require.Error(t, err)
+	assert.Contains(t, err.Error(), "parsing main.tf")
+}
