@@ -10,7 +10,6 @@ resource "tls_private_key" "deploy_key" {
 resource "github_repository_environment" "main" {
   repository  = local.github_repository_name
   environment = "main"
-  wait_timer  = 10000
   deployment_branch_policy {
     protected_branches     = false
     custom_branch_policies = true
