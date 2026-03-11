@@ -11,18 +11,17 @@ terraform {
   }
 }
 
-variable "gitea_token" {
+variable "forgejo_token" {
   type      = string
   sensitive = true
 }
 
-variable "gitea_organization" {
+variable "forgejo_organization" {
   type = string
 }
 
-variable "gitea_base_url" {
-  type    = string
-  default = "https://git-service.git.onstackit.cloud"
+variable "forgejo_base_url" {
+  type = string
 }
 
 variable "owning_workspace_identifier" {
@@ -35,14 +34,14 @@ variable "meshstack_hub_git_ref" {
 }
 
 module "backplane" {
-  source = "./backplane"
+  source = "github.com/meshcloud/meshstack-hub//modules/stackit/git-repository/backplane?ref=feature/stackit-git-repository"
 
-  gitea_base_url     = var.gitea_base_url
-  gitea_token        = var.gitea_token
-  gitea_organization = var.gitea_organization
+  forgejo_base_url     = var.forgejo_base_url
+  forgejo_token        = var.forgejo_token
+  forgejo_organization = var.forgejo_organization
 }
 
-resource "meshstack_building_block_definition" "stackit_git_repo" {
+resource "meshstack_building_block_definition" "this" {
   metadata = {
     owned_by_workspace = var.owning_workspace_identifier
   }
@@ -74,32 +73,32 @@ resource "meshstack_building_block_definition" "stackit_git_repo" {
     inputs = {
       # ── Static inputs from backplane ──────────────────────────────────────
 
-      gitea_base_url = {
+      forgejo_base_url = {
         display_name    = "STACKIT Git Base URL"
         description     = "Base URL of the STACKIT Git instance"
         type            = "STRING"
         assignment_type = "STATIC"
-        argument        = jsonencode(var.gitea_base_url)
+        argument        = jsonencode(var.forgejo_base_url)
       }
 
-      gitea_token = {
+      forgejo_token = {
         display_name    = "STACKIT Git API Token"
         description     = "Personal Access Token for the STACKIT Git API"
         type            = "STRING"
         assignment_type = "STATIC"
         sensitive = {
           argument = {
-            secret_value = var.gitea_token
+            secret_value = var.forgejo_token
           }
         }
       }
 
-      gitea_organization = {
+      forgejo_organization = {
         display_name    = "STACKIT Git Organization"
         description     = "Organization under which repositories will be created"
         type            = "STRING"
         assignment_type = "STATIC"
-        argument        = jsonencode(var.gitea_organization)
+        argument        = jsonencode(var.forgejo_organization)
       }
 
       # ── User inputs ────────────────────────────────────────────────────────

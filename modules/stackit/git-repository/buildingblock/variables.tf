@@ -1,18 +1,18 @@
 # ── Backplane inputs (static, set once per building block definition) ──────────
 
-variable "gitea_base_url" {
+variable "forgejo_base_url" {
   type        = string
   description = "STACKIT Git base URL"
   default     = "https://git-service.git.onstackit.cloud"
 }
 
-variable "gitea_token" {
+variable "forgejo_token" {
   type        = string
   description = "STACKIT Git API token (from backplane)"
   sensitive   = true
 }
 
-variable "gitea_organization" {
+variable "forgejo_organization" {
   type        = string
   description = "STACKIT Git organization where the repository will be created"
 }
@@ -102,6 +102,6 @@ variable "webhook_secret" {
 
 variable "webhook_events" {
   type        = list(string)
-  description = "List of Gitea events that trigger the webhook"
+  description = "List of Forgejo events that trigger the webhook"
   default     = ["push", "create"]
 }
