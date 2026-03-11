@@ -14,6 +14,9 @@ import (
 	"github.com/meshcloud/meshstack-hub/tools/update-module-refs/tf"
 )
 
+// modulesDir is the subdirectory (relative to the repo root) that contains all modules.
+const modulesDir = "modules"
+
 func main() {
 	repoURL := flag.String("repo", "github.com/meshcloud/meshstack-hub", "repository host+path to match module sources against")
 	dryRun := flag.Bool("dry-run", false, "only print what would be updated, do not write or commit")
@@ -25,7 +28,7 @@ func main() {
 	}
 
 	fsys := os.DirFS(cwd)
-	modules, err := scanModules(fsys, *repoURL)
+	modules, err := scanModules(fsys, *repoURL, modulesDir)
 	if err != nil {
 		log.Fatalf("failed to scan modules: %v", err)
 	}
@@ -121,12 +124,15 @@ func processDirectory(cwd, dir string, files []tf.File, repoURL string, dryRun b
 	return nil
 }
 
-// scanModules walks all directories in fsys and returns only those
+// scanModules walks all directories under root in fsys and returns only those
 // containing terraform modules with sources matching repoURL.
-func scanModules(fsys fs.FS, repoURL string) (map[string][]tf.File, error) {
+// root is the subdirectory to scan (e.g. "modules"), so returned map keys are
+// root-prefixed (e.g. "modules/aws/budget/buildingblock") matching the paths
+// produced by extractModulePath.
+func scanModules(fsys fs.FS, repoURL string, root string) (map[string][]tf.File, error) {
 	result := make(map[string][]tf.File)
 
-	err := fs.WalkDir(fsys, ".", func(path string, d fs.DirEntry, err error) error {
+	err := fs.WalkDir(fsys, root, func(path string, d fs.DirEntry, err error) error {
 		if err != nil {
 			return err
 		}
