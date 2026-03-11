@@ -53,6 +53,8 @@ No modules.
 | <a name="input_name"></a> [name](#input\_name) | This name will be used for the created projects, app subdomain and GitHub repository. | `string` | n/a | yes |
 | <a name="input_project_tags_yaml"></a> [project\_tags\_yaml](#input\_project\_tags\_yaml) | YAML configuration for project tags that will be applied to dev and prod projects. Expected structure:<pre>yaml<br>dev:<br>  key1:<br>    - "value1"<br>    - "value2"<br>  key2:<br>    - "value3"<br>prod:<br>  key1:<br>    - "value4"<br>  key2:<br>    - "value5"<br>    - "value6"</pre> | `string` | `"dev: {}\nprod: {}\n"` | no |
 | <a name="input_repo_admin"></a> [repo\_admin](#input\_repo\_admin) | GitHub handle of the user who will be assigned as the repository admin. Delete building block definition input if not needed. | `string` | `null` | no |
+| <a name="input_template_owner"></a> [template\_owner](#input\_template\_owner) | GitHub owner (org or user) of the repository template to use when creating the application repository. | `string` | `"likvid-bank"` | no |
+| <a name="input_template_repo"></a> [template\_repo](#input\_template\_repo) | Name of the GitHub repository template to use when creating the application repository. | `string` | `"aks-starterkit-template"` | no |
 | <a name="input_workspace_identifier"></a> [workspace\_identifier](#input\_workspace\_identifier) | n/a | `string` | n/a | yes |
 
 ## Outputs

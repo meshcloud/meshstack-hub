@@ -1,20 +1,26 @@
-variable "tfstates_resource_manager_id" {
-  type     = string
-  nullable = false
+variable "resource_prefix" {
+  type        = string
+  default     = "bb-github-connector"
+  description = "Prefix used for all named resources created by this backplane (resource group, app registrations, ACR)."
 }
 
-variable "tfstates_resource_group_name" {
-  type     = string
-  nullable = false
+variable "aks" {
+  type = object({
+    cluster_name        = string
+    resource_group_name = string
+  })
+  description = "Reference to the existing AKS cluster this building block connects to."
 }
 
-variable "tfstates_storage_account_name" {
-  type     = string
-  nullable = false
-}
-
-variable "tfstates_storage_container_name" {
-  type     = string
-  nullable = false
+variable "acr" {
+  type = object({
+    location            = string
+    resource_group_name = optional(string)
+  })
+  description = "Configuration for the shared Azure Container Registry. resource_group_name defaults to the resource group created by this backplane when omitted."
+  default = {
+    location            = "Germany West Central"
+    resource_group_name = null
+  }
 }
 
