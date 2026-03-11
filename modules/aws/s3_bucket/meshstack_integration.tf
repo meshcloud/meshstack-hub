@@ -7,7 +7,7 @@ locals {
 }
 
 module "backplane" {
-  source = "github.com/meshcloud/meshstack-hub//modules/aws/s3_bucket/backplane?ref=main"
+  source = "github.com/meshcloud/meshstack-hub//modules/aws/s3_bucket/backplane?ref=2de03afad9e1c95bb98681dc3266e7238ecb00ee"
 
   workload_identity_federation = {
     issuer   = local.issuer
