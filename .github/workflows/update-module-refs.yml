@@ -5,6 +5,7 @@ on:
     branches: [main]
     paths: &paths
       - 'modules/**'
+      - '.github/workflows/update-module-refs.yml'
       - 'tools/update-module-refs/**'
   pull_request:
     branches: [main]
