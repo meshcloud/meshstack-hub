@@ -29,7 +29,7 @@ provider "meshstack" {
 data "meshstack_integrations" "integrations" {}
 
 module "backplane" {
-  source = "github.com/meshcloud/meshstack-hub//modules/gcp/storage-bucket/backplane?ref=main"
+  source = "github.com/meshcloud/meshstack-hub//modules/gcp/storage-bucket/backplane?ref=6e683a081f3c4f7cd584afd7faebddb8277e1ae1"
 
   project_id = local.gcp_project
   workload_identity_federation = {
