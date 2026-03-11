@@ -12,6 +12,6 @@ terraform {
 }
 
 provider "forgejo" {
-  host      = var.forgejo_host
-  api_token = var.forgejo_api_token
+  host      = local.forgejo.host
+  api_token = local.forgejo.api_token
 }
