@@ -47,7 +47,7 @@ A secondary purpose of these files is to serve as a ready-to-use Terraform modul
 - Must use variables for required user inputs.
 - Must include `required_providers`.
 - Never include `provider` configuration.
-- Reference modules using Git URLs and ref names. Use interpolation in module source, it's supported by OpenTofu.
+- Reference modules using Git URLs and a ref pointing to the feature branch when developing. Once merged into main, the `update-module-refs` tooling in CI pins the ref to an appropriate commit.
 
 ### Shared Variable Conventions
 
@@ -102,24 +102,12 @@ resource "meshstack_building_block_definition" "this" {
 
 ---
 
-## Backplane Patterns
-
-**AWS:** IAM users + CloudFormation StackSets for cross-account roles; assume role for target account access.
-
-**Azure:**
-
-- Custom role definitions scoped to subscription or management group
-- Optional service principal creation with Workload Identity Federation (WIF); falls back to app password
-- Two-tier networking roles: `buildingblock_deploy` (main) and `buildingblock_deploy_hub` (VNet peering, ACR, Key Vault)
-
----
-
 ## Variable Conventions
 
 - Always use `snake_case` for variable names: `monthly_budget_amount`, not `monthlyBudgetAmount`
 - Group logically related inputs into `object({})` typed variables (e.g. `var.hub`, `var.meshstack`)
 - Pin provider versions with `~> X.Y.Z` (allow patch updates, not minor/major)
-- Terraform baseline: `>= 1.3.0`
+- Terraform baseline: `>= 1.11.0` to cover OpenTofu v1.11.0 with write-only/ephemeral attribute support
 
 ---
 
@@ -142,34 +130,6 @@ description: One-sentence description of what the module provisions.
 - Usage examples
 - Shared responsibility matrix (platform team vs. application team)
 - Best practices
-
----
-
-## Testing
-
-Test files (`.tftest.hcl`) must cover:
-
-- Positive scenarios (valid configurations)
-- Negative scenarios (invalid inputs / validation rules)
-- Naming collision prevention
-
-Standard test users (use these identifiers consistently):
-
-```hcl
-{ meshIdentifier = "likvid-tom-user",     username = "likvid-tom@meshcloud.io",     roles = ["admin", "Workspace Owner"] }
-{ meshIdentifier = "likvid-daniela-user", username = "likvid-daniela@meshcloud.io", roles = ["user", "Workspace Manager"] }
-{ meshIdentifier = "likvid-anna-user",    username = "likvid-anna@meshcloud.io",    roles = ["reader", "Workspace Member"] }
-```
-
----
-
-## STACKIT-Specific Notes
-
-- STACKIT Git is based on Forgejo/Gitea — use the Gitea provider, not a generic Git provider
-- Forgejo/Gitea **user management** (org membership, team assignments) must be handled in the
-  backplane; it is currently incomplete in the STACKIT git-repository module
-- The STACKIT project building block (`modules/stackit/project/`) is the mandatory Landing Zone
-  building block and should be the first dependency for any STACKIT composition
 
 ---
 
