@@ -2,7 +2,7 @@
 name: STACKIT Git Repository
 supportedPlatforms:
   - stackit
-description: Provisions a Git repository on STACKIT Git (Forgejo/Gitea) with optional template initialization, webhook configuration, and CI/CD integration.
+description: Provisions a Git repository on STACKIT Git (Forgejo) with optional template initialization, webhook configuration, and CI/CD integration.
 ---
 
 <!-- BEGIN_TF_DOCS -->
@@ -31,9 +31,9 @@ No modules.
 | Name | Description | Type | Default | Required |
 |------|-------------|------|---------|:--------:|
 | <a name="input_default_branch"></a> [default\_branch](#input\_default\_branch) | Default branch name | `string` | `"main"` | no |
-| <a name="input_gitea_base_url"></a> [gitea\_base\_url](#input\_gitea\_base\_url) | STACKIT Git base URL | `string` | `"https://git-service.git.onstackit.cloud"` | no |
-| <a name="input_gitea_organization"></a> [gitea\_organization](#input\_gitea\_organization) | STACKIT Git organization where the repository will be created | `string` | n/a | yes |
-| <a name="input_gitea_token"></a> [gitea\_token](#input\_gitea\_token) | STACKIT Git API token (from backplane) | `string` | n/a | yes |
+| <a name="input_forgejo_base_url"></a> [forgejo\_base\_url](#input\_forgejo\_base\_url) | STACKIT Git base URL | `string` | `"https://git-service.git.onstackit.cloud"` | no |
+| <a name="input_forgejo_organization"></a> [forgejo\_organization](#input\_forgejo\_organization) | STACKIT Git organization where the repository will be created | `string` | n/a | yes |
+| <a name="input_forgejo_token"></a> [forgejo\_token](#input\_forgejo\_token) | STACKIT Git API token (from backplane) | `string` | n/a | yes |
 | <a name="input_repository_auto_init"></a> [repository\_auto\_init](#input\_repository\_auto\_init) | Auto-initialize the repository with a README | `bool` | `true` | no |
 | <a name="input_repository_description"></a> [repository\_description](#input\_repository\_description) | Short description of the repository | `string` | `""` | no |
 | <a name="input_repository_name"></a> [repository\_name](#input\_repository\_name) | Name of the Git repository to create | `string` | n/a | yes |
@@ -43,7 +43,7 @@ No modules.
 | <a name="input_template_owner"></a> [template\_owner](#input\_template\_owner) | Owner/organization of the template repository | `string` | `"stackit"` | no |
 | <a name="input_template_repo_name"></a> [template\_repo\_name](#input\_template\_repo\_name) | Value for the REPO\_NAME variable used during template substitution | `string` | `""` | no |
 | <a name="input_use_template"></a> [use\_template](#input\_use\_template) | Create repository from a template repository instead of creating an empty one | `bool` | `false` | no |
-| <a name="input_webhook_events"></a> [webhook\_events](#input\_webhook\_events) | List of Gitea events that trigger the webhook | `list(string)` | <pre>[<br>  "push",<br>  "create"<br>]</pre> | no |
+| <a name="input_webhook_events"></a> [webhook\_events](#input\_webhook\_events) | List of Forgejo events that trigger the webhook | `list(string)` | <pre>[<br>  "push",<br>  "create"<br>]</pre> | no |
 | <a name="input_webhook_secret"></a> [webhook\_secret](#input\_webhook\_secret) | Secret for webhook authentication | `string` | `""` | no |
 | <a name="input_webhook_url"></a> [webhook\_url](#input\_webhook\_url) | Webhook URL to configure (e.g., Argo Workflows EventSource URL). Leave empty to skip. | `string` | `""` | no |
 

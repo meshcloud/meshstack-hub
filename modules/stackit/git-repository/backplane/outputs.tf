@@ -1,15 +1,15 @@
-output "gitea_base_url" {
-  value       = var.gitea_base_url
+output "forgejo_base_url" {
+  value       = var.forgejo_base_url
   description = "STACKIT Git base URL"
 }
 
-output "gitea_token" {
-  value       = var.gitea_token
+output "forgejo_token" {
+  value       = var.forgejo_token
   description = "STACKIT Git API token for use by building block instances"
   sensitive   = true
 }
 
-output "gitea_organization" {
-  value       = var.gitea_organization
+output "forgejo_organization" {
+  value       = var.forgejo_organization
   description = "Default STACKIT Git organization for repository creation"
 }

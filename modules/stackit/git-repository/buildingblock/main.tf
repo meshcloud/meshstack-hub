@@ -1,9 +1,9 @@
 locals {
-  owner = var.gitea_organization
+  owner = var.forgejo_organization
 
-  clone_url = "${var.gitea_base_url}/${local.owner}/${var.repository_name}.git"
-  html_url  = "${var.gitea_base_url}/${local.owner}/${var.repository_name}"
-  ssh_url   = "git@${replace(var.gitea_base_url, "https://", "")}:${local.owner}/${var.repository_name}.git"
+  clone_url = "${var.forgejo_base_url}/${local.owner}/${var.repository_name}.git"
+  html_url  = "${var.forgejo_base_url}/${local.owner}/${var.repository_name}"
+  ssh_url   = "git@${replace(var.forgejo_base_url, "https://", "")}:${local.owner}/${var.repository_name}.git"
 
   template_variables = {
     REPO_NAME = var.template_repo_name != "" ? var.template_repo_name : var.repository_name
@@ -41,8 +41,8 @@ resource "null_resource" "template_repo" {
   provisioner "local-exec" {
     command = <<-EOT
       response=$(curl -s -w "\n%\{http_code\}" \
-        -X POST "${var.gitea_base_url}/api/v1/repos/${var.template_owner}/${var.template_name}/generate" \
-        -H "Authorization: token ${var.gitea_token}" \
+        -X POST "${var.forgejo_base_url}/api/v1/repos/${var.template_owner}/${var.template_name}/generate" \
+        -H "Authorization: token ${var.forgejo_token}" \
         -H "Content-Type: application/json" \
         -d '{
           "owner": "${local.owner}",
@@ -81,8 +81,8 @@ resource "null_resource" "webhook" {
 
   provisioner "local-exec" {
     command = <<-EOT
-      curl -s -X POST "${var.gitea_base_url}/api/v1/repos/${local.owner}/${var.repository_name}/hooks" \
-        -H "Authorization: token ${var.gitea_token}" \
+      curl -s -X POST "${var.forgejo_base_url}/api/v1/repos/${local.owner}/${var.repository_name}/hooks" \
+        -H "Authorization: token ${var.forgejo_token}" \
         -H "Content-Type: application/json" \
         -d '{
           "type": "forgejo",
