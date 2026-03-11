@@ -80,6 +80,18 @@ variable "project_tags_yaml" {
   YAML
 }
 
+variable "template_owner" {
+  type        = string
+  description = "GitHub owner (org or user) of the repository template to use when creating the application repository."
+  default     = "likvid-bank"
+}
+
+variable "template_repo" {
+  type        = string
+  description = "Name of the GitHub repository template to use when creating the application repository."
+  default     = "aks-starterkit-template"
+}
+
 resource "meshstack_building_block_definition" "aks_starterkit" {
   metadata = {
     owned_by_workspace = var.meshstack.owning_workspace_identifier
@@ -207,6 +219,24 @@ EOT
         argument               = jsonencode("private")
         assignment_type        = "STATIC"
         display_name           = "Github Repo Input Repo Visibility"
+        is_environment         = false
+        type                   = "STRING"
+        updateable_by_consumer = false
+      }
+      "template_owner" = {
+        argument               = jsonencode(var.template_owner)
+        assignment_type        = "STATIC"
+        description            = "GitHub owner (org or user) of the repository template."
+        display_name           = "Template Owner"
+        is_environment         = false
+        type                   = "STRING"
+        updateable_by_consumer = false
+      }
+      "template_repo" = {
+        argument               = jsonencode(var.template_repo)
+        assignment_type        = "STATIC"
+        description            = "Name of the GitHub repository template."
+        display_name           = "Template Repo"
         is_environment         = false
         type                   = "STRING"
         updateable_by_consumer = false

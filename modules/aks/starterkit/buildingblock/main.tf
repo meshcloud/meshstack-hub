@@ -131,10 +131,10 @@ resource "meshstack_building_block_v2" "repo" {
         value_bool = true
       }
       template_owner = {
-        value_string = "likvid-bank"
+        value_string = var.template_owner
       }
       template_repo = {
-        value_string = "aks-starterkit-template"
+        value_string = var.template_repo
       }
     }
   }

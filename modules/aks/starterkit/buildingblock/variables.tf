@@ -112,3 +112,14 @@ EOF
     error_message = "prod section is required in project_tags_yaml"
   }
 }
+variable "template_owner" {
+  type        = string
+  description = "GitHub owner (org or user) of the repository template to use when creating the application repository."
+  default     = "likvid-bank"
+}
+
+variable "template_repo" {
+  type        = string
+  description = "Name of the GitHub repository template to use when creating the application repository."
+  default     = "aks-starterkit-template"
+}
