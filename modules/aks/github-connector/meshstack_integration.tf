@@ -231,3 +231,8 @@ output "building_block_definition_uuid" {
   description = "UUID of the GitHub Actions AKS Connector building block definition. Use this to reference the definition as a dependency in compositions."
   value       = meshstack_building_block_definition.aks_github_connector.ref.uuid
 }
+
+output "building_block_definition_version_uuid" {
+  description = "UUID of the latest version of the GitHub Actions AKS Connector building block definition. Use this as building_block_definition_version_ref in building block instances."
+  value       = meshstack_building_block_definition.aks_github_connector.version_latest.uuid
+}

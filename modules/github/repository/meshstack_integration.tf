@@ -253,3 +253,8 @@ output "building_block_definition_uuid" {
   description = "UUID of the GitHub Repository building block definition. Use this to reference the definition as a dependency in compositions (e.g. for BUILDING_BLOCK_OUTPUT inputs)."
   value       = meshstack_building_block_definition.github_repo.ref.uuid
 }
+
+output "building_block_definition_version_uuid" {
+  description = "UUID of the latest version of the GitHub Repository building block definition. Use this as building_block_definition_version_ref in building block instances."
+  value       = meshstack_building_block_definition.github_repo.version_latest.uuid
+}
