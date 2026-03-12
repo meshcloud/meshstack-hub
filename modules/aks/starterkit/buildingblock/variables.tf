@@ -123,3 +123,9 @@ variable "template_repo" {
   description = "Name of the GitHub repository template to use when creating the application repository."
   default     = "aks-starterkit-template"
 }
+
+variable "apps_base_domain" {
+  type        = string
+  description = "Base domain used for application URLs (e.g. 'likvid-k8s.msh.host'). The app subdomain will be prefixed to this value."
+  default     = "likvid-k8s.msh.host"
+}

@@ -1,12 +1,12 @@
 
 output "dev-link" {
   description = "Link to the dev environment Angular app"
-  value       = "https://${local.identifier}-dev.likvid-k8s.msh.host"
+  value       = "https://${local.identifier}-dev.${var.apps_base_domain}"
 }
 
 output "prod-link" {
   description = "Link to the prod environment Angular app"
-  value       = "https://${local.identifier}.likvid-k8s.msh.host"
+  value       = "https://${local.identifier}.${var.apps_base_domain}"
 }
 
 output "github_repo_url" {
@@ -54,8 +54,8 @@ Trigger a deployment by:
 
 View deployment status: [GitHub Actions](${meshstack_building_block_v2.repo.status.outputs.repo_html_url.value_string}/actions/workflows/k8s-deploy.yml)
 
-- **Dev**: [${local.identifier}-dev.likvid-k8s.msh.host](https://${local.identifier}-dev.likvid-k8s.msh.host)
-- **Prod**: [${local.identifier}.likvid-k8s.msh.host](https://${local.identifier}.likvid-k8s.msh.host)
+- **Dev**: [${local.identifier}-dev.${var.apps_base_domain}](https://${local.identifier}-dev.${var.apps_base_domain})
+- **Prod**: [${local.identifier}.${var.apps_base_domain}](https://${local.identifier}.${var.apps_base_domain})
 
 ---
 
