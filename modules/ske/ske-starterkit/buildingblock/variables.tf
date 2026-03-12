@@ -40,11 +40,9 @@ variable "project_tags" {
   description = "Tags for dev/prod meshProject."
 }
 
-variable "kubernetes_namespaces" {
-  type = object({
-    dev  = string
-    prod = string
-  })
+variable "git_repository_template_repo_path" {
+  type        = string
+  description = "Template repository path (owner/name) used for starterkit git repository creation."
 }
 
 variable "building_block_definition_version_refs" {

@@ -25,6 +25,12 @@ variable "project_tags" {
   description = "Configure project tags of starter kit, for dev and prod."
 }
 
+variable "git_repository_template_path" {
+  type        = bool
+  default     = true
+  description = "Path to Forgejo template repo for initial app repo setup"
+}
+
 variable "building_block_definition_version_refs" {
   type = map(object({
     kind = string
@@ -166,6 +172,12 @@ EOT
         description     = "Tags for the created Dev/Prod projects."
         # jsonencode twice is correct, see https://registry.terraform.io/providers/meshcloud/meshstack/latest/docs/resources/building_block_definition#argument-1
         argument = jsonencode(jsonencode(var.project_tags))
+      }
+      "git_repository_template_repo_path" = {
+        assignment_type = "STATIC"
+        type            = "STRING"
+        display_name    = "Git Repository Template Path"
+        argument        = jsonencode(var.git_repository_template_path)
       }
       "building_block_definition_version_refs" = {
         assignment_type = "STATIC"
