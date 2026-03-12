@@ -40,6 +40,7 @@ No modules.
 
 | Name | Description | Type | Default | Required |
 |------|-------------|------|---------|:--------:|
+| <a name="input_apps_base_domain"></a> [apps\_base\_domain](#input\_apps\_base\_domain) | Base domain used for application URLs (e.g. 'likvid-k8s.msh.host'). The app subdomain will be prefixed to this value. | `string` | `"likvid-k8s.msh.host"` | no |
 | <a name="input_archive_repo_on_destroy"></a> [archive\_repo\_on\_destroy](#input\_archive\_repo\_on\_destroy) | Whether to archive github repository when destroying the terraform resource, or delete it. Defaults to true (archive). | `bool` | `true` | no |
 | <a name="input_creator"></a> [creator](#input\_creator) | Information about the creator of the resources who will be assigned Project Admin role | <pre>object({<br>    type        = string<br>    identifier  = string<br>    displayName = string<br>    username    = optional(string)<br>    email       = optional(string)<br>    euid        = optional(string)<br>  })</pre> | n/a | yes |
 | <a name="input_full_platform_identifier"></a> [full\_platform\_identifier](#input\_full\_platform\_identifier) | Full platform identifier of the AKS Namespace platform. | `string` | n/a | yes |

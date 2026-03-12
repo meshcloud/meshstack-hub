@@ -92,6 +92,12 @@ variable "template_repo" {
   default     = "aks-starterkit-template"
 }
 
+variable "apps_base_domain" {
+  type        = string
+  description = "Base domain used for application URLs (e.g. 'likvid-k8s.msh.host'). The app subdomain will be prefixed to this value."
+  default     = "likvid-k8s.msh.host"
+}
+
 resource "meshstack_building_block_definition" "aks_starterkit" {
   metadata = {
     owned_by_workspace = var.meshstack.owning_workspace_identifier
@@ -278,6 +284,15 @@ EOT
         assignment_type        = "WORKSPACE_IDENTIFIER"
         description            = ""
         display_name           = "Workspace Identifier"
+        is_environment         = false
+        type                   = "STRING"
+        updateable_by_consumer = false
+      }
+      "apps_base_domain" = {
+        argument               = jsonencode(var.apps_base_domain)
+        assignment_type        = "STATIC"
+        description            = "Base domain used for application URLs. The app subdomain will be prefixed to this value."
+        display_name           = "Apps Base Domain"
         is_environment         = false
         type                   = "STRING"
         updateable_by_consumer = false
