@@ -1,7 +1,7 @@
 # Backplane module for stackit connector Building Block
 
 This backplane does not create any new resources. It simply transforms input variables
-into a `config_tf` output that can be dropped into meshStack's BuildingBlockDefinition 
+into a `config_tf` output that can be dropped into meshStack's BuildingBlockDefinition
 as an encrypted file input to configure the access to the kubernetes cluster.
 
 <!-- BEGIN_TF_DOCS -->
@@ -11,10 +11,6 @@ as an encrypted file input to configure the access to the kubernetes cluster.
 |------|---------|
 | <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.0 |
 | <a name="requirement_kubernetes"></a> [kubernetes](#requirement\_kubernetes) | 2.35.1 |
-
-## Providers
-
-No providers.
 
 ## Modules
 

@@ -1,19 +1,19 @@
 variable "harbor_host" {
-  type = string
+  type        = string
   description = "The URL of the Harbor registry."
-  default   = "https://registry.onstackit.cloud"
+  default     = "https://registry.onstackit.cloud"
 }
 
 variable "harbor_username" {
-  type = string
+  type        = string
   description = "The username for the Harbor registry."
-  sensitive = true
+  sensitive   = true
 }
 
 variable "harbor_password" {
-  type = string
+  type        = string
   description = "The password for the Harbor registry."
-  sensitive = true
+  sensitive   = true
 }
 
 variable "forgejo_repository_name" {
