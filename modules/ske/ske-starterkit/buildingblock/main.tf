@@ -9,17 +9,9 @@ resource "meshstack_building_block_v2" "git_repository" {
     }
 
     inputs = {
-      # TODO complete the inputs here for template source from backplane
-      # Examples how inputs can be defined depending on type
-      # flag              = { value_bool = true }
-      # num               = { value_int = 1 }
-      # text              = { value_string = "Hello, World!" }
-      # sensitive_text    = { value_string = "Hidden value" }
-      # single_select     = { value_single_select = "single1" }
-      # multi_select      = { value_multi_select = ["multi1", "multi2"] }
-      # multi_select_json = { value_multi_select = ["multi2", "multi1"] }
-
-      name = { value_string = var.name }
+      name               = { value_string = var.name }
+      use_template       = { value_bool = true }
+      template_repo_path = { value_string = var.git_repository_template_repo_path }
     }
   }
   wait_for_completion = true
