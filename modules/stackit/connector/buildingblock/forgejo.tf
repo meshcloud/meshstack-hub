@@ -24,8 +24,8 @@ locals {
 }
 
 data "forgejo_repository" "this" {
-  name  = local.forgejo.repository_name
-  owner = local.forgejo.repository_owner
+  name  = var.forgejo_repository_name
+  owner = var.forgejo_repository_owner
 }
 
 resource "forgejo_repository_action_secret" "kubeconfig" {
@@ -36,9 +36,9 @@ resource "forgejo_repository_action_secret" "kubeconfig" {
 
 resource "forgejo_repository_action_secret" "container_registry" {
   for_each = {
-    host     = local.harbor.host
-    username = local.harbor.username
-    password = local.harbor.password
+    host     = var.harbor_host
+    username = var.harbor_username
+    password = var.harbor_password
   }
 
   repository_id = data.forgejo_repository.this.id

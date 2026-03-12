@@ -25,20 +25,6 @@ output "config_tf" {
         }
       ]
     }
-
-    harbor = {
-      host     = "${var.harbor_host}"
-      username = "${var.harbor_username}"
-      password = "${var.harbor_password}"
-    }
-
-    forgejo = {
-      host             = "${var.forgejo_host}"
-      api_token        = "${var.forgejo_api_token}"
-      repository_name  = "${var.forgejo_repository_name}"
-      repository_owner = "${var.forgejo_repository_owner}"
-    }
-
   }
   EOF
 }

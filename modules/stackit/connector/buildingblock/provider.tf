@@ -11,7 +11,8 @@ terraform {
   }
 }
 
+# provide the following env variables for this Building Block:
+# FORGEJO_HOST
+# FORGEJO_API_TOKEN
 provider "forgejo" {
-  host      = local.forgejo.host
-  api_token = local.forgejo.api_token
 }
