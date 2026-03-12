@@ -1,33 +1,44 @@
-locals {
-  # Create a lowercase alphanumeric identifier with hyphens from the display name
-  # Remove other special characters and normalize spaces/hyphens/underscores into a single "-"
-  project_tags_config = try(yamldecode(var.project_tags_yaml), {})
+resource "meshstack_building_block_v2" "git_repository" {
+  spec = {
+    building_block_definition_version_ref = var.building_block_definition_version_refs["git-repository"]
+
+    display_name = "${var.name} Git Repo"
+    target_ref = {
+      kind       = "meshWorkspace"
+      identifier = var.workspace_identifier
+    }
+
+    inputs = {
+      # TODO complete the inputs here for template source from backplane
+      # Examples how inputs can be defined depending on type
+      # flag              = { value_bool = true }
+      # num               = { value_int = 1 }
+      # text              = { value_string = "Hello, World!" }
+      # sensitive_text    = { value_string = "Hidden value" }
+      # single_select     = { value_single_select = "single1" }
+      # multi_select      = { value_multi_select = ["multi1", "multi2"] }
+      # multi_select_json = { value_multi_select = ["multi2", "multi1"] }
+
+      name = { value_string = var.name }
+    }
+  }
+  wait_for_completion = true
 }
 
-resource "meshstack_project" "dev" {
+resource "meshstack_project" "this" {
+  for_each = tomap(var.landing_zone_identifiers)
   metadata = {
-    name               = "${local.identifier}-dev"
+    name               = "${var.name}-${each.key}"
     owned_by_workspace = var.workspace_identifier
   }
   spec = {
-    display_name = "${var.name} Dev"
-    tags         = local.project_tags_config.dev
+    display_name = "${var.name} ${title(each.key)}"
+    tags         = var.project_tags[each.key]
   }
 }
 
-resource "meshstack_project" "prod" {
-  metadata = {
-    name               = "${local.identifier}-prod"
-    owned_by_workspace = var.workspace_identifier
-  }
-  spec = {
-    display_name = "${var.name} Prod"
-    tags         = local.project_tags_config.prod
-  }
-}
-
-resource "meshstack_project_user_binding" "creator_dev_admin" {
-  count = var.creator.type == "User" && var.creator.username != null ? 1 : 0
+resource "meshstack_project_user_binding" "creator_to_admin" {
+  for_each = var.creator.type == "User" && var.creator.username != null ? tomap(var.landing_zone_identifiers) : {}
 
   metadata = {
     name = uuid()
@@ -39,7 +50,7 @@ resource "meshstack_project_user_binding" "creator_dev_admin" {
 
   target_ref = {
     owned_by_workspace = var.workspace_identifier
-    name               = meshstack_project.dev.metadata.name
+    name               = meshstack_project.this[each.key].metadata.name
   }
 
   subject = {
@@ -47,47 +58,16 @@ resource "meshstack_project_user_binding" "creator_dev_admin" {
   }
 }
 
-resource "meshstack_project_user_binding" "creator_prod_admin" {
-  count = var.creator.type == "User" && var.creator.username != null ? 1 : 0
+resource "meshstack_tenant_v4" "this" {
+  for_each = tomap(var.landing_zone_identifiers)
 
   metadata = {
-    name = uuid()
-  }
-
-  role_ref = {
-    name = "Project Admin"
-  }
-
-  target_ref = {
     owned_by_workspace = var.workspace_identifier
-    name               = meshstack_project.prod.metadata.name
-  }
-
-  subject = {
-    name = var.creator.username
-  }
-}
-
-resource "meshstack_tenant_v4" "dev" {
-  metadata = {
-    owned_by_workspace = var.workspace_identifier
-    owned_by_project   = meshstack_project.dev.metadata.name
+    owned_by_project   = meshstack_project.this[each.key].metadata.name
   }
 
   spec = {
     platform_identifier     = var.full_platform_identifier
-    landing_zone_identifier = var.landing_zone_dev_identifier
-  }
-}
-
-resource "meshstack_tenant_v4" "prod" {
-  metadata = {
-    owned_by_workspace = var.workspace_identifier
-    owned_by_project   = meshstack_project.prod.metadata.name
-  }
-
-  spec = {
-    platform_identifier     = var.full_platform_identifier
-    landing_zone_identifier = var.landing_zone_prod_identifier
+    landing_zone_identifier = each.value
   }
 }
