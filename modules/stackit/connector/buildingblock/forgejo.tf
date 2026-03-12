@@ -36,13 +36,13 @@ resource "forgejo_repository_action_secret" "kubeconfig" {
 
 resource "forgejo_repository_action_secret" "container_registry" {
   for_each = {
-    host     = var.harbor_host
-    username = var.harbor_username
-    password = var.harbor_password
+    HOST     = var.harbor_host
+    USERNAME = var.harbor_username
+    PASSWORD = var.harbor_password
   }
 
   repository_id = data.forgejo_repository.this.id
-  name          = "stackit_harbor_${each.key}"
+  name          = "STACKIT_HARBOR_${each.key}"
   data          = each.value
 }
 
