@@ -4,6 +4,19 @@ variable "meshstack" {
   })
 }
 
+variable "forgejo_token" {
+  type      = string
+  sensitive = true
+}
+
+variable "forgejo_organization" {
+  type = string
+}
+
+variable "forgejo_base_url" {
+  type = string
+}
+
 variable "full_platform_identifier" {
   type = string
 }
@@ -20,22 +33,16 @@ variable "project_tags" {
   type = object({
     dev : map(list(string))
     prod : map(list(string))
+
+    owner_tag_key = optional(string, null)
   })
   default     = { dev : {}, prod : {} }
   description = "Configure project tags of starter kit, for dev and prod."
 }
 
 variable "git_repository_template_path" {
-  type        = bool
-  default     = true
+  type        = string
   description = "Path to Forgejo template repo for initial app repo setup"
-}
-
-variable "building_block_definition_version_refs" {
-  type = map(object({
-    kind = string
-    uuid = string
-  }))
 }
 
 variable "tags" {
@@ -48,20 +55,31 @@ variable "notification_subscribers" {
   default = []
 }
 
-variable "draft" {
-  type        = bool
-  default     = false
-  description = "If true, allows changing the building block definition for upgrading dependent building blocks."
-}
-
 variable "hub" {
   type = object({
-    git_ref = string
+    git_ref   = optional(string, "main")
+    bbd_draft = optional(bool, false)
   })
-  default = {
-    git_ref = "main"
-  }
-  description = "Hub reference. Set to a tag (e.g. 'v1.2.3') or branch or commit sha of meshcloud/meshstack-hub repo."
+  default     = {}
+  description = <<-EOT
+  `git_ref`: Hub reference. Set to a tag (e.g. 'v1.2.3') or branch or commit sha of meshcloud/meshstack-hub repo.<br>
+  `bbd_draft`: If true, allows changing the building block definition for upgrading dependent building blocks.
+  EOT
+}
+
+module "backplane" {
+  source = "./backplane" # TODO revert to github.com/meshcloud/meshstack-hub//modules/ske/ske-starterkit/backplane link once pushed
+
+  meshstack = var.meshstack
+  hub       = var.hub
+
+  forgejo_token        = var.forgejo_token
+  forgejo_organization = var.forgejo_organization
+  forgejo_base_url     = var.forgejo_base_url
+}
+
+locals {
+  name_regex = "^[a-zA-Z0-9-]+$" # underscore and dots not allowed because of K8s namespace
 }
 
 resource "meshstack_building_block_definition" "this" {
@@ -119,7 +137,7 @@ EOT
   }
 
   version_spec = {
-    draft = var.draft
+    draft = var.hub.bbd_draft
 
     implementation = {
       terraform = {
@@ -140,11 +158,12 @@ EOT
         description     = "Information about the creator of the resources who will be assigned Project Admin role."
       }
       "name" = {
-        assignment_type        = "USER_INPUT"
-        type                   = "STRING"
-        display_name           = "Project Name"
-        description            = "This name will be used for the created meshProjects and Kubernetes namespaces (SKE meshTenants) and Git repository."
-        value_validation_regex = "^[a-zA-Z0-9-]+$" # underscore and dots not allowed because of K8s namespace
+        assignment_type                = "USER_INPUT"
+        type                           = "STRING"
+        display_name                   = "Project Name"
+        description                    = "This name will be used for the created meshProjects and Kubernetes namespaces (SKE meshTenants) and Git repository. Must match ${local.name_regex}."
+        value_validation_regex         = local.name_regex
+        validation_regex_error_message = "Does not match ${local.name_regex} (no underscore/dots allowed)"
       }
       "workspace_identifier" = {
         assignment_type = "WORKSPACE_IDENTIFIER"
@@ -173,7 +192,7 @@ EOT
         # jsonencode twice is correct, see https://registry.terraform.io/providers/meshcloud/meshstack/latest/docs/resources/building_block_definition#argument-1
         argument = jsonencode(jsonencode(var.project_tags))
       }
-      "git_repository_template_repo_path" = {
+      "git_repository_template_path" = {
         assignment_type = "STATIC"
         type            = "STRING"
         display_name    = "Git Repository Template Path"
@@ -185,7 +204,7 @@ EOT
         description     = "Refs used to create auxiliary building blocks (composition)."
         display_name    = "BBD Version Refs"
         # jsonencode twice is correct, see https://registry.terraform.io/providers/meshcloud/meshstack/latest/docs/resources/building_block_definition#argument-1
-        argument = jsonencode(jsonencode(var.building_block_definition_version_refs))
+        argument = jsonencode(jsonencode(module.backplane.building_block_definition_version_refs))
       }
     }
 

@@ -1,5 +1,5 @@
 locals {
-  repository     = jsondecode(restapi_object.repository.api_data)
+  repository     = restapi_object.repository.api_data
   repo_html_url  = local.repository.html_url
   repo_ssh_url   = local.repository.ssh_url
   repo_clone_url = local.repository.clone_url
