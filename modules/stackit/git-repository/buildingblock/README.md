@@ -38,7 +38,7 @@ No modules.
 | <a name="input_private"></a> [private](#input\_private) | Whether the repository should be private | `bool` | `true` | no |
 | <a name="input_template_repo_path"></a> [template\_repo\_path](#input\_template\_repo\_path) | Path (owner/name) to the template repository. | `string` | `""` | no |
 | <a name="input_use_template"></a> [use\_template](#input\_use\_template) | Create repository from a template repository given by template\_repo\_path instead of creating an empty one. | `bool` | `false` | no |
-| <a name="input_webhook_events"></a> [webhook\_events](#input\_webhook\_events) | List of Forgejo events that trigger the webhook | `list(string)` | <pre>[<br/>  "push",<br/>  "create"<br/>]</pre> | no |
+| <a name="input_webhook_events"></a> [webhook\_events](#input\_webhook\_events) | List of Forgejo events that trigger the webhook | `list(string)` | <pre>[<br>  "push",<br>  "create"<br>]</pre> | no |
 | <a name="input_webhook_secret"></a> [webhook\_secret](#input\_webhook\_secret) | Secret for webhook authentication | `string` | `""` | no |
 | <a name="input_webhook_url"></a> [webhook\_url](#input\_webhook\_url) | Webhook URL to configure (e.g., Argo Workflows EventSource URL). Leave empty to skip. | `string` | `""` | no |
 

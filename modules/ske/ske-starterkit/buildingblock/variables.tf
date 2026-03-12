@@ -36,18 +36,17 @@ variable "project_tags" {
   type = object({
     dev : map(list(string))
     prod : map(list(string))
+
+    owner_tag_key = optional(string, null)
   })
   description = "Tags for dev/prod meshProject."
 }
 
-variable "git_repository_template_repo_path" {
+variable "git_repository_template_path" {
   type        = string
   description = "Template repository path (owner/name) used for starterkit git repository creation."
 }
 
 variable "building_block_definition_version_refs" {
-  type = map(object({
-    kind = string
-    uuid = string
-  }))
+  type = map(object({ uuid = string }))
 }

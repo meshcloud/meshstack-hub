@@ -23,28 +23,23 @@ variable "forgejo_base_url" {
 
 variable "hub" {
   type = object({
-    git_ref = string
+    git_ref   = optional(string, "main")
+    bbd_draft = optional(bool, false)
   })
-  default = {
-    git_ref = "main"
-  }
-  description = "Hub release reference. Set git_ref to a tag (e.g. 'v1.2.3') or branch for the meshstack-hub repo."
+  default     = {}
+  description = <<-EOT
+  `git_ref`: Hub release reference. Set to a tag (e.g. 'v1.2.3') or branch or commit sha of meshcloud/meshstack-hub repo.<br>
+  `bbd_draft`: If true, allows changing the building block definition for upgrading dependent building blocks.
+  EOT
 }
 
-variable "draft" {
-  type        = bool
-  default     = false
-  description = "If true, allows changing the building block definition for upgrading dependent building blocks."
-}
-
-output "building_block_definition_version_refs" {
-  value = {
-    "git-repository" : meshstack_building_block_definition.this.version_latest
-  }
+output "building_block_definition_version_ref" {
+  value       = var.hub.bbd_draft ? meshstack_building_block_definition.this.version_latest : meshstack_building_block_definition.this.version_latest_release
+  description = "Version of BBD is consumed in Building Block compositions, for example in the backplane of starter kits."
 }
 
 module "backplane" {
-  source = "./backplane" # TODO revert to github.com/meshcloud/meshstack-hub//modules/stackit/git-repository/backplane?ref=feature/stackit-git-repository once pushed
+  source = "github.com/meshcloud/meshstack-hub//modules/stackit/git-repository/backplane?ref=feature/stackit-git"
 
   forgejo_base_url     = var.forgejo_base_url
   forgejo_token        = var.forgejo_token
@@ -58,7 +53,7 @@ resource "meshstack_building_block_definition" "this" {
 
   spec = {
     display_name     = "STACKIT Git Repository"
-    symbol           = "https://raw.githubusercontent.com/meshcloud/meshstack-hub/${var.hub.git_ref}/modules/ske/ske-starterkit/buildingblock/logo.png"
+    symbol           = "https://raw.githubusercontent.com/meshcloud/meshstack-hub/${var.hub.git_ref}/modules/stackit/git-repository/buildingblock/logo.png"
     description      = "Provisions a Git repository on STACKIT Git with optional template initialization and CI/CD webhook configuration."
     support_url      = "https://git-service.git.onstackit.cloud"
     target_type      = "WORKSPACE_LEVEL"
@@ -66,7 +61,7 @@ resource "meshstack_building_block_definition" "this" {
   }
 
   version_spec = {
-    draft         = var.draft
+    draft         = var.hub.bbd_draft
     deletion_mode = "DELETE"
 
     implementation = {

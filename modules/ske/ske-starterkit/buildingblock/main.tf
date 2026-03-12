@@ -1,6 +1,6 @@
 resource "meshstack_building_block_v2" "git_repository" {
   spec = {
-    building_block_definition_version_ref = var.building_block_definition_version_refs["git-repository"]
+    building_block_definition_version_ref = var.building_block_definition_version_refs["git-repository"] # provisioned in backplane
 
     display_name = "${var.name} Git Repo"
     target_ref = {
@@ -11,7 +11,7 @@ resource "meshstack_building_block_v2" "git_repository" {
     inputs = {
       name               = { value_string = var.name }
       use_template       = { value_bool = true }
-      template_repo_path = { value_string = var.git_repository_template_repo_path }
+      template_repo_path = { value_string = var.git_repository_template_path }
     }
   }
   wait_for_completion = true
@@ -25,7 +25,11 @@ resource "meshstack_project" "this" {
   }
   spec = {
     display_name = "${var.name} ${title(each.key)}"
-    tags         = var.project_tags[each.key]
+    tags = merge(
+      var.project_tags[each.key],
+      var.project_tags.owner_tag_key == null ? {} : {
+        (var.project_tags.owner_tag_key) : [var.creator.displayName]
+    })
   }
 }
 
