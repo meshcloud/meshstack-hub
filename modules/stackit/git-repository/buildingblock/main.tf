@@ -10,6 +10,7 @@ resource "restapi_object" "repository" {
     name        = var.name
     description = var.description
     private     = var.private
+    template    = var.is_template_repo
     },
     var.use_template ? {
       git_content = true
