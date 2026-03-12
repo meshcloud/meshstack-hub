@@ -19,31 +19,25 @@ variable "forgejo_organization" {
 
 # ── User inputs (set per building block instance) ─────────────────────────────
 
-variable "repository_name" {
+variable "name" {
   type        = string
   description = "Name of the Git repository to create"
 
   validation {
-    condition     = can(regex("^[a-zA-Z0-9._-]+$", var.repository_name))
+    condition     = can(regex("^[a-zA-Z0-9._-]+$", var.name))
     error_message = "Repository name must only contain alphanumeric characters, dots, dashes, or underscores."
   }
 }
 
-variable "repository_description" {
+variable "description" {
   type        = string
   description = "Short description of the repository"
   default     = ""
 }
 
-variable "repository_private" {
+variable "private" {
   type        = bool
   description = "Whether the repository should be private"
-  default     = true
-}
-
-variable "repository_auto_init" {
-  type        = bool
-  description = "Auto-initialize the repository with a README"
   default     = true
 }
 
@@ -57,32 +51,19 @@ variable "default_branch" {
 
 variable "use_template" {
   type        = bool
-  description = "Create repository from a template repository instead of creating an empty one"
+  description = "Create repository from a template repository given by template_repo_path instead of creating an empty one."
   default     = false
 }
 
-variable "template_owner" {
+variable "template_repo_path" {
   type        = string
-  description = "Owner/organization of the template repository"
-  default     = "stackit"
-}
-
-variable "template_name" {
-  type        = string
-  description = "Name of the template repository"
-  default     = "app-template-python"
-}
-
-variable "template_repo_name" {
-  type        = string
-  description = "Value for the REPO_NAME variable used during template substitution"
+  description = "Path (owner/name) to the template repository."
   default     = ""
-}
 
-variable "template_namespace" {
-  type        = string
-  description = "Value for the NAMESPACE variable used during template substitution"
-  default     = ""
+  validation {
+    condition     = var.template_repo_path == "" || can(regex("^[^/]+/[^/]+$", var.template_repo_path))
+    error_message = "template_repo_path must be in format owner/name."
+  }
 }
 
 # ── Webhook options ────────────────────────────────────────────────────────────

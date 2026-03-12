@@ -1,14 +1,10 @@
 terraform {
-  required_version = ">= 1.3.0"
+  required_version = ">= 1.4.0"
 
   required_providers {
-    gitea = {
-      source  = "Lerentis/gitea"
-      version = "~> 0.16.0"
-    }
-    null = {
-      source  = "hashicorp/null"
-      version = "~> 3.2.3"
+    restapi = {
+      source  = "Mastercard/restapi"
+      version = "3.0.0"
     }
   }
 }

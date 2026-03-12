@@ -2,13 +2,10 @@
 # building block in a meshStack instance. Adapt backplane outputs and repository
 # URL to match your own setup before applying.
 
-terraform {
-  required_providers {
-    meshstack = {
-      source  = "meshcloud/meshstack"
-      version = "~> 0.19.0"
-    }
-  }
+variable "meshstack" {
+  type = object({
+    owning_workspace_identifier = string
+  })
 }
 
 variable "forgejo_token" {
@@ -24,17 +21,30 @@ variable "forgejo_base_url" {
   type = string
 }
 
-variable "owning_workspace_identifier" {
-  type = string
+variable "hub" {
+  type = object({
+    git_ref = string
+  })
+  default = {
+    git_ref = "main"
+  }
+  description = "Hub release reference. Set git_ref to a tag (e.g. 'v1.2.3') or branch for the meshstack-hub repo."
 }
 
-variable "meshstack_hub_git_ref" {
-  type    = string
-  default = "main"
+variable "draft" {
+  type        = bool
+  default     = false
+  description = "If true, allows changing the building block definition for upgrading dependent building blocks."
+}
+
+output "building_block_definition_version_refs" {
+  value = {
+    "git-repository" : meshstack_building_block_definition.this.version_latest
+  }
 }
 
 module "backplane" {
-  source = "github.com/meshcloud/meshstack-hub//modules/stackit/git-repository/backplane?ref=feature/stackit-git-repository"
+  source = "./backplane" # TODO revert to github.com/meshcloud/meshstack-hub//modules/stackit/git-repository/backplane?ref=feature/stackit-git-repository once pushed
 
   forgejo_base_url     = var.forgejo_base_url
   forgejo_token        = var.forgejo_token
@@ -43,12 +53,12 @@ module "backplane" {
 
 resource "meshstack_building_block_definition" "this" {
   metadata = {
-    owned_by_workspace = var.owning_workspace_identifier
+    owned_by_workspace = var.meshstack.owning_workspace_identifier
   }
 
   spec = {
     display_name     = "STACKIT Git Repository"
-    symbol           = "data:image/png;base64,${filebase64("${path.module}/buildingblock/logo.png")}"
+    symbol           = "https://raw.githubusercontent.com/meshcloud/meshstack-hub/${var.hub.git_ref}/modules/ske/ske-starterkit/buildingblock/logo.png"
     description      = "Provisions a Git repository on STACKIT Git with optional template initialization and CI/CD webhook configuration."
     support_url      = "https://git-service.git.onstackit.cloud"
     target_type      = "WORKSPACE_LEVEL"
@@ -56,7 +66,7 @@ resource "meshstack_building_block_definition" "this" {
   }
 
   version_spec = {
-    draft         = true
+    draft         = var.draft
     deletion_mode = "DELETE"
 
     implementation = {
@@ -64,7 +74,7 @@ resource "meshstack_building_block_definition" "this" {
         terraform_version              = "1.9.0"
         repository_url                 = "https://github.com/meshcloud/meshstack-hub.git"
         repository_path                = "modules/stackit/git-repository/buildingblock"
-        ref_name                       = var.meshstack_hub_git_ref
+        ref_name                       = var.hub.git_ref
         async                          = false
         use_mesh_http_backend_fallback = true
       }
@@ -94,17 +104,17 @@ resource "meshstack_building_block_definition" "this" {
       }
 
       forgejo_organization = {
-        display_name    = "STACKIT Git Organization"
-        description     = "Organization under which repositories will be created"
+        display_name    = "STACKIT Git Forgejo Organization"
+        description     = "Organization under which repositories will be created in Forgejo"
         type            = "STRING"
         assignment_type = "STATIC"
-        argument        = jsonencode(var.forgejo_organization)
+        argument        = jsonencode(module.backplane.forgejo_organization)
       }
 
       # ── User inputs ────────────────────────────────────────────────────────
 
-      repository_name = {
-        display_name                   = "Repository Name"
+      name = {
+        display_name                   = "Repository Name / Identifier"
         description                    = "Name of the Git repository (alphanumeric, dashes, dots, underscores)"
         type                           = "STRING"
         assignment_type                = "USER_INPUT"
@@ -112,17 +122,17 @@ resource "meshstack_building_block_definition" "this" {
         validation_regex_error_message = "Only alphanumeric characters, dots, dashes, and underscores are allowed."
       }
 
-      repository_description = {
+      description = {
         display_name    = "Repository Description"
-        description     = "Short description of the repository"
+        description     = "Short description of the repository."
         type            = "STRING"
         assignment_type = "USER_INPUT"
         default_value   = jsonencode("")
       }
 
-      repository_private = {
+      private = {
         display_name    = "Private Repository"
-        description     = "Whether the repository should be private"
+        description     = "If true, the repository has private visibility in Forgejo."
         type            = "BOOLEAN"
         assignment_type = "USER_INPUT"
         default_value   = jsonencode(true)
@@ -136,18 +146,17 @@ resource "meshstack_building_block_definition" "this" {
         default_value   = jsonencode(false)
       }
 
-      template_name = {
-        display_name      = "Template Name"
-        description       = "Name of the template repository to use (only relevant when 'Create from Template' is enabled)"
-        type              = "SINGLE_SELECT"
-        assignment_type   = "USER_INPUT"
-        selectable_values = ["app-template-python", "app-template-nodejs", "app-template-java"]
-        default_value     = jsonencode("app-template-python")
+      template_repo_path = {
+        display_name    = "Template Repo Path"
+        description     = "Path (owner/name) of the template repository to use (only relevant when 'use_template' is true), e.g. likvid-templates/app-template-python."
+        type            = "STRING"
+        assignment_type = "USER_INPUT"
+        default_value   = jsonencode("")
       }
 
       webhook_url = {
         display_name    = "Webhook URL"
-        description     = "Optional: Webhook URL to trigger CI/CD builds (e.g., Argo Workflows EventSource). Leave empty to skip."
+        description     = "Webhook URL to trigger CI/CD builds (e.g., Argo Workflows EventSource). Optional, leave empty to skip."
         type            = "STRING"
         assignment_type = "USER_INPUT"
         default_value   = jsonencode("")
@@ -178,6 +187,15 @@ resource "meshstack_building_block_definition" "this" {
         type            = "STRING"
         assignment_type = "SUMMARY"
       }
+    }
+  }
+}
+
+terraform {
+  required_providers {
+    meshstack = {
+      source  = "meshcloud/meshstack"
+      version = "~> 0.20.0"
     }
   }
 }

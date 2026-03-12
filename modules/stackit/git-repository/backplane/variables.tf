@@ -6,7 +6,7 @@ variable "forgejo_base_url" {
 
 variable "forgejo_token" {
   type        = string
-  description = "STACKIT Git Personal Access Token with write:repository, write:organization, and read:user scopes"
+  description = "STACKIT Git Personal Access Token with write:repository and write:organization scopes"
   sensitive   = true
 }
 

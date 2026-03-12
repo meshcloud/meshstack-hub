@@ -1,4 +1,9 @@
-provider "gitea" {
-  base_url = var.forgejo_base_url
-  token    = var.forgejo_token
+provider "restapi" {
+  uri                  = var.forgejo_base_url
+  write_returns_object = true
+
+  headers = {
+    Authorization = "token ${var.forgejo_token}"
+    Content-Type  = "application/json"
+  }
 }
