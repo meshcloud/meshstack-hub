@@ -66,6 +66,12 @@ variable "template_repo_path" {
   }
 }
 
+variable "is_template_repo" {
+  type        = bool
+  description = "If true, mark the created repository itself as a Forgejo template repository."
+  default     = false
+}
+
 # ── Webhook options ────────────────────────────────────────────────────────────
 
 variable "webhook_url" {

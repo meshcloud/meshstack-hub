@@ -33,6 +33,7 @@ No modules.
 | <a name="input_forgejo_base_url"></a> [forgejo\_base\_url](#input\_forgejo\_base\_url) | STACKIT Git base URL | `string` | `"https://git-service.git.onstackit.cloud"` | no |
 | <a name="input_forgejo_organization"></a> [forgejo\_organization](#input\_forgejo\_organization) | STACKIT Git organization where the repository will be created | `string` | n/a | yes |
 | <a name="input_forgejo_token"></a> [forgejo\_token](#input\_forgejo\_token) | STACKIT Git API token (from backplane) | `string` | n/a | yes |
+| <a name="input_is_template_repo"></a> [is\_template\_repo](#input\_is\_template\_repo) | If true, mark the created repository itself as a Forgejo template repository. | `bool` | `false` | no |
 | <a name="input_name"></a> [name](#input\_name) | Name of the Git repository to create | `string` | n/a | yes |
 | <a name="input_private"></a> [private](#input\_private) | Whether the repository should be private | `bool` | `true` | no |
 | <a name="input_template_repo_path"></a> [template\_repo\_path](#input\_template\_repo\_path) | Path (owner/name) to the template repository. | `string` | `""` | no |
