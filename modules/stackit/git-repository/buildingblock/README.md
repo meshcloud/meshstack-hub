@@ -10,9 +10,8 @@ description: Provisions a Git repository on STACKIT Git (Forgejo) with optional 
 
 | Name | Version |
 |------|---------|
-| <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.3.0 |
-| <a name="requirement_gitea"></a> [gitea](#requirement\_gitea) | ~> 0.16.0 |
-| <a name="requirement_null"></a> [null](#requirement\_null) | ~> 3.2.3 |
+| <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.4.0 |
+| <a name="requirement_restapi"></a> [restapi](#requirement\_restapi) | 3.0.0 |
 
 ## Modules
 
@@ -22,28 +21,23 @@ No modules.
 
 | Name | Type |
 |------|------|
-| [gitea_repository.repo](https://registry.terraform.io/providers/Lerentis/gitea/latest/docs/resources/repository) | resource |
-| [null_resource.template_repo](https://registry.terraform.io/providers/hashicorp/null/latest/docs/resources/resource) | resource |
-| [null_resource.webhook](https://registry.terraform.io/providers/hashicorp/null/latest/docs/resources/resource) | resource |
+| [restapi_object.repository](https://registry.terraform.io/providers/Mastercard/restapi/3.0.0/docs/resources/object) | resource |
+| [restapi_object.webhook](https://registry.terraform.io/providers/Mastercard/restapi/3.0.0/docs/resources/object) | resource |
 
 ## Inputs
 
 | Name | Description | Type | Default | Required |
 |------|-------------|------|---------|:--------:|
 | <a name="input_default_branch"></a> [default\_branch](#input\_default\_branch) | Default branch name | `string` | `"main"` | no |
+| <a name="input_description"></a> [description](#input\_description) | Short description of the repository | `string` | `""` | no |
 | <a name="input_forgejo_base_url"></a> [forgejo\_base\_url](#input\_forgejo\_base\_url) | STACKIT Git base URL | `string` | `"https://git-service.git.onstackit.cloud"` | no |
 | <a name="input_forgejo_organization"></a> [forgejo\_organization](#input\_forgejo\_organization) | STACKIT Git organization where the repository will be created | `string` | n/a | yes |
 | <a name="input_forgejo_token"></a> [forgejo\_token](#input\_forgejo\_token) | STACKIT Git API token (from backplane) | `string` | n/a | yes |
-| <a name="input_repository_auto_init"></a> [repository\_auto\_init](#input\_repository\_auto\_init) | Auto-initialize the repository with a README | `bool` | `true` | no |
-| <a name="input_repository_description"></a> [repository\_description](#input\_repository\_description) | Short description of the repository | `string` | `""` | no |
-| <a name="input_repository_name"></a> [repository\_name](#input\_repository\_name) | Name of the Git repository to create | `string` | n/a | yes |
-| <a name="input_repository_private"></a> [repository\_private](#input\_repository\_private) | Whether the repository should be private | `bool` | `true` | no |
-| <a name="input_template_name"></a> [template\_name](#input\_template\_name) | Name of the template repository | `string` | `"app-template-python"` | no |
-| <a name="input_template_namespace"></a> [template\_namespace](#input\_template\_namespace) | Value for the NAMESPACE variable used during template substitution | `string` | `""` | no |
-| <a name="input_template_owner"></a> [template\_owner](#input\_template\_owner) | Owner/organization of the template repository | `string` | `"stackit"` | no |
-| <a name="input_template_repo_name"></a> [template\_repo\_name](#input\_template\_repo\_name) | Value for the REPO\_NAME variable used during template substitution | `string` | `""` | no |
-| <a name="input_use_template"></a> [use\_template](#input\_use\_template) | Create repository from a template repository instead of creating an empty one | `bool` | `false` | no |
-| <a name="input_webhook_events"></a> [webhook\_events](#input\_webhook\_events) | List of Forgejo events that trigger the webhook | `list(string)` | <pre>[<br>  "push",<br>  "create"<br>]</pre> | no |
+| <a name="input_name"></a> [name](#input\_name) | Name of the Git repository to create | `string` | n/a | yes |
+| <a name="input_private"></a> [private](#input\_private) | Whether the repository should be private | `bool` | `true` | no |
+| <a name="input_template_repo_path"></a> [template\_repo\_path](#input\_template\_repo\_path) | Path (owner/name) to the template repository. | `string` | `""` | no |
+| <a name="input_use_template"></a> [use\_template](#input\_use\_template) | Create repository from a template repository given by template\_repo\_path instead of creating an empty one. | `bool` | `false` | no |
+| <a name="input_webhook_events"></a> [webhook\_events](#input\_webhook\_events) | List of Forgejo events that trigger the webhook | `list(string)` | <pre>[<br/>  "push",<br/>  "create"<br/>]</pre> | no |
 | <a name="input_webhook_secret"></a> [webhook\_secret](#input\_webhook\_secret) | Secret for webhook authentication | `string` | `""` | no |
 | <a name="input_webhook_url"></a> [webhook\_url](#input\_webhook\_url) | Webhook URL to configure (e.g., Argo Workflows EventSource URL). Leave empty to skip. | `string` | `""` | no |
 

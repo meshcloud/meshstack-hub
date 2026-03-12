@@ -1,0 +1,42 @@
+# ✅ Git Repository Created
+
+**${name}** is ready on STACKIT Git Forgejo.
+
+## Repository Details
+
+- **Name**: ${name}
+- **Owner**: ${owner}
+- **URL**: ${repo_html_url}
+- **Clone URL**: `${repo_clone_url}`
+%{ if use_template ~}
+- **Created from template**: `${template_repo_path}`
+%{ endif ~}
+
+## Next Steps
+
+1. **Clone your repository**:
+   ```bash
+   git clone ${repo_clone_url}
+   cd ${name}
+   ```
+
+2. **Start developing**: Edit application files and push your changes.
+
+3. **Push your changes**:
+   ```bash
+   git add .
+   git commit -m "Initial commit"
+   git push origin ${default_branch}
+   ```
+
+%{ if webhook_url != "" ~}
+## Webhook Configured
+
+Pushes to this repository will trigger at:
+- **Webhook URL**: `${webhook_url}`
+- **Events**: ${webhook_events_text}
+%{ endif ~}
+
+## Resources
+
+- [Open repository in STACKIT Git](${repo_html_url})
