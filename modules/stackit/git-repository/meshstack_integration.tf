@@ -39,7 +39,7 @@ output "building_block_definition_version_ref" {
 }
 
 module "backplane" {
-  source = "github.com/meshcloud/meshstack-hub//modules/stackit/git-repository/backplane?ref=feature/stackit-git"
+  source = "github.com/meshcloud/meshstack-hub//modules/stackit/git-repository/backplane?ref=a3843c80c76c4a0298769eea8d93807bb2b271fc"
 
   forgejo_base_url     = var.forgejo_base_url
   forgejo_token        = var.forgejo_token
