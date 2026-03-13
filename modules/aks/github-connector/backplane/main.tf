@@ -9,59 +9,36 @@
 # - update image pull secret
 # - deployment
 #
-data "azurerm_subscription" "current" {
+locals {
+  acr_resource_group_name = coalesce(var.acr.resource_group_name, azurerm_resource_group.bb_github_connector.name)
 }
 
 data "azurerm_kubernetes_cluster" "aks" {
-  name                = "aks"
-  resource_group_name = "aks-rg"
+  name                = var.aks.cluster_name
+  resource_group_name = var.aks.resource_group_name
 }
 
 resource "azurerm_resource_group" "bb_github_connector" {
-  name     = "bb-github-connector"
-  location = "Germany West Central"
-}
-
-# SPN for Terraform state
-
-resource "azuread_application" "bb_github_connector" {
-  display_name = "bb-github-connector"
-}
-
-resource "azuread_service_principal" "bb_github_connector" {
-  client_id = azuread_application.bb_github_connector.client_id
-}
-
-resource "azuread_service_principal_password" "bb_github_connector" {
-  service_principal_id = azuread_service_principal.bb_github_connector.id
-}
-
-resource "azurerm_role_assignment" "bb_github_connector" {
-  scope                = data.azurerm_subscription.current.id
-  role_definition_name = "Contributor" # TODO: restrict permissions
-  principal_id         = azuread_service_principal.bb_github_connector.object_id
-}
-
-resource "azurerm_role_assignment" "terraform_state" {
-  role_definition_name = "Storage Blob Data Owner"
-  principal_id         = azuread_service_principal.bb_github_connector.object_id
-  scope                = var.tfstates_resource_manager_id
+  name     = var.resource_prefix
+  location = var.acr.location
 }
 
 # Container registry
-# We're using a shared container registry for all consumers of this building block.
-# This could easily be changed to deploy a dedicated container registry per building block
-# or by making the container registry configurable.
+# A shared ACR is used for all building block consumers by default.
+# Set var.acr.resource_group_name to place the ACR in an existing resource group.
 
 resource "azurerm_container_registry" "acr" {
-  name                = "githubconnector"
-  resource_group_name = azurerm_resource_group.bb_github_connector.name
-  location            = azurerm_resource_group.bb_github_connector.location
+  name                = replace(var.resource_prefix, "-", "")
+  resource_group_name = local.acr_resource_group_name
+  location            = var.acr.location
   sku                 = "Basic"
 }
 
+# Service principal used by GitHub Actions to push images to ACR.
+# Granted AcrPush (not Contributor) — scoped to this registry only.
+
 resource "azuread_application" "bb_github_connector_acr" {
-  display_name = "bb-github-connector-acr"
+  display_name = "${var.resource_prefix}-acr"
 }
 
 resource "azuread_service_principal" "bb_github_connector_acr" {
@@ -74,7 +51,7 @@ resource "azuread_service_principal_password" "bb_github_connector_acr" {
 
 resource "azurerm_role_assignment" "bb_github_connector_acr" {
   scope                = azurerm_container_registry.acr.id
-  role_definition_name = "Contributor"
+  role_definition_name = "AcrPush"
   principal_id         = azuread_service_principal.bb_github_connector_acr.object_id
 }
 

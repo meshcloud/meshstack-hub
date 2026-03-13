@@ -1,41 +1,119 @@
-locals {
-  owning_workspace_identifier                      = "my-workspace"
-  full_platform_identifier                         = "aks.k8s"
-  github_actions_connector_definition_version_uuid = "61f8de01-551d-4f1f-b9c4-ba94323910cd"
-  github_org                                       = "my-org"
-  github_repo_definition_uuid                      = "11240216-2b3c-42db-8e15-c7b595cf207a"
-  github_repo_definition_version_uuid              = "24654b9d-aedd-4dd3-94b0-0bc3bef52cb7"
-  landing_zone_dev_identifier                      = "aks-dev"
-  landing_zone_prod_identifier                     = "aks-prod"
-  tags = {
+terraform {
+  required_providers {
+    meshstack = {
+      source  = "meshcloud/meshstack"
+      version = "~> 0.19.3"
+    }
   }
-  notification_subscribers = [
-  ]
-  project_tags_yaml = trimspace(<<-YAML
-dev:
-  environment:
-    - "dev"
-prod:
-  environment:
-    - "prod"
-YAML
-  )
+}
+
+variable "meshstack" {
+  type = object({
+    owning_workspace_identifier = string
+  })
+}
+
+variable "full_platform_identifier" {
+  type    = string
+  default = "aks.k8s"
+}
+
+variable "github_actions_connector_definition_version_uuid" {
+  type    = string
+  default = "00000000-0000-0000-0000-000000000001"
+}
+
+variable "github_org" {
+  type    = string
+  default = "my-org"
+}
+
+variable "github_repo_definition_uuid" {
+  type    = string
+  default = "00000000-0000-0000-0000-000000000002"
+}
+
+variable "github_repo_definition_version_uuid" {
+  type    = string
+  default = "00000000-0000-0000-0000-000000000003"
+}
+
+variable "landing_zone_dev_identifier" {
+  type    = string
+  default = "aks-dev"
+}
+
+variable "landing_zone_prod_identifier" {
+  type    = string
+  default = "aks-prod"
+}
+
+variable "tags" {
+  type    = map(list(string))
+  default = {}
+}
+
+variable "notification_subscribers" {
+  type    = list(string)
+  default = []
+}
+
+variable "hub" {
+  type = object({
+    git_ref = string
+  })
+  default = {
+    git_ref = "main"
+  }
+  description = "Hub release reference. Set git_ref to a tag (e.g. 'v1.2.3') or branch for the meshstack-hub repo."
+}
+
+variable "project_tags_yaml" {
+  type    = string
+  default = <<-YAML
+    dev:
+      environment:
+        - "dev"
+    prod:
+      environment:
+        - "prod"
+  YAML
+}
+
+variable "template_owner" {
+  type        = string
+  description = "GitHub owner (org or user) of the repository template to use when creating the application repository."
+  default     = "likvid-bank"
+}
+
+variable "template_repo" {
+  type        = string
+  description = "Name of the GitHub repository template to use when creating the application repository."
+  default     = "aks-starterkit-template"
+}
+
+variable "apps_base_domain" {
+  type        = string
+  description = "Base domain used for application URLs (e.g. 'likvid-k8s.msh.host'). The app subdomain will be prefixed to this value."
+  default     = "likvid-k8s.msh.host"
 }
 
 resource "meshstack_building_block_definition" "aks_starterkit" {
   metadata = {
-    owned_by_workspace = local.owning_workspace_identifier
-    tags               = local.tags
+    owned_by_workspace = var.meshstack.owning_workspace_identifier
+    tags               = var.tags
   }
 
   spec = {
-    description              = "The AKS Starterkit provides application teams with a pre-configured Kubernetes environment following Likvid Bank's best practices. It includes a Git repository, a CI/CD pipeline using GitHub Actions, and a secure container registry integration."
+    description              = "The AKS Starterkit provides application teams with a pre-configured Kubernetes environment following best practices. It includes a Git repository, a CI/CD pipeline using GitHub Actions, and a secure container registry integration."
     display_name             = "AKS Starterkit"
-    notification_subscribers = local.notification_subscribers
+    notification_subscribers = var.notification_subscribers
+    symbol                   = "https://raw.githubusercontent.com/meshcloud/meshstack-hub/main/modules/aks/starterkit/buildingblock/logo.png"
+
     readme = chomp(<<EOT
 ## What is it?
 
-The **AKS Starterkit** provides application teams with a pre-configured Kubernetes environment following Likvid Bank's best practices. It automates the creation of essential infrastructure, including a Git repository, a CI/CD pipeline using GitHub Actions, and a secure container registry integration.
+The **AKS Starterkit** provides application teams with a pre-configured Kubernetes environment following best practices. It automates the creation of essential infrastructure, including a Git repository, a CI/CD pipeline using GitHub Actions, and a secure container registry integration.
 
 ## When to use it?
 
@@ -48,7 +126,7 @@ This building block is ideal for teams that:
 ## Usage Examples
 
 1.  **Deploying a microservice**: A developer can use this building block to create a Git repository and CI/CD pipeline for a new microservice. The pipeline will build and scan container images before deploying them into separate Kubernetes namespaces for development and production.
-2.  **Setting up a new project**: A new project team can quickly get started with an opinionated AKS setup that ensures compliance with Likvid Bank’s security and operational standards.
+2.  **Setting up a new project**: A new project team can quickly get started with an opinionated AKS setup that ensures compliance with the organization's security and operational standards.
 
 ## Resources Created
 
@@ -64,8 +142,8 @@ This building block automates the creation of the following resources:
 
 ## Shared Responsibilities
 
-| Responsibility                               | Platform Team (Likvid Bank) | Application Team |
-| -------------------------------------------- | --------------------------- | ------------------ |
+| Responsibility                               | Platform Team | Application Team |
+| -------------------------------------------- | ------------- | ---------------- |
 | Provision and manage AKS cluster             | ✅                         | ❌                |
 | Create and manage Git repository             | ✅                         | ❌                |
 | Set up GitHub Actions CI/CD pipeline        | ✅                         | ❌                |
@@ -89,7 +167,7 @@ EOT
         repository_url                 = "https://github.com/meshcloud/meshstack-hub.git"
         terraform_version              = "1.9.0"
         async                          = false
-        ref_name                       = "07ec7ac0195f62c3e6626d4445e749e33f7e3fe3"
+        ref_name                       = var.hub.git_ref
         repository_path                = "modules/aks/starterkit/buildingblock"
         use_mesh_http_backend_fallback = true
       }
@@ -104,7 +182,7 @@ EOT
         updateable_by_consumer = false
       }
       "full_platform_identifier" = {
-        argument               = jsonencode(local.full_platform_identifier)
+        argument               = jsonencode(var.full_platform_identifier)
         assignment_type        = "STATIC"
         display_name           = "Full Platform Identifier"
         is_environment         = false
@@ -112,7 +190,7 @@ EOT
         updateable_by_consumer = false
       }
       "github_actions_connector_definition_version_uuid" = {
-        argument               = jsonencode(local.github_actions_connector_definition_version_uuid)
+        argument               = jsonencode(var.github_actions_connector_definition_version_uuid)
         assignment_type        = "STATIC"
         display_name           = "Github Actions Connector Definition Version Uuid"
         is_environment         = false
@@ -120,7 +198,7 @@ EOT
         updateable_by_consumer = false
       }
       "github_org" = {
-        argument               = jsonencode(local.github_org)
+        argument               = jsonencode(var.github_org)
         assignment_type        = "STATIC"
         display_name           = "Github Org"
         is_environment         = false
@@ -128,7 +206,7 @@ EOT
         updateable_by_consumer = false
       }
       "github_repo_definition_uuid" = {
-        argument               = jsonencode(local.github_repo_definition_uuid)
+        argument               = jsonencode(var.github_repo_definition_uuid)
         assignment_type        = "STATIC"
         display_name           = "Github Repo Definition Uuid"
         is_environment         = false
@@ -136,7 +214,7 @@ EOT
         updateable_by_consumer = false
       }
       "github_repo_definition_version_uuid" = {
-        argument               = jsonencode(local.github_repo_definition_version_uuid)
+        argument               = jsonencode(var.github_repo_definition_version_uuid)
         assignment_type        = "STATIC"
         display_name           = "Github Repo Definition Version Uuid"
         is_environment         = false
@@ -151,8 +229,26 @@ EOT
         type                   = "STRING"
         updateable_by_consumer = false
       }
+      "template_owner" = {
+        argument               = jsonencode(var.template_owner)
+        assignment_type        = "STATIC"
+        description            = "GitHub owner (org or user) of the repository template."
+        display_name           = "Template Owner"
+        is_environment         = false
+        type                   = "STRING"
+        updateable_by_consumer = false
+      }
+      "template_repo" = {
+        argument               = jsonencode(var.template_repo)
+        assignment_type        = "STATIC"
+        description            = "Name of the GitHub repository template."
+        display_name           = "Template Repo"
+        is_environment         = false
+        type                   = "STRING"
+        updateable_by_consumer = false
+      }
       "landing_zone_dev_identifier" = {
-        argument               = jsonencode(local.landing_zone_dev_identifier)
+        argument               = jsonencode(var.landing_zone_dev_identifier)
         assignment_type        = "STATIC"
         display_name           = "Landing Zone Dev Identifier"
         is_environment         = false
@@ -160,7 +256,7 @@ EOT
         updateable_by_consumer = false
       }
       "landing_zone_prod_identifier" = {
-        argument               = jsonencode(local.landing_zone_prod_identifier)
+        argument               = jsonencode(var.landing_zone_prod_identifier)
         assignment_type        = "STATIC"
         display_name           = "Landing Zone Prod Identifier"
         is_environment         = false
@@ -176,7 +272,7 @@ EOT
         updateable_by_consumer = false
       }
       "project_tags_yaml" = {
-        argument               = jsonencode(local.project_tags_yaml)
+        argument               = jsonencode(chomp(var.project_tags_yaml))
         assignment_type        = "STATIC"
         description            = ""
         display_name           = "Project Tags"
@@ -188,6 +284,15 @@ EOT
         assignment_type        = "WORKSPACE_IDENTIFIER"
         description            = ""
         display_name           = "Workspace Identifier"
+        is_environment         = false
+        type                   = "STRING"
+        updateable_by_consumer = false
+      }
+      "apps_base_domain" = {
+        argument               = jsonencode(var.apps_base_domain)
+        assignment_type        = "STATIC"
+        description            = "Base domain used for application URLs. The app subdomain will be prefixed to this value."
+        display_name           = "Apps Base Domain"
         is_environment         = false
         type                   = "STRING"
         updateable_by_consumer = false
