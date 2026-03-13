@@ -95,7 +95,7 @@ output "building_block_definition_version_ref" {
 }
 
 module "backplane" {
-  source                 = "./backplane"
+  source                 = "./backplane" # TODO use proper URL
   cluster_host           = var.cluster_host
   cluster_ca_certificate = var.client_certificate
   client_key             = var.client_key
