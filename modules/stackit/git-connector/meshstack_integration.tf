@@ -39,15 +39,6 @@ variable "cluster_kubeconfig" {
   sensitive   = true
 }
 
-variable "owning_workspace_identifier" {
-  type = string
-}
-
-variable "meshstack_hub_git_ref" {
-  type    = string
-  default = "main"
-}
-
 variable "forgejo_host" {
   type = string
 }
@@ -80,6 +71,29 @@ variable "forgejo_repo_definition_uuid" {
   description = "The Building Block definition UUID of the repository parent."
 }
 
+variable "meshstack" {
+  type = object({
+    owning_workspace_identifier = string
+  })
+}
+
+variable "hub" {
+  type = object({
+    git_ref   = optional(string, "main")
+    bbd_draft = optional(bool, false)
+  })
+  default     = {}
+  description = <<-EOT
+  `git_ref`: Hub release reference. Set to a tag (e.g. 'v1.2.3') or branch or commit sha of meshcloud/meshstack-hub repo.<br>
+  `bbd_draft`: If true, allows changing the building block definition for upgrading dependent building blocks.
+  EOT
+}
+
+output "building_block_definition_version_ref" {
+  value       = var.hub.bbd_draft ? meshstack_building_block_definition.this.version_latest : meshstack_building_block_definition.this.version_latest_release
+  description = "Version of BBD is consumed in Building Block compositions, for example in the backplane of starter kits."
+}
+
 module "backplane" {
   source                 = "./backplane"
   cluster_host           = var.cluster_host
@@ -89,9 +103,9 @@ module "backplane" {
   cluster_kubeconfig     = var.cluster_kubeconfig
 }
 
-resource "meshstack_building_block_definition" "stackit_git_repo" {
+resource "meshstack_building_block_definition" "this" {
   metadata = {
-    owned_by_workspace = var.owning_workspace_identifier
+    owned_by_workspace = var.meshstack.owning_workspace_identifier
   }
 
   spec = {
@@ -104,15 +118,15 @@ resource "meshstack_building_block_definition" "stackit_git_repo" {
   }
 
   version_spec = {
-    draft         = true
+    draft         = var.hub.bbd_draft
     deletion_mode = "DELETE"
 
     implementation = {
       terraform = {
         terraform_version              = "1.9.0"
         repository_url                 = "https://github.com/meshcloud/meshstack-hub.git"
-        repository_path                = "modules/stackit/connector/buildingblock"
-        ref_name                       = var.meshstack_hub_git_ref
+        repository_path                = "modules/stackit/git-connector/buildingblock"
+        ref_name                       = var.hub.git_ref
         async                          = false
         use_mesh_http_backend_fallback = true
       }
