@@ -128,10 +128,10 @@ resource "meshstack_building_block_v2" "repo" {
         value_bool = true
       }
       template_owner = {
-        value_string = var.template_owner
+        value_string = split("/", var.github_template_repo_path)[0]
       }
       template_repo = {
-        value_string = var.template_repo
+        value_string = split("/", var.github_template_repo_path)[1]
       }
     }
   }

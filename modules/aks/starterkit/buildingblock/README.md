@@ -49,13 +49,12 @@ No modules.
 | <a name="input_github_repo_definition_uuid"></a> [github\_repo\_definition\_uuid](#input\_github\_repo\_definition\_uuid) | UUID of the GitHub repository building block definition. | `string` | n/a | yes |
 | <a name="input_github_repo_definition_version_uuid"></a> [github\_repo\_definition\_version\_uuid](#input\_github\_repo\_definition\_version\_uuid) | UUID of the GitHub repository building block definition version. | `string` | n/a | yes |
 | <a name="input_github_repo_input_repo_visibility"></a> [github\_repo\_input\_repo\_visibility](#input\_github\_repo\_input\_repo\_visibility) | Visibility of the GitHub repository (e.g., public, private). | `string` | `"private"` | no |
+| <a name="input_github_template_repo_path"></a> [github\_template\_repo\_path](#input\_github\_template\_repo\_path) | GitHub repository template to use when creating the application repository, in the format 'owner/repo'. | `string` | `"likvid-bank/aks-starterkit-template"` | no |
 | <a name="input_landing_zone_dev_identifier"></a> [landing\_zone\_dev\_identifier](#input\_landing\_zone\_dev\_identifier) | AKS Landing zone identifier for the development tenant. | `string` | n/a | yes |
 | <a name="input_landing_zone_prod_identifier"></a> [landing\_zone\_prod\_identifier](#input\_landing\_zone\_prod\_identifier) | AKS Landing zone identifier for the production tenant. | `string` | n/a | yes |
 | <a name="input_name"></a> [name](#input\_name) | This name will be used for the created projects, app subdomain and GitHub repository. | `string` | n/a | yes |
-| <a name="input_project_tags_yaml"></a> [project\_tags\_yaml](#input\_project\_tags\_yaml) | YAML configuration for project tags that will be applied to dev and prod projects. Expected structure:<pre>yaml<br>dev:<br>  key1:<br>    - "value1"<br>    - "value2"<br>  key2:<br>    - "value3"<br>prod:<br>  key1:<br>    - "value4"<br>  key2:<br>    - "value5"<br>    - "value6"</pre> | `string` | `"dev: {}\nprod: {}\n"` | no |
+| <a name="input_project_tags"></a> [project\_tags](#input\_project\_tags) | Tags for the created Dev/Prod projects. | <pre>object({<br>    dev  = map(list(string))<br>    prod = map(list(string))<br>  })</pre> | <pre>{<br>  "dev": {},<br>  "prod": {}<br>}</pre> | no |
 | <a name="input_repo_admin"></a> [repo\_admin](#input\_repo\_admin) | GitHub handle of the user who will be assigned as the repository admin. Delete building block definition input if not needed. | `string` | `null` | no |
-| <a name="input_template_owner"></a> [template\_owner](#input\_template\_owner) | GitHub owner (org or user) of the repository template to use when creating the application repository. | `string` | `"likvid-bank"` | no |
-| <a name="input_template_repo"></a> [template\_repo](#input\_template\_repo) | Name of the GitHub repository template to use when creating the application repository. | `string` | `"aks-starterkit-template"` | no |
 | <a name="input_workspace_identifier"></a> [workspace\_identifier](#input\_workspace\_identifier) | n/a | `string` | n/a | yes |
 
 ## Outputs

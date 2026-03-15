@@ -1,12 +1,3 @@
-terraform {
-  required_providers {
-    meshstack = {
-      source  = "meshcloud/meshstack"
-      version = "~> 0.19.3"
-    }
-  }
-}
-
 variable "meshstack" {
   type = object({
     owning_workspace_identifier = string
@@ -84,16 +75,10 @@ variable "project_tags" {
   description = "Configure project tags of starter kit, for dev and prod."
 }
 
-variable "template_owner" {
+variable "github_template_repo_path" {
   type        = string
-  description = "GitHub owner (org or user) of the repository template to use when creating the application repository."
-  default     = "likvid-bank"
-}
-
-variable "template_repo" {
-  type        = string
-  description = "Name of the GitHub repository template to use when creating the application repository."
-  default     = "aks-starterkit-template"
+  description = "GitHub repository template to use when creating the application repository, in the format 'owner/repo'."
+  default     = "likvid-bank/aks-starterkit-template"
 }
 
 variable "apps_base_domain" {
@@ -238,7 +223,7 @@ EOT
         updateable_by_consumer = false
       }
       "template_owner" = {
-        argument               = jsonencode(var.template_owner)
+        argument               = jsonencode(split("/", var.github_template_repo_path)[0])
         assignment_type        = "STATIC"
         description            = "GitHub owner (org or user) of the repository template."
         display_name           = "Template Owner"
@@ -247,7 +232,7 @@ EOT
         updateable_by_consumer = false
       }
       "template_repo" = {
-        argument               = jsonencode(var.template_repo)
+        argument               = jsonencode(split("/", var.github_template_repo_path)[1])
         assignment_type        = "STATIC"
         description            = "Name of the GitHub repository template."
         display_name           = "Template Repo"
@@ -351,5 +336,14 @@ EOT
       "TENANT_LIST",
       "TENANT_SAVE",
     ]
+  }
+}
+
+terraform {
+  required_providers {
+    meshstack = {
+      source  = "meshcloud/meshstack"
+      version = "~> 0.19.3"
+    }
   }
 }
