@@ -40,9 +40,9 @@ variable "project_tags" {
   description = "Configure project tags of starter kit, for dev and prod."
 }
 
-variable "git_repository_template_path" {
+variable "repo_clone_addr" {
   type        = string
-  description = "Path to Forgejo template repo for initial app repo setup"
+  description = "URL to clone into the starterkit git repository."
 }
 
 variable "tags" {
@@ -192,11 +192,11 @@ EOT
         # jsonencode twice is correct, see https://registry.terraform.io/providers/meshcloud/meshstack/latest/docs/resources/building_block_definition#argument-1
         argument = jsonencode(jsonencode(var.project_tags))
       }
-      "git_repository_template_path" = {
+      "repo_clone_addr" = {
         assignment_type = "STATIC"
         type            = "STRING"
-        display_name    = "Git Repository Template Path"
-        argument        = jsonencode(var.git_repository_template_path)
+        display_name    = "Clone from URL"
+        argument        = jsonencode(var.repo_clone_addr)
       }
       "building_block_definition_version_refs" = {
         assignment_type = "STATIC"

@@ -8,8 +8,8 @@
 - **Owner**: ${owner}
 - **URL**: ${repo_html_url}
 - **Clone URL**: `${repo_clone_url}`
-%{ if use_template ~}
-- **Created from template**: `${template_repo_path}`
+%{ if clone_addr != "" ~}
+- **Initialized from**: `${clone_addr}`
 %{ endif ~}
 
 ## Next Steps
@@ -28,14 +28,6 @@
    git commit -m "Initial commit"
    git push origin ${default_branch}
    ```
-
-%{ if webhook_url != "" ~}
-## Webhook Configured
-
-Pushes to this repository will trigger at:
-- **Webhook URL**: `${webhook_url}`
-- **Events**: ${webhook_events_text}
-%{ endif ~}
 
 ## Resources
 

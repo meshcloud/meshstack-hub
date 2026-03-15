@@ -42,9 +42,9 @@ variable "project_tags" {
   description = "Tags for dev/prod meshProject."
 }
 
-variable "git_repository_template_path" {
+variable "repo_clone_addr" {
   type        = string
-  description = "Template repository path (owner/name) used for starterkit git repository creation."
+  description = "URL to clone into the starterkit git repository."
 }
 
 variable "building_block_definition_version_refs" {
