@@ -39,7 +39,7 @@ output "building_block_definition_version_ref" {
 }
 
 module "backplane" {
-  source = "github.com/meshcloud/meshstack-hub//modules/stackit/git-repository/backplane?ref=a3843c80c76c4a0298769eea8d93807bb2b271fc"
+  source = "github.com/meshcloud/meshstack-hub//modules/stackit/git-repository/backplane?ref=main"
 
   forgejo_base_url     = var.forgejo_base_url
   forgejo_token        = var.forgejo_token
@@ -54,7 +54,7 @@ resource "meshstack_building_block_definition" "this" {
   spec = {
     display_name     = "STACKIT Git Repository"
     symbol           = "https://raw.githubusercontent.com/meshcloud/meshstack-hub/${var.hub.git_ref}/modules/stackit/git-repository/buildingblock/logo.png"
-    description      = "Provisions a Git repository on STACKIT Git with optional template initialization and CI/CD webhook configuration."
+    description      = "Provisions a Git repository on STACKIT Git (Forgejo) with optional clone_addr for one-time cloning from any public Git URL."
     support_url      = "https://git-service.git.onstackit.cloud"
     target_type      = "WORKSPACE_LEVEL"
     run_transparency = true
@@ -133,25 +133,9 @@ resource "meshstack_building_block_definition" "this" {
         default_value   = jsonencode(true)
       }
 
-      use_template = {
-        display_name    = "Create from Template"
-        description     = "Initialize the repository from a pre-configured application template"
-        type            = "BOOLEAN"
-        assignment_type = "USER_INPUT"
-        default_value   = jsonencode(false)
-      }
-
-      template_repo_path = {
-        display_name    = "Template Repo Path"
-        description     = "Path (owner/name) of the template repository to use (only relevant when 'use_template' is true), e.g. likvid-templates/app-template-python."
-        type            = "STRING"
-        assignment_type = "USER_INPUT"
-        default_value   = jsonencode("")
-      }
-
-      webhook_url = {
-        display_name    = "Webhook URL"
-        description     = "Webhook URL to trigger CI/CD builds (e.g., Argo Workflows EventSource). Optional, leave empty to skip."
+      clone_addr = {
+        display_name    = "Clone from URL"
+        description     = "Optional URL to clone into this repository, e.g. 'https://github.com/owner/repo.git'. Leave empty to create an empty repository."
         type            = "STRING"
         assignment_type = "USER_INPUT"
         default_value   = jsonencode("")

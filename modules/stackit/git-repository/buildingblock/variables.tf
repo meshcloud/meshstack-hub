@@ -47,48 +47,10 @@ variable "default_branch" {
   default     = "main"
 }
 
-# ── Template options ───────────────────────────────────────────────────────────
+# ── Clone options ──────────────────────────────────────────────────────────────
 
-variable "use_template" {
-  type        = bool
-  description = "Create repository from a template repository given by template_repo_path instead of creating an empty one."
-  default     = false
-}
-
-variable "template_repo_path" {
+variable "clone_addr" {
   type        = string
-  description = "Path (owner/name) to the template repository."
+  description = "Optional URL to clone into this repository, e.g. 'https://github.com/owner/repo.git'. Leave empty to create an empty repository."
   default     = ""
-
-  validation {
-    condition     = var.template_repo_path == "" || can(regex("^[^/]+/[^/]+$", var.template_repo_path))
-    error_message = "template_repo_path must be in format owner/name."
-  }
-}
-
-variable "is_template_repo" {
-  type        = bool
-  description = "If true, mark the created repository itself as a Forgejo template repository."
-  default     = false
-}
-
-# ── Webhook options ────────────────────────────────────────────────────────────
-
-variable "webhook_url" {
-  type        = string
-  description = "Webhook URL to configure (e.g., Argo Workflows EventSource URL). Leave empty to skip."
-  default     = ""
-}
-
-variable "webhook_secret" {
-  type        = string
-  description = "Secret for webhook authentication"
-  sensitive   = true
-  default     = ""
-}
-
-variable "webhook_events" {
-  type        = list(string)
-  description = "List of Forgejo events that trigger the webhook"
-  default     = ["push", "create"]
 }

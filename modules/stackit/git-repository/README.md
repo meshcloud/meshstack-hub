@@ -14,7 +14,7 @@ It combines:
 
 - workspace-level target type
 - static inputs from backplane (`forgejo_base_url`, `forgejo_token`, `forgejo_organization`)
-- user inputs (`name`, `description`, `private`, `use_template`, `template_repo_path`, `webhook_url`)
+- user inputs (`name`, `description`, `private`, `clone_addr`)
 - outputs exposed to users (`repository_html_url`, `repository_clone_url`, `repository_ssh_url`, `summary`)
 
 This allows platform teams to publish a reusable self-service Git repository building block for tenants.
@@ -24,6 +24,6 @@ This allows platform teams to publish a reusable self-service Git repository bui
 The backplane ensures that `forgejo_organization` exists before building block usage:
 
 - it calls the Forgejo org endpoint via `data "http"`, authenticated with the configured token
-- if the org is missing (`status_code != 200`), it creates it via `resource "gitea_org"`
+- if the org is missing (`status_code != 200`), it fails with a clear error message
 
 Because the lookup call is authenticated, this also validates that the configured token is working against the target Forgejo instance.
