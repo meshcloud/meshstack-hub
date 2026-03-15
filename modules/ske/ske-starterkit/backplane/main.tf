@@ -31,7 +31,7 @@ output "building_block_definition_version_refs" {
 }
 
 module "git_repository" {
-  source = "github.com/meshcloud/meshstack-hub//modules/stackit/git-repository?ref=feature/stackit-git"
+  source = "github.com/meshcloud/meshstack-hub//modules/stackit/git-repository?ref=2e990f277119f33db50af78032768c434ab4b7bb"
 
   meshstack = var.meshstack
   hub       = var.hub
