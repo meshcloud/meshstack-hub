@@ -255,6 +255,14 @@ EOT
         type                   = "STRING"
         updateable_by_consumer = false
       }
+      "repo_admin" = {
+        assignment_type        = "USER_INPUT"
+        description            = "GitHub handle of the user who will be assigned as the repository admin. Leave as 'null' if not needed."
+        display_name           = "Repo Admin"
+        default_value          = jsonencode("null")
+        type                   = "STRING"
+        updateable_by_consumer = false
+      }
       "landing_zone_dev_identifier" = {
         argument               = jsonencode(var.landing_zone_identifiers.dev)
         assignment_type        = "STATIC"
