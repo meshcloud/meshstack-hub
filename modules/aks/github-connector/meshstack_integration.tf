@@ -47,12 +47,14 @@ variable "notification_subscribers" {
 
 variable "hub" {
   type = object({
-    git_ref = string
+    git_ref   = optional(string, "main")
+    bbd_draft = optional(bool, false)
   })
-  default = {
-    git_ref = "main"
-  }
-  description = "Hub release reference. Set git_ref to a tag (e.g. 'v1.2.3') or branch for the meshstack-hub repo."
+  default     = {}
+  description = <<-EOT
+  `git_ref`: Hub reference. Set to a tag (e.g. 'v1.2.3') or branch or commit sha of meshcloud/meshstack-hub repo.<br>
+  `bbd_draft`: If true, allows changing the building block definition for upgrading dependent building blocks.
+  EOT
 }
 
 resource "meshstack_building_block_definition" "aks_github_connector" {
@@ -65,7 +67,7 @@ resource "meshstack_building_block_definition" "aks_github_connector" {
     description              = "CI/CD pipeline using GitHub Actions for secure, scalable AKS deployment. Sets up service accounts, secrets, and workflows for seamless GitHub Actions integration with an AKS namespace."
     display_name             = "GitHub Actions AKS Connector"
     notification_subscribers = var.notification_subscribers
-    symbol                   = "https://raw.githubusercontent.com/meshcloud/meshstack-hub/main/modules/aks/github-connector/buildingblock/logo.png"
+    symbol                   = "https://raw.githubusercontent.com/meshcloud/meshstack-hub/${var.hub.git_ref}/modules/aks/github-connector/buildingblock/logo.png"
     target_type              = "TENANT_LEVEL"
     supported_platforms      = [{ name = "AZURE_KUBERNETES_SERVICE" }]
 
@@ -110,7 +112,7 @@ EOT
   }
 
   version_spec = {
-    draft = true
+    draft = var.hub.bbd_draft
     implementation = {
       terraform = {
         repository_url                 = "https://github.com/meshcloud/meshstack-hub.git"
