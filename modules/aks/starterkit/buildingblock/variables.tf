@@ -72,45 +72,16 @@ variable "repo_admin" {
   default     = null
 }
 
-variable "project_tags_yaml" {
-  type        = string
-  description = <<EOF
-YAML configuration for project tags that will be applied to dev and prod projects. Expected structure:
-
-```yaml
-dev:
-  key1:
-    - "value1"
-    - "value2"
-  key2:
-    - "value3"
-prod:
-  key1:
-    - "value4"
-  key2:
-    - "value5"
-    - "value6"
-```
-EOF
-  default     = <<EOF
-dev: {}
-prod: {}
-EOF
-
-  validation {
-    condition     = can(yamldecode(var.project_tags_yaml))
-    error_message = "project_tags_yaml must be valid YAML"
+variable "project_tags" {
+  type = object({
+    dev  = map(list(string))
+    prod = map(list(string))
+  })
+  default = {
+    dev  = {}
+    prod = {}
   }
-
-  validation {
-    condition     = can(yamldecode(var.project_tags_yaml).dev) && yamldecode(var.project_tags_yaml).dev != null
-    error_message = "dev section is required in project_tags_yaml"
-  }
-
-  validation {
-    condition     = can(yamldecode(var.project_tags_yaml).prod) && yamldecode(var.project_tags_yaml).prod != null
-    error_message = "prod section is required in project_tags_yaml"
-  }
+  description = "Tags for the created Dev/Prod projects."
 }
 variable "template_owner" {
   type        = string
