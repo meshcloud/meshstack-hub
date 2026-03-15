@@ -35,12 +35,14 @@ variable "notification_subscribers" {
 
 variable "hub" {
   type = object({
-    git_ref = string
+    git_ref   = optional(string, "main")
+    bbd_draft = optional(bool, false)
   })
-  default = {
-    git_ref = "main"
-  }
-  description = "Hub release reference. Set git_ref to a tag (e.g. 'v1.2.3') or branch for the meshstack-hub repo."
+  default     = {}
+  description = <<-EOT
+  `git_ref`: Hub reference. Set to a tag (e.g. 'v1.2.3') or branch or commit sha of meshcloud/meshstack-hub repo.<br>
+  `bbd_draft`: If true, allows changing the building block definition for upgrading dependent building blocks.
+  EOT
 }
 
 resource "meshstack_building_block_definition" "github_repo" {
@@ -53,7 +55,7 @@ resource "meshstack_building_block_definition" "github_repo" {
     description              = "Automates GitHub repository setup with predefined configurations and access control."
     display_name             = "GitHub Repository Creation"
     notification_subscribers = var.notification_subscribers
-    symbol                   = "https://raw.githubusercontent.com/meshcloud/meshstack-hub/main/modules/github/repository/buildingblock/logo.png"
+    symbol                   = "https://raw.githubusercontent.com/meshcloud/meshstack-hub/${var.hub.git_ref}/modules/github/repository/buildingblock/logo.png"
     run_transparency         = true
 
     readme = chomp(<<EOT
@@ -95,7 +97,7 @@ EOT
   }
 
   version_spec = {
-    draft = true
+    draft = var.hub.bbd_draft
     implementation = {
       terraform = {
         repository_url                 = "https://github.com/meshcloud/meshstack-hub.git"
