@@ -38,14 +38,16 @@ variable "github_repo_definition_version_uuid" {
   default = "00000000-0000-0000-0000-000000000003"
 }
 
-variable "landing_zone_dev_identifier" {
-  type    = string
-  default = "aks-dev"
-}
-
-variable "landing_zone_prod_identifier" {
-  type    = string
-  default = "aks-prod"
+variable "landing_zone_identifiers" {
+  type = object({
+    dev  = string
+    prod = string
+  })
+  default = {
+    dev  = "aks-dev"
+    prod = "aks-prod"
+  }
+  description = "Identifiers of meshLandingZones for dev and prod."
 }
 
 variable "tags" {
@@ -60,24 +62,26 @@ variable "notification_subscribers" {
 
 variable "hub" {
   type = object({
-    git_ref = string
+    git_ref   = optional(string, "main")
+    bbd_draft = optional(bool, false)
   })
-  default = {
-    git_ref = "main"
-  }
-  description = "Hub release reference. Set git_ref to a tag (e.g. 'v1.2.3') or branch for the meshstack-hub repo."
+  default     = {}
+  description = <<-EOT
+  `git_ref`: Hub reference. Set to a tag (e.g. 'v1.2.3') or branch or commit sha of meshcloud/meshstack-hub repo.<br>
+  `bbd_draft`: If true, allows changing the building block definition for upgrading dependent building blocks.
+  EOT
 }
 
-variable "project_tags_yaml" {
-  type    = string
-  default = <<-YAML
-    dev:
-      environment:
-        - "dev"
-    prod:
-      environment:
-        - "prod"
-  YAML
+variable "project_tags" {
+  type = object({
+    dev  = map(list(string))
+    prod = map(list(string))
+  })
+  default = {
+    dev  = { environment = ["dev"] }
+    prod = { environment = ["prod"] }
+  }
+  description = "Configure project tags of starter kit, for dev and prod."
 }
 
 variable "template_owner" {
@@ -98,6 +102,10 @@ variable "apps_base_domain" {
   default     = "likvid-k8s.msh.host"
 }
 
+locals {
+  name_regex = "^[a-zA-Z0-9-]+$" # underscore and dots not allowed because of K8s namespace
+}
+
 resource "meshstack_building_block_definition" "aks_starterkit" {
   metadata = {
     owned_by_workspace = var.meshstack.owning_workspace_identifier
@@ -108,7 +116,7 @@ resource "meshstack_building_block_definition" "aks_starterkit" {
     description              = "The AKS Starterkit provides application teams with a pre-configured Kubernetes environment following best practices. It includes a Git repository, a CI/CD pipeline using GitHub Actions, and a secure container registry integration."
     display_name             = "AKS Starterkit"
     notification_subscribers = var.notification_subscribers
-    symbol                   = "https://raw.githubusercontent.com/meshcloud/meshstack-hub/main/modules/aks/starterkit/buildingblock/logo.png"
+    symbol                   = "https://raw.githubusercontent.com/meshcloud/meshstack-hub/${var.hub.git_ref}/modules/aks/starterkit/buildingblock/logo.png"
 
     readme = chomp(<<EOT
 ## What is it?
@@ -161,7 +169,7 @@ EOT
   }
 
   version_spec = {
-    draft = true
+    draft = var.hub.bbd_draft
     implementation = {
       terraform = {
         repository_url                 = "https://github.com/meshcloud/meshstack-hub.git"
@@ -248,7 +256,7 @@ EOT
         updateable_by_consumer = false
       }
       "landing_zone_dev_identifier" = {
-        argument               = jsonencode(var.landing_zone_dev_identifier)
+        argument               = jsonencode(var.landing_zone_identifiers.dev)
         assignment_type        = "STATIC"
         display_name           = "Landing Zone Dev Identifier"
         is_environment         = false
@@ -256,7 +264,7 @@ EOT
         updateable_by_consumer = false
       }
       "landing_zone_prod_identifier" = {
-        argument               = jsonencode(var.landing_zone_prod_identifier)
+        argument               = jsonencode(var.landing_zone_identifiers.prod)
         assignment_type        = "STATIC"
         display_name           = "Landing Zone Prod Identifier"
         is_environment         = false
@@ -264,21 +272,22 @@ EOT
         updateable_by_consumer = false
       }
       "name" = {
-        assignment_type        = "USER_INPUT"
-        description            = "This name will be used for the created projects, AKS namespaces and GitHub repository"
-        display_name           = "Name of the Project"
-        is_environment         = false
-        type                   = "STRING"
-        updateable_by_consumer = false
+        assignment_type                = "USER_INPUT"
+        description                    = "This name will be used for the created projects, AKS namespaces and GitHub repository. Must match ${local.name_regex}."
+        display_name                   = "Name of the Project"
+        is_environment                 = false
+        type                           = "STRING"
+        updateable_by_consumer         = false
+        value_validation_regex         = local.name_regex
+        validation_regex_error_message = "Does not match ${local.name_regex} (no underscore/dots/spaces allowed)"
       }
-      "project_tags_yaml" = {
-        argument               = jsonencode(chomp(var.project_tags_yaml))
-        assignment_type        = "STATIC"
-        description            = ""
-        display_name           = "Project Tags"
-        is_environment         = false
-        type                   = "CODE"
-        updateable_by_consumer = false
+      "project_tags" = {
+        # jsonencode twice is correct, see https://registry.terraform.io/providers/meshcloud/meshstack/latest/docs/resources/building_block_definition#argument-1
+        argument        = jsonencode(jsonencode(var.project_tags))
+        assignment_type = "STATIC"
+        description     = "Tags for the created Dev/Prod projects."
+        display_name    = "Project Tags"
+        type            = "CODE"
       }
       "workspace_identifier" = {
         assignment_type        = "WORKSPACE_IDENTIFIER"
