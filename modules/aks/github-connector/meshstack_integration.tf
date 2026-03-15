@@ -1,12 +1,3 @@
-terraform {
-  required_providers {
-    meshstack = {
-      source  = "meshcloud/meshstack"
-      version = "~> 0.19.3"
-    }
-  }
-}
-
 variable "meshstack" {
   type = object({
     owning_workspace_identifier = string
@@ -236,5 +227,14 @@ output "building_block_definition_uuid" {
 
 output "building_block_definition_version_uuid" {
   description = "UUID of the latest version of the GitHub Actions AKS Connector building block definition. Use this as building_block_definition_version_ref in building block instances."
-  value       = meshstack_building_block_definition.aks_github_connector.version_latest.uuid
+  value       = var.hub.bbd_draft ? meshstack_building_block_definition.aks_github_connector.version_latest.uuid : meshstack_building_block_definition.aks_github_connector.version_latest_release.uuid
+}
+
+terraform {
+  required_providers {
+    meshstack = {
+      source  = "meshcloud/meshstack"
+      version = "~> 0.19.3"
+    }
+  }
 }

@@ -45,7 +45,7 @@ They are starting points that should cover the simplest use case.
 A secondary purpose of these files is to serve as a ready-to-use Terraform module root that IaC runtimes can source directly.
 
 - Must use variables for required user inputs.
-- Must include `required_providers`.
+- Must include `required_providers` (place the `terraform { required_providers { ... } }` block at the **bottom** of the file — resources and variables should come first so readers see the important configuration before technical boilerplate).
 - Never include `provider` configuration.
 - Reference modules using Git URLs and a ref pointing to the feature branch when developing. Once merged into main, the `update-module-refs` tooling in CI pins the ref to an appropriate commit.
 
@@ -61,12 +61,27 @@ is always required.
 # Shared Hub reference — always include this variable
 variable "hub" {
   type = object({
-    git_ref = string
+    git_ref   = optional(string, "main")
+    bbd_draft = optional(bool, false)
   })
-  default = {
-    git_ref = "main"
-  }
-  description = "Hub release reference. Set git_ref to a tag (e.g. 'v1.2.3') or branch for the meshstack-hub repo."
+  default     = {}
+  description = <<-EOT
+  `git_ref`: Hub release reference. Set to a tag (e.g. 'v1.2.3') or branch or commit sha of the meshstack-hub repo.
+  `bbd_draft`: If true, the building block definition version is kept in draft mode, which allows changing it (useful during development in LCF/ICF).
+  EOT
+}
+```
+
+Always use `var.hub.bbd_draft` for the `draft` field of `version_spec` in `meshstack_building_block_definition` resources.
+
+### Exposing the BBD Version
+
+When a `meshstack_integration.tf` exposes the building block definition version UUID as an output (needed for compositions), use the following pattern to pin to released versions in production while allowing draft updates during development:
+
+```hcl
+output "building_block_definition_version_uuid" {
+  description = "UUID of the latest version. In draft mode returns the latest draft; otherwise returns the latest release."
+  value       = var.hub.bbd_draft ? meshstack_building_block_definition.this.version_latest.uuid : meshstack_building_block_definition.this.version_latest_release.uuid
 }
 ```
 
@@ -159,6 +174,9 @@ Do **not** commit these relative paths; switch back to the Hub GitHub URL before
 - [ ] `buildingblock/README.md` with YAML front-matter
 - [ ] `buildingblock/APP_TEAM_README.md` with shared responsibility matrix
 - [ ] `ref_name` uses `var.hub.git_ref` — no hardcoded `"main"`
+- [ ] `version_spec.draft` uses `var.hub.bbd_draft`
+- [ ] `building_block_definition_version_uuid` output uses `bbd_draft ? version_latest.uuid : version_latest_release.uuid`
+- [ ] `terraform { required_providers { ... } }` block is at the **bottom** of `meshstack_integration.tf`
 - [ ] Test file covering positive, negative, and naming collision scenarios
 - [ ] `logo.png` included in `buildingblock/`
 - [ ] No trailing whitespace

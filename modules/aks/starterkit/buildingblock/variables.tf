@@ -83,16 +83,10 @@ variable "project_tags" {
   }
   description = "Tags for the created Dev/Prod projects."
 }
-variable "template_owner" {
+variable "github_template_repo_path" {
   type        = string
-  description = "GitHub owner (org or user) of the repository template to use when creating the application repository."
-  default     = "likvid-bank"
-}
-
-variable "template_repo" {
-  type        = string
-  description = "Name of the GitHub repository template to use when creating the application repository."
-  default     = "aks-starterkit-template"
+  description = "GitHub repository template to use when creating the application repository, in the format 'owner/repo'."
+  default     = "likvid-bank/aks-starterkit-template"
 }
 
 variable "apps_base_domain" {
