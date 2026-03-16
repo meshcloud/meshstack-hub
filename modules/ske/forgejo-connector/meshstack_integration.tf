@@ -234,13 +234,6 @@ resource "meshstack_building_block_definition" "this" {
         validation_regex_error_message = "Stage must be either 'dev' or 'prod'."
       }
 
-      additional_environment_variables = {
-        display_name    = "additional_environment_variables"
-        description     = "Map of additional key/value pairs to create as repository action secrets."
-        type            = "CODE"
-        assignment_type = "USER_INPUT"
-        default_value   = jsonencode({})
-      }
     }
 
     outputs = {}

@@ -48,11 +48,3 @@ resource "forgejo_repository_action_secret" "container_registry" {
   name          = "STACKIT_HARBOR_${each.key}"
   data          = each.value
 }
-
-resource "forgejo_repository_action_secret" "additional" {
-  for_each = var.additional_environment_variables
-
-  repository_id = var.repository_id
-  name          = each.key
-  data          = each.value
-}

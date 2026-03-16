@@ -55,7 +55,6 @@ No modules.
 
 | Name | Type |
 |------|------|
-| [forgejo_repository_action_secret.additional](https://registry.terraform.io/providers/svalabs/forgejo/latest/docs/resources/repository_action_secret) | resource |
 | [forgejo_repository_action_secret.container_registry](https://registry.terraform.io/providers/svalabs/forgejo/latest/docs/resources/repository_action_secret) | resource |
 | [forgejo_repository_action_secret.kubeconfig](https://registry.terraform.io/providers/svalabs/forgejo/latest/docs/resources/repository_action_secret) | resource |
 | [forgejo_repository_action_secret.namespace](https://registry.terraform.io/providers/svalabs/forgejo/latest/docs/resources/repository_action_secret) | resource |
@@ -69,7 +68,6 @@ No modules.
 
 | Name | Description | Type | Default | Required |
 |------|-------------|------|---------|:--------:|
-| <a name="input_additional_environment_variables"></a> [additional\_environment\_variables](#input\_additional\_environment\_variables) | Map of additional environment variable key/value pairs to set as Forgejo repository action secrets. | `map(string)` | `{}` | no |
 | <a name="input_harbor_host"></a> [harbor\_host](#input\_harbor\_host) | The URL of the Harbor registry. | `string` | `"https://registry.onstackit.cloud"` | no |
 | <a name="input_harbor_password"></a> [harbor\_password](#input\_harbor\_password) | The password for the Harbor registry. | `string` | n/a | yes |
 | <a name="input_harbor_username"></a> [harbor\_username](#input\_harbor\_username) | The username for the Harbor registry. | `string` | n/a | yes |
