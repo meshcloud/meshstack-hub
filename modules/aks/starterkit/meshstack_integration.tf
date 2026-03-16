@@ -222,20 +222,11 @@ EOT
         type                   = "STRING"
         updateable_by_consumer = false
       }
-      "template_owner" = {
-        argument               = jsonencode(split("/", var.github_template_repo_path)[0])
+      "github_template_repo_path" = {
+        argument               = jsonencode(var.github_template_repo_path)
         assignment_type        = "STATIC"
-        description            = "GitHub owner (org or user) of the repository template."
-        display_name           = "Template Owner"
-        is_environment         = false
-        type                   = "STRING"
-        updateable_by_consumer = false
-      }
-      "template_repo" = {
-        argument               = jsonencode(split("/", var.github_template_repo_path)[1])
-        assignment_type        = "STATIC"
-        description            = "Name of the GitHub repository template."
-        display_name           = "Template Repo"
+        description            = "GitHub repository template to use when creating the application repository, in the format 'owner/repo'."
+        display_name           = "GitHub Template Repo Path"
         is_environment         = false
         type                   = "STRING"
         updateable_by_consumer = false
