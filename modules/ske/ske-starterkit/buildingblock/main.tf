@@ -70,8 +70,6 @@ resource "meshstack_tenant_v4" "this" {
 resource "meshstack_building_block_v2" "forgejo_connector" {
   for_each = meshstack_tenant_v4.this
 
-  depends_on = [meshstack_building_block_v2.git_repository]
-
   spec = {
     building_block_definition_version_ref = var.building_block_definition_version_refs["forgejo-connector"]
 
@@ -83,7 +81,7 @@ resource "meshstack_building_block_v2" "forgejo_connector" {
 
     parent_building_blocks = [{
       buildingblock_uuid = meshstack_building_block_v2.git_repository.metadata.uuid
-      definition_uuid    = var.git_repository_definition_uuid
+      definition_uuid    = meshstack_building_block_v2.git_repository.spec.building_block_definition_version_ref.uuid
     }]
 
     inputs = {
