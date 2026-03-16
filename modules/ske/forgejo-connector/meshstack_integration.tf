@@ -108,12 +108,13 @@ resource "meshstack_building_block_definition" "this" {
   }
 
   spec = {
-    display_name     = "SKE Forgejo Connector"
-    symbol           = "https://raw.githubusercontent.com/meshcloud/meshstack-hub/${var.hub.git_ref}/modules/ske/forgejo-connector/buildingblock/logo.png"
-    description      = "Connects a Forgejo repository with a tenant namespace on STACKIT SKE."
-    support_url      = "https://portal.stackit.cloud/git"
-    target_type      = "TENANT_LEVEL"
-    run_transparency = true
+    display_name        = "SKE Forgejo Connector"
+    symbol              = "https://raw.githubusercontent.com/meshcloud/meshstack-hub/${var.hub.git_ref}/modules/ske/forgejo-connector/buildingblock/logo.png"
+    description         = "Connects a Forgejo repository with a tenant namespace on STACKIT SKE."
+    support_url         = "https://portal.stackit.cloud/git"
+    target_type         = "TENANT_LEVEL"
+    supported_platforms = [{ name = "STACKIT_KUBERNETES_ENGINE" }]
+    run_transparency    = true
   }
 
   version_spec = {
