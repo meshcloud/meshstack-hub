@@ -215,7 +215,7 @@ resource "meshstack_building_block_definition" "this" {
         description     = "ID of the parent Forgejo repository where action secrets are created."
         type            = "STRING"
         assignment_type = "BUILDING_BLOCK_OUTPUT"
-        argument        = "${var.forgejo_repo_definition_uuid}.repository_id"
+        argument        = jsonencode("${var.forgejo_repo_definition_uuid}.repository_id")
       }
 
       namespace = {
