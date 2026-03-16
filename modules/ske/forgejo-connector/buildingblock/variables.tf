@@ -16,14 +16,19 @@ variable "harbor_password" {
   sensitive   = true
 }
 
-variable "forgejo_repository_name" {
+variable "repository_id" {
   type        = string
-  description = "The name of the Forgejo repository."
+  description = "The ID of the Forgejo repository."
 }
 
-variable "forgejo_repository_owner" {
+variable "stage" {
   type        = string
-  description = "The owner of the Forgejo repository."
+  description = "Deployment stage used for secret suffixing (`dev` or `prod`)."
+
+  validation {
+    condition     = can(regex("^(dev|prod)$", var.stage))
+    error_message = "stage must be either 'dev' or 'prod'."
+  }
 }
 
 variable "additional_environment_variables" {

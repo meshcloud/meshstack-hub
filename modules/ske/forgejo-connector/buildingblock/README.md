@@ -58,24 +58,24 @@ No modules.
 | [forgejo_repository_action_secret.additional](https://registry.terraform.io/providers/svalabs/forgejo/latest/docs/resources/repository_action_secret) | resource |
 | [forgejo_repository_action_secret.container_registry](https://registry.terraform.io/providers/svalabs/forgejo/latest/docs/resources/repository_action_secret) | resource |
 | [forgejo_repository_action_secret.kubeconfig](https://registry.terraform.io/providers/svalabs/forgejo/latest/docs/resources/repository_action_secret) | resource |
+| [forgejo_repository_action_secret.namespace](https://registry.terraform.io/providers/svalabs/forgejo/latest/docs/resources/repository_action_secret) | resource |
 | [kubernetes_cluster_role_binding.forgejo_actions_clusterissuer_access](https://registry.terraform.io/providers/hashicorp/kubernetes/2.35.1/docs/resources/cluster_role_binding) | resource |
 | [kubernetes_role_binding.forgejo_actions](https://registry.terraform.io/providers/hashicorp/kubernetes/2.35.1/docs/resources/role_binding) | resource |
 | [kubernetes_secret.forgejo_actions](https://registry.terraform.io/providers/hashicorp/kubernetes/2.35.1/docs/resources/secret) | resource |
 | [kubernetes_secret.image_pull](https://registry.terraform.io/providers/hashicorp/kubernetes/2.35.1/docs/resources/secret) | resource |
 | [kubernetes_service_account.forgejo_actions](https://registry.terraform.io/providers/hashicorp/kubernetes/2.35.1/docs/resources/service_account) | resource |
-| [forgejo_repository.this](https://registry.terraform.io/providers/svalabs/forgejo/latest/docs/data-sources/repository) | data source |
 
 ## Inputs
 
 | Name | Description | Type | Default | Required |
 |------|-------------|------|---------|:--------:|
 | <a name="input_additional_environment_variables"></a> [additional\_environment\_variables](#input\_additional\_environment\_variables) | Map of additional environment variable key/value pairs to set as Forgejo repository action secrets. | `map(string)` | `{}` | no |
-| <a name="input_forgejo_repository_name"></a> [forgejo\_repository\_name](#input\_forgejo\_repository\_name) | The name of the Forgejo repository. | `string` | n/a | yes |
-| <a name="input_forgejo_repository_owner"></a> [forgejo\_repository\_owner](#input\_forgejo\_repository\_owner) | The owner of the Forgejo repository. | `string` | n/a | yes |
 | <a name="input_harbor_host"></a> [harbor\_host](#input\_harbor\_host) | The URL of the Harbor registry. | `string` | `"https://registry.onstackit.cloud"` | no |
 | <a name="input_harbor_password"></a> [harbor\_password](#input\_harbor\_password) | The password for the Harbor registry. | `string` | n/a | yes |
 | <a name="input_harbor_username"></a> [harbor\_username](#input\_harbor\_username) | The username for the Harbor registry. | `string` | n/a | yes |
 | <a name="input_namespace"></a> [namespace](#input\_namespace) | Associated namespace in kubernetes cluster. | `string` | n/a | yes |
+| <a name="input_repository_id"></a> [repository\_id](#input\_repository\_id) | The ID of the Forgejo repository. | `string` | n/a | yes |
+| <a name="input_stage"></a> [stage](#input\_stage) | Deployment stage used for secret suffixing (`dev` or `prod`). | `string` | n/a | yes |
 
 ## Outputs
 

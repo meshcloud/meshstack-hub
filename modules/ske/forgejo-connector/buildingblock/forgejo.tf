@@ -1,4 +1,6 @@
 locals {
+  stage_suffix = upper(var.stage)
+
   kubeconfig_user = {
     users = [
       {
@@ -23,15 +25,16 @@ locals {
   kubeconfig = merge(local.stackit_kubeconfig_stub, local.kubeconfig_user)
 }
 
-data "forgejo_repository" "this" {
-  name  = var.forgejo_repository_name
-  owner = var.forgejo_repository_owner
+resource "forgejo_repository_action_secret" "kubeconfig" {
+  repository_id = var.repository_id
+  name          = "KUBECONFIG_${local.stage_suffix}"
+  data          = yamlencode(local.kubeconfig)
 }
 
-resource "forgejo_repository_action_secret" "kubeconfig" {
-  repository_id = data.forgejo_repository.this.id
-  name          = "KUBECONFIG"
-  data          = yamlencode(local.kubeconfig)
+resource "forgejo_repository_action_secret" "namespace" {
+  repository_id = var.repository_id
+  name          = "K8S_NAMESPACE_${local.stage_suffix}"
+  data          = var.namespace
 }
 
 resource "forgejo_repository_action_secret" "container_registry" {
@@ -41,7 +44,7 @@ resource "forgejo_repository_action_secret" "container_registry" {
     PASSWORD = var.harbor_password
   }
 
-  repository_id = data.forgejo_repository.this.id
+  repository_id = var.repository_id
   name          = "STACKIT_HARBOR_${each.key}"
   data          = each.value
 }
@@ -49,7 +52,7 @@ resource "forgejo_repository_action_secret" "container_registry" {
 resource "forgejo_repository_action_secret" "additional" {
   for_each = var.additional_environment_variables
 
-  repository_id = data.forgejo_repository.this.id
+  repository_id = var.repository_id
   name          = each.key
   data          = each.value
 }
