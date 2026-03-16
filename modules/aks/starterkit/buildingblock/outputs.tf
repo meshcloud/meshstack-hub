@@ -69,8 +69,8 @@ View deployment status: [GitHub Actions](${meshstack_building_block_v2.repo.stat
 - Check workflow status in the [Actions tab](<${meshstack_building_block_v2.repo.status.outputs.repo_html_url.value_string}/actions>)
 
 ### 3. Access AKS Namespaces
-- [Dev Namespace](/#/w/${var.workspace_identifier}/p/${meshstack_project.dev.metadata.name}/i/${meshstack_tenant_v4.dev.metadata.platform_identifier}/overview/azure_kubernetes_service)
-- [Prod Namespace](/#/w/${var.workspace_identifier}/p/${meshstack_project.prod.metadata.name}/i/${meshstack_tenant_v4.prod.metadata.platform_identifier}/overview/azure_kubernetes_service)
+- [Dev Namespace](/#/w/${var.workspace_identifier}/p/${meshstack_project.dev.metadata.name}/i/${meshstack_tenant_v4.dev.spec.platform_identifier}/overview/azure_kubernetes_service)
+- [Prod Namespace](/#/w/${var.workspace_identifier}/p/${meshstack_project.prod.metadata.name}/i/${meshstack_tenant_v4.prod.spec.platform_identifier}/overview/azure_kubernetes_service)
 
 ### 4. Manage Access
 - Invite team members via meshStack:
