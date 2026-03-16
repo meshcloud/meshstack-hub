@@ -14,3 +14,11 @@ resource "forgejo_repository" "repository" {
   clone_addr = local.have_clone_addr ? var.clone_addr : null
   mirror     = false
 }
+
+resource "forgejo_repository_action_secret" "action_secrets" {
+  for_each = var.action_secrets
+
+  repository_id = forgejo_repository.repository.id
+  name          = each.key
+  data          = each.value
+}

@@ -21,6 +21,17 @@ variable "forgejo_base_url" {
   type = string
 }
 
+variable "action_secrets" {
+  type      = map(string)
+  sensitive = false # the whole map is not sensitive, but map values are!
+  default   = {}
+
+  validation {
+    condition     = alltrue([for key in keys(var.action_secrets) : length(key) <= 30])
+    error_message = "Forgejo Actions secret names must be 30 characters or less."
+  }
+}
+
 variable "hub" {
   type = object({
     git_ref   = optional(string, "main")
@@ -139,6 +150,18 @@ resource "meshstack_building_block_definition" "this" {
         type            = "STRING"
         assignment_type = "USER_INPUT"
         default_value   = jsonencode("null")
+      }
+      action_secrets = {
+        display_name    = "Repository Action Secrets"
+        description     = "Static sensitive map of Forgejo Actions secrets created in each provisioned repository."
+        type            = "CODE"
+        assignment_type = "STATIC"
+        sensitive = {
+          argument = {
+            secret_value   = jsonencode(var.action_secrets)
+            secret_version = nonsensitive(sha256(jsonencode(var.action_secrets)))
+          }
+        }
       }
     }
 

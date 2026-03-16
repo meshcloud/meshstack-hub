@@ -22,12 +22,14 @@ No modules.
 | Name | Type |
 |------|------|
 | [forgejo_repository.repository](https://registry.terraform.io/providers/svalabs/forgejo/latest/docs/resources/repository) | resource |
+| [forgejo_repository_action_secret.action_secrets](https://registry.terraform.io/providers/svalabs/forgejo/latest/docs/resources/repository_action_secret) | resource |
 
 ## Inputs
 
 | Name | Description | Type | Default | Required |
 |------|-------------|------|---------|:--------:|
-| <a name="input_clone_addr"></a> [clone\_addr](#input\_clone\_addr) | Optional URL to clone into this repository, e.g. 'https://github.com/owner/repo.git'. Leave empty to create an empty repository. | `string` | `""` | no |
+| <a name="input_action_secrets"></a> [action\_secrets](#input\_action\_secrets) | Map of Forgejo Actions secrets to create in the repository. | `map(string)` | `{}` | no |
+| <a name="input_clone_addr"></a> [clone\_addr](#input\_clone\_addr) | Optional URL to clone into this repository, e.g. 'https://github.com/owner/repo.git'. Leave empty or `null` to create an empty repository. | `string` | `"null"` | no |
 | <a name="input_default_branch"></a> [default\_branch](#input\_default\_branch) | Default branch name | `string` | `"main"` | no |
 | <a name="input_description"></a> [description](#input\_description) | Short description of the repository | `string` | `""` | no |
 | <a name="input_forgejo_base_url"></a> [forgejo\_base\_url](#input\_forgejo\_base\_url) | STACKIT Git base URL | `string` | `"https://git-service.git.onstackit.cloud"` | no |

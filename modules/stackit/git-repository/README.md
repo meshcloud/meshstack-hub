@@ -14,6 +14,7 @@ It combines:
 
 - workspace-level target type
 - static inputs from backplane (`forgejo_base_url`, `forgejo_token`, `forgejo_organization`)
+- optional static sensitive action secrets (`action_secrets`)
 - user inputs (`name`, `description`, `private`, `clone_addr`)
 - outputs exposed to users (`repository_html_url`, `repository_clone_url`, `repository_ssh_url`, `summary`)
 

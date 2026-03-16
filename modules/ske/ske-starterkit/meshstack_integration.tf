@@ -4,19 +4,6 @@ variable "meshstack" {
   })
 }
 
-variable "forgejo_token" {
-  type      = string
-  sensitive = true
-}
-
-variable "forgejo_organization" {
-  type = string
-}
-
-variable "forgejo_base_url" {
-  type = string
-}
-
 variable "full_platform_identifier" {
   type = string
 }
@@ -55,6 +42,13 @@ variable "notification_subscribers" {
   default = []
 }
 
+variable "building_block_definition_version_refs" {
+  type = map(object({
+    content_hash = string # adding the content nicely tracks changes in dependent BBDs (draft mode)
+    uuid         = string
+  }))
+}
+
 variable "hub" {
   type = object({
     git_ref   = optional(string, "main")
@@ -65,17 +59,6 @@ variable "hub" {
   `git_ref`: Hub reference. Set to a tag (e.g. 'v1.2.3') or branch or commit sha of meshcloud/meshstack-hub repo.<br>
   `bbd_draft`: If true, allows changing the building block definition for upgrading dependent building blocks.
   EOT
-}
-
-module "backplane" {
-  source = "./backplane" # TODO revert to github.com/meshcloud/meshstack-hub//modules/ske/ske-starterkit/backplane link once pushed
-
-  meshstack = var.meshstack
-  hub       = var.hub
-
-  forgejo_token        = var.forgejo_token
-  forgejo_organization = var.forgejo_organization
-  forgejo_base_url     = var.forgejo_base_url
 }
 
 locals {
@@ -204,7 +187,20 @@ EOT
         description     = "Refs used to create auxiliary building blocks (composition)."
         display_name    = "BBD Version Refs"
         # jsonencode twice is correct, see https://registry.terraform.io/providers/meshcloud/meshstack/latest/docs/resources/building_block_definition#argument-1
-        argument = jsonencode(jsonencode(module.backplane.building_block_definition_version_refs))
+        argument = jsonencode(jsonencode(var.building_block_definition_version_refs))
+      },
+      # TODO remove before merge, leftover from dev attempts in grubinator2 instance
+      "git_repository_action_secrets" = {
+        assignment_type = "STATIC"
+        type            = "CODE"
+        description     = "REMOVEME Static sensitive Forgejo Actions secrets passed to the composed git-repository building block."
+        display_name    = "REMOVEME Git Repository Action Secrets"
+        # jsonencode twice is correct, see https://registry.terraform.io/providers/meshcloud/meshstack/latest/docs/resources/building_block_definition#argument-1
+        sensitive = {
+          argument = {
+            secret_value = jsonencode({})
+          }
+        }
       }
     }
 
