@@ -65,10 +65,10 @@ resource "kubernetes_secret" "image_pull" {
   data = {
     ".dockerconfigjson" = jsonencode({
       auths = {
-        "${local.harbor.host}" = {
-          username = local.harbor.username
-          password = local.harbor.password
-          auth     = base64encode("${local.harbor.username}:${local.harbor.password}")
+        "${var.harbor_host}" = {
+          username = var.harbor_username
+          password = var.harbor_password
+          auth     = base64encode("${var.harbor_username}:${var.harbor_password}")
         }
       }
     })
