@@ -168,8 +168,8 @@ No modules.
 
 | Name | Description | Type | Default | Required |
 |------|-------------|------|---------|:--------:|
-| <a name="input_alert_email_receivers"></a> [alert\_email\_receivers](#input\_alert\_email\_receivers) | List of email receivers for alerts provided by meshStack | <pre>list(object(<br>    {<br>      meshIdentifier = string<br>      username       = string<br>      firstName      = string<br>      lastName       = string<br>      email          = string<br>      euid           = string<br>      roles          = list(string)<br>    }<br>  ))</pre> | `[]` | no |
-| <a name="input_alert_webhook_receivers"></a> [alert\_webhook\_receivers](#input\_alert\_webhook\_receivers) | List of webhook receivers for alerts (Teams, Slack, etc.) | <pre>list(object({<br>    name = string<br>    uri  = string<br>  }))</pre> | `[]` | no |
+| <a name="input_alert_email_receivers"></a> [alert\_email\_receivers](#input\_alert\_email\_receivers) | List of email receivers for alerts provided by meshStack | <pre>list(object(<br/>    {<br/>      meshIdentifier = string<br/>      username       = string<br/>      firstName      = string<br/>      lastName       = string<br/>      email          = string<br/>      euid           = string<br/>      roles          = list(string)<br/>    }<br/>  ))</pre> | `[]` | no |
+| <a name="input_alert_webhook_receivers"></a> [alert\_webhook\_receivers](#input\_alert\_webhook\_receivers) | List of webhook receivers for alerts (Teams, Slack, etc.) | <pre>list(object({<br/>    name = string<br/>    uri  = string<br/>  }))</pre> | `[]` | no |
 | <a name="input_azure_delay_seconds"></a> [azure\_delay\_seconds](#input\_azure\_delay\_seconds) | Delay in seconds to wait for Azure resources to be ready | `number` | `30` | no |
 | <a name="input_bastion_sku"></a> [bastion\_sku](#input\_bastion\_sku) | SKU of the Azure Bastion Host | `string` | `"Basic"` | no |
 | <a name="input_bastion_subnet_cidr"></a> [bastion\_subnet\_cidr](#input\_bastion\_subnet\_cidr) | CIDR block for the AzureBastionSubnet (minimum /27) | `string` | n/a | yes |

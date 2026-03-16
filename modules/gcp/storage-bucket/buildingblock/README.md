@@ -32,7 +32,7 @@ No modules.
 | Name | Description | Type | Default | Required |
 |------|-------------|------|---------|:--------:|
 | <a name="input_bucket_name"></a> [bucket\_name](#input\_bucket\_name) | The name of the storage bucket | `string` | n/a | yes |
-| <a name="input_labels"></a> [labels](#input\_labels) | List of labels to apply to the resource | `list(string)` | <pre>[<br>  "env:dev",<br>  "team:backend",<br>  "project:myapp"<br>]</pre> | no |
+| <a name="input_labels"></a> [labels](#input\_labels) | List of labels to apply to the resource | `list(string)` | <pre>[<br/>  "env:dev",<br/>  "team:backend",<br/>  "project:myapp"<br/>]</pre> | no |
 | <a name="input_location"></a> [location](#input\_location) | The GCP location/region | `string` | `"europe-west1"` | no |
 | <a name="input_project_id"></a> [project\_id](#input\_project\_id) | The GCP project ID | `string` | n/a | yes |
 

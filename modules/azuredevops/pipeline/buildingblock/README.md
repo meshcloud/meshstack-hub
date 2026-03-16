@@ -206,7 +206,7 @@ No modules.
 | <a name="input_key_vault_name"></a> [key\_vault\_name](#input\_key\_vault\_name) | Name of the Key Vault containing the Azure DevOps PAT | `string` | n/a | yes |
 | <a name="input_pat_secret_name"></a> [pat\_secret\_name](#input\_pat\_secret\_name) | Name of the secret in Key Vault that contains the Azure DevOps PAT | `string` | `"azdo-pat"` | no |
 | <a name="input_pipeline_name"></a> [pipeline\_name](#input\_pipeline\_name) | Name of the pipeline to create | `string` | n/a | yes |
-| <a name="input_pipeline_variables"></a> [pipeline\_variables](#input\_pipeline\_variables) | List of pipeline variables to create | <pre>list(object({<br>    name           = string<br>    value          = string<br>    is_secret      = optional(bool, false)<br>    allow_override = optional(bool, true)<br>  }))</pre> | `[]` | no |
+| <a name="input_pipeline_variables"></a> [pipeline\_variables](#input\_pipeline\_variables) | List of pipeline variables to create | <pre>list(object({<br/>    name           = string<br/>    value          = string<br/>    is_secret      = optional(bool, false)<br/>    allow_override = optional(bool, true)<br/>  }))</pre> | `[]` | no |
 | <a name="input_project_id"></a> [project\_id](#input\_project\_id) | Azure DevOps Project ID where the pipeline will be created | `string` | n/a | yes |
 | <a name="input_repository_id"></a> [repository\_id](#input\_repository\_id) | Repository ID or name where the pipeline YAML file is located | `string` | n/a | yes |
 | <a name="input_repository_type"></a> [repository\_type](#input\_repository\_type) | Type of repository. Options: TfsGit, GitHub, GitHubEnterprise, Bitbucket | `string` | `"TfsGit"` | no |

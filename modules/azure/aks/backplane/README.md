@@ -54,10 +54,10 @@ No modules.
 | <a name="input_existing_hub_principal_ids"></a> [existing\_hub\_principal\_ids](#input\_existing\_hub\_principal\_ids) | set of existing principal ids that will be granted permissions to peer with the hub VNet | `set(string)` | `[]` | no |
 | <a name="input_existing_principal_ids"></a> [existing\_principal\_ids](#input\_existing\_principal\_ids) | set of existing principal ids that will be granted permissions to deploy the building block | `set(string)` | `[]` | no |
 | <a name="input_hub_scope"></a> [hub\_scope](#input\_hub\_scope) | Scope for hub VNet peering permissions (management group or subscription). Typically a hub subscription, but can be a management group containing hub resources. | `string` | n/a | yes |
-| <a name="input_hub_workload_identity_federation"></a> [hub\_workload\_identity\_federation](#input\_hub\_workload\_identity\_federation) | Configuration for workload identity federation for hub service principal. If not provided, an application password will be created instead. | <pre>object({<br>    issuer  = string<br>    subject = string<br>  })</pre> | `null` | no |
+| <a name="input_hub_workload_identity_federation"></a> [hub\_workload\_identity\_federation](#input\_hub\_workload\_identity\_federation) | Configuration for workload identity federation for hub service principal. If not provided, an application password will be created instead. | <pre>object({<br/>    issuer  = string<br/>    subject = string<br/>  })</pre> | `null` | no |
 | <a name="input_name"></a> [name](#input\_name) | name of the building block, used for naming resources | `string` | `"aks"` | no |
 | <a name="input_scope"></a> [scope](#input\_scope) | Scope where the building block should be deployable (management group or subscription), typically the parent of all Landing Zones. | `string` | n/a | yes |
-| <a name="input_workload_identity_federation"></a> [workload\_identity\_federation](#input\_workload\_identity\_federation) | Configuration for workload identity federation. If not provided, an application password will be created instead. | <pre>object({<br>    issuer  = string<br>    subject = string<br>  })</pre> | `null` | no |
+| <a name="input_workload_identity_federation"></a> [workload\_identity\_federation](#input\_workload\_identity\_federation) | Configuration for workload identity federation. If not provided, an application password will be created instead. | <pre>object({<br/>    issuer  = string<br/>    subject = string<br/>  })</pre> | `null` | no |
 
 ## Outputs
 
