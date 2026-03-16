@@ -66,3 +66,32 @@ resource "meshstack_tenant_v4" "this" {
     landing_zone_identifier = each.value
   }
 }
+
+resource "meshstack_building_block_v2" "forgejo_connector" {
+  for_each = meshstack_tenant_v4.this
+
+  depends_on = [meshstack_building_block_v2.git_repository]
+
+  spec = {
+    building_block_definition_version_ref = var.building_block_definition_version_refs["forgejo-connector"]
+
+    display_name = "${var.name} Forgejo Connector ${upper(each.key)}"
+    target_ref = {
+      kind = "meshTenant"
+      uuid = each.value.metadata.uuid
+    }
+
+    parent_building_blocks = [{
+      buildingblock_uuid = meshstack_building_block_v2.git_repository.metadata.uuid
+      definition_uuid    = var.git_repository_definition_uuid
+    }]
+
+    inputs = {
+      stage = {
+        value_string = each.key
+      }
+    }
+  }
+
+  wait_for_completion = true
+}

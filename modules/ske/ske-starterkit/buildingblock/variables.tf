@@ -50,3 +50,8 @@ variable "repo_clone_addr" {
 variable "building_block_definition_version_refs" {
   type = map(object({ uuid = string }))
 }
+
+variable "git_repository_definition_uuid" {
+  type        = string
+  description = "Definition UUID of the composed git-repository building block."
+}
