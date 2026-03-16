@@ -1,0 +1,7 @@
+- id: validate-png-minimization
+  name: Validate PNG minimization
+  description: Check that PNGs in buildingblocks are sufficiently minimized
+  entry: bash ci/validate_modules.sh
+  language: script
+  files: ^modules/.*$
+  pass_filenames: false
