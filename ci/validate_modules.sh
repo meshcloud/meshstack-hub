@@ -35,6 +35,41 @@ check_png_naming() {
 	fi
 }
 
+check_png_minimization() {
+	local png_path="$1"
+
+	# Get original file size
+	local original_size
+	if [[ -f "$png_path" ]]; then
+		original_size=$(wc -c < "$png_path")
+	else
+		return 1
+	fi
+
+	# Create a temporary minimized version using pngquant
+	local temp_minimized
+	temp_minimized=$(mktemp)
+
+	if pngquant --quality=100 --force --output "$temp_minimized" "$png_path" 2>/dev/null; then
+		local minimized_size
+		minimized_size=$(wc -c < "$temp_minimized")
+
+		# Calculate percentage reduction and absolute savings
+		local size_reduction=$(( (original_size - minimized_size) * 100 / original_size ))
+		local savings_bytes=$(( original_size - minimized_size ))
+		local savings_kib=$(( savings_bytes / 1024 ))
+		local original_kib=$(( original_size / 1024 ))
+		local minimized_kib=$(( minimized_size / 1024 ))
+
+		# If more than 10% reduction is possible, suggest minimization
+		if [[ $size_reduction -gt 10 ]]; then
+			errors+=("PNG at $png_path is not sufficiently minimized (${original_kib} KiB -> ${minimized_kib} KiB, save ${savings_kib} KiB / $size_reduction%)")
+		fi
+	fi
+
+	rm -f "$temp_minimized"
+}
+
 check_terraform_files() {
 	local buildingblock_path="$1"
 	local tf_files=("main.tf" "variables.tf" "outputs.tf")
@@ -64,6 +99,7 @@ done
 
 for png_file in $(find $modules_glob -name '*.png'); do
 	check_png_naming "$png_file"
+	check_png_minimization "$png_file"
 done
 
 for buildingblock_dir in $(find $modules_glob -type d -name 'buildingblock'); do
