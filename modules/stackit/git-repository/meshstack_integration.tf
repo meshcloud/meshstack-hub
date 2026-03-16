@@ -49,6 +49,11 @@ output "building_block_definition_version_ref" {
   description = "Version of BBD is consumed in Building Block compositions, for example in the backplane of starter kits."
 }
 
+output "building_block_definition_uuid" {
+  value       = meshstack_building_block_definition.this.ref.uuid
+  description = "UUID of the STACKIT Git Repository building block definition."
+}
+
 module "backplane" {
   source = "github.com/meshcloud/meshstack-hub//modules/stackit/git-repository/backplane?ref=a3843c80c76c4a0298769eea8d93807bb2b271fc"
 
