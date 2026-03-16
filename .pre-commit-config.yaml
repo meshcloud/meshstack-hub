@@ -1,12 +1,4 @@
 repos:
-  - repo: local
-    hooks:
-      - id: validate-modules
-        name: Validate modules
-        entry: sh -c 'bash ci/validate_modules.sh --fix'
-        language: system
-        pass_filenames: true
-        always_run: true
   - repo: https://github.com/antonbabenko/pre-commit-terraform
     rev: v1.81.0
     hooks:
@@ -21,3 +13,11 @@ repos:
     rev: v4.4.0  # Use the ref you want to point at
     hooks:
       - id: trailing-whitespace
+  - repo: local
+    hooks:
+      - id: validate-modules
+        name: Validate modules
+        entry: sh -c 'bash ci/validate_modules.sh'
+        language: system
+        pass_filenames: true
+        always_run: true
