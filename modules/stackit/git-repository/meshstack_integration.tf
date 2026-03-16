@@ -135,10 +135,10 @@ resource "meshstack_building_block_definition" "this" {
 
       clone_addr = {
         display_name    = "Clone from URL"
-        description     = "Optional URL to clone into this repository, e.g. 'https://github.com/owner/repo.git'. Leave empty to create an empty repository."
+        description     = "Optional URL to clone into this repository, e.g. 'https://github.com/owner/repo.git'. Leave `null` to create an empty repository."
         type            = "STRING"
         assignment_type = "USER_INPUT"
-        default_value   = jsonencode("")
+        default_value   = jsonencode("null")
       }
     }
 

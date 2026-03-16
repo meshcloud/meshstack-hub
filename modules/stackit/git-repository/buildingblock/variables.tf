@@ -51,6 +51,6 @@ variable "default_branch" {
 
 variable "clone_addr" {
   type        = string
-  description = "Optional URL to clone into this repository, e.g. 'https://github.com/owner/repo.git'. Leave empty to create an empty repository."
-  default     = ""
+  description = "Optional URL to clone into this repository, e.g. 'https://github.com/owner/repo.git'. Leave empty or `null` to create an empty repository."
+  default     = "null" # supporting the null string is a workaround for the Panel UI which does not support empty string as default for optional value
 }
