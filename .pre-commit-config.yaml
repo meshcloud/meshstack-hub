@@ -9,7 +9,6 @@ repos:
         files: ^modules/[^/]+/[^/]+/(backplane|buildingblock)/.+\.tf$
       - id: terraform_fmt
         exclude: ^tools/update-module-refs/tf/testdata/invalid/
-      - id: terragrunt_fmt
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v4.4.0  # Use the ref you want to point at
     hooks:
