@@ -142,7 +142,7 @@ resource "meshstack_building_block_definition" "this" {
         assignment_type = "STATIC"
         sensitive = {
           argument = {
-            secret_value   = module.backplane.config_tf
+            secret_value   = "data:application/octet-stream;base64,${base64encode(module.backplane.config_tf)}"
             secret_version = sha256(module.backplane.config_tf)
           }
         }
@@ -182,6 +182,22 @@ resource "meshstack_building_block_definition" "this" {
         type            = "STRING"
         assignment_type = "STATIC"
         argument        = jsonencode(var.harbor_host)
+      }
+
+      cluster_host = {
+        display_name    = "cluster_host"
+        description     = "Kubernetes API server URL used for generated kubeconfig."
+        type            = "STRING"
+        assignment_type = "STATIC"
+        argument        = jsonencode(var.cluster_host)
+      }
+
+      cluster_ca_certificate = {
+        display_name    = "cluster_ca_certificate"
+        description     = "Base64-encoded Kubernetes cluster CA certificate used for generated kubeconfig."
+        type            = "STRING"
+        assignment_type = "STATIC"
+        argument        = jsonencode(var.cluster_ca_certificate)
       }
 
       harbor_username = {

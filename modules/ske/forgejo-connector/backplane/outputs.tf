@@ -8,23 +8,5 @@ output "config_tf" {
     client_certificate = base64decode("${var.client_certificate}")
     client_key = base64decode("${var.client_key}")
   }
-
-  locals {
-    stackit_kubeconfig_stub = {
-      apiVersion      = "v1"
-      kind            = "Config"
-      current-context = "stackit_k8s"
-
-      clusters = [
-        {
-          name = "stackit_k8s"
-          cluster = {
-            server = "${var.cluster_host}"
-            certificate-authority-data = "${var.cluster_ca_certificate}"
-          }
-        }
-      ]
-    }
-  }
   EOF
 }

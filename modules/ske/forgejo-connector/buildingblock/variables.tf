@@ -4,6 +4,16 @@ variable "harbor_host" {
   default     = "https://registry.onstackit.cloud"
 }
 
+variable "cluster_host" {
+  type        = string
+  description = "Kubernetes API server URL used for generated kubeconfig."
+}
+
+variable "cluster_ca_certificate" {
+  type        = string
+  description = "Base64-encoded Kubernetes cluster CA certificate used for generated kubeconfig."
+}
+
 variable "harbor_username" {
   type        = string
   description = "The username for the Harbor registry."

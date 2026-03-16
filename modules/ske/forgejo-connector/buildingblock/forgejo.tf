@@ -1,5 +1,20 @@
 locals {
   stage_suffix = upper(var.stage)
+  stackit_kubeconfig_stub = {
+    apiVersion      = "v1"
+    kind            = "Config"
+    current-context = "stackit_k8s"
+
+    clusters = [
+      {
+        name = "stackit_k8s"
+        cluster = {
+          server                     = var.cluster_host
+          certificate-authority-data = var.cluster_ca_certificate
+        }
+      }
+    ]
+  }
 
   kubeconfig_user = {
     users = [
