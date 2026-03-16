@@ -49,6 +49,11 @@ variable "building_block_definition_version_refs" {
   }))
 }
 
+variable "git_repository_definition_uuid" {
+  type        = string
+  description = "Definition UUID of the STACKIT git-repository building block."
+}
+
 variable "hub" {
   type = object({
     git_ref   = optional(string, "main")
@@ -201,6 +206,13 @@ EOT
             secret_value = jsonencode({})
           }
         }
+      }
+      "git_repository_definition_uuid" = {
+        assignment_type = "STATIC"
+        type            = "STRING"
+        display_name    = "Git Repository Definition UUID"
+        description     = "Definition UUID used for parent dependency wiring to the composed git-repository."
+        argument        = jsonencode(var.git_repository_definition_uuid)
       }
     }
 
