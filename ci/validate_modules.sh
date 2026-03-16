@@ -1,6 +1,12 @@
 #!/bin/bash
 
 errors=()
+fix_mode=false
+
+# Check if --fix flag is passed
+if [[ "$1" == "--fix" ]]; then
+	fix_mode=true
+fi
 
 check_readme_format() {
 	local readme_path="$1"
@@ -61,13 +67,22 @@ check_png_minimization() {
 		local original_kib=$(( original_size / 1024 ))
 		local minimized_kib=$(( minimized_size / 1024 ))
 
-		# If more than 10% reduction is possible, suggest minimization
+		# If more than 10% reduction is possible
 		if [[ $size_reduction -gt 10 ]]; then
-			errors+=("PNG at $png_path is not sufficiently minimized (${original_kib} KiB -> ${minimized_kib} KiB, save ${savings_kib} KiB / $size_reduction%)")
+			if [[ "$fix_mode" == true ]]; then
+				# In fix mode, replace the original with the minimized version
+				mv "$temp_minimized" "$png_path"
+				echo "Fixed: $png_path (${original_kib} KiB -> ${minimized_kib} KiB, saved ${savings_kib} KiB / $size_reduction%)"
+			else
+				# In validate mode, just report the issue
+				errors+=("PNG at $png_path is not sufficiently minimized (${original_kib} KiB -> ${minimized_kib} KiB, save ${savings_kib} KiB / $size_reduction%)")
+			fi
+		else
+			rm -f "$temp_minimized"
 		fi
+	else
+		rm -f "$temp_minimized"
 	fi
-
-	rm -f "$temp_minimized"
 }
 
 check_terraform_files() {
@@ -114,6 +129,10 @@ if [[ ${#errors[@]} -gt 0 ]]; then
 	done
 	exit 1
 else
-	echo "All checks passed successfully."
+	if [[ "$fix_mode" == true ]]; then
+		echo "All PNGs are sufficiently minimized."
+	else
+		echo "All checks passed successfully."
+	fi
 	exit 0
 fi
