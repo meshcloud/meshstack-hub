@@ -7,20 +7,5 @@ on:
   merge_group:
 
 jobs:
-  pre-commit:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
-
-      - uses: meshcloud/setup-collie@main
-
-      - uses: nixbuild/nix-quick-install-action@1fe9e97a7bb9eea2f717fa55360c33293d5e2524 # v26
-        with:
-          nix_on_tmpfs: true
-
-      - uses: rrbutani/use-nix-shell-action@59a52b2b9bbfe3cc0e7deb8f9059abe37a439edf # v1
-        with:
-          devShell: .#github_actions # use a special github actions shell
-
-      - name: ensure all pre-commit hooks pass
-        run: pre-commit run --all-files --show-diff-on-failure
+  build:
+    uses: meshcloud/shared-workflows/.github/workflows/terraform-meshplatform-modules-build-workflow.yml@main
