@@ -23,7 +23,6 @@
       with pkgs;
       [
         unstable_pkgs.opentofu
-        terragrunt
         tflint
         tfupdate
         terraform-docs
