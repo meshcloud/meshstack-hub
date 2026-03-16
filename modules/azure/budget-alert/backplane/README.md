@@ -43,7 +43,7 @@ No modules.
 | <a name="input_existing_principal_ids"></a> [existing\_principal\_ids](#input\_existing\_principal\_ids) | set of existing principal ids that will be granted permissions to deploy the building block | `set(string)` | `[]` | no |
 | <a name="input_name"></a> [name](#input\_name) | name of the building block, used for naming resources | `string` | `"budget-alert"` | no |
 | <a name="input_scope"></a> [scope](#input\_scope) | Scope where the building block should be deployable, typically the parent of all Landing Zones. | `string` | n/a | yes |
-| <a name="input_workload_identity_federation"></a> [workload\_identity\_federation](#input\_workload\_identity\_federation) | if set, configures workload identity federation for the created service principal | <pre>object({<br>    issuer  = string<br>    subject = string<br>  })</pre> | `null` | no |
+| <a name="input_workload_identity_federation"></a> [workload\_identity\_federation](#input\_workload\_identity\_federation) | if set, configures workload identity federation for the created service principal | <pre>object({<br/>    issuer  = string<br/>    subject = string<br/>  })</pre> | `null` | no |
 
 ## Outputs
 

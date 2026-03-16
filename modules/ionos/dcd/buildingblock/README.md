@@ -203,7 +203,7 @@ No modules.
 | <a name="input_datacenter_description"></a> [datacenter\_description](#input\_datacenter\_description) | Description of the datacenter | `string` | `"Managed by Terraform"` | no |
 | <a name="input_datacenter_location"></a> [datacenter\_location](#input\_datacenter\_location) | Location for the IONOS datacenter | `string` | `"de/fra"` | no |
 | <a name="input_datacenter_name"></a> [datacenter\_name](#input\_datacenter\_name) | Name of the IONOS DCD datacenter | `string` | n/a | yes |
-| <a name="input_users"></a> [users](#input\_users) | List of users from authoritative system | <pre>list(object({<br>    meshIdentifier = string<br>    username       = string<br>    firstName      = string<br>    lastName       = string<br>    email          = string<br>    euid           = string<br>    roles          = list(string)<br>  }))</pre> | n/a | yes |
+| <a name="input_users"></a> [users](#input\_users) | List of users from authoritative system | <pre>list(object({<br/>    meshIdentifier = string<br/>    username       = string<br/>    firstName      = string<br/>    lastName       = string<br/>    email          = string<br/>    euid           = string<br/>    roles          = list(string)<br/>  }))</pre> | n/a | yes |
 
 ## Outputs
 

@@ -59,11 +59,11 @@ No modules.
 | Name | Description | Type | Default | Required |
 |------|-------------|------|---------|:--------:|
 | <a name="input_azure_vm_definition_version_uuid"></a> [azure\_vm\_definition\_version\_uuid](#input\_azure\_vm\_definition\_version\_uuid) | UUID of the Azure Virtual Machine building block definition version. | `string` | n/a | yes |
-| <a name="input_creator"></a> [creator](#input\_creator) | Information about the creator of the resources who will be assigned Project Admin role | <pre>object({<br>    type        = string<br>    identifier  = string<br>    displayName = string<br>    username    = optional(string)<br>    email       = optional(string)<br>    euid        = optional(string)<br>  })</pre> | n/a | yes |
+| <a name="input_creator"></a> [creator](#input\_creator) | Information about the creator of the resources who will be assigned Project Admin role | <pre>object({<br/>    type        = string<br/>    identifier  = string<br/>    displayName = string<br/>    username    = optional(string)<br/>    email       = optional(string)<br/>    euid        = optional(string)<br/>  })</pre> | n/a | yes |
 | <a name="input_full_platform_identifier"></a> [full\_platform\_identifier](#input\_full\_platform\_identifier) | Full platform identifier of the Azure platform. | `string` | n/a | yes |
 | <a name="input_landing_zone_identifier"></a> [landing\_zone\_identifier](#input\_landing\_zone\_identifier) | Azure Landing zone identifier for the tenant. | `string` | n/a | yes |
 | <a name="input_name"></a> [name](#input\_name) | This name will be used for the created project and VM | `string` | n/a | yes |
-| <a name="input_project_tags_yaml"></a> [project\_tags\_yaml](#input\_project\_tags\_yaml) | YAML configuration for project tags. Expected structure:<pre>yaml<br>key1:<br>  - "value1"<br>  - "value2"<br>key2:<br>  - "value3"</pre> | `string` | `"{}"` | no |
+| <a name="input_project_tags_yaml"></a> [project\_tags\_yaml](#input\_project\_tags\_yaml) | YAML configuration for project tags. Expected structure:<pre>yaml<br/>key1:<br/>  - "value1"<br/>  - "value2"<br/>key2:<br/>  - "value3"</pre> | `string` | `"{}"` | no |
 | <a name="input_vm_admin_password"></a> [vm\_admin\_password](#input\_vm\_admin\_password) | The admin password for Windows VM (required for Windows). | `string` | `null` | no |
 | <a name="input_vm_admin_username"></a> [vm\_admin\_username](#input\_vm\_admin\_username) | The admin username for the VM. | `string` | `"azureuser"` | no |
 | <a name="input_vm_enable_public_ip"></a> [vm\_enable\_public\_ip](#input\_vm\_enable\_public\_ip) | Whether to create and assign a public IP address to the VM. | `bool` | `false` | no |
