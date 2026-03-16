@@ -1,11 +1,10 @@
-# This file is an example showing how to register the STACKIT connector
-# building block in a meshStack instance.
+# This file registers the SKE Forgejo connector building block definition.
 
 terraform {
   required_providers {
     meshstack = {
       source  = "meshcloud/meshstack"
-      version = "~> 0.19.0"
+      version = "~> 0.20.0"
     }
   }
 }
@@ -48,6 +47,11 @@ variable "forgejo_api_token" {
   sensitive = true
 }
 
+variable "forgejo_repo_definition_uuid" {
+  type        = string
+  description = "UUID of the Forgejo repository building block definition used as parent dependency."
+}
+
 variable "harbor_host" {
   type        = string
   description = "The URL of the Harbor registry."
@@ -64,11 +68,6 @@ variable "harbor_password" {
   type        = string
   description = "The password for the Harbor registry."
   sensitive   = true
-}
-
-variable "forgejo_repo_definition_uuid" {
-  type        = string
-  description = "The Building Block definition UUID of the repository parent."
 }
 
 variable "meshstack" {
@@ -91,13 +90,13 @@ variable "hub" {
 
 output "building_block_definition_version_ref" {
   value       = var.hub.bbd_draft ? meshstack_building_block_definition.this.version_latest : meshstack_building_block_definition.this.version_latest_release
-  description = "Version of BBD is consumed in Building Block compositions, for example in the backplane of starter kits."
+  description = "Version of BBD is consumed in building block compositions."
 }
 
 module "backplane" {
   source                 = "./backplane"
   cluster_host           = var.cluster_host
-  cluster_ca_certificate = var.client_certificate
+  cluster_ca_certificate = var.cluster_ca_certificate
   client_key             = var.client_key
   client_certificate     = var.client_certificate
   cluster_kubeconfig     = var.cluster_kubeconfig
@@ -109,11 +108,11 @@ resource "meshstack_building_block_definition" "this" {
   }
 
   spec = {
-    display_name     = "STACKIT connector"
-    symbol           = "data:image/png;base64,${filebase64("${path.module}/buildingblock/logo.png")}"
-    description      = "Forgejo Actions Integration with STACKIT Kubernetes"
+    display_name     = "SKE Forgejo Connector"
+    symbol           = "https://raw.githubusercontent.com/meshcloud/meshstack-hub/${var.hub.git_ref}/modules/ske/forgejo-connector/buildingblock/logo.png"
+    description      = "Connects a Forgejo repository with a tenant namespace on STACKIT SKE."
     support_url      = "https://portal.stackit.cloud/git"
-    target_type      = "WORKSPACE_LEVEL"
+    target_type      = "TENANT_LEVEL"
     run_transparency = true
   }
 
@@ -125,26 +124,25 @@ resource "meshstack_building_block_definition" "this" {
       terraform = {
         terraform_version              = "1.9.0"
         repository_url                 = "https://github.com/meshcloud/meshstack-hub.git"
-        repository_path                = "modules/stackit/git-connector/buildingblock"
+        repository_path                = "modules/ske/forgejo-connector/buildingblock"
         ref_name                       = var.hub.git_ref
         async                          = false
         use_mesh_http_backend_fallback = true
       }
     }
 
-    dependency_refs = [{ uuid = "${var.forgejo_repo_definition_uuid}" }]
+    dependency_refs = [{ uuid = var.forgejo_repo_definition_uuid }]
 
     inputs = {
-      # ── Static inputs from backplane ──────────────────────────────────────
-      config_tf = {
-        display_name    = "config_k8s"
-        description     = "Static config for kubernetes"
+      "config.tf" = {
+        display_name    = "config.tf"
+        description     = "Static Kubernetes provider config and kubeconfig stub."
         type            = "FILE"
         assignment_type = "STATIC"
-        is_environment  = true
         sensitive = {
           argument = {
-            secret_value = jsonencode(module.backplane.config_tf)
+            secret_value   = module.backplane.config_tf
+            secret_version = sha256(module.backplane.config_tf)
           }
         }
       }
@@ -157,7 +155,8 @@ resource "meshstack_building_block_definition" "this" {
         is_environment  = true
         sensitive = {
           argument = {
-            secret_value = jsonencode(var.forgejo_host)
+            secret_value   = jsonencode(var.forgejo_host)
+            secret_version = sha256(jsonencode(var.forgejo_host))
           }
         }
       }
@@ -170,7 +169,8 @@ resource "meshstack_building_block_definition" "this" {
         is_environment  = true
         sensitive = {
           argument = {
-            secret_value = jsonencode(var.forgejo_api_token)
+            secret_value   = jsonencode(var.forgejo_api_token)
+            secret_version = sha256(jsonencode(var.forgejo_api_token))
           }
         }
       }
@@ -188,7 +188,12 @@ resource "meshstack_building_block_definition" "this" {
         description     = "The username for the Harbor registry."
         type            = "STRING"
         assignment_type = "STATIC"
-        argument        = jsonencode(var.harbor_username)
+        sensitive = {
+          argument = {
+            secret_value   = jsonencode(var.harbor_username)
+            secret_version = sha256(jsonencode(var.harbor_username))
+          }
+        }
       }
 
       harbor_password = {
@@ -198,38 +203,47 @@ resource "meshstack_building_block_definition" "this" {
         assignment_type = "STATIC"
         sensitive = {
           argument = {
-            secret_value = jsonencode(var.harbor_password)
+            secret_value   = jsonencode(var.harbor_password)
+            secret_version = sha256(jsonencode(var.harbor_password))
           }
         }
       }
 
-      forgejo_repository_name = {
-        display_name    = "forgejo_repository_name"
-        description     = "The name of the Forgejo repository."
+      repository_id = {
+        display_name    = "repository_id"
+        description     = "ID of the parent Forgejo repository where action secrets are created."
         type            = "STRING"
         assignment_type = "BUILDING_BLOCK_OUTPUT"
-        argument        = "${var.forgejo_repo_definition_uuid}.repo_name"
+        argument        = "${var.forgejo_repo_definition_uuid}.repository_id"
       }
-
-      forgejo_repository_owner = {
-        display_name    = "forgejo_repository_owner"
-        description     = "The owner of the Forgejo repository."
-        type            = "STRING"
-        assignment_type = "BUILDING_BLOCK_OUTPUT"
-        argument        = "${var.forgejo_repo_definition_uuid}.repo_owner"
-      }
-
-      # ── User inputs ────────────────────────────────────────────────────────
 
       namespace = {
         display_name    = "namespace"
         description     = "Associated namespace in kubernetes cluster."
         type            = "STRING"
+        assignment_type = "PLATFORM_TENANT_ID"
+      }
+
+      stage = {
+        display_name                   = "stage"
+        description                    = "Deployment stage used for secret suffixing (`dev` or `prod`)."
+        type                           = "STRING"
+        assignment_type                = "USER_INPUT"
+        value_validation_regex         = "^(dev|prod)$"
+        validation_regex_error_message = "Stage must be either 'dev' or 'prod'."
+      }
+
+      additional_environment_variables = {
+        display_name    = "additional_environment_variables"
+        description     = "Map of additional key/value pairs to create as repository action secrets."
+        type            = "CODE"
         assignment_type = "USER_INPUT"
+        default_value   = jsonencode({})
       }
     }
 
-    outputs = {
-    }
+    outputs = {}
+
+    permissions = ["TENANT_LIST", "TENANT_SAVE", "TENANT_DELETE"]
   }
 }
