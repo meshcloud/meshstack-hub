@@ -75,11 +75,8 @@ This summary is rendered like a README for this building block in meshPanel.
 
 | Input          | Value                        |
 |----------------|------------------------------|
-| Text           | `${var.text}`                |
-| Number         | `${var.num}`                 |
-| Flag           | `${var.flag}`                |
-| Single Select  | `${var.single_select}`       |
-| Multi Select   | `${join(", ", var.multi_select)}` |
+| Text           | `Hello`                      |
+| Number         | `123`                        |
 
 ## Example: Code blocks
 
