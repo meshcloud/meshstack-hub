@@ -10,3 +10,8 @@ output "config_tf" {
   }
   EOF
 }
+
+output "kubeconfig_cluster_name" {
+  description = "Cluster name to use when merging static kubeconfig and generated service-account credentials."
+  value       = "stackit_k8s"
+}

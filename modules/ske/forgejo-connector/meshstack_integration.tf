@@ -99,7 +99,6 @@ module "backplane" {
   cluster_ca_certificate = var.cluster_ca_certificate
   client_key             = var.client_key
   client_certificate     = var.client_certificate
-  cluster_kubeconfig     = var.cluster_kubeconfig
 }
 
 resource "meshstack_building_block_definition" "this" {
@@ -184,20 +183,25 @@ resource "meshstack_building_block_definition" "this" {
         argument        = jsonencode(var.harbor_host)
       }
 
-      cluster_host = {
-        display_name    = "cluster_host"
-        description     = "Kubernetes API server URL used for generated kubeconfig."
-        type            = "STRING"
+      kubeconfig = {
+        display_name    = "kubeconfig"
+        description     = "Static cluster kubeconfig content merged with generated service-account credentials."
+        type            = "CODE"
         assignment_type = "STATIC"
-        argument        = jsonencode(var.cluster_host)
+        sensitive = {
+          argument = {
+            secret_value   = jsonencode(yamldecode(var.cluster_kubeconfig))
+            secret_version = sha256(var.cluster_kubeconfig)
+          }
+        }
       }
 
-      cluster_ca_certificate = {
-        display_name    = "cluster_ca_certificate"
-        description     = "Base64-encoded Kubernetes cluster CA certificate used for generated kubeconfig."
+      kubeconfig_cluster_name = {
+        display_name    = "kubeconfig_cluster_name"
+        description     = "Cluster name used to connect static kubeconfig and generated user/context entries."
         type            = "STRING"
         assignment_type = "STATIC"
-        argument        = jsonencode(var.cluster_ca_certificate)
+        argument        = jsonencode(module.backplane.kubeconfig_cluster_name)
       }
 
       harbor_username = {

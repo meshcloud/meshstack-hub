@@ -20,9 +20,3 @@ variable "client_key" {
   type        = string
   sensitive   = true
 }
-
-variable "cluster_kubeconfig" {
-  description = "Raw kubeconfig content containing the configuration required to access and authenticate to the Kubernetes cluster."
-  type        = string
-  sensitive   = true
-}

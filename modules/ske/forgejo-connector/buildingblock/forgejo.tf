@@ -1,22 +1,9 @@
 locals {
   stage_suffix = upper(var.stage)
-  stackit_kubeconfig_stub = {
-    apiVersion      = "v1"
-    kind            = "Config"
-    current-context = "stackit_k8s"
-
-    clusters = [
-      {
-        name = "stackit_k8s"
-        cluster = {
-          server                     = var.cluster_host
-          certificate-authority-data = var.cluster_ca_certificate
-        }
-      }
-    ]
-  }
 
   kubeconfig_user = {
+    current-context = var.kubeconfig_cluster_name
+
     users = [
       {
         name = kubernetes_service_account.forgejo_actions.metadata[0].name
@@ -28,16 +15,16 @@ locals {
 
     contexts = [
       {
-        name = "stackit_k8s"
+        name = var.kubeconfig_cluster_name
         context = {
-          cluster   = "stackit_k8s"
+          cluster   = var.kubeconfig_cluster_name
           namespace = var.namespace
           user      = kubernetes_service_account.forgejo_actions.metadata[0].name
         }
       }
     ]
   }
-  kubeconfig = merge(local.stackit_kubeconfig_stub, local.kubeconfig_user)
+  kubeconfig = merge(var.kubeconfig, local.kubeconfig_user)
 }
 
 resource "forgejo_repository_action_secret" "kubeconfig" {
