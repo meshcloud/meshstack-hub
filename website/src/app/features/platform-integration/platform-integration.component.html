@@ -18,9 +18,8 @@
         <div class="flex-1 flex flex-col gap-2">
           <h1 class="text-2xl lg:text-3xl font-bold text-slate-900">Integrate {{ platform.name }} into meshStack</h1>
           <p class="text-base text-slate-700 mb-1">{{ platform.description }}</p>
-
           <!-- Benefits -->
-          <div *ngIf="platform.benefits && platform.benefits.length > 0" class="flex flex-wrap gap-4 mb-2">
+          <div *ngIf="platform.benefits && platform.benefits.length > 0" class="flex flex-wrap gap-4">
             <span *ngFor="let benefit of platform.benefits" class="inline-flex items-center gap-1.5 text-sm text-slate-600">
               <i class="fa-solid fa-circle-check text-green-600"></i>
               <span>{{ benefit }}</span>
@@ -33,49 +32,205 @@
 
   <!-- Main Content -->
   <div class="container mx-auto px-4 lg:px-8 py-8">
-    <!-- Integration Guide + How To + Terraform Snippet Combined -->
-    <div class="mb-8">
-      <div class="grid grid-cols-1 md:grid-cols-[0.8fr_1.5fr] gap-6 items-start">
-        <mst-card label="Quick Start" class="h-fit">
-          <div class="px-5 py-6 max-w-none text-base" card-body>
-            <h2 class="text-xl font-bold text-slate-900 mb-4 flex items-center gap-2">
-              <i class="fa-solid fa-rocket text-primary-600"></i>
-              Quick Start
+
+    <!-- ── Tab container ────────────────────────────────────────────── -->
+    <div class="bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden">
+
+      <!-- Tab strip -->
+      <div class="flex border-b border-slate-200">
+
+        <!-- Tab: meshStack UI -->
+        <button
+          type="button"
+          (click)="selectMethod('ui')"
+          class="relative flex-1 flex items-center justify-center gap-2.5 px-6 py-4 text-sm font-semibold transition-colors focus:outline-none"
+          [class.text-primary-600]="selectedMethod === 'ui'"
+          [class.bg-primary-50]="selectedMethod === 'ui'"
+          [class.text-slate-500]="selectedMethod !== 'ui'"
+          [class.hover:bg-slate-50]="selectedMethod !== 'ui'">
+          <i class="fa-solid fa-display text-base"></i>
+          <span>meshStack UI</span>
+          <span class="ml-1 text-xs font-medium text-green-700 bg-green-50 border border-green-200 px-2 py-0.5 rounded-full hidden sm:inline-flex items-center gap-1">
+            <i class="fa-solid fa-star text-green-500 text-[9px]"></i> Recommended
+          </span>
+          <span *ngIf="selectedMethod === 'ui'"
+            class="absolute bottom-0 left-0 right-0 h-0.5 bg-primary-500"></span>
+        </button>
+
+        <div class="w-px bg-slate-200 self-stretch"></div>
+
+        <!-- Tab: OpenTofu / Code -->
+        <button
+          type="button"
+          (click)="selectMethod('code')"
+          [disabled]="!platform.terraformSnippet"
+          class="relative flex-1 flex items-center justify-center gap-2.5 px-6 py-4 text-sm font-semibold transition-colors focus:outline-none disabled:opacity-40 disabled:cursor-not-allowed"
+          [class.text-primary-600]="selectedMethod === 'code'"
+          [class.bg-primary-50]="selectedMethod === 'code'"
+          [class.text-slate-500]="selectedMethod !== 'code'"
+          [class.hover:bg-slate-50]="selectedMethod !== 'code' && platform.terraformSnippet">
+          <i class="fa-solid fa-code text-base"></i>
+          <span>OpenTofu / Terraform</span>
+          <span *ngIf="!platform.terraformSnippet" class="ml-1 text-xs font-medium text-slate-400 bg-slate-100 border border-slate-200 px-2 py-0.5 rounded-full hidden sm:inline">
+            Coming soon
+          </span>
+          <span *ngIf="platform.terraformSnippet" class="ml-1 text-xs font-medium text-slate-600 bg-slate-50 border border-slate-200 px-2 py-0.5 rounded-full hidden sm:inline-flex items-center gap-1">
+            <i class="fa-solid fa-code-branch text-slate-400 text-[9px]"></i> GitOps
+          </span>
+          <span *ngIf="selectedMethod === 'code'"
+            class="absolute bottom-0 left-0 right-0 h-0.5 bg-primary-500"></span>
+        </button>
+
+      </div>
+
+      <!-- ── Tab panel: UI path ──────────────────────────────────────── -->
+      <div *ngIf="selectedMethod === 'ui'" class="p-6">
+        <div class="grid grid-cols-1 md:grid-cols-[1fr_1fr] gap-8 items-start">
+
+          <!-- Steps -->
+          <div>
+            <h2 class="text-base font-semibold text-slate-800 mb-5 flex items-center gap-2">
+              <i class="fa-solid fa-display text-primary-500"></i> Set up via Admin Panel
             </h2>
-            <div class="space-y-4">
+            <div class="space-y-5">
               <div class="flex gap-3 items-start">
                 <div class="flex-shrink-0 w-6 h-6 rounded-full bg-primary-100 text-primary-600 flex items-center justify-center text-sm font-semibold">1</div>
                 <div class="flex-1">
-                  <div class="text-slate-700 font-medium mb-1 text-base">Add the OpenTofu snippet</div>
-                  <div class="text-slate-600 text-sm">Copy the provided OpenTofu code from the right and add it to your infrastructure codebase.</div>
+                  <div class="text-slate-700 font-medium mb-1">Open the meshStack Admin Panel</div>
+                  <div class="text-slate-500 text-sm">Log in to your meshStack instance and navigate to the <span class="font-mono bg-slate-100 px-1 py-0.5 rounded text-sm">Admin Area</span>.</div>
                 </div>
               </div>
               <div class="flex gap-3 items-start">
                 <div class="flex-shrink-0 w-6 h-6 rounded-full bg-primary-100 text-primary-600 flex items-center justify-center text-sm font-semibold">2</div>
                 <div class="flex-1">
-                  <div class="text-slate-700 font-medium mb-1 text-base">Provider setup and configure variables</div>
-                  <div class="text-slate-600 text-sm">
-                    Ensure you enter your API key in the <span class="font-mono bg-slate-100 px-1 py-0.5 rounded text-sm">provider</span> block and update the required variables in the <span class="font-mono bg-slate-100 px-1 py-0.5 rounded text-sm">locals</span> block as needed for your environment.
-                  </div>
+                  <div class="text-slate-700 font-medium mb-1">Go to Platforms → Add Platform</div>
+                  <div class="text-slate-500 text-sm">In the left sidebar, click <span class="font-mono bg-slate-100 px-1 py-0.5 rounded text-sm">Platforms</span>, then hit <span class="font-mono bg-slate-100 px-1 py-0.5 rounded text-sm">+ Add Platform</span> and select <strong>{{ platform.name }}</strong> from the list.</div>
                 </div>
               </div>
               <div class="flex gap-3 items-start">
                 <div class="flex-shrink-0 w-6 h-6 rounded-full bg-primary-100 text-primary-600 flex items-center justify-center text-sm font-semibold">3</div>
                 <div class="flex-1">
-                  <div class="text-slate-700 font-medium mb-1 text-base">Deploy with OpenTofu</div>
-                  <div class="text-slate-600 text-sm">Run <span class="font-mono bg-slate-100 px-1 py-0.5 rounded text-sm">tofu init</span>, <span class="font-mono bg-slate-100 px-1 py-0.5 rounded text-sm">tofu plan</span>, and <span class="font-mono bg-slate-100 px-1 py-0.5 rounded text-sm">tofu apply</span> to provision the integration.</div>
+                  <div class="text-slate-700 font-medium mb-1">Enter credentials &amp; endpoint</div>
+                  <div class="text-slate-500 text-sm">Fill in the API endpoint URL and service account credentials required for replication and metering.</div>
+                </div>
+              </div>
+              <div class="flex gap-3 items-start">
+                <div class="flex-shrink-0 w-6 h-6 rounded-full bg-primary-100 text-primary-600 flex items-center justify-center text-sm font-semibold">4</div>
+                <div class="flex-1">
+                  <div class="text-slate-700 font-medium mb-1">Configure Landing Zones</div>
+                  <div class="text-slate-500 text-sm">Add one or more landing zones to define how meshStack will provision and govern tenants on this platform.</div>
                 </div>
               </div>
               <div class="flex gap-3 items-start">
                 <div class="flex-shrink-0 w-6 h-6 rounded-full bg-green-100 text-green-600 flex items-center justify-center text-base font-bold">✓</div>
                 <div class="flex-1">
-                  <div class="text-slate-700 font-medium mb-1 text-base">Success!</div>
-                  <div class="text-slate-600 text-sm">The platform is now integrated and you can start using it to provision tenants, assign users and collect costs.</div>
+                  <div class="text-slate-700 font-medium mb-1">Publish &amp; enjoy!</div>
+                  <div class="text-slate-500 text-sm">Set the availability to <span class="font-mono bg-slate-100 px-1 py-0.5 rounded text-sm">Public</span> and publish the platform — your users can now self-service tenants on {{ platform.name }}.</div>
                 </div>
               </div>
             </div>
           </div>
-        </mst-card>
+
+          <!-- Right column: why + hints -->
+          <div class="flex flex-col gap-4 md:border-l md:border-slate-100 md:pl-8">
+            <!-- Why UI -->
+            <div>
+              <h3 class="text-sm font-semibold text-slate-700 mb-3 flex items-center gap-1.5">
+                <i class="fa-solid fa-circle-info text-primary-400 text-xs"></i> Why choose the UI path?
+              </h3>
+              <ul class="space-y-2 text-sm text-slate-600">
+                <li class="flex items-start gap-2">
+                  <i class="fa-solid fa-check text-green-500 mt-0.5 flex-shrink-0"></i>
+                  <span>No Terraform or coding knowledge required</span>
+                </li>
+                <li class="flex items-start gap-2">
+                  <i class="fa-solid fa-check text-green-500 mt-0.5 flex-shrink-0"></i>
+                  <span>Guided wizard validates your inputs as you go</span>
+                </li>
+                <li class="flex items-start gap-2">
+                  <i class="fa-solid fa-check text-green-500 mt-0.5 flex-shrink-0"></i>
+                  <span>Ideal for one-time setup or smaller teams</span>
+                </li>
+                <li class="flex items-start gap-2">
+                  <i class="fa-solid fa-check text-green-500 mt-0.5 flex-shrink-0"></i>
+                  <span>Changes take effect immediately — no <span class="font-mono bg-slate-100 px-1 py-0.5 rounded">tofu apply</span> needed</span>
+                </li>
+              </ul>
+            </div>
+
+            <!-- Prefer code banner -->
+            <div *ngIf="platform.terraformSnippet" class="bg-primary-50 border border-primary-200 rounded-lg p-4 flex items-start gap-3">
+              <i class="fa-solid fa-lightbulb text-primary-500 mt-0.5 flex-shrink-0"></i>
+              <div class="text-sm text-slate-700">
+                <strong class="font-semibold text-slate-800">Already using IaC?</strong>
+                <span class="ml-1">Switch to the <button type="button" (click)="selectMethod('code')" class="text-primary-600 hover:text-primary-700 underline font-medium">OpenTofu / Terraform tab</button> for a GitOps approach.</span>
+              </div>
+            </div>
+
+            <!-- Docs link -->
+            <div class="text-sm text-slate-500 flex items-start gap-2">
+              <i class="fa-solid fa-book text-slate-300 mt-0.5 flex-shrink-0"></i>
+              <span>Need more detail? See the
+                <a href="https://docs.meshcloud.io/docs/meshstack.meshplatforms.html" target="_blank" rel="noopener noreferrer"
+                  class="text-primary-600 hover:text-primary-700 underline font-medium">meshStack Platform docs</a>.
+              </span>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+    <!-- ── Tab panel: Code path ───────────────────────────────────────── -->
+    <div *ngIf="selectedMethod === 'code'" class="p-6">
+      <div class="grid grid-cols-1 md:grid-cols-[0.8fr_1.5fr] gap-8 items-start">
+
+        <!-- Quick-start steps -->
+        <div class="md:border-r md:border-slate-100 md:pr-8">
+          <h2 class="text-base font-semibold text-slate-800 mb-5 flex items-center gap-2">
+            <i class="fa-solid fa-rocket text-primary-500"></i> Quick Start
+          </h2>
+          <div class="space-y-4">
+            <div class="flex gap-3 items-start">
+              <div class="flex-shrink-0 w-6 h-6 rounded-full bg-primary-100 text-primary-600 flex items-center justify-center text-sm font-semibold">1</div>
+              <div class="flex-1">
+                <div class="text-slate-700 font-medium mb-1 text-sm">Copy the OpenTofu snippet</div>
+                <div class="text-slate-500 text-sm">Copy the provided code and add it to your infrastructure codebase.</div>
+              </div>
+            </div>
+            <div class="flex gap-3 items-start">
+              <div class="flex-shrink-0 w-6 h-6 rounded-full bg-primary-100 text-primary-600 flex items-center justify-center text-sm font-semibold">2</div>
+              <div class="flex-1">
+                <div class="text-slate-700 font-medium mb-1 text-sm">Configure provider &amp; variables</div>
+                <div class="text-slate-500 text-sm">
+                  Enter your API key in the <span class="font-mono bg-slate-100 px-1 py-0.5 rounded text-xs">provider</span> block and update the required variables in the <span class="font-mono bg-slate-100 px-1 py-0.5 rounded text-xs">locals</span> block.
+                </div>
+              </div>
+            </div>
+            <div class="flex gap-3 items-start">
+              <div class="flex-shrink-0 w-6 h-6 rounded-full bg-primary-100 text-primary-600 flex items-center justify-center text-sm font-semibold">3</div>
+              <div class="flex-1">
+                <div class="text-slate-700 font-medium mb-1 text-sm">Deploy with OpenTofu</div>
+                <div class="text-slate-500 text-sm">Run <span class="font-mono bg-slate-100 px-1 py-0.5 rounded text-xs">tofu init</span>, <span class="font-mono bg-slate-100 px-1 py-0.5 rounded text-xs">tofu plan</span>, and <span class="font-mono bg-slate-100 px-1 py-0.5 rounded text-xs">tofu apply</span>.</div>
+              </div>
+            </div>
+            <div class="flex gap-3 items-start">
+              <div class="flex-shrink-0 w-6 h-6 rounded-full bg-green-100 text-green-600 flex items-center justify-center text-base font-bold">✓</div>
+              <div class="flex-1">
+                <div class="text-slate-700 font-medium mb-1 text-sm">Done!</div>
+                <div class="text-slate-500 text-sm">The platform is integrated. You can start provisioning tenants, assigning users, and collecting costs.</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Prefer UI hint -->
+          <div class="mt-6 text-xs text-slate-400">
+            <i class="fa-solid fa-display mr-1"></i>
+            Prefer no-code?
+            <button type="button" (click)="selectMethod('ui')" class="text-primary-600 hover:text-primary-700 underline font-medium">Switch to the UI tab.</button>
+          </div>
+        </div>
+
+        <!-- Code snippet -->
         <div class="relative w-full overflow-hidden">
           <button
             (click)="copyTerraform(platform.terraformSnippet!!)"
@@ -88,6 +243,9 @@
         </div>
       </div>
     </div>
+
+  </div><!-- /tab container -->
+
   </div>
 </div>
 
