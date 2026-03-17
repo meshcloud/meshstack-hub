@@ -81,8 +81,8 @@ No modules.
 
 | Name | Description |
 |------|-------------|
-| <a name="output_debug_input_files_json"></a> [debug\_input\_files\_json](#output\_debug\_input\_files\_json) | JSON-encoded map of all input files received, including sensitive values in plaintext. Useful for test assertions. Do not do this in production code. |
-| <a name="output_debug_input_variables_json"></a> [debug\_input\_variables\_json](#output\_debug\_input\_variables\_json) | JSON-encoded map of all input variables received, including sensitive values in plaintext. Useful for test assertions. Do not do this in production code. |
+| <a name="output_debug_input_files_json"></a> [debug\_input\_files\_json](#output\_debug\_input\_files\_json) | JSON-encoded map of all input files received, including sensitive values in plaintext. |
+| <a name="output_debug_input_variables_json"></a> [debug\_input\_variables\_json](#output\_debug\_input\_variables\_json) | JSON-encoded map of all input variables received, including sensitive values in plaintext. |
 | <a name="output_flag"></a> [flag](#output\_flag) | n/a |
 | <a name="output_multi_select"></a> [multi\_select](#output\_multi\_select) | n/a |
 | <a name="output_multi_select_json"></a> [multi\_select\_json](#output\_multi\_select\_json) | n/a |
