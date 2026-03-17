@@ -33,8 +33,13 @@ resource "azuredevops_project" "main" {
   version_control    = var.version_control
   work_item_template = var.work_item_template
 
-  features = var.project_features
-
+  features = {
+    boards       = "enabled"
+    repositories = "enabled"
+    pipelines    = "enabled"
+    testplans    = "disabled"
+    artifacts    = "enabled"
+  }
   lifecycle {
     ignore_changes = [
       visibility,
