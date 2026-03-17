@@ -171,6 +171,12 @@ resource "meshstack_building_block_definition" "this" {
     }
 
     outputs = {
+      repository_id = {
+        display_name    = "Repository ID"
+        type            = "STRING"
+        assignment_type = "NONE"
+      }
+
       repository_html_url = {
         display_name    = "Open Repository"
         type            = "STRING"

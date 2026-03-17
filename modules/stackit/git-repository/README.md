@@ -16,7 +16,7 @@ It combines:
 - static inputs from backplane (`forgejo_base_url`, `forgejo_token`, `forgejo_organization`)
 - optional static sensitive action secrets (`action_secrets`)
 - user inputs (`name`, `description`, `private`, `clone_addr`)
-- outputs exposed to users (`repository_html_url`, `repository_clone_url`, `repository_ssh_url`, `summary`)
+- outputs exposed to users (`repository_id`, `repository_html_url`, `repository_clone_url`, `repository_ssh_url`, `summary`)
 
 This allows platform teams to publish a reusable self-service Git repository building block for tenants.
 

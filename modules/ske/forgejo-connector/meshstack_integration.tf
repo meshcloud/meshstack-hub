@@ -112,7 +112,7 @@ resource "meshstack_building_block_definition" "this" {
     description         = "Connects a Forgejo repository with a tenant namespace on STACKIT SKE."
     support_url         = "https://portal.stackit.cloud/git"
     target_type         = "TENANT_LEVEL"
-    supported_platforms = [{ name = "STACKIT_KUBERNETES_ENGINE" }]
+    supported_platforms = [{ name = "KUBERNETES" }]
     run_transparency    = true
   }
 
