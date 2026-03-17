@@ -1,40 +1,6 @@
-# This file registers the SKE Forgejo connector building block definition.
-
-terraform {
-  required_providers {
-    meshstack = {
-      source  = "meshcloud/meshstack"
-      version = "~> 0.20.0"
-    }
-  }
-}
-
-variable "cluster_host" {
-  type        = string
-  description = "The endpoint of the Kubernetes cluster."
-}
-
-variable "cluster_ca_certificate" {
-  description = "Base64-encoded certificate authority (CA) certificate used to verify the Kubernetes API server's identity."
-  type        = string
-  sensitive   = true
-}
-
-variable "client_certificate" {
-  description = "Base64-encoded client certificate used for authenticating to the Kubernetes API server."
-  type        = string
-  sensitive   = true
-}
-
-variable "client_key" {
-  description = "Base64-encoded private key corresponding to the client certificate, used for authentication with the Kubernetes API server."
-  type        = string
-  sensitive   = true
-}
-
-variable "cluster_kubeconfig" {
-  description = "Raw kubeconfig content containing the configuration required to access and authenticate to the Kubernetes cluster."
-  type        = string
+variable "kubeconfig" {
+  description = "Kubeconfig content containing the configuration required to access and authenticate to the Kubernetes cluster."
+  type        = any
   sensitive   = true
 }
 
@@ -49,7 +15,7 @@ variable "forgejo_api_token" {
 
 variable "forgejo_repo_definition_uuid" {
   type        = string
-  description = "UUID of the Forgejo repository building block definition used as parent dependency."
+  description = "UUID of the Forgejo repository building block definition used as parent dependency for tenant building blocks (connector)."
 }
 
 variable "harbor_host" {
@@ -93,14 +59,6 @@ output "building_block_definition_version_ref" {
   description = "Version of BBD is consumed in building block compositions."
 }
 
-module "backplane" {
-  source                 = "./backplane"
-  cluster_host           = var.cluster_host
-  cluster_ca_certificate = var.cluster_ca_certificate
-  client_key             = var.client_key
-  client_certificate     = var.client_certificate
-}
-
 resource "meshstack_building_block_definition" "this" {
   metadata = {
     owned_by_workspace = var.meshstack.owning_workspace_identifier
@@ -134,98 +92,22 @@ resource "meshstack_building_block_definition" "this" {
     dependency_refs = [{ uuid = var.forgejo_repo_definition_uuid }]
 
     inputs = {
-      "config.tf" = {
-        display_name    = "config.tf"
-        description     = "Static Kubernetes provider config and kubeconfig stub."
+      namespace = {
+        display_name    = "namespace"
+        description     = "Associated namespace in kubernetes cluster."
+        type            = "STRING"
+        assignment_type = "PLATFORM_TENANT_ID"
+      }
+
+      "kubeconfig.yaml" = {
+        display_name    = "kubeconfig.yaml"
+        description     = "kubeconfig.yaml file providing admin credentials to cluster."
         type            = "FILE"
         assignment_type = "STATIC"
         sensitive = {
           argument = {
-            secret_value   = "data:application/octet-stream;base64,${base64encode(module.backplane.config_tf)}"
-            secret_version = sha256(module.backplane.config_tf)
-          }
-        }
-      }
-
-      FORGEJO_HOST = {
-        display_name    = "FORGEJO_HOST"
-        description     = "The URL of the Forgejo instance to connect to."
-        type            = "STRING"
-        assignment_type = "STATIC"
-        is_environment  = true
-        sensitive = {
-          argument = {
-            secret_value   = jsonencode(var.forgejo_host)
-            secret_version = sha256(jsonencode(var.forgejo_host))
-          }
-        }
-      }
-
-      FORGEJO_API_TOKEN = {
-        display_name    = "FORGEJO_API_TOKEN"
-        description     = "The API token for authenticating with the Forgejo instance."
-        type            = "STRING"
-        assignment_type = "STATIC"
-        is_environment  = true
-        sensitive = {
-          argument = {
-            secret_value   = jsonencode(var.forgejo_api_token)
-            secret_version = sha256(jsonencode(var.forgejo_api_token))
-          }
-        }
-      }
-
-      harbor_host = {
-        display_name    = "harbor_host"
-        description     = "The URL of the Harbor registry."
-        type            = "STRING"
-        assignment_type = "STATIC"
-        argument        = jsonencode(var.harbor_host)
-      }
-
-      kubeconfig = {
-        display_name    = "kubeconfig"
-        description     = "Static cluster kubeconfig content merged with generated service-account credentials."
-        type            = "CODE"
-        assignment_type = "STATIC"
-        sensitive = {
-          argument = {
-            secret_value   = jsonencode(yamldecode(var.cluster_kubeconfig))
-            secret_version = sha256(var.cluster_kubeconfig)
-          }
-        }
-      }
-
-      kubeconfig_cluster_name = {
-        display_name    = "kubeconfig_cluster_name"
-        description     = "Cluster name used to connect static kubeconfig and generated user/context entries."
-        type            = "STRING"
-        assignment_type = "STATIC"
-        argument        = jsonencode(module.backplane.kubeconfig_cluster_name)
-      }
-
-      harbor_username = {
-        display_name    = "harbor_username"
-        description     = "The username for the Harbor registry."
-        type            = "STRING"
-        assignment_type = "STATIC"
-        sensitive = {
-          argument = {
-            secret_value   = jsonencode(var.harbor_username)
-            secret_version = sha256(jsonencode(var.harbor_username))
-          }
-        }
-      }
-
-      harbor_password = {
-        display_name    = "harbor_password"
-        description     = "The password for the Harbor registry."
-        type            = "STRING"
-        assignment_type = "STATIC"
-        sensitive = {
-          argument = {
-            secret_value   = jsonencode(var.harbor_password)
-            secret_version = sha256(jsonencode(var.harbor_password))
+            secret_value   = yamlencode(var.kubeconfig)
+            secret_version = nonsensitive(sha256(var.kubeconfig))
           }
         }
       }
@@ -238,26 +120,81 @@ resource "meshstack_building_block_definition" "this" {
         argument        = jsonencode("${var.forgejo_repo_definition_uuid}.repository_id")
       }
 
-      namespace = {
-        display_name    = "namespace"
-        description     = "Associated namespace in kubernetes cluster."
+      repository_secret_name_suffix = {
+        display_name    = "repository_secret_name_suffix"
+        description     = "Optional suffix appended to created repository secret names (for example `_DEV`)."
         type            = "STRING"
-        assignment_type = "PLATFORM_TENANT_ID"
+        assignment_type = "USER_INPUT"
+        default_value   = jsonencode("")
       }
 
-      stage = {
-        display_name                   = "stage"
-        description                    = "Deployment stage used for secret suffixing (`dev` or `prod`)."
-        type                           = "STRING"
-        assignment_type                = "USER_INPUT"
-        value_validation_regex         = "^(dev|prod)$"
-        validation_regex_error_message = "Stage must be either 'dev' or 'prod'."
+      FORGEJO_HOST = {
+        display_name    = "FORGEJO_HOST"
+        description     = "The Host of the Forgejo instance to connect to."
+        type            = "STRING"
+        assignment_type = "STATIC"
+        is_environment  = true
+        argument        = jsonencode(var.forgejo_host)
       }
 
+      FORGEJO_API_TOKEN = {
+        display_name    = "FORGEJO_API_TOKEN"
+        description     = "The API token for authenticating with the Forgejo instance."
+        type            = "STRING"
+        assignment_type = "STATIC"
+        is_environment  = true
+        sensitive = {
+          argument = {
+            secret_value   = var.forgejo_api_token
+            secret_version = nonsensitive(sha256(var.forgejo_api_token))
+          }
+        }
+      }
+
+      harbor_host = {
+        display_name    = "harbor_host"
+        description     = "The URL of the Harbor registry."
+        type            = "STRING"
+        assignment_type = "STATIC"
+        argument        = jsonencode(var.harbor_host)
+      }
+
+      harbor_username = {
+        display_name    = "harbor_username"
+        description     = "The username for the Harbor registry."
+        type            = "STRING"
+        assignment_type = "STATIC"
+        sensitive = {
+          argument = {
+            secret_value   = var.harbor_username
+            secret_version = nonsensitive(sha256(var.harbor_username))
+          }
+        }
+      }
+
+      harbor_password = {
+        display_name    = "harbor_password"
+        description     = "The password for the Harbor registry."
+        type            = "STRING"
+        assignment_type = "STATIC"
+        sensitive = {
+          argument = {
+            secret_value   = var.harbor_password
+            secret_version = nonsensitive(sha256(var.harbor_password))
+          }
+        }
+      }
     }
 
     outputs = {}
+  }
+}
 
-    permissions = ["TENANT_LIST", "TENANT_SAVE", "TENANT_DELETE"]
+terraform {
+  required_providers {
+    meshstack = {
+      source  = "meshcloud/meshstack"
+      version = "~> 0.20.0"
+    }
   }
 }

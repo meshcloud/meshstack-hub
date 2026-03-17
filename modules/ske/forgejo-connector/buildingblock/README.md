@@ -55,7 +55,6 @@ No modules.
 
 | Name | Type |
 |------|------|
-| [forgejo_repository_action_secret.container_registry](https://registry.terraform.io/providers/svalabs/forgejo/latest/docs/resources/repository_action_secret) | resource |
 | [forgejo_repository_action_secret.kubeconfig](https://registry.terraform.io/providers/svalabs/forgejo/latest/docs/resources/repository_action_secret) | resource |
 | [forgejo_repository_action_secret.namespace](https://registry.terraform.io/providers/svalabs/forgejo/latest/docs/resources/repository_action_secret) | resource |
 | [kubernetes_cluster_role_binding.forgejo_actions_clusterissuer_access](https://registry.terraform.io/providers/hashicorp/kubernetes/2.35.1/docs/resources/cluster_role_binding) | resource |
@@ -71,11 +70,9 @@ No modules.
 | <a name="input_harbor_host"></a> [harbor\_host](#input\_harbor\_host) | The URL of the Harbor registry. | `string` | `"https://registry.onstackit.cloud"` | no |
 | <a name="input_harbor_password"></a> [harbor\_password](#input\_harbor\_password) | The password for the Harbor registry. | `string` | n/a | yes |
 | <a name="input_harbor_username"></a> [harbor\_username](#input\_harbor\_username) | The username for the Harbor registry. | `string` | n/a | yes |
-| <a name="input_kubeconfig"></a> [kubeconfig](#input\_kubeconfig) | Static kubeconfig content of the SKE cluster. | `any` | n/a | yes |
-| <a name="input_kubeconfig_cluster_name"></a> [kubeconfig\_cluster\_name](#input\_kubeconfig\_cluster\_name) | Cluster name used in merged kubeconfig context entries. | `string` | n/a | yes |
 | <a name="input_namespace"></a> [namespace](#input\_namespace) | Associated namespace in kubernetes cluster. | `string` | n/a | yes |
 | <a name="input_repository_id"></a> [repository\_id](#input\_repository\_id) | The ID of the Forgejo repository. | `number` | n/a | yes |
-| <a name="input_stage"></a> [stage](#input\_stage) | Deployment stage used for secret suffixing (`dev` or `prod`). | `string` | n/a | yes |
+| <a name="input_repository_secret_name_suffix"></a> [repository\_secret\_name\_suffix](#input\_repository\_secret\_name\_suffix) | Optional suffix appended to created repository secret names. | `string` | `""` | no |
 
 ## Outputs
 

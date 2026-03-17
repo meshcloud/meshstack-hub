@@ -1,8 +1,33 @@
+locals {
+  kubeconfig = try(
+    yamldecode(file("${path.module}/kubeconfig.yaml")),
+    yamldecode(file("${path.module}/kubeconfig-mock.yaml"))
+  )
+  kubeconfig_cluster      = one(local.kubeconfig["clusters"])["cluster"]
+  kubeconfig_cluster_name = one(local.kubeconfig["clusters"])["name"]
+  kubeconfig_admin_user   = one(local.kubeconfig["users"])["user"]
+}
+
+provider "kubernetes" {
+  host                   = local.kubeconfig_cluster["server"]
+  cluster_ca_certificate = base64decode(local.kubeconfig_cluster["certificate-authority-data"])
+  client_certificate     = base64decode(local.kubeconfig_admin_user["client-certificate-data"])
+  client_key             = base64decode(local.kubeconfig_admin_user["client-key-data"])
+}
+
 # Service account for forgejo actions to use
 resource "kubernetes_service_account" "forgejo_actions" {
   metadata {
     name      = "forgejo-actions"
     namespace = var.namespace
+  }
+
+  # Unfortunately, check blocks only supported in Terraform, not OpenTofu.
+  lifecycle {
+    precondition {
+      condition     = local.kubeconfig_cluster["server"] != "https://example.invalid"
+      error_message = "Mock kubeconfig detected. Ensure meshStack injected kubeconfig.yaml before apply."
+    }
   }
 }
 
@@ -65,7 +90,7 @@ resource "kubernetes_secret" "image_pull" {
   data = {
     ".dockerconfigjson" = jsonencode({
       auths = {
-        "${var.harbor_host}" = {
+        (var.harbor_host) = {
           username = var.harbor_username
           password = var.harbor_password
           auth     = base64encode("${var.harbor_username}:${var.harbor_password}")

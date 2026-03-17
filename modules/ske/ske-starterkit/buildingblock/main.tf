@@ -2,7 +2,7 @@ resource "meshstack_building_block_v2" "git_repository" {
   spec = {
     building_block_definition_version_ref = var.building_block_definition_version_refs["git-repository"] # provisioned in backplane
 
-    display_name = "${var.name} Git Repo"
+    display_name = "Git Repo ${var.name}"
     target_ref = {
       kind       = "meshWorkspace"
       identifier = var.workspace_identifier
@@ -73,7 +73,7 @@ resource "meshstack_building_block_v2" "forgejo_connector" {
   spec = {
     building_block_definition_version_ref = var.building_block_definition_version_refs["forgejo-connector"]
 
-    display_name = "${var.name} Forgejo Connector ${upper(each.key)}"
+    display_name = "${var.name} Forgejo Connector ${title(each.key)}"
     target_ref = {
       kind = "meshTenant"
       uuid = each.value.metadata.uuid
@@ -85,8 +85,8 @@ resource "meshstack_building_block_v2" "forgejo_connector" {
     }]
 
     inputs = {
-      stage = {
-        value_string = each.key
+      repository_secret_name_suffix = {
+        value_string = "_${upper(each.key)}"
       }
     }
   }

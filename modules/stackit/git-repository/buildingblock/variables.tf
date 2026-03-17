@@ -1,17 +1,5 @@
 # ── Backplane inputs (static, set once per building block definition) ──────────
 
-variable "forgejo_base_url" {
-  type        = string
-  description = "STACKIT Git base URL"
-  default     = "https://git-service.git.onstackit.cloud"
-}
-
-variable "forgejo_token" {
-  type        = string
-  description = "STACKIT Git API token (from backplane)"
-  sensitive   = true
-}
-
 variable "forgejo_organization" {
   type        = string
   description = "STACKIT Git organization where the repository will be created"

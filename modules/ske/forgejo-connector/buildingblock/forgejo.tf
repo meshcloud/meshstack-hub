@@ -1,8 +1,12 @@
-locals {
-  stage_suffix = upper(var.stage)
+provider "forgejo" {
+  # configured via env variables FORGEJO_HOST, FORGEJO_API_TOKEN
+}
 
-  kubeconfig_user = {
-    current-context = var.kubeconfig_cluster_name
+resource "forgejo_repository_action_secret" "kubeconfig" {
+  repository_id = var.repository_id
+  name          = "KUBECONFIG${var.repository_secret_name_suffix}"
+  data = yamlencode(merge(local.kubeconfig, {
+    current-context = local.kubeconfig_cluster_name
 
     users = [
       {
@@ -15,38 +19,19 @@ locals {
 
     contexts = [
       {
-        name = var.kubeconfig_cluster_name
+        name = local.kubeconfig_cluster_name
         context = {
-          cluster   = var.kubeconfig_cluster_name
+          cluster   = local.kubeconfig_cluster_name
           namespace = var.namespace
           user      = kubernetes_service_account.forgejo_actions.metadata[0].name
         }
       }
     ]
-  }
-  kubeconfig = merge(var.kubeconfig, local.kubeconfig_user)
-}
-
-resource "forgejo_repository_action_secret" "kubeconfig" {
-  repository_id = var.repository_id
-  name          = "KUBECONFIG_${local.stage_suffix}"
-  data          = yamlencode(local.kubeconfig)
+  }))
 }
 
 resource "forgejo_repository_action_secret" "namespace" {
   repository_id = var.repository_id
-  name          = "K8S_NAMESPACE_${local.stage_suffix}"
+  name          = "K8S_NAMESPACE${var.repository_secret_name_suffix}"
   data          = var.namespace
-}
-
-resource "forgejo_repository_action_secret" "container_registry" {
-  for_each = {
-    HOST     = var.harbor_host
-    USERNAME = var.harbor_username
-    PASSWORD = var.harbor_password
-  }
-
-  repository_id = var.repository_id
-  name          = "STACKIT_HARBOR_${each.key}"
-  data          = each.value
 }

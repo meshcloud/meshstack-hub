@@ -94,19 +94,21 @@ resource "meshstack_building_block_definition" "this" {
     inputs = {
       # ── Static inputs from backplane ──────────────────────────────────────
 
-      forgejo_base_url = {
-        display_name    = "STACKIT Git Base URL"
-        description     = "Base URL of the STACKIT Git instance"
+      FORGEJO_HOST = {
+        display_name    = "FORGEJO_HOST"
+        description     = "The Host of the Forgejo instance to connect to."
         type            = "STRING"
         assignment_type = "STATIC"
+        is_environment  = true
         argument        = jsonencode(var.forgejo_base_url)
       }
 
-      forgejo_token = {
-        display_name    = "STACKIT Git API Token"
-        description     = "Personal Access Token for the STACKIT Git API"
+      FORGEJO_API_TOKEN = {
+        display_name    = "FORGEJO_API_TOKEN"
+        description     = "The API token for authenticating with the Forgejo instance."
         type            = "STRING"
         assignment_type = "STATIC"
+        is_environment  = true
         sensitive = {
           argument = {
             secret_value = var.forgejo_token

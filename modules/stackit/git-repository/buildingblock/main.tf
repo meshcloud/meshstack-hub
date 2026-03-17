@@ -1,3 +1,7 @@
+provider "forgejo" {
+  # configured via env variables FORGEJO_HOST, FORGEJO_API_TOKEN
+}
+
 locals {
   have_clone_addr = trimspace(var.clone_addr) != "" && var.clone_addr != "null"
 }

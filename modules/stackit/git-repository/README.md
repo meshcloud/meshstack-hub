@@ -13,7 +13,7 @@ It combines:
 `meshstack_integration.tf` creates a `meshstack_building_block_definition` with:
 
 - workspace-level target type
-- static inputs from backplane (`forgejo_base_url`, `forgejo_token`, `forgejo_organization`)
+- static inputs from backplane (`FORGEJO_HOST`, `FORGEJO_API_TOKEN`, `forgejo_organization`)
 - optional static sensitive action secrets (`action_secrets`)
 - user inputs (`name`, `description`, `private`, `clone_addr`)
 - outputs exposed to users (`repository_id`, `repository_html_url`, `repository_clone_url`, `repository_ssh_url`, `summary`)
