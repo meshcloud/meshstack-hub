@@ -81,10 +81,13 @@ No modules.
 
 | Name | Description |
 |------|-------------|
+| <a name="output_debug_input_files_json"></a> [debug\_input\_files\_json](#output\_debug\_input\_files\_json) | JSON-encoded map of all input files received, including sensitive values in plaintext. Useful for test assertions. Do not do this in production code. |
+| <a name="output_debug_input_variables_json"></a> [debug\_input\_variables\_json](#output\_debug\_input\_variables\_json) | JSON-encoded map of all input variables received, including sensitive values in plaintext. Useful for test assertions. Do not do this in production code. |
 | <a name="output_flag"></a> [flag](#output\_flag) | n/a |
 | <a name="output_multi_select"></a> [multi\_select](#output\_multi\_select) | n/a |
 | <a name="output_multi_select_json"></a> [multi\_select\_json](#output\_multi\_select\_json) | n/a |
 | <a name="output_num"></a> [num](#output\_num) | n/a |
+| <a name="output_resource_url"></a> [resource\_url](#output\_resource\_url) | n/a |
 | <a name="output_sensitive_file_yaml"></a> [sensitive\_file\_yaml](#output\_sensitive\_file\_yaml) | n/a |
 | <a name="output_sensitive_text"></a> [sensitive\_text](#output\_sensitive\_text) | n/a |
 | <a name="output_sensitive_yaml"></a> [sensitive\_yaml](#output\_sensitive\_yaml) | n/a |
@@ -92,6 +95,7 @@ No modules.
 | <a name="output_some_file_yaml"></a> [some\_file\_yaml](#output\_some\_file\_yaml) | n/a |
 | <a name="output_static"></a> [static](#output\_static) | n/a |
 | <a name="output_static_code"></a> [static\_code](#output\_static\_code) | n/a |
+| <a name="output_summary"></a> [summary](#output\_summary) | n/a |
 | <a name="output_text"></a> [text](#output\_text) | n/a |
 | <a name="output_user_permissions"></a> [user\_permissions](#output\_user\_permissions) | n/a |
 | <a name="output_user_permissions_json"></a> [user\_permissions\_json](#output\_user\_permissions\_json) | n/a |

@@ -150,6 +150,31 @@ resource "meshstack_building_block_definition" "this" {
         display_name    = "Text"
         type            = "STRING"
       }
+      static_code = {
+        assignment_type = "NONE"
+        display_name    = "Static Code"
+        type            = "CODE"
+      }
+      resource_url = {
+        assignment_type = "RESOURCE_URL"
+        display_name    = "Resource URL"
+        type            = "STRING"
+      }
+      summary = {
+        assignment_type = "SUMMARY"
+        display_name    = "Summary"
+        type            = "STRING"
+      }
+      debug_input_variables_json = {
+        assignment_type = "NONE"
+        display_name    = "Input Variables as JSON for debugging"
+        type            = "CODE"
+      }
+      debug_input_files_json = {
+        assignment_type = "NONE"
+        display_name    = "Input Files as JSON for debugging"
+        type            = "CODE"
+      }
     }
   }
 }
