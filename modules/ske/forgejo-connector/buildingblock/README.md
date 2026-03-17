@@ -74,7 +74,7 @@ No modules.
 | <a name="input_kubeconfig"></a> [kubeconfig](#input\_kubeconfig) | Static kubeconfig content of the SKE cluster. | `any` | n/a | yes |
 | <a name="input_kubeconfig_cluster_name"></a> [kubeconfig\_cluster\_name](#input\_kubeconfig\_cluster\_name) | Cluster name used in merged kubeconfig context entries. | `string` | n/a | yes |
 | <a name="input_namespace"></a> [namespace](#input\_namespace) | Associated namespace in kubernetes cluster. | `string` | n/a | yes |
-| <a name="input_repository_id"></a> [repository\_id](#input\_repository\_id) | The ID of the Forgejo repository. | `string` | n/a | yes |
+| <a name="input_repository_id"></a> [repository\_id](#input\_repository\_id) | The ID of the Forgejo repository. | `number` | n/a | yes |
 | <a name="input_stage"></a> [stage](#input\_stage) | Deployment stage used for secret suffixing (`dev` or `prod`). | `string` | n/a | yes |
 
 ## Outputs

@@ -134,19 +134,21 @@ resource "meshstack_building_block_definition" "this" {
       }
 
       description = {
-        display_name    = "Repository Description"
-        description     = "Short description of the repository."
-        type            = "STRING"
-        assignment_type = "USER_INPUT"
-        default_value   = jsonencode("")
+        display_name           = "Repository Description"
+        description            = "Short description of the repository."
+        type                   = "STRING"
+        assignment_type        = "USER_INPUT"
+        updateable_by_consumer = true
+        default_value          = jsonencode("")
       }
 
       private = {
-        display_name    = "Private Repository"
-        description     = "If true, the repository has private visibility in Forgejo."
-        type            = "BOOLEAN"
-        assignment_type = "USER_INPUT"
-        default_value   = jsonencode(true)
+        display_name           = "Private Repository"
+        description            = "If true, the repository has private visibility in Forgejo."
+        type                   = "BOOLEAN"
+        assignment_type        = "USER_INPUT"
+        updateable_by_consumer = true
+        default_value          = jsonencode(true)
       }
 
       clone_addr = {
@@ -173,8 +175,9 @@ resource "meshstack_building_block_definition" "this" {
     outputs = {
       repository_id = {
         display_name    = "Repository ID"
-        type            = "STRING"
+        type            = "INTEGER"
         assignment_type = "NONE"
+        description     = "Numeric Forgejo repository ID, primarily intended for wiring dependent building blocks."
       }
 
       repository_html_url = {

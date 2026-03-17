@@ -28,7 +28,7 @@ variable "harbor_password" {
 }
 
 variable "repository_id" {
-  type        = string
+  type        = number
   description = "The ID of the Forgejo repository."
 }
 
