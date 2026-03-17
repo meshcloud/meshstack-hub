@@ -24,7 +24,6 @@ export class PlatformIntegrationComponent implements OnInit {
   public breadcrumbs$!: Observable<BreadcrumbItem[]>;
   public copiedTerraform = false;
   public headerBgColor$!: Observable<string>;
-  public selectedMethod: 'ui' | 'code' = 'ui';
 
   constructor(
     private route: ActivatedRoute,
@@ -76,10 +75,5 @@ export class PlatformIntegrationComponent implements OnInit {
       setTimeout(() => this.copiedTerraform = false, 2000);
       (window as any).plausible('Copy Platform Terraform');
     });
-  }
-
-  public selectMethod(method: 'ui' | 'code'): void {
-    this.selectedMethod = method;
-    (window as any).plausible?.('Select Platform Integration Method', { props: { method } });
   }
 }
