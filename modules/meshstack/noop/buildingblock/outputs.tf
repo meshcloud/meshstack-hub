@@ -98,7 +98,8 @@ MARKDOWN
 }
 
 output "debug_input_variables_json" {
-  description = "JSON-encoded map of all input variables received, including sensitive values in plaintext. Useful for test assertions. Do not do this in production code."
+  description = "JSON-encoded map of all input variables received, including sensitive values in plaintext."
+  sensitive   = true # For test only. Do not do this in production code.
   value = jsonencode({
     flag                  = var.flag
     num                   = var.num
@@ -116,7 +117,8 @@ output "debug_input_variables_json" {
 }
 
 output "debug_input_files_json" {
-  description = "JSON-encoded map of all input files received, including sensitive values in plaintext. Useful for test assertions. Do not do this in production code."
+  description = "JSON-encoded map of all input files received, including sensitive values in plaintext."
+  sensitive   = true # For test only. Do not do this in production code.
   value = jsonencode({
     "some-file.yaml"      = file("some-file.yaml")
     "sensitive-file.yaml" = file("sensitive-file.yaml")
