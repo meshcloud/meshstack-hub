@@ -15,10 +15,18 @@ provider "kubernetes" {
   client_key             = base64decode(local.kubeconfig_admin_user["client-key-data"])
 }
 
+resource "random_string" "resource_name_suffix" {
+  length  = 5
+  lower   = true
+  upper   = false
+  numeric = true
+  special = false
+}
+
 # Service account for forgejo actions to use
 resource "kubernetes_service_account" "forgejo_actions" {
   metadata {
-    name      = "forgejo-actions"
+    name      = "forgejo-actions-${random_string.resource_name_suffix.result}"
     namespace = var.namespace
   }
 
@@ -33,7 +41,7 @@ resource "kubernetes_service_account" "forgejo_actions" {
 
 resource "kubernetes_secret" "forgejo_actions" {
   metadata {
-    name      = "forgejo-actions"
+    name      = "forgejo-actions-${random_string.resource_name_suffix.result}"
     namespace = var.namespace
     annotations = {
       "kubernetes.io/service-account.name" = kubernetes_service_account.forgejo_actions.metadata[0].name
@@ -45,7 +53,7 @@ resource "kubernetes_secret" "forgejo_actions" {
 
 resource "kubernetes_role_binding" "forgejo_actions" {
   metadata {
-    name      = "forgejo-actions"
+    name      = "forgejo-actions-${random_string.resource_name_suffix.result}"
     namespace = var.namespace
   }
   role_ref {
@@ -61,18 +69,10 @@ resource "kubernetes_role_binding" "forgejo_actions" {
   }
 }
 
-resource "random_string" "clusterissuer_reader_name_suffix" {
-  length  = 8
-  lower   = true
-  upper   = false
-  numeric = false
-  special = false
-}
-
 # The ClusterIssuer access is needed so that SSL certificates can be issued for projects using the connector.
 resource "kubernetes_cluster_role" "clusterissuer_reader" {
   metadata {
-    name = "clusterissuer-reader-${random_string.clusterissuer_reader_name_suffix.result}" # random suffix ensures multiple roles can exist
+    name = "${var.namespace}-clusterissuer-reader-${random_string.resource_name_suffix.result}"
   }
 
   rule {
@@ -84,7 +84,7 @@ resource "kubernetes_cluster_role" "clusterissuer_reader" {
 
 resource "kubernetes_cluster_role_binding" "forgejo_actions_clusterissuer_access" {
   metadata {
-    name = "forgejo-actions-clusterissuer-access-${var.namespace}"
+    name = "${var.namespace}-forgejo-actions-clusterissuer-access-${random_string.resource_name_suffix.result}"
   }
 
   role_ref {
@@ -102,7 +102,7 @@ resource "kubernetes_cluster_role_binding" "forgejo_actions_clusterissuer_access
 
 resource "kubernetes_secret" "image_pull" {
   metadata {
-    name      = "harbor-image-pull"
+    name      = "harbor-image-pull-${random_string.resource_name_suffix.result}"
     namespace = var.namespace
   }
 

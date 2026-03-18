@@ -5,12 +5,18 @@ terraform {
       version = "~> 2.3.0"
     }
     forgejo = {
-      source = "svalabs/forgejo"
+      source  = "svalabs/forgejo"
+      version = "~> 1.3.0"
     }
 
     kubernetes = {
       source  = "hashicorp/kubernetes"
       version = "2.35.1"
+    }
+
+    random = {
+      source  = "hashicorp/random"
+      version = "~> 3.8.0"
     }
 
     restapi = {
@@ -19,6 +25,3 @@ terraform {
     }
   }
 }
-
-
-
