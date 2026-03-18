@@ -9,7 +9,7 @@ resource "random_string" "resource_code" {
 }
 
 resource "azurerm_resource_group" "storage_account_rg" {
-  name     = var.storage_account_resource_group_name
+  name     = "rg-${var.storage_account_name}"
   location = var.location
 }
 
