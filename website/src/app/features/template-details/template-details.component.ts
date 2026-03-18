@@ -97,6 +97,13 @@ export class TemplateDetailsComponent implements OnInit, OnDestroy {
       });
   }
 
+  public scrollToTerraform(): void {
+    const terraformCard = document.querySelector('mst-card');
+    if (terraformCard) {
+      terraformCard.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  }
+
   public open(template: TemplateDetailsVm): void {
     const modulePath = this.extractModulePath(template.source);
 
