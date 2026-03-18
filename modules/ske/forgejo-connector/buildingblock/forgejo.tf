@@ -23,10 +23,9 @@ data "external" "repository_context" {
 locals {
   repository_owner = data.external.repository_context.result.owner
   repository_name  = data.external.repository_context.result.name
-  stage            = lower(var.stage)
 
   action_secret = {
-    "KUBECONFIG_${upper(local.stage)}" = yamlencode(merge(local.kubeconfig, {
+    "KUBECONFIG_${upper(var.stage)}" = yamlencode(merge(local.kubeconfig, {
       current-context = local.kubeconfig_cluster_name
 
       users = [
@@ -52,7 +51,7 @@ locals {
   }
 
   action_variable = {
-    "K8S_NAMESPACE_${upper(local.stage)}" = var.namespace
+    "K8S_NAMESPACE_${upper(var.stage)}" = var.namespace
   }
 }
 
@@ -83,12 +82,19 @@ resource "terraform_data" "await_pipeline_workflow" {
     restapi_object.action_variable,
   ]
 
+  triggers_replace = [
+    sha256(file("${path.module}/trigger_and_await_forgejo_workflow.py")),
+    nonsensitive(sha256(jsonencode(local.action_secret))),
+    sha256(jsonencode(local.action_variable)),
+  ]
+
   provisioner "local-exec" {
     command = "${path.module}/trigger_and_await_forgejo_workflow.py"
     environment = {
-      FORGEJO_REPOSITORY_ID       = tostring(var.repository_id)
-      FORGEJO_WORKFLOW_NAME       = "pipeline.yaml"
-      FORGEJO_WORKFLOW_ONLY_STAGE = local.stage
+      REPOSITORY_ID               = tostring(var.repository_id)
+      WORKFLOW_NAME               = "pipeline.yaml"
+      WORKFLOW_ONLY_STAGE         = var.stage
+      EXPECTED_WORKFLOW_TASK_NAME = "deploy_${var.stage}"
     }
   }
 }

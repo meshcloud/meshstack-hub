@@ -10,11 +10,11 @@ variable "repository_id" {
 
 variable "stage" {
   type        = string
-  description = "Deployment stage used for Forgejo workflow dispatch and action secret naming. Allowed values: dev, prod."
+  description = "Deployment stage used for Forgejo workflow dispatch and action secret naming."
 
   validation {
-    condition     = contains(["dev", "prod"], lower(var.stage))
-    error_message = "stage must be one of: dev, prod."
+    condition     = can(regex("^[a-z]+$", var.stage))
+    error_message = "stage must match ^[a-z]+$."
   }
 }
 
