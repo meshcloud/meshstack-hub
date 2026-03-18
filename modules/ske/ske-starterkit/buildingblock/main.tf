@@ -1,10 +1,19 @@
+resource "random_string" "name_suffix" {
+  length  = 5
+  upper   = false
+  numeric = false
+  special = false
+}
+
 locals {
+  name = var.add_random_name_suffix ? "${var.name}-${random_string.name_suffix.result}" : var.name
+
   app_hostnames = {
     for stage, _ in var.landing_zone_identifiers :
     stage => (
       stage == "prod"
-      ? "${var.name}.${var.apps_base_domain}"
-      : "${var.name}-${stage}.${var.apps_base_domain}"
+      ? "${local.name}.${var.dns_zone_name}"
+      : "${local.name}-${stage}.${var.dns_zone_name}"
     )
   }
 }
@@ -13,14 +22,14 @@ resource "meshstack_building_block_v2" "git_repository" {
   spec = {
     building_block_definition_version_ref = var.building_block_definitions["git-repository"].version_ref # provisioned in backplane
 
-    display_name = "Git Repo ${var.name}"
+    display_name = "Git Repo ${local.name}"
     target_ref = {
       kind       = "meshWorkspace"
       identifier = var.workspace_identifier
     }
 
     inputs = {
-      name       = { value_string = var.name }
+      name       = { value_string = local.name }
       clone_addr = { value_string = var.repo_clone_addr }
     }
   }
@@ -30,7 +39,7 @@ resource "meshstack_building_block_v2" "git_repository" {
 resource "meshstack_project" "this" {
   for_each = tomap(var.landing_zone_identifiers)
   metadata = {
-    name               = "${var.name}-${each.key}"
+    name               = "${local.name}-${each.key}"
     owned_by_workspace = var.workspace_identifier
   }
   spec = {

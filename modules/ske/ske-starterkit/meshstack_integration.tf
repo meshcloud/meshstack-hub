@@ -32,9 +32,15 @@ variable "repo_clone_addr" {
   description = "URL to clone into the starterkit git repository."
 }
 
-variable "apps_base_domain" {
+variable "dns_zone_name" {
   type        = string
-  description = "Base domain used for application ingress hostnames."
+  description = "DNS zone name used for application ingress hostnames."
+}
+
+variable "add_random_name_suffix" {
+  type        = bool
+  default     = true
+  description = "Whether to append a random suffix to starterkit names for shared environments."
 }
 
 variable "tags" {
@@ -189,11 +195,17 @@ EOT
         display_name    = "Clone from URL"
         argument        = jsonencode(var.repo_clone_addr)
       }
-      "apps_base_domain" = {
+      "dns_zone_name" = {
         assignment_type = "STATIC"
         type            = "STRING"
-        display_name    = "Apps Base Domain"
-        argument        = jsonencode(var.apps_base_domain)
+        display_name    = "DNS Zone Name"
+        argument        = jsonencode(var.dns_zone_name)
+      }
+      "add_random_name_suffix" = {
+        assignment_type = "STATIC"
+        type            = "BOOLEAN"
+        display_name    = "Add Random Name Suffix"
+        argument        = jsonencode(var.add_random_name_suffix)
       }
       "building_block_definitions" = {
         assignment_type = "STATIC"

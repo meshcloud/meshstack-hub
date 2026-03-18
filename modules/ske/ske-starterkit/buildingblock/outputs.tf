@@ -1,9 +1,9 @@
 output "dev_link" {
-  value       = "https://${var.name}-dev.${var.apps_base_domain}"
+  value       = "https://${local.name}-dev.${var.dns_zone_name}"
   description = "Public URL for the dev stage application."
 }
 
 output "prod_link" {
-  value       = "https://${var.name}.${var.apps_base_domain}"
+  value       = "https://${local.name}.${var.dns_zone_name}"
   description = "Public URL for the prod stage application."
 }

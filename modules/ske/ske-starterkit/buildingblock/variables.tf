@@ -47,9 +47,14 @@ variable "repo_clone_addr" {
   description = "URL to clone into the starterkit git repository."
 }
 
-variable "apps_base_domain" {
+variable "dns_zone_name" {
   type        = string
-  description = "Base domain used for application ingress hostnames (for example 'likvid.stackit.run')."
+  description = "DNS zone name used for application ingress hostnames (for example 'likvid.stackit.run')."
+}
+
+variable "add_random_name_suffix" {
+  type        = bool
+  description = "Whether to append a random suffix to the provided name for shared environments."
 }
 
 variable "building_block_definitions" {
