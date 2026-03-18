@@ -76,7 +76,7 @@ def main() -> None:
         expected_run_id = int(m.group(1))
 
     deadline = time.time() + 900
-    runs_path = f"/api/v1/repos/{owner}/{repo_name}/actions/runs?limit=30"
+    runs_path = f"/api/v1/repos/{owner}/{repo_name}/actions/workflows/{workflow_name}/runs?limit=30"
 
     while time.time() < deadline:
         _, _, payload = request_json(host, token, "GET", runs_path)

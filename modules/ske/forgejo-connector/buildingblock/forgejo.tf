@@ -69,9 +69,10 @@ resource "restapi_object" "action_variables" {
   for_each = local.action_variables
 
   path          = "/api/v1/repos/${local.repository_owner}/${local.repository_name}/actions/variables"
+  create_path   = "/api/v1/repos/${local.repository_owner}/${local.repository_name}/actions/variables/${each.key}"
   id_attribute  = "name"
   object_id     = each.key
-  update_method = "PATCH"
+  update_method = "PUT"
   data = jsonencode({
     name  = each.key
     value = each.value
