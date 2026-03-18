@@ -120,3 +120,13 @@ resource "kubernetes_secret" "image_pull" {
     })
   }
 }
+
+resource "kubernetes_default_service_account" "namespace_default" {
+  metadata {
+    namespace = var.namespace
+  }
+
+  image_pull_secret {
+    name = kubernetes_secret.image_pull.metadata[0].name
+  }
+}
