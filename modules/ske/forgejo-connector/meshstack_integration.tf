@@ -146,7 +146,7 @@ resource "meshstack_building_block_definition" "this" {
 
       app_hostname = {
         display_name    = "app_hostname"
-        description     = "Public application hostname for this stage (for example 'grubinator2-dev.likvid.stackit.run')."
+        description     = "Public application hostname for this stage (for example 'ai-summarizer-klhyt-dev.likvid.stackit.run')."
         type            = "STRING"
         assignment_type = "USER_INPUT"
       }
