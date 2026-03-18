@@ -86,11 +86,11 @@ resource "terraform_data" "await_pipeline_workflow" {
   ]
 
   provisioner "local-exec" {
-    command = "python3 ${path.module}/trigger_and_await_forgejo_workflow.py"
+    command = "${path.module}/trigger_and_await_forgejo_workflow.py"
     environment = {
-      FORGEJO_REPOSITORY_ID    = tostring(var.repository_id)
-      FORGEJO_WORKFLOW_NAME    = "pipeline.yaml"
-      FORGEJO_WORKFLOW_STAGE   = local.stage
+      FORGEJO_REPOSITORY_ID       = tostring(var.repository_id)
+      FORGEJO_WORKFLOW_NAME       = "pipeline.yaml"
+      FORGEJO_WORKFLOW_ONLY_STAGE = local.stage
     }
   }
 }
