@@ -52,6 +52,7 @@ locals {
 
   action_variable = {
     "K8S_NAMESPACE_${upper(var.stage)}" = var.namespace
+    "APP_HOSTNAME_${upper(var.stage)}"  = var.app_hostname
   }
 }
 

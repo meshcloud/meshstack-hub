@@ -144,6 +144,13 @@ resource "meshstack_building_block_definition" "this" {
         default_value   = jsonencode("dev")
       }
 
+      app_hostname = {
+        display_name    = "app_hostname"
+        description     = "Public application hostname for this stage (for example 'grubinator2-dev.likvid.stackit.run')."
+        type            = "STRING"
+        assignment_type = "USER_INPUT"
+      }
+
       additional_kubernetes_secrets = {
         display_name    = "additional_kubernetes_secrets"
         description     = "Static sensitive map of additional Kubernetes Opaque secrets to create in the tenant namespace."

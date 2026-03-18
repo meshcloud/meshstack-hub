@@ -18,6 +18,11 @@ variable "stage" {
   }
 }
 
+variable "app_hostname" {
+  type        = string
+  description = "Public application hostname for this stage (used by deploy workflow and ingress)."
+}
+
 variable "additional_kubernetes_secrets" {
   type        = map(map(string))
   description = "Additional Kubernetes secrets to create in the tenant namespace. Map keys are secret names, values are secret data maps."
