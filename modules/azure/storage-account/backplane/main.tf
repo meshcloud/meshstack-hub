@@ -14,11 +14,15 @@ resource "azuread_service_principal" "buildingblock_deploy" {
 
 
 # Create federated identity credentials (one per subject)
+# Use a map with static numeric string keys so that for_each keys are known at plan time,
+# even when subject values contain apply-time unknowns (e.g. building block definition UUIDs).
 resource "azuread_application_federated_identity_credential" "buildingblock_deploy" {
-  for_each = var.create_service_principal_name != null && var.workload_identity_federation != null ? toset(var.workload_identity_federation.subjects) : toset([])
+  for_each = var.create_service_principal_name != null && var.workload_identity_federation != null ? {
+    for i, s in var.workload_identity_federation.subjects : tostring(i) => s
+  } : {}
 
   application_id = azuread_application.buildingblock_deploy[0].id
-  display_name   = reverse(split(":", each.value))[0]
+  display_name   = "subject-${each.key}"
   audiences      = ["api://AzureADTokenExchange"]
   issuer         = var.workload_identity_federation.issuer
   subject        = each.value

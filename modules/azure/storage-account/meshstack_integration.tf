@@ -79,7 +79,7 @@ resource "meshstack_building_block_definition" "this" {
   spec = {
     display_name             = "Azure Storage Account"
     description              = "Provisions an Azure Storage Account as a highly scalable, durable, and secure container in the target Azure subscription."
-    support_url              = "https://hu"
+    support_url              = "mailto:support@meshcloud.io"
     documentation_url        = "https://hub.meshcloud.io/platforms/azure/definitions/azure-storage-account"
     notification_subscribers = var.notification_subscribers
     symbol                   = "https://raw.githubusercontent.com/meshcloud/meshstack-hub/main/modules/azure/storage-account/buildingblock/logo.png"
@@ -164,10 +164,12 @@ resource "meshstack_building_block_definition" "this" {
         argument        = jsonencode("/var/run/secrets/workload-identity/azure/token")
       }
       storage_account_name = {
-        type            = "STRING"
-        display_name    = "Storage Account Name"
-        description     = "A name prefix for the storage account. A random 5-character suffix will be appended to ensure uniqueness (e.g. 'myapp' becomes 'myappx7k2q'). Only lowercase letters and numbers allowed."
-        assignment_type = "USER_INPUT"
+        type                           = "STRING"
+        display_name                   = "Storage Account Name"
+        description                    = "A name prefix for the storage account. A random 5-character suffix will be appended to ensure uniqueness (e.g. 'myapp' becomes 'myappx7k2q'). Only lowercase letters and numbers, 3–19 characters."
+        assignment_type                = "USER_INPUT"
+        value_validation_regex         = "^[a-z0-9]{3,19}$"
+        validation_regex_error_message = "Only lowercase letters and numbers are allowed, between 3 and 19 characters (a 5-character suffix will be appended, keeping the final name within Azure's 24-character limit)."
       }
       location = {
         type            = "STRING"
