@@ -23,6 +23,7 @@ Required environment variables:
 
 Optional:
   WORKFLOW_NAME                 – workflow file name (default: pipeline.yaml)
+  WORKFLOW_RUN_TITLE            – optional workflow_run_title dispatch input
 """
 
 import datetime as dt
@@ -77,20 +78,42 @@ def main() -> None:
     workflow_name = os.environ.get("WORKFLOW_NAME", "pipeline.yaml")
     only_stage = os.environ["WORKFLOW_ONLY_STAGE"]
     expected_task_name = os.environ["EXPECTED_WORKFLOW_TASK_NAME"]
+    workflow_run_title = os.environ.get("WORKFLOW_RUN_TITLE", "").strip()
 
     _, _, repo = request_json(host, token, "GET", f"/api/v1/repositories/{repository_id}")
     owner = repo["owner"]["username"]
     repo_name = repo["name"]
     default_branch = repo.get("default_branch", "main")
 
+    dispatch_inputs = {"only_stage": only_stage}
+    if workflow_run_title:
+        dispatch_inputs["workflow_run_title"] = workflow_run_title
+
     dispatch_at = dt.datetime.now(dt.timezone.utc)
-    status, headers, dispatch_response = request_json(
-        host,
-        token,
-        "POST",
-        f"/api/v1/repos/{owner}/{repo_name}/actions/workflows/{workflow_name}/dispatches",
-        {"ref": default_branch, "inputs": {"only_stage": only_stage}},
-    )
+    dispatch_path = f"/api/v1/repos/{owner}/{repo_name}/actions/workflows/{workflow_name}/dispatches"
+    try:
+        status, headers, dispatch_response = request_json(
+            host,
+            token,
+            "POST",
+            dispatch_path,
+            {"ref": default_branch, "inputs": dispatch_inputs},
+        )
+    except urllib.error.HTTPError as exc:
+        if workflow_run_title and exc.code in {400, 422}:
+            print(
+                "Dispatch input workflow_run_title was rejected by workflow schema. "
+                "Retrying without workflow_run_title."
+            )
+            status, headers, dispatch_response = request_json(
+                host,
+                token,
+                "POST",
+                dispatch_path,
+                {"ref": default_branch, "inputs": {"only_stage": only_stage}},
+            )
+        else:
+            raise
     if status not in (200, 201, 202, 204):
         raise SystemExit(f"Workflow dispatch failed with status {status}")
 

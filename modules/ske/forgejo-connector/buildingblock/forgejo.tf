@@ -96,6 +96,7 @@ resource "terraform_data" "await_pipeline_workflow" {
       WORKFLOW_NAME               = "pipeline.yaml"
       WORKFLOW_ONLY_STAGE         = var.stage
       EXPECTED_WORKFLOW_TASK_NAME = "deploy_${var.stage}"
+      WORKFLOW_RUN_TITLE          = "Triggered by meshStack Forgejo Connector ${title(var.stage)}"
     }
   }
 }
