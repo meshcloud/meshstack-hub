@@ -1,3 +1,14 @@
+locals {
+  app_hostnames = {
+    for stage, _ in var.landing_zone_identifiers :
+    stage => (
+      stage == "prod"
+      ? "${var.name}.${var.apps_base_domain}"
+      : "${var.name}-${stage}.${var.apps_base_domain}"
+    )
+  }
+}
+
 resource "meshstack_building_block_v2" "git_repository" {
   spec = {
     building_block_definition_version_ref = var.building_block_definitions["git-repository"].version_ref # provisioned in backplane
@@ -85,7 +96,8 @@ resource "meshstack_building_block_v2" "forgejo_connector" {
     }]
 
     inputs = {
-      stage = { value_string = each.key }
+      stage        = { value_string = each.key }
+      app_hostname = { value_string = local.app_hostnames[each.key] }
     }
   }
 

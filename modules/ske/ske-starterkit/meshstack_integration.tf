@@ -32,6 +32,11 @@ variable "repo_clone_addr" {
   description = "URL to clone into the starterkit git repository."
 }
 
+variable "apps_base_domain" {
+  type        = string
+  description = "Base domain used for application ingress hostnames."
+}
+
 variable "tags" {
   type    = map(list(string))
   default = {}
@@ -183,6 +188,12 @@ EOT
         type            = "STRING"
         display_name    = "Clone from URL"
         argument        = jsonencode(var.repo_clone_addr)
+      }
+      "apps_base_domain" = {
+        assignment_type = "STATIC"
+        type            = "STRING"
+        display_name    = "Apps Base Domain"
+        argument        = jsonencode(var.apps_base_domain)
       }
       "building_block_definitions" = {
         assignment_type = "STATIC"

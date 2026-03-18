@@ -34,6 +34,7 @@ No modules.
 
 | Name | Description | Type | Default | Required |
 |------|-------------|------|---------|:--------:|
+| <a name="input_apps_base_domain"></a> [apps\_base\_domain](#input\_apps\_base\_domain) | Base domain used for application ingress hostnames (for example 'likvid.stackit.run'). | `string` | n/a | yes |
 | <a name="input_building_block_definitions"></a> [building\_block\_definitions](#input\_building\_block\_definitions) | n/a | <pre>map(object({<br/>    uuid = string<br/>    version_ref = object({<br/>      uuid = string<br/>    })<br/>  }))</pre> | n/a | yes |
 | <a name="input_creator"></a> [creator](#input\_creator) | Information about the creator of the resources who will be assigned Project Admin role | <pre>object({<br/>    type        = string<br/>    identifier  = string<br/>    displayName = string<br/>    username    = optional(string)<br/>    email       = optional(string)<br/>    euid        = optional(string)<br/>  })</pre> | n/a | yes |
 | <a name="input_full_platform_identifier"></a> [full\_platform\_identifier](#input\_full\_platform\_identifier) | Full platform identifier of the SKE platform. | `string` | n/a | yes |
@@ -45,5 +46,8 @@ No modules.
 
 ## Outputs
 
-No outputs.
+| Name | Description |
+|------|-------------|
+| <a name="output_dev_link"></a> [dev\_link](#output\_dev\_link) | Public URL for the dev stage application. |
+| <a name="output_prod_link"></a> [prod\_link](#output\_prod\_link) | Public URL for the prod stage application. |
 <!-- END_TF_DOCS -->

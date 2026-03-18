@@ -47,6 +47,11 @@ variable "repo_clone_addr" {
   description = "URL to clone into the starterkit git repository."
 }
 
+variable "apps_base_domain" {
+  type        = string
+  description = "Base domain used for application ingress hostnames (for example 'likvid.stackit.run')."
+}
+
 variable "building_block_definitions" {
   type = map(object({
     uuid = string
