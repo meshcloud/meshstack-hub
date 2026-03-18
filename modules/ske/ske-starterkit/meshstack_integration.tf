@@ -216,6 +216,12 @@ EOT
         argument = jsonencode(jsonencode(var.building_block_definitions))
       },
       # TODO remove inputs below before merge, leftover from dev attempts in grubinator2 instance
+      "apps_base_domain" = {
+        assignment_type = "STATIC"
+        type            = "STRING"
+        display_name    = "REMOVEME"
+        argument        = jsonencode(var.dns_zone_name)
+      }
       "building_block_definition_version_refs" = {
         assignment_type = "STATIC"
         type            = "CODE"
