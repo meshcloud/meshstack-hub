@@ -47,6 +47,11 @@ variable "repo_clone_addr" {
   description = "URL to clone into the starterkit git repository."
 }
 
-variable "building_block_definition_version_refs" {
-  type = map(object({ uuid = string }))
+variable "building_block_definitions" {
+  type = map(object({
+    uuid = string
+    version_ref = object({
+      uuid = string
+    })
+  }))
 }

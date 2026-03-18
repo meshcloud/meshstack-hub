@@ -34,7 +34,7 @@ No modules.
 
 | Name | Description | Type | Default | Required |
 |------|-------------|------|---------|:--------:|
-| <a name="input_building_block_definition_version_refs"></a> [building\_block\_definition\_version\_refs](#input\_building\_block\_definition\_version\_refs) | n/a | `map(object({ uuid = string }))` | n/a | yes |
+| <a name="input_building_block_definitions"></a> [building\_block\_definitions](#input\_building\_block\_definitions) | n/a | <pre>map(object({<br/>    uuid = string<br/>    version_ref = object({<br/>      uuid = string<br/>    })<br/>  }))</pre> | n/a | yes |
 | <a name="input_creator"></a> [creator](#input\_creator) | Information about the creator of the resources who will be assigned Project Admin role | <pre>object({<br/>    type        = string<br/>    identifier  = string<br/>    displayName = string<br/>    username    = optional(string)<br/>    email       = optional(string)<br/>    euid        = optional(string)<br/>  })</pre> | n/a | yes |
 | <a name="input_full_platform_identifier"></a> [full\_platform\_identifier](#input\_full\_platform\_identifier) | Full platform identifier of the SKE platform. | `string` | n/a | yes |
 | <a name="input_landing_zone_identifiers"></a> [landing\_zone\_identifiers](#input\_landing\_zone\_identifiers) | SKE Landing zone identifiers for the dev/prod meshTenant. | <pre>object({<br/>    dev  = string<br/>    prod = string<br/>  })</pre> | n/a | yes |

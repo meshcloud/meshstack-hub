@@ -42,10 +42,13 @@ variable "notification_subscribers" {
   default = []
 }
 
-variable "building_block_definition_version_refs" {
+variable "building_block_definitions" {
   type = map(object({
-    content_hash = string # adding the content nicely tracks changes in dependent BBDs (draft mode)
-    uuid         = string
+    uuid = string
+    version_ref = object({
+      content_hash = string # adding the content nicely tracks changes in dependent BBDs (draft mode)
+      uuid         = string
+    })
   }))
 }
 
@@ -181,20 +184,28 @@ EOT
         display_name    = "Clone from URL"
         argument        = jsonencode(var.repo_clone_addr)
       }
+      "building_block_definitions" = {
+        assignment_type = "STATIC"
+        type            = "CODE"
+        description     = "Definitions used to create auxiliary building blocks (composition)."
+        display_name    = "BBDs"
+        # jsonencode twice is correct, see https://registry.terraform.io/providers/meshcloud/meshstack/latest/docs/resources/building_block_definition#argument-1
+        argument = jsonencode(jsonencode(var.building_block_definitions))
+      },
+      # TODO remove inputs below before merge, leftover from dev attempts in grubinator2 instance
       "building_block_definition_version_refs" = {
         assignment_type = "STATIC"
         type            = "CODE"
-        description     = "Refs used to create auxiliary building blocks (composition)."
-        display_name    = "BBD Version Refs"
+        description     = "REMOVEME"
+        display_name    = "REMOVEME"
         # jsonencode twice is correct, see https://registry.terraform.io/providers/meshcloud/meshstack/latest/docs/resources/building_block_definition#argument-1
-        argument = jsonencode(jsonencode(var.building_block_definition_version_refs))
+        argument = jsonencode(jsonencode(var.building_block_definitions))
       },
-      # TODO remove before merge, leftover from dev attempts in grubinator2 instance
       "git_repository_action_secrets" = {
         assignment_type = "STATIC"
         type            = "CODE"
-        description     = "REMOVEME Static sensitive Forgejo Actions secrets passed to the composed git-repository building block."
-        display_name    = "REMOVEME Git Repository Action Secrets"
+        description     = "REMOVEME"
+        display_name    = "REMOVEME"
         # jsonencode twice is correct, see https://registry.terraform.io/providers/meshcloud/meshstack/latest/docs/resources/building_block_definition#argument-1
         sensitive = {
           argument = {

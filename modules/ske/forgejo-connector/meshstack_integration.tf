@@ -54,9 +54,12 @@ variable "hub" {
   EOT
 }
 
-output "building_block_definition_version_ref" {
-  value       = var.hub.bbd_draft ? meshstack_building_block_definition.this.version_latest : meshstack_building_block_definition.this.version_latest_release
-  description = "Version of BBD is consumed in building block compositions."
+output "building_block_definition" {
+  value = {
+    uuid        = meshstack_building_block_definition.this.metadata.uuid
+    version_ref = var.hub.bbd_draft ? meshstack_building_block_definition.this.version_latest : meshstack_building_block_definition.this.version_latest_release
+  }
+  description = "BBD is consumed in building block compositions."
 }
 
 resource "meshstack_building_block_definition" "this" {
@@ -106,8 +109,8 @@ resource "meshstack_building_block_definition" "this" {
         assignment_type = "STATIC"
         sensitive = {
           argument = {
-            secret_value   = yamlencode(var.kubeconfig)
-            secret_version = nonsensitive(sha256(var.kubeconfig))
+            secret_value   = "data:application/yaml;base64,${base64encode(yamlencode(var.kubeconfig))}" # data type application/yaml is ignored anyway
+            secret_version = nonsensitive(sha256(yamlencode(var.kubeconfig)))
           }
         }
       }
