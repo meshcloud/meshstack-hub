@@ -85,9 +85,7 @@ resource "meshstack_building_block_v2" "forgejo_connector" {
     }]
 
     inputs = {
-      stage = {
-        value_string = each.key
-      }
+      stage = { value_string = each.key }
     }
   }
 

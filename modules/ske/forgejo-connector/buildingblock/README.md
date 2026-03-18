@@ -57,7 +57,7 @@ No modules.
 
 | Name | Type |
 |------|------|
-| [forgejo_repository_action_secret.action_secrets](https://registry.terraform.io/providers/svalabs/forgejo/latest/docs/resources/repository_action_secret) | resource |
+| [forgejo_repository_action_secret.this](https://registry.terraform.io/providers/svalabs/forgejo/latest/docs/resources/repository_action_secret) | resource |
 | [kubernetes_cluster_role.clusterissuer_reader](https://registry.terraform.io/providers/hashicorp/kubernetes/2.35.1/docs/resources/cluster_role) | resource |
 | [kubernetes_cluster_role_binding.forgejo_actions_clusterissuer_access](https://registry.terraform.io/providers/hashicorp/kubernetes/2.35.1/docs/resources/cluster_role_binding) | resource |
 | [kubernetes_default_service_account.namespace_default](https://registry.terraform.io/providers/hashicorp/kubernetes/2.35.1/docs/resources/default_service_account) | resource |
@@ -67,7 +67,7 @@ No modules.
 | [kubernetes_secret.image_pull](https://registry.terraform.io/providers/hashicorp/kubernetes/2.35.1/docs/resources/secret) | resource |
 | [kubernetes_service_account.forgejo_actions](https://registry.terraform.io/providers/hashicorp/kubernetes/2.35.1/docs/resources/service_account) | resource |
 | [random_string.clusterissuer_reader_name_suffix](https://registry.terraform.io/providers/hashicorp/random/latest/docs/resources/string) | resource |
-| [restapi_object.action_variables](https://registry.terraform.io/providers/Mastercard/restapi/3.0.0/docs/resources/object) | resource |
+| [restapi_object.action_variable](https://registry.terraform.io/providers/Mastercard/restapi/3.0.0/docs/resources/object) | resource |
 | [terraform_data.await_pipeline_workflow](https://registry.terraform.io/providers/hashicorp/terraform/latest/docs/resources/data) | resource |
 | [external_external.repository_context](https://registry.terraform.io/providers/hashicorp/external/latest/docs/data-sources/external) | data source |
 

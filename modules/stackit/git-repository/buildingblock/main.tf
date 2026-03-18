@@ -29,7 +29,7 @@ locals {
   have_clone_addr = trimspace(var.clone_addr) != "" && var.clone_addr != "null"
 }
 
-resource "forgejo_repository" "repository" {
+resource "forgejo_repository" "this" {
   owner          = var.forgejo_organization
   name           = var.name
   description    = var.description
@@ -42,24 +42,38 @@ resource "forgejo_repository" "repository" {
   mirror     = false
 }
 
-resource "forgejo_repository_action_secret" "action_secrets" {
+resource "forgejo_repository_action_secret" "this" {
   for_each = var.action_secrets
 
-  repository_id = forgejo_repository.repository.id
+  repository_id = forgejo_repository.this.id
   name          = each.key
   data          = each.value
 }
 
-resource "restapi_object" "action_variables" {
+resource "restapi_object" "action_variable" {
   for_each = var.action_variables
 
-  path          = "/api/v1/repos/${var.forgejo_organization}/${forgejo_repository.repository.name}/actions/variables"
+  path          = "/api/v1/repos/${var.forgejo_organization}/${forgejo_repository.this.name}/actions/variables/${each.key}"
   id_attribute  = "name"
   object_id     = each.key
-  update_method = "PATCH"
+  update_method = "PUT"
   data = jsonencode({
-    name  = each.key
     value = each.value
   })
   ignore_server_additions = true
+}
+
+moved {
+  from = forgejo_repository.repository
+  to   = forgejo_repository.this
+}
+
+moved {
+  from = forgejo_repository_action_secret.action_secrets
+  to   = forgejo_repository_action_secret.this
+}
+
+moved {
+  from = restapi_object.action_variables
+  to   = restapi_object.action_variable
 }

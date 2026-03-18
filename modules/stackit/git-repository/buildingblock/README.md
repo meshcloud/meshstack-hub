@@ -23,9 +23,9 @@ No modules.
 
 | Name | Type |
 |------|------|
-| [forgejo_repository.repository](https://registry.terraform.io/providers/svalabs/forgejo/latest/docs/resources/repository) | resource |
-| [forgejo_repository_action_secret.action_secrets](https://registry.terraform.io/providers/svalabs/forgejo/latest/docs/resources/repository_action_secret) | resource |
-| [restapi_object.action_variables](https://registry.terraform.io/providers/Mastercard/restapi/3.0.0/docs/resources/object) | resource |
+| [forgejo_repository.this](https://registry.terraform.io/providers/svalabs/forgejo/latest/docs/resources/repository) | resource |
+| [forgejo_repository_action_secret.this](https://registry.terraform.io/providers/svalabs/forgejo/latest/docs/resources/repository_action_secret) | resource |
+| [restapi_object.action_variable](https://registry.terraform.io/providers/Mastercard/restapi/3.0.0/docs/resources/object) | resource |
 | [external_external.forgejo_env](https://registry.terraform.io/providers/hashicorp/external/latest/docs/data-sources/external) | data source |
 
 ## Inputs
