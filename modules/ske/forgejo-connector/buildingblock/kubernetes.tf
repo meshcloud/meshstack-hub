@@ -61,6 +61,27 @@ resource "kubernetes_role_binding" "forgejo_actions" {
   }
 }
 
+resource "random_string" "clusterissuer_reader_name_suffix" {
+  length  = 8
+  lower   = true
+  upper   = false
+  numeric = false
+  special = false
+}
+
+# The ClusterIssuer access is needed so that SSL certificates can be issued for projects using the connector.
+resource "kubernetes_cluster_role" "clusterissuer_reader" {
+  metadata {
+    name = "clusterissuer-reader-${random_string.clusterissuer_reader_name_suffix.result}" # random suffix ensures multiple roles can exist
+  }
+
+  rule {
+    api_groups = ["cert-manager.io"]
+    resources  = ["clusterissuers"]
+    verbs      = ["get"]
+  }
+}
+
 resource "kubernetes_cluster_role_binding" "forgejo_actions_clusterissuer_access" {
   metadata {
     name = "forgejo-actions-clusterissuer-access-${var.namespace}"
@@ -69,7 +90,7 @@ resource "kubernetes_cluster_role_binding" "forgejo_actions_clusterissuer_access
   role_ref {
     api_group = "rbac.authorization.k8s.io"
     kind      = "ClusterRole"
-    name      = "clusterissuer-reader" # This role is created in the backplane module
+    name      = kubernetes_cluster_role.clusterissuer_reader.metadata[0].name
   }
 
   subject {

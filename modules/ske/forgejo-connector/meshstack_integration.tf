@@ -96,8 +96,8 @@ resource "meshstack_building_block_definition" "this" {
 
     inputs = {
       namespace = {
-        display_name    = "namespace"
-        description     = "Associated namespace in kubernetes cluster."
+        display_name    = "K8S Namespace"
+        description     = "Provided namespace in Kubernetes cluster."
         type            = "STRING"
         assignment_type = "PLATFORM_TENANT_ID"
       }
