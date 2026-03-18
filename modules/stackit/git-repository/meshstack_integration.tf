@@ -163,6 +163,16 @@ resource "meshstack_building_block_definition" "this" {
         assignment_type = "USER_INPUT"
         default_value   = jsonencode("null")
       }
+
+      action_variables = {
+        display_name    = "Repository Action Variables"
+        description     = "Static non-sensitive map of Forgejo Actions variables created in each provisioned repository."
+        type            = "CODE"
+        assignment_type = "STATIC"
+        # jsonencode twice is correct, see https://registry.terraform.io/providers/meshcloud/meshstack/latest/docs/resources/building_block_definition#argument-1
+        argument = jsonencode(jsonencode(var.action_variables))
+      }
+
       action_secrets = {
         display_name    = "Repository Action Secrets"
         description     = "Static sensitive map of Forgejo Actions secrets created in each provisioned repository."
@@ -174,13 +184,6 @@ resource "meshstack_building_block_definition" "this" {
             secret_version = nonsensitive(sha256(jsonencode(var.action_secrets)))
           }
         }
-      }
-      action_variables = {
-        display_name    = "Repository Action Variables"
-        description     = "Static non-sensitive map of Forgejo Actions variables created in each provisioned repository."
-        type            = "CODE"
-        assignment_type = "STATIC"
-        argument        = jsonencode(var.action_variables)
       }
     }
 

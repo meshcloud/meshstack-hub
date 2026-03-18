@@ -85,7 +85,5 @@ No modules.
 
 ## Outputs
 
-| Name | Description |
-|------|-------------|
-| <a name="output_action_variables"></a> [action\_variables](#output\_action\_variables) | Action variables to expose for dependent building block wiring. |
+No outputs.
 <!-- END_TF_DOCS -->

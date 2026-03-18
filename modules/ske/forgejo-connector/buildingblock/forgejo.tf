@@ -21,10 +21,9 @@ data "external" "repository_context" {
 }
 
 locals {
-  repository_owner          = data.external.repository_context.result.owner
-  repository_name           = data.external.repository_context.result.name
-  repository_default_branch = data.external.repository_context.result.default_branch
-  stage                     = lower(var.stage)
+  repository_owner = data.external.repository_context.result.owner
+  repository_name  = data.external.repository_context.result.name
+  stage            = lower(var.stage)
 
   action_secrets = {
     "KUBECONFIG_${upper(local.stage)}" = yamlencode(merge(local.kubeconfig, {
