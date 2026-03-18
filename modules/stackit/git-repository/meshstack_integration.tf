@@ -32,6 +32,11 @@ variable "action_secrets" {
   }
 }
 
+variable "action_variables" {
+  type    = map(string)
+  default = {}
+}
+
 variable "hub" {
   type = object({
     git_ref   = optional(string, "main")
@@ -169,6 +174,13 @@ resource "meshstack_building_block_definition" "this" {
             secret_version = nonsensitive(sha256(jsonencode(var.action_secrets)))
           }
         }
+      }
+      action_variables = {
+        display_name    = "Repository Action Variables"
+        description     = "Static non-sensitive map of Forgejo Actions variables created in each provisioned repository."
+        type            = "CODE"
+        assignment_type = "STATIC"
+        argument        = jsonencode(var.action_variables)
       }
     }
 

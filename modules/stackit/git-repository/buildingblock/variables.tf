@@ -17,6 +17,12 @@ variable "action_secrets" {
   }
 }
 
+variable "action_variables" {
+  type        = map(string)
+  description = "Map of Forgejo Actions variables to create in the repository."
+  default     = {}
+}
+
 # ── User inputs (set per building block instance) ─────────────────────────────
 
 variable "name" {

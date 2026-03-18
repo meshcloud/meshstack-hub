@@ -45,7 +45,9 @@ the backplane module's `config_tf` output.
 
 | Name | Version |
 |------|---------|
+| <a name="requirement_external"></a> [external](#requirement\_external) | ~> 2.3.0 |
 | <a name="requirement_kubernetes"></a> [kubernetes](#requirement\_kubernetes) | 2.35.1 |
+| <a name="requirement_restapi"></a> [restapi](#requirement\_restapi) | 3.0.0 |
 
 ## Modules
 
@@ -65,6 +67,10 @@ No modules.
 | [kubernetes_secret.image_pull](https://registry.terraform.io/providers/hashicorp/kubernetes/2.35.1/docs/resources/secret) | resource |
 | [kubernetes_service_account.forgejo_actions](https://registry.terraform.io/providers/hashicorp/kubernetes/2.35.1/docs/resources/service_account) | resource |
 | [random_string.clusterissuer_reader_name_suffix](https://registry.terraform.io/providers/hashicorp/random/latest/docs/resources/string) | resource |
+| [restapi_object.pipeline_dispatch](https://registry.terraform.io/providers/Mastercard/restapi/3.0.0/docs/resources/object) | resource |
+| [terraform_data.await_pipeline_workflow](https://registry.terraform.io/providers/hashicorp/terraform/latest/docs/resources/data) | resource |
+| [external_external.forgejo_env](https://registry.terraform.io/providers/hashicorp/external/latest/docs/data-sources/external) | data source |
+| [external_external.repository](https://registry.terraform.io/providers/hashicorp/external/latest/docs/data-sources/external) | data source |
 
 ## Inputs
 

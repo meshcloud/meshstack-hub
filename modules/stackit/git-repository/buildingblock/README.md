@@ -11,7 +11,9 @@ description: Provisions a Git repository on STACKIT Git (Forgejo) with optional 
 | Name | Version |
 |------|---------|
 | <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.4.0 |
+| <a name="requirement_external"></a> [external](#requirement\_external) | ~> 2.3.0 |
 | <a name="requirement_forgejo"></a> [forgejo](#requirement\_forgejo) | ~> 1.3.0 |
+| <a name="requirement_restapi"></a> [restapi](#requirement\_restapi) | 3.0.0 |
 
 ## Modules
 
@@ -23,12 +25,15 @@ No modules.
 |------|------|
 | [forgejo_repository.repository](https://registry.terraform.io/providers/svalabs/forgejo/latest/docs/resources/repository) | resource |
 | [forgejo_repository_action_secret.action_secrets](https://registry.terraform.io/providers/svalabs/forgejo/latest/docs/resources/repository_action_secret) | resource |
+| [restapi_object.action_variables](https://registry.terraform.io/providers/Mastercard/restapi/3.0.0/docs/resources/object) | resource |
+| [external_external.forgejo_env](https://registry.terraform.io/providers/hashicorp/external/latest/docs/data-sources/external) | data source |
 
 ## Inputs
 
 | Name | Description | Type | Default | Required |
 |------|-------------|------|---------|:--------:|
 | <a name="input_action_secrets"></a> [action\_secrets](#input\_action\_secrets) | Map of Forgejo Actions secrets to create in the repository. | `map(string)` | `{}` | no |
+| <a name="input_action_variables"></a> [action\_variables](#input\_action\_variables) | Map of Forgejo Actions variables to create in the repository. | `map(string)` | `{}` | no |
 | <a name="input_clone_addr"></a> [clone\_addr](#input\_clone\_addr) | Optional URL to clone into this repository, e.g. 'https://github.com/owner/repo.git'. Leave empty or `null` to create an empty repository. | `string` | `"null"` | no |
 | <a name="input_default_branch"></a> [default\_branch](#input\_default\_branch) | Default branch name | `string` | `"main"` | no |
 | <a name="input_description"></a> [description](#input\_description) | Short description of the repository | `string` | `""` | no |

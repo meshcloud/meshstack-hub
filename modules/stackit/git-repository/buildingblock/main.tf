@@ -2,6 +2,29 @@ provider "forgejo" {
   # configured via env variables FORGEJO_HOST, FORGEJO_API_TOKEN
 }
 
+data "external" "forgejo_env" {
+  program = ["python3", "-c", <<-PY
+import json
+import os
+
+print(json.dumps({
+  "forgejo_host": os.environ["FORGEJO_HOST"],
+  "forgejo_auth_header": f'token {os.environ["FORGEJO_API_TOKEN"]}',
+}))
+PY
+  ]
+}
+
+provider "restapi" {
+  uri                  = data.external.forgejo_env.result.forgejo_host
+  write_returns_object = true
+
+  headers = {
+    Authorization = data.external.forgejo_env.result.forgejo_auth_header
+    Content-Type  = "application/json"
+  }
+}
+
 locals {
   have_clone_addr = trimspace(var.clone_addr) != "" && var.clone_addr != "null"
 }
@@ -25,4 +48,18 @@ resource "forgejo_repository_action_secret" "action_secrets" {
   repository_id = forgejo_repository.repository.id
   name          = each.key
   data          = each.value
+}
+
+resource "restapi_object" "action_variables" {
+  for_each = var.action_variables
+
+  path          = "/api/v1/repos/${var.forgejo_organization}/${forgejo_repository.repository.name}/actions/variables"
+  id_attribute  = "name"
+  object_id     = each.key
+  update_method = "PATCH"
+  data = jsonencode({
+    name  = each.key
+    value = each.value
+  })
+  ignore_server_additions = true
 }
