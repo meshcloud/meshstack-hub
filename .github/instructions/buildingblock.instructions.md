@@ -95,9 +95,9 @@ The app team readme should always include these elements
 
 
 For the markdown apply the following rules
-- Don't use a heading for the short description, start with plaintext right away
+- Don't use an additional sub-heading for the short description.
 - Use emojis in the shared responsibility table (checkmark and x).
-- You can use emojis elsewhere where appropriate
+- You can use emojis elsewhere where appropriate.
 
 ### meshstack_integration.tf
 
