@@ -5,6 +5,7 @@ import json
 import os
 import re
 import time
+import urllib.error
 import urllib.request
 
 
@@ -71,12 +72,35 @@ def main() -> None:
         expected_run_number = int(dispatch_response["run_number"])
 
     location = headers.get("Location", "")
-    m = re.search(r"/actions/runs/(\\d+)", location)
+    m = re.search(r"/actions/runs/(\d+)", location)
     if m:
         expected_run_id = int(m.group(1))
 
     deadline = time.time() + 900
-    runs_path = f"/api/v1/repos/{owner}/{repo_name}/actions/workflows/{workflow_name}/runs?limit=30"
+    # Forgejo API compatibility: some Forgejo installations expose action run listing via
+    # /actions/tasks instead of /actions/workflows/{workflow}/runs. This is Forgejo
+    # version/variant behavior (not intentional legacy Gitea support), so probe both.
+    run_list_candidates = [
+        f"/api/v1/repos/{owner}/{repo_name}/actions/workflows/{workflow_name}/runs?limit=30",
+        f"/api/v1/repos/{owner}/{repo_name}/actions/tasks?limit=30",
+    ]
+    runs_path = None
+
+    for candidate in run_list_candidates:
+        try:
+            request_json(host, token, "GET", candidate)
+            runs_path = candidate
+            break
+        except urllib.error.HTTPError as exc:
+            if exc.code == 404:
+                continue
+            raise
+
+    if runs_path is None:
+        raise SystemExit(
+            "Could not find a supported Forgejo workflow runs endpoint. "
+            "Tried: " + ", ".join(run_list_candidates)
+        )
 
     while time.time() < deadline:
         _, _, payload = request_json(host, token, "GET", runs_path)
@@ -103,7 +127,11 @@ def main() -> None:
             run_id = run.get("id")
             status_val = run.get("status")
             conclusion = run.get("conclusion")
-            html_url = run.get("html_url", "")
+            html_url = run.get("html_url", run.get("url", ""))
+
+            if conclusion is None and status_val in {"success", "failure", "cancelled", "skipped"}:
+                conclusion = status_val
+                status_val = "completed"
 
             if status_val == "completed":
                 if conclusion == "success":

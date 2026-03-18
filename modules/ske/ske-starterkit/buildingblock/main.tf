@@ -73,7 +73,7 @@ resource "meshstack_building_block_v2" "forgejo_connector" {
   spec = {
     building_block_definition_version_ref = var.building_block_definitions["forgejo-connector"].version_ref
 
-    display_name = "Forgejo Connector"
+    display_name = "Forgejo Connector ${title(each.key)}"
     target_ref = {
       kind = "meshTenant"
       uuid = each.value.metadata.uuid
