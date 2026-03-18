@@ -8,10 +8,20 @@ variable "repository_id" {
   description = "The ID of the Forgejo repository."
 }
 
-variable "repository_secret_name_suffix" {
+variable "stage" {
   type        = string
-  description = "Optional suffix appended to created repository secret names."
-  default     = ""
+  description = "Deployment stage used for Forgejo workflow dispatch and action secret naming. Allowed values: dev, prod."
+
+  validation {
+    condition     = contains(["dev", "prod"], lower(var.stage))
+    error_message = "stage must be one of: dev, prod."
+  }
+}
+
+variable "additional_kubernetes_secrets" {
+  type        = map(map(string))
+  description = "Additional Kubernetes secrets to create in the tenant namespace. Map keys are secret names, values are secret data maps."
+  default     = {}
 }
 
 variable "harbor_host" {

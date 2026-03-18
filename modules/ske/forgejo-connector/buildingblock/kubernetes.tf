@@ -121,6 +121,19 @@ resource "kubernetes_secret" "image_pull" {
   }
 }
 
+resource "kubernetes_secret" "additional" {
+  for_each = var.additional_kubernetes_secrets
+
+  metadata {
+    name      = each.key
+    namespace = var.namespace
+  }
+
+  type = "Opaque"
+
+  data = each.value
+}
+
 resource "kubernetes_default_service_account" "namespace_default" {
   metadata {
     namespace = var.namespace

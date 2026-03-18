@@ -36,6 +36,19 @@ variable "harbor_password" {
   sensitive   = true
 }
 
+variable "additional_kubernetes_secrets" {
+  type        = map(map(string))
+  description = "Additional Kubernetes secrets provisioned in tenant namespaces by the connector."
+  sensitive   = true
+  default = {
+    "stackit-ai" = {
+      STACKIT_AI_BASE_URL = "https://example.invalid/v1"
+      STACKIT_AI_API_KEY  = "dummy-api-key"
+      STACKIT_AI_MODEL    = "dummy-model"
+    }
+  }
+}
+
 variable "meshstack" {
   type = object({
     owning_workspace_identifier = string
@@ -123,12 +136,25 @@ resource "meshstack_building_block_definition" "this" {
         argument        = jsonencode("${var.forgejo_repo_definition_uuid}.repository_id")
       }
 
-      repository_secret_name_suffix = {
-        display_name    = "repository_secret_name_suffix"
-        description     = "Optional suffix appended to created repository secret names (for example `_DEV`)."
+      stage = {
+        display_name    = "stage"
+        description     = "Deployment stage for this connector instance (dev or prod)."
         type            = "STRING"
         assignment_type = "USER_INPUT"
-        default_value   = jsonencode("")
+        default_value   = jsonencode("dev")
+      }
+
+      additional_kubernetes_secrets = {
+        display_name    = "additional_kubernetes_secrets"
+        description     = "Static sensitive map of additional Kubernetes Opaque secrets to create in the tenant namespace."
+        type            = "CODE"
+        assignment_type = "STATIC"
+        sensitive = {
+          argument = {
+            secret_value   = jsonencode(var.additional_kubernetes_secrets)
+            secret_version = nonsensitive(sha256(jsonencode(var.additional_kubernetes_secrets)))
+          }
+        }
       }
 
       FORGEJO_HOST = {

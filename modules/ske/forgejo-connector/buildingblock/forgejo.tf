@@ -24,10 +24,10 @@ locals {
   repository_owner          = data.external.repository_context.result.owner
   repository_name           = data.external.repository_context.result.name
   repository_default_branch = data.external.repository_context.result.default_branch
-  stage                     = lower(trimprefix(var.repository_secret_name_suffix, "_"))
+  stage                     = lower(var.stage)
 
   action_secrets = {
-    "KUBECONFIG${var.repository_secret_name_suffix}" = yamlencode(merge(local.kubeconfig, {
+    "KUBECONFIG_${upper(local.stage)}" = yamlencode(merge(local.kubeconfig, {
       current-context = local.kubeconfig_cluster_name
 
       users = [
@@ -53,7 +53,7 @@ locals {
   }
 
   action_variables = {
-    "K8S_NAMESPACE${var.repository_secret_name_suffix}" = var.namespace
+    "K8S_NAMESPACE_${upper(local.stage)}" = var.namespace
   }
 }
 

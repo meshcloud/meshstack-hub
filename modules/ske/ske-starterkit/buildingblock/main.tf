@@ -85,8 +85,8 @@ resource "meshstack_building_block_v2" "forgejo_connector" {
     }]
 
     inputs = {
-      repository_secret_name_suffix = {
-        value_string = "_${upper(each.key)}"
+      stage = {
+        value_string = each.key
       }
     }
   }
