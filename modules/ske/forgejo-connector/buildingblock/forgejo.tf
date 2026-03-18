@@ -24,6 +24,7 @@ locals {
   repository_owner          = data.external.repository_context.result.owner
   repository_name           = data.external.repository_context.result.name
   repository_default_branch = data.external.repository_context.result.default_branch
+  stage                     = lower(trimprefix(var.repository_secret_name_suffix, "_"))
 
   action_secrets = {
     "KUBECONFIG${var.repository_secret_name_suffix}" = yamlencode(merge(local.kubeconfig, {
@@ -87,8 +88,9 @@ resource "terraform_data" "await_pipeline_workflow" {
   provisioner "local-exec" {
     command = "python3 ${path.module}/trigger_and_await_forgejo_workflow.py"
     environment = {
-      FORGEJO_REPOSITORY_ID = tostring(var.repository_id)
-      FORGEJO_WORKFLOW_NAME = "pipeline.yaml"
+      FORGEJO_REPOSITORY_ID    = tostring(var.repository_id)
+      FORGEJO_WORKFLOW_NAME    = "pipeline.yaml"
+      FORGEJO_WORKFLOW_STAGE   = local.stage
     }
   }
 }

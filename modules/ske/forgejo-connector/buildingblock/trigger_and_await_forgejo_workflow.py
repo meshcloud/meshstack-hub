@@ -42,6 +42,7 @@ def main() -> None:
     token = os.environ["FORGEJO_API_TOKEN"]
     repository_id = os.environ["FORGEJO_REPOSITORY_ID"]
     workflow_name = os.environ.get("FORGEJO_WORKFLOW_NAME", "pipeline.yaml")
+    stage = os.environ["FORGEJO_WORKFLOW_STAGE"]
 
     _, _, repo = request_json(host, token, "GET", f"/api/v1/repositories/{repository_id}")
     owner = repo["owner"]["username"]
@@ -54,7 +55,7 @@ def main() -> None:
         token,
         "POST",
         f"/api/v1/repos/{owner}/{repo_name}/actions/workflows/{workflow_name}/dispatches",
-        {"ref": default_branch},
+        {"ref": default_branch, "inputs": {"stage": stage}},
     )
     if status not in (200, 201, 202, 204):
         raise SystemExit(f"Workflow dispatch failed with status {status}")
