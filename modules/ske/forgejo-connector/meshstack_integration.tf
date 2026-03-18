@@ -189,7 +189,14 @@ resource "meshstack_building_block_definition" "this" {
       }
     }
 
-    outputs = {}
+    outputs = {
+      action_variables = {
+        display_name    = "Action Variables"
+        description     = "Non-sensitive action variable map for dependent building block wiring."
+        type            = "CODE"
+        assignment_type = "NONE"
+      }
+    }
   }
 }
 
