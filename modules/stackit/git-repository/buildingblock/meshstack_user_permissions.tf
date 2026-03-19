@@ -5,9 +5,9 @@ provider "stackit" {
 
 resource "stackit_authorization_project_custom_role" "forgejo_access" {
   resource_id = var.stackit_project_id
-  name        = var.stackit_git_access_role_name
+  name        = "meshstack.forgejo_access"
   description = "Minimal custom role for members that should access the shared Forgejo instance."
-  permissions = var.stackit_git_access_role_permissions
+  permissions = ["iam.subject.get"]
 }
 
 resource "stackit_authorization_project_role_assignment" "forgejo_access_members" {

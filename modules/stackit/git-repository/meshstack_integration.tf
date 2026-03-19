@@ -62,18 +62,6 @@ variable "workspace_members" {
   default = []
 }
 
-variable "stackit_git_access_role_name" {
-  type        = string
-  description = "Name of the custom STACKIT project role for shared Forgejo access assignments."
-  default     = "meshstack.forgejo_access"
-}
-
-variable "stackit_git_access_role_permissions" {
-  type        = list(string)
-  description = "Permissions assigned to the custom STACKIT role. Keep minimal and refine once Git-specific IAM permissions are confirmed."
-  default     = ["iam.subject.get"]
-}
-
 variable "hub" {
   type = object({
     git_ref   = optional(string, "main")
@@ -236,22 +224,6 @@ resource "meshstack_building_block_definition" "this" {
         type            = "STRING"
         assignment_type = "STATIC"
         argument        = jsonencode(var.stackit_project_id)
-      }
-
-      stackit_git_access_role_name = {
-        display_name    = "STACKIT Git Access Role Name"
-        description     = "Name of custom STACKIT role used to assign project access to workspace members."
-        type            = "STRING"
-        assignment_type = "STATIC"
-        argument        = jsonencode(var.stackit_git_access_role_name)
-      }
-
-      stackit_git_access_role_permissions = {
-        display_name    = "STACKIT Git Access Role Permissions"
-        description     = "Permissions for the custom STACKIT role used in project assignments."
-        type            = "CODE"
-        assignment_type = "STATIC"
-        argument        = jsonencode(jsonencode(var.stackit_git_access_role_permissions))
       }
 
       action_secrets = {

@@ -80,15 +80,3 @@ variable "stackit_project_id" {
   type        = string
   description = "STACKIT project ID hosting the shared Forgejo instance."
 }
-
-variable "stackit_git_access_role_name" {
-  type        = string
-  description = "Name of the custom STACKIT project role used for shared Forgejo access."
-  default     = "meshstack.forgejo_access"
-}
-
-variable "stackit_git_access_role_permissions" {
-  type        = list(string)
-  description = "Permissions assigned to the custom STACKIT project role."
-  default     = ["iam.subject.get"]
-}

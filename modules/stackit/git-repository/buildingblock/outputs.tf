@@ -35,6 +35,6 @@ output "summary" {
 
     workspace_member_access      = local.mapped_workspace_members
     stackit_project_id           = var.stackit_project_id
-    stackit_git_access_role_name = var.stackit_git_access_role_name
+    stackit_git_access_role_name = "meshstack.forgejo_access"
   })
 }

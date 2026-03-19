@@ -50,8 +50,6 @@ No modules.
 | <a name="input_forgejo_organization"></a> [forgejo\_organization](#input\_forgejo\_organization) | STACKIT Git organization where the repository will be created | `string` | n/a | yes |
 | <a name="input_name"></a> [name](#input\_name) | Name of the Git repository to create | `string` | n/a | yes |
 | <a name="input_private"></a> [private](#input\_private) | Whether the repository should be private | `bool` | `true` | no |
-| <a name="input_stackit_git_access_role_name"></a> [stackit\_git\_access\_role\_name](#input\_stackit\_git\_access\_role\_name) | Name of the custom STACKIT project role used for shared Forgejo access. | `string` | `"meshstack.forgejo_access"` | no |
-| <a name="input_stackit_git_access_role_permissions"></a> [stackit\_git\_access\_role\_permissions](#input\_stackit\_git\_access\_role\_permissions) | Permissions assigned to the custom STACKIT project role. | `list(string)` | <pre>[<br/>  "iam.subject.get"<br/>]</pre> | no |
 | <a name="input_stackit_project_id"></a> [stackit\_project\_id](#input\_stackit\_project\_id) | STACKIT project ID hosting the shared Forgejo instance. | `string` | n/a | yes |
 | <a name="input_workspace_members"></a> [workspace\_members](#input\_workspace\_members) | Workspace members used for collaborator and optional STACKIT project access reconciliation. | <pre>list(object({<br/>    meshIdentifier = string<br/>    username       = string<br/>    firstName      = string<br/>    lastName       = string<br/>    email          = string<br/>    euid           = string<br/>    roles          = list(string)<br/>  }))</pre> | `[]` | no |
 
