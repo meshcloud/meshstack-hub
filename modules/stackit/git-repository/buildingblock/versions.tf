@@ -2,9 +2,25 @@ terraform {
   required_version = ">= 1.4.0"
 
   required_providers {
+    external = {
+      source  = "hashicorp/external"
+      version = "~> 2.3.0"
+    }
     forgejo = {
       source  = "svalabs/forgejo"
       version = "~> 1.3.0"
+    }
+    restapi = {
+      source  = "Mastercard/restapi"
+      version = "3.0.0"
+    }
+    stackit = {
+      source  = "stackitcloud/stackit"
+      version = ">= 0.60.0"
+    }
+    random = {
+      source  = "hashicorp/random"
+      version = "3.8.1"
     }
   }
 }

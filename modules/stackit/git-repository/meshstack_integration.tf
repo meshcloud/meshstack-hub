@@ -21,6 +21,47 @@ variable "forgejo_base_url" {
   type = string
 }
 
+variable "action_secrets" {
+  type      = map(string)
+  sensitive = false # the whole map is not sensitive, but map values are!
+  default   = {}
+
+  validation {
+    condition     = alltrue([for key in keys(var.action_secrets) : length(key) <= 30])
+    error_message = "Forgejo Actions secret names must be 30 characters or less."
+  }
+}
+
+variable "action_variables" {
+  type    = map(string)
+  default = {}
+}
+
+variable "stackit_project_id" {
+  type        = string
+  description = "STACKIT project ID hosting the shared Forgejo instance. Used for project role assignments."
+}
+
+variable "stackit_service_account_key" {
+  type        = string
+  sensitive   = true
+  description = "STACKIT service account key used to authenticate the STACKIT provider in the git-repository building block."
+}
+
+variable "workspace_members" {
+  description = "Workspace members that should receive repository access. Populated via USER_PERMISSIONS assignment on each building block instance."
+  type = list(object({
+    meshIdentifier = string
+    username       = string
+    firstName      = string
+    lastName       = string
+    email          = string
+    euid           = string
+    roles          = list(string)
+  }))
+  default = []
+}
+
 variable "hub" {
   type = object({
     git_ref   = optional(string, "main")
@@ -33,9 +74,12 @@ variable "hub" {
   EOT
 }
 
-output "building_block_definition_version_ref" {
-  value       = var.hub.bbd_draft ? meshstack_building_block_definition.this.version_latest : meshstack_building_block_definition.this.version_latest_release
-  description = "Version of BBD is consumed in Building Block compositions, for example in the backplane of starter kits."
+output "building_block_definition" {
+  value = {
+    uuid        = meshstack_building_block_definition.this.metadata.uuid
+    version_ref = var.hub.bbd_draft ? meshstack_building_block_definition.this.version_latest : meshstack_building_block_definition.this.version_latest_release
+  }
+  description = "BBD is consumed in Building Block compositions, for example in the backplane of starter kits."
 }
 
 module "backplane" {
@@ -78,19 +122,21 @@ resource "meshstack_building_block_definition" "this" {
     inputs = {
       # ── Static inputs from backplane ──────────────────────────────────────
 
-      forgejo_base_url = {
-        display_name    = "STACKIT Git Base URL"
-        description     = "Base URL of the STACKIT Git instance"
+      FORGEJO_HOST = {
+        display_name    = "FORGEJO_HOST"
+        description     = "The Host of the Forgejo instance to connect to."
         type            = "STRING"
         assignment_type = "STATIC"
+        is_environment  = true
         argument        = jsonencode(var.forgejo_base_url)
       }
 
-      forgejo_token = {
-        display_name    = "STACKIT Git API Token"
-        description     = "Personal Access Token for the STACKIT Git API"
+      FORGEJO_API_TOKEN = {
+        display_name    = "FORGEJO_API_TOKEN"
+        description     = "The API token for authenticating with the Forgejo instance."
         type            = "STRING"
         assignment_type = "STATIC"
+        is_environment  = true
         sensitive = {
           argument = {
             secret_value = var.forgejo_token
@@ -106,6 +152,40 @@ resource "meshstack_building_block_definition" "this" {
         argument        = jsonencode(module.backplane.forgejo_organization)
       }
 
+      STACKIT_SERVICE_ACCOUNT_KEY = {
+        display_name    = "STACKIT_SERVICE_ACCOUNT_KEY"
+        description     = "Service account key used for STACKIT provider authentication in this building block."
+        type            = "STRING"
+        assignment_type = "STATIC"
+        is_environment  = true
+        sensitive = {
+          argument = {
+            secret_value = var.stackit_service_account_key
+          }
+        }
+      }
+
+      stackit_project_id = {
+        display_name    = "STACKIT Project ID"
+        description     = "STACKIT project ID hosting the shared Forgejo instance for role assignments."
+        type            = "STRING"
+        assignment_type = "STATIC"
+        argument        = jsonencode(var.stackit_project_id)
+      }
+
+      workspace_identifier = {
+        display_name    = "Workspace Identifier"
+        type            = "STRING"
+        assignment_type = "WORKSPACE_IDENTIFIER"
+      }
+
+      workspace_members = {
+        display_name    = "Workspace Members"
+        description     = "Workspace members used to reconcile Forgejo repository collaborators."
+        type            = "CODE"
+        assignment_type = "USER_PERMISSIONS"
+      }
+
       # ── User inputs ────────────────────────────────────────────────────────
 
       name = {
@@ -118,31 +198,63 @@ resource "meshstack_building_block_definition" "this" {
       }
 
       description = {
-        display_name    = "Repository Description"
-        description     = "Short description of the repository."
-        type            = "STRING"
-        assignment_type = "USER_INPUT"
-        default_value   = jsonencode("")
+        display_name           = "Repository Description"
+        description            = "Short description of the repository."
+        type                   = "STRING"
+        assignment_type        = "USER_INPUT"
+        updateable_by_consumer = true
+        default_value          = jsonencode("")
       }
 
       private = {
-        display_name    = "Private Repository"
-        description     = "If true, the repository has private visibility in Forgejo."
-        type            = "BOOLEAN"
-        assignment_type = "USER_INPUT"
-        default_value   = jsonencode(true)
+        display_name           = "Private Repository"
+        description            = "If true, the repository has private visibility in Forgejo."
+        type                   = "BOOLEAN"
+        assignment_type        = "USER_INPUT"
+        updateable_by_consumer = true
+        default_value          = jsonencode(true)
       }
 
       clone_addr = {
         display_name    = "Clone from URL"
-        description     = "Optional URL to clone into this repository, e.g. 'https://github.com/owner/repo.git'. Leave empty to create an empty repository."
+        description     = "Optional URL to clone into this repository, e.g. 'https://github.com/owner/repo.git'. Leave `null` to create an empty repository."
         type            = "STRING"
         assignment_type = "USER_INPUT"
-        default_value   = jsonencode("")
+        default_value   = jsonencode("null")
+      }
+
+
+      action_variables = {
+        display_name    = "Repository Action Variables"
+        description     = "Static non-sensitive map of Forgejo Actions variables created in each provisioned repository."
+        type            = "CODE"
+        assignment_type = "STATIC"
+        # jsonencode twice is correct, see https://registry.terraform.io/providers/meshcloud/meshstack/latest/docs/resources/building_block_definition#argument-1
+        argument = jsonencode(jsonencode(var.action_variables))
+      }
+
+      action_secrets = {
+        display_name    = "Repository Action Secrets"
+        description     = "Static sensitive map of Forgejo Actions secrets created in each provisioned repository."
+        type            = "CODE"
+        assignment_type = "STATIC"
+        sensitive = {
+          argument = {
+            secret_value   = jsonencode(var.action_secrets)
+            secret_version = nonsensitive(sha256(jsonencode(var.action_secrets)))
+          }
+        }
       }
     }
 
     outputs = {
+      repository_id = {
+        display_name    = "Repository ID"
+        type            = "INTEGER"
+        assignment_type = "NONE"
+        description     = "Numeric Forgejo repository ID, primarily intended for wiring dependent building blocks."
+      }
+
       repository_html_url = {
         display_name    = "Open Repository"
         type            = "STRING"

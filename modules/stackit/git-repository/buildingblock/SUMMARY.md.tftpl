@@ -32,3 +32,24 @@
 ## Resources
 
 - [Open repository in STACKIT Git](${repo_html_url})
+
+%{ if length(workspace_members) > 0 ~}
+## Workspace Member Access
+
+| workspace member | role | repository access |
+|------------------|------|-------------------|
+%{ for username in sort(keys(workspace_members)) ~}
+| `${username}` | `${workspace_members[username]}` | `${mapped_workspace_members[username]}` |
+%{ endfor ~}
+
+STACKIT project role assignment configured on [project ${stackit_project_id}](https://portal.stackit.cloud/dashboard?project=${stackit_project_id}) with custom permissions `${stackit_forgejo_access_permissions}`.
+
+%{ if length(pending_workspace_members) > 0 ~}
+⚠️ The following workspace members could not be assigned to the STACKIT project yet (for example because the subject is not available in STACKIT yet):
+%{ for subject in pending_workspace_members ~}
+- `${subject}`
+%{ endfor ~}
+%{ else ~}
+All workspace members are currently assigned to the STACKIT project role.
+%{ endif ~}
+%{ endif ~}
