@@ -37,8 +37,6 @@ locals {
   }
 }
 
-
-
 resource "forgejo_repository" "this" {
   owner          = var.forgejo_organization
   name           = var.name
@@ -86,14 +84,14 @@ resource "restapi_object" "action_variable" {
   for_each = var.action_variables
 
   path         = "/api/v1/repos/${var.forgejo_organization}/${forgejo_repository.this.name}/actions/variables/${each.key}"
-  create_path  = "/api/v1/repos/${var.forgejo_organization}/${forgejo_repository.this.name}/actions/variables"
+  create_path  = "/api/v1/repos/${var.forgejo_organization}/${forgejo_repository.this.name}/actions/variables/${each.key}"
   update_path  = "/api/v1/repos/${var.forgejo_organization}/${forgejo_repository.this.name}/actions/variables/${each.key}"
   destroy_path = "/api/v1/repos/${var.forgejo_organization}/${forgejo_repository.this.name}/actions/variables/${each.key}"
   read_path    = "/api/v1/repos/${var.forgejo_organization}/${forgejo_repository.this.name}/actions/variables/${each.key}"
   id_attribute = "name"
   object_id    = each.key
 
-  create_method  = "POST"
+  create_method  = "PUT"
   update_method  = "PUT"
   destroy_method = "DELETE"
 
