@@ -24,7 +24,7 @@ locals {
   repository_owner = data.external.repository_context.result.owner
   repository_name  = data.external.repository_context.result.name
 
-  action_secret = {
+  action_secrets = {
     "KUBECONFIG_${upper(var.stage)}" = yamlencode(merge(local.kubeconfig, {
       current-context = local.kubeconfig_cluster_name
 
@@ -50,14 +50,14 @@ locals {
     }))
   }
 
-  action_variable = {
+  action_variables = {
     "K8S_NAMESPACE_${upper(var.stage)}" = var.namespace
     "APP_HOSTNAME_${upper(var.stage)}"  = var.app_hostname
   }
 }
 
 resource "restapi_object" "action_secret" {
-  for_each = local.action_secret
+  for_each = local.action_secrets
 
   path         = "/api/v1/repos/${local.repository_owner}/${local.repository_name}/actions/secrets/${each.key}"
   create_path  = "/api/v1/repos/${local.repository_owner}/${local.repository_name}/actions/secrets/${each.key}"
@@ -85,10 +85,10 @@ resource "restapi_object" "action_secret" {
 }
 
 resource "restapi_object" "action_variable" {
-  for_each = local.action_variable
+  for_each = local.action_variables
 
   path         = "/api/v1/repos/${local.repository_owner}/${local.repository_name}/actions/variables/${each.key}"
-  create_path  = "/api/v1/repos/${local.repository_owner}/${local.repository_name}/actions/variables"
+  create_path  = "/api/v1/repos/${local.repository_owner}/${local.repository_name}/actions/variables/${each.key}"
   update_path  = "/api/v1/repos/${local.repository_owner}/${local.repository_name}/actions/variables/${each.key}"
   destroy_path = "/api/v1/repos/${local.repository_owner}/${local.repository_name}/actions/variables/${each.key}"
   read_path    = "/api/v1/repos/${local.repository_owner}/${local.repository_name}/actions/variables/${each.key}"
@@ -115,8 +115,8 @@ resource "terraform_data" "await_pipeline_workflow" {
 
   triggers_replace = [
     sha256(file("${path.module}/trigger_and_await_forgejo_workflow.py")),
-    nonsensitive(sha256(jsonencode(local.action_secret))),
-    sha256(jsonencode(local.action_variable)),
+    nonsensitive(sha256(jsonencode(local.action_secrets))),
+    sha256(jsonencode(local.action_variables)),
   ]
 
   provisioner "local-exec" {
