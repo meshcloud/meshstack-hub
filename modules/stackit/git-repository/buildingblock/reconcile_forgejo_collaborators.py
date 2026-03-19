@@ -2,6 +2,8 @@
 
 import json
 import os
+import sys
+import urllib.error
 import urllib.request
 
 
@@ -39,13 +41,19 @@ def main() -> None:
 
     for username in sorted(desired_users):
         permission = desired[username]
-        request_json(
-            host,
-            token,
-            "PUT",
-            f"/api/v1/repos/{owner}/{repo}/collaborators/{username}",
-            {"permission": permission},
-        )
+        try:
+            request_json(
+                host,
+                token,
+                "PUT",
+                f"/api/v1/repos/{owner}/{repo}/collaborators/{username}",
+                {"permission": permission},
+            )
+        except urllib.error.HTTPError as err:
+            if err.code == 422:
+                print(f"Skipping collaborator '{username}': user does not exist in Forgejo yet.", file=sys.stderr)
+                continue
+            raise
 
     removable = sorted((current - desired_users) - protected)
     for username in removable:
