@@ -1,23 +1,30 @@
-# ── Backplane inputs (static, set once per building block definition) ──────────
-
-variable "forgejo_base_url" {
-  type        = string
-  description = "STACKIT Git base URL"
-  default     = "https://git-service.git.onstackit.cloud"
+variable "workspace_identifier" {
+  type = string
 }
 
-variable "forgejo_token" {
+variable "workspace_members" {
+  description = "Workspace members used for collaborator and optional STACKIT project access reconciliation."
+  type = list(object({
+    meshIdentifier = string
+    username       = string
+    firstName      = string
+    lastName       = string
+    email          = string
+    euid           = string
+    roles          = list(string)
+  }))
+  default = []
+}
+
+variable "stackit_project_id" {
   type        = string
-  description = "STACKIT Git API token (from backplane)"
-  sensitive   = true
+  description = "STACKIT project ID hosting the shared Forgejo instance."
 }
 
 variable "forgejo_organization" {
   type        = string
   description = "STACKIT Git organization where the repository will be created"
 }
-
-# ── User inputs (set per building block instance) ─────────────────────────────
 
 variable "name" {
   type        = string
@@ -47,10 +54,28 @@ variable "default_branch" {
   default     = "main"
 }
 
-# ── Clone options ──────────────────────────────────────────────────────────────
-
 variable "clone_addr" {
   type        = string
-  description = "Optional URL to clone into this repository, e.g. 'https://github.com/owner/repo.git'. Leave empty to create an empty repository."
-  default     = ""
+  description = "Optional URL to clone into this repository, e.g. 'https://github.com/owner/repo.git'. Leave empty or `null` to create an empty repository."
+  default     = "null" # supporting the null string is a workaround for the Panel UI which does not support empty string as default for optional value
 }
+
+variable "action_variables" {
+  type        = map(string)
+  description = "Map of Forgejo Actions variables to create in the repository."
+  default     = {}
+}
+
+variable "action_secrets" {
+  type        = map(string)
+  description = "Map of Forgejo Actions secrets to create in the repository."
+  sensitive   = false # the whole map is not sensitive, but map values are!
+  default     = {}
+
+  validation {
+    condition     = alltrue([for key in keys(var.action_secrets) : (length(key) <= 30)])
+    error_message = "Forgejo Actions secret names must be 30 characters or less."
+  }
+}
+
+

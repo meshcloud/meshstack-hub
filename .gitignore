@@ -20,6 +20,8 @@ yarn-error.log*
 *tfvars*
 .terraform.lock.hcl
 .env
+__pycache__/
+*.pyc
 
 # Generated assets
 website/public/assets/building-block-logos/
