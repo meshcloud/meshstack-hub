@@ -7,31 +7,28 @@ data "external" "forgejo_env" {
 import json
 import os
 
-print(json.dumps({
-  "forgejo_host": os.environ["FORGEJO_HOST"],
-  "forgejo_auth_header": f'token {os.environ["FORGEJO_API_TOKEN"]}',
-}))
+print(json.dumps(dict(os.environ)))
 PY
   ]
 }
 
 provider "restapi" {
-  uri                  = data.external.forgejo_env.result.forgejo_host
+  uri                  = data.external.forgejo_env.result["FORGEJO_HOST"]
   write_returns_object = true
 
   headers = {
-    Authorization = data.external.forgejo_env.result.forgejo_auth_header
+    Authorization = "token ${data.external.forgejo_env.result["FORGEJO_API_TOKEN"]}"
     Content-Type  = "application/json"
   }
 }
 
 provider "restapi" {
   alias                = "action_secret"
-  uri                  = data.external.forgejo_env.result.forgejo_host
+  uri                  = data.external.forgejo_env.result["FORGEJO_HOST"]
   write_returns_object = false
 
   headers = {
-    Authorization = data.external.forgejo_env.result.forgejo_auth_header
+    Authorization = "token ${data.external.forgejo_env.result["FORGEJO_API_TOKEN"]}"
     Content-Type  = "application/json"
   }
 }
@@ -157,8 +154,8 @@ resource "terraform_data" "sync_repository_collaborators" {
   provisioner "local-exec" {
     command = "python3 ${path.module}/reconcile_forgejo_collaborators.py"
     environment = {
-      FORGEJO_HOST                 = data.external.forgejo_env.result.forgejo_host
-      FORGEJO_API_TOKEN            = trimprefix(data.external.forgejo_env.result.forgejo_auth_header, "token ")
+      FORGEJO_HOST                 = data.external.forgejo_env.result["FORGEJO_HOST"]
+      FORGEJO_API_TOKEN            = data.external.forgejo_env.result["FORGEJO_API_TOKEN"]
       REPOSITORY_OWNER             = var.forgejo_organization
       REPOSITORY_NAME              = forgejo_repository.this.name
       DESIRED_COLLABORATORS_JSON   = jsonencode(local.mapped_workspace_members)
