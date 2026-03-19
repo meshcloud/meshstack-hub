@@ -86,13 +86,22 @@ resource "restapi_object" "action_secret" {
 resource "restapi_object" "action_variable" {
   for_each = var.action_variables
 
-  path          = "/api/v1/repos/${var.forgejo_organization}/${forgejo_repository.this.name}/actions/variables/${each.key}"
-  id_attribute  = "name"
-  object_id     = each.key
-  update_method = "PUT"
+  path         = "/api/v1/repos/${var.forgejo_organization}/${forgejo_repository.this.name}/actions/variables/${each.key}"
+  create_path  = "/api/v1/repos/${var.forgejo_organization}/${forgejo_repository.this.name}/actions/variables/${each.key}"
+  update_path  = "/api/v1/repos/${var.forgejo_organization}/${forgejo_repository.this.name}/actions/variables/${each.key}"
+  destroy_path = "/api/v1/repos/${var.forgejo_organization}/${forgejo_repository.this.name}/actions/variables/${each.key}"
+  read_path    = "/api/v1/repos/${var.forgejo_organization}/${forgejo_repository.this.name}/actions/variables/${each.key}"
+  id_attribute = "name"
+  object_id    = each.key
+
+  create_method  = "PUT"
+  update_method  = "PUT"
+  destroy_method = "DELETE"
+
   data = jsonencode({
     value = each.value
   })
+
   ignore_server_additions = true
 }
 
