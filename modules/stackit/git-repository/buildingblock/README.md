@@ -36,7 +36,7 @@ No modules.
 | [stackit_authorization_project_role_assignment.forgejo_access_members](https://registry.terraform.io/providers/stackitcloud/stackit/latest/docs/resources/authorization_project_role_assignment) | resource |
 | [terraform_data.sync_repository_collaborators](https://registry.terraform.io/providers/hashicorp/terraform/latest/docs/resources/data) | resource |
 | [external_external.current_collaborators](https://registry.terraform.io/providers/hashicorp/external/latest/docs/data-sources/external) | data source |
-| [external_external.forgejo_env](https://registry.terraform.io/providers/hashicorp/external/latest/docs/data-sources/external) | data source |
+| [external_external.env](https://registry.terraform.io/providers/hashicorp/external/latest/docs/data-sources/external) | data source |
 
 ## Inputs
 
