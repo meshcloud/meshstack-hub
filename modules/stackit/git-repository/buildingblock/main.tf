@@ -2,25 +2,27 @@ provider "forgejo" {
   # configured via env variables FORGEJO_HOST, FORGEJO_API_TOKEN
 }
 
-provider "restapi" {
-  uri                  = data.external.env.result["FORGEJO_HOST"]
-  write_returns_object = true
-
-  headers = {
+locals {
+  restapi_provider_headers = {
     Authorization = "token ${data.external.env.result["FORGEJO_API_TOKEN"]}"
     Content-Type  = "application/json"
   }
 }
 
 provider "restapi" {
-  alias                = "action_secret"
-  uri                  = data.external.env.result["FORGEJO_HOST"]
-  write_returns_object = false
+  uri     = data.external.env.result["FORGEJO_HOST"]
+  headers = local.restapi_provider_headers
+  # crucial flag which must be on provider level to control different handling for secrets (see below),
+  # as they can't be read back to check for state
+  write_returns_object = true
+}
 
-  headers = {
-    Authorization = "token ${data.external.env.result["FORGEJO_API_TOKEN"]}"
-    Content-Type  = "application/json"
-  }
+provider "restapi" {
+  alias   = "action_secret"
+  uri     = data.external.env.result["FORGEJO_HOST"]
+  headers = local.restapi_provider_headers
+  # Secrets can't be read back, so PUT/POST don't return the object
+  write_returns_object = false
 }
 
 locals {
@@ -84,7 +86,7 @@ resource "restapi_object" "action_variable" {
   for_each = var.action_variables
 
   path         = "/api/v1/repos/${var.forgejo_organization}/${forgejo_repository.this.name}/actions/variables/${each.key}"
-  create_path  = "/api/v1/repos/${var.forgejo_organization}/${forgejo_repository.this.name}/actions/variables"
+  create_path  = "/api/v1/repos/${var.forgejo_organization}/${forgejo_repository.this.name}/actions/variables/${each.key}"
   update_path  = "/api/v1/repos/${var.forgejo_organization}/${forgejo_repository.this.name}/actions/variables/${each.key}"
   destroy_path = "/api/v1/repos/${var.forgejo_organization}/${forgejo_repository.this.name}/actions/variables/${each.key}"
   read_path    = "/api/v1/repos/${var.forgejo_organization}/${forgejo_repository.this.name}/actions/variables/${each.key}"
