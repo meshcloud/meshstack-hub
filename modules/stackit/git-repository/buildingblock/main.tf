@@ -58,16 +58,28 @@ resource "restapi_object" "action_secret" {
 
   provider = restapi.action_secret
 
-  path           = "/api/v1/repos/${var.forgejo_organization}/${forgejo_repository.this.name}/actions/secrets/${each.key}"
-  read_path      = "/api/v1/repos/${var.forgejo_organization}/${forgejo_repository.this.name}/actions/secrets/${each.key}"
-  id_attribute   = "name"
-  object_id      = each.key
+  path         = "/api/v1/repos/${var.forgejo_organization}/${forgejo_repository.this.name}/actions/secrets/${each.key}"
+  create_path  = "/api/v1/repos/${var.forgejo_organization}/${forgejo_repository.this.name}/actions/secrets/${each.key}"
+  update_path  = "/api/v1/repos/${var.forgejo_organization}/${forgejo_repository.this.name}/actions/secrets/${each.key}"
+  destroy_path = "/api/v1/repos/${var.forgejo_organization}/${forgejo_repository.this.name}/actions/secrets/${each.key}"
+  read_path    = "/api/v1/repos/${var.forgejo_organization}/${forgejo_repository.this.name}/actions/secrets"
+  id_attribute = "name"
+  object_id    = each.key
+
   create_method  = "PUT"
   update_method  = "PUT"
   destroy_method = "DELETE"
+
+  read_search = {
+    results_key  = "data"
+    search_key   = "name"
+    search_value = each.key
+  }
+
   data = jsonencode({
     data = each.value
   })
+
   ignore_server_additions = true
 }
 

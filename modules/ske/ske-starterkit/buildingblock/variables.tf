@@ -49,7 +49,7 @@ variable "repo_clone_addr" {
 
 variable "dns_zone_name" {
   type        = string
-  description = "DNS zone name used for application ingress hostnames (for example 'likvid.stackit.run')."
+  description = "DNS zone name used for application ingress hostnames."
 }
 
 variable "add_random_name_suffix" {
