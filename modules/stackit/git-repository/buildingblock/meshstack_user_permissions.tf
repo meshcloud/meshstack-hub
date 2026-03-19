@@ -35,7 +35,6 @@ resource "terraform_data" "sync_repository_collaborators" {
   provisioner "local-exec" {
     command = "${path.module}/reconcile_forgejo_collaborators.py"
     environment = {
-      FORGEJO_API_TOKEN            = data.external.env.result["FORGEJO_API_TOKEN"]
       REPOSITORY_OWNER             = var.forgejo_organization
       REPOSITORY_NAME              = forgejo_repository.this.name
       DESIRED_COLLABORATORS_JSON   = jsonencode(local.mapped_workspace_members)
