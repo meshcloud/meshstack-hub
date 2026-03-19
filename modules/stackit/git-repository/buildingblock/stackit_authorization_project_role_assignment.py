@@ -54,9 +54,9 @@ def create_service_account_assertion(service_account_key_raw: str) -> tuple[str,
 
 
 def get_access_token_from_service_account_key() -> str:
-    key_raw = os.environ.get("STACKIT_SKE_PROJECT_SERVICE_ACCOUNT_KEY", "").strip()
+    key_raw = os.environ.get("STACKIT_SERVICE_ACCOUNT_KEY", "").strip()
     if not key_raw:
-        raise KeyError("Missing STACKIT_SERVICE_ACCOUNT_TOKEN (and no STACKIT_SKE_PROJECT_SERVICE_ACCOUNT_KEY fallback available)")
+        raise KeyError("Missing STACKIT_SERVICE_ACCOUNT_KEY")
 
     assertion, issuer = create_service_account_assertion(key_raw)
     token_url = os.environ.get("STACKIT_TOKEN_URL", "https://service-account.api.stackit.cloud/token").strip()
@@ -94,14 +94,6 @@ def get_access_token_from_service_account_key() -> str:
 
     return access_token
 
-
-def resolve_token() -> str:
-    token = os.environ.get("STACKIT_SERVICE_ACCOUNT_TOKEN", "").strip()
-    if token:
-        return token
-    return get_access_token_from_service_account_key()
-
-
 def is_subject_not_found(subject: str, status_code: int, error_payload: dict | object) -> bool:
     if status_code not in (400, 404) or not isinstance(error_payload, dict):
         return False
@@ -126,7 +118,7 @@ def main() -> None:
         raise ValueError("RESOURCE_TYPE must not be empty")
 
     host = normalize_host(os.environ.get("STACKIT_AUTHORIZATION_BASE_URL", "https://authorization.api.stackit.cloud"))
-    token = resolve_token()
+    token = get_access_token_from_service_account_key()
 
     payload = {
         "resourceType": resource_type,
