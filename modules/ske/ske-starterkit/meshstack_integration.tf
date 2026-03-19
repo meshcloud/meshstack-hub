@@ -4,19 +4,6 @@ variable "meshstack" {
   })
 }
 
-variable "forgejo_token" {
-  type      = string
-  sensitive = true
-}
-
-variable "forgejo_organization" {
-  type = string
-}
-
-variable "forgejo_base_url" {
-  type = string
-}
-
 variable "full_platform_identifier" {
   type = string
 }
@@ -45,6 +32,18 @@ variable "repo_clone_addr" {
   description = "URL to clone into the starterkit git repository."
 }
 
+variable "dns_zone_name" {
+  type        = string
+  description = "DNS zone name used for application ingress hostnames."
+}
+
+variable "add_random_name_suffix" {
+  type        = bool
+  default     = true
+  description = "Whether to append a random suffix to starterkit names for shared environments."
+}
+
+
 variable "tags" {
   type    = map(list(string))
   default = {}
@@ -53,6 +52,16 @@ variable "tags" {
 variable "notification_subscribers" {
   type    = list(string)
   default = []
+}
+
+variable "building_block_definitions" {
+  type = map(object({
+    uuid = string
+    version_ref = object({
+      content_hash = string # adding the content nicely tracks changes in dependent BBDs (draft mode)
+      uuid         = string
+    })
+  }))
 }
 
 variable "hub" {
@@ -65,17 +74,6 @@ variable "hub" {
   `git_ref`: Hub reference. Set to a tag (e.g. 'v1.2.3') or branch or commit sha of meshcloud/meshstack-hub repo.<br>
   `bbd_draft`: If true, allows changing the building block definition for upgrading dependent building blocks.
   EOT
-}
-
-module "backplane" {
-  source = "./backplane" # TODO revert to github.com/meshcloud/meshstack-hub//modules/ske/ske-starterkit/backplane link once pushed
-
-  meshstack = var.meshstack
-  hub       = var.hub
-
-  forgejo_token        = var.forgejo_token
-  forgejo_organization = var.forgejo_organization
-  forgejo_base_url     = var.forgejo_base_url
 }
 
 locals {
@@ -114,8 +112,10 @@ This building block automates the creation of the following resources:
 - **STACKIT Git Forgejo Repository**: Code repository for application development and deployment.
 - **Development Project**
   - **SKE Tenant**: A dedicated Kubernetes namespace for development.
+  - **SKE Forgejo Connector**: Provisions stage-specific namespace/repository wiring and outputs stage user permissions.
 - **Production Project**: You, as the creator, will have access to this project and SKE tenant.
   - **SKE Tenant**: A dedicated Kubernetes namespace for production.
+  - **SKE Forgejo Connector**: Provisions stage-specific namespace/repository wiring and outputs stage user permissions.
 
 You, as the creator, will have access to the the Git repository, the projects and associated Kubernetes namespaces.
 
@@ -198,17 +198,41 @@ EOT
         display_name    = "Clone from URL"
         argument        = jsonencode(var.repo_clone_addr)
       }
-      "building_block_definition_version_refs" = {
+      "dns_zone_name" = {
+        assignment_type = "STATIC"
+        type            = "STRING"
+        display_name    = "DNS Zone Name"
+        argument        = jsonencode(var.dns_zone_name)
+      }
+      "add_random_name_suffix" = {
+        assignment_type = "STATIC"
+        type            = "BOOLEAN"
+        display_name    = "Add Random Name Suffix"
+        argument        = jsonencode(var.add_random_name_suffix)
+      }
+      "building_block_definitions" = {
         assignment_type = "STATIC"
         type            = "CODE"
-        description     = "Refs used to create auxiliary building blocks (composition)."
-        display_name    = "BBD Version Refs"
+        description     = "Definitions used to create auxiliary building blocks (composition)."
+        display_name    = "BBDs"
         # jsonencode twice is correct, see https://registry.terraform.io/providers/meshcloud/meshstack/latest/docs/resources/building_block_definition#argument-1
-        argument = jsonencode(jsonencode(module.backplane.building_block_definition_version_refs))
-      }
+        argument = jsonencode(jsonencode(var.building_block_definitions))
+      },
+
     }
 
-    outputs = {}
+    outputs = {
+      "app_link_dev" = {
+        assignment_type = "RESOURCE_URL"
+        display_name    = "Open App Dev"
+        type            = "STRING"
+      }
+      "app_link_prod" = {
+        assignment_type = "RESOURCE_URL"
+        display_name    = "Open App Prod"
+        type            = "STRING"
+      }
+    }
 
     permissions = [
       "BUILDINGBLOCK_LIST",
