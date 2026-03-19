@@ -81,7 +81,7 @@ resource "terraform_data" "sync_repository_collaborators" {
     sha256(file("reconcile_forgejo_collaborators.py")),
     sha256(file("get_forgejo_collaborators.py")),
     sha256(jsonencode(local.mapped_workspace_members)),
-    data.external.current_collaborators.result.current_hash,
+    sha256(data.external.current_collaborators.result.collaborators_json),
   ]
 
   provisioner "local-exec" {
