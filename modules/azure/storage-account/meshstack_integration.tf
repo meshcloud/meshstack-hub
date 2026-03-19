@@ -1,7 +1,7 @@
 variable "hub" {
   type = object({
     git_ref   = optional(string, "main")
-    bbd_draft = optional(bool, false)
+    bbd_draft = optional(bool, true)
   })
   default     = {}
   description = <<-EOT
@@ -12,35 +12,29 @@ variable "hub" {
 
 variable "meshstack" {
   type = object({
-    identifier                  = string
     owning_workspace_identifier = string
   })
-  description = <<-EOT
-  `identifier`: MeshStack instance identifier, e.g. meshcloud-dev.
-  `owning_workspace_identifier`: Identifier of the workspace that owns the building block.
-  EOT
+  description = "`owning_workspace_identifier`: Identifier of the workspace that owns the building block."
 }
+
+# Retrieves the workload identity federation configuration from meshStack.
+# The building block runners share the same OIDC issuer and namespace prefix as meshStack integrations.
+# For self-hosted runners running outside our cluster, this does not hold true.
+data "meshstack_integrations" "integrations" {}
 
 variable "azure" {
   type = object({
     tenant_id       = string
     subscription_id = string
     scope           = string
-    location        = optional(string, "westeurope")
+    location        = optional(string, "germanywestcentral")
   })
   description = <<-EOT
   `tenant_id`: Azure Entra tenant ID where the storage accounts will be deployed.
   `subscription_id`: Azure subscription ID where storage accounts will be deployed.
   `scope`: Azure management group or subscription ID used as the scope for the backplane role definition and assignment.
-  `location`: Default Azure region where storage accounts will be created (e.g. 'westeurope').
+  `location`: Default Azure region where storage accounts will be created (e.g. 'germanywestcentral').
   EOT
-}
-
-variable "workload_identity_federation" {
-  type = object({
-    issuer = string
-  })
-  description = "Workload identity federation configuration for the building block's service principal. The issuer is available in your meshStack instance under Integrations."
 }
 
 variable "backplane_name" {
@@ -64,9 +58,9 @@ module "backplane" {
   create_service_principal_name = var.backplane_name
 
   workload_identity_federation = {
-    issuer = var.workload_identity_federation.issuer
+    issuer = data.meshstack_integrations.integrations.workload_identity_federation.replicator.issuer
     subjects = [
-      "system:serviceaccount:${var.meshstack.identifier}:workspace.${var.meshstack.owning_workspace_identifier}.buildingblockdefinition.${meshstack_building_block_definition.this.metadata.uuid}"
+      "${trimsuffix(data.meshstack_integrations.integrations.workload_identity_federation.replicator.subject, ":replicator")}:workspace.${var.meshstack.owning_workspace_identifier}.buildingblockdefinition.${meshstack_building_block_definition.this.metadata.uuid}"
     ]
   }
 }
