@@ -1,11 +1,17 @@
 provider "stackit" {
-  default_region      = "eu01"
-  service_account_key = data.external.env.result["STACKIT_SERVICE_ACCOUNT_KEY"]
+  default_region = "eu01"
+}
+
+resource "random_string" "stackit_custom_role_suffix" {
+  length  = 8
+  lower   = true
+  numeric = false
+  upper   = false
 }
 
 resource "stackit_authorization_project_custom_role" "forgejo_access" {
   resource_id = var.stackit_project_id
-  name        = "meshstack.forgejo_access"
+  name        = "meshstack.forgejo_access.${random_string.stackit_custom_role_suffix.result}"
   description = "Minimal custom role for members that should access the shared Forgejo instance."
   permissions = ["iam.subject.get"]
 }
@@ -33,7 +39,7 @@ resource "terraform_data" "sync_repository_collaborators" {
   ]
 
   provisioner "local-exec" {
-    command = "${path.module}/reconcile_forgejo_collaborators.py"
+    command = "./reconcile_forgejo_collaborators.py"
     environment = {
       REPOSITORY_OWNER             = var.forgejo_organization
       REPOSITORY_NAME              = forgejo_repository.this.name

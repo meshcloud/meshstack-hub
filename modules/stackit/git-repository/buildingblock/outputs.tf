@@ -33,8 +33,8 @@ output "summary" {
     clone_addr     = var.clone_addr
     default_branch = var.default_branch
 
-    workspace_member_access      = local.mapped_workspace_members
-    stackit_project_id           = var.stackit_project_id
-    stackit_git_access_role_name = "meshstack.forgejo_access"
+    workspace_member_access            = local.mapped_workspace_members
+    stackit_project_id                 = var.stackit_project_id
+    stackit_forgejo_access_permissions = join(", ", stackit_authorization_project_custom_role.forgejo_access.permissions)
   })
 }
