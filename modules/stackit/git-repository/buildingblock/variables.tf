@@ -60,3 +60,36 @@ variable "clone_addr" {
   description = "Optional URL to clone into this repository, e.g. 'https://github.com/owner/repo.git'. Leave empty or `null` to create an empty repository."
   default     = "null" # supporting the null string is a workaround for the Panel UI which does not support empty string as default for optional value
 }
+
+
+variable "workspace_members" {
+  description = "Workspace members used for collaborator and optional STACKIT project access reconciliation."
+  type = list(object({
+    meshIdentifier = string
+    username       = string
+    firstName      = string
+    lastName       = string
+    email          = string
+    euid           = string
+    roles          = list(string)
+  }))
+  default = []
+}
+
+variable "stackit_project_id" {
+  type        = string
+  description = "STACKIT project ID hosting the shared Forgejo instance. Optional."
+  default     = ""
+}
+
+variable "stackit_git_access_role_name" {
+  type        = string
+  description = "Name of the custom STACKIT project role used for shared Forgejo access."
+  default     = "meshstack.forgejo_access"
+}
+
+variable "stackit_git_access_role_permissions" {
+  type        = list(string)
+  description = "Permissions assigned to the custom STACKIT project role."
+  default     = ["iam.subject.get"]
+}

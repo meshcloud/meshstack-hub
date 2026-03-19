@@ -37,6 +37,38 @@ variable "action_variables" {
   default = {}
 }
 
+variable "stackit_project_id" {
+  type        = string
+  description = "STACKIT project ID hosting the shared Forgejo instance. Used for optional project role assignments."
+  default     = ""
+}
+
+variable "workspace_members" {
+  description = "Workspace members that should receive repository access. Populated via USER_PERMISSIONS assignment on each building block instance."
+  type = list(object({
+    meshIdentifier = string
+    username       = string
+    firstName      = string
+    lastName       = string
+    email          = string
+    euid           = string
+    roles          = list(string)
+  }))
+  default = []
+}
+
+variable "stackit_git_access_role_name" {
+  type        = string
+  description = "Name of the custom STACKIT project role for shared Forgejo access assignments."
+  default     = "meshstack.forgejo_access"
+}
+
+variable "stackit_git_access_role_permissions" {
+  type        = list(string)
+  description = "Permissions assigned to the custom STACKIT role. Keep minimal and refine once Git-specific IAM permissions are confirmed."
+  default     = ["iam.subject.get"]
+}
+
 variable "hub" {
   type = object({
     git_ref   = optional(string, "main")
@@ -164,6 +196,13 @@ resource "meshstack_building_block_definition" "this" {
         default_value   = jsonencode("null")
       }
 
+      workspace_members = {
+        display_name    = "Workspace Members"
+        description     = "Workspace members used to reconcile Forgejo repository collaborators."
+        type            = "CODE"
+        assignment_type = "USER_PERMISSIONS"
+      }
+
       action_variables = {
         display_name    = "Repository Action Variables"
         description     = "Static non-sensitive map of Forgejo Actions variables created in each provisioned repository."
@@ -171,6 +210,30 @@ resource "meshstack_building_block_definition" "this" {
         assignment_type = "STATIC"
         # jsonencode twice is correct, see https://registry.terraform.io/providers/meshcloud/meshstack/latest/docs/resources/building_block_definition#argument-1
         argument = jsonencode(jsonencode(var.action_variables))
+      }
+
+      stackit_project_id = {
+        display_name    = "STACKIT Project ID"
+        description     = "STACKIT project ID hosting the shared Forgejo instance for optional role assignments."
+        type            = "STRING"
+        assignment_type = "STATIC"
+        argument        = jsonencode(var.stackit_project_id)
+      }
+
+      stackit_git_access_role_name = {
+        display_name    = "STACKIT Git Access Role Name"
+        description     = "Name of custom STACKIT role used to assign project access to workspace members."
+        type            = "STRING"
+        assignment_type = "STATIC"
+        argument        = jsonencode(var.stackit_git_access_role_name)
+      }
+
+      stackit_git_access_role_permissions = {
+        display_name    = "STACKIT Git Access Role Permissions"
+        description     = "Permissions for the custom STACKIT role used in project assignments."
+        type            = "CODE"
+        assignment_type = "STATIC"
+        argument        = jsonencode(jsonencode(var.stackit_git_access_role_permissions))
       }
 
       action_secrets = {

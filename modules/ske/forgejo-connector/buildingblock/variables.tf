@@ -23,6 +23,20 @@ variable "app_hostname" {
   description = "Public application hostname for this stage (used by deploy workflow and ingress)."
 }
 
+variable "users" {
+  description = "List of users from authoritative system to derive stage user permissions."
+  type = list(object({
+    meshIdentifier = string
+    username       = string
+    firstName      = string
+    lastName       = string
+    email          = string
+    euid           = string
+    roles          = list(string)
+  }))
+  default = []
+}
+
 variable "additional_kubernetes_secrets" {
   type        = map(map(string))
   description = "Additional Kubernetes secrets to create in the tenant namespace. Map keys are secret names, values are secret data maps."

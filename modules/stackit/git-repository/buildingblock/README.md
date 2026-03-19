@@ -19,6 +19,7 @@ To guarantee correct destroy behavior (actual DELETE in Forgejo), this module ma
 | <a name="requirement_external"></a> [external](#requirement\_external) | ~> 2.3.0 |
 | <a name="requirement_forgejo"></a> [forgejo](#requirement\_forgejo) | ~> 1.3.0 |
 | <a name="requirement_restapi"></a> [restapi](#requirement\_restapi) | 3.0.0 |
+| <a name="requirement_stackit"></a> [stackit](#requirement\_stackit) | >= 0.60.0 |
 
 ## Modules
 
@@ -31,6 +32,10 @@ No modules.
 | [forgejo_repository.this](https://registry.terraform.io/providers/svalabs/forgejo/latest/docs/resources/repository) | resource |
 | [restapi_object.action_secret](https://registry.terraform.io/providers/Mastercard/restapi/3.0.0/docs/resources/object) | resource |
 | [restapi_object.action_variable](https://registry.terraform.io/providers/Mastercard/restapi/3.0.0/docs/resources/object) | resource |
+| [stackit_authorization_project_custom_role.forgejo_access](https://registry.terraform.io/providers/stackitcloud/stackit/latest/docs/resources/authorization_project_custom_role) | resource |
+| [stackit_authorization_project_role_assignment.forgejo_access_members](https://registry.terraform.io/providers/stackitcloud/stackit/latest/docs/resources/authorization_project_role_assignment) | resource |
+| [terraform_data.sync_repository_collaborators](https://registry.terraform.io/providers/hashicorp/terraform/latest/docs/resources/data) | resource |
+| [external_external.current_collaborators](https://registry.terraform.io/providers/hashicorp/external/latest/docs/data-sources/external) | data source |
 | [external_external.forgejo_env](https://registry.terraform.io/providers/hashicorp/external/latest/docs/data-sources/external) | data source |
 
 ## Inputs
@@ -45,6 +50,10 @@ No modules.
 | <a name="input_forgejo_organization"></a> [forgejo\_organization](#input\_forgejo\_organization) | STACKIT Git organization where the repository will be created | `string` | n/a | yes |
 | <a name="input_name"></a> [name](#input\_name) | Name of the Git repository to create | `string` | n/a | yes |
 | <a name="input_private"></a> [private](#input\_private) | Whether the repository should be private | `bool` | `true` | no |
+| <a name="input_stackit_git_access_role_name"></a> [stackit\_git\_access\_role\_name](#input\_stackit\_git\_access\_role\_name) | Name of the custom STACKIT project role used for shared Forgejo access. | `string` | `"meshstack.forgejo_access"` | no |
+| <a name="input_stackit_git_access_role_permissions"></a> [stackit\_git\_access\_role\_permissions](#input\_stackit\_git\_access\_role\_permissions) | Permissions assigned to the custom STACKIT project role. | `list(string)` | <pre>[<br/>  "iam.subject.get"<br/>]</pre> | no |
+| <a name="input_stackit_project_id"></a> [stackit\_project\_id](#input\_stackit\_project\_id) | STACKIT project ID hosting the shared Forgejo instance. Optional. | `string` | `""` | no |
+| <a name="input_workspace_members"></a> [workspace\_members](#input\_workspace\_members) | Workspace members used for collaborator and optional STACKIT project access reconciliation. | <pre>list(object({<br/>    meshIdentifier = string<br/>    username       = string<br/>    firstName      = string<br/>    lastName       = string<br/>    email          = string<br/>    euid           = string<br/>    roles          = list(string)<br/>  }))</pre> | `[]` | no |
 
 ## Outputs
 

@@ -38,6 +38,41 @@ provider "restapi" {
 
 locals {
   have_clone_addr = trimspace(var.clone_addr) != "" && var.clone_addr != "null"
+
+  mapped_workspace_members = {
+    for member in var.workspace_members : trimspace(member.username) => (
+      contains(member.roles, "admin") ? "admin" : (
+        contains(member.roles, "user") ? "write" : (
+          contains(member.roles, "reader") ? "read" : null
+        )
+      )
+    )
+    if trimspace(member.username) != "" && (
+      contains(member.roles, "admin") ||
+      contains(member.roles, "user") ||
+      contains(member.roles, "reader")
+    )
+  }
+
+  collaborator_access_markdown = join("\n", concat(
+    [
+      "| workspace member | repository access |",
+      "| --- | --- |",
+    ],
+    [
+      for username in sort(keys(local.mapped_workspace_members)) :
+      format("| `%s` | `%s` |", username, local.mapped_workspace_members[username])
+    ]
+  ))
+}
+
+data "external" "current_collaborators" {
+  program = ["python3", "${path.module}/get_forgejo_collaborators.py"]
+
+  query = {
+    owner = var.forgejo_organization
+    repo  = forgejo_repository.this.name
+  }
 }
 
 resource "forgejo_repository" "this" {
@@ -87,7 +122,7 @@ resource "restapi_object" "action_variable" {
   for_each = var.action_variables
 
   path         = "/api/v1/repos/${var.forgejo_organization}/${forgejo_repository.this.name}/actions/variables/${each.key}"
-  create_path  = "/api/v1/repos/${var.forgejo_organization}/${forgejo_repository.this.name}/actions/variables/${each.key}"
+  create_path  = "/api/v1/repos/${var.forgejo_organization}/${forgejo_repository.this.name}/actions/variables"
   update_path  = "/api/v1/repos/${var.forgejo_organization}/${forgejo_repository.this.name}/actions/variables/${each.key}"
   destroy_path = "/api/v1/repos/${var.forgejo_organization}/${forgejo_repository.this.name}/actions/variables/${each.key}"
   read_path    = "/api/v1/repos/${var.forgejo_organization}/${forgejo_repository.this.name}/actions/variables/${each.key}"
@@ -99,6 +134,7 @@ resource "restapi_object" "action_variable" {
   destroy_method = "DELETE"
 
   data = jsonencode({
+    name  = each.key
     value = each.value
   })
 
@@ -113,4 +149,32 @@ moved {
 moved {
   from = restapi_object.action_variables
   to   = restapi_object.action_variable
+}
+
+resource "terraform_data" "sync_repository_collaborators" {
+  depends_on = [
+    forgejo_repository.this,
+    restapi_object.action_secret,
+    restapi_object.action_variable,
+  ]
+
+  triggers_replace = [
+    sha256(file("${path.module}/reconcile_forgejo_collaborators.py")),
+    sha256(file("${path.module}/get_forgejo_collaborators.py")),
+    sha256(jsonencode(local.mapped_workspace_members)),
+    data.external.current_collaborators.result.current_hash,
+  ]
+
+  provisioner "local-exec" {
+    command = "python3 ${path.module}/reconcile_forgejo_collaborators.py"
+    environment = {
+      FORGEJO_HOST                 = data.external.forgejo_env.result.forgejo_host
+      FORGEJO_API_TOKEN            = trimprefix(data.external.forgejo_env.result.forgejo_auth_header, "token ")
+      REPOSITORY_OWNER             = var.forgejo_organization
+      REPOSITORY_NAME              = forgejo_repository.this.name
+      DESIRED_COLLABORATORS_JSON   = jsonencode(local.mapped_workspace_members)
+      CURRENT_COLLABORATORS_JSON   = data.external.current_collaborators.result.collaborators_json
+      PROTECTED_COLLABORATORS_JSON = jsonencode([var.forgejo_organization])
+    }
+  }
 }

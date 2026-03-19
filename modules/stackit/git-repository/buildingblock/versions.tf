@@ -14,5 +14,9 @@ terraform {
       source  = "Mastercard/restapi"
       version = "3.0.0"
     }
+    stackit = {
+      source  = "stackitcloud/stackit"
+      version = ">= 0.60.0"
+    }
   }
 }

@@ -32,3 +32,14 @@
 ## Resources
 
 - [Open repository in STACKIT Git](${repo_html_url})
+
+
+## Workspace Member Access
+
+${workspace_member_access_markdown}
+
+%{ if stackit_project_access_enabled ~}
+STACKIT project role assignment enabled on project `${stackit_project_id}` with role `${stackit_git_access_role_name}`.
+%{ else ~}
+STACKIT project role assignment disabled (no `stackit_project_id` configured).
+%{ endif ~}

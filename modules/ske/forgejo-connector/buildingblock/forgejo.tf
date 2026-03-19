@@ -54,6 +54,21 @@ locals {
     "K8S_NAMESPACE_${upper(var.stage)}" = var.namespace
     "APP_HOSTNAME_${upper(var.stage)}"  = var.app_hostname
   }
+
+  user_permissions = {
+    for user in var.users : trimspace(user.username) => (
+      contains(user.roles, "admin") ? "admin" : (
+        contains(user.roles, "user") ? "write" : (
+          contains(user.roles, "reader") ? "read" : null
+        )
+      )
+    )
+    if trimspace(user.username) != "" && (
+      contains(user.roles, "admin") ||
+      contains(user.roles, "user") ||
+      contains(user.roles, "reader")
+    )
+  }
 }
 
 resource "restapi_object" "action_secret" {
@@ -88,7 +103,7 @@ resource "restapi_object" "action_variable" {
   for_each = local.action_variable
 
   path         = "/api/v1/repos/${local.repository_owner}/${local.repository_name}/actions/variables/${each.key}"
-  create_path  = "/api/v1/repos/${local.repository_owner}/${local.repository_name}/actions/variables/${each.key}"
+  create_path  = "/api/v1/repos/${local.repository_owner}/${local.repository_name}/actions/variables"
   update_path  = "/api/v1/repos/${local.repository_owner}/${local.repository_name}/actions/variables/${each.key}"
   destroy_path = "/api/v1/repos/${local.repository_owner}/${local.repository_name}/actions/variables/${each.key}"
   read_path    = "/api/v1/repos/${local.repository_owner}/${local.repository_name}/actions/variables/${each.key}"
@@ -100,6 +115,7 @@ resource "restapi_object" "action_variable" {
   destroy_method = "DELETE"
 
   data = jsonencode({
+    name  = each.key
     value = each.value
   })
 

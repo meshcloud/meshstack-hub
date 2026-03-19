@@ -43,6 +43,7 @@ variable "add_random_name_suffix" {
   description = "Whether to append a random suffix to starterkit names for shared environments."
 }
 
+
 variable "tags" {
   type    = map(list(string))
   default = {}
@@ -111,8 +112,10 @@ This building block automates the creation of the following resources:
 - **STACKIT Git Forgejo Repository**: Code repository for application development and deployment.
 - **Development Project**
   - **SKE Tenant**: A dedicated Kubernetes namespace for development.
+  - **SKE Forgejo Connector**: Provisions stage-specific namespace/repository wiring and outputs stage user permissions.
 - **Production Project**: You, as the creator, will have access to this project and SKE tenant.
   - **SKE Tenant**: A dedicated Kubernetes namespace for production.
+  - **SKE Forgejo Connector**: Provisions stage-specific namespace/repository wiring and outputs stage user permissions.
 
 You, as the creator, will have access to the the Git repository, the projects and associated Kubernetes namespaces.
 
