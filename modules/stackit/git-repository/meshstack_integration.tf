@@ -24,7 +24,7 @@ variable "forgejo_base_url" {
 variable "hub" {
   type = object({
     git_ref   = optional(string, "main")
-    bbd_draft = optional(bool, false)
+    bbd_draft = optional(bool, true)
   })
   default     = {}
   description = <<-EOT
