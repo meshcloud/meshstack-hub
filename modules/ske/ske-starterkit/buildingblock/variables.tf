@@ -47,6 +47,21 @@ variable "repo_clone_addr" {
   description = "URL to clone into the starterkit git repository."
 }
 
-variable "building_block_definition_version_refs" {
-  type = map(object({ uuid = string }))
+variable "dns_zone_name" {
+  type        = string
+  description = "DNS zone name used for application ingress hostnames."
+}
+
+variable "add_random_name_suffix" {
+  type        = bool
+  description = "Whether to append a random suffix to the provided name for shared environments."
+}
+
+variable "building_block_definitions" {
+  type = map(object({
+    uuid = string
+    version_ref = object({
+      uuid = string
+    })
+  }))
 }
