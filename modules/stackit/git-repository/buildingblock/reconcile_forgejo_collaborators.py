@@ -26,7 +26,7 @@ def request_json(host: str, token: str, method: str, path: str, payload: dict | 
 
 
 def main() -> None:
-    host = normalize_host(os.environ["FORGEJO_HOST"])
+    host = normalize_host(os.environ.get("FORGEJO_HOST", "https://git.onstackit.cloud"))
     token = os.environ["FORGEJO_API_TOKEN"]
     owner = os.environ["REPOSITORY_OWNER"]
     repo = os.environ["REPOSITORY_NAME"]

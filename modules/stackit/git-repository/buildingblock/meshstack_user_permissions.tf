@@ -1,0 +1,46 @@
+provider "stackit" {
+  default_region      = "eu01"
+  service_account_key = data.external.env.result["STACKIT_SERVICE_ACCOUNT_KEY"]
+}
+
+resource "stackit_authorization_project_custom_role" "forgejo_access" {
+  resource_id = var.stackit_project_id
+  name        = var.stackit_git_access_role_name
+  description = "Minimal custom role for members that should access the shared Forgejo instance."
+  permissions = var.stackit_git_access_role_permissions
+}
+
+resource "stackit_authorization_project_role_assignment" "forgejo_access_members" {
+  for_each = local.mapped_workspace_members
+
+  resource_id = var.stackit_project_id
+  role        = stackit_authorization_project_custom_role.forgejo_access.name
+  subject     = each.key
+}
+
+resource "terraform_data" "sync_repository_collaborators" {
+  depends_on = [
+    forgejo_repository.this,
+    restapi_object.action_secret,
+    restapi_object.action_variable,
+  ]
+
+  triggers_replace = [
+    sha256(file("${path.module}/reconcile_forgejo_collaborators.py")),
+    sha256(file("${path.module}/get_forgejo_collaborators.py")),
+    sha256(jsonencode(local.mapped_workspace_members)),
+    data.external.current_collaborators.result.current_hash,
+  ]
+
+  provisioner "local-exec" {
+    command = "${path.module}/reconcile_forgejo_collaborators.py"
+    environment = {
+      FORGEJO_API_TOKEN            = data.external.env.result["FORGEJO_API_TOKEN"]
+      REPOSITORY_OWNER             = var.forgejo_organization
+      REPOSITORY_NAME              = forgejo_repository.this.name
+      DESIRED_COLLABORATORS_JSON   = jsonencode(local.mapped_workspace_members)
+      CURRENT_COLLABORATORS_JSON   = data.external.current_collaborators.result.collaborators_json
+      PROTECTED_COLLABORATORS_JSON = jsonencode([var.forgejo_organization])
+    }
+  }
+}

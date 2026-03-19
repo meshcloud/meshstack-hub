@@ -126,31 +126,3 @@ moved {
   from = restapi_object.action_variables
   to   = restapi_object.action_variable
 }
-
-resource "terraform_data" "sync_repository_collaborators" {
-  depends_on = [
-    forgejo_repository.this,
-    restapi_object.action_secret,
-    restapi_object.action_variable,
-  ]
-
-  triggers_replace = [
-    sha256(file("${path.module}/reconcile_forgejo_collaborators.py")),
-    sha256(file("${path.module}/get_forgejo_collaborators.py")),
-    sha256(jsonencode(local.mapped_workspace_members)),
-    data.external.current_collaborators.result.current_hash,
-  ]
-
-  provisioner "local-exec" {
-    command = "python3 ${path.module}/reconcile_forgejo_collaborators.py"
-    environment = {
-      FORGEJO_HOST                 = data.external.env.result["FORGEJO_HOST"]
-      FORGEJO_API_TOKEN            = data.external.env.result["FORGEJO_API_TOKEN"]
-      REPOSITORY_OWNER             = var.forgejo_organization
-      REPOSITORY_NAME              = forgejo_repository.this.name
-      DESIRED_COLLABORATORS_JSON   = jsonencode(local.mapped_workspace_members)
-      CURRENT_COLLABORATORS_JSON   = data.external.current_collaborators.result.collaborators_json
-      PROTECTED_COLLABORATORS_JSON = jsonencode([var.forgejo_organization])
-    }
-  }
-}
