@@ -33,7 +33,7 @@ output "summary" {
     clone_addr     = var.clone_addr
     default_branch = var.default_branch
 
-    workspace_members                  = { for member in var.workspace_members : member.username => member }
+    workspace_members                  = { for member in var.workspace_members : member.username => join(", ", member.roles) }
     mapped_workspace_members           = local.mapped_workspace_members
     stackit_project_id                 = var.stackit_project_id
     stackit_forgejo_access_permissions = join(", ", stackit_authorization_project_custom_role.forgejo_access.permissions)

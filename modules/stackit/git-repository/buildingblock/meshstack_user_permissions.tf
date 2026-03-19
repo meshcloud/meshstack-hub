@@ -1,5 +1,6 @@
 provider "stackit" {
   default_region = "eu01"
+  experiments    = ["iam"]
 }
 
 resource "random_string" "stackit_custom_role_suffix" {
