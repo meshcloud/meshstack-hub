@@ -28,16 +28,11 @@ locals {
 
   mapped_workspace_members = {
     for member in var.workspace_members : trimspace(member.username) => (
-      contains(member.roles, "admin") ? "admin" : (
-        contains(member.roles, "user") ? "write" : (
-          contains(member.roles, "reader") ? "read" : null
+      contains(member.roles, "Owner") ? "admin" : (
+        contains(member.roles, "Manager") ? "write" : (
+          "read"
         )
       )
-    )
-    if trimspace(member.username) != "" && (
-      contains(member.roles, "admin") ||
-      contains(member.roles, "user") ||
-      contains(member.roles, "reader")
     )
   }
 }
