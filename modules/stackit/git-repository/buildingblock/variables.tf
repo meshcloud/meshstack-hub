@@ -78,8 +78,7 @@ variable "workspace_members" {
 
 variable "stackit_project_id" {
   type        = string
-  description = "STACKIT project ID hosting the shared Forgejo instance. Optional."
-  default     = ""
+  description = "STACKIT project ID hosting the shared Forgejo instance."
 }
 
 variable "stackit_git_access_role_name" {

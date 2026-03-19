@@ -39,8 +39,7 @@ variable "action_variables" {
 
 variable "stackit_project_id" {
   type        = string
-  description = "STACKIT project ID hosting the shared Forgejo instance. Used for optional project role assignments."
-  default     = ""
+  description = "STACKIT project ID hosting the shared Forgejo instance. Used for project role assignments."
 }
 
 variable "workspace_members" {
@@ -214,7 +213,7 @@ resource "meshstack_building_block_definition" "this" {
 
       stackit_project_id = {
         display_name    = "STACKIT Project ID"
-        description     = "STACKIT project ID hosting the shared Forgejo instance for optional role assignments."
+        description     = "STACKIT project ID hosting the shared Forgejo instance for role assignments."
         type            = "STRING"
         assignment_type = "STATIC"
         argument        = jsonencode(var.stackit_project_id)

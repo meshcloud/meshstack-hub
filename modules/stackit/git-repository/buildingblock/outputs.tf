@@ -26,15 +26,14 @@ output "repository_clone_url" {
 output "summary" {
   description = "Summary with next steps and links for the created repository"
   value = templatefile("${path.module}/SUMMARY.md.tftpl", {
-    name                             = var.name
-    owner                            = var.forgejo_organization
-    repo_html_url                    = forgejo_repository.this.html_url
-    repo_clone_url                   = forgejo_repository.this.clone_url
-    clone_addr                       = var.clone_addr
-    default_branch                   = var.default_branch
-    workspace_member_access_markdown = local.collaborator_access_markdown
-    stackit_project_access_enabled   = local.enable_stackit_project_access
-    stackit_project_id               = var.stackit_project_id
-    stackit_git_access_role_name     = var.stackit_git_access_role_name
+    name                         = var.name
+    owner                        = var.forgejo_organization
+    repo_html_url                = forgejo_repository.this.html_url
+    repo_clone_url               = forgejo_repository.this.clone_url
+    clone_addr                   = var.clone_addr
+    default_branch               = var.default_branch
+    workspace_member_access      = local.mapped_workspace_members
+    stackit_project_id           = var.stackit_project_id
+    stackit_git_access_role_name = var.stackit_git_access_role_name
   })
 }

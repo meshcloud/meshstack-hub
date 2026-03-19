@@ -53,17 +53,6 @@ locals {
       contains(member.roles, "reader")
     )
   }
-
-  collaborator_access_markdown = join("\n", concat(
-    [
-      "| workspace member | repository access |",
-      "| --- | --- |",
-    ],
-    [
-      for username in sort(keys(local.mapped_workspace_members)) :
-      format("| `%s` | `%s` |", username, local.mapped_workspace_members[username])
-    ]
-  ))
 }
 
 data "external" "current_collaborators" {

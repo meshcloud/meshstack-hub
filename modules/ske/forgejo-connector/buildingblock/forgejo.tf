@@ -54,21 +54,6 @@ locals {
     "K8S_NAMESPACE_${upper(var.stage)}" = var.namespace
     "APP_HOSTNAME_${upper(var.stage)}"  = var.app_hostname
   }
-
-  user_permissions = {
-    for user in var.users : trimspace(user.username) => (
-      contains(user.roles, "admin") ? "admin" : (
-        contains(user.roles, "user") ? "write" : (
-          contains(user.roles, "reader") ? "read" : null
-        )
-      )
-    )
-    if trimspace(user.username) != "" && (
-      contains(user.roles, "admin") ||
-      contains(user.roles, "user") ||
-      contains(user.roles, "reader")
-    )
-  }
 }
 
 resource "restapi_object" "action_secret" {

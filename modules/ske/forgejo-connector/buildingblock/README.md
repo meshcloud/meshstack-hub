@@ -20,18 +20,6 @@ This module therefore uses `restapi_object` for Action secrets so destroy perfor
 
 - Secure authentication using a Kubernetes service account and Forgejo action secrets
 - STACKIT Container Registry integration for image building and pushing
-- Stage-scoped user permission output derived from meshStack project members
-
-## Stage user permissions output
-
-This module derives and outputs stage-scoped Forgejo user permissions from the `users` input (meshStack User Permissions input).
-
-- Input schema follows the standard authoritative user object (`username`, `email`, `roles`, ...).
-- Role mapping is:
-  - `reader -> read`
-  - `user -> write`
-  - `admin -> admin`
-- If a user has multiple roles, highest privilege wins: `admin > user > reader`.
 
 ## Providers
 
@@ -102,12 +90,10 @@ No modules.
 | <a name="input_namespace"></a> [namespace](#input\_namespace) | Associated namespace in kubernetes cluster. | `string` | n/a | yes |
 | <a name="input_repository_id"></a> [repository\_id](#input\_repository\_id) | The ID of the Forgejo repository. | `number` | n/a | yes |
 | <a name="input_stage"></a> [stage](#input\_stage) | Deployment stage used for Forgejo workflow dispatch and action secret naming. | `string` | n/a | yes |
-| <a name="input_users"></a> [users](#input\_users) | List of users from authoritative system to derive stage user permissions. | <pre>list(object({<br/>    meshIdentifier = string<br/>    username       = string<br/>    firstName      = string<br/>    lastName       = string<br/>    email          = string<br/>    euid           = string<br/>    roles          = list(string)<br/>  }))</pre> | `[]` | no |
 
 ## Outputs
 
 | Name | Description |
 |------|-------------|
 | <a name="output_app_link"></a> [app\_link](#output\_app\_link) | Public URL for this stage application. |
-| <a name="output_user_permissions"></a> [user\_permissions](#output\_user\_permissions) | Stage-scoped Forgejo user permissions derived from meshStack project members. |
 <!-- END_TF_DOCS -->

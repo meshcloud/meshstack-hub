@@ -151,13 +151,6 @@ resource "meshstack_building_block_definition" "this" {
         assignment_type = "USER_INPUT"
       }
 
-      users = {
-        display_name    = "users"
-        description     = "Authoritative meshStack project members used to derive stage-scoped Forgejo user permissions."
-        type            = "CODE"
-        assignment_type = "USER_PERMISSIONS"
-      }
-
       additional_kubernetes_secrets = {
         display_name    = "additional_kubernetes_secrets"
         description     = "Static sensitive map of additional Kubernetes Opaque secrets to create in the tenant namespace."
@@ -234,11 +227,6 @@ resource "meshstack_building_block_definition" "this" {
         assignment_type = "RESOURCE_URL"
         display_name    = "Open App"
         type            = "STRING"
-      }
-      "user_permissions" = {
-        assignment_type = "NONE"
-        display_name    = "User Permissions"
-        type            = "CODE"
       }
     }
   }

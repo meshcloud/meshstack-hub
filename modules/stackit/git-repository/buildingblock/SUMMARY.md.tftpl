@@ -36,10 +36,10 @@
 
 ## Workspace Member Access
 
-${workspace_member_access_markdown}
+| workspace member | repository access |
+| --- | --- |
+%{ for username in sort(keys(workspace_member_access)) ~}
+| `${username}` | `${workspace_member_access[username]}` |
+%{ endfor ~}
 
-%{ if stackit_project_access_enabled ~}
-STACKIT project role assignment enabled on project `${stackit_project_id}` with role `${stackit_git_access_role_name}`.
-%{ else ~}
-STACKIT project role assignment disabled (no `stackit_project_id` configured).
-%{ endif ~}
+STACKIT project role assignment configured on project `${stackit_project_id}` with role `${stackit_git_access_role_name}`.
