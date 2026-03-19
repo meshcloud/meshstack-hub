@@ -11,9 +11,9 @@ resource "random_string" "stackit_custom_role_suffix" {
   special = false
 }
 
-resource "stackit_authorization_project_custom_role" "forgejo_access" {
+resource "stackit_authorization_project_custom_role" "access" {
   resource_id = var.stackit_project_id
-  name        = "forgejo-access-${random_string.stackit_custom_role_suffix.result}"
+  name        = "access-${var.workspace_identifier}-${random_string.stackit_custom_role_suffix.result}"
   description = "Minimal custom role for members that should access the shared Forgejo instance."
   permissions = ["git.instance.get"]
 }
@@ -22,7 +22,7 @@ resource "stackit_authorization_project_role_assignment" "forgejo_access_members
   for_each = local.mapped_workspace_members
 
   resource_id = var.stackit_project_id
-  role        = stackit_authorization_project_custom_role.forgejo_access.name
+  role        = stackit_authorization_project_custom_role.access.name
   subject     = each.key
 }
 

@@ -165,6 +165,27 @@ resource "meshstack_building_block_definition" "this" {
         }
       }
 
+      stackit_project_id = {
+        display_name    = "STACKIT Project ID"
+        description     = "STACKIT project ID hosting the shared Forgejo instance for role assignments."
+        type            = "STRING"
+        assignment_type = "STATIC"
+        argument        = jsonencode(var.stackit_project_id)
+      }
+
+      workspace_identifier = {
+        display_name    = "Workspace Identifier"
+        type            = "STRING"
+        assignment_type = "WORKSPACE_IDENTIFIER"
+      }
+
+      workspace_members = {
+        display_name    = "Workspace Members"
+        description     = "Workspace members used to reconcile Forgejo repository collaborators."
+        type            = "CODE"
+        assignment_type = "USER_PERMISSIONS"
+      }
+
       # ── User inputs ────────────────────────────────────────────────────────
 
       name = {
@@ -202,12 +223,6 @@ resource "meshstack_building_block_definition" "this" {
         default_value   = jsonencode("null")
       }
 
-      workspace_members = {
-        display_name    = "Workspace Members"
-        description     = "Workspace members used to reconcile Forgejo repository collaborators."
-        type            = "CODE"
-        assignment_type = "USER_PERMISSIONS"
-      }
 
       action_variables = {
         display_name    = "Repository Action Variables"
@@ -218,13 +233,7 @@ resource "meshstack_building_block_definition" "this" {
         argument = jsonencode(jsonencode(var.action_variables))
       }
 
-      stackit_project_id = {
-        display_name    = "STACKIT Project ID"
-        description     = "STACKIT project ID hosting the shared Forgejo instance for role assignments."
-        type            = "STRING"
-        assignment_type = "STATIC"
-        argument        = jsonencode(var.stackit_project_id)
-      }
+
 
       action_secrets = {
         display_name    = "Repository Action Secrets"
