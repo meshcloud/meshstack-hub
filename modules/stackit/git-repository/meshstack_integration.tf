@@ -42,6 +42,12 @@ variable "stackit_project_id" {
   description = "STACKIT project ID hosting the shared Forgejo instance. Used for project role assignments."
 }
 
+variable "stackit_service_account_key" {
+  type        = string
+  sensitive   = true
+  description = "STACKIT service account key used to authenticate the STACKIT provider in the git-repository building block."
+}
+
 variable "workspace_members" {
   description = "Workspace members that should receive repository access. Populated via USER_PERMISSIONS assignment on each building block instance."
   type = list(object({
@@ -156,6 +162,19 @@ resource "meshstack_building_block_definition" "this" {
         type            = "STRING"
         assignment_type = "STATIC"
         argument        = jsonencode(module.backplane.forgejo_organization)
+      }
+
+      STACKIT_SERVICE_ACCOUNT_KEY = {
+        display_name    = "STACKIT_SERVICE_ACCOUNT_KEY"
+        description     = "Service account key used for STACKIT provider authentication in this building block."
+        type            = "STRING"
+        assignment_type = "STATIC"
+        is_environment  = true
+        sensitive = {
+          argument = {
+            secret_value = var.stackit_service_account_key
+          }
+        }
       }
 
       # ── User inputs ────────────────────────────────────────────────────────
