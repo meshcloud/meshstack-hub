@@ -18,6 +18,7 @@ To guarantee correct destroy behavior (actual DELETE in Forgejo), this module ma
 | <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.4.0 |
 | <a name="requirement_external"></a> [external](#requirement\_external) | ~> 2.3.0 |
 | <a name="requirement_forgejo"></a> [forgejo](#requirement\_forgejo) | ~> 1.3.0 |
+| <a name="requirement_random"></a> [random](#requirement\_random) | 3.8.1 |
 | <a name="requirement_restapi"></a> [restapi](#requirement\_restapi) | 3.0.0 |
 | <a name="requirement_stackit"></a> [stackit](#requirement\_stackit) | >= 0.60.0 |
 
@@ -30,7 +31,7 @@ No modules.
 | Name | Type |
 |------|------|
 | [forgejo_repository.this](https://registry.terraform.io/providers/svalabs/forgejo/latest/docs/resources/repository) | resource |
-| [random_string.stackit_custom_role_suffix](https://registry.terraform.io/providers/hashicorp/random/latest/docs/resources/string) | resource |
+| [random_string.stackit_custom_role_suffix](https://registry.terraform.io/providers/hashicorp/random/3.8.1/docs/resources/string) | resource |
 | [restapi_object.action_secret](https://registry.terraform.io/providers/Mastercard/restapi/3.0.0/docs/resources/object) | resource |
 | [restapi_object.action_variable](https://registry.terraform.io/providers/Mastercard/restapi/3.0.0/docs/resources/object) | resource |
 | [stackit_authorization_project_custom_role.forgejo_access](https://registry.terraform.io/providers/stackitcloud/stackit/latest/docs/resources/authorization_project_custom_role) | resource |

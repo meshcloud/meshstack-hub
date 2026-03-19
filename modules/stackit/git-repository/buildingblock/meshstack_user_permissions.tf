@@ -7,11 +7,12 @@ resource "random_string" "stackit_custom_role_suffix" {
   lower   = true
   numeric = false
   upper   = false
+  special = false
 }
 
 resource "stackit_authorization_project_custom_role" "forgejo_access" {
   resource_id = var.stackit_project_id
-  name        = "meshstack.forgejo_access.${random_string.stackit_custom_role_suffix.result}"
+  name        = "forgejo-access-${random_string.stackit_custom_role_suffix.result}"
   description = "Minimal custom role for members that should access the shared Forgejo instance."
   permissions = ["iam.subject.get"]
 }

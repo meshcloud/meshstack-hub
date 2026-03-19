@@ -18,5 +18,9 @@ terraform {
       source  = "stackitcloud/stackit"
       version = ">= 0.60.0"
     }
+    random = {
+      source  = "hashicorp/random"
+      version = "3.8.1"
+    }
   }
 }
