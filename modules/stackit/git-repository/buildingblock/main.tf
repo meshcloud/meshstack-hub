@@ -25,6 +25,17 @@ provider "restapi" {
   }
 }
 
+provider "restapi" {
+  alias                = "action_secret"
+  uri                  = data.external.forgejo_env.result.forgejo_host
+  write_returns_object = false
+
+  headers = {
+    Authorization = data.external.forgejo_env.result.forgejo_auth_header
+    Content-Type  = "application/json"
+  }
+}
+
 locals {
   have_clone_addr = trimspace(var.clone_addr) != "" && var.clone_addr != "null"
 }
@@ -42,12 +53,22 @@ resource "forgejo_repository" "this" {
   mirror     = false
 }
 
-resource "forgejo_repository_action_secret" "this" {
+resource "restapi_object" "action_secret" {
   for_each = var.action_secrets
 
-  repository_id = forgejo_repository.this.id
-  name          = each.key
-  data          = each.value
+  provider = restapi.action_secret
+
+  path           = "/api/v1/repos/${var.forgejo_organization}/${forgejo_repository.this.name}/actions/secrets/${each.key}"
+  read_path      = "/api/v1/repos/${var.forgejo_organization}/${forgejo_repository.this.name}/actions/secrets/${each.key}"
+  id_attribute   = "name"
+  object_id      = each.key
+  create_method  = "PUT"
+  update_method  = "PUT"
+  destroy_method = "DELETE"
+  data = jsonencode({
+    data = each.value
+  })
+  ignore_server_additions = true
 }
 
 resource "restapi_object" "action_variable" {
@@ -66,11 +87,6 @@ resource "restapi_object" "action_variable" {
 moved {
   from = forgejo_repository.repository
   to   = forgejo_repository.this
-}
-
-moved {
-  from = forgejo_repository_action_secret.action_secrets
-  to   = forgejo_repository_action_secret.this
 }
 
 moved {

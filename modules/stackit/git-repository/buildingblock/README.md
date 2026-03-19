@@ -5,6 +5,11 @@ supportedPlatforms:
 description: Provisions a Git repository on STACKIT Git (Forgejo) with optional clone_addr support for one-time cloning from any public Git URL.
 ---
 
+## Why `restapi` is used for Action secrets
+
+`forgejo_repository_action_secret` from the Forgejo provider does not support deleting repository Action secrets via API and only removes them from Terraform state.
+To guarantee correct destroy behavior (actual DELETE in Forgejo), this module manages Action secrets via `restapi_object` against `/api/v1/repos/{owner}/{repo}/actions/secrets/{name}`.
+
 <!-- BEGIN_TF_DOCS -->
 ## Requirements
 
@@ -24,7 +29,7 @@ No modules.
 | Name | Type |
 |------|------|
 | [forgejo_repository.this](https://registry.terraform.io/providers/svalabs/forgejo/latest/docs/resources/repository) | resource |
-| [forgejo_repository_action_secret.this](https://registry.terraform.io/providers/svalabs/forgejo/latest/docs/resources/repository_action_secret) | resource |
+| [restapi_object.action_secret](https://registry.terraform.io/providers/Mastercard/restapi/3.0.0/docs/resources/object) | resource |
 | [restapi_object.action_variable](https://registry.terraform.io/providers/Mastercard/restapi/3.0.0/docs/resources/object) | resource |
 | [external_external.forgejo_env](https://registry.terraform.io/providers/hashicorp/external/latest/docs/data-sources/external) | data source |
 

@@ -56,12 +56,20 @@ locals {
   }
 }
 
-resource "forgejo_repository_action_secret" "this" {
+resource "restapi_object" "action_secret" {
   for_each = local.action_secret
 
-  repository_id = var.repository_id
-  name          = each.key
-  data          = each.value
+  path           = "/api/v1/repos/${local.repository_owner}/${local.repository_name}/actions/secrets/${each.key}"
+  read_path      = "/api/v1/repos/${local.repository_owner}/${local.repository_name}/actions/secrets/${each.key}"
+  id_attribute   = "name"
+  object_id      = each.key
+  create_method  = "PUT"
+  update_method  = "PUT"
+  destroy_method = "DELETE"
+  data = jsonencode({
+    data = each.value
+  })
+  ignore_server_additions = true
 }
 
 resource "restapi_object" "action_variable" {
@@ -79,7 +87,7 @@ resource "restapi_object" "action_variable" {
 
 resource "terraform_data" "await_pipeline_workflow" {
   depends_on = [
-    forgejo_repository_action_secret.this,
+    restapi_object.action_secret,
     restapi_object.action_variable,
   ]
 
@@ -99,11 +107,6 @@ resource "terraform_data" "await_pipeline_workflow" {
       WORKFLOW_RUN_TITLE          = "Triggered by meshStack Forgejo Connector ${title(var.stage)}"
     }
   }
-}
-
-moved {
-  from = forgejo_repository_action_secret.action_secrets
-  to   = forgejo_repository_action_secret.this
 }
 
 moved {

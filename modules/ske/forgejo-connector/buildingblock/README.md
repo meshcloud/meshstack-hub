@@ -11,6 +11,11 @@ description: |
 This Terraform module provisions the necessary resources to integrate Forgejo Actions with a STACKIT Kubernetes cluster.
 It sets up a service account and repository action secrets for seamless CI/CD.
 
+## Why `restapi` is used for Action secrets
+
+`forgejo_repository_action_secret` currently lacks delete support in the Forgejo provider, which can leave stale secrets in Forgejo after Terraform destroy.
+This module therefore uses `restapi_object` for Action secrets so destroy performs an actual `DELETE` request against the Forgejo API.
+
 ## Features
 
 - Secure authentication using a Kubernetes service account and Forgejo action secrets
@@ -59,7 +64,6 @@ No modules.
 
 | Name | Type |
 |------|------|
-| [forgejo_repository_action_secret.this](https://registry.terraform.io/providers/svalabs/forgejo/latest/docs/resources/repository_action_secret) | resource |
 | [kubernetes_cluster_role.clusterissuer_reader](https://registry.terraform.io/providers/hashicorp/kubernetes/2.35.1/docs/resources/cluster_role) | resource |
 | [kubernetes_cluster_role_binding.forgejo_actions_clusterissuer_access](https://registry.terraform.io/providers/hashicorp/kubernetes/2.35.1/docs/resources/cluster_role_binding) | resource |
 | [kubernetes_default_service_account.namespace_default](https://registry.terraform.io/providers/hashicorp/kubernetes/2.35.1/docs/resources/default_service_account) | resource |
@@ -69,6 +73,7 @@ No modules.
 | [kubernetes_secret.image_pull](https://registry.terraform.io/providers/hashicorp/kubernetes/2.35.1/docs/resources/secret) | resource |
 | [kubernetes_service_account.forgejo_actions](https://registry.terraform.io/providers/hashicorp/kubernetes/2.35.1/docs/resources/service_account) | resource |
 | [random_string.resource_name_suffix](https://registry.terraform.io/providers/hashicorp/random/latest/docs/resources/string) | resource |
+| [restapi_object.action_secret](https://registry.terraform.io/providers/Mastercard/restapi/3.0.0/docs/resources/object) | resource |
 | [restapi_object.action_variable](https://registry.terraform.io/providers/Mastercard/restapi/3.0.0/docs/resources/object) | resource |
 | [terraform_data.await_pipeline_workflow](https://registry.terraform.io/providers/hashicorp/terraform/latest/docs/resources/data) | resource |
 | [external_external.repository_context](https://registry.terraform.io/providers/hashicorp/external/latest/docs/data-sources/external) | data source |
