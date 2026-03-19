@@ -35,24 +35,12 @@ def main() -> None:
 
     users = request_json(host, token, "GET", f"/api/v1/repos/{owner}/{repo}/collaborators")
 
-    collaborators = sorted(
-        {
-            str((u.get("login") or "")).strip()
-            for u in (users if isinstance(users, list) else [])
-            if str((u.get("login") or "")).strip() != ""
-        }
-    )
-    collaborators_json = json.dumps(collaborators, separators=(",", ":"))
-    current_hash = hashlib.sha256(collaborators_json.encode("utf-8")).hexdigest()
-
-    print(
-        json.dumps(
-            {
-                "collaborators_json": collaborators_json,
-                "current_hash": current_hash,
-            }
-        )
-    )
+    collaborators = sorted({
+        str((u.get("login") or "")).strip()
+        for u in (users if isinstance(users, list) else [])
+        if str((u.get("login") or "")).strip() != ""
+    })
+    print(json.dumps({"collaborators_json": (json.dumps(collaborators, separators=(",", ":")))}))
 
 
 if __name__ == "__main__":

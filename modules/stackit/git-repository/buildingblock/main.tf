@@ -37,14 +37,7 @@ locals {
   }
 }
 
-data "external" "current_collaborators" {
-  program = ["python3", "${path.module}/get_forgejo_collaborators.py"]
 
-  query = {
-    owner = var.forgejo_organization
-    repo  = forgejo_repository.this.name
-  }
-}
 
 resource "forgejo_repository" "this" {
   owner          = var.forgejo_organization

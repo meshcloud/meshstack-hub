@@ -43,4 +43,13 @@
 %{ endfor ~}
 
 STACKIT project role assignment configured on [project ${stackit_project_id}](https://portal.stackit.cloud/dashboard?project=${stackit_project_id}) with custom permissions `${stackit_forgejo_access_permissions}`.
+
+%{ if length(pending_workspace_members) > 0 ~}
+⚠️ The following workspace members could not be assigned to the STACKIT project yet (for example because the subject is not available in STACKIT yet):
+%{ for subject in pending_workspace_members ~}
+- `${subject}`
+%{ endfor ~}
+%{ else ~}
+All workspace members are currently assigned to the STACKIT project role.
+%{ endif ~}
 %{ endif ~}
