@@ -51,6 +51,6 @@ No modules.
 
 | Name | Description |
 |------|-------------|
-| <a name="output_dev_link"></a> [dev\_link](#output\_dev\_link) | Public URL for the dev stage application. |
-| <a name="output_prod_link"></a> [prod\_link](#output\_prod\_link) | Public URL for the prod stage application. |
+| <a name="output_app_link_dev"></a> [app\_link\_dev](#output\_app\_link\_dev) | Public URL for the dev stage application. |
+| <a name="output_app_link_prod"></a> [app\_link\_prod](#output\_app\_link\_prod) | Public URL for the prod stage application. |
 <!-- END_TF_DOCS -->

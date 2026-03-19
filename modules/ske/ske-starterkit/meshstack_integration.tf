@@ -244,7 +244,18 @@ EOT
       }
     }
 
-    outputs = {}
+    outputs = {
+      "app_link_dev" = {
+        assignment_type = "RESOURCE_URL"
+        display_name    = "Open App Dev"
+        type            = "STRING"
+      }
+      "app_link_prod" = {
+        assignment_type = "RESOURCE_URL"
+        display_name    = "Open App Prod"
+        type            = "STRING"
+      }
+    }
 
     permissions = [
       "BUILDINGBLOCK_LIST",

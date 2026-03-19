@@ -93,5 +93,7 @@ No modules.
 
 ## Outputs
 
-No outputs.
+| Name | Description |
+|------|-------------|
+| <a name="output_app_link"></a> [app\_link](#output\_app\_link) | Public URL for this stage application. |
 <!-- END_TF_DOCS -->

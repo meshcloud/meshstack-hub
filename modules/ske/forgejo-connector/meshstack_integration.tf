@@ -146,7 +146,7 @@ resource "meshstack_building_block_definition" "this" {
 
       app_hostname = {
         display_name    = "app_hostname"
-        description     = "Public application hostname for this stage (for example 'ai-summarizer-klhyt-dev.likvid.stackit.run')."
+        description     = "Public application hostname for this stage."
         type            = "STRING"
         assignment_type = "USER_INPUT"
       }
@@ -219,6 +219,14 @@ resource "meshstack_building_block_definition" "this" {
             secret_version = nonsensitive(sha256(var.harbor_password))
           }
         }
+      }
+    }
+
+    outputs = {
+      "app_link" = {
+        assignment_type = "RESOURCE_URL"
+        display_name    = "Open App"
+        type            = "STRING"
       }
     }
   }
