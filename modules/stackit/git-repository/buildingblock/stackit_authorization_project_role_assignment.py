@@ -101,7 +101,7 @@ def is_subject_pending(subject: str, status_code: int, error_payload: dict | obj
     message = str(error_payload.get("message", "")).lower()
     if ("subject" in message) and ("not found" in message):
         return True
-    if ("subject" in message) and ("not part of the same organization" in message):
+    if ("subject" in message) and ("subject must be part of the same organization as the resource" in message):
         return True
     return False
 
