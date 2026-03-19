@@ -257,13 +257,13 @@ EOT
       }
       "name" = {
         assignment_type                = "USER_INPUT"
-        description                    = "This name will be used for the created projects, AKS namespaces and GitHub repository. Must match ${local.name_regex}."
+        description                    = "This name will be used for the created projects, AKS namespaces and GitHub repository."
         display_name                   = "Name of the Project"
         is_environment                 = false
         type                           = "STRING"
         updateable_by_consumer         = false
         value_validation_regex         = local.name_regex
-        validation_regex_error_message = "Does not match ${local.name_regex} (no underscore/dots/spaces allowed)"
+        validation_regex_error_message = "No underscore/dots/spaces are allowed"
       }
       "project_tags" = {
         # jsonencode twice is correct, see https://registry.terraform.io/providers/meshcloud/meshstack/latest/docs/resources/building_block_definition#argument-1
