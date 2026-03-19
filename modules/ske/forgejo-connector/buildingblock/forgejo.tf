@@ -95,7 +95,7 @@ resource "restapi_object" "action_variable" {
   id_attribute = "name"
   object_id    = each.key
 
-  create_method  = "PUT"
+  create_method  = "POST"
   update_method  = "PUT"
   destroy_method = "DELETE"
 
