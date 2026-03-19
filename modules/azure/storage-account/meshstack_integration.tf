@@ -50,7 +50,7 @@ variable "notification_subscribers" {
 }
 
 module "backplane" {
-  source = "github.com/meshcloud/meshstack-hub//modules/azure/storage-account/backplane?ref=${var.hub.git_ref}"
+  source = "github.com/meshcloud/meshstack-hub//modules/azure/storage-account/backplane?ref=0a6d313e509e1c9052712f0d9c41c2d0a96f9a39"
 
   name  = var.backplane_name
   scope = var.azure.scope
