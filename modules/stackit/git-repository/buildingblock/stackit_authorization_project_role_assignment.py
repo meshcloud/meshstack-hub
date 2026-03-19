@@ -94,12 +94,16 @@ def get_access_token_from_service_account_key() -> str:
 
     return access_token
 
-def is_subject_not_found(subject: str, status_code: int, error_payload: dict | object) -> bool:
+def is_subject_pending(subject: str, status_code: int, error_payload: dict | object) -> bool:
     if status_code not in (400, 404) or not isinstance(error_payload, dict):
         return False
 
     message = str(error_payload.get("message", "")).lower()
-    return ("subject" in message) and ("not found" in message)
+    if ("subject" in message) and ("not found" in message):
+        return True
+    if ("subject" in message) and ("not part of the same organization" in message):
+        return True
+    return False
 
 
 def main() -> None:
@@ -153,7 +157,7 @@ def main() -> None:
             except json.JSONDecodeError:
                 error_payload = {"message": raw_body}
 
-        if is_subject_not_found(subject, status_code, error_payload):
+        if is_subject_pending(subject, status_code, error_payload):
             print(
                 json.dumps(
                     {
