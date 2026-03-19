@@ -1,3 +1,34 @@
+variable "namespace" {
+  description = "Associated namespace in kubernetes cluster."
+  type        = string
+}
+
+variable "repository_id" {
+  type        = number
+  description = "The ID of the Forgejo repository."
+}
+
+variable "stage" {
+  type        = string
+  description = "Deployment stage used for Forgejo workflow dispatch and action secret naming."
+
+  validation {
+    condition     = can(regex("^[a-z]+$", var.stage))
+    error_message = "stage must match ^[a-z]+$."
+  }
+}
+
+variable "app_hostname" {
+  type        = string
+  description = "Public application hostname for this stage (used by deploy workflow and ingress)."
+}
+
+variable "additional_kubernetes_secrets" {
+  type        = map(map(string))
+  description = "Additional Kubernetes secrets to create in the tenant namespace. Map keys are secret names, values are secret data maps."
+  default     = {}
+}
+
 variable "harbor_host" {
   type        = string
   description = "The URL of the Harbor registry."
@@ -14,25 +45,4 @@ variable "harbor_password" {
   type        = string
   description = "The password for the Harbor registry."
   sensitive   = true
-}
-
-variable "forgejo_repository_name" {
-  type        = string
-  description = "The name of the Forgejo repository."
-}
-
-variable "forgejo_repository_owner" {
-  type        = string
-  description = "The owner of the Forgejo repository."
-}
-
-variable "additional_environment_variables" {
-  type        = map(string)
-  description = "Map of additional environment variable key/value pairs to set as Forgejo repository action secrets."
-  default     = {}
-}
-
-variable "namespace" {
-  description = "Associated namespace in kubernetes cluster."
-  type        = string
 }
