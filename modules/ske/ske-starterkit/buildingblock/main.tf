@@ -29,8 +29,9 @@ resource "meshstack_building_block_v2" "git_repository" {
     }
 
     inputs = {
-      name       = { value_string = local.name }
-      clone_addr = { value_string = var.repo_clone_addr }
+      name        = { value_string = local.name }
+      description = { value_string = "Source code for application ${var.name}" }
+      clone_addr  = { value_string = var.repo_clone_addr }
     }
   }
   wait_for_completion = true

@@ -31,6 +31,7 @@ No modules.
 | [meshstack_project_user_binding.creator_to_admin](https://registry.terraform.io/providers/meshcloud/meshstack/latest/docs/resources/project_user_binding) | resource |
 | [meshstack_tenant_v4.this](https://registry.terraform.io/providers/meshcloud/meshstack/latest/docs/resources/tenant_v4) | resource |
 | [random_string.name_suffix](https://registry.terraform.io/providers/hashicorp/random/3.8.1/docs/resources/string) | resource |
+| [random_uuid.binding](https://registry.terraform.io/providers/hashicorp/random/3.8.1/docs/resources/uuid) | resource |
 
 ## Inputs
 
