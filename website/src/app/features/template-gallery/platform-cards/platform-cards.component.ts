@@ -25,7 +25,7 @@ export class PlatformCardsComponent {
     'Google Cloud Platform',
     'Azure Kubernetes Service',
     'STACKIT',
-    'STACKIT Kubernetes Enginge',]; // <-- customize as needed
+    'STACKIT Kubernetes Engine',]; // <-- customize as needed
 
   /**
    * Returns the cards sorted by customOrder, with others following in original order.
