@@ -72,6 +72,15 @@ data "external" "current_collaborators" {
 }
 
 locals {
+  mapped_workspace_members = {
+    for member in var.workspace_members : trimspace(member.euid) => (
+      contains(member.roles, "Workspace Owner") ? "admin" : (
+        contains(member.roles, "Workspace Manager") ? "write" : (
+          "read"
+        )
+      )
+    )
+  }
   # STACKIT forgejo is setup to generate usernames without the /@domain part, so we need to strip it for locating the right collaborators
   mapped_workspace_members_forgejo = {
     for k, v in local.mapped_workspace_members : replace(k, "/(.*)@(.*)/", "$1") => v

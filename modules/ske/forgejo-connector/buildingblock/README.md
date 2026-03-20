@@ -11,10 +11,13 @@ description: |
 This Terraform module provisions the necessary resources to integrate Forgejo Actions with a STACKIT Kubernetes cluster.
 It sets up a service account and repository action secrets for seamless CI/CD.
 
-## Why `restapi` is used for Action secrets
+## Why `restapi` is used for Action secrets & variables
 
-`forgejo_repository_action_secret` currently lacks delete support in the Forgejo provider, which can leave stale secrets in Forgejo after Terraform destroy.
-This module therefore uses `restapi_object` for Action secrets so destroy performs an actual `DELETE` request against the Forgejo API.
+Action secrets and variables are managed by a shared
+[`action-variables-and-secrets`](https://github.com/meshcloud/meshstack-hub/tree/feature/ske-starter-kit-harbor-integration/modules/stackit/git-repository/buildingblock/action-variables-and-secrets)
+sub-module (sourced from `git-repository`) using the generic `restapi` provider.
+The Forgejo Terraform provider currently cannot delete secrets (only removes
+them from state) and does not support action variables at all.
 
 ## Features
 
@@ -54,11 +57,13 @@ the backplane module's `config_tf` output.
 | <a name="requirement_forgejo"></a> [forgejo](#requirement\_forgejo) | ~> 1.3.0 |
 | <a name="requirement_kubernetes"></a> [kubernetes](#requirement\_kubernetes) | 2.35.1 |
 | <a name="requirement_random"></a> [random](#requirement\_random) | ~> 3.8.0 |
-| <a name="requirement_restapi"></a> [restapi](#requirement\_restapi) | 3.0.0 |
+| <a name="requirement_restapi"></a> [restapi](#requirement\_restapi) | ~> 3.0.0 |
 
 ## Modules
 
-No modules.
+| Name | Source | Version |
+|------|--------|---------|
+| <a name="module_action_secrets_and_variables"></a> [action\_secrets\_and\_variables](#module\_action\_secrets\_and\_variables) | github.com/meshcloud/meshstack-hub//modules/stackit/git-repository/buildingblock/action-variables-and-secrets | feature/ske-starter-kit-harbor-integration |
 
 ## Resources
 
@@ -73,10 +78,8 @@ No modules.
 | [kubernetes_secret.image_pull](https://registry.terraform.io/providers/hashicorp/kubernetes/2.35.1/docs/resources/secret) | resource |
 | [kubernetes_service_account.forgejo_actions](https://registry.terraform.io/providers/hashicorp/kubernetes/2.35.1/docs/resources/service_account) | resource |
 | [random_string.suffix](https://registry.terraform.io/providers/hashicorp/random/latest/docs/resources/string) | resource |
-| [restapi_object.action_secret](https://registry.terraform.io/providers/Mastercard/restapi/3.0.0/docs/resources/object) | resource |
-| [restapi_object.action_variable](https://registry.terraform.io/providers/Mastercard/restapi/3.0.0/docs/resources/object) | resource |
 | [terraform_data.await_pipeline_workflow](https://registry.terraform.io/providers/hashicorp/terraform/latest/docs/resources/data) | resource |
-| [external_external.repository_context](https://registry.terraform.io/providers/hashicorp/external/latest/docs/data-sources/external) | data source |
+| [external_external.env](https://registry.terraform.io/providers/hashicorp/external/latest/docs/data-sources/external) | data source |
 
 ## Inputs
 

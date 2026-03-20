@@ -2,115 +2,48 @@ provider "forgejo" {
   # configured via env variables FORGEJO_HOST, FORGEJO_API_TOKEN
 }
 
-provider "restapi" {
-  uri                  = data.external.repository_context.result.forgejo_host
-  write_returns_object = false
-
-  headers = {
-    Authorization = "token ${data.external.repository_context.result.forgejo_api_token}"
-    Content-Type  = "application/json"
-  }
-}
-
-data "external" "repository_context" {
-  program = ["python3", "${path.module}/get_forgejo_repository_context.py"]
-
-  query = {
-    FORGEJO_REPOSITORY_ID = tostring(var.repository_id)
-  }
-}
-
 locals {
-  repository_owner = data.external.repository_context.result.owner
-  repository_name  = data.external.repository_context.result.name
-
-  action_secrets = {
-    "KUBECONFIG_${upper(var.stage)}" = yamlencode(merge(local.kubeconfig, {
-      current-context = local.kubeconfig_cluster_name
-
-      users = [
-        {
-          name = kubernetes_service_account.forgejo_actions.metadata[0].name
-          user = {
-            "token" = kubernetes_secret.forgejo_actions.data.token
-          }
-        }
-      ]
-
-      contexts = [
-        {
-          name = local.kubeconfig_cluster_name
-          context = {
-            cluster   = local.kubeconfig_cluster_name
-            namespace = var.namespace
-            user      = kubernetes_service_account.forgejo_actions.metadata[0].name
-          }
-        }
-      ]
-    }))
-  }
-
   action_variables = {
     "K8S_NAMESPACE_${upper(var.stage)}" = var.namespace
     "APP_HOSTNAME_${upper(var.stage)}"  = var.app_hostname
   }
+  action_secrets = {
+    "KUBECONFIG_${upper(var.stage)}" = yamlencode(merge(local.kubeconfig, {
+      current-context = local.kubeconfig_cluster_name
+      # Note: Overwriting the users is crucial here to avoid passing down the admin user to the tenant-sliced K8s slices.
+      users = [{
+        name = kubernetes_service_account.forgejo_actions.metadata[0].name
+        user = {
+          "token" = kubernetes_secret.forgejo_actions.data.token
+        }
+      }]
+      contexts = [{
+        name = local.kubeconfig_cluster_name
+        context = {
+          cluster   = local.kubeconfig_cluster_name
+          namespace = var.namespace
+          user      = kubernetes_service_account.forgejo_actions.metadata[0].name
+        }
+      }]
+    }))
+  }
 }
 
-resource "restapi_object" "action_secret" {
-  for_each = local.action_secrets
-
-  path         = "/api/v1/repos/${local.repository_owner}/${local.repository_name}/actions/secrets/${each.key}"
-  create_path  = "/api/v1/repos/${local.repository_owner}/${local.repository_name}/actions/secrets/${each.key}"
-  update_path  = "/api/v1/repos/${local.repository_owner}/${local.repository_name}/actions/secrets/${each.key}"
-  destroy_path = "/api/v1/repos/${local.repository_owner}/${local.repository_name}/actions/secrets/${each.key}"
-  read_path    = "/api/v1/repos/${local.repository_owner}/${local.repository_name}/actions/secrets"
-  id_attribute = "name"
-  object_id    = each.key
-
-  create_method  = "PUT"
-  update_method  = "PUT"
-  destroy_method = "DELETE"
-
-  read_search = {
-    results_key  = "data"
-    search_key   = "name"
-    search_value = each.key
+module "action_secrets_and_variables" {
+  source = "github.com/meshcloud/meshstack-hub//modules/stackit/git-repository/buildingblock/action-variables-and-secrets?ref=feature/ske-starter-kit-harbor-integration"
+  providers = {
+    restapi.action_variable = restapi.action_variable
+    restapi.action_secret   = restapi.action_secret
   }
 
-  data = jsonencode({
-    data = each.value
-  })
-
-  ignore_server_additions = true
-}
-
-resource "restapi_object" "action_variable" {
-  for_each = local.action_variables
-
-  path         = "/api/v1/repos/${local.repository_owner}/${local.repository_name}/actions/variables/${each.key}"
-  create_path  = "/api/v1/repos/${local.repository_owner}/${local.repository_name}/actions/variables/${each.key}"
-  update_path  = "/api/v1/repos/${local.repository_owner}/${local.repository_name}/actions/variables/${each.key}"
-  destroy_path = "/api/v1/repos/${local.repository_owner}/${local.repository_name}/actions/variables/${each.key}"
-  read_path    = "/api/v1/repos/${local.repository_owner}/${local.repository_name}/actions/variables/${each.key}"
-  id_attribute = "name"
-  object_id    = each.key
-
-  create_method  = "POST"
-  update_method  = "PUT"
-  destroy_method = "DELETE"
-
-  data = jsonencode({
-    name  = each.key
-    value = each.value
-  })
-
-  ignore_server_additions = true
+  repository_id    = var.repository_id
+  action_variables = local.action_variables
+  action_secrets   = local.action_secrets
 }
 
 resource "terraform_data" "await_pipeline_workflow" {
   depends_on = [
-    restapi_object.action_secret,
-    restapi_object.action_variable,
+    module.action_secrets_and_variables,
   ]
 
   triggers_replace = [
@@ -129,9 +62,4 @@ resource "terraform_data" "await_pipeline_workflow" {
       WORKFLOW_RUN_TITLE          = "Triggered by meshStack Forgejo Connector ${title(var.stage)}"
     }
   }
-}
-
-moved {
-  from = restapi_object.action_variables
-  to   = restapi_object.action_variable
 }

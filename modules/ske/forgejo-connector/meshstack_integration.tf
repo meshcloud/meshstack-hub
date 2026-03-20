@@ -40,13 +40,7 @@ variable "additional_kubernetes_secrets" {
   type        = map(map(string))
   description = "Additional Kubernetes secrets provisioned in tenant namespaces by the connector."
   sensitive   = true
-  default = {
-    "stackit-ai" = {
-      STACKIT_AI_BASE_URL = "https://example.invalid/v1"
-      STACKIT_AI_API_KEY  = "dummy-api-key"
-      STACKIT_AI_MODEL    = "dummy-model"
-    }
-  }
+  default     = {}
 }
 
 variable "meshstack" {
