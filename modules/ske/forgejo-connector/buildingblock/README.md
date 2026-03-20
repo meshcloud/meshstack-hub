@@ -8,45 +8,47 @@ description: |
 
 # Forgejo Actions Integration with STACKIT Kubernetes
 
-This Terraform module provisions the necessary resources to integrate Forgejo Actions with a STACKIT Kubernetes cluster.
-It sets up a service account and repository action secrets for seamless CI/CD.
+This building block connects a Forgejo repository with a tenant namespace on a
+STACKIT Kubernetes Engine (SKE) cluster. It provisions the Kubernetes resources
+(service account, RBAC, image-pull secrets) and configures the matching Forgejo
+Actions secrets and variables so that a CI/CD pipeline can deploy into the
+namespace.
+
+## Features
+
+- **Kubernetes service account & RBAC** – scoped credentials for the Forgejo
+  Actions runner, including cluster-issuer read access for cert-manager.
+- **Action secrets & variables** – per-stage `KUBECONFIG_<STAGE>`,
+  `K8S_NAMESPACE_<STAGE>` and `APP_HOSTNAME_<STAGE>` managed via the shared
+  [`action-variables-and-secrets`](https://github.com/meshcloud/meshstack-hub/tree/feature/ske-starter-kit-harbor-integration/modules/stackit/git-repository/buildingblock/action-variables-and-secrets)
+  sub-module.
+- **Harbor image-pull secret** – `kubernetes.io/dockerconfigjson` secret
+  attached to the default service account so pods can pull from STACKIT Harbor.
+- **Pipeline trigger** – after provisioning, automatically triggers the Forgejo
+  Actions pipeline workflow and waits for it to complete.
+- **Additional secrets** – optional map of arbitrary Opaque secrets injected
+  into the namespace (e.g. AI service keys).
 
 ## Why `restapi` is used for Action secrets & variables
 
-Action secrets and variables are managed by a shared
+Action secrets and variables are managed by the shared
 [`action-variables-and-secrets`](https://github.com/meshcloud/meshstack-hub/tree/feature/ske-starter-kit-harbor-integration/modules/stackit/git-repository/buildingblock/action-variables-and-secrets)
 sub-module (sourced from `git-repository`) using the generic `restapi` provider.
 The Forgejo Terraform provider currently cannot delete secrets (only removes
 them from state) and does not support action variables at all.
 
-## Features
+## Provider configuration
 
-- Secure authentication using a Kubernetes service account and Forgejo action secrets
-- STACKIT Container Registry integration for image building and pushing
+The module expects the following environment variables for the Forgejo provider
+and the restapi providers:
 
-## Providers
+| Variable            | Description |
+|---------------------|-------------|
+| `FORGEJO_HOST`      | Base URL of the Forgejo instance. |
+| `FORGEJO_API_TOKEN`  | API token for authenticating with Forgejo. |
 
-```hcl
-terraform {
-  required_providers {
-    forgejo = {
-      source  = "svalabs/forgejo"
-      version = "1.3.1"
-    }
-
-    kubernetes = {
-      source  = "hashicorp/kubernetes"
-      version = "2.35.1"
-    }
-  }
-}
-```
-
-To setup the Forgejo provider make sure to set these environment variables for this Building Block:
-`FORGEJO_HOST`, `FORGEJO_API_TOKEN`.
-
-The Kubernetes provider should be set up with a static file input `config.tf` with the contents of
-the backplane module's `config_tf` output.
+The Kubernetes provider is configured from a `kubeconfig.yaml` static file
+input containing admin credentials to the SKE cluster.
 
 <!-- BEGIN_TF_DOCS -->
 ## Requirements
