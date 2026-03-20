@@ -107,7 +107,6 @@ resource "kubernetes_secret" "image_pull" {
   }
 
   type = "kubernetes.io/dockerconfigjson"
-
   data = {
     ".dockerconfigjson" = jsonencode({
       auths = {
@@ -130,7 +129,6 @@ resource "kubernetes_secret" "additional" {
   }
 
   type = "Opaque"
-
   data = each.value
 }
 
@@ -142,14 +140,4 @@ resource "kubernetes_default_service_account" "this" {
   image_pull_secret {
     name = kubernetes_secret.image_pull.metadata[0].name
   }
-}
-
-moved {
-  from = kubernetes_default_service_account.namespace_default
-  to   = kubernetes_default_service_account.this
-}
-
-moved {
-  from = random_string.resource_name_suffix
-  to   = random_string.suffix
 }

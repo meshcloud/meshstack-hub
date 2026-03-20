@@ -5,10 +5,13 @@ supportedPlatforms:
 description: Provisions a Git repository on STACKIT Git (Forgejo) with optional clone_addr support for one-time cloning from any public Git URL.
 ---
 
-## Why `restapi` is used for Action secrets
+## Why `restapi` is used for Action secrets & variables
 
-`forgejo_repository_action_secret` from the Forgejo provider does not support deleting repository Action secrets via API and only removes them from Terraform state.
-To guarantee correct destroy behavior (actual DELETE in Forgejo), this module manages Action secrets via `restapi_object` against `/api/v1/repos/{owner}/{repo}/actions/secrets/{name}`.
+Action secrets and variables are managed by the
+[`action-variables-and-secrets`](./action-variables-and-secrets/) sub-module
+using the generic `restapi` provider because the Forgejo Terraform provider
+currently cannot delete secrets (only removes them from state) and does not
+support action variables at all. See the sub-module README for details.
 
 <!-- BEGIN_TF_DOCS -->
 ## Requirements
@@ -19,12 +22,14 @@ To guarantee correct destroy behavior (actual DELETE in Forgejo), this module ma
 | <a name="requirement_external"></a> [external](#requirement\_external) | ~> 2.3.0 |
 | <a name="requirement_forgejo"></a> [forgejo](#requirement\_forgejo) | ~> 1.3.0 |
 | <a name="requirement_random"></a> [random](#requirement\_random) | 3.8.1 |
-| <a name="requirement_restapi"></a> [restapi](#requirement\_restapi) | 3.0.0 |
+| <a name="requirement_restapi"></a> [restapi](#requirement\_restapi) | ~> 3.0.0 |
 | <a name="requirement_stackit"></a> [stackit](#requirement\_stackit) | >= 0.60.0 |
 
 ## Modules
 
-No modules.
+| Name | Source | Version |
+|------|--------|---------|
+| <a name="module_action_variables_and_secrets"></a> [action\_variables\_and\_secrets](#module\_action\_variables\_and\_secrets) | ./action-variables-and-secrets | n/a |
 
 ## Resources
 
@@ -32,8 +37,6 @@ No modules.
 |------|------|
 | [forgejo_repository.this](https://registry.terraform.io/providers/svalabs/forgejo/latest/docs/resources/repository) | resource |
 | [random_string.stackit_custom_role_suffix](https://registry.terraform.io/providers/hashicorp/random/3.8.1/docs/resources/string) | resource |
-| [restapi_object.action_secret](https://registry.terraform.io/providers/Mastercard/restapi/3.0.0/docs/resources/object) | resource |
-| [restapi_object.action_variable](https://registry.terraform.io/providers/Mastercard/restapi/3.0.0/docs/resources/object) | resource |
 | [stackit_authorization_project_custom_role.access](https://registry.terraform.io/providers/stackitcloud/stackit/latest/docs/resources/authorization_project_custom_role) | resource |
 | [terraform_data.access_members](https://registry.terraform.io/providers/hashicorp/terraform/latest/docs/resources/data) | resource |
 | [terraform_data.sync_repository_collaborators](https://registry.terraform.io/providers/hashicorp/terraform/latest/docs/resources/data) | resource |

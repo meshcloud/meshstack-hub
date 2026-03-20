@@ -83,7 +83,7 @@ output "building_block_definition" {
 }
 
 module "backplane" {
-  source = "github.com/meshcloud/meshstack-hub//modules/stackit/git-repository/backplane?ref=a3843c80c76c4a0298769eea8d93807bb2b271fc"
+  source = "github.com/meshcloud/meshstack-hub//modules/stackit/git-repository/backplane?ref=feature/ske-starter-kit-harbor-integration"
 
   forgejo_base_url     = var.forgejo_base_url
   forgejo_token        = var.forgejo_token
