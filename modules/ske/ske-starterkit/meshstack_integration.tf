@@ -87,51 +87,57 @@ resource "meshstack_building_block_definition" "this" {
   }
 
   spec = {
-    description              = "The SKE Starterkit provides application teams with a pre-configured Kubernetes environment on STACKIT SKE following best practices. It automates the creation of dev and prod projects with dedicated SKE tenants."
+    description = chomp(<<-EOT
+      The SKE Starterkit provides application teams with a pre-configured
+      Kubernetes environment on STACKIT SKE following best practices. It
+      automates the creation of dev and prod projects with dedicated SKE
+      tenants.
+    EOT
+    )
     display_name             = "SKE Starterkit"
     symbol                   = "https://raw.githubusercontent.com/meshcloud/meshstack-hub/${var.hub.git_ref}/modules/ske/ske-starterkit/buildingblock/logo.png"
     notification_subscribers = var.notification_subscribers
 
-    readme = chomp(<<EOT
-## What is it?
+    readme = chomp(<<-EOT
+    ## What is it?
 
-The **SKE Starterkit** provides application teams with a pre-configured Kubernetes environment on STACKIT Kubernetes Engine (SKE) following best practices. It automates the creation of dev and prod projects with dedicated SKE tenants.
+    The **SKE Starterkit** provides application teams with a pre-configured Kubernetes environment on STACKIT Kubernetes Engine (SKE) following best practices. It automates the creation of dev and prod projects with dedicated SKE tenants.
 
-## When to use it?
+    ## When to use it?
 
-This building block is ideal for teams that:
+    This building block is ideal for teams that:
 
--   Want to deploy applications on Kubernetes without worrying about setting up infrastructure from scratch.
--   Need a secure, best-practice-aligned environment for developing and deploying workloads on STACKIT.
--   Prefer a streamlined setup with separate dev and prod environments.
+    -   Want to deploy applications on Kubernetes without worrying about setting up infrastructure from scratch.
+    -   Need a secure, best-practice-aligned environment for developing and deploying workloads on STACKIT.
+    -   Prefer a streamlined setup with separate dev and prod environments.
 
-## Resources Created
+    ## Resources Created
 
-This building block automates the creation of the following resources:
+    This building block automates the creation of the following resources:
 
-- **STACKIT Git Forgejo Repository**: Code repository for application development and deployment.
-- **Development Project**
-  - **SKE Tenant**: A dedicated Kubernetes namespace for development.
-  - **SKE Forgejo Connector**: Provisions stage-specific namespace/repository wiring and outputs stage user permissions.
-- **Production Project**: You, as the creator, will have access to this project and SKE tenant.
-  - **SKE Tenant**: A dedicated Kubernetes namespace for production.
-  - **SKE Forgejo Connector**: Provisions stage-specific namespace/repository wiring and outputs stage user permissions.
+    - **STACKIT Git Forgejo Repository**: Code repository for application development and deployment.
+    - **Development Project**
+      - **SKE Tenant**: A dedicated Kubernetes namespace for development.
+      - **SKE Forgejo Connector**: Provisions stage-specific namespace/repository wiring and outputs stage user permissions.
+    - **Production Project**: You, as the creator, will have access to this project and SKE tenant.
+      - **SKE Tenant**: A dedicated Kubernetes namespace for production.
+      - **SKE Forgejo Connector**: Provisions stage-specific namespace/repository wiring and outputs stage user permissions.
 
-You, as the creator, will have access to the the Git repository, the projects and associated Kubernetes namespaces.
+    You, as the creator, will have access to the the Git repository, the projects and associated Kubernetes namespaces.
 
-## Shared Responsibilities
+    ## Shared Responsibilities
 
-| Responsibility                               | Platform Team | Application Team |
-| -------------------------------------------- | ------------- | ---------------- |
-| Provision and manage SKE cluster             | ✅            | ❌                |
-| Create Kubernetes namespaces (dev/prod)      | ✅            | ❌                |
-| Create Forgejo Git repository                | ✅            | ❌                |
-| Manage K8s resources inside namespace        | ❌             | ✅               |
-| Develop and maintain application source code | ❌             | ✅               |
-| Maintain application configurations          | ❌             | ✅               |
+    | Responsibility                               | Platform Team | Application Team |
+    | -------------------------------------------- | ------------- | ---------------- |
+    | Provision and manage SKE cluster             | ✅            | ❌                |
+    | Create Kubernetes namespaces (dev/prod)      | ✅            | ❌                |
+    | Create Forgejo Git repository                | ✅            | ❌                |
+    | Manage K8s resources inside namespace        | ❌             | ✅               |
+    | Develop and maintain application source code | ❌             | ✅               |
+    | Maintain application configurations          | ❌             | ✅               |
 
----
-EOT
+    ---
+    EOT
     )
     run_transparency = true
   }
