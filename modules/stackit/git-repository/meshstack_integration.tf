@@ -96,12 +96,41 @@ resource "meshstack_building_block_definition" "this" {
   }
 
   spec = {
-    display_name     = "STACKIT Git Repository"
-    symbol           = "https://raw.githubusercontent.com/meshcloud/meshstack-hub/${var.hub.git_ref}/modules/stackit/git-repository/buildingblock/logo.png"
-    description      = "Provisions a Git repository on STACKIT Git (Forgejo) with optional clone_addr for one-time cloning from any public Git URL."
+    display_name = "STACKIT Git Repository"
+    symbol       = "https://raw.githubusercontent.com/meshcloud/meshstack-hub/${var.hub.git_ref}/modules/stackit/git-repository/buildingblock/logo.png"
+    description = chomp(<<-EOT
+      Provisions a Git repository on STACKIT Git (Forgejo) with optional
+      one-time cloning from any public Git URL.
+    EOT
+    )
     support_url      = "https://git-service.git.onstackit.cloud"
     target_type      = "WORKSPACE_LEVEL"
     run_transparency = true
+
+    readme = chomp(<<-EOT
+    ## What does it do?
+
+    The **STACKIT Git Repository** building block creates a Forgejo repository on STACKIT Git and reconciles
+    workspace member access as repository collaborators.
+
+    ## Resources Created
+
+    - **Forgejo repository** – created under a configurable Forgejo organization. Optionally cloned from an
+      existing public Git URL (one-time clone, not an ongoing mirror).
+    - **Collaborator sync** – workspace members are mapped to Forgejo collaborator roles
+      (Owner → admin, Manager → write, others → read).
+    - **STACKIT project access** – members receive a custom IAM role on the STACKIT project hosting the
+      Forgejo instance.
+    - **Action secrets & variables** – optional maps of Forgejo Actions secrets and variables managed via the
+      REST API (see below).
+
+    ## Forgejo Actions secrets & variables
+
+    The Forgejo Terraform provider currently cannot delete action secrets (only removes them from state) and
+    does not support action variables at all. This building block therefore manages them via the generic
+    `restapi` provider against the Forgejo API, ensuring proper create/update/delete lifecycle.
+    EOT
+    )
   }
 
   version_spec = {

@@ -75,13 +75,46 @@ resource "meshstack_building_block_definition" "this" {
   }
 
   spec = {
-    display_name        = "SKE Forgejo Connector"
-    symbol              = "https://raw.githubusercontent.com/meshcloud/meshstack-hub/${var.hub.git_ref}/modules/ske/forgejo-connector/buildingblock/logo.png"
-    description         = "Connects a Forgejo repository with a tenant namespace on STACKIT SKE."
+    display_name = "SKE Forgejo Connector"
+    symbol       = "https://raw.githubusercontent.com/meshcloud/meshstack-hub/${var.hub.git_ref}/modules/ske/forgejo-connector/buildingblock/logo.png"
+    description = chomp(<<-EOT
+      Connects a Forgejo repository with a Kubernetes namespace on STACKIT SKE
+      for CI/CD via Forgejo Actions.
+    EOT
+    )
     support_url         = "https://portal.stackit.cloud/git"
     target_type         = "TENANT_LEVEL"
     supported_platforms = [{ name = "KUBERNETES" }]
     run_transparency    = true
+
+    readme = chomp(<<-EOT
+    ## What does it do?
+
+    The **SKE Forgejo Connector** wires a Forgejo repository to a Kubernetes namespace on STACKIT SKE so that
+    Forgejo Actions workflows can build and deploy applications into the namespace.
+
+    ## Resources Created
+
+    - **Kubernetes service account & RBAC** – scoped credentials for the Forgejo Actions runner, including
+      cluster-issuer read access for cert-manager.
+    - **Forgejo Actions secrets** – a per-stage `KUBECONFIG_<STAGE>` secret containing a kubeconfig scoped to
+      the tenant namespace.
+    - **Forgejo Actions variables** – per-stage `K8S_NAMESPACE_<STAGE>` and `APP_HOSTNAME_<STAGE>`.
+    - **Harbor image-pull secret** – a `kubernetes.io/dockerconfigjson` secret attached to the default service
+      account so pods can pull images from STACKIT Harbor.
+    - **Pipeline trigger** – after provisioning, the connector automatically triggers the Forgejo Actions
+      pipeline workflow and waits for it to complete.
+
+    ## Shared Responsibilities
+
+    | Responsibility                                       | Platform Team | Application Team |
+    | ---------------------------------------------------- | ------------- | ---------------- |
+    | Provision and manage SKE cluster                     | ✅            | ❌                |
+    | Create connector (namespace ↔ repository wiring)     | ✅            | ❌                |
+    | Manage K8s resources inside namespace                | ❌             | ✅               |
+    | Maintain Forgejo Actions pipeline (pipeline.yaml)    | ❌             | ✅               |
+    EOT
+    )
   }
 
   version_spec = {
