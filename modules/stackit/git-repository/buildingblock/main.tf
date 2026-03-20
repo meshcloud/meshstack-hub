@@ -29,7 +29,7 @@ locals {
   have_clone_addr = trimspace(var.clone_addr) != "" && var.clone_addr != "null"
 
   mapped_workspace_members = {
-    for member in var.workspace_members : trimspace(member.username) => (
+    for member in var.workspace_members : trimspace(member.euid) => (
       contains(member.roles, "Workspace Owner") ? "admin" : (
         contains(member.roles, "Workspace Manager") ? "write" : (
           "read"
