@@ -52,11 +52,15 @@ resource "meshstack_project" "this" {
   }
 }
 
+resource "random_uuid" "binding" {
+  for_each = var.creator.type == "User" && var.creator.username != null ? tomap(var.landing_zone_identifiers) : {}
+}
+
 resource "meshstack_project_user_binding" "creator_to_admin" {
   for_each = var.creator.type == "User" && var.creator.username != null ? tomap(var.landing_zone_identifiers) : {}
 
   metadata = {
-    name = uuid()
+    name = random_uuid.binding[each.key].result
   }
 
   role_ref = {
