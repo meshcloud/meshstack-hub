@@ -89,6 +89,9 @@ resource "meshstack_tenant_v4" "this" {
     platform_identifier     = var.full_platform_identifier
     landing_zone_identifier = each.value
   }
+
+  # FIXME: remove after BD-2288 is fixed
+  depends_on = [meshstack_project_user_binding.creator_to_admin]
 }
 
 resource "meshstack_building_block_v2" "forgejo_connector" {
