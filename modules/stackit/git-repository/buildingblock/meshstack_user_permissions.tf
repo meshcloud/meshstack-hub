@@ -71,6 +71,13 @@ data "external" "current_collaborators" {
   }
 }
 
+locals {
+  # STACKIT forgejo is setup to generate usernames without the /@domain part, so we need to strip it for locating the right collaborators
+  mapped_workspace_members_forgejo = {
+    for k, v in local.mapped_workspace_members : replace(k, "/(.*)@(.*)/", "$1") => v
+  }
+}
+
 resource "terraform_data" "sync_repository_collaborators" {
   depends_on = [
     forgejo_repository.this,
@@ -80,7 +87,7 @@ resource "terraform_data" "sync_repository_collaborators" {
   triggers_replace = [
     sha256(file("reconcile_forgejo_collaborators.py")),
     sha256(file("get_forgejo_collaborators.py")),
-    sha256(jsonencode(local.mapped_workspace_members)),
+    sha256(jsonencode(local.mapped_workspace_members_forgejo)),
     sha256(data.external.current_collaborators.result.collaborators_json),
   ]
 
@@ -89,7 +96,7 @@ resource "terraform_data" "sync_repository_collaborators" {
     environment = {
       REPOSITORY_OWNER             = var.forgejo_organization
       REPOSITORY_NAME              = forgejo_repository.this.name
-      DESIRED_COLLABORATORS_JSON   = jsonencode(local.mapped_workspace_members)
+      DESIRED_COLLABORATORS_JSON   = jsonencode(local.mapped_workspace_members_forgejo)
       CURRENT_COLLABORATORS_JSON   = data.external.current_collaborators.result.collaborators_json
       PROTECTED_COLLABORATORS_JSON = jsonencode([var.forgejo_organization])
     }
