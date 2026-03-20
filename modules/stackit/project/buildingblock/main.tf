@@ -38,7 +38,7 @@ resource "stackit_authorization_project_role_assignment" "reader_assignments" {
   for_each = local.reader_users
 
   resource_id = stackit_resourcemanager_project.project.project_id
-  role        = "viewer"
+  role        = "reader"
   subject     = each.value.email
 }
 
