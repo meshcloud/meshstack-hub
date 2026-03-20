@@ -65,7 +65,7 @@ input containing admin credentials to the SKE cluster.
 
 | Name | Source | Version |
 |------|--------|---------|
-| <a name="module_action_secrets_and_variables"></a> [action\_secrets\_and\_variables](#module\_action\_secrets\_and\_variables) | github.com/meshcloud/meshstack-hub//modules/stackit/git-repository/buildingblock/action-variables-and-secrets | feature/ske-starter-kit-harbor-integration |
+| <a name="module_action_secrets_and_variables"></a> [action\_secrets\_and\_variables](#module\_action\_secrets\_and\_variables) | github.com/meshcloud/meshstack-hub//modules/stackit/git-repository/buildingblock/action-variables-and-secrets | d01aad9eb8beffa2a4686d546ccda7dd66bb187b |
 
 ## Resources
 
