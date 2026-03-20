@@ -45,7 +45,7 @@ A secondary purpose of these files is to serve as a ready-to-use Terraform modul
 
 - Must use variables for required user inputs.
 - Must include `required_providers` block at the **bottom** of the file.
-- Keep variable blocks at the top of the file; keep `variable "meshstack"` and `variable "hub"` at the end of the variable section.
+- Keep variable blocks at the top of the file, followed immediately by output blocks; keep `variable "meshstack"` and `variable "hub"` at the end of the variable section.
 - Cloud-provider-specific variables must be flat with a provider prefix (e.g. `azure_tenant_id`, `aws_region`). Do **not** group them into a single provider object like `variable "azure" { type = object({...}) }`.
 - Cross-cutting concerns (e.g. workload identity federation) may use an `object({})` variable when the fields are logically inseparable.
 - `locals` blocks are allowed when they improve readability/reuse, but place them below variable and output sections.
@@ -212,6 +212,5 @@ Do **not** commit these relative paths; switch back to the Hub GitHub URL before
 - [ ] `locals` blocks (if used) appear below variables and outputs
 - [ ] `terraform { required_providers { ... } }` block is at the **bottom** of `meshstack_integration.tf`
 - [ ] `meshstack` and `hub` variables are at the end of the variable section
-- [ ] Test file covering positive, negative, and naming collision scenarios
 - [ ] `logo.png` included in `buildingblock/`
 - [ ] No trailing whitespace
