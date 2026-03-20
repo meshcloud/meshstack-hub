@@ -30,7 +30,7 @@ locals {
 }
 
 module "action_secrets_and_variables" {
-  source = "github.com/meshcloud/meshstack-hub//modules/stackit/git-repository/buildingblock/action-variables-and-secrets?ref=feature/ske-starter-kit-harbor-integration"
+  source = "github.com/meshcloud/meshstack-hub//modules/stackit/git-repository/buildingblock/action-variables-and-secrets?ref=d01aad9eb8beffa2a4686d546ccda7dd66bb187b"
   providers = {
     restapi.action_variable = restapi.action_variable
     restapi.action_secret   = restapi.action_secret
