@@ -80,6 +80,14 @@ locals {
   name_regex = "^[a-zA-Z0-9-]+$" # underscore and dots not allowed because of K8s namespace
 }
 
+output "building_block_definition" {
+  value = {
+    uuid        = meshstack_building_block_definition.this.metadata.uuid
+    version_ref = var.hub.bbd_draft ? meshstack_building_block_definition.this.version_latest : meshstack_building_block_definition.this.version_latest_release
+  }
+  description = "BBD can be consumed as-code for a subsequent BB run."
+}
+
 resource "meshstack_building_block_definition" "this" {
   metadata = {
     owned_by_workspace = var.meshstack.owning_workspace_identifier
