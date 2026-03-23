@@ -77,7 +77,7 @@ variable "hub" {
 }
 
 locals {
-  name_regex = "^[a-zA-Z0-9-]+$" # underscore and dots not allowed because of K8s namespace
+  name_regex = "^[a-zA-Z0-9-]{0,24}$" # underscore and dots not allowed because of K8s namespace, max length of 25 because of project character limit and suffixes added by the building block
 }
 
 output "building_block_definition" {
@@ -175,9 +175,9 @@ resource "meshstack_building_block_definition" "this" {
         assignment_type                = "USER_INPUT"
         type                           = "STRING"
         display_name                   = "Project Name"
-        description                    = "This name will be used for the created meshProjects and Kubernetes namespaces (SKE meshTenants) and Git repository. Must match ${local.name_regex}."
+        description                    = "This name will be used for the created meshProjects and Kubernetes namespaces (SKE meshTenants) and Git repository."
         value_validation_regex         = local.name_regex
-        validation_regex_error_message = "Does not match ${local.name_regex} (no underscore/dots allowed)"
+        validation_regex_error_message = "Does not match ${local.name_regex} (no underscore/dots allowed). A maximum length of 25 characters is allowed."
       }
       "workspace_identifier" = {
         assignment_type = "WORKSPACE_IDENTIFIER"

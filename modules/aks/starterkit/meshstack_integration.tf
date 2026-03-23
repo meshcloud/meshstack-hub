@@ -88,7 +88,7 @@ variable "apps_base_domain" {
 }
 
 locals {
-  name_regex = "^[a-zA-Z0-9-]+$" # underscore and dots not allowed because of K8s namespace
+  name_regex = "^[a-zA-Z0-9-]{0,24}$" # underscore and dots not allowed because of K8s namespace, max length of 25 because of project character limit and suffixes added by the building block
 }
 
 resource "meshstack_building_block_definition" "aks_starterkit" {
@@ -263,7 +263,7 @@ EOT
         type                           = "STRING"
         updateable_by_consumer         = false
         value_validation_regex         = local.name_regex
-        validation_regex_error_message = "No underscore/dots/spaces are allowed"
+        validation_regex_error_message = "No underscore/dots/spaces are allowed. A maximum length of 25 characters is allowed."
       }
       "project_tags" = {
         # jsonencode twice is correct, see https://registry.terraform.io/providers/meshcloud/meshstack/latest/docs/resources/building_block_definition#argument-1
