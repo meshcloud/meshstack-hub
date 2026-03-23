@@ -11,10 +11,19 @@ resource "random_string" "stackit_custom_role_suffix" {
   special = false
 }
 
+locals {
+  # Replace digits with leet-speak letter equivalents so the name satisfies ^[a-z](?:[-.]?[a-z]){1,63}$
+  sanitized_workspace_id = join("", [for ch in regexall(".", lower(var.workspace_identifier)) : lookup({
+    "0" = "o", "1" = "l", "2" = "z", "3" = "e", "4" = "a",
+    "5" = "s", "6" = "g", "7" = "t", "8" = "b", "9" = "p",
+    "_" = "-"
+  }, ch, ch)])
+}
+
 resource "stackit_authorization_project_custom_role" "access" {
   resource_id = var.stackit_project_id
-  name        = "access-${var.workspace_identifier}-${random_string.stackit_custom_role_suffix.result}"
-  description = "Minimal custom role for members that should access the shared Forgejo instance."
+  name        = "access-${local.sanitized_workspace_id}-${random_string.stackit_custom_role_suffix.result}"
+  description = "Minimal custom role from workspace ${var.workspace_identifier} members that access shared Forgejo instance."
   permissions = ["git.instance.get"]
 }
 
