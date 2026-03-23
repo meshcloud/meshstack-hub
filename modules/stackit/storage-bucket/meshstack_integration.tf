@@ -28,7 +28,7 @@ output "building_block_definition_version" {
 }
 
 module "backplane" {
-  source = "github.com/meshcloud/meshstack-hub//modules/stackit/storage-bucket/backplane?ref=feature/stackit-storage-bucket"
+  source = "github.com/meshcloud/meshstack-hub//modules/stackit/storage-bucket/backplane?ref=aeb06b72d8580f0581db36a26569d07d88320858"
 
   project_id = var.project_id
 }
