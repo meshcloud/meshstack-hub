@@ -178,7 +178,7 @@ EOT
       }
       "github_environment_name" = {
         assignment_type        = "USER_INPUT"
-        description            = "Name of the GitHub environment to use for deployments."
+        description            = "Name of the GitHub environment to use for deployments. Use 'production' to deploy to the release branch, any other value (e.g. 'development') deploys to main."
         display_name           = "GitHub Environment Name"
         default_value          = jsonencode("production")
         is_environment         = false

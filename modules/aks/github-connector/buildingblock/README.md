@@ -60,6 +60,7 @@ No modules.
 | [kubernetes_secret.github_actions](https://registry.terraform.io/providers/hashicorp/kubernetes/2.35.1/docs/resources/secret) | resource |
 | [kubernetes_secret.image_pull](https://registry.terraform.io/providers/hashicorp/kubernetes/2.35.1/docs/resources/secret) | resource |
 | [kubernetes_service_account.github_actions](https://registry.terraform.io/providers/hashicorp/kubernetes/2.35.1/docs/resources/service_account) | resource |
+| [terraform_data.workflow_dispatch](https://registry.terraform.io/providers/hashicorp/terraform/latest/docs/resources/data) | resource |
 
 ## Inputs
 
@@ -69,6 +70,7 @@ No modules.
 | <a name="input_github_environment_name"></a> [github\_environment\_name](#input\_github\_environment\_name) | Name of the GitHub environment to use for deployments. | `string` | `"production"` | no |
 | <a name="input_github_repo"></a> [github\_repo](#input\_github\_repo) | n/a | `string` | n/a | yes |
 | <a name="input_namespace"></a> [namespace](#input\_namespace) | Associated namespace in AKS. | `string` | n/a | yes |
+| <a name="input_workflow_filename"></a> [workflow\_filename](#input\_workflow\_filename) | Filename of the GitHub Actions workflow to dispatch after connector setup (e.g. 'k8s-deploy.yml'). The workflow must have 'on: workflow\_dispatch'. Set to empty string to skip. | `string` | `"k8s-deploy.yml"` | no |
 
 ## Outputs
 
