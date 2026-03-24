@@ -170,8 +170,6 @@ resource "meshstack_building_block_v2" "github_actions_dev" {
 }
 
 resource "meshstack_building_block_v2" "github_actions_prod" {
-  depends_on = [meshstack_building_block_v2.github_actions_dev]
-
   spec = {
     display_name = "GHA Connector Prod"
     building_block_definition_version_ref = {
