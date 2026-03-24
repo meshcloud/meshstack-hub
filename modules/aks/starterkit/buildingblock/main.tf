@@ -85,6 +85,8 @@ resource "meshstack_tenant_v4" "dev" {
     platform_identifier     = var.full_platform_identifier
     landing_zone_identifier = var.landing_zone_dev_identifier
   }
+
+  depends_on = [meshstack_project_user_binding.creator_dev_admin]
 }
 
 resource "meshstack_tenant_v4" "prod" {
@@ -97,6 +99,8 @@ resource "meshstack_tenant_v4" "prod" {
     platform_identifier     = var.full_platform_identifier
     landing_zone_identifier = var.landing_zone_prod_identifier
   }
+
+  depends_on = [meshstack_project_user_binding.creator_prod_admin]
 }
 
 resource "meshstack_building_block_v2" "repo" {

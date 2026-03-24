@@ -21,6 +21,9 @@ locals {
     ]
   }
   kubeconfig = merge(local.aks_kubeconfig_stub, local.kubeconfig_user)
+  # Map GitHub environment name to the corresponding branch:
+  # 'production' -> 'release', everything else (e.g. 'development') -> 'main'
+  workflow_ref = var.github_environment_name == "production" ? "release" : "main"
 }
 
 resource "github_repository_environment" "env" {
@@ -64,5 +67,35 @@ resource "github_actions_environment_variable" "additional" {
   value         = each.value
   depends_on = [
     github_repository_environment.env
+  ]
+}
+
+# Trigger workflow_dispatch once for this connector's branch after all secrets
+# and variables are in place. Each connector instance targets one branch (dev→main,
+# prod→release), so this fires exactly once per connector per apply.
+resource "terraform_data" "workflow_dispatch" {
+  count = var.workflow_filename != "" ? 1 : 0
+
+  triggers_replace = [
+    sha256(yamlencode(local.kubeconfig)),
+    local.acr.host,
+  ]
+
+  provisioner "local-exec" {
+    command     = "${path.module}/dispatch_github_workflow.py"
+    interpreter = ["python3"]
+    environment = {
+      GITHUB_REPO       = var.github_repo
+      WORKFLOW_FILENAME = var.workflow_filename
+      WORKFLOW_REF      = local.workflow_ref
+      # GITHUB_APP_ID, GITHUB_APP_INSTALLATION_ID, GITHUB_APP_PEM_FILE are
+      # already in the environment from the building block runner's env vars.
+    }
+  }
+
+  depends_on = [
+    github_actions_environment_secret.kubeconfig,
+    github_actions_environment_secret.container_registry,
+    github_actions_environment_variable.additional,
   ]
 }
