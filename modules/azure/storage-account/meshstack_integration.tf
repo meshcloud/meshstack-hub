@@ -34,8 +34,9 @@ variable "notification_subscribers" {
 variable "meshstack" {
   type = object({
     owning_workspace_identifier = string
+    tags                        = optional(map(list(string)), {})
   })
-  description = "`owning_workspace_identifier`: Identifier of the workspace that owns the building block."
+  description = "Shared meshStack context. Tags are optional and propagated to building block definition metadata."
 }
 
 variable "hub" {
@@ -58,6 +59,8 @@ output "building_block_definition" {
   }
 }
 
+data "meshstack_integrations" "integrations" {}
+
 module "backplane" {
   source = "github.com/meshcloud/meshstack-hub//modules/azure/storage-account/backplane?ref=0a6d313e509e1c9052712f0d9c41c2d0a96f9a39"
 
@@ -77,6 +80,7 @@ module "backplane" {
 resource "meshstack_building_block_definition" "this" {
   metadata = {
     owned_by_workspace = var.meshstack.owning_workspace_identifier
+    tags               = var.meshstack.tags
   }
 
   spec = {
