@@ -55,7 +55,9 @@ variable "workspace_members" {
 variable "meshstack" {
   type = object({
     owning_workspace_identifier = string
+    tags                        = optional(map(list(string)), {})
   })
+  description = "Shared meshStack context. Tags are optional and propagated to building block definition metadata."
 }
 
 variable "hub" {
@@ -89,6 +91,7 @@ module "backplane" {
 resource "meshstack_building_block_definition" "this" {
   metadata = {
     owned_by_workspace = var.meshstack.owning_workspace_identifier
+    tags               = var.meshstack.tags
   }
 
   spec = {
