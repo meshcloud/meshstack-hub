@@ -174,7 +174,7 @@ resource "meshstack_platform" "azure" {
               }
               subscription_creation_error_cooldown_sec = 900
             }
-            subscription_owner_object_ids = coalesce(var.azure_subscription_owner_object_ids, [data.azurerm_client_config.current.object_id])
+            subscription_owner_object_ids = var.azure_subscription_owner_object_ids != null ? var.azure_subscription_owner_object_ids : [data.azurerm_client_config.current.object_id]
           }
 
           azure_role_mappings = [
