@@ -47,6 +47,8 @@ A secondary purpose of these files is to serve as a ready-to-use Terraform modul
 - Must use variables for required user inputs.
 - Must include `required_providers` block at the **bottom** of the file.
 - Keep variable blocks at the top of the file; keep `variable "meshstack"` and `variable "hub"` at the end of the variable section.
+- Cloud-provider-specific variables must be flat with a provider prefix (e.g. `azure_tenant_id`, `aws_region`). Do **not** group them into a single provider object like `variable "azure" { type = object({...}) }`.
+- Cross-cutting concerns (e.g. workload identity federation) may use an `object({})` variable when the fields are logically inseparable.
 - `locals` blocks are allowed when they improve readability/reuse, but place them below variable and output sections.
 - Avoid top-of-file banner comments in `meshstack_integration.tf`.
 - Never include `provider` configuration.
@@ -145,7 +147,9 @@ resource "meshstack_building_block_definition" "this" {
 ## Variable Conventions
 
 - Always use `snake_case` for variable names: `monthly_budget_amount`, not `monthlyBudgetAmount`
-- Group logically related inputs into `object({})` typed variables (e.g. `var.hub`, `var.meshstack`)
+- **Cloud-provider-specific variables** in `meshstack_integration.tf` must be **flat** (not grouped into a single object) and prefixed with the cloud provider name: `azure_tenant_id`, `aws_region`, `gcp_project_id`, `stackit_project_id`
+- **Cross-cutting concerns** like workload identity federation settings may be grouped into an `object({})` typed variable (e.g. `variable "workload_identity"`) when the fields are logically inseparable
+- Only `variable "meshstack"` and `variable "hub"` use shared `object({})` conventions across all integrations
 - Pin provider versions with `~> X.Y.Z` (allow patch updates, not minor/major)
 - Terraform baseline: `>= 1.11.0` to cover OpenTofu v1.11.0 with write-only/ephemeral attribute support
 
@@ -195,7 +199,7 @@ Do **not** commit these relative paths; switch back to the Hub GitHub URL before
 - [ ] `backplane/` and `buildingblock/` with all required files
 - [ ] `meshstack_integration.tf` present at the module root
 - [ ] Provider versions pinned with `~>`
-- [ ] Variables in `snake_case`
+- [ ] Variables in `snake_case` with cloud-provider prefix in `meshstack_integration.tf` (e.g. `azure_tenant_id`)
 - [ ] `buildingblock/README.md` with YAML front-matter
 - [ ] `buildingblock/APP_TEAM_README.md` with shared responsibility matrix
 - [ ] `meshstack_integration.tf` declares `meshcloud/meshstack` in `required_providers`
