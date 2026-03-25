@@ -35,6 +35,6 @@ output "summary" {
 
     workspace_members = { for member in var.workspace_members : member.username => join(", ", member.roles) }
     member_team_type  = local.member_team_type
-    team_names        = { for type, team in forgejo_team.this : type => team.name }
+    team_names        = local.team_names
   })
 }

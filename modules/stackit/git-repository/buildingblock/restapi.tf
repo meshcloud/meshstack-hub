@@ -15,27 +15,28 @@ locals {
   }
 }
 
+# The restapi provider's write_returns_object flag must be set at the provider
+# level, so we need two aliases to handle the different Forgejo API behaviors:
+#
+# with_returned_object (write_returns_object = true)
+#   Use for Forgejo endpoints whose POST/PUT returns a JSON response body,
+#   e.g. POST /orgs/{org}/teams, PUT /repos/{owner}/{repo}/actions/variables/{name}
+#
+# without_returned_object (write_returns_object = false)
+#   Use for Forgejo endpoints whose PUT/DELETE returns 204 No Content,
+#   e.g. PUT /teams/{id}/repos/{owner}/{repo}, PUT /teams/{id}/members/{username},
+#        PUT /repos/{owner}/{repo}/actions/secrets/{name}
+
 provider "restapi" {
-  alias   = "action_variable"
-  uri     = data.external.env.result["FORGEJO_HOST"]
-  headers = local.restapi_provider_headers
-  # crucial flag which must be on provider level to control different handling for secrets (see below),
-  # as they can't be read back to check for state
+  alias                = "with_returned_object"
+  uri                  = data.external.env.result["FORGEJO_HOST"]
+  headers              = local.restapi_provider_headers
   write_returns_object = true
 }
 
 provider "restapi" {
-  alias   = "action_secret"
-  uri     = data.external.env.result["FORGEJO_HOST"]
-  headers = local.restapi_provider_headers
-  # Secrets can't be read back, so PUT/POST don't return the object
-  write_returns_object = false
-}
-
-provider "restapi" {
-  alias   = "team_management"
-  uri     = data.external.env.result["FORGEJO_HOST"]
-  headers = local.restapi_provider_headers
-  # Team-repo PUT returns 204, member POST may not return the full object
+  alias                = "without_returned_object"
+  uri                  = data.external.env.result["FORGEJO_HOST"]
+  headers              = local.restapi_provider_headers
   write_returns_object = false
 }

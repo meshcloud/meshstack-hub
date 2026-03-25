@@ -16,14 +16,14 @@ resource "forgejo_repository" "this" {
 
   # One-time clone (not an ongoing mirror)
   clone_addr = local.have_clone_addr ? var.clone_addr : null
-  mirror     = false
+  mirror     = local.have_clone_addr ? false : null
 }
 
 module "action_variables_and_secrets" {
   source = "./action-variables-and-secrets"
   providers = {
-    restapi.action_variable = restapi.action_variable
-    restapi.action_secret   = restapi.action_secret
+    restapi.with_returned_object    = restapi.with_returned_object
+    restapi.without_returned_object = restapi.without_returned_object
   }
 
   repository_id    = forgejo_repository.this.id

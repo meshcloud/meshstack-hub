@@ -35,12 +35,11 @@ support action variables at all. See the sub-module README for details.
 | Name | Type |
 |------|------|
 | [forgejo_repository.this](https://registry.terraform.io/providers/svalabs/forgejo/latest/docs/resources/repository) | resource |
-| [forgejo_team.this](https://registry.terraform.io/providers/svalabs/forgejo/latest/docs/resources/team) | resource |
 | [random_string.team_suffix](https://registry.terraform.io/providers/hashicorp/random/3.8.1/docs/resources/string) | resource |
-| [restapi_object.team_member](https://registry.terraform.io/providers/Mastercard/restapi/latest/docs/resources/object) | resource |
-| [restapi_object.team_repo](https://registry.terraform.io/providers/Mastercard/restapi/latest/docs/resources/object) | resource |
+| [restapi_object.team](https://registry.terraform.io/providers/Mastercard/restapi/latest/docs/resources/object) | resource |
+| [terraform_data.team_member](https://registry.terraform.io/providers/hashicorp/terraform/latest/docs/resources/data) | resource |
+| [terraform_data.team_repo](https://registry.terraform.io/providers/hashicorp/terraform/latest/docs/resources/data) | resource |
 | [external_external.env](https://registry.terraform.io/providers/hashicorp/external/latest/docs/data-sources/external) | data source |
-| [forgejo_organization.this](https://registry.terraform.io/providers/svalabs/forgejo/latest/docs/data-sources/organization) | data source |
 
 ## Inputs
 
