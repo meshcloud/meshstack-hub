@@ -16,11 +16,6 @@ variable "workspace_members" {
   default = []
 }
 
-variable "stackit_project_id" {
-  type        = string
-  description = "STACKIT project ID hosting the shared Forgejo instance."
-}
-
 variable "forgejo_organization" {
   type        = string
   description = "STACKIT Git organization where the repository will be created"

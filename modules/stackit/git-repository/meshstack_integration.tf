@@ -27,17 +27,6 @@ variable "action_variables" {
   default = {}
 }
 
-variable "stackit_project_id" {
-  type        = string
-  description = "STACKIT project ID hosting the shared Forgejo instance. Used for project role assignments."
-}
-
-variable "stackit_service_account_key" {
-  type        = string
-  sensitive   = true
-  description = "STACKIT service account key used to authenticate the STACKIT provider in the git-repository building block."
-}
-
 variable "meshstack" {
   type = object({
     owning_workspace_identifier = string
@@ -84,8 +73,8 @@ resource "meshstack_building_block_definition" "this" {
     display_name = "STACKIT Git Repository"
     symbol       = "https://raw.githubusercontent.com/meshcloud/meshstack-hub/${var.hub.git_ref}/modules/stackit/git-repository/buildingblock/logo.png"
     description = chomp(<<-EOT
-      Provisions a Git repository on STACKIT Git (Forgejo) with optional
-      one-time cloning from any public Git URL.
+      Provisions a Git repository on STACKIT Git (Forgejo) with team-based
+      workspace member access management.
     EOT
     )
     support_url      = "https://git-service.git.onstackit.cloud"
@@ -95,17 +84,17 @@ resource "meshstack_building_block_definition" "this" {
     readme = chomp(<<-EOT
     ## What does it do?
 
-    The **STACKIT Git Repository** building block creates a Forgejo repository on STACKIT Git and reconciles
-    workspace member access as repository collaborators.
+    The **STACKIT Git Repository** building block creates a Forgejo repository on STACKIT Git and manages
+    workspace member access using Forgejo organization teams.
 
     ## Resources Created
 
     - **Forgejo repository** – created under a configurable Forgejo organization. Optionally cloned from an
       existing public Git URL (one-time clone, not an ongoing mirror).
-    - **Collaborator sync** – workspace members are mapped to Forgejo collaborator roles
-      (Owner → admin, Manager → write, others → read).
-    - **STACKIT project access** – members receive a custom IAM role on the STACKIT project hosting the
-      Forgejo instance.
+    - **Forgejo teams** – workspace members are organized into organization teams by role
+      (Owner → admins/admin, Manager → writers/write, others → readers/read).
+      Teams are assigned to the repository with appropriate permissions.
+    - **Team member invitations** – workspace members are invited to teams by email.
     - **Action secrets & variables** – optional maps of Forgejo Actions secrets and variables managed via the
       REST API (see below).
 
@@ -166,27 +155,6 @@ resource "meshstack_building_block_definition" "this" {
         argument        = jsonencode(module.backplane.forgejo_organization)
       }
 
-      STACKIT_SERVICE_ACCOUNT_KEY = {
-        display_name    = "STACKIT_SERVICE_ACCOUNT_KEY"
-        description     = "Service account key used for STACKIT provider authentication in this building block."
-        type            = "STRING"
-        assignment_type = "STATIC"
-        is_environment  = true
-        sensitive = {
-          argument = {
-            secret_value = var.stackit_service_account_key
-          }
-        }
-      }
-
-      stackit_project_id = {
-        display_name    = "STACKIT Project ID"
-        description     = "STACKIT project ID hosting the shared Forgejo instance for role assignments."
-        type            = "STRING"
-        assignment_type = "STATIC"
-        argument        = jsonencode(var.stackit_project_id)
-      }
-
       workspace_identifier = {
         display_name    = "Workspace Identifier"
         type            = "STRING"
@@ -195,7 +163,7 @@ resource "meshstack_building_block_definition" "this" {
 
       workspace_members = {
         display_name    = "Workspace Members"
-        description     = "Workspace members used to reconcile Forgejo repository collaborators."
+        description     = "Workspace members used to manage Forgejo team membership."
         type            = "CODE"
         assignment_type = "USER_PERMISSIONS"
       }
