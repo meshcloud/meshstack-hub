@@ -17,7 +17,7 @@ variable "forgejo_action_secrets" {
   sensitive = true
 
   validation {
-    condition     = alltrue([for key in keys(var.forgejo_action_secrets) : length(key) <= 30])
+    condition     = alltrue([for key in keys(nonsensitive(var.forgejo_action_secrets)) : length(key) <= 30])
     error_message = "Forgejo Actions secret names must be 30 characters or less."
   }
 }
