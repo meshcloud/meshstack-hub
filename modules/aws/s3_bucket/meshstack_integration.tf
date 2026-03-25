@@ -1,11 +1,15 @@
-variable "aws" {
+variable "aws_region" {
+  type        = string
+  description = "AWS region where the S3 bucket will be created (e.g. 'eu-central-1')."
+}
+
+variable "workload_identity" {
   type = object({
-    region                     = string
-    workload_identity_issuer   = string
-    workload_identity_audience = string
-    subject_namespace_prefix   = string
+    issuer                   = string
+    audience                 = string
+    subject_namespace_prefix = string
   })
-  description = "AWS and workload identity federation configuration for the integration. Example: `{ region = \"eu-central-1\", workload_identity_issuer = \"https://token.actions.githubusercontent.com\", workload_identity_audience = \"sts.amazonaws.com\", subject_namespace_prefix = \"meshcloud-prod\" }`."
+  description = "Workload identity federation configuration for AWS authentication."
 }
 
 variable "bb_environment" {
@@ -45,9 +49,9 @@ module "backplane" {
   source = "github.com/meshcloud/meshstack-hub//modules/aws/s3_bucket/backplane?ref=b9c1f3f2201e7e22b04dbf71a3ceab7a0246a7b3"
 
   workload_identity_federation = {
-    issuer   = var.aws.workload_identity_issuer
-    audience = var.aws.workload_identity_audience
-    subjects = ["system:serviceaccount:${var.aws.subject_namespace_prefix}:workspace.${var.meshstack.owning_workspace_identifier}.buildingblockdefinition.${meshstack_building_block_definition.this.metadata.uuid}"]
+    issuer   = var.workload_identity.issuer
+    audience = var.workload_identity.audience
+    subjects = ["system:serviceaccount:${var.workload_identity.subject_namespace_prefix}:workspace.${var.meshstack.owning_workspace_identifier}.buildingblockdefinition.${meshstack_building_block_definition.this.metadata.uuid}"]
   }
 }
 
@@ -102,7 +106,7 @@ resource "meshstack_building_block_definition" "this" {
         assignment_type = "STATIC"
         display_name    = "AWS Region"
         description     = "The AWS region where the S3 bucket will be created"
-        argument        = jsonencode(var.aws.region)
+        argument        = jsonencode(var.aws_region)
       }
       bucket_name = {
         type            = "STRING"
