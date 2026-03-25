@@ -212,7 +212,7 @@ terraform {
   required_providers {
     meshstack = {
       source  = "meshcloud/meshstack"
-      version = "~> 0.19.3"
+      version = "~> 0.20.0"
     }
     azurerm = {
       source  = "hashicorp/azurerm"
