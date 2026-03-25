@@ -1,19 +1,19 @@
-variable "tenant_id" {
+variable "azure_tenant_id" {
   type        = string
   description = "Azure Entra tenant ID where storage accounts will be deployed."
 }
 
-variable "subscription_id" {
+variable "azure_subscription_id" {
   type        = string
   description = "Azure subscription ID where storage accounts will be deployed."
 }
 
-variable "scope" {
+variable "azure_scope" {
   type        = string
   description = "Azure management group or subscription ID used for backplane role scope."
 }
 
-variable "location" {
+variable "azure_location" {
   type        = string
   default     = "germanywestcentral"
   description = "Default Azure region where storage accounts will be created."
@@ -62,7 +62,7 @@ module "backplane" {
   source = "github.com/meshcloud/meshstack-hub//modules/azure/storage-account/backplane?ref=0a6d313e509e1c9052712f0d9c41c2d0a96f9a39"
 
   name  = var.backplane_name
-  scope = var.scope
+  scope = var.azure_scope
 
   create_service_principal_name = var.backplane_name
 
@@ -140,7 +140,7 @@ resource "meshstack_building_block_definition" "this" {
         description     = "Azure Entra tenant ID for authentication."
         assignment_type = "STATIC"
         is_environment  = true
-        argument        = jsonencode(var.tenant_id)
+        argument        = jsonencode(var.azure_tenant_id)
       }
       ARM_SUBSCRIPTION_ID = {
         type            = "STRING"
@@ -148,7 +148,7 @@ resource "meshstack_building_block_definition" "this" {
         description     = "The Azure subscription ID where the storage account will be deployed."
         assignment_type = "STATIC"
         is_environment  = true
-        argument        = jsonencode(var.subscription_id)
+        argument        = jsonencode(var.azure_subscription_id)
       }
       ARM_USE_OIDC = {
         type            = "STRING"
@@ -179,7 +179,7 @@ resource "meshstack_building_block_definition" "this" {
         display_name    = "Location"
         description     = "The Azure region where the storage account will be created."
         assignment_type = "STATIC"
-        argument        = jsonencode(var.location)
+        argument        = jsonencode(var.azure_location)
       }
     }
 

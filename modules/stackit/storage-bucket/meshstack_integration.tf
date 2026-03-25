@@ -1,4 +1,4 @@
-variable "project_id" {
+variable "stackit_project_id" {
   type        = string
   description = "STACKIT project ID where Object Storage buckets will be created."
 }
@@ -33,7 +33,7 @@ output "building_block_definition" {
 module "backplane" {
   source = "github.com/meshcloud/meshstack-hub//modules/stackit/storage-bucket/backplane?ref=aeb06b72d8580f0581db36a26569d07d88320858"
 
-  project_id = var.project_id
+  project_id = var.stackit_project_id
 }
 
 resource "meshstack_building_block_definition" "this" {
