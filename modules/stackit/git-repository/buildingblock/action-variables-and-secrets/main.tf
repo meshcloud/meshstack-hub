@@ -14,7 +14,7 @@ locals {
 resource "restapi_object" "action_secret" {
   for_each = var.action_secrets
 
-  provider = restapi.action_secret
+  provider = restapi.without_returned_object
 
   path         = "/api/v1/repos/${local.repository_owner}/${local.repository_name}/actions/secrets/${each.key}"
   create_path  = "/api/v1/repos/${local.repository_owner}/${local.repository_name}/actions/secrets/${each.key}"
@@ -44,7 +44,7 @@ resource "restapi_object" "action_secret" {
 resource "restapi_object" "action_variable" {
   for_each = var.action_variables
 
-  provider = restapi.action_variable
+  provider = restapi.with_returned_object
 
   path         = "/api/v1/repos/${local.repository_owner}/${local.repository_name}/actions/variables/${each.key}"
   create_path  = "/api/v1/repos/${local.repository_owner}/${local.repository_name}/actions/variables/${each.key}"

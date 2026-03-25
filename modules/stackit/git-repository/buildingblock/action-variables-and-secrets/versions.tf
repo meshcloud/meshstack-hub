@@ -5,7 +5,7 @@ terraform {
     restapi = {
       source                = "Mastercard/restapi"
       version               = "~> 3.0.0"
-      configuration_aliases = [restapi.action_secret, restapi.action_variable]
+      configuration_aliases = [restapi.with_returned_object, restapi.without_returned_object]
     }
   }
 }
