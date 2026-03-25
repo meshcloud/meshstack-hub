@@ -31,3 +31,11 @@ provider "restapi" {
   # Secrets can't be read back, so PUT/POST don't return the object
   write_returns_object = false
 }
+
+provider "restapi" {
+  alias   = "team_management"
+  uri     = data.external.env.result["FORGEJO_HOST"]
+  headers = local.restapi_provider_headers
+  # Team-repo PUT returns 204, member POST may not return the full object
+  write_returns_object = false
+}

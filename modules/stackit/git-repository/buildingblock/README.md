@@ -23,7 +23,6 @@ support action variables at all. See the sub-module README for details.
 | <a name="requirement_forgejo"></a> [forgejo](#requirement\_forgejo) | ~> 1.3.0 |
 | <a name="requirement_random"></a> [random](#requirement\_random) | 3.8.1 |
 | <a name="requirement_restapi"></a> [restapi](#requirement\_restapi) | ~> 3.0.0 |
-| <a name="requirement_stackit"></a> [stackit](#requirement\_stackit) | >= 0.60.0 |
 
 ## Modules
 
@@ -36,13 +35,12 @@ support action variables at all. See the sub-module README for details.
 | Name | Type |
 |------|------|
 | [forgejo_repository.this](https://registry.terraform.io/providers/svalabs/forgejo/latest/docs/resources/repository) | resource |
-| [random_string.stackit_custom_role_suffix](https://registry.terraform.io/providers/hashicorp/random/3.8.1/docs/resources/string) | resource |
-| [stackit_authorization_project_custom_role.access](https://registry.terraform.io/providers/stackitcloud/stackit/latest/docs/resources/authorization_project_custom_role) | resource |
-| [terraform_data.access_members](https://registry.terraform.io/providers/hashicorp/terraform/latest/docs/resources/data) | resource |
-| [terraform_data.sync_repository_collaborators](https://registry.terraform.io/providers/hashicorp/terraform/latest/docs/resources/data) | resource |
-| [external_external.current_collaborators](https://registry.terraform.io/providers/hashicorp/external/latest/docs/data-sources/external) | data source |
+| [forgejo_team.this](https://registry.terraform.io/providers/svalabs/forgejo/latest/docs/resources/team) | resource |
+| [random_string.team_suffix](https://registry.terraform.io/providers/hashicorp/random/3.8.1/docs/resources/string) | resource |
+| [restapi_object.team_member](https://registry.terraform.io/providers/Mastercard/restapi/latest/docs/resources/object) | resource |
+| [restapi_object.team_repo](https://registry.terraform.io/providers/Mastercard/restapi/latest/docs/resources/object) | resource |
 | [external_external.env](https://registry.terraform.io/providers/hashicorp/external/latest/docs/data-sources/external) | data source |
-| [external_external.role_assignments](https://registry.terraform.io/providers/hashicorp/external/latest/docs/data-sources/external) | data source |
+| [forgejo_organization.this](https://registry.terraform.io/providers/svalabs/forgejo/latest/docs/data-sources/organization) | data source |
 
 ## Inputs
 
@@ -56,7 +54,6 @@ support action variables at all. See the sub-module README for details.
 | <a name="input_forgejo_organization"></a> [forgejo\_organization](#input\_forgejo\_organization) | STACKIT Git organization where the repository will be created | `string` | n/a | yes |
 | <a name="input_name"></a> [name](#input\_name) | Name of the Git repository to create | `string` | n/a | yes |
 | <a name="input_private"></a> [private](#input\_private) | Whether the repository should be private | `bool` | `true` | no |
-| <a name="input_stackit_project_id"></a> [stackit\_project\_id](#input\_stackit\_project\_id) | STACKIT project ID hosting the shared Forgejo instance. | `string` | n/a | yes |
 | <a name="input_workspace_identifier"></a> [workspace\_identifier](#input\_workspace\_identifier) | n/a | `string` | n/a | yes |
 | <a name="input_workspace_members"></a> [workspace\_members](#input\_workspace\_members) | Workspace members used for collaborator and optional STACKIT project access reconciliation. | <pre>list(object({<br/>    meshIdentifier = string<br/>    username       = string<br/>    firstName      = string<br/>    lastName       = string<br/>    email          = string<br/>    euid           = string<br/>    roles          = list(string)<br/>  }))</pre> | `[]` | no |
 
