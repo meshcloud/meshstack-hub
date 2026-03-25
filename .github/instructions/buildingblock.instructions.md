@@ -37,7 +37,7 @@ Each module follows a two-tier architecture:
 
 ## Provider Versions
 
-Provider versions are **module-specific**. Use `~> X.Y.Z` to allow patch updates. Terraform baseline: `>= 1.3.0`.
+Provider versions are **module-specific**. Use `~> X.Y.Z` to allow patch updates. **Exception:** the `meshcloud/meshstack` provider is pre-1.0, so pin to the minor version with `~> 0.Y.0` (e.g. `~> 0.20.0`). Terraform baseline: `>= 1.3.0`.
 
 ## Backplane Patterns
 
