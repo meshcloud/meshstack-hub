@@ -45,7 +45,10 @@ They are starting points that should cover the simplest use case.
 A secondary purpose of these files is to serve as a ready-to-use Terraform module root that IaC runtimes can source directly.
 
 - Must use variables for required user inputs.
-- Must include `required_providers` block at the **bottom** of the file — resources and variables should come first so readers see the important configuration before technical boilerplate).
+- Must include `required_providers` block at the **bottom** of the file.
+- Keep variable blocks at the top of the file; keep `variable "meshstack"` and `variable "hub"` at the end of the variable section.
+- `locals` blocks are allowed when they improve readability/reuse, but place them below variable and output sections.
+- Avoid top-of-file banner comments in `meshstack_integration.tf`.
 - Never include `provider` configuration.
 - Reference modules using Git URLs and a ref pointing to the feature branch when developing. Once merged into main, the `update-module-refs` tooling in CI pins the ref to an appropriate commit.
 
@@ -90,14 +93,17 @@ variable "hub" {
 
 Always use `var.hub.bbd_draft` for the `draft` field of `version_spec` in `meshstack_building_block_definition` resources.
 
-### Exposing the BBD Version
+### Exposing Building Block Definition References
 
-When a `meshstack_integration.tf` exposes the building block definition version UUID as an output (needed for compositions), use the following pattern to pin to released versions in production while allowing draft updates during development:
+When a `meshstack_integration.tf` exposes building block definition references for compositions, use a single object output named `building_block_definition`:
 
 ```hcl
-output "building_block_definition_version_uuid" {
-  description = "UUID of the latest version. In draft mode returns the latest draft; otherwise returns the latest release."
-  value       = var.hub.bbd_draft ? meshstack_building_block_definition.this.version_latest.uuid : meshstack_building_block_definition.this.version_latest_release.uuid
+output "building_block_definition" {
+  description = "BBD is consumed in building block compositions."
+  value = {
+    uuid        = meshstack_building_block_definition.this.metadata.uuid
+    version_ref = var.hub.bbd_draft ? meshstack_building_block_definition.this.version_latest : meshstack_building_block_definition.this.version_latest_release
+  }
 }
 ```
 
@@ -108,7 +114,7 @@ Integrating with meshStack requires context, like a workspace where the resource
 variable "meshstack" {
   type = object({
     owning_workspace_identifier = string
-    tags                         = optional(map(list(string)), {})
+    tags                        = optional(map(list(string)), {})
   })
   description = "Shared meshStack context. Tags are optional and propagated to building block definition metadata."
 }
@@ -197,8 +203,11 @@ Do **not** commit these relative paths; switch back to the Hub GitHub URL before
 - [ ] `meshstack_integration.tf` uses relative `./backplane` source (no absolute GitHub URL)
 - [ ] `ref_name` uses `var.hub.git_ref` — no hardcoded `"main"`
 - [ ] `version_spec.draft` uses `var.hub.bbd_draft`
-- [ ] `building_block_definition_version_uuid` output uses `bbd_draft ? version_latest.uuid : version_latest_release.uuid`
+- [ ] Tags are modeled via `var.meshstack.tags` (no separate top-level `variable "tags"` in integrations)
+- [ ] `building_block_definition` output is exposed as `{ uuid, version_ref }` with `version_ref` using `bbd_draft ? version_latest : version_latest_release`
+- [ ] `locals` blocks (if used) appear below variables and outputs
 - [ ] `terraform { required_providers { ... } }` block is at the **bottom** of `meshstack_integration.tf`
+- [ ] `meshstack` and `hub` variables are at the end of the variable section
 - [ ] Test file covering positive, negative, and naming collision scenarios
 - [ ] `logo.png` included in `buildingblock/`
 - [ ] No trailing whitespace

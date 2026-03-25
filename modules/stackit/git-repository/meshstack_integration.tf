@@ -1,13 +1,3 @@
-# This file is an example showing how to register the STACKIT Git Repository
-# building block in a meshStack instance. Adapt backplane outputs and repository
-# URL to match your own setup before applying.
-
-variable "meshstack" {
-  type = object({
-    owning_workspace_identifier = string
-  })
-}
-
 variable "forgejo_token" {
   type      = string
   sensitive = true
@@ -21,18 +11,18 @@ variable "forgejo_base_url" {
   type = string
 }
 
-variable "action_secrets" {
+variable "forgejo_action_secrets" {
   type      = map(string)
-  sensitive = false # the whole map is not sensitive, but map values are!
   default   = {}
+  sensitive = true
 
   validation {
-    condition     = alltrue([for key in keys(var.action_secrets) : length(key) <= 30])
+    condition     = alltrue([for key in keys(var.forgejo_action_secrets) : length(key) <= 30])
     error_message = "Forgejo Actions secret names must be 30 characters or less."
   }
 }
 
-variable "action_variables" {
+variable "forgejo_action_variables" {
   type    = map(string)
   default = {}
 }
@@ -60,6 +50,12 @@ variable "workspace_members" {
     roles          = list(string)
   }))
   default = []
+}
+
+variable "meshstack" {
+  type = object({
+    owning_workspace_identifier = string
+  })
 }
 
 variable "hub" {
@@ -252,14 +248,13 @@ resource "meshstack_building_block_definition" "this" {
         default_value   = jsonencode("null")
       }
 
-
       action_variables = {
         display_name    = "Repository Action Variables"
         description     = "Static non-sensitive map of Forgejo Actions variables created in each provisioned repository."
         type            = "CODE"
         assignment_type = "STATIC"
         # jsonencode twice is correct, see https://registry.terraform.io/providers/meshcloud/meshstack/latest/docs/resources/building_block_definition#argument-1
-        argument = jsonencode(jsonencode(var.action_variables))
+        argument = jsonencode(jsonencode(var.forgejo_action_variables))
       }
 
       action_secrets = {
@@ -269,8 +264,8 @@ resource "meshstack_building_block_definition" "this" {
         assignment_type = "STATIC"
         sensitive = {
           argument = {
-            secret_value   = jsonencode(var.action_secrets)
-            secret_version = nonsensitive(sha256(jsonencode(var.action_secrets)))
+            secret_value   = jsonencode(var.forgejo_action_secrets)
+            secret_version = nonsensitive(sha256(jsonencode(var.forgejo_action_secrets)))
           }
         }
       }

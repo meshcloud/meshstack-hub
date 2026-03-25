@@ -1,40 +1,22 @@
-variable "hub" {
-  type = object({
-    git_ref   = optional(string, "main")
-    bbd_draft = optional(bool, true)
-  })
-  default     = {}
-  description = <<-EOT
-  `git_ref`: Hub release reference. Set to a tag (e.g. 'v1.2.3') or branch or commit sha of the meshstack-hub repo.
-  `bbd_draft`: If true, the building block definition version is kept in draft mode, which allows changing it (useful during development in LCF/ICF).
-  EOT
+variable "tenant_id" {
+  type        = string
+  description = "Azure Entra tenant ID where storage accounts will be deployed."
 }
 
-variable "meshstack" {
-  type = object({
-    owning_workspace_identifier = string
-  })
-  description = "`owning_workspace_identifier`: Identifier of the workspace that owns the building block."
+variable "subscription_id" {
+  type        = string
+  description = "Azure subscription ID where storage accounts will be deployed."
 }
 
-# Retrieves the workload identity federation configuration from meshStack.
-# The building block runners share the same OIDC issuer and namespace prefix as meshStack integrations.
-# For self-hosted runners running outside our cluster, this does not hold true.
-data "meshstack_integrations" "integrations" {}
+variable "scope" {
+  type        = string
+  description = "Azure management group or subscription ID used for backplane role scope."
+}
 
-variable "azure" {
-  type = object({
-    tenant_id       = string
-    subscription_id = string
-    scope           = string
-    location        = optional(string, "germanywestcentral")
-  })
-  description = <<-EOT
-  `tenant_id`: Azure Entra tenant ID where the storage accounts will be deployed.
-  `subscription_id`: Azure subscription ID where storage accounts will be deployed.
-  `scope`: Azure management group or subscription ID used as the scope for the backplane role definition and assignment.
-  `location`: Default Azure region where storage accounts will be created (e.g. 'germanywestcentral').
-  EOT
+variable "location" {
+  type        = string
+  default     = "germanywestcentral"
+  description = "Default Azure region where storage accounts will be created."
 }
 
 variable "backplane_name" {
@@ -49,11 +31,38 @@ variable "notification_subscribers" {
   description = "List of email addresses to notify on building block lifecycle events."
 }
 
+variable "meshstack" {
+  type = object({
+    owning_workspace_identifier = string
+  })
+  description = "`owning_workspace_identifier`: Identifier of the workspace that owns the building block."
+}
+
+variable "hub" {
+  type = object({
+    git_ref   = optional(string, "main")
+    bbd_draft = optional(bool, true)
+  })
+  default     = {}
+  description = <<-EOT
+  `git_ref`: Hub release reference. Set to a tag (e.g. 'v1.2.3') or branch or commit sha of the meshstack-hub repo.
+  `bbd_draft`: If true, the building block definition version is kept in draft mode, which allows changing it (useful during development in LCF/ICF).
+  EOT
+}
+
+output "building_block_definition" {
+  description = "BBD is consumed in building block compositions."
+  value = {
+    uuid        = meshstack_building_block_definition.this.metadata.uuid
+    version_ref = var.hub.bbd_draft ? meshstack_building_block_definition.this.version_latest : meshstack_building_block_definition.this.version_latest_release
+  }
+}
+
 module "backplane" {
   source = "github.com/meshcloud/meshstack-hub//modules/azure/storage-account/backplane?ref=0a6d313e509e1c9052712f0d9c41c2d0a96f9a39"
 
   name  = var.backplane_name
-  scope = var.azure.scope
+  scope = var.scope
 
   create_service_principal_name = var.backplane_name
 
@@ -131,7 +140,7 @@ resource "meshstack_building_block_definition" "this" {
         description     = "Azure Entra tenant ID for authentication."
         assignment_type = "STATIC"
         is_environment  = true
-        argument        = jsonencode(var.azure.tenant_id)
+        argument        = jsonencode(var.tenant_id)
       }
       ARM_SUBSCRIPTION_ID = {
         type            = "STRING"
@@ -139,7 +148,7 @@ resource "meshstack_building_block_definition" "this" {
         description     = "The Azure subscription ID where the storage account will be deployed."
         assignment_type = "STATIC"
         is_environment  = true
-        argument        = jsonencode(var.azure.subscription_id)
+        argument        = jsonencode(var.subscription_id)
       }
       ARM_USE_OIDC = {
         type            = "STRING"
@@ -170,7 +179,7 @@ resource "meshstack_building_block_definition" "this" {
         display_name    = "Location"
         description     = "The Azure region where the storage account will be created."
         assignment_type = "STATIC"
-        argument        = jsonencode(var.azure.location)
+        argument        = jsonencode(var.location)
       }
     }
 
@@ -195,11 +204,6 @@ resource "meshstack_building_block_definition" "this" {
       }
     }
   }
-}
-
-output "building_block_definition_version_uuid" {
-  description = "UUID of the latest version. In draft mode returns the latest draft; otherwise returns the latest release."
-  value       = var.hub.bbd_draft ? meshstack_building_block_definition.this.version_latest.uuid : meshstack_building_block_definition.this.version_latest_release.uuid
 }
 
 terraform {

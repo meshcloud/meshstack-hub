@@ -1,27 +1,60 @@
-locals {
-  env                  = "demo"
-  workspace_identifier = "m25-platform"
-  region               = "eu-central-1"
-  issuer               = "https://container.googleapis.com/v1/projects/meshcloud-meshcloud--bc0/locations/europe-west1/clusters/meshstacks-ha"
-  audience             = "aws-workload-identity-provider:meshcloud-demo"
+variable "aws" {
+  type = object({
+    region                     = string
+    workload_identity_issuer   = string
+    workload_identity_audience = string
+    subject_namespace_prefix   = string
+  })
+  description = "AWS and workload identity federation configuration for the integration. Example: `{ region = \"eu-central-1\", workload_identity_issuer = \"https://token.actions.githubusercontent.com\", workload_identity_audience = \"sts.amazonaws.com\", subject_namespace_prefix = \"meshcloud-prod\" }`."
+}
+
+variable "bb_environment" {
+  type        = string
+  description = "Value used for the BBEnvironment metadata tag (example: `prod`)."
+}
+
+variable "meshstack" {
+  type = object({
+    owning_workspace_identifier = string
+    tags                        = optional(map(list(string)), {})
+  })
+  description = "Shared meshStack context. Tags are optional and propagated to building block definition metadata."
+}
+
+variable "hub" {
+  type = object({
+    git_ref   = optional(string, "main")
+    bbd_draft = optional(bool, true)
+  })
+  default     = {}
+  description = <<-EOT
+  `git_ref`: Hub release reference. Set to a tag (e.g. 'v1.2.3') or branch or commit sha of the meshstack-hub repo.
+  `bbd_draft`: If true, the building block definition version is kept in draft mode.
+  EOT
+}
+
+output "building_block_definition" {
+  description = "BBD is consumed in building block compositions."
+  value = {
+    uuid        = meshstack_building_block_definition.this.metadata.uuid
+    version_ref = var.hub.bbd_draft ? meshstack_building_block_definition.this.version_latest : meshstack_building_block_definition.this.version_latest_release
+  }
 }
 
 module "backplane" {
   source = "github.com/meshcloud/meshstack-hub//modules/aws/s3_bucket/backplane?ref=b9c1f3f2201e7e22b04dbf71a3ceab7a0246a7b3"
 
   workload_identity_federation = {
-    issuer   = local.issuer
-    audience = local.audience
-    subjects = ["system:serviceaccount:meshcloud-demo:workspace.${local.workspace_identifier}.buildingblockdefinition.${meshstack_building_block_definition.this.metadata.uuid}"]
+    issuer   = var.aws.workload_identity_issuer
+    audience = var.aws.workload_identity_audience
+    subjects = ["system:serviceaccount:${var.aws.subject_namespace_prefix}:workspace.${var.meshstack.owning_workspace_identifier}.buildingblockdefinition.${meshstack_building_block_definition.this.metadata.uuid}"]
   }
 }
 
 resource "meshstack_building_block_definition" "this" {
   metadata = {
-    owned_by_workspace = local.workspace_identifier
-    tags = {
-      "BBEnvironment" = [local.env]
-    }
+    owned_by_workspace = var.meshstack.owning_workspace_identifier
+    tags               = merge(var.meshstack.tags, { BBEnvironment = [var.bb_environment] })
   }
 
   spec = {
@@ -34,8 +67,7 @@ resource "meshstack_building_block_definition" "this" {
   }
 
   version_spec = {
-    draft = true
-
+    draft         = var.hub.bbd_draft
     deletion_mode = "DELETE"
 
     implementation = {
@@ -43,41 +75,41 @@ resource "meshstack_building_block_definition" "this" {
         terraform_version              = "1.9.0"
         repository_url                 = "https://github.com/meshcloud/meshstack-hub.git"
         repository_path                = "modules/aws/s3_bucket/buildingblock"
-        ref_name                       = "main"
+        ref_name                       = var.hub.git_ref
         use_mesh_http_backend_fallback = false
       }
     }
 
     inputs = {
       AWS_ROLE_ARN = {
-        type            = "STRING",
-        display_name    = "AWS Role ARN",
-        description     = "The ARN of the AWS role to assume for provisioning the S3 bucket",
-        assignment_type = "STATIC",
+        type            = "STRING"
+        display_name    = "AWS Role ARN"
+        description     = "The ARN of the AWS role to assume for provisioning the S3 bucket"
+        assignment_type = "STATIC"
         is_environment  = true
         argument        = jsonencode(module.backplane.workload_identity_federation_role_arn)
-      },
+      }
       AWS_WEB_IDENTITY_TOKEN_FILE = {
-        type            = "STRING",
-        assignment_type = "STATIC",
-        display_name    = "AWS Web Identity Token File Path",
-        description     = "The file path to the AWS web identity token for authentication",
+        type            = "STRING"
+        assignment_type = "STATIC"
+        display_name    = "AWS Web Identity Token File Path"
+        description     = "The file path to the AWS web identity token for authentication"
         is_environment  = true
         argument        = jsonencode("/var/run/secrets/workload-identity/aws/token")
-      },
+      }
       region = {
-        type            = "STRING",
-        assignment_type = "STATIC",
+        type            = "STRING"
+        assignment_type = "STATIC"
         display_name    = "AWS Region"
         description     = "The AWS region where the S3 bucket will be created"
-        argument        = jsonencode(local.region)
-      },
+        argument        = jsonencode(var.aws.region)
+      }
       bucket_name = {
         type            = "STRING"
         assignment_type = "USER_INPUT"
         display_name    = "S3 Bucket Name"
         description     = "The name of the S3 bucket"
-      },
+      }
     }
 
     outputs = {
@@ -86,25 +118,25 @@ resource "meshstack_building_block_definition" "this" {
         assignment_type = "NONE"
         display_name    = "S3 Bucket Name"
         description     = "The name of the created S3 bucket"
-      },
+      }
       bucket_arn = {
         type            = "STRING"
         assignment_type = "NONE"
         display_name    = "S3 Bucket ARN"
         description     = "The ARN of the created S3 bucket"
-      },
+      }
       bucket_uri = {
         type            = "STRING"
         assignment_type = "NONE"
         display_name    = "S3 Bucket URI"
         description     = "The URI of the created S3 bucket"
-      },
+      }
       bucket_domain_name = {
         type            = "STRING"
         assignment_type = "NONE"
         display_name    = "S3 Bucket Domain Name"
         description     = "The domain name of the created S3 bucket"
-      },
+      }
       bucket_regional_domain_name = {
         type            = "STRING"
         assignment_type = "NONE"
@@ -115,38 +147,17 @@ resource "meshstack_building_block_definition" "this" {
   }
 }
 
-# Output for demo purposes
-output "building_block_definition_uuid" {
-  value = meshstack_building_block_definition.this.metadata.uuid
-}
-
-# The provider setup below is optional and can be part of a shared terraform.tf file
 terraform {
-  required_version = ">= 1.11"
+  required_version = ">= 1.11.0"
 
   required_providers {
     aws = {
       source  = "hashicorp/aws"
-      version = "6.12.0"
+      version = "~> 6.12.0"
     }
     meshstack = {
       source  = "meshcloud/meshstack"
-      version = "0.19.0"
+      version = "~> 0.19.3"
     }
   }
-}
-
-
-provider "meshstack" {
-  # Provide the following environment:
-  # MESHSTACK_ENDPOINT
-  # MESHSTACK_API_KEY
-  # MESHSTACK_API_SECRET
-}
-
-
-provider "aws" {
-  region = local.region
-  # Ensure to select the right profile from you aws CLI
-  # using the env variable AWS_PROFILE
 }

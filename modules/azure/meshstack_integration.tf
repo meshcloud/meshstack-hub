@@ -1,77 +1,79 @@
-terraform {
-  required_providers {
-    meshstack = {
-      source  = "meshcloud/meshstack"
-      version = "~> 0.19.1"
-    }
-    azurerm = {
-      source  = "hashicorp/azurerm"
-      version = "~> 4.61.0"
-    }
-    azuread = {
-      source  = "hashicorp/azuread"
-      version = "~> 3.8.0"
-    }
-  }
+variable "azure_management_group" {
+  type        = string
+  description = "Azure management group used for platform integration."
 }
 
-# Change these values according to your Azure and meshStack setup.
-locals {
-  # Existing Azure management group which will be used for resources managed by meshStack
-  azure_management_group = "meshstack-cloud-foundation"
-
-  # Configure according to your Microsoft customer agreement
-  mca = {
-    billing_account_name = "00000000-0000-0000-0000-000000000000:00000000-0000-0000-0000-000000000000_2018-09-30"
-    billing_profile_name = "0000-0000-000-000"
-    invoice_section_name = "0000-0000-000-000"
-  }
-
-  # Azure subscriptions require at least one owner. This assigns the current user/service principal as owner.
-  # Update this list to match your organization's ownership requirements.
-  subscription_owner_object_ids = [data.azurerm_client_config.current.object_id]
-
-  # meshStack workspace that will manage the platform
-  meshstack_platform_workspace = "platform-azure"
-  meshstack_platform_name      = "azure"
-  meshstack_location_name      = "global"
+variable "azure_billing_account_name" {
+  type        = string
+  description = "MCA billing account name."
 }
 
-# For workload identity federation config
+variable "azure_billing_profile_name" {
+  type        = string
+  description = "MCA billing profile name."
+}
+
+variable "azure_invoice_section_name" {
+  type        = string
+  description = "MCA invoice section name."
+}
+
+variable "azure_subscription_owner_object_ids" {
+  type        = list(string)
+  default     = null
+  description = "Optional explicit subscription owner object IDs. If null, current principal is used."
+}
+
+variable "azure_blueprint_service_principal_client_id" {
+  type        = string
+  default     = "f71766dc-90d9-4b7d-bd9d-4499c4331c3f"
+  description = "Client ID of the Azure Blueprints service principal."
+}
+
+variable "azure_blueprint_location" {
+  type        = string
+  default     = "westeurope"
+  description = "Azure region used for Blueprints."
+}
+
+variable "meshstack" {
+  type = object({
+    owning_workspace_identifier = string
+    platform_name               = optional(string, "azure")
+    location_name               = optional(string, "global")
+  })
+  description = "meshStack ownership and naming settings for this platform integration."
+}
+
 data "meshstack_integrations" "integrations" {}
 
-# For Entra tenant name
 data "azuread_domains" "aad_domains" {
   only_initial = true
 }
 
-# For Azure Blueprints
 data "azuread_service_principal" "blueprints" {
   # Client ID is known but object id changes
-  client_id = "f71766dc-90d9-4b7d-bd9d-4499c4331c3f"
+  client_id = var.azure_blueprint_service_principal_client_id
 }
 
-# For current user or service principal
 data "azurerm_client_config" "current" {}
 
-# For role assignments
 data "azurerm_role_definition" "contributor" {
   name = "Contributor"
 }
 
-# For role assignments
 data "azurerm_role_definition" "reader" {
   name = "Reader"
 }
 
 data "azurerm_billing_mca_account_scope" "subscriptions" {
-  billing_account_name = local.mca.billing_account_name
-  billing_profile_name = local.mca.billing_profile_name
-  invoice_section_name = local.mca.invoice_section_name
+  billing_account_name = var.azure_billing_account_name
+  billing_profile_name = var.azure_billing_profile_name
+  invoice_section_name = var.azure_invoice_section_name
 }
 
 data "azurerm_management_group" "parent" {
-  name = local.azure_management_group
+  name = var.azure_management_group
 }
 
 # Creates required resource in Azure
@@ -100,9 +102,9 @@ module "azure_meshplatform" {
   }
 
   mca = {
-    billing_account_name    = local.mca.billing_account_name
-    billing_profile_name    = local.mca.billing_profile_name
-    invoice_section_name    = local.mca.invoice_section_name
+    billing_account_name    = var.azure_billing_account_name
+    billing_profile_name    = var.azure_billing_profile_name
+    invoice_section_name    = var.azure_invoice_section_name
     service_principal_names = ["meshstack-mca"]
   }
 }
@@ -110,8 +112,8 @@ module "azure_meshplatform" {
 # Configure meshStack platform
 resource "meshstack_platform" "azure" {
   metadata = {
-    name               = local.meshstack_platform_name
-    owned_by_workspace = local.meshstack_platform_workspace
+    name               = var.meshstack.platform_name
+    owned_by_workspace = var.meshstack.owning_workspace_identifier
   }
 
   spec = {
@@ -120,7 +122,7 @@ resource "meshstack_platform" "azure" {
     endpoint     = "https://portal.azure.com"
 
     location_ref = {
-      name = local.meshstack_location_name
+      name = var.meshstack.location_name
     }
 
     # To make this platform visible and accessible to all users, you must request publishing
@@ -128,7 +130,7 @@ resource "meshstack_platform" "azure" {
     availability = {
       restriction              = "PRIVATE"
       publication_state        = "UNPUBLISHED"
-      restricted_to_workspaces = [local.meshstack_platform_workspace]
+      restricted_to_workspaces = [var.meshstack.owning_workspace_identifier]
     }
 
     config = {
@@ -145,7 +147,7 @@ resource "meshstack_platform" "azure" {
           user_lookup_strategy = "UserByMailLookupStrategy"
 
           blueprint_service_principal = data.azuread_service_principal.blueprints.object_id
-          blueprint_location          = "westeurope"
+          blueprint_location          = var.azure_blueprint_location
 
           service_principal = {
             client_id = module.azure_meshplatform.replicator_service_principal.Application_Client_ID
@@ -172,7 +174,7 @@ resource "meshstack_platform" "azure" {
               }
               subscription_creation_error_cooldown_sec = 900
             }
-            subscription_owner_object_ids = local.subscription_owner_object_ids
+            subscription_owner_object_ids = coalesce(var.azure_subscription_owner_object_ids, [data.azurerm_client_config.current.object_id])
           }
 
           azure_role_mappings = [
@@ -233,8 +235,8 @@ resource "meshstack_platform" "azure" {
 
 resource "meshstack_landingzone" "azure_default" {
   metadata = {
-    name               = "${local.meshstack_platform_name}-default"
-    owned_by_workspace = local.meshstack_platform_workspace
+    name               = "${var.meshstack.platform_name}-default"
+    owned_by_workspace = var.meshstack.owning_workspace_identifier
   }
 
   spec = {
@@ -249,10 +251,27 @@ resource "meshstack_landingzone" "azure_default" {
 
     platform_properties = {
       azure = {
-        azure_management_group_id = local.azure_management_group
+        azure_management_group_id = var.azure_management_group
 
         azure_role_mappings = []
       }
+    }
+  }
+}
+
+terraform {
+  required_providers {
+    meshstack = {
+      source  = "meshcloud/meshstack"
+      version = "~> 0.19.1"
+    }
+    azurerm = {
+      source  = "hashicorp/azurerm"
+      version = "~> 4.61.0"
+    }
+    azuread = {
+      source  = "hashicorp/azuread"
+      version = "~> 3.8.0"
     }
   }
 }

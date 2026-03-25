@@ -1,15 +1,30 @@
-# Change these values according to your AKS and meshStack setup.
-locals {
-  # Existing AKS cluster config.
-  aks_base_url        = "https://my-cluster.abc.europe.azmk8s.io"
-  aks_subscription_id = "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
-  aks_cluster_name    = "my-cluster"
-  aks_resource_group  = "my-resource-group"
+variable "aks_base_url" {
+  type        = string
+  description = "Base URL used by meshStack to reach the AKS API endpoint."
+}
 
-  # meshStack workspace that will manage the platform
-  aks_platform_workspace  = "platform-aks"
-  aks_platform_identifier = "aks"
-  aks_location_identifier = "global"
+variable "aks_subscription_id" {
+  type        = string
+  description = "Azure subscription ID that hosts the AKS cluster."
+}
+
+variable "aks_cluster_name" {
+  type        = string
+  description = "Name of the AKS cluster."
+}
+
+variable "aks_resource_group" {
+  type        = string
+  description = "Resource group of the AKS cluster."
+}
+
+variable "meshstack" {
+  type = object({
+    owning_workspace_identifier = string
+    platform_identifier         = optional(string, "aks")
+    location_identifier         = optional(string, "global")
+  })
+  description = "meshStack ownership and naming settings for this platform integration."
 }
 
 module "aks_meshplatform" {
@@ -17,7 +32,7 @@ module "aks_meshplatform" {
   version = "~> 0.2.0"
 
   namespace = "meshcloud"
-  scope     = local.aks_subscription_id
+  scope     = var.aks_subscription_id
 
   replicator_enabled     = true
   service_principal_name = "replicator-service-principal"
@@ -33,17 +48,17 @@ module "aks_meshplatform" {
 
 resource "meshstack_platform" "aks" {
   metadata = {
-    name               = local.aks_platform_identifier
-    owned_by_workspace = local.aks_platform_workspace
+    name               = var.meshstack.platform_identifier
+    owned_by_workspace = var.meshstack.owning_workspace_identifier
   }
 
   spec = {
     description  = "Azure Kubernetes Service (AKS). Create a k8s namespace in our AKS cluster."
     display_name = "AKS Namespace"
-    endpoint     = local.aks_base_url
+    endpoint     = var.aks_base_url
 
     location_ref = {
-      name = local.aks_location_identifier
+      name = var.meshstack.location_identifier
     }
 
     # This platform is available to all users
@@ -54,7 +69,7 @@ resource "meshstack_platform" "aks" {
 
     config = {
       aks = {
-        base_url               = local.aks_base_url
+        base_url               = var.aks_base_url
         disable_ssl_validation = true # Usually the case for Kubernetes clusters
 
         replication = {
@@ -83,9 +98,9 @@ resource "meshstack_platform" "aks" {
           user_lookup_strategy       = "UserByMailLookupStrategy"
           send_azure_invitation_mail = false
 
-          aks_subscription_id = local.aks_subscription_id
-          aks_cluster_name    = local.aks_cluster_name
-          aks_resource_group  = local.aks_resource_group
+          aks_subscription_id = var.aks_subscription_id
+          aks_cluster_name    = var.aks_cluster_name
+          aks_resource_group  = var.aks_resource_group
 
         }
 
@@ -106,8 +121,8 @@ resource "meshstack_platform" "aks" {
 
 resource "meshstack_landingzone" "aks_default" {
   metadata = {
-    name               = "${local.aks_platform_identifier}-default"
-    owned_by_workspace = local.aks_platform_workspace
+    name               = "${var.meshstack.platform_identifier}-default"
+    owned_by_workspace = var.meshstack.owning_workspace_identifier
   }
 
   spec = {
@@ -152,10 +167,8 @@ resource "meshstack_landingzone" "aks_default" {
   }
 }
 
-# For workload identity federation config
 data "meshstack_integrations" "integrations" {}
 
-# For Entra tenant name
 data "azuread_domains" "aad_domains" {
   only_initial = true
 }
@@ -167,20 +180,4 @@ terraform {
       version = "~> 0.19.1"
     }
   }
-}
-
-provider "meshstack" {
-  # Configure meshStack API credentials here or use environment variables.
-  # endpoint  = "https://api.my.meshstack.io"
-  # apikey    = "00000000-0000-0000-0000-000000000000"
-  # apisecret = "uFOu4OjbE4JiewPxezDuemSP3DUrCYmw"
-}
-
-# Configure required providers
-provider "azurerm" {
-  features {}
-  subscription_id = local.aks_subscription_id
-}
-
-provider "kubernetes" {
 }
