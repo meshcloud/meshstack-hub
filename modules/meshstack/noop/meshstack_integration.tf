@@ -1,3 +1,11 @@
+variable "meshstack" {
+  type = object({
+    owning_workspace_identifier = string
+    tags                        = optional(map(list(string)), {})
+  })
+  description = "Shared meshStack context. Tags are optional and propagated to building block definition metadata."
+}
+
 variable "hub" {
   type = object({
     git_ref   = optional(string, "main")
@@ -10,12 +18,12 @@ variable "hub" {
   EOT
 }
 
-variable "meshstack" {
-  type = object({
-    owning_workspace_identifier = string
-    tags                        = optional(map(list(string)), {})
-  })
-  description = "Shared meshStack context. Tags are optional and propagated to building block definition metadata."
+output "building_block_definition" {
+  description = "BBD is consumed in building block compositions."
+  value = {
+    uuid        = meshstack_building_block_definition.this.metadata.uuid
+    version_ref = var.hub.bbd_draft ? meshstack_building_block_definition.this.version_latest : meshstack_building_block_definition.this.version_latest_release
+  }
 }
 
 resource "meshstack_building_block_definition" "this" {
@@ -177,15 +185,6 @@ resource "meshstack_building_block_definition" "this" {
       }
     }
   }
-}
-
-output "building_block_definition_uuid" {
-  value = meshstack_building_block_definition.this.metadata.uuid
-}
-
-output "building_block_definition_version_uuid" {
-  description = "UUID of the latest version. In draft mode returns the latest draft; otherwise returns the latest release."
-  value       = var.hub.bbd_draft ? meshstack_building_block_definition.this.version_latest.uuid : meshstack_building_block_definition.this.version_latest_release.uuid
 }
 
 terraform {

@@ -1,9 +1,3 @@
-variable "meshstack" {
-  type = object({
-    owning_workspace_identifier = string
-  })
-}
-
 variable "github" {
   type = object({
     repo_definition_uuid = string
@@ -19,21 +13,19 @@ variable "aks" {
   type = object({
     connector_config_tf_base64 = string
   })
-  description = "AKS integration configuration. connector_config_tf_base64 is the base64-encoded config.tf providing a kubeconfig stub (cluster server endpoint and CA certificate) and ACR credentials to the building block run. It does not contain user credentials — those are provisioned by the building block itself."
-}
-
-locals {
-  config_tf_secret_value = "data:application/octet-stream;base64,${var.aks.connector_config_tf_base64}"
-}
-
-variable "tags" {
-  type    = map(list(string))
-  default = {}
+  description = "AKS integration configuration. `connector_config_tf_base64` is the base64-encoded `config.tf` payload passed into the run (for example: `data:application/octet-stream;base64,ZXhhbXBsZQ==`)."
 }
 
 variable "notification_subscribers" {
   type    = list(string)
   default = []
+}
+
+variable "meshstack" {
+  type = object({
+    owning_workspace_identifier = string
+    tags                        = optional(map(list(string)), {})
+  })
 }
 
 variable "hub" {
@@ -48,10 +40,22 @@ variable "hub" {
   EOT
 }
 
+output "building_block_definition" {
+  description = "BBD is consumed in building block compositions."
+  value = {
+    uuid        = meshstack_building_block_definition.aks_github_connector.metadata.uuid
+    version_ref = var.hub.bbd_draft ? meshstack_building_block_definition.aks_github_connector.version_latest : meshstack_building_block_definition.aks_github_connector.version_latest_release
+  }
+}
+
+locals {
+  config_tf_secret_value = "data:application/octet-stream;base64,${var.aks.connector_config_tf_base64}"
+}
+
 resource "meshstack_building_block_definition" "aks_github_connector" {
   metadata = {
     owned_by_workspace = var.meshstack.owning_workspace_identifier
-    tags               = var.tags
+    tags               = var.meshstack.tags
   }
 
   spec = {
@@ -218,16 +222,6 @@ EOT
       "TENANT_DELETE",
     ]
   }
-}
-
-output "building_block_definition_uuid" {
-  description = "UUID of the GitHub Actions AKS Connector building block definition. Use this to reference the definition as a dependency in compositions."
-  value       = meshstack_building_block_definition.aks_github_connector.ref.uuid
-}
-
-output "building_block_definition_version_uuid" {
-  description = "UUID of the latest version of the GitHub Actions AKS Connector building block definition. Use this as building_block_definition_version_ref in building block instances."
-  value       = var.hub.bbd_draft ? meshstack_building_block_definition.aks_github_connector.version_latest.uuid : meshstack_building_block_definition.aks_github_connector.version_latest_release.uuid
 }
 
 terraform {

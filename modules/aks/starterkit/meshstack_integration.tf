@@ -1,32 +1,36 @@
-variable "meshstack" {
-  type = object({
-    owning_workspace_identifier = string
-  })
-}
-
 variable "full_platform_identifier" {
-  type    = string
-  default = "aks.k8s"
+  type        = string
+  description = "Full identifier of the AKS platform (example: `aks.k8s`)."
 }
 
 variable "github_actions_connector_definition_version_uuid" {
-  type    = string
-  default = "00000000-0000-0000-0000-000000000001"
+  type        = string
+  description = "Version UUID of the GitHub Actions connector building block definition (example: `11111111-2222-3333-4444-555555555555`)."
 }
 
 variable "github_org" {
-  type    = string
-  default = "my-org"
+  type        = string
+  description = "GitHub organization where repositories are created (example: `acme-platform`)."
 }
 
 variable "github_repo_definition_uuid" {
-  type    = string
-  default = "00000000-0000-0000-0000-000000000002"
+  type        = string
+  description = "UUID of the GitHub repository building block definition (example: `aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee`)."
 }
 
 variable "github_repo_definition_version_uuid" {
-  type    = string
-  default = "00000000-0000-0000-0000-000000000003"
+  type        = string
+  description = "Version UUID of the GitHub repository building block definition (example: `ffffffff-1111-2222-3333-444444444444`)."
+}
+
+variable "github_template_repo_path" {
+  type        = string
+  description = "Template repository path (owner/repo) used to bootstrap new app repositories (example: `acme-platform/aks-starterkit-template`)."
+}
+
+variable "apps_base_domain" {
+  type        = string
+  description = "Base domain used for app URLs (example: `apps.prod.example.com`)."
 }
 
 variable "landing_zone_identifiers" {
@@ -34,33 +38,12 @@ variable "landing_zone_identifiers" {
     dev  = string
     prod = string
   })
-  default = {
-    dev  = "aks-dev"
-    prod = "aks-prod"
-  }
-  description = "Identifiers of meshLandingZones for dev and prod."
-}
-
-variable "tags" {
-  type    = map(list(string))
-  default = {}
+  description = "Identifiers of meshLandingZones for dev and prod (example: `{ dev = \"aks-dev\", prod = \"aks-prod\" }`)."
 }
 
 variable "notification_subscribers" {
   type    = list(string)
   default = []
-}
-
-variable "hub" {
-  type = object({
-    git_ref   = optional(string, "main")
-    bbd_draft = optional(bool, true)
-  })
-  default     = {}
-  description = <<-EOT
-  `git_ref`: Hub reference. Set to a tag (e.g. 'v1.2.3') or branch or commit sha of meshcloud/meshstack-hub repo.<br>
-  `bbd_draft`: If true, allows changing the building block definition for upgrading dependent building blocks.
-  EOT
 }
 
 variable "project_tags" {
@@ -75,16 +58,32 @@ variable "project_tags" {
   description = "Configure project tags of starter kit, for dev and prod."
 }
 
-variable "github_template_repo_path" {
-  type        = string
-  description = "GitHub repository template to use when creating the application repository, in the format 'owner/repo'."
-  default     = "likvid-bank/aks-starterkit-template"
+variable "meshstack" {
+  type = object({
+    owning_workspace_identifier = string
+
+    tags = optional(map(list(string)), {})
+  })
 }
 
-variable "apps_base_domain" {
-  type        = string
-  description = "Base domain used for application URLs (e.g. 'likvid-k8s.msh.host'). The app subdomain will be prefixed to this value."
-  default     = "likvid-k8s.msh.host"
+variable "hub" {
+  type = object({
+    git_ref   = optional(string, "main")
+    bbd_draft = optional(bool, true)
+  })
+  default     = {}
+  description = <<-EOT
+  `git_ref`: Hub reference. Set to a tag (e.g. 'v1.2.3') or branch or commit sha of meshcloud/meshstack-hub repo.<br>
+  `bbd_draft`: If true, allows changing the building block definition for upgrading dependent building blocks.
+  EOT
+}
+
+output "building_block_definition" {
+  description = "BBD is consumed in building block compositions."
+  value = {
+    uuid        = meshstack_building_block_definition.aks_starterkit.metadata.uuid
+    version_ref = var.hub.bbd_draft ? meshstack_building_block_definition.aks_starterkit.version_latest : meshstack_building_block_definition.aks_starterkit.version_latest_release
+  }
 }
 
 locals {
@@ -94,7 +93,7 @@ locals {
 resource "meshstack_building_block_definition" "aks_starterkit" {
   metadata = {
     owned_by_workspace = var.meshstack.owning_workspace_identifier
-    tags               = var.tags
+    tags               = var.meshstack.tags
   }
 
   spec = {

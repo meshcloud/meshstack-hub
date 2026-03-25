@@ -1,26 +1,38 @@
-locals {
-  workspace_identifier = "<WORKSPACE_IDENTIFIER>"
-  gcp_project          = "<GCP_PROJECT_ID>"
+variable "gcp" {
+  type = object({
+    project_id                        = string
+    workload_identity_pool_identifier = optional(string, "meshstack-building-block-pool")
+    subject_token_file_path           = optional(string, "/var/run/secrets/workload-identity/gcp/token")
+  })
+  description = "GCP project and workload identity federation settings used by this integration."
 }
 
-terraform {
-  required_providers {
-    meshstack = {
-      source  = "meshcloud/meshstack"
-      version = "0.19.1"
-    }
+variable "meshstack" {
+  type = object({
+    owning_workspace_identifier = string
+    tags                        = optional(map(list(string)), {})
+  })
+  description = "Shared meshStack context. Tags are optional and propagated to building block definition metadata."
+}
+
+variable "hub" {
+  type = object({
+    git_ref   = optional(string, "main")
+    bbd_draft = optional(bool, true)
+  })
+  default     = {}
+  description = <<-EOT
+  `git_ref`: Hub release reference. Set to a tag (e.g. 'v1.2.3') or branch or commit sha of the meshstack-hub repo.
+  `bbd_draft`: If true, the building block definition version is kept in draft mode.
+  EOT
+}
+
+output "building_block_definition" {
+  description = "BBD is consumed in building block compositions."
+  value = {
+    uuid        = meshstack_building_block_definition.gcp_storage_bucket.metadata.uuid
+    version_ref = var.hub.bbd_draft ? meshstack_building_block_definition.gcp_storage_bucket.version_latest : meshstack_building_block_definition.gcp_storage_bucket.version_latest_release
   }
-}
-
-# fill in your meshStack API endpoint and credentials here
-# Create an API key in your workspace with permissions:
-# - "Integrations":Read (to allow the building block to read part of the workload identity federation configuration)
-# - "Building Blocks Definitions": Read, Write, Delete (to manage the building block definition lifecycle)
-# and generated
-provider "meshstack" {
-  # endpoint  = ""
-  # apikey    = ""
-  # apisecret = ""
 }
 
 # Retrieve the workload identity federation configuration from meshStack.
@@ -31,27 +43,22 @@ data "meshstack_integrations" "integrations" {}
 module "backplane" {
   source = "github.com/meshcloud/meshstack-hub//modules/gcp/storage-bucket/backplane?ref=b9c1f3f2201e7e22b04dbf71a3ceab7a0246a7b3"
 
-  project_id = local.gcp_project
+  project_id = var.gcp.project_id
   workload_identity_federation = {
-    workload_identity_pool_identifier = "meshstack-building-block-pool"
+    workload_identity_pool_identifier = var.gcp.workload_identity_pool_identifier
     audience                          = data.meshstack_integrations.integrations.workload_identity_federation.replicator.gcp.audience
     issuer                            = data.meshstack_integrations.integrations.workload_identity_federation.replicator.issuer
     subjects = [
-      # Grants access to all building block definitions in this workspace.
-      # To restrict access to a specific BBD, append its UUID after the first apply:
-      # ":workspace.<WORKSPACE_IDENTIFIER>.buildingblockdefinition.<BBD_UUID>"
-      # (The BBD UUID is only available after resources are created)
-      # The subject prefix is derived from the replicator subject, which shares the same
-      # "system:serviceaccount:<meshstack_identifier>" namespace prefix as building block runners.
-      "${trimsuffix(data.meshstack_integrations.integrations.workload_identity_federation.replicator.subject, ":replicator")}:workspace.${local.workspace_identifier}.buildingblockdefinition"
+      "${trimsuffix(data.meshstack_integrations.integrations.workload_identity_federation.replicator.subject, ":replicator")}:workspace.${var.meshstack.owning_workspace_identifier}.buildingblockdefinition"
     ]
-    subject_token_file_path = "/var/run/secrets/workload-identity/gcp/token"
+    subject_token_file_path = var.gcp.subject_token_file_path
   }
 }
 
 resource "meshstack_building_block_definition" "gcp_storage_bucket" {
   metadata = {
-    owned_by_workspace = local.workspace_identifier
+    owned_by_workspace = var.meshstack.owning_workspace_identifier
+    tags               = var.meshstack.tags
   }
 
   spec = {
@@ -70,8 +77,7 @@ EOT
   }
 
   version_spec = {
-    draft = true
-
+    draft         = var.hub.bbd_draft
     deletion_mode = "DELETE"
 
     implementation = {
@@ -79,7 +85,7 @@ EOT
         terraform_version              = "1.9.0"
         repository_url                 = "https://github.com/meshcloud/meshstack-hub.git"
         repository_path                = "modules/gcp/storage-bucket/buildingblock"
-        ref_name                       = "main"
+        ref_name                       = var.hub.git_ref
         use_mesh_http_backend_fallback = true
       }
     }
@@ -88,7 +94,7 @@ EOT
       GOOGLE_APPLICATION_CREDENTIALS = {
         type            = "STRING"
         assignment_type = "STATIC"
-        display_name    = "Google Application Credentials",
+        display_name    = "Google Application Credentials"
         description     = "The path to the Google application credentials JSON file for authentication."
         is_environment  = true
         argument        = jsonencode("./CREDENTIALS_FILE")
@@ -96,7 +102,7 @@ EOT
       CREDENTIALS_FILE = {
         type            = "FILE"
         assignment_type = "STATIC"
-        display_name    = "Credentials File",
+        display_name    = "Credentials File"
         description     = "The credentials file containing the Google application credentials JSON content. This input is used to securely pass the credentials content to the building block."
 
         sensitive = {
@@ -109,27 +115,27 @@ EOT
       project_id = {
         type            = "STRING"
         assignment_type = "STATIC"
-        display_name    = "GCP Project ID",
+        display_name    = "GCP Project ID"
         description     = "The ID of the GCP project where the storage bucket will be created."
-        argument        = jsonencode(local.gcp_project)
+        argument        = jsonencode(var.gcp.project_id)
       }
       location = {
         type            = "STRING"
         assignment_type = "USER_INPUT"
-        display_name    = "Bucket Location",
+        display_name    = "Bucket Location"
         description     = "The location/region where the GCP storage bucket will be created."
         default_value   = jsonencode("europe-west1")
       }
       bucket_name = {
         type            = "STRING"
         assignment_type = "USER_INPUT"
-        display_name    = "Bucket Name",
+        display_name    = "Bucket Name"
         description     = "The name of the GCP storage bucket to be created."
       }
       labels = {
         type            = "CODE"
         assignment_type = "USER_INPUT"
-        display_name    = "Labels",
+        display_name    = "Labels"
         description     = "A list of labels to apply to the resource."
         default_value   = jsonencode("[\"env:dev\",\"team:backend\",\"project:myapp\"]")
       }
@@ -141,25 +147,38 @@ EOT
         assignment_type = "NONE"
         display_name    = "GCP Bucket Name"
         description     = "The name of the created GCP bucket"
-      },
+      }
       bucket_url = {
         type            = "STRING"
         assignment_type = "RESOURCE_URL"
         display_name    = "GCP Bucket URL"
         description     = "The URL of the created GCP bucket"
-      },
+      }
       bucket_self_link = {
         type            = "STRING"
         assignment_type = "RESOURCE_URL"
         display_name    = "GCP Bucket Self Link"
         description     = "The self link of the created GCP bucket"
-      },
+      }
       summary = {
         type            = "STRING"
         assignment_type = "SUMMARY"
         display_name    = "Summary"
         description     = "A markdown summary of the created GCP bucket with details"
       }
+    }
+  }
+}
+
+terraform {
+  required_providers {
+    meshstack = {
+      source  = "meshcloud/meshstack"
+      version = "~> 0.19.3"
+    }
+    google = {
+      source  = "hashicorp/google"
+      version = "~> 6.0"
     }
   }
 }

@@ -105,6 +105,11 @@ For the markdown apply the following rules
 
 - **Platform integration**: registers a cloud platform with meshStack — provider setup, `meshstack_platform`, `meshstack_location`, and `meshstack_landingzone` resources.
 - **Building block integration**: registers a `meshstack_building_block_definition`, wiring backplane outputs to static building block inputs.
+- Keep variables at the top and outputs right after variables. Keep `variable "meshstack"` and `variable "hub"` at the end of the variable section.
+- `locals` blocks are allowed when they simplify implementation, but place them below variables and outputs.
+- Model metadata tags via `var.meshstack.tags` instead of a separate top-level `variable "tags"` in integration files.
+- Keep `terraform { required_providers { ... } }` at the bottom and do not include manual provider blocks in `meshstack_integration.tf`.
+- Avoid top-of-file banner comments in `meshstack_integration.tf`.
 
 Consult the [meshStack terraform provider documentation](https://registry.terraform.io/providers/meshcloud/meshstack/latest/docs) for details on available resources and attributes.
 

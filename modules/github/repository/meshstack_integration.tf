@@ -1,9 +1,3 @@
-variable "meshstack" {
-  type = object({
-    owning_workspace_identifier = string
-  })
-}
-
 variable "github" {
   type = object({
     org                 = string
@@ -14,14 +8,17 @@ variable "github" {
   description = "GitHub App credentials used to authenticate the GitHub Terraform provider. app_pem_file is the raw PEM private key content."
 }
 
-variable "tags" {
-  type    = map(list(string))
-  default = {}
-}
-
 variable "notification_subscribers" {
   type    = list(string)
   default = []
+}
+
+variable "meshstack" {
+  type = object({
+    owning_workspace_identifier = string
+
+    tags = optional(map(list(string)), {})
+  })
 }
 
 variable "hub" {
@@ -36,10 +33,18 @@ variable "hub" {
   EOT
 }
 
+output "building_block_definition" {
+  description = "BBD is consumed in building block compositions."
+  value = {
+    uuid        = meshstack_building_block_definition.github_repo.metadata.uuid
+    version_ref = var.hub.bbd_draft ? meshstack_building_block_definition.github_repo.version_latest : meshstack_building_block_definition.github_repo.version_latest_release
+  }
+}
+
 resource "meshstack_building_block_definition" "github_repo" {
   metadata = {
     owned_by_workspace = var.meshstack.owning_workspace_identifier
-    tags               = var.tags
+    tags               = var.meshstack.tags
   }
 
   spec = {
@@ -240,16 +245,6 @@ EOT
 
     permissions = []
   }
-}
-
-output "building_block_definition_uuid" {
-  description = "UUID of the GitHub Repository building block definition. Use this to reference the definition as a dependency in compositions (e.g. for BUILDING_BLOCK_OUTPUT inputs)."
-  value       = meshstack_building_block_definition.github_repo.ref.uuid
-}
-
-output "building_block_definition_version_uuid" {
-  description = "UUID of the latest version of the GitHub Repository building block definition. Use this as building_block_definition_version_ref in building block instances."
-  value       = var.hub.bbd_draft ? meshstack_building_block_definition.github_repo.version_latest.uuid : meshstack_building_block_definition.github_repo.version_latest_release.uuid
 }
 
 terraform {

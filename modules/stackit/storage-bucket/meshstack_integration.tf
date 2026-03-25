@@ -1,13 +1,13 @@
+variable "project_id" {
+  type        = string
+  description = "STACKIT project ID where Object Storage buckets will be created."
+}
+
 variable "meshstack" {
   type = object({
     owning_workspace_identifier = string
     tags                        = optional(map(list(string)), {})
   })
-}
-
-variable "project_id" {
-  type        = string
-  description = "STACKIT project ID where Object Storage buckets will be created."
 }
 
 variable "hub" {
@@ -22,9 +22,12 @@ variable "hub" {
   EOT
 }
 
-output "building_block_definition_version" {
-  description = "In draft mode returns the latest draft version; otherwise returns the latest release version."
-  value       = var.hub.bbd_draft ? meshstack_building_block_definition.this.version_latest : meshstack_building_block_definition.this.version_latest_release
+output "building_block_definition" {
+  description = "BBD is consumed in building block compositions."
+  value = {
+    uuid        = meshstack_building_block_definition.this.metadata.uuid
+    version_ref = var.hub.bbd_draft ? meshstack_building_block_definition.this.version_latest : meshstack_building_block_definition.this.version_latest_release
+  }
 }
 
 module "backplane" {

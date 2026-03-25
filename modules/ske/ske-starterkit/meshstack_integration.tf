@@ -1,11 +1,6 @@
-variable "meshstack" {
-  type = object({
-    owning_workspace_identifier = string
-  })
-}
-
 variable "full_platform_identifier" {
-  type = string
+  type        = string
+  description = "Full identifier of the SKE platform (example: `stackit.ske`)."
 }
 
 variable "landing_zone_identifiers" {
@@ -13,40 +8,34 @@ variable "landing_zone_identifiers" {
     dev  = string
     prod = string
   })
-  description = "Identifiers of meshLandingZones for dev and prod."
 }
 
 variable "project_tags" {
   type = object({
-    dev : map(list(string))
-    prod : map(list(string))
+    dev  = map(list(string))
+    prod = map(list(string))
 
     owner_tag_key = optional(string, null)
   })
-  default     = { dev : {}, prod : {} }
-  description = "Configure project tags of starter kit, for dev and prod."
+  default = {
+    dev  = {}
+    prod = {}
+  }
 }
 
 variable "repo_clone_addr" {
   type        = string
-  description = "URL to clone into the starterkit git repository."
+  description = "Repository URL used to initialize the project repository (example: `https://git.example.com/org/sample-app.git`)."
 }
 
 variable "dns_zone_name" {
   type        = string
-  description = "DNS zone name used for application ingress hostnames."
+  description = "DNS zone used for generated app endpoints (example: `apps.example.com`)."
 }
 
 variable "add_random_name_suffix" {
-  type        = bool
-  default     = true
-  description = "Whether to append a random suffix to starterkit names for shared environments."
-}
-
-
-variable "tags" {
-  type    = map(list(string))
-  default = {}
+  type    = bool
+  default = true
 }
 
 variable "notification_subscribers" {
@@ -64,6 +53,14 @@ variable "building_block_definitions" {
   }))
 }
 
+variable "meshstack" {
+  type = object({
+    owning_workspace_identifier = string
+
+    tags = optional(map(list(string)), {})
+  })
+}
+
 variable "hub" {
   type = object({
     git_ref   = optional(string, "main")
@@ -76,10 +73,6 @@ variable "hub" {
   EOT
 }
 
-locals {
-  name_regex = "^[a-zA-Z0-9-]{0,24}$" # underscore and dots not allowed because of K8s namespace, max length of 25 because of project character limit and suffixes added by the building block
-}
-
 output "building_block_definition" {
   value = {
     uuid        = meshstack_building_block_definition.this.metadata.uuid
@@ -88,10 +81,14 @@ output "building_block_definition" {
   description = "BBD can be consumed as-code for a subsequent BB run."
 }
 
+locals {
+  name_regex = "^[a-zA-Z0-9-]{0,24}$" # underscore and dots not allowed because of K8s namespace, max length of 25 because of project character limit and suffixes added by the building block
+}
+
 resource "meshstack_building_block_definition" "this" {
   metadata = {
     owned_by_workspace = var.meshstack.owning_workspace_identifier
-    tags               = var.tags
+    tags               = var.meshstack.tags
   }
 
   spec = {
