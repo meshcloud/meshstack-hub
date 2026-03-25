@@ -33,13 +33,17 @@
 
 - [Open repository in STACKIT Git](${repo_html_url})
 
-%{ if length(workspace_members) > 0 ~}
+%{ if length(members) > 0 ~}
 ## Workspace Member Access
 
-| workspace member | role | team |
-|------------------|------|------|
-%{ for username in sort(keys(workspace_members)) ~}
-| `${username}` | `${workspace_members[username]}` | `${member_team_type[username]}` |
+| workspace member | role | team | status |
+|------------------|------|------|--------|
+%{ for m in members ~}
+%{ if m.resolved ~}
+| `${m.email}` | `${m.roles}` | `${m.team_type}` | ✅ added as `${m.username}` |
+%{ else ~}
+| `${m.email}` | `${m.roles}` | `${m.team_type}` | ⚠️ not found on [Forgejo](${forgejo_host}) |
+%{ endif ~}
 %{ endfor ~}
 
 %{ if length(team_names) > 0 ~}
@@ -48,5 +52,22 @@
 %{ for type, name in team_names ~}
 - **${type}**: `${name}`
 %{ endfor ~}
+%{ endif ~}
+
+%{ if length([for m in members : m if !m.resolved]) > 0 ~}
+### ⚠️ Members Not Found
+
+The following workspace members could not be added to their teams because they
+do not yet have an account on the Forgejo instance.
+
+%{ for m in members ~}
+%{ if !m.resolved ~}
+- `${m.email}` → **${m.team_type}**
+%{ endif ~}
+%{ endfor ~}
+
+**To resolve this**, each member must sign in to [${forgejo_host}](${forgejo_host})
+at least once (e.g. via SSO). After they have signed in, re-run this building
+block and they will be automatically added to their team.
 %{ endif ~}
 %{ endif ~}
