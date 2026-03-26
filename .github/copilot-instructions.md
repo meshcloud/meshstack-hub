@@ -13,12 +13,12 @@ building blocks** that can be imported into any meshStack instance.
 
 ## Module Structure
 
-Every module follows a strict two-tier layout:
+Every module follows a two-tier layout. The `backplane` tier is optional and should be omitted for simple building blocks that require no cloud-side setup (e.g. those that receive all credentials as static inputs).
 
 ```
 modules/<cloud-provider>/<service-name>/
-├── backplane/          # Infrastructure/permissions setup (run by platform team)
-│   ├── main.tf
+├── backplane/          # optional — Infrastructure/permissions setup (run by platform team)
+│   ├── main.tf         # Omit entirely for simple building blocks that need no cloud-side setup
 │   ├── variables.tf
 │   ├── outputs.tf
 │   ├── versions.tf
@@ -30,7 +30,6 @@ modules/<cloud-provider>/<service-name>/
 │   ├── versions.tf
 │   ├── provider.tf
 │   ├── README.md          # YAML front-matter required (see below)
-│   ├── APP_TEAM_README.md # User-facing docs with shared responsibility matrix
 │   ├── logo.png
 │   └── *.tftest.hcl
 └── meshstack_integration.tf   # Example wiring into a meshStack instance
@@ -170,12 +169,11 @@ description: One-sentence description of what the module provisions.
 ---
 ```
 
-**`buildingblock/APP_TEAM_README.md`** — user-facing; must include:
+**BBD `readme` field** — user-facing documentation lives in the `readme` field of `meshstack_building_block_definition.spec` in `meshstack_integration.tf`. It must include:
 
-- What the building block does and when to use it
-- Usage examples
-- Shared responsibility matrix (platform team vs. application team)
-- Best practices
+- A short plain-text description of what the building block does (no extra sub-heading).
+- Usage motivation and examples (1–2 developer scenarios).
+- Shared responsibility matrix (platform team vs. application team) as a markdown table with ✅ / ❌ emojis.
 
 ---
 
@@ -198,15 +196,15 @@ Do **not** commit these relative paths; switch back to the Hub GitHub URL before
 
 ## Checklist for New Modules
 
-- [ ] `backplane/` and `buildingblock/` with all required files
+- [ ] `backplane/` (optional) and `buildingblock/` with all required files
 - [ ] `meshstack_integration.tf` present at the module root
 - [ ] Provider versions pinned with `~>`
 - [ ] Variables in `snake_case` with cloud-provider prefix in `meshstack_integration.tf` (e.g. `azure_tenant_id`)
 - [ ] `buildingblock/README.md` with YAML front-matter
-- [ ] `buildingblock/APP_TEAM_README.md` with shared responsibility matrix
+- [ ] BBD `readme` field in `meshstack_integration.tf` contains description, usage motivation, examples, and shared responsibility table (✅ / ❌)
 - [ ] `meshstack_integration.tf` declares `meshcloud/meshstack` in `required_providers`
 - [ ] `meshstack_integration.tf` uses `variable "hub" { type = object({git_ref = string}) }` and `variable "meshstack" { type = object({owning_workspace_identifier = string}) }`
-- [ ] `meshstack_integration.tf` uses relative `./backplane` source (no absolute GitHub URL)
+- [ ] `meshstack_integration.tf` references backplane via GitHub URL (`github.com/meshcloud/meshstack-hub//modules/<provider>/<service>/backplane?ref=<branch-or-commit>`) — never a relative `./backplane` path
 - [ ] `ref_name` uses `var.hub.git_ref` — no hardcoded `"main"`
 - [ ] `version_spec.draft` uses `var.hub.bbd_draft`
 - [ ] Tags are modeled via `var.meshstack.tags` (no separate top-level `variable "tags"` in integrations)

@@ -12,7 +12,7 @@ When asked to create a new building block definition for meshStack, follow these
 <cloud-provider>/
   <service-name>/
     meshstack_integration.tf
-    backplane/
+    backplane/           # optional — only needed when cloud-side setup is required
       main.tf
       outputs.tf
       variables.tf
@@ -26,13 +26,12 @@ When asked to create a new building block definition for meshStack, follow these
       versions.tf
       provider.tf
       README.md
-      APP_TEAM_README.md
       logo.png
       [*.tftest.hcl]
 ```
 
 Each module follows a two-tier architecture:
-- the **backplane** sets up infrastructure permissions required to deploy many individually parameterized instances of the building block module
+- the **backplane** (optional) sets up infrastructure permissions required to deploy many individually parameterized instances of the building block module. Omit it for simple building blocks that need no cloud-side setup (e.g. those that receive all credentials as static inputs).
 - the **buildingblock** module, i.e. the actual service provided
 
 ## Provider Versions
@@ -89,18 +88,18 @@ description: Provides an AWS S3 bucket for object storage with access controls, 
 <!-- END_TF_DOCS -->
 ```
 
-### buildingblock/APP_TEAM_README.md
+### BBD `readme` field (in `meshstack_integration.tf`)
 
-The app team readme should always include these elements
-- description of the building block (what is it) in plain text.
-- usage motivation: who this building block is for and when it should be used
-- usage examples: provide 1-2 examples of how this building block can be used by a developer building on the cloud
-- shared responsibility: clear demarcation of the responsibility of the service (ie what is managed and provided) vs. what the application team is responsible for. This should be formatted as a markdown table.
+User-facing documentation is placed directly in the `readme` field of `meshstack_building_block_definition.spec`. It must always include:
 
+- A short plain-text description of the building block (no additional sub-heading).
+- Usage motivation: who it is for and when to use it.
+- 1–2 usage examples showing a developer using the building block.
+- A shared responsibility table (markdown) with a clear demarcation between platform team and application team responsibilities.
 
-For the markdown apply the following rules
+For the markdown apply the following rules:
 - Don't use an additional sub-heading for the short description.
-- Use emojis in the shared responsibility table (checkmark and x).
+- Use emojis in the shared responsibility table (✅ / ❌).
 - You can use emojis elsewhere where appropriate.
 
 ### meshstack_integration.tf
@@ -121,11 +120,11 @@ Consult the [meshStack terraform provider documentation](https://registry.terraf
 
 ## Checklist for New Modules
 
-- [ ] `backplane/` and `buildingblock/` directories with all required files
+- [ ] `backplane/` (optional) and `buildingblock/` directories with all required files
 - [ ] Provider versions pinned with `~>`
 - [ ] Variables in `snake_case` with cloud-provider prefix in `meshstack_integration.tf` (e.g. `azure_tenant_id`)
 - [ ] `README.md` with YAML front-matter
-- [ ] `APP_TEAM_README.md` with required sections
+- [ ] BBD `readme` field in `meshstack_integration.tf` contains description, usage motivation, examples, and shared responsibility table
 - [ ] `meshstack_integration.tf` example for meshStack registration
 - [ ] Test file covering positive, negative, and naming scenarios
 - [ ] `logo.png` included

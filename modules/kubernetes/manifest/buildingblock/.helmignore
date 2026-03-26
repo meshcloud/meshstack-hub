@@ -1,0 +1,25 @@
+# Exclude everything that is not part of the Helm chart itself.
+# Helm stores the packaged chart in a Kubernetes Secret — keeping it small is critical.
+
+# Terraform files and state
+*.tf
+*.tfstate
+*.tfstate.backup
+*.tfplan
+.terraform/
+.terraform.lock.hcl
+.terraform.lock.hcl
+
+# Kubernetes credentials — never bundle into the chart
+kubeconfig.yaml
+kubeconfig-mock.yaml
+
+# Terraform test files
+*.tftest.hcl
+
+# Misc
+.DS_Store
+*.png
+*.svg
+README.md
+APP_TEAM_README.md

@@ -1,0 +1,46 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200">
+  <defs>
+    <!-- Diagonal gradient: Kubernetes blue (top-left) → Helm navy (bottom-right) -->
+    <linearGradient id="bg" x1="0" y1="0" x2="200" y2="200" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#326CE5"/>
+      <stop offset="100%" stop-color="#0F1689"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Background circle -->
+  <circle cx="100" cy="100" r="96" fill="url(#bg)"/>
+
+  <!-- Wheel rim -->
+  <circle cx="100" cy="100" r="62" fill="none" stroke="white" stroke-width="8"/>
+
+  <!--
+    7 spokes (Kubernetes-style count).
+    Each spoke runs from the hub edge (r=13, so y=87) to just past the rim (r=74, so y=26),
+    crossing through the rim so it looks like a real ship's wheel.
+    Angles: 360/7 ≈ 51.43°
+  -->
+  <g stroke="white" stroke-width="7" stroke-linecap="round">
+    <line x1="100" y1="87" x2="100" y2="26" transform="rotate(0,100,100)"/>
+    <line x1="100" y1="87" x2="100" y2="26" transform="rotate(51.43,100,100)"/>
+    <line x1="100" y1="87" x2="100" y2="26" transform="rotate(102.86,100,100)"/>
+    <line x1="100" y1="87" x2="100" y2="26" transform="rotate(154.29,100,100)"/>
+    <line x1="100" y1="87" x2="100" y2="26" transform="rotate(205.71,100,100)"/>
+    <line x1="100" y1="87" x2="100" y2="26" transform="rotate(257.14,100,100)"/>
+    <line x1="100" y1="87" x2="100" y2="26" transform="rotate(308.57,100,100)"/>
+  </g>
+
+  <!-- Helm-style grip knobs at each spoke tip -->
+  <g fill="white">
+    <circle cx="100" cy="26" r="7" transform="rotate(0,100,100)"/>
+    <circle cx="100" cy="26" r="7" transform="rotate(51.43,100,100)"/>
+    <circle cx="100" cy="26" r="7" transform="rotate(102.86,100,100)"/>
+    <circle cx="100" cy="26" r="7" transform="rotate(154.29,100,100)"/>
+    <circle cx="100" cy="26" r="7" transform="rotate(205.71,100,100)"/>
+    <circle cx="100" cy="26" r="7" transform="rotate(257.14,100,100)"/>
+    <circle cx="100" cy="26" r="7" transform="rotate(308.57,100,100)"/>
+  </g>
+
+  <!-- Center hub (white ring with gradient fill to echo the background) -->
+  <circle cx="100" cy="100" r="13" fill="white"/>
+  <circle cx="100" cy="100" r="6" fill="url(#bg)"/>
+</svg>
