@@ -6,12 +6,20 @@ locals {
   have_clone_addr = trimspace(var.clone_addr) != "" && var.clone_addr != "null"
 }
 
+data "external" "resolve_default_branch" {
+  program = ["python3", "${path.module}/resolve_default_branch.py"]
+
+  query = {
+    clone_addr = var.clone_addr
+  }
+}
+
 resource "forgejo_repository" "this" {
   owner          = var.forgejo_organization
   name           = var.name
   description    = var.description
   private        = var.private
-  default_branch = var.default_branch
+  default_branch = local.have_clone_addr ? data.external.resolve_default_branch.result["default_branch"] : var.default_branch
   auto_init      = !local.have_clone_addr
 
   # One-time clone (not an ongoing mirror)
