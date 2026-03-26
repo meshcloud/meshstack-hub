@@ -1,13 +1,12 @@
 #!/usr/bin/env python3
-"""Dispatch a Forgejo workflow and wait for completion.
+"""Dispatch a Forgejo workflow on a specific branch and wait for completion.
 
-Triggers a workflow_dispatch event and polls until all jobs reach a terminal
-state (success, failure, cancelled, skipped).
+Triggers a workflow_dispatch event on the given BRANCH and polls until all jobs
+reach a terminal state (success, failure, cancelled, skipped).
 
-Parallel-dispatch safety: Forgejo returns HTTP 204 with no body on dispatch,
-so there is no run ID to correlate. Instead, we use a timestamp coincidence
-window (2 s) combined with EXPECTED_WORKFLOW_TASK_NAME to identify the correct
-run among concurrent dispatches (e.g. stage=dev vs stage=prod).
+Run identification: Forgejo returns HTTP 204 with no body on dispatch, so there
+is no run ID to correlate. Instead, we use a 5-second timestamp coincidence
+window filtering by the dispatched branch to identify the correct run.
 
 API compatibility: Forgejo 8.x does not expose /actions/workflows/{wf}/runs.
 The script probes that endpoint first, then falls back to /actions/tasks which
@@ -15,15 +14,13 @@ returns one entry per job. The tasks endpoint also lacks a separate 'conclusion'
 field — the 'status' value IS the terminal state.
 
 Required environment variables:
-  FORGEJO_HOST                  – Forgejo instance URL (from provider)
-  FORGEJO_API_TOKEN             – API token with repo action scope (from provider)
-  REPOSITORY_ID                 – numeric repository ID
-  WORKFLOW_ONLY_STAGE           – value for the only_stage workflow input
-  EXPECTED_WORKFLOW_TASK_NAME   – job name used to identify the correct run
+  FORGEJO_HOST       – Forgejo instance URL (from provider)
+  FORGEJO_API_TOKEN  – API token with repo action scope (from provider)
+  REPOSITORY_ID      – numeric repository ID
+  BRANCH             – branch to dispatch on (e.g. "dev" or "prod")
 
 Optional:
-  WORKFLOW_NAME                 – workflow file name (default: pipeline.yaml)
-  WORKFLOW_RUN_TITLE            – optional workflow_run_title dispatch input
+  WORKFLOW_NAME      – workflow file name (default: pipeline.yaml)
 """
 
 import datetime as dt
@@ -33,6 +30,11 @@ import re
 import time
 import urllib.error
 import urllib.request
+
+COINCIDENCE_WINDOW_SECONDS = 5
+TERMINAL_STATUSES = {"success", "failure", "cancelled", "skipped"}
+TIMEOUT_SECONDS = 900
+POLL_INTERVAL_SECONDS = 10
 
 
 def as_int(value, default: int = 0) -> int:
@@ -59,10 +61,9 @@ def request_json(host: str, token: str, method: str, path: str, payload: dict | 
     )
     with urllib.request.urlopen(req, timeout=30) as resp:
         raw = resp.read().decode("utf-8")
-        headers = dict(resp.headers.items())
         status = resp.status
     data = json.loads(raw) if raw else {}
-    return status, headers, data
+    return status, data
 
 
 def parse_timestamp(ts: str | None):
@@ -71,247 +72,166 @@ def parse_timestamp(ts: str | None):
     return dt.datetime.fromisoformat(ts.replace("Z", "+00:00"))
 
 
-def main() -> None:
-    host = normalize_host(os.environ["FORGEJO_HOST"])
-    token = os.environ["FORGEJO_API_TOKEN"]
-    repository_id = os.environ["REPOSITORY_ID"]
-    workflow_name = os.environ.get("WORKFLOW_NAME", "pipeline.yaml")
-    only_stage = os.environ["WORKFLOW_ONLY_STAGE"]
-    expected_task_name = os.environ["EXPECTED_WORKFLOW_TASK_NAME"]
-    workflow_run_title = os.environ.get("WORKFLOW_RUN_TITLE", "").strip()
-
-    _, _, repo = request_json(host, token, "GET", f"/api/v1/repositories/{repository_id}")
-    owner = repo["owner"]["username"]
-    repo_name = repo["name"]
-    default_branch = repo.get("default_branch", "main")
-
-    dispatch_inputs = {"only_stage": only_stage}
-    if workflow_run_title:
-        dispatch_inputs["workflow_run_title"] = workflow_run_title
-
-    dispatch_at = dt.datetime.now(dt.timezone.utc)
-    dispatch_path = f"/api/v1/repos/{owner}/{repo_name}/actions/workflows/{workflow_name}/dispatches"
-    try:
-        status, headers, dispatch_response = request_json(
-            host,
-            token,
-            "POST",
-            dispatch_path,
-            {"ref": default_branch, "inputs": dispatch_inputs},
-        )
-    except urllib.error.HTTPError as exc:
-        if workflow_run_title and exc.code in {400, 422}:
-            print(
-                "Dispatch input workflow_run_title was rejected by workflow schema. "
-                "Retrying without workflow_run_title."
-            )
-            status, headers, dispatch_response = request_json(
-                host,
-                token,
-                "POST",
-                dispatch_path,
-                {"ref": default_branch, "inputs": {"only_stage": only_stage}},
-            )
-        else:
-            raise
-    if status not in (200, 201, 202, 204):
-        raise SystemExit(f"Workflow dispatch failed with status {status}")
-
-    expected_run_id = None
-    expected_run_number = None
-
-    if "id" in dispatch_response:
-        expected_run_id = int(dispatch_response["id"])
-    if "run_id" in dispatch_response:
-        expected_run_id = int(dispatch_response["run_id"])
-    if "run_number" in dispatch_response:
-        expected_run_number = int(dispatch_response["run_number"])
-    expected_jobs = dispatch_response.get("jobs", [])
-    if not isinstance(expected_jobs, list):
-        expected_jobs = []
-    if expected_jobs:
-        print(f"Dispatched workflow jobs: {', '.join(expected_jobs)}")
-
-    location = headers.get("Location", "")
-    m = re.search(r"/actions/runs/(\d+)", location)
-    if m:
-        expected_run_id = int(m.group(1))
-
-    deadline = time.time() + 900
-    run_list_candidates = [
+def find_runs_endpoint(host: str, token: str, owner: str, repo_name: str, workflow_name: str) -> str:
+    """Probe available run list endpoints, return the first that works."""
+    candidates = [
         f"/api/v1/repos/{owner}/{repo_name}/actions/workflows/{workflow_name}/runs?limit=30",
         f"/api/v1/repos/{owner}/{repo_name}/actions/tasks?limit=30",
     ]
-    runs_path = None
-
-    for candidate in run_list_candidates:
+    for candidate in candidates:
         try:
             request_json(host, token, "GET", candidate)
-            runs_path = candidate
-            break
+            return candidate
         except urllib.error.HTTPError as exc:
             if exc.code == 404:
                 continue
             raise
 
-    if runs_path is None:
-        raise SystemExit(
-            "Could not find a supported Forgejo workflow runs endpoint. "
-            "Tried: " + ", ".join(run_list_candidates)
-        )
+    raise SystemExit(
+        "Could not find a supported Forgejo workflow runs endpoint. "
+        "Tried: " + ", ".join(candidates)
+    )
 
+
+def identify_run_from_tasks(tasks: list[dict], branch: str, dispatch_at: dt.datetime) -> list[dict]:
+    """From /actions/tasks, find tasks matching our branch within the coincidence window."""
+    candidates = []
+    for task in tasks:
+        if task.get("head_branch") != branch:
+            continue
+        created_at = parse_timestamp(task.get("created_at"))
+        if created_at and created_at >= dispatch_at - dt.timedelta(seconds=COINCIDENCE_WINDOW_SECONDS):
+            candidates.append(task)
+
+    if not candidates:
+        return []
+
+    # Group by run_number, pick the latest run
+    by_run: dict[int, list[dict]] = {}
+    for task in candidates:
+        rn = as_int(task.get("run_number"), -1)
+        if rn >= 0:
+            by_run.setdefault(rn, []).append(task)
+
+    if by_run:
+        latest_run = max(by_run)
+        return by_run[latest_run]
+
+    return candidates
+
+
+def identify_run_from_workflow_runs(runs: list[dict], branch: str, dispatch_at: dt.datetime) -> list[dict]:
+    """From /actions/workflows/{wf}/runs, find runs matching our branch within the coincidence window."""
+    candidates = []
+    for run in runs:
+        if run.get("head_branch") != branch:
+            continue
+        created_at = parse_timestamp(run.get("created_at"))
+        if created_at and created_at >= dispatch_at - dt.timedelta(seconds=COINCIDENCE_WINDOW_SECONDS):
+            candidates.append(run)
+
+    candidates.sort(key=lambda r: as_int(r.get("id")), reverse=True)
+    return candidates
+
+
+def await_tasks_completion(tasks: list[dict], seen_job_status: dict[str, str]) -> tuple[bool, str]:
+    """Check if all tasks are terminal. Returns (all_done, status_summary)."""
+    by_job_name: dict[str, dict] = {}
+    for task in tasks:
+        task_name = str(task.get("name") or task.get("display_title") or "").strip()
+        if not task_name:
+            continue
+        prev = by_job_name.get(task_name)
+        if prev is None or as_int(task.get("id")) > as_int(prev.get("id")):
+            by_job_name[task_name] = task
+
+    for task in by_job_name.values():
+        task_name = str(task.get("name") or task.get("display_title") or "unknown").strip()
+        task_status = str(task.get("status") or "unknown")
+        if seen_job_status.get(task_name) != task_status:
+            print(f"  Job {task_name}: {task_status}")
+            seen_job_status[task_name] = task_status
+
+    non_terminal = [t for t in by_job_name.values() if t.get("status") not in TERMINAL_STATUSES]
+    if non_terminal:
+        return False, ""
+
+    failed = [t for t in by_job_name.values() if t.get("status") not in {"success", "skipped"}]
+    if failed:
+        summary = ", ".join(
+            f"{t.get('name', t.get('display_title', 'unknown'))}={t.get('status')}" for t in failed
+        )
+        return True, f"failed: {summary}"
+
+    return True, "success"
+
+
+def main() -> None:
+    host = normalize_host(os.environ["FORGEJO_HOST"])
+    token = os.environ["FORGEJO_API_TOKEN"]
+    repository_id = os.environ["REPOSITORY_ID"]
+    workflow_name = os.environ.get("WORKFLOW_NAME", "pipeline.yaml")
+    branch = os.environ["BRANCH"]
+
+    _, repo = request_json(host, token, "GET", f"/api/v1/repositories/{repository_id}")
+    owner = repo["owner"]["username"]
+    repo_name = repo["name"]
+
+    print(f"Dispatching workflow {workflow_name} on branch {branch} for {owner}/{repo_name}")
+
+    dispatch_at = dt.datetime.now(dt.timezone.utc)
+    dispatch_path = f"/api/v1/repos/{owner}/{repo_name}/actions/workflows/{workflow_name}/dispatches"
+    status, _ = request_json(host, token, "POST", dispatch_path, {"ref": branch})
+    if status not in (200, 201, 202, 204):
+        raise SystemExit(f"Workflow dispatch failed with status {status}")
+
+    runs_path = find_runs_endpoint(host, token, owner, repo_name, workflow_name)
     uses_tasks_endpoint = "/actions/tasks" in runs_path
     print(f"Polling workflow status via {runs_path}")
+
     seen_job_status: dict[str, str] = {}
-    last_wait_reason: tuple | None = None
-    last_run_state: tuple | None = None
+    deadline = time.time() + TIMEOUT_SECONDS
 
     while time.time() < deadline:
-        _, _, payload = request_json(host, token, "GET", runs_path)
+        _, payload = request_json(host, token, "GET", runs_path)
         runs = payload.get("workflow_runs", [])
 
         if uses_tasks_endpoint:
-            if expected_run_number is not None:
-                candidates = [r for r in runs if as_int(r.get("run_number"), -1) == expected_run_number]
-            else:
-                candidates = []
-                for run in runs:
-                    if run.get("event") != "workflow_dispatch":
-                        continue
-                    if run.get("head_branch") != default_branch:
-                        continue
-                    created_at = parse_timestamp(run.get("created_at"))
-                    if created_at and created_at >= dispatch_at - dt.timedelta(seconds=2):
-                        candidates.append(run)
-
-                # Disambiguate parallel dispatches: group by run_number and pick
-                # the run whose job list contains the expected task name.
-                if expected_task_name and candidates:
-                    by_run: dict[int, list[dict]] = {}
-                    for task in candidates:
-                        rn = as_int(task.get("run_number"), -1)
-                        if rn >= 0:
-                            by_run.setdefault(rn, []).append(task)
-
-                    matched_run = None
-                    for rn in sorted(by_run, reverse=True):
-                        if any(
-                            str(t.get("name", "")).strip() == expected_task_name
-                            for t in by_run[rn]
-                        ):
-                            matched_run = rn
-                            break
-
-                    if matched_run is not None:
-                        candidates = by_run[matched_run]
-                        expected_run_number = matched_run
-                        print(f"Identified run {matched_run} by expected task '{expected_task_name}'")
-                    else:
-                        candidates = []
-        elif expected_run_id is not None:
-            candidates = [r for r in runs if as_int(r.get("id")) == expected_run_id]
-        elif expected_run_number is not None:
-            candidates = [r for r in runs if as_int(r.get("run_number"), -1) == expected_run_number]
+            candidates = identify_run_from_tasks(runs, branch, dispatch_at)
+            if candidates:
+                done, result = await_tasks_completion(candidates, seen_job_status)
+                if done:
+                    run_id = as_int(candidates[0].get("run_number"))
+                    url = candidates[0].get("url", "")
+                    if result == "success":
+                        print(f"Workflow run {run_id} on {branch} completed successfully: {url}")
+                        return
+                    raise SystemExit(f"Workflow run {run_id} on {branch} {result}: {url}")
         else:
-            candidates = []
-            for run in runs:
-                if run.get("event") != "workflow_dispatch":
-                    continue
-                if run.get("head_branch") != default_branch:
-                    continue
-                created_at = parse_timestamp(run.get("created_at"))
-                if created_at and created_at >= dispatch_at - dt.timedelta(seconds=2):
-                    candidates.append(run)
-            candidates.sort(key=lambda r: as_int(r.get("id")), reverse=True)
-
-        if candidates:
-            if uses_tasks_endpoint:
-                # /actions/tasks returns one task per job in the workflow.
-                # Wait for all jobs in the dispatched composition to reach terminal states.
-                by_job_name: dict[str, dict] = {}
-                for task in candidates:
-                    task_name = str(task.get("name") or task.get("display_title") or "").strip()
-                    if not task_name:
-                        continue
-                    prev = by_job_name.get(task_name)
-                    if prev is None or as_int(task.get("id")) > as_int(prev.get("id")):
-                        by_job_name[task_name] = task
-
-                if expected_jobs:
-                    missing_jobs = [job for job in expected_jobs if job not in by_job_name]
-                    if missing_jobs:
-                        wait_reason = ("missing", tuple(missing_jobs))
-                        if wait_reason != last_wait_reason:
-                            print(f"Awaiting jobs to appear: {', '.join(missing_jobs)}")
-                            last_wait_reason = wait_reason
-                        time.sleep(10)
-                        continue
-                    relevant_tasks = [by_job_name[job] for job in expected_jobs]
-                else:
-                    relevant_tasks = list(by_job_name.values())
-
-                for task in relevant_tasks:
-                    task_name = str(task.get("name") or task.get("display_title") or "unknown").strip()
-                    task_status = str(task.get("status") or "unknown")
-                    previous_status = seen_job_status.get(task_name)
-                    if previous_status != task_status:
-                        print(f"Job {task_name}: {task_status}")
-                        seen_job_status[task_name] = task_status
-
-                terminal_statuses = {"success", "failure", "cancelled", "skipped"}
-                non_terminal = [t for t in relevant_tasks if t.get("status") not in terminal_statuses]
-                if non_terminal:
-                    running = tuple(
-                        f"{str(t.get('name') or t.get('display_title') or 'unknown').strip()}={t.get('status')}"
-                        for t in non_terminal
-                    )
-                    wait_reason = ("running", running)
-                    if wait_reason != last_wait_reason:
-                        print(f"Awaiting jobs: {', '.join(running)}")
-                        last_wait_reason = wait_reason
-                    time.sleep(10)
-                    continue
-
-                last_wait_reason = None
-                failed = [
-                    t
-                    for t in relevant_tasks
-                    if t.get("status") not in {"success", "skipped"}
-                ]
-                run_id = expected_run_id if expected_run_id is not None else as_int(relevant_tasks[0].get("id"))
-                html_url = relevant_tasks[0].get("url", "")
-                if not failed:
-                    print(f"Workflow run {run_id} completed successfully: {html_url}")
-                    return
-
-                failed_statuses = ", ".join(
-                    f"{t.get('name', t.get('display_title', 'unknown'))}={t.get('status')}" for t in failed
-                )
-                raise SystemExit(f"Workflow run {run_id} failed jobs: {failed_statuses}: {html_url}")
-            else:
+            candidates = identify_run_from_workflow_runs(runs, branch, dispatch_at)
+            if candidates:
                 run = candidates[0]
                 run_id = run.get("id")
                 status_val = run.get("status")
                 conclusion = run.get("conclusion")
                 html_url = run.get("html_url", run.get("url", ""))
-                run_state = (status_val, conclusion)
-                if run_state != last_run_state:
-                    print(f"Workflow run {run_id}: status={status_val} conclusion={conclusion}")
-                    last_run_state = run_state
 
-                if conclusion is None and status_val in {"success", "failure", "cancelled", "skipped"}:
+                # Normalize: some Forgejo versions use status as terminal state
+                if conclusion is None and status_val in TERMINAL_STATUSES:
                     conclusion = status_val
                     status_val = "completed"
 
                 if status_val == "completed":
                     if conclusion == "success":
-                        print(f"Workflow run {run_id} completed successfully: {html_url}")
+                        print(f"Workflow run {run_id} on {branch} completed successfully: {html_url}")
                         return
-                    raise SystemExit(f"Workflow run {run_id} failed with conclusion={conclusion}: {html_url}")
+                    raise SystemExit(f"Workflow run {run_id} on {branch} failed: conclusion={conclusion}: {html_url}")
 
-        time.sleep(10)
+                print(f"Workflow run {run_id} on {branch}: status={status_val} conclusion={conclusion}")
 
-    raise SystemExit("Timed out waiting for dispatched pipeline workflow to complete.")
+        time.sleep(POLL_INTERVAL_SECONDS)
+
+    raise SystemExit(f"Timed out waiting for workflow on branch {branch} to complete.")
 
 
 if __name__ == "__main__":
