@@ -28,3 +28,6 @@ website/public/assets/building-block-logos/
 website/public/assets/logos/
 website/public/assets/*.json
 .worktrees/
+
+# Local terragrunt integration test files — not for committing
+terragrunt.hcl
