@@ -156,7 +156,7 @@ resource "terraform_data" "team_repo" {
 
   provisioner "local-exec" {
     command = <<-EOT
-      curl -sf -X PUT \
+      curl -s --fail-with-body -X PUT \
         -H "Authorization: token $FORGEJO_API_TOKEN" \
         "$FORGEJO_HOST/api/v1/teams/${local._team_ids[each.key]}/repos/${var.forgejo_organization}/${forgejo_repository.this.name}"
     EOT
@@ -165,7 +165,7 @@ resource "terraform_data" "team_repo" {
   provisioner "local-exec" {
     when    = destroy
     command = <<-EOT
-      curl -sf -X DELETE \
+      curl -s --fail-with-body -X DELETE \
         -H "Authorization: token $FORGEJO_API_TOKEN" \
         "$FORGEJO_HOST/api/v1/teams/${self.triggers_replace.team_id}/repos/${self.triggers_replace.org}/${self.triggers_replace.repo_name}" \
         || true
@@ -186,7 +186,7 @@ resource "terraform_data" "team_member" {
 
   provisioner "local-exec" {
     command = <<-EOT
-      curl -sf -X PUT \
+      curl -s --fail-with-body -X PUT \
         -H "Authorization: token $FORGEJO_API_TOKEN" \
         "$FORGEJO_HOST/api/v1/teams/${local._team_ids[each.value.team_type]}/members/${each.value.username}"
     EOT
@@ -195,7 +195,7 @@ resource "terraform_data" "team_member" {
   provisioner "local-exec" {
     when    = destroy
     command = <<-EOT
-      curl -sf -X DELETE \
+      curl -s --fail-with-body -X DELETE \
         -H "Authorization: token $FORGEJO_API_TOKEN" \
         "$FORGEJO_HOST/api/v1/teams/${self.triggers_replace.team_id}/members/${self.triggers_replace.username}" \
         || true
