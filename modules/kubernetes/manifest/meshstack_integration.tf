@@ -70,7 +70,7 @@ output "building_block_definition" {
 }
 
 module "backplane" {
-  source = "github.com/meshcloud/meshstack-hub//modules/kubernetes/manifest/backplane?ref=feature/kubernetes-manifest-bb"
+  source = "github.com/meshcloud/meshstack-hub//modules/kubernetes/manifest/backplane?ref=50756692c3b74dde5a2ec0b080e43108e0d0c9d9"
 
   kubeconfig_admin     = var.kubernetes_kubeconfig
   namespace            = var.kubernetes_namespace
