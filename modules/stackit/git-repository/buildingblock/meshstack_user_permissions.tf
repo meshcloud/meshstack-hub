@@ -154,11 +154,18 @@ resource "terraform_data" "team_repo" {
     org       = var.forgejo_organization
   }
 
+  # Retry loop: concurrent team-repo assignments for the same repo can race in Forgejo's database
   provisioner "local-exec" {
     command = <<-EOT
-      curl -s --fail-with-body -X PUT \
-        -H "Authorization: token $FORGEJO_API_TOKEN" \
-        "$FORGEJO_HOST/api/v1/teams/${local._team_ids[each.key]}/repos/${var.forgejo_organization}/${forgejo_repository.this.name}"
+      for i in 1 2 3 4 5 6; do
+        curl -s --fail-with-body -X PUT \
+          -H "Authorization: token $FORGEJO_API_TOKEN" \
+          "$FORGEJO_HOST/api/v1/teams/${local._team_ids[each.key]}/repos/${var.forgejo_organization}/${forgejo_repository.this.name}" \
+          && exit 0
+        echo "Attempt $i failed, retrying in 2s..." >&2
+        sleep 2
+      done
+      exit 1
     EOT
   }
 
@@ -186,9 +193,15 @@ resource "terraform_data" "team_member" {
 
   provisioner "local-exec" {
     command = <<-EOT
-      curl -s --fail-with-body -X PUT \
-        -H "Authorization: token $FORGEJO_API_TOKEN" \
-        "$FORGEJO_HOST/api/v1/teams/${local._team_ids[each.value.team_type]}/members/${each.value.username}"
+      for i in 1 2 3 4 5 6; do
+        curl -s --fail-with-body -X PUT \
+          -H "Authorization: token $FORGEJO_API_TOKEN" \
+          "$FORGEJO_HOST/api/v1/teams/${local._team_ids[each.value.team_type]}/members/${each.value.username}" \
+          && exit 0
+        echo "Attempt $i failed, retrying in 2s..." >&2
+        sleep 2
+      done
+      exit 1
     EOT
   }
 
