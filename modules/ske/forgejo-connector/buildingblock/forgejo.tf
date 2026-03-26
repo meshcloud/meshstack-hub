@@ -55,11 +55,9 @@ resource "terraform_data" "await_pipeline_workflow" {
   provisioner "local-exec" {
     command = "${path.module}/trigger_and_await_forgejo_workflow.py"
     environment = {
-      REPOSITORY_ID               = tostring(var.repository_id)
-      WORKFLOW_NAME               = "pipeline.yaml"
-      WORKFLOW_ONLY_STAGE         = var.stage
-      EXPECTED_WORKFLOW_TASK_NAME = "deploy_${var.stage}"
-      WORKFLOW_RUN_TITLE          = "Triggered by meshStack Forgejo Connector ${title(var.stage)}"
+      REPOSITORY_ID = tostring(var.repository_id)
+      WORKFLOW_NAME = "pipeline.yaml"
+      BRANCH        = var.stage
     }
   }
 }
