@@ -39,11 +39,11 @@ output "summary" {
     # Per-member info for the summary table
     members = [
       for member in var.workspace_members : {
-        email     = member.email
-        roles     = join(", ", member.roles)
-        team_type = local.member_team_type[member.username]
-        resolved  = lookup(local._resolved_users, member.email, "") != ""
-        username  = lookup(local._resolved_users, member.email, "")
+        email         = member.email
+        roles         = join(", ", member.roles)
+        team_type     = local.member_team_type[member.username]
+        resolve_error = lookup(local._resolved_users, "error:${member.email}", "")
+        username      = lookup(local._resolved_users, member.email, "")
       }
     ]
   })

@@ -55,14 +55,14 @@ locals {
     for email, username in local._resolved_users : email => {
       team_type = local._member_email_team[email]
       username  = username
-    } if username != ""
+    } if username != "" && !startswith(email, "error:")
   }
 
   # Members without Forgejo accounts (for summary reporting)
   _unresolved_members = {
     for email, username in local._resolved_users : email => {
       team_type = local._member_email_team[email]
-    } if username == ""
+    } if username == "" && !startswith(email, "error:")
   }
 
   # Group members by team type (using resolved emails)
