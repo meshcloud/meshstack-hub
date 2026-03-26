@@ -32,7 +32,7 @@ locals {
   # email → forgejo username (empty string if not found)
   _resolved_users = data.external.resolve_forgejo_users.result
 
-  # Map each workspace member to a team type based on their roles (keyed by email)
+  # Map each workspace member to a team type based on their roles (keyed by meshStack username)
   member_team_type = {
     for member in var.workspace_members : member.username => (
       contains(member.roles, "Workspace Owner") ? "admins" : (

@@ -94,10 +94,14 @@ def find_runs_endpoint(host: str, token: str, owner: str, repo_name: str, workfl
 
 
 def identify_run_from_tasks(tasks: list[dict], branch: str, dispatch_at: dt.datetime) -> list[dict]:
-    """From /actions/tasks, find tasks matching our branch within the coincidence window."""
+    """From /actions/tasks, find tasks matching our branch and event within the coincidence window."""
     candidates = []
     for task in tasks:
         if task.get("head_branch") != branch:
+            continue
+        # Filter by event type when available to avoid confusing push-triggered runs
+        event = task.get("event")
+        if event and event != "workflow_dispatch":
             continue
         created_at = parse_timestamp(task.get("created_at"))
         if created_at and created_at >= dispatch_at - dt.timedelta(seconds=COINCIDENCE_WINDOW_SECONDS):
@@ -121,10 +125,14 @@ def identify_run_from_tasks(tasks: list[dict], branch: str, dispatch_at: dt.date
 
 
 def identify_run_from_workflow_runs(runs: list[dict], branch: str, dispatch_at: dt.datetime) -> list[dict]:
-    """From /actions/workflows/{wf}/runs, find runs matching our branch within the coincidence window."""
+    """From /actions/workflows/{wf}/runs, find runs matching our branch and event within the coincidence window."""
     candidates = []
     for run in runs:
         if run.get("head_branch") != branch:
+            continue
+        # Filter by event type when available to avoid confusing push-triggered runs
+        event = run.get("event")
+        if event and event != "workflow_dispatch":
             continue
         created_at = parse_timestamp(run.get("created_at"))
         if created_at and created_at >= dispatch_at - dt.timedelta(seconds=COINCIDENCE_WINDOW_SECONDS):
