@@ -39,10 +39,10 @@
 | workspace member | role | team | status |
 |------------------|------|------|--------|
 %{ for m in members ~}
-%{ if m.resolved ~}
+%{ if m.resolve_error == "" ~}
 | `${m.email}` | `${m.roles}` | `${m.team_type}` | ✅ added as `${m.username}` |
 %{ else ~}
-| `${m.email}` | `${m.roles}` | `${m.team_type}` | ⚠️ not found on [Forgejo](${forgejo_host}) |
+| `${m.email}` | `${m.roles}` | `${m.team_type}` | ⚠️ ${m.resolve_error} |
 %{ endif ~}
 %{ endfor ~}
 
@@ -54,15 +54,14 @@
 %{ endfor ~}
 %{ endif ~}
 
-%{ if length([for m in members : m if !m.resolved]) > 0 ~}
+%{ if length([for m in members : m if m.resolve_error != ""]) > 0 ~}
 ### ⚠️ Members Not Found
 
-The following workspace members could not be added to their teams because they
-do not yet have an account on the Forgejo instance.
+The following workspace members could not be added to their teams:
 
 %{ for m in members ~}
-%{ if !m.resolved ~}
-- `${m.email}` → **${m.team_type}**
+%{ if m.resolve_error != "" ~}
+- `${m.email}` → **${m.team_type}**: ${m.resolve_error}
 %{ endif ~}
 %{ endfor ~}
 
