@@ -56,8 +56,10 @@ def _search_user_api(forgejo_host: str, token: str, email: str) -> str | None:
     try:
         with urllib.request.urlopen(req, timeout=30) as resp:
             payload = json.loads(resp.read().decode("utf-8"))
-    except urllib.error.HTTPError:
-        return None
+    except urllib.error.HTTPError as exc:
+        if exc.code == 404:
+            return None  # endpoint unavailable (explore users disabled)
+        raise  # surface auth/server errors (401, 403, 5xx) immediately
 
     # The search API returns partial matches, so we must verify the email exactly
     for user in payload.get("data", []):

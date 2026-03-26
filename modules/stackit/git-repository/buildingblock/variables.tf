@@ -3,7 +3,7 @@ variable "workspace_identifier" {
 }
 
 variable "workspace_members" {
-  description = "Workspace members used for collaborator and optional STACKIT project access reconciliation."
+  description = "Workspace members used for team-based access management with username resolution."
   type = list(object({
     meshIdentifier = string
     username       = string
