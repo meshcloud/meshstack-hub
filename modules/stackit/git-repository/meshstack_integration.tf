@@ -11,18 +11,18 @@ variable "forgejo_base_url" {
   type = string
 }
 
-variable "forgejo_action_secrets" {
+variable "action_secrets" {
   type      = map(string)
   default   = {}
   sensitive = true
 
   validation {
-    condition     = alltrue([for key in keys(nonsensitive(var.forgejo_action_secrets)) : length(key) <= 30])
+    condition     = alltrue([for key in keys(nonsensitive(var.action_secrets)) : (length(key) <= 30)])
     error_message = "Forgejo Actions secret names must be 30 characters or less."
   }
 }
 
-variable "forgejo_action_variables" {
+variable "action_variables" {
   type    = map(string)
   default = {}
 }
@@ -36,20 +36,6 @@ variable "stackit_service_account_key" {
   type        = string
   sensitive   = true
   description = "STACKIT service account key used to authenticate the STACKIT provider in the git-repository building block."
-}
-
-variable "workspace_members" {
-  description = "Workspace members that should receive repository access. Populated via USER_PERMISSIONS assignment on each building block instance."
-  type = list(object({
-    meshIdentifier = string
-    username       = string
-    firstName      = string
-    lastName       = string
-    email          = string
-    euid           = string
-    roles          = list(string)
-  }))
-  default = []
 }
 
 variable "meshstack" {
@@ -257,7 +243,7 @@ resource "meshstack_building_block_definition" "this" {
         type            = "CODE"
         assignment_type = "STATIC"
         # jsonencode twice is correct, see https://registry.terraform.io/providers/meshcloud/meshstack/latest/docs/resources/building_block_definition#argument-1
-        argument = jsonencode(jsonencode(var.forgejo_action_variables))
+        argument = jsonencode(jsonencode(var.action_variables))
       }
 
       action_secrets = {
@@ -267,8 +253,8 @@ resource "meshstack_building_block_definition" "this" {
         assignment_type = "STATIC"
         sensitive = {
           argument = {
-            secret_value   = jsonencode(var.forgejo_action_secrets)
-            secret_version = nonsensitive(sha256(jsonencode(var.forgejo_action_secrets)))
+            secret_value   = jsonencode(var.action_secrets)
+            secret_version = nonsensitive(sha256(jsonencode(var.action_secrets)))
           }
         }
       }
