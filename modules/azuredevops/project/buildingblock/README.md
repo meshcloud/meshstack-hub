@@ -21,7 +21,8 @@ This building block creates an Azure DevOps project and manages user access with
 
 - Azure DevOps organization
 - Users provided by authoritative system with assigned roles
-- Personal Access Token with required scopes (managed by backplane)
+- **Personal Access Token with 'Full Access' scope** (managed by backplane)
+  - ⚠️ **Important**: Despite the provider documentation suggesting specific scopes, managing project features requires a PAT with 'Full Access'. This is a known limitation of the Azure DevOps API (see [terraform-provider-azuredevops#712](https://github.com/microsoft/terraform-provider-azuredevops/issues/712))
 - User licenses managed externally by authoritative system
 
 ## Architecture
@@ -130,7 +131,7 @@ If license assignment fails:
 
 ### Permission Denied Errors
 If you get permission errors:
-1. Verify PAT scopes include "Project & Team (Read, Write, & Manage)"
+1. **Verify PAT has 'Full Access' scope** - Custom scoped PATs will fail with 401 Unauthorized when managing project features, even with all scopes enabled
 2. Check the service principal has access to the Key Vault
 3. Ensure the PAT hasn't expired
 <!-- BEGIN_TF_DOCS -->
