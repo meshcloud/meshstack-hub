@@ -20,8 +20,12 @@ locals {
 
   ]
   # Create a map of email to user descriptor for easy lookup
+  # Use ellipsis to handle duplicate principal_names, then take the first descriptor per key
+  user_descriptors_grouped = {
+    for user in data.azuredevops_users.all_users.users : user.principal_name => user.descriptor...
+  }
   user_descriptors = {
-    for user in data.azuredevops_users.all_users.users : user.principal_name => user.descriptor
+    for key, descriptors in local.user_descriptors_grouped : key => descriptors[0]
   }
 }
 
