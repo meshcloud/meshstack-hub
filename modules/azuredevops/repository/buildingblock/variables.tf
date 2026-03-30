@@ -1,24 +1,3 @@
-variable "azure_devops_organization_url" {
-  description = "Azure DevOps organization URL (e.g., https://dev.azure.com/myorg)"
-  type        = string
-}
-
-variable "key_vault_name" {
-  description = "Name of the Key Vault containing the Azure DevOps PAT"
-  type        = string
-}
-
-variable "resource_group_name" {
-  description = "Name of the resource group containing the Key Vault"
-  type        = string
-}
-
-variable "pat_secret_name" {
-  description = "Name of the secret in Key Vault that contains the Azure DevOps PAT"
-  type        = string
-  default     = "azdo-pat"
-}
-
 variable "project_id" {
   description = "Azure DevOps Project ID where the repository will be created"
   type        = string
@@ -49,7 +28,7 @@ variable "enable_branch_policies" {
 variable "minimum_reviewers" {
   description = "Minimum number of reviewers required for pull requests"
   type        = number
-  default     = 2
+  default     = 1
 
   validation {
     condition     = var.minimum_reviewers >= 1 && var.minimum_reviewers <= 10

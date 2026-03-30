@@ -1,15 +1,9 @@
-data "azurerm_key_vault" "devops" {
-  name                = var.key_vault_name
-  resource_group_name = var.resource_group_name
-}
-
-data "azurerm_key_vault_secret" "azure_devops_pat" {
-  name         = var.pat_secret_name
-  key_vault_id = data.azurerm_key_vault.devops.id
+data "azuredevops_project" "project" {
+  name = var.project_name
 }
 
 resource "azuredevops_git_repository" "main" {
-  project_id = var.project_id
+  project_id = data.azuredevops_project.project.id
   name       = var.repository_name
 
   initialization {
@@ -26,7 +20,7 @@ resource "azuredevops_git_repository" "main" {
 resource "azuredevops_branch_policy_min_reviewers" "main" {
   count = var.enable_branch_policies ? 1 : 0
 
-  project_id = var.project_id
+  project_id = data.azuredevops_project.project.id
 
   enabled  = true
   blocking = true
@@ -49,10 +43,9 @@ resource "azuredevops_branch_policy_min_reviewers" "main" {
 resource "azuredevops_branch_policy_work_item_linking" "main" {
   count = var.enable_branch_policies ? 1 : 0
 
-  project_id = var.project_id
-
-  enabled  = true
-  blocking = false
+  project_id = data.azuredevops_project.project.id
+  enabled    = true
+  blocking   = false
 
   settings {
     scope {
