@@ -1,5 +1,5 @@
-variable "project_id" {
-  description = "Azure DevOps Project ID where the repository will be created"
+variable "project_name" {
+  description = "Azure DevOps Project Name where the repository will be created"
   type        = string
 }
 
