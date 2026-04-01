@@ -66,19 +66,6 @@ output "building_block_definition" {
   }
 }
 
-resource "meshstack_platform_type" "stackit" {
-  metadata = {
-    name               = "STACKIT"
-    owned_by_workspace = var.meshstack.owning_workspace_identifier
-  }
-
-  spec = {
-    display_name     = "STACKIT"
-    default_endpoint = "https://portal.stackit.cloud"
-    icon             = "data:image/png;base64,${filebase64("${path.module}/stackit.png")}"
-  }
-}
-
 resource "meshstack_platform" "stackit" {
   metadata = {
     name               = var.meshstack.platform_identifier
@@ -87,7 +74,7 @@ resource "meshstack_platform" "stackit" {
 
   spec = {
     display_name = "STACKIT Project"
-    description  = "STACKIT. Create a STACKIT project with role-based access control."
+    description  = "Create a STACKIT project with role-based access control."
     endpoint     = "https://portal.stackit.cloud"
 
     location_ref = {
@@ -102,7 +89,7 @@ resource "meshstack_platform" "stackit" {
 
     config = {
       custom = {
-        platform_type_ref = meshstack_platform_type.stackit.ref
+        platform_type_ref = { name = "STACKIT" }
       }
     }
   }
@@ -148,7 +135,7 @@ resource "meshstack_building_block_definition" "this" {
     support_url         = "https://portal.stackit.cloud"
     target_type         = "TENANT_LEVEL"
     run_transparency    = true
-    supported_platforms = [meshstack_platform_type.stackit.ref]
+    supported_platforms = [{ name = "STACKIT" }]
   }
 
   version_spec = {
