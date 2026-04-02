@@ -7,5 +7,7 @@ output "credentials" {
 }
 
 output "workload_identity_federation_role" {
-  value = var.workload_identity_federation == null ? null : aws_iam_role.assume_federated_role[0].arn
+  description = "Workload identity federation role ARN"
+  # Manually construct ARN to avoid dependency cycle on input workload_identity_federation (which contains the BBD UUID as subject)
+  value = "arn:aws:iam::${data.aws_caller_identity.current.account_id}:role/BuildingBlockRoute53AliasRecordIdentityFederation"
 }
