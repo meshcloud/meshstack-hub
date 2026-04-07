@@ -9,6 +9,29 @@ variable "hosted_zone_ids" {
   description = "List of Route53 hosted zone IDs the building block may manage. Example: [\"ZXXXXXXXXXXXXXXXXX\"]"
 }
 
+variable "hosted_zone_names" {
+  type        = list(string)
+  description = "List of Route53 hosted zone names offered in the zone selector (e.g. [\"example.com\", \"internal.example.com\"]). Must correspond to the hosted zones listed in hosted_zone_ids."
+}
+
+variable "private_zone" {
+  type        = bool
+  default     = false
+  description = "Set to true if the Route53 zones are Private Hosted Zones."
+}
+
+variable "record_types" {
+  type        = list(string)
+  default     = ["A", "AAAA", "CNAME", "TXT"]
+  description = "List of DNS record types offered in the record type selector."
+}
+
+variable "create_oidc_provider" {
+  type        = bool
+  default     = true
+  description = "Set to false if the OIDC provider for the meshStack issuer already exists in this AWS account (e.g., created by another backplane). The existing provider will be looked up by URL instead of created."
+}
+
 variable "meshstack" {
   type = object({
     owning_workspace_identifier = string
@@ -42,7 +65,8 @@ data "meshstack_integrations" "integrations" {}
 module "backplane" {
   source = "github.com/meshcloud/meshstack-hub//modules/aws/route53-dns-record/backplane?ref=${var.hub.git_ref}"
 
-  hosted_zone_ids = var.hosted_zone_ids
+  hosted_zone_ids      = var.hosted_zone_ids
+  create_oidc_provider = var.create_oidc_provider
 
   workload_identity_federation = {
     issuer   = data.meshstack_integrations.integrations.workload_identity_federation.replicator.issuer
@@ -64,7 +88,7 @@ resource "meshstack_building_block_definition" "this" {
     description       = "Provides AWS Route53 DNS records for mapping domain names to IP addresses or other values."
     support_url       = ""
     documentation_url = "https://hub.meshcloud.io/platforms/aws/definitions/route53-dns-record"
-    symbol            = "https://raw.githubusercontent.com/meshcloud/meshstack-hub/main/modules/aws/route53-dns-record/buildingblock/logo.png"
+    symbol            = "https://raw.githubusercontent.com/meshcloud/meshstack-hub/${var.hub.git_ref}/modules/aws/route53-dns-record/buildingblock/logo.png"
     target_type       = "WORKSPACE_LEVEL"
 
     readme = chomp(<<-EOT
@@ -128,17 +152,18 @@ resource "meshstack_building_block_definition" "this" {
         argument        = jsonencode(var.aws_region)
       }
       zone_name = {
-        type            = "STRING"
-        display_name    = "Zone Name"
-        description     = "AWS Route53 hosted zone name in which the record will be created (e.g. 'example.com')."
-        assignment_type = "USER_INPUT"
+        type              = "SINGLE_SELECT"
+        display_name      = "Zone Name"
+        description       = "AWS Route53 hosted zone in which the record will be created."
+        assignment_type   = "USER_INPUT"
+        selectable_values = var.hosted_zone_names
       }
       private_zone = {
         type            = "BOOLEAN"
         display_name    = "Private Zone"
-        description     = "Set to true if the Route53 zone is a Private Hosted Zone."
-        assignment_type = "USER_INPUT"
-        default_value   = jsonencode(false)
+        description     = "Whether the Route53 zones are Private Hosted Zones. Set by the platform team."
+        assignment_type = "STATIC"
+        argument        = jsonencode(var.private_zone)
       }
       sub = {
         type            = "STRING"
@@ -147,10 +172,11 @@ resource "meshstack_building_block_definition" "this" {
         assignment_type = "USER_INPUT"
       }
       type = {
-        type            = "STRING"
-        display_name    = "Record Type"
-        description     = "DNS record type. Supported: A, AAAA, CNAME, MX, SPF, SRV, TXT."
-        assignment_type = "USER_INPUT"
+        type              = "SINGLE_SELECT"
+        display_name      = "Record Type"
+        description       = "DNS record type."
+        assignment_type   = "USER_INPUT"
+        selectable_values = var.record_types
       }
       record = {
         type            = "STRING"
