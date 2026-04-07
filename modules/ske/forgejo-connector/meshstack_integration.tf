@@ -46,6 +46,7 @@ variable "additional_kubernetes_secrets" {
 variable "meshstack" {
   type = object({
     owning_workspace_identifier = string
+    tags                        = optional(map(list(string)), {})
   })
 }
 
@@ -72,6 +73,7 @@ output "building_block_definition" {
 resource "meshstack_building_block_definition" "this" {
   metadata = {
     owned_by_workspace = var.meshstack.owning_workspace_identifier
+    tags               = var.meshstack.tags
   }
 
   spec = {
