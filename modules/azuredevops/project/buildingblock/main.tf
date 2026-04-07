@@ -79,7 +79,7 @@ resource "azuredevops_group_membership" "readers" {
 
   group = data.azuredevops_group.project_readers.descriptor
   members = [
-    for euid in local.readers : local.user_descriptors[euid] if contains(keys(local.user_descriptors), euid)
+    for euid in local.readers : local.user_descriptors[euid] if contains(keys(local.user_descriptors), euid) && local.user_descriptors[euid] != null
   ]
   mode = "add"
 }
@@ -89,7 +89,7 @@ resource "azuredevops_group_membership" "contributors" {
 
   group = data.azuredevops_group.project_contributors.descriptor
   members = [
-    for euid in local.contributors : local.user_descriptors[euid] if contains(keys(local.user_descriptors), euid)
+    for euid in local.contributors : local.user_descriptors[euid] if contains(keys(local.user_descriptors), euid) && local.user_descriptors[euid] != null
   ]
   mode = "add"
 }
@@ -99,7 +99,7 @@ resource "azuredevops_group_membership" "administrators" {
 
   group = data.azuredevops_group.project_administrators.descriptor
   members = [
-    for euid in local.administrators : local.user_descriptors[euid] if contains(keys(local.user_descriptors), euid)
+    for euid in local.administrators : local.user_descriptors[euid] if contains(keys(local.user_descriptors), euid) && local.user_descriptors[euid] != null
   ]
   mode = "add"
 }
