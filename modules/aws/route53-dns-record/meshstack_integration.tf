@@ -119,15 +119,47 @@ resource "meshstack_building_block_definition" "this" {
 
     implementation = {
       terraform = {
-        terraform_version              = "1.9.0"
-        repository_url                 = "https://github.com/meshcloud/meshstack-hub.git"
-        repository_path                = "modules/aws/route53-dns-record/buildingblock"
-        ref_name                       = var.hub.git_ref
-        use_mesh_http_backend_fallback = false
+        terraform_version = "1.11.5"
+        repository_url    = "https://github.com/meshcloud/meshstack-hub.git"
+        repository_path   = "modules/aws/route53-dns-record/buildingblock"
+        ref_name          = var.hub.git_ref
       }
     }
 
     inputs = {
+      zone_name = {
+        type              = "SINGLE_SELECT"
+        display_name      = "Zone Name"
+        description       = "AWS Route53 hosted zone in which the record will be created."
+        assignment_type   = "USER_INPUT"
+        selectable_values = var.hosted_zone_names
+      }
+      sub = {
+        type            = "STRING"
+        display_name    = "DNS Record Name"
+        description     = "DNS record name, excluding the zone name (e.g. 'api' creates 'api.example.com'). Use '@' for apex records."
+        assignment_type = "USER_INPUT"
+      }
+      type = {
+        type              = "SINGLE_SELECT"
+        display_name      = "Record Type"
+        description       = "DNS record type."
+        assignment_type   = "USER_INPUT"
+        selectable_values = var.record_types
+      }
+      record = {
+        type            = "STRING"
+        display_name    = "Record Value"
+        description     = "The DNS record value (e.g. an IP address for A records, a hostname for CNAME records)."
+        assignment_type = "USER_INPUT"
+      }
+      ttl = {
+        type            = "STRING"
+        display_name    = "TTL (seconds)"
+        description     = "Time-to-live of the record in seconds. Lower values allow faster propagation of changes."
+        assignment_type = "USER_INPUT"
+        default_value   = jsonencode("300")
+      }
       AWS_ROLE_ARN = {
         type            = "STRING"
         display_name    = "AWS Role ARN"
@@ -151,45 +183,12 @@ resource "meshstack_building_block_definition" "this" {
         assignment_type = "STATIC"
         argument        = jsonencode(var.aws_region)
       }
-      zone_name = {
-        type              = "SINGLE_SELECT"
-        display_name      = "Zone Name"
-        description       = "AWS Route53 hosted zone in which the record will be created."
-        assignment_type   = "USER_INPUT"
-        selectable_values = var.hosted_zone_names
-      }
       private_zone = {
         type            = "BOOLEAN"
         display_name    = "Private Zone"
         description     = "Whether the Route53 zones are Private Hosted Zones. Set by the platform team."
         assignment_type = "STATIC"
         argument        = jsonencode(var.private_zone)
-      }
-      sub = {
-        type            = "STRING"
-        display_name    = "DNS Record Name"
-        description     = "DNS record name, excluding the zone name (e.g. 'api' creates 'api.example.com'). Leave empty for apex records."
-        assignment_type = "USER_INPUT"
-      }
-      type = {
-        type              = "SINGLE_SELECT"
-        display_name      = "Record Type"
-        description       = "DNS record type."
-        assignment_type   = "USER_INPUT"
-        selectable_values = var.record_types
-      }
-      record = {
-        type            = "STRING"
-        display_name    = "Record Value"
-        description     = "The DNS record value (e.g. an IP address for A records, a hostname for CNAME records)."
-        assignment_type = "USER_INPUT"
-      }
-      ttl = {
-        type            = "STRING"
-        display_name    = "TTL (seconds)"
-        description     = "Time-to-live of the record in seconds. Lower values allow faster propagation of changes."
-        assignment_type = "USER_INPUT"
-        default_value   = jsonencode("300")
       }
     }
 
@@ -216,7 +215,7 @@ resource "meshstack_building_block_definition" "this" {
         type            = "STRING"
         display_name    = "Summary"
         description     = "Human-readable summary of the created DNS record."
-        assignment_type = "NONE"
+        assignment_type = "SUMMARY"
       }
     }
   }

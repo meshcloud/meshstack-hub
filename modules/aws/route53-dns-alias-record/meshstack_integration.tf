@@ -119,51 +119,20 @@ resource "meshstack_building_block_definition" "this" {
 
     implementation = {
       terraform = {
-        terraform_version              = "1.9.0"
-        repository_url                 = "https://github.com/meshcloud/meshstack-hub.git"
-        repository_path                = "modules/aws/route53-dns-alias-record/buildingblock"
-        ref_name                       = var.hub.git_ref
-        use_mesh_http_backend_fallback = false
+        terraform_version = "1.11.5"
+        repository_url    = "https://github.com/meshcloud/meshstack-hub.git"
+        repository_path   = "modules/aws/route53-dns-alias-record/buildingblock"
+        ref_name          = var.hub.git_ref
       }
     }
 
     inputs = {
-      AWS_ROLE_ARN = {
-        type            = "STRING"
-        display_name    = "AWS Role ARN"
-        description     = "ARN of the AWS IAM role assumed by the building block runner via workload identity federation."
-        assignment_type = "STATIC"
-        is_environment  = true
-        argument        = jsonencode(module.backplane.workload_identity_federation_role)
-      }
-      AWS_WEB_IDENTITY_TOKEN_FILE = {
-        type            = "STRING"
-        display_name    = "AWS Web Identity Token File Path"
-        description     = "File path to the AWS web identity token used for workload identity federation."
-        assignment_type = "STATIC"
-        is_environment  = true
-        argument        = jsonencode("/var/run/secrets/workload-identity/aws/token")
-      }
-      region = {
-        type            = "STRING"
-        display_name    = "AWS Region"
-        description     = "AWS region for the provider (Route53 is global; this is used for provider configuration only)."
-        assignment_type = "STATIC"
-        argument        = jsonencode(var.aws_region)
-      }
       zone_name = {
         type              = "SINGLE_SELECT"
         display_name      = "Zone Name"
         description       = "AWS Route53 hosted zone in which the alias record will be created."
         assignment_type   = "USER_INPUT"
         selectable_values = var.hosted_zone_names
-      }
-      private_zone = {
-        type            = "BOOLEAN"
-        display_name    = "Private Zone"
-        description     = "Whether the Route53 zones are Private Hosted Zones. Set by the platform team."
-        assignment_type = "STATIC"
-        argument        = jsonencode(var.private_zone)
       }
       sub = {
         type            = "STRING"
@@ -197,6 +166,36 @@ resource "meshstack_building_block_definition" "this" {
         assignment_type = "USER_INPUT"
         default_value   = jsonencode(false)
       }
+      AWS_ROLE_ARN = {
+        type            = "STRING"
+        display_name    = "AWS Role ARN"
+        description     = "ARN of the AWS IAM role assumed by the building block runner via workload identity federation."
+        assignment_type = "STATIC"
+        is_environment  = true
+        argument        = jsonencode(module.backplane.workload_identity_federation_role)
+      }
+      AWS_WEB_IDENTITY_TOKEN_FILE = {
+        type            = "STRING"
+        display_name    = "AWS Web Identity Token File Path"
+        description     = "File path to the AWS web identity token used for workload identity federation."
+        assignment_type = "STATIC"
+        is_environment  = true
+        argument        = jsonencode("/var/run/secrets/workload-identity/aws/token")
+      }
+      region = {
+        type            = "STRING"
+        display_name    = "AWS Region"
+        description     = "AWS region for the provider (Route53 is global; this is used for provider configuration only)."
+        assignment_type = "STATIC"
+        argument        = jsonencode(var.aws_region)
+      }
+      private_zone = {
+        type            = "BOOLEAN"
+        display_name    = "Private Zone"
+        description     = "Whether the Route53 zones are Private Hosted Zones. Set by the platform team."
+        assignment_type = "STATIC"
+        argument        = jsonencode(var.private_zone)
+      }
     }
 
     outputs = {
@@ -222,7 +221,7 @@ resource "meshstack_building_block_definition" "this" {
         type            = "STRING"
         display_name    = "Summary"
         description     = "Human-readable summary of the created DNS alias record."
-        assignment_type = "NONE"
+        assignment_type = "SUMMARY"
       }
     }
   }
