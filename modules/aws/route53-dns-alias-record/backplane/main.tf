@@ -1,9 +1,15 @@
 data "aws_caller_identity" "current" {}
 
+resource "random_string" "name_suffix" {
+  length  = 4
+  special = false
+  upper   = false
+}
+
 resource "aws_iam_user" "buildingblock_route53_alias_record_user" {
   count = var.workload_identity_federation == null ? 1 : 0
 
-  name = "buildingblock-route53-alias-record-user"
+  name = "buildingblock-route53-alias-record-user-${random_string.name_suffix.result}"
 }
 
 data "aws_iam_policy_document" "route53_alias_record_access" {
@@ -32,8 +38,16 @@ data "aws_iam_policy_document" "route53_alias_record_access" {
   }
 }
 
+locals {
+  policy_name = var.workload_identity_federation == null ? "Route53AliasRecordBuildingBlockPolicy-${random_string.name_suffix.result}" : "Route53AliasRecordBuildingBlockFederatedPolicy-${random_string.name_suffix.result}"
+  oidc_provider_arn = var.workload_identity_federation == null ? null : try(
+    aws_iam_openid_connect_provider.buildingblock_oidc_provider[0].arn,
+    data.aws_iam_openid_connect_provider.buildingblock_oidc_provider[0].arn
+  )
+}
+
 resource "aws_iam_policy" "buildingblock_route53_alias_record_policy" {
-  name        = var.workload_identity_federation == null ? "Route53AliasRecordBuildingBlockPolicy" : "Route53AliasRecordBuildingBlockFederatedPolicy"
+  name        = local.policy_name
   description = "Policy for the Route53 DNS Alias Record Building Block"
   policy      = data.aws_iam_policy_document.route53_alias_record_access.json
 }
@@ -54,10 +68,16 @@ resource "aws_iam_access_key" "buildingblock_route53_alias_record_access_key" {
 # Workload Identity Federation
 
 resource "aws_iam_openid_connect_provider" "buildingblock_oidc_provider" {
-  count = var.workload_identity_federation != null ? 1 : 0
+  count = (var.workload_identity_federation != null && var.create_oidc_provider) ? 1 : 0
 
   url            = var.workload_identity_federation.issuer
   client_id_list = [var.workload_identity_federation.audience]
+}
+
+data "aws_iam_openid_connect_provider" "buildingblock_oidc_provider" {
+  count = (var.workload_identity_federation != null && !var.create_oidc_provider) ? 1 : 0
+
+  url = var.workload_identity_federation.issuer
 }
 
 data "aws_iam_policy_document" "workload_identity_federation" {
@@ -68,7 +88,7 @@ data "aws_iam_policy_document" "workload_identity_federation" {
     effect = "Allow"
     principals {
       type        = "Federated"
-      identifiers = [aws_iam_openid_connect_provider.buildingblock_oidc_provider[0].arn]
+      identifiers = [local.oidc_provider_arn]
     }
     actions = ["sts:AssumeRoleWithWebIdentity"]
 
