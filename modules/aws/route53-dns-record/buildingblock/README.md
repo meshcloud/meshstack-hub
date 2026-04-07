@@ -5,34 +5,12 @@ supportedPlatforms:
 description: Provides AWS Route53 DNS records for mapping domain names to IP addresses or other values.
 ---
 
-# AWS Route53 DNS Record
-
-This Terraform module provisions AWS Route53 DNS records.
-
-## Providers
-
-```hcl
-terraform {
-  required_providers {
-    aws = {
-      source  = "hashicorp/aws"
-      version = "~> 5.77.0"
-    }
-  }
-}
-
-provider "aws" {
-  region              = var.region
-  allowed_account_ids = var.allowed_account_ids  # Optional
-}
-```
-
 <!-- BEGIN_TF_DOCS -->
 ## Requirements
 
 | Name | Version |
 |------|---------|
-| <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.0 |
+| <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.11.0 |
 | <a name="requirement_aws"></a> [aws](#requirement\_aws) | ~> 6.32 |
 
 ## Modules

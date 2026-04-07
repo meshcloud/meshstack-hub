@@ -111,7 +111,7 @@ data "aws_iam_policy_document" "workload_identity_federation" {
 resource "aws_iam_role" "assume_federated_role" {
   count = var.workload_identity_federation != null ? 1 : 0
 
-  name               = "BuildingBlockRoute53RecordIdentityFederation"
+  name               = "BuildingBlockRoute53RecordIdentityFederation-${random_string.name_suffix.result}"
   assume_role_policy = data.aws_iam_policy_document.workload_identity_federation[0].json
 }
 
