@@ -92,8 +92,6 @@ resource "meshstack_building_block_definition" "this" {
     target_type       = "WORKSPACE_LEVEL"
 
     readme = chomp(<<-EOT
-      ## AWS Route53 DNS Record
-
       This building block creates standard DNS records for mapping domain names to IP addresses or other values.
 
       ## When to use it?

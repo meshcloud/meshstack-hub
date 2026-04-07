@@ -13,6 +13,7 @@ variable "allowed_account_ids" {
 variable "zone_name" {
   type        = string
   description = "AWS Route53 zone name in which the record should be created."
+  nullable    = false
 }
 
 variable "private_zone" {

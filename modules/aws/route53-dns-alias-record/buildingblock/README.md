@@ -5,38 +5,12 @@ supportedPlatforms:
 description: Provides AWS Route53 DNS alias records
 ---
 
-# AWS Route53 DNS Alias Record
-
-This Terraform module provisions AWS Route53 DNS alias records.
-
-## Providers
-
-```hcl
-terraform {
-  required_providers {
-    aws = {
-      source  = "hashicorp/aws"
-      version = "~> 5.77.0"
-    }
-  }
-}
-
-provider "aws" {
-  region              = var.region
-  allowed_account_ids = var.allowed_account_ids  # Optional
-}
-```
-
-
-## Backend configuration
-Here you can find an example of how to create a backend.tf file on this [Wiki Page](https://github.com/meshcloud/building-blocks/wiki/%5BUser-Guide%5D-Setting-up-the-Backend-for-terraform-state#how-to-configure-backendtf-file-for-these-providers)
-
 <!-- BEGIN_TF_DOCS -->
 ## Requirements
 
 | Name | Version |
 |------|---------|
-| <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.0 |
+| <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.11.0 |
 | <a name="requirement_aws"></a> [aws](#requirement\_aws) | ~> 6.32 |
 
 ## Modules

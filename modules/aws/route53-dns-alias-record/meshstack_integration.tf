@@ -92,8 +92,6 @@ resource "meshstack_building_block_definition" "this" {
     target_type       = "WORKSPACE_LEVEL"
 
     readme = chomp(<<-EOT
-      ## AWS Route53 DNS Alias Record
-
       This building block creates Route53 alias records, which are AWS-specific DNS records that route traffic to AWS resources (load balancers, CloudFront distributions, S3 websites, etc.).
 
       ## When to use it?
