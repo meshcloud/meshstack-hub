@@ -5,17 +5,17 @@
 # Group users by their roles for easier management
 locals {
   readers = [
-    for user in var.users : user.email
+    for user in var.users : user.euid
     if contains(user.roles, "reader") || contains(user.roles, "Workspace Member")
   ]
 
   contributors = [
-    for user in var.users : user.email
+    for user in var.users : user.euid
     if contains(user.roles, "user") || contains(user.roles, "Workspace Manager")
   ]
 
   administrators = [
-    for user in var.users : user.email
+    for user in var.users : user.euid
     if contains(user.roles, "admin") || contains(user.roles, "Workspace Owner")
 
   ]
@@ -79,7 +79,7 @@ resource "azuredevops_group_membership" "readers" {
 
   group = data.azuredevops_group.project_readers.descriptor
   members = [
-    for email in local.readers : local.user_descriptors[email] if contains(keys(local.user_descriptors), email)
+    for euid in local.readers : local.user_descriptors[euid] if contains(keys(local.user_descriptors), euid)
   ]
   mode = "add"
 }
@@ -89,7 +89,7 @@ resource "azuredevops_group_membership" "contributors" {
 
   group = data.azuredevops_group.project_contributors.descriptor
   members = [
-    for email in local.contributors : local.user_descriptors[email] if contains(keys(local.user_descriptors), email)
+    for euid in local.contributors : local.user_descriptors[euid] if contains(keys(local.user_descriptors), euid)
   ]
   mode = "add"
 }
@@ -99,7 +99,7 @@ resource "azuredevops_group_membership" "administrators" {
 
   group = data.azuredevops_group.project_administrators.descriptor
   members = [
-    for email in local.administrators : local.user_descriptors[email] if contains(keys(local.user_descriptors), email)
+    for euid in local.administrators : local.user_descriptors[euid] if contains(keys(local.user_descriptors), euid)
   ]
   mode = "add"
 }
