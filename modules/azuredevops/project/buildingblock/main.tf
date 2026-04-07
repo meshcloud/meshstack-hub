@@ -6,18 +6,17 @@
 locals {
   readers = [
     for user in var.users : user.euid
-    if contains(user.roles, "reader") || contains(user.roles, "Workspace Member")
+    if user.euid != null && (contains(user.roles, "reader") || contains(user.roles, "Workspace Member"))
   ]
 
   contributors = [
     for user in var.users : user.euid
-    if contains(user.roles, "user") || contains(user.roles, "Workspace Manager")
+    if user.euid != null && (contains(user.roles, "user") || contains(user.roles, "Workspace Manager"))
   ]
 
   administrators = [
     for user in var.users : user.euid
-    if contains(user.roles, "admin") || contains(user.roles, "Workspace Owner")
-
+    if user.euid != null && (contains(user.roles, "admin") || contains(user.roles, "Workspace Owner"))
   ]
   # Create a map of email to user descriptor for easy lookup
   # Use ellipsis to handle duplicate principal_names, then take the first descriptor per key
@@ -79,7 +78,7 @@ resource "azuredevops_group_membership" "readers" {
 
   group = data.azuredevops_group.project_readers.descriptor
   members = [
-    for euid in local.readers : local.user_descriptors[euid] if contains(keys(local.user_descriptors), euid) && local.user_descriptors[euid] != null
+    for euid in local.readers : local.user_descriptors[euid] if contains(keys(local.user_descriptors), euid)
   ]
   mode = "add"
 }
@@ -89,7 +88,7 @@ resource "azuredevops_group_membership" "contributors" {
 
   group = data.azuredevops_group.project_contributors.descriptor
   members = [
-    for euid in local.contributors : local.user_descriptors[euid] if contains(keys(local.user_descriptors), euid) && local.user_descriptors[euid] != null
+    for euid in local.contributors : local.user_descriptors[euid] if contains(keys(local.user_descriptors), euid)
   ]
   mode = "add"
 }
@@ -99,7 +98,7 @@ resource "azuredevops_group_membership" "administrators" {
 
   group = data.azuredevops_group.project_administrators.descriptor
   members = [
-    for euid in local.administrators : local.user_descriptors[euid] if contains(keys(local.user_descriptors), euid) && local.user_descriptors[euid] != null
+    for euid in local.administrators : local.user_descriptors[euid] if contains(keys(local.user_descriptors), euid)
   ]
   mode = "add"
 }
