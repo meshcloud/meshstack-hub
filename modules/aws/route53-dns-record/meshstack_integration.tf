@@ -63,7 +63,7 @@ output "building_block_definition" {
 data "meshstack_integrations" "integrations" {}
 
 module "backplane" {
-  source = "github.com/meshcloud/meshstack-hub//modules/aws/route53-dns-record/backplane?ref=${var.hub.git_ref}"
+  source = "github.com/meshcloud/meshstack-hub//modules/aws/route53-dns-record/backplane?ref=32698080a28bce13ba224334ad5bfbb2233236ae"
 
   hosted_zone_ids      = var.hosted_zone_ids
   create_oidc_provider = var.create_oidc_provider
