@@ -10,8 +10,13 @@ import { CardComponent } from 'app/shared/card';
 import { HighlightDirective } from 'app/shared/directives';
 import { Platform, PlatformService } from 'app/shared/platform';
 import { extractLogoColor } from 'app/shared/util/logo-color.util';
+import { buildHubModuleCodeSnippet } from 'app/shared/util/module-source.util';
 
 const DEFAULT_HEADER_BG_COLOR = 'rgba(203,213,225,0.3)';
+
+interface PlatformIntegrationVm extends Platform {
+  moduleCodeSnippet: string | null;
+}
 
 @Component({
   selector: 'mst-platform-integration',
@@ -21,11 +26,13 @@ const DEFAULT_HEADER_BG_COLOR = 'rgba(203,213,225,0.3)';
   standalone: true
 })
 export class PlatformIntegrationComponent implements OnInit {
-  public platform$!: Observable<Platform>;
+  public platform$!: Observable<PlatformIntegrationVm>;
 
   public breadcrumbs$!: Observable<BreadcrumbItem[]>;
 
   public copiedTerraform = false;
+
+  public copiedModuleCode = false;
 
   public headerBgColor$!: Observable<string>;
 
@@ -53,7 +60,10 @@ export class PlatformIntegrationComponent implements OnInit {
                 throw new Error('Platform not found');
               }
 
-              return platform;
+              return {
+                ...platform,
+                moduleCodeSnippet: buildHubModuleCodeSnippet(platform.integrationSourceUrl)
+              };
             })
           );
       })
@@ -85,4 +95,19 @@ export class PlatformIntegrationComponent implements OnInit {
         plausible?.('Copy Platform Terraform');
       });
   }
+
+  public copyModuleCode(moduleCodeSnippet: string | null): void {
+    if (!moduleCodeSnippet) {
+      return;
+    }
+
+    navigator.clipboard.writeText(moduleCodeSnippet)
+      .then(() => {
+        this.copiedModuleCode = true;
+        setTimeout(() => {
+          this.copiedModuleCode = false;
+        }, 2000);
+      });
+  }
+
 }

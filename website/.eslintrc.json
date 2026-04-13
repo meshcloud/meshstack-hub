@@ -378,6 +378,7 @@
           {
             "allowList": [
               "close",
+              "copyModuleCode",
               "copyTerraform",
               "getCategoryLabel",
               "navigateToRoutePath",

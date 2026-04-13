@@ -1,4 +1,4 @@
-<div class="bg-slate-50 min-h-screen" *ngIf="template$ | async as template">
+<div class="bg-slate-50 min-h-screen" *ngIf="template$ | async as template; else templateNotFound">
   <!-- Breadcrumb -->
   <div class="border-b border-slate-200 w-full">
     <div class="container mx-auto px-4 lg:px-8">
@@ -33,8 +33,9 @@
                 *ngIf="template.terraformSnippet"
                 target="_blank"
                 rel="noopener noreferrer"
-                class="inline-block text-sm text-slate-600 hover:text-slate-900 mt-3 transition-colors">
-                View source on GitHub
+                class="inline-flex items-center gap-2 mt-3 rounded-md border border-slate-300 bg-white/80 px-3 py-1.5 text-sm text-slate-700 hover:border-slate-400 hover:text-slate-900 transition-colors">
+                <img src="assets/logos/github.png" alt="" class="w-4 h-4" />
+                <span>View source on GitHub</span>
               </a>
             </div>
             <!-- Action Buttons -->
@@ -103,7 +104,22 @@
                   <div class="flex-shrink-0 w-6 h-6 rounded-full bg-primary-100 text-primary-600 flex items-center justify-center text-sm font-semibold">1</div>
                   <div class="flex-1">
                     <div class="text-slate-700 font-medium mb-1 text-base">Add the OpenTofu snippet</div>
-                    <div class="text-slate-600 text-sm">Copy the provided OpenTofu code from the right and add it to your infrastructure codebase.</div>
+                    <div class="text-slate-600 text-sm">
+                      Copy the provided OpenTofu code from the right and add it to your infrastructure codebase.
+                    </div>
+                    <div class="mt-2">
+                      <button
+                        type="button"
+                        class="inline-flex items-center gap-1 rounded border border-slate-200 bg-slate-50 px-2 py-1 text-xs text-slate-600 transition-colors hover:border-slate-300 hover:text-slate-800"
+                        [disabled]="!template.moduleCodeSnippet"
+                        [class.border-slate-300]="copiedModuleCode"
+                        [class.bg-slate-100]="copiedModuleCode"
+                        [class.text-slate-700]="copiedModuleCode"
+                        (click)="copyModuleCode(template.moduleCodeSnippet)">
+                        <i class="fa-solid" [class.fa-check]="copiedModuleCode" [class.fa-copy]="!copiedModuleCode"></i>
+                        <span>{{ copiedModuleCode ? 'Copied!' : 'Copy module code' }}</span>
+                      </button>
+                    </div>
                   </div>
                 </div>
                 <div class="flex gap-3 items-start">
@@ -257,13 +273,15 @@
 </div>
 
 <!-- Not Found State -->
-<div class="bg-slate-50 min-h-screen flex items-center justify-center" *ngIf="(template$ | async) === null || (template$ | async) === undefined">
-  <div class="text-center">
-    <i class="fa-solid fa-circle-exclamation text-6xl text-slate-400 mb-4"></i>
-    <h2 class="text-2xl font-bold text-slate-900 mb-2">Building Block Not Found</h2>
-    <p class="text-slate-600 mb-4">This building block does not exist or has been removed.</p>
-    <a routerLink="/" class="btn btn-primary">
-      <i class="fa-solid fa-home mr-2"></i>Back to Home
-    </a>
+<ng-template #templateNotFound>
+  <div class="bg-slate-50 min-h-screen flex items-center justify-center">
+    <div class="text-center">
+      <i class="fa-solid fa-circle-exclamation text-6xl text-slate-400 mb-4"></i>
+      <h2 class="text-2xl font-bold text-slate-900 mb-2">Building Block Not Found</h2>
+      <p class="text-slate-600 mb-4">This building block does not exist or has been removed.</p>
+      <a routerLink="/" class="btn btn-primary">
+        <i class="fa-solid fa-home mr-2"></i>Back to Home
+      </a>
+    </div>
   </div>
-</div>
+</ng-template>
