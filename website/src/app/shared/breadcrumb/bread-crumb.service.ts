@@ -49,7 +49,7 @@ export class BreadCrumbService {
     templateName: string | null,
     platformName: string | null,
     type: string | null,
-    isIntegration: boolean = false
+    isIntegration = false
   ): BreadcrumbItem[] {
     const breadcrumbs: BreadcrumbItem[] = [{ label: 'Home', routePath: '/' }];
 

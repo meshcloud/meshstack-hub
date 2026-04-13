@@ -1,7 +1,7 @@
+import { DIALOG_DATA, DialogRef } from '@angular/cdk/dialog';
 import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { Component, Inject, OnInit, PLATFORM_ID } from '@angular/core';
 import { FormBuilder, FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
-import { DialogRef, DIALOG_DATA } from '@angular/cdk/dialog';
 
 import { ReferrerService } from 'app/referrer.service';
 

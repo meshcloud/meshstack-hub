@@ -12,6 +12,7 @@ export function extractLogoColor(imageUrl: string, alpha = 0.1): Observable<stri
     if (!imageUrl || typeof window === 'undefined') {
       observer.next(null);
       observer.complete();
+
       return;
     }
     const img = new Image();
