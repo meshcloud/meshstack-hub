@@ -6,5 +6,6 @@ export interface Platform {
   benefits?: string[];
   logo: string;
   readme: string;
+  integrationSourceUrl?: string | null;
   terraformSnippet?: string;
 }

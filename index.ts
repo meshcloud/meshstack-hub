@@ -5,6 +5,17 @@ const { execSync } = require("child_process");
 
 const repoRoot = path.resolve(__dirname, "modules");
 const assetsDir = path.resolve(__dirname, "website/public/assets/logos");
+const hubRef = getHubRef();
+
+function getHubRef() {
+  try {
+    return execSync("git rev-parse HEAD")
+      .toString()
+      .trim();
+  } catch {
+    return "main";
+  }
+}
 
 function getGitHubRemoteUrl() {
   try {
@@ -26,7 +37,7 @@ function getBuildingBlockFolderUrl(filePath) {
   const relativePath = filePath
     .replace(path.resolve(__dirname, "modules"), "")
     .replace(/\/README\.md$/, "");
-  return `${remoteUrl}/tree/main/modules${relativePath}`;
+  return `${remoteUrl}/tree/${hubRef}/modules${relativePath}`;
 }
 
 function findReadmes(dir){
@@ -52,6 +63,7 @@ function findPlatforms(): Platform[] {
       const platformReadme = getPlatformReadmeOrThrow(platformDir);
       const { name, description, category, benefits, content } = extractReadmeFrontMatter(platformReadme);
       const terraformSnippet = getTerraformSnippet(platformDir);
+      const integrationSourceUrl = getPlatformIntegrationSourceUrl(platformDir);
 
       return {
         platformType: dir.name,
@@ -61,9 +73,24 @@ function findPlatforms(): Platform[] {
         benefits,
         logo: platformLogo,
         readme: content,
+        integrationSourceUrl,
         terraformSnippet
       };
     });
+}
+
+function getPlatformIntegrationSourceUrl(platformDir: string): string | null {
+  const remoteUrl = getGitHubRemoteUrl();
+  if (!remoteUrl) return null;
+
+  const tfFile = path.join(platformDir, "meshstack_integration.tf");
+  if (!fs.existsSync(tfFile)) return null;
+
+  const relativePath = platformDir
+    .replace(path.resolve(__dirname, "modules"), "")
+    .replace(/\\/g, "/");
+
+  return `${remoteUrl}/blob/${hubRef}/modules${relativePath}/meshstack_integration.tf`;
 }
 
 // Finds the logo, copies it to website assets and returns the path.
@@ -242,5 +269,6 @@ export interface Platform {
   readme: string;
   category?: string;
   benefits?: string[];
+  integrationSourceUrl?: string | null;
   terraformSnippet?: string;
 }
