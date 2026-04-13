@@ -3,6 +3,7 @@ import { Component, OnDestroy, OnInit } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 import { Observable, Subscription, combineLatest, forkJoin, map } from 'rxjs';
 
+import { Template } from 'app/core';
 import { BreadcrumbComponent } from 'app/shared/breadcrumb';
 import { BreadcrumbItem } from 'app/shared/breadcrumb/breadcrumb';
 import { DefinitionCard } from 'app/shared/definition-card/definition-card';
@@ -78,7 +79,7 @@ export class TemplateGalleryComponent implements OnInit, OnDestroy {
     });
   }
 
-  private getTemplatesWithLogos(templateObs$: Observable<any>): Observable<DefinitionCard[]> {
+  private getTemplatesWithLogos(templateObs$: Observable<Template[]>): Observable<DefinitionCard[]> {
     return forkJoin({ templates: templateObs$, platforms: this.platforms$ })
       .pipe(
         map(({ templates, platforms }) =>
@@ -88,10 +89,11 @@ export class TemplateGalleryComponent implements OnInit, OnDestroy {
   }
 
   private getFilteredPlatformCards(searchTerm: string | undefined): Observable<PlatformCard[]> {
-    return combineLatest([this.platforms$, this.templateService.filterTemplatesByPlatformType('all')]).pipe(
-      map(([platforms, templates]) => this.mapLogosToPlatformCards(platforms, templates)),
-      map(cards => this.filterCardsBySearchTerm(cards, searchTerm))
-    );
+    return combineLatest([this.platforms$, this.templateService.filterTemplatesByPlatformType('all')])
+      .pipe(
+        map(([platforms, templates]) => this.mapLogosToPlatformCards(platforms, templates)),
+        map(cards => this.filterCardsBySearchTerm(cards, searchTerm))
+      );
   }
 
   private getBreadcrumbs(): Observable<BreadcrumbItem[]> {
@@ -101,15 +103,15 @@ export class TemplateGalleryComponent implements OnInit, OnDestroy {
       );
   }
 
-  private mapToDefinitionCard(template: any, platforms: Platform[]): DefinitionCard {
+  private mapToDefinitionCard(template: Template, platforms: Platform[]): DefinitionCard {
     return {
       cardLogo: template.logo,
       title: template.name,
       description: template.description,
       routePath: `/definitions/${template.id}`,
-      supportedPlatforms: template.supportedPlatforms.map(platform => ({
+      supportedPlatforms: (template.supportedPlatforms ?? []).map(platform => ({
         platformType: platform,
-        imageUrl: platforms.find(p => p.platformType === platform)?.logo ?? null
+        imageUrl: platforms.find(p => p.platformType === platform)?.logo ?? 'assets/meshstack-logo.png'
       }))
     };
   }
@@ -121,9 +123,10 @@ export class TemplateGalleryComponent implements OnInit, OnDestroy {
     ];
   }
 
-  private mapLogosToPlatformCards(data: Platform[], templates: any[]): PlatformCard[] {
+  private mapLogosToPlatformCards(data: Platform[], templates: Template[]): PlatformCard[] {
     return data.map(platform => {
       const buildingBlockCount = templates.filter(t => t.platformType === platform.platformType).length;
+
       return this.createPlatformCard(
         platform.name,
         platform.logo,

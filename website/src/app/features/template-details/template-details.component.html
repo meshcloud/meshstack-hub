@@ -136,13 +136,14 @@
             <!-- Right Column: Code -->
             <div class="relative w-full overflow-hidden">
               <button
+                type="button"
                 (click)="copyTerraform(template.terraformSnippet)"
                 class="absolute top-3 right-3 btn btn-xs btn-primary z-10 font-bold flex items-center gap-2"
                 [class.btn-success]="copiedTerraform">
                 <i class="fa-solid" [class.fa-check]="copiedTerraform" [class.fa-copy]="!copiedTerraform"></i>
                 <span>{{ copiedTerraform ? 'Copied!' : 'Copy' }}</span>
               </button>
-              <pre class="bg-slate-900 text-slate-100 p-2 md:p-3 rounded-xl border border-slate-200 overflow-x-auto text-xs md:text-sm mt-0 w-full whitespace-pre"><code class="language-hcl" highlight>{{ template.terraformSnippet }}</code></pre>
+              <pre class="bg-slate-900 text-slate-100 p-2 md:p-3 rounded-xl border border-slate-200 overflow-x-auto text-xs md:text-sm mt-0 w-full whitespace-pre"><code class="language-hcl" mstHighlight>{{ template.terraformSnippet }}</code></pre>
             </div>
           </div>
         </div>
@@ -256,7 +257,7 @@
 </div>
 
 <!-- Not Found State -->
-<div class="bg-slate-50 min-h-screen flex items-center justify-center" *ngIf="!(template$ | async)">
+<div class="bg-slate-50 min-h-screen flex items-center justify-center" *ngIf="(template$ | async) === null || (template$ | async) === undefined">
   <div class="text-center">
     <i class="fa-solid fa-circle-exclamation text-6xl text-slate-400 mb-4"></i>
     <h2 class="text-2xl font-bold text-slate-900 mb-2">Building Block Not Found</h2>

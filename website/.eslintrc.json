@@ -373,7 +373,22 @@
         "plugin:@angular-eslint/template/accessibility"
       ],
       "rules": {
-        "@angular-eslint/template/no-call-expression": "warn",
+        "@angular-eslint/template/no-call-expression": [
+          "warn",
+          {
+            "allowList": [
+              "close",
+              "copyTerraform",
+              "getCategoryLabel",
+              "navigateToRoutePath",
+              "onBackgroundColorExtracted",
+              "onSearch",
+              "open",
+              "openMeshStackUrl",
+              "scrollToTerraform"
+            ]
+          }
+        ],
         "@angular-eslint/template/no-negated-async": "warn",
 
         // ESLint Accessibility Keyboard Navigation

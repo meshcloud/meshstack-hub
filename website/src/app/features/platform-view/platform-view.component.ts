@@ -1,8 +1,9 @@
 import { CommonModule } from '@angular/common';
 import { Component, OnDestroy, OnInit } from '@angular/core';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
-import { Observable, Subscription, map, switchMap, of } from 'rxjs';
+import { Observable, Subscription, map, of, switchMap } from 'rxjs';
 
+import { Template } from 'app/core';
 import { BreadcrumbComponent } from 'app/shared/breadcrumb';
 import { BreadCrumbService } from 'app/shared/breadcrumb/bread-crumb.service';
 import { BreadcrumbItem } from 'app/shared/breadcrumb/breadcrumb';
@@ -33,13 +34,13 @@ export class PlatformViewComponent implements OnInit, OnDestroy {
 
   public templates$!: Observable<DefinitionCard[]>;
 
-  public hasIntegration: boolean = false;
+  public hasIntegration = false;
 
-  public currentPlatformType: string = '';
-
-  private paramSubscription!: Subscription;
+  public currentPlatformType = '';
 
   public logoBackgroundColor$!: Observable<string>;
+
+  private paramSubscription!: Subscription;
 
   constructor(
     private router: Router,
@@ -77,6 +78,7 @@ export class PlatformViewComponent implements OnInit, OnDestroy {
               }
 
               this.hasIntegration = !!platform.terraformSnippet;
+
               return {
                 logo: platform.logo,
                 title: platform.name,
@@ -84,13 +86,14 @@ export class PlatformViewComponent implements OnInit, OnDestroy {
                 benefits: platform.benefits
               };
             })
-        );
+          );
         // Compose logoBackgroundColor$ reactively from platform$
         const DEFAULT_LOGO_BG_COLOR = 'rgba(203,213,225,0.3)';
         this.logoBackgroundColor$ = this.platform$.pipe(
           switchMap(platform =>
             platform.logo
-              ? extractLogoColor(platform.logo).pipe(
+              ? extractLogoColor(platform.logo)
+                .pipe(
                   map(color => color || DEFAULT_LOGO_BG_COLOR)
                 )
               : of(DEFAULT_LOGO_BG_COLOR)
@@ -105,7 +108,7 @@ export class PlatformViewComponent implements OnInit, OnDestroy {
   }
 
   private getTemplatesWithLogos(
-    templateObs$: Observable<any>,
+    templateObs$: Observable<Template[]>,
     platforms: Platform[],
     type: string
   ): Observable<DefinitionCard[]> {
@@ -119,7 +122,7 @@ export class PlatformViewComponent implements OnInit, OnDestroy {
             routePath: `/platforms/${type}/definitions/${item.id}`,
             supportedPlatforms: item.supportedPlatforms.map(platform => ({
               platformType: platform,
-              imageUrl: platforms.find(p => p.platformType === item.platformType)?.logo ?? null
+              imageUrl: platforms.find(p => p.platformType === platform)?.logo ?? 'assets/meshstack-logo.png'
             }))
           }))
         )

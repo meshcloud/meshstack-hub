@@ -31,10 +31,12 @@ export class PlatformCardsComponent {
    * Returns the cards sorted by customOrder, with others following in original order.
    */
   public get sortedCards(): PlatformCard[] {
-    if (!this.cards) return [];
+    if (!this.cards) {return [];}
     const order = this.customOrder;
+
     return [
-      ...this.cards.filter(card => order.includes(card.title)).sort((a, b) => order.indexOf(a.title) - order.indexOf(b.title)),
+      ...this.cards.filter(card => order.includes(card.title))
+        .sort((a, b) => order.indexOf(a.title) - order.indexOf(b.title)),
       ...this.cards.filter(card => !order.includes(card.title))
     ];
   }
@@ -46,21 +48,21 @@ export class PlatformCardsComponent {
   }
 
   public getCategoryLabel(category?: 'hyperscaler' | 'european' | 'china' | 'devops' | 'private-cloud'): { emoji: string; text: string } | null {
-    if (!category) return null;
+    if (!category) {return null;}
 
     switch (category) {
-      case 'hyperscaler':
-        return { emoji: '🌐', text: 'Hyperscaler' };
-      case 'european':
-        return { emoji: '🇪🇺', text: 'European' };
-      case 'china':
-        return { emoji: '🇨🇳', text: 'China' };
-      case 'devops':
-        return { emoji: '🔧', text: 'DevOps' };
-      case 'private-cloud':
-        return { emoji: '🔒', text: 'Private Cloud' };
-      default:
-        return null;
+    case 'hyperscaler':
+      return { emoji: '🌐', text: 'Hyperscaler' };
+    case 'european':
+      return { emoji: '🇪🇺', text: 'European' };
+    case 'china':
+      return { emoji: '🇨🇳', text: 'China' };
+    case 'devops':
+      return { emoji: '🔧', text: 'DevOps' };
+    case 'private-cloud':
+      return { emoji: '🔒', text: 'Private Cloud' };
+    default:
+      return null;
     }
   }
 }

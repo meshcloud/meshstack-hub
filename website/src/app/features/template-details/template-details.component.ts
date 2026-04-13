@@ -1,18 +1,18 @@
+import { Dialog } from '@angular/cdk/dialog';
 import { CommonModule } from '@angular/common';
 import { Component, OnDestroy, OnInit } from '@angular/core';
 import { ActivatedRoute, RouterLink } from '@angular/router';
-import { Dialog } from '@angular/cdk/dialog';
-import { Observable, Subscription, map, switchMap, of } from 'rxjs';
+import { Observable, Subscription, map, of, switchMap } from 'rxjs';
 
 import { BreadCrumbService } from 'app/shared/breadcrumb/bread-crumb.service';
 import { BreadcrumbItem } from 'app/shared/breadcrumb/breadcrumb';
 import { BreadcrumbComponent } from 'app/shared/breadcrumb/breadcrumb.component';
 import { CardComponent } from 'app/shared/card';
+import { HighlightDirective } from 'app/shared/directives';
 import { TemplateService } from 'app/shared/template';
 import { extractLogoColor } from 'app/shared/util/logo-color.util';
 
 import { ImportDialogComponent } from './import-dialog/import-dialog.component';
-import { HighlightDirective } from 'app/shared/directives';
 
 const DEFAULT_HEADER_BG_COLOR = 'rgba(203,213,225,0.3)';
 
@@ -69,7 +69,8 @@ export class TemplateDetailsComponent implements OnInit, OnDestroy {
     this.headerBgColor$ = this.template$.pipe(
       switchMap(template =>
         template && template.imageUrl
-          ? extractLogoColor(template.imageUrl).pipe(
+          ? extractLogoColor(template.imageUrl)
+            .pipe(
               map(color => color || DEFAULT_HEADER_BG_COLOR)
             )
           : of(DEFAULT_HEADER_BG_COLOR)
@@ -93,12 +94,14 @@ export class TemplateDetailsComponent implements OnInit, OnDestroy {
         setTimeout(() => {
           this.copiedTerraform = false;
         }, 2000);
-        (window as any).plausible('Copy BBD Terraform');
+        const plausible = (window as Window & { plausible?: (eventName: string) => void }).plausible;
+        plausible?.('Copy BBD Terraform');
       });
   }
 
   public scrollToTerraform(): void {
     const terraformCard = document.querySelector('mst-card');
+
     if (terraformCard) {
       terraformCard.scrollIntoView({ behavior: 'smooth', block: 'start' });
     }

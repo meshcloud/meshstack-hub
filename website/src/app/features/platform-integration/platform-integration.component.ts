@@ -1,15 +1,15 @@
 import { CommonModule } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute, RouterLink } from '@angular/router';
-import { Observable, switchMap, of, map } from 'rxjs';
+import { Observable, map, of, switchMap } from 'rxjs';
 
 import { BreadcrumbComponent } from 'app/shared/breadcrumb';
 import { BreadCrumbService } from 'app/shared/breadcrumb/bread-crumb.service';
 import { BreadcrumbItem } from 'app/shared/breadcrumb/breadcrumb';
 import { CardComponent } from 'app/shared/card';
-import { PlatformService, Platform } from 'app/shared/platform';
-import { extractLogoColor } from 'app/shared/util/logo-color.util';
 import { HighlightDirective } from 'app/shared/directives';
+import { Platform, PlatformService } from 'app/shared/platform';
+import { extractLogoColor } from 'app/shared/util/logo-color.util';
 
 const DEFAULT_HEADER_BG_COLOR = 'rgba(203,213,225,0.3)';
 
@@ -22,8 +22,11 @@ const DEFAULT_HEADER_BG_COLOR = 'rgba(203,213,225,0.3)';
 })
 export class PlatformIntegrationComponent implements OnInit {
   public platform$!: Observable<Platform>;
+
   public breadcrumbs$!: Observable<BreadcrumbItem[]>;
+
   public copiedTerraform = false;
+
   public headerBgColor$!: Observable<string>;
 
   constructor(
@@ -36,16 +39,20 @@ export class PlatformIntegrationComponent implements OnInit {
     this.platform$ = this.route.paramMap.pipe(
       switchMap(params => {
         const type = params.get('type');
+
         if (!type) {
           throw new Error('Platform type not given in URL');
         }
+
         return this.platformService.getAllPlatforms()
           .pipe(
             map(platforms => {
               const platform = platforms.find(p => p.platformType === type);
+
               if (!platform) {
                 throw new Error('Platform not found');
               }
+
               return platform;
             })
           );
@@ -60,10 +67,9 @@ export class PlatformIntegrationComponent implements OnInit {
     this.headerBgColor$ = this.platform$.pipe(
       switchMap(platform =>
         platform && platform.logo
-          ? extractLogoColor(platform.logo).pipe(
-              map(color => {
-                return color || DEFAULT_HEADER_BG_COLOR;
-              })
+          ? extractLogoColor(platform.logo)
+            .pipe(
+              map(color => color || DEFAULT_HEADER_BG_COLOR)
             )
           : of(DEFAULT_HEADER_BG_COLOR)
       )
@@ -71,10 +77,12 @@ export class PlatformIntegrationComponent implements OnInit {
   }
 
   public copyTerraform(content: string): void {
-    navigator.clipboard.writeText(content).then(() => {
-      this.copiedTerraform = true;
-      setTimeout(() => this.copiedTerraform = false, 2000);
-      (window as any).plausible('Copy Platform Terraform');
-    });
+    navigator.clipboard.writeText(content)
+      .then(() => {
+        this.copiedTerraform = true;
+        setTimeout(() => this.copiedTerraform = false, 2000);
+        const plausible = (window as Window & { plausible?: (eventName: string) => void }).plausible;
+        plausible?.('Copy Platform Terraform');
+      });
   }
 }

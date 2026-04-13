@@ -15,6 +15,7 @@ export class SearchBarComponent implements OnInit, OnDestroy {
   public searchForm!: FormGroup;
 
   private routerSubscription!: Subscription;
+
   private searchSubscription!: Subscription;
 
   constructor(
@@ -46,7 +47,13 @@ export class SearchBarComponent implements OnInit, OnDestroy {
 
   private setupLiveSearch(): void {
     // Live search with debounce - searches as user types
-    this.searchSubscription = this.searchForm.get('searchTerm')!.valueChanges
+    const searchTermControl = this.searchForm.get('searchTerm');
+
+    if (!searchTermControl) {
+      throw new Error('searchTerm form control missing');
+    }
+
+    this.searchSubscription = searchTermControl.valueChanges
       .pipe(
         debounceTime(300), // Wait 300ms after user stops typing
         distinctUntilChanged() // Only emit when value actually changes
