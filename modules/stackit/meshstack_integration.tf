@@ -51,7 +51,7 @@ variable "hub" {
 }
 
 module "backplane" {
-  source = "github.com/meshcloud/meshstack-hub//modules/stackit/project/backplane?ref=865ee1baa8facabdb76071a151669f5d35a81134"
+  source = "github.com/meshcloud/meshstack-hub//modules/stackit/project/backplane?ref=f157cea7511aa6e8a6c0e3197a6acaa723488b2b"
 
   project_id           = var.stackit_project_id
   organization_id      = var.stackit_organization_id
