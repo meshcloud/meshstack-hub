@@ -242,8 +242,8 @@ terraform {
       version = "~> 0.20.0"
     }
     stackit = {
-      source  = "stackitcloud/meshstack"
-      version = "~> 0.88.0"
+      source  = "stackitcloud/stackit"
+      version = "~> 0.89.0"
     }
   }
 }
