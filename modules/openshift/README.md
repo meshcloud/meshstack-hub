@@ -6,5 +6,6 @@ benefits:
   - Project and Namespace Provisioning
   - Role Binding Assignment
   - Cost Tracking
+official: true
 ---
 

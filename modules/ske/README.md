@@ -6,5 +6,6 @@ benefits:
   - Namespace Provisioning
   - Role Binding Assignment
   - Usage Tracking
+official: true
 ---
 

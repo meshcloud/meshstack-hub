@@ -6,5 +6,6 @@ benefits:
   - Subscription Provisioning
   - Role Assignment
   - Cost Management
+official: true
 ---
 

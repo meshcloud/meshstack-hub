@@ -6,5 +6,6 @@ benefits:
   - Namespace Management
   - Role Binding Assignment
   - Secure Access
+official: true
 ---
 
