@@ -5,23 +5,32 @@
                 [label]="card.title"
                 [logoSourceImage]="card.cardLogo"
                 (backgroundColorExtracted)="onBackgroundColorExtracted(card.title, $event)">
-        <div class="p-4 flex flex-col h-full" card-body>
-          <!-- Title with Logo - Left Aligned -->
-          <div class="flex items-center gap-2 mb-3">
-            <div class="w-9 h-9 flex-shrink-0 flex items-center justify-center rounded-lg transition-colors"
-                 [ngStyle]="{'background-color': logoBackgroundColors[card.title] || 'rgba(203, 213, 225, 0.3)'}">
-              <img *ngIf="card.cardLogo; else unknownLogo"
-                   [src]="card.cardLogo"
-                   [alt]="card.title"
-                   class="w-5 h-5 object-contain" />
-              <ng-template #unknownLogo>
-                <img src="assets/meshstack-logo.png" alt="Unknown Logo" class="w-5 h-5 object-contain" />
-              </ng-template>
-            </div>
-            <h5 class="font-semibold text-slate-900 mb-0 text-base leading-tight">
-              {{ card.title }}
-            </h5>
-          </div>
+        <div class="p-4 flex flex-col h-full relative" card-body>
+           <!-- Official Badge Icon - Top Right -->
+           <span *ngIf="card.official" class="absolute top-2 right-2 flex-shrink-0">
+             <span class="inline-flex items-center justify-center w-6 h-6 bg-amber-100 rounded-full"
+                   title="Official - This is an officially maintained platform integration"
+                   aria-label="Official platform">
+               <i class="fa-solid fa-award text-amber-600"></i>
+             </span>
+           </span>
+
+           <!-- Title with Logo - Left Aligned -->
+           <div class="flex items-center gap-2 mb-3">
+             <div class="w-9 h-9 flex-shrink-0 flex items-center justify-center rounded-lg transition-colors"
+                  [ngStyle]="{'background-color': logoBackgroundColors[card.title] || 'rgba(203, 213, 225, 0.3)'}">
+               <img *ngIf="card.cardLogo; else unknownLogo"
+                    [src]="card.cardLogo"
+                    [alt]="card.title"
+                    class="w-5 h-5 object-contain" />
+               <ng-template #unknownLogo>
+                 <img src="assets/meshstack-logo.png" alt="Unknown Logo" class="w-5 h-5 object-contain" />
+               </ng-template>
+             </div>
+             <h5 class="font-semibold text-slate-900 mb-0 text-base leading-tight">
+               {{ card.title }}
+             </h5>
+           </div>
           <!-- Building Block Count and Category Label -->
           <div class="mt-auto pt-2 border-t border-slate-100">
             <div class="flex items-center justify-between gap-2">

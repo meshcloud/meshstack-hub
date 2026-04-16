@@ -18,6 +18,7 @@ interface PlatformVM {
   title: string;
   description: string;
   benefits?: string[];
+  official?: boolean;
 }
 
 @Component({
@@ -83,7 +84,8 @@ export class PlatformViewComponent implements OnInit, OnDestroy {
                 logo: platform.logo,
                 title: platform.name,
                 description: platform.description,
-                benefits: platform.benefits
+                benefits: platform.benefits,
+                official: platform.official
               };
             })
           );

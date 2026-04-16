@@ -8,4 +8,5 @@ export interface Platform {
   readme: string;
   integrationSourceUrl?: string | null;
   terraformSnippet?: string;
+  official?: boolean;
 }

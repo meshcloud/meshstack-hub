@@ -143,20 +143,17 @@ export class TemplateGalleryComponent implements OnInit, OnDestroy {
     return data.map(platform => {
       const buildingBlockCount = templates.filter(t => t.platformType === platform.platformType).length;
 
-      return this.createPlatformCard(
-        platform.name,
-        platform.logo,
-        `/platforms/${platform.platformType}`,
-        platform.description,
+      return {
+        title: platform.name,
+        cardLogo: platform.logo,
+        routePath: `/platforms/${platform.platformType}`,
+        description: platform.description,
         buildingBlockCount,
-        platform.category,
-        platform.benefits
-      );
+        category: platform.category,
+        benefits: platform.benefits,
+        official: platform.official
+      }
     });
-  }
-
-  private createPlatformCard(title: string, logoUrl: string, routePath: string, description?: string, buildingBlockCount?: number, category?: 'hyperscaler' | 'european' | 'china' | 'devops' | 'private-cloud', benefits?: string[]): PlatformCard {
-    return { cardLogo: logoUrl, title, routePath, description, buildingBlockCount, category, benefits };
   }
 
   private filterCardsBySearchTerm(cards: PlatformCard[], searchTerm: string | undefined): PlatformCard[] {

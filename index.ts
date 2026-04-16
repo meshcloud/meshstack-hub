@@ -62,7 +62,7 @@ function findPlatforms(): Platform[] {
       const platformDir: string = path.join(repoRoot, dir.name);
       const platformLogo = getPlatformLogoOrThrow(platformDir, dir.name);
       const platformReadme = getPlatformReadmeOrThrow(platformDir);
-      const { name, description, category, benefits, content } = extractReadmeFrontMatter(platformReadme);
+      const { name, description, category, benefits, content, official } = extractReadmeFrontMatter(platformReadme);
       const terraformSnippet = getTerraformSnippet(platformDir);
       const integrationSourceUrl = getPlatformIntegrationSourceUrl(platformDir);
 
@@ -75,7 +75,8 @@ function findPlatforms(): Platform[] {
         logo: platformLogo,
         readme: content,
         integrationSourceUrl,
-        terraformSnippet
+        terraformSnippet,
+        official
       };
     });
 }
@@ -115,7 +116,7 @@ function getPlatformReadmeOrThrow(platformDir: string) {
   }
 }
 
-function extractReadmeFrontMatter(platformReadme: string): { name: string; description: string; category?: string; benefits?: string[]; content: string } {
+function extractReadmeFrontMatter(platformReadme: string): { name: string; description: string; category?: string; benefits?: string[]; content: string; official: boolean } {
   const { data, content } = matter(platformReadme);
 
   const name = data.name;
@@ -136,7 +137,8 @@ function extractReadmeFrontMatter(platformReadme: string): { name: string; descr
     description,
     content,
     category,
-    benefits
+    benefits,
+    official: data.official === true
   }
 }
 
@@ -336,4 +338,5 @@ export interface Platform {
   benefits?: string[];
   integrationSourceUrl?: string | null;
   terraformSnippet?: string;
+  official?: boolean;
 }

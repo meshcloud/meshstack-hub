@@ -6,5 +6,6 @@ benefits:
   - Account Provisioning
   - IAM Role Assignment
   - Unified Billing
+official: true
 ---
 
