@@ -194,6 +194,53 @@ Do **not** commit these relative paths; switch back to the Hub GitHub URL before
 
 ---
 
+## Reference Architectures
+
+Reference architectures are curated, end-to-end blueprints that show how multiple Hub building blocks
+fit together to deliver a complete platform capability. They live in the `reference-architectures/`
+directory at the repo root as Markdown files with YAML front-matter.
+
+### File format
+
+```yaml
+---
+name: Human-Readable Architecture Name
+description: >
+  A concise paragraph explaining the architecture's purpose and value proposition.
+cloudProviders:
+  - azure
+buildingBlocks:
+  - path: azure/aks
+    role: Short description of this block's role in the architecture.
+  - path: aks/github-connector
+    role: Short description of this block's role in the architecture.
+---
+
+# Architecture Title
+
+Markdown body with overview, architecture diagram, how-it-works walkthrough,
+getting-started steps, and shared responsibility matrix.
+```
+
+### Conventions
+
+- File name: `<cloud>-<capability>.md` (e.g. `azure-kubernetes.md`, `stackit-kubernetes.md`).
+- `buildingBlocks[].path` must match a module path under `modules/` (e.g. `azure/aks`).
+- The Markdown body should include a **Mermaid diagram** showing how blocks relate.
+- Include a **shared responsibility matrix** (platform team vs. application team) with ✅ / ❌ emojis.
+- Include **Getting Started** steps with prerequisites and deployment order.
+
+### Checklist for New Reference Architectures
+
+- [ ] Markdown file in `reference-architectures/` with YAML front-matter
+- [ ] `name`, `description`, `cloudProviders`, and `buildingBlocks` fields present
+- [ ] Every `buildingBlocks[].path` references an existing module in `modules/`
+- [ ] Every `buildingBlocks[].role` has a one-sentence description
+- [ ] Body includes: overview, architecture diagram, how-it-works, getting started, shared responsibilities
+- [ ] No trailing whitespace
+
+---
+
 ## Checklist for New Modules
 
 - [ ] `backplane/` (optional) and `buildingblock/` with all required files

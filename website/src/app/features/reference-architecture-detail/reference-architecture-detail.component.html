@@ -1,0 +1,123 @@
+<div class="bg-slate-50 min-h-screen" *ngIf="vm$ | async as vm; else notFound">
+  <!-- Breadcrumb -->
+  <div class="border-b border-slate-200 w-full">
+    <div class="container mx-auto px-4 lg:px-8">
+      <ng-container *ngIf="breadcrumbs$ | async as breadcrumbs">
+        <mst-breadcrumb [breadcrumbs]="breadcrumbs"></mst-breadcrumb>
+      </ng-container>
+    </div>
+  </div>
+
+  <!-- Header -->
+  <div class="bg-gradient-to-br from-primary-50 to-blue-50 border-b border-primary-100">
+    <div class="container mx-auto px-4 py-6 md:py-8">
+      <div class="flex flex-col md:flex-row items-start gap-6">
+        <!-- Platform logos -->
+        <div class="flex -space-x-2 flex-shrink-0">
+          <div *ngFor="let logo of vm.platformLogos"
+               class="w-16 h-16 flex items-center justify-center rounded-lg bg-white shadow-sm ring-2 ring-white">
+            <img [src]="logo.imageUrl" [alt]="logo.platformType" class="w-10 h-10 object-contain" />
+          </div>
+        </div>
+
+        <div class="flex-1 flex flex-col gap-2">
+          <div class="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
+            <div class="flex-1">
+              <div class="flex items-center gap-2 mb-2">
+                <span class="inline-flex items-center gap-1 px-2 py-0.5 bg-primary-100 text-primary-700 text-xs font-medium rounded">
+                  <i class="fa-solid fa-layer-group"></i>
+                  Reference Architecture
+                </span>
+              </div>
+              <h1 class="text-2xl lg:text-3xl font-bold text-slate-900">{{ vm.name }}</h1>
+              <p class="text-base text-slate-700 mt-2">{{ vm.description }}</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main Content -->
+  <div class="container mx-auto px-4 lg:px-8 py-8">
+    <div class="grid grid-cols-1 lg:grid-cols-[1fr_380px] gap-8">
+      <!-- Left: Markdown Body -->
+      <div>
+        <mst-card label="Architecture Details" class="w-full">
+          <div class="p-6 md:p-8" card-body>
+            <div class="prose prose-slate max-w-none
+                        prose-headings:text-slate-900
+                        prose-h2:text-xl prose-h2:font-bold prose-h2:mt-8 prose-h2:mb-4
+                        prose-h3:text-lg prose-h3:font-semibold prose-h3:mt-6 prose-h3:mb-3
+                        prose-p:text-slate-600 prose-p:leading-relaxed
+                        prose-li:text-slate-600
+                        prose-strong:text-slate-900
+                        prose-a:text-primary-600 prose-a:no-underline hover:prose-a:underline
+                        prose-table:text-sm
+                        prose-th:text-left prose-th:font-semibold prose-th:text-slate-700
+                        prose-td:text-slate-600
+                        prose-code:text-sm prose-code:bg-slate-100 prose-code:px-1 prose-code:py-0.5 prose-code:rounded
+                        prose-pre:bg-slate-900 prose-pre:text-slate-100 prose-pre:rounded-xl"
+                 [innerHTML]="vm.bodyHtml">
+            </div>
+          </div>
+        </mst-card>
+      </div>
+
+      <!-- Right: Building Blocks Sidebar -->
+      <div>
+        <div class="sticky top-24">
+          <h2 class="text-lg font-bold text-slate-900 mb-4">Building Blocks Used</h2>
+          <div class="space-y-3">
+            <div *ngFor="let bb of vm.buildingBlocks">
+              <a *ngIf="bb.definitionId; else noLink"
+                 [routerLink]="['/definitions', bb.definitionId]"
+                 class="block bg-white rounded-xl border border-slate-200 p-4 hover:shadow-md hover:-translate-y-0.5 transition-all">
+                <ng-container *ngTemplateOutlet="bbContent; context: { $implicit: bb }"></ng-container>
+              </a>
+              <ng-template #noLink>
+                <div class="bg-white rounded-xl border border-slate-200 p-4">
+                  <ng-container *ngTemplateOutlet="bbContent; context: { $implicit: bb }"></ng-container>
+                </div>
+              </ng-template>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Building block card content template -->
+<ng-template #bbContent let-bb>
+  <div class="flex items-start gap-3">
+    <div class="w-8 h-8 flex-shrink-0 flex items-center justify-center">
+      <img *ngIf="bb.logo; else defaultLogo"
+           [src]="bb.logo" [alt]="bb.name || bb.path" class="w-6 h-6 object-contain" />
+      <ng-template #defaultLogo>
+        <i class="fa-solid fa-cube text-slate-400 text-lg"></i>
+      </ng-template>
+    </div>
+    <div class="flex-1 min-w-0">
+      <div class="font-medium text-slate-900 text-sm truncate">{{ bb.name || bb.path }}</div>
+      <div class="text-slate-500 text-xs mt-0.5">{{ bb.role }}</div>
+      <div class="text-slate-400 text-xs mt-1 font-mono">modules/{{ bb.path }}</div>
+    </div>
+    <i *ngIf="bb.definitionId" class="fa-solid fa-arrow-right text-slate-400 text-xs mt-1 flex-shrink-0"></i>
+  </div>
+</ng-template>
+
+<!-- Not Found -->
+<ng-template #notFound>
+  <div class="bg-slate-50 min-h-screen flex items-center justify-center">
+    <div class="text-center">
+      <i class="fa-solid fa-circle-exclamation text-6xl text-slate-400 mb-4"></i>
+      <h2 class="text-2xl font-bold text-slate-900 mb-2">Reference Architecture Not Found</h2>
+      <p class="text-slate-600 mb-4">This reference architecture does not exist or has been removed.</p>
+      <a routerLink="/reference-architectures" class="btn btn-primary">
+        <i class="fa-solid fa-arrow-left mr-2"></i>Back to Reference Architectures
+      </a>
+    </div>
+  </div>
+</ng-template>
+

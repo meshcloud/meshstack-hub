@@ -4,6 +4,7 @@ const matter = require("gray-matter");
 const { execSync } = require("child_process");
 
 const repoRoot = path.resolve(__dirname, "modules");
+const refArchRoot = path.resolve(__dirname, "reference-architectures");
 const assetsDir = path.resolve(__dirname, "website/public/assets/logos");
 const hubRef = getHubRef();
 
@@ -237,6 +238,61 @@ function getIdAndPlatform(filePath) {
   return { id, platform };
 }
 
+// --- Reference Architectures ---
+
+interface ReferenceArchitectureBuildingBlock {
+  path: string;
+  role: string;
+}
+
+export interface ReferenceArchitecture {
+  id: string;
+  name: string;
+  description: string;
+  cloudProviders: string[];
+  buildingBlocks: ReferenceArchitectureBuildingBlock[];
+  body: string;
+  sourceUrl: string | null;
+}
+
+function findReferenceArchitectures(): ReferenceArchitecture[] {
+  if (!fs.existsSync(refArchRoot)) return [];
+
+  return fs.readdirSync(refArchRoot)
+    .filter((f: string) => f.endsWith(".md") && f !== "README.md")
+    .map((file: string) => {
+      const filePath = path.join(refArchRoot, file);
+      const raw = fs.readFileSync(filePath, "utf-8");
+      const { data, content: body } = matter(raw);
+      const id = file.replace(/\.md$/, "");
+
+      const remoteUrl = getGitHubRemoteUrl();
+      const sourceUrl = remoteUrl
+        ? `${remoteUrl}/blob/${hubRef}/reference-architectures/${file}`
+        : null;
+
+      if (!data.name) {
+        throw new Error(`Reference architecture ${file} is missing "name" in front-matter.`);
+      }
+      if (!data.description) {
+        throw new Error(`Reference architecture ${file} is missing "description" in front-matter.`);
+      }
+      if (!data.buildingBlocks || !Array.isArray(data.buildingBlocks)) {
+        throw new Error(`Reference architecture ${file} is missing "buildingBlocks" list in front-matter.`);
+      }
+
+      return {
+        id,
+        name: data.name,
+        description: data.description,
+        cloudProviders: data.cloudProviders || [],
+        buildingBlocks: data.buildingBlocks,
+        body,
+        sourceUrl,
+      } as ReferenceArchitecture;
+    });
+}
+
 // Main execution
 function main() {
   const platforms = findPlatforms();
@@ -256,6 +312,15 @@ function main() {
   );
   console.log(
     `✅ Successfully processed ${readmeFiles.length} README.md files. Output saved to templates.json`
+  );
+
+  const refArchs = findReferenceArchitectures();
+  fs.writeFileSync(
+    "website/public/assets/reference-architectures.json",
+    JSON.stringify({ referenceArchitectures: refArchs }, null, 2)
+  );
+  console.log(
+    `✅ Successfully processed ${refArchs.length} reference architectures. Output saved to reference-architectures.json`
   );
 }
 

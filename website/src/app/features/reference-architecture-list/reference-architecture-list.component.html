@@ -1,0 +1,73 @@
+<div class="bg-slate-50 min-h-screen">
+  <!-- Breadcrumb -->
+  <div class="border-b border-slate-200 w-full">
+    <div class="container mx-auto px-4 lg:px-8">
+      <mst-breadcrumb [breadcrumbs]="breadcrumbs"></mst-breadcrumb>
+    </div>
+  </div>
+
+  <!-- Header -->
+  <div class="bg-gradient-to-br from-primary-50 to-blue-50 border-b border-primary-100">
+    <div class="container mx-auto px-4 py-8 md:py-12">
+      <div class="flex items-start gap-4">
+        <div class="w-14 h-14 flex-shrink-0 flex items-center justify-center rounded-lg bg-primary-100">
+          <i class="fa-solid fa-layer-group text-2xl text-primary-600"></i>
+        </div>
+        <div>
+          <h1 class="text-2xl lg:text-3xl font-bold text-slate-900 mb-2">Reference Architectures</h1>
+          <p class="text-base text-slate-700 max-w-3xl">
+            Curated, end-to-end blueprints that show how multiple building blocks fit together to deliver a complete platform capability. Pick an architecture and get a production-ready platform in minutes.
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Cards -->
+  <div class="container mx-auto px-4 lg:px-8 py-8">
+    <ng-container *ngIf="cards$ | async as cards">
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" *ngIf="cards.length > 0; else noArchitectures">
+        <div *ngFor="let card of cards">
+          <mst-card [routePath]="'/reference-architectures/' + card.id" [label]="card.name">
+            <div class="p-5 flex flex-col h-full" card-body>
+              <!-- Platform logos + title -->
+              <div class="flex items-center gap-3 mb-3">
+                <div class="flex -space-x-2">
+                  <div *ngFor="let logo of card.platformLogos"
+                       class="w-9 h-9 flex-shrink-0 flex items-center justify-center rounded-lg bg-slate-100 ring-2 ring-white">
+                    <img [src]="logo.imageUrl" [alt]="logo.platformType" class="w-5 h-5 object-contain" />
+                  </div>
+                </div>
+                <h3 class="font-semibold text-slate-900 text-base leading-tight mb-0">{{ card.name }}</h3>
+              </div>
+
+              <!-- Description -->
+              <p class="text-slate-600 text-sm line-clamp-3 leading-snug mb-4 flex-1">{{ card.description }}</p>
+
+              <!-- Footer -->
+              <div class="mt-auto pt-3 border-t border-slate-100 flex items-center justify-between">
+                <div class="flex items-center gap-1.5 text-slate-500">
+                  <i class="fa-solid fa-cubes"></i>
+                  <span class="text-sm font-medium">
+                    {{ card.buildingBlockCount }} building block{{ card.buildingBlockCount !== 1 ? 's' : '' }}
+                  </span>
+                </div>
+                <span class="inline-flex items-center gap-1 px-2 py-0.5 bg-primary-50 text-primary-700 text-xs font-medium rounded">
+                  <i class="fa-solid fa-layer-group"></i>
+                  Architecture
+                </span>
+              </div>
+            </div>
+          </mst-card>
+        </div>
+      </div>
+
+      <ng-template #noArchitectures>
+        <div class="bg-white border border-slate-200 rounded-xl p-12 text-center">
+          <p class="text-slate-500 mb-0">No reference architectures available yet.</p>
+        </div>
+      </ng-template>
+    </ng-container>
+  </div>
+</div>
+
