@@ -1,0 +1,17 @@
+/* Mermaid diagrams rendered inside [innerHTML] need :host ::ng-deep to pierce encapsulation */
+:host ::ng-deep .mermaid-diagram {
+  display: flex;
+  justify-content: center;
+  margin: 1.5rem 0;
+  padding: 1rem;
+  background-color: #f8fafc; /* slate-50 */
+  border: 1px solid #e2e8f0; /* slate-200 */
+  border-radius: 0.75rem;
+  overflow-x: auto;
+
+  svg {
+    max-width: 100%;
+    height: auto;
+  }
+}
+

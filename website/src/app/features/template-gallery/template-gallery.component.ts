@@ -1,22 +1,32 @@
 import { CommonModule } from '@angular/common';
 import { Component, OnDestroy, OnInit } from '@angular/core';
-import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, RouterLink } from '@angular/router';
 import { Observable, Subscription, combineLatest, forkJoin, map } from 'rxjs';
 
-import { Template } from 'app/core';
+import { ReferenceArchitecture, Template } from 'app/core';
 import { BreadcrumbComponent } from 'app/shared/breadcrumb';
 import { BreadcrumbItem } from 'app/shared/breadcrumb/breadcrumb';
+import { CardComponent } from 'app/shared/card';
 import { DefinitionCard } from 'app/shared/definition-card/definition-card';
 import { DefinitionCardComponent } from 'app/shared/definition-card/definition-card.component';
 import { Platform, PlatformService } from 'app/shared/platform';
+import { ReferenceArchitectureService } from 'app/shared/reference-architecture';
 import { TemplateService } from 'app/shared/template';
 
 import { PlatformCardsComponent } from './platform-cards';
 import { PlatformCard } from './platform-cards/platform-card';
 
+interface RefArchCardVm {
+  id: string;
+  name: string;
+  description: string;
+  buildingBlockCount: number;
+  platformLogos: { platformType: string; imageUrl: string }[];
+}
+
 @Component({
   selector: 'mst-template-gallery',
-  imports: [CommonModule, DefinitionCardComponent, PlatformCardsComponent, BreadcrumbComponent],
+  imports: [CommonModule, DefinitionCardComponent, PlatformCardsComponent, BreadcrumbComponent, RouterLink, CardComponent],
   templateUrl: './template-gallery.component.html',
   styleUrl: './template-gallery.component.scss',
   standalone: true
@@ -26,6 +36,8 @@ export class TemplateGalleryComponent implements OnInit, OnDestroy {
 
   public platformCards$!: Observable<PlatformCard[]>;
 
+  public refArchCards$!: Observable<RefArchCardVm[]>;
+
   public breadcrumbs$!: Observable<BreadcrumbItem[]>;
 
   public isSearch = false;
@@ -34,6 +46,8 @@ export class TemplateGalleryComponent implements OnInit, OnDestroy {
 
   public buildingBlockCount = 0;
 
+  public refArchCount = 0;
+
   private searchSubscription!: Subscription;
 
   private platforms$!: Observable<Platform[]>;
@@ -41,11 +55,13 @@ export class TemplateGalleryComponent implements OnInit, OnDestroy {
   constructor(
     private route: ActivatedRoute,
     private templateService: TemplateService,
-    private platformService: PlatformService
+    private platformService: PlatformService,
+    private refArchService: ReferenceArchitectureService
   ) {}
 
   public ngOnInit(): void {
     this.platforms$ = this.platformService.getAllPlatforms();
+    this.loadRefArchitectures();
     this.subscribeToSearchTerm();
   }
 
@@ -170,5 +186,31 @@ export class TemplateGalleryComponent implements OnInit, OnDestroy {
     }
 
     return a.title.localeCompare(b.title);
+  }
+
+  private loadRefArchitectures(): void {
+    this.refArchCards$ = forkJoin({
+      archs: this.refArchService.getAll(),
+      platforms: this.platforms$
+    }).pipe(
+      map(({ archs, platforms }) => archs.map(arch => this.toRefArchCard(arch, platforms)))
+    );
+
+    this.refArchCards$.subscribe(cards => {
+      this.refArchCount = cards.length;
+    });
+  }
+
+  private toRefArchCard(arch: ReferenceArchitecture, platforms: Platform[]): RefArchCardVm {
+    return {
+      id: arch.id,
+      name: arch.name,
+      description: arch.description,
+      buildingBlockCount: arch.buildingBlocks.length,
+      platformLogos: arch.cloudProviders.map(cp => ({
+        platformType: cp,
+        imageUrl: platforms.find(p => p.platformType === cp)?.logo ?? 'assets/meshstack-logo.png'
+      }))
+    };
   }
 }

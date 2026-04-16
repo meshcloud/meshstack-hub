@@ -27,6 +27,14 @@
               <div class="text-sm font-medium text-slate-600 uppercase tracking-wide">Building Blocks</div>
             </div>
           </div>
+          <div class="text-center" *ngIf="refArchCount > 0">
+            <a routerLink="/reference-architectures" class="block">
+              <div class="bg-white rounded-xl p-6 shadow-md border border-slate-200 min-w-[120px] hover:shadow-lg transition-shadow">
+                <div class="text-4xl font-bold text-primary-600 mb-2">{{ refArchCount }}</div>
+                <div class="text-sm font-medium text-slate-600 uppercase tracking-wide">Architectures</div>
+              </div>
+            </a>
+          </div>
         </div>
       </div>
     </div>
@@ -42,6 +50,57 @@
     <ng-container *ngIf="platformCards$ | async as platformCards">
       <div class="mb-12">
         <mst-platform-cards [cards]="platformCards"></mst-platform-cards>
+      </div>
+    </ng-container>
+
+    <!-- Reference Architectures Section -->
+    <ng-container *ngIf="refArchCards$ | async as refArchCards">
+      <div class="mb-12" *ngIf="refArchCards.length > 0 && !isSearch">
+        <div class="flex items-center justify-between mb-6">
+          <div>
+            <h2 class="text-2xl font-bold text-slate-900 mb-2">
+              <i class="fa-solid fa-layer-group text-primary-600 mr-2"></i>Reference Architectures
+            </h2>
+            <p class="text-base text-slate-600 max-w-3xl">
+              End-to-end blueprints that combine building blocks into complete platform capabilities.
+            </p>
+          </div>
+          <a routerLink="/reference-architectures"
+             class="hidden sm:inline-flex items-center gap-1 text-sm font-medium text-primary-600 hover:text-primary-700 transition-colors">
+            View all <i class="fa-solid fa-arrow-right"></i>
+          </a>
+        </div>
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div *ngFor="let card of refArchCards">
+            <mst-card [routePath]="'/reference-architectures/' + card.id" [label]="card.name">
+              <div class="p-4 flex flex-col h-full" card-body>
+                <!-- Platform logos + title -->
+                <div class="flex items-center gap-3 mb-3">
+                  <div class="flex -space-x-1">
+                    <div *ngFor="let logo of card.platformLogos"
+                         class="w-8 h-8 flex-shrink-0 flex items-center justify-center rounded-lg bg-slate-100 ring-2 ring-white">
+                      <img [src]="logo.imageUrl" [alt]="logo.platformType" class="w-5 h-5 object-contain" />
+                    </div>
+                  </div>
+                  <h3 class="font-semibold text-slate-900 text-base leading-tight mb-0">{{ card.name }}</h3>
+                </div>
+                <!-- Description -->
+                <p class="text-slate-600 text-sm line-clamp-2 leading-snug mb-3 flex-1">{{ card.description }}</p>
+                <!-- Footer -->
+                <div class="mt-auto pt-2 border-t border-slate-100 flex items-center justify-between">
+                  <div class="flex items-center gap-1.5 text-slate-500">
+                    <i class="fa-solid fa-cubes"></i>
+                    <span class="text-sm font-medium">{{ card.buildingBlockCount }} building block{{ card.buildingBlockCount !== 1 ? 's' : '' }}</span>
+                  </div>
+                  <span class="inline-flex items-center gap-1 px-2 py-0.5 bg-primary-50 text-primary-700 text-xs font-medium rounded">
+                    <i class="fa-solid fa-layer-group"></i>
+                    Architecture
+                  </span>
+                </div>
+              </div>
+            </mst-card>
+          </div>
+        </div>
       </div>
     </ng-container>
 

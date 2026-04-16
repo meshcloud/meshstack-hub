@@ -2,12 +2,10 @@
   <div class="container mx-auto px-4 py-3">
     <div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-3">
       <!-- Logo and Title Section -->
-      <div class="flex items-center gap-3">
-        <a href="/" class="transition-opacity hover:opacity-80">
-          <img class="h-12 object-contain" src="assets/meshstack-logo.png" alt="meshStack Hub" />
-        </a>
+      <a href="/" class="flex items-center gap-3 transition-opacity hover:opacity-80">
+        <img class="h-12 object-contain" src="assets/meshstack-logo.png" alt="meshStack Hub" />
         <h1 class="text-2xl font-bold text-slate-900 tracking-tight mb-0">meshStack Hub</h1>
-      </div>
+      </a>
 
       <!-- Search Bar - Desktop -->
       <div class="hidden md:flex flex-grow justify-center mx-4 max-w-lg min-w-[300px]">
@@ -16,6 +14,10 @@
 
       <!-- Action Buttons -->
       <div class="hidden md:flex items-center gap-6">
+        <a routerLink="/reference-architectures"
+           class="text-slate-600 hover:text-slate-900 transition-colors font-medium">
+          Reference Architectures
+        </a>
         <a href="https://www.meshcloud.io/en/book-demo"
            class="text-slate-600 hover:text-slate-900 transition-colors"
            target="_blank"

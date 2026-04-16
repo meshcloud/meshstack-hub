@@ -115,6 +115,14 @@
   }
 }
 
+/* Tailwind Typography overrides */
+/* The typography plugin adds backtick ::before/::after pseudo-elements to inline
+   code by default. Remove them so backticks don't appear in the rendered output. */
+.prose :where(code):not(:where([class~="not-prose"] *))::before,
+.prose :where(code):not(:where([class~="not-prose"] *))::after {
+  content: '' !important;
+}
+
 /* Legacy SCSS variables for backward compatibility during migration */
 $primary-blue: #2563eb;
 $primary-blue-dark: #1e40af;

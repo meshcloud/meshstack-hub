@@ -16,6 +16,12 @@ Example modules:
 
 AWS S3 Module – Provision S3 buckets with encryption and logging.
 
+## 🏗️ Reference Architectures
+
+Reference architectures show how to combine multiple building blocks into a complete
+platform capability. See the [`reference-architectures/`](reference-architectures/) directory
+for curated, end-to-end blueprints.
+
 ## 🏢️ Structure
 
 All Terraform modules are listed in the `modules/` directory.
