@@ -159,7 +159,8 @@ export class TemplateGalleryComponent implements OnInit, OnDestroy {
         buildingBlockCount,
         category: platform.category,
         benefits: platform.benefits,
-        official: platform.official
+        official: platform.official,
+        terraformSnippet: platform.terraformSnippet
       }
     });
   }

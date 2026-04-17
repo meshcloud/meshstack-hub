@@ -7,4 +7,5 @@ export interface PlatformCard {
     category?: 'hyperscaler' | 'european' | 'china' | 'devops' | 'private-cloud';
     benefits?: string[];
     official?: boolean;
+    terraformSnippet?: string;
   }

@@ -36,7 +36,8 @@
             </div>
             <div class="flex-shrink-0" *ngIf="hasIntegration">
               <a [routerLink]="['/platforms', currentPlatformType, 'integrate']"
-                 class="btn btn-primary whitespace-nowrap">
+                 class="btn btn-primary whitespace-nowrap flex items-center gap-2">
+                <i class="fa-solid fa-code"></i>
                 Integrate Platform
               </a>
             </div>
