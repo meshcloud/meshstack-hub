@@ -117,16 +117,24 @@ export class PlatformViewComponent implements OnInit, OnDestroy {
     return templateObs$
       .pipe(
         map(templates =>
-          templates.map(item => ({
-            cardLogo: item.logo,
-            title: item.name,
-            description: item.description,
-            routePath: `/platforms/${type}/definitions/${item.id}`,
-            supportedPlatforms: item.supportedPlatforms.map(platform => ({
-              platformType: platform,
-              imageUrl: platforms.find(p => p.platformType === platform)?.logo ?? 'assets/meshstack-logo.png'
+          templates
+            .map(item => ({
+              cardLogo: item.logo,
+              title: item.name,
+              description: item.description,
+              routePath: `/platforms/${type}/definitions/${item.id}`,
+              supportedPlatforms: item.supportedPlatforms.map(platform => ({
+                platformType: platform,
+                imageUrl: platforms.find(p => p.platformType === platform)?.logo ?? 'assets/meshstack-logo.png'
+              })),
+              hasTerraformSnippet: !!item.terraformSnippet
             }))
-          }))
+            .sort((a, b) => {
+              // Sort templates with terraform snippets first
+              if (a.hasTerraformSnippet && !b.hasTerraformSnippet) return -1;
+              if (!a.hasTerraformSnippet && b.hasTerraformSnippet) return 1;
+              return 0;
+            })
         )
       );
   }

@@ -30,15 +30,15 @@
           <!-- Official Info Box -->
           <div *ngIf="platform.official" class="p-4 bg-amber-50 border border-amber-200 rounded-lg flex items-start gap-3">
             <i class="fa-solid fa-award text-amber-600 text-lg flex-shrink-0 mt-0.5"></i>
-            <div class="flex flex-col gap-1 flex-1">
+            <div class="flex-1 flex flex-col gap-1">
               <span class="font-semibold text-amber-900">Official Integration</span>
               <p class="text-sm text-amber-800">This is an officially maintained meshStack platform integration with guaranteed support and regular updates.</p>
-              <div class="mt-3" *ngIf="hasIntegration">
-                <a [routerLink]="['/platforms', currentPlatformType, 'integrate']"
-                   class="btn btn-primary whitespace-nowrap">
-                  Integrate Platform
-                </a>
-              </div>
+            </div>
+            <div class="flex-shrink-0" *ngIf="hasIntegration">
+              <a [routerLink]="['/platforms', currentPlatformType, 'integrate']"
+                 class="btn btn-primary whitespace-nowrap">
+                Integrate Platform
+              </a>
             </div>
           </div>
         </div>
