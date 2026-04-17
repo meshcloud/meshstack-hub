@@ -4,4 +4,5 @@ export interface DefinitionCard {
   description: string | null;
   routePath: string;
   supportedPlatforms: { platformType: string; imageUrl: string }[];
+  hasTerraformSnippet?: boolean;
 }

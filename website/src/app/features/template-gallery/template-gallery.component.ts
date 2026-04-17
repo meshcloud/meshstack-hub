@@ -99,7 +99,14 @@ export class TemplateGalleryComponent implements OnInit, OnDestroy {
     return forkJoin({ templates: templateObs$, platforms: this.platforms$ })
       .pipe(
         map(({ templates, platforms }) =>
-          templates.map(template => this.mapToDefinitionCard(template, platforms))
+          templates
+            .map(template => this.mapToDefinitionCard(template, platforms))
+            .sort((a, b) => {
+              // Sort templates with terraform snippets first
+              if (a.hasTerraformSnippet && !b.hasTerraformSnippet) return -1;
+              if (!a.hasTerraformSnippet && b.hasTerraformSnippet) return 1;
+              return 0;
+            })
         )
       );
   }
@@ -128,7 +135,8 @@ export class TemplateGalleryComponent implements OnInit, OnDestroy {
       supportedPlatforms: (template.supportedPlatforms ?? []).map(platform => ({
         platformType: platform,
         imageUrl: platforms.find(p => p.platformType === platform)?.logo ?? 'assets/meshstack-logo.png'
-      }))
+      })),
+      hasTerraformSnippet: !!template.terraformSnippet
     };
   }
 
