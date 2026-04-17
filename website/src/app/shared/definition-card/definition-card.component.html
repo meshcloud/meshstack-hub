@@ -1,12 +1,5 @@
 <mst-card [routePath]="card.routePath" [label]="card.title">
-  <div class="p-4 flex flex-col h-full relative" card-body>
-    <!-- Terraform Snippet Badge - Top Right -->
-    <div *ngIf="card.hasTerraformSnippet"
-         class="absolute top-2 right-2 w-5 h-5 rounded-full bg-slate-300 flex items-center justify-center"
-         title="Has ready-to-use Terraform snippet">
-      <i class="fa-solid fa-code text-xs text-slate-700"></i>
-    </div>
-
+  <div class="p-4 flex flex-col h-full" card-body>
     <!-- Logo, Title, and Badge -->
     <div class="flex items-center gap-2 mb-2">
       <div class="w-10 h-10 flex-shrink-0 relative">
@@ -40,6 +33,16 @@
     <!-- Description -->
     <div class="flex-1">
       <p class="mb-0 text-slate-600 text-sm line-clamp-3 leading-snug">{{ card.description }}</p>
+    </div>
+
+    <!-- Bottom Label: Terraform Snippet -->
+    <div class="mt-2 pt-2 border-t border-slate-100" *ngIf="card.hasTerraformSnippet">
+      <div class="flex flex-wrap items-center gap-2">
+        <span class="inline-flex items-center gap-1 px-2 py-0.5 bg-slate-100 text-slate-700 text-xs font-medium rounded"
+              title="Has ready-to-use Terraform snippet">
+          <i class="fa-solid fa-code text-xs"></i>
+        </span>
+      </div>
     </div>
   </div>
 </mst-card>
