@@ -1,4 +1,13 @@
 <div class="mb-12">
+  <!-- Section Header -->
+  <div class="mb-8">
+    <h2 class="text-3xl font-bold text-slate-900 mb-3">Platforms</h2>
+    <p class="text-lg text-slate-600 max-w-4xl">
+      Browse platform integrations for various cloud provider platforms.
+      Each platform offers a collection of building blocks to automate common tasks.
+    </p>
+  </div>
+
   <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
     <div *ngFor="let card of sortedCards">
       <mst-card [routePath]="card.routePath"
@@ -23,35 +32,35 @@
             </h5>
           </div>
 
-          <!-- Bottom Labels: Official Badge, Building Blocks, Category, Terraform Snippet -->
+          <!-- Bottom Labels: Official Badge, Terraform Snippet, Building Blocks, Category -->
           <div class="mt-auto pt-2 border-t border-slate-100">
             <div class="flex flex-wrap items-center gap-2">
               <!-- Official Badge Icon -->
               <span *ngIf="card.official"
-                    class="inline-flex items-center justify-center px-2 py-0.5 bg-amber-100 text-amber-700 rounded"
+                    class="inline-flex items-center justify-center h-5 px-2 bg-amber-100 text-amber-700 rounded text-xs"
                     title="Official - This is an officially maintained platform integration"
                     aria-label="Official platform">
-                <i class="fa-solid fa-award text-base"></i>
-              </span>
-
-              <!-- Building Block Count Icon -->
-              <div class="inline-flex items-center gap-1 px-2 py-0.5 bg-slate-100 text-slate-700 rounded">
-                <i class="fa-solid fa-cubes text-xs"></i>
-                <span class="text-xs font-medium">{{ card.buildingBlockCount || 0 }}</span>
-              </div>
-
-              <!-- Category Label -->
-              <span *ngIf="getCategoryLabel(card.category) as label"
-                    class="inline-flex items-center gap-1 px-2 py-0.5 bg-slate-100 text-slate-700 text-xs font-medium rounded">
-                <span>{{ label.emoji }}</span>
-                <span>{{ label.text }}</span>
+                <i class="fa-solid fa-award"></i>
               </span>
 
               <!-- Terraform Snippet Label -->
               <span *ngIf="card.terraformSnippet"
-                    class="inline-flex items-center gap-1 px-2 py-0.5 bg-slate-100 text-slate-700 text-xs font-medium rounded"
+                    class="inline-flex items-center justify-center h-5 px-2 bg-slate-100 text-slate-700 rounded text-xs"
                     title="Has ready-to-use Terraform snippet">
-                <i class="fa-solid fa-code text-xs py-0.5"></i>
+                <i class="fa-solid fa-code"></i>
+              </span>
+
+              <!-- Building Block Count Icon -->
+              <div *ngIf="(card.buildingBlockCount || 0) > 0" class="inline-flex items-center h-5 gap-1 px-2 bg-slate-100 text-slate-700 rounded text-xs">
+                <i class="fa-solid fa-cubes"></i>
+                <span class="font-medium">{{ card.buildingBlockCount }}</span>
+              </div>
+
+              <!-- Category Label -->
+              <span *ngIf="getCategoryLabel(card.category) as label"
+                    class="inline-flex items-center h-5 gap-1 px-2 bg-slate-100 text-slate-700 rounded text-xs font-medium">
+                <span>{{ label.emoji }}</span>
+                <span>{{ label.text }}</span>
               </span>
             </div>
           </div>

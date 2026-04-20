@@ -62,7 +62,7 @@
               <i class="fa-solid fa-layer-group text-primary-600 mr-2"></i>Reference Architectures
             </h2>
             <p class="text-base text-slate-600 max-w-3xl">
-              End-to-end blueprints that combine building blocks into complete platform capabilities.
+              End-to-end blueprints that combine building blocks into complete internal developer platform capabilities.
             </p>
           </div>
           <a routerLink="/reference-architectures"
@@ -87,10 +87,10 @@
                 <!-- Description -->
                 <p class="text-slate-600 text-sm line-clamp-2 leading-snug mb-3 flex-1">{{ card.description }}</p>
                 <!-- Footer -->
-                <div class="mt-auto pt-2 border-t border-slate-100 flex items-center justify-between">
-                  <div class="flex items-center gap-1.5 text-slate-500">
-                    <i class="fa-solid fa-cubes"></i>
-                    <span class="text-sm font-medium">{{ card.buildingBlockCount }} building block{{ card.buildingBlockCount !== 1 ? 's' : '' }}</span>
+                <div class="mt-auto pt-2 border-t border-slate-100 flex items-center justify-between flex-wrap gap-2">
+                  <div class="inline-flex items-center gap-1 px-2 py-0.5 bg-slate-100 text-slate-700 rounded">
+                    <i class="fa-solid fa-cubes text-xs"></i>
+                    <span class="text-xs font-medium">{{ card.buildingBlockCount || 0 }}</span>
                   </div>
                   <span class="inline-flex items-center gap-1 px-2 py-0.5 bg-primary-50 text-primary-700 text-xs font-medium rounded">
                     <i class="fa-solid fa-layer-group"></i>
