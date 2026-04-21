@@ -11,7 +11,7 @@
   <!-- Full Width Header -->
   <div class="bg-gradient-to-br from-primary-50 to-blue-50 border-b border-primary-100">
     <div class="container mx-auto px-4 py-6 md:py-8">
-      <div class="flex flex-col md:flex-row items-start md:items-center gap-8">
+      <div class="flex flex-col md:flex-row items-start gap-8">
         <div class="w-20 h-20 flex-shrink-0 flex items-center justify-center rounded-lg" [ngStyle]="{'background-color': (headerBgColor$ | async)}">
           <img *ngIf="platform.logo" [src]="platform.logo" [alt]="platform.name" class="w-14 h-14 object-contain" />
         </div>
@@ -26,6 +26,16 @@
               <span>{{ benefit }}</span>
             </span>
           </div>
+
+          <!-- Official Info Box -->
+          <div *ngIf="platform.official" class="p-4 bg-amber-50 border border-amber-200 rounded-lg flex items-start gap-3 mb-3">
+            <i class="fa-solid fa-award text-amber-600 text-lg flex-shrink-0 mt-0.5"></i>
+            <div class="flex-1 flex flex-col gap-1">
+              <span class="font-semibold text-amber-900">Official Integration</span>
+              <p class="text-sm text-amber-800">This is an officially maintained meshStack platform integration with guaranteed support and regular updates.</p>
+            </div>
+          </div>
+
           <a
             *ngIf="platform.integrationSourceUrl"
             [href]="platform.integrationSourceUrl"
