@@ -188,20 +188,6 @@ function parseReadme(filePath) {
   const extractSection = (regex) =>
     body.match(regex)?.[1]?.trim() || null;
 
-  const parseTable = (match) =>
-    match
-      ? match[1]
-          .split("\n")
-          .filter((line) => line.startsWith("| <a name"))
-          .map((line) => line.split("|").map((s) => s.trim()))
-          .map(([name, description, type, _default, required]) => ({
-            name: name.replace(/<a name=".*?_(.*?)".*?>/, "$1"),
-            description,
-            type,
-            required: required === "yes",
-          }))
-      : [];
-
   const buildingBlockUrl = getBuildingBlockFolderUrl(filePath);
   const buildingBlockLogoPath = copyBuildingBlockLogoToAssets(buildingBlockDir);
 
@@ -223,9 +209,6 @@ function parseReadme(filePath) {
     terraformSnippet,
     ...data,
     howToUse: extractSection(/## How to Use([\s\S]*?)(##|$)/),
-    resources: parseTable(body.match(/## Resources([\s\S]*)/)),
-    inputs: parseTable(body.match(/## Inputs([\s\S]*?)## Outputs/)),
-    outputs: parseTable(body.match(/## Outputs([\s\S]*)/))
   };
 }
 
@@ -297,32 +280,35 @@ function findReferenceArchitectures(): ReferenceArchitecture[] {
 
 // Main execution
 function main() {
+  const generatedDir = "website/src/generated";
+  fs.mkdirSync(generatedDir, { recursive: true });
+
   const platforms = findPlatforms();
   fs.writeFileSync(
-    "website/public/assets/platform.json",
+    `${generatedDir}/platform.json`,
     JSON.stringify(platforms, null, 2)
   );
   console.log(
-    `✅ Successfully processed ${platforms.length} platforms. Output saved to platform.json`
+    `✅ Successfully processed ${platforms.length} platforms. Output saved to ${generatedDir}/platform.json`
   );
 
   const readmeFiles = findReadmes(repoRoot);
   const jsonData = readmeFiles.map(parseReadme);
   fs.writeFileSync(
-    "website/public/assets/templates.json",
+    `${generatedDir}/templates.json`,
     JSON.stringify({ templates: jsonData }, null, 2)
   );
   console.log(
-    `✅ Successfully processed ${readmeFiles.length} README.md files. Output saved to templates.json`
+    `✅ Successfully processed ${readmeFiles.length} README.md files. Output saved to ${generatedDir}/templates.json`
   );
 
   const refArchs = findReferenceArchitectures();
   fs.writeFileSync(
-    "website/public/assets/reference-architectures.json",
+    `${generatedDir}/reference-architectures.json`,
     JSON.stringify({ referenceArchitectures: refArchs }, null, 2)
   );
   console.log(
-    `✅ Successfully processed ${refArchs.length} reference architectures. Output saved to reference-architectures.json`
+    `✅ Successfully processed ${refArchs.length} reference architectures. Output saved to ${generatedDir}/reference-architectures.json`
   );
 }
 

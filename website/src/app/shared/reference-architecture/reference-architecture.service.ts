@@ -1,8 +1,8 @@
-import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import { Observable, map, take } from 'rxjs';
+import { Observable, map, of } from 'rxjs';
 
 import { ReferenceArchitecture } from 'app/core';
+import refArchData from '../../../generated/reference-architectures.json';
 
 interface GeneratedRefArchData {
   referenceArchitectures: ReferenceArchitecture[];
@@ -12,37 +12,24 @@ interface GeneratedRefArchData {
   providedIn: 'root'
 })
 export class ReferenceArchitectureService {
-  private data$: Observable<GeneratedRefArchData> | null = null;
-
-  constructor(private http: HttpClient) {}
+  private data = refArchData as GeneratedRefArchData;
 
   public getAll(): Observable<ReferenceArchitecture[]> {
-    return this.retrieveData()
-      .pipe(map(data => data.referenceArchitectures));
+    return of(this.data.referenceArchitectures);
   }
 
   public getById(id: string): Observable<ReferenceArchitecture> {
-    return this.retrieveData()
-      .pipe(
-        map(data => {
-          const arch = data.referenceArchitectures.find(a => a.id === id);
+    return of(this.data.referenceArchitectures).pipe(
+      map(archs => {
+        const arch = archs.find(a => a.id === id);
 
-          if (!arch) {
-            throw new Error(`Reference architecture with id ${id} not found`);
-          }
+        if (!arch) {
+          throw new Error(`Reference architecture with id ${id} not found`);
+        }
 
-          return arch;
-        })
-      );
-  }
-
-  private retrieveData(): Observable<GeneratedRefArchData> {
-    if (!this.data$) {
-      this.data$ = this.http.get<GeneratedRefArchData>('/assets/reference-architectures.json')
-        .pipe(take(1));
-    }
-
-    return this.data$;
+        return arch;
+      })
+    );
   }
 }
 

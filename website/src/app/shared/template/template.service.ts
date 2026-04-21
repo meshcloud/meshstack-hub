@@ -1,8 +1,8 @@
-import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import { Observable, map, take } from 'rxjs';
+import { Observable, map, of } from 'rxjs';
 
 import { Template } from 'app/core';
+import templatesData from '../../../generated/templates.json';
 
 interface GeneratedTemplateData {
   templates: Template[];
@@ -12,66 +12,52 @@ interface GeneratedTemplateData {
   providedIn: 'root'
 })
 export class TemplateService {
-  private data$: Observable<GeneratedTemplateData> | null = null;
-
-  constructor(
-    private http: HttpClient
-  ) { }
+  private data = templatesData as unknown as GeneratedTemplateData;
 
   public search(
     term: string
   ): Observable<Template[]> {
-    return this.retrieveData()
-      .pipe(
-        map(data =>
-          data.templates.filter((template: Template) =>
-            template.name.toLowerCase()
-              .includes(term.toLowerCase()) ||
-            template.description.toLowerCase()
-              .includes(term.toLowerCase())
-          )
+    return of(this.data.templates).pipe(
+      map(templates =>
+        templates.filter((template: Template) =>
+          template.name.toLowerCase()
+            .includes(term.toLowerCase()) ||
+          template.description.toLowerCase()
+            .includes(term.toLowerCase())
         )
-      );
+      )
+    );
   }
 
   public filterTemplatesByPlatformType(
     platformType: string | 'all'
   ): Observable<Template[]> {
-    return this.retrieveData()
-      .pipe(
-        map(data =>
-          platformType === 'all'
-            ? data.templates
-            : data.templates.filter((template: Template) => template.platformType === platformType)
-        )
-      );
+    return of(this.data.templates).pipe(
+      map(templates =>
+        platformType === 'all'
+          ? templates
+          : templates.filter((template: Template) => template.platformType === platformType)
+      )
+    );
   }
 
   public getTemplateById(
     id: string
   ): Observable<Template> {
-    return this.retrieveData()
-      .pipe(
-        map(data => {
-          const template = data.templates.find((t: Template) => t.id === id);
+    return of(this.data.templates).pipe(
+      map(templates => {
+        const template = templates.find((t: Template) => t.id === id);
 
-          if (!template) {
-            throw new Error(`Template with id ${id} not found`);
-          }
+        if (!template) {
+          throw new Error(`Template with id ${id} not found`);
+        }
 
-          return template;
-        })
-      );
+        return template;
+      })
+    );
   }
 
   public retrieveData(): Observable<GeneratedTemplateData> {
-    if (!this.data$) {
-      this.data$ = this.http.get<GeneratedTemplateData>('/assets/templates.json')
-        .pipe(
-          take(1)
-        );
-    }
-
-    return this.data$;
+    return of(this.data);
   }
 }
