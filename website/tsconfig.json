@@ -26,6 +26,7 @@
     "target": "ES2022",
     "module": "ES2022",
     "skipLibCheck": true,
+    "resolveJsonModule": true,
     "paths": {
       "@styles": [
         "src/styles.scss"
