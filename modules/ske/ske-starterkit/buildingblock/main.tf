@@ -6,7 +6,9 @@ resource "random_string" "name_suffix" {
 }
 
 locals {
-  name = var.add_random_name_suffix ? "${var.name}-${random_string.name_suffix.result}" : var.name
+  # Sanitize and lowercase the name for K8s namespace compatibility (similar to AKS starterkit)
+  sanitized_name = lower(replace(replace(var.name, "/[^a-zA-Z0-9\\s\\-]/", ""), "/[\\s]+/", "-"))
+  name           = var.add_random_name_suffix ? "${local.sanitized_name}-${random_string.name_suffix.result}" : local.sanitized_name
 
   app_hostnames = {
     for stage, _ in var.landing_zone_identifiers :
