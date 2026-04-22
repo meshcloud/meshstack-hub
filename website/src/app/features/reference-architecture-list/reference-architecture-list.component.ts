@@ -8,6 +8,7 @@ import { BreadcrumbItem } from 'app/shared/breadcrumb/breadcrumb';
 import { CardComponent } from 'app/shared/card';
 import { Platform, PlatformService } from 'app/shared/platform';
 import { ReferenceArchitectureService } from 'app/shared/reference-architecture';
+import { SeoService } from 'app/core';
 
 interface RefArchCard {
   id: string;
@@ -35,10 +36,15 @@ export class ReferenceArchitectureListComponent implements OnInit {
 
   constructor(
     private refArchService: ReferenceArchitectureService,
-    private platformService: PlatformService
+    private platformService: PlatformService,
+    private seoService: SeoService
   ) {}
 
   public ngOnInit(): void {
+    this.seoService.set(
+      'Reference Architectures',
+      'Explore curated end-to-end reference architectures combining meshStack building blocks for complete platform capabilities.'
+    );
     this.cards$ = forkJoin({
       archs: this.refArchService.getAll(),
       platforms: this.platformService.getAllPlatforms()

@@ -11,6 +11,7 @@ import { HighlightDirective } from 'app/shared/directives';
 import { Platform, PlatformService } from 'app/shared/platform';
 import { extractLogoColor } from 'app/shared/util/logo-color.util';
 import { buildHubModuleCodeSnippet } from 'app/shared/util/module-source.util';
+import { SeoService } from 'app/core';
 
 const DEFAULT_HEADER_BG_COLOR = 'rgba(203,213,225,0.3)';
 
@@ -39,7 +40,8 @@ export class PlatformIntegrationComponent implements OnInit {
   constructor(
     private route: ActivatedRoute,
     private platformService: PlatformService,
-    private breadcrumbService: BreadCrumbService
+    private breadcrumbService: BreadCrumbService,
+    private seoService: SeoService
   ) { }
 
   public ngOnInit(): void {
@@ -68,6 +70,12 @@ export class PlatformIntegrationComponent implements OnInit {
           );
       })
     );
+    this.platform$.subscribe(platform => {
+      this.seoService.set(
+        `Integrate ${platform.name} with meshStack`,
+        `Step-by-step guide to integrating ${platform.name} into your meshStack instance using Terraform.`
+      );
+    });
 
     this.breadcrumbs$ = this.route.paramMap.pipe(
       switchMap(x => this.breadcrumbService.getBreadcrumbs(x))

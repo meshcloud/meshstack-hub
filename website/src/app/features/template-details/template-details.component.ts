@@ -12,6 +12,7 @@ import { HighlightDirective } from 'app/shared/directives';
 import { TemplateService } from 'app/shared/template';
 import { extractLogoColor } from 'app/shared/util/logo-color.util';
 import { buildHubModuleCodeSnippet } from 'app/shared/util/module-source.util';
+import { SeoService } from 'app/core';
 
 import { ImportDialogComponent } from './import-dialog/import-dialog.component';
 
@@ -57,7 +58,8 @@ export class TemplateDetailsComponent implements OnInit, OnDestroy {
     private route: ActivatedRoute,
     private templateService: TemplateService,
     private dialog: Dialog,
-    private breadcrumbService: BreadCrumbService
+    private breadcrumbService: BreadCrumbService,
+    private seoService: SeoService
   ) { }
 
   public ngOnInit(): void {
@@ -158,14 +160,17 @@ export class TemplateDetailsComponent implements OnInit, OnDestroy {
 
       this.template$ = this.templateService.getTemplateById(id)
         .pipe(
-          map(template => ({
-            ...template,
-            imageUrl: template.logo,
-            source: template.buildingBlockUrl,
-            moduleCodeSnippet: buildHubModuleCodeSnippet(template.buildingBlockUrl),
-            howToUse: template.howToUse,
-            terraformSnippet: template.terraformSnippet
-          }))
+          map(template => {
+            this.seoService.set(template.name, template.description);
+            return {
+              ...template,
+              imageUrl: template.logo,
+              source: template.buildingBlockUrl,
+              moduleCodeSnippet: buildHubModuleCodeSnippet(template.buildingBlockUrl),
+              howToUse: template.howToUse,
+              terraformSnippet: template.terraformSnippet
+            };
+          })
         );
     });
   }

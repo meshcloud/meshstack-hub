@@ -3,7 +3,7 @@ import { Component, OnDestroy, OnInit } from '@angular/core';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { Observable, Subscription, combineLatest, forkJoin, map } from 'rxjs';
 
-import { ReferenceArchitecture, Template } from 'app/core';
+import { ReferenceArchitecture, SeoService, Template } from 'app/core';
 import { BreadcrumbComponent } from 'app/shared/breadcrumb';
 import { BreadcrumbItem } from 'app/shared/breadcrumb/breadcrumb';
 import { CardComponent } from 'app/shared/card';
@@ -56,10 +56,12 @@ export class TemplateGalleryComponent implements OnInit, OnDestroy {
     private route: ActivatedRoute,
     private templateService: TemplateService,
     private platformService: PlatformService,
-    private refArchService: ReferenceArchitectureService
+    private refArchService: ReferenceArchitectureService,
+    private seoService: SeoService
   ) {}
 
   public ngOnInit(): void {
+    this.seoService.setDefault();
     this.platforms$ = this.platformService.getAllPlatforms();
     this.loadRefArchitectures();
     this.subscribeToSearchTerm();
