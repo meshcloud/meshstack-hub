@@ -12,6 +12,7 @@ import { DefinitionCardComponent } from 'app/shared/definition-card/definition-c
 import { Platform, PlatformService } from 'app/shared/platform';
 import { TemplateService } from 'app/shared/template';
 import { extractLogoColor } from 'app/shared/util/logo-color.util';
+import { SeoService } from 'app/core';
 
 interface PlatformVM {
   logo: string | null;
@@ -48,7 +49,8 @@ export class PlatformViewComponent implements OnInit, OnDestroy {
     private route: ActivatedRoute,
     private templateService: TemplateService,
     private platformService: PlatformService,
-    private breadcrumbService: BreadCrumbService
+    private breadcrumbService: BreadCrumbService,
+    private seoService: SeoService
   ) { }
 
   public ngOnInit(): void {
@@ -79,6 +81,11 @@ export class PlatformViewComponent implements OnInit, OnDestroy {
               }
 
               this.hasIntegration = !!platform.terraformSnippet;
+
+              this.seoService.set(
+                `${platform.name} Building Blocks`,
+                platform.description
+              );
 
               return {
                 logo: platform.logo,

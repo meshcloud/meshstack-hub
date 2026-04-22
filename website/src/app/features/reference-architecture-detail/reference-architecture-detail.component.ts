@@ -4,7 +4,7 @@ import { ActivatedRoute, RouterLink } from '@angular/router';
 import { Observable, Subscription, forkJoin, map } from 'rxjs';
 import { marked } from 'marked';
 
-import { ReferenceArchitecture } from 'app/core';
+import { ReferenceArchitecture, SeoService } from 'app/core';
 import { BreadcrumbComponent } from 'app/shared/breadcrumb';
 import { BreadcrumbItem } from 'app/shared/breadcrumb/breadcrumb';
 import { CardComponent } from 'app/shared/card';
@@ -52,7 +52,8 @@ export class ReferenceArchitectureDetailComponent implements OnInit, OnDestroy, 
     private platformService: PlatformService,
     private templateService: TemplateService,
     private el: ElementRef,
-    @Inject(PLATFORM_ID) private platformId: object
+    @Inject(PLATFORM_ID) private platformId: object,
+    private seoService: SeoService
   ) {}
 
   public ngOnInit(): void {
@@ -69,7 +70,11 @@ export class ReferenceArchitectureDetailComponent implements OnInit, OnDestroy, 
         platforms: this.platformService.getAllPlatforms(),
         templates: this.templateService.retrieveData()
       }).pipe(
-        map(({ arch, platforms, templates }) => this.toVm(arch, platforms, templates.templates))
+        map(({ arch, platforms, templates }) => {
+          const vm = this.toVm(arch, platforms, templates.templates);
+          this.seoService.set(vm.name, vm.description);
+          return vm;
+        })
       );
 
       this.breadcrumbs$ = this.vm$.pipe(
