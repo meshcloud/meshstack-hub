@@ -10,7 +10,9 @@
     "test": "ng test",
     "lint": "ng lint",
     "lint:fix": "ng lint --fix",
-    "serve:ssr": "node dist/website/server/server.mjs"
+    "serve:ssr": "node dist/website/server/server.mjs",
+    "generate-sitemap": "node scripts/generate-sitemap.ts",
+    "build:with-sitemap": "npm run generate-sitemap && npm run build"
   },
   "private": true,
   "dependencies": {

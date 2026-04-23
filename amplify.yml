@@ -12,7 +12,7 @@ frontend:
        - yarn install --frozen-lockfile
     build:
       commands:
-        - yarn build
+        - yarn build:with-sitemap
   artifacts:
     baseDirectory: website/dist/website/browser
     files:
