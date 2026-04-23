@@ -46,3 +46,6 @@ Thumbs.db
 /public/assets/logos
 /public/assets/platform.json
 /public/assets/templates.json
+
+# Generated sitemap
+public/sitemap.xml
