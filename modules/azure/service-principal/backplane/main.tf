@@ -89,8 +89,10 @@ resource "azurerm_role_definition" "buildingblock_deploy" {
       "Microsoft.Authorization/roleAssignments/write",
       "Microsoft.Authorization/roleAssignments/delete",
 
-      # Read role definitions (to look up built-in roles like Contributor)
+      # Role Definitions (to look up built-in roles and create custom roles)
       "Microsoft.Authorization/roleDefinitions/read",
+      "Microsoft.Authorization/roleDefinitions/write",
+      "Microsoft.Authorization/roleDefinitions/delete",
     ]
   }
 

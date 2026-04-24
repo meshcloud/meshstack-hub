@@ -32,8 +32,38 @@ resource "azuread_application_password" "main" {
   }
 }
 
+# -----------------------------------------------------------------------------
+# Custom Role Definition (optional)
+# Created only when var.custom_role is specified
+# -----------------------------------------------------------------------------
+
+resource "azurerm_role_definition" "custom" {
+  count = var.custom_role != null ? 1 : 0
+
+  name        = var.custom_role.name
+  scope       = data.azurerm_subscription.target.id
+  description = var.custom_role.description
+
+  permissions {
+    actions          = var.custom_role.actions
+    not_actions      = var.custom_role.not_actions
+    data_actions     = var.custom_role.data_actions
+    not_data_actions = var.custom_role.not_data_actions
+  }
+
+  assignable_scopes = [data.azurerm_subscription.target.id]
+}
+
+# -----------------------------------------------------------------------------
+# Role Assignment
+# Uses custom role if defined, otherwise uses built-in role
+# -----------------------------------------------------------------------------
+
 resource "azurerm_role_assignment" "main" {
+  count = var.custom_role != null || var.azure_role != null ? 1 : 0
+
   scope                = data.azurerm_subscription.target.id
-  role_definition_name = var.azure_role
+  role_definition_id   = var.custom_role != null ? azurerm_role_definition.custom[0].role_definition_resource_id : null
+  role_definition_name = var.custom_role == null ? var.azure_role : null
   principal_id         = azuread_service_principal.main.object_id
 }
