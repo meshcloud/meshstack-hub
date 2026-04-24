@@ -226,6 +226,7 @@ No modules.
 | [azuread_application_password.main](https://registry.terraform.io/providers/hashicorp/azuread/latest/docs/resources/application_password) | resource |
 | [azuread_service_principal.main](https://registry.terraform.io/providers/hashicorp/azuread/latest/docs/resources/service_principal) | resource |
 | [azurerm_role_assignment.main](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/role_assignment) | resource |
+| [azurerm_role_definition.custom](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/role_definition) | resource |
 | [time_rotating.secret_rotation](https://registry.terraform.io/providers/hashicorp/time/latest/docs/resources/rotating) | resource |
 | [azurerm_client_config.current](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/client_config) | data source |
 | [azurerm_subscription.target](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/subscription) | data source |
@@ -234,9 +235,10 @@ No modules.
 
 | Name | Description | Type | Default | Required |
 |------|-------------|------|---------|:--------:|
-| <a name="input_azure_role"></a> [azure\_role](#input\_azure\_role) | Azure RBAC role to assign to the service principal on the subscription | `string` | `"Contributor"` | no |
+| <a name="input_azure_role"></a> [azure\_role](#input\_azure\_role) | Azure RBAC built-in role name to assign to the service principal (e.g., 'Contributor', 'Reader', 'Storage Blob Data Reader'). Ignored if custom\_role is specified. | `string` | `null` | no |
 | <a name="input_azure_subscription_id"></a> [azure\_subscription\_id](#input\_azure\_subscription\_id) | Azure Subscription ID where role assignments will be created | `string` | n/a | yes |
 | <a name="input_create_client_secret"></a> [create\_client\_secret](#input\_create\_client\_secret) | Whether to create a client secret for the service principal (set to false for workload identity federation) | `bool` | `true` | no |
+| <a name="input_custom_role"></a> [custom\_role](#input\_custom\_role) | Define a custom role instead of using a built-in role. If specified, azure\_role is ignored. | <pre>object({<br/>    name             = string<br/>    description      = optional(string, "Custom role managed by Terraform")<br/>    actions          = optional(list(string), [])<br/>    not_actions      = optional(list(string), [])<br/>    data_actions     = optional(list(string), [])<br/>    not_data_actions = optional(list(string), [])<br/>  })</pre> | `null` | no |
 | <a name="input_description"></a> [description](#input\_description) | Description for the Entra ID application | `string` | `"Service principal managed by Terraform"` | no |
 | <a name="input_display_name"></a> [display\_name](#input\_display\_name) | Display name for the Entra ID application and service principal | `string` | n/a | yes |
 | <a name="input_owners"></a> [owners](#input\_owners) | List of object IDs to set as owners of the application (defaults to current user) | `list(string)` | `[]` | no |
@@ -249,9 +251,12 @@ No modules.
 | <a name="output_application_id"></a> [application\_id](#output\_application\_id) | Application (client) ID of the Entra ID application |
 | <a name="output_application_object_id"></a> [application\_object\_id](#output\_application\_object\_id) | Object ID of the Entra ID application |
 | <a name="output_authentication_method"></a> [authentication\_method](#output\_authentication\_method) | Authentication method for the service principal |
-| <a name="output_azure_role"></a> [azure\_role](#output\_azure\_role) | Azure role assigned to the service principal |
-| <a name="output_client_secret"></a> [client\_secret](#output\_client\_secret) | Client secret for the service principal ("null" if create\_client\_secret is false) |
-| <a name="output_secret_expiration_date"></a> [secret\_expiration\_date](#output\_secret\_expiration\_date) | Date when the service principal secret will expire ("null" if create\_client\_secret is false) |
+| <a name="output_client_secret"></a> [client\_secret](#output\_client\_secret) | Client secret for the service principal (null if create\_client\_secret is false) |
+| <a name="output_custom_role"></a> [custom\_role](#output\_custom\_role) | Custom role definition details (null if using built-in role) |
+| <a name="output_custom_role_id"></a> [custom\_role\_id](#output\_custom\_role\_id) | ID of the custom role definition (null if using built-in role) |
+| <a name="output_role_assignment_id"></a> [role\_assignment\_id](#output\_role\_assignment\_id) | ID of the role assignment (null if no role was assigned) |
+| <a name="output_role_name"></a> [role\_name](#output\_role\_name) | Name of the role assigned to the service principal (built-in or custom) |
+| <a name="output_secret_expiration_date"></a> [secret\_expiration\_date](#output\_secret\_expiration\_date) | Date when the service principal secret will expire (null if create\_client\_secret is false) |
 | <a name="output_service_principal_id"></a> [service\_principal\_id](#output\_service\_principal\_id) | Client ID of the service principal (same as application\_id) |
 | <a name="output_service_principal_object_id"></a> [service\_principal\_object\_id](#output\_service\_principal\_object\_id) | Object ID of the service principal |
 | <a name="output_subscription_id"></a> [subscription\_id](#output\_subscription\_id) | Azure Subscription ID where role assignment was created |
