@@ -46,4 +46,39 @@ security_contact = {
 Please reference the [backplane implementation](../backplane/) for the required permissions to deploy this building block.
 
 <!-- BEGIN_TF_DOCS -->
+## Requirements
+
+| Name | Version |
+|------|---------|
+| <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.3.0 |
+| <a name="requirement_aws"></a> [aws](#requirement\_aws) | ~> 5.0 |
+
+## Modules
+
+No modules.
+
+## Resources
+
+| Name | Type |
+|------|------|
+| [aws_account_alternate_contact.billing](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/account_alternate_contact) | resource |
+| [aws_account_alternate_contact.operations](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/account_alternate_contact) | resource |
+| [aws_account_alternate_contact.security](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/account_alternate_contact) | resource |
+
+## Inputs
+
+| Name | Description | Type | Default | Required |
+|------|-------------|------|---------|:--------:|
+| <a name="input_account_id"></a> [account\_id](#input\_account\_id) | Target account id where the alternate contacts should be set | `string` | n/a | yes |
+| <a name="input_assume_role_name"></a> [assume\_role\_name](#input\_assume\_role\_name) | The name of the role to assume in target account identified by account\_id | `string` | n/a | yes |
+| <a name="input_aws_partition"></a> [aws\_partition](#input\_aws\_partition) | The AWS partition to use. e.g. aws, aws-cn, aws-us-gov | `string` | `"aws"` | no |
+| <a name="input_billing_contact"></a> [billing\_contact](#input\_billing\_contact) | Billing alternate contact. Set to null to skip. All fields are required when set. | <pre>object({<br/>    name  = string<br/>    title = string<br/>    email = string<br/>    phone = string<br/>  })</pre> | `null` | no |
+| <a name="input_operations_contact"></a> [operations\_contact](#input\_operations\_contact) | Operations alternate contact. Set to null to skip. All fields are required when set. | <pre>object({<br/>    name  = string<br/>    title = string<br/>    email = string<br/>    phone = string<br/>  })</pre> | `null` | no |
+| <a name="input_security_contact"></a> [security\_contact](#input\_security\_contact) | Security alternate contact. Set to null to skip. All fields are required when set. | <pre>object({<br/>    name  = string<br/>    title = string<br/>    email = string<br/>    phone = string<br/>  })</pre> | `null` | no |
+
+## Outputs
+
+| Name | Description |
+|------|-------------|
+| <a name="output_operations_contacts"></a> [operations\_contacts](#output\_operations\_contacts) | Map of configured alternate contact types to their email addresses |
 <!-- END_TF_DOCS -->
