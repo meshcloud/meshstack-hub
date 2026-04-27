@@ -13,7 +13,9 @@ resource "aws_iam_access_key" "backplane" {
   user     = aws_iam_user.backplane.name
 }
 
-data "aws_partition" "current" {}
+data "aws_partition" "current" {
+  provider = aws.backplane
+}
 
 # access building block service role in target accounts
 data "aws_iam_policy_document" "building_block_service" {
