@@ -4,5 +4,5 @@ output "operations_contacts" {
     "operations" = aws_account_alternate_contact.operations.email_address
     "billing"    = aws_account_alternate_contact.billing.email_address
     "security"   = aws_account_alternate_contact.security.email_address
-    }
+  }
 }
