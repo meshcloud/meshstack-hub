@@ -8,11 +8,9 @@ locals {
   # in zonefiles) as a special value to indicate "empty"
   record_name = var.sub == "@" ? "" : var.sub
 
-  # For NS records, support comma-separated values (e.g., "ns1.example.com,ns2.example.com")
-  # For other record types, use the single value as-is
-  record_values = var.type == "NS" ? [
-    for v in split(",", var.record) : trimspace(v)
-  ] : [var.record]
+  # Support comma-separated values for record types that accept multiple values
+  # (e.g., NS, A, AAAA, MX, TXT)
+  record_values = [for v in split(",", var.record) : trimspace(v)]
 }
 
 resource "aws_route53_record" "record" {
