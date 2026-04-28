@@ -6,7 +6,6 @@ The Service Principal Building Block creates Azure AD applications and service p
 
 ## Automation
 
-We automate the deployment of the Service Principal Building Block using the common [Azure Building Blocks Automation Infrastructure](../automation.md).
 In order to deploy this building block, this infrastructure receives the following roles and permissions.
 
 ### Azure RBAC Role

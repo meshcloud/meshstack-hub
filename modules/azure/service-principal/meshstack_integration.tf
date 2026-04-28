@@ -52,9 +52,8 @@ data "meshstack_integrations" "integrations" {}
 
 module "backplane" {
   source = "github.com/meshcloud/meshstack-hub//modules/azure/service-principal/backplane?ref=main"
-
-  name  = var.backplane_name
-  scope = var.azure_scope
+  name   = var.backplane_name
+  scope  = var.azure_scope
 
   create_service_principal_name = var.backplane_name
 
