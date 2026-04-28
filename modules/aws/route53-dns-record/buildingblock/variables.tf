@@ -76,7 +76,7 @@ variable "type" {
 
 variable "record" {
   type        = string
-  description = "DNS record value"
+  description = "DNS record value. For NS records, you can specify multiple values separated by commas (e.g., \"ns1.example.com,ns2.example.com\")."
   nullable    = false
 }
 

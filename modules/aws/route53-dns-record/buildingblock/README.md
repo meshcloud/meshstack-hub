@@ -30,7 +30,7 @@ No modules.
 |------|-------------|------|---------|:--------:|
 | <a name="input_allowed_account_ids"></a> [allowed\_account\_ids](#input\_allowed\_account\_ids) | List of allowed AWS account IDs to prevent operations on the wrong account | `list(string)` | `null` | no |
 | <a name="input_private_zone"></a> [private\_zone](#input\_private\_zone) | Set to true if the AWS Route 53 zone is a Private Hosted Zone. | `bool` | `false` | no |
-| <a name="input_record"></a> [record](#input\_record) | DNS record value | `string` | n/a | yes |
+| <a name="input_record"></a> [record](#input\_record) | DNS record value. For NS records, you can specify multiple values separated by commas (e.g., "ns1.example.com,ns2.example.com"). | `string` | n/a | yes |
 | <a name="input_region"></a> [region](#input\_region) | The AWS region | `string` | `"eu-central-1"` | no |
 | <a name="input_sub"></a> [sub](#input\_sub) | DNS record name, excluding the `zone_name`. Leave empty to create apex records. | `string` | n/a | yes |
 | <a name="input_ttl"></a> [ttl](#input\_ttl) | TTL of the record in seconds. | `string` | `"300"` | no |
