@@ -64,7 +64,7 @@ variable "type" {
       # "DS",
       "MX",
       # "NAPTR",
-      # "NS",
+      "NS",
       # "PTR",
       # "SOA",
       "SPF",
