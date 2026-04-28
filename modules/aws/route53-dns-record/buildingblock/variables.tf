@@ -49,7 +49,7 @@ variable "type" {
       # "DS",
       "MX",
       # "NAPTR",
-      # "NS",
+      "NS",
       # "PTR",
       # "SOA",
       "SPF",
@@ -64,7 +64,7 @@ variable "type" {
       # "DS",
       "MX",
       # "NAPTR",
-      # "NS",
+      "NS",
       # "PTR",
       # "SOA",
       "SPF",
@@ -76,7 +76,7 @@ variable "type" {
 
 variable "record" {
   type        = string
-  description = "DNS record value"
+  description = "DNS record value. You can specify multiple values separated by commas (e.g., \"ns1.example.com,ns2.example.com\" or \"192.168.1.1,192.168.1.2\")."
   nullable    = false
 }
 
