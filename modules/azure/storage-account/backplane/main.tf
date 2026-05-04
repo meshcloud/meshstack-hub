@@ -42,6 +42,8 @@ resource "azurerm_role_definition" "buildingblock_deploy" {
   scope       = var.scope
   permissions {
     actions = [
+      # resource manager
+      "*/register/action",
       # storage accounts
       "Microsoft.Storage/storageAccounts/write",
       "Microsoft.Storage/storageAccounts/read",
