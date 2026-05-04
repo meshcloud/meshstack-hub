@@ -26,6 +26,8 @@ resource "azurerm_role_definition" "backplane" {
   scope       = var.scope
   permissions {
     actions = [
+      # resource manager
+      "*/register/action",
       # storage accounts
       "Microsoft.Storage/storageAccounts/write",
       "Microsoft.Storage/storageAccounts/read",
