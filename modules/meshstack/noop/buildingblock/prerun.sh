@@ -22,8 +22,9 @@ ls -lah
 echo ""
 
 echo "--- Tool Installation ---"
-echo "Currently not supported via apk add, but coming soon, see https://feedback.meshcloud.io/feature-requests/p/building-block-should-support-aws-cli-and-other"
-# sudo apk add aws-cli
+echo "Install additional packages safely via nix"
+nix profile add nixpkgs#awscli2
+aws --version
 echo ""
 
 echo "--- Terraform State Manipulation ---"
