@@ -1,6 +1,3 @@
-# Tests the noop building block deployed via meshstack-hub module.
-# Run individually: tofu test -filter=tests/building_block_noop_hub.tftest.hcl
-
 run "building_block_noop_hub" {
   assert {
     condition     = meshstack_building_block_v2.this.status.status == "SUCCEEDED"
