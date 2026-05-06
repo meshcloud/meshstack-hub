@@ -21,9 +21,15 @@ echo "Working directory: $(pwd)"
 ls -lah
 echo ""
 
-echo "--- Tool Installation ---"
-echo "Currently not supported via apk add, but coming soon, see https://feedback.meshcloud.io/feature-requests/p/building-block-should-support-aws-cli-and-other"
-# sudo apk add aws-cli
+echo "--- Tool Installation via Nix ---"
+echo "The go runner image ships with nix pre-installed (single-user mode, meshcloud user)."
+echo "Use 'nix profile add nixpkgs#<package>' to install any package from nixpkgs without root/sudo."
+echo ""
+echo "Installing AWS CLI as an example:"
+nix profile add nixpkgs#awscli2
+echo ""
+echo "Verifying AWS CLI installation:"
+aws --version
 echo ""
 
 echo "--- Terraform State Manipulation ---"

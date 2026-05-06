@@ -15,6 +15,23 @@ Use it to:
 - Learn how FILE-type inputs are written to the working directory
 - See how `USER_PERMISSIONS` injects project team members into your building block
 - Understand the pre-run script execution model
+- See how to install arbitrary tools (e.g. AWS CLI) using nix in pre-run scripts
+
+## Installing Tools in Pre-Run Scripts
+
+The go runner image ships with [nix](https://nixos.org/) pre-installed in single-user mode, running as the non-root `meshcloud` user. This means you can install any package from [nixpkgs](https://search.nixos.org/packages) **without root or sudo access**:
+
+```bash
+# Install a single tool
+nix profile add nixpkgs#awscli2
+
+# Install multiple tools
+nix profile add nixpkgs#awscli2 nixpkgs#kubectl nixpkgs#jq
+```
+
+After installation, the tool is available in `PATH` for the rest of the pre-run script and subsequent steps.
+
+> **Tip:** Use [search.nixos.org](https://search.nixos.org/packages) to find the exact package name for any tool.
 
 ## Input Types
 
