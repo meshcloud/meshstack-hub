@@ -58,6 +58,7 @@ No modules.
 
 | Name | Type |
 |------|------|
+| [terraform_data.aws_cli](https://registry.terraform.io/providers/hashicorp/terraform/latest/docs/resources/data) | resource |
 | [terraform_data.noop](https://registry.terraform.io/providers/hashicorp/terraform/latest/docs/resources/data) | resource |
 
 ## Inputs
