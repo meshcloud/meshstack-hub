@@ -1,0 +1,15 @@
+output "token_replicator" {
+  sensitive = true
+  value     = kubernetes_secret.meshfed_service_secret.data["token"]
+}
+
+output "full_platform_identifier" {
+  value = "${meshstack_platform.this.metadata.name}.${meshstack_platform.this.spec.location_ref.name}"
+}
+
+output "landing_zone_identifiers" {
+  value = {
+    dev  = meshstack_landingzone.dev.metadata.name
+    prod = meshstack_landingzone.prod.metadata.name
+  }
+}
