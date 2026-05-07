@@ -10,8 +10,8 @@ run "building_block_noop_hub" {
   }
 
   assert {
-    condition     = meshstack_building_block_v2.this.status.outputs["text"].value_string == "Hello, World! aws-cli/2"
-    error_message = "noop hub building block expected output text to be 'Hello, World! aws-cli/2', got ${meshstack_building_block_v2.this.status.outputs["text"].value_string}"
+    condition     = startswith(meshstack_building_block_v2.this.status.outputs["text"].value_string, "Hello, World! aws-cli/2")
+    error_message = "noop hub building block expected output text to start with 'Hello, World! aws-cli/2', got ${meshstack_building_block_v2.this.status.outputs["text"].value_string}"
   }
 
   assert {

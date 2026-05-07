@@ -1,5 +1,6 @@
 variable "test_context" {
   type = object({
+    hub_git_ref = string
     workspace   = string
     project     = string
     name_suffix = string
@@ -8,7 +9,7 @@ variable "test_context" {
 }
 
 module "noop" {
-  source = "github.com/meshcloud/meshstack-hub/modules/meshstack/noop"
+  source = "../"
   meshstack = {
     owning_workspace_identifier = var.test_context.workspace
     tags = {
@@ -16,7 +17,7 @@ module "noop" {
     }
   }
   hub = {
-    git_ref   = "main"
+    git_ref   = var.test_context.hub_git_ref
     bbd_draft = true
   }
 }
