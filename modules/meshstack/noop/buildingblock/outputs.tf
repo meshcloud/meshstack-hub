@@ -36,7 +36,7 @@ output "num" {
 }
 
 output "text" {
-  value = var.text
+  value = "${var.text} ${data.external.aws_version.result.version}"
 }
 
 output "sensitive_text" {

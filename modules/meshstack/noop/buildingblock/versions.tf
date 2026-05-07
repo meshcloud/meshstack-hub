@@ -1,5 +1,10 @@
 terraform {
   required_version = ">= 1.0"
-  # No provider required - this building block manages no cloud resources.
-  # It only processes and echoes back the inputs provided by meshStack.
+  required_providers {
+    # external is used to capture the AWS CLI version at apply time.
+    external = {
+      source  = "hashicorp/external"
+      version = "~> 2.3.0"
+    }
+  }
 }
