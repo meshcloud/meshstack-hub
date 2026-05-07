@@ -1,5 +1,6 @@
 variable "test_context" {
   type = object({
+    hub_git_ref          = string
     workspace            = string
     name_suffix          = string
     forgejo_base_url     = string
@@ -65,7 +66,7 @@ module "meshstack_kubernetes_platform" {
 }
 
 module "stackit_git_repository" {
-  source = "github.com/meshcloud/meshstack-hub/modules/stackit/git-repository"
+  source = "../../../stackit/git-repository"
   meshstack = {
     owning_workspace_identifier = var.test_context.workspace
     tags = {
@@ -73,7 +74,7 @@ module "stackit_git_repository" {
     }
   }
   hub = {
-    git_ref   = "main"
+    git_ref   = var.test_context.hub_git_ref
     bbd_draft = true
   }
 
@@ -94,7 +95,7 @@ module "stackit_git_repository" {
 }
 
 module "forgejo_connector" {
-  source = "github.com/meshcloud/meshstack-hub/modules/ske/forgejo-connector"
+  source = "../../forgejo-connector"
   meshstack = {
     owning_workspace_identifier = var.test_context.workspace
     tags = {
@@ -102,7 +103,7 @@ module "forgejo_connector" {
     }
   }
   hub = {
-    git_ref   = "main"
+    git_ref   = var.test_context.hub_git_ref
     bbd_draft = true
   }
 
@@ -115,7 +116,7 @@ module "forgejo_connector" {
 }
 
 module "ske_starterkit" {
-  source = "github.com/meshcloud/meshstack-hub/modules/ske/ske-starterkit"
+  source = "../"
   meshstack = {
     owning_workspace_identifier = var.test_context.workspace
     tags = {
@@ -123,7 +124,7 @@ module "ske_starterkit" {
     }
   }
   hub = {
-    git_ref   = "main"
+    git_ref   = var.test_context.hub_git_ref
     bbd_draft = true
   }
 
@@ -156,9 +157,7 @@ module "ske_starterkit" {
 resource "meshstack_building_block_v2" "this" {
   wait_for_completion = true
   spec = {
-    building_block_definition_version_ref = {
-      uuid = module.ske_starterkit.building_block_definition.version_ref.uuid
-    }
+    building_block_definition_version_ref = module.ske_starterkit.building_block_definition.version_ref
 
     display_name = "smoke-test-ske-starterkit-hub-${var.test_context.name_suffix}"
     target_ref = {

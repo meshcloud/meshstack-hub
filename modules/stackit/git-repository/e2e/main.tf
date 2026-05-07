@@ -1,5 +1,6 @@
 variable "test_context" {
   type = object({
+    hub_git_ref          = string
     workspace            = string
     name_suffix          = string
     forgejo_base_url     = string
@@ -15,7 +16,7 @@ variable "stackit_git_forgejo_token" {
 }
 
 module "stackit_git_repository" {
-  source = "github.com/meshcloud/meshstack-hub/modules/stackit/git-repository"
+  source = "../"
   meshstack = {
     owning_workspace_identifier = var.test_context.workspace
     tags = {
@@ -23,7 +24,7 @@ module "stackit_git_repository" {
     }
   }
   hub = {
-    git_ref   = "main"
+    git_ref   = var.test_context.hub_git_ref
     bbd_draft = true
   }
 
@@ -35,9 +36,7 @@ module "stackit_git_repository" {
 resource "meshstack_building_block_v2" "this" {
   wait_for_completion = true
   spec = {
-    building_block_definition_version_ref = {
-      uuid = module.stackit_git_repository.building_block_definition.version_ref.uuid
-    }
+    building_block_definition_version_ref = module.stackit_git_repository.building_block_definition.version_ref
 
     display_name = "smoke-test-stackit-git-repository-hub-${var.test_context.name_suffix}"
     target_ref = {
