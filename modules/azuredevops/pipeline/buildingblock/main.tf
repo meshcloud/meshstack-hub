@@ -1,11 +1,14 @@
-data "azurerm_key_vault" "devops" {
-  name                = var.key_vault_name
-  resource_group_name = var.resource_group_name
-}
-
-data "azurerm_key_vault_secret" "azure_devops_pat" {
-  name         = var.pat_secret_name
-  key_vault_id = data.azurerm_key_vault.devops.id
+resource "azuredevops_git_repository_file" "pipeline_yaml" {
+  repository_id = var.repository_id
+  file          = var.yaml_path
+  content = templatefile("${path.module}/templates/azure-pipelines.yml.tpl", {
+    agent_pool_name         = var.agent_pool_name
+    service_connection_name = var.service_connection_name
+    repository_name         = var.repository_name
+  })
+  branch              = var.branch_name
+  commit_message      = "Add pipeline definition"
+  overwrite_on_create = true
 }
 
 resource "azuredevops_build_definition" "main" {

@@ -1,13 +1,3 @@
-data "azurerm_key_vault" "devops" {
-  name                = var.key_vault_name
-  resource_group_name = var.resource_group_name
-}
-
-data "azurerm_key_vault_secret" "azure_devops_pat" {
-  name         = var.pat_secret_name
-  key_vault_id = data.azurerm_key_vault.devops.id
-}
-
 data "azurerm_virtual_machine_scale_set" "existing" {
   name                = var.vmss_name
   resource_group_name = var.vmss_resource_group_name

@@ -1,24 +1,3 @@
-variable "azure_devops_organization_url" {
-  description = "Azure DevOps organization URL (e.g., https://dev.azure.com/myorg)"
-  type        = string
-}
-
-variable "key_vault_name" {
-  description = "Name of the Key Vault containing the Azure DevOps PAT"
-  type        = string
-}
-
-variable "resource_group_name" {
-  description = "Name of the resource group containing the Key Vault"
-  type        = string
-}
-
-variable "pat_secret_name" {
-  description = "Name of the secret in Key Vault that contains the Azure DevOps PAT"
-  type        = string
-  default     = "azdo-pat"
-}
-
 variable "project_id" {
   description = "Azure DevOps Project ID where the pipeline will be created"
   type        = string
@@ -61,6 +40,21 @@ variable "variable_group_ids" {
   description = "List of variable group IDs to link to this pipeline"
   type        = list(number)
   default     = []
+}
+
+variable "repository_name" {
+  description = "Name of the repository, used as the namespace name in the generated pipeline YAML"
+  type        = string
+}
+
+variable "service_connection_name" {
+  description = "Name of the Azure DevOps service connection for AKS access"
+  type        = string
+}
+
+variable "agent_pool_name" {
+  description = "Name of the Azure DevOps agent pool to run the pipeline on"
+  type        = string
 }
 
 variable "pipeline_variables" {
