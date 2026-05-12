@@ -24,18 +24,6 @@ variable "azure_subscription_owner_object_ids" {
   description = "Optional explicit subscription owner object IDs. If null, current principal is used."
 }
 
-variable "azure_blueprint_service_principal_client_id" {
-  type        = string
-  default     = "f71766dc-90d9-4b7d-bd9d-4499c4331c3f"
-  description = "Client ID of the Azure Blueprints service principal."
-}
-
-variable "azure_blueprint_location" {
-  type        = string
-  default     = "westeurope"
-  description = "Azure region used for Blueprints."
-}
-
 variable "meshstack" {
   type = object({
     owning_workspace_identifier = string
@@ -49,11 +37,6 @@ data "meshstack_integrations" "integrations" {}
 
 data "azuread_domains" "aad_domains" {
   only_initial = true
-}
-
-data "azuread_service_principal" "blueprints" {
-  # Client ID is known but object id changes
-  client_id = var.azure_blueprint_service_principal_client_id
 }
 
 data "azurerm_client_config" "current" {}
@@ -145,9 +128,6 @@ resource "meshstack_platform" "azure" {
           skip_user_group_permission_cleanup = false
 
           user_lookup_strategy = "UserByMailLookupStrategy"
-
-          blueprint_service_principal = data.azuread_service_principal.blueprints.object_id
-          blueprint_location          = var.azure_blueprint_location
 
           service_principal = {
             client_id = module.azure_meshplatform.replicator_service_principal.Application_Client_ID
@@ -263,7 +243,7 @@ terraform {
   required_providers {
     meshstack = {
       source  = "meshcloud/meshstack"
-      version = "~> 0.20.0"
+      version = "~> 0.20.6"
     }
     azurerm = {
       source  = "hashicorp/azurerm"
