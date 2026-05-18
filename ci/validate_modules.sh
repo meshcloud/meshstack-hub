@@ -87,6 +87,13 @@ check_png_minimization() {
 
 check_terraform_files() {
 	local buildingblock_path="$1"
+
+	# Skip terraform checks for manual building blocks and other non-terraform modules
+	# This is deliberately naive for the single use case we have right now, we can make this smarter if we have that case more often
+	if [[ "$buildingblock_path" == *"/meshstack/manual/buildingblock" ]]; then
+		return 0
+	fi
+
 	local tf_files=("main.tf" "variables.tf" "outputs.tf")
 
 	for tf_file in "${tf_files[@]}"; do
