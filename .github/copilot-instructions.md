@@ -281,7 +281,7 @@ module "my_module" {
   source = "../"     # relative path to the meshstack_integration.tf root
   meshstack = {
     owning_workspace_identifier = var.test_context.workspace
-    tags = { BBEnvironment = ["dev"] }
+    tags = {}
   }
   hub = {
     git_ref   = var.test_context.hub_git_ref   # always use hub_git_ref — never hardcode "main"
