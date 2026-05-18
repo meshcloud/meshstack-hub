@@ -34,10 +34,10 @@ resource "meshstack_building_block_v2" "this" {
     }
 
     inputs = {
-      text          = { value_string = "Hello, Manual World!" }
-      flag          = { value_bool = true }
-      num           = { value_int = 42 }
-      single_select = { value_single_select = "option1" }
+      text = { value_string = "Hello, Manual World!" }
+      flag = { value_bool = true }
+      num  = { value_int = 42 }
+      # single_select = { value_single_select = "option1" }
       # static_note is STATIC — provided in the BBD, not by the user
     }
   }

@@ -52,7 +52,7 @@ resource "meshstack_building_block_definition" "this" {
     | Responsibility | Platform Team | Application Team |
     |----------------|:-------------:|:----------------:|
     | Complete the building block run | ✅ | ❌ |
-    | Provide `text`, `flag`, `num`, `single_select` inputs | ❌ | ✅ |
+    | Provide `text`, `flag`, `num`, inputs | ❌ | ✅ |
     | Monitor completion status | ❌ | ✅ |
     EOT
   }
@@ -79,20 +79,26 @@ resource "meshstack_building_block_definition" "this" {
         display_name    = "Num"
         type            = "INTEGER"
       }
-      # SINGLE_SELECT has no corresponding output type — exercises the input-only type constraint
-      single_select = {
-        assignment_type   = "USER_INPUT"
-        display_name      = "Single Select"
-        selectable_values = ["option1", "option2"]
-        type              = "SINGLE_SELECT"
-      }
-      # Static input with no corresponding output — exercises more-inputs-than-outputs
-      static_note = {
-        assignment_type = "STATIC"
-        display_name    = "Static Note"
-        type            = "STRING"
-        argument        = jsonencode("A static note value")
-      }
+
+      # TODO: these two currently break the terraform provider because they can't be mapped to an output type
+      # This is a known issue that needs to be fixed in meshStack
+      # > produced an unexpected new value:
+      #  .version_spec.outputs: new element "single_select" has appeared.
+      #  .version_spec.outputs: new element "static_note" has appeared.
+
+      # single_select = {
+      #   assignment_type   = "USER_INPUT"
+      #   display_name      = "Single Select"
+      #   selectable_values = ["option1", "option2"]
+      #   type              = "SINGLE_SELECT"
+      # }
+      # # Static input with no corresponding output — exercises more-inputs-than-outputs
+      # static_note = {
+      #   assignment_type = "STATIC"
+      #   display_name    = "Static Note"
+      #   type            = "STRING"
+      #   argument        = jsonencode("A static note value")
+      # }
     }
     # Output keys must match input keys; types must be compatible with manual mirroring.
     # Only text, flag, and num are output — single_select and static_note are intentionally omitted.
