@@ -29,9 +29,7 @@ module "storage_account" {
 
   meshstack = {
     owning_workspace_identifier = var.test_context.workspace
-    tags = {
-      BBEnvironment = ["dev"]
-    }
+    tags                        = {}
   }
 
   hub = {

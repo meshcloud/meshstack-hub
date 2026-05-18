@@ -12,11 +12,6 @@ variable "workload_identity" {
   description = "Workload identity federation configuration for AWS authentication."
 }
 
-variable "bb_environment" {
-  type        = string
-  description = "Value used for the BBEnvironment metadata tag (example: `prod`)."
-}
-
 variable "meshstack" {
   type = object({
     owning_workspace_identifier = string
@@ -58,7 +53,7 @@ module "backplane" {
 resource "meshstack_building_block_definition" "this" {
   metadata = {
     owned_by_workspace = var.meshstack.owning_workspace_identifier
-    tags               = merge(var.meshstack.tags, { BBEnvironment = [var.bb_environment] })
+    tags               = var.meshstack.tags
   }
 
   spec = {

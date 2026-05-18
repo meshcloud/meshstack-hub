@@ -69,9 +69,7 @@ module "stackit_git_repository" {
   source = "../../../stackit/git-repository"
   meshstack = {
     owning_workspace_identifier = var.test_context.workspace
-    tags = {
-      "BBEnvironment" = ["dev"]
-    }
+    tags                        = {}
   }
   hub = {
     git_ref   = var.test_context.hub_git_ref
@@ -98,9 +96,7 @@ module "forgejo_connector" {
   source = "../../forgejo-connector"
   meshstack = {
     owning_workspace_identifier = var.test_context.workspace
-    tags = {
-      "BBEnvironment" = ["dev"]
-    }
+    tags                        = {}
   }
   hub = {
     git_ref   = var.test_context.hub_git_ref
@@ -119,9 +115,7 @@ module "ske_starterkit" {
   source = "../"
   meshstack = {
     owning_workspace_identifier = var.test_context.workspace
-    tags = {
-      "BBEnvironment" = ["dev"]
-    }
+    tags                        = {}
   }
   hub = {
     git_ref   = var.test_context.hub_git_ref

@@ -19,9 +19,7 @@ module "stackit_git_repository" {
   source = "../"
   meshstack = {
     owning_workspace_identifier = var.test_context.workspace
-    tags = {
-      "BBEnvironment" = ["dev"]
-    }
+    tags                        = {}
   }
   hub = {
     git_ref   = var.test_context.hub_git_ref
