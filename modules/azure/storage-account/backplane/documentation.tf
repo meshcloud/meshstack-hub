@@ -6,8 +6,8 @@ The Storage Account Building Block configures a storage account for your subscri
 
 ## Automation
 
-We automate the deployment of a Storage Account Building Block building block using the common [Azure Building Blocks Automation Infrastructure](../automation.md).
-In order to deploy this building block, this infrastructure receives the following roles.
+We automate the deployment of a Storage Account Building Block using a User-Assigned Managed
+Identity (UAMI) with Workload Identity Federation. The UAMI receives the following roles.
 
 | Role Name | Description | Permissions |
 |-----------|-------------|-------------|
