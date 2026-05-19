@@ -169,7 +169,7 @@ resource "meshstack_building_block_definition" "this" {
 - **Cross-cutting concerns** like workload identity federation settings may be grouped into an `object({})` typed variable (e.g. `variable "workload_identity"`) when the fields are logically inseparable
 - Only `variable "meshstack"` and `variable "hub"` use shared `object({})` conventions across all integrations
 - Pin provider versions with `~> X.Y.Z` (allow patch updates, not minor/major). **Exception:** the `meshcloud/meshstack` provider is pre-1.0, so pin to the minor version with `~> 0.Y.0` (e.g. `~> 0.20.0`)
-- Terraform baseline: `>= 1.11.0` to cover OpenTofu v1.11.0 with write-only/ephemeral attribute support
+- Terraform baseline: `>= 1.12.0` to cover OpenTofu v1.12.0 with `const` variable support (requires OpenTofu ≥ 1.12 or Terraform ≥ 1.15)
 
 ---
 

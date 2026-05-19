@@ -54,6 +54,7 @@ variable "hub" {
     git_ref   = optional(string, "main")
     bbd_draft = optional(bool, true)
   })
+  const       = true
   default     = {}
   description = <<-EOT
   `git_ref`: Hub release reference. Set to a tag (e.g. 'v1.2.3') or branch or commit sha of the meshstack-hub repo.
@@ -70,7 +71,7 @@ output "building_block_definition" {
 }
 
 module "backplane" {
-  source = "github.com/meshcloud/meshstack-hub//modules/kubernetes/manifest/backplane?ref=50756692c3b74dde5a2ec0b080e43108e0d0c9d9"
+  source = "github.com/meshcloud/meshstack-hub//modules/kubernetes/manifest/backplane?ref=${var.hub.git_ref}"
 
   kubeconfig_admin     = var.kubernetes_kubeconfig
   namespace            = var.kubernetes_namespace
@@ -196,6 +197,8 @@ resource "meshstack_building_block_definition" "this" {
 }
 
 terraform {
+  required_version = ">= 1.12.0"
+
   required_providers {
     meshstack = {
       source  = "meshcloud/meshstack"

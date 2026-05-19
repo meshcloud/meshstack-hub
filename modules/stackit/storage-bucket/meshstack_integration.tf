@@ -15,6 +15,7 @@ variable "hub" {
     git_ref   = optional(string, "main")
     bbd_draft = optional(bool, true)
   })
+  const       = true
   default     = {}
   description = <<-EOT
   `git_ref`: Hub release reference. Set to a tag (e.g. 'v1.2.3') or branch or commit sha of meshcloud/meshstack-hub repo.
@@ -31,7 +32,7 @@ output "building_block_definition" {
 }
 
 module "backplane" {
-  source = "github.com/meshcloud/meshstack-hub//modules/stackit/storage-bucket/backplane?ref=aeb06b72d8580f0581db36a26569d07d88320858"
+  source = "github.com/meshcloud/meshstack-hub//modules/stackit/storage-bucket/backplane?ref=${var.hub.git_ref}"
 
   project_id = var.stackit_project_id
 }
@@ -201,6 +202,8 @@ resource "meshstack_building_block_definition" "this" {
 }
 
 terraform {
+  required_version = ">= 1.12.0"
+
   required_providers {
     meshstack = {
       source  = "meshcloud/meshstack"

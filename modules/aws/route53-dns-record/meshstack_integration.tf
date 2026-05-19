@@ -45,6 +45,7 @@ variable "hub" {
     git_ref   = optional(string, "main")
     bbd_draft = optional(bool, true)
   })
+  const       = true
   default     = {}
   description = <<-EOT
   `git_ref`: Hub release reference. Set to a tag (e.g. 'v1.2.3') or branch or commit sha of the meshstack-hub repo.
@@ -63,7 +64,7 @@ output "building_block_definition" {
 data "meshstack_integrations" "integrations" {}
 
 module "backplane" {
-  source = "github.com/meshcloud/meshstack-hub//modules/aws/route53-dns-record/backplane?ref=32698080a28bce13ba224334ad5bfbb2233236ae"
+  source = "github.com/meshcloud/meshstack-hub//modules/aws/route53-dns-record/backplane?ref=${var.hub.git_ref}"
 
   hosted_zone_ids      = var.hosted_zone_ids
   create_oidc_provider = var.create_oidc_provider
@@ -220,7 +221,7 @@ resource "meshstack_building_block_definition" "this" {
 }
 
 terraform {
-  required_version = ">= 1.11.0"
+  required_version = ">= 1.12.0"
 
   required_providers {
     aws = {
