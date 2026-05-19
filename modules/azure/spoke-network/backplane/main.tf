@@ -31,6 +31,7 @@ resource "azurerm_role_definition" "buildingblock_deploy_hub" {
 resource "azurerm_role_assignment" "buildingblock_deploy_hub" {
   for_each = var.principal_ids
 
+  principal_type     = "ServicePrincipal"
   role_definition_id = azurerm_role_definition.buildingblock_deploy_hub.role_definition_resource_id
   description        = azurerm_role_definition.buildingblock_deploy_hub.description
   principal_id       = each.key

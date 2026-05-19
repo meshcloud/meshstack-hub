@@ -58,8 +58,9 @@ output "application_password" {
   value = var.create_service_principal_name != null && var.workload_identity_federation == null ? {
     key_id       = azuread_application_password.buildingblock_deploy[0].key_id
     display_name = azuread_application_password.buildingblock_deploy[0].display_name
+    value        = azuread_application_password.buildingblock_deploy[0].value
   } : null
-  description = "Information about the created application password (excludes the actual password value for security)."
+  description = "Information about the created application password including the password value."
   sensitive   = true
 }
 

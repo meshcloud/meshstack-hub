@@ -97,6 +97,7 @@ resource "azurerm_role_definition" "buildingblock_deploy" {
 resource "azurerm_role_assignment" "existing_principals" {
   for_each = var.existing_principal_ids
 
+  principal_type     = "ServicePrincipal"
   role_definition_id = azurerm_role_definition.buildingblock_deploy.role_definition_resource_id
   principal_id       = each.value
   scope              = var.scope
@@ -106,6 +107,7 @@ resource "azurerm_role_assignment" "existing_principals" {
 resource "azurerm_role_assignment" "created_principal" {
   count = var.create_service_principal_name != null ? 1 : 0
 
+  principal_type     = "ServicePrincipal"
   role_definition_id = azurerm_role_definition.buildingblock_deploy.role_definition_resource_id
   principal_id       = azuread_service_principal.buildingblock_deploy[0].object_id
   scope              = var.scope
