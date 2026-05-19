@@ -494,9 +494,9 @@ function main() {
   for (const mod of modules) {
     const categoryResults = {};
 
+    // Always compute all categories so the per-module summary is always complete.
+    // The filterCategory only controls which sections are *rendered*.
     for (const [catId, cat] of Object.entries(CATEGORIES)) {
-      if (filterCategory && catId !== filterCategory) continue;
-
       const applicable = cat.appliesTo(mod);
       const catDetectors = detectors.filter((d) => d.category === catId);
       const checks = catDetectors.map((d) => ({
@@ -512,8 +512,10 @@ function main() {
       categoryResults[catId] = { checks, passed, total, score, applicable };
     }
 
-    const allApplicableChecks = Object.values(categoryResults)
-      .flatMap((cr) => cr.checks)
+    // For overall score, only include categories matching the active filter (if any).
+    const allApplicableChecks = Object.entries(categoryResults)
+      .filter(([catId]) => !filterCategory || catId === filterCategory)
+      .flatMap(([, cr]) => cr.checks)
       .filter((c) => c.result.pass !== null);
     const totalPassed = allApplicableChecks.filter((c) => c.result.pass).length;
     const totalChecks = allApplicableChecks.length;
@@ -534,6 +536,34 @@ function main() {
   const categoriesToRender = filterCategory
     ? { [filterCategory]: CATEGORIES[filterCategory] }
     : CATEGORIES;
+
+  // ─── Per-Module Category Summary ────────────────────────────────────────
+  lines.push("## 📋 Per-Module Category Summary");
+  lines.push("");
+  lines.push("Score per category per building block. `n/a` = category does not apply to this module.");
+  lines.push("");
+
+  const summaryCategories = Object.entries(CATEGORIES);
+  const catHeaderCols = summaryCategories.map(([, cat]) => cat.name).join(" | ");
+  lines.push(`| Module | Overall | ${catHeaderCols} |`);
+  lines.push(`|--------|---------|${summaryCategories.map(() => "---").join("|")}|`);
+
+  for (const r of results) {
+    const overallCell = r.total > 0
+      ? `${r.score >= 80 ? "🟢" : r.score >= 50 ? "🟡" : "🔴"} ${r.score}%`
+      : "—";
+
+    const catCells = summaryCategories.map(([catId]) => {
+      const cr = r.categoryResults[catId];
+      if (!cr || !cr.applicable) return "n/a";
+      if (cr.score === null) return "—";
+      const emoji = cr.score >= 80 ? "🟢" : cr.score >= 50 ? "🟡" : "🔴";
+      return `${emoji} ${cr.score}%`;
+    });
+
+    lines.push(`| \`${r.mod.id}\` | ${overallCell} | ${catCells.join(" | ")} |`);
+  }
+  lines.push("");
 
   for (const [catId, cat] of Object.entries(categoriesToRender)) {
     const catDetectors = detectors.filter((d) => d.category === catId);
