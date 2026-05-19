@@ -51,7 +51,13 @@ A secondary purpose of these files is to serve as a ready-to-use Terraform modul
 - `locals` blocks are allowed when they improve readability/reuse, but place them below variable and output sections.
 - Avoid top-of-file banner comments in `meshstack_integration.tf`.
 - Never include `provider` configuration.
-- Reference modules using Git URLs and a ref pointing to the feature branch when developing. Once merged into main, the `update-module-refs` tooling in CI pins the ref to an appropriate commit.
+- Reference modules using Git URLs with `?ref=${var.hub.git_ref}`. This keeps both the `buildingblock` implementation path and the optional `backplane` module source pinned by a single variable. Example:
+  ```hcl
+  module "backplane" {
+    source = "github.com/meshcloud/meshstack-hub//modules/<provider>/<service>/backplane?ref=${var.hub.git_ref}"
+  }
+  ```
+  The `const = true` attribute on `var.hub` allows Terraform/OpenTofu to resolve the interpolation at `init` time.
 
 ### Required providers
 
@@ -86,6 +92,7 @@ variable "hub" {
     git_ref   = optional(string, "main")
     bbd_draft = optional(bool, true)
   })
+  const       = true
   default     = {}
   description = <<-EOT
   `git_ref`: Hub release reference. Set to a tag (e.g. 'v1.2.3') or branch or commit sha of the meshstack-hub repo.
@@ -93,6 +100,10 @@ variable "hub" {
   EOT
 }
 ```
+
+The `const = true` attribute (Terraform ≥ 1.15 / OpenTofu ≥ 1.12) marks `var.hub` for early static evaluation during `terraform init`, which is required to interpolate `var.hub.git_ref` inside module `source` strings. As a consequence, `variable "hub"` **must** satisfy all `const` constraints:
+- Its value must come from a `default`, `.tfvars` file, or `TF_VAR_*` environment variable — **never** from a resource, data source, or dynamic local.
+- It must **not** have `sensitive = true` or `ephemeral = true`.
 
 Always use `var.hub.bbd_draft` for the `draft` field of `version_spec` in `meshstack_building_block_definition` resources.
 
@@ -123,7 +134,7 @@ variable "meshstack" {
 }
 ```
 
-Use these variables in the implementation block of building block definitions.
+Use these variables in the implementation block of building block definitions. Always forward `var.meshstack.tags` to the BBD `metadata.tags` field so that workspace-level tags are propagated to the building block definition.
 
 ```hcl
 resource "meshstack_building_block_definition" "this" {
@@ -341,9 +352,11 @@ Pass `module.<name>.building_block_definition.version_ref` **directly** — do n
 - [ ] BBD `readme` field in `meshstack_integration.tf` contains description, usage motivation, examples, and shared responsibility table (✅ / ❌)
 - [ ] `meshstack_integration.tf` declares `meshcloud/meshstack` in `required_providers`
 - [ ] `meshstack_integration.tf` uses `variable "hub" { type = object({git_ref = string}) }` and `variable "meshstack" { type = object({owning_workspace_identifier = string}) }`
-- [ ] `meshstack_integration.tf` references backplane via GitHub URL (`github.com/meshcloud/meshstack-hub//modules/<provider>/<service>/backplane?ref=<branch-or-commit>`) — never a relative `./backplane` path
+- [ ] `meshstack_integration.tf` references backplane via GitHub URL with `?ref=${var.hub.git_ref}` (e.g. `github.com/meshcloud/meshstack-hub//modules/<provider>/<service>/backplane?ref=${var.hub.git_ref}`) — never a hardcoded commit SHA or relative `./backplane` path
+- [ ] `variable "hub"` includes `const = true`
 - [ ] `ref_name` uses `var.hub.git_ref` — no hardcoded `"main"`
 - [ ] `version_spec.draft` uses `var.hub.bbd_draft`
+- [ ] `metadata.tags = var.meshstack.tags` in `meshstack_building_block_definition` resource
 - [ ] Tags are modeled via `var.meshstack.tags` (no separate top-level `variable "tags"` in integrations)
 - [ ] `building_block_definition` output is exposed as `{ uuid, version_ref }` with `version_ref` using `bbd_draft ? version_latest : version_latest_release`
 - [ ] `locals` blocks (if used) appear below variables and outputs
