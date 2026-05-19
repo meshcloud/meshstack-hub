@@ -55,6 +55,7 @@ variable "hub" {
     git_ref   = optional(string, "main")
     bbd_draft = optional(bool, true)
   })
+  const       = true
   default     = {}
   description = <<-EOT
   `git_ref`: Hub release reference. Set to a tag (e.g. 'v1.2.3') or branch or commit sha of meshcloud/meshstack-hub repo.<br>
@@ -262,6 +263,8 @@ resource "meshstack_building_block_definition" "this" {
 }
 
 terraform {
+  required_version = ">= 1.12.0"
+
   required_providers {
     meshstack = {
       source  = "meshcloud/meshstack"
