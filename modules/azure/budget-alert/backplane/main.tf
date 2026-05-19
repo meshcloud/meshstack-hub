@@ -1,14 +1,19 @@
+resource "azurerm_resource_group" "buildingblock" {
+  name     = var.name
+  location = var.location
+}
+
 resource "azurerm_user_assigned_identity" "buildingblock" {
   name                = var.name
   location            = var.location
-  resource_group_name = var.resource_group_name
+  resource_group_name = azurerm_resource_group.buildingblock.name
 }
 
 resource "azurerm_federated_identity_credential" "buildingblock" {
   for_each = { for i, s in var.workload_identity_federation.subjects : tostring(i) => s }
 
   name                = "subject-${each.key}"
-  resource_group_name = var.resource_group_name
+  resource_group_name = azurerm_resource_group.buildingblock.name
   parent_id           = azurerm_user_assigned_identity.buildingblock.id
   audience            = ["api://AzureADTokenExchange"]
   issuer              = var.workload_identity_federation.issuer

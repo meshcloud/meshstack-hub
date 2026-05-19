@@ -29,17 +29,22 @@ principal for building block execution. Do **not** create Service Principals (SP
 ```hcl
 # backplane/main.tf — UAMI-based automation principal
 
+resource "azurerm_resource_group" "buildingblock" {
+  name     = var.name
+  location = var.location
+}
+
 resource "azurerm_user_assigned_identity" "buildingblock" {
   name                = var.name
   location            = var.location
-  resource_group_name = var.resource_group_name
+  resource_group_name = azurerm_resource_group.buildingblock.name
 }
 
 resource "azurerm_federated_identity_credential" "buildingblock" {
   for_each = { for i, s in var.workload_identity_federation.subjects : tostring(i) => s }
 
   name                = "subject-${each.key}"
-  resource_group_name = var.resource_group_name
+  resource_group_name = azurerm_resource_group.buildingblock.name
   parent_id           = azurerm_user_assigned_identity.buildingblock.id
   audience            = ["api://AzureADTokenExchange"]
   issuer              = var.workload_identity_federation.issuer
@@ -82,11 +87,6 @@ variable "location" {
   description = "Azure region for the UAMI resource."
 }
 
-variable "resource_group_name" {
-  type        = string
-  description = "Resource group where the UAMI will be created."
-}
-
 variable "workload_identity_federation" {
   type = object({
     issuer   = string
@@ -124,10 +124,9 @@ In the integration file, pass the UAMI client ID as the `ARM_CLIENT_ID` environm
 module "backplane" {
   source = "github.com/meshcloud/meshstack-hub//modules/azure/<service>/backplane?ref=${var.hub.git_ref}"
 
-  name                = var.backplane_name
-  scope               = var.azure_scope
-  location            = var.azure_location
-  resource_group_name = var.azure_resource_group_name
+  name     = var.backplane_name
+  scope    = var.azure_scope
+  location = var.azure_location
 
   workload_identity_federation = {
     issuer = data.meshstack_integrations.integrations.workload_identity_federation.replicator.issuer
@@ -138,8 +137,7 @@ module "backplane" {
 }
 ```
 
-The `meshstack_integration.tf` must include `azure_resource_group_name` and `azure_location`
-variables (flat, provider-prefixed) for the UAMI placement.
+The `meshstack_integration.tf` must include `azure_location` variable (flat, provider-prefixed) for the UAMI placement. The resource group is derived from and managed by the backplane using `var.name`.
 
 ## Checklist for Azure Backplanes
 
@@ -149,4 +147,4 @@ variables (flat, provider-prefixed) for the UAMI placement.
 - [ ] No `create_service_principal_name` / `existing_principal_ids` toggle
 - [ ] `workload_identity_federation` variable is non-nullable (always required)
 - [ ] Outputs `identity.client_id`, `identity.principal_id`, `identity.tenant_id`
-- [ ] `meshstack_integration.tf` includes `azure_resource_group_name` and `azure_location` variables
+- [ ] `meshstack_integration.tf` includes `azure_location` variable (no separate `azure_resource_group_name` — the backplane manages its own resource group named after `var.name`)

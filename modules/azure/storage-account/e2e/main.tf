@@ -6,9 +6,8 @@ variable "test_context" {
 
     fixtures = object({
       azure = object({
-        subscription_uuid   = string
-        entra_tenant_id     = string
-        resource_group_name = string
+        subscription_uuid = string
+        entra_tenant_id   = string
       })
     })
   })
@@ -38,10 +37,9 @@ module "storage_account" {
     bbd_draft = true
   }
 
-  azure_tenant_id           = var.test_context.fixtures.azure.entra_tenant_id
-  azure_subscription_id     = var.test_context.fixtures.azure.subscription_uuid
-  azure_scope               = local.azure_scope
-  azure_resource_group_name = var.test_context.fixtures.azure.resource_group_name
+  azure_tenant_id       = var.test_context.fixtures.azure.entra_tenant_id
+  azure_subscription_id = var.test_context.fixtures.azure.subscription_uuid
+  azure_scope           = local.azure_scope
 
   # Unique backplane name per test run so role definitions don't clash across concurrent/retried runs.
   backplane_name = "hub-e2e-stg-${var.test_context.name_suffix}"
