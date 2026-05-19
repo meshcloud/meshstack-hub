@@ -21,12 +21,6 @@ variable "location" {
   description = "Azure region for the UAMI resource."
 }
 
-variable "resource_group_name" {
-  type        = string
-  nullable    = false
-  description = "Resource group where the UAMI will be created."
-}
-
 variable "workload_identity_federation" {
   type = object({
     issuer   = string

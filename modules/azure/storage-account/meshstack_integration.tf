@@ -19,11 +19,6 @@ variable "azure_location" {
   description = "Default Azure region where storage accounts will be created."
 }
 
-variable "azure_resource_group_name" {
-  type        = string
-  description = "Resource group where the backplane UAMI will be created."
-}
-
 variable "backplane_name" {
   type        = string
   default     = "azure-storage-account"
@@ -70,10 +65,9 @@ data "meshstack_integrations" "integrations" {}
 module "backplane" {
   source = "github.com/meshcloud/meshstack-hub//modules/azure/storage-account/backplane?ref=${var.hub.git_ref}"
 
-  name                = var.backplane_name
-  scope               = var.azure_scope
-  location            = var.azure_location
-  resource_group_name = var.azure_resource_group_name
+  name     = var.backplane_name
+  scope    = var.azure_scope
+  location = var.azure_location
 
   workload_identity_federation = {
     issuer = data.meshstack_integrations.integrations.workload_identity_federation.replicator.issuer
