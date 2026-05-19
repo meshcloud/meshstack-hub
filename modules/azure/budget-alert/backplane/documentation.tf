@@ -11,7 +11,8 @@ specific needs of their application and infrastructure.
 
 # 💰 Budget Alert Building Block Backplane
 
-This module automates the deployment of a Budget Alert building block within Azure. It utilizes the common [Azure Building Blocks Automation Infrastructure](./azure-buildingblocks-automation)
+This module automates the deployment of a Budget Alert building block within Azure using a
+User-Assigned Managed Identity (UAMI) with Workload Identity Federation.
 
 
 ## 🛠️ Role Definition
@@ -20,11 +21,11 @@ This module automates the deployment of a Budget Alert building block within Azu
 | --- | --- |
 | ${azurerm_role_definition.buildingblock_deploy.name} | ${azurerm_role_definition.buildingblock_deploy.id} |
 
-## 📝 Role Assignments
+## 📝 Role Assignment
 
 | Principal ID |
 | --- |
-| ${join("\n", concat([for assignment in azurerm_role_assignment.existing_principals : assignment.principal_id], var.create_service_principal_name != null ? [azurerm_role_assignment.created_principal[0].principal_id] : []))} |
+| ${azurerm_role_assignment.buildingblock.principal_id} |
 
 ## 🎯 Scope
 

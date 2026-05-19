@@ -1,34 +1,18 @@
-data "azurerm_subscription" "current" {
+resource "azurerm_user_assigned_identity" "buildingblock" {
+  name                = var.name
+  location            = var.location
+  resource_group_name = var.resource_group_name
 }
 
-resource "azuread_application" "buildingblock_deploy" {
-  count = var.create_service_principal_name != null ? 1 : 0
+resource "azurerm_federated_identity_credential" "buildingblock" {
+  for_each = { for i, s in var.workload_identity_federation.subjects : tostring(i) => s }
 
-  display_name = "${var.name}-${var.create_service_principal_name}"
-}
-
-resource "azuread_service_principal" "buildingblock_deploy" {
-  count = var.create_service_principal_name != null ? 1 : 0
-
-  client_id                    = azuread_application.buildingblock_deploy[0].client_id
-  app_role_assignment_required = false
-}
-
-resource "azuread_application_federated_identity_credential" "buildingblock_deploy" {
-  count = var.create_service_principal_name != null && var.workload_identity_federation != null ? 1 : 0
-
-  application_id = azuread_application.buildingblock_deploy[0].id
-  display_name   = var.create_service_principal_name
-  audiences      = ["api://AzureADTokenExchange"]
-  issuer         = var.workload_identity_federation.issuer
-  subject        = var.workload_identity_federation.subject
-}
-
-resource "azuread_application_password" "buildingblock_deploy" {
-  count = var.create_service_principal_name != null && var.workload_identity_federation == null ? 1 : 0
-
-  application_id = azuread_application.buildingblock_deploy[0].id
-  display_name   = "${var.create_service_principal_name}-password"
+  name                = "subject-${each.key}"
+  resource_group_name = var.resource_group_name
+  parent_id           = azurerm_user_assigned_identity.buildingblock.id
+  audience            = ["api://AzureADTokenExchange"]
+  issuer              = var.workload_identity_federation.issuer
+  subject             = each.value
 }
 
 resource "azurerm_role_definition" "buildingblock_deploy" {
@@ -51,34 +35,8 @@ resource "azurerm_role_definition" "buildingblock_deploy" {
   }
 }
 
-resource "azurerm_role_assignment" "existing_principals" {
-  for_each = var.existing_principal_ids
-
-  role_definition_id = azurerm_role_definition.buildingblock_deploy.role_definition_resource_id
-  principal_id       = each.value
+resource "azurerm_role_assignment" "buildingblock" {
   scope              = var.scope
-}
-
-resource "azurerm_role_assignment" "created_principal" {
-  count = var.create_service_principal_name != null ? 1 : 0
-
   role_definition_id = azurerm_role_definition.buildingblock_deploy.role_definition_resource_id
-  principal_id       = azuread_service_principal.buildingblock_deploy[0].object_id
-  scope              = var.scope
-}
-
-resource "azuread_directory_role" "directory_readers" {
-  display_name = "Directory Readers"
-}
-
-resource "azuread_directory_role_assignment" "directory_readers_existing" {
-  for_each            = var.existing_principal_ids
-  role_id             = azuread_directory_role.directory_readers.template_id
-  principal_object_id = each.value
-}
-
-resource "azuread_directory_role_assignment" "directory_readers_created" {
-  count               = var.create_service_principal_name != null ? 1 : 0
-  role_id             = azuread_directory_role.directory_readers.template_id
-  principal_object_id = azuread_service_principal.buildingblock_deploy[0].object_id
+  principal_id       = azurerm_user_assigned_identity.buildingblock.principal_id
 }

@@ -2,7 +2,7 @@ variable "name" {
   type        = string
   nullable    = false
   default     = "budget-alert"
-  description = "name of the building block, used for naming resources"
+  description = "Name for the building block identity and role definition."
   validation {
     condition     = can(regex("^[-a-z0-9]+$", var.name))
     error_message = "Only alphanumeric lowercase characters and dashes are allowed"
@@ -12,29 +12,26 @@ variable "name" {
 variable "scope" {
   type        = string
   nullable    = false
-  description = "Scope where the building block should be deployable, typically the parent of all Landing Zones."
+  description = "Scope for role assignment (management group or subscription ID)."
 }
 
-variable "existing_principal_ids" {
-  type        = set(string)
-  nullable    = false
-  default     = []
-  description = "set of existing principal ids that will be granted permissions to deploy the building block"
-}
-
-variable "create_service_principal_name" {
+variable "location" {
   type        = string
-  nullable    = true
-  default     = null
-  description = "if set, creates a new service principal with the given name for deploying the building block"
+  nullable    = false
+  description = "Azure region for the UAMI resource."
+}
+
+variable "resource_group_name" {
+  type        = string
+  nullable    = false
+  description = "Resource group where the UAMI will be created."
 }
 
 variable "workload_identity_federation" {
   type = object({
-    issuer  = string
-    subject = string
+    issuer   = string
+    subjects = list(string)
   })
-  nullable    = true
-  default     = null
-  description = "if set, configures workload identity federation for the created service principal"
+  nullable    = false
+  description = "WIF issuer and subjects for federated authentication."
 }
