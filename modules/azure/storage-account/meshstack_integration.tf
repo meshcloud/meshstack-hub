@@ -63,7 +63,7 @@ output "building_block_definition" {
 data "meshstack_integrations" "integrations" {}
 
 module "backplane" {
-  source = "github.com/meshcloud/meshstack-hub//modules/azure/storage-account/backplane?ref=e0c48e1bec3cff445a99ee70f1796db247607bc5"
+  source = "github.com/meshcloud/meshstack-hub//modules/azure/storage-account/backplane?ref=${var.hub.git_ref}"
 
   name     = var.backplane_name
   scope    = var.azure_scope
@@ -209,7 +209,7 @@ resource "meshstack_building_block_definition" "this" {
 }
 
 terraform {
-  required_version = ">= 1.11.0"
+  required_version = ">= 1.12.0"
 
   required_providers {
     meshstack = {
