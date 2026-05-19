@@ -105,6 +105,34 @@ const detectors = [
     },
   },
   {
+    id: "variable_hub_const",
+    name: 'variable "hub" has const = true',
+    emoji: "🔐",
+    fn: (mod) => {
+      const content = readIntegrationTf(mod);
+      if (!content) return { pass: false, detail: "no integration file" };
+      if (!/variable\s+"hub"/.test(content)) return { pass: false, detail: 'no variable "hub"' };
+      // const = true must appear somewhere in the file (it's only valid on a variable)
+      return { pass: /^\s*const\s*=\s*true/m.test(content) };
+    },
+  },
+  {
+    id: "backplane_source_hub_git_ref",
+    name: "backplane source uses var.hub.git_ref",
+    emoji: "📎",
+    fn: (mod) => {
+      const content = readIntegrationTf(mod);
+      if (!content) return { pass: false, detail: "no integration file" };
+      // If no backplane module source exists, treat as passing (backplane is optional)
+      const hasBackplaneSource = /source\s*=\s*"[^"]*\/backplane[^"]*"/.test(content);
+      if (!hasBackplaneSource) return { pass: true, detail: "no backplane module" };
+      return {
+        pass: /source\s*=\s*"[^"]*\/backplane[^"]*\$\{var\.hub\.git_ref\}[^"]*"/.test(content),
+        detail: "backplane source has hardcoded ref instead of var.hub.git_ref",
+      };
+    },
+  },
+  {
     id: "ref_name_hub_git_ref",
     name: "ref_name uses var.hub.git_ref",
     emoji: "🔀",
@@ -125,6 +153,16 @@ const detectors = [
       const content = readIntegrationTf(mod);
       if (!content) return { pass: false, detail: "no integration file" };
       return { pass: /draft\s*=\s*var\.hub\.bbd_draft/.test(content) };
+    },
+  },
+  {
+    id: "bbd_tags_forwarded",
+    name: "BBD metadata.tags forwards var.meshstack.tags",
+    emoji: "🏷️",
+    fn: (mod) => {
+      const content = readIntegrationTf(mod);
+      if (!content) return { pass: false, detail: "no integration file" };
+      return { pass: /tags\s*=\s*var\.meshstack\.tags/.test(content) };
     },
   },
   {
