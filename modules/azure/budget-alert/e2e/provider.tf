@@ -4,7 +4,3 @@ provider "azurerm" {
 
   features {}
 }
-
-provider "azuread" {
-  tenant_id = var.test_context.fixtures.azure.entra_tenant_id
-}

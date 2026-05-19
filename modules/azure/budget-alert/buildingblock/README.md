@@ -22,7 +22,7 @@ Please reference the [backplane implementation](../backplane/) for the required 
 |------|---------|
 | <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.0 |
 | <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) | ~> 4.64 |
-| <a name="requirement_time"></a> [time](#requirement\_time) | 0.11.1 |
+| <a name="requirement_time"></a> [time](#requirement\_time) | ~> 0.11 |
 
 ## Modules
 
@@ -33,7 +33,7 @@ No modules.
 | Name | Type |
 |------|------|
 | [azurerm_consumption_budget_subscription.subscription_budget](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/consumption_budget_subscription) | resource |
-| [time_static.start_date](https://registry.terraform.io/providers/hashicorp/time/0.11.1/docs/resources/static) | resource |
+| [time_static.start_date](https://registry.terraform.io/providers/hashicorp/time/latest/docs/resources/static) | resource |
 | [azurerm_subscription.subscription](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/subscription) | data source |
 
 ## Inputs
