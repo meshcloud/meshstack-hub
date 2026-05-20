@@ -68,7 +68,6 @@ No modules.
 | <a name="output_created_hub_application"></a> [created\_hub\_application](#output\_created\_hub\_application) | Information about the created hub Azure AD application. |
 | <a name="output_created_hub_service_principal"></a> [created\_hub\_service\_principal](#output\_created\_hub\_service\_principal) | Information about the created hub service principal. |
 | <a name="output_created_service_principal"></a> [created\_service\_principal](#output\_created\_service\_principal) | Information about the created service principal. |
-| <a name="output_documentation_md"></a> [documentation\_md](#output\_documentation\_md) | Markdown documentation with information about the AKS Building Block building block backplane |
 | <a name="output_hub_application_password"></a> [hub\_application\_password](#output\_hub\_application\_password) | Information about the created hub application password (excludes the actual password value for security). |
 | <a name="output_hub_role_assignment_ids"></a> [hub\_role\_assignment\_ids](#output\_hub\_role\_assignment\_ids) | The IDs of the hub role assignments for all service principals. |
 | <a name="output_hub_role_assignment_principal_ids"></a> [hub\_role\_assignment\_principal\_ids](#output\_hub\_role\_assignment\_principal\_ids) | The principal IDs of all service principals that have been assigned the hub role. |
