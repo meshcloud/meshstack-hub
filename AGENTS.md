@@ -192,6 +192,12 @@ description: One-sentence description of what the module provisions.
 - Usage motivation and examples (1–2 developer scenarios).
 - Shared responsibility matrix (platform team vs. application team) as a markdown table with ✅ / ❌ emojis.
 
+**`backplane/README.md`** — documentation relevant to platform engineers deploying the backplane. Include an overview of what the backplane provisions, required permissions/roles, and operational notes.
+
+**Anti-pattern: `documentation_md` output** — do **not** add a `documentation_md` output to backplane modules. This is a legacy pattern. Documentation must instead be split into:
+- User-facing content → BBD `readme` field in `meshstack_integration.tf`
+- Platform-engineer-facing content → `backplane/README.md`
+
 ---
 
 ## Hub as a Shim for IaC Runtimes
@@ -369,5 +375,6 @@ Pass `module.<name>.building_block_definition.version_ref` **directly** — do n
 - [ ] `terraform { required_providers { ... } }` block is at the **bottom** of `meshstack_integration.tf`
 - [ ] `meshstack` and `hub` variables are at the end of the variable section
 - [ ] `logo.png` included in `buildingblock/`
+- [ ] No `documentation_md` output in `backplane/` — use BBD `readme` field and `backplane/README.md` instead
 - [ ] No trailing whitespace
 - [ ] **Azure modules**: also follow the [Azure Backplane Checklist](.github/instructions/azure-backplane.instructions.md#checklist-for-azure-backplanes)

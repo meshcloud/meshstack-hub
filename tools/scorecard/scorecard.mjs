@@ -249,6 +249,20 @@ const detectors = [
       return { pass: /readme\s*=/.test(content) };
     },
   },
+  {
+    id: "no_documentation_md_output",
+    category: "integration",
+    name: "No documentation_md output in backplane",
+    emoji: "🚫",
+    fn: (mod) => {
+      const allTf = readAllBackplaneTf(mod);
+      if (!allTf) return { pass: true, detail: "no backplane" };
+      return {
+        pass: !/output\s+"documentation_md"/.test(allTf),
+        detail: "legacy documentation_md output found — move content to BBD readme and backplane/README.md",
+      };
+    },
+  },
 
   // ─── Azure Backplane ────────────────────────────────────────────────────
   {
