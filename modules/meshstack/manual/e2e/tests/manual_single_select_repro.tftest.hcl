@@ -1,3 +1,7 @@
+# NOTE: all of these repros fail in tofu test until underlying issues resolved
+# unfortunately expect_failures cannot detect these provider-level issues, so we have to
+# leave this test in place with manual ignore
+
 # Reproduces a known provider bug where SINGLE_SELECT and STATIC input types
 # in a MANUAL building block definition cause an "unexpected new value" error:
 #
@@ -15,10 +19,6 @@ run "reproduces_single_select_provider_bug" {
   module {
     source = "./modules/manual-with-selects"
   }
-
-  expect_failures = [
-    meshstack_building_block_definition.this,
-  ]
 }
 
 # Reproduces a 400 error when a building block instance is created with an
@@ -33,8 +33,4 @@ run "reproduces_unknown_input_400_error" {
   module {
     source = "./modules/manual-with-unknown-input"
   }
-
-  expect_failures = [
-    meshstack_building_block_v2.this,
-  ]
 }
