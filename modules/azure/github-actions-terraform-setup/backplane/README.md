@@ -199,6 +199,5 @@ No modules.
 
 | Name | Description |
 |------|-------------|
-| <a name="output_documentation_md"></a> [documentation\_md](#output\_documentation\_md) | n/a |
 | <a name="output_provider_config"></a> [provider\_config](#output\_provider\_config) | ENVIRONMENT VARIABLES for the AzureRM and AzureAD Providers, which you can use to configure your Building Block Definition. |
 <!-- END_TF_DOCS -->

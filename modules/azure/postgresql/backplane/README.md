@@ -1,10 +1,14 @@
-# Azure Subscription Postgresql
+# Azure PostgreSQL Building Block — Backplane
 
-This documentation is intended as a reference documentation for cloud foundation or platform engineers using this module.
+This documentation is intended as a reference for platform engineers deploying the PostgreSQL Building Block backplane.
+
+## Overview
+
+The backplane provisions the automation identity and permissions required to deploy Azure Database for PostgreSQL on behalf of application teams.
 
 ## Permissions
 
-This is a very simple building block, which means we let the SPN have access to Key Vault
+This is a simple building block backplane that grants the automation principal access to PostgreSQL
 across all subscriptions underneath a management group (typically the top-level management group for landing zones).
 
 <!-- BEGIN_TF_DOCS -->
@@ -39,7 +43,6 @@ No modules.
 
 | Name | Description |
 |------|-------------|
-| <a name="output_documentation_md"></a> [documentation\_md](#output\_documentation\_md) | Markdown documentation with information about the Key Vault Building Block building block backplane |
 | <a name="output_role_assignment_ids"></a> [role\_assignment\_ids](#output\_role\_assignment\_ids) | The IDs of the role assignments for the service principals. |
 | <a name="output_role_assignment_principal_ids"></a> [role\_assignment\_principal\_ids](#output\_role\_assignment\_principal\_ids) | The principal IDs of the service principals that have been assigned the role. |
 | <a name="output_role_definition_id"></a> [role\_definition\_id](#output\_role\_definition\_id) | The ID of the role definition that enables deployment of the building block to subscriptions. |
