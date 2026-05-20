@@ -1,4 +1,4 @@
-# GitHub Copilot Instructions — meshstack-hub
+# meshstack-hub — Agent Instructions
 
 ## Purpose of this Repository
 
@@ -164,6 +164,12 @@ resource "meshstack_building_block_definition" "this" {
 - Only `variable "meshstack"` and `variable "hub"` use shared `object({})` conventions across all integrations
 - Pin provider versions with `~> X.Y.Z` (allow patch updates, not minor/major). **Exception:** the `meshcloud/meshstack` provider is pre-1.0, so pin to the minor version with `~> 0.Y.0` (e.g. `~> 0.20.0`)
 - Terraform baseline: `>= 1.11.0` to cover OpenTofu v1.11.0 with write-only/ephemeral attribute support
+
+---
+
+## Azure Backplane Identity Conventions
+
+See [.github/instructions/azure-backplane.instructions.md](.github/instructions/azure-backplane.instructions.md) for the full Azure backplane identity conventions, including UAMI patterns, WIF wiring, required variables/outputs, and the Azure backplane checklist.
 
 ---
 
@@ -364,3 +370,4 @@ Pass `module.<name>.building_block_definition.version_ref` **directly** — do n
 - [ ] `meshstack` and `hub` variables are at the end of the variable section
 - [ ] `logo.png` included in `buildingblock/`
 - [ ] No trailing whitespace
+- [ ] **Azure modules**: also follow the [Azure Backplane Checklist](.github/instructions/azure-backplane.instructions.md#checklist-for-azure-backplanes)

@@ -44,6 +44,7 @@ variable "hub" {
     git_ref   = optional(string, "main")
     bbd_draft = optional(bool, true)
   })
+  const       = true
   default     = {}
   description = <<-EOT
   `git_ref`: Hub release reference. Set to a tag (e.g. 'v1.2.3') or branch or commit sha of the meshstack-hub repo.
@@ -62,12 +63,11 @@ output "building_block_definition" {
 data "meshstack_integrations" "integrations" {}
 
 module "backplane" {
-  source = "github.com/meshcloud/meshstack-hub//modules/azure/storage-account/backplane?ref=0a6d313e509e1c9052712f0d9c41c2d0a96f9a39"
+  source = "github.com/meshcloud/meshstack-hub//modules/azure/storage-account/backplane?ref=${var.hub.git_ref}"
 
-  name  = var.backplane_name
-  scope = var.azure_scope
-
-  create_service_principal_name = var.backplane_name
+  name     = var.backplane_name
+  scope    = var.azure_scope
+  location = var.azure_location
 
   workload_identity_federation = {
     issuer = data.meshstack_integrations.integrations.workload_identity_federation.replicator.issuer
@@ -136,7 +136,7 @@ resource "meshstack_building_block_definition" "this" {
         description     = "Client ID of the service principal used to authenticate with Azure."
         assignment_type = "STATIC"
         is_environment  = true
-        argument        = jsonencode(module.backplane.created_service_principal.client_id)
+        argument        = jsonencode(module.backplane.identity.client_id)
       }
       ARM_TENANT_ID = {
         type            = "STRING"
@@ -221,10 +221,6 @@ terraform {
     azurerm = {
       source  = "hashicorp/azurerm"
       version = "~> 4.64"
-    }
-    azuread = {
-      source  = "hashicorp/azuread"
-      version = "~> 3.8"
     }
   }
 }

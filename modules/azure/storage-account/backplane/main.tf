@@ -1,42 +1,26 @@
-# Service Principal Creation
-resource "azuread_application" "buildingblock_deploy" {
-  count = var.create_service_principal_name != null ? 1 : 0
-
-  display_name = var.create_service_principal_name
+resource "azurerm_resource_group" "backplane" {
+  name     = var.name
+  location = var.location
 }
 
-resource "azuread_service_principal" "buildingblock_deploy" {
-  count = var.create_service_principal_name != null ? 1 : 0
-
-  client_id                    = azuread_application.buildingblock_deploy[0].client_id
-  app_role_assignment_required = false
+resource "azurerm_user_assigned_identity" "backplane" {
+  name                = var.name
+  location            = var.location
+  resource_group_name = azurerm_resource_group.backplane.name
 }
 
+resource "azurerm_federated_identity_credential" "backplane" {
+  for_each = { for i, s in var.workload_identity_federation.subjects : tostring(i) => s }
 
-# Create federated identity credentials (one per subject)
-# Use a map with static numeric string keys so that for_each keys are known at plan time,
-# even when subject values contain apply-time unknowns (e.g. building block definition UUIDs).
-resource "azuread_application_federated_identity_credential" "buildingblock_deploy" {
-  for_each = var.create_service_principal_name != null && var.workload_identity_federation != null ? {
-    for i, s in var.workload_identity_federation.subjects : tostring(i) => s
-  } : {}
-
-  application_id = azuread_application.buildingblock_deploy[0].id
-  display_name   = "subject-${each.key}"
-  audiences      = ["api://AzureADTokenExchange"]
-  issuer         = var.workload_identity_federation.issuer
-  subject        = each.value
-}
-# Create application password (when not using workload identity federation)
-resource "azuread_application_password" "buildingblock_deploy" {
-  count = var.create_service_principal_name != null && var.workload_identity_federation == null ? 1 : 0
-
-  application_id = azuread_application.buildingblock_deploy[0].id
-  display_name   = "${var.create_service_principal_name}-password"
+  name                = "subject-${each.key}"
+  resource_group_name = azurerm_resource_group.backplane.name
+  parent_id           = azurerm_user_assigned_identity.backplane.id
+  audience            = ["api://AzureADTokenExchange"]
+  issuer              = var.workload_identity_federation.issuer
+  subject             = each.value
 }
 
-# Role Definition
-resource "azurerm_role_definition" "buildingblock_deploy" {
+resource "azurerm_role_definition" "backplane" {
   name        = "${var.name}-deploy"
   description = "Enables deployment of the ${var.name} building block to subscriptions"
   scope       = var.scope
@@ -72,20 +56,8 @@ resource "azurerm_role_definition" "buildingblock_deploy" {
   }
 }
 
-# Role Assignments for existing principals
-resource "azurerm_role_assignment" "existing_principals" {
-  for_each = var.existing_principal_ids
-
-  role_definition_id = azurerm_role_definition.buildingblock_deploy.role_definition_resource_id
-  principal_id       = each.value
+resource "azurerm_role_assignment" "backplane" {
   scope              = var.scope
-}
-
-# Role Assignment for created service principal
-resource "azurerm_role_assignment" "created_principal" {
-  count = var.create_service_principal_name != null ? 1 : 0
-
-  role_definition_id = azurerm_role_definition.buildingblock_deploy.role_definition_resource_id
-  principal_id       = azuread_service_principal.buildingblock_deploy[0].object_id
-  scope              = var.scope
+  role_definition_id = azurerm_role_definition.backplane.role_definition_resource_id
+  principal_id       = azurerm_user_assigned_identity.backplane.principal_id
 }
