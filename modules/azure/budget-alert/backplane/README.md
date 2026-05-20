@@ -42,7 +42,6 @@ No modules.
 
 | Name | Description |
 |------|-------------|
-| <a name="output_documentation_md"></a> [documentation\_md](#output\_documentation\_md) | Markdown documentation with information about the Budget Alert building block backplane |
 | <a name="output_identity"></a> [identity](#output\_identity) | The managed identity used as the automation principal for this building block. |
 | <a name="output_role_definition_id"></a> [role\_definition\_id](#output\_role\_definition\_id) | The ID of the role definition that enables deployment of the building block. |
 | <a name="output_role_definition_name"></a> [role\_definition\_name](#output\_role\_definition\_name) | The name of the role definition that enables deployment of the building block. |
