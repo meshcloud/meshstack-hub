@@ -27,8 +27,8 @@ resource "meshstack_building_block_v2" "this" {
 
     display_name = "smoke-test-noop-hub-${var.test_context.name_suffix}"
     target_ref = {
-      kind       = "meshWorkspace"
-      identifier = var.test_context.workspace
+      kind = "meshWorkspace"
+      name = var.test_context.workspace
     }
 
     inputs = {
