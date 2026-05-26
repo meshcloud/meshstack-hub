@@ -11,6 +11,7 @@ building blocks** that can be imported into any meshStack instance.
 
 ---
 
+<!-- scorecard-checks: buildingblock_dir, versions_tf, backplane -->
 ## Module Structure
 
 Every module follows a two-tier layout. The `backplane` tier is optional and should be omitted for simple building blocks that require no cloud-side setup (e.g. those that receive all credentials as static inputs).
@@ -37,6 +38,7 @@ modules/<cloud-provider>/<service-name>/
 
 ---
 
+<!-- scorecard-checks: meshstack_integration, backplane_source_hub_git_ref, ref_name_hub_git_ref -->
 ## `meshstack_integration.tf` Conventions
 
 These files are examples showing how to integrate building block and platform modules with a meshStack instance.
@@ -59,6 +61,7 @@ A secondary purpose of these files is to serve as a ready-to-use Terraform modul
   ```
   The `const = true` attribute on `var.hub` allows Terraform/OpenTofu to resolve the interpolation at `init` time.
 
+<!-- scorecard-checks: required_providers_meshstack -->
 ### Required providers
 
 Every `meshstack_integration.tf` must declare the `meshcloud/meshstack` provider in a
@@ -77,6 +80,7 @@ terraform {
 }
 ```
 
+<!-- scorecard-checks: variable_hub, variable_meshstack, variable_hub_const, bbd_draft, bbd_tags_forwarded -->
 ### Shared Variable Conventions
 
 The following variables must appear in every `meshstack_integration.tf`.
@@ -107,6 +111,7 @@ The `const = true` attribute (Terraform ≥ 1.15 / OpenTofu ≥ 1.12) marks `var
 
 Always use `var.hub.bbd_draft` for the `draft` field of `version_spec` in `meshstack_building_block_definition` resources.
 
+<!-- scorecard-checks: output_bbd -->
 ### Exposing Building Block Definition References
 
 When a `meshstack_integration.tf` exposes building block definition references for compositions, use a single object output named `building_block_definition`:
@@ -156,6 +161,7 @@ resource "meshstack_building_block_definition" "this" {
 
 ---
 
+<!-- scorecard-checks: provider_pinned -->
 ## Variable Conventions
 
 - Always use `snake_case` for variable names: `monthly_budget_amount`, not `monthlyBudgetAmount`
@@ -167,12 +173,33 @@ resource "meshstack_building_block_definition" "this" {
 
 ---
 
+## Scorecard
+
+The repository includes a scorecard tool that checks module maturity across four categories:
+**Core Structure**, **Integration**, **Azure Backplane**, and **Testing**.
+
+```sh
+# Full report
+node tools/scorecard/scorecard.mjs
+
+# Single module
+node tools/scorecard/scorecard.mjs --module=<provider>/<service>
+
+# Generate a fix prompt for a module's violations
+node tools/scorecard/scorecard.mjs --module=<provider>/<service> --fix
+```
+
+To fix violations, see [.github/instructions/fix-scorecard.instructions.md](.github/instructions/fix-scorecard.instructions.md).
+
+---
+
 ## Azure Backplane Identity Conventions
 
 See [.github/instructions/azure-backplane.instructions.md](.github/instructions/azure-backplane.instructions.md) for the full Azure backplane identity conventions, including UAMI patterns, WIF wiring, required variables/outputs, and the Azure backplane checklist.
 
 ---
 
+<!-- scorecard-checks: readme_frontmatter, logo, bbd_readme -->
 ## Documentation Requirements
 
 **`buildingblock/README.md`** — must include YAML front-matter:
@@ -264,6 +291,7 @@ getting-started steps, and shared responsibility matrix.
 
 ---
 
+<!-- scorecard-checks: e2e_tests, e2e_tftest -->
 ## End-to-End Testing
 
 Modules that can be smoke-tested against a live meshStack instance should include an `e2e/` directory alongside the module root.

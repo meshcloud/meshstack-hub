@@ -52,6 +52,9 @@ const CATEGORIES = {
 // ─── Detector functions ─────────────────────────────────────────────────────
 // Each detector returns { pass: boolean, detail?: string }
 
+const AGENTS = (section) => ({ file: "AGENTS.md", section });
+const AZURE  = (section) => ({ file: ".github/instructions/azure-backplane.instructions.md", section });
+
 const detectors = [
   // ─── Core Structure ─────────────────────────────────────────────────────
   {
@@ -59,6 +62,7 @@ const detectors = [
     category: "core",
     name: "buildingblock/ directory exists",
     emoji: "📦",
+    fixRef: AGENTS("module-structure"),
     fn: (mod) => ({
       pass: existsSync(join(mod.path, "buildingblock")),
     }),
@@ -68,6 +72,7 @@ const detectors = [
     category: "core",
     name: "meshstack_integration.tf present",
     emoji: "🔗",
+    fixRef: AGENTS("meshstack_integrationtf-conventions"),
     fn: (mod) => ({
       pass: existsSync(join(mod.path, "meshstack_integration.tf")),
     }),
@@ -77,6 +82,7 @@ const detectors = [
     category: "core",
     name: "buildingblock/README.md with YAML front-matter",
     emoji: "📝",
+    fixRef: AGENTS("documentation-requirements"),
     fn: (mod) => {
       const readmePath = join(mod.path, "buildingblock", "README.md");
       if (!existsSync(readmePath)) return { pass: false, detail: "missing" };
@@ -96,6 +102,7 @@ const detectors = [
     category: "core",
     name: "buildingblock/logo.png included",
     emoji: "🖼️",
+    fixRef: AGENTS("documentation-requirements"),
     fn: (mod) => ({
       pass: existsSync(join(mod.path, "buildingblock", "logo.png")),
     }),
@@ -105,6 +112,7 @@ const detectors = [
     category: "core",
     name: "buildingblock/versions.tf present",
     emoji: "📌",
+    fixRef: AGENTS("module-structure"),
     fn: (mod) => ({
       pass: existsSync(join(mod.path, "buildingblock", "versions.tf")),
     }),
@@ -114,6 +122,7 @@ const detectors = [
     category: "core",
     name: "Provider versions pinned (~>)",
     emoji: "🔒",
+    fixRef: AGENTS("variable-conventions"),
     fn: (mod) => {
       const versionsPath = join(mod.path, "buildingblock", "versions.tf");
       if (!existsSync(versionsPath)) return { pass: false, detail: "no versions.tf" };
@@ -132,6 +141,7 @@ const detectors = [
     category: "integration",
     name: 'variable "hub" in integration',
     emoji: "🏷️",
+    fixRef: AGENTS("shared-variable-conventions"),
     fn: (mod) => {
       const content = readIntegrationTf(mod);
       if (!content) return { pass: false, detail: "no integration file" };
@@ -143,6 +153,7 @@ const detectors = [
     category: "integration",
     name: 'variable "meshstack" in integration',
     emoji: "🏢",
+    fixRef: AGENTS("shared-variable-conventions"),
     fn: (mod) => {
       const content = readIntegrationTf(mod);
       if (!content) return { pass: false, detail: "no integration file" };
@@ -154,6 +165,7 @@ const detectors = [
     category: "integration",
     name: "building_block_definition output exposed",
     emoji: "📤",
+    fixRef: AGENTS("exposing-building-block-definition-references"),
     fn: (mod) => {
       const content = readIntegrationTf(mod);
       if (!content) return { pass: false, detail: "no integration file" };
@@ -167,6 +179,7 @@ const detectors = [
     category: "integration",
     name: "meshcloud/meshstack in required_providers",
     emoji: "🔌",
+    fixRef: AGENTS("required-providers"),
     fn: (mod) => {
       const content = readIntegrationTf(mod);
       if (!content) return { pass: false, detail: "no integration file" };
@@ -180,6 +193,7 @@ const detectors = [
     category: "integration",
     name: 'variable "hub" has const = true',
     emoji: "🔐",
+    fixRef: AGENTS("shared-variable-conventions"),
     fn: (mod) => {
       const content = readIntegrationTf(mod);
       if (!content) return { pass: false, detail: "no integration file" };
@@ -192,6 +206,7 @@ const detectors = [
     category: "integration",
     name: "backplane source uses var.hub.git_ref",
     emoji: "📎",
+    fixRef: AGENTS("meshstack_integrationtf-conventions"),
     fn: (mod) => {
       const content = readIntegrationTf(mod);
       if (!content) return { pass: false, detail: "no integration file" };
@@ -208,6 +223,7 @@ const detectors = [
     category: "integration",
     name: "ref_name uses var.hub.git_ref",
     emoji: "🔀",
+    fixRef: AGENTS("meshstack_integrationtf-conventions"),
     fn: (mod) => {
       const content = readIntegrationTf(mod);
       if (!content) return { pass: false, detail: "no integration file" };
@@ -221,6 +237,7 @@ const detectors = [
     category: "integration",
     name: "version_spec.draft uses var.hub.bbd_draft",
     emoji: "📋",
+    fixRef: AGENTS("shared-variable-conventions"),
     fn: (mod) => {
       const content = readIntegrationTf(mod);
       if (!content) return { pass: false, detail: "no integration file" };
@@ -232,6 +249,7 @@ const detectors = [
     category: "integration",
     name: "BBD metadata.tags forwards var.meshstack.tags",
     emoji: "🏷️",
+    fixRef: AGENTS("shared-variable-conventions"),
     fn: (mod) => {
       const content = readIntegrationTf(mod);
       if (!content) return { pass: false, detail: "no integration file" };
@@ -243,6 +261,7 @@ const detectors = [
     category: "integration",
     name: "BBD readme field present",
     emoji: "📖",
+    fixRef: AGENTS("documentation-requirements"),
     fn: (mod) => {
       const content = readIntegrationTf(mod);
       if (!content) return { pass: false, detail: "no integration file" };
@@ -270,6 +289,7 @@ const detectors = [
     category: "azure_backplane",
     name: "Uses azurerm_user_assigned_identity",
     emoji: "🪪",
+    fixRef: AZURE("implementation-pattern"),
     fn: (mod) => {
       const mainTf = readBackplaneTf(mod);
       if (!mainTf) return { pass: false, detail: "no backplane main.tf" };
@@ -283,6 +303,7 @@ const detectors = [
     category: "azure_backplane",
     name: "No azuread_application resources",
     emoji: "🚫",
+    fixRef: AZURE("what-to-avoid"),
     fn: (mod) => {
       const allTf = readAllBackplaneTf(mod);
       if (!allTf) return { pass: true, detail: "no backplane tf files" };
@@ -297,6 +318,7 @@ const detectors = [
     category: "azure_backplane",
     name: "No azuread_service_principal resources",
     emoji: "🚫",
+    fixRef: AZURE("what-to-avoid"),
     fn: (mod) => {
       const allTf = readAllBackplaneTf(mod);
       if (!allTf) return { pass: true, detail: "no backplane tf files" };
@@ -311,6 +333,7 @@ const detectors = [
     category: "azure_backplane",
     name: "No azuread_application_password resources",
     emoji: "🔑",
+    fixRef: AZURE("what-to-avoid"),
     fn: (mod) => {
       const allTf = readAllBackplaneTf(mod);
       if (!allTf) return { pass: true, detail: "no backplane tf files" };
@@ -325,6 +348,7 @@ const detectors = [
     category: "azure_backplane",
     name: "Uses azurerm_federated_identity_credential",
     emoji: "🔗",
+    fixRef: AZURE("implementation-pattern"),
     fn: (mod) => {
       const allTf = readAllBackplaneTf(mod);
       if (!allTf) return { pass: false, detail: "no backplane tf files" };
@@ -338,6 +362,7 @@ const detectors = [
     category: "azure_backplane",
     name: "workload_identity_federation is non-nullable",
     emoji: "⚡",
+    fixRef: AZURE("backplane-variables-azure"),
     fn: (mod) => {
       const varsTf = readBackplaneFile(mod, "variables.tf");
       if (!varsTf) return { pass: false, detail: "no variables.tf" };
@@ -356,6 +381,7 @@ const detectors = [
     category: "azure_backplane",
     name: "No create_service_principal_name toggle",
     emoji: "🧹",
+    fixRef: AZURE("what-to-avoid"),
     fn: (mod) => {
       const varsTf = readBackplaneFile(mod, "variables.tf");
       if (!varsTf) return { pass: true, detail: "no variables.tf" };
@@ -370,6 +396,7 @@ const detectors = [
     category: "azure_backplane",
     name: 'Outputs identity (client_id, principal_id, tenant_id)',
     emoji: "📤",
+    fixRef: AZURE("backplane-outputs-azure"),
     fn: (mod) => {
       const outputsTf = readBackplaneFile(mod, "outputs.tf");
       if (!outputsTf) return { pass: false, detail: "no outputs.tf" };
@@ -384,6 +411,7 @@ const detectors = [
     category: "azure_backplane",
     name: "Integration has azure_resource_group_name & azure_location",
     emoji: "📍",
+    fixRef: AZURE("meshstack_integrationtf-wiring-azure"),
     fn: (mod) => {
       const content = readIntegrationTf(mod);
       if (!content) return { pass: false, detail: "no integration file" };
@@ -402,6 +430,7 @@ const detectors = [
     category: "testing",
     name: "backplane/ directory (optional tier)",
     emoji: "⚙️",
+    fixRef: AGENTS("module-structure"),
     fn: (mod) => ({
       pass: existsSync(join(mod.path, "backplane")),
     }),
@@ -411,6 +440,7 @@ const detectors = [
     category: "testing",
     name: "e2e/ test directory exists",
     emoji: "🧪",
+    fixRef: AGENTS("end-to-end-testing"),
     fn: (mod) => ({
       pass: existsSync(join(mod.path, "e2e")),
     }),
@@ -420,6 +450,7 @@ const detectors = [
     category: "testing",
     name: "e2e/ contains .tftest.hcl files",
     emoji: "✅",
+    fixRef: AGENTS("e2etests-tftesthcl-conventions"),
     fn: (mod) => {
       const e2eDir = join(mod.path, "e2e", "tests");
       if (!existsSync(e2eDir)) return { pass: false };
@@ -491,16 +522,59 @@ function discoverModules() {
   return modules.sort((a, b) => a.id.localeCompare(b.id));
 }
 
+// ─── Fix prompt generator ────────────────────────────────────────────────────
+
+function generateFixPrompt(mod, failingChecks) {
+  const lines = [];
+  lines.push(`# Fix Scorecard Violations for \`${mod.id}\``);
+  lines.push("");
+  lines.push(`Fix the following scorecard violations in \`modules/${mod.id}/\`.`);
+  lines.push("After each fix re-run the scorecard to verify progress:");
+  lines.push("");
+  lines.push("```sh");
+  lines.push(`node tools/scorecard/scorecard.mjs --module=${mod.id}`);
+  lines.push("```");
+  lines.push("");
+  lines.push("## Failing Checks");
+  lines.push("");
+
+  for (const check of failingChecks) {
+    const catName = CATEGORIES[check.category].name;
+    lines.push(`### ❌ \`${check.id}\` — ${check.name} [${catName}]`);
+    if (check.result.detail) lines.push(`> ${check.result.detail}`);
+    lines.push("");
+    const ref = check.fixRef;
+    if (ref) {
+      lines.push(`**Fix instructions**: [\`${ref.file}#${ref.section}\`](${ref.file}#${ref.section})`);
+      lines.push("");
+    }
+  }
+
+  lines.push("## Done");
+  lines.push("");
+  lines.push("When all checks pass, commit the changes.");
+  return lines.join("\n");
+}
+
 // ─── Main ───────────────────────────────────────────────────────────────────
 
 function main() {
   const args = process.argv.slice(2);
   const filterCategory = args.find((a) => a.startsWith("--category="))?.split("=")[1];
   const filterProvider = args.find((a) => a.startsWith("--provider="))?.split("=")[1];
+  const filterModule = args.find((a) => a.startsWith("--module="))?.split("=")[1];
+  const fixMode = args.includes("--fix");
 
   let modules = discoverModules();
   if (filterProvider) {
     modules = modules.filter((m) => m.provider === filterProvider);
+  }
+  if (filterModule) {
+    modules = modules.filter((m) => m.id === filterModule);
+    if (modules.length === 0) {
+      process.stderr.write(`Error: module "${filterModule}" not found. Use <provider>/<service> format.\n`);
+      process.exit(1);
+    }
   }
 
   const results = [];
@@ -538,7 +612,25 @@ function main() {
     results.push({ mod, categoryResults, passed: totalPassed, total: totalChecks, score: overallScore });
   }
 
+  // ─── Fix mode ───────────────────────────────────────────────────────────
+  if (fixMode) {
+    for (const r of results) {
+      const failingChecks = Object.values(r.categoryResults)
+        .filter((cr) => cr.applicable)
+        .flatMap((cr) => cr.checks)
+        .filter((c) => c.result.pass === false);
+
+      if (failingChecks.length === 0) {
+        console.log(`✅ \`${r.mod.id}\` has no failing checks.`);
+      } else {
+        console.log(generateFixPrompt(r.mod, failingChecks));
+      }
+    }
+    return;
+  }
+
   // ─── Render Report ──────────────────────────────────────────────────────
+  const singleModule = modules.length === 1;
   const lines = [];
   lines.push("# 📊 meshstack-hub Module Scorecard");
   lines.push("");
@@ -551,33 +643,35 @@ function main() {
     ? { [filterCategory]: CATEGORIES[filterCategory] }
     : CATEGORIES;
 
-  // ─── Per-Module Category Summary ────────────────────────────────────────
-  lines.push("## 📋 Per-Module Category Summary");
-  lines.push("");
-  lines.push("Score per category per building block. `n/a` = category does not apply to this module.");
-  lines.push("");
+  // ─── Per-Module Category Summary (omit for single-module mode) ───────────
+  if (!singleModule) {
+    lines.push("## 📋 Per-Module Category Summary");
+    lines.push("");
+    lines.push("Score per category per building block. `n/a` = category does not apply to this module.");
+    lines.push("");
 
-  const summaryCategories = Object.entries(CATEGORIES);
-  const catHeaderCols = summaryCategories.map(([, cat]) => cat.name).join(" | ");
-  lines.push(`| Module | Overall | ${catHeaderCols} |`);
-  lines.push(`|--------|---------|${summaryCategories.map(() => "---").join("|")}|`);
+    const summaryCategories = Object.entries(CATEGORIES);
+    const catHeaderCols = summaryCategories.map(([, cat]) => cat.name).join(" | ");
+    lines.push(`| Module | Overall | ${catHeaderCols} |`);
+    lines.push(`|--------|---------|${summaryCategories.map(() => "---").join("|")}|`);
 
-  for (const r of results) {
-    const overallCell = r.total > 0
-      ? `${r.score >= 80 ? "🟢" : r.score >= 50 ? "🟡" : "🔴"} ${r.score}%`
-      : "—";
+    for (const r of results) {
+      const overallCell = r.total > 0
+        ? `${r.score >= 80 ? "🟢" : r.score >= 50 ? "🟡" : "🔴"} ${r.score}%`
+        : "—";
 
-    const catCells = summaryCategories.map(([catId]) => {
-      const cr = r.categoryResults[catId];
-      if (!cr || !cr.applicable) return "n/a";
-      if (cr.score === null) return "—";
-      const emoji = cr.score >= 80 ? "🟢" : cr.score >= 50 ? "🟡" : "🔴";
-      return `${emoji} ${cr.score}%`;
-    });
+      const catCells = summaryCategories.map(([catId]) => {
+        const cr = r.categoryResults[catId];
+        if (!cr || !cr.applicable) return "n/a";
+        if (cr.score === null) return "—";
+        const emoji = cr.score >= 80 ? "🟢" : cr.score >= 50 ? "🟡" : "🔴";
+        return `${emoji} ${cr.score}%`;
+      });
 
-    lines.push(`| \`${r.mod.id}\` | ${overallCell} | ${catCells.join(" | ")} |`);
+      lines.push(`| \`${r.mod.id}\` | ${overallCell} | ${catCells.join(" | ")} |`);
+    }
+    lines.push("");
   }
-  lines.push("");
 
   for (const [catId, cat] of Object.entries(categoriesToRender)) {
     const catDetectors = detectors.filter((d) => d.category === catId);
@@ -612,45 +706,49 @@ function main() {
     }
     lines.push("");
 
-    lines.push(`### ${cat.name} — Summary`);
-    lines.push("");
-    lines.push("| Emoji | Criterion | Coverage | Status |");
-    lines.push("|-------|-----------|----------|--------|");
-    for (const d of catDetectors) {
-      const passing = applicableModules.filter(
-        (r) => r.categoryResults[catId].checks.find((c) => c.id === d.id)?.result.pass
-      ).length;
-      const pct = Math.round((passing / applicableModules.length) * 100);
-      const bar = pct >= 80 ? "🟢" : pct >= 50 ? "🟡" : "🔴";
-      lines.push(
-        `| ${d.emoji} | ${d.name} | **${passing}/${applicableModules.length}** | ${bar} ${pct}% |`
-      );
+    // Per-criterion summary omitted for single-module mode (redundant with the table row above)
+    if (!singleModule) {
+      lines.push(`### ${cat.name} — Summary`);
+      lines.push("");
+      lines.push("| Emoji | Criterion | Coverage | Status |");
+      lines.push("|-------|-----------|----------|--------|");
+      for (const d of catDetectors) {
+        const passing = applicableModules.filter(
+          (r) => r.categoryResults[catId].checks.find((c) => c.id === d.id)?.result.pass
+        ).length;
+        const pct = Math.round((passing / applicableModules.length) * 100);
+        const bar = pct >= 80 ? "🟢" : pct >= 50 ? "🟡" : "🔴";
+        lines.push(
+          `| ${d.emoji} | ${d.name} | **${passing}/${applicableModules.length}** | ${bar} ${pct}% |`
+        );
+      }
+      lines.push("");
     }
-    lines.push("");
   }
 
-  // ─── Overall Summary ────────────────────────────────────────────────────
-  lines.push("## 📈 Overall Summary");
-  lines.push("");
+  // ─── Overall Summary (omit for single-module mode) ──────────────────────
+  if (!singleModule) {
+    lines.push("## 📈 Overall Summary");
+    lines.push("");
 
-  // When filtering by category, only count modules where that category applies
-  const scoredResults = results.filter((r) => r.total > 0);
-  const totalModules = scoredResults.length;
-  const avgScore = totalModules > 0
-    ? Math.round(scoredResults.reduce((s, r) => s + (r.score || 0), 0) / totalModules)
-    : 0;
-  lines.push(`### Overall Average Score: **${avgScore}%**`);
-  lines.push("");
+    const scoredResults = results.filter((r) => r.total > 0);
+    const totalModules = scoredResults.length;
+    const avgScore = totalModules > 0
+      ? Math.round(scoredResults.reduce((s, r) => s + (r.score || 0), 0) / totalModules)
+      : 0;
+    lines.push(`### Overall Average Score: **${avgScore}%**`);
+    lines.push("");
 
-  const high = scoredResults.filter((r) => r.score >= 80).length;
-  const mid = scoredResults.filter((r) => r.score >= 50 && r.score < 80).length;
-  const low = scoredResults.filter((r) => r.score < 50).length;
-  lines.push("### Score Distribution");
-  lines.push("");
-  lines.push(`- 🟢 High maturity (≥80%): **${high}** modules`);
-  lines.push(`- 🟡 Medium maturity (50–79%): **${mid}** modules`);
-  lines.push(`- 🔴 Low maturity (<50%): **${low}** modules`);
-  lines.push("");
+    const high = scoredResults.filter((r) => r.score >= 80).length;
+    const mid = scoredResults.filter((r) => r.score >= 50 && r.score < 80).length;
+    const low = scoredResults.filter((r) => r.score < 50).length;
+    lines.push("### Score Distribution");
+    lines.push("");
+    lines.push(`- 🟢 High maturity (≥80%): **${high}** modules`);
+    lines.push(`- 🟡 Medium maturity (50–79%): **${mid}** modules`);
+    lines.push(`- 🔴 Low maturity (<50%): **${low}** modules`);
+    lines.push("");
+  }
 
   console.log(lines.join("\n"));
 }

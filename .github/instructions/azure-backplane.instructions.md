@@ -24,6 +24,7 @@ principal for building block execution. Do **not** create Service Principals (SP
 - **No secrets rotation**: Unlike SPNs with client secrets, UAMIs with WIF produce no secrets to
   manage or rotate.
 
+<!-- scorecard-checks: azure_uses_uami, azure_federated_identity_credential -->
 ## Implementation Pattern
 
 ```hcl
@@ -65,6 +66,7 @@ resource "azurerm_role_assignment" "backplane" {
 }
 ```
 
+<!-- scorecard-checks: azure_wif_nonnullable -->
 ## Backplane Variables (Azure)
 
 Every Azure backplane must accept these variables:
@@ -97,6 +99,7 @@ variable "workload_identity_federation" {
 }
 ```
 
+<!-- scorecard-checks: azure_identity_output -->
 ## Backplane Outputs (Azure)
 
 ```hcl
@@ -109,6 +112,7 @@ output "identity" {
 }
 ```
 
+<!-- scorecard-checks: azure_no_azuread_application, azure_no_spn, azure_no_app_password, azure_no_create_spn_toggle -->
 ## What to Avoid
 
 - ❌ `azuread_application` / `azuread_service_principal` — do not create SPNs
@@ -116,6 +120,7 @@ output "identity" {
 - ❌ `existing_principal_ids` / `create_service_principal_name` toggle pattern — unnecessary complexity
 - ❌ Conditional WIF-vs-secret logic — always use WIF with UAMIs
 
+<!-- scorecard-checks: azure_integration_rg_location -->
 ## `meshstack_integration.tf` Wiring (Azure)
 
 In the integration file, pass the UAMI client ID as the `ARM_CLIENT_ID` environment variable:
