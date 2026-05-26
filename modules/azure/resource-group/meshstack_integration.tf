@@ -13,10 +13,15 @@ variable "azure_scope" {
   description = "Azure management group or subscription scope for backplane role assignment."
 }
 
+variable "azure_location" {
+  type        = string
+  description = "Azure region for the UAMI resource."
+}
+
 variable "backplane_name" {
   type        = string
   default     = "azure-resource-group"
-  description = "Name for the backplane resources (service principal, role definition). Must match pattern ^[-a-z0-9]+$."
+  description = "Name for the backplane resources (UAMI, role definition). Must match pattern ^[-a-z0-9]+$."
 }
 
 variable "notification_subscribers" {
@@ -38,6 +43,7 @@ variable "hub" {
     git_ref   = optional(string, "main")
     bbd_draft = optional(bool, true)
   })
+  const       = true
   default     = {}
   description = <<-EOT
   `git_ref`: Hub release reference. Set to a tag (e.g. 'v1.2.3') or branch or commit sha of the meshstack-hub repo.
@@ -56,16 +62,17 @@ output "building_block_definition" {
 data "meshstack_integrations" "integrations" {}
 
 module "backplane" {
-  source = "./backplane"
+  source = "github.com/meshcloud/meshstack-hub//modules/azure/resource-group/backplane?ref=${var.hub.git_ref}"
 
-  name  = var.backplane_name
-  scope = var.azure_scope
-
-  create_service_principal_name = var.backplane_name
+  name     = var.backplane_name
+  scope    = var.azure_scope
+  location = var.azure_location
 
   workload_identity_federation = {
-    issuer  = data.meshstack_integrations.integrations.workload_identity_federation.replicator.issuer
-    subject = "${trimsuffix(data.meshstack_integrations.integrations.workload_identity_federation.replicator.subject, ":replicator")}:workspace.${var.meshstack.owning_workspace_identifier}.buildingblockdefinition.${meshstack_building_block_definition.this.metadata.uuid}"
+    issuer = data.meshstack_integrations.integrations.workload_identity_federation.replicator.issuer
+    subjects = [
+      "${trimsuffix(data.meshstack_integrations.integrations.workload_identity_federation.replicator.subject, ":replicator")}:workspace.${var.meshstack.owning_workspace_identifier}.buildingblockdefinition.${meshstack_building_block_definition.this.metadata.uuid}"
+    ]
   }
 }
 
@@ -129,10 +136,10 @@ resource "meshstack_building_block_definition" "this" {
       ARM_CLIENT_ID = {
         type            = "STRING"
         display_name    = "ARM Client ID"
-        description     = "Client ID of the service principal used to authenticate with Azure."
+        description     = "Client ID of the UAMI used to authenticate with Azure."
         assignment_type = "STATIC"
         is_environment  = true
-        argument        = jsonencode(module.backplane.created_service_principal.client_id)
+        argument        = jsonencode(module.backplane.identity.client_id)
       }
       ARM_TENANT_ID = {
         type            = "STRING"
@@ -220,11 +227,7 @@ terraform {
     }
     azurerm = {
       source  = "hashicorp/azurerm"
-      version = "~> 4.64"
-    }
-    azuread = {
-      source  = "hashicorp/azuread"
-      version = "~> 3.8"
+      version = "~> 4.64.0"
     }
   }
 }
