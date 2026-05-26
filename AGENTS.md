@@ -189,17 +189,17 @@ node tools/scorecard/scorecard.mjs --module=<provider>/<service>
 node tools/scorecard/scorecard.mjs --module=<provider>/<service> --fix
 ```
 
-To fix violations, see [.github/instructions/fix-scorecard.instructions.md](.github/instructions/fix-scorecard.instructions.md).
+To fix violations, see [.agents/skills/fix-scorecard.md](.agents/skills/fix-scorecard.md).
 
 ---
 
 ## AWS Backplane Identity Conventions
 
-See [.github/instructions/aws-backplane.instructions.md](.github/instructions/aws-backplane.instructions.md) for the full AWS backplane identity conventions, including WIF (OIDC + IAM role) and cross-account (IAM user + CloudFormation StackSet) patterns, required variables/outputs, and the AWS backplane checklist.
+See [.agents/skills/aws-backplane.md](.agents/skills/aws-backplane.md) for the full AWS backplane identity conventions, including WIF (OIDC + IAM role) and cross-account (IAM user + CloudFormation StackSet) patterns, required variables/outputs, and the AWS backplane checklist.
 
 ## Azure Backplane Identity Conventions
 
-See [.github/instructions/azure-backplane.instructions.md](.github/instructions/azure-backplane.instructions.md) for the full Azure backplane identity conventions, including UAMI patterns, WIF wiring, required variables/outputs, and the Azure backplane checklist.
+See [.agents/skills/azure-backplane.md](.agents/skills/azure-backplane.md) for the full Azure backplane identity conventions, including UAMI patterns, WIF wiring, required variables/outputs, and the Azure backplane checklist.
 
 ---
 
@@ -409,4 +409,4 @@ Pass `module.<name>.building_block_definition.version_ref` **directly** — do n
 - [ ] `logo.png` included in `buildingblock/`
 - [ ] No `documentation_md` output in `backplane/` — use BBD `readme` field and `backplane/README.md` instead
 - [ ] No trailing whitespace
-- [ ] **Azure modules**: also follow the [Azure Backplane Checklist](.github/instructions/azure-backplane.instructions.md#checklist-for-azure-backplanes)
+- [ ] **Azure modules**: also follow the [Azure Backplane Checklist](.agents/skills/azure-backplane.md#checklist-for-azure-backplanes)

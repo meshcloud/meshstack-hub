@@ -1,5 +1,5 @@
 ---
-applyTo: modules/azure/**
+description: Azure backplane identity conventions for meshstack-hub modules under modules/azure/. Covers UAMI (User-Assigned Managed Identity) with WIF patterns, required variables/outputs, meshstack_integration.tf wiring, and what to avoid (no SPNs, no client secrets).
 ---
 
 # Azure Backplane Identity Conventions
