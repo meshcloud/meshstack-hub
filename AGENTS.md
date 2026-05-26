@@ -193,6 +193,10 @@ To fix violations, see [.github/instructions/fix-scorecard.instructions.md](.git
 
 ---
 
+## AWS Backplane Identity Conventions
+
+See [.github/instructions/aws-backplane.instructions.md](.github/instructions/aws-backplane.instructions.md) for the full AWS backplane identity conventions, including WIF (OIDC + IAM role) and cross-account (IAM user + CloudFormation StackSet) patterns, required variables/outputs, and the AWS backplane checklist.
+
 ## Azure Backplane Identity Conventions
 
 See [.github/instructions/azure-backplane.instructions.md](.github/instructions/azure-backplane.instructions.md) for the full Azure backplane identity conventions, including UAMI patterns, WIF wiring, required variables/outputs, and the Azure backplane checklist.
