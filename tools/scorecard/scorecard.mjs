@@ -53,7 +53,7 @@ const CATEGORIES = {
 // Each detector returns { pass: boolean, detail?: string }
 
 const AGENTS = (section) => ({ file: "AGENTS.md", section });
-const AZURE  = (section) => ({ file: ".github/instructions/azure-backplane.instructions.md", section });
+const AZURE  = (section) => ({ file: ".agents/skills/azure-backplane.md", section });
 
 const detectors = [
   // ─── Core Structure ─────────────────────────────────────────────────────

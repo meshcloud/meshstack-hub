@@ -1,5 +1,5 @@
 ---
-applyTo: modules/aws/**
+description: AWS backplane identity conventions for meshstack-hub modules under modules/aws/. Covers WIF (OIDC + IAM role) and cross-account (IAM user + CloudFormation StackSet) patterns, required variables/outputs, meshstack_integration.tf wiring, and the AWS backplane checklist.
 ---
 
 # AWS Backplane Identity Conventions
