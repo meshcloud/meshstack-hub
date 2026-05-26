@@ -11,6 +11,7 @@ description: |
 This building block is a reference implementation demonstrating how meshStack interfaces with OpenTofu building blocks. It exercises every input type, file input, pre-run script capability, and output type — without provisioning any cloud resources.
 
 Use it to:
+
 - Understand how meshStack passes inputs to Terraform
 - Learn how FILE-type inputs are written to the working directory
 - See how `USER_PERMISSIONS` injects project team members into your building block
