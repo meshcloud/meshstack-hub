@@ -707,24 +707,21 @@ function main() {
     }
     lines.push("");
 
-    // Per-criterion summary omitted for single-module mode (redundant with the table row above)
-    if (!singleModule) {
-      lines.push(`### ${cat.name} — Summary`);
-      lines.push("");
-      lines.push("| Emoji | Criterion | Coverage | Status |");
-      lines.push("|-------|-----------|----------|--------|");
-      for (const d of catDetectors) {
-        const passing = applicableModules.filter(
-          (r) => r.categoryResults[catId].checks.find((c) => c.id === d.id)?.result.pass
-        ).length;
-        const pct = Math.round((passing / applicableModules.length) * 100);
-        const bar = pct >= 80 ? "🟢" : pct >= 50 ? "🟡" : "🔴";
-        lines.push(
-          `| ${d.emoji} | ${d.name} | **${passing}/${applicableModules.length}** | ${bar} ${pct}% |`
-        );
-      }
-      lines.push("");
+    lines.push(`### ${cat.name} — Summary`);
+    lines.push("");
+    lines.push("| Emoji | Criterion | Coverage | Status |");
+    lines.push("|-------|-----------|----------|--------|");
+    for (const d of catDetectors) {
+      const passing = applicableModules.filter(
+        (r) => r.categoryResults[catId].checks.find((c) => c.id === d.id)?.result.pass
+      ).length;
+      const pct = Math.round((passing / applicableModules.length) * 100);
+      const bar = pct >= 80 ? "🟢" : pct >= 50 ? "🟡" : "🔴";
+      lines.push(
+        `| ${d.emoji} | ${d.name} | **${passing}/${applicableModules.length}** | ${bar} ${pct}% |`
+      );
     }
+    lines.push("");
   }
 
   // ─── Overall Summary (omit for single-module mode) ──────────────────────
