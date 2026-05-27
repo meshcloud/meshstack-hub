@@ -273,6 +273,7 @@ const detectors = [
     category: "integration",
     name: "No documentation_md output in backplane",
     emoji: "🚫",
+    fixRef: AGENTS("documentation-requirements"),
     fn: (mod) => {
       const allTf = readAllBackplaneTf(mod);
       if (!allTf) return { pass: true, detail: "no backplane" };

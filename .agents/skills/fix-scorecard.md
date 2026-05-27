@@ -19,23 +19,7 @@ When asked to fix scorecard violations for a module, follow this workflow:
    ```
    The output lists each failing check ID, its category, and a link to the relevant section in `AGENTS.md` or the `.agents/skills/` files that explains the correct convention.
 
-3. **Apply fixes** — for each failing check, read the referenced instruction section and apply the required changes to the module files. The check IDs and their fix locations are:
-
-   | Check ID | Instruction Section |
-   |----------|-------------------|
-   | `buildingblock_dir`, `versions_tf`, `backplane` | `AGENTS.md#module-structure` |
-   | `meshstack_integration`, `backplane_source_hub_git_ref`, `ref_name_hub_git_ref` | `AGENTS.md#meshstack_integrationtf-conventions` |
-   | `required_providers_meshstack` | `AGENTS.md#required-providers` |
-   | `variable_hub`, `variable_meshstack`, `variable_hub_const`, `bbd_draft`, `bbd_tags_forwarded` | `AGENTS.md#shared-variable-conventions` |
-   | `output_bbd` | `AGENTS.md#exposing-building-block-definition-references` |
-   | `provider_pinned` | `AGENTS.md#variable-conventions` |
-   | `readme_frontmatter`, `logo`, `bbd_readme` | `AGENTS.md#documentation-requirements` |
-   | `e2e_tests`, `e2e_tftest` | `AGENTS.md#end-to-end-testing` |
-   | `azure_uses_uami`, `azure_federated_identity_credential` | `.agents/skills/azure-backplane.md#implementation-pattern` |
-   | `azure_no_azuread_application`, `azure_no_spn`, `azure_no_app_password`, `azure_no_create_spn_toggle` | `.agents/skills/azure-backplane.md#what-to-avoid` |
-   | `azure_wif_nonnullable` | `.agents/skills/azure-backplane.md#backplane-variables-azure` |
-   | `azure_identity_output` | `.agents/skills/azure-backplane.md#backplane-outputs-azure` |
-   | `azure_integration_rg_location` | `.agents/skills/azure-backplane.md#meshstack_integrationtf-wiring-azure` |
+3. **Apply fixes** — for each failing check, read the referenced instruction section and apply the required changes to the module files.
 
 4. **Verify** — re-run the scorecard after each set of fixes:
    ```sh
