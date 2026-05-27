@@ -410,16 +410,17 @@ const detectors = [
   {
     id: "azure_integration_rg_location",
     category: "azure_backplane",
-    name: "Integration has azure_location",
+    name: "Integration has azure_resource_group_name & azure_location",
     emoji: "📍",
     fixRef: AZURE("meshstack_integrationtf-wiring-azure"),
     fn: (mod) => {
       const content = readIntegrationTf(mod);
       if (!content) return { pass: false, detail: "no integration file" };
+      const hasRg = /variable\s+"azure_resource_group_name"/.test(content);
       const hasLocation = /variable\s+"azure_location"/.test(content);
       return {
-        pass: hasLocation,
-        detail: "missing azure_location",
+        pass: hasRg && hasLocation,
+        detail: !hasRg ? "missing azure_resource_group_name" : "missing azure_location",
       };
     },
   },
@@ -630,7 +631,6 @@ function main() {
   }
 
   // ─── Render Report ──────────────────────────────────────────────────────
-  const singleModule = modules.length === 1;
   const lines = [];
   lines.push("# 📊 meshstack-hub Module Scorecard");
   lines.push("");
@@ -644,34 +644,32 @@ function main() {
     : CATEGORIES;
 
   // ─── Per-Module Category Summary (omit for single-module mode) ───────────
-  if (!singleModule) {
-    lines.push("## 📋 Per-Module Category Summary");
-    lines.push("");
-    lines.push("Score per category per building block. `n/a` = category does not apply to this module.");
-    lines.push("");
+  lines.push("## 📋 Per-Module Category Summary");
+  lines.push("");
+  lines.push("Score per category per building block. `n/a` = category does not apply to this module.");
+  lines.push("");
 
-    const summaryCategories = Object.entries(CATEGORIES);
-    const catHeaderCols = summaryCategories.map(([, cat]) => cat.name).join(" | ");
-    lines.push(`| Module | Overall | ${catHeaderCols} |`);
-    lines.push(`|--------|---------|${summaryCategories.map(() => "---").join("|")}|`);
+  const summaryCategories = Object.entries(CATEGORIES);
+  const catHeaderCols = summaryCategories.map(([, cat]) => cat.name).join(" | ");
+  lines.push(`| Module | Overall | ${catHeaderCols} |`);
+  lines.push(`|--------|---------|${summaryCategories.map(() => "---").join("|")}|`);
 
-    for (const r of results) {
-      const overallCell = r.total > 0
-        ? `${r.score >= 80 ? "🟢" : r.score >= 50 ? "🟡" : "🔴"} ${r.score}%`
-        : "—";
+  for (const r of results) {
+    const overallCell = r.total > 0
+      ? `${r.score >= 80 ? "🟢" : r.score >= 50 ? "🟡" : "🔴"} ${r.score}%`
+      : "—";
 
-      const catCells = summaryCategories.map(([catId]) => {
-        const cr = r.categoryResults[catId];
-        if (!cr || !cr.applicable) return "n/a";
-        if (cr.score === null) return "—";
-        const emoji = cr.score >= 80 ? "🟢" : cr.score >= 50 ? "🟡" : "🔴";
-        return `${emoji} ${cr.score}%`;
-      });
+    const catCells = summaryCategories.map(([catId]) => {
+      const cr = r.categoryResults[catId];
+      if (!cr || !cr.applicable) return "n/a";
+      if (cr.score === null) return "—";
+      const emoji = cr.score >= 80 ? "🟢" : cr.score >= 50 ? "🟡" : "🔴";
+      return `${emoji} ${cr.score}%`;
+    });
 
-      lines.push(`| \`${r.mod.id}\` | ${overallCell} | ${catCells.join(" | ")} |`);
-    }
-    lines.push("");
+    lines.push(`| \`${r.mod.id}\` | ${overallCell} | ${catCells.join(" | ")} |`);
   }
+  lines.push("");
 
   for (const [catId, cat] of Object.entries(categoriesToRender)) {
     const catDetectors = detectors.filter((d) => d.category === catId);
@@ -706,6 +704,7 @@ function main() {
     }
     lines.push("");
 
+    // Per-criterion summary omitted for single-module mode (redundant with the table row above)
     lines.push(`### ${cat.name} — Summary`);
     lines.push("");
     lines.push("| Emoji | Criterion | Coverage | Status |");
@@ -724,6 +723,7 @@ function main() {
   }
 
   // ─── Overall Summary (omit for single-module mode) ──────────────────────
+  const singleModule = modules.length === 1;
   if (!singleModule) {
     lines.push("## 📈 Overall Summary");
     lines.push("");
