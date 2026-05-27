@@ -111,8 +111,8 @@ resource "meshstack_building_block_v2" "repo" {
 
     display_name = "${var.github_org}/${local.identifier}"
     target_ref = {
-      kind       = "meshWorkspace"
-      identifier = var.workspace_identifier
+      kind = "meshWorkspace"
+      name = var.workspace_identifier
     }
 
     inputs = {

@@ -26,8 +26,8 @@ resource "meshstack_building_block_v2" "git_repository" {
 
     display_name = "Git Repo ${local.name}"
     target_ref = {
-      kind       = "meshWorkspace"
-      identifier = var.workspace_identifier
+      kind = "meshWorkspace"
+      name = var.workspace_identifier
     }
 
     inputs = {
