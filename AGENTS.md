@@ -203,8 +203,10 @@ See [.agents/skills/azure-backplane.md](.agents/skills/azure-backplane.md) for t
 
 ---
 
-<!-- scorecard-checks: readme_frontmatter, logo, bbd_readme -->
+<!-- scorecard-checks: readme_frontmatter, logo, bbd_readme, bbd_readme_no_leading_heading, bbd_readme_shared_responsibility -->
 ## Documentation Requirements
+
+See [.agents/skills/bbd-readme.md](.agents/skills/bbd-readme.md) for the complete BBD readme specification, template, and checklist.
 
 **`buildingblock/README.md`** — must include YAML front-matter:
 
@@ -217,11 +219,12 @@ description: One-sentence description of what the module provisions.
 ---
 ```
 
-**BBD `readme` field** — user-facing documentation lives in the `readme` field of `meshstack_building_block_definition.spec` in `meshstack_integration.tf`. It must include:
+**BBD `readme` field** — user-facing documentation lives in the `readme` field of `meshstack_building_block_definition.spec` in `meshstack_integration.tf`. Always use `chomp(<<-EOT)` inline — never `file()` or a separate file (the one-file copy/paste requirement). The readme must include:
 
-- A short plain-text description of what the building block does (no extra sub-heading).
-- Usage motivation and examples (1–2 developer scenarios).
-- Shared responsibility matrix (platform team vs. application team) as a markdown table with ✅ / ❌ emojis.
+- A **plain-text description** as the first content — no leading `#` heading.
+- **Usage motivation**: who this building block is for and when to use it.
+- **Usage examples**: 1–2 concrete developer scenarios.
+- **Shared responsibility matrix**: markdown table with `✅` / `❌` emojis.
 
 **`backplane/README.md`** — documentation relevant to platform engineers deploying the backplane. Include an overview of what the backplane provisions, required permissions/roles, and operational notes.
 
@@ -393,7 +396,7 @@ Pass `module.<name>.building_block_definition.version_ref` **directly** — do n
 - [ ] Provider versions pinned with `~>`
 - [ ] Variables in `snake_case` with cloud-provider prefix in `meshstack_integration.tf` (e.g. `azure_tenant_id`)
 - [ ] `buildingblock/README.md` with YAML front-matter
-- [ ] BBD `readme` field in `meshstack_integration.tf` contains description, usage motivation, examples, and shared responsibility table (✅ / ❌)
+- [ ] BBD `readme` field uses `chomp(<<-EOT)` inline (no `file()`), starts with plain-text description (no `#` heading), and includes usage motivation, 1–2 examples, and a shared responsibility table with ✅ / ❌ — see [.agents/skills/bbd-readme.md](.agents/skills/bbd-readme.md)
 - [ ] `meshstack_integration.tf` declares `meshcloud/meshstack` in `required_providers`
 - [ ] `meshstack_integration.tf` uses `variable "hub" { type = object({git_ref = string}) }` and `variable "meshstack" { type = object({owning_workspace_identifier = string}) }`
 - [ ] `meshstack_integration.tf` references backplane via GitHub URL with `?ref=${var.hub.git_ref}` (e.g. `github.com/meshcloud/meshstack-hub//modules/<provider>/<service>/backplane?ref=${var.hub.git_ref}`) — never a hardcoded commit SHA or relative `./backplane` path

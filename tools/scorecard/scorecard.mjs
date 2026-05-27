@@ -52,8 +52,9 @@ const CATEGORIES = {
 // ─── Detector functions ─────────────────────────────────────────────────────
 // Each detector returns { pass: boolean, detail?: string }
 
-const AGENTS = (section) => ({ file: "AGENTS.md", section });
-const AZURE  = (section) => ({ file: ".agents/skills/azure-backplane.md", section });
+const AGENTS     = (section) => ({ file: "AGENTS.md", section });
+const AZURE      = (section) => ({ file: ".agents/skills/azure-backplane.md", section });
+const BBD_README = (section) => ({ file: ".agents/skills/bbd-readme.md", section });
 
 const detectors = [
   // ─── Core Structure ─────────────────────────────────────────────────────
@@ -261,11 +262,49 @@ const detectors = [
     category: "integration",
     name: "BBD readme field present",
     emoji: "📖",
-    fixRef: AGENTS("documentation-requirements"),
+    fixRef: BBD_README("standard-pattern"),
     fn: (mod) => {
       const content = readIntegrationTf(mod);
       if (!content) return { pass: false, detail: "no integration file" };
       return { pass: /readme\s*=/.test(content) };
+    },
+  },
+  {
+    id: "bbd_readme_no_leading_heading",
+    category: "integration",
+    name: "BBD readme starts with plain-text description (no heading)",
+    emoji: "📝",
+    fixRef: BBD_README("description"),
+    fn: (mod) => {
+      const content = readIntegrationTf(mod);
+      if (!content) return { pass: false, detail: "no integration file" };
+      const readmeContent = extractBBDReadmeContent(content);
+      if (readmeContent === null) return { pass: false, detail: "readme is not a heredoc — use chomp(<<-EOT)" };
+      if (readmeContent === "") return { pass: false, detail: "readme is empty" };
+      return {
+        pass: !readmeContent.startsWith("#"),
+        detail: "readme starts with a heading — begin with plain-text description instead",
+      };
+    },
+  },
+  {
+    id: "bbd_readme_shared_responsibility",
+    category: "integration",
+    name: "BBD readme has shared responsibility table (✅/❌)",
+    emoji: "📊",
+    fixRef: BBD_README("shared-responsibility-table"),
+    fn: (mod) => {
+      const content = readIntegrationTf(mod);
+      if (!content) return { pass: false, detail: "no integration file" };
+      if (!/readme\s*=/.test(content)) return { pass: false, detail: "no readme field" };
+      const hasTableSeparator = /\|[ :]*-+[ :]*\|/.test(content);
+      const hasCheckEmoji = /[✅❌]/.test(content);
+      return {
+        pass: hasTableSeparator && hasCheckEmoji,
+        detail: !hasCheckEmoji
+          ? "no ✅/❌ emojis found — add a shared responsibility table"
+          : "no markdown table separator found — ensure table uses |---|:---:| rows",
+      };
     },
   },
   {
@@ -479,6 +518,17 @@ function readBackplaneFile(mod, filename) {
   const p = join(mod.path, "backplane", filename);
   if (!existsSync(p)) return null;
   return readFileSync(p, "utf-8");
+}
+
+function extractBBDReadmeContent(content) {
+  // Match: readme = [chomp(] <<[-]MARKER\n...content...\nMARKER
+  const m = content.match(/readme\s*=\s*(?:chomp\s*\(\s*)?<<-?([A-Za-z_]+)\s*\n([\s\S]*?)\n[ \t]*\1\b/);
+  if (!m) return null;
+  const lines = m[2].split("\n");
+  const nonEmpty = lines.filter((l) => l.trim().length > 0);
+  if (nonEmpty.length === 0) return "";
+  const minIndent = Math.min(...nonEmpty.map((l) => (l.match(/^(\s*)/) || ["", ""])[1].length));
+  return lines.map((l) => l.slice(minIndent)).join("\n").trim();
 }
 
 function readAllBackplaneTf(mod) {
