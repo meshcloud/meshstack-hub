@@ -51,7 +51,7 @@ output "building_block_definition" {
 data "meshstack_integrations" "integrations" {}
 
 module "backplane" {
-  source = "github.com/meshcloud/meshstack-hub//modules/azure/service-principal/backplane?ref=ce07c0a83c58ab924fc4ab3e62907dde1a44edf3"
+  source = "github.com/meshcloud/meshstack-hub//modules/azure/service-principal/backplane?ref=741e1b40e2a52cf777f8d2a68d7f9bab262f70ac"
   name   = var.backplane_name
   scope  = var.azure_scope
 
