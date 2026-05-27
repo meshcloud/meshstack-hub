@@ -8,6 +8,7 @@ variable "test_context" {
       azure = object({
         subscription_uuid = string
         entra_tenant_id   = string
+        mesh_tenant_id    = string
       })
     })
   })
@@ -55,8 +56,8 @@ resource "meshstack_building_block_v2" "this" {
 
     display_name = "smoke-test-resource-group-${var.test_context.name_suffix}"
     target_ref = {
-      kind = "meshWorkspace"
-      name = var.test_context.workspace
+      kind = "meshTenant"
+      uuid = var.test_context.fixtures.azure.mesh_tenant_id
     }
 
     inputs = {
