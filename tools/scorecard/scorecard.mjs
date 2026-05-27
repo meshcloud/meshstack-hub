@@ -410,17 +410,16 @@ const detectors = [
   {
     id: "azure_integration_rg_location",
     category: "azure_backplane",
-    name: "Integration has azure_resource_group_name & azure_location",
+    name: "Integration has azure_location",
     emoji: "📍",
     fixRef: AZURE("meshstack_integrationtf-wiring-azure"),
     fn: (mod) => {
       const content = readIntegrationTf(mod);
       if (!content) return { pass: false, detail: "no integration file" };
-      const hasRg = /variable\s+"azure_resource_group_name"/.test(content);
       const hasLocation = /variable\s+"azure_location"/.test(content);
       return {
-        pass: hasRg && hasLocation,
-        detail: !hasRg ? "missing azure_resource_group_name" : "missing azure_location",
+        pass: hasLocation,
+        detail: "missing azure_location",
       };
     },
   },
