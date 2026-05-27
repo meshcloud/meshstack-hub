@@ -37,6 +37,37 @@ resource "meshstack_building_block_definition" "this" {
     display_name = "meshStack NoOp Building Block"
     description  = "Reference building block demonstrating meshStack's complete Terraform interface: all input types, file inputs, user permissions injection, and pre-run scripts."
     target_type  = "WORKSPACE_LEVEL"
+    readme = chomp(<<-EOT
+      The **meshStack NoOp Building Block** is a reference implementation that demonstrates meshStack's
+      complete Terraform building block interface without provisioning any real infrastructure. It covers
+      all input types, file inputs, user permissions injection, and pre-run scripts.
+
+      ## 🎯 When to use it
+
+      Use this building block when you want to:
+      - Understand the full range of input types available in meshStack building blocks.
+      - Test the building block framework without side effects.
+      - Use it as a starting point or template for building new building blocks.
+
+      ## 💡 Usage examples
+
+      **Example 1: Exploring input types**
+      Platform engineers can deploy this building block to a test workspace to see how all input
+      types (text, number, select, file, sensitive) are surfaced in the meshStack UI and passed
+      to Terraform.
+
+      **Example 2: Onboarding new module developers**
+      A new platform engineer reviews the NoOp building block to learn the conventions before
+      writing their first real building block module.
+
+      ## 📊 Shared Responsibility
+
+      | Responsibility | Platform Team | Application Team |
+      |---|:---:|:---:|
+      | Maintain the NoOp reference implementation | ✅ | ❌ |
+      | Deploy and test the building block | ❌ | ✅ |
+      EOT
+    )
   }
 
   version_spec = {

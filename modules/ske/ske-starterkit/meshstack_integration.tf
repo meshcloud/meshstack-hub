@@ -104,11 +104,9 @@ resource "meshstack_building_block_definition" "this" {
     notification_subscribers = var.notification_subscribers
 
     readme = chomp(<<-EOT
-    ## What is it?
-
     The **SKE Starterkit** provides application teams with a pre-configured Kubernetes environment on STACKIT Kubernetes Engine (SKE) following best practices. It automates the creation of dev and prod projects with dedicated SKE tenants.
 
-    ## When to use it?
+    ## 🎯 When to use it
 
     This building block is ideal for teams that:
 

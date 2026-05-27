@@ -67,15 +67,39 @@ resource "meshstack_building_block_definition" "gcp_storage_bucket" {
   }
 
   spec = {
-    display_name      = "GCP Storage Bucket"
-    description       = "Provides a GCP Cloud Storage bucket for object storage."
-    readme            = <<EOT
-# GCP Storage Bucket
+    display_name = "GCP Storage Bucket"
+    description  = "Provides a GCP Cloud Storage bucket for object storage."
+    readme = chomp(<<-EOT
+      This building block provisions a **GCP Cloud Storage bucket** in your GCP project, providing
+      scalable and durable object storage for application data, static assets, and backups.
 
-## Description
+      ## 🎯 When to use it
 
-Provides a GCP Cloud Storage bucket for object storage.
-EOT
+      Use this building block when your application team needs:
+      - A dedicated GCS bucket to store files, blobs, or build artifacts.
+      - Object storage provisioned per workspace without managing GCP infrastructure directly.
+
+      ## 💡 Usage examples
+
+      **Example 1: Storing build artifacts**
+      A CI/CD pipeline uploads compiled artifacts to a per-workspace GCS bucket, keeping
+      build outputs isolated and accessible only to the owning team.
+
+      **Example 2: Static website assets**
+      A frontend team stores images and compiled assets in a GCS bucket and configures
+      their CDN or application to serve them from there.
+
+      ## 📊 Shared Responsibility
+
+      | Responsibility | Platform Team | Application Team |
+      |---|:---:|:---:|
+      | Provision and manage the GCS bucket | ✅ | ❌ |
+      | Configure service account credentials | ✅ | ❌ |
+      | Choose bucket name, region, and labels | ❌ | ✅ |
+      | Manage objects and lifecycle policies | ❌ | ✅ |
+      | Control access to bucket contents | ❌ | ✅ |
+      EOT
+    )
     support_url       = ""
     documentation_url = ""
     target_type       = "WORKSPACE_LEVEL"

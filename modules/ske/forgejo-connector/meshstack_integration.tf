@@ -90,12 +90,10 @@ resource "meshstack_building_block_definition" "this" {
     run_transparency    = true
 
     readme = chomp(<<-EOT
-    ## What does it do?
-
     The **SKE Forgejo Connector** wires a Forgejo repository to a Kubernetes namespace on STACKIT SKE so that
     Forgejo Actions workflows can build and deploy applications into the namespace.
 
-    ## Resources Created
+    ## 📦 Resources Created
 
     - **Kubernetes service account & RBAC** – scoped credentials for the Forgejo Actions runner, including
       cluster-issuer read access for cert-manager.

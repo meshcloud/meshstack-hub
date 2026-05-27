@@ -86,8 +86,6 @@ resource "meshstack_building_block_definition" "this" {
     supported_platforms      = [{ name = "AZURE" }]
 
     readme = chomp(<<-EOT
-      ## Azure Resource Group
-
       This building block provisions an empty **Azure Resource Group** in a target subscription.
       The resource group name is automatically derived from the meshStack context following the schema:
 
@@ -95,7 +93,7 @@ resource "meshstack_building_block_definition" "this" {
       rg-<workspaceIdentifier>-<projectIdentifier>
       ```
 
-      ## When to use it?
+      ## 🎯 When to use it
 
       Use this building block when your application team needs a dedicated Azure Resource Group
       to deploy resources into, with a consistent naming convention enforced across all projects.

@@ -103,11 +103,9 @@ resource "meshstack_building_block_definition" "aks_starterkit" {
     symbol                   = "https://raw.githubusercontent.com/meshcloud/meshstack-hub/${var.hub.git_ref}/modules/aks/starterkit/buildingblock/logo.png"
 
     readme = chomp(<<EOT
-## What is it?
-
 The **AKS Starterkit** provides application teams with a pre-configured Kubernetes environment following best practices. It automates the creation of essential infrastructure, including a Git repository, a CI/CD pipeline using GitHub Actions, and a secure container registry integration.
 
-## When to use it?
+## 🎯 When to use it
 
 This building block is ideal for teams that:
 

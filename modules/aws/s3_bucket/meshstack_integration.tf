@@ -57,9 +57,40 @@ resource "meshstack_building_block_definition" "this" {
   }
 
   spec = {
-    display_name      = "AWS S3 Bucket"
-    description       = "AWS S3 Bucket"
-    readme            = "# Example Building Block\n"
+    display_name = "AWS S3 Bucket"
+    description  = "AWS S3 Bucket"
+    readme = chomp(<<-EOT
+      This building block provisions an **AWS S3 bucket** in your AWS account with configurable tags.
+      It is designed for workspaces that need a dedicated object storage bucket for application data,
+      backups, or static assets.
+
+      ## 🎯 When to use it
+
+      Use this building block when your application team needs:
+      - A private S3 bucket to store application data, logs, or build artifacts.
+      - A consistent bucket provisioned per workspace without managing AWS infrastructure directly.
+
+      ## 💡 Usage examples
+
+      **Example 1: Storing application logs**
+      A backend service writes structured logs to a dedicated S3 bucket per environment,
+      keeping data isolated per workspace without sharing buckets.
+
+      **Example 2: Hosting static assets**
+      A frontend team stores compiled assets (images, fonts, JS bundles) in an S3 bucket
+      and references them from their CDN configuration.
+
+      ## 📊 Shared Responsibility
+
+      | Responsibility | Platform Team | Application Team |
+      |---|:---:|:---:|
+      | Provision and manage the S3 bucket | ✅ | ❌ |
+      | Configure IAM access via WIF role | ✅ | ❌ |
+      | Choose bucket name and region | ❌ | ✅ |
+      | Manage objects and lifecycle policies | ❌ | ✅ |
+      | Secure access to bucket contents | ❌ | ✅ |
+      EOT
+    )
     support_url       = "https://support.example.com/building-blocks"
     documentation_url = "https://docs.example.com/building-blocks"
     target_type       = "WORKSPACE_LEVEL"
