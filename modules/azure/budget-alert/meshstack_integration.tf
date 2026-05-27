@@ -94,11 +94,9 @@ resource "meshstack_building_block_definition" "this" {
     target_type              = "WORKSPACE_LEVEL"
 
     readme = chomp(<<-EOT
-      ## Azure Budget Alert
-
       This building block provisions an **Azure Consumption Budget Alert** on a target subscription, helping teams track spending and receive email notifications when actual or forecasted costs cross defined thresholds.
 
-      ## When to use it?
+      ## 🎯 When to use it
 
       Use this building block when you need to enforce cost governance on an Azure subscription and receive proactive spending alerts before budgets are exceeded.
 

@@ -79,6 +79,23 @@ const detectors = [
     }),
   },
   {
+    id: "app_team_readme",
+    category: "core",
+    name: "buildingblock/APP_TEAM_README.md present (no-integration fallback)",
+    emoji: "📋",
+    fixRef: AGENTS("documentation-requirements"),
+    fn: (mod) => {
+      // Modules with a meshstack_integration.tf carry their readme inline — no fallback file needed.
+      if (existsSync(join(mod.path, "meshstack_integration.tf"))) {
+        return { pass: null, detail: "not applicable — readme is inline in integration file" };
+      }
+      return {
+        pass: existsSync(join(mod.path, "buildingblock", "APP_TEAM_README.md")),
+        detail: "missing — modules without meshstack_integration.tf need buildingblock/APP_TEAM_README.md as user-facing readme fallback",
+      };
+    },
+  },
+  {
     id: "readme_frontmatter",
     category: "core",
     name: "buildingblock/README.md with YAML front-matter",

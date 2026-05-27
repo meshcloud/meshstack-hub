@@ -67,11 +67,9 @@ resource "meshstack_building_block_definition" "aks_github_connector" {
     supported_platforms      = [{ name = "AZURE_KUBERNETES_SERVICE" }]
 
     readme = chomp(<<EOT
-## What is it?
-
 The **GitHub Actions AKS Connector** integrates a GitHub repository with an Azure Kubernetes Service (AKS) namespace. It sets up the necessary service accounts, secrets, and workflows so that GitHub Actions can build, push, and deploy container images to your AKS namespace automatically.
 
-## When to use it?
+## 🎯 When to use it
 
 This building block is ideal for teams that:
 

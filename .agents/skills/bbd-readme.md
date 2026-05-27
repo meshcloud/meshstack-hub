@@ -1,16 +1,24 @@
 ---
-description: BBD readme conventions for meshstack-hub modules. Covers the required inline HCL pattern (chomp heredoc), required sections (description, usage motivation, usage examples, shared responsibility table), markdown rules, a copy-paste template, and anti-patterns to avoid.
+description: BBD readme conventions for meshstack-hub modules. Covers two patterns (inline HCL for modules with meshstack_integration.tf, APP_TEAM_README.md fallback for modules without), required sections (description, usage motivation, usage examples, shared responsibility table), markdown rules, a copy-paste template, and anti-patterns to avoid.
 ---
 
 # BBD Readme Conventions
 
-The `readme` field of `meshstack_building_block_definition.spec` is the **user-facing documentation** shown to application teams in the meshStack marketplace. It must be written for developers — not platform engineers — and must explain what the building block does, when to reach for it, and exactly what each party is responsible for.
+User-facing readmes in meshstack-hub explain what the building block does, when to reach for it, and exactly what each party is responsible for. They are written for application team developers, not platform engineers.
 
-## Rationale
+## Two Patterns — Choose Based on Module Completeness
 
-- **One-file copy/paste**: Platform engineers import building blocks by copying `meshstack_integration.tf` into their IaC runtime. Keeping the readme inline means they get the full building block — resources, variables, and documentation — in a single file with no missing dependencies.
-- **No stale file references**: A `file("buildingblock/APP_TEAM_README.md")` path breaks the moment the integration file is used outside the hub repo, which is exactly the copy/paste scenario above.
-- **Consistency**: All building blocks in the hub use the same pattern, so agents and platform engineers know where to look.
+| Module has `meshstack_integration.tf`? | Readme location |
+|---|---|
+| ✅ Yes | Inline `chomp(<<-EOT)` heredoc in the `readme` field of `meshstack_building_block_definition.spec` |
+| ❌ No | `buildingblock/APP_TEAM_README.md` — meshStack uses this file as a fallback |
+
+**Why two patterns?**
+
+- **Inline (`meshstack_integration.tf` present)**: Platform engineers import building blocks by copying `meshstack_integration.tf` into their IaC runtime. Keeping the readme inline ensures the full building block — resources, variables, and documentation — is in a single file with no missing dependencies.
+- **`APP_TEAM_README.md` (no integration file)**: Standalone building blocks consumed directly by meshStack need a dedicated file for meshStack to display. Use `APP_TEAM_README.md` in the `buildingblock/` directory.
+
+**Never** use `readme = file("buildingblock/APP_TEAM_README.md")` inside a `meshstack_integration.tf` — that path breaks the copy/paste scenario. If the module has an integration file, the readme must be inline.
 
 <!-- scorecard-checks: bbd_readme -->
 ## Standard Pattern
@@ -147,20 +155,28 @@ readme = chomp(<<-EOT
 
 ## Anti-patterns
 
-- ❌ `readme = file("buildingblock/APP_TEAM_README.md")` — breaks copy/paste, path resolves only inside the hub repo.
+- ❌ `readme = file("buildingblock/APP_TEAM_README.md")` inside `meshstack_integration.tf` — breaks copy/paste; use inline `chomp(<<-EOT)` instead.
 - ❌ `readme = file("buildingblock/README.md")` — that file is for terraform-docs and catalog metadata (YAML front-matter), not the BBD readme.
 - ❌ `readme = <<EOT` (without dash) — includes HCL indentation as literal whitespace in the output.
 - ❌ Starting the readme with a `#` heading — the first content must be plain-text description.
 - ❌ Omitting the shared responsibility table — application teams need a clear handoff line.
 - ❌ Writing the readme from the platform engineer's perspective — the audience is the application team.
+- ❌ Deleting `buildingblock/APP_TEAM_README.md` from a module that has no `meshstack_integration.tf` — it is the only readme meshStack can display for such modules.
 
 ## Checklist for BBD Readmes
 
+**Modules with `meshstack_integration.tf`:**
 - [ ] `readme` field is a `chomp(<<-EOT)` heredoc inline in `meshstack_integration.tf`
+- [ ] No `file()` call for the readme value
+- [ ] No `buildingblock/APP_TEAM_README.md` (redundant once readme is inline)
+
+**Modules without `meshstack_integration.tf`:**
+- [ ] `buildingblock/APP_TEAM_README.md` exists
+
+**All readmes (both patterns):**
 - [ ] First content is plain-text description — no `#` heading
 - [ ] Includes a "When to use it" section with at least one bullet
 - [ ] Includes 1–2 usage examples written from the developer's perspective
 - [ ] Includes a shared responsibility table with `✅` and `❌` emojis
 - [ ] Table uses `|---|:---:|:---:|` alignment row
-- [ ] No `file()` call for the readme value
 - [ ] No trailing `---` at the end of the readme value

@@ -55,11 +55,9 @@ resource "meshstack_building_block_definition" "github_repo" {
     run_transparency         = true
 
     readme = chomp(<<EOT
-## What is it?
-
 The **GitHub Repository Creation** building block provides an automated way to create and manage GitHub repositories for application teams. It ensures repositories are set up with predefined configurations, including access control, branch protection rules, and compliance settings.
 
-## When to use it?
+## 🎯 When to use it
 
 This building block is ideal for teams that:
 

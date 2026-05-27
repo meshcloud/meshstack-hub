@@ -82,12 +82,10 @@ resource "meshstack_building_block_definition" "this" {
     run_transparency = true
 
     readme = chomp(<<-EOT
-    ## What does it do?
-
     The **STACKIT Git Repository** building block creates a Forgejo repository on STACKIT Git and manages
     workspace member access using Forgejo organization teams.
 
-    ## Resources Created
+    ## 📦 Resources Created
 
     - **Forgejo repository** – created under a configurable Forgejo organization. Optionally cloned from an
       existing public Git URL (one-time clone, not an ongoing mirror).
@@ -98,11 +96,21 @@ resource "meshstack_building_block_definition" "this" {
     - **Action secrets & variables** – optional maps of Forgejo Actions secrets and variables managed via the
       REST API (see below).
 
-    ## Forgejo Actions secrets & variables
+    ## ℹ️ Forgejo Actions secrets & variables
 
     The Forgejo Terraform provider currently cannot delete action secrets (only removes them from state) and
     does not support action variables at all. This building block therefore manages them via the generic
     `restapi` provider against the Forgejo API, ensuring proper create/update/delete lifecycle.
+
+    ## 📊 Shared Responsibility
+
+    | Responsibility | Platform Team | Application Team |
+    |---|:---:|:---:|
+    | Provision and manage the Forgejo repository | ✅ | ❌ |
+    | Manage organization teams and access control | ✅ | ❌ |
+    | Develop and maintain code in the repository | ❌ | ✅ |
+    | Configure Forgejo Actions pipelines | ❌ | ✅ |
+    | Manage repository secrets and variables | ❌ | ✅ |
     EOT
     )
   }

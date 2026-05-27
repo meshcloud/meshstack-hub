@@ -79,11 +79,9 @@ resource "meshstack_building_block_definition" "this" {
     target_type              = "WORKSPACE_LEVEL"
 
     readme = chomp(<<-EOT
-      ## Azure Service Principal
-
       This building block creates an **Azure AD Application** and **Service Principal** with role assignments on your Azure subscription.
 
-      ## When to use it?
+      ## 🎯 When to use it
 
       Use this building block when your applications need:
       - A service identity for Azure authentication

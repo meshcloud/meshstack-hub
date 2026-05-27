@@ -93,11 +93,9 @@ resource "meshstack_building_block_definition" "this" {
     target_type              = "WORKSPACE_LEVEL"
 
     readme = chomp(<<-EOT
-      ## Azure Storage Account
-
       This building block provisions an **Azure Storage Account** in your Azure subscription, providing scalable and durable cloud storage for blobs, files, queues, and tables.
 
-      ## When to use it?
+      ## 🎯 When to use it
 
       Use this building block when you need a managed Azure Storage Account with consistent naming, resource group organisation, and a pre-configured lifecycle policy.
 

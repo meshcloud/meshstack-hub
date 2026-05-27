@@ -203,7 +203,7 @@ See [.agents/skills/azure-backplane.md](.agents/skills/azure-backplane.md) for t
 
 ---
 
-<!-- scorecard-checks: readme_frontmatter, logo, bbd_readme, bbd_readme_no_leading_heading, bbd_readme_shared_responsibility -->
+<!-- scorecard-checks: readme_frontmatter, logo, app_team_readme, bbd_readme, bbd_readme_no_leading_heading, bbd_readme_shared_responsibility -->
 ## Documentation Requirements
 
 See [.agents/skills/bbd-readme.md](.agents/skills/bbd-readme.md) for the complete BBD readme specification, template, and checklist.
@@ -219,7 +219,13 @@ description: One-sentence description of what the module provisions.
 ---
 ```
 
-**BBD `readme` field** — user-facing documentation lives in the `readme` field of `meshstack_building_block_definition.spec` in `meshstack_integration.tf`. Always use `chomp(<<-EOT)` inline — never `file()` or a separate file (the one-file copy/paste requirement). The readme must include:
+**User-facing readme — two patterns depending on module completeness:**
+
+- **Modules with `meshstack_integration.tf`** (full building blocks): user-facing readme lives in the `readme` field of `meshstack_building_block_definition.spec`. Always use `chomp(<<-EOT)` inline — never `file()` or a separate file (one-file copy/paste requirement). See [.agents/skills/bbd-readme.md](.agents/skills/bbd-readme.md) for full spec.
+
+- **Modules without `meshstack_integration.tf`** (standalone building blocks): place the user-facing readme at `buildingblock/APP_TEAM_README.md`. meshStack uses this file as a fallback when no inline readme is available. The same content requirements apply (plain-text description first, usage motivation, examples, shared responsibility table).
+
+The readme (inline or `APP_TEAM_README.md`) must include:
 
 - A **plain-text description** as the first content — no leading `#` heading.
 - **Usage motivation**: who this building block is for and when to use it.
@@ -229,7 +235,7 @@ description: One-sentence description of what the module provisions.
 **`backplane/README.md`** — documentation relevant to platform engineers deploying the backplane. Include an overview of what the backplane provisions, required permissions/roles, and operational notes.
 
 **Anti-pattern: `documentation_md` output** — do **not** add a `documentation_md` output to backplane modules. This is a legacy pattern. Documentation must instead be split into:
-- User-facing content → BBD `readme` field in `meshstack_integration.tf`
+- User-facing content → BBD `readme` field in `meshstack_integration.tf` (or `APP_TEAM_README.md` if no integration file)
 - Platform-engineer-facing content → `backplane/README.md`
 
 ---
@@ -397,6 +403,7 @@ Pass `module.<name>.building_block_definition.version_ref` **directly** — do n
 - [ ] Variables in `snake_case` with cloud-provider prefix in `meshstack_integration.tf` (e.g. `azure_tenant_id`)
 - [ ] `buildingblock/README.md` with YAML front-matter
 - [ ] BBD `readme` field uses `chomp(<<-EOT)` inline (no `file()`), starts with plain-text description (no `#` heading), and includes usage motivation, 1–2 examples, and a shared responsibility table with ✅ / ❌ — see [.agents/skills/bbd-readme.md](.agents/skills/bbd-readme.md)
+- [ ] If no `meshstack_integration.tf`: `buildingblock/APP_TEAM_README.md` is present with the same content requirements (plain-text description first, motivation, examples, shared responsibility table)
 - [ ] `meshstack_integration.tf` declares `meshcloud/meshstack` in `required_providers`
 - [ ] `meshstack_integration.tf` uses `variable "hub" { type = object({git_ref = string}) }` and `variable "meshstack" { type = object({owning_workspace_identifier = string}) }`
 - [ ] `meshstack_integration.tf` references backplane via GitHub URL with `?ref=${var.hub.git_ref}` (e.g. `github.com/meshcloud/meshstack-hub//modules/<provider>/<service>/backplane?ref=${var.hub.git_ref}`) — never a hardcoded commit SHA or relative `./backplane` path

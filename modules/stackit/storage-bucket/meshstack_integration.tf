@@ -48,6 +48,38 @@ resource "meshstack_building_block_definition" "this" {
     description      = "Provisions an S3-compatible Object Storage bucket on STACKIT with access credentials."
     target_type      = "WORKSPACE_LEVEL"
     run_transparency = true
+    readme = chomp(<<-EOT
+      This building block provisions an **S3-compatible Object Storage bucket on STACKIT** with
+      dedicated access credentials, so your team can store and retrieve files without managing
+      the underlying infrastructure.
+
+      ## 🎯 When to use it
+
+      Use this building block when your application team needs:
+      - A dedicated S3-compatible bucket on STACKIT for application data, backups, or static assets.
+      - Isolated object storage per workspace with separate access credentials.
+
+      ## 💡 Usage examples
+
+      **Example 1: Storing application data**
+      A backend service stores user-uploaded files in a STACKIT Object Storage bucket.
+      The building block provisions the bucket and outputs S3 credentials for the application.
+
+      **Example 2: Build artifact cache**
+      A CI pipeline caches build dependencies in a STACKIT bucket, reducing build times
+      while keeping artifacts isolated per project.
+
+      ## 📊 Shared Responsibility
+
+      | Responsibility | Platform Team | Application Team |
+      |---|:---:|:---:|
+      | Provision the Object Storage bucket | ✅ | ❌ |
+      | Provide S3-compatible access credentials | ✅ | ❌ |
+      | Choose bucket name and STACKIT project | ❌ | ✅ |
+      | Manage objects and data lifecycle | ❌ | ✅ |
+      | Secure and rotate application credentials | ❌ | ✅ |
+      EOT
+    )
   }
 
   version_spec = {
