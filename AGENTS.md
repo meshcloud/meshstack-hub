@@ -80,7 +80,7 @@ terraform {
 }
 ```
 
-<!-- scorecard-checks: variable_hub, variable_meshstack, variable_hub_const, bbd_draft, bbd_tags_forwarded -->
+<!-- scorecard-checks: variable_hub, variable_meshstack, bbd_draft, bbd_tags_forwarded -->
 ### Shared Variable Conventions
 
 The following variables must appear in every `meshstack_integration.tf`.
@@ -96,7 +96,7 @@ variable "hub" {
     git_ref   = optional(string, "main")
     bbd_draft = optional(bool, true)
   })
-  const       = true
+  # const       = true   # uncomment once OpenTofu ≥ 1.12 is available
   default     = {}
   description = <<-EOT
   `git_ref`: Hub release reference. Set to a tag (e.g. 'v1.2.3') or branch or commit sha of the meshstack-hub repo.
@@ -105,7 +105,7 @@ variable "hub" {
 }
 ```
 
-The `const = true` attribute (Terraform ≥ 1.15 / OpenTofu ≥ 1.12) marks `var.hub` for early static evaluation during `terraform init`, which is required to interpolate `var.hub.git_ref` inside module `source` strings. As a consequence, `variable "hub"` **must** satisfy all `const` constraints:
+The `const = true` attribute (Terraform ≥ 1.15 / OpenTofu ≥ 1.12) marks `var.hub` for early static evaluation during `terraform init`, which is required to interpolate `var.hub.git_ref` inside module `source` strings. Until OpenTofu ≥ 1.12 is available in all IaC runtimes, always keep `const = true` **commented out**. When uncommented, `variable "hub"` must satisfy all `const` constraints:
 - Its value must come from a `default`, `.tfvars` file, or `TF_VAR_*` environment variable — **never** from a resource, data source, or dynamic local.
 - It must **not** have `sensitive = true` or `ephemeral = true`.
 
@@ -407,7 +407,7 @@ Pass `module.<name>.building_block_definition.version_ref` **directly** — do n
 - [ ] `meshstack_integration.tf` declares `meshcloud/meshstack` in `required_providers`
 - [ ] `meshstack_integration.tf` uses `variable "hub" { type = object({git_ref = string}) }` and `variable "meshstack" { type = object({owning_workspace_identifier = string}) }`
 - [ ] `meshstack_integration.tf` references backplane via GitHub URL with `?ref=${var.hub.git_ref}` (e.g. `github.com/meshcloud/meshstack-hub//modules/<provider>/<service>/backplane?ref=${var.hub.git_ref}`) — never a hardcoded commit SHA or relative `./backplane` path
-- [ ] `variable "hub"` includes `const = true`
+- [ ] `variable "hub"` includes `# const = true` (commented out until OpenTofu ≥ 1.12)
 - [ ] `ref_name` uses `var.hub.git_ref` — no hardcoded `"main"`
 - [ ] `version_spec.draft` uses `var.hub.bbd_draft`
 - [ ] `metadata.tags = var.meshstack.tags` in `meshstack_building_block_definition` resource

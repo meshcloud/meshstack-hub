@@ -142,7 +142,7 @@ module "backplane" {
 }
 ```
 
-The `meshstack_integration.tf` must include `azure_location` variable (flat, provider-prefixed) for the UAMI placement. The resource group is derived from and managed by the backplane using `var.name`.
+The `meshstack_integration.tf` must include `azure_location` variable (flat, provider-prefixed) for all resource placement. The resource group is derived from and managed by the backplane using `var.name`.
 
 ## Checklist for Azure Backplanes
 
