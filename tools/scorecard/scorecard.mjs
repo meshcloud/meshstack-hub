@@ -630,17 +630,21 @@ function main() {
   const args = process.argv.slice(2);
   const filterCategory = args.find((a) => a.startsWith("--category="))?.split("=")[1];
   const filterProvider = args.find((a) => a.startsWith("--provider="))?.split("=")[1];
-  const filterModule = args.find((a) => a.startsWith("--module="))?.split("=")[1];
+  const filterModules = args.filter((a) => a.startsWith("--module=")).map((a) => a.split("=")[1]);
   const fixMode = args.includes("--fix");
 
   let modules = discoverModules();
   if (filterProvider) {
     modules = modules.filter((m) => m.provider === filterProvider);
   }
-  if (filterModule) {
-    modules = modules.filter((m) => m.id === filterModule);
+  if (filterModules.length > 0) {
+    const unknown = filterModules.filter((id) => !modules.some((m) => m.id === id));
+    for (const id of unknown) {
+      process.stderr.write(`Warning: module "${id}" not found — skipping.\n`);
+    }
+    modules = modules.filter((m) => filterModules.includes(m.id));
     if (modules.length === 0) {
-      process.stderr.write(`Error: module "${filterModule}" not found. Use <provider>/<service> format.\n`);
+      process.stderr.write(`Error: none of the specified modules were found. Use <provider>/<service> format.\n`);
       process.exit(1);
     }
   }

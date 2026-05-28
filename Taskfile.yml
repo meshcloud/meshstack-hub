@@ -1,0 +1,20 @@
+version: '3'
+
+vars:
+  BASE_REF: origin/main
+
+tasks:
+  scorecard:pr:
+    desc: "Run scorecard on modules changed vs BASE_REF (default: origin/main). Usage: task scorecard:pr BASE_REF=origin/my-branch"
+    cmds:
+      - bash tools/scorecard/pr-scorecard.sh --base={{.BASE_REF}}
+
+  scorecard:module:
+    desc: "Run scorecard for a single module. Usage: task scorecard:module MODULE=aws/budget-alert"
+    cmds:
+      - node tools/scorecard/scorecard.mjs --module={{.MODULE}} {{.CLI_ARGS}}
+
+  scorecard:all:
+    desc: Run scorecard across all modules
+    cmds:
+      - node tools/scorecard/scorecard.mjs {{.CLI_ARGS}}
