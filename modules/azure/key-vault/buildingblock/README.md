@@ -88,9 +88,9 @@ provider "azurerm" {
 
 | Name | Version |
 |------|---------|
-| <a name="requirement_azuread"></a> [azuread](#requirement\_azuread) | 3.1.0 |
-| <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) | 4.18.0 |
-| <a name="requirement_random"></a> [random](#requirement\_random) | 3.6.3 |
+| <a name="requirement_azuread"></a> [azuread](#requirement\_azuread) | ~> 3.1.0 |
+| <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) | ~> 4.18.0 |
+| <a name="requirement_random"></a> [random](#requirement\_random) | ~> 3.6.3 |
 
 ## Modules
 
@@ -100,22 +100,22 @@ No modules.
 
 | Name | Type |
 |------|------|
-| [azurerm_key_vault.key_vault](https://registry.terraform.io/providers/hashicorp/azurerm/4.18.0/docs/resources/key_vault) | resource |
-| [azurerm_private_dns_zone.key_vault_dns](https://registry.terraform.io/providers/hashicorp/azurerm/4.18.0/docs/resources/private_dns_zone) | resource |
-| [azurerm_private_dns_zone_virtual_network_link.key_vault_dns_link](https://registry.terraform.io/providers/hashicorp/azurerm/4.18.0/docs/resources/private_dns_zone_virtual_network_link) | resource |
-| [azurerm_private_endpoint.key_vault_pe](https://registry.terraform.io/providers/hashicorp/azurerm/4.18.0/docs/resources/private_endpoint) | resource |
-| [azurerm_resource_group.key_vault](https://registry.terraform.io/providers/hashicorp/azurerm/4.18.0/docs/resources/resource_group) | resource |
-| [azurerm_subnet.pe_subnet](https://registry.terraform.io/providers/hashicorp/azurerm/4.18.0/docs/resources/subnet) | resource |
-| [azurerm_virtual_network.vnet](https://registry.terraform.io/providers/hashicorp/azurerm/4.18.0/docs/resources/virtual_network) | resource |
-| [azurerm_virtual_network_peering.hub_to_key_vault](https://registry.terraform.io/providers/hashicorp/azurerm/4.18.0/docs/resources/virtual_network_peering) | resource |
-| [azurerm_virtual_network_peering.key_vault_to_hub](https://registry.terraform.io/providers/hashicorp/azurerm/4.18.0/docs/resources/virtual_network_peering) | resource |
-| [random_string.resource_code](https://registry.terraform.io/providers/hashicorp/random/3.6.3/docs/resources/string) | resource |
-| [azurerm_client_config.current](https://registry.terraform.io/providers/hashicorp/azurerm/4.18.0/docs/data-sources/client_config) | data source |
-| [azurerm_resource_group.hub_rg](https://registry.terraform.io/providers/hashicorp/azurerm/4.18.0/docs/data-sources/resource_group) | data source |
-| [azurerm_subnet.existing_subnet](https://registry.terraform.io/providers/hashicorp/azurerm/4.18.0/docs/data-sources/subnet) | data source |
-| [azurerm_subscription.current](https://registry.terraform.io/providers/hashicorp/azurerm/4.18.0/docs/data-sources/subscription) | data source |
-| [azurerm_virtual_network.existing_vnet](https://registry.terraform.io/providers/hashicorp/azurerm/4.18.0/docs/data-sources/virtual_network) | data source |
-| [azurerm_virtual_network.hub_vnet](https://registry.terraform.io/providers/hashicorp/azurerm/4.18.0/docs/data-sources/virtual_network) | data source |
+| [azurerm_key_vault.key_vault](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/key_vault) | resource |
+| [azurerm_private_dns_zone.key_vault_dns](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/private_dns_zone) | resource |
+| [azurerm_private_dns_zone_virtual_network_link.key_vault_dns_link](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/private_dns_zone_virtual_network_link) | resource |
+| [azurerm_private_endpoint.key_vault_pe](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/private_endpoint) | resource |
+| [azurerm_resource_group.key_vault](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/resource_group) | resource |
+| [azurerm_subnet.pe_subnet](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/subnet) | resource |
+| [azurerm_virtual_network.vnet](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/virtual_network) | resource |
+| [azurerm_virtual_network_peering.hub_to_key_vault](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/virtual_network_peering) | resource |
+| [azurerm_virtual_network_peering.key_vault_to_hub](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/virtual_network_peering) | resource |
+| [random_string.resource_code](https://registry.terraform.io/providers/hashicorp/random/latest/docs/resources/string) | resource |
+| [azurerm_client_config.current](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/client_config) | data source |
+| [azurerm_resource_group.hub_rg](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/resource_group) | data source |
+| [azurerm_subnet.existing_subnet](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/subnet) | data source |
+| [azurerm_subscription.current](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/subscription) | data source |
+| [azurerm_virtual_network.existing_vnet](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/virtual_network) | data source |
+| [azurerm_virtual_network.hub_vnet](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/virtual_network) | data source |
 
 ## Inputs
 
