@@ -14,7 +14,7 @@ run "env_audit_hub" {
   }
 
   assert {
-    condition     = length(setsubtract(toset(jsondecode(meshstack_building_block_v2.this.status.outputs["apply_env_keys"].value_string)), toset(jsondecode(file("${path.root}/allowed_env_keys.expected.json"))))) == 0
+    condition     = length(setsubtract(toset(jsondecode(meshstack_building_block_v2.this.status.outputs["apply_env_keys"].value_string)), toset(jsondecode(file("${path.root}/apply_allowed_env_keys.expected.json"))))) == 0
     error_message = "Unexpected apply-time environment variables detected: ${meshstack_building_block_v2.this.status.outputs["apply_env_keys"].value_string}"
   }
 }
