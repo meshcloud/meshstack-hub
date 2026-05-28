@@ -728,17 +728,42 @@ function main() {
   }
   lines.push("");
 
+  // ─── Status Banner ───────────────────────────────────────────────────────
+  const scoredModules = results.filter((r) => r.total > 0);
+  const allPassing = scoredModules.length > 0 && scoredModules.every((r) => r.score === 100);
+  if (allPassing) {
+    lines.push("> ✅ **All checks passing!** This module meets all scorecard criteria.");
+  } else {
+    const failingCount = scoredModules.filter((r) => r.score < 100).length;
+    const noun = failingCount === 1 ? "1 module has" : `${failingCount} modules have`;
+    lines.push(`> ⚠️ **${noun} failing checks** — failing categories are expanded below.`);
+  }
+  lines.push("");
+
   for (const [catId, cat] of Object.entries(categoriesToRender)) {
     const catDetectors = detectors.filter((d) => d.category === catId);
     const applicableModules = results.filter((r) => r.categoryResults[catId]?.applicable);
 
-    lines.push(`## ${cat.name}`);
+    const categoryHasFailures = applicableModules.some((r) =>
+      r.categoryResults[catId].checks.some((c) => c.result.pass === false)
+    );
+    const openAttr = applicableModules.length > 0 && categoryHasFailures ? " open" : "";
+    const statusLabel = applicableModules.length === 0
+      ? "not applicable"
+      : categoryHasFailures
+        ? "some checks failing"
+        : "✅ all passing";
+
+    lines.push(`<details${openAttr}>`);
+    lines.push(`<summary><strong>${cat.name}</strong> — ${statusLabel}</summary>`);
     lines.push("");
     lines.push(`*${cat.description}* — applies to **${applicableModules.length}** modules`);
     lines.push("");
 
     if (applicableModules.length === 0) {
       lines.push("No applicable modules.");
+      lines.push("");
+      lines.push("</details>");
       lines.push("");
       continue;
     }
@@ -761,8 +786,7 @@ function main() {
     }
     lines.push("");
 
-    // Per-criterion summary omitted for single-module mode (redundant with the table row above)
-    lines.push(`### ${cat.name} — Summary`);
+    lines.push(`#### ${cat.name} — Summary`);
     lines.push("");
     lines.push("| Emoji | Criterion | Coverage | Status |");
     lines.push("|-------|-----------|----------|--------|");
@@ -776,6 +800,8 @@ function main() {
         `| ${d.emoji} | ${d.name} | **${passing}/${applicableModules.length}** | ${bar} ${pct}% |`
       );
     }
+    lines.push("");
+    lines.push("</details>");
     lines.push("");
   }
 
