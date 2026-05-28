@@ -18,10 +18,9 @@ support action variables at all. See the sub-module README for details.
 
 | Name | Version |
 |------|---------|
-| <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.4.0 |
 | <a name="requirement_external"></a> [external](#requirement\_external) | ~> 2.3.0 |
 | <a name="requirement_forgejo"></a> [forgejo](#requirement\_forgejo) | ~> 1.3.0 |
-| <a name="requirement_random"></a> [random](#requirement\_random) | 3.8.1 |
+| <a name="requirement_random"></a> [random](#requirement\_random) | ~> 3.8.0 |
 | <a name="requirement_restapi"></a> [restapi](#requirement\_restapi) | ~> 3.0.0 |
 
 ## Modules
@@ -35,7 +34,7 @@ support action variables at all. See the sub-module README for details.
 | Name | Type |
 |------|------|
 | [forgejo_repository.this](https://registry.terraform.io/providers/svalabs/forgejo/latest/docs/resources/repository) | resource |
-| [random_string.team_suffix](https://registry.terraform.io/providers/hashicorp/random/3.8.1/docs/resources/string) | resource |
+| [random_string.team_suffix](https://registry.terraform.io/providers/hashicorp/random/latest/docs/resources/string) | resource |
 | [restapi_object.team](https://registry.terraform.io/providers/Mastercard/restapi/latest/docs/resources/object) | resource |
 | [terraform_data.team_member](https://registry.terraform.io/providers/hashicorp/terraform/latest/docs/resources/data) | resource |
 | [terraform_data.team_repo](https://registry.terraform.io/providers/hashicorp/terraform/latest/docs/resources/data) | resource |
