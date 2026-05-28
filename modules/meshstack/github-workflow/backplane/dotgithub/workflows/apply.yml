@@ -1,0 +1,42 @@
+name: ${workflow_name}
+
+on:
+  workflow_dispatch:
+    inputs:
+      buildingBlockRun:
+        description: "Building Block Run Object"
+        required: true
+
+permissions:
+  contents: read
+
+jobs:
+  validate-input:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Show run metadata
+        run: |
+          echo "event_name=$${{ github.event_name }}"
+          echo "repository=$${{ github.repository }}"
+          echo "actor=$${{ github.actor }}"
+
+      - name: Validate user input
+        run: |
+          echo "buildingBlockRun provided=$${{ inputs.buildingBlockRun != '' }}"
+
+  simulate-apply:
+    needs: validate-input
+    runs-on: ubuntu-latest
+    steps:
+      - name: Simulate automation steps
+        run: |
+          echo "No cloud resources are provisioned by this reference workflow."
+          echo "Use this job to add your real provisioning logic later."
+
+      - name: Publish summary
+        run: |
+          {
+            echo "## meshStack GitHub Workflow Reference"
+            echo "- Behavior: APPLY"
+            echo "- Run URL: $${{ github.server_url }}/$${{ github.repository }}/actions/runs/$${{ github.run_id }}"
+          } >> "$GITHUB_STEP_SUMMARY"
