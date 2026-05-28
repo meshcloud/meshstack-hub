@@ -48,8 +48,7 @@ module "git_repo_backplane" {
 
 | Name | Version |
 |------|---------|
-| <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.4.0 |
-| <a name="requirement_http"></a> [http](#requirement\_http) | ~> 3.4 |
+| <a name="requirement_http"></a> [http](#requirement\_http) | ~> 3.4.0 |
 
 ## Modules
 
