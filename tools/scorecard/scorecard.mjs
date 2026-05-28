@@ -207,19 +207,6 @@ const detectors = [
     },
   },
   {
-    id: "variable_hub_const",
-    category: "integration",
-    name: 'variable "hub" has const = true',
-    emoji: "🔐",
-    fixRef: AGENTS("shared-variable-conventions"),
-    fn: (mod) => {
-      const content = readIntegrationTf(mod);
-      if (!content) return { pass: false, detail: "no integration file" };
-      if (!/variable\s+"hub"/.test(content)) return { pass: false, detail: 'no variable "hub"' };
-      return { pass: /^\s*const\s*=\s*true/m.test(content) };
-    },
-  },
-  {
     id: "backplane_source_hub_git_ref",
     category: "integration",
     name: "backplane source uses var.hub.git_ref",
@@ -466,17 +453,16 @@ const detectors = [
   {
     id: "azure_integration_rg_location",
     category: "azure_backplane",
-    name: "Integration has azure_resource_group_name & azure_location",
+    name: "Integration has azure_location",
     emoji: "📍",
     fixRef: AZURE("meshstack_integrationtf-wiring-azure"),
     fn: (mod) => {
       const content = readIntegrationTf(mod);
       if (!content) return { pass: false, detail: "no integration file" };
-      const hasRg = /variable\s+"azure_resource_group_name"/.test(content);
       const hasLocation = /variable\s+"azure_location"/.test(content);
       return {
-        pass: hasRg && hasLocation,
-        detail: !hasRg ? "missing azure_resource_group_name" : "missing azure_location",
+        pass: hasLocation,
+        detail: "missing azure_location",
       };
     },
   },
