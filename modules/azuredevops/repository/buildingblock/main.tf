@@ -5,6 +5,7 @@ data "azuredevops_project" "project" {
 resource "azuredevops_git_repository" "main" {
   project_id = data.azuredevops_project.project.id
   name       = var.repository_name
+  default_branch = "refs/heads/main"
 
   initialization {
     init_type = var.init_type
