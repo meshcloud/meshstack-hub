@@ -18,13 +18,6 @@ variable "network_area_id" {
   description = "STACKIT network area ID of the platform hub. The spoke network will be attached to this area."
 }
 
-variable "service_account_key_json" {
-  type        = string
-  nullable    = false
-  sensitive   = true
-  description = "Service account key JSON for authenticating the STACKIT provider."
-}
-
 variable "firewall_next_hop_ip" {
   type        = string
   default     = null
