@@ -35,7 +35,7 @@ resource "meshstack_building_block_v2" "this" {
       flag              = { value_bool = true }
       num               = { value_int = 1 }
       text              = { value_string = "Hello, World!" }
-      sensitive_text    = { value_string = "Hidden value" }
+      sensitive_text    = { value_string_sensitive = "Hidden value" }
       single_select     = { value_single_select = "single1" }
       multi_select      = { value_multi_select = ["multi1", "multi2"] }
       multi_select_json = { value_multi_select = ["multi2", "multi1"] }
