@@ -146,22 +146,32 @@ resource "meshstack_building_block_definition" "this" {
       service_account_key_json = {
         display_name    = "Service Account Key JSON"
         description     = "Service account key JSON for authenticating the STACKIT provider."
-        type            = "STRING"
+        type            = "FILE"
         assignment_type = "STATIC"
         sensitive = {
           argument = {
-            secret_value = module.backplane.service_account_key_json
+            secret_value   = "data:application/json;base64,${base64encode(module.backplane.service_account_key_json)}"
+            secret_version = nonsensitive(sha256(module.backplane.service_account_key_json))
           }
         }
       }
 
-      firewall_next_hop_ip = {
-        display_name    = "Firewall Next-Hop IP"
-        description     = "IPv4 address of the firewall next-hop. Null if no firewall is configured."
+      STACKIT_SERVICE_ACCOUNT_KEY_PATH = {
+        display_name    = "STACKIT Credentials Path"
+        description     = "Path to the STACKIT service account credentials file."
         type            = "STRING"
         assignment_type = "STATIC"
-        argument        = jsonencode(var.firewall_next_hop_ip)
+        is_environment  = true
+        argument        = jsonencode("./service_account_key_json")
       }
+
+      # firewall_next_hop_ip = {
+      #   display_name    = "Firewall Next-Hop IP"
+      #   description     = "IPv4 address of the firewall next-hop. Null if no firewall is configured."
+      #   type            = "STRING"
+      #   assignment_type = "STATIC"
+      #   argument        = jsonencode(var.firewall_next_hop_ip)
+      # }
 
       network_prefix_length = {
         display_name                   = "Network Prefix Length"
