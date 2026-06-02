@@ -161,7 +161,7 @@ The module automatically:
 
 | Name | Version |
 |------|---------|
-| <a name="requirement_meshstack"></a> [meshstack](#requirement\_meshstack) | ~> 0.20.0 |
+| <a name="requirement_meshstack"></a> [meshstack](#requirement\_meshstack) | ~> 0.21.0 |
 | <a name="requirement_oci"></a> [oci](#requirement\_oci) | 7.32.0 |
 
 ## Modules

@@ -14,7 +14,7 @@ This building block creates a dev and prod meshStack project pair, each with a d
 
 | Name | Version |
 |------|---------|
-| <a name="requirement_meshstack"></a> [meshstack](#requirement\_meshstack) | ~>0.20.0 |
+| <a name="requirement_meshstack"></a> [meshstack](#requirement\_meshstack) | ~> 0.21.0 |
 | <a name="requirement_random"></a> [random](#requirement\_random) | 3.8.1 |
 
 ## Modules
