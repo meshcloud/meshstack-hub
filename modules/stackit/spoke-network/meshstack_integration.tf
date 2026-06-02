@@ -143,16 +143,12 @@ resource "meshstack_building_block_definition" "this" {
         argument        = jsonencode(var.network_area_id)
       }
 
-      service_account_key_json = {
-        display_name    = "Service Account Key JSON"
-        description     = "Service account key for the spoke-network backplane."
+      service_account_email = {
+        display_name    = "Service Account Email"
+        description     = "Email of the STACKIT service account. The runtime provides a short-lived token via WIF."
         type            = "STRING"
         assignment_type = "STATIC"
-        sensitive = {
-          argument = {
-            secret_value = module.backplane.service_account_key_json
-          }
-        }
+        argument        = jsonencode(module.backplane.service_account_email)
       }
 
       firewall_next_hop_ip = {
