@@ -53,9 +53,9 @@ const CATEGORIES = {
 // Each detector returns { pass: boolean, detail?: string }
 
 const AGENTS     = (section) => ({ file: "AGENTS.md", section });
-const AZURE      = (section) => ({ file: ".agents/skills/azure-backplane.md", section });
-const BBD_README = (section) => ({ file: ".agents/skills/bbd-readme.md", section });
-const E2E        = (section) => ({ file: ".claude/skills/write-e2e-test/SKILL.md", section });
+const AZURE      = (section) => ({ file: ".agents/references/azure-backplane.md", section });
+const BBD_README = (section) => ({ file: ".agents/references/bbd-readme.md", section });
+const E2E        = (section) => ({ file: ".agents/skills/write-e2e-test/SKILL.md", section });
 
 const detectors = [
   // ─── Core Structure ─────────────────────────────────────────────────────
