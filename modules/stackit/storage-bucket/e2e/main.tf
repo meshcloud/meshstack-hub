@@ -1,3 +1,14 @@
+variable "stackit_service_account_key" {
+  type      = string
+  nullable  = false
+  sensitive = true
+}
+
+provider "stackit" {
+  service_account_key = var.stackit_service_account_key
+  experiments         = ["iam"]
+}
+
 variable "test_context" {
   type = object({
     hub_git_ref = string
