@@ -55,6 +55,7 @@ const CATEGORIES = {
 const AGENTS     = (section) => ({ file: "AGENTS.md", section });
 const AZURE      = (section) => ({ file: ".agents/skills/azure-backplane.md", section });
 const BBD_README = (section) => ({ file: ".agents/skills/bbd-readme.md", section });
+const E2E        = (section) => ({ file: ".claude/skills/write-e2e-test/SKILL.md", section });
 
 const detectors = [
   // ─── Core Structure ─────────────────────────────────────────────────────
@@ -483,7 +484,7 @@ const detectors = [
     category: "testing",
     name: "e2e/ test directory exists",
     emoji: "🧪",
-    fixRef: AGENTS("end-to-end-testing"),
+    fixRef: E2E("structure"),
     fn: (mod) => ({
       pass: existsSync(join(mod.path, "e2e")),
     }),
@@ -493,7 +494,7 @@ const detectors = [
     category: "testing",
     name: "e2e/ contains .tftest.hcl files",
     emoji: "✅",
-    fixRef: AGENTS("e2etests-tftesthcl-conventions"),
+    fixRef: E2E("e2etests-tftesthcl-conventions"),
     fn: (mod) => {
       const e2eDir = join(mod.path, "e2e", "tests");
       if (!existsSync(e2eDir)) return { pass: false };
