@@ -78,7 +78,7 @@ conventions, see the reference files in `.agents/references/`.
 ### Scorecard fix notes
 
 - **`logo` check**: requires `buildingblock/logo.png` (256×256 px, flat-design, white-background icon). Generate with an AI image tool if missing, then resize and optimise with `pngquant`.
-- **`e2e_tests` / `e2e_tftest`**: creating a full e2e test is a larger task — check with the module owner before adding. See `.agents/skills/write-e2e-test/SKILL.md`.
+- **`e2e_tests` / `e2e_tftest`**: creating a full e2e test is a larger task — check with the module owner before adding. See `.agents/skills/e2e-test/SKILL.md`.
 - **Never** fix a check by editing the check logic in `scorecard.mjs` — fix the module.
 
 ---
@@ -92,4 +92,4 @@ conventions, see the reference files in `.agents/references/`.
 | AWS backplane identity | `.agents/references/aws-backplane.md` |
 | Azure backplane identity | `.agents/references/azure-backplane.md` |
 | STACKIT backplane identity | `.agents/references/stackit-backplane.md` |
-| E2E tests | `.agents/skills/write-e2e-test/SKILL.md` |
+| E2E tests | `.agents/skills/e2e-test/SKILL.md` |
