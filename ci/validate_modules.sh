@@ -115,16 +115,16 @@ fi
 
 modules_glob="$modules_path/*/*/buildingblock"
 
-for readme_file in $(find $modules_glob -name 'README.md'); do
+for readme_file in $(find $modules_glob -name 'README.md' -not -path '*/.terraform/*'); do
 	check_readme_format "$readme_file"
 done
 
-for png_file in $(find $modules_glob -name '*.png'); do
+for png_file in $(find $modules_glob -name '*.png' -not -path '*/.terraform/*'); do
 	check_png_naming "$png_file"
 	check_png_minimization "$png_file"
 done
 
-for buildingblock_dir in $(find $modules_glob -type d -name 'buildingblock'); do
+for buildingblock_dir in $(find $modules_glob -type d -name 'buildingblock' -not -path '*/.terraform/*'); do
 	check_terraform_files "$buildingblock_dir"
 done
 
