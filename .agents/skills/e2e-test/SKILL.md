@@ -1,5 +1,5 @@
 ---
-name: write-e2e-test
+name: e2e-test
 description: >
   Write, run, and debug hub e2e tests for meshstack-hub modules. Use when asked to add, fix, or run
   an end-to-end smoke test for any building block module. Covers structure, test_context wiring,
