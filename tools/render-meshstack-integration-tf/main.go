@@ -14,11 +14,25 @@ import (
 	"text/template"
 
 	"github.com/hashicorp/hcl/v2"
+	"github.com/hashicorp/hcl/v2/hclsyntax"
 	"github.com/hashicorp/hcl/v2/hclwrite"
+	"github.com/zclconf/go-cty/cty"
 )
 
 //go:embed templates
 var templateFiles embed.FS
+
+type providerConfig struct {
+	Name  string
+	Alias string
+}
+
+func (p providerConfig) Key() string {
+	if p.Alias == "" {
+		return p.Name
+	}
+	return fmt.Sprintf("%s.%s", p.Name, p.Alias)
+}
 
 func main() {
 	if len(os.Args) != 2 {
@@ -40,59 +54,203 @@ func render(filename string, w io.Writer) error {
 		return diags
 	}
 
-	// search for the Terraform and provider blocks
-	var existingProviders []string
-	var requiredProviders []string
-	for _, block := range file.Body().Blocks() {
-		switch block.Type() {
-		case "terraform":
-			for _, terraformBlock := range block.Body().Blocks() {
-				if terraformBlock.Type() == "required_providers" {
-					if len(requiredProviders) > 0 {
-						return fmt.Errorf("multiple terraform/required_providers blocks found, already have %s", requiredProviders)
-					}
-					requiredProviders = slices.Collect(maps.Keys(terraformBlock.Body().Attributes()))
-				}
-			}
-		case "provider":
-			providerName := block.Labels()[0]
-			log.Printf("Found provider '%s'\n", providerName)
-			existingProviders = append(existingProviders, providerName)
-		}
+	requiredProviders, err := findRequiredProviders(file, filename)
+	if err != nil {
+		return err
 	}
-	log.Printf("Found existing providers: %s\n", existingProviders)
-	log.Printf("Found required providers: %s\n", requiredProviders)
+	existingProviders := findExistingProviders(file, filename)
 
-	for _, providerName := range requiredProviders {
-		if slices.Contains(existingProviders, providerName) {
-			log.Printf("Skip rendering provider '%s', already defined in input\n", providerName)
+	log.Printf("Found existing providers: %v\n", existingProviderKeys(existingProviders))
+	log.Printf("Found required providers: %v\n", providerConfigKeys(requiredProviders))
+
+	for _, provider := range requiredProviders {
+		if existingProviders[provider.Key()] {
+			log.Printf("Skip rendering provider '%s', already defined in input\n", provider.Key())
 			continue
 		}
-		providerFile, err := renderProviderBlockFromTemplate(providerName)
+		providerFile, err := renderProviderBlockFromTemplate(provider)
 		if err != nil {
 			return err
 		}
 		file.Body().AppendNewline()
 		file.Body().AppendUnstructuredTokens(providerFile.Body().BuildTokens(nil))
+		existingProviders[provider.Key()] = true
 	}
 
 	_, err = file.WriteTo(w)
 	return err
 }
 
-func renderProviderBlockFromTemplate(providerName string) (*hclwrite.File, error) {
-	tmpl, err := loadProviderTemplate(providerName)
+func findRequiredProviders(file *hclwrite.File, filename string) ([]providerConfig, error) {
+	var requiredProviders []providerConfig
+	for _, block := range file.Body().Blocks() {
+		if block.Type() != "terraform" {
+			continue
+		}
+		for _, terraformBlock := range block.Body().Blocks() {
+			if terraformBlock.Type() != "required_providers" {
+				continue
+			}
+			if len(requiredProviders) > 0 {
+				return nil, fmt.Errorf("multiple terraform/required_providers blocks found, already have %s", providerConfigKeys(requiredProviders))
+			}
+			parsedRequiredProviders, err := parseRequiredProviders(terraformBlock, filename)
+			if err != nil {
+				return nil, err
+			}
+			requiredProviders = parsedRequiredProviders
+		}
+	}
+	return requiredProviders, nil
+}
+
+func parseRequiredProviders(requiredProvidersBlock *hclwrite.Block, filename string) ([]providerConfig, error) {
+	attrs := requiredProvidersBlock.Body().Attributes()
+	providerNames := slices.Collect(maps.Keys(attrs))
+	slices.Sort(providerNames)
+
+	providers := make([]providerConfig, 0, len(providerNames))
+	for _, providerName := range providerNames {
+		providers = append(providers, providerConfig{Name: providerName})
+
+		providerAliases, err := parseProviderAliases(attrs[providerName], providerName, filename)
+		if err != nil {
+			return nil, err
+		}
+		for _, providerAlias := range providerAliases {
+			providers = append(providers, providerConfig{Name: providerName, Alias: providerAlias})
+		}
+	}
+	return providers, nil
+}
+
+func parseProviderAliases(attribute *hclwrite.Attribute, providerName string, filename string) ([]string, error) {
+	expr, diags := hclsyntax.ParseExpression(attribute.Expr().BuildTokens(nil).Bytes(), filename, hcl.Pos{Line: 1, Column: 1})
+	if diags.HasErrors() {
+		return nil, diags
+	}
+
+	objectExpr, ok := expr.(*hclsyntax.ObjectConsExpr)
+	if !ok {
+		return nil, nil
+	}
+
+	for _, item := range objectExpr.Items {
+		key, ok := expressionAsString(item.KeyExpr)
+		if !ok || key != "configuration_aliases" {
+			continue
+		}
+		tupleExpr, ok := item.ValueExpr.(*hclsyntax.TupleConsExpr)
+		if !ok {
+			return nil, fmt.Errorf("provider %q has non-list configuration_aliases", providerName)
+		}
+
+		aliases := make([]string, 0, len(tupleExpr.Exprs))
+		for _, aliasExpr := range tupleExpr.Exprs {
+			alias, ok := parseProviderAliasExpression(aliasExpr, providerName)
+			if !ok {
+				log.Printf("Skipping unsupported configuration_aliases entry for provider '%s': %T\n", providerName, aliasExpr)
+				continue
+			}
+			aliases = append(aliases, alias)
+		}
+		return aliases, nil
+	}
+
+	return nil, nil
+}
+
+func parseProviderAliasExpression(expr hclsyntax.Expression, providerName string) (string, bool) {
+	scopeTraversalExpr, ok := expr.(*hclsyntax.ScopeTraversalExpr)
+	if !ok {
+		return "", false
+	}
+	traversal := scopeTraversalExpr.Traversal
+	if len(traversal) != 2 {
+		return "", false
+	}
+
+	root, ok := traversal[0].(hcl.TraverseRoot)
+	if !ok || root.Name != providerName {
+		return "", false
+	}
+	alias, ok := traversal[1].(hcl.TraverseAttr)
+	if !ok {
+		return "", false
+	}
+	return alias.Name, true
+}
+
+func expressionAsString(expr hclsyntax.Expression) (string, bool) {
+	if keyword := hcl.ExprAsKeyword(expr); keyword != "" {
+		return keyword, true
+	}
+	value, diags := expr.Value(nil)
+	if diags.HasErrors() || value.Type() != cty.String {
+		return "", false
+	}
+	return value.AsString(), true
+}
+
+func findExistingProviders(file *hclwrite.File, filename string) map[string]bool {
+	existingProviders := map[string]bool{}
+	for _, block := range file.Body().Blocks() {
+		if block.Type() != "provider" {
+			continue
+		}
+
+		providerName := block.Labels()[0]
+		providerAlias := ""
+		if aliasAttribute := block.Body().GetAttribute("alias"); aliasAttribute != nil {
+			if alias, ok := parseStringAttribute(aliasAttribute, filename); ok {
+				providerAlias = alias
+			}
+		}
+
+		provider := providerConfig{Name: providerName, Alias: providerAlias}
+		log.Printf("Found provider '%s'\n", provider.Key())
+		existingProviders[provider.Key()] = true
+	}
+	return existingProviders
+}
+
+func parseStringAttribute(attribute *hclwrite.Attribute, filename string) (string, bool) {
+	expr, diags := hclsyntax.ParseExpression(attribute.Expr().BuildTokens(nil).Bytes(), filename, hcl.Pos{Line: 1, Column: 1})
+	if diags.HasErrors() {
+		return "", false
+	}
+	value, diags := expr.Value(nil)
+	if diags.HasErrors() || value.Type() != cty.String {
+		return "", false
+	}
+	return value.AsString(), true
+}
+
+func providerConfigKeys(providers []providerConfig) []string {
+	keys := make([]string, 0, len(providers))
+	for _, provider := range providers {
+		keys = append(keys, provider.Key())
+	}
+	slices.Sort(keys)
+	return keys
+}
+
+func existingProviderKeys(providers map[string]bool) []string {
+	keys := slices.Collect(maps.Keys(providers))
+	slices.Sort(keys)
+	return keys
+}
+
+func renderProviderBlockFromTemplate(provider providerConfig) (*hclwrite.File, error) {
+	tmpl, err := loadProviderTemplate(provider.Name)
 	if err != nil {
 		return nil, err
 	}
 	var buf bytes.Buffer
-	renderContext := struct {
-		Name string
-	}{providerName}
-	if err := tmpl.Execute(&buf, renderContext); err != nil {
+	if err := tmpl.Execute(&buf, provider); err != nil {
 		return nil, err
 	}
-	file, diags := hclwrite.ParseConfig(buf.Bytes(), fmt.Sprintf("%s.tmpl.tf", providerName), hcl.Pos{Line: 1, Column: 1})
+	file, diags := hclwrite.ParseConfig(buf.Bytes(), fmt.Sprintf("%s.tmpl.tf", provider.Name), hcl.Pos{Line: 1, Column: 1})
 	if diags.HasErrors() {
 		return nil, diags
 	}
