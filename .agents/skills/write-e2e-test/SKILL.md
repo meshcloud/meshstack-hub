@@ -17,6 +17,7 @@ For the runner architecture, commands, and conventions, see
 
 ---
 
+<!-- scorecard-checks: e2e_tests -->
 ## Structure
 
 ```
@@ -135,6 +136,7 @@ target_ref = {
 
 ---
 
+<!-- scorecard-checks: e2e_tftest -->
 ## `e2e/tests/*.tftest.hcl` conventions
 
 - Name the file `<cloud>_<service>_hub.tftest.hcl` (e.g. `building_block_noop_hub.tftest.hcl`).

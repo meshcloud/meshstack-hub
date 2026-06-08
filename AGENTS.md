@@ -203,7 +203,7 @@ See [.agents/skills/azure-backplane.md](.agents/skills/azure-backplane.md) for t
 
 ---
 
-<!-- scorecard-checks: readme_frontmatter, logo, app_team_readme, bbd_readme, bbd_readme_no_leading_heading, bbd_readme_shared_responsibility -->
+<!-- scorecard-checks: readme_frontmatter, logo, app_team_readme, bbd_readme, bbd_readme_no_leading_heading, bbd_readme_shared_responsibility, no_documentation_md_output -->
 ## Documentation Requirements
 
 See [.agents/skills/bbd-readme.md](.agents/skills/bbd-readme.md) for the complete BBD readme specification, template, and checklist.

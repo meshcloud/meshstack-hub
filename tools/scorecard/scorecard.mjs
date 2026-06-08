@@ -52,11 +52,6 @@ const CATEGORIES = {
 // ─── Detector functions ─────────────────────────────────────────────────────
 // Each detector returns { pass: boolean, detail?: string }
 
-const AGENTS     = (section) => ({ file: "AGENTS.md", section });
-const AZURE      = (section) => ({ file: ".agents/references/azure-backplane.md", section });
-const BBD_README = (section) => ({ file: ".agents/references/bbd-readme.md", section });
-const E2E        = (section) => ({ file: ".agents/skills/write-e2e-test/SKILL.md", section });
-
 const detectors = [
   // ─── Core Structure ─────────────────────────────────────────────────────
   {
@@ -64,7 +59,6 @@ const detectors = [
     category: "core",
     name: "buildingblock/ directory exists",
     emoji: "📦",
-    fixRef: AGENTS("module-structure"),
     fn: (mod) => ({
       pass: existsSync(join(mod.path, "buildingblock")),
     }),
@@ -74,7 +68,6 @@ const detectors = [
     category: "core",
     name: "meshstack_integration.tf present",
     emoji: "🔗",
-    fixRef: AGENTS("meshstack_integrationtf-conventions"),
     fn: (mod) => ({
       pass: existsSync(join(mod.path, "meshstack_integration.tf")),
     }),
@@ -84,7 +77,6 @@ const detectors = [
     category: "core",
     name: "buildingblock/APP_TEAM_README.md present (no-integration fallback)",
     emoji: "📋",
-    fixRef: AGENTS("documentation-requirements"),
     fn: (mod) => {
       // Modules with a meshstack_integration.tf carry their readme inline — no fallback file needed.
       if (existsSync(join(mod.path, "meshstack_integration.tf"))) {
@@ -101,7 +93,6 @@ const detectors = [
     category: "core",
     name: "buildingblock/README.md with YAML front-matter",
     emoji: "📝",
-    fixRef: AGENTS("documentation-requirements"),
     fn: (mod) => {
       const readmePath = join(mod.path, "buildingblock", "README.md");
       if (!existsSync(readmePath)) return { pass: false, detail: "missing" };
@@ -121,7 +112,6 @@ const detectors = [
     category: "core",
     name: "buildingblock/logo.png included",
     emoji: "🖼️",
-    fixRef: AGENTS("documentation-requirements"),
     fn: (mod) => ({
       pass: existsSync(join(mod.path, "buildingblock", "logo.png")),
     }),
@@ -131,7 +121,6 @@ const detectors = [
     category: "core",
     name: "buildingblock/versions.tf present",
     emoji: "📌",
-    fixRef: AGENTS("module-structure"),
     fn: (mod) => ({
       pass: existsSync(join(mod.path, "buildingblock", "versions.tf")),
     }),
@@ -141,7 +130,6 @@ const detectors = [
     category: "core",
     name: "Provider versions pinned (~>)",
     emoji: "🔒",
-    fixRef: AGENTS("variable-conventions"),
     fn: (mod) => {
       const versionsPath = join(mod.path, "buildingblock", "versions.tf");
       if (!existsSync(versionsPath)) return { pass: false, detail: "no versions.tf" };
@@ -160,7 +148,6 @@ const detectors = [
     category: "integration",
     name: 'variable "hub" in integration',
     emoji: "🏷️",
-    fixRef: AGENTS("shared-variable-conventions"),
     fn: (mod) => {
       const content = readIntegrationTf(mod);
       if (!content) return { pass: false, detail: "no integration file" };
@@ -172,7 +159,6 @@ const detectors = [
     category: "integration",
     name: 'variable "meshstack" in integration',
     emoji: "🏢",
-    fixRef: AGENTS("shared-variable-conventions"),
     fn: (mod) => {
       const content = readIntegrationTf(mod);
       if (!content) return { pass: false, detail: "no integration file" };
@@ -184,7 +170,6 @@ const detectors = [
     category: "integration",
     name: "building_block_definition output exposed",
     emoji: "📤",
-    fixRef: AGENTS("exposing-building-block-definition-references"),
     fn: (mod) => {
       const content = readIntegrationTf(mod);
       if (!content) return { pass: false, detail: "no integration file" };
@@ -198,7 +183,6 @@ const detectors = [
     category: "integration",
     name: "meshcloud/meshstack in required_providers",
     emoji: "🔌",
-    fixRef: AGENTS("required-providers"),
     fn: (mod) => {
       const content = readIntegrationTf(mod);
       if (!content) return { pass: false, detail: "no integration file" };
@@ -212,7 +196,6 @@ const detectors = [
     category: "integration",
     name: "backplane source uses var.hub.git_ref",
     emoji: "📎",
-    fixRef: AGENTS("meshstack_integrationtf-conventions"),
     fn: (mod) => {
       const content = readIntegrationTf(mod);
       if (!content) return { pass: false, detail: "no integration file" };
@@ -229,7 +212,6 @@ const detectors = [
     category: "integration",
     name: "ref_name uses var.hub.git_ref",
     emoji: "🔀",
-    fixRef: AGENTS("meshstack_integrationtf-conventions"),
     fn: (mod) => {
       const content = readIntegrationTf(mod);
       if (!content) return { pass: false, detail: "no integration file" };
@@ -243,7 +225,6 @@ const detectors = [
     category: "integration",
     name: "version_spec.draft uses var.hub.bbd_draft",
     emoji: "📋",
-    fixRef: AGENTS("shared-variable-conventions"),
     fn: (mod) => {
       const content = readIntegrationTf(mod);
       if (!content) return { pass: false, detail: "no integration file" };
@@ -255,7 +236,6 @@ const detectors = [
     category: "integration",
     name: "BBD metadata.tags forwards var.meshstack.tags",
     emoji: "🏷️",
-    fixRef: AGENTS("shared-variable-conventions"),
     fn: (mod) => {
       const content = readIntegrationTf(mod);
       if (!content) return { pass: false, detail: "no integration file" };
@@ -267,7 +247,6 @@ const detectors = [
     category: "integration",
     name: "BBD readme field present",
     emoji: "📖",
-    fixRef: BBD_README("standard-pattern"),
     fn: (mod) => {
       const content = readIntegrationTf(mod);
       if (!content) return { pass: false, detail: "no integration file" };
@@ -279,7 +258,6 @@ const detectors = [
     category: "integration",
     name: "BBD readme starts with plain-text description (no heading)",
     emoji: "📝",
-    fixRef: BBD_README("description"),
     fn: (mod) => {
       const content = readIntegrationTf(mod);
       if (!content) return { pass: false, detail: "no integration file" };
@@ -297,7 +275,6 @@ const detectors = [
     category: "integration",
     name: "BBD readme has shared responsibility table (✅/❌)",
     emoji: "📊",
-    fixRef: BBD_README("shared-responsibility-table"),
     fn: (mod) => {
       const content = readIntegrationTf(mod);
       if (!content) return { pass: false, detail: "no integration file" };
@@ -317,7 +294,6 @@ const detectors = [
     category: "integration",
     name: "No documentation_md output in backplane",
     emoji: "🚫",
-    fixRef: AGENTS("documentation-requirements"),
     fn: (mod) => {
       const allTf = readAllBackplaneTf(mod);
       if (!allTf) return { pass: true, detail: "no backplane" };
@@ -334,7 +310,6 @@ const detectors = [
     category: "azure_backplane",
     name: "Uses azurerm_user_assigned_identity",
     emoji: "🪪",
-    fixRef: AZURE("implementation-pattern"),
     fn: (mod) => {
       const mainTf = readBackplaneTf(mod);
       if (!mainTf) return { pass: false, detail: "no backplane main.tf" };
@@ -348,7 +323,6 @@ const detectors = [
     category: "azure_backplane",
     name: "No azuread_application resources",
     emoji: "🚫",
-    fixRef: AZURE("what-to-avoid"),
     fn: (mod) => {
       const allTf = readAllBackplaneTf(mod);
       if (!allTf) return { pass: true, detail: "no backplane tf files" };
@@ -363,7 +337,6 @@ const detectors = [
     category: "azure_backplane",
     name: "No azuread_service_principal resources",
     emoji: "🚫",
-    fixRef: AZURE("what-to-avoid"),
     fn: (mod) => {
       const allTf = readAllBackplaneTf(mod);
       if (!allTf) return { pass: true, detail: "no backplane tf files" };
@@ -378,7 +351,6 @@ const detectors = [
     category: "azure_backplane",
     name: "No azuread_application_password resources",
     emoji: "🔑",
-    fixRef: AZURE("what-to-avoid"),
     fn: (mod) => {
       const allTf = readAllBackplaneTf(mod);
       if (!allTf) return { pass: true, detail: "no backplane tf files" };
@@ -393,7 +365,6 @@ const detectors = [
     category: "azure_backplane",
     name: "Uses azurerm_federated_identity_credential",
     emoji: "🔗",
-    fixRef: AZURE("implementation-pattern"),
     fn: (mod) => {
       const allTf = readAllBackplaneTf(mod);
       if (!allTf) return { pass: false, detail: "no backplane tf files" };
@@ -407,7 +378,6 @@ const detectors = [
     category: "azure_backplane",
     name: "workload_identity_federation is non-nullable",
     emoji: "⚡",
-    fixRef: AZURE("backplane-variables-azure"),
     fn: (mod) => {
       const varsTf = readBackplaneFile(mod, "variables.tf");
       if (!varsTf) return { pass: false, detail: "no variables.tf" };
@@ -426,7 +396,6 @@ const detectors = [
     category: "azure_backplane",
     name: "No create_service_principal_name toggle",
     emoji: "🧹",
-    fixRef: AZURE("what-to-avoid"),
     fn: (mod) => {
       const varsTf = readBackplaneFile(mod, "variables.tf");
       if (!varsTf) return { pass: true, detail: "no variables.tf" };
@@ -441,7 +410,6 @@ const detectors = [
     category: "azure_backplane",
     name: 'Outputs identity (client_id, principal_id, tenant_id)',
     emoji: "📤",
-    fixRef: AZURE("backplane-outputs-azure"),
     fn: (mod) => {
       const outputsTf = readBackplaneFile(mod, "outputs.tf");
       if (!outputsTf) return { pass: false, detail: "no outputs.tf" };
@@ -456,7 +424,6 @@ const detectors = [
     category: "azure_backplane",
     name: "Integration has azure_location",
     emoji: "📍",
-    fixRef: AZURE("meshstack_integrationtf-wiring-azure"),
     fn: (mod) => {
       const content = readIntegrationTf(mod);
       if (!content) return { pass: false, detail: "no integration file" };
@@ -474,7 +441,6 @@ const detectors = [
     category: "testing",
     name: "backplane/ directory (optional tier)",
     emoji: "⚙️",
-    fixRef: AGENTS("module-structure"),
     fn: (mod) => ({
       pass: existsSync(join(mod.path, "backplane")),
     }),
@@ -484,7 +450,6 @@ const detectors = [
     category: "testing",
     name: "e2e/ test directory exists",
     emoji: "🧪",
-    fixRef: E2E("structure"),
     fn: (mod) => ({
       pass: existsSync(join(mod.path, "e2e")),
     }),
@@ -494,7 +459,6 @@ const detectors = [
     category: "testing",
     name: "e2e/ contains .tftest.hcl files",
     emoji: "✅",
-    fixRef: E2E("e2etests-tftesthcl-conventions"),
     fn: (mod) => {
       const e2eDir = join(mod.path, "e2e", "tests");
       if (!existsSync(e2eDir)) return { pass: false };
@@ -577,9 +541,71 @@ function discoverModules() {
   return modules.sort((a, b) => a.id.localeCompare(b.id));
 }
 
+// ─── Marker-based ref index ──────────────────────────────────────────────────
+// Check → section mapping is derived from <!-- scorecard-checks: id, ... -->
+// markers in reference docs. Each marker annotates the heading that follows it.
+
+const REF_FILES = [
+  "AGENTS.md",
+  ".agents/references/azure-backplane.md",
+  ".agents/references/bbd-readme.md",
+  ".agents/skills/e2e-test/SKILL.md",
+];
+
+function headingToAnchor(heading) {
+  return heading
+    .replace(/^#+\s*/, "")
+    .replace(/`([^`]*)`/g, "$1")
+    .toLowerCase()
+    .replace(/[^\w\s-]/g, "")
+    .replace(/\s+/g, "-");
+}
+
+function buildCheckToRef() {
+  const checkToRef = new Map(); // checkId → {file, section}
+  const errors = [];
+
+  for (const relFile of REF_FILES) {
+    const filePath = join(ROOT, relFile);
+    if (!existsSync(filePath)) continue;
+
+    const lines = readFileSync(filePath, "utf-8").split("\n");
+    let pendingIds = null;
+
+    for (const line of lines) {
+      const m = line.match(/<!--\s*scorecard-checks:\s*([^-]+?)\s*-->/);
+      if (m) {
+        pendingIds = m[1].split(",").map((s) => s.trim()).filter(Boolean);
+        continue;
+      }
+      if (pendingIds && /^#{1,6}\s/.test(line)) {
+        const section = headingToAnchor(line);
+        for (const id of pendingIds) checkToRef.set(id, { file: relFile, section });
+        pendingIds = null;
+      }
+    }
+  }
+
+  const detectorIds = new Set(detectors.map((d) => d.id));
+
+  for (const d of detectors) {
+    if (!checkToRef.has(d.id)) {
+      errors.push(`check "${d.id}" has no <!-- scorecard-checks: ... --> marker in any ref file`);
+    }
+  }
+
+  for (const id of checkToRef.keys()) {
+    if (!detectorIds.has(id)) {
+      errors.push(`marker references unknown check "${id}" — no detector with that id`);
+    }
+  }
+
+  return { checkToRef, errors };
+}
+
 // ─── Fix prompt generator ────────────────────────────────────────────────────
 
-function generateFixPrompt(mod, failingChecks) {
+function generateFixPrompt(mod, failingChecks, checkToRef) {
   const lines = [];
   lines.push(`# Fix Scorecard Violations for \`${mod.id}\``);
   lines.push("");
@@ -598,7 +624,7 @@ function generateFixPrompt(mod, failingChecks) {
     lines.push(`### ❌ \`${check.id}\` — ${check.name} [${catName}]`);
     if (check.result.detail) lines.push(`> ${check.result.detail}`);
     lines.push("");
-    const ref = check.fixRef;
+    const ref = checkToRef.get(check.id);
     if (ref) {
       lines.push(`**Fix instructions**: [\`${ref.file}#${ref.section}\`](${ref.file}#${ref.section})`);
       lines.push("");
@@ -619,6 +645,13 @@ function main() {
   const filterProvider = args.find((a) => a.startsWith("--provider="))?.split("=")[1];
   const filterModules = args.filter((a) => a.startsWith("--module=")).map((a) => a.split("=")[1]);
   const fixMode = args.includes("--fix");
+
+  const { checkToRef, errors: refErrors } = buildCheckToRef();
+  if (refErrors.length > 0) {
+    process.stderr.write("❌ scorecard-checks marker validation failed:\n");
+    for (const e of refErrors) process.stderr.write(`  • ${e}\n`);
+    process.exit(1);
+  }
 
   let modules = discoverModules();
   if (filterProvider) {
@@ -682,7 +715,7 @@ function main() {
       if (failingChecks.length === 0) {
         console.log(`✅ \`${r.mod.id}\` has no failing checks.`);
       } else {
-        console.log(generateFixPrompt(r.mod, failingChecks));
+        console.log(generateFixPrompt(r.mod, failingChecks, checkToRef));
       }
     }
     return;
