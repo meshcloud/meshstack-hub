@@ -20,8 +20,8 @@ Please reference the [backplane implementation](../backplane/) for the required 
 
 | Name | Version |
 |------|---------|
-| <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) | ~> 4.64.0 |
-| <a name="requirement_time"></a> [time](#requirement\_time) | ~> 0.11.0 |
+| <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) | >= 4.64.0 |
+| <a name="requirement_time"></a> [time](#requirement\_time) | >= 0.11.0 |
 
 ## Modules
 

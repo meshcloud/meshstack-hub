@@ -62,7 +62,7 @@ data "azurerm_management_group" "parent" {
 # Creates required resource in Azure
 module "azure_meshplatform" {
   source  = "meshcloud/meshplatform/azure"
-  version = "~> 0.14.0"
+  version = ">= 0.14.0"
 
   replicator_enabled                = true
   replicator_service_principal_name = "meshstack-replicator"
@@ -245,15 +245,15 @@ terraform {
   required_providers {
     meshstack = {
       source  = "meshcloud/meshstack"
-      version = "~> 0.21.0"
+      version = ">= 0.21.0"
     }
     azurerm = {
       source  = "hashicorp/azurerm"
-      version = "~> 4.64"
+      version = ">= 4.64"
     }
     azuread = {
       source  = "hashicorp/azuread"
-      version = "~> 3.8"
+      version = ">= 3.8"
     }
   }
 }

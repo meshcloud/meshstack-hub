@@ -14,8 +14,8 @@ This building block creates a dev and prod meshStack project pair, each with a d
 
 | Name | Version |
 |------|---------|
-| <a name="requirement_meshstack"></a> [meshstack](#requirement\_meshstack) | ~> 0.21.0 |
-| <a name="requirement_random"></a> [random](#requirement\_random) | 3.8.1 |
+| <a name="requirement_meshstack"></a> [meshstack](#requirement\_meshstack) | >= 0.21.0 |
+| <a name="requirement_random"></a> [random](#requirement\_random) | >= 3.8.1 |
 
 ## Modules
 
@@ -30,8 +30,8 @@ No modules.
 | [meshstack_project.this](https://registry.terraform.io/providers/meshcloud/meshstack/latest/docs/resources/project) | resource |
 | [meshstack_project_user_binding.creator_to_admin](https://registry.terraform.io/providers/meshcloud/meshstack/latest/docs/resources/project_user_binding) | resource |
 | [meshstack_tenant_v4.this](https://registry.terraform.io/providers/meshcloud/meshstack/latest/docs/resources/tenant_v4) | resource |
-| [random_string.name_suffix](https://registry.terraform.io/providers/hashicorp/random/3.8.1/docs/resources/string) | resource |
-| [random_uuid.binding](https://registry.terraform.io/providers/hashicorp/random/3.8.1/docs/resources/uuid) | resource |
+| [random_string.name_suffix](https://registry.terraform.io/providers/hashicorp/random/latest/docs/resources/string) | resource |
+| [random_uuid.binding](https://registry.terraform.io/providers/hashicorp/random/latest/docs/resources/uuid) | resource |
 
 ## Inputs
 

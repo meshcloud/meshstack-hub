@@ -18,7 +18,7 @@ Please reference the [backplane implementation](../backplane/) for the required 
 | Name | Version |
 |------|---------|
 | <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.0 |
-| <a name="requirement_google"></a> [google](#requirement\_google) | 6.12.0 |
+| <a name="requirement_google"></a> [google](#requirement\_google) | >= 6.12.0 |
 
 ## Modules
 
@@ -28,8 +28,8 @@ No modules.
 
 | Name | Type |
 |------|------|
-| [google_billing_budget.budget](https://registry.terraform.io/providers/hashicorp/google/6.12.0/docs/resources/billing_budget) | resource |
-| [google_monitoring_notification_channel.notification_channel](https://registry.terraform.io/providers/hashicorp/google/6.12.0/docs/resources/monitoring_notification_channel) | resource |
+| [google_billing_budget.budget](https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/billing_budget) | resource |
+| [google_monitoring_notification_channel.notification_channel](https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/monitoring_notification_channel) | resource |
 
 ## Inputs
 

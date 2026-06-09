@@ -11,7 +11,7 @@ description: Deploys arbitrary Kubernetes manifests into a tenant namespace via 
 | Name | Version |
 |------|---------|
 | <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.11.0 |
-| <a name="requirement_helm"></a> [helm](#requirement\_helm) | ~> 2.17.0 |
+| <a name="requirement_helm"></a> [helm](#requirement\_helm) | >= 2.17.0 |
 
 ## Modules
 
