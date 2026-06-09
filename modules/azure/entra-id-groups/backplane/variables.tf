@@ -15,12 +15,6 @@ variable "location" {
   description = "Azure region for the backplane resource group and UAMI."
 }
 
-variable "scope" {
-  type        = string
-  nullable    = false
-  description = "Scope for role assignment (management group or subscription ID)."
-}
-
 variable "workload_identity_federation" {
   type = object({
     issuer   = string
