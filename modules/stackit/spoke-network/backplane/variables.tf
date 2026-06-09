@@ -9,3 +9,12 @@ variable "organization_id" {
   nullable    = false
   description = "STACKIT organization ID where the service account will be granted network management permissions."
 }
+
+variable "workload_identity_federation" {
+  type = object({
+    issuer   = string
+    subjects = list(string)
+  })
+  nullable    = false
+  description = "WIF issuer URL and subject list for the meshStack building block identity provider."
+}

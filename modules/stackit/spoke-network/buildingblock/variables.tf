@@ -1,5 +1,11 @@
 # ── Backplane inputs (static, set once per building block definition) ──────────
 
+variable "service_account_email" {
+  type        = string
+  nullable    = false
+  description = "Email of the STACKIT service account for WIF-based authentication."
+}
+
 variable "project_id" {
   type        = string
   nullable    = false
