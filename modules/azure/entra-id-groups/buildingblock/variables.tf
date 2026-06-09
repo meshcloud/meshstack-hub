@@ -26,6 +26,16 @@ variable "administrative_unit_id" {
   description = "Object ID of the Entra Administrative Unit to add the groups to. Leave empty to skip AU membership."
 }
 
+variable "user_lookup_attribute" {
+  type        = string
+  default     = "upn"
+  description = "Azure AD attribute used to look up users. 'upn' matches on User Principal Name; 'email' matches on the primary mail address."
+  validation {
+    condition     = contains(["upn", "email"], var.user_lookup_attribute)
+    error_message = "Must be 'upn' or 'email'."
+  }
+}
+
 variable "users" {
   type = list(object({
     meshIdentifier = string

@@ -19,9 +19,14 @@ locals {
   }
 }
 
-data "azuread_user" "this" {
-  for_each            = local.unique_user_euids
+data "azuread_user" "by_upn" {
+  for_each            = var.user_lookup_attribute == "upn" ? local.unique_user_euids : toset([])
   user_principal_name = each.value
+}
+
+data "azuread_user" "by_email" {
+  for_each = var.user_lookup_attribute == "email" ? local.unique_user_euids : toset([])
+  mail     = each.value
 }
 
 resource "azuread_group" "project_role" {
@@ -43,5 +48,5 @@ resource "azuread_group_member" "project_role" {
   for_each = local.user_role_assignments
 
   group_object_id  = azuread_group.project_role[each.value.role].object_id
-  member_object_id = data.azuread_user.this[each.value.euid].object_id
+  member_object_id = var.user_lookup_attribute == "upn" ? data.azuread_user.by_upn[each.value.euid].object_id : data.azuread_user.by_email[each.value.euid].object_id
 }
