@@ -15,7 +15,7 @@ resource "stackit_service_account_federated_identity_provider" "building_block" 
     {
       item     = "aud"
       operator = "equals"
-      value    = "sts.accounts.stackit.cloud"
+      value    = "api://AzureADTokenExchange"
     },
     {
       item     = "sub"

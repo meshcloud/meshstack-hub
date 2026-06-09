@@ -146,7 +146,7 @@ resource "meshstack_building_block_definition" "this" {
         type            = "STRING"
         assignment_type = "STATIC"
         is_environment  = true
-        argument        = jsonencode("/var/run/secrets/workload-identity/stackit/token")
+        argument        = jsonencode("/var/run/secrets/workload-identity/azure/token")
       }
 
       admin_s3_access_key = {
