@@ -199,6 +199,68 @@ tofu init -upgrade -var-file=/tmp/test-vars.tfvars.json
 tofu test -var-file=/tmp/test-vars.tfvars.json -var="my_secret=value"
 ```
 
+### Advanced Debugging
+
+#### Debugging with `tofu apply` (bypass `tofu test` teardown)
+
+When iterating on a failing building block run, it's faster to use `tofu apply` directly
+in the `e2e/` directory instead of `tofu test`. This bypasses the test framework's automatic
+teardown so you can inspect the deployed state:
+
+```bash
+cd modules/<provider>/<service>/e2e
+tofu init -upgrade -var-file=/tmp/test-vars.tfvars.json -var="my_secret=$SECRET"
+tofu apply -auto-approve -var-file=/tmp/test-vars.tfvars.json -var="my_secret=$SECRET"
+```
+
+After debugging, **always destroy manually**:
+
+```bash
+tofu destroy -auto-approve -var-file=/tmp/test-vars.tfvars.json -var="my_secret=$SECRET"
+```
+
+Do not leave apply state behind — it will block subsequent `tofu test` runs because the BBD
+already exists under the same workspace.
+
+#### Fetching building block run logs
+
+Use the `tools/debug/get-bb-run-logs.mjs` helper to fetch step-by-step Terraform logs for a
+building block run without manual curl calls:
+
+```bash
+# From meshstack-hub after: source ../meshstack-smoke-test/setup-env.sh
+BB_UUID="<uuid from state or errored_test.tfstate>"
+node tools/debug/get-bb-run-logs.mjs "$BB_UUID"
+```
+
+To get the UUID from an errored test state:
+```bash
+tofu state show -state=errored_test.tfstate 'meshstack_building_block_v2.this' | grep uuid
+```
+
+#### Provider override for local meshstack provider binary
+
+`source setup-override-provider.sh` in `meshstack-smoke-test` must be run from the
+`meshstack-smoke-test` directory itself, not from the hub repo. When sourced from a different
+working directory, the script correctly resolves its own path via `BASH_SOURCE[0]`.
+
+After sourcing, export the config file to affect all tofu invocations in the current shell:
+```bash
+cd /path/to/meshstack-smoke-test
+source setup-override-provider.sh
+# TF_CLI_CONFIG_FILE is now exported — all tofu calls in this shell use the local binary
+```
+
+---
+
+## Fetching run logs from the meshStack API
+
+Use `tools/debug/get-bb-run-logs.mjs` — it handles auth, run listing, and log fetching in one
+command. See the [Advanced Debugging](#advanced-debugging) section above for usage.
+
+The `systemMessage` of the `Run Terraform Apply` step contains the full `tofu apply` output,
+including the plan diff and any provider errors.
+
 ---
 
 ## Checklist for New E2E Tests

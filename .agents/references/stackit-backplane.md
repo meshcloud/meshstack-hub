@@ -202,9 +202,14 @@ The `stackit_service_account_federated_identity_provider` resource requires prov
 
 ## Checklist for STACKIT Backplanes
 
+> **Note on token audience**: meshStack issues a single OIDC token at
+> `/var/run/secrets/workload-identity/azure/token` with audience `api://AzureADTokenExchange`.
+> There is no STACKIT-specific token path. The STACKIT provider accepts this token via the
+> `STACKIT_FEDERATED_TOKEN_FILE` env var — the `AzureADTokenExchange` audience is correct.
+
 - [ ] `stackit_service_account` resource present
 - [ ] `stackit_service_account_federated_identity_provider` resource present (with `for_each` over subjects)
-- [ ] WIF assertions include `aud = "sts.accounts.stackit.cloud"` and `sub = each.value`
+- [ ] WIF assertions include `aud = "api://AzureADTokenExchange"` and `sub = each.value`
 - [ ] Required role assignments present (`stackit_authorization_project_role_assignment` or `stackit_authorization_organization_role_assignment`)
 - [ ] `service_account_email` output present (not sensitive, not `service_account_key_json`)
 - [ ] `workload_identity_federation` variable present (`object({ issuer, subjects })`, `nullable = false`)
