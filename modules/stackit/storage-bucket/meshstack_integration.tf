@@ -3,6 +3,12 @@ variable "stackit_project_id" {
   description = "STACKIT project ID where Object Storage buckets will be created."
 }
 
+variable "stackit_service_account_name" {
+  type        = string
+  default     = null
+  description = "Name of the backplane service account. Defaults to 'mesh-storage-bucket'. Override when deploying multiple backplane instances in the same STACKIT project."
+}
+
 variable "meshstack" {
   type = object({
     owning_workspace_identifier = string
@@ -36,7 +42,8 @@ data "meshstack_integrations" "integrations" {}
 module "backplane" {
   source = "github.com/meshcloud/meshstack-hub//modules/stackit/storage-bucket/backplane?ref=${var.hub.git_ref}"
 
-  project_id = var.stackit_project_id
+  project_id           = var.stackit_project_id
+  service_account_name = coalesce(var.stackit_service_account_name, "mesh-storage-bucket")
 
   workload_identity_federation = {
     issuer = data.meshstack_integrations.integrations.workload_identity_federation.replicator.issuer

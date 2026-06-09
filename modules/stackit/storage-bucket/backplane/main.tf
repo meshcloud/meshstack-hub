@@ -1,6 +1,6 @@
 resource "stackit_service_account" "building_block" {
   project_id = var.project_id
-  name       = "mesh-storage-bucket"
+  name       = var.service_account_name
 }
 
 resource "stackit_service_account_federated_identity_provider" "building_block" {
