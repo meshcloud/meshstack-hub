@@ -37,7 +37,8 @@ module "stackit_storage_bucket" {
     bbd_draft = true
   }
 
-  stackit_project_id = var.test_context.fixtures.stackit.project_id
+  stackit_project_id           = var.test_context.fixtures.stackit.project_id
+  stackit_service_account_name = "mesh-storage-bucket-${var.test_context.name_suffix}"
 }
 
 resource "meshstack_building_block_v2" "this" {

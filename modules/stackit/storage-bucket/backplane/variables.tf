@@ -4,6 +4,13 @@ variable "project_id" {
   description = "STACKIT project ID where Object Storage buckets will be created."
 }
 
+variable "service_account_name" {
+  type        = string
+  default     = "mesh-storage-bucket"
+  nullable    = false
+  description = "Name of the service account created in the STACKIT project. Override when deploying multiple backplane instances in the same project."
+}
+
 variable "workload_identity_federation" {
   type = object({
     issuer   = string
