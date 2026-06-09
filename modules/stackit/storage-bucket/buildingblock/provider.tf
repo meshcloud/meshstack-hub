@@ -1,5 +1,6 @@
 provider "stackit" {
-  service_account_key = var.service_account_key_json
+  service_account_email = var.service_account_email
+  use_oidc              = true
 }
 
 provider "aws" {

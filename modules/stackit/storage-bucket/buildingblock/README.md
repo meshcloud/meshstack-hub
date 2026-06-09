@@ -40,7 +40,7 @@ No modules.
 | <a name="input_admin_s3_secret_access_key"></a> [admin\_s3\_secret\_access\_key](#input\_admin\_s3\_secret\_access\_key) | S3 secret access key for the admin credentials group used to apply bucket policies. | `string` | n/a | yes |
 | <a name="input_bucket_name"></a> [bucket\_name](#input\_bucket\_name) | Name of the Object Storage bucket. Must be DNS-conformant. | `string` | n/a | yes |
 | <a name="input_project_id"></a> [project\_id](#input\_project\_id) | STACKIT project ID where the bucket will be created. | `string` | n/a | yes |
-| <a name="input_service_account_key_json"></a> [service\_account\_key\_json](#input\_service\_account\_key\_json) | Service account key JSON for authenticating the STACKIT provider. | `string` | n/a | yes |
+| <a name="input_service_account_email"></a> [service\_account\_email](#input\_service\_account\_email) | Email of the STACKIT service account for WIF-based authentication. | `string` | n/a | yes |
 
 ## Outputs
 
