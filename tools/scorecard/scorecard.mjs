@@ -41,6 +41,13 @@ const CATEGORIES = {
     appliesTo: (mod) =>
       mod.provider === "azure" && existsSync(join(mod.path, "backplane")),
   },
+  stackit_backplane: {
+    id: "stackit_backplane",
+    name: "STACKIT Backplane",
+    description: "STACKIT WIF-based automation principal conventions",
+    appliesTo: (mod) =>
+      mod.provider === "stackit" && existsSync(join(mod.path, "backplane")),
+  },
   testing: {
     id: "testing",
     name: "Testing",
@@ -435,6 +442,68 @@ const detectors = [
     },
   },
 
+  // ─── STACKIT Backplane ──────────────────────────────────────────────────
+  {
+    id: "stackit_uses_wif",
+    category: "stackit_backplane",
+    name: "Uses stackit_service_account_federated_identity_provider",
+    emoji: "🔐",
+    fn: (mod) => {
+      const allTf = readAllBackplaneTf(mod);
+      if (!allTf) return { pass: false, detail: "no backplane tf files" };
+      return {
+        pass: /resource\s+"stackit_service_account_federated_identity_provider"/.test(allTf),
+      };
+    },
+  },
+  {
+    id: "stackit_no_sa_key",
+    category: "stackit_backplane",
+    name: "No stackit_service_account_key resource",
+    emoji: "🚫",
+    fn: (mod) => {
+      const allTf = readAllBackplaneTf(mod);
+      if (!allTf) return { pass: true, detail: "no backplane tf files" };
+      return {
+        pass: !/resource\s+"stackit_service_account_key"/.test(allTf),
+        detail: "stackit_service_account_key found — migrate to WIF",
+      };
+    },
+  },
+  {
+    id: "stackit_sa_email_output",
+    category: "stackit_backplane",
+    name: "Outputs service_account_email (not key)",
+    emoji: "📤",
+    fn: (mod) => {
+      const outputsTf = readBackplaneFile(mod, "outputs.tf");
+      if (!outputsTf) return { pass: false, detail: "no outputs.tf" };
+      const hasEmailOutput = /output\s+"service_account_email"/.test(outputsTf);
+      const hasKeyOutput = /output\s+"service_account_key"/.test(outputsTf);
+      return {
+        pass: hasEmailOutput && !hasKeyOutput,
+        detail: !hasEmailOutput
+          ? 'missing output "service_account_email"'
+          : "service_account_key output found — replace with service_account_email",
+      };
+    },
+  },
+  {
+    id: "stackit_provider_oidc",
+    category: "stackit_backplane",
+    name: "Buildingblock provider uses use_oidc = true",
+    emoji: "⚡",
+    fn: (mod) => {
+      const providerTf = join(mod.path, "buildingblock", "provider.tf");
+      if (!existsSync(providerTf)) return { pass: false, detail: "no provider.tf" };
+      const content = readFileSync(providerTf, "utf-8");
+      return {
+        pass: /use_oidc\s*=\s*true/.test(content),
+        detail: "provider.tf does not use use_oidc = true — use WIF instead of service_account_key",
+      };
+    },
+  },
+
   // ─── Testing ────────────────────────────────────────────────────────────
   {
     id: "backplane",
@@ -548,6 +617,7 @@ function discoverModules() {
 const REF_FILES = [
   "AGENTS.md",
   ".agents/references/azure-backplane.md",
+  ".agents/references/stackit-backplane.md",
   ".agents/references/bbd-readme.md",
   ".agents/skills/e2e-test/SKILL.md",
 ];
@@ -825,13 +895,20 @@ function main() {
     lines.push("| Emoji | Criterion | Coverage | Status |");
     lines.push("|-------|-----------|----------|--------|");
     for (const d of catDetectors) {
-      const passing = applicableModules.filter(
-        (r) => r.categoryResults[catId].checks.find((c) => c.id === d.id)?.result.pass
+      const checkApplicable = applicableModules.filter(
+        (r) => r.categoryResults[catId].checks.find((c) => c.id === d.id)?.result.pass !== null
+      );
+      if (checkApplicable.length === 0) {
+        lines.push(`| ${d.emoji} | ${d.name} | n/a | — |`);
+        continue;
+      }
+      const passing = checkApplicable.filter(
+        (r) => r.categoryResults[catId].checks.find((c) => c.id === d.id)?.result.pass === true
       ).length;
-      const pct = Math.round((passing / applicableModules.length) * 100);
+      const pct = Math.round((passing / checkApplicable.length) * 100);
       const bar = pct >= 80 ? "🟢" : pct >= 50 ? "🟡" : "🔴";
       lines.push(
-        `| ${d.emoji} | ${d.name} | **${passing}/${applicableModules.length}** | ${bar} ${pct}% |`
+        `| ${d.emoji} | ${d.name} | **${passing}/${checkApplicable.length}** | ${bar} ${pct}% |`
       );
     }
     lines.push("");

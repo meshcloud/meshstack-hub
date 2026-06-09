@@ -17,7 +17,7 @@ meshStack-issued short-lived OIDC token for a STACKIT access token at runtime.
   Authentication for the backplane itself is configured by the caller (e.g. the platform team running
   `tofu apply` or the integration runtime).
 
-<!-- scorecard-checks: stackit_uses_service_account_key -->
+<!-- scorecard-checks: stackit_uses_wif, stackit_no_sa_key -->
 ## Implementation Pattern
 
 ```hcl
@@ -65,7 +65,7 @@ resource "stackit_authorization_organization_role_assignment" "this" {
 }
 ```
 
-<!-- scorecard-checks: stackit_service_account_key_output -->
+<!-- scorecard-checks: stackit_sa_email_output -->
 ## Backplane Outputs (STACKIT)
 
 Every STACKIT backplane must output the service account email:
@@ -110,7 +110,7 @@ variable "organization_id" {
 }
 ```
 
-<!-- scorecard-checks: stackit_provider_uses_key -->
+<!-- scorecard-checks: stackit_provider_oidc -->
 ## Buildingblock Provider Configuration
 
 The buildingblock `provider.tf` must use `use_oidc = true` and `service_account_email`.
@@ -201,11 +201,6 @@ The `stackit_service_account_federated_identity_provider` resource requires prov
 - ❌ Non-sensitive output for credentials — `service_account_email` is not sensitive, but any key would be
 
 ## Checklist for STACKIT Backplanes
-
-> **Note on token audience**: meshStack issues a single OIDC token at
-> `/var/run/secrets/workload-identity/azure/token` with audience `api://AzureADTokenExchange`.
-> There is no STACKIT-specific token path. The STACKIT provider accepts this token via the
-> `STACKIT_FEDERATED_TOKEN_FILE` env var — the `AzureADTokenExchange` audience is correct.
 
 - [ ] `stackit_service_account` resource present
 - [ ] `stackit_service_account_federated_identity_provider` resource present (with `for_each` over subjects)
