@@ -1,27 +1,18 @@
 package main
 
 import (
+	"embed"
 	"os"
 	"path/filepath"
 	"strings"
 	"testing"
 )
 
-func TestRenderAddsAliasedProvidersFromConfigurationAliases(t *testing.T) {
-	input := `terraform {
-  required_providers {
-    aws = {
-      source = "hashicorp/aws"
-      configuration_aliases = [aws.management, aws.meshcloud, aws.automation]
-    }
-    meshstack = {
-      source = "meshcloud/meshstack"
-    }
-  }
-}
-`
+//go:embed testdata/*.tf
+var testdataFiles embed.FS
 
-	output := renderFromString(t, input)
+func TestRenderAddsAliasedProvidersFromConfigurationAliases(t *testing.T) {
+	output := renderFromFixture(t, "aliases_multiple.tf")
 
 	if got, want := strings.Count(output, `provider "aws"`), 4; got != want {
 		t.Fatalf("unexpected number of aws provider blocks: got %d want %d\n%s", got, want, output)
@@ -34,19 +25,7 @@ func TestRenderAddsAliasedProvidersFromConfigurationAliases(t *testing.T) {
 }
 
 func TestRenderDoesNotRenderAliasesWhenNoneConfigured(t *testing.T) {
-	input := `terraform {
-  required_providers {
-    aws = {
-      source = "hashicorp/aws"
-    }
-    meshstack = {
-      source = "meshcloud/meshstack"
-    }
-  }
-}
-`
-
-	output := renderFromString(t, input)
+	output := renderFromFixture(t, "no_aliases.tf")
 
 	if strings.Contains(output, `alias = "`) {
 		t.Fatalf("did not expect any aliased provider blocks\n%s", output)
@@ -60,20 +39,7 @@ func TestRenderDoesNotRenderAliasesWhenNoneConfigured(t *testing.T) {
 }
 
 func TestRenderMixedProvidersWithAndWithoutAliases(t *testing.T) {
-	input := `terraform {
-  required_providers {
-    aws = {
-      source = "hashicorp/aws"
-      configuration_aliases = [aws.management, aws.meshcloud]
-    }
-    meshstack = {
-      source = "meshcloud/meshstack"
-    }
-  }
-}
-`
-
-	output := renderFromString(t, input)
+	output := renderFromFixture(t, "mixed_aliases.tf")
 
 	if got, want := strings.Count(output, `provider "aws"`), 3; got != want {
 		t.Fatalf("unexpected number of aws provider blocks: got %d want %d\n%s", got, want, output)
@@ -92,21 +58,7 @@ func TestRenderMixedProvidersWithAndWithoutAliases(t *testing.T) {
 }
 
 func TestRenderSkipsExistingAliasedProvider(t *testing.T) {
-	input := `terraform {
-  required_providers {
-    aws = {
-      source = "hashicorp/aws"
-      configuration_aliases = [aws.management, aws.meshcloud]
-    }
-  }
-}
-
-provider "aws" {
-  alias = "management"
-}
-`
-
-	output := renderFromString(t, input)
+	output := renderFromFixture(t, "existing_alias_provider.tf")
 
 	if got, want := strings.Count(output, `alias = "management"`), 1; got != want {
 		t.Fatalf("management alias block duplicated: got %d want %d\n%s", got, want, output)
@@ -117,17 +69,7 @@ provider "aws" {
 }
 
 func TestRenderDeduplicatesConfigurationAliases(t *testing.T) {
-	input := `terraform {
-  required_providers {
-    aws = {
-      source = "hashicorp/aws"
-      configuration_aliases = [aws.management, aws.management]
-    }
-  }
-}
-`
-
-	output := renderFromString(t, input)
+	output := renderFromFixture(t, "duplicate_aliases.tf")
 
 	if got, want := strings.Count(output, `alias = "management"`), 1; got != want {
 		t.Fatalf("management alias block duplicated: got %d want %d\n%s", got, want, output)
@@ -135,6 +77,17 @@ func TestRenderDeduplicatesConfigurationAliases(t *testing.T) {
 	if got, want := strings.Count(output, `provider "aws"`), 2; got != want {
 		t.Fatalf("unexpected number of aws provider blocks: got %d want %d\n%s", got, want, output)
 	}
+}
+
+func renderFromFixture(t *testing.T, fixture string) string {
+	t.Helper()
+
+	input, err := testdataFiles.ReadFile(filepath.Join("testdata", fixture))
+	if err != nil {
+		t.Fatalf("read fixture %q: %v", fixture, err)
+	}
+
+	return renderFromString(t, string(input))
 }
 
 func renderFromString(t *testing.T, input string) string {
