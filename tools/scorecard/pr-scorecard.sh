@@ -21,7 +21,7 @@ cd "$REPO_ROOT"
 MODULES=$(git diff --name-only "${BASE_REF}...HEAD" \
   | grep '^modules/' \
   | sed 's|^modules/\([^/]*/[^/]*\)/.*|\1|' \
-  | sort -u)
+  | sort -u || true)
 
 emit() {
   if [ -n "$OUTPUT_FILE" ]; then
