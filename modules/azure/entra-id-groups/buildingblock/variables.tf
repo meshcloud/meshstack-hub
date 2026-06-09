@@ -25,3 +25,17 @@ variable "administrative_unit_id" {
   default     = ""
   description = "Object ID of the Entra Administrative Unit to add the groups to. Leave empty to skip AU membership."
 }
+
+variable "users" {
+  type = list(object({
+    meshIdentifier = string
+    username       = string
+    firstName      = string
+    lastName       = string
+    email          = string
+    euid           = string
+    roles          = list(string)
+  }))
+  default     = []
+  description = "Project members from meshStack with their assigned roles. Each user is added to the group matching their role."
+}

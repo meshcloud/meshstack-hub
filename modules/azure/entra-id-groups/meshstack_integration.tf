@@ -129,7 +129,8 @@ resource "meshstack_building_block_definition" "this" {
       | Create and delete Entra groups | ✅ | ❌ |
       | Add the Administrative Unit (optional) | ✅ | ❌ |
       | Choose which project roles get groups | ❌ | ✅ |
-      | Assign users to the generated groups | ❌ | ✅ |
+      | Assign users to generated groups (automated via project membership) | ✅ | ❌ |
+      | Manage which users have which project roles | ❌ | ✅ |
       | Use group IDs in downstream RBAC assignments | ❌ | ✅ |
     EOT
     )
@@ -215,6 +216,12 @@ resource "meshstack_building_block_definition" "this" {
         description     = "Object ID of the Entra Administrative Unit to add the groups to. Leave empty to skip AU membership."
         assignment_type = "USER_INPUT"
         argument        = jsonencode("")
+      }
+      users = {
+        type            = "CODE"
+        display_name    = "Users"
+        description     = "Project members from meshStack with their assigned roles. Injected automatically by meshStack."
+        assignment_type = "USER_PERMISSIONS"
       }
     }
 
