@@ -3,10 +3,9 @@ output "project_id" {
   description = "STACKIT project ID for Object Storage bucket creation."
 }
 
-output "service_account_key_json" {
-  value       = stackit_service_account_key.building_block.json
-  description = "Service account key JSON for authenticating the STACKIT provider in the buildingblock."
-  sensitive   = true
+output "service_account_email" {
+  value       = stackit_service_account.building_block.email
+  description = "Email of the STACKIT service account used by the buildingblock provider via WIF."
 }
 
 output "admin_s3_access_key" {
