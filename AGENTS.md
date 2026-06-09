@@ -309,7 +309,7 @@ getting-started steps, and shared responsibility matrix.
 
 Modules that can be smoke-tested against a live meshStack instance should include an `e2e/` directory alongside the module root.
 
-See [.claude/skills/write-e2e-test/SKILL.md](.claude/skills/write-e2e-test/SKILL.md) (the `write-e2e-test` skill) for the full e2e testing conventions, including the `e2e/` structure, `test_context` wiring, `e2e/main.tf` and `*.tftest.hcl` conventions, the new-test checklist, and how to run and debug tests via the smoke-test runner.
+See [.agents/skills/write-e2e-test/SKILL.md](.agents/skills/write-e2e-test/SKILL.md) (the `write-e2e-test` skill) for the full e2e testing conventions, including the `e2e/` structure, `test_context` wiring, `e2e/main.tf` and `*.tftest.hcl` conventions, the new-test checklist, and how to run and debug tests via the smoke-test runner.
 
 ---
 
