@@ -35,7 +35,7 @@ resource "meshstack_building_block_definition" "this" {
 
   spec = {
     display_name = "meshStack Manual Building Block"
-    description  = "Reference building block demonstrating the MANUAL implementation type: outputs mirror selected inputs 1:1, with extra inputs (SINGLE_SELECT and STATIC) that have no corresponding output."
+    description  = "Reference building block demonstrating the MANUAL implementation type: the backend derives one output per input (SINGLE_SELECT is mirrored as STRING), so outputs are computed and must not be configured."
     target_type  = "WORKSPACE_LEVEL"
     readme       = <<-EOT
     This building block demonstrates meshStack's MANUAL implementation type, where platform operators manually confirm execution and output values are copied directly from inputs.
@@ -52,7 +52,7 @@ resource "meshstack_building_block_definition" "this" {
     | Responsibility | Platform Team | Application Team |
     |----------------|:-------------:|:----------------:|
     | Complete the building block run | ✅ | ❌ |
-    | Provide `text`, `flag`, `num`, inputs | ❌ | ✅ |
+    | Provide `text`, `flag`, `num`, `single_select` inputs | ❌ | ✅ |
     | Monitor completion status | ❌ | ✅ |
     EOT
   }
@@ -80,45 +80,26 @@ resource "meshstack_building_block_definition" "this" {
         type            = "INTEGER"
       }
 
-      # TODO: these two currently break the terraform provider because they can't be mapped to an output type
-      # This is a known issue that needs to be fixed in meshStack
-      # > produced an unexpected new value:
-      #  .version_spec.outputs: new element "single_select" has appeared.
-      #  .version_spec.outputs: new element "static_note" has appeared.
-
-      # single_select = {
-      #   assignment_type   = "USER_INPUT"
-      #   display_name      = "Single Select"
-      #   selectable_values = ["option1", "option2"]
-      #   type              = "SINGLE_SELECT"
-      # }
-      # # Static input with no corresponding output — exercises more-inputs-than-outputs
-      # static_note = {
-      #   assignment_type = "STATIC"
-      #   display_name    = "Static Note"
-      #   type            = "STRING"
-      #   argument        = jsonencode("A static note value")
-      # }
-    }
-    # Output keys must match input keys; types must be compatible with manual mirroring.
-    # Only text, flag, and num are output — single_select and static_note are intentionally omitted.
-    outputs = {
-      text = {
-        assignment_type = "NONE"
-        display_name    = "Text"
+      # SINGLE_SELECT cannot be an output type, so the backend mirrors it to a STRING output.
+      single_select = {
+        assignment_type   = "USER_INPUT"
+        display_name      = "Single Select"
+        selectable_values = ["option1", "option2"]
+        type              = "SINGLE_SELECT"
+      }
+      # STATIC input supplied by the building block definition (not the user); also mirrored to a STRING output.
+      static_note = {
+        assignment_type = "STATIC"
+        display_name    = "Static Note"
         type            = "STRING"
-      }
-      flag = {
-        assignment_type = "NONE"
-        display_name    = "Flag"
-        type            = "BOOLEAN"
-      }
-      num = {
-        assignment_type = "NONE"
-        display_name    = "Num"
-        type            = "INTEGER"
+        argument        = jsonencode("A static note value")
       }
     }
+
+    # Outputs are omitted for manual building blocks: the backend derives one output per input
+    # (assignment type NONE, with SINGLE_SELECT/MULTI_SELECT/LIST translated to output-compatible
+    # types), so version_spec.outputs is computed and must not be set here.
+    # Requires the meshstack provider >= 0.21.1 (see meshcloud/terraform-provider-meshstack#176).
   }
 }
 
