@@ -166,8 +166,8 @@ its output as a temp `.tfvars.json`, then runs `tofu test` in the module's `e2e/
 
 ## Debugging
 
-**Hub changes must be pushed before running.** The runner resolves `hub_git_ref` from the current
-commit SHA and verifies it exists on a remote branch:
+### Hub changes must be pushed before running
+The runner resolves `hub_git_ref` from the current commit SHA and verifies it exists on a remote branch:
 
 ```
 ERROR: Hub commit <sha> has not been pushed to any remote branch.
@@ -176,8 +176,10 @@ ERROR: Hub commit <sha> has not been pushed to any remote branch.
 Fix: push your branch first. Uncommitted local changes only produce a warning — the test still runs
 against the committed SHA. Only the `e2e/` directory itself is executed from local disk.
 
-**Errored test state.** If `tofu test` fails mid-apply, OpenTofu writes `e2e/errored_test.tfstate`.
-Clean up:
+### Errored test state
+
+If `tofu test` fails mid-apply, OpenTofu writes `e2e/errored_test.tfstate`.
+Interacting with the test state is useful for manually cleaning up cloud resources when tofu fails to do it:
 
 ```bash
 cd modules/<provider>/<service>/e2e
@@ -185,51 +187,20 @@ tofu state list -state=errored_test.tfstate
 rm errored_test.tfstate   # after manual cleanup if needed
 ```
 
-**Manual run (bypass the runner).** Useful for passing extra `-var` flags or iterating quickly:
+### Fetching building block run logs
 
-```bash
-# From meshstack-smoke-test: produce the var-file
-tofu -chdir=modules/test_context apply -auto-approve -var="hub_dir=$(pwd)/../meshstack-hub"
-ctx=$(tofu -chdir=modules/test_context output -json test_context)
-printf '{"test_context":%s}\n' "$ctx" > /tmp/test-vars.tfvars.json
+The most likely cause of a test failure is a building block run failure, manifesting as an error message like this
 
-# From meshstack-hub: run test directly
-cd modules/<provider>/<service>/e2e
-tofu init -upgrade -var-file=/tmp/test-vars.tfvars.json
-tofu test -var-file=/tmp/test-vars.tfvars.json -var="my_secret=value"
-```
-
-### Advanced Debugging
-
-#### Debugging with `tofu apply` (bypass `tofu test` teardown)
-
-When iterating on a failing building block run, it's faster to use `tofu apply` directly
-in the `e2e/` directory instead of `tofu test`. This bypasses the test framework's automatic
-teardown so you can inspect the deployed state:
-
-```bash
-cd modules/<provider>/<service>/e2e
-tofu init -upgrade -var-file=/tmp/test-vars.tfvars.json -var="my_secret=$SECRET"
-tofu apply -auto-approve -var-file=/tmp/test-vars.tfvars.json -var="my_secret=$SECRET"
-```
-
-After debugging, **always destroy manually**:
-
-```bash
-tofu destroy -auto-approve -var-file=/tmp/test-vars.tfvars.json -var="my_secret=$SECRET"
-```
-
-Do not leave apply state behind — it will block subsequent `tofu test` runs because the BBD
-already exists under the same workspace.
-
-#### Fetching building block run logs
+> Failed to await building block creation
+> item in failed state: building block 97cc733e-9611-460a-8bbf-d930466cfc94
+> reached FAILED state during creation, check the building block run logs in meshStack
 
 Use the `tools/debug/get-bb-run-logs.mjs` helper to fetch step-by-step Terraform logs for a
 building block run without manual curl calls:
 
 ```bash
 # From meshstack-hub after: source ../meshstack-smoke-test/setup-env.sh
-BB_UUID="<uuid from state or errored_test.tfstate>"
+BB_UUID="<uuid from log or errored_test.tfstate>"
 node tools/debug/get-bb-run-logs.mjs "$BB_UUID"
 ```
 
@@ -238,7 +209,39 @@ To get the UUID from an errored test state:
 tofu state show -state=errored_test.tfstate 'meshstack_building_block_v2.this' | grep uuid
 ```
 
-#### Provider override for local meshstack provider binary
+
+## Advanced Debugging
+
+### Debugging with `tofu apply` (bypass `tofu test` teardown)
+
+When iterating on a new building block, it's sometimes faster to use `tofu apply` directly
+in the `e2e/` directory instead of `tofu test`. This bypasses the test framework's automatic
+teardown and you can more quickly iterate on the deployed state, making changes across `meshstack_integration.tf`,
+the `backplane` and `buildingblock` module as well as the test assertions themselves.
+
+Step 1, produce the test_context var file
+```bash
+# From meshstack-smoke-test: produce the var-file
+tofu -chdir=modules/test_context apply -auto-approve -var="hub_dir=$(pwd)/../meshstack-hub"
+ctx=$(tofu -chdir=modules/test_context output -json test_context)
+printf '{"test_context":%s}\n' "$ctx" > /tmp/test-vars.tfvars.json
+
+# From meshstack-hub: run module directly directly
+cd modules/<provider>/<service>/e2e
+tofu init -upgrade -var-file=/tmp/test-vars.tfvars.json -var="my_secret=$SECRET"
+tofu apply -auto-approve -var-file=/tmp/test-vars.tfvars.json -var="my_secret=$SECRET"
+```
+
+After debugging, **always destroy explicitly**:
+
+```bash
+tofu destroy -auto-approve -var-file=/tmp/test-vars.tfvars.json -var="my_secret=$SECRET"
+```
+
+### Provider override for local meshstack provider binary
+
+When testing against pre-release versions of the meshStack terraform provider is required, ie. due to impending breaking
+changes or using pre-release features:
 
 `source setup-override-provider.sh` in `meshstack-smoke-test` must be run from the
 `meshstack-smoke-test` directory itself, not from the hub repo. When sourced from a different
@@ -250,16 +253,6 @@ cd /path/to/meshstack-smoke-test
 source setup-override-provider.sh
 # TF_CLI_CONFIG_FILE is now exported — all tofu calls in this shell use the local binary
 ```
-
----
-
-## Fetching run logs from the meshStack API
-
-Use `tools/debug/get-bb-run-logs.mjs` — it handles auth, run listing, and log fetching in one
-command. See the [Advanced Debugging](#advanced-debugging) section above for usage.
-
-The `systemMessage` of the `Run Terraform Apply` step contains the full `tofu apply` output,
-including the plan diff and any provider errors.
 
 ---
 
