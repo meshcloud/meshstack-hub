@@ -29,7 +29,7 @@ variable "meshstack" {
 
 module "aks_meshplatform" {
   source  = "meshcloud/meshplatform/aks"
-  version = "~> 0.2.0"
+  version = ">= 0.2.0"
 
   namespace = "meshcloud"
   scope     = var.aks_subscription_id
@@ -179,11 +179,11 @@ terraform {
   required_providers {
     meshstack = {
       source  = "meshcloud/meshstack"
-      version = "~> 0.21.0"
+      version = ">= 0.21.0"
     }
     azuread = {
       source  = "hashicorp/azuread"
-      version = "~> 3.8"
+      version = ">= 3.8"
     }
   }
 }

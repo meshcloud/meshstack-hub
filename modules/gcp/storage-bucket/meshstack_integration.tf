@@ -206,11 +206,11 @@ terraform {
   required_providers {
     meshstack = {
       source  = "meshcloud/meshstack"
-      version = "~> 0.21.0"
+      version = ">= 0.21.0"
     }
     google = {
       source  = "hashicorp/google"
-      version = "~> 7.0"
+      version = ">= 7.0"
     }
   }
 }

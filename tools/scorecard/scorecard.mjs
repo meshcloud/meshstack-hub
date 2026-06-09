@@ -135,7 +135,7 @@ const detectors = [
   {
     id: "provider_pinned",
     category: "core",
-    name: "Provider versions pinned (~>)",
+    name: "Provider versions use minimum constraint (>=)",
     emoji: "🔒",
     fn: (mod) => {
       const versionsPath = join(mod.path, "buildingblock", "versions.tf");
@@ -144,8 +144,8 @@ const detectors = [
       const versionLines = content.match(/version\s*=\s*"[^"]+"/g);
       if (!versionLines || versionLines.length === 0)
         return { pass: true, detail: "no version constraints" };
-      const allPinned = versionLines.every((l) => l.includes("~>"));
-      return { pass: allPinned };
+      const allMinimum = versionLines.every((l) => l.includes(">=") && !l.includes("~>"));
+      return { pass: allMinimum };
     },
   },
 

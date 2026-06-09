@@ -3,7 +3,7 @@ terraform {
   required_providers {
     external = {
       source  = "hashicorp/external"
-      version = "~> 2.3.0"
+      version = ">= 2.3.0"
     }
   }
 }

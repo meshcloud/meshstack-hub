@@ -37,9 +37,9 @@ provider "azurerm" {
 
 | Name | Version |
 |------|---------|
-| <a name="requirement_azuread"></a> [azuread](#requirement\_azuread) | ~> 3.8 |
-| <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) | ~> 4.64 |
-| <a name="requirement_random"></a> [random](#requirement\_random) | ~> 3.8 |
+| <a name="requirement_azuread"></a> [azuread](#requirement\_azuread) | >= 3.8 |
+| <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) | >= 4.64 |
+| <a name="requirement_random"></a> [random](#requirement\_random) | >= 3.8 |
 
 ## Modules
 

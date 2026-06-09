@@ -15,8 +15,8 @@ This building block module provisions a STACKIT Object Storage bucket with S3-co
 | Name | Version |
 |------|---------|
 | <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.11.0 |
-| <a name="requirement_aws"></a> [aws](#requirement\_aws) | ~> 5.0 |
-| <a name="requirement_stackit"></a> [stackit](#requirement\_stackit) | ~> 0.82.0 |
+| <a name="requirement_aws"></a> [aws](#requirement\_aws) | >= 5.0 |
+| <a name="requirement_stackit"></a> [stackit](#requirement\_stackit) | >= 0.82.0 |
 
 ## Modules
 

@@ -39,7 +39,7 @@ The Azure VM Starterkit building block automates the creation of a complete Azur
 
 | Name | Version |
 |------|---------|
-| <a name="requirement_meshstack"></a> [meshstack](#requirement\_meshstack) | 0.9.0 |
+| <a name="requirement_meshstack"></a> [meshstack](#requirement\_meshstack) | >= 0.9.0 |
 
 ## Modules
 
@@ -49,10 +49,10 @@ No modules.
 
 | Name | Type |
 |------|------|
-| [meshstack_building_block_v2.azure_vm](https://registry.terraform.io/providers/meshcloud/meshstack/0.9.0/docs/resources/building_block_v2) | resource |
-| [meshstack_project.vm_project](https://registry.terraform.io/providers/meshcloud/meshstack/0.9.0/docs/resources/project) | resource |
-| [meshstack_project_user_binding.creator_admin](https://registry.terraform.io/providers/meshcloud/meshstack/0.9.0/docs/resources/project_user_binding) | resource |
-| [meshstack_tenant_v4.vm_tenant](https://registry.terraform.io/providers/meshcloud/meshstack/0.9.0/docs/resources/tenant_v4) | resource |
+| [meshstack_building_block_v2.azure_vm](https://registry.terraform.io/providers/meshcloud/meshstack/latest/docs/resources/building_block_v2) | resource |
+| [meshstack_project.vm_project](https://registry.terraform.io/providers/meshcloud/meshstack/latest/docs/resources/project) | resource |
+| [meshstack_project_user_binding.creator_admin](https://registry.terraform.io/providers/meshcloud/meshstack/latest/docs/resources/project_user_binding) | resource |
+| [meshstack_tenant_v4.vm_tenant](https://registry.terraform.io/providers/meshcloud/meshstack/latest/docs/resources/tenant_v4) | resource |
 
 ## Inputs
 

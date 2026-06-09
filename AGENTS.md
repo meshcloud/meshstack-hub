@@ -65,16 +65,16 @@ A secondary purpose of these files is to serve as a ready-to-use Terraform modul
 ### Required providers
 
 Every `meshstack_integration.tf` must declare the `meshcloud/meshstack` provider in a
-`required_providers` block. Pin the meshstack provider to the current minor version using
-`~> X.Y.0` (e.g. `~> 0.20.0`). This is an exception to the general `~> X.Y.Z` patch-pinning
-rule because the meshstack provider is pre-1.0 and minor versions may contain breaking changes.
+`required_providers` block. Use a minimum version constraint with `>=` (e.g. `>= 0.20.0`).
+Root configurations (ICF/LCF) that source hub modules are responsible for strict version
+pinning via their `.terraform.lock.hcl` files.
 
 ```hcl
 terraform {
   required_providers {
     meshstack = {
       source  = "meshcloud/meshstack"
-      version = "~> 0.20.0"
+      version = ">= 0.20.0"
     }
   }
 }
@@ -168,7 +168,7 @@ resource "meshstack_building_block_definition" "this" {
 - **Cloud-provider-specific variables** in `meshstack_integration.tf` must be **flat** (not grouped into a single object) and prefixed with the cloud provider name: `azure_tenant_id`, `aws_region`, `gcp_project_id`, `stackit_project_id`
 - **Cross-cutting concerns** like workload identity federation settings may be grouped into an `object({})` typed variable (e.g. `variable "workload_identity"`) when the fields are logically inseparable
 - Only `variable "meshstack"` and `variable "hub"` use shared `object({})` conventions across all integrations
-- Pin provider versions with `~> X.Y.Z` (allow patch updates, not minor/major). **Exception:** the `meshcloud/meshstack` provider is pre-1.0, so pin to the minor version with `~> 0.Y.0` (e.g. `~> 0.20.0`)
+- Use minimum version constraints (`>= X.Y.Z`) for all providers in `versions.tf` and `meshstack_integration.tf`. Strict pinning is the responsibility of root configurations (ICF/LCF) via `.terraform.lock.hcl`.
 - Terraform baseline: `>= 1.12.0` to cover OpenTofu v1.12.0 with `const` variable support (requires OpenTofu ≥ 1.12 or Terraform ≥ 1.15)
 
 ---
@@ -317,7 +317,7 @@ See [.agents/skills/write-e2e-test/SKILL.md](.agents/skills/write-e2e-test/SKILL
 
 - [ ] `backplane/` (optional) and `buildingblock/` with all required files
 - [ ] `meshstack_integration.tf` present at the module root
-- [ ] Provider versions pinned with `~>`
+- [ ] Provider versions use minimum constraint (`>=`) in `versions.tf` and `meshstack_integration.tf`
 - [ ] Variables in `snake_case` with cloud-provider prefix in `meshstack_integration.tf` (e.g. `azure_tenant_id`)
 - [ ] `buildingblock/README.md` with YAML front-matter
 - [ ] BBD `readme` field uses `chomp(<<-EOT)` inline (no `file()`), starts with plain-text description (no `#` heading), and includes usage motivation, 1–2 examples, and a shared responsibility table with ✅ / ❌ — see [.agents/skills/bbd-readme.md](.agents/skills/bbd-readme.md)

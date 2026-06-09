@@ -4,27 +4,27 @@ terraform {
   required_providers {
     azurerm = {
       source  = "hashicorp/azurerm"
-      version = "4.4.0"
+      version = ">= 4.4.0"
     }
 
     azuread = {
       source  = "hashicorp/azuread"
-      version = "3.0.2"
+      version = ">= 3.0.2"
     }
 
     github = {
       source  = "integrations/github"
-      version = "6.3.0"
+      version = ">= 6.3.0"
     }
 
     random = {
       source  = "hashicorp/random"
-      version = "3.6.3"
+      version = ">= 3.6.3"
     }
 
     time = {
       source  = "hashicorp/time"
-      version = "0.11.1"
+      version = ">= 0.11.1"
     }
   }
 }

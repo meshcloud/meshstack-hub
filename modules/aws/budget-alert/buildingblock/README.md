@@ -18,8 +18,8 @@ Please reference the [backplane implementation](../backplane/) for the required 
 | Name | Version |
 |------|---------|
 | <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.3.0 |
-| <a name="requirement_aws"></a> [aws](#requirement\_aws) | ~> 5.0 |
-| <a name="requirement_time"></a> [time](#requirement\_time) | ~> 0.11.1 |
+| <a name="requirement_aws"></a> [aws](#requirement\_aws) | >= 5.0 |
+| <a name="requirement_time"></a> [time](#requirement\_time) | >= 0.11.1 |
 
 ## Modules
 

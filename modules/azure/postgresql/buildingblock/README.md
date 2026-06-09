@@ -19,8 +19,8 @@ This Terraform project deploys a cost-effective Azure PostgreSQL database with m
 | Name | Version |
 |------|---------|
 | <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.5.0 |
-| <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) | 4.22.0 |
-| <a name="requirement_random"></a> [random](#requirement\_random) | 3.7.1 |
+| <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) | >= 4.22.0 |
+| <a name="requirement_random"></a> [random](#requirement\_random) | >= 3.7.1 |
 
 ## Modules
 
@@ -30,9 +30,9 @@ No modules.
 
 | Name | Type |
 |------|------|
-| [azurerm_postgresql_server.example](https://registry.terraform.io/providers/hashicorp/azurerm/4.22.0/docs/resources/postgresql_server) | resource |
-| [azurerm_resource_group.example](https://registry.terraform.io/providers/hashicorp/azurerm/4.22.0/docs/resources/resource_group) | resource |
-| [random_password.psql_admin_password](https://registry.terraform.io/providers/hashicorp/random/3.7.1/docs/resources/password) | resource |
+| [azurerm_postgresql_server.example](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/postgresql_server) | resource |
+| [azurerm_resource_group.example](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/resource_group) | resource |
+| [random_password.psql_admin_password](https://registry.terraform.io/providers/hashicorp/random/latest/docs/resources/password) | resource |
 
 ## Inputs
 
