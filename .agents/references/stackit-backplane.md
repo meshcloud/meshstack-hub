@@ -40,7 +40,7 @@ resource "stackit_service_account_federated_identity_provider" "backplane" {
     {
       item     = "aud"
       operator = "equals"
-      value    = "sts.accounts.stackit.cloud"
+      value    = "api://AzureADTokenExchange"
     },
     {
       item     = "sub"
@@ -183,7 +183,7 @@ STACKIT_FEDERATED_TOKEN_FILE = {
   type            = "STRING"
   assignment_type = "STATIC"
   is_environment  = true
-  argument        = jsonencode("/var/run/secrets/workload-identity/stackit/token")
+  argument        = jsonencode("/var/run/secrets/workload-identity/azure/token")
 }
 ```
 
