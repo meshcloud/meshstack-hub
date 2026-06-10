@@ -6,7 +6,8 @@ provider "stackit" {
 provider "aws" {
   access_key = var.admin_s3_access_key
   secret_key = var.admin_s3_secret_access_key
-  region     = "eu01"
+  # AWS provider v5+ sends LocationConstraint for custom endpoints; eu01 matches STACKIT's S3 region
+  region = "eu01"
 
   endpoints {
     s3 = "https://object.storage.eu01.onstackit.cloud"
