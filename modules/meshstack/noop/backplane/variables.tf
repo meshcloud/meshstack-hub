@@ -27,8 +27,8 @@ variable "gcp_region" {
 
 variable "gcp_runner_image" {
   type        = string
-  description = "Container image URI for the meshStack runner (e.g. ghcr.io/meshcloud/tf-block-runner:latest)."
-  default     = "ghcr.io/meshcloud/tf-block-runner:latest"
+  description = "Container image URI for the meshStack runner."
+  default     = "docker.io/meshcloud/tf-block-runner:main"
 }
 
 variable "gcp_resource_name_prefix" {

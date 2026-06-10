@@ -7,7 +7,9 @@ locals {
   cloud_run_service_account = "${data.google_project.this.number}-compute@developer.gserviceaccount.com"
 }
 
-resource "tls_private_key" "runner" {
+resource "time_static" "runner_key_expiry" {}
+
+ephemeral "tls_private_key" "runner" {
   algorithm = "RSA"
   rsa_bits  = 4096
 }
@@ -23,7 +25,7 @@ resource "meshstack_api_key" "runner" {
       "MANAGED_BUILDINGBLOCKRUN_LIST",
       "MANAGED_BUILDINGBLOCKRUN_SAVE"
     ]
-    expires_at = "2026-08-31" # TODO: this should be a variable? generated somehow
+    expires_at = formatdate("YYYY-MM-DD", timeadd(time_static.runner_key_expiry.rfc3339, "168h"))
   }
 }
 
@@ -41,8 +43,8 @@ resource "google_secret_manager_secret" "runner_private_key" {
 }
 
 resource "google_secret_manager_secret_version" "runner_private_key" {
-  secret      = google_secret_manager_secret.runner_private_key.id
-  secret_data = tls_private_key.runner.private_key_pem
+  secret         = google_secret_manager_secret.runner_private_key.id
+  secret_data_wo = ephemeral.tls_private_key.runner.private_key_pem_pkcs8
 }
 
 resource "google_secret_manager_secret" "runner_config" {
@@ -116,6 +118,16 @@ resource "google_cloud_run_v2_service" "runner" {
     containers {
       image = var.gcp_runner_image
 
+      resources {
+        limits = {
+          cpu = "2"
+          # 512MiB did crash for the noop BB at pre-run script level, so did 1024:
+          # GCP Error message: Memory limit of 1024 MiB exceeded with 1074 MiB used. Consider increasing the memory limit,
+          # 2048 seems to work fine so far.
+          memory = "2048Mi"
+        }
+      }
+
       env {
         name  = "RUNNER_CONFIG_FILE"
         value = "/config/runner-config.yml"
@@ -187,7 +199,6 @@ resource "google_cloud_run_v2_service" "runner" {
         }
       }
     }
-
   }
 
   depends_on = [
@@ -207,14 +218,7 @@ resource "meshstack_building_block_runner" "this" {
   spec = {
     display_name        = var.runner_display_name
     implementation_type = "TERRAFORM"
-    public_key          = tls_private_key.runner.public_key_pem
+    public_key          = ephemeral.tls_private_key.runner.public_key_pem
     restriction         = "PRIVATE"
   }
 }
-
-/**
-provider "meshstack" {
-  endpoint  = "https://federation.dev.meshcloud.io"
-  apikey    = "761ca118-5801-424b-b839-1ea3b8866f57"
-  apisecret = "nyZG2oduo58aUWzvFtDYksuVGrZV25xK"
-**/
