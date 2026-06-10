@@ -6,7 +6,8 @@ provider "stackit" {
 provider "aws" {
   access_key = var.admin_s3_access_key
   secret_key = var.admin_s3_secret_access_key
-  # AWS provider v5+ sends LocationConstraint for custom endpoints; eu01 matches STACKIT's S3 region
+  # STACKIT StorageGRID requires LocationConstraint="eu01" in CreateBucket; AWS provider v5+ sends the
+  # region as LocationConstraint. skip_region_validation lets us use "eu01" (not a real AWS region).
   region = "eu01"
 
   endpoints {
@@ -17,5 +18,6 @@ provider "aws" {
   skip_region_validation      = true
   skip_requesting_account_id  = true
   skip_metadata_api_check     = true
+  skip_region_validation      = true
   s3_use_path_style           = true
 }
