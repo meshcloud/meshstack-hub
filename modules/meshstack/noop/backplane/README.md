@@ -1,6 +1,8 @@
 # NoOp Backplane — Self-Hosted Cloud Run Runner
 
-This backplane provisions a self-hosted meshStack building block runner on Google Cloud Run.
+This optional backplane provisions a self-hosted meshStack building block runner on Google Cloud Run.
+It serves as an example and testing preparation when potentially running the NoOp Building Block on a different
+runner than the built-in meshStack runner.
 
 ## What it provisions
 
@@ -16,18 +18,17 @@ This backplane provisions a self-hosted meshStack building block runner on Googl
 
 The Cloud Run service mounts the following secrets into the container:
 
-| Mount path                         | Content                                                                                                            |
-|------------------------------------|--------------------------------------------------------------------------------------------------------------------|
-| `/app/runner-config.yml`           | Rendered from `runner-config.yml` with `RUNNER_UUID`, `RUNNER_API_URL`, and `RUNNER_API_KEY_CLIENT_ID` substituted |
-| `/app/runner-private.pem`          | RSA 4096 private key (PEM)                                                                                         |
-| `$MESHSTACK_CLIENT_SECRET` env var | meshStack API client secret                                                                                        |
+| Mount path                          | Content                                                                                                            |
+|-------------------------------------|--------------------------------------------------------------------------------------------------------------------|
+| `/config/runner-config.yml`         | Rendered from `runner-config.yml` with `RUNNER_UUID`, `RUNNER_API_URL`, and `RUNNER_API_KEY_CLIENT_ID` substituted |
+| `/keys/runner-private.pem`          | RSA 4096 private key (PEM)                                                                                         |
+| `$RUNNER_API_CLIENT_SECRET` env var | meshStack API client secret                                                                                        |
 
 Adjust the mount paths in `main.tf` if your runner image expects a different layout.
 
 ## Prerequisites
 
 - The `cloudrun.googleapis.com` and `secretmanager.googleapis.com` APIs must be enabled in `gcp_project_id`.
-- The service account identified by `gcp_cloud_run_service_account_email` must exist before applying. The backplane grants it `roles/secretmanager.secretAccessor` on the created secrets.
 - The meshStack provider is configured via the `meshstack_endpoint` variable. Supply admin credentials via `MESHSTACK_CLIENT_ID` and `MESHSTACK_CLIENT_SECRET` environment variables (or `TF_VAR_*` equivalents).
 
 ## Outputs

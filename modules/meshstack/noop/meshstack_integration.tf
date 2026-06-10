@@ -1,3 +1,12 @@
+variable "runner_ref" {
+  type = object({
+    kind = string
+    uuid = string
+  })
+  default     = null
+  description = "Optional reference to a meshStack building block runner. When set, building block runs are dispatched to this custom runner. Obtain the value from the backplane module's `runner_ref` output."
+}
+
 variable "meshstack" {
   type = object({
     owning_workspace_identifier = string
@@ -73,7 +82,8 @@ resource "meshstack_building_block_definition" "this" {
 
   version_spec = {
     draft         = var.hub.bbd_draft
-    deletion_mode = "PURGE"
+    deletion_mode = "DELETE"
+    runner_ref    = var.runner_ref
     implementation = {
       terraform = {
         ref_name          = var.hub.git_ref
