@@ -1,7 +1,29 @@
+variable "test_context" {
+  type = object({
+    workspace   = string
+    name_suffix = string
+    hub_git_ref = string
+
+    # Mode discriminator: set in foundation mode to order an already-deployed BBD version;
+    # null in build-from-source mode, which builds the BBD from hub source.
+    bbd_version_ref = optional(string)
+
+    # Cloud resource IDs. Needed in build-from-source mode (to provision the backplane) and, for
+    # tenant-level building blocks, also in foundation mode (the target_ref tenant id).
+    fixtures = optional(object({
+      stackit = object({
+        project_id     = string
+        mesh_tenant_id = string
+      })
+    }))
+  })
+  nullable = false
+}
+
 variable "stackit_service_account_key" {
   type      = string
-  nullable  = true
   sensitive = true
+  nullable  = true
   default   = null
 }
 
@@ -10,31 +32,8 @@ provider "stackit" {
   experiments         = ["iam"]
 }
 
-variable "bbd_version_ref" {
-  description = "If set, order an instance of this already-deployed BBD version instead of building one from hub source (smoke-test mode)."
-  type        = any
-  default     = null
-}
-
-variable "test_context" {
-  type = object({
-    hub_git_ref = optional(string)
-    workspace   = string
-    project     = optional(string)
-    name_suffix = string
-
-    fixtures = optional(object({
-      stackit = optional(object({
-        project_id     = string
-        mesh_tenant_id = string
-      }))
-    }))
-  })
-  nullable = false
-}
-
 module "stackit_storage_bucket" {
-  count  = var.bbd_version_ref == null ? 1 : 0
+  count  = var.test_context.bbd_version_ref == null ? 1 : 0
   source = "../"
   meshstack = {
     owning_workspace_identifier = var.test_context.workspace
@@ -50,7 +49,7 @@ module "stackit_storage_bucket" {
 }
 
 locals {
-  version_ref = var.bbd_version_ref != null ? var.bbd_version_ref : module.stackit_storage_bucket[0].building_block_definition.version_ref
+  version_ref = var.test_context.bbd_version_ref != null ? var.test_context.bbd_version_ref : module.stackit_storage_bucket[0].building_block_definition.version_ref
 }
 
 resource "meshstack_building_block_v2" "this" {

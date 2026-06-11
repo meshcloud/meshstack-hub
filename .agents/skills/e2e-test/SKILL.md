@@ -3,17 +3,21 @@ name: e2e-test
 description: >
   Write, run, and debug hub e2e tests for meshstack-hub modules. Use when asked to add, fix, or run
   an end-to-end smoke test for any building block module. Covers structure, test_context wiring,
-  conventions, the new-test checklist, running via the smoke-test runner, and debugging failures.
+  conventions, the new-test checklist, running via the smoke-test runner or from a foundation repo, and debugging failures.
 ---
 
 # Hub E2E Test Skill
 
-This skill is the authoritative reference for hub e2e tests. Modules that can be smoke-tested
-against a live meshStack instance include an `e2e/` directory alongside the module root. Tests are
-run by the meshstack-smoke-test repo (`../meshstack-smoke-test`).
+This skill is the authoritative reference for hub e2e test modules. Hub modules that can be tested
+against a live meshStack instance include an `e2e/` directory alongside the module root.
 
-For the runner architecture, commands, and conventions, see
-[`../meshstack-smoke-test/AGENTS.md`](../../../../meshstack-smoke-test/AGENTS.md).
+The purpose of these e2e tests is to ensure correct operation of building blocks in two different contexts.
+- **hub module e2e test**: deploy the hub module with an ephemeral backplane against a dev meshStack, ensuring that a fresh deployment of a hub module works out of the box using the latest version of all meshStack ecosystem components (i.e. meshStack, the official meshStack terraform provider, building block runners etc.). These tests are run by the meshcloud internal `meshcloud/meshstack-smoke-test` repo.
+- **foundation e2e tests**: deploy the hub module with a long-lived backplane against a production meshStack instance and deploy an ephemeral building block to verify that the building block as deployed by end users via meshStack is functional. These tests are run by foundation repositories like that set up enterprise landing zones on cloud platforms and integrate them with meshStack.
+
+meshcloud maintains the public [likvid-bank/likvid-cloudfoundation](https://github.com/likvid-bank/likvid-cloudfoundation) foundation repo and meshcloud `meshcloud/internal-cloudfoundation` for internal testing.
+
+To successfully work across these repositories, always read their AGENTS.md file to discover skills in these repositories.
 
 ---
 
@@ -31,63 +35,85 @@ modules/<cloud-provider>/<service-name>/
 
 ---
 
-## `test_context` field inventory
+## Invocation protocol (single source of truth)
 
-`e2e/main.tf` declares a single `variable "test_context"` object. The `test_context` output is
-defined in
+`e2e/main.tf` takes a **single `test_context` grab-bag** the smoke-test runner dumps **verbatim** as
+one var-file (keeping the runner module-agnostic). Declare **only the fields your module reads**;
+object-type conversion drops the rest. Its full shape is the `test_context` output in
 [`../meshstack-smoke-test/modules/test_context/main.tf`](../../../../meshstack-smoke-test/modules/test_context/main.tf).
-Declare only the fields your module actually uses, but **at minimum** include `hub_git_ref`,
-`workspace`, `project`, and `name_suffix`:
 
-| Field | Description |
-|---|---|
-| `hub_git_ref` | Committed SHA of the meshstack-hub checkout — always include |
-| `workspace` | `"smoke-test"` — shared smoke-test workspace |
-| `project` | smoke-test project identifier |
-| `name_suffix` | Timestamp string (e.g. `20260608143022`) — include in resource names for uniqueness |
+The mode is selected **solely by the optional `bbd_version_ref` field**:
 
-Cloud resource IDs always live under `fixtures` — use `var.test_context.fixtures.stackit.project_id`,
-not a flat `stackit_project_id` field on `test_context` (that pattern is outdated).
-
-For additional secrets not in `test_context` (SA keys, tokens), declare separate top-level
-`sensitive` variables — `setup-env.sh` in meshstack-smoke-test provides them via `TF_VAR_*`.
+| `bbd_version_ref` | Mode | Who runs it | What it does |
+|---|---|---|---|
+| null (unset) | **build-from-source** | meshstack-smoke-test (hub-e2e) | Builds the BBD from hub source via the relative `../` module + ephemeral backplane, then orders a building block. |
+| set | **foundation** | foundation repos (likvid/internal-cloudfoundation) | The foundation already deployed the BBD; the test only orders a building block against the given version ref. |
 
 ```hcl
 variable "test_context" {
   type = object({
-    hub_git_ref = string
     workspace   = string
-    project     = string
     name_suffix = string
+    hub_git_ref = string
 
-    fixtures = object({
+    # Mode discriminator: set in foundation mode to order an already-deployed BBD version;
+    # null in build-from-source mode, which builds the BBD from hub source.
+    bbd_version_ref = optional(string)
+
+    # Cloud resource IDs. Needed in build-from-source mode (to provision the backplane) and, for
+    # tenant-level building blocks, also in foundation mode (the target_ref tenant id).
+    fixtures = optional(object({
       stackit = object({
         project_id     = string
         mesh_tenant_id = string
       })
-    })
+    }))
   })
   nullable = false
 }
 ```
 
+Conventions that keep this clean and correct:
+
+- **The discriminator is `bbd_version_ref` alone — not `fixtures`.** `fixtures` is orthogonal to the
+  mode: tenant-level building blocks need `fixtures.<cloud>.mesh_tenant_id` for `target_ref` in *both*
+  modes, so you cannot key the mode off `fixtures` being present. Declare `fixtures = optional(...)`
+  and let each module decide whether it needs it (workspace-level blocks typically only need it in
+  build-from-source; tenant-level blocks need it in both). Its inner shape stays fully required, so a
+  half-populated `fixtures` is unrepresentable.
+- **`hub_git_ref` is required in both modes.** It is passed into the integration module's `const`
+  `hub.git_ref`, whose backplane `source` (`?ref=${var.hub.git_ref}`) is statically evaluated at
+  **init — regardless of `count`**. It must therefore resolve to a non-null string even in foundation
+  mode (where the module is not built), so it cannot be `optional`. The foundation already knows its
+  deployed ref and passes it through (`dependency.deployment.outputs.e2e.hub.git_ref`).
+- **Always-shared fields are required**: `workspace`, `name_suffix`, and `hub_git_ref` are used (or
+  statically evaluated) in both modes.
+- **Cloud resource IDs live under `fixtures`** (e.g. `var.test_context.fixtures.stackit.project_id`),
+  never as a flat top-level field.
+
+### Provider authentication secrets
+
+Provider authentication secrets should come via standard environment variables expected by these providers, not grab-bag fields in `test_context`.
+
 ---
 
 ## `e2e/main.tf` conventions
 
-- Source the module under test using a **relative path** to the module root (where
-  `meshstack_integration.tf` lives), **not** a GitHub URL. This ensures tests run against the local
-  branch without requiring a push. Map the module's flat provider inputs from `fixtures`:
+- **Source the module under test via a relative path** to the module root (where
+  `meshstack_integration.tf` lives), **not** a GitHub URL — so tests run against the local branch
+  without a push. Gate it on the mode with `count` (build-from-source only), and map the module's
+  flat provider inputs from `fixtures`:
 
 ```hcl
 module "my_stackit_module" {
-  source = "../"     # relative path to the meshstack_integration.tf root
+  count  = var.test_context.bbd_version_ref == null ? 1 : 0   # build-from-source mode only
+  source = "../"                                              # relative path to the meshstack_integration.tf root
   meshstack = {
     owning_workspace_identifier = var.test_context.workspace
     tags                        = {}
   }
   hub = {
-    git_ref   = var.test_context.hub_git_ref   # always use hub_git_ref — never hardcode "main"
+    git_ref   = var.test_context.hub_git_ref
     bbd_draft = true
   }
   stackit_project_id = var.test_context.fixtures.stackit.project_id
@@ -98,20 +124,28 @@ module "my_stackit_module" {
   git-repository and connector module), also source those dependencies using **relative paths**
   (e.g. `"../../stackit/git-repository"`, `"../forgejo-connector"`).
 
-- Create a `meshstack_building_block_v2` resource to exercise the building block end-to-end. Pass
-  `module.<name>.building_block_definition.version_ref` **directly** — do not unwrap it as
-  `{ uuid = module.<name>.building_block_definition.version_ref.uuid }`:
+- **Resolve the version ref in a `local`** — from `bbd_version_ref` in foundation mode, otherwise
+  from the built module. Pass it **directly** — do not unwrap it as `{ uuid = ...version_ref.uuid }`:
+
+```hcl
+locals {
+  version_ref = var.test_context.bbd_version_ref != null ? var.test_context.bbd_version_ref : module.my_stackit_module[0].building_block_definition.version_ref
+}
+```
+
+- Create a `meshstack_building_block_v2` resource that exercises the building block end-to-end.
+  Reference `test_context` directly (it is non-null in both modes):
 
 ```hcl
 resource "meshstack_building_block_v2" "this" {
   wait_for_completion = true
   spec = {
-    building_block_definition_version_ref = module.my_module.building_block_definition.version_ref
+    building_block_definition_version_ref = local.version_ref
 
     display_name = "smoke-test-<name>-${var.test_context.name_suffix}"
     target_ref = {
-      kind       = "meshWorkspace"
-      identifier = var.test_context.workspace
+      kind = "meshWorkspace"
+      name = var.test_context.workspace
     }
     inputs = { ... }
   }
@@ -127,7 +161,8 @@ target_ref = {
   name = var.test_context.workspace
 }
 
-# Tenant-level building block (cloud tenant required):
+# Tenant-level building block (cloud tenant required) — fixtures.<cloud>.mesh_tenant_id is provided
+# in BOTH modes for tenant-level blocks (the foundation supplies the tenant id it deployed against):
 target_ref = {
   kind = "meshTenant"
   uuid = var.test_context.fixtures.azure.mesh_tenant_id
@@ -143,6 +178,9 @@ target_ref = {
 - Always assert `status.status == "SUCCEEDED"` as the first check.
 - Assert meaningful output values (URLs, strings, booleans) to validate the building block executed
   correctly.
+- The same test file runs in **both** invocation modes (smoke-test via `tofu test`, foundation via
+  `terragrunt test`). Reference **`output.<name>`**, never `var.test_context.*` — `test_context` is
+  null in foundation mode and would crash the assertion.
 - Use `file("${path.root}/tests/<name>.expected.*")` for large expected values (JSON, Markdown) to
   keep assertions readable.
 
@@ -259,10 +297,15 @@ source setup-override-provider.sh
 ## Checklist for New E2E Tests
 
 - [ ] `e2e/` directory exists at the module root
-- [ ] `variable "test_context"` includes `hub_git_ref`, `workspace`, `project`, `name_suffix`
+- [ ] Single `variable "test_context"` grab-bag (`nullable = false`); declares only the fields the module reads
+- [ ] Mode selected **solely** by the optional `bbd_version_ref` (typed `optional(string)`); `fixtures` is orthogonal (tenant-level blocks need it in both modes)
+- [ ] `fixtures` is `optional()` with its inner shape fully required (no half-populated fixtures)
+- [ ] Always-shared fields (`workspace`, `name_suffix`, `hub_git_ref`) are required, not `optional()`
 - [ ] Cloud resource IDs sourced from `var.test_context.fixtures.*` (not flat `test_context` fields)
-- [ ] Module sourced via relative path (not a GitHub URL)
+- [ ] Scalar secrets are top-level `nullable` vars with `default = null` (foundation mode omits them)
+- [ ] Module sourced via relative path (not a GitHub URL), gated with `count = var.test_context.bbd_version_ref == null ? 1 : 0`
 - [ ] `hub.git_ref = var.test_context.hub_git_ref` — no hardcoded `"main"`
+- [ ] Version ref resolved in a `local` (`bbd_version_ref` in foundation mode, else the built module)
 - [ ] `building_block_definition_version_ref` uses the full `version_ref` object directly
 - [ ] `meshstack_building_block_v2` has `wait_for_completion = true`
-- [ ] tftest.hcl asserts `status.status == "SUCCEEDED"` and key outputs
+- [ ] tftest asserts `status.status == "SUCCEEDED"` and key outputs (references `var.test_context.*` directly — non-null in both modes)
