@@ -6,9 +6,7 @@ provider "stackit" {
 provider "aws" {
   access_key = var.admin_s3_access_key
   secret_key = var.admin_s3_secret_access_key
-  # us-east-1 causes AWS SDK Go v1 (provider ~> 4.0) to omit LocationConstraint in CreateBucket,
-  # which is what STACKIT StorageGRID requires (it rejects any LocationConstraint value).
-  region = "us-east-1"
+  region     = "eu01"
 
   endpoints {
     s3 = "https://object.storage.eu01.onstackit.cloud"
