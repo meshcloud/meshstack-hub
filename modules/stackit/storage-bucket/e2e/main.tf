@@ -6,7 +6,9 @@ variable "test_context" {
 
     # Mode discriminator: set in foundation mode to order an already-deployed BBD version;
     # null in build-from-source mode, which builds the BBD from hub source.
-    bbd_version_ref = optional(string)
+    bbd_version_ref = optional(object({
+      uuid = string
+    }))
 
     # Cloud resource IDs. Needed in build-from-source mode (to provision the backplane) and, for
     # tenant-level building blocks, also in foundation mode (the target_ref tenant id).
@@ -55,7 +57,7 @@ locals {
 resource "meshstack_building_block_v2" "this" {
   wait_for_completion = true
   spec = {
-    building_block_definition_version_ref = local.version_ref
+    building_block_definition_version_ref = { uuid = local.version_ref.uuid }
 
     display_name = "smoke-test-stackit-storage-bucket-${var.test_context.name_suffix}"
     target_ref = {
