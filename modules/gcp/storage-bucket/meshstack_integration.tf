@@ -181,14 +181,8 @@ resource "meshstack_building_block_definition" "gcp_storage_bucket" {
       bucket_url = {
         type            = "STRING"
         assignment_type = "RESOURCE_URL"
-        display_name    = "GCP Bucket URL"
-        description     = "The URL of the created GCP bucket"
-      }
-      bucket_self_link = {
-        type            = "STRING"
-        assignment_type = "RESOURCE_URL"
-        display_name    = "GCP Bucket Self Link"
-        description     = "The self link of the created GCP bucket"
+        display_name    = "GCP Console"
+        description     = "Opens the created bucket in the GCP console"
       }
       summary = {
         type            = "STRING"
