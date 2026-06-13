@@ -55,6 +55,10 @@ locals {
 }
 
 resource "meshstack_building_block_v2" "this" {
+  # Explicit dependency ensures the building block (and its delete run) is fully destroyed before
+  # any backplane resources are torn down. Without this, OpenTofu destroys the WIF federated
+  # identity providers in parallel with the delete run, causing 401s from the STACKIT provider.
+  depends_on          = [module.stackit_storage_bucket]
   wait_for_completion = true
   spec = {
     building_block_definition_version_ref = { uuid = local.version_ref.uuid }
