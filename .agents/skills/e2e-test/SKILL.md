@@ -58,7 +58,9 @@ variable "test_context" {
 
     # Mode discriminator: set in foundation mode to order an already-deployed BBD version;
     # null in build-from-source mode, which builds the BBD from hub source.
-    bbd_version_ref = optional(string)
+    bbd_version_ref = optional(object({
+      uuid = string
+    }))
 
     # Cloud resource IDs. Needed in build-from-source mode (to provision the backplane) and, for
     # tenant-level building blocks, also in foundation mode (the target_ref tenant id).
@@ -125,7 +127,7 @@ module "my_stackit_module" {
   (e.g. `"../../stackit/git-repository"`, `"../forgejo-connector"`).
 
 - **Resolve the version ref in a `local`** — from `bbd_version_ref` in foundation mode, otherwise
-  from the built module. Pass it **directly** — do not unwrap it as `{ uuid = ...version_ref.uuid }`:
+  from the built module:
 
 ```hcl
 locals {
@@ -134,13 +136,14 @@ locals {
 ```
 
 - Create a `meshstack_building_block_v2` resource that exercises the building block end-to-end.
-  Reference `test_context` directly (it is non-null in both modes):
+  Reference `test_context` directly (it is non-null in both modes). The provider's
+  `building_block_definition_version_ref` takes `{ uuid }` only — extract it explicitly:
 
 ```hcl
 resource "meshstack_building_block_v2" "this" {
   wait_for_completion = true
   spec = {
-    building_block_definition_version_ref = local.version_ref
+    building_block_definition_version_ref = { uuid = local.version_ref.uuid }
 
     display_name = "smoke-test-<name>-${var.test_context.name_suffix}"
     target_ref = {
@@ -298,7 +301,7 @@ source setup-override-provider.sh
 
 - [ ] `e2e/` directory exists at the module root
 - [ ] Single `variable "test_context"` grab-bag (`nullable = false`); declares only the fields the module reads
-- [ ] Mode selected **solely** by the optional `bbd_version_ref` (typed `optional(string)`); `fixtures` is orthogonal (tenant-level blocks need it in both modes)
+- [ ] Mode selected **solely** by the optional `bbd_version_ref` (typed `optional(object({ uuid = string }))`); `fixtures` is orthogonal (tenant-level blocks need it in both modes)
 - [ ] `fixtures` is `optional()` with its inner shape fully required (no half-populated fixtures)
 - [ ] Always-shared fields (`workspace`, `name_suffix`, `hub_git_ref`) are required, not `optional()`
 - [ ] Cloud resource IDs sourced from `var.test_context.fixtures.*` (not flat `test_context` fields)
@@ -306,6 +309,6 @@ source setup-override-provider.sh
 - [ ] Module sourced via relative path (not a GitHub URL), gated with `count = var.test_context.bbd_version_ref == null ? 1 : 0`
 - [ ] `hub.git_ref = var.test_context.hub_git_ref` — no hardcoded `"main"`
 - [ ] Version ref resolved in a `local` (`bbd_version_ref` in foundation mode, else the built module)
-- [ ] `building_block_definition_version_ref` uses the full `version_ref` object directly
+- [ ] `building_block_definition_version_ref = { uuid = local.version_ref.uuid }` — provider only accepts `{ uuid }`, extract it explicitly
 - [ ] `meshstack_building_block_v2` has `wait_for_completion = true`
 - [ ] tftest asserts `status.status == "SUCCEEDED"` and key outputs (references `var.test_context.*` directly — non-null in both modes)

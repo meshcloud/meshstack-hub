@@ -5,17 +5,25 @@ variable "test_context" {
     name_suffix          = string
     forgejo_base_url     = string
     forgejo_organization = string
+
+    # Mode discriminator: set in foundation mode to order an already-deployed BBD version;
+    # null in build-from-source mode, which builds the BBD from hub source.
+    bbd_version_ref = optional(object({
+      uuid = string
+    }))
   })
   nullable = false
 }
 
 variable "stackit_git_forgejo_token" {
   type      = string
-  nullable  = false
+  nullable  = true
   sensitive = true
+  default   = null
 }
 
 module "stackit_git_repository" {
+  count  = var.test_context.bbd_version_ref == null ? 1 : 0
   source = "../"
   meshstack = {
     owning_workspace_identifier = var.test_context.workspace
@@ -31,10 +39,14 @@ module "stackit_git_repository" {
   forgejo_organization = var.test_context.forgejo_organization
 }
 
+locals {
+  version_ref = var.test_context.bbd_version_ref != null ? var.test_context.bbd_version_ref : module.stackit_git_repository[0].building_block_definition.version_ref
+}
+
 resource "meshstack_building_block_v2" "this" {
   wait_for_completion = true
   spec = {
-    building_block_definition_version_ref = module.stackit_git_repository.building_block_definition.version_ref
+    building_block_definition_version_ref = { uuid = local.version_ref.uuid }
 
     display_name = "smoke-test-stackit-git-repository-hub-${var.test_context.name_suffix}"
     target_ref = {
