@@ -137,10 +137,18 @@ locals {
 
 - Create a `meshstack_building_block_v2` resource that exercises the building block end-to-end.
   Reference `test_context` directly (it is non-null in both modes). The provider's
-  `building_block_definition_version_ref` takes `{ uuid }` only — extract it explicitly:
+  `building_block_definition_version_ref` takes `{ uuid }` only — extract it explicitly.
+
+- **Always add `depends_on = [module.<integration_module>]`** to `meshstack_building_block_v2.this`.
+  WIF federated identity providers have no Terraform dependents (nothing references their outputs),
+  so OpenTofu schedules their destruction in parallel with the BB delete run. This causes the BB
+  delete run to fail with 401s because the cloud WIF trust is already gone before the delete run
+  can authenticate. The explicit `depends_on` forces the BB resource (including its delete run) to
+  be fully destroyed before any backplane resources are torn down.
 
 ```hcl
 resource "meshstack_building_block_v2" "this" {
+  depends_on          = [module.<integration_module>]   # prevents teardown race with WIF providers
   wait_for_completion = true
   spec = {
     building_block_definition_version_ref = { uuid = local.version_ref.uuid }
@@ -310,5 +318,6 @@ source setup-override-provider.sh
 - [ ] `hub.git_ref = var.test_context.hub_git_ref` — no hardcoded `"main"`
 - [ ] Version ref resolved in a `local` (`bbd_version_ref` in foundation mode, else the built module)
 - [ ] `building_block_definition_version_ref = { uuid = local.version_ref.uuid }` — provider only accepts `{ uuid }`, extract it explicitly
+- [ ] `meshstack_building_block_v2` has `depends_on = [module.<integration_module>]` to prevent WIF teardown race (delete run must finish before backplane resources are destroyed)
 - [ ] `meshstack_building_block_v2` has `wait_for_completion = true`
 - [ ] tftest asserts `status.status == "SUCCEEDED"` and key outputs (references `var.test_context.*` directly — non-null in both modes)
