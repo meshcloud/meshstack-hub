@@ -9,7 +9,7 @@ locals {
 
 resource "time_static" "runner_key_expiry" {}
 
-ephemeral "tls_private_key" "runner" {
+resource "tls_private_key" "runner" {
   algorithm = "RSA"
   rsa_bits  = 4096
 }
@@ -44,7 +44,7 @@ resource "google_secret_manager_secret" "runner_private_key" {
 
 resource "google_secret_manager_secret_version" "runner_private_key" {
   secret         = google_secret_manager_secret.runner_private_key.id
-  secret_data_wo = ephemeral.tls_private_key.runner.private_key_pem_pkcs8
+  secret_data_wo = resource.tls_private_key.runner.private_key_pem_pkcs8
 }
 
 resource "google_secret_manager_secret" "runner_config" {
@@ -218,7 +218,7 @@ resource "meshstack_building_block_runner" "this" {
   spec = {
     display_name        = var.runner_display_name
     implementation_type = "TERRAFORM"
-    public_key          = ephemeral.tls_private_key.runner.public_key_pem
+    public_key          = resource.tls_private_key.runner.public_key_pem
     restriction         = "PRIVATE"
   }
 }
