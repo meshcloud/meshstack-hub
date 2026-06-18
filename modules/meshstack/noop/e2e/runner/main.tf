@@ -20,6 +20,7 @@ module "noop" {
     bbd_draft = true
   }
   runner_ref = module.backplane.runner_ref
+  depends_on = [module.backplane] # Without the backplane there is no runner and no place to run the BB.
 }
 
 resource "meshstack_building_block_v2" "this" {
@@ -43,4 +44,6 @@ resource "meshstack_building_block_v2" "this" {
       multi_select_json = { value_multi_select = ["multi2", "multi1"] }
     }
   }
+
+  depends_on = [module.backplane] # Without the backplane there is no runner and no place to run the BB.
 }
