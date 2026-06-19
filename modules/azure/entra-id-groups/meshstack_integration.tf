@@ -217,6 +217,13 @@ resource "meshstack_building_block_definition" "this" {
         assignment_type = "USER_INPUT"
         argument        = jsonencode("")
       }
+      user_lookup_attribute = {
+        type            = "STRING"
+        display_name    = "User Lookup Attribute"
+        description     = "Azure AD attribute used to look up users. 'upn' matches on User Principal Name; 'email' matches on the primary mail address."
+        assignment_type = "STATIC"
+        argument        = jsonencode("upn")
+      }
       users = {
         type            = "CODE"
         display_name    = "Users"
@@ -248,15 +255,15 @@ terraform {
   required_providers {
     meshstack = {
       source  = "meshcloud/meshstack"
-      version = "~> 0.21.0"
+      version = ">= 0.21.0"
     }
     azurerm = {
       source  = "hashicorp/azurerm"
-      version = "~> 4.0"
+      version = ">= 4.0"
     }
     azuread = {
       source  = "hashicorp/azuread"
-      version = "~> 3.8"
+      version = ">= 3.8"
     }
   }
 }

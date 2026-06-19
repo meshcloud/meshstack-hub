@@ -4,8 +4,8 @@ This backplane creates the automation identity used to provision Entra security 
 
 ## What it provisions
 
-- **Resource Group** — hosts the UAMI in the configured Azure region.
 - **User-Assigned Managed Identity (UAMI)** — the automation principal that runs the building block. No client secrets.
+- **Resource Group** — hosts the UAMI in the configured Azure region.
 - **Workload Identity Federation credentials** — bind the UAMI to the meshStack replicator's OIDC issuer and subject, enabling secret-free authentication.
 - **Microsoft Graph app roles** on the UAMI:
   - `User.Read.All` — look up users by UPN or primary mail address to resolve object IDs for group membership.

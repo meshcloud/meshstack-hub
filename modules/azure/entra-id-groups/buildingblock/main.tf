@@ -32,16 +32,10 @@ data "azuread_user" "by_email" {
 resource "azuread_group" "project_role" {
   for_each = toset(local.roles)
 
-  display_name     = join("-", concat(local.name_parts, [each.value]))
-  security_enabled = true
-  mail_enabled     = false
-}
-
-resource "azuread_administrative_unit_member" "project_role" {
-  for_each = local.au_id != null ? toset(local.roles) : toset([])
-
-  administrative_unit_object_id = local.au_id
-  member_object_id              = azuread_group.project_role[each.value].object_id
+  display_name            = join(".", concat(local.name_parts, [each.value]))
+  security_enabled        = true
+  mail_enabled            = false
+  administrative_unit_ids = local.au_id != null ? [local.au_id] : []
 }
 
 resource "azuread_group_member" "project_role" {
