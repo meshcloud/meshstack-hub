@@ -45,5 +45,5 @@ resource "meshstack_building_block_v2" "this" {
     }
   }
 
-  depends_on = [module.backplane] # Without the backplane there is no runner and no place to run the BB.
+  depends_on = [module.noop] # Destroy the instance before the definition to avoid reference errors.
 }
