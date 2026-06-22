@@ -117,6 +117,10 @@ resource "meshstack_platform" "aks" {
       }
     }
   }
+
+  lifecycle {
+    ignore_changes = [spec.availability]
+  }
 }
 
 resource "meshstack_landingzone" "aks_default" {

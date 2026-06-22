@@ -310,6 +310,22 @@ const detectors = [
       };
     },
   },
+  {
+    id: "platform_lifecycle_ignore_availability",
+    category: "integration",
+    name: "meshstack_platform has lifecycle ignore_changes = [availability]",
+    emoji: "🔄",
+    fn: (mod) => {
+      const content = readIntegrationTf(mod);
+      if (!content) return { pass: false, detail: "no integration file" };
+      const hasPlatformResource = /resource\s+"meshstack_platform"/.test(content);
+      if (!hasPlatformResource) return { pass: null, detail: "no meshstack_platform resource" };
+      return {
+        pass: /lifecycle\s*\{[\s\S]*?ignore_changes\s*=\s*\[[^\]]*spec\.availability[^\]]*\]/.test(content),
+        detail: "add lifecycle { ignore_changes = [spec.availability] } to meshstack_platform resource",
+      };
+    },
+  },
 
   // ─── Azure Backplane ────────────────────────────────────────────────────
   {

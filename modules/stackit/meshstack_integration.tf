@@ -73,6 +73,10 @@ resource "meshstack_platform" "stackit" {
     owned_by_workspace = var.meshstack.owning_workspace_identifier
   }
 
+  lifecycle {
+    ignore_changes = [spec.availability]
+  }
+
   spec = {
     display_name = "STACKIT Project"
     description  = "Create a STACKIT project with role-based access control."

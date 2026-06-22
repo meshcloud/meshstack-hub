@@ -211,6 +211,10 @@ resource "meshstack_platform" "azure" {
       }
     }
   }
+
+  lifecycle {
+    ignore_changes = [spec.availability]
+  }
 }
 
 resource "meshstack_landingzone" "azure_default" {
