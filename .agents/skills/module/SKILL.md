@@ -37,6 +37,7 @@ conventions, see the reference files in `.agents/references/`.
 5. **Write the BBD readme** → `.agents/references/bbd-readme.md`
 
 6. **Write `meshstack_integration.tf`** — follow AGENTS.md § `meshstack_integration.tf` Conventions
+   - Always add `lifecycle { ignore_changes = [ availability ] }` to every `meshstack_platform` resource (see AGENTS.md § `meshstack_platform` Lifecycle)
 
 7. **Validate**:
    ```sh

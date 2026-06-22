@@ -159,6 +159,22 @@ resource "meshstack_building_block_definition" "this" {
 }
 ```
 
+<!-- scorecard-checks: platform_lifecycle_ignore_availability -->
+### `meshstack_platform` Lifecycle
+
+Every `meshstack_platform` resource must include a `lifecycle` block that ignores changes to `availability`:
+
+```hcl
+resource "meshstack_platform" "this" {
+  # ...
+  lifecycle {
+    ignore_changes = [spec.availability]
+  }
+}
+```
+
+The `availability` field controls publication state and access restrictions. meshStack operators modify this after initial deployment (e.g. to publish a platform to users) — Terraform must not reset it on subsequent applies.
+
 ---
 
 <!-- scorecard-checks: provider_pinned -->
@@ -336,5 +352,6 @@ See [.agents/skills/write-e2e-test/SKILL.md](.agents/skills/write-e2e-test/SKILL
 - [ ] `meshstack` and `hub` variables are at the end of the variable section
 - [ ] `logo.png` included in `buildingblock/`
 - [ ] No `documentation_md` output in `backplane/` — use BBD `readme` field and `backplane/README.md` instead
+- [ ] `meshstack_platform` resources include `lifecycle { ignore_changes = [spec.availability] }`
 - [ ] No trailing whitespace
 - [ ] **Azure modules**: also follow the [Azure Backplane Checklist](.agents/skills/azure-backplane.md#checklist-for-azure-backplanes)

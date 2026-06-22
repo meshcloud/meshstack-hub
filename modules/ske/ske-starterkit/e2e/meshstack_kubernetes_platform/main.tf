@@ -146,6 +146,10 @@ resource "meshstack_platform" "this" {
 
     contributing_workspaces = []
   }
+
+  lifecycle {
+    ignore_changes = [spec.availability]
+  }
 }
 
 # dev meshLandingZone
