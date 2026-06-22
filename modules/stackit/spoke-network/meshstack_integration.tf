@@ -171,10 +171,9 @@ resource "meshstack_building_block_definition" "this" {
 
       ipv4_nameservers = {
         display_name    = "DNS Nameservers"
-        description     = "JSON-encoded list of IPv4 DNS nameservers, e.g. '[\"8.8.8.8\",\"8.8.4.4\"]'. Leave blank to use STACKIT defaults."
+        description     = "Comma-separated list of IPv4 DNS nameservers, e.g. '8.8.8.8,8.8.4.4'. Leave blank to use STACKIT defaults."
         type            = "STRING"
         assignment_type = "USER_INPUT"
-        mandatory       = false
       }
     }
 

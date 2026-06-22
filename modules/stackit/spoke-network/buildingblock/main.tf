@@ -1,5 +1,5 @@
 locals {
-  nameservers = var.ipv4_nameservers != null && var.ipv4_nameservers != "" ? jsondecode(var.ipv4_nameservers) : null
+  nameservers = var.ipv4_nameservers != null && var.ipv4_nameservers != "" ? split(",", var.ipv4_nameservers) : null
 }
 
 resource "stackit_routing_table" "this" {

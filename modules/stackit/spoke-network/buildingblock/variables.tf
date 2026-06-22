@@ -48,5 +48,5 @@ variable "ipv4_nameservers" {
   type        = string
   default     = null
   nullable    = true
-  description = "JSON-encoded list of IPv4 DNS nameservers, e.g. '[\"8.8.8.8\",\"8.8.4.4\"]'. Leave null to use STACKIT defaults."
+  description = "Comma-separated list of IPv4 DNS nameservers, e.g. '8.8.8.8,8.8.4.4'. Leave null to use STACKIT defaults."
 }
