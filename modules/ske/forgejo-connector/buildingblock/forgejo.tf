@@ -52,12 +52,21 @@ resource "terraform_data" "await_pipeline_workflow" {
     sha256(jsonencode(local.action_variables)),
   ]
 
+  # This relies on the actual workflow definition in
+  # https://github.com/likvid-bank/starterkit-template-stackit-ai-summarizer/tree/ffba93a6e7e1aa12032b5ae5697a5dcdc481a74b/.forgejo/workflows
   provisioner "local-exec" {
-    command = "${path.module}/trigger_and_await_forgejo_workflow.py"
+    # The script polls indefinitely (Forgejo exposes no run-level status to bound
+    # on); cap the wait at 10 minutes here since local-exec has no timeout option.
+    command = "timeout 600 ${path.module}/trigger_and_await_forgejo_workflow.py"
     environment = {
       REPOSITORY_ID = tostring(var.repository_id)
       WORKFLOW_NAME = "pipeline.yaml"
       BRANCH        = var.stage
+      # Jobs (as named in /actions/tasks) that must all succeed for the run to
+      # count as done. Required because Forgejo's API exposes no run-level status
+      # and needs-gated jobs only appear once their dependency finishes; see the
+      # script header for details.
+      EXPECTED_JOBS = "build_image,deploy"
     }
   }
 }
