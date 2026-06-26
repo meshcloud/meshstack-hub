@@ -161,7 +161,7 @@ resource "meshstack_platform" "azure" {
             {
               azure_role = {
                 alias = "admin"
-                id    = data.azurerm_role_definition.contributor.id
+                id    = basename(data.azurerm_role_definition.contributor.role_definition_id)
               }
               project_role_ref = {
                 name = "admin"
@@ -170,7 +170,7 @@ resource "meshstack_platform" "azure" {
             {
               azure_role = {
                 alias = "user"
-                id    = data.azurerm_role_definition.contributor.id
+                id    = basename(data.azurerm_role_definition.contributor.role_definition_id)
               }
               project_role_ref = {
                 name = "user"
@@ -179,7 +179,7 @@ resource "meshstack_platform" "azure" {
             {
               azure_role = {
                 alias = "reader"
-                id    = data.azurerm_role_definition.reader.id
+                id    = basename(data.azurerm_role_definition.reader.role_definition_id)
               }
               project_role_ref = {
                 name = "reader"
