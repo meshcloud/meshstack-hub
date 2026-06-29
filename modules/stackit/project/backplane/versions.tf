@@ -1,10 +1,10 @@
 terraform {
-  required_version = ">= 1.11.0"
+  required_version = ">= 1.12.0"
 
   required_providers {
     stackit = {
       source  = "stackitcloud/stackit"
-      version = ">= 0.89.0"
+      version = ">= 0.98.0"
     }
   }
 }

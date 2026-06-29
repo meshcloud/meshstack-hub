@@ -57,7 +57,16 @@ module "backplane" {
   project_id           = var.stackit_project_id
   organization_id      = var.stackit_organization_id
   service_account_name = coalesce(var.stackit_service_account_name, "mesh-project")
+
+  workload_identity_federation = {
+    issuer = data.meshstack_integrations.integrations.workload_identity_federation.replicator.issuer
+    subjects = [
+      "${trimsuffix(data.meshstack_integrations.integrations.workload_identity_federation.replicator.subject, ":replicator")}:workspace.${var.meshstack.owning_workspace_identifier}.buildingblockdefinition.${meshstack_building_block_definition.this.metadata.uuid}"
+    ]
+  }
 }
+
+data "meshstack_integrations" "integrations" {}
 
 output "building_block_definition" {
   description = "BBD is consumed in building block compositions."
@@ -169,32 +178,28 @@ resource "meshstack_building_block_definition" "this" {
 
       service_account_email = {
         display_name    = "Service Account Email"
-        description     = "Email of the STACKIT service account that owns created projects."
+        description     = "Email of the STACKIT service account for WIF-based authentication."
         type            = "STRING"
         assignment_type = "STATIC"
         argument        = jsonencode(module.backplane.service_account_email)
       }
 
-      service_account_key_json = {
-        display_name    = "Service Account Key JSON"
-        description     = "Service account key JSON for authenticating the STACKIT provider."
-        type            = "FILE"
-        assignment_type = "STATIC"
-        sensitive = {
-          argument = {
-            secret_value   = "data:application/json;base64,${base64encode(module.backplane.service_account_key_json)}"
-            secret_version = nonsensitive(sha256(module.backplane.service_account_key_json))
-          }
-        }
-      }
-
-      STACKIT_SERVICE_ACCOUNT_KEY_PATH = {
-        display_name    = "STACKIT Credentials Path"
-        description     = "Path to the STACKIT service account credentials file."
+      STACKIT_USE_OIDC = {
+        display_name    = "STACKIT Use OIDC"
+        description     = "Enables OIDC-based WIF for the STACKIT provider."
         type            = "STRING"
         assignment_type = "STATIC"
         is_environment  = true
-        argument        = jsonencode("./service_account_key_json")
+        argument        = jsonencode("1")
+      }
+
+      STACKIT_FEDERATED_TOKEN_FILE = {
+        display_name    = "STACKIT Federated Token File"
+        description     = "Path to the WIF token file injected by meshStack."
+        type            = "STRING"
+        assignment_type = "STATIC"
+        is_environment  = true
+        argument        = jsonencode("/var/run/secrets/workload-identity/azure/token")
       }
 
       project_name = {
@@ -250,7 +255,7 @@ terraform {
     }
     stackit = {
       source  = "stackitcloud/stackit"
-      version = ">= 0.89.0"
+      version = ">= 0.98.0"
     }
   }
 }
