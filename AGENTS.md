@@ -217,6 +217,10 @@ See [.agents/skills/aws-backplane.md](.agents/skills/aws-backplane.md) for the f
 
 See [.agents/skills/azure-backplane.md](.agents/skills/azure-backplane.md) for the full Azure backplane identity conventions, including UAMI patterns, WIF wiring, required variables/outputs, and the Azure backplane checklist.
 
+## STACKIT Backplane Identity Conventions
+
+See [.agents/skills/stackit-backplane.md](.agents/skills/stackit-backplane.md) for the full STACKIT backplane identity conventions, including the service account + key pattern, required variables/outputs, provider configuration, and the STACKIT backplane checklist.
+
 ---
 
 <!-- scorecard-checks: readme_frontmatter, logo, app_team_readme, bbd_readme, bbd_readme_no_leading_heading, bbd_readme_shared_responsibility, no_documentation_md_output -->

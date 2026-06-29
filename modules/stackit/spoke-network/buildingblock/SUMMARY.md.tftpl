@@ -1,0 +1,10 @@
+# Spoke Network
+
+| Property | Value |
+|----------|-------|
+| **Network ID** | `${network_id}` |
+| **Network CIDR** | `${network_cidr}` |
+| **Hub Network Area** | `${network_area_id}` |
+%{~ if has_routing_table}
+| **Routing Table** | `${routing_table_id}` |
+%{~ endif}
