@@ -12,24 +12,29 @@ This Terraform module provisions a STACKIT project with user access control.
 
 ## Requirements
 
-- Terraform `>= 1.6.0`
-- STACKIT Provider `>= 0.60.0`
+- Terraform `>= 1.11.0`
+- STACKIT Provider `>= 0.98.0`
 
 ## Providers
+
+Authentication uses Workload Identity Federation (OIDC token exchange) — no long-lived
+service account key. meshStack injects the federated token file and sets `STACKIT_USE_OIDC`
+and `STACKIT_FEDERATED_TOKEN_FILE` in the environment.
 
 ```hcl
 terraform {
   required_providers {
     stackit = {
       source  = "stackitcloud/stackit"
-      version = ">= 0.60.0"
+      version = ">= 0.98.0"
     }
   }
 }
 
 provider "stackit" {
-  service_account_key_path = "/path/to/service-account-key.json"
-  experiments             = ["iam"]
+  service_account_email = var.service_account_email
+  use_oidc              = true
+  experiments           = ["iam"] # Required for authorization resources
 }
 ```
 
@@ -38,8 +43,8 @@ provider "stackit" {
 
 | Name | Version |
 |------|---------|
-| <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.6.0 |
-| <a name="requirement_stackit"></a> [stackit](#requirement\_stackit) | >= 0.60.0 |
+| <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.11.0 |
+| <a name="requirement_stackit"></a> [stackit](#requirement\_stackit) | >= 0.98.0 |
 
 ## Modules
 
@@ -63,7 +68,7 @@ No modules.
 | <a name="input_parent_container_id"></a> [parent\_container\_id](#input\_parent\_container\_id) | The parent container ID (organization or folder) where the project will be created. | `string` | n/a | yes |
 | <a name="input_parent_container_ids"></a> [parent\_container\_ids](#input\_parent\_container\_ids) | Parent container IDs for different environments. If environment is set, the corresponding container ID will be used. | <pre>object({<br/>    production  = optional(string)<br/>    staging     = optional(string)<br/>    development = optional(string)<br/>  })</pre> | `{}` | no |
 | <a name="input_project_name"></a> [project\_name](#input\_project\_name) | The name of the StackIt project to create. | `string` | n/a | yes |
-| <a name="input_service_account_email"></a> [service\_account\_email](#input\_service\_account\_email) | The email address of the service account that will own this project. | `string` | n/a | yes |
+| <a name="input_service_account_email"></a> [service\_account\_email](#input\_service\_account\_email) | Email of the STACKIT service account for WIF-based authentication and project ownership. | `string` | n/a | yes |
 | <a name="input_users"></a> [users](#input\_users) | List of users from authoritative system | <pre>list(object({<br/>    meshIdentifier = string<br/>    username       = string<br/>    firstName      = string<br/>    lastName       = string<br/>    email          = string<br/>    euid           = string<br/>    roles          = list(string)<br/>  }))</pre> | `[]` | no |
 
 ## Outputs
