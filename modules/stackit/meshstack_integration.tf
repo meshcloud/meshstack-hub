@@ -143,13 +143,14 @@ resource "meshstack_building_block_definition" "this" {
   }
 
   spec = {
-    display_name        = "STACKIT Project"
-    symbol              = "https://raw.githubusercontent.com/meshcloud/meshstack-hub/${var.hub.git_ref}/modules/stackit/project/buildingblock/logo.png"
-    description         = "Creates a new STACKIT project and manages user access permissions with role-based access control."
-    support_url         = "https://portal.stackit.cloud"
-    target_type         = "TENANT_LEVEL"
-    run_transparency    = true
-    supported_platforms = [{ name = "STACKIT" }]
+    display_name              = "STACKIT Project"
+    symbol                    = "https://raw.githubusercontent.com/meshcloud/meshstack-hub/${var.hub.git_ref}/modules/stackit/project/buildingblock/logo.png"
+    description               = "Creates a new STACKIT project and manages user access permissions with role-based access control."
+    support_url               = "https://portal.stackit.cloud"
+    target_type               = "TENANT_LEVEL"
+    run_transparency          = true
+    supported_platforms       = [{ name = "STACKIT" }]
+    use_in_landing_zones_only = true
   }
 
   version_spec = {
@@ -221,7 +222,7 @@ resource "meshstack_building_block_definition" "this" {
       project_url = {
         display_name    = "Open Project"
         type            = "STRING"
-        assignment_type = "RESOURCE_URL"
+        assignment_type = "SIGN_IN_URL"
       }
 
       project_id = {
