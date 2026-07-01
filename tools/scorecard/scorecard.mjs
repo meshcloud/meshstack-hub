@@ -250,6 +250,54 @@ const detectors = [
     },
   },
   {
+    id: "bbd_inputs_explicit_defaults",
+    category: "integration",
+    name: "BBD input argument vars with optional() have explicit defaults",
+    emoji: "🧱",
+    fn: (mod) => {
+      const content = readIntegrationTf(mod);
+      if (!content) return { pass: false, detail: "no integration file" };
+
+      const bbdResources = extractBBDResourceBlocks(content);
+      if (bbdResources.length === 0) {
+        return { pass: null, detail: "no meshstack_building_block_definition resource" };
+      }
+
+      const referencedVars = collectBBDInputArgumentVariableReferences(content);
+      if (referencedVars.size === 0) {
+        return { pass: true, detail: "no var.* references in BBD input arguments" };
+      }
+
+      const variableBlocks = extractVariableBlocks(content);
+      const violations = [];
+
+      for (const varName of referencedVars) {
+        const variableBlock = variableBlocks.get(varName);
+        if (!variableBlock) continue;
+
+        const hasOptional = /optional\s*\(/.test(variableBlock);
+        if (!hasOptional) continue;
+
+        const hasDefault = /^\s*default\s*=/m.test(variableBlock);
+        const hasBareObjectDefault = /default\s*=\s*\{\s*\}/s.test(variableBlock);
+
+        if (!hasDefault || hasBareObjectDefault) {
+          const reason = !hasDefault ? "missing default" : "bare default = {}";
+          violations.push(`${varName} (${reason})`);
+        }
+      }
+
+      if (violations.length === 0) return { pass: true };
+
+      const shown = violations.slice(0, 5).join(", ");
+      const more = violations.length > 5 ? ` (+${violations.length - 5} more)` : "";
+      return {
+        pass: false,
+        detail: `set explicit defaults for vars referenced by BBD input arguments: ${shown}${more}`,
+      };
+    },
+  },
+  {
     id: "bbd_readme",
     category: "integration",
     name: "BBD readme field present",
@@ -571,6 +619,203 @@ function readBackplaneFile(mod, filename) {
   const p = join(mod.path, "backplane", filename);
   if (!existsSync(p)) return null;
   return readFileSync(p, "utf-8");
+}
+
+function extractBBDResourceBlocks(content) {
+  return content.match(/^resource\s+"meshstack_building_block_definition"\s+"[^"]+"\s*\{[\s\S]*?^}/gm) || [];
+}
+
+function extractVariableBlocks(content) {
+  const blocks = new Map();
+  const re = /^variable\s+"([^"]+)"\s*\{[\s\S]*?^}/gm;
+  for (const m of content.matchAll(re)) {
+    blocks.set(m[1], m[0]);
+  }
+  return blocks;
+}
+
+function findMatchingBrace(text, openingBraceIndex) {
+  if (openingBraceIndex < 0 || text[openingBraceIndex] !== "{") return -1;
+
+  let depth = 0;
+  let inString = false;
+  let escaped = false;
+  let inLineComment = false;
+  let inBlockComment = false;
+
+  for (let i = openingBraceIndex; i < text.length; i++) {
+    const ch = text[i];
+    const next = text[i + 1];
+
+    if (inLineComment) {
+      if (ch === "\n") inLineComment = false;
+      continue;
+    }
+
+    if (inBlockComment) {
+      if (ch === "*" && next === "/") {
+        inBlockComment = false;
+        i++;
+      }
+      continue;
+    }
+
+    if (inString) {
+      if (escaped) {
+        escaped = false;
+      } else if (ch === "\\") {
+        escaped = true;
+      } else if (ch === "\"") {
+        inString = false;
+      }
+      continue;
+    }
+
+    if (ch === "#") {
+      inLineComment = true;
+      continue;
+    }
+    if (ch === "/" && next === "/") {
+      inLineComment = true;
+      i++;
+      continue;
+    }
+    if (ch === "/" && next === "*") {
+      inBlockComment = true;
+      i++;
+      continue;
+    }
+    if (ch === "\"") {
+      inString = true;
+      continue;
+    }
+
+    if (ch === "{") {
+      depth++;
+      continue;
+    }
+
+    if (ch === "}") {
+      depth--;
+      if (depth === 0) return i;
+      if (depth < 0) return -1;
+    }
+  }
+
+  return -1;
+}
+
+function findExpressionEnd(text, startIndex) {
+  let inString = false;
+  let escaped = false;
+  let inLineComment = false;
+  let inBlockComment = false;
+  let parenDepth = 0;
+  let bracketDepth = 0;
+  let braceDepth = 0;
+
+  for (let i = startIndex; i < text.length; i++) {
+    const ch = text[i];
+    const next = text[i + 1];
+
+    if (inLineComment) {
+      if (ch === "\n") {
+        inLineComment = false;
+        if (parenDepth === 0 && bracketDepth === 0 && braceDepth === 0) return i;
+      }
+      continue;
+    }
+
+    if (inBlockComment) {
+      if (ch === "*" && next === "/") {
+        inBlockComment = false;
+        i++;
+      }
+      continue;
+    }
+
+    if (inString) {
+      if (escaped) {
+        escaped = false;
+      } else if (ch === "\\") {
+        escaped = true;
+      } else if (ch === "\"") {
+        inString = false;
+      }
+      continue;
+    }
+
+    if (ch === "#") {
+      inLineComment = true;
+      continue;
+    }
+    if (ch === "/" && next === "/") {
+      inLineComment = true;
+      i++;
+      continue;
+    }
+    if (ch === "/" && next === "*") {
+      inBlockComment = true;
+      i++;
+      continue;
+    }
+    if (ch === "\"") {
+      inString = true;
+      continue;
+    }
+
+    if (ch === "(") parenDepth++;
+    if (ch === ")") parenDepth = Math.max(0, parenDepth - 1);
+    if (ch === "[") bracketDepth++;
+    if (ch === "]") bracketDepth = Math.max(0, bracketDepth - 1);
+    if (ch === "{") braceDepth++;
+    if (ch === "}") braceDepth = Math.max(0, braceDepth - 1);
+
+    if (ch === "\n" && parenDepth === 0 && bracketDepth === 0 && braceDepth === 0) {
+      return i;
+    }
+  }
+
+  return text.length;
+}
+
+function collectBBDInputArgumentVariableReferences(content) {
+  const refs = new Set();
+  const resources = extractBBDResourceBlocks(content);
+
+  for (const resourceBlock of resources) {
+    const inputsRe = /inputs\s*=\s*\{/g;
+    for (const m of resourceBlock.matchAll(inputsRe)) {
+      const openingBraceIndex = m.index + m[0].lastIndexOf("{");
+      const closingBraceIndex = findMatchingBrace(resourceBlock, openingBraceIndex);
+      if (closingBraceIndex === -1) continue;
+
+      const inputsBody = resourceBlock.slice(openingBraceIndex + 1, closingBraceIndex);
+      const argumentRe = /\bargument\s*=\s*/g;
+
+      for (const argumentMatch of inputsBody.matchAll(argumentRe)) {
+        let exprStart = argumentMatch.index + argumentMatch[0].length;
+        while (exprStart < inputsBody.length && /\s/.test(inputsBody[exprStart])) exprStart++;
+        if (exprStart >= inputsBody.length) continue;
+
+        let exprEnd;
+        if (inputsBody[exprStart] === "{") {
+          const blockEnd = findMatchingBrace(inputsBody, exprStart);
+          if (blockEnd === -1) continue;
+          exprEnd = blockEnd + 1;
+        } else {
+          exprEnd = findExpressionEnd(inputsBody, exprStart);
+        }
+
+        const expression = inputsBody.slice(exprStart, exprEnd);
+        for (const varMatch of expression.matchAll(/\bvar\.([A-Za-z_][A-Za-z0-9_]*)\b/g)) {
+          refs.add(varMatch[1]);
+        }
+      }
+    }
+  }
+
+  return refs;
 }
 
 function extractBBDReadmeContent(content) {
