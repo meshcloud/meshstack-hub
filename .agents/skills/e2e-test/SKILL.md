@@ -135,11 +135,11 @@ locals {
 }
 ```
 
-- Create a `meshstack_building_block_v2` resource that exercises the building block end-to-end.
+- Create a `meshstack_building_block` resource that exercises the building block end-to-end.
   Reference `test_context` directly (it is non-null in both modes). The provider's
   `building_block_definition_version_ref` takes `{ uuid }` only — extract it explicitly.
 
-- **Always add `depends_on = [module.<integration_module>]`** to `meshstack_building_block_v2.this`.
+- **Always add `depends_on = [module.<integration_module>]`** to `meshstack_building_block.this`.
   WIF federated identity providers have no Terraform dependents (nothing references their outputs),
   so OpenTofu schedules their destruction in parallel with the BB delete run. This causes the BB
   delete run to fail with 401s because the cloud WIF trust is already gone before the delete run
@@ -147,7 +147,7 @@ locals {
   be fully destroyed before any backplane resources are torn down.
 
 ```hcl
-resource "meshstack_building_block_v2" "this" {
+resource "meshstack_building_block" "this" {
   depends_on          = [module.<integration_module>]   # prevents teardown race with WIF providers
   wait_for_completion = true
   spec = {
@@ -158,6 +158,9 @@ resource "meshstack_building_block_v2" "this" {
       kind = "meshWorkspace"
       name = var.test_context.workspace
     }
+    # v3 inputs: one `value = jsonencode(...)` per input (jsonencode strings too, e.g.
+    # jsonencode("x"), jsonencode(1), jsonencode(true)). Sensitive inputs instead use
+    # `sensitive = { secret_value = ... }`.
     inputs = { ... }
   }
 }
@@ -188,7 +191,8 @@ target_ref = {
 - Name the file `<cloud>_<service>_hub.tftest.hcl` (e.g. `building_block_noop_hub.tftest.hcl`).
 - Always assert `status.status == "SUCCEEDED"` as the first check.
 - Assert meaningful output values (URLs, strings, booleans) to validate the building block executed
-  correctly.
+  correctly. In v3 every output `value` is a `jsonencode`d string — read it with
+  `jsondecode(<res>.status.outputs["<name>"].value)` (a CODE/JSON output decodes twice).
 - The same test file runs in **both** invocation modes (smoke-test via `tofu test`, foundation via
   `terragrunt test`). Reference **`output.<name>`**, never `var.test_context.*` — `test_context` is
   null in foundation mode and would crash the assertion.
@@ -255,7 +259,7 @@ node tools/debug/get-bb-run-logs.mjs "$BB_UUID"
 
 To get the UUID from an errored test state:
 ```bash
-tofu state show -state=errored_test.tfstate 'meshstack_building_block_v2.this' | grep uuid
+tofu state show -state=errored_test.tfstate 'meshstack_building_block.this' | grep uuid
 ```
 
 
@@ -318,6 +322,6 @@ source setup-override-provider.sh
 - [ ] `hub.git_ref = var.test_context.hub_git_ref` — no hardcoded `"main"`
 - [ ] Version ref resolved in a `local` (`bbd_version_ref` in foundation mode, else the built module)
 - [ ] `building_block_definition_version_ref = { uuid = local.version_ref.uuid }` — provider only accepts `{ uuid }`, extract it explicitly
-- [ ] `meshstack_building_block_v2` has `depends_on = [module.<integration_module>]` to prevent WIF teardown race (delete run must finish before backplane resources are destroyed)
-- [ ] `meshstack_building_block_v2` has `wait_for_completion = true`
+- [ ] `meshstack_building_block` has `depends_on = [module.<integration_module>]` to prevent WIF teardown race (delete run must finish before backplane resources are destroyed)
+- [ ] `meshstack_building_block` has `wait_for_completion = true`
 - [ ] tftest asserts `status.status == "SUCCEEDED"` and key outputs (references `var.test_context.*` directly — non-null in both modes)
