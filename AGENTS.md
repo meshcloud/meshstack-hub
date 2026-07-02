@@ -96,8 +96,11 @@ variable "hub" {
     git_ref   = optional(string, "main")
     bbd_draft = optional(bool, true)
   })
-  const       = true
-  default     = {}
+  const   = true
+  default = {
+    git_ref   = "main"
+    bbd_draft = true
+  }
   description = <<-EOT
   `git_ref`: Hub release reference. Set to a tag (e.g. 'v1.2.3') or branch or commit sha of the meshstack-hub repo.
   `bbd_draft`: If true, the building block definition version is kept in draft mode.
@@ -108,6 +111,8 @@ variable "hub" {
 The `const = true` attribute (OpenTofu ≥ 1.12 / Terraform ≥ 1.15) marks `var.hub` for early static evaluation during `terraform init`, which is required to interpolate `var.hub.git_ref` inside module `source` strings. `variable "hub"` must satisfy all `const` constraints:
 - Its value must come from a `default`, `.tfvars` file, or `TF_VAR_*` environment variable — **never** from a resource, data source, or dynamic local.
 - It must **not** have `sensitive = true` or `ephemeral = true`.
+
+**Always fully populate `variable "hub"`'s `default`** — never a bare `default = {}` relying on nested `optional()` defaults, since some downstream consumers don't evaluate Terraform's `optional()` object-attribute defaulting and would see unset fields instead. Apply the same treatment to any other object-typed variable whose field is referenced directly inside a `meshstack_building_block_definition`'s `inputs` block (e.g. `argument = jsonencode(var.x.y)`); otherwise a bare `default = {}` is fine. Keep the `optional()` type constraints regardless — they still document intent and protect callers who omit keys.
 
 Always use `var.hub.bbd_draft` for the `draft` field of `version_spec` in `meshstack_building_block_definition` resources.
 
@@ -342,6 +347,7 @@ See [.agents/skills/write-e2e-test/SKILL.md](.agents/skills/write-e2e-test/SKILL
 - [ ] `meshstack_integration.tf` uses `variable "hub" { type = object({git_ref = string}) }` and `variable "meshstack" { type = object({owning_workspace_identifier = string}) }`
 - [ ] `meshstack_integration.tf` references backplane via GitHub URL with `?ref=${var.hub.git_ref}` (e.g. `github.com/meshcloud/meshstack-hub//modules/<provider>/<service>/backplane?ref=${var.hub.git_ref}`) — never a hardcoded commit SHA or relative `./backplane` path
 - [ ] `variable "hub"` has `const = true`
+- [ ] `variable "hub"` fully populates `default` (never bare `default = {}`) — same for any other object-typed variable whose field is referenced directly inside an `inputs` block
 - [ ] `ref_name` uses `var.hub.git_ref` — no hardcoded `"main"`
 - [ ] `version_spec.draft` uses `var.hub.bbd_draft`
 - [ ] `metadata.tags = var.meshstack.tags` in `meshstack_building_block_definition` resource
