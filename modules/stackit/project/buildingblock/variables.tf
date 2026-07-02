@@ -39,7 +39,7 @@ variable "labels" {
 }
 
 variable "users" {
-  description = "List of users from authoritative system"
+  description = "List of users from the authoritative system. Each user's `roles` are meshStack roles that are mapped to STACKIT project roles via `role_mapping`."
   type = list(object({
     meshIdentifier = string
     username       = string
@@ -50,5 +50,16 @@ variable "users" {
     roles          = list(string)
   }))
   default = []
+}
+
+variable "role_mapping" {
+  type        = map(list(string))
+  description = "Maps meshStack roles from `users[*].roles` to STACKIT project roles. Values can be built-in STACKIT roles or custom STACKIT role names. Unknown meshStack roles are ignored."
+
+  default = {
+    admin  = ["owner"]
+    user   = ["editor"]
+    reader = ["reader"]
+  }
 }
 

@@ -3,6 +3,12 @@ variable "workspace" {
   description = "Identifier of the meshStack workspace that will own the created location, platform and landing zone."
 }
 
+variable "use_global_location" {
+  type        = bool
+  default     = false
+  description = "Use the global location instead of creating a dedicated location for this platform."
+}
+
 variable "stackit_org" {
   type        = string
   description = "STACKIT organization UUID under which the landing-zone folder, backplane project and tenant projects are created."
@@ -42,6 +48,17 @@ variable "tags" {
 
   default     = { landingzone = {}, building_block = {} }
   description = "Tags forwarded to the nested STACKIT Project integration. `landingzone` tags are applied to the default landing zone; `building_block` tags are applied to the nested building block definition."
+}
+
+variable "role_mapping" {
+  type        = map(list(string))
+  description = "Default mapping from meshStack roles to STACKIT project roles for the nested STACKIT Project integration. Values can be built-in STACKIT roles or custom STACKIT role names."
+
+  default = {
+    admin  = ["owner"]
+    user   = ["editor"]
+    reader = ["reader"]
+  }
 }
 
 variable "git_ref" {

@@ -19,6 +19,17 @@ variable "stackit_service_account_name" {
   description = "Name of the backplane service account. Defaults to 'mesh-project'. Override when deploying multiple backplane instances in the same STACKIT project."
 }
 
+variable "role_mapping" {
+  type        = map(list(string))
+  description = "Default mapping from meshStack roles to STACKIT project roles for the STACKIT Project building block. Values can be built-in STACKIT roles or custom STACKIT role names."
+
+  default = {
+    admin  = ["owner"]
+    user   = ["editor"]
+    reader = ["reader"]
+  }
+}
+
 variable "meshstack" {
   type = object({
     owning_workspace_identifier = string
@@ -88,7 +99,7 @@ resource "meshstack_platform" "stackit" {
 
   spec = {
     display_name = "STACKIT Project"
-    description  = "Create a STACKIT project with role-based access control."
+    description  = "Create a STACKIT project with configurable role-based access control."
     endpoint     = "https://portal.stackit.cloud"
 
     location_ref = {
@@ -145,7 +156,7 @@ resource "meshstack_building_block_definition" "this" {
   spec = {
     display_name              = "STACKIT Project"
     symbol                    = "https://raw.githubusercontent.com/meshcloud/meshstack-hub/${var.hub.git_ref}/modules/stackit/project/buildingblock/logo.png"
-    description               = "Creates a new STACKIT project and manages user access permissions with role-based access control."
+    description               = "Creates a new STACKIT project and manages user access permissions with configurable role-based access control."
     support_url               = "https://portal.stackit.cloud"
     target_type               = "TENANT_LEVEL"
     run_transparency          = true
@@ -215,6 +226,14 @@ resource "meshstack_building_block_definition" "this" {
         description     = "Project users with role assignments from meshStack."
         type            = "CODE"
         assignment_type = "USER_PERMISSIONS"
+      }
+
+      role_mapping = {
+        display_name    = "Role Mapping"
+        description     = "JSON object mapping meshStack roles to STACKIT project roles. Values can be built-in STACKIT roles or custom STACKIT role names."
+        type            = "CODE"
+        assignment_type = "STATIC"
+        argument        = jsonencode(jsonencode(var.role_mapping))
       }
     }
 

@@ -1,4 +1,6 @@
 resource "meshstack_location" "this" {
+  count = var.use_global_location ? 0 : 1
+
   metadata = {
     name               = var.platform_identifier
     owned_by_workspace = var.workspace
@@ -31,6 +33,7 @@ module "stackit_integration" {
   stackit_parent_container_id  = stackit_resourcemanager_folder.this.container_id
   stackit_project_id           = stackit_resourcemanager_project.backplane.project_id
   stackit_service_account_name = substr(var.platform_identifier, 0, 20)
+  role_mapping                 = var.role_mapping
 
   hub = {
     git_ref = var.git_ref
@@ -38,7 +41,7 @@ module "stackit_integration" {
 
   meshstack = {
     owning_workspace_identifier = var.workspace
-    location_name               = meshstack_location.this.metadata.name
+    location_name               = var.use_global_location ? "global" : meshstack_location.this[0].metadata.name
     platform_identifier         = var.platform_identifier
     tags                        = var.tags
   }

@@ -36,9 +36,15 @@ run "verify" {
         lastName       = "User"
         email          = "reader@stackit.cloud"
         euid           = "reader@stackit.cloud"
-        roles          = ["reader"]
+        roles          = ["reader", "auditor"]
       }
     ]
+    role_mapping = {
+      admin   = ["owner"]
+      user    = ["editor"]
+      reader  = ["reader"]
+      auditor = ["audit-log.viewer"]
+    }
   }
 }
 

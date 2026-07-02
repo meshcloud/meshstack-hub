@@ -79,14 +79,14 @@ resource "meshstack_building_block_definition" "this" {
 
     ## 🔑 Authentication
 
-    You provide the STACKIT organization UUID, owner email, nested integration tags and a service account key as inputs.
+    You provide the STACKIT organization UUID, owner email, tags, default role mapping and a service account key as inputs.
     The building block authenticates to STACKIT with the service account key, which needs `resource-manager.admin` on the organization.
 
     ## 📊 Shared responsibility
 
     | Responsibility | Platform Team | Application Team |
     |---|:---:|:---:|
-    | Provide the STACKIT service account key, organization details and nested integration tags | ✅ | ❌ |
+    | Provide the STACKIT service account key, organization details, tags and role mapping | ✅ | ❌ |
     | Provision the location, folder and STACKIT Project platform | ✅ | ❌ |
     | Request STACKIT projects through the landing zone | ❌ | ✅ |
     | Manage workloads inside the provisioned STACKIT projects | ❌ | ✅ |
@@ -98,7 +98,7 @@ resource "meshstack_building_block_definition" "this" {
     draft         = var.hub.bbd_draft
     deletion_mode = "DELETE"
 
-    # Ephemeral API key permissions for meshStack resources created by this building block and nested STACKIT integration.
+    # Ephemeral API key permissions for meshStack resources created by this building block and STACKIT integration.
     permissions = [
       "INTEGRATION_LIST",
       "BUILDINGBLOCKDEFINITION_LIST",
@@ -136,7 +136,7 @@ resource "meshstack_building_block_definition" "this" {
 
       git_ref = {
         display_name    = "Hub Git Ref"
-        description     = "meshstack-hub reference used to source the nested STACKIT project integration module. Kept in sync with the building block implementation ref."
+        description     = "meshstack-hub reference used to source the STACKIT project integration module. Kept in sync with the building block implementation ref."
         type            = "STRING"
         assignment_type = "STATIC"
         argument        = jsonencode(var.hub.git_ref)
@@ -161,10 +161,26 @@ resource "meshstack_building_block_definition" "this" {
       }
 
       tags = {
-        display_name    = "Nested STACKIT Project Tags"
-        description     = "JSON object with `landingzone` and `building_block` tag maps forwarded to the nested STACKIT Project integration."
+        display_name    = "Tags"
+        description     = "JSON object with `landingzone` and `building_block` tag maps forwarded to the STACKIT Project integration module."
         type            = "CODE"
         assignment_type = "USER_INPUT"
+        default_value = jsonencode(jsonencode({
+          landingzone    = {}
+          building_block = {}
+        }))
+      }
+
+      role_mapping = {
+        display_name    = "STACKIT Project Role Mapping"
+        description     = "JSON object mapping meshStack roles from project users to STACKIT project roles. Values can be built-in STACKIT roles or custom STACKIT role names."
+        type            = "CODE"
+        assignment_type = "USER_INPUT"
+        default_value = jsonencode(jsonencode({
+          admin  = ["owner"]
+          user   = ["editor"]
+          reader = ["reader"]
+        }))
       }
 
       # ── meshStack context ──
@@ -183,6 +199,14 @@ resource "meshstack_building_block_definition" "this" {
         assignment_type                = "USER_INPUT"
         value_validation_regex         = "^[a-zA-Z0-9-]+$"
         validation_regex_error_message = "platform_identifier must only contain letters, digits, and dashes."
+      }
+
+      use_global_location = {
+        display_name    = "Use Global Location"
+        description     = "If true, use the existing global meshStack location instead of creating a dedicated location for this platform."
+        type            = "BOOLEAN"
+        assignment_type = "USER_INPUT"
+        default_value   = jsonencode(false)
       }
     }
 
