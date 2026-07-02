@@ -14,8 +14,27 @@ variable "resource_group_name" {
 }
 
 variable "vnet_name" {
-  description = "Name of the virtual network where Bastion subnet will be created"
+  description = "Name of the virtual network to create. Required when existing_vnet_name is not set."
   type        = string
+  default     = null
+}
+
+variable "existing_vnet_name" {
+  description = "Name of an existing VNet to attach Bastion to. When set, a new VNet is not created."
+  type        = string
+  default     = null
+}
+
+variable "existing_vnet_resource_group_name" {
+  description = "Resource group of the existing VNet. Defaults to resource_group_name when not set."
+  type        = string
+  default     = null
+}
+
+variable "aks_cluster_resource_id" {
+  description = "Resource ID of the AKS cluster to tunnel to via Bastion. Used to generate the connect_command output."
+  type        = string
+  default     = null
 }
 
 

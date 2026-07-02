@@ -54,21 +54,34 @@ output "subscription_resource_health_alert_id" {
 }
 
 output "vnet_id" {
-  description = "The ID of the POC Virtual Network"
-  value       = azurerm_virtual_network.vnet.id
+  description = "The ID of the Virtual Network"
+  value       = local.create_vnet ? azurerm_virtual_network.vnet[0].id : data.azurerm_virtual_network.existing[0].id
 }
 
 output "vnet_name" {
-  description = "The name of the POC Virtual Network"
-  value       = azurerm_virtual_network.vnet.name
+  description = "The name of the Virtual Network"
+  value       = local.effective_vnet_name
 }
 
 output "vnet_address_space" {
-  description = "The address space of the POC Virtual Network"
-  value       = azurerm_virtual_network.vnet.address_space
+  description = "The address space of the Virtual Network"
+  value       = local.create_vnet ? azurerm_virtual_network.vnet[0].address_space : data.azurerm_virtual_network.existing[0].address_space
 }
 
 output "workload_subnet_id" {
-  description = "The ID of workload subnet"
-  value       = azurerm_subnet.workload_subnet.id
+  description = "The ID of the workload subnet. Null when an existing VNet is used."
+  value       = local.create_vnet ? azurerm_subnet.workload_subnet[0].id : null
+}
+
+output "connect_command" {
+  description = "Ready-to-run az CLI commands to tunnel kubectl through Bastion to your AKS cluster."
+  value       = <<-EOT
+    # Terminal 1 — open the tunnel and keep it running
+    az network bastion tunnel \
+      --name ${azurerm_bastion_host.bastion.name} \
+      --resource-group ${var.resource_group_name} \
+      --target-resource-id ${coalesce(var.aks_cluster_resource_id, "<YOUR_AKS_CLUSTER_RESOURCE_ID>")} \
+      --resource-port 443 \
+      --port 8443
+  EOT
 }

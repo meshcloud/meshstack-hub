@@ -1,8 +1,18 @@
 locals {
-  azure_delay = "${var.azure_delay_seconds}s"
+  azure_delay         = "${var.azure_delay_seconds}s"
+  create_vnet         = var.existing_vnet_name == null
+  existing_vnet_rg    = coalesce(var.existing_vnet_resource_group_name, var.resource_group_name)
+  vnet_resource_group = local.create_vnet ? azurerm_resource_group.bastion.name : local.existing_vnet_rg
+  effective_vnet_name = local.create_vnet ? azurerm_virtual_network.vnet[0].name : data.azurerm_virtual_network.existing[0].name
 }
 
 data "azurerm_client_config" "current" {}
+
+data "azurerm_virtual_network" "existing" {
+  count               = local.create_vnet ? 0 : 1
+  name                = var.existing_vnet_name
+  resource_group_name = local.existing_vnet_rg
+}
 
 # Create the resource group
 resource "azurerm_resource_group" "bastion" {
@@ -13,6 +23,8 @@ resource "azurerm_resource_group" "bastion" {
 
 # Create the POC VNet with 10.0.0.0/8 address space
 resource "azurerm_virtual_network" "vnet" {
+  count = local.create_vnet ? 1 : 0
+
   name                = var.vnet_name
   location            = var.location
   resource_group_name = azurerm_resource_group.bastion.name
@@ -23,30 +35,31 @@ resource "azurerm_virtual_network" "vnet" {
 
 # Create additional subnets for workloads
 resource "azurerm_subnet" "workload_subnet" {
+  count = local.create_vnet ? 1 : 0
+
   name                 = "workload-subnet"
   resource_group_name  = azurerm_resource_group.bastion.name
-  virtual_network_name = azurerm_virtual_network.vnet.name
+  virtual_network_name = azurerm_virtual_network.vnet[0].name
   address_prefixes     = ["10.1.0.0/24"]
 }
 
 # Create subnet for Azure Bastion (must be named AzureBastionSubnet)
 resource "azurerm_subnet" "bastion_subnet" {
   name                 = "AzureBastionSubnet"
-  resource_group_name  = azurerm_resource_group.bastion.name
-  virtual_network_name = azurerm_virtual_network.vnet.name
+  resource_group_name  = local.vnet_resource_group
+  virtual_network_name = local.effective_vnet_name
   address_prefixes     = [var.bastion_subnet_cidr]
 }
 
 # Resource locks for VNet and workload subnets - applied after all subnets and associations are created
 resource "azurerm_management_lock" "vnet_lock" {
-  count = var.enable_resource_locks ? 1 : 0
+  count = var.enable_resource_locks && local.create_vnet ? 1 : 0
 
   name       = "${var.name}-vnet-lock"
-  scope      = azurerm_virtual_network.vnet.id
+  scope      = azurerm_virtual_network.vnet[0].id
   lock_level = "ReadOnly"
   notes      = "Prevent accidental modification of VNet"
 
-  # Ensure all subnets and NSG associations are created before applying the lock
   depends_on = [
     azurerm_subnet.workload_subnet,
     azurerm_subnet.bastion_subnet,
@@ -55,10 +68,10 @@ resource "azurerm_management_lock" "vnet_lock" {
 }
 
 resource "azurerm_management_lock" "workload_subnet_lock" {
-  count = var.enable_resource_locks ? 1 : 0
+  count = var.enable_resource_locks && local.create_vnet ? 1 : 0
 
   name       = "${var.name}-workload-subnet-1-lock"
-  scope      = azurerm_subnet.workload_subnet.id
+  scope      = azurerm_subnet.workload_subnet[0].id
   lock_level = "ReadOnly"
   notes      = "Prevent accidental modification of workload subnet 1"
 }
@@ -201,6 +214,7 @@ resource "azurerm_bastion_host" "bastion" {
   location            = var.location
   resource_group_name = azurerm_resource_group.bastion.name
   sku                 = var.bastion_sku
+  tunneling_enabled   = var.bastion_sku == "Standard"
 
   ip_configuration {
     name                 = "configuration"
@@ -268,6 +282,7 @@ resource "azurerm_monitor_activity_log_alert" "service_health" {
 
   name                = "${var.name}-service-health-alert"
   resource_group_name = var.resource_group_name
+  location            = "global"
   scopes              = ["/subscriptions/${data.azurerm_client_config.current.subscription_id}"]
   description         = "Service Health issues affecting the sandbox subscription"
 
@@ -295,6 +310,7 @@ resource "azurerm_monitor_activity_log_alert" "bastion_resource_health" {
 
   name                = "${var.name}-bastion-resource-health"
   resource_group_name = azurerm_resource_group.bastion.name
+  location            = "global"
   scopes              = [azurerm_bastion_host.bastion.id]
   description         = "Resource health issues with Azure Bastion Host"
 
@@ -322,6 +338,7 @@ resource "azurerm_monitor_activity_log_alert" "subscription_resource_health" {
 
   name                = "${var.name}-subscription-resource-health"
   resource_group_name = azurerm_resource_group.bastion.name
+  location            = "global"
   scopes              = ["/subscriptions/${data.azurerm_client_config.current.subscription_id}"]
   description         = "Resource health issues for any resource in the sandbox subscription"
 
@@ -349,6 +366,7 @@ resource "azurerm_monitor_activity_log_alert" "admin_activity" {
 
   name                = "${var.name}-admin-activity-alert"
   resource_group_name = azurerm_resource_group.bastion.name
+  location            = "global"
   scopes              = ["/subscriptions/${data.azurerm_client_config.current.subscription_id}"]
   description         = "Administrative activities and failures in the sandbox subscription"
 
