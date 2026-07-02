@@ -238,43 +238,83 @@ export interface ReferenceArchitecture {
   buildingBlocks: ReferenceArchitectureBuildingBlock[];
   body: string;
   sourceUrl: string | null;
+  // True when the reference architecture ships its own meshstack_integration.tf and can be
+  // imported into meshStack directly, the same way a building block is imported.
+  hasCode: boolean;
+  integrationSourceUrl: string | null;
+  folderUrl: string | null;
+  modulePath: string | null;
+}
+
+// Parses a reference architecture from its front-matter/body markdown file.
+// `codeDir`, when set, is the directory checked for a `meshstack_integration.tf` that makes
+// this reference architecture importable, the same way a building block is imported.
+function parseReferenceArchitecture(filePath: string, id: string, codeDir: string | null): ReferenceArchitecture {
+  const raw = fs.readFileSync(filePath, "utf-8");
+  const { data, content: body } = matter(raw);
+
+  if (!data.name) {
+    throw new Error(`Reference architecture ${id} is missing "name" in front-matter.`);
+  }
+  if (!data.description) {
+    throw new Error(`Reference architecture ${id} is missing "description" in front-matter.`);
+  }
+  if (!data.buildingBlocks || !Array.isArray(data.buildingBlocks)) {
+    throw new Error(`Reference architecture ${id} is missing "buildingBlocks" list in front-matter.`);
+  }
+
+  const remoteUrl = getGitHubRemoteUrl();
+  const relativeFilePath = filePath
+    .replace(path.resolve(__dirname), "")
+    .replace(/\\/g, "/");
+  const sourceUrl = remoteUrl ? `${remoteUrl}/blob/${hubRef}${relativeFilePath}` : null;
+
+  const hasCode = codeDir !== null && fs.existsSync(path.join(codeDir, "meshstack_integration.tf"));
+  const integrationSourceUrl = hasCode && remoteUrl
+    ? `${remoteUrl}/blob/${hubRef}/reference-architectures/${id}/meshstack_integration.tf`
+    : null;
+  const folderUrl = hasCode && remoteUrl
+    ? `${remoteUrl}/tree/${hubRef}/reference-architectures/${id}`
+    : null;
+  const modulePath = hasCode ? `reference-architectures/${id}` : null;
+
+  return {
+    id,
+    name: data.name,
+    description: data.description,
+    cloudProviders: data.cloudProviders || [],
+    buildingBlocks: data.buildingBlocks,
+    body,
+    sourceUrl,
+    hasCode,
+    integrationSourceUrl,
+    folderUrl,
+    modulePath,
+  };
 }
 
 function findReferenceArchitectures(): ReferenceArchitecture[] {
   if (!fs.existsSync(refArchRoot)) return [];
 
-  return fs.readdirSync(refArchRoot)
-    .filter((f: string) => f.endsWith(".md") && f !== "README.md")
-    .map((file: string) => {
-      const filePath = path.join(refArchRoot, file);
-      const raw = fs.readFileSync(filePath, "utf-8");
-      const { data, content: body } = matter(raw);
-      const id = file.replace(/\.md$/, "");
+  return fs.readdirSync(refArchRoot, { withFileTypes: true })
+    .flatMap((entry): ReferenceArchitecture[] => {
+      // Directory-based reference architecture: README.md plus optional code
+      // (meshstack_integration.tf + buildingblock/) that can be imported into meshStack.
+      if (entry.isDirectory()) {
+        const dir = path.join(refArchRoot, entry.name);
+        const readmePath = path.join(dir, "README.md");
+        if (!fs.existsSync(readmePath)) return [];
 
-      const remoteUrl = getGitHubRemoteUrl();
-      const sourceUrl = remoteUrl
-        ? `${remoteUrl}/blob/${hubRef}/reference-architectures/${file}`
-        : null;
-
-      if (!data.name) {
-        throw new Error(`Reference architecture ${file} is missing "name" in front-matter.`);
-      }
-      if (!data.description) {
-        throw new Error(`Reference architecture ${file} is missing "description" in front-matter.`);
-      }
-      if (!data.buildingBlocks || !Array.isArray(data.buildingBlocks)) {
-        throw new Error(`Reference architecture ${file} is missing "buildingBlocks" list in front-matter.`);
+        return [parseReferenceArchitecture(readmePath, entry.name, dir)];
       }
 
-      return {
-        id,
-        name: data.name,
-        description: data.description,
-        cloudProviders: data.cloudProviders || [],
-        buildingBlocks: data.buildingBlocks,
-        body,
-        sourceUrl,
-      } as ReferenceArchitecture;
+      // Flat markdown reference architecture: a conceptual blueprint with no code of its own.
+      if (entry.isFile() && entry.name.endsWith(".md") && entry.name !== "README.md") {
+        const id = entry.name.replace(/\.md$/, "");
+        return [parseReferenceArchitecture(path.join(refArchRoot, entry.name), id, null)];
+      }
+
+      return [];
     });
 }
 
