@@ -158,7 +158,7 @@ resource "meshstack_building_block" "this" {
       kind = "meshWorkspace"
       name = var.test_context.workspace
     }
-    # v3 inputs: one `value = jsonencode(...)` per input (jsonencode strings too, e.g.
+    # inputs: one `value = jsonencode(...)` per input (jsonencode strings too, e.g.
     # jsonencode("x"), jsonencode(1), jsonencode(true)). Sensitive inputs instead use
     # `sensitive = { secret_value = ... }`.
     inputs = { ... }
@@ -191,7 +191,7 @@ target_ref = {
 - Name the file `<cloud>_<service>_hub.tftest.hcl` (e.g. `building_block_noop_hub.tftest.hcl`).
 - Always assert `status.status == "SUCCEEDED"` as the first check.
 - Assert meaningful output values (URLs, strings, booleans) to validate the building block executed
-  correctly. In v3 every output `value` is a `jsonencode`d string — read it with
+  correctly. Every output `value` is a `jsonencode`d string — read it with
   `jsondecode(<res>.status.outputs["<name>"].value)` (a CODE/JSON output decodes twice).
 - The same test file runs in **both** invocation modes (smoke-test via `tofu test`, foundation via
   `terragrunt test`). Reference **`output.<name>`**, never `var.test_context.*` — `test_context` is
