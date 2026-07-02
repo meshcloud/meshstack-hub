@@ -1,36 +1,36 @@
 run "building_block_noop_hub" {
   assert {
-    condition     = meshstack_building_block_v2.this.status.status == "SUCCEEDED"
-    error_message = "noop hub building block expected SUCCEEDED, got ${meshstack_building_block_v2.this.status.status}"
+    condition     = meshstack_building_block.this.status.status == "SUCCEEDED"
+    error_message = "noop hub building block expected SUCCEEDED, got ${meshstack_building_block.this.status.status}"
   }
 
   assert {
-    condition     = meshstack_building_block_v2.this.status.outputs["num"].value_int == 1
-    error_message = "noop hub building block expected output num to be 1, got ${meshstack_building_block_v2.this.status.outputs["num"].value_int}"
+    condition     = jsondecode(meshstack_building_block.this.status.outputs["num"].value) == 1
+    error_message = "noop hub building block expected output num to be 1, got ${jsondecode(meshstack_building_block.this.status.outputs["num"].value)}"
   }
 
   assert {
-    condition     = startswith(meshstack_building_block_v2.this.status.outputs["text"].value_string, "Hello, World! aws-cli/2")
-    error_message = "noop hub building block expected output text to start with 'Hello, World! aws-cli/2', got ${meshstack_building_block_v2.this.status.outputs["text"].value_string}"
+    condition     = startswith(jsondecode(meshstack_building_block.this.status.outputs["text"].value), "Hello, World! aws-cli/2")
+    error_message = "noop hub building block expected output text to start with 'Hello, World! aws-cli/2', got ${jsondecode(meshstack_building_block.this.status.outputs["text"].value)}"
   }
 
   assert {
-    condition     = meshstack_building_block_v2.this.status.outputs["flag"].value_bool == true
-    error_message = "noop hub building block expected output flag to be true, got ${meshstack_building_block_v2.this.status.outputs["flag"].value_bool}"
+    condition     = jsondecode(meshstack_building_block.this.status.outputs["flag"].value) == true
+    error_message = "noop hub building block expected output flag to be true, got ${jsondecode(meshstack_building_block.this.status.outputs["flag"].value)}"
   }
 
   assert {
-    condition     = meshstack_building_block_v2.this.status.outputs["resource_url"].value_string == "https://hub.meshcloud.io/modules/meshstack/noop"
-    error_message = "noop hub building block expected output resource_url to be 'https://hub.meshcloud.io/modules/meshstack/noop', got ${meshstack_building_block_v2.this.status.outputs["resource_url"].value_string}"
+    condition     = jsondecode(meshstack_building_block.this.status.outputs["resource_url"].value) == "https://hub.meshcloud.io/modules/meshstack/noop"
+    error_message = "noop hub building block expected output resource_url to be 'https://hub.meshcloud.io/modules/meshstack/noop', got ${jsondecode(meshstack_building_block.this.status.outputs["resource_url"].value)}"
   }
 
   assert {
     condition = (
-      meshstack_building_block_v2.this.status.outputs["summary"].value_string
+      jsondecode(meshstack_building_block.this.status.outputs["summary"].value)
       ==
       file("${path.root}/tests/building_block_noop_hub.summary.expected.md")
     )
-    error_message = "noop hub building block expected output summary to match expected, got ${meshstack_building_block_v2.this.status.outputs["summary"].value_string}"
+    error_message = "noop hub building block expected output summary to match expected, got ${jsondecode(meshstack_building_block.this.status.outputs["summary"].value)}"
   }
 
   assert {
@@ -38,7 +38,7 @@ run "building_block_noop_hub" {
     # and permissions may change, so we assert those separately below
     condition = (
       {
-        for k, v in jsondecode(meshstack_building_block_v2.this.status.outputs["debug_input_variables_json"].value_code) :
+        for k, v in jsondecode(jsondecode(meshstack_building_block.this.status.outputs["debug_input_variables_json"].value)) :
         k => v
         if k != "user_permissions_json" && k != "user_permissions"
       }
@@ -50,7 +50,7 @@ run "building_block_noop_hub" {
 
   assert {
     condition = contains(
-      jsondecode(meshstack_building_block_v2.this.status.outputs["debug_input_variables_json"].value_code)["user_permissions"],
+      jsondecode(jsondecode(meshstack_building_block.this.status.outputs["debug_input_variables_json"].value))["user_permissions"],
       jsondecode(file("${path.root}/tests/building_block_noop_hub.debug_input_variables_json_binding.expected.json"))
     )
     error_message = "could not find expected user permission"
@@ -59,7 +59,7 @@ run "building_block_noop_hub" {
   assert {
     condition = contains(
       # double decoding is required when user_permissions_json is passed as json
-      jsondecode(jsondecode(meshstack_building_block_v2.this.status.outputs["debug_input_variables_json"].value_code)["user_permissions_json"]),
+      jsondecode(jsondecode(jsondecode(meshstack_building_block.this.status.outputs["debug_input_variables_json"].value))["user_permissions_json"]),
       jsondecode(file("${path.root}/tests/building_block_noop_hub.debug_input_variables_json_binding.expected.json"))
     )
     error_message = "could not find expected user permission"
@@ -67,11 +67,10 @@ run "building_block_noop_hub" {
 
   assert {
     condition = (
-      jsondecode(meshstack_building_block_v2.this.status.outputs["debug_input_files_json"].value_code)
+      jsondecode(jsondecode(meshstack_building_block.this.status.outputs["debug_input_files_json"].value))
       ==
       jsondecode(file("${path.root}/tests/building_block_noop_hub.debug_input_files_json.expected.json"))
     )
-    error_message = "noop hub building block expected output debug_input_files_json to match expected, got ${meshstack_building_block_v2.this.status.outputs["debug_input_files_json"].value_code}"
+    error_message = "noop hub building block expected output debug_input_files_json to match expected, got ${jsondecode(jsondecode(meshstack_building_block.this.status.outputs["debug_input_files_json"].value))}"
   }
 }
-

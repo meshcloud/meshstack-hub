@@ -45,7 +45,7 @@ module "storage_account" {
   backplane_name = "hub-e2e-stg-${var.test_context.name_suffix}"
 }
 
-resource "meshstack_building_block_v2" "this" {
+resource "meshstack_building_block" "this" {
   # depend on the entire backplane to force correct resource ordering at the module boundary,not just individual resources in the backplane
   depends_on = [module.storage_account]
 
@@ -61,7 +61,7 @@ resource "meshstack_building_block_v2" "this" {
     }
 
     inputs = {
-      storage_account_name = { value_string = local.storage_account_name_prefix }
+      storage_account_name = { value = jsonencode(local.storage_account_name_prefix) }
     }
   }
 }

@@ -55,7 +55,7 @@ resource "meshstack_building_block_definition" "env_audit" {
   }
 }
 
-resource "meshstack_building_block_v2" "this" {
+resource "meshstack_building_block" "this" {
   wait_for_completion = true
   spec = {
     building_block_definition_version_ref = meshstack_building_block_definition.env_audit.version_latest

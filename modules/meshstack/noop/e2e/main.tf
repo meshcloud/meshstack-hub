@@ -20,7 +20,7 @@ module "noop" {
   }
 }
 
-resource "meshstack_building_block_v2" "this" {
+resource "meshstack_building_block" "this" {
   wait_for_completion = true
   spec = {
     building_block_definition_version_ref = module.noop.building_block_definition.version_ref
@@ -32,13 +32,13 @@ resource "meshstack_building_block_v2" "this" {
     }
 
     inputs = {
-      flag              = { value_bool = true }
-      num               = { value_int = 1 }
-      text              = { value_string = "Hello, World!" }
-      sensitive_text    = { value_string_sensitive = "Hidden value" }
-      single_select     = { value_single_select = "single1" }
-      multi_select      = { value_multi_select = ["multi1", "multi2"] }
-      multi_select_json = { value_multi_select = ["multi2", "multi1"] }
+      flag              = { value = jsonencode(true) }
+      num               = { value = jsonencode(1) }
+      text              = { value = jsonencode("Hello, World!") }
+      sensitive_text    = { sensitive = { secret_value = "Hidden value" } }
+      single_select     = { value = jsonencode("single1") }
+      multi_select      = { value = jsonencode(["multi1", "multi2"]) }
+      multi_select_json = { value = jsonencode(["multi2", "multi1"]) }
     }
   }
 }

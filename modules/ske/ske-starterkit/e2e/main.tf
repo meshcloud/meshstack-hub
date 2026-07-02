@@ -162,7 +162,7 @@ module "ske_starterkit" {
   }
 }
 
-resource "meshstack_building_block_v2" "this" {
+resource "meshstack_building_block" "this" {
   wait_for_completion = true
   spec = {
     building_block_definition_version_ref = module.ske_starterkit.building_block_definition.version_ref
@@ -174,7 +174,7 @@ resource "meshstack_building_block_v2" "this" {
     }
 
     inputs = {
-      name = { value_string = "smoke-test-${var.test_context.name_suffix}" }
+      name = { value = jsonencode("smoke-test-${var.test_context.name_suffix}") }
     }
   }
 

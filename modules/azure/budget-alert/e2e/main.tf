@@ -44,7 +44,7 @@ module "budget_alert" {
   backplane_name = "hub-e2e-budget-${var.test_context.name_suffix}"
 }
 
-resource "meshstack_building_block_v2" "this" {
+resource "meshstack_building_block" "this" {
   depends_on = [module.budget_alert]
 
   wait_for_completion = true
@@ -59,9 +59,9 @@ resource "meshstack_building_block_v2" "this" {
     }
 
     inputs = {
-      contact_emails        = { value_string = "e2e-test@example.com" }
-      monthly_budget_amount = { value_int = 1000 }
-      budget_name           = { value_string = local.budget_name }
+      contact_emails        = { value = jsonencode("e2e-test@example.com") }
+      monthly_budget_amount = { value = jsonencode(1000) }
+      budget_name           = { value = jsonencode(local.budget_name) }
     }
   }
 }

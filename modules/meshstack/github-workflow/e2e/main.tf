@@ -50,7 +50,7 @@ locals {
   execution_mode = try(var.test_context.fixtures.github.async, false) ? "async" : "sync"
 }
 
-resource "meshstack_building_block_v2" "this" {
+resource "meshstack_building_block" "this" {
   wait_for_completion = true
 
   spec = {
@@ -64,7 +64,7 @@ resource "meshstack_building_block_v2" "this" {
 
     inputs = {
       environment = {
-        value_string = "dev"
+        value = jsonencode("dev")
       }
     }
   }
