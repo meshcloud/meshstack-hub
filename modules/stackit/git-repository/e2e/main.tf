@@ -43,7 +43,7 @@ locals {
   version_ref = var.test_context.bbd_version_ref != null ? var.test_context.bbd_version_ref : module.stackit_git_repository[0].building_block_definition.version_ref
 }
 
-resource "meshstack_building_block_v2" "this" {
+resource "meshstack_building_block" "this" {
   wait_for_completion = true
   spec = {
     building_block_definition_version_ref = { uuid = local.version_ref.uuid }
@@ -55,10 +55,10 @@ resource "meshstack_building_block_v2" "this" {
     }
 
     inputs = {
-      name        = { value_string = "smoke-test-repo-${var.test_context.name_suffix}" }
-      description = { value_string = "Smoke test repository" }
-      private     = { value_bool = true }
-      clone_addr  = { value_string = "https://github.com/likvid-bank/starterkit-template-stackit-ai-summarizer.git" }
+      name        = { value = jsonencode("smoke-test-repo-${var.test_context.name_suffix}") }
+      description = { value = jsonencode("Smoke test repository") }
+      private     = { value = jsonencode(true) }
+      clone_addr  = { value = jsonencode("https://github.com/likvid-bank/starterkit-template-stackit-ai-summarizer.git") }
     }
   }
 }

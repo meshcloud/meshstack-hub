@@ -54,7 +54,7 @@ locals {
   version_ref = var.test_context.bbd_version_ref != null ? var.test_context.bbd_version_ref : module.stackit_storage_bucket[0].building_block_definition.version_ref
 }
 
-resource "meshstack_building_block_v2" "this" {
+resource "meshstack_building_block" "this" {
   # Explicit dependency ensures the building block (and its delete run) is fully destroyed before
   # any backplane resources are torn down. Without this, OpenTofu destroys the WIF federated
   # identity providers in parallel with the delete run, causing 401s from the STACKIT provider.
@@ -70,7 +70,7 @@ resource "meshstack_building_block_v2" "this" {
     }
 
     inputs = {
-      bucket_name = { value_string = "smoke-test-bucket-${var.test_context.name_suffix}" }
+      bucket_name = { value = jsonencode("smoke-test-bucket-${var.test_context.name_suffix}") }
     }
   }
 }

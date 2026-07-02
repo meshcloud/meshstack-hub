@@ -20,7 +20,7 @@ module "manual" {
   }
 }
 
-resource "meshstack_building_block_v2" "this" {
+resource "meshstack_building_block" "this" {
   wait_for_completion = true
   spec = {
     building_block_definition_version_ref = module.manual.building_block_definition.version_ref
@@ -32,10 +32,10 @@ resource "meshstack_building_block_v2" "this" {
     }
 
     inputs = {
-      text          = { value_string = "Hello, Manual World!" }
-      flag          = { value_bool = true }
-      num           = { value_int = 42 }
-      single_select = { value_single_select = "option1" }
+      text          = { value = jsonencode("Hello, Manual World!") }
+      flag          = { value = jsonencode(true) }
+      num           = { value = jsonencode(42) }
+      single_select = { value = jsonencode("option1") }
       # static_note is STATIC — provided in the BBD, not by the user
     }
   }
