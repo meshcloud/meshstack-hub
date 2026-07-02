@@ -46,6 +46,13 @@ variable "harbor_pull_password" {
   nullable  = false
 }
 
+variable "stackit_ai_secret_data" {
+  type        = map(string)
+  sensitive   = true
+  nullable    = false
+  description = "Data map for the 'stackit-ai' Kubernetes secret injected into tenant namespaces by the forgejo-connector (keys: STACKIT_AI_BASE_URL, STACKIT_AI_API_KEY, STACKIT_AI_MODEL)."
+}
+
 locals {
   ske_kubeconfig = jsondecode(var.ske_kubeconfig)
 }
@@ -109,6 +116,8 @@ module "forgejo_connector" {
   forgejo_repo_definition_uuid = module.stackit_git_repository.building_block_definition.uuid
   harbor_username              = var.harbor_push_username
   harbor_password              = var.harbor_push_password
+
+  additional_kubernetes_secrets = { "stackit-ai" = var.stackit_ai_secret_data }
 }
 
 module "ske_starterkit" {
