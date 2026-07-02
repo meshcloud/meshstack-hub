@@ -5,6 +5,7 @@ variable "test_context" {
     name_suffix          = string
     forgejo_base_url     = string
     forgejo_organization = string
+    dns_zone_name        = string
   })
   nullable = false
 }
@@ -109,6 +110,19 @@ module "forgejo_connector" {
   forgejo_repo_definition_uuid = module.stackit_git_repository.building_block_definition.uuid
   harbor_username              = var.harbor_push_username
   harbor_password              = var.harbor_push_password
+
+  # Smoke tests don't exercise real inference — the app only needs the `stackit-ai`
+  # secret to exist so its pods can start (the app chart mounts it via `envFrom`, so a
+  # missing secret leaves pods in CreateContainerConfigError and `helm --wait --atomic`
+  # rolls the deploy back). Static foundations (e.g. trial) inject a real STACKIT
+  # model-serving token here via their own `ai.tf`; the smoke test uses dummy values.
+  additional_kubernetes_secrets = {
+    "stackit-ai" = {
+      STACKIT_AI_BASE_URL = "https://ai.invalid/v1"
+      STACKIT_AI_API_KEY  = "dummy-smoke-test"
+      STACKIT_AI_MODEL    = "dummy-model"
+    }
+  }
 }
 
 module "ske_starterkit" {
@@ -128,7 +142,7 @@ module "ske_starterkit" {
     prod = module.meshstack_kubernetes_platform.landing_zone_identifiers.prod
   }
   repo_clone_addr        = "https://github.com/likvid-bank/starterkit-template-stackit-ai-summarizer.git"
-  dns_zone_name          = "meshcloud-dev-ske-starterkit"
+  dns_zone_name          = var.test_context.dns_zone_name
   add_random_name_suffix = false
 
   building_block_definitions = {
