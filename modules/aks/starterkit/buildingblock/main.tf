@@ -198,8 +198,8 @@ resource "meshstack_building_block" "github_actions_prod" {
 }
 
 # Migrate the app-team-managed child building blocks from the deprecated
-# meshstack_building_block_v2 resource to meshstack_building_block (provider v0.23.0)
-# in place — no destroy/recreate of the live blocks.
+# meshstack_building_block_v2 resource to meshstack_building_block in place —
+# no destroy/recreate of the live blocks.
 moved {
   from = meshstack_building_block_v2.repo
   to   = meshstack_building_block.repo

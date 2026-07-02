@@ -91,7 +91,7 @@ resource "meshstack_building_block" "azure_vm" {
 }
 
 # Migrate the child building block from the deprecated meshstack_building_block_v2
-# resource to meshstack_building_block (provider v0.23.0) in place.
+# resource to meshstack_building_block in place.
 moved {
   from = meshstack_building_block_v2.azure_vm
   to   = meshstack_building_block.azure_vm
