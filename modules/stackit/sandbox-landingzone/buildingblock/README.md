@@ -11,8 +11,8 @@ sources the [`modules/stackit`](../../) project integration to provision the STA
 platform together with its default landing zone.
 
 It authenticates to STACKIT with a service account key you paste as a secret input. You also
-provide the STACKIT organization UUID, owner email and nested integration tags as user inputs.
-The service account needs `resource-manager.admin` on the organization. The nested project integration is
+provide the STACKIT organization UUID, owner email, nested integration tags and default role mapping
+as user inputs. The service account needs `resource-manager.admin` on the organization. The nested project integration is
 pinned to the same `git_ref` as this building block's implementation.
 
 The user-facing readme is maintained inline in the `readme` field of the
@@ -48,6 +48,7 @@ The user-facing readme is maintained inline in the `readme` field of the
 |------|-------------|------|---------|:--------:|
 | <a name="input_git_ref"></a> [git\_ref](#input\_git\_ref) | meshstack-hub reference used to source the nested STACKIT project integration module. `const` so it can be interpolated into the module source at init time. | `string` | `"main"` | no |
 | <a name="input_platform_identifier"></a> [platform\_identifier](#input\_platform\_identifier) | Identifier for the STACKIT sandbox platform created in meshStack (letters, digits and dashes only). | `string` | n/a | yes |
+| <a name="input_role_mapping"></a> [role\_mapping](#input\_role\_mapping) | Default mapping from meshStack roles to STACKIT project roles for the nested STACKIT Project integration. Values can be built-in STACKIT roles or custom STACKIT role names. | `map(list(string))` | <pre>{<br/>  "admin": [<br/>    "owner"<br/>  ],<br/>  "reader": [<br/>    "reader"<br/>  ],<br/>  "user": [<br/>    "editor"<br/>  ]<br/>}</pre> | no |
 | <a name="input_stackit_org"></a> [stackit\_org](#input\_stackit\_org) | STACKIT organization UUID under which the landing-zone folder, backplane project and tenant projects are created. | `string` | n/a | yes |
 | <a name="input_stackit_owner_email"></a> [stackit\_owner\_email](#input\_stackit\_owner\_email) | Owner email assigned to the STACKIT resourcemanager folder and backplane project. | `string` | n/a | yes |
 | <a name="input_stackit_service_account_key"></a> [stackit\_service\_account\_key](#input\_stackit\_service\_account\_key) | STACKIT service account key JSON with `resource-manager.admin` on the organization. Used to create the landing-zone folder and backplane project. | `string` | n/a | yes |

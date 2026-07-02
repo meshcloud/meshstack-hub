@@ -3,12 +3,12 @@ name: STACKIT Project
 supportedPlatforms:
   - stackit
 description: |
-  Creates a new STACKIT project and manages user access permissions with role-based access control.
+  Creates a new STACKIT project and manages user access permissions with configurable role-based access control.
 ---
 
 # STACKIT Project Building Block
 
-This Terraform module provisions a STACKIT project with user access control.
+This Terraform module provisions a STACKIT project with user access control. meshStack roles from the `users` input are mapped to STACKIT project roles via the configurable `role_mapping` input.
 
 ## Requirements
 
@@ -54,9 +54,7 @@ No modules.
 
 | Name | Type |
 |------|------|
-| [stackit_authorization_project_role_assignment.admin_assignments](https://registry.terraform.io/providers/stackitcloud/stackit/latest/docs/resources/authorization_project_role_assignment) | resource |
-| [stackit_authorization_project_role_assignment.reader_assignments](https://registry.terraform.io/providers/stackitcloud/stackit/latest/docs/resources/authorization_project_role_assignment) | resource |
-| [stackit_authorization_project_role_assignment.user_assignments](https://registry.terraform.io/providers/stackitcloud/stackit/latest/docs/resources/authorization_project_role_assignment) | resource |
+| [stackit_authorization_project_role_assignment.role_assignments](https://registry.terraform.io/providers/stackitcloud/stackit/latest/docs/resources/authorization_project_role_assignment) | resource |
 | [stackit_resourcemanager_project.project](https://registry.terraform.io/providers/stackitcloud/stackit/latest/docs/resources/resourcemanager_project) | resource |
 
 ## Inputs
@@ -68,8 +66,9 @@ No modules.
 | <a name="input_parent_container_id"></a> [parent\_container\_id](#input\_parent\_container\_id) | The parent container ID (organization or folder) where the project will be created. | `string` | n/a | yes |
 | <a name="input_parent_container_ids"></a> [parent\_container\_ids](#input\_parent\_container\_ids) | Parent container IDs for different environments. If environment is set, the corresponding container ID will be used. | <pre>object({<br/>    production  = optional(string)<br/>    staging     = optional(string)<br/>    development = optional(string)<br/>  })</pre> | `{}` | no |
 | <a name="input_project_name"></a> [project\_name](#input\_project\_name) | The name of the StackIt project to create. | `string` | n/a | yes |
+| <a name="input_role_mapping"></a> [role\_mapping](#input\_role\_mapping) | Maps meshStack roles from `users[*].roles` to STACKIT project roles. Values can be built-in STACKIT roles or custom STACKIT role names. Unknown meshStack roles are ignored. | `map(list(string))` | <pre>{<br/>  "admin": [<br/>    "owner"<br/>  ],<br/>  "reader": [<br/>    "reader"<br/>  ],<br/>  "user": [<br/>    "editor"<br/>  ]<br/>}</pre> | no |
 | <a name="input_service_account_email"></a> [service\_account\_email](#input\_service\_account\_email) | Email of the STACKIT service account for WIF-based authentication and project ownership. | `string` | n/a | yes |
-| <a name="input_users"></a> [users](#input\_users) | List of users from authoritative system | <pre>list(object({<br/>    meshIdentifier = string<br/>    username       = string<br/>    firstName      = string<br/>    lastName       = string<br/>    email          = string<br/>    euid           = string<br/>    roles          = list(string)<br/>  }))</pre> | `[]` | no |
+| <a name="input_users"></a> [users](#input\_users) | List of users from the authoritative system. Each user's `roles` are meshStack roles that are mapped to STACKIT project roles via `role_mapping`. | <pre>list(object({<br/>    meshIdentifier = string<br/>    username       = string<br/>    firstName      = string<br/>    lastName       = string<br/>    email          = string<br/>    euid           = string<br/>    roles          = list(string)<br/>  }))</pre> | `[]` | no |
 
 ## Outputs
 
