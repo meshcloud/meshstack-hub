@@ -64,64 +64,85 @@ resource "meshstack_project" "sandbox" {
 }
 
 
-resource "meshstack_tenant" "sandbox" {
+resource "meshstack_tenant_v4" "sandbox" {
   metadata = {
-    owned_by_workspace  = meshstack_project.sandbox.metadata.owned_by_workspace
-    owned_by_project    = meshstack_project.sandbox.metadata.name
-    platform_identifier = local.platform_identifier
+    owned_by_workspace = meshstack_project.sandbox.metadata.owned_by_workspace
+    owned_by_project   = meshstack_project.sandbox.metadata.name
   }
 
   spec = {
+    platform_identifier     = local.platform_identifier
     landing_zone_identifier = local.landing_zone_identifier
   }
 }
 
+# The v3 meshstack_building_block resource references a definition by its version uuid, but the
+# composition config provides the definition uuid + a version number. Resolve the version uuid via
+# the definitions data source.
+data "meshstack_building_block_definitions" "all" {}
 
-# NOTE: must use bb v1 resource because v2 requires a tenant uuid
-# but the tenant v4 api that delivers the uuid is not supported by  our terraform provider yet
-resource "meshstack_buildingblock" "budget_alert" {
-  metadata = {
-    definition_uuid    = local.budget_alert_definition_uuid
-    definition_version = local.budget_alert_definition_version
-    tenant_identifier  = "${meshstack_tenant.sandbox.metadata.owned_by_workspace}.${meshstack_tenant.sandbox.metadata.owned_by_project}.${meshstack_tenant.sandbox.metadata.platform_identifier}"
-  }
+locals {
+  _bbds = data.meshstack_building_block_definitions.all.building_block_definitions
 
+  budget_alert_version_uuid = one(flatten([
+    for d in local._bbds : [
+      for v in d.versions : v.uuid if tostring(v.number) == tostring(local.budget_alert_definition_version)
+    ] if d.metadata.uuid == local.budget_alert_definition_uuid
+  ]))
+
+  enable_eu_south_2_region_version_uuid = one(flatten([
+    for d in local._bbds : [
+      for v in d.versions : v.uuid if tostring(v.number) == tostring(local.enable_eu_south_2_region_definition_version)
+    ] if d.metadata.uuid == local.enable_eu_south_2_region_definition_uuid
+  ]))
+}
+
+
+resource "meshstack_building_block" "budget_alert" {
   spec = {
+    building_block_definition_version_ref = {
+      uuid = local.budget_alert_version_uuid
+    }
+
     display_name = "Budget Alert"
+    target_ref   = meshstack_tenant_v4.sandbox.ref
 
     inputs = {
       budget_name = {
-        value_string = "Agentic Coding Budget Alert"
+        value = jsonencode("Agentic Coding Budget Alert")
       }
       monthly_budget_amount = {
-        value_int = var.budget_amount
+        value = jsonencode(var.budget_amount)
       }
       contact_emails = {
         # just a single email for now, not a comma-separated list
-        value_string = var.username
+        value = jsonencode(var.username)
       }
     }
   }
+
+  wait_for_completion = true
 }
 
 
 # enable spain region for the sandbox tenant because that's the only region where Anthropic's Sonnet 4 is available
-resource "meshstack_buildingblock" "enable_eu_south_2_region" {
-  metadata = {
-    definition_uuid    = local.enable_eu_south_2_region_definition_uuid
-    definition_version = local.enable_eu_south_2_region_definition_version
-    tenant_identifier  = "${meshstack_tenant.sandbox.metadata.owned_by_workspace}.${meshstack_tenant.sandbox.metadata.owned_by_project}.${meshstack_tenant.sandbox.metadata.platform_identifier}"
-  }
-
+resource "meshstack_building_block" "enable_eu_south_2_region" {
   spec = {
+    building_block_definition_version_ref = {
+      uuid = local.enable_eu_south_2_region_version_uuid
+    }
+
     display_name = "Enable eu-south-2 region"
+    target_ref   = meshstack_tenant_v4.sandbox.ref
 
     inputs = {
       region = {
-        value_single_select = "eu-south-2"
+        value = jsonencode("eu-south-2")
       }
     }
   }
+
+  wait_for_completion = true
 }
 
 # note: this does not work until API keys get support for an ADM level permission on project role bidnings
