@@ -1,3 +1,4 @@
+import { Dialog } from '@angular/cdk/dialog';
 import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { AfterViewChecked, Component, ElementRef, Inject, OnDestroy, OnInit, PLATFORM_ID } from '@angular/core';
 import { ActivatedRoute, RouterLink } from '@angular/router';
@@ -11,6 +12,8 @@ import { CardComponent } from 'app/shared/card';
 import { Platform, PlatformService } from 'app/shared/platform';
 import { ReferenceArchitectureService } from 'app/shared/reference-architecture';
 import { TemplateService } from 'app/shared/template';
+
+import { ImportDialogComponent } from '../template-details/import-dialog/import-dialog.component';
 
 interface BuildingBlockLink {
   path: string;
@@ -29,6 +32,10 @@ interface RefArchDetailVm {
   bodyHtml: string;
   sourceUrl: string | null;
   platformLogos: { platformType: string; imageUrl: string }[];
+  hasCode: boolean;
+  integrationSourceUrl: string | null;
+  folderUrl: string | null;
+  modulePath: string | null;
 }
 
 @Component({
@@ -51,6 +58,7 @@ export class ReferenceArchitectureDetailComponent implements OnInit, OnDestroy, 
     private refArchService: ReferenceArchitectureService,
     private platformService: PlatformService,
     private templateService: TemplateService,
+    private dialog: Dialog,
     private el: ElementRef,
     @Inject(PLATFORM_ID) private platformId: object,
     private seoService: SeoService
@@ -110,6 +118,17 @@ export class ReferenceArchitectureDetailComponent implements OnInit, OnDestroy, 
     this.routeSubscription?.unsubscribe();
   }
 
+  public open(vm: RefArchDetailVm): void {
+    if (!vm.modulePath) {
+      return;
+    }
+
+    this.dialog.open(ImportDialogComponent, {
+      width: '600px',
+      data: { name: vm.name, modulePath: vm.modulePath }
+    });
+  }
+
   private toVm(
     arch: ReferenceArchitecture,
     platforms: Platform[],
@@ -142,7 +161,11 @@ export class ReferenceArchitectureDetailComponent implements OnInit, OnDestroy, 
       platformLogos: arch.cloudProviders.map(cp => ({
         platformType: cp,
         imageUrl: platforms.find(p => p.platformType === cp)?.logo ?? 'assets/meshstack-logo.png'
-      }))
+      })),
+      hasCode: arch.hasCode,
+      integrationSourceUrl: arch.integrationSourceUrl,
+      folderUrl: arch.folderUrl,
+      modulePath: arch.modulePath
     };
   }
 
