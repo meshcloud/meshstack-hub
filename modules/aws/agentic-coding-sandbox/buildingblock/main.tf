@@ -76,7 +76,7 @@ resource "meshstack_tenant_v4" "sandbox" {
   }
 }
 
-# The v3 meshstack_building_block resource references a definition by its version uuid, but the
+# The meshstack_building_block resource references a definition by its version uuid, but the
 # composition config provides the definition uuid + a version number. Resolve the version uuid via
 # the definitions data source.
 data "meshstack_building_block_definitions" "all" {}
