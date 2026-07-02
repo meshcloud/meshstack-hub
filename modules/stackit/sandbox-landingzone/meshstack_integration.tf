@@ -1,23 +1,9 @@
-variable "stackit_organization_id" {
-  type        = string
-  description = "STACKIT organization ID under which the landing-zone folder and the STACKIT project platform are created."
-}
-
-variable "stackit_owner_email" {
-  type        = string
-  description = "Owner email assigned to the STACKIT resourcemanager folder created for the landing zone."
-}
-
 variable "meshstack" {
   type = object({
     owning_workspace_identifier = string
     tags                        = optional(map(list(string)), {})
-    module_tags = optional(object({
-      landingzone    = map(list(string))
-      building_block = map(list(string))
-    }), { landingzone = {}, building_block = {} })
   })
-  description = "Shared meshStack context. `tags` are applied immediately to this building block definition metadata. `module_tags` are forwarded to the nested STACKIT Project integration (landing zone + building block tags)."
+  description = "Shared meshStack context. Tags are optional and propagated to building block definition metadata."
 }
 
 variable "hub" {
@@ -25,8 +11,13 @@ variable "hub" {
     git_ref   = optional(string, "main")
     bbd_draft = optional(bool, true)
   })
-  const       = true
-  default     = {}
+  const = true
+
+  default = {
+    git_ref   = "main"
+    bbd_draft = true
+  }
+
   description = <<-EOT
   `git_ref`: Hub release reference. Set to a tag (e.g. 'v1.2.3') or branch or commit sha of the meshstack-hub repo.
   `bbd_draft`: If true, the building block definition version is kept in draft mode.
@@ -50,14 +41,14 @@ resource "meshstack_building_block_definition" "this" {
   spec = {
     display_name     = "STACKIT Sandbox Landing Zone"
     symbol           = "https://raw.githubusercontent.com/meshcloud/meshstack-hub/${var.hub.git_ref}/modules/stackit/sandbox-landingzone/buildingblock/logo.png"
-    description      = "Onboards a STACKIT platform into meshStack: creates a location, a STACKIT resourcemanager folder and the STACKIT Project platform with its default landing zone."
+    description      = "Onboards a STACKIT sandbox platform into meshStack: creates a location, a STACKIT resourcemanager folder and the STACKIT Project platform with its default landing zone."
     support_url      = "https://portal.stackit.cloud"
     target_type      = "WORKSPACE_LEVEL"
     run_transparency = true
 
     readme = chomp(<<-EOT
-    The **STACKIT Landing Zone** building block bootstraps a complete STACKIT platform integration inside a
-    meshStack workspace. Running it once turns a STACKIT organization into a self-service-ready platform: it
+    The **STACKIT Sandbox Landing Zone** building block bootstraps a complete STACKIT sandbox platform integration inside a
+    meshStack workspace. Running it once turns a STACKIT organization into a sandbox-ready self-service platform: it
     registers a meshStack location, carves out a dedicated STACKIT resourcemanager folder for the workspace and
     wires up the **STACKIT Project** platform together with its default landing zone.
 
@@ -88,14 +79,14 @@ resource "meshstack_building_block_definition" "this" {
 
     ## 🔑 Authentication
 
-    The building block authenticates to STACKIT with a service account key you paste as a secret input.
-    The service account needs `resource-manager.admin` on the organization.
+    You provide the STACKIT organization UUID, owner email, nested integration tags and a service account key as inputs.
+    The building block authenticates to STACKIT with the service account key, which needs `resource-manager.admin` on the organization.
 
     ## 📊 Shared responsibility
 
     | Responsibility | Platform Team | Application Team |
     |---|:---:|:---:|
-    | Provide the STACKIT service account key and organization details | ✅ | ❌ |
+    | Provide the STACKIT service account key, organization details and nested integration tags | ✅ | ❌ |
     | Provision the location, folder and STACKIT Project platform | ✅ | ❌ |
     | Request STACKIT projects through the landing zone | ❌ | ✅ |
     | Manage workloads inside the provisioned STACKIT projects | ❌ | ✅ |
@@ -154,27 +145,26 @@ resource "meshstack_building_block_definition" "this" {
       # ── Platform configuration (set by the platform team) ──
 
       stackit_org = {
-        display_name    = "STACKIT Organization ID"
-        description     = "Organization under which the landing-zone folder and projects are created."
-        type            = "STRING"
-        assignment_type = "STATIC"
-        argument        = jsonencode(var.stackit_organization_id)
+        display_name                   = "STACKIT Organization UUID"
+        description                    = "STACKIT organization UUID under which the landing-zone folder, backplane project and tenant projects are created."
+        type                           = "STRING"
+        assignment_type                = "USER_INPUT"
+        value_validation_regex         = "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$"
+        validation_regex_error_message = "STACKIT Organization UUID must be a valid UUID."
       }
 
       stackit_owner_email = {
-        display_name    = "STACKIT Folder Owner Email"
-        description     = "Owner email assigned to the STACKIT resourcemanager folder."
+        display_name    = "STACKIT Owner Email"
+        description     = "Owner email assigned to the STACKIT resourcemanager folder and backplane project."
         type            = "STRING"
-        assignment_type = "STATIC"
-        argument        = jsonencode(var.stackit_owner_email)
+        assignment_type = "USER_INPUT"
       }
 
       tags = {
-        display_name    = "Module Tags"
-        description     = "Tags forwarded to the nested STACKIT Project integration (landing zone and nested building block definition)."
+        display_name    = "Nested STACKIT Project Tags"
+        description     = "JSON object with `landingzone` and `building_block` tag maps forwarded to the nested STACKIT Project integration."
         type            = "CODE"
-        assignment_type = "STATIC"
-        argument        = jsonencode(jsonencode(var.meshstack.module_tags))
+        assignment_type = "USER_INPUT"
       }
 
       # ── meshStack context ──
@@ -188,7 +178,7 @@ resource "meshstack_building_block_definition" "this" {
 
       platform_identifier = {
         display_name                   = "Platform Identifier"
-        description                    = "Identifier for the STACKIT platform created in meshStack (letters, digits and dashes only)."
+        description                    = "Identifier for the STACKIT sandbox platform created in meshStack (letters, digits and dashes only)."
         type                           = "STRING"
         assignment_type                = "USER_INPUT"
         value_validation_regex         = "^[a-zA-Z0-9-]+$"

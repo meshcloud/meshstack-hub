@@ -5,7 +5,12 @@ variable "workspace" {
 
 variable "stackit_org" {
   type        = string
-  description = "STACKIT organization ID under which the landing-zone folder and backplane project are created."
+  description = "STACKIT organization UUID under which the landing-zone folder, backplane project and tenant projects are created."
+
+  validation {
+    condition     = can(regex("^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$", var.stackit_org))
+    error_message = "stackit_org must be a valid UUID."
+  }
 }
 
 variable "stackit_owner_email" {
@@ -20,7 +25,9 @@ variable "stackit_service_account_key" {
 }
 
 variable "platform_identifier" {
-  type = string
+  type        = string
+  description = "Identifier for the STACKIT sandbox platform created in meshStack (letters, digits and dashes only)."
+
   validation {
     condition     = can(regex("^[a-zA-Z0-9-]+$", var.platform_identifier))
     error_message = "platform_identifier must only contain letters, digits, and dashes."
@@ -33,7 +40,8 @@ variable "tags" {
     building_block = map(list(string))
   })
 
-  default = { landingzone = {}, building_block = {} }
+  default     = { landingzone = {}, building_block = {} }
+  description = "Tags forwarded to the nested STACKIT Project integration. `landingzone` tags are applied to the default landing zone; `building_block` tags are applied to the nested building block definition."
 }
 
 variable "git_ref" {

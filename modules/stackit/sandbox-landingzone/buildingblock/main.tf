@@ -6,7 +6,7 @@ resource "meshstack_location" "this" {
 
   spec = {
     display_name = var.platform_identifier
-    description  = ""
+    description  = "STACKIT sandbox location created by the STACKIT Sandbox Landing Zone."
   }
 }
 
