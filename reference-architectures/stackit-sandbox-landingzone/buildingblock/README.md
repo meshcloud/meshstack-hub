@@ -7,8 +7,8 @@ description: Onboards a STACKIT sandbox platform into meshStack by creating a lo
 
 This building block bootstraps a complete STACKIT sandbox platform integration inside a meshStack
 workspace. It creates a meshStack location, a dedicated STACKIT resourcemanager folder and
-sources the [`modules/stackit`](../../) project integration to provision the STACKIT Project
-platform together with its default landing zone.
+sources the [`modules/stackit`](../../../modules/stackit) project integration to provision the
+STACKIT Project platform together with its default landing zone.
 
 It authenticates to STACKIT with a service account key you paste as a secret input. You also
 provide the STACKIT organization UUID, owner email, nested integration tags and default role mapping
