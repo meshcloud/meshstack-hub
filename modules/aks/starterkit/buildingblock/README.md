@@ -15,7 +15,7 @@ This documentation is intended as a reference documentation for cloud foundation
 
 | Name | Version |
 |------|---------|
-| <a name="requirement_meshstack"></a> [meshstack](#requirement\_meshstack) | >= 0.21.0 |
+| <a name="requirement_meshstack"></a> [meshstack](#requirement\_meshstack) | >= 0.23.0 |
 
 ## Modules
 
@@ -25,9 +25,9 @@ No modules.
 
 | Name | Type |
 |------|------|
-| [meshstack_building_block_v2.github_actions_dev](https://registry.terraform.io/providers/meshcloud/meshstack/latest/docs/resources/building_block_v2) | resource |
-| [meshstack_building_block_v2.github_actions_prod](https://registry.terraform.io/providers/meshcloud/meshstack/latest/docs/resources/building_block_v2) | resource |
-| [meshstack_building_block_v2.repo](https://registry.terraform.io/providers/meshcloud/meshstack/latest/docs/resources/building_block_v2) | resource |
+| [meshstack_building_block.github_actions_dev](https://registry.terraform.io/providers/meshcloud/meshstack/latest/docs/resources/building_block) | resource |
+| [meshstack_building_block.github_actions_prod](https://registry.terraform.io/providers/meshcloud/meshstack/latest/docs/resources/building_block) | resource |
+| [meshstack_building_block.repo](https://registry.terraform.io/providers/meshcloud/meshstack/latest/docs/resources/building_block) | resource |
 | [meshstack_project.dev](https://registry.terraform.io/providers/meshcloud/meshstack/latest/docs/resources/project) | resource |
 | [meshstack_project.prod](https://registry.terraform.io/providers/meshcloud/meshstack/latest/docs/resources/project) | resource |
 | [meshstack_project_user_binding.creator_dev_admin](https://registry.terraform.io/providers/meshcloud/meshstack/latest/docs/resources/project_user_binding) | resource |

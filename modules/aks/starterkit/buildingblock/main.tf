@@ -103,7 +103,7 @@ resource "meshstack_tenant_v4" "prod" {
   depends_on = [meshstack_project_user_binding.creator_prod_admin]
 }
 
-resource "meshstack_building_block_v2" "repo" {
+resource "meshstack_building_block" "repo" {
   spec = {
     building_block_definition_version_ref = {
       uuid = var.github_repo_definition_version_uuid
@@ -117,31 +117,31 @@ resource "meshstack_building_block_v2" "repo" {
 
     inputs = {
       repo_name = {
-        value_string = local.repo_name
+        value = jsonencode(local.repo_name)
       }
       archive_repo_on_destroy = {
-        value_bool = var.archive_repo_on_destroy
+        value = jsonencode(var.archive_repo_on_destroy)
       }
       repo_owner = {
-        value_string = var.repo_admin != null ? var.repo_admin : "null"
+        value = jsonencode(var.repo_admin != null ? var.repo_admin : "null")
       }
       repo_visibility = {
-        value_string = var.github_repo_input_repo_visibility != null ? var.github_repo_input_repo_visibility : "private"
+        value = jsonencode(var.github_repo_input_repo_visibility != null ? var.github_repo_input_repo_visibility : "private")
       }
       use_template = {
-        value_bool = true
+        value = jsonencode(true)
       }
       template_owner = {
-        value_string = split("/", var.github_template_repo_path)[0]
+        value = jsonencode(split("/", var.github_template_repo_path)[0])
       }
       template_repo = {
-        value_string = split("/", var.github_template_repo_path)[1]
+        value = jsonencode(split("/", var.github_template_repo_path)[1])
       }
     }
   }
 }
 
-resource "meshstack_building_block_v2" "github_actions_dev" {
+resource "meshstack_building_block" "github_actions_dev" {
   spec = {
     building_block_definition_version_ref = {
       uuid = var.github_actions_connector_definition_version_uuid
@@ -152,24 +152,24 @@ resource "meshstack_building_block_v2" "github_actions_dev" {
     }
     display_name = "GHA Connector Dev"
     parent_building_blocks = [{
-      buildingblock_uuid = meshstack_building_block_v2.repo.metadata.uuid
+      buildingblock_uuid = meshstack_building_block.repo.metadata.uuid
       definition_uuid    = var.github_repo_definition_uuid
     }]
     inputs = {
       github_environment_name = {
-        value_string = "development"
+        value = jsonencode("development")
       }
       additional_environment_variables = {
-        value_code = jsonencode({
+        value = jsonencode(jsonencode({
           "DOMAIN_NAME"        = "${local.identifier}-dev"
           "AKS_NAMESPACE_NAME" = meshstack_tenant_v4.dev.spec.platform_tenant_id
-        })
+        }))
       }
     }
   }
 }
 
-resource "meshstack_building_block_v2" "github_actions_prod" {
+resource "meshstack_building_block" "github_actions_prod" {
   spec = {
     display_name = "GHA Connector Prod"
     building_block_definition_version_ref = {
@@ -180,19 +180,37 @@ resource "meshstack_building_block_v2" "github_actions_prod" {
       uuid = meshstack_tenant_v4.prod.metadata.uuid
     }
     parent_building_blocks = [{
-      buildingblock_uuid = meshstack_building_block_v2.repo.metadata.uuid
+      buildingblock_uuid = meshstack_building_block.repo.metadata.uuid
       definition_uuid    = var.github_repo_definition_uuid
     }]
     inputs = {
       github_environment_name = {
-        value_string = "production"
+        value = jsonencode("production")
       }
       additional_environment_variables = {
-        value_code = jsonencode({
+        value = jsonencode(jsonencode({
           "DOMAIN_NAME"        = local.identifier
           "AKS_NAMESPACE_NAME" = meshstack_tenant_v4.prod.spec.platform_tenant_id
-        })
+        }))
       }
     }
   }
+}
+
+# Migrate the app-team-managed child building blocks from the deprecated
+# meshstack_building_block_v2 resource to meshstack_building_block in place —
+# no destroy/recreate of the live blocks.
+moved {
+  from = meshstack_building_block_v2.repo
+  to   = meshstack_building_block.repo
+}
+
+moved {
+  from = meshstack_building_block_v2.github_actions_dev
+  to   = meshstack_building_block.github_actions_dev
+}
+
+moved {
+  from = meshstack_building_block_v2.github_actions_prod
+  to   = meshstack_building_block.github_actions_prod
 }

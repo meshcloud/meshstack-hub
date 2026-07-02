@@ -4,22 +4,22 @@ run "env_audit_hub" {
   }
 
   assert {
-    condition     = meshstack_building_block_v2.this.status.status == "SUCCEEDED"
-    error_message = "env-audit building block expected SUCCEEDED, got ${meshstack_building_block_v2.this.status.status}"
+    condition     = meshstack_building_block.this.status.status == "SUCCEEDED"
+    error_message = "env-audit building block expected SUCCEEDED, got ${meshstack_building_block.this.status.status}"
   }
 
   assert {
     condition = length(setsubtract(
-      toset(jsondecode(meshstack_building_block_v2.this.status.outputs["prerun_env_keys"].value_string)),
+      toset(jsondecode(jsondecode(meshstack_building_block.this.status.outputs["prerun_env_keys"].value))),
       toset(jsondecode(file("${path.root}/allowed_env_keys.expected.json")))
     )) == 0
-    error_message = "Unexpected prerun environment variables detected: ${meshstack_building_block_v2.this.status.outputs["prerun_env_keys"].value_string}"
+    error_message = "Unexpected prerun environment variables detected: ${jsondecode(meshstack_building_block.this.status.outputs["prerun_env_keys"].value)}"
   }
 
   assert {
     # apply-time adds OpenTofu plugin protocol vars not present at prerun
     condition = length(setsubtract(
-      toset(jsondecode(meshstack_building_block_v2.this.status.outputs["apply_env_keys"].value_string)),
+      toset(jsondecode(jsondecode(meshstack_building_block.this.status.outputs["apply_env_keys"].value))),
       setunion(
         toset(jsondecode(file("${path.root}/allowed_env_keys.expected.json"))),
         toset([
@@ -32,6 +32,6 @@ run "env_audit_hub" {
         ])
       )
     )) == 0
-    error_message = "Unexpected apply-time environment variables detected: ${meshstack_building_block_v2.this.status.outputs["apply_env_keys"].value_string}"
+    error_message = "Unexpected apply-time environment variables detected: ${jsondecode(meshstack_building_block.this.status.outputs["apply_env_keys"].value)}"
   }
 }

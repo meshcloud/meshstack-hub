@@ -20,7 +20,7 @@ locals {
   }
 }
 
-resource "meshstack_building_block_v2" "git_repository" {
+resource "meshstack_building_block" "git_repository" {
   spec = {
     building_block_definition_version_ref = var.building_block_definitions["git-repository"].version_ref # provisioned in backplane
 
@@ -31,9 +31,9 @@ resource "meshstack_building_block_v2" "git_repository" {
     }
 
     inputs = {
-      name        = { value_string = local.name }
-      description = { value_string = "Source code for application ${var.name}" }
-      clone_addr  = { value_string = var.repo_clone_addr }
+      name        = { value = jsonencode(local.name) }
+      description = { value = jsonencode("Source code for application ${var.name}") }
+      clone_addr  = { value = jsonencode(var.repo_clone_addr) }
     }
   }
   wait_for_completion = true
@@ -97,7 +97,7 @@ resource "meshstack_tenant_v4" "this" {
   depends_on = [meshstack_project_user_binding.creator_to_admin]
 }
 
-resource "meshstack_building_block_v2" "forgejo_connector" {
+resource "meshstack_building_block" "forgejo_connector" {
   for_each = meshstack_tenant_v4.this
 
   spec = {
@@ -110,16 +110,29 @@ resource "meshstack_building_block_v2" "forgejo_connector" {
     }
 
     parent_building_blocks = [{
-      buildingblock_uuid = meshstack_building_block_v2.git_repository.metadata.uuid
+      buildingblock_uuid = meshstack_building_block.git_repository.metadata.uuid
       definition_uuid    = var.building_block_definitions["git-repository"].uuid
     }]
 
     inputs = {
-      stage        = { value_string = each.key }
-      app_hostname = { value_string = local.app_hostnames[each.key] }
+      stage        = { value = jsonencode(each.key) }
+      app_hostname = { value = jsonencode(local.app_hostnames[each.key]) }
     }
   }
 
   wait_for_completion = true
+}
+
+# Migrate the app-team-managed child building blocks from the deprecated
+# meshstack_building_block_v2 resource to meshstack_building_block in place —
+# no destroy/recreate of the live blocks.
+moved {
+  from = meshstack_building_block_v2.git_repository
+  to   = meshstack_building_block.git_repository
+}
+
+moved {
+  from = meshstack_building_block_v2.forgejo_connector
+  to   = meshstack_building_block.forgejo_connector
 }
 

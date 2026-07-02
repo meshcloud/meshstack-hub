@@ -46,7 +46,7 @@ module "resource_group" {
   backplane_name = "hub-e2e-rg-${var.test_context.name_suffix}"
 }
 
-resource "meshstack_building_block_v2" "this" {
+resource "meshstack_building_block" "this" {
   depends_on = [module.resource_group]
 
   wait_for_completion = true
@@ -61,8 +61,8 @@ resource "meshstack_building_block_v2" "this" {
     }
 
     inputs = {
-      workspace_identifier = { value_string = var.test_context.workspace }
-      project_identifier   = { value_string = local.project_identifier }
+      workspace_identifier = { value = jsonencode(var.test_context.workspace) }
+      project_identifier   = { value = jsonencode(local.project_identifier) }
     }
   }
 }
