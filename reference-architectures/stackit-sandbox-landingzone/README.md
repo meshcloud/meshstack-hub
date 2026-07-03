@@ -1,8 +1,7 @@
 ---
 name: STACKIT Sandbox Landing Zone
 description: >
-  Bootstraps a self-service-ready STACKIT platform: a dedicated STACKIT resourcemanager folder, a service account, 
-  and the STACKIT Project platform with a default landing zone.
+  Bootstraps a self-service-ready STACKIT platform: a dedicated STACKIT resourcemanager folder, a service account, and the STACKIT Project platform with a default landing zone.
 cloudProviders:
   - stackit
 buildingBlocks:
