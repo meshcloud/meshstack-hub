@@ -11,5 +11,8 @@ terraform {
     random = {
       source = "hashicorp/random"
     }
+    external = {
+      source = "hashicorp/external"
+    }
   }
 }

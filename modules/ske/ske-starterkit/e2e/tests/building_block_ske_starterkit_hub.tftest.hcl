@@ -13,4 +13,15 @@ run "building_block_ske_starterkit_hub" {
     condition     = can(regex("^https://", meshstack_building_block_v2.this.status.outputs["app_link_prod"].value_string))
     error_message = "ske-starterkit hub building block expected app_link_prod to be a URL, got ${meshstack_building_block_v2.this.status.outputs["app_link_prod"].value_string}"
   }
+
+  # The app must actually serve traffic over a valid (cert-manager-issued) TLS certificate.
+  assert {
+    condition     = data.external.app_probe["dev"].result.status == "200"
+    error_message = "dev app endpoint expected HTTP 200 over verified TLS, got ${data.external.app_probe["dev"].result.status}"
+  }
+
+  assert {
+    condition     = data.external.app_probe["prod"].result.status == "200"
+    error_message = "prod app endpoint expected HTTP 200 over verified TLS, got ${data.external.app_probe["prod"].result.status}"
+  }
 }

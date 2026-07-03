@@ -180,3 +180,16 @@ resource "meshstack_building_block_v2" "this" {
 
   depends_on = [module.meshstack_kubernetes_platform]
 }
+
+# Probe the deployed dev + prod app endpoints: reaching SUCCEEDED means the app was deployed, but
+# not that the ingress actually serves traffic with a valid, cert-manager-issued certificate. The
+# script GETs the URL over TLS (verified against the system trust store) and retries while
+# cert-manager issues the cert; the test asserts each returns 200. Referencing the BB outputs makes
+# these data sources read after the building block completes.
+data "external" "app_probe" {
+  for_each = toset(["dev", "prod"])
+  program  = ["python3", "${path.module}/probe_endpoint.py"]
+  query = {
+    url = meshstack_building_block_v2.this.status.outputs["app_link_${each.key}"].value_string
+  }
+}
