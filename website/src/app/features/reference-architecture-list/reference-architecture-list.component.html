@@ -56,7 +56,7 @@
                     {{ card.buildingBlockCount }} building block{{ card.buildingBlockCount !== 1 ? 's' : '' }}
                   </span>
                 </div>
-                <span *ngIf="card.hasCode" class="inline-flex items-center gap-1 px-2 py-0.5 bg-green-100 text-green-700 text-xs font-medium rounded">
+                <span *ngIf="card.integrationSourceUrl" class="inline-flex items-center gap-1 px-2 py-0.5 bg-green-100 text-green-700 text-xs font-medium rounded">
                   <i class="fa-solid fa-code"></i>
                   Importable
                 </span>

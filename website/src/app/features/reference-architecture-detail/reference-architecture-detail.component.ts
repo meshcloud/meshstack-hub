@@ -32,7 +32,6 @@ interface RefArchDetailVm {
   bodyHtml: string;
   sourceUrl: string | null;
   platformLogos: { platformType: string; imageUrl: string }[];
-  hasCode: boolean;
   integrationSourceUrl: string | null;
   folderUrl: string | null;
   modulePath: string | null;
@@ -162,7 +161,6 @@ export class ReferenceArchitectureDetailComponent implements OnInit, OnDestroy, 
         platformType: cp,
         imageUrl: platforms.find(p => p.platformType === cp)?.logo ?? 'assets/meshstack-logo.png'
       })),
-      hasCode: arch.hasCode,
       integrationSourceUrl: arch.integrationSourceUrl,
       folderUrl: arch.folderUrl,
       modulePath: arch.modulePath

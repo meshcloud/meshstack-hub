@@ -28,7 +28,7 @@
                   <i class="fa-solid fa-layer-group"></i>
                   Reference Architecture
                 </span>
-                <span *ngIf="vm.hasCode" class="inline-flex items-center gap-1 px-2 py-0.5 bg-green-100 text-green-700 text-xs font-medium rounded">
+                <span *ngIf="vm.integrationSourceUrl" class="inline-flex items-center gap-1 px-2 py-0.5 bg-green-100 text-green-700 text-xs font-medium rounded">
                   <i class="fa-solid fa-code"></i>
                   Importable
                 </span>
@@ -51,7 +51,7 @@
   </div>
 
   <!-- How to use (only when this reference architecture ships its own Terraform code) -->
-  <div *ngIf="vm.hasCode" class="container mx-auto px-4 lg:px-8 pt-6">
+  <div *ngIf="vm.integrationSourceUrl" class="container mx-auto px-4 lg:px-8 pt-6">
     <div class="bg-white border border-slate-200 rounded-xl divide-y divide-slate-100 sm:divide-y-0 sm:divide-x flex flex-col sm:flex-row">
       <div class="flex-1 p-4 flex items-center gap-3">
         <i class="fa-solid fa-window-restore text-primary-600"></i>
