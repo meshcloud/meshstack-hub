@@ -116,7 +116,7 @@ resource "meshstack_building_block_definition" "this" {
       terraform = {
         terraform_version              = "1.12.0"
         repository_url                 = "https://github.com/meshcloud/meshstack-hub.git"
-        repository_path                = "modules/stackit/sandbox-landingzone/buildingblock"
+        repository_path                = "reference-architectures/stackit-sandbox-landingzone/buildingblock"
         ref_name                       = var.hub.git_ref
         async                          = false
         use_mesh_http_backend_fallback = true
