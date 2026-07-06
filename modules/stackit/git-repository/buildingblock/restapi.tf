@@ -32,6 +32,14 @@ provider "restapi" {
   uri                  = data.external.env.result["FORGEJO_HOST"]
   headers              = local.restapi_provider_headers
   write_returns_object = true
+
+  # Forgejo occasionally answers 5xx under concurrent load (e.g. team CRUD
+  # racing other repo operations); retry instead of failing the run outright.
+  retries {
+    max_retries = 5
+    min_wait    = 1
+    max_wait    = 10
+  }
 }
 
 provider "restapi" {
@@ -39,4 +47,10 @@ provider "restapi" {
   uri                  = data.external.env.result["FORGEJO_HOST"]
   headers              = local.restapi_provider_headers
   write_returns_object = false
+
+  retries {
+    max_retries = 5
+    min_wait    = 1
+    max_wait    = 10
+  }
 }
