@@ -30,3 +30,9 @@ resource "stackit_authorization_organization_role_assignment" "project_admin" {
   role        = "resource-manager.admin"
   subject     = stackit_service_account.building_block.email
 }
+
+resource "stackit_authorization_organization_role_assignment" "member_admin" {
+  resource_id = var.organization_id
+  role        = "iam.member-admin"
+  subject     = stackit_service_account.building_block.email
+}

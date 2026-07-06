@@ -8,6 +8,12 @@ variable "stackit_organization_id" {
   description = "STACKIT organization ID where the service account will be granted permissions."
 }
 
+variable "stackit_organization_member_role" {
+  type        = string
+  default     = "organization.viewer"
+  description = "STACKIT organization role assigned best-effort to all meshStack project users before project role assignments are applied."
+}
+
 variable "stackit_parent_container_id" {
   type        = string
   description = "Default parent container ID (organization or folder) for project creation."
@@ -179,6 +185,7 @@ resource "meshstack_building_block_definition" "this" {
         ref_name                       = var.hub.git_ref
         async                          = false
         use_mesh_http_backend_fallback = true
+        pre_run_script                 = file("${path.module}/project/buildingblock/prerun.sh")
       }
     }
 
@@ -215,6 +222,33 @@ resource "meshstack_building_block_definition" "this" {
         assignment_type = "STATIC"
         is_environment  = true
         argument        = jsonencode("/var/run/secrets/workload-identity/azure/token")
+      }
+
+      STACKIT_SERVICE_ACCOUNT_EMAIL = {
+        display_name    = "STACKIT Service Account Email"
+        description     = "Service account email used by the pre-run script for WIF token exchange."
+        type            = "STRING"
+        assignment_type = "STATIC"
+        is_environment  = true
+        argument        = jsonencode(module.backplane.service_account_email)
+      }
+
+      STACKIT_ORGANIZATION_ID = {
+        display_name    = "STACKIT Organization ID"
+        description     = "STACKIT organization where meshStack project users are added best-effort before project role assignments are applied."
+        type            = "STRING"
+        assignment_type = "STATIC"
+        is_environment  = true
+        argument        = jsonencode(var.stackit_organization_id)
+      }
+
+      STACKIT_ORGANIZATION_MEMBER_ROLE = {
+        display_name    = "STACKIT Organization Member Role"
+        description     = "STACKIT organization role assigned best-effort to all meshStack project users."
+        type            = "STRING"
+        assignment_type = "STATIC"
+        is_environment  = true
+        argument        = jsonencode(var.stackit_organization_member_role)
       }
 
       project_name = {

@@ -5,6 +5,7 @@ It creates a dedicated service account with a Workload Identity Federation (WIF)
 and the permissions required to create and manage STACKIT projects under a given organization:
 
 - **`resource-manager.admin`** — allows creating and managing projects within the organization.
+- **`iam.member-admin`** — allows the building block pre-run script to add meshStack project users to the STACKIT organization before project-level role assignments are applied.
 
 Authentication uses WIF (OIDC token exchange) — no long-lived service account key is created or stored.
 
@@ -51,6 +52,7 @@ No modules.
 
 | Name | Type |
 |------|------|
+| [stackit_authorization_organization_role_assignment.member_admin](https://registry.terraform.io/providers/stackitcloud/stackit/latest/docs/resources/authorization_organization_role_assignment) | resource |
 | [stackit_authorization_organization_role_assignment.project_admin](https://registry.terraform.io/providers/stackitcloud/stackit/latest/docs/resources/authorization_organization_role_assignment) | resource |
 | [stackit_service_account.building_block](https://registry.terraform.io/providers/stackitcloud/stackit/latest/docs/resources/service_account) | resource |
 | [stackit_service_account_federated_identity_provider.building_block](https://registry.terraform.io/providers/stackitcloud/stackit/latest/docs/resources/service_account_federated_identity_provider) | resource |

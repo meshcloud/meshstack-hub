@@ -1,7 +1,7 @@
 # StackIt Project
 
 ## Description
-This building block creates a new STACKIT project and manages user access permissions with configurable role mapping. It provides application teams with a secure, isolated environment for deploying their workloads while ensuring proper access controls.
+This building block creates a new STACKIT project and manages user access permissions with configurable role mapping. It also performs best-effort STACKIT organization onboarding for all assigned users before project permissions are applied. It provides application teams with a secure, isolated environment for deploying their workloads while ensuring proper access controls.
 
 ## Usage Motivation
 This building block is designed for application teams that need to:
@@ -84,6 +84,12 @@ role_mapping = {
 ```
 
 Unknown meshStack roles are ignored. If a user has multiple meshStack roles, all mapped STACKIT roles are assigned once.
+
+### STACKIT Organization Membership
+
+Before applying project-level role assignments, the building block runs a best-effort pre-run step that adds all assigned meshStack users to the STACKIT organization with the organization role configured by the platform team. The default organization role is `organization.viewer`.
+
+This onboarding step is apply-only and does not remove organization memberships during destroy because organization membership can be shared by multiple projects. If the onboarding request fails, the building block logs a warning and continues; project-level role assignment remains authoritative and may still fail if STACKIT rejects a user that is not an organization member.
 
 ### Environment-Based Parent Container Selection
 
