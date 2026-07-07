@@ -315,11 +315,9 @@ EOT
       }
     }
     permissions = [
-      "BUILDINGBLOCK_DELETE",
-      "BUILDINGBLOCK_LIST",
-      # BBD run keys must use the MANAGED tier for the building-block save capability: it saves the
-      # composed child blocks AND can change their definition version. The backend rejects plain
-      # BUILDINGBLOCK_SAVE in a definition's permissions ("can only use MANAGED_BUILDINGBLOCK_SAVE").
+      # A composition BBD manages its composed child blocks. The backend requires the building-block
+      # permission here to be exactly MANAGED_BUILDINGBLOCK_SAVE — plain BUILDINGBLOCK_* (LIST/SAVE/
+      # DELETE) are rejected ("Building Block definitions can only use MANAGED_BUILDINGBLOCK_SAVE").
       "MANAGED_BUILDINGBLOCK_SAVE",
       "PROJECTPRINCIPALROLE_DELETE",
       "PROJECTPRINCIPALROLE_LIST",
