@@ -71,6 +71,6 @@ run "building_block_noop_hub" {
       ==
       jsondecode(file("${path.root}/tests/building_block_noop_hub.debug_input_files_json.expected.json"))
     )
-    error_message = "noop hub building block expected output debug_input_files_json to match expected, got ${jsondecode(jsondecode(meshstack_building_block.this.status.outputs["debug_input_files_json"].value))}"
+    error_message = "noop hub building block expected output debug_input_files_json to match expected, got ${jsonencode(jsondecode(jsondecode(meshstack_building_block.this.status.outputs["debug_input_files_json"].value)))}"
   }
 }
