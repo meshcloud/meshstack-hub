@@ -190,6 +190,6 @@ data "external" "app_probe" {
   for_each = toset(["dev", "prod"])
   program  = ["python3", "${path.module}/probe_endpoint.py"]
   query = {
-    url = meshstack_building_block_v2.this.status.outputs["app_link_${each.key}"].value_string
+    url = jsondecode(meshstack_building_block.this.status.outputs["app_link_${each.key}"].value)
   }
 }
