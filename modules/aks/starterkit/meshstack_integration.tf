@@ -315,10 +315,9 @@ EOT
       }
     }
     permissions = [
-      # A composition BBD manages its composed child blocks. The backend requires the building-block
-      # permission here to be exactly MANAGED_BUILDINGBLOCK_SAVE — plain BUILDINGBLOCK_* (LIST/SAVE/
-      # DELETE) are rejected ("Building Block definitions can only use MANAGED_BUILDINGBLOCK_SAVE").
-      "MANAGED_BUILDINGBLOCK_SAVE",
+      "BUILDINGBLOCK_DELETE",
+      "BUILDINGBLOCK_LIST",
+      "BUILDINGBLOCK_SAVE",
       "PROJECTPRINCIPALROLE_DELETE",
       "PROJECTPRINCIPALROLE_LIST",
       "PROJECTPRINCIPALROLE_SAVE",
