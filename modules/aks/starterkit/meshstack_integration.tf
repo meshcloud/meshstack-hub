@@ -317,9 +317,9 @@ EOT
     permissions = [
       "BUILDINGBLOCK_DELETE",
       "BUILDINGBLOCK_LIST",
-      "BUILDINGBLOCK_SAVE",
-      # Required to bump a composed child block to a new version of its (platform-owned)
-      # definition — plain BUILDINGBLOCK_SAVE cannot change a block's definition version.
+      # BBD run keys must use the MANAGED tier for the building-block save capability: it saves the
+      # composed child blocks AND can change their definition version. The backend rejects plain
+      # BUILDINGBLOCK_SAVE in a definition's permissions ("can only use MANAGED_BUILDINGBLOCK_SAVE").
       "MANAGED_BUILDINGBLOCK_SAVE",
       "PROJECTPRINCIPALROLE_DELETE",
       "PROJECTPRINCIPALROLE_LIST",
