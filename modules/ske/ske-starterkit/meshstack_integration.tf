@@ -251,6 +251,9 @@ resource "meshstack_building_block_definition" "this" {
       "BUILDINGBLOCK_LIST",
       "BUILDINGBLOCK_SAVE",
       "BUILDINGBLOCK_DELETE",
+      # Required to bump a composed child block to a new version of its (platform-owned)
+      # definition — plain BUILDINGBLOCK_SAVE cannot change a block's definition version.
+      "MANAGED_BUILDINGBLOCK_SAVE",
       "PROJECTPRINCIPALROLE_LIST",
       "PROJECTPRINCIPALROLE_SAVE",
       "PROJECTPRINCIPALROLE_DELETE",

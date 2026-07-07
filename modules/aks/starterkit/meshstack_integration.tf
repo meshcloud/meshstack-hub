@@ -318,6 +318,9 @@ EOT
       "BUILDINGBLOCK_DELETE",
       "BUILDINGBLOCK_LIST",
       "BUILDINGBLOCK_SAVE",
+      # Required to bump a composed child block to a new version of its (platform-owned)
+      # definition — plain BUILDINGBLOCK_SAVE cannot change a block's definition version.
+      "MANAGED_BUILDINGBLOCK_SAVE",
       "PROJECTPRINCIPALROLE_DELETE",
       "PROJECTPRINCIPALROLE_LIST",
       "PROJECTPRINCIPALROLE_SAVE",
