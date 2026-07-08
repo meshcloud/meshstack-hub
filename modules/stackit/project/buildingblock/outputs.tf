@@ -13,8 +13,12 @@ output "project_name" {
   description = "The name of the created StackIt project."
 }
 
-
 output "project_url" {
   value       = "https://portal.stackit.cloud/projects/${stackit_resourcemanager_project.project.project_id}"
   description = "The deep link URL to access the project in the StackIt portal."
+}
+
+output "summary" {
+  value       = fileexists("${path.module}/stackit_organization_membership_summary.md") ? file("${path.module}/stackit_organization_membership_summary.md") : "STACKIT organization membership summary was not generated."
+  description = "Summary of STACKIT organization membership onboarding for assigned project users."
 }

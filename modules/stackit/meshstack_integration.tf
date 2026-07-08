@@ -185,7 +185,9 @@ resource "meshstack_building_block_definition" "this" {
         ref_name                       = var.hub.git_ref
         async                          = false
         use_mesh_http_backend_fallback = true
-        pre_run_script                 = file("${path.module}/project/buildingblock/prerun.sh")
+        pre_run_script                 = <<-SH
+          exec python3 "./prerun.py" "$@"
+        SH
       }
     }
 
@@ -295,6 +297,12 @@ resource "meshstack_building_block_definition" "this" {
 
       project_name = {
         display_name    = "Project Name"
+        type            = "STRING"
+        assignment_type = "NONE"
+      }
+
+      summary = {
+        display_name    = "Summary"
         type            = "STRING"
         assignment_type = "SUMMARY"
       }
