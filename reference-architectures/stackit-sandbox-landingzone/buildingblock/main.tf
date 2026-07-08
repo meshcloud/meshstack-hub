@@ -29,11 +29,12 @@ resource "stackit_resourcemanager_project" "backplane" {
 module "stackit_integration" {
   source = "github.com/meshcloud/meshstack-hub//modules/stackit?ref=${var.git_ref}"
 
-  stackit_organization_id      = var.stackit_org
-  stackit_parent_container_id  = stackit_resourcemanager_folder.this.container_id
-  stackit_project_id           = stackit_resourcemanager_project.backplane.project_id
-  stackit_service_account_name = substr(var.platform_identifier, 0, 20)
-  role_mapping                 = var.role_mapping
+  stackit_organization_id                 = var.stackit_org
+  stackit_parent_container_id             = stackit_resourcemanager_folder.this.container_id
+  stackit_project_id                      = stackit_resourcemanager_project.backplane.project_id
+  stackit_service_account_name            = substr(var.platform_identifier, 0, 20)
+  role_mapping                            = var.role_mapping
+  stackit_organization_onboarding_enabled = var.stackit_organization_onboarding_enabled
 
   hub = {
     git_ref = var.git_ref

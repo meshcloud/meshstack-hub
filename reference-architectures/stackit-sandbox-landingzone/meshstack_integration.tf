@@ -183,6 +183,14 @@ resource "meshstack_building_block_definition" "this" {
         }))
       }
 
+      stackit_organization_onboarding_enabled = {
+        display_name    = "STACKIT Organization Onboarding Enabled"
+        description     = "If true, the nested STACKIT Project integration adds meshStack project users to the STACKIT organization before applying project-level role assignments."
+        type            = "BOOLEAN"
+        assignment_type = "USER_INPUT"
+        default_value   = jsonencode(true)
+      }
+
       # ── meshStack context ──
 
       workspace = {

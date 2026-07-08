@@ -87,11 +87,11 @@ Unknown meshStack roles are ignored. If a user has multiple meshStack roles, all
 
 ### STACKIT Organization Membership
 
-Before applying project-level role assignments, the building block runs a best-effort pre-run step that adds all assigned meshStack users to the STACKIT organization with the organization role configured by the platform team. The default organization role is `organization.viewer`.
+Before applying project-level role assignments, the building block runs a best-effort pre-run step that adds all assigned meshStack users to the STACKIT organization with the organization role configured by the platform team. The default organization role is `organization.viewer`. The platform team can disable this step entirely; in that case, organization membership must be managed outside this building block.
 
 This onboarding step is apply-only and does not remove organization memberships during destroy because organization membership can be shared by multiple projects. If the onboarding request fails, the building block logs a warning and continues; project-level role assignment remains authoritative and may still fail if STACKIT rejects a user that is not an organization member.
 
-The building block summary shows which organization add requests succeeded or failed and whether each assigned user currently has the required organization role. If access is missing or could not be checked, the summary includes remediation guidance for the platform team.
+The building block summary lists each user with a status: a checkmark if the required organization role is assigned, or details about what went wrong otherwise (e.g. a failed add request or a role that is still missing). If any user's status is not a checkmark, the summary includes remediation guidance for the platform team.
 
 ### Environment-Based Parent Container Selection
 

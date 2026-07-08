@@ -8,7 +8,7 @@ description: |
 
 # STACKIT Project Building Block
 
-This Terraform module provisions a STACKIT project with user access control. meshStack roles from the `users` input are mapped to STACKIT project roles via the configurable `role_mapping` input. When used through the meshStack integration, a pre-run script performs best-effort STACKIT organization onboarding for all assigned users and writes a summary that reports which add requests succeeded or failed and whether the required organization role is currently assigned. When used through the meshStack integration, a pre-run script performs best-effort STACKIT organization onboarding for all assigned users before project-level role assignments are applied.
+This Terraform module provisions a STACKIT project with user access control. meshStack roles from the `users` input are mapped to STACKIT project roles via the configurable `role_mapping` input. When used through the meshStack integration, a pre-run script performs best-effort STACKIT organization onboarding for all assigned users before project-level role assignments are applied and writes a summary that marks users with ✅ when the required organization role is currently assigned.
 
 ## Requirements
 

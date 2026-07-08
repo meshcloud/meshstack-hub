@@ -61,6 +61,12 @@ variable "role_mapping" {
   }
 }
 
+variable "stackit_organization_onboarding_enabled" {
+  type        = bool
+  default     = true
+  description = "Whether the nested STACKIT Project integration adds meshStack project users to the STACKIT organization before applying project-level role assignments. Disable if organization membership is managed outside this landing zone."
+}
+
 variable "git_ref" {
   type        = string
   default     = "main"
