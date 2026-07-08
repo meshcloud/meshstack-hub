@@ -91,6 +91,8 @@ Before applying project-level role assignments, the building block runs a best-e
 
 This onboarding step is apply-only and does not remove organization memberships during destroy because organization membership can be shared by multiple projects. If the onboarding request fails, the building block logs a warning and continues; project-level role assignment remains authoritative and may still fail if STACKIT rejects a user that is not an organization member.
 
+The building block summary shows which organization add requests succeeded or failed and whether each assigned user currently has the required organization role. If access is missing or could not be checked, the summary includes remediation guidance for the platform team.
+
 ### Environment-Based Parent Container Selection
 
 The building block supports automatic parent container selection based on environment type:
