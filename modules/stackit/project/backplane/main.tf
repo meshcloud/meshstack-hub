@@ -31,7 +31,14 @@ resource "stackit_authorization_organization_role_assignment" "project_admin" {
   subject     = stackit_service_account.building_block.email
 }
 
+moved {
+  from = stackit_authorization_organization_role_assignment.member_admin
+  to   = stackit_authorization_organization_role_assignment.member_admin[0]
+}
+
 resource "stackit_authorization_organization_role_assignment" "member_admin" {
+  count = var.organization_onboarding_enabled ? 1 : 0
+
   resource_id = var.organization_id
   role        = "iam.member-admin"
   subject     = stackit_service_account.building_block.email

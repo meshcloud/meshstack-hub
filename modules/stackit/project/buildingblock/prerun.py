@@ -97,6 +97,9 @@ def get_access_token() -> str:
 
 
 def add_member(organization_id: str, role: str, email: str, token: str) -> dict[str, str]:
+    # This PATCH is STACKIT's `AddMembers` operation (Authorization API v2): it grants the given
+    # (subject, role) pair without touching the subject's other roles or other members' grants.
+    # Removal uses a separate `RemoveMembers` endpoint; there is no full-list-replace endpoint.
     code, body = request(
         "PATCH",
         f"{AUTHORIZATION_ENDPOINT}/v2/{urllib.parse.quote(organization_id, safe='')}/members",
@@ -182,45 +185,48 @@ def write_summary(organization_id: str, role: str, rows: list[dict[str, str]]) -
         f"- **Organization ID**: `{organization_id}`",
         f"- **Required organization role**: `{role}`",
         "",
-        "| User | Required role | Add request | Current assignment | Details |",
-        "|------|---------------|-------------|--------------------|---------|",
+        "| User | Status |",
+        "|------|--------|",
     ]
 
     for row in rows:
-        add_icon = {"succeeded": "✅", "failed": "⚠️", "skipped": "❓"}[row["add_status"]]
-        assignment_icon = {"assigned": "✅", "missing": "⚠️", "unknown": "❓"}[
-            row["assignment_status"]
-        ]
-        details = " ".join([row["add_details"], row["assignment_details"]]).strip()
-        lines.append(
-            "| "
-            f"`{markdown_cell(row['email'])}` | "
-            f"`{markdown_cell(row['role'])}` | "
-            f"{add_icon} {markdown_cell(row['add_status'])} | "
-            f"{assignment_icon} {markdown_cell(row['assignment_status'])} | "
-            f"{markdown_cell(details)} |"
-        )
+        if row["assignment_status"] == "assigned":
+            status = "✅"
+        else:
+            details = " ".join([row["add_details"], row["assignment_details"]]).strip()
+            status = markdown_cell(details)
+        lines.append(f"| `{markdown_cell(row['email'])}` | {status} |")
 
-    has_problem = any(
-        row["add_status"] == "failed" or row["assignment_status"] in {"missing", "unknown"}
-        for row in rows
-    )
+    has_problem = any(row["assignment_status"] != "assigned" for row in rows)
     if has_problem:
         lines += [
             "",
             "## How to fix missing access",
             "",
-            "- If **Add request** is **failed**, verify that the building block service account has the STACKIT organization role `iam.member-admin` and that Workload Identity Federation is configured correctly. Then re-run this building block.",
-            f"- If **Current assignment** is **missing**, ask a STACKIT organization administrator to add the user to organization `{organization_id}` with role `{role}`, then re-run this building block.",
-            "- If **Current assignment** is **unknown**, verify API access for querying organization members and re-run this building block.",
+            "- If the add request failed, verify that the building block service account has the STACKIT organization role `iam.member-admin` and that Workload Identity Federation is configured correctly. Then re-run this building block.",
+            f"- If the required role is missing, ask a STACKIT organization administrator to add the user to organization `{organization_id}` with role `{role}`, then re-run this building block.",
+            "- If membership could not be checked, verify API access for querying organization members and re-run this building block.",
         ]
 
     SUMMARY_FILE.write_text("\n".join(lines) + "\n", encoding="utf-8")
 
 
+def write_disabled_summary() -> None:
+    SUMMARY_FILE.write_text(
+        "# STACKIT Organization Membership\n\n"
+        "Organization membership onboarding is disabled for this building block.\n",
+        encoding="utf-8",
+    )
+
+
 def main() -> None:
     if len(sys.argv) > 1 and sys.argv[1].upper() == "DESTROY":
         info("destroy run detected; skipping organization membership onboarding")
+        return
+
+    if os.environ.get("STACKIT_ORGANIZATION_ONBOARDING_ENABLED", "1") != "1":
+        info("organization membership onboarding is disabled; skipping")
+        write_disabled_summary()
         return
 
     organization_id = os.environ["STACKIT_ORGANIZATION_ID"]

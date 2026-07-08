@@ -14,6 +14,12 @@ variable "stackit_organization_member_role" {
   description = "STACKIT organization role assigned best-effort to all meshStack project users before project role assignments are applied."
 }
 
+variable "stackit_organization_onboarding_enabled" {
+  type        = bool
+  default     = true
+  description = "Whether the building block adds meshStack project users to the STACKIT organization (with `stackit_organization_member_role`) before applying project-level role assignments. Disable if organization membership is managed outside this building block."
+}
+
 variable "stackit_parent_container_id" {
   type        = string
   description = "Default parent container ID (organization or folder) for project creation."
@@ -74,9 +80,10 @@ variable "hub" {
 module "backplane" {
   source = "github.com/meshcloud/meshstack-hub//modules/stackit/project/backplane?ref=${var.hub.git_ref}"
 
-  project_id           = var.stackit_project_id
-  organization_id      = var.stackit_organization_id
-  service_account_name = coalesce(var.stackit_service_account_name, "mesh-project")
+  project_id                      = var.stackit_project_id
+  organization_id                 = var.stackit_organization_id
+  service_account_name            = coalesce(var.stackit_service_account_name, "mesh-project")
+  organization_onboarding_enabled = var.stackit_organization_onboarding_enabled
 
   workload_identity_federation = {
     issuer = data.meshstack_integrations.integrations.workload_identity_federation.replicator.issuer
@@ -251,6 +258,15 @@ resource "meshstack_building_block_definition" "this" {
         assignment_type = "STATIC"
         is_environment  = true
         argument        = jsonencode(var.stackit_organization_member_role)
+      }
+
+      STACKIT_ORGANIZATION_ONBOARDING_ENABLED = {
+        display_name    = "STACKIT Organization Onboarding Enabled"
+        description     = "Whether the pre-run script adds meshStack project users to the STACKIT organization before project role assignments are applied."
+        type            = "STRING"
+        assignment_type = "STATIC"
+        is_environment  = true
+        argument        = jsonencode(var.stackit_organization_onboarding_enabled ? "1" : "0")
       }
 
       project_name = {
