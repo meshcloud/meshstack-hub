@@ -192,9 +192,10 @@ resource "meshstack_building_block_definition" "this" {
         ref_name                       = var.hub.git_ref
         async                          = false
         use_mesh_http_backend_fallback = true
-        pre_run_script                 = <<-SH
+        pre_run_script = (var.stackit_organization_onboarding_enabled ? <<-SH
           exec python3 "./prerun.py" "$@"
-        SH
+          SH
+        : null)
       }
     }
 
@@ -258,15 +259,6 @@ resource "meshstack_building_block_definition" "this" {
         assignment_type = "STATIC"
         is_environment  = true
         argument        = jsonencode(var.stackit_organization_member_role)
-      }
-
-      STACKIT_ORGANIZATION_ONBOARDING_ENABLED = {
-        display_name    = "STACKIT Organization Onboarding Enabled"
-        description     = "Whether the pre-run script adds meshStack project users to the STACKIT organization before project role assignments are applied."
-        type            = "STRING"
-        assignment_type = "STATIC"
-        is_environment  = true
-        argument        = jsonencode(var.stackit_organization_onboarding_enabled ? "1" : "0")
       }
 
       project_name = {

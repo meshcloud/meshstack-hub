@@ -211,22 +211,9 @@ def write_summary(organization_id: str, role: str, rows: list[dict[str, str]]) -
     SUMMARY_FILE.write_text("\n".join(lines) + "\n", encoding="utf-8")
 
 
-def write_disabled_summary() -> None:
-    SUMMARY_FILE.write_text(
-        "# STACKIT Organization Membership\n\n"
-        "Organization membership onboarding is disabled for this building block.\n",
-        encoding="utf-8",
-    )
-
-
 def main() -> None:
     if len(sys.argv) > 1 and sys.argv[1].upper() == "DESTROY":
         info("destroy run detected; skipping organization membership onboarding")
-        return
-
-    if os.environ.get("STACKIT_ORGANIZATION_ONBOARDING_ENABLED", "1") != "1":
-        info("organization membership onboarding is disabled; skipping")
-        write_disabled_summary()
         return
 
     organization_id = os.environ["STACKIT_ORGANIZATION_ID"]

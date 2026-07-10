@@ -24,6 +24,12 @@ variable "hub" {
   EOT
 }
 
+variable "stackit_organization_onboarding_enabled" {
+  type        = bool
+  default     = true
+  description = "Whether the project building block adds meshStack project users to the STACKIT organization. Disable if organization membership is managed externally."
+}
+
 output "building_block_definition" {
   description = "BBD is consumed in building block compositions."
   value = {
@@ -127,11 +133,12 @@ resource "meshstack_building_block_definition" "this" {
       # ── STACKIT authentication (service account key supplied by the operator) ──
 
       "stackit_service_account_key" = {
-        display_name    = "STACKIT Service Account Key"
-        description     = "STACKIT service account key JSON with `resource-manager.admin` on the organization. Paste the full JSON as a secret input."
-        type            = "CODE"
-        assignment_type = "USER_INPUT"
-        sensitive       = {}
+        display_name           = "STACKIT Service Account Key"
+        description            = "STACKIT service account key JSON with `resource-manager.admin` on the organization. Paste the full JSON as a secret input."
+        type                   = "CODE"
+        assignment_type        = "USER_INPUT"
+        updateable_by_consumer = true
+        sensitive              = {}
       }
 
       git_ref = {
@@ -161,10 +168,12 @@ resource "meshstack_building_block_definition" "this" {
       }
 
       tags = {
-        display_name    = "Tags"
-        description     = "JSON object with `landingzone` and `building_block` tag maps forwarded to the STACKIT Project integration module."
-        type            = "CODE"
-        assignment_type = "USER_INPUT"
+        display_name           = "Tags"
+        description            = "JSON object with `landingzone` and `building_block` tag maps forwarded to the STACKIT Project integration module."
+        type                   = "CODE"
+        assignment_type        = "USER_INPUT"
+        updateable_by_consumer = true
+
         default_value = jsonencode(jsonencode({
           landingzone    = {}
           building_block = {}
@@ -172,10 +181,12 @@ resource "meshstack_building_block_definition" "this" {
       }
 
       role_mapping = {
-        display_name    = "STACKIT Project Role Mapping"
-        description     = "JSON object mapping meshStack roles from project users to STACKIT project roles. Values can be built-in STACKIT roles or custom STACKIT role names."
-        type            = "CODE"
-        assignment_type = "USER_INPUT"
+        display_name           = "STACKIT Project Role Mapping"
+        description            = "JSON object mapping meshStack roles from project users to STACKIT project roles. Values can be built-in STACKIT roles or custom STACKIT role names."
+        type                   = "CODE"
+        assignment_type        = "USER_INPUT"
+        updateable_by_consumer = true
+
         default_value = jsonencode(jsonencode({
           admin  = ["owner"]
           user   = ["editor"]
@@ -184,11 +195,13 @@ resource "meshstack_building_block_definition" "this" {
       }
 
       stackit_organization_onboarding_enabled = {
-        display_name    = "STACKIT Organization Onboarding Enabled"
-        description     = "If true, the nested STACKIT Project integration adds meshStack project users to the STACKIT organization before applying project-level role assignments."
-        type            = "BOOLEAN"
-        assignment_type = "USER_INPUT"
-        default_value   = jsonencode(true)
+        display_name           = "STACKIT Organization Onboarding Enabled"
+        description            = "If true, the nested STACKIT Project integration adds meshStack project users to the STACKIT organization before applying project-level role assignments."
+        type                   = "BOOLEAN"
+        assignment_type        = "USER_INPUT"
+        updateable_by_consumer = true
+
+        default_value = jsonencode(var.stackit_organization_onboarding_enabled)
       }
 
       # ── meshStack context ──
