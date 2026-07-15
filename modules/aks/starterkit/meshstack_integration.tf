@@ -102,7 +102,7 @@ resource "meshstack_building_block_definition" "aks_starterkit" {
 
   spec = {
     description              = "The AKS Starterkit provides application teams with a pre-configured Kubernetes environment following best practices. It includes a Git repository, a CI/CD pipeline using GitHub Actions, and a secure container registry integration."
-    display_name             = "AKS Starterkit"
+    display_name             = "AKS Starterkit {{ name }}"
     notification_subscribers = var.notification_subscribers
     symbol                   = "https://raw.githubusercontent.com/meshcloud/meshstack-hub/${var.hub.git_ref}/modules/aks/starterkit/buildingblock/logo.png"
 
