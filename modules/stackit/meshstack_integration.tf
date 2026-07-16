@@ -45,7 +45,13 @@ variable "role_mapping" {
 variable "stackit_project_labels" {
   type        = map(string)
   default     = {}
-  description = "Labels applied to every STACKIT project created by this building block. Use the `networkArea` key to specify the STACKIT Network Area."
+  description = "Additional labels applied to every STACKIT project created by this building block, merged with the `networkArea` label resolved at runtime from the landing zone's tags."
+}
+
+variable "stackit_network_area_tag_name" {
+  type        = string
+  default     = null
+  description = "Name of the meshStack landing zone tag whose value is used as the STACKIT project's `networkArea` label. Set to null (default) to skip network area assignment."
 }
 
 variable "meshstack" {
@@ -291,10 +297,32 @@ resource "meshstack_building_block_definition" "this" {
 
       labels = {
         display_name    = "Labels"
-        description     = "Labels applied to the STACKIT project. Use the `networkArea` key to specify the STACKIT Network Area."
+        description     = "Additional labels applied to the STACKIT project, merged with the `networkArea` label resolved at runtime from the landing zone's tags."
         type            = "CODE"
         assignment_type = "STATIC"
         argument        = jsonencode(jsonencode(var.stackit_project_labels))
+      }
+
+      workspace_identifier = {
+        display_name    = "Workspace Identifier"
+        description     = "meshStack workspace identifier, used to look up this project's landing zone tags at runtime."
+        type            = "STRING"
+        assignment_type = "WORKSPACE_IDENTIFIER"
+      }
+
+      platform_identifier = {
+        display_name    = "Platform Identifier"
+        description     = "meshStack platform identifier, used to look up this project's landing zone tags at runtime."
+        type            = "STRING"
+        assignment_type = "FULL_PLATFORM_IDENTIFIER"
+      }
+
+      network_area_tag_name = {
+        display_name    = "Network Area Tag Name"
+        description     = "Name of the meshStack landing zone tag whose value is used as the STACKIT project's `networkArea` label. Null skips network area assignment."
+        type            = "STRING"
+        assignment_type = "STATIC"
+        argument        = jsonencode(var.stackit_network_area_tag_name)
       }
     }
 
@@ -338,7 +366,7 @@ terraform {
   required_providers {
     meshstack = {
       source  = "meshcloud/meshstack"
-      version = ">= 0.21.0"
+      version = ">= 0.23.0"
     }
     stackit = {
       source  = "stackitcloud/stackit"

@@ -5,5 +5,9 @@ terraform {
       source  = "stackitcloud/stackit"
       version = ">= 0.98.0"
     }
+    meshstack = {
+      source  = "meshcloud/meshstack"
+      version = ">= 0.21.0"
+    }
   }
 }
