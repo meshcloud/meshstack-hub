@@ -30,6 +30,7 @@ variable "meshstack" {
 
     tags = optional(map(list(string)), {})
   })
+  description = "Shared meshStack context. Tags are optional and propagated to building block definition metadata."
 }
 
 variable "hub" {
@@ -43,8 +44,8 @@ variable "hub" {
     bbd_draft = true
   }
   description = <<-EOT
-  `git_ref`: Hub reference. Set to a tag (e.g. 'v1.2.3') or branch or commit sha of meshcloud/meshstack-hub repo.<br>
-  `bbd_draft`: If true, allows changing the building block definition for upgrading dependent building blocks.
+  `git_ref`: Hub release reference. Set to a tag (e.g. 'v1.2.3') or branch or commit sha of the meshstack-hub repo.
+  `bbd_draft`: If true, the building block definition version is kept in draft mode, which allows changing it (useful during development in LCF/ICF).
   EOT
 }
 
@@ -192,16 +193,23 @@ resource "meshstack_building_block_definition" "this" {
       }
       "vm_ssh_public_key" = {
         assignment_type = "USER_INPUT"
-        description     = "SSH public key for Linux VM authentication (required for Linux)."
+        description     = "SSH public key for Linux VM authentication (required for Linux). Leave empty for Windows."
         display_name    = "VM SSH Public Key"
         type            = "STRING"
+        # Only one of ssh_public_key / admin_password applies per OS; default both to empty so
+        # neither is force-required in the form. The buildingblock validates the correct one per vm_os_type.
+        default_value = jsonencode("")
       }
       "vm_admin_password" = {
         assignment_type = "USER_INPUT"
-        description     = "Admin password for a Windows VM (required for Windows)."
+        description     = "Admin password for a Windows VM (required for Windows). Leave empty for Linux."
         display_name    = "VM Admin Password"
         type            = "STRING"
-        sensitive       = {}
+        sensitive = {
+          default_value = {
+            secret_value = ""
+          }
+        }
       }
       "vm_enable_public_ip" = {
         assignment_type = "USER_INPUT"

@@ -1,3 +1,8 @@
+variable "subscription_id" {
+  type        = string
+  description = "The Azure subscription ID where the virtual machine will be deployed (the target tenant's subscription)."
+}
+
 variable "vm_name" {
   type        = string
   description = "The name of the virtual machine"

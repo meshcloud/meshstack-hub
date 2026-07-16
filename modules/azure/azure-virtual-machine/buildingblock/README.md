@@ -194,6 +194,7 @@ No modules.
 | <a name="input_spot_max_bid_price"></a> [spot\_max\_bid\_price](#input\_spot\_max\_bid\_price) | Maximum price to pay for spot instance per hour. -1 means pay up to on-demand price. Default is -1 for maximum availability | `number` | `-1` | no |
 | <a name="input_ssh_public_key"></a> [ssh\_public\_key](#input\_ssh\_public\_key) | SSH public key for Linux VM authentication (required for Linux) | `string` | `null` | no |
 | <a name="input_subnet_address_prefix"></a> [subnet\_address\_prefix](#input\_subnet\_address\_prefix) | The address prefix for the subnet | `string` | `"10.0.1.0/24"` | no |
+| <a name="input_subscription_id"></a> [subscription\_id](#input\_subscription\_id) | The Azure subscription ID where the virtual machine will be deployed (the target tenant's subscription). | `string` | n/a | yes |
 | <a name="input_tags"></a> [tags](#input\_tags) | Tags to apply to all resources | `map(string)` | `{}` | no |
 | <a name="input_vm_name"></a> [vm\_name](#input\_vm\_name) | The name of the virtual machine | `string` | n/a | yes |
 | <a name="input_vm_size"></a> [vm\_size](#input\_vm\_size) | The size of the virtual machine | `string` | `"Standard_B1s"` | no |
