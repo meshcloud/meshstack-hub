@@ -89,6 +89,7 @@ conventions, see the reference files in `.agents/references/`.
 | Topic | Reference |
 |---|---|
 | Module structure & `meshstack_integration.tf` | AGENTS.md |
+| Terraform/OpenTofu coding conventions | `.agents/references/terraform-conventions.md` |
 | BBD readme | `.agents/references/bbd-readme.md` |
 | AWS backplane identity | `.agents/references/aws-backplane.md` |
 | Azure backplane identity | `.agents/references/azure-backplane.md` |
