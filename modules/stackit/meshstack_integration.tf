@@ -42,6 +42,12 @@ variable "role_mapping" {
   }
 }
 
+variable "stackit_project_labels" {
+  type        = map(string)
+  default     = {}
+  description = "Labels applied to every STACKIT project created by this building block. Use the `networkArea` key to specify the STACKIT Network Area."
+}
+
 variable "meshstack" {
   type = object({
     owning_workspace_identifier = string
@@ -281,6 +287,14 @@ resource "meshstack_building_block_definition" "this" {
         type            = "CODE"
         assignment_type = "STATIC"
         argument        = jsonencode(jsonencode(var.role_mapping))
+      }
+
+      labels = {
+        display_name    = "Labels"
+        description     = "Labels applied to the STACKIT project. Use the `networkArea` key to specify the STACKIT Network Area."
+        type            = "CODE"
+        assignment_type = "STATIC"
+        argument        = jsonencode(jsonencode(var.stackit_project_labels))
       }
     }
 
