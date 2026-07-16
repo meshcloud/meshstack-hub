@@ -1,6 +1,9 @@
-variable "full_platform_identifier" {
-  type        = string
-  description = "Full identifier of the AKS platform (example: `aks.k8s`)."
+variable "platform_ref" {
+  type = object({
+    uuid = string
+    kind = optional(string, "meshPlatform")
+  })
+  description = "Reference (by uuid) to the meshPlatform tenants are created on — e.g. the `.ref` output of the meshstack_platform resource/backplane that owns it. Wired to the building block as a static input; required since the meshTenant v4 API references platforms by ref."
 }
 
 variable "github_actions_connector_definition_version_uuid" {
@@ -33,12 +36,9 @@ variable "apps_base_domain" {
   description = "Base domain used for app URLs (example: `apps.prod.example.com`)."
 }
 
-variable "landing_zone_identifiers" {
-  type = object({
-    dev  = string
-    prod = string
-  })
-  description = "Identifiers of meshLandingZones for dev and prod (example: `{ dev = \"aks-dev\", prod = \"aks-prod\" }`)."
+variable "landing_zone_refs" {
+  type        = map(object({ name = string, kind = optional(string, "meshLandingZone") }))
+  description = "Landing zone references keyed by stage (usually dev and prod), e.g. the `.ref` outputs of the meshstack_landingzone resources/backplane that owns them."
 }
 
 variable "notification_subscribers" {
@@ -175,12 +175,22 @@ EOT
         type                   = "CODE"
         updateable_by_consumer = false
       }
-      "full_platform_identifier" = {
-        argument               = jsonencode(var.full_platform_identifier)
+      "platform_ref" = {
+        # jsonencode twice is correct for structured inputs, see the project_tags input below.
+        argument               = jsonencode(jsonencode(var.platform_ref))
         assignment_type        = "STATIC"
-        display_name           = "Full Platform Identifier"
+        display_name           = "Platform Reference"
         is_environment         = false
-        type                   = "STRING"
+        type                   = "CODE"
+        updateable_by_consumer = false
+      }
+      "landing_zone_refs" = {
+        # jsonencode twice is correct for structured inputs, see the project_tags input below.
+        argument               = jsonencode(jsonencode(var.landing_zone_refs))
+        assignment_type        = "STATIC"
+        display_name           = "Landing Zone References for Dev/Prod."
+        is_environment         = false
+        type                   = "CODE"
         updateable_by_consumer = false
       }
       "github_actions_connector_definition_version_uuid" = {
@@ -237,22 +247,6 @@ EOT
         description            = "GitHub handle of the user who will be assigned as the repository admin. Leave as 'null' if not needed."
         display_name           = "Repo Admin"
         default_value          = jsonencode("null")
-        type                   = "STRING"
-        updateable_by_consumer = false
-      }
-      "landing_zone_dev_identifier" = {
-        argument               = jsonencode(var.landing_zone_identifiers.dev)
-        assignment_type        = "STATIC"
-        display_name           = "Landing Zone Dev Identifier"
-        is_environment         = false
-        type                   = "STRING"
-        updateable_by_consumer = false
-      }
-      "landing_zone_prod_identifier" = {
-        argument               = jsonencode(var.landing_zone_identifiers.prod)
-        assignment_type        = "STATIC"
-        display_name           = "Landing Zone Prod Identifier"
-        is_environment         = false
         type                   = "STRING"
         updateable_by_consumer = false
       }
@@ -337,7 +331,7 @@ terraform {
   required_providers {
     meshstack = {
       source  = "meshcloud/meshstack"
-      version = ">= 0.21.0"
+      version = ">= 0.24.0"
     }
   }
 }

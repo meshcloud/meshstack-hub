@@ -75,32 +75,51 @@ resource "meshstack_project_user_binding" "creator_prod_admin" {
   }
 }
 
-resource "meshstack_tenant_v4" "dev" {
+# Resolves the platform's full identifier (`<platform>.<location>`) from its ref, for meshPanel deep-links.
+data "meshstack_platform" "this" {
+  metadata = {
+    uuid = var.platform_ref.uuid
+  }
+}
+
+resource "meshstack_tenant" "dev" {
   metadata = {
     owned_by_workspace = var.workspace_identifier
     owned_by_project   = meshstack_project.dev.metadata.name
   }
 
   spec = {
-    platform_identifier     = var.full_platform_identifier
-    landing_zone_identifier = var.landing_zone_dev_identifier
+    platform_ref     = var.platform_ref
+    landing_zone_ref = var.landing_zone_refs["dev"]
   }
 
   depends_on = [meshstack_project_user_binding.creator_dev_admin]
 }
 
-resource "meshstack_tenant_v4" "prod" {
+resource "meshstack_tenant" "prod" {
   metadata = {
     owned_by_workspace = var.workspace_identifier
     owned_by_project   = meshstack_project.prod.metadata.name
   }
 
   spec = {
-    platform_identifier     = var.full_platform_identifier
-    landing_zone_identifier = var.landing_zone_prod_identifier
+    platform_ref     = var.platform_ref
+    landing_zone_ref = var.landing_zone_refs["prod"]
   }
 
   depends_on = [meshstack_project_user_binding.creator_prod_admin]
+}
+
+# Anticipates terraform-provider-meshstack v0.24.0 (#226): meshstack_tenant now runs on the
+# meshTenant v4 API, so meshstack_tenant_v4 usages migrate here in place (both share the v4 body).
+moved {
+  from = meshstack_tenant_v4.dev
+  to   = meshstack_tenant.dev
+}
+
+moved {
+  from = meshstack_tenant_v4.prod
+  to   = meshstack_tenant.prod
 }
 
 resource "meshstack_building_block" "repo" {
@@ -148,7 +167,7 @@ resource "meshstack_building_block" "github_actions_dev" {
     }
     target_ref = {
       kind = "meshTenant"
-      uuid = meshstack_tenant_v4.dev.metadata.uuid
+      uuid = meshstack_tenant.dev.metadata.uuid
     }
     display_name = "GHA Connector Dev"
     parent_building_blocks = [{
@@ -162,7 +181,7 @@ resource "meshstack_building_block" "github_actions_dev" {
       additional_environment_variables = {
         value = jsonencode(jsonencode({
           "DOMAIN_NAME"        = "${local.identifier}-dev"
-          "AKS_NAMESPACE_NAME" = meshstack_tenant_v4.dev.spec.platform_tenant_id
+          "AKS_NAMESPACE_NAME" = meshstack_tenant.dev.spec.platform_tenant_id
         }))
       }
     }
@@ -177,7 +196,7 @@ resource "meshstack_building_block" "github_actions_prod" {
     }
     target_ref = {
       kind = "meshTenant"
-      uuid = meshstack_tenant_v4.prod.metadata.uuid
+      uuid = meshstack_tenant.prod.metadata.uuid
     }
     parent_building_blocks = [{
       buildingblock_uuid = meshstack_building_block.repo.metadata.uuid
@@ -190,7 +209,7 @@ resource "meshstack_building_block" "github_actions_prod" {
       additional_environment_variables = {
         value = jsonencode(jsonencode({
           "DOMAIN_NAME"        = local.identifier
-          "AKS_NAMESPACE_NAME" = meshstack_tenant_v4.prod.spec.platform_tenant_id
+          "AKS_NAMESPACE_NAME" = meshstack_tenant.prod.spec.platform_tenant_id
         }))
       }
     }

@@ -26,11 +26,11 @@ This starter kit has set up the following resources in workspace `${var.workspac
 @buildingblock[${meshstack_building_block.repo.metadata.uuid}]
 
 @project[${meshstack_project.dev.metadata.owned_by_workspace}.${meshstack_project.dev.metadata.name}]\
-&nbsp;&nbsp;&nbsp;&nbsp;@tenant[${meshstack_tenant_v4.dev.metadata.uuid}]\
+&nbsp;&nbsp;&nbsp;&nbsp;@tenant[${meshstack_tenant.dev.metadata.uuid}]\
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;@buildingblock[${meshstack_building_block.github_actions_dev.metadata.uuid}]
 
 @project[${meshstack_project.prod.metadata.owned_by_workspace}.${meshstack_project.prod.metadata.name}]\
-&nbsp;&nbsp;&nbsp;&nbsp;@tenant[${meshstack_tenant_v4.prod.metadata.uuid}]\
+&nbsp;&nbsp;&nbsp;&nbsp;@tenant[${meshstack_tenant.prod.metadata.uuid}]\
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;@buildingblock[${meshstack_building_block.github_actions_prod.metadata.uuid}]
 
 ---
@@ -69,8 +69,8 @@ View deployment status: [GitHub Actions](${jsondecode(meshstack_building_block.r
 - Check workflow status in the [Actions tab](<${jsondecode(meshstack_building_block.repo.status.outputs.repo_html_url.value)}/actions>)
 
 ### 3. Access AKS Namespaces
-- [Dev Namespace](/#/w/${var.workspace_identifier}/p/${meshstack_project.dev.metadata.name}/i/${meshstack_tenant_v4.dev.spec.platform_identifier}/overview/azure_kubernetes_service)
-- [Prod Namespace](/#/w/${var.workspace_identifier}/p/${meshstack_project.prod.metadata.name}/i/${meshstack_tenant_v4.prod.spec.platform_identifier}/overview/azure_kubernetes_service)
+- [Dev Namespace](/#/w/${var.workspace_identifier}/p/${meshstack_project.dev.metadata.name}/i/${data.meshstack_platform.this.identifier}/overview/azure_kubernetes_service)
+- [Prod Namespace](/#/w/${var.workspace_identifier}/p/${meshstack_project.prod.metadata.name}/i/${data.meshstack_platform.this.identifier}/overview/azure_kubernetes_service)
 
 ### 4. Manage Access
 - Invite team members via meshStack:

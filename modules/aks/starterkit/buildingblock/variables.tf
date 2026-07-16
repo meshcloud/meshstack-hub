@@ -7,19 +7,17 @@ variable "name" {
   description = "This name will be used for the created projects, app subdomain and GitHub repository."
 }
 
-variable "full_platform_identifier" {
-  type        = string
-  description = "Full platform identifier of the AKS Namespace platform."
+variable "platform_ref" {
+  type = object({
+    uuid = string
+    kind = optional(string, "meshPlatform")
+  })
+  description = "Reference (by uuid) to the meshPlatform the tenants are created on. Wired in as a static building block input from the platform/backplane that owns the meshPlatform (its `.ref` output). Required because the meshTenant v4 API references platforms by ref."
 }
 
-variable "landing_zone_dev_identifier" {
-  type        = string
-  description = "AKS Landing zone identifier for the development tenant."
-}
-
-variable "landing_zone_prod_identifier" {
-  type        = string
-  description = "AKS Landing zone identifier for the production tenant."
+variable "landing_zone_refs" {
+  type        = map(object({ name = string, kind = optional(string, "meshLandingZone") }))
+  description = "Landing zone references keyed by stage (usually dev and prod). Wired in as a static building block input from the platform/backplane that owns the meshLandingZones (their `.ref` outputs)."
 }
 
 variable "github_repo_definition_version_uuid" {
