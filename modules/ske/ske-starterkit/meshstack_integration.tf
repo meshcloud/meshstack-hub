@@ -1,13 +1,14 @@
-variable "full_platform_identifier" {
-  type        = string
-  description = "Full identifier of the SKE platform (example: `stackit.ske`)."
+variable "platform_ref" {
+  type = object({
+    uuid = string
+    kind = optional(string, "meshPlatform")
+  })
+  description = "Reference (by uuid) to the meshPlatform tenants are created on — e.g. the `.ref` output of the meshstack_platform resource/backplane that owns it. Wired to the building block as a static input; required since the meshTenant v4 API references platforms by ref."
 }
 
-variable "landing_zone_identifiers" {
-  type = object({
-    dev  = string
-    prod = string
-  })
+variable "landing_zone_refs" {
+  type        = map(object({ name = string, kind = optional(string, "meshLandingZone") }))
+  description = "map keys are the stages, usually dev and prod"
 }
 
 variable "project_tags" {
@@ -184,18 +185,19 @@ resource "meshstack_building_block_definition" "this" {
         display_name    = "Workspace Identifier"
         description     = "Workspace where the starter kit will be provisioned."
       }
-      "full_platform_identifier" = {
-        assignment_type = "STATIC"
-        type            = "STRING"
-        display_name    = "Full Platform Identifier"
-        argument        = jsonencode(var.full_platform_identifier)
-      }
-      "landing_zone_identifiers" = {
+      "platform_ref" = {
         assignment_type = "STATIC"
         type            = "CODE"
-        display_name    = "Landing Zone Identifiers for Dev/Prod."
+        display_name    = "Platform Reference"
+        # jsonencode twice is correct for structured inputs, see landing_zone_refs below.
+        argument = jsonencode(jsonencode(var.platform_ref))
+      }
+      "landing_zone_refs" = {
+        assignment_type = "STATIC"
+        type            = "CODE"
+        display_name    = "Landing Zone References for Dev/Prod."
         # jsonencode twice is correct, see https://registry.terraform.io/providers/meshcloud/meshstack/latest/docs/resources/building_block_definition#argument-1
-        argument = jsonencode(jsonencode(var.landing_zone_identifiers))
+        argument = jsonencode(jsonencode(var.landing_zone_refs))
       }
       "project_tags" = {
         assignment_type = "STATIC"
@@ -270,7 +272,7 @@ terraform {
   required_providers {
     meshstack = {
       source  = "meshcloud/meshstack"
-      version = ">= 0.21.0"
+      version = ">= 0.24.0"
     }
   }
 }

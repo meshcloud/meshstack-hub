@@ -11,7 +11,7 @@ locals {
   name           = var.add_random_name_suffix ? "${local.sanitized_name}-${random_string.name_suffix.result}" : local.sanitized_name
 
   app_hostnames = {
-    for stage, _ in var.landing_zone_identifiers :
+    for stage, _ in var.landing_zone_refs :
     stage => (
       stage == "prod"
       ? "${local.name}.${var.dns_zone_name}"
@@ -40,7 +40,7 @@ resource "meshstack_building_block" "git_repository" {
 }
 
 resource "meshstack_project" "this" {
-  for_each = tomap(var.landing_zone_identifiers)
+  for_each = var.landing_zone_refs
   metadata = {
     name               = "${local.name}-${each.key}"
     owned_by_workspace = var.workspace_identifier
@@ -56,11 +56,11 @@ resource "meshstack_project" "this" {
 }
 
 resource "random_uuid" "binding" {
-  for_each = var.creator.type == "User" && var.creator.username != null ? tomap(var.landing_zone_identifiers) : {}
+  for_each = var.creator.type == "User" && var.creator.username != null ? var.landing_zone_refs : {}
 }
 
 resource "meshstack_project_user_binding" "creator_to_admin" {
-  for_each = var.creator.type == "User" && var.creator.username != null ? tomap(var.landing_zone_identifiers) : {}
+  for_each = var.creator.type == "User" && var.creator.username != null ? var.landing_zone_refs : {}
 
   metadata = {
     name = random_uuid.binding[each.key].result
@@ -80,8 +80,8 @@ resource "meshstack_project_user_binding" "creator_to_admin" {
   }
 }
 
-resource "meshstack_tenant_v4" "this" {
-  for_each = tomap(var.landing_zone_identifiers)
+resource "meshstack_tenant" "this" {
+  for_each = var.landing_zone_refs
 
   metadata = {
     owned_by_workspace = var.workspace_identifier
@@ -89,16 +89,23 @@ resource "meshstack_tenant_v4" "this" {
   }
 
   spec = {
-    platform_identifier     = var.full_platform_identifier
-    landing_zone_identifier = each.value
+    platform_ref     = var.platform_ref
+    landing_zone_ref = each.value
   }
 
   # FIXME: remove after BD-2288 is fixed
   depends_on = [meshstack_project_user_binding.creator_to_admin]
 }
 
+# Anticipates terraform-provider-meshstack v0.24.0 (#226): meshstack_tenant now runs on the
+# meshTenant v4 API, so meshstack_tenant_v4 usages migrate here in place (both share the v4 body).
+moved {
+  from = meshstack_tenant_v4.this
+  to   = meshstack_tenant.this
+}
+
 resource "meshstack_building_block" "forgejo_connector" {
-  for_each = meshstack_tenant_v4.this
+  for_each = meshstack_tenant.this
 
   spec = {
     building_block_definition_version_ref = var.building_block_definitions["forgejo-connector"].version_ref

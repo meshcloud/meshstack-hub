@@ -136,11 +136,8 @@ module "ske_starterkit" {
     bbd_draft = true
   }
 
-  full_platform_identifier = module.meshstack_kubernetes_platform.full_platform_identifier
-  landing_zone_identifiers = {
-    dev  = module.meshstack_kubernetes_platform.landing_zone_identifiers.dev
-    prod = module.meshstack_kubernetes_platform.landing_zone_identifiers.prod
-  }
+  platform_ref           = module.meshstack_kubernetes_platform.platform_ref
+  landing_zone_refs      = module.meshstack_kubernetes_platform.landing_zone_refs
   repo_clone_addr        = "https://github.com/likvid-bank/starterkit-template-stackit-ai-summarizer.git"
   dns_zone_name          = var.test_context.dns_zone_name
   add_random_name_suffix = false
