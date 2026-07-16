@@ -107,7 +107,6 @@ resource "meshstack_building_block" "this" {
 
     inputs = {
       name                = { value = jsonencode(local.vm_name) }
-      vm_os_type          = { value = jsonencode("Linux") }
       vm_location         = { value = jsonencode("westeurope") }
       vm_size             = { value = jsonencode("Standard_B1s") }
       vm_enable_public_ip = { value = jsonencode(false) }

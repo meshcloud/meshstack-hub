@@ -76,7 +76,7 @@ resource "meshstack_building_block_definition" "this" {
 
   spec = {
     display_name             = "Azure Virtual Machine"
-    description              = "Provisions a single Azure Virtual Machine (Linux or Windows) with its own virtual network, subnet, network security group and optional public IP and data disk, in the target tenant's subscription."
+    description              = "Provisions a single Linux Azure Virtual Machine with its own virtual network, subnet, network security group and optional public IP and data disk, in the target tenant's subscription."
     support_url              = "mailto:support@meshcloud.io"
     documentation_url        = "https://hub.meshcloud.io/platforms/azure/definitions/azure-virtual-machine"
     notification_subscribers = var.notification_subscribers
@@ -85,19 +85,19 @@ resource "meshstack_building_block_definition" "this" {
     supported_platforms      = [{ name = "AZURE" }]
 
     readme = chomp(<<-EOT
-    Provisions a single **Azure Virtual Machine** (Linux or Windows) with a dedicated virtual network, subnet, network security group, system-assigned managed identity and an optional public IP and data disk. The VM is deployed into the target tenant's Azure subscription.
+    Provisions a single **Linux Azure Virtual Machine** with a dedicated virtual network, subnet, network security group, system-assigned managed identity and an optional public IP and data disk. The VM is deployed into the target tenant's Azure subscription.
 
     ## 🎯 When to use it
 
-    Use this building block when your team needs a dedicated compute instance with full OS control, for example to:
+    Use this building block when your team needs a dedicated Linux compute instance with full OS control, for example to:
 
-    -   Run a Linux or Windows workload that isn't a good fit for managed/containerized services.
+    -   Run a Linux workload that isn't a good fit for managed/containerized services.
     -   Host an application server, database, build agent or lift-and-shift migration.
     -   Get an isolated dev/test environment with predictable performance.
 
     ## Resources Created
 
-    - **Virtual Machine**: A Linux or Windows VM with a system-assigned managed identity.
+    - **Virtual Machine**: A Linux VM with a system-assigned managed identity.
     - **Networking**: A virtual network, subnet, network interface and network security group (plus an optional public IP).
     - **Storage**: An OS disk and an optional data disk.
 
@@ -182,14 +182,6 @@ resource "meshstack_building_block_definition" "this" {
         assignment_type = "USER_INPUT"
         default_value   = jsonencode("westeurope")
       }
-      os_type = {
-        type              = "SINGLE_SELECT"
-        display_name      = "OS Type"
-        description       = "The operating system type."
-        assignment_type   = "USER_INPUT"
-        selectable_values = ["Linux", "Windows"]
-        default_value     = jsonencode("Linux")
-      }
       vm_size = {
         type            = "STRING"
         display_name    = "VM Size"
@@ -207,20 +199,8 @@ resource "meshstack_building_block_definition" "this" {
       ssh_public_key = {
         type            = "STRING"
         display_name    = "SSH Public Key"
-        description     = "SSH public key for Linux VM authentication (required for Linux). Leave empty for Windows."
+        description     = "SSH public key used to authenticate as the VM's admin user."
         assignment_type = "USER_INPUT"
-        default_value   = jsonencode("")
-      }
-      admin_password = {
-        type            = "STRING"
-        display_name    = "Admin Password"
-        description     = "Admin password for a Windows VM (required for Windows). Leave empty for Linux."
-        assignment_type = "USER_INPUT"
-        sensitive = {
-          default_value = {
-            secret_value = ""
-          }
-        }
       }
       enable_public_ip = {
         type            = "BOOLEAN"

@@ -81,13 +81,13 @@ resource "meshstack_building_block_definition" "this" {
     This building block is ideal for teams that:
 
     -   Need a quick, governed Azure VM without assembling project, tenant and VM wiring by hand.
-    -   Want a Linux or Windows VM in a landing-zone-compliant tenant.
+    -   Want a Linux VM in a landing-zone-compliant tenant.
 
     ## Resources Created
 
     - **Azure Project**: A dedicated meshProject for your virtual machine resources.
     - **Azure Tenant**: An Azure subscription tenant on your chosen landing zone.
-    - **Virtual Machine**: A Linux or Windows VM (composed via the Azure Virtual Machine building block).
+    - **Virtual Machine**: A Linux VM (composed via the Azure Virtual Machine building block).
 
     ## Shared Responsibilities
 
@@ -169,14 +169,6 @@ resource "meshstack_building_block_definition" "this" {
         type            = "STRING"
         default_value   = jsonencode("westeurope")
       }
-      "vm_os_type" = {
-        assignment_type   = "USER_INPUT"
-        description       = "Operating system type."
-        display_name      = "VM OS Type"
-        type              = "SINGLE_SELECT"
-        selectable_values = ["Linux", "Windows"]
-        default_value     = jsonencode("Linux")
-      }
       "vm_size" = {
         assignment_type = "USER_INPUT"
         description     = "Size of the virtual machine."
@@ -193,23 +185,9 @@ resource "meshstack_building_block_definition" "this" {
       }
       "vm_ssh_public_key" = {
         assignment_type = "USER_INPUT"
-        description     = "SSH public key for Linux VM authentication (required for Linux). Leave empty for Windows."
+        description     = "SSH public key used to authenticate as the VM's admin user."
         display_name    = "VM SSH Public Key"
         type            = "STRING"
-        # Only one of ssh_public_key / admin_password applies per OS; default both to empty so
-        # neither is force-required in the form. The buildingblock validates the correct one per vm_os_type.
-        default_value = jsonencode("")
-      }
-      "vm_admin_password" = {
-        assignment_type = "USER_INPUT"
-        description     = "Admin password for a Windows VM (required for Windows). Leave empty for Linux."
-        display_name    = "VM Admin Password"
-        type            = "STRING"
-        sensitive = {
-          default_value = {
-            secret_value = ""
-          }
-        }
       }
       "vm_enable_public_ip" = {
         assignment_type = "USER_INPUT"
