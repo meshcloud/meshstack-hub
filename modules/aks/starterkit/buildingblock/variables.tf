@@ -74,11 +74,9 @@ variable "project_tags" {
   type = object({
     dev  = map(list(string))
     prod = map(list(string))
+
+    owner_tag_key = optional(string, null)
   })
-  default = {
-    dev  = {}
-    prod = {}
-  }
   description = "Tags for the created Dev/Prod projects."
 }
 variable "github_template_repo_path" {

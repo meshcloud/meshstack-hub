@@ -25,15 +25,11 @@ No modules.
 
 | Name | Type |
 |------|------|
-| [meshstack_building_block.github_actions_dev](https://registry.terraform.io/providers/meshcloud/meshstack/latest/docs/resources/building_block) | resource |
-| [meshstack_building_block.github_actions_prod](https://registry.terraform.io/providers/meshcloud/meshstack/latest/docs/resources/building_block) | resource |
+| [meshstack_building_block.github_actions](https://registry.terraform.io/providers/meshcloud/meshstack/latest/docs/resources/building_block) | resource |
 | [meshstack_building_block.repo](https://registry.terraform.io/providers/meshcloud/meshstack/latest/docs/resources/building_block) | resource |
-| [meshstack_project.dev](https://registry.terraform.io/providers/meshcloud/meshstack/latest/docs/resources/project) | resource |
-| [meshstack_project.prod](https://registry.terraform.io/providers/meshcloud/meshstack/latest/docs/resources/project) | resource |
-| [meshstack_project_user_binding.creator_dev_admin](https://registry.terraform.io/providers/meshcloud/meshstack/latest/docs/resources/project_user_binding) | resource |
-| [meshstack_project_user_binding.creator_prod_admin](https://registry.terraform.io/providers/meshcloud/meshstack/latest/docs/resources/project_user_binding) | resource |
-| [meshstack_tenant.dev](https://registry.terraform.io/providers/meshcloud/meshstack/latest/docs/resources/tenant) | resource |
-| [meshstack_tenant.prod](https://registry.terraform.io/providers/meshcloud/meshstack/latest/docs/resources/tenant) | resource |
+| [meshstack_project.this](https://registry.terraform.io/providers/meshcloud/meshstack/latest/docs/resources/project) | resource |
+| [meshstack_project_user_binding.creator_admin](https://registry.terraform.io/providers/meshcloud/meshstack/latest/docs/resources/project_user_binding) | resource |
+| [meshstack_tenant.this](https://registry.terraform.io/providers/meshcloud/meshstack/latest/docs/resources/tenant) | resource |
 | [random_id.repo_suffix](https://registry.terraform.io/providers/hashicorp/random/latest/docs/resources/id) | resource |
 | [meshstack_platform.this](https://registry.terraform.io/providers/meshcloud/meshstack/latest/docs/data-sources/platform) | data source |
 
@@ -53,7 +49,7 @@ No modules.
 | <a name="input_landing_zone_refs"></a> [landing\_zone\_refs](#input\_landing\_zone\_refs) | Landing zone references keyed by stage (usually dev and prod). Wired in as a static building block input from the platform/backplane that owns the meshLandingZones (their `.ref` outputs). | `map(object({ name = string, kind = optional(string, "meshLandingZone") }))` | n/a | yes |
 | <a name="input_name"></a> [name](#input\_name) | This name will be used for the created projects, app subdomain and GitHub repository. | `string` | n/a | yes |
 | <a name="input_platform_ref"></a> [platform\_ref](#input\_platform\_ref) | Reference (by uuid) to the meshPlatform the tenants are created on. Wired in as a static building block input from the platform/backplane that owns the meshPlatform (its `.ref` output). Required because the meshTenant v4 API references platforms by ref. | <pre>object({<br/>    uuid = string<br/>    kind = optional(string, "meshPlatform")<br/>  })</pre> | n/a | yes |
-| <a name="input_project_tags"></a> [project\_tags](#input\_project\_tags) | Tags for the created Dev/Prod projects. | <pre>object({<br/>    dev  = map(list(string))<br/>    prod = map(list(string))<br/>  })</pre> | <pre>{<br/>  "dev": {},<br/>  "prod": {}<br/>}</pre> | no |
+| <a name="input_project_tags"></a> [project\_tags](#input\_project\_tags) | Tags for the created Dev/Prod projects. | <pre>object({<br/>    dev  = map(list(string))<br/>    prod = map(list(string))<br/><br/>    owner_tag_key = optional(string, null)<br/>  })</pre> | n/a | yes |
 | <a name="input_repo_admin"></a> [repo\_admin](#input\_repo\_admin) | GitHub handle of the user who will be assigned as the repository admin. Delete building block definition input if not needed. | `string` | `null` | no |
 | <a name="input_workspace_identifier"></a> [workspace\_identifier](#input\_workspace\_identifier) | n/a | `string` | n/a | yes |
 
