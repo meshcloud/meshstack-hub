@@ -5,7 +5,7 @@ block. It creates a dedicated service account with a Workload Identity Federatio
 provider and the permissions required to create and manage STACKIT network areas under a given
 organization:
 
-- **`iaas.network.admin`** — allows creating and managing network areas (and their regions) within the organization.
+- **`iaas.network-area.admin`** — allows creating and managing network areas (and their regions) within the organization.
 
 Authentication uses WIF (OIDC token exchange) — no long-lived service account key is created or stored.
 

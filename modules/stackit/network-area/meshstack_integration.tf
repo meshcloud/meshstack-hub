@@ -70,13 +70,12 @@ resource "meshstack_building_block_definition" "this" {
   }
 
   spec = {
-    display_name        = "STACKIT Network Area"
-    symbol              = "https://raw.githubusercontent.com/meshcloud/meshstack-hub/${var.hub.git_ref}/modules/stackit/network-area/buildingblock/logo.png"
-    description         = "Creates a STACKIT network area with a configurable IPv4 address plan for network-segmented projects."
-    support_url         = "https://portal.stackit.cloud"
-    target_type         = "WORKSPACE_LEVEL"
-    run_transparency    = true
-    supported_platforms = [{ name = "STACKIT" }]
+    display_name     = "STACKIT Network Area"
+    symbol           = "https://raw.githubusercontent.com/meshcloud/meshstack-hub/${var.hub.git_ref}/modules/stackit/network-area/buildingblock/logo.png"
+    description      = "Creates a STACKIT network area with a configurable IPv4 address plan for network-segmented projects."
+    support_url      = "https://portal.stackit.cloud"
+    target_type      = "WORKSPACE_LEVEL"
+    run_transparency = true
     readme = chomp(<<-EOT
       This building block provisions a **STACKIT network area** with a configurable IPv4
       address plan, so platform teams can organize STACKIT projects into network-segmented
@@ -215,7 +214,7 @@ resource "meshstack_building_block_definition" "this" {
         description     = "JSON list of default IPv4 nameservers assigned to networks created within the network area."
         type            = "CODE"
         assignment_type = "USER_INPUT"
-        default_value   = jsonencode(jsonencode(["1.0.0.1", "1.1.1.1"]))
+        default_value   = jsonencode(jsonencode([]))
       }
     }
 

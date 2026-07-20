@@ -211,7 +211,7 @@ resource "meshstack_building_block_definition" "this" {
       }
     }
 
-    inputs = {
+    inputs = merge({
       parent_container_id = {
         display_name    = "Parent Container ID"
         description     = "Default parent container ID (organization or folder) where the project will be created."
@@ -317,14 +317,15 @@ resource "meshstack_building_block_definition" "this" {
         assignment_type = "FULL_PLATFORM_IDENTIFIER"
       }
 
+      }, var.stackit_network_area_tag_name != null ? {
       network_area_tag_name = {
         display_name    = "Network Area Tag Name"
-        description     = "Name of the meshStack landing zone tag whose value is used as the STACKIT project's `networkArea` label. Null skips network area assignment."
+        description     = "Name of the meshStack landing zone tag whose value is used as the STACKIT project's `networkArea` label."
         type            = "STRING"
         assignment_type = "STATIC"
         argument        = jsonencode(var.stackit_network_area_tag_name)
       }
-    }
+    } : {})
 
     outputs = {
       project_url = {
@@ -357,6 +358,9 @@ resource "meshstack_building_block_definition" "this" {
         assignment_type = "SUMMARY"
       }
     }
+
+    # TENANT_LIST/LANDINGZONE_LIST: needed by meshstack_tenant/meshstack_landingzone data sources for network area tag lookup.
+    permissions = ["TENANT_LIST", "LANDINGZONE_LIST"]
   }
 }
 

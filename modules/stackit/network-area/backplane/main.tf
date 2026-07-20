@@ -25,11 +25,9 @@ resource "stackit_service_account_federated_identity_provider" "building_block" 
   ]
 }
 
-# network.admin at org scope allows managing network areas and their regions.
-# Least-privilege alternative: if STACKIT introduces a narrower "network-area.editor"
-# role, prefer that.
+# iaas.network-area.admin (org scope) manages network areas; iaas.network.admin only covers project networks.
 resource "stackit_authorization_organization_role_assignment" "network_admin" {
   resource_id = var.organization_id
-  role        = "iaas.network.admin"
+  role        = "iaas.network-area.admin"
   subject     = stackit_service_account.building_block.email
 }
