@@ -14,6 +14,18 @@ variable "stackit_service_account_name" {
   description = "Name of the backplane service account. Defaults to 'mesh-network'. Override when deploying multiple backplane instances in the same STACKIT project."
 }
 
+variable "stackit_network_min_prefix_length" {
+  type        = number
+  default     = 24
+  description = "Minimum allowed IPv4 prefix length for the network's prefix length input."
+}
+
+variable "stackit_network_max_prefix_length" {
+  type        = number
+  default     = 28
+  description = "Maximum allowed IPv4 prefix length for the network's prefix length input."
+}
+
 variable "meshstack" {
   type = object({
     owning_workspace_identifier = string
@@ -47,6 +59,10 @@ output "building_block_definition" {
 }
 
 data "meshstack_integrations" "integrations" {}
+
+locals {
+  network_allowed_prefix_lengths = [for i in range(var.stackit_network_min_prefix_length, var.stackit_network_max_prefix_length + 1) : i]
+}
 
 module "backplane" {
   source = "github.com/meshcloud/meshstack-hub//modules/stackit/network/backplane?ref=${var.hub.git_ref}"
@@ -169,12 +185,12 @@ resource "meshstack_building_block_definition" "this" {
 
       network_prefix_length = {
         display_name                   = "Network Prefix Length"
-        description                    = "IPv4 prefix length for the network (24-28)."
+        description                    = "IPv4 prefix length for the network (${var.stackit_network_min_prefix_length}-${var.stackit_network_max_prefix_length})."
         type                           = "INTEGER"
         assignment_type                = "USER_INPUT"
         default_value                  = jsonencode(25)
-        value_validation_regex         = "^(24|25|26|27|28)$"
-        validation_regex_error_message = "Prefix length must be one of 24, 25, 26, 27, 28."
+        value_validation_regex         = "^(${join("|", local.network_allowed_prefix_lengths)})$"
+        validation_regex_error_message = "Prefix length must be one of ${join(", ", local.network_allowed_prefix_lengths)}."
       }
 
       ipv4_nameservers = {

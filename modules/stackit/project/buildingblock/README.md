@@ -44,6 +44,7 @@ provider "stackit" {
 | Name | Version |
 |------|---------|
 | <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.11.0 |
+| <a name="requirement_meshstack"></a> [meshstack](#requirement\_meshstack) | >= 0.21.0 |
 | <a name="requirement_stackit"></a> [stackit](#requirement\_stackit) | >= 0.98.0 |
 
 ## Modules
@@ -56,19 +57,24 @@ No modules.
 |------|------|
 | [stackit_authorization_project_role_assignment.role_assignments](https://registry.terraform.io/providers/stackitcloud/stackit/latest/docs/resources/authorization_project_role_assignment) | resource |
 | [stackit_resourcemanager_project.project](https://registry.terraform.io/providers/stackitcloud/stackit/latest/docs/resources/resourcemanager_project) | resource |
+| [meshstack_landingzone.this](https://registry.terraform.io/providers/meshcloud/meshstack/latest/docs/data-sources/landingzone) | data source |
+| [meshstack_tenant.this](https://registry.terraform.io/providers/meshcloud/meshstack/latest/docs/data-sources/tenant) | data source |
 
 ## Inputs
 
 | Name | Description | Type | Default | Required |
 |------|-------------|------|---------|:--------:|
 | <a name="input_environment"></a> [environment](#input\_environment) | The environment type (production, staging, development). If not set, uses parent\_container\_id directly. | `string` | `null` | no |
-| <a name="input_labels"></a> [labels](#input\_labels) | Labels to apply to the project. Use 'networkArea' to specify the STACKIT Network Area. | `map(string)` | `{}` | no |
+| <a name="input_labels"></a> [labels](#input\_labels) | Additional labels to apply to the project, merged with the `networkArea` label resolved from the landing zone's tags. | `map(string)` | `{}` | no |
+| <a name="input_network_area_tag_name"></a> [network\_area\_tag\_name](#input\_network\_area\_tag\_name) | Name of the meshStack landing zone tag whose value is used as the STACKIT project's `networkArea` label. Set to null (default) to skip network area assignment — projects remain usable without a network area. | `string` | `null` | no |
 | <a name="input_parent_container_id"></a> [parent\_container\_id](#input\_parent\_container\_id) | The parent container ID (organization or folder) where the project will be created. | `string` | n/a | yes |
 | <a name="input_parent_container_ids"></a> [parent\_container\_ids](#input\_parent\_container\_ids) | Parent container IDs for different environments. If environment is set, the corresponding container ID will be used. | <pre>object({<br/>    production  = optional(string)<br/>    staging     = optional(string)<br/>    development = optional(string)<br/>  })</pre> | `{}` | no |
+| <a name="input_platform_identifier"></a> [platform\_identifier](#input\_platform\_identifier) | meshStack platform identifier, used to look up this project's landing zone tags at runtime. | `string` | n/a | yes |
 | <a name="input_project_name"></a> [project\_name](#input\_project\_name) | The name of the StackIt project to create. | `string` | n/a | yes |
 | <a name="input_role_mapping"></a> [role\_mapping](#input\_role\_mapping) | Maps meshStack roles from `users[*].roles` to STACKIT project roles. Values can be built-in STACKIT roles or custom STACKIT role names. Unknown meshStack roles are ignored. | `map(list(string))` | <pre>{<br/>  "admin": [<br/>    "owner"<br/>  ],<br/>  "reader": [<br/>    "reader"<br/>  ],<br/>  "user": [<br/>    "editor"<br/>  ]<br/>}</pre> | no |
 | <a name="input_service_account_email"></a> [service\_account\_email](#input\_service\_account\_email) | Email of the STACKIT service account for WIF-based authentication and project ownership. | `string` | n/a | yes |
 | <a name="input_users"></a> [users](#input\_users) | List of users from the authoritative system. Each user's `roles` are meshStack roles that are mapped to STACKIT project roles via `role_mapping`. | <pre>list(object({<br/>    meshIdentifier = string<br/>    username       = string<br/>    firstName      = string<br/>    lastName       = string<br/>    email          = string<br/>    euid           = string<br/>    roles          = list(string)<br/>  }))</pre> | `[]` | no |
+| <a name="input_workspace_identifier"></a> [workspace\_identifier](#input\_workspace\_identifier) | meshStack workspace identifier, used to look up this project's landing zone tags at runtime. | `string` | n/a | yes |
 
 ## Outputs
 
