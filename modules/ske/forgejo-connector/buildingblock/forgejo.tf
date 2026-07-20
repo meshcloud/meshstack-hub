@@ -56,8 +56,8 @@ resource "terraform_data" "await_pipeline_workflow" {
   # https://github.com/likvid-bank/starterkit-template-stackit-ai-summarizer/tree/ffba93a6e7e1aa12032b5ae5697a5dcdc481a74b/.forgejo/workflows
   provisioner "local-exec" {
     # The script polls indefinitely (Forgejo exposes no run-level status to bound
-    # on); cap the wait at 10 minutes here since local-exec has no timeout option.
-    command = "timeout 600 ${path.module}/trigger_and_await_forgejo_workflow.py"
+    # on); cap the wait at 15 minutes here since local-exec has no timeout option.
+    command = "timeout 900 ${path.module}/trigger_and_await_forgejo_workflow.py"
     environment = {
       REPOSITORY_ID = tostring(var.repository_id)
       WORKFLOW_NAME = "pipeline.yaml"

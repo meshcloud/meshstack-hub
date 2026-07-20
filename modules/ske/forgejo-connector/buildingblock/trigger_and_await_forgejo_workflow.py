@@ -42,7 +42,7 @@ Optional:
 
 There is intentionally no in-script timeout: the script polls until the run
 reaches a terminal verdict. The caller bounds the wall-clock time instead — the
-Terraform provisioner wraps this in `timeout 600` (10 minutes).
+Terraform provisioner wraps this in `timeout 900` (15 minutes).
 """
 
 import datetime as dt
