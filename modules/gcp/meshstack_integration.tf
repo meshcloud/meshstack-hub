@@ -66,7 +66,7 @@ locals {
 }
 
 # Creates required GCP service accounts and WIF resources for meshStack
-module "gcp_meshplatform" {
+module "this" {
   source  = "meshcloud/meshplatform/gcp"
   version = ">= 0.3.0"
 
@@ -99,7 +99,7 @@ module "gcp_meshplatform" {
 }
 
 # Configure meshStack platform
-resource "meshstack_platform" "gcp" {
+resource "meshstack_platform" "this" {
   metadata = {
     name               = var.meshstack.platform_name
     owned_by_workspace = var.meshstack.owning_workspace_identifier
@@ -128,7 +128,7 @@ resource "meshstack_platform" "gcp" {
           service_account = {
             workload_identity = {
               audience              = data.meshstack_integrations.integrations.workload_identity_federation.replicator.gcp.audience
-              service_account_email = module.gcp_meshplatform.replicator_sa_email
+              service_account_email = module.this.replicator_sa_email
             }
           }
 
@@ -180,11 +180,11 @@ resource "meshstack_platform" "gcp" {
           service_account = {
             workload_identity = {
               audience              = data.meshstack_integrations.integrations.workload_identity_federation.metering.gcp.audience
-              service_account_email = module.gcp_meshplatform.kraken_sa_email
+              service_account_email = module.this.kraken_sa_email
             }
           }
 
-          bigquery_table        = module.gcp_meshplatform.cloud_billing_export_table_name
+          bigquery_table        = module.this.cloud_billing_export_table_name
           partition_time_column = "usage_start_time"
 
           processing = {}
@@ -212,7 +212,7 @@ resource "meshstack_landingzone" "gcp_default" {
     automate_deletion_replication = true
 
     platform_ref = {
-      uuid = meshstack_platform.gcp.metadata.uuid
+      uuid = meshstack_platform.this.metadata.uuid
     }
 
     platform_properties = {
