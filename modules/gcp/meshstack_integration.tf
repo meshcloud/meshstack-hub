@@ -197,7 +197,7 @@ resource "meshstack_platform" "this" {
   }
 }
 
-resource "meshstack_landingzone" "gcp_default" {
+resource "meshstack_landingzone" "default" {
   metadata = {
     name               = "${var.meshstack.platform_name}-lz"
     owned_by_workspace = var.meshstack.owning_workspace_identifier
