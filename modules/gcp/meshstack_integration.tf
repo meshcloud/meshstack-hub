@@ -67,8 +67,7 @@ locals {
 
 # Creates required GCP service accounts and WIF resources for meshStack
 module "this" {
-  source  = "meshcloud/meshplatform/gcp"
-  version = ">= 0.3.0"
+  source = "github.com/meshcloud/terraform-gcp-meshplatform?ref=0.3.0"
 
   project_id     = var.gcp_project_id
   org_id         = var.gcp_org_id
