@@ -20,7 +20,7 @@ data "meshstack_landingzone" "this" {
   }
 
   metadata = {
-    name = data.meshstack_tenant.this.spec.landing_zone_identifier
+    name = data.meshstack_tenant.this.spec.landing_zone_ref.name
   }
 }
 
