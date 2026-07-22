@@ -17,6 +17,6 @@ resource "stackit_network_area_region" "this" {
     max_prefix_length     = var.max_prefix_length
     default_prefix_length = var.default_prefix_length
     # STACKIT turns an empty list into null which results in an inconsistent result.
-    default_nameservers = var.default_nameservers == [] ? null : var.default_nameservers
+    default_nameservers = length(var.default_nameservers) > 0 ? var.default_nameservers : null
   }
 }

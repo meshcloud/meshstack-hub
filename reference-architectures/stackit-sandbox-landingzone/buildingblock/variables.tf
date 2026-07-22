@@ -67,6 +67,12 @@ variable "stackit_organization_onboarding_enabled" {
   description = "Whether the nested STACKIT Project integration adds meshStack project users to the STACKIT organization before applying project-level role assignments. Disable if organization membership is managed outside this landing zone."
 }
 
+variable "network_area_tag_name" {
+  type        = string
+  default     = null
+  description = "Name of the meshStack landing zone tag whose value is used as the STACKIT project's `networkArea` label, forwarded to the nested STACKIT Project integration. Set to null (default) to skip network area assignment."
+}
+
 variable "git_ref" {
   type        = string
   default     = "main"

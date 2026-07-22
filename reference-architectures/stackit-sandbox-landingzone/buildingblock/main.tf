@@ -35,6 +35,7 @@ module "stackit_integration" {
   stackit_service_account_name            = substr(var.platform_identifier, 0, 20)
   role_mapping                            = var.role_mapping
   stackit_organization_onboarding_enabled = var.stackit_organization_onboarding_enabled
+  stackit_network_area_tag_name           = var.network_area_tag_name
 
   hub = {
     git_ref = var.git_ref
