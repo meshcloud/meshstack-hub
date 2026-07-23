@@ -1,5 +1,5 @@
 module "foundation" {
-  source = "github.com/meshcloud/meshstack-hub//reference-architectures/stackit-sandbox-landingzone/buildingblock?ref=${var.git_ref}"
+  source = "github.com/meshcloud/meshstack-hub//reference-architectures/stackit-sandbox-landingzone/buildingblock?ref=${var.hub.git_ref}"
 
   workspace                               = var.workspace
   use_global_location                     = var.use_global_location
@@ -11,21 +11,21 @@ module "foundation" {
   role_mapping                            = var.role_mapping
   stackit_organization_onboarding_enabled = var.stackit_organization_onboarding_enabled
   network_area_tag_name                   = var.network_area_tag_name
-  git_ref                                 = var.git_ref
+  hub                                     = var.hub
 }
 
 module "network_area_integration" {
-  source = "github.com/meshcloud/meshstack-hub//modules/stackit/network-area?ref=${var.git_ref}"
+  source = "github.com/meshcloud/meshstack-hub//modules/stackit/network-area?ref=${var.hub.git_ref}"
 
   stackit_organization_id = var.stackit_org
   stackit_project_id      = module.foundation.backplane_project_id
 
   meshstack = { owning_workspace_identifier = var.workspace, tags = var.tags.building_block }
-  hub       = { git_ref = var.git_ref, bbd_draft = true }
+  hub       = var.hub
 }
 
 module "network_integration" {
-  source = "github.com/meshcloud/meshstack-hub//modules/stackit/network?ref=${var.git_ref}"
+  source = "github.com/meshcloud/meshstack-hub//modules/stackit/network?ref=${var.hub.git_ref}"
 
   stackit_organization_id           = var.stackit_org
   stackit_project_id                = module.foundation.backplane_project_id
@@ -33,7 +33,7 @@ module "network_integration" {
   stackit_network_max_prefix_length = var.tenant_network_max_prefix_length
 
   meshstack = { owning_workspace_identifier = var.workspace, tags = var.tags.building_block }
-  hub       = { git_ref = var.git_ref, bbd_draft = true }
+  hub       = var.hub
 }
 
 resource "meshstack_building_block" "network_area_hub" {

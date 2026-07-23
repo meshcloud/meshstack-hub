@@ -7,8 +7,6 @@ repos:
           - --args=--config=.terraform-docs.yml
         # Only run terraform_docs on .tf files inside 'backplane' or 'buildingblock' folders
         files: ^modules/[^/]+/[^/]+/(backplane|buildingblock)/.+\.tf$
-        # Need to exclude because of https://github.com/terraform-docs/terraform-docs/issues/927
-        exclude: ^modules/stackit/sandbox-landingzone/
       - id: terraform_fmt
         exclude: ^tools/render-meshstack-integration-tf/templates/provider
   - repo: https://github.com/pre-commit/pre-commit-hooks
