@@ -10,8 +10,8 @@ variable "stackit_project_id" {
 
 variable "stackit_service_account_name" {
   type        = string
-  default     = null
-  description = "Name of the backplane service account. Defaults to 'mesh-network-area'. Override when deploying multiple backplane instances in the same STACKIT project."
+  default     = "mesh-network-area"
+  description = "Name of the backplane service account. Override when deploying multiple backplane instances in the same STACKIT project."
 }
 
 variable "meshstack" {
@@ -53,7 +53,7 @@ module "backplane" {
 
   project_id           = var.stackit_project_id
   organization_id      = var.stackit_organization_id
-  service_account_name = coalesce(var.stackit_service_account_name, "mesh-network-area")
+  service_account_name = var.stackit_service_account_name
 
   workload_identity_federation = {
     issuer = data.meshstack_integrations.integrations.workload_identity_federation.replicator.issuer
@@ -215,6 +215,14 @@ resource "meshstack_building_block_definition" "this" {
         type            = "CODE"
         assignment_type = "USER_INPUT"
         default_value   = jsonencode(jsonencode([]))
+      }
+
+      labels = {
+        display_name    = "Labels"
+        description     = "Labels to apply to the network area."
+        type            = "CODE"
+        assignment_type = "USER_INPUT"
+        default_value   = jsonencode(jsonencode({}))
       }
     }
 

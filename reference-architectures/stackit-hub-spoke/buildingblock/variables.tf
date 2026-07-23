@@ -1,16 +1,18 @@
 variable "workspace" {
   type        = string
+  nullable    = false
   description = "Identifier of the meshStack workspace that will own the created platform, location, landing zones, and the hub network-area instance."
 }
 
 variable "use_global_location" {
   type        = bool
-  default     = false
+  nullable    = false
   description = "Use the global location instead of creating a dedicated location for this platform."
 }
 
 variable "stackit_org" {
   type        = string
+  nullable    = false
   description = "STACKIT organization UUID under which the landing-zone folder, backplane project and tenant projects are created."
 
   validation {
@@ -21,17 +23,20 @@ variable "stackit_org" {
 
 variable "stackit_owner_email" {
   type        = string
+  nullable    = false
   description = "Owner email assigned to the STACKIT resourcemanager folder and backplane project."
 }
 
 variable "stackit_service_account_key" {
   type        = string
   sensitive   = true
+  nullable    = false
   description = "STACKIT service account key JSON with `resource-manager.admin` on the organization. Used to create the landing-zone folder and backplane project."
 }
 
 variable "platform_identifier" {
   type        = string
+  nullable    = false
   description = "Identifier for the STACKIT sandbox platform created in meshStack (letters, digits and dashes only)."
 
   validation {
@@ -45,85 +50,79 @@ variable "tags" {
     landingzone    = map(list(string))
     building_block = map(list(string))
   })
-
-  default     = { landingzone = {}, building_block = {} }
+  nullable    = false
   description = "Tags forwarded to the nested foundation, network-area, and network integrations. `landingzone` tags are applied to the created landing zones; `building_block` tags are applied to the nested building block definitions."
 }
 
 variable "role_mapping" {
   type        = map(list(string))
+  nullable    = false
   description = "Default mapping from meshStack roles to STACKIT project roles for the nested STACKIT Project integration. Values can be built-in STACKIT roles or custom STACKIT role names."
-
-  default = {
-    admin  = ["owner"]
-    user   = ["editor"]
-    reader = ["reader"]
-  }
 }
 
 variable "stackit_organization_onboarding_enabled" {
   type        = bool
-  default     = true
+  nullable    = false
   description = "Whether the nested STACKIT Project integration adds meshStack project users to the STACKIT organization before applying project-level role assignments. Disable if organization membership is managed outside this landing zone."
 }
 
 variable "network_area_tag_name" {
   type        = string
-  default     = "StackitNetworkArea"
+  nullable    = false
   description = "Name of the meshStack landing zone tag whose value is the hub network area's ID. Forwarded to the foundation's nested STACKIT Project integration (so it knows which tag to read) and set on the `networked` landing zone created here (with the hub's network area ID as its value)."
 }
 
 variable "hub_network_area_name" {
   type        = string
-  default     = "hub"
+  nullable    = false
   description = "Name of the hub STACKIT network area instance."
 }
 
 variable "hub_network_ranges" {
   type        = list(string)
-  default     = ["10.0.0.0/16"]
+  nullable    = false
   description = "List of IPv4 CIDR ranges available to projects within the hub network area."
 }
 
 variable "hub_transfer_network" {
   type        = string
-  default     = "10.1.255.0/24"
+  nullable    = false
   description = "IPv4 CIDR range used as the transfer network between the hub network area and connected networks. Must not overlap with `hub_network_ranges`."
 }
 
 variable "hub_min_prefix_length" {
   type        = number
-  default     = 24
+  nullable    = false
   description = "Minimum prefix length allowed for networks created within the hub network area."
 }
 
 variable "hub_max_prefix_length" {
   type        = number
-  default     = 28
+  nullable    = false
   description = "Maximum prefix length allowed for networks created within the hub network area."
 }
 
 variable "hub_default_prefix_length" {
   type        = number
-  default     = 28
+  nullable    = false
   description = "Default prefix length used for networks created within the hub network area when none is specified."
 }
 
 variable "hub_default_nameservers" {
   type        = list(string)
-  default     = []
+  nullable    = false
   description = "Default IPv4 nameservers assigned to networks created within the hub network area."
 }
 
 variable "tenant_network_min_prefix_length" {
   type        = number
-  default     = 24
+  nullable    = false
   description = "Minimum allowed IPv4 prefix length for the spoke network BBD's prefix length input, offered to application teams ordering spoke networks."
 }
 
 variable "tenant_network_max_prefix_length" {
   type        = number
-  default     = 28
+  nullable    = false
   description = "Maximum allowed IPv4 prefix length for the spoke network BBD's prefix length input, offered to application teams ordering spoke networks."
 }
 

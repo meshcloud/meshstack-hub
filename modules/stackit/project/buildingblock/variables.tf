@@ -34,7 +34,7 @@ variable "service_account_email" {
 
 variable "labels" {
   type        = map(string)
-  default     = {}
+  nullable    = false
   description = "Additional labels to apply to the project, merged with the `networkArea` label resolved from the landing zone's tags."
 }
 
@@ -67,17 +67,13 @@ variable "users" {
     euid           = string
     roles          = list(string)
   }))
-  default = []
+  nullable = false
 }
 
 variable "role_mapping" {
   type        = map(list(string))
   description = "Maps meshStack roles from `users[*].roles` to STACKIT project roles. Values can be built-in STACKIT roles or custom STACKIT role names. Unknown meshStack roles are ignored."
 
-  default = {
-    admin  = ["owner"]
-    user   = ["editor"]
-    reader = ["reader"]
-  }
+  nullable = false
 }
 
