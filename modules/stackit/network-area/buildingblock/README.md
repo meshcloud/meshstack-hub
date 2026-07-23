@@ -34,11 +34,11 @@ No modules.
 
 | Name | Description | Type | Default | Required |
 |------|-------------|------|---------|:--------:|
-| <a name="input_default_nameservers"></a> [default\_nameservers](#input\_default\_nameservers) | Default IPv4 nameservers assigned to networks created within the network area. | `list(string)` | <pre>[<br/>  "1.0.0.1",<br/>  "1.1.1.1"<br/>]</pre> | no |
-| <a name="input_default_prefix_length"></a> [default\_prefix\_length](#input\_default\_prefix\_length) | Default prefix length used for networks created within the network area when none is specified. | `number` | `28` | no |
-| <a name="input_labels"></a> [labels](#input\_labels) | Labels to apply to the network area. | `map(string)` | `{}` | no |
-| <a name="input_max_prefix_length"></a> [max\_prefix\_length](#input\_max\_prefix\_length) | Maximum prefix length allowed for networks created within the network area. | `number` | `28` | no |
-| <a name="input_min_prefix_length"></a> [min\_prefix\_length](#input\_min\_prefix\_length) | Minimum prefix length allowed for networks created within the network area. | `number` | `24` | no |
+| <a name="input_default_nameservers"></a> [default\_nameservers](#input\_default\_nameservers) | Default IPv4 nameservers assigned to networks created within the network area. | `list(string)` | n/a | yes |
+| <a name="input_default_prefix_length"></a> [default\_prefix\_length](#input\_default\_prefix\_length) | Default prefix length used for networks created within the network area when none is specified. | `number` | n/a | yes |
+| <a name="input_labels"></a> [labels](#input\_labels) | Labels to apply to the network area. | `map(string)` | n/a | yes |
+| <a name="input_max_prefix_length"></a> [max\_prefix\_length](#input\_max\_prefix\_length) | Maximum prefix length allowed for networks created within the network area. | `number` | n/a | yes |
+| <a name="input_min_prefix_length"></a> [min\_prefix\_length](#input\_min\_prefix\_length) | Minimum prefix length allowed for networks created within the network area. | `number` | n/a | yes |
 | <a name="input_network_area_name"></a> [network\_area\_name](#input\_network\_area\_name) | Name of the STACKIT network area. | `string` | n/a | yes |
 | <a name="input_network_ranges"></a> [network\_ranges](#input\_network\_ranges) | List of IPv4 CIDR ranges available to projects within the network area. | `list(string)` | n/a | yes |
 | <a name="input_organization_id"></a> [organization\_id](#input\_organization\_id) | STACKIT organization ID under which the network area will be created. | `string` | n/a | yes |
