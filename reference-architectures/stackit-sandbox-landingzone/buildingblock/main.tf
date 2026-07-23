@@ -27,7 +27,7 @@ resource "stackit_resourcemanager_project" "backplane" {
 }
 
 module "stackit_integration" {
-  source = "github.com/meshcloud/meshstack-hub//modules/stackit?ref=${var.git_ref}"
+  source = "github.com/meshcloud/meshstack-hub//modules/stackit?ref=${var.hub.git_ref}"
 
   stackit_organization_id                 = var.stackit_org
   stackit_parent_container_id             = stackit_resourcemanager_folder.this.container_id
@@ -37,9 +37,7 @@ module "stackit_integration" {
   stackit_organization_onboarding_enabled = var.stackit_organization_onboarding_enabled
   stackit_network_area_tag_name           = var.network_area_tag_name
 
-  hub = {
-    git_ref = var.git_ref
-  }
+  hub = var.hub
 
   meshstack = {
     owning_workspace_identifier = var.workspace

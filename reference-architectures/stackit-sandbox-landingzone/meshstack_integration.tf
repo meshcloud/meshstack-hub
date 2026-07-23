@@ -141,12 +141,12 @@ resource "meshstack_building_block_definition" "this" {
         sensitive              = {}
       }
 
-      git_ref = {
-        display_name    = "Hub Git Ref"
-        description     = "meshstack-hub reference used to source the STACKIT project integration module. Kept in sync with the building block implementation ref."
-        type            = "STRING"
+      hub = {
+        display_name    = "Hub"
+        description     = "JSON object with `git_ref` (meshstack-hub reference used to source the nested STACKIT project integration module) and `bbd_draft` (forwarded to the nested integration's own building block definition draft state)."
+        type            = "CODE"
         assignment_type = "STATIC"
-        argument        = jsonencode(var.hub.git_ref)
+        argument        = jsonencode(jsonencode(var.hub))
       }
 
       # ── Platform configuration (set by the platform team) ──

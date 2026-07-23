@@ -127,9 +127,16 @@ variable "tenant_network_max_prefix_length" {
   description = "Maximum allowed IPv4 prefix length for the spoke network BBD's prefix length input, offered to application teams ordering spoke networks."
 }
 
-variable "git_ref" {
-  type        = string
-  default     = "main"
-  const       = true
-  description = "meshstack-hub reference used to source the nested foundation, network-area, and network integration modules. `const` so it can be interpolated into the module source at init time."
+variable "hub" {
+  type = object({
+    git_ref   = optional(string, "main")
+    bbd_draft = optional(bool, true)
+  })
+  const   = true
+  default = { git_ref = "main", bbd_draft = true }
+
+  description = <<-EOT
+  `git_ref`: meshstack-hub reference used to source the nested foundation, network-area, and network integration modules. `const` so it can be interpolated into the module source at init time.
+  `bbd_draft`: Forwarded as-is to those nested integrations' own `hub.bbd_draft`, so their building block definition draft state tracks this building block's own release state.
+  EOT
 }

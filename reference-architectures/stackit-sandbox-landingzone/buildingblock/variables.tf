@@ -73,10 +73,17 @@ variable "network_area_tag_name" {
   description = "Name of the meshStack landing zone tag whose value is used as the STACKIT project's `networkArea` label, forwarded to the nested STACKIT Project integration. Set to null (default) to skip network area assignment."
 }
 
-variable "git_ref" {
-  type        = string
-  default     = "main"
-  const       = true
-  description = "meshstack-hub reference used to source the nested STACKIT project integration module. `const` so it can be interpolated into the module source at init time."
+variable "hub" {
+  type = object({
+    git_ref   = optional(string, "main")
+    bbd_draft = optional(bool, true)
+  })
+  const   = true
+  default = { git_ref = "main", bbd_draft = true }
+
+  description = <<-EOT
+  `git_ref`: meshstack-hub reference used to source the nested STACKIT project integration module. `const` so it can be interpolated into the module source at init time.
+  `bbd_draft`: Forwarded as-is to the nested STACKIT project integration's own `hub.bbd_draft`, so its building block definition draft state tracks this building block's own release state.
+  EOT
 }
 
