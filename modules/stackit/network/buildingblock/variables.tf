@@ -18,12 +18,11 @@ variable "network_name" {
 
 variable "network_prefix_length" {
   type     = number
-  default  = 25
   nullable = false
 
   validation {
-    condition     = contains([24, 25, 26, 27, 28], var.network_prefix_length)
-    error_message = "network_prefix_length must be one of 24, 25, 26, 27, 28."
+    condition     = var.network_prefix_length <= 29 && var.network_prefix_length >= 24
+    error_message = "network_prefix_length must be between 24 and 29."
   }
 
   description = "IPv4 prefix length for the network (24-28)."
@@ -31,7 +30,6 @@ variable "network_prefix_length" {
 
 variable "ipv4_nameservers" {
   type        = list(string)
-  default     = []
   nullable    = false
   description = "IPv4 nameservers for the network. Empty list falls back to the project's network area default nameservers."
 }

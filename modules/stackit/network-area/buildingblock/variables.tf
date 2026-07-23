@@ -30,35 +30,30 @@ variable "transfer_network" {
 
 variable "min_prefix_length" {
   type        = number
-  default     = 24
   nullable    = false
   description = "Minimum prefix length allowed for networks created within the network area."
 }
 
 variable "max_prefix_length" {
   type        = number
-  default     = 28
   nullable    = false
   description = "Maximum prefix length allowed for networks created within the network area."
 }
 
 variable "default_prefix_length" {
   type        = number
-  default     = 28
   nullable    = false
   description = "Default prefix length used for networks created within the network area when none is specified."
 }
 
 variable "default_nameservers" {
   type        = list(string)
-  default     = ["1.0.0.1", "1.1.1.1"]
   nullable    = false
   description = "Default IPv4 nameservers assigned to networks created within the network area."
 }
 
 variable "labels" {
   type        = map(string)
-  default     = {}
   nullable    = false
   description = "Labels to apply to the network area."
 }
