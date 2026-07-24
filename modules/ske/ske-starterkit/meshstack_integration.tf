@@ -104,7 +104,7 @@ resource "meshstack_building_block_definition" "this" {
       tenants.
     EOT
     )
-    display_name             = "SKE Starterkit"
+    display_name             = "SKE Starterkit {{ name }}"
     symbol                   = "https://raw.githubusercontent.com/meshcloud/meshstack-hub/${var.hub.git_ref}/modules/ske/ske-starterkit/buildingblock/logo.png"
     notification_subscribers = var.notification_subscribers
 
