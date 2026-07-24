@@ -22,16 +22,11 @@ variable "test_context" {
   nullable = false
 }
 
-variable "stackit_service_account_key" {
-  type      = string
-  sensitive = true
-  nullable  = true
-  default   = null
-}
-
 provider "stackit" {
-  service_account_key = var.stackit_service_account_key
-  experiments         = ["iam"]
+  # Credentials are picked up from the environment: STACKIT_SERVICE_ACCOUNT_KEY_PATH for local
+  # development (see meshstack-smoke-test/setup-env.sh), WIF in CI. Do not set service_account_key
+  # here — an explicit null argument overrides the env-based credential discovery.
+  experiments = ["iam"]
 }
 
 module "stackit_storage_bucket" {
