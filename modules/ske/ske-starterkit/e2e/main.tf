@@ -20,7 +20,7 @@ variable "ske_kubeconfig" {
   type        = string
   sensitive   = true
   nullable    = false
-  description = "Kubeconfig JSON object for the SKE cluster, used by the Forgejo Connector building block."
+  description = "Kubeconfig for the SKE cluster (YAML or JSON), used by the Forgejo Connector building block."
 }
 
 variable "harbor_push_username" {
@@ -48,7 +48,9 @@ variable "harbor_pull_password" {
 }
 
 locals {
-  ske_kubeconfig = jsondecode(var.ske_kubeconfig)
+  # yamldecode parses both YAML (the ICF-published Vault value) and JSON (a superset), so it is
+  # robust regardless of the format the kubeconfig secret is provided in.
+  ske_kubeconfig = yamldecode(var.ske_kubeconfig)
 }
 
 resource "random_string" "suffix" {
@@ -61,7 +63,7 @@ resource "random_string" "suffix" {
 module "meshstack_kubernetes_platform" {
   source = "./meshstack_kubernetes_platform"
 
-  kube_host   = jsondecode(var.ske_kubeconfig)["clusters"][0]["cluster"]["server"]
+  kube_host   = local.ske_kubeconfig["clusters"][0]["cluster"]["server"]
   workspace   = var.test_context.workspace
   test_suffix = random_string.suffix.result
 }
