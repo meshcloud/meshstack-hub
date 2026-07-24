@@ -203,6 +203,8 @@ target_ref = {
 
 ## Running tests
 
+### Running locally
+
 From `../meshstack-smoke-test` after `source setup-env.sh`:
 
 ```bash
@@ -214,6 +216,13 @@ task hub:e2e   # run all hub e2e tests
 
 The runner: applies `modules/test_context` to resolve `hub_git_ref` from the committed SHA, exports
 its output as a temp `.tfvars.json`, then runs `tofu test` in the module's `e2e/` directory.
+
+### Running in CI (GitHub Actions)
+
+The CI workflow lives in the **`meshcloud/meshstack-smoke-test`** repo (`../meshstack-smoke-test`),
+not in the hub — it is `.github/workflows/smoke-test.yml`. It has **a single-module dispatch input** called `module` that's used to verify exactly one module.
+
+Trigger the workflow using gh cli and poll for the result.
 
 ---
 
