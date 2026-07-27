@@ -8,3 +8,8 @@ variable "location" {
   type        = string
   description = "The location/region where the storage account is created."
 }
+
+variable "resource_group_tags" {
+  default = null
+  type = map(string)
+}

@@ -11,6 +11,7 @@ resource "random_string" "resource_code" {
 resource "azurerm_resource_group" "storage_account_rg" {
   name     = "rg-${var.storage_account_name}"
   location = var.location
+  tags     = var.resource_group_tags
 }
 
 resource "azurerm_storage_account" "storage_account" {
