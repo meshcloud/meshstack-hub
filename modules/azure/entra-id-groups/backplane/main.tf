@@ -12,12 +12,11 @@ resource "azurerm_user_assigned_identity" "this" {
 resource "azurerm_federated_identity_credential" "this" {
   for_each = { for i, s in var.workload_identity_federation.subjects : tostring(i) => s }
 
-  name                = "subject-${each.key}"
-  resource_group_name = azurerm_resource_group.this.name
-  parent_id           = azurerm_user_assigned_identity.this.id
-  audience            = ["api://AzureADTokenExchange"]
-  issuer              = var.workload_identity_federation.issuer
-  subject             = each.value
+  name                      = "subject-${each.key}"
+  user_assigned_identity_id = azurerm_user_assigned_identity.this.id
+  audience                  = ["api://AzureADTokenExchange"]
+  issuer                    = var.workload_identity_federation.issuer
+  subject                   = each.value
 }
 
 # Grant Microsoft Graph app roles so the UAMI can read users, manage groups, and manage Administrative Unit members.
