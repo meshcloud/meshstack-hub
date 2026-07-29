@@ -12,12 +12,11 @@ resource "azurerm_user_assigned_identity" "backplane" {
 resource "azurerm_federated_identity_credential" "backplane" {
   for_each = { for i, s in var.workload_identity_federation.subjects : tostring(i) => s }
 
-  name                = "subject-${each.key}"
-  resource_group_name = azurerm_resource_group.backplane.name
-  parent_id           = azurerm_user_assigned_identity.backplane.id
-  audience            = ["api://AzureADTokenExchange"]
-  issuer              = var.workload_identity_federation.issuer
-  subject             = each.value
+  name                      = "subject-${each.key}"
+  user_assigned_identity_id = azurerm_user_assigned_identity.backplane.id
+  audience                  = ["api://AzureADTokenExchange"]
+  issuer                    = var.workload_identity_federation.issuer
+  subject                   = each.value
 }
 
 resource "azurerm_role_definition" "backplane" {

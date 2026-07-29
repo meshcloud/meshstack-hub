@@ -24,7 +24,7 @@ For more information, refer to the backplane documentation of the [Azure GitHub 
 |------|---------|
 | <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.0 |
 | <a name="requirement_azuread"></a> [azuread](#requirement\_azuread) | >= 3.0.2 |
-| <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) | >= 4.4.0 |
+| <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) | >= 4.65.0 |
 | <a name="requirement_github"></a> [github](#requirement\_github) | >= 6.3.0 |
 | <a name="requirement_random"></a> [random](#requirement\_random) | >= 3.6.3 |
 | <a name="requirement_time"></a> [time](#requirement\_time) | >= 0.11.1 |

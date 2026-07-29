@@ -40,8 +40,7 @@ resource "azurerm_user_assigned_identity" "ghactions" {
 
 # see https://docs.github.com/en/actions/deployment/security-hardening-your-deployments/configuring-openid-connect-in-azure#adding-the-federated-credentials-to-azure
 resource "azurerm_federated_identity_credential" "ghactions" {
-  parent_id           = azurerm_user_assigned_identity.ghactions.id
-  resource_group_name = azurerm_resource_group.cicd.name
+  user_assigned_identity_id = azurerm_user_assigned_identity.ghactions.id
 
   name     = "github-actions"
   audience = ["api://AzureADTokenExchange"]
