@@ -79,6 +79,24 @@ resource "meshstack_building_block_definition" "this" {
     address plan, registers the **STACKIT Network** building block, and creates a `networked` landing
     zone. Application teams can then self-service order routed spoke networks inside their projects.
 
+    A **network** configuration looks like this (sensible example values shown — adapt them to your
+    own address plan):
+
+    ```json
+    {
+      "network_area_tag_name": "StackitNetworkArea",
+      "hub_network_area_name": "hub",
+      "hub_network_ranges": ["10.0.0.0/16"],
+      "hub_transfer_network": "10.1.255.0/24",
+      "hub_min_prefix_length": 24,
+      "hub_max_prefix_length": 28,
+      "hub_default_prefix_length": 28,
+      "hub_default_nameservers": [],
+      "tenant_network_min_prefix_length": 24,
+      "tenant_network_max_prefix_length": 28
+    }
+    ```
+
     ## 📦 Resources created
 
     - **meshStack location** – named after the chosen platform identifier.
