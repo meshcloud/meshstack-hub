@@ -228,22 +228,7 @@ resource "meshstack_building_block_definition" "this" {
         display_name           = "Network (Hub-and-Spoke)"
         description            = <<-DESC
         Optional JSON object enabling hub-and-spoke networking. Leave as `null` to deploy only the
-        sandbox landing zone. When set, all fields are optional (sensible defaults shown):
-
-        ```json
-        {
-          "network_area_tag_name": "StackitNetworkArea",
-          "hub_network_area_name": "hub",
-          "hub_network_ranges": ["10.0.0.0/16"],
-          "hub_transfer_network": "10.1.255.0/24",
-          "hub_min_prefix_length": 24,
-          "hub_max_prefix_length": 28,
-          "hub_default_prefix_length": 28,
-          "hub_default_nameservers": [],
-          "tenant_network_min_prefix_length": 24,
-          "tenant_network_max_prefix_length": 28
-        }
-        ```
+        sandbox landing zone. When set, all fields are optional
         DESC
         type                   = "CODE"
         assignment_type        = "USER_INPUT"
