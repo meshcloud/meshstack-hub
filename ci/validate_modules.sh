@@ -3,9 +3,22 @@
 errors=()
 fix_mode=false
 
+# Logos are displayed as small catalog tiles in meshStack, so anything larger
+# than this is wasted bytes in the repo and in every consumer's clone.
+max_png_dimension=512
+
 # Check if --fix flag is passed
 if [[ "$1" == "--fix" ]]; then
 	fix_mode=true
+fi
+
+# Resolve an ImageMagick entrypoint once. Only needed to *fix* oversized PNGs —
+# validation reads the PNG header directly so it works without any tooling.
+imagemagick_bin=""
+if command -v magick > /dev/null 2>&1; then
+	imagemagick_bin="magick"
+elif command -v convert > /dev/null 2>&1; then
+	imagemagick_bin="convert"
 fi
 
 check_readme_format() {
@@ -39,6 +52,56 @@ check_png_naming() {
 	if [[ "$png_name" != "logo.png" ]]; then
 		errors+=("Warning: PNG file '$png_name' should be named 'logo.png' to be importable in meshStack")
 	fi
+}
+
+# Reads width/height straight out of the PNG IHDR chunk: bytes 16-19 are the
+# width and 20-23 the height, both big-endian uint32. Avoids depending on an
+# image tool just to validate, so a runner without ImageMagick still gates.
+png_dimensions() {
+	local png_path="$1"
+	local b
+	read -r -a b <<< "$(od -An -tu1 -j16 -N8 "$png_path")"
+	if [[ ${#b[@]} -lt 8 ]]; then
+		return 1
+	fi
+	echo "$(( b[0] * 16777216 + b[1] * 65536 + b[2] * 256 + b[3] ))" \
+		"$(( b[4] * 16777216 + b[5] * 65536 + b[6] * 256 + b[7] ))"
+}
+
+check_png_dimensions() {
+	local png_path="$1"
+
+	local dims width height
+	if ! dims=$(png_dimensions "$png_path"); then
+		errors+=("Could not read PNG dimensions from $png_path (corrupt or not a PNG?)")
+		return 1
+	fi
+	read -r width height <<< "$dims"
+
+	if [[ $width -le $max_png_dimension && $height -le $max_png_dimension ]]; then
+		return 0
+	fi
+
+	if [[ "$fix_mode" != true ]]; then
+		errors+=("PNG at $png_path is ${width}x${height}, larger than the ${max_png_dimension}px maximum (run 'bash ci/validate_modules.sh --fix' to resize)")
+		return 1
+	fi
+
+	if [[ -z "$imagemagick_bin" ]]; then
+		errors+=("PNG at $png_path is ${width}x${height} and needs resizing, but neither 'magick' nor 'convert' is installed")
+		return 1
+	fi
+
+	# '>' only shrinks, and aspect ratio is preserved, so non-square banners stay intact.
+	if ! "$imagemagick_bin" "$png_path" -filter Lanczos \
+		-resize "${max_png_dimension}x${max_png_dimension}>" -strip "$png_path"; then
+		errors+=("Failed to resize $png_path")
+		return 1
+	fi
+
+	read -r width height <<< "$(png_dimensions "$png_path")"
+	echo "Fixed: $png_path (resized to ${width}x${height})"
+	return 0
 }
 
 check_png_minimization() {
@@ -119,8 +182,17 @@ for readme_file in $(find $modules_glob -name 'README.md' -not -path '*/.terrafo
 	check_readme_format "$readme_file"
 done
 
+# pngquant is required for the minimization check. Failing loudly here matters:
+# the check used to swallow a missing binary and silently pass every PNG.
+if ! command -v pngquant > /dev/null 2>&1; then
+	errors+=("pngquant is not installed, so PNG minimization cannot be validated")
+fi
+
 for png_file in $(find $modules_glob -name '*.png' -not -path '*/.terraform/*'); do
 	check_png_naming "$png_file"
+	# Dimensions first: resizing in fix mode changes the encoding, so the
+	# minimization check below must run against the already-resized file.
+	check_png_dimensions "$png_file"
 	check_png_minimization "$png_file"
 done
 
