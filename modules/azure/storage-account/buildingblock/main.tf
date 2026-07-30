@@ -19,4 +19,10 @@ resource "azurerm_storage_account" "storage_account" {
   location                 = azurerm_resource_group.storage_account_rg.location
   account_tier             = "Standard"
   account_replication_type = "GRS"
+
+  lifecycle {
+    ignore_changes = [
+      allow_nested_items_to_be_public
+    ]
+  }
 }
