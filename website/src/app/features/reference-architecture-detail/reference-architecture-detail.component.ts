@@ -31,6 +31,7 @@ interface RefArchDetailVm {
   buildingBlocks: BuildingBlockLink[];
   bodyHtml: string;
   sourceUrl: string | null;
+  logo: string | null;
   platformLogos: { platformType: string; imageUrl: string }[];
   integrationSourceUrl: string | null;
   folderUrl: string | null;
@@ -157,6 +158,7 @@ export class ReferenceArchitectureDetailComponent implements OnInit, OnDestroy, 
       buildingBlocks,
       bodyHtml: marked.parse(arch.body) as string,
       sourceUrl: arch.sourceUrl,
+      logo: arch.logo,
       platformLogos: arch.cloudProviders.map(cp => ({
         platformType: cp,
         imageUrl: platforms.find(p => p.platformType === cp)?.logo ?? 'assets/meshstack-logo.png'
