@@ -207,6 +207,12 @@ resource "meshstack_building_block_definition" "this" {
         description     = "The name of the resource group containing the storage account."
         assignment_type = "NONE"
       }
+      storage_account_url = {
+        type            = "STRING"
+        display_name    = "Open Storage Account"
+        description     = "Azure Portal URL to the storage account"
+        assignment_type = "RESOURCE_URL"
+      }
     }
   }
 }
