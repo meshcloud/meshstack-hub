@@ -23,9 +23,11 @@ Graphviz runs from a WASM npm package, so no system `dot` install is needed. CI 
 is edited without committing the re-rendered SVG.
 
 Keep the markdown link **relative** so it renders on GitHub. The website generator copies every
-relatively-linked image into `website/public/assets/reference-architecture-diagrams/<id>/` and
-rewrites the link to that served path, so the diagram renders from the website's own origin
-regardless of whether the commit has been pushed.
+relatively-linked image into `website/public/assets/markdown-images/<scope>/` and rewrites the link
+to that served path, so the diagram renders from the website's own origin regardless of whether the
+commit has been pushed. This applies to every markdown body the website ships — reference
+architectures, platform readmes and a building block's `## How to Use` section — so a diagram or
+screenshot can be committed next to any of them.
 
 ---
 

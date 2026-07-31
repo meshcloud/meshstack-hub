@@ -36,6 +36,13 @@ modules/<cloud-provider>/<service-name>/
 └── meshstack_integration.tf   # Example wiring into a meshStack instance
 ```
 
+The `modules/<cloud-provider>/` directory itself holds the platform's own `README.md` (front-matter
+with `name` and `description`) and its `logo.png` or `logo.svg`.
+
+**Logos are always named `logo.png` or `logo.svg`** and colocated with what they depict — platforms,
+building blocks and reference architectures alike. The website generator copies them into its
+generated asset directories under `website/public/assets/`; never add files there by hand.
+
 ---
 
 <!-- scorecard-checks: meshstack_integration, backplane_source_hub_git_ref, ref_name_hub_git_ref -->
