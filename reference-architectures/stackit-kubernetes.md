@@ -36,48 +36,7 @@ a sovereign LLM API, ensuring even AI capabilities remain under full data contro
 
 ## Architecture Diagram
 
-```mermaid
-flowchart TD
-    subgraph STACKIT["STACKIT Global Services"]
-        Git["STACKIT Git<br/>(Forgejo Instance)"]
-        Harbor["STACKIT Harbor<br/>(Global Registry<br/>Shared Across Customers)"]
-        ModelServing["STACKIT Model Serving<br/>(Platform-provided API)"]
-    end
-
-    subgraph Platform Team
-        SKE[SKE Cluster<br/>Managed by STACKIT]
-    end
-
-    subgraph Self-Service Catalog
-        B[ske/ske-starterkit<br/>Developer Onboarding]
-    end
-
-    subgraph Per Application Team
-        C[stackit/git-repository<br/>Forgejo Repo]
-        D_dev[ske/forgejo-connector<br/>Dev Namespace CI/CD]
-        D_prod[ske/forgejo-connector<br/>Prod Namespace CI/CD]
-        P_dev[Dev Project + SKE Tenant]
-        P_prod[Prod Project + SKE Tenant]
-    end
-
-    B -->|creates| C
-    B -->|creates| P_dev
-    B -->|creates| P_prod
-    B -->|creates dev connector| D_dev
-    B -->|creates prod connector| D_prod
-    P_dev -->|namespace| D_dev
-    P_prod -->|namespace| D_prod
-    C -->|hosted on| Git
-    C -->|repo output| D_dev
-    C -->|repo output| D_prod
-    D_dev -->|push images to| Harbor
-    D_prod -->|push images to| Harbor
-    D_dev -->|wires Model API secret| ModelServing
-    D_prod -->|wires Model API secret| ModelServing
-    D_dev -->|deploys to| SKE
-    D_prod -->|deploys to| SKE
-    Harbor -->|pull from| SKE
-```
+![STACKIT Kubernetes reference architecture](stackit-kubernetes.svg)
 
 ## How It Works
 

@@ -1,0 +1,87 @@
+/*
+ * STACKIT Kubernetes (SKE) reference architecture.
+ * Render with: task diagrams
+ */
+digraph stackit_kubernetes {
+  rankdir=TB
+  splines=ortho
+  forcelabels=true
+  bgcolor="white"
+  nodesep=0.55
+  ranksep=0.85
+
+  node [shape=box style="rounded,filled" fontname="Helvetica" fontsize=11 fillcolor="#ffffff" color="#a2abb8" penwidth=1.1 margin="0.20,0.11"]
+  edge [fontname="Helvetica" fontsize=9 fontcolor="#697180" color="#8b95a3" arrowsize=0.7]
+
+  subgraph cluster_catalog {
+    label="  Self-Service Catalog"
+    labeljust=l
+    fontname="Helvetica" fontsize=12 fontcolor="#697180"
+    style="rounded" color="#d5dae0"
+    margin=18
+
+    STARTER [label="ske/ske-starterkit\ndeveloper onboarding" fillcolor="#ecedfb" color="#9aa2e6"]
+  }
+
+  subgraph cluster_team {
+    label="  Per Application Team"
+    labeljust=l
+    fontname="Helvetica" fontsize=12 fontcolor="#697180"
+    style="rounded" color="#d5dae0"
+    margin=18
+
+    REPO   [label="stackit/git-repository\nForgejo repo" fillcolor="#e5f2ea" color="#85bfa0"]
+    P_DEV  [label="dev project\n+ SKE tenant" fillcolor="#e5f2ea" color="#85bfa0"]
+    P_PROD [label="prod project\n+ SKE tenant" fillcolor="#e5f2ea" color="#85bfa0"]
+    D_DEV  [label="ske/forgejo-connector\ndev namespace CI/CD" fillcolor="#e5f2ea" color="#85bfa0"]
+    D_PROD [label="ske/forgejo-connector\nprod namespace CI/CD" fillcolor="#e5f2ea" color="#85bfa0"]
+
+    { rank=same; P_PROD -> P_DEV -> REPO [style=invis] }
+    { rank=same; D_PROD -> D_DEV [style=invis] }
+  }
+
+  subgraph cluster_platform {
+    label="  Platform Team"
+    labeljust=l
+    fontname="Helvetica" fontsize=12 fontcolor="#697180"
+    style="rounded" color="#d5dae0"
+    margin=18
+
+    SKE [label="SKE cluster\nmanaged by STACKIT"]
+  }
+
+  subgraph cluster_stackit {
+    label="  STACKIT Global Services"
+    labeljust=l
+    fontname="Helvetica" fontsize=12 fontcolor="#697180"
+    style="rounded" color="#d5dae0"
+    margin=18
+
+    GIT    [label="STACKIT Git\nForgejo instance"]
+    HARBOR [label="STACKIT Harbor\nregistry shared across customers"]
+    MODEL  [label="STACKIT Model Serving\nplatform-provided API"]
+
+    { rank=same; GIT -> HARBOR -> MODEL [style=invis] }
+  }
+
+  STARTER -> REPO   [xlabel="creates"]
+  STARTER -> P_DEV  [xlabel="creates"]
+  STARTER -> P_PROD
+  STARTER -> D_DEV  [xlabel="creates connector"]
+  STARTER -> D_PROD
+
+  P_DEV  -> D_DEV  [xlabel="namespace"]
+  P_PROD -> D_PROD
+  REPO   -> D_DEV  [xlabel="repo output"]
+  REPO   -> D_PROD
+
+  D_DEV  -> SKE [xlabel="deploys to"]
+  D_PROD -> SKE
+
+  REPO   -> GIT    [xlabel="hosted on" style=dashed]
+  D_DEV  -> HARBOR [xlabel="push images" style=dashed]
+  D_PROD -> HARBOR [style=dashed]
+  D_DEV  -> MODEL  [xlabel="model API secret" style=dashed]
+  D_PROD -> MODEL  [style=dashed]
+  HARBOR -> SKE    [xlabel="pulls" style=dashed constraint=false]
+}

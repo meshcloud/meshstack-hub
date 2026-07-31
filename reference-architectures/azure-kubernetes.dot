@@ -1,0 +1,67 @@
+/*
+ * Azure Kubernetes reference architecture.
+ * Render with: task diagrams
+ */
+digraph azure_kubernetes {
+  rankdir=TB
+  splines=ortho
+  forcelabels=true
+  bgcolor="white"
+  nodesep=0.60
+  ranksep=0.95
+
+  node [shape=box style="rounded,filled" fontname="Helvetica" fontsize=11 fillcolor="#ffffff" color="#a2abb8" penwidth=1.1 margin="0.20,0.11"]
+  edge [fontname="Helvetica" fontsize=9 fontcolor="#697180" color="#8b95a3" arrowsize=0.7]
+
+  subgraph cluster_catalog {
+    label="  Self-Service Catalog"
+    labeljust=l
+    fontname="Helvetica" fontsize=12 fontcolor="#697180"
+    style="rounded" color="#d5dae0"
+    margin=18
+
+    STARTER [label="aks/starterkit\ndeveloper onboarding" fillcolor="#ecedfb" color="#9aa2e6"]
+  }
+
+  subgraph cluster_team {
+    label="  Per Application Team"
+    labeljust=l
+    fontname="Helvetica" fontsize=12 fontcolor="#697180"
+    style="rounded" color="#d5dae0"
+    margin=18
+
+    REPO [label="github/repository\nGitHub repo" fillcolor="#e5f2ea" color="#85bfa0"]
+    DEV  [label="aks/github-connector\ndev namespace CI/CD" fillcolor="#e5f2ea" color="#85bfa0"]
+    PROD [label="aks/github-connector\nprod namespace CI/CD" fillcolor="#e5f2ea" color="#85bfa0"]
+
+    { rank=same; DEV -> PROD [style=invis] }
+  }
+
+  subgraph cluster_infra {
+    label="  Existing Infrastructure"
+    labeljust=l
+    fontname="Helvetica" fontsize=12 fontcolor="#697180"
+    style="rounded" color="#d5dae0"
+    margin=18
+
+    AKS [label="AKS cluster\nmanaged by platform team"]
+    ACR [label="Azure Container Registry"]
+
+    { rank=same; AKS -> ACR [style=invis] }
+  }
+
+  STARTER -> REPO [xlabel="creates"]
+  STARTER -> DEV  [xlabel="creates dev env"]
+  STARTER -> PROD [xlabel="creates prod env"]
+
+  REPO -> DEV  [xlabel="repo output"]
+  REPO -> PROD
+
+  DEV  -> ACR [xlabel="push images"]
+  PROD -> ACR
+  DEV  -> AKS [xlabel="deploys to"]
+  PROD -> AKS
+
+  AKS -> ACR [xlabel="pulls" style=dashed constraint=false]
+}
+

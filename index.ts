@@ -23,7 +23,10 @@ function getGitHubRemoteUrl() {
     const remoteUrl = execSync("git config --get remote.origin.url")
       .toString()
       .trim()
-      .replace(/https?:\/\/.*?@github\.com\//, "https://github.com/");
+      .replace(/https?:\/\/.*?@github\.com\//, "https://github.com/")
+      // scp-style SSH remotes (git@github.com:owner/repo) would otherwise leak into every
+      // generated link, which breaks local runs of this script in an SSH clone.
+      .replace(/^(?:ssh:\/\/)?git@github\.com[:/]/, "https://github.com/");
     return remoteUrl.replace(/\.git$/, "");
   } catch (error) {
     console.error("Error getting GitHub remote URL:", error.message);
@@ -245,12 +248,31 @@ export interface ReferenceArchitecture {
   modulePath: string | null;
 }
 
+// Rewrites relative markdown image links to absolute `raw` URLs pinned to the built commit.
+// Diagrams are committed next to their markdown so a relative link renders on GitHub, but the
+// website serves this body from its own origin where a repo-relative path resolves to nothing.
+function absolutizeImageLinks(body: string, markdownDir: string): string {
+  const remoteUrl = getGitHubRemoteUrl();
+  if (!remoteUrl) return body;
+
+  const dirInRepo = path
+    .relative(path.resolve(__dirname), markdownDir)
+    .replace(/\\/g, "/");
+
+  return body.replace(
+    /(!\[[^\]]*\]\()(?!https?:\/\/|\/|#)([^)\s]+)(\))/g,
+    (_match, prefix, target, suffix) =>
+      `${prefix}${remoteUrl}/raw/${hubRef}/${dirInRepo}/${target.replace(/^\.\//, "")}${suffix}`
+  );
+}
+
 // Parses a reference architecture from its front-matter/body markdown file.
 // `codeDir`, when set, is the directory checked for a `meshstack_integration.tf` that makes
 // this reference architecture importable, the same way a building block is imported.
 function parseReferenceArchitecture(filePath: string, id: string, codeDir: string | null): ReferenceArchitecture {
   const raw = fs.readFileSync(filePath, "utf-8");
-  const { data, content: body } = matter(raw);
+  const { data, content } = matter(raw);
+  const body = absolutizeImageLinks(content, path.dirname(filePath));
 
   if (!data.name) {
     throw new Error(`Reference architecture ${id} is missing "name" in front-matter.`);

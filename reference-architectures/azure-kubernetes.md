@@ -36,34 +36,7 @@ layers developer self-service on top of those clusters.
 
 ## Architecture Diagram
 
-```mermaid
-flowchart TD
-    subgraph Existing Infrastructure
-        B[AKS Cluster<br/>managed by platform team]
-        ACR["Azure Container Registry"]
-    end
-
-    subgraph Self-Service Catalog
-        C[aks/starterkit<br/>Developer Onboarding]
-    end
-
-    subgraph Per Application Team
-        D[github/repository<br/>GitHub Repo]
-        E_dev[aks/github-connector<br/>Dev Namespace CI/CD]
-        E_prod[aks/github-connector<br/>Prod Namespace CI/CD]
-    end
-
-    C -->|creates| D
-    C -->|creates dev project +<br/>namespace + connector| E_dev
-    C -->|creates prod project +<br/>namespace + connector| E_prod
-    D -->|repo output| E_dev
-    D -->|repo output| E_prod
-    E_dev -->|build & push images| ACR
-    E_prod -->|build & push images| ACR
-    B -->|pull access| ACR
-    E_dev -->|deploys to| B
-    E_prod -->|deploys to| B
-```
+![Azure Kubernetes reference architecture](azure-kubernetes.svg)
 
 ## How It Works
 
