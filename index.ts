@@ -5,10 +5,61 @@ const { execSync } = require("child_process");
 
 const repoRoot = path.resolve(__dirname, "modules");
 const refArchRoot = path.resolve(__dirname, "reference-architectures");
-const assetsDir = path.resolve(__dirname, "website/public/assets/logos");
-const refArchAssetsDir = path.resolve(__dirname, "website/public/assets/reference-architecture-logos");
-const refArchDiagramAssetsDir = path.resolve(__dirname, "website/public/assets/reference-architecture-diagrams");
+const publicDir = path.resolve(__dirname, "website/public");
+const assetsDir = path.join(publicDir, "assets/logos");
+const buildingBlockAssetsDir = path.join(publicDir, "assets/building-block-logos");
+const refArchAssetsDir = path.join(publicDir, "assets/reference-architecture-logos");
+// Images referenced from the markdown bodies we ship (diagrams, screenshots), kept in one tree
+// keyed by the scope that owns them, e.g. `reference-architectures/azure-kubernetes`.
+const markdownImageAssetsDir = path.join(publicDir, "assets/markdown-images");
 const hubRef = getHubRef();
+
+// Copies a repo file into a generated website assets directory and returns the path the website
+// serves it under (relative to `website/public`, which is the asset root).
+function copyToWebsiteAssets(sourcePath: string, destDir: string, destName: string): string {
+  fs.mkdirSync(destDir, { recursive: true });
+  fs.copyFileSync(sourcePath, path.join(destDir, destName));
+
+  return path.join(destDir, destName)
+    .replace(publicDir, "")
+    .replace(/^\/+/g, "");
+}
+
+// Logos are colocated with what they depict and always named `logo.png` or `logo.svg` — for
+// platforms, building blocks and reference architectures alike.
+function findLogoFile(dir: string): string | null {
+  return ["logo.png", "logo.svg"]
+    .map(file => path.join(dir, file))
+    .find(file => fs.existsSync(file)) ?? null;
+}
+
+// Copies images referenced by relative markdown links into the website assets and rewrites the
+// links to the served path. Images are committed next to the markdown so a relative link renders
+// on GitHub, but the website serves this body from its own origin where a repo-relative path
+// resolves to nothing. Serving our own copy — rather than a github.com/raw link pinned to the
+// built commit — also keeps images rendering for commits that are not (yet) pushed, and for files
+// that moved since the last commit.
+function localizeMarkdownImages(body: string, markdownDir: string, scope: string): string {
+  return body.replace(
+    /(!\[[^\]]*\]\()(?!https?:\/\/|\/|#)([^)\s]+)(\))/g,
+    (match, prefix, target, suffix) => {
+      const sourcePath = path.join(markdownDir, target.replace(/^\.\//, ""));
+      if (!fs.existsSync(sourcePath)) {
+        console.warn(`⚠️  ${scope} links a missing image: ${target}`);
+        return match;
+      }
+
+      const fileName = path.basename(sourcePath);
+      const servedPath = copyToWebsiteAssets(
+        sourcePath,
+        path.join(markdownImageAssetsDir, scope),
+        fileName
+      );
+
+      return `${prefix}${servedPath}${suffix}`;
+    }
+  );
+}
 
 function getHubRef() {
   try {
@@ -85,7 +136,7 @@ function findPlatforms(): Platform[] {
         category,
         benefits,
         logo: platformLogo,
-        readme: content,
+        readme: localizeMarkdownImages(content, platformDir, `platforms/${dir.name}`),
         integrationSourceUrl,
         terraformSnippet,
         official
@@ -109,15 +160,12 @@ function getPlatformIntegrationSourceUrl(platformDir: string): string | null {
 
 // Finds the logo, copies it to website assets and returns the path.
 function getPlatformLogoOrThrow(platformDir: string, platformType: string): string {
-  const logoFile = fs.readdirSync(platformDir).find(f => f.endsWith('.png') || f.endsWith('.svg'));
-  if (logoFile) {
-    const sourcePath = path.join(platformDir, logoFile);
-    const destPath = path.join(assetsDir, `${platformType}${path.extname(logoFile)}`);
-    fs.copyFileSync(sourcePath, destPath);
-    return destPath.replace(path.resolve(__dirname, "website/public"), "").replace(/^\/+/g, "");
+  const logoFile = findLogoFile(platformDir);
+  if (!logoFile) {
+    throw new Error(`Logo file not found for platform: ${platformType} in directory: ${platformDir}. Each platform should have a logo.png or logo.svg.`);
   }
 
-  throw new Error(`Logo file not found for platform: ${platformType} in directory: ${platformDir}. Each platform should have a logo.`);
+  return copyToWebsiteAssets(logoFile, assetsDir, `${platformType}${path.extname(logoFile)}`);
 }
 
 function getPlatformReadmeOrThrow(platformDir: string) {
@@ -168,27 +216,12 @@ function getTerraformSnippet(platformDir: string): string | null {
 }
 
 function copyBuildingBlockLogoToAssets(buildingBlockDir) {
-  const assetsDir = path.resolve(
-    __dirname,
-    "website/public/assets/building-block-logos"
-  );
-
-  const logoFile = fs
-    .readdirSync(buildingBlockDir)
-    .find((file) => file.endsWith(".png"));
-
+  const logoFile = findLogoFile(buildingBlockDir);
   if (!logoFile) return null;
 
   const { id } = getIdAndPlatform(buildingBlockDir);
-  const sourcePath = path.join(buildingBlockDir, logoFile);
-  const destinationPath = path.join(assetsDir, `${id}${path.extname(logoFile)}`);
 
-  fs.mkdirSync(assetsDir, { recursive: true });
-  fs.copyFileSync(sourcePath, destinationPath);
-
-  return destinationPath
-    .replace(path.resolve(__dirname, "website/public"), "")
-    .replace(/^\/+/g, "");
+  return copyToWebsiteAssets(logoFile, buildingBlockAssetsDir, `${id}${path.extname(logoFile)}`);
 }
 
 function parseReadme(filePath) {
@@ -197,8 +230,13 @@ function parseReadme(filePath) {
   const { data, content: body } = matter(content);
   const { id, platform } = getIdAndPlatform(buildingBlockDir);
 
-  const extractSection = (regex) =>
-    body.match(regex)?.[1]?.trim() || null;
+  const extractSection = (regex) => {
+    const section = body.match(regex)?.[1]?.trim() || null;
+
+    return section === null
+      ? null
+      : localizeMarkdownImages(section, buildingBlockDir, `building-blocks/${id}`);
+  };
 
   const buildingBlockUrl = getBuildingBlockFolderUrl(filePath);
   const buildingBlockLogoPath = copyBuildingBlockLogoToAssets(buildingBlockDir);
@@ -260,47 +298,11 @@ export interface ReferenceArchitecture {
   modulePath: string | null;
 }
 
-// Copies images referenced by relative markdown links into the website assets and rewrites the
-// links to the served path. Diagrams are committed next to their README so a relative link renders
-// on GitHub, but the website serves this body from its own origin where a repo-relative path
-// resolves to nothing. Serving our own copy — rather than a github.com/raw link pinned to the built
-// commit — also keeps diagrams rendering for commits that are not (yet) pushed, and for files that
-// moved since the last commit.
-function localizeImageLinks(body: string, archDir: string, id: string): string {
-  return body.replace(
-    /(!\[[^\]]*\]\()(?!https?:\/\/|\/|#)([^)\s]+)(\))/g,
-    (match, prefix, target, suffix) => {
-      const sourcePath = path.join(archDir, target.replace(/^\.\//, ""));
-      if (!fs.existsSync(sourcePath)) {
-        console.warn(`⚠️  Reference architecture ${id} links a missing image: ${target}`);
-        return match;
-      }
-
-      const destDir = path.join(refArchDiagramAssetsDir, id);
-      const fileName = path.basename(sourcePath);
-      fs.mkdirSync(destDir, { recursive: true });
-      fs.copyFileSync(sourcePath, path.join(destDir, fileName));
-
-      return `${prefix}assets/reference-architecture-diagrams/${id}/${fileName}${suffix}`;
-    }
-  );
-}
-
-// Reference architectures colocate their logo as `logo.png|svg`, the same way a building block
-// does. Copies it to the website assets under the architecture id and returns the served path.
 function copyReferenceArchitectureLogoToAssets(archDir: string, id: string): string | null {
-  const logoFile = ["logo.png", "logo.svg"]
-    .find(file => fs.existsSync(path.join(archDir, file)));
-
+  const logoFile = findLogoFile(archDir);
   if (!logoFile) return null;
 
-  fs.mkdirSync(refArchAssetsDir, { recursive: true });
-  fs.copyFileSync(
-    path.join(archDir, logoFile),
-    path.join(refArchAssetsDir, `${id}${path.extname(logoFile)}`)
-  );
-
-  return `assets/reference-architecture-logos/${id}${path.extname(logoFile)}`;
+  return copyToWebsiteAssets(logoFile, refArchAssetsDir, `${id}${path.extname(logoFile)}`);
 }
 
 // Parses a reference architecture from the `README.md` of its directory. The directory is also
@@ -310,7 +312,7 @@ function parseReferenceArchitecture(archDir: string, id: string): ReferenceArchi
   const filePath = path.join(archDir, "README.md");
   const raw = fs.readFileSync(filePath, "utf-8");
   const { data, content } = matter(raw);
-  const body = localizeImageLinks(content, archDir, id);
+  const body = localizeMarkdownImages(content, archDir, `reference-architectures/${id}`);
 
   if (!data.name) {
     throw new Error(`Reference architecture ${id} is missing "name" in front-matter.`);
