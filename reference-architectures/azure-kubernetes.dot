@@ -1,27 +1,21 @@
 /*
  * Azure Kubernetes reference architecture.
- * Render with: task diagrams
+ * Conventions: .agents/references/diagrams.md — render with: task diagrams
  */
 digraph azure_kubernetes {
   rankdir=TB
   splines=ortho
   forcelabels=true
   bgcolor="white"
-  nodesep=0.60
-  ranksep=0.95
+  nodesep=0.55
+  ranksep=0.85
 
-  node [shape=box style="rounded,filled" fontname="Helvetica" fontsize=11 fillcolor="#ffffff" color="#a2abb8" penwidth=1.1 margin="0.20,0.11"]
+  node [shape=box style="rounded,filled" fontname="Helvetica" fontsize=11
+        fillcolor="#ffffff" color="#a2abb8" penwidth=1.1 margin="0.20,0.11"]
   edge [fontname="Helvetica" fontsize=9 fontcolor="#697180" color="#8b95a3" arrowsize=0.7]
 
-  subgraph cluster_catalog {
-    label="  Self-Service Catalog"
-    labeljust=l
-    fontname="Helvetica" fontsize=12 fontcolor="#697180"
-    style="rounded" color="#d5dae0"
-    margin=18
-
-    STARTER [label="aks/starterkit\ndeveloper onboarding" fillcolor="#ecedfb" color="#9aa2e6"]
-  }
+  // meshStack definition the application team orders from the catalog
+  STARTER [label="📦 aks/starterkit\nself-service catalog" fillcolor="#ecedfb" color="#9aa2e6"]
 
   subgraph cluster_team {
     label="  Per Application Team"
@@ -30,22 +24,22 @@ digraph azure_kubernetes {
     style="rounded" color="#d5dae0"
     margin=18
 
-    REPO [label="github/repository\nGitHub repo" fillcolor="#e5f2ea" color="#85bfa0"]
-    DEV  [label="aks/github-connector\ndev namespace CI/CD" fillcolor="#e5f2ea" color="#85bfa0"]
-    PROD [label="aks/github-connector\nprod namespace CI/CD" fillcolor="#e5f2ea" color="#85bfa0"]
+    REPO [label="🔀 github/repository\nGitHub repo" fillcolor="#e5f2ea" color="#85bfa0"]
+    DEV  [label="⚙️ aks/github-connector\ndev namespace CI/CD" fillcolor="#e5f2ea" color="#85bfa0"]
+    PROD [label="⚙️ aks/github-connector\nprod namespace CI/CD" fillcolor="#e5f2ea" color="#85bfa0"]
 
     { rank=same; DEV -> PROD [style=invis] }
   }
 
-  subgraph cluster_infra {
-    label="  Existing Infrastructure"
+  subgraph cluster_azure {
+    label="  Azure — managed by the platform team"
     labeljust=l
     fontname="Helvetica" fontsize=12 fontcolor="#697180"
     style="rounded" color="#d5dae0"
     margin=18
 
-    AKS [label="AKS cluster\nmanaged by platform team"]
-    ACR [label="Azure Container Registry"]
+    AKS [label="☸️ AKS cluster" fillcolor="#eef2f6" color="#93a7bb"]
+    ACR [label="🗄️ Azure Container Registry" fillcolor="#eef2f6" color="#93a7bb"]
 
     { rank=same; AKS -> ACR [style=invis] }
   }
@@ -54,7 +48,7 @@ digraph azure_kubernetes {
   STARTER -> DEV  [xlabel="creates dev env"]
   STARTER -> PROD [xlabel="creates prod env"]
 
-  REPO -> DEV  [xlabel="repo output"]
+  REPO -> DEV [xlabel="repo output"]
   REPO -> PROD
 
   DEV  -> ACR [xlabel="push images"]
@@ -64,4 +58,3 @@ digraph azure_kubernetes {
 
   AKS -> ACR [xlabel="pulls" style=dashed constraint=false]
 }
-
