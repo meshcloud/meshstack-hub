@@ -1,0 +1,217 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN"
+ "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<svg width="771pt" height="445pt"
+ viewBox="0.00 0.00 771.00 445.00" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+<g id="graph0" class="graph" transform="scale(1 1) rotate(0) translate(4 441.16)">
+<title>stackit_kubernetes</title>
+<polygon fill="white" stroke="none" points="-4,4 -4,-441.16 767,-441.16 767,4 -4,4"/>
+<g id="clust1" class="cluster">
+<title>cluster_catalog</title>
+<path fill="white" stroke="#d5dae0" d="M185,-328.52C185,-328.52 333,-328.52 333,-328.52 339,-328.52 345,-334.52 345,-340.52 345,-340.52 345,-417.16 345,-417.16 345,-423.16 339,-429.16 333,-429.16 333,-429.16 185,-429.16 185,-429.16 179,-429.16 173,-423.16 173,-417.16 173,-417.16 173,-340.52 173,-340.52 173,-334.52 179,-328.52 185,-328.52"/>
+<text xml:space="preserve" text-anchor="middle" x="239.03" y="-414.36" font-family="Helvetica,sans-Serif" font-size="12.00" fill="#697180"> &#160;Self&#45;Service Catalog</text>
+</g>
+<g id="clust2" class="cluster">
+<title>cluster_team</title>
+<path fill="white" stroke="#d5dae0" d="M206,-116.64C206,-116.64 612,-116.64 612,-116.64 618,-116.64 624,-122.64 624,-128.64 624,-128.64 624,-308.52 624,-308.52 624,-314.52 618,-320.52 612,-320.52 612,-320.52 206,-320.52 206,-320.52 200,-320.52 194,-314.52 194,-308.52 194,-308.52 194,-128.64 194,-128.64 194,-122.64 200,-116.64 206,-116.64"/>
+<text xml:space="preserve" text-anchor="middle" x="262.69" y="-305.72" font-family="Helvetica,sans-Serif" font-size="12.00" fill="#697180"> &#160;Per Application Team</text>
+</g>
+<g id="clust5" class="cluster">
+<title>cluster_platform</title>
+<path fill="white" stroke="#d5dae0" d="M20,-8C20,-8 170,-8 170,-8 176,-8 182,-14 182,-20 182,-20 182,-96.64 182,-96.64 182,-102.64 176,-108.64 170,-108.64 170,-108.64 20,-108.64 20,-108.64 14,-108.64 8,-102.64 8,-96.64 8,-96.64 8,-20 8,-20 8,-14 14,-8 20,-8"/>
+<text xml:space="preserve" text-anchor="middle" x="58.68" y="-93.84" font-family="Helvetica,sans-Serif" font-size="12.00" fill="#697180"> &#160;Platform Team</text>
+</g>
+<g id="clust6" class="cluster">
+<title>cluster_stackit</title>
+<path fill="white" stroke="#d5dae0" d="M202,-8C202,-8 743,-8 743,-8 749,-8 755,-14 755,-20 755,-20 755,-96.64 755,-96.64 755,-102.64 749,-108.64 743,-108.64 743,-108.64 202,-108.64 202,-108.64 196,-108.64 190,-102.64 190,-96.64 190,-96.64 190,-20 190,-20 190,-14 196,-8 202,-8"/>
+<text xml:space="preserve" text-anchor="middle" x="270.35" y="-93.84" font-family="Helvetica,sans-Serif" font-size="12.00" fill="#697180"> &#160;STACKIT Global Services</text>
+</g>
+<!-- STARTER -->
+<g id="node1" class="node">
+<title>STARTER</title>
+<path fill="#ecedfb" stroke="#9aa2e6" stroke-width="1.1" d="M314.61,-388.76C314.61,-388.76 203.39,-388.76 203.39,-388.76 197.39,-388.76 191.39,-382.76 191.39,-376.76 191.39,-376.76 191.39,-358.52 191.39,-358.52 191.39,-352.52 197.39,-346.52 203.39,-346.52 203.39,-346.52 314.61,-346.52 314.61,-346.52 320.61,-346.52 326.61,-352.52 326.61,-358.52 326.61,-358.52 326.61,-376.76 326.61,-376.76 326.61,-382.76 320.61,-388.76 314.61,-388.76"/>
+<text xml:space="preserve" text-anchor="middle" x="259" y="-370.94" font-family="Helvetica,sans-Serif" font-size="11.00">ske/ske&#45;starterkit</text>
+<text xml:space="preserve" text-anchor="middle" x="259" y="-357.74" font-family="Helvetica,sans-Serif" font-size="11.00">developer onboarding</text>
+</g>
+<!-- REPO -->
+<g id="node2" class="node">
+<title>REPO</title>
+<path fill="#e5f2ea" stroke="#85bfa0" stroke-width="1.1" d="M594.3,-280.12C594.3,-280.12 491.7,-280.12 491.7,-280.12 485.7,-280.12 479.7,-274.12 479.7,-268.12 479.7,-268.12 479.7,-249.88 479.7,-249.88 479.7,-243.88 485.7,-237.88 491.7,-237.88 491.7,-237.88 594.3,-237.88 594.3,-237.88 600.3,-237.88 606.3,-243.88 606.3,-249.88 606.3,-249.88 606.3,-268.12 606.3,-268.12 606.3,-274.12 600.3,-280.12 594.3,-280.12"/>
+<text xml:space="preserve" text-anchor="middle" x="543" y="-262.3" font-family="Helvetica,sans-Serif" font-size="11.00">stackit/git&#45;repository</text>
+<text xml:space="preserve" text-anchor="middle" x="543" y="-249.1" font-family="Helvetica,sans-Serif" font-size="11.00">Forgejo repo</text>
+</g>
+<!-- STARTER&#45;&gt;REPO -->
+<g id="edge6" class="edge">
+<title>STARTER&#45;&gt;REPO</title>
+<path fill="none" stroke="#8b95a3" d="M327.03,-375C411.04,-375 543,-375 543,-375 543,-375 543,-289.06 543,-289.06"/>
+<polygon fill="#8b95a3" stroke="#8b95a3" points="545.45,-289.06 543,-282.06 540.55,-289.06 545.45,-289.06"/>
+<text xml:space="preserve" text-anchor="middle" x="463.23" y="-377.7" font-family="Helvetica,sans-Serif" font-size="9.00" fill="#697180">creates</text>
+</g>
+<!-- P_DEV -->
+<g id="node3" class="node">
+<title>P_DEV</title>
+<path fill="#e5f2ea" stroke="#85bfa0" stroke-width="1.1" d="M293.96,-280.12C293.96,-280.12 224.04,-280.12 224.04,-280.12 218.04,-280.12 212.04,-274.12 212.04,-268.12 212.04,-268.12 212.04,-249.88 212.04,-249.88 212.04,-243.88 218.04,-237.88 224.04,-237.88 224.04,-237.88 293.96,-237.88 293.96,-237.88 299.96,-237.88 305.96,-243.88 305.96,-249.88 305.96,-249.88 305.96,-268.12 305.96,-268.12 305.96,-274.12 299.96,-280.12 293.96,-280.12"/>
+<text xml:space="preserve" text-anchor="middle" x="259" y="-262.3" font-family="Helvetica,sans-Serif" font-size="11.00">dev project</text>
+<text xml:space="preserve" text-anchor="middle" x="259" y="-249.1" font-family="Helvetica,sans-Serif" font-size="11.00">+ SKE tenant</text>
+</g>
+<!-- STARTER&#45;&gt;P_DEV -->
+<g id="edge7" class="edge">
+<title>STARTER&#45;&gt;P_DEV</title>
+<path fill="none" stroke="#8b95a3" d="M259,-346.18C259,-346.18 259,-288.93 259,-288.93"/>
+<polygon fill="#8b95a3" stroke="#8b95a3" points="261.45,-288.93 259,-281.93 256.55,-288.93 261.45,-288.93"/>
+<text xml:space="preserve" text-anchor="middle" x="244.24" y="-320.25" font-family="Helvetica,sans-Serif" font-size="9.00" fill="#697180">creates</text>
+</g>
+<!-- P_PROD -->
+<g id="node4" class="node">
+<title>P_PROD</title>
+<path fill="#e5f2ea" stroke="#85bfa0" stroke-width="1.1" d="M427.96,-280.12C427.96,-280.12 358.04,-280.12 358.04,-280.12 352.04,-280.12 346.04,-274.12 346.04,-268.12 346.04,-268.12 346.04,-249.88 346.04,-249.88 346.04,-243.88 352.04,-237.88 358.04,-237.88 358.04,-237.88 427.96,-237.88 427.96,-237.88 433.96,-237.88 439.96,-243.88 439.96,-249.88 439.96,-249.88 439.96,-268.12 439.96,-268.12 439.96,-274.12 433.96,-280.12 427.96,-280.12"/>
+<text xml:space="preserve" text-anchor="middle" x="393" y="-262.3" font-family="Helvetica,sans-Serif" font-size="11.00">prod project</text>
+<text xml:space="preserve" text-anchor="middle" x="393" y="-249.1" font-family="Helvetica,sans-Serif" font-size="11.00">+ SKE tenant</text>
+</g>
+<!-- STARTER&#45;&gt;P_PROD -->
+<g id="edge8" class="edge">
+<title>STARTER&#45;&gt;P_PROD</title>
+<path fill="none" stroke="#8b95a3" d="M319.73,-346.08C319.73,-316.25 319.73,-266 319.73,-266 319.73,-266 337.25,-266 337.25,-266"/>
+<polygon fill="#8b95a3" stroke="#8b95a3" points="337.25,-268.45 344.25,-266 337.25,-263.55 337.25,-268.45"/>
+</g>
+<!-- D_DEV -->
+<g id="node5" class="node">
+<title>D_DEV</title>
+<path fill="#e5f2ea" stroke="#85bfa0" stroke-width="1.1" d="M339.73,-176.88C339.73,-176.88 224.27,-176.88 224.27,-176.88 218.27,-176.88 212.27,-170.88 212.27,-164.88 212.27,-164.88 212.27,-146.64 212.27,-146.64 212.27,-140.64 218.27,-134.64 224.27,-134.64 224.27,-134.64 339.73,-134.64 339.73,-134.64 345.73,-134.64 351.73,-140.64 351.73,-146.64 351.73,-146.64 351.73,-164.88 351.73,-164.88 351.73,-170.88 345.73,-176.88 339.73,-176.88"/>
+<text xml:space="preserve" text-anchor="middle" x="282" y="-159.06" font-family="Helvetica,sans-Serif" font-size="11.00">ske/forgejo&#45;connector</text>
+<text xml:space="preserve" text-anchor="middle" x="282" y="-145.86" font-family="Helvetica,sans-Serif" font-size="11.00">dev namespace CI/CD</text>
+</g>
+<!-- STARTER&#45;&gt;D_DEV -->
+<g id="edge9" class="edge">
+<title>STARTER&#45;&gt;D_DEV</title>
+<path fill="none" stroke="#8b95a3" d="M312.85,-346.16C312.85,-346.16 312.85,-185.81 312.85,-185.81"/>
+<polygon fill="#8b95a3" stroke="#8b95a3" points="315.3,-185.81 312.85,-178.81 310.4,-185.81 315.3,-185.81"/>
+<text xml:space="preserve" text-anchor="middle" x="348.62" y="-268.69" font-family="Helvetica,sans-Serif" font-size="9.00" fill="#697180">creates connector</text>
+</g>
+<!-- D_PROD -->
+<g id="node6" class="node">
+<title>D_PROD</title>
+<path fill="#e5f2ea" stroke="#85bfa0" stroke-width="1.1" d="M523.87,-176.88C523.87,-176.88 404.13,-176.88 404.13,-176.88 398.13,-176.88 392.13,-170.88 392.13,-164.88 392.13,-164.88 392.13,-146.64 392.13,-146.64 392.13,-140.64 398.13,-134.64 404.13,-134.64 404.13,-134.64 523.87,-134.64 523.87,-134.64 529.87,-134.64 535.87,-140.64 535.87,-146.64 535.87,-146.64 535.87,-164.88 535.87,-164.88 535.87,-170.88 529.87,-176.88 523.87,-176.88"/>
+<text xml:space="preserve" text-anchor="middle" x="464" y="-159.06" font-family="Helvetica,sans-Serif" font-size="11.00">ske/forgejo&#45;connector</text>
+<text xml:space="preserve" text-anchor="middle" x="464" y="-145.86" font-family="Helvetica,sans-Serif" font-size="11.00">prod namespace CI/CD</text>
+</g>
+<!-- STARTER&#45;&gt;D_PROD -->
+<g id="edge10" class="edge">
+<title>STARTER&#45;&gt;D_PROD</title>
+<path fill="none" stroke="#8b95a3" d="M326.99,-361C385.25,-361 459.83,-361 459.83,-361 459.83,-361 459.83,-185.85 459.83,-185.85"/>
+<polygon fill="#8b95a3" stroke="#8b95a3" points="462.28,-185.85 459.83,-178.85 457.38,-185.85 462.28,-185.85"/>
+</g>
+<!-- REPO&#45;&gt;D_DEV -->
+<g id="edge13" class="edge">
+<title>REPO&#45;&gt;D_DEV</title>
+<path fill="none" stroke="#8b95a3" d="M507.78,-237.66C507.78,-219.73 507.78,-197 507.78,-197 507.78,-197 336.32,-197 336.32,-197 336.32,-197 336.32,-185.86 336.32,-185.86"/>
+<polygon fill="#8b95a3" stroke="#8b95a3" points="338.77,-185.86 336.32,-178.86 333.87,-185.86 338.77,-185.86"/>
+<text xml:space="preserve" text-anchor="middle" x="414.05" y="-199.7" font-family="Helvetica,sans-Serif" font-size="9.00" fill="#697180">repo output</text>
+</g>
+<!-- REPO&#45;&gt;D_PROD -->
+<g id="edge14" class="edge">
+<title>REPO&#45;&gt;D_PROD</title>
+<path fill="none" stroke="#8b95a3" d="M521.83,-237.61C521.83,-237.61 521.83,-185.64 521.83,-185.64"/>
+<polygon fill="#8b95a3" stroke="#8b95a3" points="524.28,-185.64 521.83,-178.64 519.38,-185.64 524.28,-185.64"/>
+</g>
+<!-- GIT -->
+<g id="node8" class="node">
+<title>GIT</title>
+<path fill="#ffffff" stroke="#a2abb8" stroke-width="1.1" d="M725.06,-68.24C725.06,-68.24 638.94,-68.24 638.94,-68.24 632.94,-68.24 626.94,-62.24 626.94,-56.24 626.94,-56.24 626.94,-38 626.94,-38 626.94,-32 632.94,-26 638.94,-26 638.94,-26 725.06,-26 725.06,-26 731.06,-26 737.06,-32 737.06,-38 737.06,-38 737.06,-56.24 737.06,-56.24 737.06,-62.24 731.06,-68.24 725.06,-68.24"/>
+<text xml:space="preserve" text-anchor="middle" x="682" y="-50.42" font-family="Helvetica,sans-Serif" font-size="11.00">STACKIT Git</text>
+<text xml:space="preserve" text-anchor="middle" x="682" y="-37.22" font-family="Helvetica,sans-Serif" font-size="11.00">Forgejo instance</text>
+</g>
+<!-- REPO&#45;&gt;GIT -->
+<g id="edge17" class="edge">
+<title>REPO&#45;&gt;GIT</title>
+<path fill="none" stroke="#8b95a3" stroke-dasharray="5,2" d="M596.85,-237.45C596.85,-184.82 596.85,-54 596.85,-54 596.85,-54 618.12,-54 618.12,-54"/>
+<polygon fill="#8b95a3" stroke="#8b95a3" points="618.12,-56.45 625.12,-54 618.12,-51.55 618.12,-56.45"/>
+<text xml:space="preserve" text-anchor="middle" x="577.08" y="-137.79" font-family="Helvetica,sans-Serif" font-size="9.00" fill="#697180">hosted on</text>
+</g>
+<!-- P_DEV&#45;&gt;REPO -->
+<!-- P_DEV&#45;&gt;D_DEV -->
+<g id="edge11" class="edge">
+<title>P_DEV&#45;&gt;D_DEV</title>
+<path fill="none" stroke="#8b95a3" d="M243.5,-237.61C243.5,-237.61 243.5,-185.64 243.5,-185.64"/>
+<polygon fill="#8b95a3" stroke="#8b95a3" points="245.95,-185.64 243.5,-178.64 241.05,-185.64 245.95,-185.64"/>
+<text xml:space="preserve" text-anchor="middle" x="220.24" y="-214.32" font-family="Helvetica,sans-Serif" font-size="9.00" fill="#697180">namespace</text>
+</g>
+<!-- P_PROD&#45;&gt;P_DEV -->
+<!-- P_PROD&#45;&gt;D_PROD -->
+<g id="edge12" class="edge">
+<title>P_PROD&#45;&gt;D_PROD</title>
+<path fill="none" stroke="#8b95a3" d="M416.05,-237.61C416.05,-237.61 416.05,-185.64 416.05,-185.64"/>
+<polygon fill="#8b95a3" stroke="#8b95a3" points="418.5,-185.64 416.05,-178.64 413.6,-185.64 418.5,-185.64"/>
+</g>
+<!-- SKE -->
+<g id="node7" class="node">
+<title>SKE</title>
+<path fill="#ffffff" stroke="#a2abb8" stroke-width="1.1" d="M152.42,-68.24C152.42,-68.24 37.58,-68.24 37.58,-68.24 31.58,-68.24 25.58,-62.24 25.58,-56.24 25.58,-56.24 25.58,-38 25.58,-38 25.58,-32 31.58,-26 37.58,-26 37.58,-26 152.42,-26 152.42,-26 158.42,-26 164.42,-32 164.42,-38 164.42,-38 164.42,-56.24 164.42,-56.24 164.42,-62.24 158.42,-68.24 152.42,-68.24"/>
+<text xml:space="preserve" text-anchor="middle" x="95" y="-50.42" font-family="Helvetica,sans-Serif" font-size="11.00">SKE cluster</text>
+<text xml:space="preserve" text-anchor="middle" x="95" y="-37.22" font-family="Helvetica,sans-Serif" font-size="11.00">managed by STACKIT</text>
+</g>
+<!-- D_DEV&#45;&gt;SKE -->
+<g id="edge15" class="edge">
+<title>D_DEV&#45;&gt;SKE</title>
+<path fill="none" stroke="#8b95a3" d="M211.73,-156C150.64,-156 71.86,-156 71.86,-156 71.86,-156 71.86,-77.14 71.86,-77.14"/>
+<polygon fill="#8b95a3" stroke="#8b95a3" points="74.31,-77.14 71.86,-70.14 69.41,-77.14 74.31,-77.14"/>
+<text xml:space="preserve" text-anchor="middle" x="81.85" y="-158.7" font-family="Helvetica,sans-Serif" font-size="9.00" fill="#697180">deploys to</text>
+</g>
+<!-- HARBOR -->
+<g id="node9" class="node">
+<title>HARBOR</title>
+<path fill="#ffffff" stroke="#a2abb8" stroke-width="1.1" d="M575.4,-68.24C575.4,-68.24 408.6,-68.24 408.6,-68.24 402.6,-68.24 396.6,-62.24 396.6,-56.24 396.6,-56.24 396.6,-38 396.6,-38 396.6,-32 402.6,-26 408.6,-26 408.6,-26 575.4,-26 575.4,-26 581.4,-26 587.4,-32 587.4,-38 587.4,-38 587.4,-56.24 587.4,-56.24 587.4,-62.24 581.4,-68.24 575.4,-68.24"/>
+<text xml:space="preserve" text-anchor="middle" x="492" y="-50.42" font-family="Helvetica,sans-Serif" font-size="11.00">STACKIT Harbor</text>
+<text xml:space="preserve" text-anchor="middle" x="492" y="-37.22" font-family="Helvetica,sans-Serif" font-size="11.00">registry shared across customers</text>
+</g>
+<!-- D_DEV&#45;&gt;HARBOR -->
+<g id="edge18" class="edge">
+<title>D_DEV&#45;&gt;HARBOR</title>
+<path fill="none" stroke="#8b95a3" stroke-dasharray="5,2" d="M352.03,-145C361.61,-145 368.25,-145 368.25,-145 368.25,-145 368.25,-58 368.25,-58 368.25,-58 387.82,-58 387.82,-58"/>
+<polygon fill="#8b95a3" stroke="#8b95a3" points="387.82,-60.45 394.82,-58 387.82,-55.55 387.82,-60.45"/>
+<text xml:space="preserve" text-anchor="middle" x="393.76" y="-102.53" font-family="Helvetica,sans-Serif" font-size="9.00" fill="#697180">push images</text>
+</g>
+<!-- MODEL -->
+<g id="node10" class="node">
+<title>MODEL</title>
+<path fill="#ffffff" stroke="#a2abb8" stroke-width="1.1" d="M344.31,-68.24C344.31,-68.24 219.69,-68.24 219.69,-68.24 213.69,-68.24 207.69,-62.24 207.69,-56.24 207.69,-56.24 207.69,-38 207.69,-38 207.69,-32 213.69,-26 219.69,-26 219.69,-26 344.31,-26 344.31,-26 350.31,-26 356.31,-32 356.31,-38 356.31,-38 356.31,-56.24 356.31,-56.24 356.31,-62.24 350.31,-68.24 344.31,-68.24"/>
+<text xml:space="preserve" text-anchor="middle" x="282" y="-50.42" font-family="Helvetica,sans-Serif" font-size="11.00">STACKIT Model Serving</text>
+<text xml:space="preserve" text-anchor="middle" x="282" y="-37.22" font-family="Helvetica,sans-Serif" font-size="11.00">platform&#45;provided API</text>
+</g>
+<!-- D_DEV&#45;&gt;MODEL -->
+<g id="edge20" class="edge">
+<title>D_DEV&#45;&gt;MODEL</title>
+<path fill="none" stroke="#8b95a3" stroke-dasharray="5,2" d="M282,-134.3C282,-134.3 282,-77.05 282,-77.05"/>
+<polygon fill="#8b95a3" stroke="#8b95a3" points="284.45,-77.05 282,-70.05 279.55,-77.05 284.45,-77.05"/>
+<text xml:space="preserve" text-anchor="middle" x="247.74" y="-108.37" font-family="Helvetica,sans-Serif" font-size="9.00" fill="#697180">model API secret</text>
+</g>
+<!-- D_PROD&#45;&gt;D_DEV -->
+<!-- D_PROD&#45;&gt;SKE -->
+<g id="edge16" class="edge">
+<title>D_PROD&#45;&gt;SKE</title>
+<path fill="none" stroke="#8b95a3" d="M443.02,-134.12C443.02,-118.81 443.02,-101 443.02,-101 443.02,-101 118.14,-101 118.14,-101 118.14,-101 118.14,-77.24 118.14,-77.24"/>
+<polygon fill="#8b95a3" stroke="#8b95a3" points="120.59,-77.24 118.14,-70.24 115.69,-77.24 120.59,-77.24"/>
+</g>
+<!-- D_PROD&#45;&gt;HARBOR -->
+<g id="edge19" class="edge">
+<title>D_PROD&#45;&gt;HARBOR</title>
+<path fill="none" stroke="#8b95a3" stroke-dasharray="5,2" d="M489.45,-134.3C489.45,-134.3 489.45,-77.05 489.45,-77.05"/>
+<polygon fill="#8b95a3" stroke="#8b95a3" points="491.9,-77.05 489.45,-70.05 487,-77.05 491.9,-77.05"/>
+</g>
+<!-- D_PROD&#45;&gt;MODEL -->
+<g id="edge21" class="edge">
+<title>D_PROD&#45;&gt;MODEL</title>
+<path fill="none" stroke="#8b95a3" stroke-dasharray="5,2" d="M391.84,-166C384.79,-166 380.19,-166 380.19,-166 380.19,-166 380.19,-47 380.19,-47 380.19,-47 364.93,-47 364.93,-47"/>
+<polygon fill="#8b95a3" stroke="#8b95a3" points="364.93,-44.55 357.93,-47 364.93,-49.45 364.93,-44.55"/>
+</g>
+<!-- GIT&#45;&gt;HARBOR -->
+<!-- HARBOR&#45;&gt;SKE -->
+<g id="edge22" class="edge">
+<title>HARBOR&#45;&gt;SKE</title>
+<path fill="none" stroke="#8b95a3" stroke-dasharray="5,2" d="M492,-25.73C492,-16.6 492,-8 492,-8 492,-8 95,-8 95,-8 95,-8 95,-17.22 95,-17.22"/>
+<polygon fill="#8b95a3" stroke="#8b95a3" points="92.55,-17.22 95,-24.22 97.45,-17.22 92.55,-17.22"/>
+<text xml:space="preserve" text-anchor="middle" x="288.5" y="-10.7" font-family="Helvetica,sans-Serif" font-size="9.00" fill="#697180">pulls</text>
+</g>
+<!-- HARBOR&#45;&gt;MODEL -->
+</g>
+</svg>

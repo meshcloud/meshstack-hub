@@ -310,7 +310,8 @@ getting-started steps, and shared responsibility matrix.
 
 - File name: `<cloud>-<capability>.md` (e.g. `azure-kubernetes.md`, `stackit-kubernetes.md`).
 - `buildingBlocks[].path` must match a module path under `modules/` (e.g. `azure/aks`).
-- The Markdown body should include a **Mermaid diagram** showing how blocks relate.
+- The Markdown body should include an **architecture diagram** showing how blocks relate — see
+  [Diagrams](#diagrams) for the format.
 - Include a **shared responsibility matrix** (platform team vs. application team) with ✅ / ❌ emojis.
 - Include **Getting Started** steps with prerequisites and deployment order.
 
@@ -321,7 +322,60 @@ getting-started steps, and shared responsibility matrix.
 - [ ] Every `buildingBlocks[].path` references an existing module in `modules/`
 - [ ] Every `buildingBlocks[].role` has a one-sentence description
 - [ ] Body includes: overview, architecture diagram, how-it-works, getting started, shared responsibilities
+- [ ] Diagram committed as `<name>.dot` + generated `<name>.svg`, referenced with `![...](<name>.svg)`
+- [ ] `task diagrams` run and the regenerated SVG committed
 - [ ] No trailing whitespace
+
+---
+
+## Diagrams
+
+Architecture diagrams are **Graphviz DOT** source committed next to the Markdown that uses them,
+with the rendered SVG committed alongside:
+
+```
+reference-architectures/
+├── azure-kubernetes.md     # references the SVG: ![...](azure-kubernetes.svg)
+├── azure-kubernetes.dot    # the source you edit
+└── azure-kubernetes.svg    # generated — never hand-edit
+```
+
+```sh
+task diagrams        # re-render every *.dot in the repo to a sibling *.svg
+task diagrams:check  # verify the committed SVGs match their sources (what CI runs)
+```
+
+Graphviz runs from a WASM npm package, so no system `dot` install is needed. CI fails when a `.dot`
+is edited without committing the re-rendered SVG.
+
+### Why not Mermaid
+
+Mermaid renders inline in Markdown, which is convenient, but it offers no way to constrain layout:
+there is no "keep these three nodes on one row" and no "this edge must not affect ranking". Diagrams
+with two related hierarchies come out as diagonal spaghetti. DOT has both escape hatches, which is
+worth the render step:
+
+- `{ rank=same; A B C }` pins nodes to one row.
+- `constraint=false` draws an edge without letting it influence ranking — use it for cross-cutting
+  relationships that would otherwise distort the layout.
+- `splines=ortho` gives right-angle connectors. Under `ortho`, use `xlabel` (with `forcelabels=true`)
+  rather than `label` for edge labels — plain labels get placed far from their edge.
+- Avoid `ordering=out`: it fights rank ordering and silently mirrors rows.
+- Set `bgcolor="white"` explicitly. A transparent background renders dark-on-dark for anyone reading
+  the diagram in GitHub's dark theme.
+
+### Diagrams in Markdown
+
+Reference the SVG with a plain relative image link:
+
+```markdown
+![Azure Kubernetes reference architecture](azure-kubernetes.svg)
+```
+
+Do **not** inline HTML or `<svg>` in the Markdown body. The hub website renders these files through
+`marked` into Angular's `[innerHTML]`, which strips `<style>` blocks, `style` attributes and inline
+SVG; GitHub's Markdown pipeline does the same. `index.ts` rewrites relative image links to absolute
+`raw` URLs pinned to the built commit, so the same relative link works on GitHub and on the website.
 
 ---
 

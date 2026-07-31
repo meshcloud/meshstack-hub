@@ -4,6 +4,16 @@ vars:
   BASE_REF: origin/main
 
 tasks:
+  diagrams:
+    desc: Render every *.dot diagram to a sibling *.svg
+    cmds:
+      - node tools/diagrams/render-diagrams.mjs {{.CLI_ARGS}}
+
+  diagrams:check:
+    desc: Fail if any committed diagram SVG is stale or missing
+    cmds:
+      - node tools/diagrams/render-diagrams.mjs --check
+
   scorecard:pr:
     desc: "Run scorecard on modules changed vs BASE_REF (default: origin/main). Usage: task scorecard:pr BASE_REF=origin/my-branch"
     cmds:

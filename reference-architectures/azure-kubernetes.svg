@@ -1,0 +1,135 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN"
+ "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<svg width="415pt" height="455pt"
+ viewBox="0.00 0.00 415.00 455.00" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+<g id="graph0" class="graph" transform="scale(1 1) rotate(0) translate(4 451.36)">
+<title>azure_kubernetes</title>
+<polygon fill="white" stroke="none" points="-4,4 -4,-451.36 411,-451.36 411,4 -4,4"/>
+<g id="clust1" class="cluster">
+<title>cluster_catalog</title>
+<path fill="white" stroke="#d5dae0" d="M151,-338.72C151,-338.72 299,-338.72 299,-338.72 305,-338.72 311,-344.72 311,-350.72 311,-350.72 311,-427.36 311,-427.36 311,-433.36 305,-439.36 299,-439.36 299,-439.36 151,-439.36 151,-439.36 145,-439.36 139,-433.36 139,-427.36 139,-427.36 139,-350.72 139,-350.72 139,-344.72 145,-338.72 151,-338.72"/>
+<text xml:space="preserve" text-anchor="middle" x="205.03" y="-424.56" font-family="Helvetica,sans-Serif" font-size="12.00" fill="#697180"> &#160;Self&#45;Service Catalog</text>
+</g>
+<g id="clust2" class="cluster">
+<title>cluster_team</title>
+<path fill="white" stroke="#d5dae0" d="M37,-118.24C37,-118.24 376,-118.24 376,-118.24 382,-118.24 388,-124.24 388,-130.24 388,-130.24 388,-317.12 388,-317.12 388,-323.12 382,-329.12 376,-329.12 376,-329.12 37,-329.12 37,-329.12 31,-329.12 25,-323.12 25,-317.12 25,-317.12 25,-130.24 25,-130.24 25,-124.24 31,-118.24 37,-118.24"/>
+<text xml:space="preserve" text-anchor="middle" x="93.69" y="-314.32" font-family="Helvetica,sans-Serif" font-size="12.00" fill="#697180"> &#160;Per Application Team</text>
+</g>
+<g id="clust4" class="cluster">
+<title>cluster_infra</title>
+<path fill="white" stroke="#d5dae0" d="M20,-8C20,-8 387,-8 387,-8 393,-8 399,-14 399,-20 399,-20 399,-96.64 399,-96.64 399,-102.64 393,-108.64 387,-108.64 387,-108.64 20,-108.64 20,-108.64 14,-108.64 8,-102.64 8,-96.64 8,-96.64 8,-20 8,-20 8,-14 14,-8 20,-8"/>
+<text xml:space="preserve" text-anchor="middle" x="77.36" y="-93.84" font-family="Helvetica,sans-Serif" font-size="12.00" fill="#697180"> &#160;Existing Infrastructure</text>
+</g>
+<!-- STARTER -->
+<g id="node1" class="node">
+<title>STARTER</title>
+<path fill="#ecedfb" stroke="#9aa2e6" stroke-width="1.1" d="M280.61,-398.96C280.61,-398.96 169.39,-398.96 169.39,-398.96 163.39,-398.96 157.39,-392.96 157.39,-386.96 157.39,-386.96 157.39,-368.72 157.39,-368.72 157.39,-362.72 163.39,-356.72 169.39,-356.72 169.39,-356.72 280.61,-356.72 280.61,-356.72 286.61,-356.72 292.61,-362.72 292.61,-368.72 292.61,-368.72 292.61,-386.96 292.61,-386.96 292.61,-392.96 286.61,-398.96 280.61,-398.96"/>
+<text xml:space="preserve" text-anchor="middle" x="225" y="-381.14" font-family="Helvetica,sans-Serif" font-size="11.00">aks/starterkit</text>
+<text xml:space="preserve" text-anchor="middle" x="225" y="-367.94" font-family="Helvetica,sans-Serif" font-size="11.00">developer onboarding</text>
+</g>
+<!-- REPO -->
+<g id="node2" class="node">
+<title>REPO</title>
+<path fill="#e5f2ea" stroke="#85bfa0" stroke-width="1.1" d="M148.06,-288.72C148.06,-288.72 61.94,-288.72 61.94,-288.72 55.94,-288.72 49.94,-282.72 49.94,-276.72 49.94,-276.72 49.94,-258.48 49.94,-258.48 49.94,-252.48 55.94,-246.48 61.94,-246.48 61.94,-246.48 148.06,-246.48 148.06,-246.48 154.06,-246.48 160.06,-252.48 160.06,-258.48 160.06,-258.48 160.06,-276.72 160.06,-276.72 160.06,-282.72 154.06,-288.72 148.06,-288.72"/>
+<text xml:space="preserve" text-anchor="middle" x="105" y="-270.9" font-family="Helvetica,sans-Serif" font-size="11.00">github/repository</text>
+<text xml:space="preserve" text-anchor="middle" x="105" y="-257.7" font-family="Helvetica,sans-Serif" font-size="11.00">GitHub repo</text>
+</g>
+<!-- STARTER&#45;&gt;REPO -->
+<g id="edge3" class="edge">
+<title>STARTER&#45;&gt;REPO</title>
+<path fill="none" stroke="#8b95a3" d="M167.62,-356.53C167.62,-326.41 167.62,-275 167.62,-275 167.62,-275 166.9,-275 166.9,-275"/>
+<polygon fill="#8b95a3" stroke="#8b95a3" points="168.95,-272.55 161.95,-275 168.95,-277.45 168.95,-272.55"/>
+<text xml:space="preserve" text-anchor="middle" x="182.37" y="-318.11" font-family="Helvetica,sans-Serif" font-size="9.00" fill="#697180">creates</text>
+</g>
+<!-- DEV -->
+<g id="node3" class="node">
+<title>DEV</title>
+<path fill="#e5f2ea" stroke="#85bfa0" stroke-width="1.1" d="M170.73,-178.48C170.73,-178.48 55.27,-178.48 55.27,-178.48 49.27,-178.48 43.27,-172.48 43.27,-166.48 43.27,-166.48 43.27,-148.24 43.27,-148.24 43.27,-142.24 49.27,-136.24 55.27,-136.24 55.27,-136.24 170.73,-136.24 170.73,-136.24 176.73,-136.24 182.73,-142.24 182.73,-148.24 182.73,-148.24 182.73,-166.48 182.73,-166.48 182.73,-172.48 176.73,-178.48 170.73,-178.48"/>
+<text xml:space="preserve" text-anchor="middle" x="113" y="-160.66" font-family="Helvetica,sans-Serif" font-size="11.00">aks/github&#45;connector</text>
+<text xml:space="preserve" text-anchor="middle" x="113" y="-147.46" font-family="Helvetica,sans-Serif" font-size="11.00">dev namespace CI/CD</text>
+</g>
+<!-- STARTER&#45;&gt;DEV -->
+<g id="edge4" class="edge">
+<title>STARTER&#45;&gt;DEV</title>
+<path fill="none" stroke="#8b95a3" d="M175.17,-356.3C175.17,-356.3 175.17,-187.5 175.17,-187.5"/>
+<polygon fill="#8b95a3" stroke="#8b95a3" points="177.62,-187.5 175.17,-180.5 172.72,-187.5 177.62,-187.5"/>
+<text xml:space="preserve" text-anchor="middle" x="206.94" y="-274.6" font-family="Helvetica,sans-Serif" font-size="9.00" fill="#697180">creates dev env</text>
+</g>
+<!-- PROD -->
+<g id="node4" class="node">
+<title>PROD</title>
+<path fill="#e5f2ea" stroke="#85bfa0" stroke-width="1.1" d="M357.87,-178.48C357.87,-178.48 238.13,-178.48 238.13,-178.48 232.13,-178.48 226.13,-172.48 226.13,-166.48 226.13,-166.48 226.13,-148.24 226.13,-148.24 226.13,-142.24 232.13,-136.24 238.13,-136.24 238.13,-136.24 357.87,-136.24 357.87,-136.24 363.87,-136.24 369.87,-142.24 369.87,-148.24 369.87,-148.24 369.87,-166.48 369.87,-166.48 369.87,-172.48 363.87,-178.48 357.87,-178.48"/>
+<text xml:space="preserve" text-anchor="middle" x="298" y="-160.66" font-family="Helvetica,sans-Serif" font-size="11.00">aks/github&#45;connector</text>
+<text xml:space="preserve" text-anchor="middle" x="298" y="-147.46" font-family="Helvetica,sans-Serif" font-size="11.00">prod namespace CI/CD</text>
+</g>
+<!-- STARTER&#45;&gt;PROD -->
+<g id="edge5" class="edge">
+<title>STARTER&#45;&gt;PROD</title>
+<path fill="none" stroke="#8b95a3" d="M270.45,-356.3C270.45,-356.3 270.45,-187.5 270.45,-187.5"/>
+<polygon fill="#8b95a3" stroke="#8b95a3" points="272.9,-187.5 270.45,-180.5 268,-187.5 272.9,-187.5"/>
+<text xml:space="preserve" text-anchor="middle" x="236.93" y="-263.8" font-family="Helvetica,sans-Serif" font-size="9.00" fill="#697180">creates prod env</text>
+</g>
+<!-- REPO&#45;&gt;DEV -->
+<g id="edge6" class="edge">
+<title>REPO&#45;&gt;DEV</title>
+<path fill="none" stroke="#8b95a3" d="M105,-246.08C105,-246.08 105,-187.34 105,-187.34"/>
+<polygon fill="#8b95a3" stroke="#8b95a3" points="107.45,-187.34 105,-180.34 102.55,-187.34 107.45,-187.34"/>
+<text xml:space="preserve" text-anchor="middle" x="82.23" y="-219.41" font-family="Helvetica,sans-Serif" font-size="9.00" fill="#697180">repo output</text>
+</g>
+<!-- REPO&#45;&gt;PROD -->
+<g id="edge7" class="edge">
+<title>REPO&#45;&gt;PROD</title>
+<path fill="none" stroke="#8b95a3" d="M160.4,-261C200.72,-261 248.29,-261 248.29,-261 248.29,-261 248.29,-187.35 248.29,-187.35"/>
+<polygon fill="#8b95a3" stroke="#8b95a3" points="250.74,-187.35 248.29,-180.35 245.84,-187.35 250.74,-187.35"/>
+</g>
+<!-- DEV&#45;&gt;PROD -->
+<!-- AKS -->
+<g id="node5" class="node">
+<title>AKS</title>
+<path fill="#ffffff" stroke="#a2abb8" stroke-width="1.1" d="M173.82,-68.24C173.82,-68.24 38.18,-68.24 38.18,-68.24 32.18,-68.24 26.18,-62.24 26.18,-56.24 26.18,-56.24 26.18,-38 26.18,-38 26.18,-32 32.18,-26 38.18,-26 38.18,-26 173.82,-26 173.82,-26 179.82,-26 185.82,-32 185.82,-38 185.82,-38 185.82,-56.24 185.82,-56.24 185.82,-62.24 179.82,-68.24 173.82,-68.24"/>
+<text xml:space="preserve" text-anchor="middle" x="106" y="-50.42" font-family="Helvetica,sans-Serif" font-size="11.00">AKS cluster</text>
+<text xml:space="preserve" text-anchor="middle" x="106" y="-37.22" font-family="Helvetica,sans-Serif" font-size="11.00">managed by platform team</text>
+</g>
+<!-- DEV&#45;&gt;AKS -->
+<g id="edge10" class="edge">
+<title>DEV&#45;&gt;AKS</title>
+<path fill="none" stroke="#8b95a3" d="M113,-135.84C113,-135.84 113,-77.1 113,-77.1"/>
+<polygon fill="#8b95a3" stroke="#8b95a3" points="115.45,-77.1 113,-70.1 110.55,-77.1 115.45,-77.1"/>
+<text xml:space="preserve" text-anchor="middle" x="92.49" y="-109.17" font-family="Helvetica,sans-Serif" font-size="9.00" fill="#697180">deploys to</text>
+</g>
+<!-- ACR -->
+<g id="node6" class="node">
+<title>ACR</title>
+<path fill="#ffffff" stroke="#a2abb8" stroke-width="1.1" d="M368.84,-65.12C368.84,-65.12 241.16,-65.12 241.16,-65.12 235.16,-65.12 229.16,-59.12 229.16,-53.12 229.16,-53.12 229.16,-41.12 229.16,-41.12 229.16,-35.12 235.16,-29.12 241.16,-29.12 241.16,-29.12 368.84,-29.12 368.84,-29.12 374.84,-29.12 380.84,-35.12 380.84,-41.12 380.84,-41.12 380.84,-53.12 380.84,-53.12 380.84,-59.12 374.84,-65.12 368.84,-65.12"/>
+<text xml:space="preserve" text-anchor="middle" x="305" y="-43.82" font-family="Helvetica,sans-Serif" font-size="11.00">Azure Container Registry</text>
+</g>
+<!-- DEV&#45;&gt;ACR -->
+<g id="edge8" class="edge">
+<title>DEV&#45;&gt;ACR</title>
+<path fill="none" stroke="#8b95a3" d="M183.05,-147C199.68,-147 212.69,-147 212.69,-147 212.69,-147 212.69,-51 212.69,-51 212.69,-51 220.26,-51 220.26,-51"/>
+<polygon fill="#8b95a3" stroke="#8b95a3" points="220.26,-53.45 227.26,-51 220.26,-48.55 220.26,-53.45"/>
+<text xml:space="preserve" text-anchor="middle" x="187.18" y="-112.74" font-family="Helvetica,sans-Serif" font-size="9.00" fill="#697180">push images</text>
+</g>
+<!-- PROD&#45;&gt;AKS -->
+<g id="edge11" class="edge">
+<title>PROD&#45;&gt;AKS</title>
+<path fill="none" stroke="#8b95a3" d="M225.72,-168C210.66,-168 199.26,-168 199.26,-168 199.26,-168 199.26,-58 199.26,-58 199.26,-58 194.8,-58 194.8,-58"/>
+<polygon fill="#8b95a3" stroke="#8b95a3" points="194.8,-55.55 187.8,-58 194.8,-60.45 194.8,-55.55"/>
+</g>
+<!-- PROD&#45;&gt;ACR -->
+<g id="edge9" class="edge">
+<title>PROD&#45;&gt;ACR</title>
+<path fill="none" stroke="#8b95a3" d="M299.51,-135.84C299.51,-135.84 299.51,-74.17 299.51,-74.17"/>
+<polygon fill="#8b95a3" stroke="#8b95a3" points="301.96,-74.17 299.51,-67.17 297.06,-74.17 301.96,-74.17"/>
+</g>
+<!-- AKS&#45;&gt;ACR -->
+<!-- AKS&#45;&gt;ACR -->
+<g id="edge12" class="edge">
+<title>AKS&#45;&gt;ACR</title>
+<path fill="none" stroke="#8b95a3" stroke-dasharray="5,2" d="M186.37,-44C186.37,-44 220.33,-44 220.33,-44"/>
+<polygon fill="#8b95a3" stroke="#8b95a3" points="220.33,-46.45 227.33,-44 220.33,-41.55 220.33,-46.45"/>
+<text xml:space="preserve" text-anchor="middle" x="212.6" y="-46.7" font-family="Helvetica,sans-Serif" font-size="9.00" fill="#697180">pulls</text>
+</g>
+</g>
+</svg>
