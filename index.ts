@@ -6,6 +6,8 @@ const { execSync } = require("child_process");
 const repoRoot = path.resolve(__dirname, "modules");
 const refArchRoot = path.resolve(__dirname, "reference-architectures");
 const assetsDir = path.resolve(__dirname, "website/public/assets/logos");
+const refArchAssetsDir = path.resolve(__dirname, "website/public/assets/reference-architecture-logos");
+const refArchDiagramAssetsDir = path.resolve(__dirname, "website/public/assets/reference-architecture-diagrams");
 const hubRef = getHubRef();
 
 function getHubRef() {
@@ -67,7 +69,7 @@ function findPlatforms(): Platform[] {
   fs.mkdirSync(assetsDir, { recursive: true });
 
   return fs.readdirSync(repoRoot, { withFileTypes: true })
-    .filter((dirent) => dirent.isDirectory() && dirent.name !== ".github")
+    .filter((dirent) => dirent.isDirectory() && !isIgnoredDir(dirent.name))
     .map((dir) => {
       const platformDir: string = path.join(repoRoot, dir.name);
       const platformLogo = getPlatformLogoOrThrow(platformDir, dir.name);
@@ -247,6 +249,9 @@ export interface ReferenceArchitecture {
   cloudProviders: string[];
   buildingBlocks: ReferenceArchitectureBuildingBlock[];
   body: string;
+  // Own logo, when one is committed for this architecture. Null means the website falls back
+  // to the logos of the architecture's cloud providers.
+  logo: string | null;
   sourceUrl: string | null;
   // Set when the reference architecture ships its own meshstack_integration.tf and can be
   // imported into meshStack directly, the same way a building block is imported.
@@ -255,31 +260,57 @@ export interface ReferenceArchitecture {
   modulePath: string | null;
 }
 
-// Rewrites relative markdown image links to absolute `raw` URLs pinned to the built commit.
-// Diagrams are committed next to their markdown so a relative link renders on GitHub, but the
-// website serves this body from its own origin where a repo-relative path resolves to nothing.
-function absolutizeImageLinks(body: string, markdownDir: string): string {
-  const remoteUrl = getGitHubRemoteUrl();
-  if (!remoteUrl) return body;
-
-  const dirInRepo = path
-    .relative(path.resolve(__dirname), markdownDir)
-    .replace(/\\/g, "/");
-
+// Copies images referenced by relative markdown links into the website assets and rewrites the
+// links to the served path. Diagrams are committed next to their README so a relative link renders
+// on GitHub, but the website serves this body from its own origin where a repo-relative path
+// resolves to nothing. Serving our own copy — rather than a github.com/raw link pinned to the built
+// commit — also keeps diagrams rendering for commits that are not (yet) pushed, and for files that
+// moved since the last commit.
+function localizeImageLinks(body: string, archDir: string, id: string): string {
   return body.replace(
     /(!\[[^\]]*\]\()(?!https?:\/\/|\/|#)([^)\s]+)(\))/g,
-    (_match, prefix, target, suffix) =>
-      `${prefix}${remoteUrl}/raw/${hubRef}/${dirInRepo}/${target.replace(/^\.\//, "")}${suffix}`
+    (match, prefix, target, suffix) => {
+      const sourcePath = path.join(archDir, target.replace(/^\.\//, ""));
+      if (!fs.existsSync(sourcePath)) {
+        console.warn(`⚠️  Reference architecture ${id} links a missing image: ${target}`);
+        return match;
+      }
+
+      const destDir = path.join(refArchDiagramAssetsDir, id);
+      const fileName = path.basename(sourcePath);
+      fs.mkdirSync(destDir, { recursive: true });
+      fs.copyFileSync(sourcePath, path.join(destDir, fileName));
+
+      return `${prefix}assets/reference-architecture-diagrams/${id}/${fileName}${suffix}`;
+    }
   );
 }
 
-// Parses a reference architecture from its front-matter/body markdown file.
-// `codeDir`, when set, is the directory checked for a `meshstack_integration.tf` that makes
-// this reference architecture importable, the same way a building block is imported.
-function parseReferenceArchitecture(filePath: string, id: string, codeDir: string | null): ReferenceArchitecture {
+// Reference architectures colocate their logo as `logo.png|svg`, the same way a building block
+// does. Copies it to the website assets under the architecture id and returns the served path.
+function copyReferenceArchitectureLogoToAssets(archDir: string, id: string): string | null {
+  const logoFile = ["logo.png", "logo.svg"]
+    .find(file => fs.existsSync(path.join(archDir, file)));
+
+  if (!logoFile) return null;
+
+  fs.mkdirSync(refArchAssetsDir, { recursive: true });
+  fs.copyFileSync(
+    path.join(archDir, logoFile),
+    path.join(refArchAssetsDir, `${id}${path.extname(logoFile)}`)
+  );
+
+  return `assets/reference-architecture-logos/${id}${path.extname(logoFile)}`;
+}
+
+// Parses a reference architecture from the `README.md` of its directory. The directory is also
+// checked for a `meshstack_integration.tf` that makes this reference architecture importable,
+// the same way a building block is imported.
+function parseReferenceArchitecture(archDir: string, id: string): ReferenceArchitecture {
+  const filePath = path.join(archDir, "README.md");
   const raw = fs.readFileSync(filePath, "utf-8");
   const { data, content } = matter(raw);
-  const body = absolutizeImageLinks(content, path.dirname(filePath));
+  const body = localizeImageLinks(content, archDir, id);
 
   if (!data.name) {
     throw new Error(`Reference architecture ${id} is missing "name" in front-matter.`);
@@ -297,7 +328,7 @@ function parseReferenceArchitecture(filePath: string, id: string, codeDir: strin
     .replace(/\\/g, "/");
   const sourceUrl = remoteUrl ? `${remoteUrl}/blob/${hubRef}${relativeFilePath}` : null;
 
-  const hasCode = codeDir !== null && fs.existsSync(path.join(codeDir, "meshstack_integration.tf"));
+  const hasCode = fs.existsSync(path.join(archDir, "meshstack_integration.tf"));
   const integrationSourceUrl = hasCode && remoteUrl
     ? `${remoteUrl}/blob/${hubRef}/reference-architectures/${id}/meshstack_integration.tf`
     : null;
@@ -313,6 +344,7 @@ function parseReferenceArchitecture(filePath: string, id: string, codeDir: strin
     cloudProviders: data.cloudProviders || [],
     buildingBlocks: data.buildingBlocks,
     body,
+    logo: copyReferenceArchitectureLogoToAssets(archDir, id),
     sourceUrl,
     integrationSourceUrl,
     folderUrl,
@@ -323,25 +355,16 @@ function parseReferenceArchitecture(filePath: string, id: string, codeDir: strin
 function findReferenceArchitectures(): ReferenceArchitecture[] {
   if (!fs.existsSync(refArchRoot)) return [];
 
+  // Every reference architecture is a directory named after its id, holding a README.md, an
+  // optional logo and diagram, and optional code (meshstack_integration.tf + buildingblock/)
+  // that can be imported into meshStack.
   return fs.readdirSync(refArchRoot, { withFileTypes: true })
+    .filter(entry => entry.isDirectory() && !isIgnoredDir(entry.name))
     .flatMap((entry): ReferenceArchitecture[] => {
-      // Directory-based reference architecture: README.md plus optional code
-      // (meshstack_integration.tf + buildingblock/) that can be imported into meshStack.
-      if (entry.isDirectory()) {
-        const dir = path.join(refArchRoot, entry.name);
-        const readmePath = path.join(dir, "README.md");
-        if (!fs.existsSync(readmePath)) return [];
+      const archDir = path.join(refArchRoot, entry.name);
+      if (!fs.existsSync(path.join(archDir, "README.md"))) return [];
 
-        return [parseReferenceArchitecture(readmePath, entry.name, dir)];
-      }
-
-      // Flat markdown reference architecture: a conceptual blueprint with no code of its own.
-      if (entry.isFile() && entry.name.endsWith(".md") && entry.name !== "README.md") {
-        const id = entry.name.replace(/\.md$/, "");
-        return [parseReferenceArchitecture(path.join(refArchRoot, entry.name), id, null)];
-      }
-
-      return [];
+      return [parseReferenceArchitecture(archDir, entry.name)];
     });
 }
 

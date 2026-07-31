@@ -21,6 +21,7 @@ interface RefArchCardVm {
   name: string;
   description: string;
   buildingBlockCount: number;
+  logo: string | null;
   platformLogos: { platformType: string; imageUrl: string }[];
 }
 
@@ -215,6 +216,7 @@ export class TemplateGalleryComponent implements OnInit, OnDestroy {
       name: arch.name,
       description: arch.description,
       buildingBlockCount: arch.buildingBlocks.length,
+      logo: arch.logo,
       platformLogos: arch.cloudProviders.map(cp => ({
         platformType: cp,
         imageUrl: platforms.find(p => p.platformType === cp)?.logo ?? 'assets/meshstack-logo.png'

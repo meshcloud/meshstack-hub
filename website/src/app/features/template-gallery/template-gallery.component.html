@@ -74,14 +74,20 @@
           <div *ngFor="let card of refArchCards">
             <mst-card [routePath]="'/reference-architectures/' + card.id" [label]="card.name">
               <div class="p-4 flex flex-col h-full" card-body>
-                <!-- Platform logos + title -->
+                <!-- Architecture logo, falling back to platform logos + title -->
                 <div class="flex items-center gap-3 mb-3">
-                  <div class="flex -space-x-1">
-                    <div *ngFor="let logo of card.platformLogos"
-                         class="w-8 h-8 flex-shrink-0 flex items-center justify-center rounded-lg bg-slate-100 ring-2 ring-white">
-                      <img [src]="logo.imageUrl" [alt]="logo.platformType" class="w-5 h-5 object-contain" />
-                    </div>
+                  <div *ngIf="card.logo; else platformLogos"
+                       class="w-8 h-8 flex-shrink-0 flex items-center justify-center rounded-lg bg-slate-100 ring-2 ring-white">
+                    <img [src]="card.logo" [alt]="card.name" class="w-6 h-6 object-contain" />
                   </div>
+                  <ng-template #platformLogos>
+                    <div class="flex -space-x-1">
+                      <div *ngFor="let logo of card.platformLogos"
+                           class="w-8 h-8 flex-shrink-0 flex items-center justify-center rounded-lg bg-slate-100 ring-2 ring-white">
+                        <img [src]="logo.imageUrl" [alt]="logo.platformType" class="w-5 h-5 object-contain" />
+                      </div>
+                    </div>
+                  </ng-template>
                   <h3 class="font-semibold text-slate-900 text-base leading-tight mb-0">{{ card.name }}</h3>
                 </div>
                 <!-- Description -->

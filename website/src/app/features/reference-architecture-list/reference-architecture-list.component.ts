@@ -17,6 +17,7 @@ interface RefArchCard {
   cloudProviders: string[];
   buildingBlockCount: number;
   integrationSourceUrl: string | null;
+  logo: string | null;
   platformLogos: { platformType: string; imageUrl: string }[];
 }
 
@@ -62,6 +63,7 @@ export class ReferenceArchitectureListComponent implements OnInit {
       cloudProviders: arch.cloudProviders,
       buildingBlockCount: arch.buildingBlocks.length,
       integrationSourceUrl: arch.integrationSourceUrl,
+      logo: arch.logo,
       platformLogos: arch.cloudProviders.map(cp => ({
         platformType: cp,
         imageUrl: platforms.find(p => p.platformType === cp)?.logo ?? 'assets/meshstack-logo.png'

@@ -8,8 +8,8 @@ Diagrams are **Graphviz DOT** source committed next to the Markdown that uses th
 SVG committed alongside:
 
 ```
-reference-architectures/
-├── azure-kubernetes.md     # references the SVG: ![...](azure-kubernetes.svg)
+reference-architectures/azure-kubernetes/
+├── README.md               # references the SVG: ![...](azure-kubernetes.svg)
 ├── azure-kubernetes.dot    # the source you edit
 └── azure-kubernetes.svg    # generated — never hand-edit
 ```
@@ -21,6 +21,11 @@ task diagrams:check  # verify committed SVGs match their sources (what CI runs)
 
 Graphviz runs from a WASM npm package, so no system `dot` install is needed. CI fails when a `.dot`
 is edited without committing the re-rendered SVG.
+
+Keep the markdown link **relative** so it renders on GitHub. The website generator copies every
+relatively-linked image into `website/public/assets/reference-architecture-diagrams/<id>/` and
+rewrites the link to that served path, so the diagram renders from the website's own origin
+regardless of whether the commit has been pushed.
 
 ---
 
