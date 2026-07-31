@@ -44,11 +44,18 @@ function getBuildingBlockFolderUrl(filePath) {
   return `${remoteUrl}/tree/${hubRef}/modules${relativePath}`;
 }
 
+// Directories that never contain hub modules but do contain vendored copies of them.
+// `terraform init` mirrors the whole repo into `.terraform/modules/...`, so recursing into
+// these would count every module once per initialized module directory.
+function isIgnoredDir(name: string): boolean {
+  return name.startsWith(".") || name === "node_modules";
+}
+
 function findReadmes(dir){
   return fs.readdirSync(dir, { withFileTypes: true }).flatMap((file) => {
     const fullPath = path.join(dir, file.name);
     if (file.isDirectory()) {
-      return file.name === ".github" ? [] : findReadmes(fullPath);
+      return isIgnoredDir(file.name) ? [] : findReadmes(fullPath);
     }
     return file.name === "README.md" && dir.includes("buildingblock")
       ? [fullPath]
