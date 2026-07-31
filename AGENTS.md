@@ -210,24 +210,24 @@ node tools/scorecard/scorecard.mjs --module=<provider>/<service>
 node tools/scorecard/scorecard.mjs --module=<provider>/<service> --fix
 ```
 
-To fix violations, see [.agents/skills/fix-scorecard.md](.agents/skills/fix-scorecard.md).
+To fix violations, see [.agents/skills/module/SKILL.md](.agents/skills/module/SKILL.md#workflow-fixing-scorecard-violations).
 
 ---
 
 ## AWS Backplane Identity Conventions
 
-See [.agents/skills/aws-backplane.md](.agents/skills/aws-backplane.md) for the full AWS backplane identity conventions, including WIF (OIDC + IAM role) and cross-account (IAM user + CloudFormation StackSet) patterns, required variables/outputs, and the AWS backplane checklist.
+See [.agents/references/aws-backplane.md](.agents/references/aws-backplane.md) for the full AWS backplane identity conventions, including WIF (OIDC + IAM role) and cross-account (IAM user + CloudFormation StackSet) patterns, required variables/outputs, and the AWS backplane checklist.
 
 ## Azure Backplane Identity Conventions
 
-See [.agents/skills/azure-backplane.md](.agents/skills/azure-backplane.md) for the full Azure backplane identity conventions, including UAMI patterns, WIF wiring, required variables/outputs, and the Azure backplane checklist.
+See [.agents/references/azure-backplane.md](.agents/references/azure-backplane.md) for the full Azure backplane identity conventions, including UAMI patterns, WIF wiring, required variables/outputs, and the Azure backplane checklist.
 
 ---
 
 <!-- scorecard-checks: readme_frontmatter, logo, app_team_readme, bbd_readme, bbd_readme_no_leading_heading, bbd_readme_shared_responsibility, no_documentation_md_output -->
 ## Documentation Requirements
 
-See [.agents/skills/bbd-readme.md](.agents/skills/bbd-readme.md) for the complete BBD readme specification, template, and checklist.
+See [.agents/references/bbd-readme.md](.agents/references/bbd-readme.md) for the complete BBD readme specification, template, and checklist.
 
 **`buildingblock/README.md`** — must include YAML front-matter:
 
@@ -242,7 +242,7 @@ description: One-sentence description of what the module provisions.
 
 **User-facing readme — two patterns depending on module completeness:**
 
-- **Modules with `meshstack_integration.tf`** (full building blocks): user-facing readme lives in the `readme` field of `meshstack_building_block_definition.spec`. Always use `chomp(<<-EOT)` inline — never `file()` or a separate file (one-file copy/paste requirement). See [.agents/skills/bbd-readme.md](.agents/skills/bbd-readme.md) for full spec.
+- **Modules with `meshstack_integration.tf`** (full building blocks): user-facing readme lives in the `readme` field of `meshstack_building_block_definition.spec`. Always use `chomp(<<-EOT)` inline — never `file()` or a separate file (one-file copy/paste requirement). See [.agents/references/bbd-readme.md](.agents/references/bbd-readme.md) for full spec.
 
 - **Modules without `meshstack_integration.tf`** (standalone building blocks): place the user-facing readme at `buildingblock/APP_TEAM_README.md`. meshStack uses this file as a fallback when no inline readme is available. The same content requirements apply (plain-text description first, usage motivation, examples, shared responsibility table).
 
@@ -330,7 +330,7 @@ getting-started steps, and shared responsibility matrix.
 
 Modules that can be smoke-tested against a live meshStack instance should include an `e2e/` directory alongside the module root.
 
-See [.agents/skills/write-e2e-test/SKILL.md](.agents/skills/write-e2e-test/SKILL.md) (the `write-e2e-test` skill) for the full e2e testing conventions, including the `e2e/` structure, `test_context` wiring, `e2e/main.tf` and `*.tftest.hcl` conventions, the new-test checklist, and how to run and debug tests via the smoke-test runner.
+See [.agents/skills/e2e-test/SKILL.md](.agents/skills/e2e-test/SKILL.md) (the `e2e-test` skill) for the full e2e testing conventions, including the `e2e/` structure, `test_context` wiring, `e2e/main.tf` and `*.tftest.hcl` conventions, the new-test checklist, and how to run and debug tests via the smoke-test runner.
 
 ---
 
@@ -341,7 +341,7 @@ See [.agents/skills/write-e2e-test/SKILL.md](.agents/skills/write-e2e-test/SKILL
 - [ ] Provider versions use minimum constraint (`>=`) in `versions.tf` and `meshstack_integration.tf`
 - [ ] Variables in `snake_case` with cloud-provider prefix in `meshstack_integration.tf` (e.g. `azure_tenant_id`)
 - [ ] `buildingblock/README.md` with YAML front-matter
-- [ ] BBD `readme` field uses `chomp(<<-EOT)` inline (no `file()`), starts with plain-text description (no `#` heading), and includes usage motivation, 1–2 examples, and a shared responsibility table with ✅ / ❌ — see [.agents/skills/bbd-readme.md](.agents/skills/bbd-readme.md)
+- [ ] BBD `readme` field uses `chomp(<<-EOT)` inline (no `file()`), starts with plain-text description (no `#` heading), and includes usage motivation, 1–2 examples, and a shared responsibility table with ✅ / ❌ — see [.agents/references/bbd-readme.md](.agents/references/bbd-readme.md)
 - [ ] If no `meshstack_integration.tf`: `buildingblock/APP_TEAM_README.md` is present with the same content requirements (plain-text description first, motivation, examples, shared responsibility table)
 - [ ] `meshstack_integration.tf` declares `meshcloud/meshstack` in `required_providers`
 - [ ] `meshstack_integration.tf` uses `variable "hub" { type = object({git_ref = string}) }` and `variable "meshstack" { type = object({owning_workspace_identifier = string}) }`
@@ -360,4 +360,4 @@ See [.agents/skills/write-e2e-test/SKILL.md](.agents/skills/write-e2e-test/SKILL
 - [ ] No `documentation_md` output in `backplane/` — use BBD `readme` field and `backplane/README.md` instead
 - [ ] `meshstack_platform` resources include `lifecycle { ignore_changes = [spec.availability] }`
 - [ ] No trailing whitespace
-- [ ] **Azure modules**: also follow the [Azure Backplane Checklist](.agents/skills/azure-backplane.md#checklist-for-azure-backplanes)
+- [ ] **Azure modules**: also follow the [Azure Backplane Checklist](.agents/references/azure-backplane.md#checklist-for-azure-backplanes)
