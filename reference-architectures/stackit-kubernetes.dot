@@ -14,59 +14,61 @@ digraph stackit_kubernetes {
         fillcolor="#ffffff" color="#a2abb8" penwidth=1.1 margin="0.20,0.11"]
   edge [fontname="Helvetica" fontsize=9 fontcolor="#697180" color="#8b95a3" arrowsize=0.7]
 
-  // meshStack definition the application team orders from the catalog
-  STARTER [label="📦 ske/ske-starterkit\nself-service catalog" fillcolor="#ecedfb" color="#9aa2e6"]
-
-  subgraph cluster_team {
-    label="  Per Application Team"
-    labeljust=l
-    fontname="Helvetica" fontsize=12 fontcolor="#697180"
-    style="rounded" color="#d5dae0"
-    margin=18
-
-    REPO   [label="🔀 stackit/git-repository\nForgejo repo" fillcolor="#e5f2ea" color="#85bfa0"]
-    P_DEV  [label="🗂️ dev project\n+ SKE tenant" fillcolor="#e5f2ea" color="#85bfa0"]
-    P_PROD [label="🗂️ prod project\n+ SKE tenant" fillcolor="#e5f2ea" color="#85bfa0"]
-    D_DEV  [label="⚙️ ske/forgejo-connector\ndev namespace CI/CD" fillcolor="#e5f2ea" color="#85bfa0"]
-    D_PROD [label="⚙️ ske/forgejo-connector\nprod namespace CI/CD" fillcolor="#e5f2ea" color="#85bfa0"]
-
-    { rank=same; P_PROD -> P_DEV -> REPO [style=invis] }
-    { rank=same; D_PROD -> D_DEV [style=invis] }
-  }
-
   subgraph cluster_stackit {
-    label="  STACKIT — provider-managed services"
+    label="  STACKIT"
     labeljust=l
     fontname="Helvetica" fontsize=12 fontcolor="#697180"
     style="rounded" color="#d5dae0"
     margin=18
 
-    SKE    [label="☸️ SKE cluster\nprovisioned by the platform team" fillcolor="#eef2f6" color="#93a7bb"]
-    MODEL  [label="🧠 STACKIT Model Serving" fillcolor="#eef2f6" color="#93a7bb"]
-    HARBOR [label="🗄️ STACKIT Harbor\nregistry shared across customers" fillcolor="#eef2f6" color="#93a7bb"]
+    ORG    [label="🏢 STACKIT Organization" fillcolor="#ffffff" color="#a2abb8"]
+    SKE    [label="☸️ SKE cluster\nrun by the platform team" fillcolor="#eef2f6" color="#93a7bb"]
     GIT    [label="🔀 STACKIT Git\nForgejo instance" fillcolor="#eef2f6" color="#93a7bb"]
+    HARBOR [label="🗄️ STACKIT Harbor\nregistry shared across customers" fillcolor="#eef2f6" color="#93a7bb"]
+    MODEL  [label="🧠 STACKIT Model Serving\nsovereign LLM API" fillcolor="#eef2f6" color="#93a7bb"]
+    NS     [label="☸️ Namespace ×2\ndev + prod" fillcolor="#e5f2ea" color="#85bfa0"]
+    REPO   [label="🔀 App repository ×1\nper application team" fillcolor="#e5f2ea" color="#85bfa0"]
+    ACT    [label="⚙️ Forgejo Actions ×2\ndev + prod pipeline" fillcolor="#e5f2ea" color="#85bfa0"]
 
-    { rank=same; MODEL -> HARBOR -> SKE -> GIT [style=invis] }
+    { rank=same; SKE -> GIT -> HARBOR -> MODEL [style=invis] }
+
+    ORG -> SKE
+    ORG -> GIT
+    SKE -> NS   [xlabel="contains"]
+    GIT -> REPO [xlabel="hosts"]
+
+    REPO -> ACT [xlabel="runs pipeline"]
+    ACT  -> HARBOR [xlabel="pushes images" style=dashed constraint=false]
+    ACT  -> NS     [xlabel="deploys to" style=dashed constraint=false]
+    NS   -> HARBOR [xlabel="pulls images" style=dashed constraint=false]
+    NS   -> MODEL  [xlabel="calls with injected key" style=dashed constraint=false]
   }
 
-  STARTER -> REPO   [xlabel="creates"]
-  STARTER -> P_DEV  [xlabel="creates"]
-  STARTER -> P_PROD
-  STARTER -> D_DEV  [xlabel="creates connector"]
-  STARTER -> D_PROD
+  subgraph cluster_mesh {
+    label="  meshStack"
+    labeljust=l
+    fontname="Helvetica" fontsize=12 fontcolor="#697180"
+    style="rounded" color="#d5dae0"
+    margin=18
 
-  P_DEV  -> D_DEV [xlabel="namespace"]
-  P_PROD -> D_PROD
-  REPO   -> D_DEV [xlabel="repo output"]
-  REPO   -> D_PROD
+    PLAT  [label="🛰️ SKE Platform" fillcolor="#ecedfb" color="#9aa2e6"]
+    LZ    [label="🛬 Landing Zone ×2\ndev + prod" fillcolor="#ecedfb" color="#9aa2e6"]
+    PROJ  [label="🗂️ Project ×2\ndev + prod" fillcolor="#e5f2ea" color="#85bfa0"]
+    BBD_S [label="📦 ske/ske-starterkit BBD\nself-service catalog entry" fillcolor="#ecedfb" color="#9aa2e6"]
+    BBD_R [label="📦 stackit/git-repository BBD" fillcolor="#ecedfb" color="#9aa2e6"]
+    BBD_C [label="📦 ske/forgejo-connector BBD" fillcolor="#ecedfb" color="#9aa2e6"]
 
-  D_DEV  -> SKE [xlabel="deploys to"]
-  D_PROD -> SKE
+    { rank=same; BBD_R -> BBD_C [style=invis] }
 
-  REPO   -> GIT    [xlabel="hosted on" style=dashed]
-  D_DEV  -> HARBOR [xlabel="push images" style=dashed]
-  D_PROD -> HARBOR [style=dashed]
-  D_DEV  -> MODEL  [xlabel="model API secret" style=dashed]
-  D_PROD -> MODEL  [style=dashed]
-  HARBOR -> SKE    [xlabel="pulls" style=dashed constraint=false]
+    PLAT  -> LZ
+    LZ    -> PROJ  [xlabel="applies to"]
+    BBD_S -> BBD_R [xlabel="composes"]
+    BBD_S -> BBD_C
+    BBD_S -> PROJ  [xlabel="creates" style=dotted constraint=false]
+  }
+
+  PLAT  -> SKE  [xlabel="replicates into" style=dotted constraint=false]
+  PROJ  -> NS   [xlabel="tenant namespace" style=dotted constraint=false]
+  BBD_R -> REPO [xlabel="provisions" style=dotted constraint=false]
+  BBD_C -> ACT  [xlabel="provisions" style=dotted constraint=false]
 }
