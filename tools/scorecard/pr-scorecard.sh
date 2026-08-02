@@ -18,8 +18,10 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
 cd "$REPO_ROOT"
 
+# Only paths inside a module dir (modules/<provider>/<service>/...) map to a module.
+# Provider-level files such as modules/<provider>/logo.png are not modules and are skipped.
 MODULES=$(git diff --name-only "${BASE_REF}...HEAD" \
-  | grep '^modules/' \
+  | grep -E '^modules/[^/]+/[^/]+/' \
   | sed 's|^modules/\([^/]*/[^/]*\)/.*|\1|' \
   | sort -u || true)
 
