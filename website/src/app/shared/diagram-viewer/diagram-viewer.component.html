@@ -1,0 +1,76 @@
+<div class="diagram-viewer fixed inset-0 flex flex-col bg-slate-900">
+  <!-- Toolbar -->
+  <div class="flex items-center gap-3 px-4 py-3 border-b border-white/10 text-slate-100">
+    <i class="fa-solid fa-diagram-project text-primary-300"></i>
+    <span class="text-sm font-semibold truncate flex-1">{{ data.title }}</span>
+
+    <div class="flex items-center gap-1 rounded-lg bg-white/10 p-1">
+      <button
+        type="button"
+        class="diagram-viewer-btn"
+        aria-label="Zoom out"
+        title="Zoom out (-)"
+        (click)="zoomOut()">
+        <i class="fa-solid fa-magnifying-glass-minus"></i>
+      </button>
+      <span class="w-14 text-center text-xs font-mono tabular-nums">{{ zoomPercent }}%</span>
+      <button
+        type="button"
+        class="diagram-viewer-btn"
+        aria-label="Zoom in"
+        title="Zoom in (+)"
+        (click)="zoomIn()">
+        <i class="fa-solid fa-magnifying-glass-plus"></i>
+      </button>
+      <button
+        type="button"
+        class="diagram-viewer-btn"
+        aria-label="Fit to screen"
+        title="Fit to screen (0)"
+        (click)="resetView()">
+        <i class="fa-solid fa-compress"></i>
+      </button>
+    </div>
+
+    <a
+      *ngIf="data.sourceUrl"
+      [href]="data.sourceUrl"
+      target="_blank"
+      rel="noopener noreferrer"
+      class="diagram-viewer-btn text-slate-100"
+      aria-label="Open diagram in a new tab"
+      title="Open diagram in a new tab">
+      <i class="fa-solid fa-up-right-from-square"></i>
+    </a>
+
+    <button
+      type="button"
+      class="diagram-viewer-btn text-slate-100"
+      aria-label="Close"
+      title="Close (Esc)"
+      (click)="dialogRef.close()">
+      <i class="fa-solid fa-xmark text-lg"></i>
+    </button>
+  </div>
+
+  <!-- Stage -->
+  <div
+    #stage
+    class="diagram-viewer-stage flex-1 overflow-hidden"
+    [class.is-panning]="panning"
+    (pointerdown)="onPointerDown($event)"
+    (pointermove)="onPointerMove($event)"
+    (pointerup)="onPointerUp($event)"
+    (pointercancel)="onPointerUp($event)"
+    (dblclick)="onDoubleClick($event)">
+    <div
+      #canvas
+      class="diagram-viewer-canvas"
+      [style.transform]="'translate(' + translateX + 'px, ' + translateY + 'px)'">
+    </div>
+  </div>
+
+  <div class="px-4 py-2 text-center text-xs text-slate-400 border-t border-white/10">
+    Scroll or pinch to zoom · drag to pan · double-click to zoom · Esc to close
+  </div>
+</div>

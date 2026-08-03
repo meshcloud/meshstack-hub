@@ -1,5 +1,6 @@
-/* Mermaid diagrams rendered inside [innerHTML] need :host ::ng-deep to pierce encapsulation */
-:host ::ng-deep .mermaid-diagram {
+/* Diagrams live inside [innerHTML] content, so styling them needs :host ::ng-deep */
+:host ::ng-deep .diagram-figure {
+  position: relative;
   display: flex;
   justify-content: center;
   margin: 1.5rem 0;
@@ -7,11 +8,41 @@
   background-color: #f8fafc; /* slate-50 */
   border: 1px solid #e2e8f0; /* slate-200 */
   border-radius: 0.75rem;
-  overflow-x: auto;
+  cursor: zoom-in;
+  transition: border-color 0.15s ease;
 
+  &:hover {
+    border-color: #94a3b8; /* slate-400 */
+  }
+
+  img,
   svg {
     max-width: 100%;
     height: auto;
   }
-}
 
+  .diagram-expand {
+    position: absolute;
+    top: 0.5rem;
+    right: 0.5rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.375rem;
+    padding: 0.25rem 0.5rem;
+    font-size: 0.75rem;
+    line-height: 1rem;
+    color: #475569; /* slate-600 */
+    background-color: rgb(255 255 255 / 0.9);
+    border: 1px solid #e2e8f0; /* slate-200 */
+    border-radius: 0.375rem;
+    /* Kept visible rather than hover-only so the affordance also exists on touch devices */
+    opacity: 0.75;
+    transition: opacity 0.15s ease, color 0.15s ease;
+  }
+
+  &:hover .diagram-expand,
+  .diagram-expand:focus-visible {
+    opacity: 1;
+    color: #0f172a; /* slate-900 */
+  }
+}

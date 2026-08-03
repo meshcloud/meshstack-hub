@@ -9,6 +9,7 @@ import { ReferenceArchitecture, SeoService } from 'app/core';
 import { BreadcrumbComponent } from 'app/shared/breadcrumb';
 import { BreadcrumbItem } from 'app/shared/breadcrumb/breadcrumb';
 import { CardComponent } from 'app/shared/card';
+import { DiagramViewerComponent } from 'app/shared/diagram-viewer';
 import { Platform, PlatformService } from 'app/shared/platform';
 import { ReferenceArchitectureService } from 'app/shared/reference-architecture';
 import { TemplateService } from 'app/shared/template';
@@ -104,14 +105,14 @@ export class ReferenceArchitectureDetailComponent implements OnInit, OnDestroy, 
       'code.language-mermaid:not([data-mermaid-rendered])'
     );
 
-    if (mermaidBlocks.length === 0) {
-      return;
+    if (mermaidBlocks.length > 0) {
+      // Mark blocks synchronously before the async render to prevent double-processing
+      // when ngAfterViewChecked fires again during the async mermaid import.
+      mermaidBlocks.forEach((block: Element) => block.setAttribute('data-mermaid-rendered', 'true'));
+      this.renderMermaid(mermaidBlocks);
     }
 
-    // Mark blocks synchronously before the async render to prevent double-processing
-    // when ngAfterViewChecked fires again during the async mermaid import.
-    mermaidBlocks.forEach((block: Element) => block.setAttribute('data-mermaid-rendered', 'true'));
-    this.renderMermaid(mermaidBlocks);
+    this.enhanceDiagramImages();
   }
 
   public ngOnDestroy(): void {
@@ -186,14 +187,78 @@ export class ReferenceArchitectureDetailComponent implements OnInit, OnDestroy, 
 
       try {
         const { svg } = await mermaid.render(id, graphDefinition);
-        const wrapper = document.createElement('div');
-        wrapper.classList.add('mermaid-diagram');
-        wrapper.innerHTML = svg;
-        pre.replaceWith(wrapper);
+        const holder = document.createElement('div');
+        holder.innerHTML = svg;
+        const svgEl = holder.firstElementChild as HTMLElement | null;
+
+        if (!svgEl) {
+          continue;
+        }
+
+        pre.replaceWith(svgEl);
+        this.makeZoomable(svgEl, svgEl, 'Diagram', null);
       } catch {
         // Leave the code block as-is if rendering fails
       }
     }
+  }
+
+  /**
+   * Diagrams in the markdown body are committed SVGs referenced as images. They are wide and
+   * detailed, and browser zoom does not help — the page just reflows and the diagram stays fitted
+   * to its column — so each one gets a fullscreen viewer with real zoom and pan.
+   */
+  private enhanceDiagramImages(): void {
+    const images: NodeListOf<HTMLImageElement> = this.el.nativeElement.querySelectorAll(
+      '.markdown-body img:not([data-diagram-enhanced])'
+    );
+
+    images.forEach(img =>
+      this.makeZoomable(img, img, img.getAttribute('alt') || 'Diagram', img.getAttribute('src'))
+    );
+  }
+
+  /**
+   * Wraps `element` in a figure carrying a fullscreen affordance. `viewerNode` is what the viewer
+   * clones and displays — the same element for images, the bare `<svg>` for rendered mermaid.
+   */
+  private makeZoomable(
+    element: HTMLElement,
+    viewerNode: HTMLElement,
+    title: string,
+    sourceUrl: string | null
+  ): void {
+    element.setAttribute('data-diagram-enhanced', 'true');
+
+    const figure = document.createElement('figure');
+    figure.className = 'diagram-figure';
+
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.className = 'diagram-expand';
+    button.setAttribute('aria-label', `View ${title} fullscreen`);
+    button.innerHTML = '<i class="fa-solid fa-expand"></i><span>Fullscreen</span>';
+
+    // A markdown image sits alone in its own paragraph — replace that paragraph so the figure does
+    // not end up nested inside a <p>.
+    const parent = element.parentElement;
+    const replaced =
+      parent?.tagName === 'P' && parent.childElementCount === 1 && !parent.textContent?.trim()
+        ? parent
+        : element;
+
+    replaced.parentElement?.replaceChild(figure, replaced);
+    figure.appendChild(element);
+    figure.appendChild(button);
+
+    figure.addEventListener('click', () => this.openDiagram(viewerNode, title, sourceUrl));
+  }
+
+  private openDiagram(node: HTMLElement, title: string, sourceUrl: string | null): void {
+    this.dialog.open(DiagramViewerComponent, {
+      panelClass: 'diagram-viewer-panel',
+      data: { title, node, sourceUrl }
+    });
   }
 }
 
