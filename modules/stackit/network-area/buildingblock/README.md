@@ -51,6 +51,7 @@ No modules.
 |------|-------------|
 | <a name="output_network_area_id"></a> [network\_area\_id](#output\_network\_area\_id) | The UUID of the created STACKIT network area. |
 | <a name="output_network_area_name"></a> [network\_area\_name](#output\_network\_area\_name) | The name of the created STACKIT network area. |
+| <a name="output_network_area_url"></a> [network\_area\_url](#output\_network\_area\_url) | The deep link URL to access the network area in the STACKIT portal. |
 | <a name="output_network_ranges"></a> [network\_ranges](#output\_network\_ranges) | IPv4 CIDR ranges available to projects within the network area. |
 | <a name="output_summary"></a> [summary](#output\_summary) | Summary of the created network area. |
 | <a name="output_transfer_network"></a> [transfer\_network](#output\_transfer\_network) | IPv4 CIDR range used as the transfer network between the network area and connected networks. |
