@@ -227,6 +227,12 @@ resource "meshstack_building_block_definition" "this" {
     }
 
     outputs = {
+      network_area_url = {
+        display_name    = "Network Area URL"
+        type            = "STRING"
+        assignment_type = "RESOURCE_URL"
+      }
+
       network_area_id = {
         display_name    = "Network Area ID"
         type            = "STRING"

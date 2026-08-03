@@ -46,5 +46,6 @@ No modules.
 |------|-------------|
 | <a name="output_network_cidr"></a> [network\_cidr](#output\_network\_cidr) | Allocated IPv4 CIDR block of the network. |
 | <a name="output_network_id"></a> [network\_id](#output\_network\_id) | The UUID of the created STACKIT network. |
+| <a name="output_network_url"></a> [network\_url](#output\_network\_url) | The deep link URL to access the network in the STACKIT portal. |
 | <a name="output_summary"></a> [summary](#output\_summary) | Summary of the created network. |
 <!-- END_TF_DOCS -->
