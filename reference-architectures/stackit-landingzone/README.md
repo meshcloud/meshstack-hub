@@ -45,59 +45,16 @@ deploys only the sandbox foundation.
 
 ## Architecture Diagram
 
-The diagram separates the **platform artifacts** provisioned once by the platform team — the
-STACKIT cloud objects (folder, foundation project), the meshStack platform, landing zones, and the
-building block **definitions** (BBDs) registered in meshStack — from the **application landing zone
-objects** that application teams instantiate `N` times in self-service. Building block definitions
-(blue) are registered once; building block **instances** (green) are ordered against them — the hub
-network area is a single instance the platform team orders, while STACKIT projects and spoke
-networks are ordered `N` times by application teams.
+The left half of the diagram is the **STACKIT resource hierarchy** — the organization, the
+resourcemanager folder tenant projects land in, the foundation project holding the project-creation
+service account, and the org-level network area. The right half is **meshStack**: the platform, its
+landing zones and the building block **definitions** (BBDs). Dotted edges across the boundary show
+how each meshStack construct maps onto a STACKIT one. Definitions (blue) are registered once;
+**instances** (green) are ordered against them — the hub network area is a single instance the
+platform team orders, while STACKIT projects and spoke networks are ordered `N` times by application
+teams. Everything marked *optional* only appears when a network configuration is provided.
 
-```mermaid
-flowchart TB
-    subgraph platform["🏗️ Platform Team — provisioned once by this reference architecture"]
-        direction TB
-        FOLDER["📁 Resourcemanager Folder<br/><i>STACKIT</i>"]
-        FOUND["🔑 Foundation Project<br/><i>STACKIT · project-creation service account</i>"]
-        PLAT["🛰️ STACKIT Project Platform<br/><i>meshStack</i>"]
-        PRJBBD["📦 STACKIT Project BBD<br/><i>meshStack definition</i>"]
-        DEFLZ["🛬 Default Landing Zone<br/><i>meshStack</i>"]
-
-        PLAT --> PRJBBD
-        PLAT --> DEFLZ
-        FOUND -. hosts SA, creates projects in .-> FOLDER
-
-        subgraph net["Optional — enabled by the network configuration"]
-            direction TB
-            NABBD["📦 Network Area BBD<br/><i>meshStack definition</i>"]
-            SPOKEBBD["📦 STACKIT Network BBD<br/><i>meshStack definition · spoke</i>"]
-            HUBNA["🌐 Hub Network Area<br/><i>1 building block instance</i>"]
-            NETLZ["🛬 Networked Landing Zone<br/><i>meshStack</i>"]
-
-            NABBD -->|platform team orders 1| HUBNA
-            NETLZ -. tagged with area id .-> HUBNA
-        end
-        PLAT --> NETLZ
-    end
-
-    subgraph apps["👥 Application Teams — self-service · N instances"]
-        direction TB
-        PRJ["🗂️ STACKIT Project ×N<br/><i>building block instance</i>"]
-        SPOKE["🔌 Spoke Network ×N<br/><i>building block instance</i>"]
-        PRJ -->|orders stackit/network| SPOKE
-    end
-
-    DEFLZ ==>|request project| PRJ
-    NETLZ ==>|request networked project| PRJ
-    PRJBBD -. defines .-> PRJ
-    SPOKEBBD -. defines .-> SPOKE
-    SPOKE -. draws CIDR from .-> HUBNA
-
-    classDef bbd fill:#e8ecff,stroke:#5566dd,stroke-width:1px,color:#111;
-    classDef inst fill:#e6f6e6,stroke:#4a9a4a,stroke-width:1px,color:#111;
-    class PRJBBD,NABBD,SPOKEBBD bbd;
-    class HUBNA,PRJ,SPOKE inst;
-```
+![STACKIT Landing Zone reference architecture](stackit-landingzone.svg)
 
 When networking is enabled, application teams order a routed network into their own project via the
 self-service `stackit/network` building block; each order draws its subnet from the hub's address
