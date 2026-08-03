@@ -1,0 +1,69 @@
+/*
+ * STACKIT Landing Zone reference architecture.
+ * Conventions: .agents/references/diagrams.md — render with: task diagrams
+ */
+digraph stackit_landingzone {
+  rankdir=TB
+  splines=ortho
+  forcelabels=true
+  bgcolor="white"
+  nodesep=0.55
+  ranksep=0.85
+
+  node [shape=box style="rounded,filled" fontname="Helvetica" fontsize=11
+        fillcolor="#ffffff" color="#a2abb8" penwidth=1.1 margin="0.20,0.11"]
+  edge [fontname="Helvetica" fontsize=9 fontcolor="#697180" color="#8b95a3" arrowsize=0.7]
+
+  subgraph cluster_stackit {
+    label="  STACKIT"
+    labeljust=l
+    fontname="Helvetica" fontsize=12 fontcolor="#697180"
+    style="rounded" color="#d5dae0"
+    margin=18
+
+    ORG    [label="🏢 STACKIT Organization" fillcolor="#ffffff" color="#a2abb8"]
+    FOUND  [label="🔑 Foundation Project\nhosts the project-creation service account" fillcolor="#ffffff" color="#a2abb8"]
+    FOLDER [label="📁 Resourcemanager Folder\ntenant projects are created here" fillcolor="#ffffff" color="#a2abb8"]
+    NA     [label="🌐 Network Area ×1\nshared IPv4 address plan · hub" fillcolor="#e5f2ea" color="#85bfa0"]
+    PRJ    [label="🗂️ STACKIT Project ×N" fillcolor="#e5f2ea" color="#85bfa0"]
+    SPOKE  [label="🔌 Routed Network ×N\nspoke subnet" fillcolor="#e5f2ea" color="#85bfa0"]
+
+    { rank=same; FOUND -> FOLDER -> NA [style=invis] }
+
+    ORG    -> FOUND
+    ORG    -> FOLDER
+    ORG    -> NA
+    FOLDER -> PRJ   [xlabel="holds"]
+    PRJ    -> SPOKE [xlabel="contains"]
+    NA     -> SPOKE [xlabel="assigns CIDR to" style=dashed constraint=false]
+  }
+
+  subgraph cluster_mesh {
+    label="  meshStack"
+    labeljust=l
+    fontname="Helvetica" fontsize=12 fontcolor="#697180"
+    style="rounded" color="#d5dae0"
+    margin=18
+
+    PLAT     [label="🛰️ STACKIT Project Platform" fillcolor="#ecedfb" color="#9aa2e6"]
+    DEFLZ    [label="🛬 Default Landing Zone" fillcolor="#ecedfb" color="#9aa2e6"]
+    NETLZ    [label="🛬 Networked Landing Zone\noptional · with network config" fillcolor="#ecedfb" color="#9aa2e6"]
+    PRJBBD   [label="📦 stackit/project BBD" fillcolor="#ecedfb" color="#9aa2e6"]
+    NABBD    [label="📦 stackit/network-area BBD\noptional · platform team orders it once" fillcolor="#ecedfb" color="#9aa2e6"]
+    SPOKEBBD [label="📦 stackit/network BBD\noptional · tenant-level self-service" fillcolor="#ecedfb" color="#9aa2e6"]
+
+    { rank=same; DEFLZ -> NETLZ [style=invis] }
+    { rank=same; PRJBBD -> SPOKEBBD -> NABBD [style=invis] }
+
+    PLAT  -> DEFLZ
+    PLAT  -> NETLZ
+    DEFLZ -> PRJBBD   [xlabel="requests"]
+    NETLZ -> SPOKEBBD [xlabel="offers to tenants"]
+  }
+
+  FOUND    -> PLAT  [xlabel="authenticates" style=dotted constraint=false]
+  PRJBBD   -> PRJ   [xlabel="provisions" style=dotted constraint=false]
+  NABBD    -> NA    [xlabel="provisions" style=dotted constraint=false]
+  SPOKEBBD -> SPOKE [xlabel="provisions" style=dotted constraint=false]
+  NETLZ    -> NA    [xlabel="tagged with area id" style=dotted constraint=false]
+}
