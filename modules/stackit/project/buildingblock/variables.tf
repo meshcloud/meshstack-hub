@@ -35,25 +35,7 @@ variable "service_account_email" {
 variable "labels" {
   type        = map(string)
   nullable    = false
-  description = "Additional labels to apply to the project, merged with the `networkArea` label resolved from the landing zone's tags."
-}
-
-variable "workspace_identifier" {
-  type        = string
-  nullable    = false
-  description = "meshStack workspace identifier, used to look up this project's landing zone tags at runtime."
-}
-
-variable "platform_identifier" {
-  type        = string
-  nullable    = false
-  description = "meshStack platform identifier, used to look up this project's landing zone tags at runtime."
-}
-
-variable "network_area_tag_name" {
-  type        = string
-  default     = null
-  description = "Name of the meshStack landing zone tag whose value is used as the STACKIT project's `networkArea` label. Set to null (default) to skip network area assignment — projects remain usable without a network area."
+  description = "Labels to apply to the project. Includes the `networkArea` label when the building block definition is wired to a network area."
 }
 
 variable "users" {

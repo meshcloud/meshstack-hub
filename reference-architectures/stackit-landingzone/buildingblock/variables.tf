@@ -68,7 +68,6 @@ variable "stackit_organization_onboarding_enabled" {
 
 variable "network" {
   type = object({
-    network_area_tag_name            = optional(string, "StackitNetworkArea")
     hub_network_area_name            = optional(string, "hub")
     hub_network_ranges               = optional(list(string), ["10.0.0.0/16"])
     hub_transfer_network             = optional(string, "10.1.255.0/24")
@@ -80,7 +79,7 @@ variable "network" {
     tenant_network_max_prefix_length = optional(number, 28)
   })
   default     = null
-  description = "Optional hub-and-spoke network topology. Leave unset (null) to deploy only the sandbox landing zone. When set, additionally provisions a shared hub network area with the given address plan (`hub_*` fields), registers the self-service spoke `STACKIT Network` building block (`tenant_network_*` prefix bounds), and creates a `networked` landing zone (tagged via `network_area_tag_name`) whose projects are placed in the hub network area."
+  description = "Optional hub-and-spoke network topology. Leave unset (null) to deploy only the sandbox landing zone. When set, additionally provisions a shared hub network area with the given address plan (`hub_*` fields), registers the self-service spoke `STACKIT Network` building block (`tenant_network_*` prefix bounds), and adds a dedicated `networked` STACKIT Project building block definition and landing zone whose projects are placed in the hub network area."
 }
 
 variable "hub" {

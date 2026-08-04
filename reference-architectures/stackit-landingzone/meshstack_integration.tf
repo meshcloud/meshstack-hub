@@ -76,15 +76,15 @@ resource "meshstack_building_block_definition" "this" {
     **Example 2: Bootstrap with hub-and-spoke networking**
     A platform engineer provides a **network** configuration (CIDR plan, prefix bounds). In addition
     to the sandbox platform, the building block provisions the hub network area with the chosen
-    address plan, registers the **STACKIT Network** building block, and creates a `networked` landing
-    zone. Application teams can then self-service order routed spoke networks inside their projects.
+    address plan, registers the **STACKIT Network** building block, and adds a dedicated `networked`
+    STACKIT Project building block definition plus landing zone whose projects are placed in the hub
+    network area. Application teams can then self-service order routed spoke networks inside their projects.
 
     A **network** configuration looks like this (sensible example values shown — adapt them to your
     own address plan):
 
     ```json
     {
-      "network_area_tag_name": "StackitNetworkArea",
       "hub_network_area_name": "hub",
       "hub_network_ranges": ["10.0.0.0/16"],
       "hub_transfer_network": "10.1.255.0/24",
@@ -106,9 +106,10 @@ resource "meshstack_building_block_definition" "this" {
       project-creation service account and other landing-zone core assets.
     - **STACKIT Project platform** – the `STACKIT Project` building block definition, platform and default landing zone,
       including the project-creation service account provisioned in the foundation project.
-    - **Hub network area + spoke network building block + networked landing zone** *(only when a
-      network configuration is provided)* – the shared hub address plan, the self-service
-      `STACKIT Network` building block, and a landing zone that places projects into the hub.
+    - **Hub network area + spoke network building block + networked project definition and landing
+      zone** *(only when a network configuration is provided)* – the shared hub address plan, the
+      self-service `STACKIT Network` building block, and a second `STACKIT Networked Project`
+      building block definition plus landing zone that places projects into the hub network area.
 
     ## 🔑 Authentication
 

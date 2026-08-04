@@ -1,6 +1,9 @@
 locals {
   # Hub-and-spoke networking is deployed only when the operator supplies a `network` object.
   network_enabled = var.network != null
+
+  # Only resolvable once the hub network area building block has completed.
+  network_area_id = local.network_enabled ? jsondecode(meshstack_building_block.network_area_hub[0].status.outputs["network_area_id"].value) : null
 }
 
 # ── Sandbox landing zone foundation (always deployed) ──
@@ -42,7 +45,11 @@ module "stackit_integration" {
   stackit_service_account_name            = substr(var.platform_identifier, 0, 20)
   role_mapping                            = var.role_mapping
   stackit_organization_onboarding_enabled = var.stackit_organization_onboarding_enabled
-  stackit_network_area_tag_name           = local.network_enabled ? var.network.network_area_tag_name : null
+
+  # The networked project definition places its projects in the hub network area via a static
+  # `networkArea` label, so no landing zone tag (and no tag definition) is involved.
+  stackit_networked_projects_enabled = local.network_enabled
+  stackit_network_area_id            = local.network_area_id
 
   hub = var.hub
 
@@ -115,37 +122,5 @@ resource "meshstack_building_block" "network_area_hub" {
         value = jsonencode(jsonencode(var.network.hub_default_nameservers))
       }
     }
-  }
-}
-
-# Looks up the default landing zone that `module.stackit_integration` already registered, without
-# needing new outputs threaded through it. Used below only as an input into the independent
-# `networked` landing zone — never fed back into the integration itself, which would create a cycle.
-data "meshstack_landingzone" "foundation_default" {
-  count      = local.network_enabled ? 1 : 0
-  metadata   = { name = "${var.platform_identifier}-default" }
-  depends_on = [module.stackit_integration]
-}
-
-resource "meshstack_landingzone" "networked" {
-  count = local.network_enabled ? 1 : 0
-
-  metadata = {
-    name               = "${var.platform_identifier}-networked"
-    owned_by_workspace = var.workspace
-    tags = merge(var.tags.landingzone, {
-      (var.network.network_area_tag_name) = [jsondecode(meshstack_building_block.network_area_hub[0].status.outputs["network_area_id"].value)]
-    })
-  }
-
-  spec = {
-    display_name                  = "STACKIT Networked"
-    description                   = "STACKIT landing zone whose projects are placed in the hub network area."
-    automate_deletion_approval    = true
-    automate_deletion_replication = true
-
-    platform_ref                  = data.meshstack_landingzone.foundation_default[0].spec.platform_ref
-    platform_properties           = { custom = {} }
-    mandatory_building_block_refs = data.meshstack_landingzone.foundation_default[0].spec.mandatory_building_block_refs
   }
 }

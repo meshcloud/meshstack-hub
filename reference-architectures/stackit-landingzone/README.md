@@ -80,8 +80,10 @@ When a **network** configuration is provided, it additionally:
 5. Registers the [`stackit/network`](../../modules/stackit/network) building block definition
    (`TENANT_LEVEL`) so application teams can self-service order routed networks (spokes) inside
    their STACKIT projects, drawing from the hub's address plan.
-6. Provisions an additional **networked landing zone**, tagged with the hub's network area ID, so
-   new STACKIT projects created against it are placed in the hub's network area.
+6. Provisions an additional **networked project definition and landing zone**. The networked
+   `STACKIT Project` building block definition carries the hub's network area ID as a static
+   `networkArea` label, so new STACKIT projects created against that landing zone are placed in the
+   hub's network area.
 
 ## Getting Started
 
@@ -96,7 +98,7 @@ When a **network** configuration is provided, it additionally:
 
 Order the **STACKIT Landing Zone** building block once per workspace. Without a network
 configuration it creates the platform and default landing zone. With a network configuration it
-additionally creates the hub network area instance, the networked landing zone, and registers the
+additionally creates the hub network area instance, the networked project definition and landing zone, and registers the
 spoke `stackit/network` building block in the same apply. Application teams can then request
 projects and — when networking is enabled — order `stackit/network` inside their own STACKIT
 projects once those projects exist.

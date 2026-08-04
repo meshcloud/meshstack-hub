@@ -45,13 +45,19 @@ variable "role_mapping" {
 variable "stackit_project_labels" {
   type        = map(string)
   default     = {}
-  description = "Additional labels applied to every STACKIT project created by this building block, merged with the `networkArea` label resolved at runtime from the landing zone's tags."
+  description = "Additional labels applied to every STACKIT project created by this building block."
 }
 
-variable "stackit_network_area_tag_name" {
+variable "stackit_networked_projects_enabled" {
+  type        = bool
+  default     = false
+  description = "Whether to create a second, `networked` STACKIT Project building block definition and landing zone whose projects are placed in `stackit_network_area_id`. Must be known at plan time (`stackit_network_area_id` itself may only resolve during apply)."
+}
+
+variable "stackit_network_area_id" {
   type        = string
   default     = null
-  description = "Name of the meshStack landing zone tag whose value is used as the STACKIT project's `networkArea` label. Set to null (default) to skip network area assignment."
+  description = "STACKIT network area ID applied as the `networkArea` label to projects created through the `networked` landing zone. Only used when `stackit_networked_projects_enabled` is true."
 }
 
 variable "meshstack" {
@@ -100,7 +106,8 @@ module "backplane" {
   workload_identity_federation = {
     issuer = data.meshstack_integrations.integrations.workload_identity_federation.replicator.issuer
     subjects = [
-      "${trimsuffix(data.meshstack_integrations.integrations.workload_identity_federation.replicator.subject, ":replicator")}:workspace.${var.meshstack.owning_workspace_identifier}.buildingblockdefinition.${meshstack_building_block_definition.this.metadata.uuid}"
+      for bbd in meshstack_building_block_definition.this :
+      "${trimsuffix(data.meshstack_integrations.integrations.workload_identity_federation.replicator.subject, ":replicator")}:workspace.${var.meshstack.owning_workspace_identifier}.buildingblockdefinition.${bbd.metadata.uuid}"
     ]
   }
 }
@@ -110,9 +117,38 @@ data "meshstack_integrations" "integrations" {}
 output "building_block_definition" {
   description = "BBD is consumed in building block compositions."
   value = {
-    uuid        = meshstack_building_block_definition.this.metadata.uuid
-    version_ref = var.hub.bbd_draft ? meshstack_building_block_definition.this.version_latest : meshstack_building_block_definition.this.version_latest_release
+    uuid        = meshstack_building_block_definition.this["default"].metadata.uuid
+    version_ref = var.hub.bbd_draft ? meshstack_building_block_definition.this["default"].version_latest : meshstack_building_block_definition.this["default"].version_latest_release
   }
+}
+
+output "service_account_email" {
+  description = "Email of the backplane STACKIT service account that creates and manages tenant projects."
+  value       = module.backplane.service_account_email
+}
+
+# One STACKIT Project building block definition plus landing zone per project variant. The
+# `networked` variant carries the `networkArea` label as a static building block input, so projects
+# are placed in the network area without any landing zone tag lookup at run time.
+locals {
+  project_variants = merge(
+    {
+      default = {
+        bbd_display_name         = "STACKIT Project"
+        landingzone_display_name = "STACKIT Sandbox"
+        landingzone_description  = "Creates a STACKIT project in the landing zone folder, with project roles mapped from meshStack project roles. The project is not attached to a network area, so it uses STACKIT's default flat networking."
+        network_area_id          = null
+      }
+    },
+    var.stackit_networked_projects_enabled ? {
+      networked = {
+        bbd_display_name         = "STACKIT Networked Project"
+        landingzone_display_name = "STACKIT Networked"
+        landingzone_description  = "Creates a STACKIT project placed in the shared hub network area, with project roles mapped from meshStack project roles. Order the STACKIT Network building block inside the project to get a routed subnet drawn from the hub's address plan."
+        network_area_id          = var.stackit_network_area_id
+      }
+    } : {}
+  )
 }
 
 resource "meshstack_platform" "stackit" {
@@ -129,6 +165,8 @@ resource "meshstack_platform" "stackit" {
     display_name = "STACKIT Project"
     description  = "Create a STACKIT project with configurable role-based access control."
     endpoint     = "https://portal.stackit.cloud"
+
+    documentation_url = "https://hub.meshcloud.io/reference-architectures/stackit-landingzone"
 
     location_ref = {
       name = var.meshstack.location_name
@@ -148,16 +186,19 @@ resource "meshstack_platform" "stackit" {
   }
 }
 
-resource "meshstack_landingzone" "stackit_default" {
+resource "meshstack_landingzone" "this" {
+  for_each = local.project_variants
+
   metadata = {
-    name               = "${var.meshstack.platform_identifier}-default"
+    name               = "${var.meshstack.platform_identifier}-${each.key}"
     owned_by_workspace = var.meshstack.owning_workspace_identifier
     tags               = var.meshstack.tags.landingzone
   }
 
   spec = {
-    display_name                  = "STACKIT Default"
-    description                   = "Default landing zone for STACKIT projects."
+    display_name                  = each.value.landingzone_display_name
+    description                   = each.value.landingzone_description
+    info_link                     = "https://hub.meshcloud.io/reference-architectures/stackit-landingzone"
     automate_deletion_approval    = true
     automate_deletion_replication = true
 
@@ -170,19 +211,21 @@ resource "meshstack_landingzone" "stackit_default" {
     }
 
     mandatory_building_block_refs = [
-      { uuid = meshstack_building_block_definition.this.metadata.uuid }
+      { uuid = meshstack_building_block_definition.this[each.key].metadata.uuid }
     ]
   }
 }
 
 resource "meshstack_building_block_definition" "this" {
+  for_each = local.project_variants
+
   metadata = {
     owned_by_workspace = var.meshstack.owning_workspace_identifier
     tags               = var.meshstack.tags.building_block
   }
 
   spec = {
-    display_name              = "STACKIT Project"
+    display_name              = each.value.bbd_display_name
     symbol                    = "https://raw.githubusercontent.com/meshcloud/meshstack-hub/${var.hub.git_ref}/modules/stackit/project/buildingblock/logo.png"
     description               = "Creates a new STACKIT project and manages user access permissions with configurable role-based access control."
     support_url               = "https://portal.stackit.cloud"
@@ -211,7 +254,7 @@ resource "meshstack_building_block_definition" "this" {
       }
     }
 
-    inputs = merge({
+    inputs = {
       parent_container_id = {
         display_name    = "Parent Container ID"
         description     = "Default parent container ID (organization or folder) where the project will be created."
@@ -297,35 +340,15 @@ resource "meshstack_building_block_definition" "this" {
 
       labels = {
         display_name    = "Labels"
-        description     = "Additional labels applied to the STACKIT project, merged with the `networkArea` label resolved at runtime from the landing zone's tags."
+        description     = "Labels applied to the STACKIT project, including the `networkArea` label for the networked variant."
         type            = "CODE"
         assignment_type = "STATIC"
-        argument        = jsonencode(jsonencode(var.stackit_project_labels))
+        argument = jsonencode(jsonencode(merge(
+          var.stackit_project_labels,
+          each.value.network_area_id != null ? { networkArea = each.value.network_area_id } : {}
+        )))
       }
-
-      workspace_identifier = {
-        display_name    = "Workspace Identifier"
-        description     = "meshStack workspace identifier, used to look up this project's landing zone tags at runtime."
-        type            = "STRING"
-        assignment_type = "WORKSPACE_IDENTIFIER"
-      }
-
-      platform_identifier = {
-        display_name    = "Platform Identifier"
-        description     = "meshStack platform identifier, used to look up this project's landing zone tags at runtime."
-        type            = "STRING"
-        assignment_type = "FULL_PLATFORM_IDENTIFIER"
-      }
-
-      }, var.stackit_network_area_tag_name != null ? {
-      network_area_tag_name = {
-        display_name    = "Network Area Tag Name"
-        description     = "Name of the meshStack landing zone tag whose value is used as the STACKIT project's `networkArea` label."
-        type            = "STRING"
-        assignment_type = "STATIC"
-        argument        = jsonencode(var.stackit_network_area_tag_name)
-      }
-    } : {})
+    }
 
     outputs = {
       project_url = {
@@ -358,9 +381,6 @@ resource "meshstack_building_block_definition" "this" {
         assignment_type = "SUMMARY"
       }
     }
-
-    # TENANT_LIST/LANDINGZONE_LIST: needed by meshstack_tenant/meshstack_landingzone data sources for network area tag lookup.
-    permissions = ["TENANT_LIST", "LANDINGZONE_LIST"]
   }
 }
 
