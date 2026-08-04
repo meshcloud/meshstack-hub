@@ -4,11 +4,14 @@
 
 | Property | Value |
 |----------|-------|
+| **Organization** | [Open in STACKIT Portal](${organization_url}) (`${organization_id}`) |
+| **Landing Zone Folder** | [Open in STACKIT Portal](${lz_folder_url}) (`${lz_folder_container_id}`) |
 | **Foundation Project** | [Open in STACKIT Portal](${foundation_project_url}) (`${foundation_project_id}`) |
-| **Landing Zone Folder** | `${lz_folder_container_id}` |
+| **Foundation Project Service Account** | [Open in STACKIT Portal](${service_account_url}) (`${service_account_email}`) |
 %{ if network_enabled ~}
+| **Hub Network Area** | [Open in STACKIT Portal](${network_area_url}) (`${network_area_id}`) |
+| **Hub Network Area Building Block** | @buildingblock[${network_area_hub_uuid}] |
 | **Networked Landing Zone** | `${networked_landingzone_name}` |
-| **Hub Network Area** | @buildingblock[${network_area_hub_uuid}] |
 %{ endif ~}
 
 %{ if network_enabled ~}
