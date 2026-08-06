@@ -5,6 +5,8 @@ supportedPlatforms:
 description: |
   Reference building block demonstrating meshStack's MANUAL implementation type:
   the backend derives one output per input, translating types that cannot be outputs.
+# MANUAL implementation type: no Terraform runs at all, so there is nothing to set up cloud-side.
+requiresBackplane: false
 ---
 # meshStack Manual Building Block
 
