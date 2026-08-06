@@ -244,8 +244,14 @@ name: <Human-readable name>
 supportedPlatforms:
   - <platform-id> # e.g. aws, azure, stackit
 description: One-sentence description of what the module provisions.
+requiresBackplane: false # optional — see below
 ---
 ```
+
+`requiresBackplane: false` is optional and declares that the module needs no cloud-side setup, so
+the scorecard treats the missing `backplane/` tier as not applicable instead of a gap. Only set it
+for building blocks that genuinely provision nothing cloud-side (e.g. those receiving all
+credentials as static inputs) — add a comment above it saying why.
 
 **User-facing readme — two patterns depending on module completeness:**
 
