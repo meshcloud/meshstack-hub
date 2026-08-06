@@ -574,9 +574,20 @@ const detectors = [
     category: "testing",
     name: "backplane/ directory (optional tier)",
     emoji: "⚙️",
-    fn: (mod) => ({
-      pass: existsSync(join(mod.path, "backplane")),
-    }),
+    fn: (mod) => {
+      // The tier is genuinely optional: building blocks that need no cloud-side setup opt out by
+      // declaring `requiresBackplane: false` in their buildingblock/README.md front-matter, which
+      // makes this check not applicable rather than failing. Keeping the opt-out explicit means an
+      // absent backplane still shows as a gap unless someone deliberately declared otherwise.
+      const readmePath = join(mod.path, "buildingblock", "README.md");
+      if (existsSync(readmePath)) {
+        const frontmatter = readFileSync(readmePath, "utf-8").split(/^---\s*$/m)[1] ?? "";
+        if (/^requiresBackplane:\s*false\s*$/m.test(frontmatter)) {
+          return { pass: null, detail: "module declares requiresBackplane: false" };
+        }
+      }
+      return { pass: existsSync(join(mod.path, "backplane")) };
+    },
   },
   {
     id: "e2e_tests",
