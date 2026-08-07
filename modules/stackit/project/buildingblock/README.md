@@ -79,5 +79,5 @@ No modules.
 | <a name="output_project_id"></a> [project\_id](#output\_project\_id) | The UUID of the created StackIt project. |
 | <a name="output_project_name"></a> [project\_name](#output\_project\_name) | The name of the created StackIt project. |
 | <a name="output_project_url"></a> [project\_url](#output\_project\_url) | The deep link URL to access the project in the StackIt portal. |
-| <a name="output_summary"></a> [summary](#output\_summary) | Summary of STACKIT organization membership onboarding for assigned project users. |
+| <a name="output_summary"></a> [summary](#output\_summary) | Summary of the created project and STACKIT organization membership onboarding for assigned project users. |
 <!-- END_TF_DOCS -->
