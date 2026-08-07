@@ -11,8 +11,8 @@ resource "meshstack_building_block_definition" "created" {
   }
 
   spec = {
-    display_name     = var.name
-    description      = "Link building block definition created by the meshStack Composition building block."
+    display_name     = var.link_name
+    description      = "Link building block definition created by the Composition Demo building block."
     target_type      = "WORKSPACE_LEVEL"
     run_transparency = true
 
@@ -59,7 +59,7 @@ resource "meshstack_building_block_definition" "created" {
         description     = "Human-readable name of the linked resource."
         type            = "STRING"
         assignment_type = "STATIC"
-        argument        = jsonencode(var.name)
+        argument        = jsonencode(var.link_name)
       }
       # Empty falls back to the summary the link module generates from title and url.
       summary = {
@@ -73,7 +73,7 @@ resource "meshstack_building_block_definition" "created" {
 
     outputs = {
       url = {
-        display_name    = var.name
+        display_name    = var.link_name
         type            = "STRING"
         assignment_type = "RESOURCE_URL"
       }
@@ -95,7 +95,7 @@ resource "meshstack_building_block" "created" {
       content_hash = meshstack_building_block_definition.created.version_latest.content_hash
     }
 
-    display_name = var.name
+    display_name = var.link_name
 
     target_ref = {
       kind = "meshWorkspace"

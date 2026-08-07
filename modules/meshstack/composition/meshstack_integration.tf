@@ -1,3 +1,9 @@
+variable "link_name" {
+  type        = string
+  default     = "Link"
+  description = "Name given to the building block definition and building block this composition creates. Both are the hub's `link` building block, hence the default."
+}
+
 variable "link_url" {
   type        = string
   default     = "https://docs.meshcloud.io"
@@ -44,8 +50,8 @@ resource "meshstack_building_block_definition" "this" {
   }
 
   spec = {
-    display_name = "meshStack Composition Building Block"
-    description  = "Reference building block demonstrating the composition pattern: creates a link building block definition and a building block from it using the run's ephemeral API key."
+    display_name = "Composition Demo"
+    description  = "Reference building block demonstrating the composition pattern: creates a Link building block definition and a building block from it using the run's ephemeral API key."
     target_type  = "WORKSPACE_LEVEL"
     symbol       = "https://raw.githubusercontent.com/meshcloud/meshstack-hub/${var.hub.git_ref}/modules/meshstack/composition/buildingblock/logo.png"
 
@@ -105,12 +111,12 @@ resource "meshstack_building_block_definition" "this" {
     }
 
     inputs = {
-      name = {
+      link_name = {
         assignment_type = "USER_INPUT"
         type            = "STRING"
-        display_name    = "Name"
+        display_name    = "Link Name"
         description     = "Name given to the building block definition and building block this composition creates."
-        default_value   = jsonencode("Composition Demo")
+        default_value   = jsonencode(var.link_name)
       }
       link_url = {
         assignment_type = "USER_INPUT"
