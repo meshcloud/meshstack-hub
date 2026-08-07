@@ -30,8 +30,13 @@ resource "meshstack_building_block_definition" "created" {
     # anyway, warn on every run, and leave version_latest_release null. The building block below can
     # still be created from a draft because the definition and the target are the same workspace,
     # which satisfies BuildingBlockCreationValidator.requireAccess's `selfOwning` branch.
-    draft         = true
-    deletion_mode = "DELETE"
+    draft = true
+
+    # PURGE, not DELETE: DELETE would schedule a deprovisioning run for the building block below when
+    # this composition is torn down, and that run cannot start until the composition's own destroy run
+    # returns — a deadlock wherever the terraform runner pool has a single worker. Nothing is leaked
+    # by purging, because the `link` implementation provisions nothing but a terraform_data.
+    deletion_mode = "PURGE"
 
     implementation = {
       terraform = {

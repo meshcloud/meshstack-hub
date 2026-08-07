@@ -1,5 +1,9 @@
+# Defaulted, unlike the other inputs, so that a run can still destroy a building block whose stored
+# inputs predate a rename of this one. A destroy only has to delete the created meshObjects, and their
+# display names have no bearing on that.
 variable "link_name" {
   type        = string
+  default     = "Link"
   description = "Name given to the building block definition and building block this composition creates."
 }
 

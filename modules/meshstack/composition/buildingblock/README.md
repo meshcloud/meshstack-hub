@@ -48,6 +48,9 @@ escalation guard (a nested definition may only request a subset of its parent's 
 - This module does not wait for the created building block's run. That run needs a terraform runner,
   and a stack with a single one cannot start it before this run returns. Provenance is recorded when
   the block is created, so nothing here depends on the result.
+- For the same reason the created definition uses `deletion_mode = "PURGE"`. `DELETE` would schedule
+  a deprovisioning run on teardown that cannot start until the composition's own destroy run returns.
+  Purging leaks nothing, since `link` provisions no infrastructure.
 - `hub_git_ref` is wired in as a static input from the composition's own `var.hub.git_ref`, so the
   created definition clones the `link` module from the same hub revision.
 - The created definition's version stays a **draft**. Releasing needs admin approval, which the run's
@@ -79,7 +82,7 @@ No modules.
 | Name | Description | Type | Default | Required |
 |------|-------------|------|---------|:--------:|
 | <a name="input_hub_git_ref"></a> [hub\_git\_ref](#input\_hub\_git\_ref) | Hub reference the created building block definition clones its implementation from. Wired in as a static input from the composition's own `var.hub.git_ref`, so both definitions stay on the same hub revision. | `string` | n/a | yes |
-| <a name="input_link_name"></a> [link\_name](#input\_link\_name) | Name given to the building block definition and building block this composition creates. | `string` | n/a | yes |
+| <a name="input_link_name"></a> [link\_name](#input\_link\_name) | Name given to the building block definition and building block this composition creates. | `string` | `"Link"` | no |
 | <a name="input_link_url"></a> [link\_url](#input\_link\_url) | Target of the link the created building block publishes. | `string` | n/a | yes |
 | <a name="input_workspace_identifier"></a> [workspace\_identifier](#input\_workspace\_identifier) | Workspace the created building block definition is owned by and the created building block is attached to. Wired in as a WORKSPACE\_IDENTIFIER input, so it is always the consuming workspace — the same one the run's ephemeral API key is scoped to. | `string` | n/a | yes |
 
