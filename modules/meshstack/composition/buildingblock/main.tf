@@ -25,8 +25,12 @@ resource "meshstack_building_block_definition" "created" {
   }
 
   version_spec = {
-    # Released, not a draft: meshstack_building_block.created below is created from this version.
-    draft         = false
+    # Stays a draft: releasing a version needs admin approval, which the run's ephemeral key — a
+    # plain workspace key — cannot obtain. Setting draft = false would leave the version DRAFT
+    # anyway, warn on every run, and leave version_latest_release null. The building block below can
+    # still be created from a draft because the definition and the target are the same workspace,
+    # which satisfies BuildingBlockCreationValidator.requireAccess's `selfOwning` branch.
+    draft         = true
     deletion_mode = "DELETE"
 
     implementation = {
@@ -84,9 +88,11 @@ resource "meshstack_building_block_definition" "created" {
 
 resource "meshstack_building_block" "created" {
   spec = {
+    # version_latest, not version_latest_release: the definition above stays a draft, so
+    # version_latest_release is null.
     building_block_definition_version_ref = {
-      uuid         = meshstack_building_block_definition.created.version_latest_release.uuid
-      content_hash = meshstack_building_block_definition.created.version_latest_release.content_hash
+      uuid         = meshstack_building_block_definition.created.version_latest.uuid
+      content_hash = meshstack_building_block_definition.created.version_latest.content_hash
     }
 
     display_name = var.name

@@ -48,6 +48,11 @@ escalation guard (a nested definition may only request a subset of its parent's 
   the block is created, so nothing here depends on the result.
 - `hub_git_ref` is wired in as a static input from the composition's own `var.hub.git_ref`, so the
   created definition clones the `link` module from the same hub revision.
+- The created definition's version stays a **draft**. Releasing needs admin approval, which the run's
+  ephemeral key — a plain workspace key — cannot obtain, so `draft = false` would leave the version
+  `DRAFT` regardless, warn on every run, and leave `version_latest_release` null. The created
+  building block therefore references `version_latest`, which a draft permits because the definition
+  and the building block's target are the same workspace.
 
 <!-- BEGIN_TF_DOCS -->
 ## Requirements
