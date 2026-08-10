@@ -196,7 +196,8 @@ The `availability` field controls publication state and access restrictions. mes
 - **Cloud-provider-specific variables** in `meshstack_integration.tf` must be **flat** (not grouped into a single object) and prefixed with the cloud provider name: `azure_tenant_id`, `aws_region`, `gcp_project_id`, `stackit_project_id`
 - **Cross-cutting concerns** like workload identity federation settings may be grouped into an `object({})` typed variable (e.g. `variable "workload_identity"`) when the fields are logically inseparable
 - Only `variable "meshstack"` and `variable "hub"` use shared `object({})` conventions across all integrations
-- Use minimum version constraints (`>= X.Y.Z`) for all providers in `versions.tf` and `meshstack_integration.tf`. Strict pinning is the responsibility of root configurations (ICF/LCF) via `.terraform.lock.hcl`.
+- Use minimum version constraints (`>= X.Y.Z`) for all providers — never `~>` and never an exact pin. This applies to **every** `required_providers` block in the module: both tiers (`backplane/` and `buildingblock/`, including nested submodules) and `meshstack_integration.tf`, in whichever file declares them (`versions.tf`, `provider.tf`, …). Strict pinning is the responsibility of root configurations (ICF/LCF) via `.terraform.lock.hcl`.
+  Both tiers matter because they are consumed together: a hub e2e test module loads the backplane and the buildingblock into one configuration, so their constraints must intersect on a version that exists. A `~>` or exact pin in either tier caps the whole configuration — and silently caps the e2e suite.
 - Terraform baseline: `>= 1.12.0` to cover OpenTofu v1.12.0 with `const` variable support (requires OpenTofu ≥ 1.12 or Terraform ≥ 1.15)
 
 ---

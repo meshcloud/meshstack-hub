@@ -138,14 +138,24 @@ const detectors = [
     name: "Provider versions use minimum constraint (>=)",
     emoji: "🔒",
     fn: (mod) => {
-      const versionsPath = join(mod.path, "buildingblock", "versions.tf");
-      if (!existsSync(versionsPath)) return { pass: false, detail: "no versions.tf" };
-      const content = readFileSync(versionsPath, "utf-8");
-      const versionLines = content.match(/version\s*=\s*"[^"]+"/g);
-      if (!versionLines || versionLines.length === 0)
-        return { pass: true, detail: "no version constraints" };
-      const allMinimum = versionLines.every((l) => l.includes(">=") && !l.includes("~>"));
-      return { pass: allMinimum };
+      const constraints = collectProviderConstraints(mod);
+      if (constraints.length === 0)
+        return { pass: true, detail: "no provider version constraints" };
+
+      const violations = constraints.filter(
+        (c) => !c.constraint.includes(">=") || c.constraint.includes("~>")
+      );
+      if (violations.length === 0) return { pass: true };
+
+      const shown = violations
+        .slice(0, 4)
+        .map((v) => `${v.file}: ${v.provider} = "${v.constraint}"`)
+        .join(", ");
+      const more = violations.length > 4 ? `, +${violations.length - 4} more` : "";
+      return {
+        pass: false,
+        detail: `use a minimum constraint (>=) instead: ${shown}${more}`,
+      };
     },
   },
 
@@ -838,6 +848,67 @@ function extractBBDReadmeContent(content) {
   if (nonEmpty.length === 0) return "";
   const minIndent = Math.min(...nonEmpty.map((l) => (l.match(/^(\s*)/) || ["", ""])[1].length));
   return lines.map((l) => l.slice(minIndent)).join("\n").trim();
+}
+
+// Every .tf file under dir, recursively — nested submodules (e.g.
+// buildingblock/pre_role_assignment/) declare their own required_providers and are
+// initialised as part of the parent, so their constraints count too.
+function collectTfFilesRecursive(dir) {
+  if (!existsSync(dir)) return [];
+  const found = [];
+  for (const entry of readdirSync(dir)) {
+    if (entry.startsWith(".")) continue; // .terraform, .terraform.lock.hcl
+    const p = join(dir, entry);
+    if (statSync(p).isDirectory()) found.push(...collectTfFilesRecursive(p));
+    else if (entry.endsWith(".tf")) found.push(p);
+  }
+  return found;
+}
+
+// Heredoc bodies are example Terraform emitted for consumers (several Azure backplanes
+// output a ready-to-paste provider.tf), not constraints this module is initialised with.
+function stripHeredocs(content) {
+  return content.replace(/<<-?\s*([A-Za-z_]\w*)\r?\n[\s\S]*?^\s*\1\s*$/gm, "");
+}
+
+// Every `version` attribute inside a `required_providers` block across BOTH tiers.
+//
+// Both tiers matter because they are consumed together: a hub e2e test module loads the
+// backplane and the buildingblock into one configuration, so their constraints have to
+// intersect on a version that exists. A `~>` or exact pin in either tier caps the whole
+// configuration — that is how modules/meshstack/noop pinned the e2e suite to meshstack
+// v0.21.0 from its backplane while its buildingblock declared only `>=`.
+//
+// Constraints are read from any .tf file, not just versions.tf: `provider.tf` is part of the
+// documented module layout and legitimately carries required_providers.
+function collectProviderConstraints(mod) {
+  const constraints = [];
+
+  for (const tier of ["backplane", "buildingblock"]) {
+    for (const file of collectTfFilesRecursive(join(mod.path, tier))) {
+      const content = stripHeredocs(readFileSync(file, "utf-8"));
+
+      for (const m of content.matchAll(/required_providers\s*\{/g)) {
+        const open = m.index + m[0].length - 1;
+        const close = findMatchingBrace(content, open);
+        if (close < 0) continue;
+        const body = content.slice(open + 1, close);
+
+        // Provider entries hold no nested braces, so a flat `name = { ... }` match is enough.
+        for (const entry of body.matchAll(/([\w-]+)\s*=\s*\{([^{}]*)\}/g)) {
+          const version = entry[2].match(/version\s*=\s*"([^"]+)"/);
+          if (!version) continue;
+          constraints.push({
+            file: relative(mod.path, file),
+            provider: entry[1],
+            constraint: version[1],
+          });
+        }
+      }
+    }
+  }
+
+  return constraints;
 }
 
 function readAllBackplaneTf(mod) {
