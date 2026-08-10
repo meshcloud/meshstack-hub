@@ -127,6 +127,11 @@ output "service_account_email" {
   value       = module.backplane.service_account_email
 }
 
+output "landingzone_names" {
+  description = "meshStack landing zone names created per project variant (`default`, and `networked` when `stackit_networked_projects_enabled` is true), keyed by variant."
+  value       = { for key, lz in meshstack_landingzone.this : key => lz.metadata.name }
+}
+
 # One STACKIT Project building block definition plus landing zone per project variant. The
 # `networked` variant carries the `networkArea` label as a static building block input, so projects
 # are placed in the network area without any landing zone tag lookup at run time.
