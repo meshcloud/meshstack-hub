@@ -52,9 +52,15 @@ into one platform-team order and one application-team order.
 tenant namespace obtained from an existing Kubernetes landing zone, pre-wired by convention: LiteLLM
 points at Langfuse for tracing, and model backends are registered from the credentials it was given.
 
+Step ① is performed by the reference architecture's **own Terraform apply** rather than by ordering a
+catalog building block — the same way `stackit-landingzone` provisions its platform and landing zone
+directly. This matters: the target cluster is then a plain input variable, so selecting *which* SKE
+cluster the AI platform lands in works today (see [Feature Requests](#meshstack-feature-requests)).
+
 **② Application team, per team.** LiteLLM is then registered as a **meshStack platform**, so ordering
 model access is a normal self-service action: the landing zone carries the policy (allowed models,
-budget tier), and the building block creates the LiteLLM team and virtual key behind it.
+budget tier), and the building block creates the LiteLLM team and virtual key behind it. This step is
+per-project and needs no cluster targeting, so it is unaffected by the limitation below.
 
 ### Why LiteLLM Works as a meshStack Platform
 
@@ -149,6 +155,25 @@ This architecture **consumes** a Kubernetes cluster, it does not provision one �
 6. **Dropped from the demo.** FlowiseAI (agent/workflow builder) and RAGFlow (RAG and data layer) were
    left out to keep the focus on serving, observability and governance. Follow-up architecture?
 
+## meshStack Feature Requests
+
+**Instance-level `supported_platforms` on building block definitions.** Today
+`meshstack_building_block_definition.supported_platforms.kind` is documented as *"Always
+`meshPlatformType` for now"* — a block can declare it supports `kubernetes`, but not *which*
+Kubernetes platform. By contrast `meshstack_landingzone.platform_ref` already targets a specific
+platform by uuid.
+
+This is why step ① is RA-owned Terraform rather than a catalog block. Allowing `supported_platforms`
+to reference a `meshPlatform` would make the catalog path pluggable and is worth having:
+
+- The realistic topology is **two SKE clusters** — one hosting the shared AI platform, one hosting
+  application workloads such as the SKE Starterkit. Without instance-level support, an `ai-platform`
+  block offered for type `kubernetes` appears orderable on both.
+- It would let the platform engineer answer "which cluster?" as a normal platform reference instead of
+  threading a kubeconfig or platform uuid through Terraform inputs.
+- The current workaround — registering each cluster as its own custom platform type — inflates the
+  platform-type list to express what is really an instance selection.
+
 ## Tracked: Folding In the SKE Starterkit
 
 Not in scope for the first iteration, recorded so it is not lost.
@@ -173,12 +198,17 @@ several providers (renaming to `OPENAI_BASE_URL` / `OPENAI_API_KEY` would additi
 client SDKs work with zero configuration), and routing the demo app through the gateway means its
 traffic shows up in Langfuse and counts against the team's budget — which is the point.
 
-**Delivery idea to validate:** expose AI as an opt-in option the same way
+**Delivery idea:** expose AI as an opt-in option the same way
 [`stackit-landingzone`](../stackit-landingzone) exposes networking — a nullable object variable
 (`variable "network"`, unset = sandbox only) — with the SKE Starterkit as a further option that
-requires the AI option to be enabled. Open layering question: the STACKIT Landing Zone hands out
-STACKIT **projects**, while the AI platform needs a Kubernetes **namespace**, so the option may
-belong at the SKE/Kubernetes layer instead.
+requires the AI option to be enabled.
+
+There is no layering conflict here, because the **SKE cluster is itself an offering inside a STACKIT
+project**: the STACKIT LZ provisions the project, the SKE cluster building block turns it into a
+Kubernetes platform, and that platform's landing zone hands out the namespaces the AI components and
+the starterkit need. Note the cluster building block does not exist in the hub yet — SKE clusters are
+provisioned by foundation Terraform today (`platforms/ske/kubernetes/cluster.tf` in the
+cloudfoundation repos), so hub-ifying it is a prerequisite.
 
 ## Getting Started
 
