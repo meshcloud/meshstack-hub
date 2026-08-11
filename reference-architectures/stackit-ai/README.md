@@ -149,6 +149,37 @@ This architecture **consumes** a Kubernetes cluster, it does not provision one �
 6. **Dropped from the demo.** FlowiseAI (agent/workflow builder) and RAGFlow (RAG and data layer) were
    left out to keep the focus on serving, observability and governance. Follow-up architecture?
 
+## Tracked: Folding In the SKE Starterkit
+
+Not in scope for the first iteration, recorded so it is not lost.
+
+The [`ske/ske-starterkit`](../../modules/ske/ske-starterkit) demo app already calls an AI model, but
+its credential is injected statically — foundations supply a STACKIT model-serving token through
+their own `ai.tf`. The goal is for the starterkit to consume this reference architecture instead, so
+its demo app becomes a live example of a governed AI workload.
+
+**The seam already exists and is already the right shape.** The starterkit injects AI config through
+`forgejo-connector`'s `additional_kubernetes_secrets` as a `stackit-ai` secret holding three values:
+
+| Variable | Today | With this architecture |
+|----------|-------|------------------------|
+| `STACKIT_AI_BASE_URL` | STACKIT Model Serving endpoint | The LiteLLM gateway URL |
+| `STACKIT_AI_API_KEY` | A statically provisioned token | The team's LiteLLM virtual key |
+| `STACKIT_AI_MODEL` | A fixed model name | A model from the landing zone's allow-list |
+
+Because LiteLLM is OpenAI-compatible, this needs **no change to the starterkit's interface** — only
+different values. Two notes: the `STACKIT_AI_*` prefix becomes a misnomer once the gateway fronts
+several providers (renaming to `OPENAI_BASE_URL` / `OPENAI_API_KEY` would additionally make most
+client SDKs work with zero configuration), and routing the demo app through the gateway means its
+traffic shows up in Langfuse and counts against the team's budget — which is the point.
+
+**Delivery idea to validate:** expose AI as an opt-in option the same way
+[`stackit-landingzone`](../stackit-landingzone) exposes networking — a nullable object variable
+(`variable "network"`, unset = sandbox only) — with the SKE Starterkit as a further option that
+requires the AI option to be enabled. Open layering question: the STACKIT Landing Zone hands out
+STACKIT **projects**, while the AI platform needs a Kubernetes **namespace**, so the option may
+belong at the SKE/Kubernetes layer instead.
+
 ## Getting Started
 
 ### Prerequisites
