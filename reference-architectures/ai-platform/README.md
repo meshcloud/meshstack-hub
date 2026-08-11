@@ -135,8 +135,44 @@ options stack:
 `BUILDING_BLOCK_OUTPUT` input carries it with no missing feature. The hop that *does* need sensitive
 outputs is the next one: a cluster block handing its kubeconfig to whatever installs into it.
 
-The `kubernetes` option needs a new `modules/stackit/ske-cluster` block; SKE clusters live in
-foundation Terraform today.
+#### The `kubernetes` Option: A Self-Registering Cluster Block
+
+The option needs a new `modules/stackit/ske` block — SKE clusters live in foundation Terraform today.
+It goes beside [`stackit/project`](../../modules/stackit/project),
+[`stackit/network`](../../modules/stackit/network) and
+[`stackit/model-serving`](../../modules/stackit/model-serving) because **the directory follows the
+platform the block is ordered on**, not the thing it produces. This mirrors
+[`modules/azure/aks`](../../modules/azure/aks) (`name: AKS Cluster`, `supportedPlatforms: [azure]`)
+exactly, and keeps `modules/ske/` and `modules/aks/` as what their readmes describe: the platforms
+whose tenants are *namespaces*.
+
+The block is `TENANT_LEVEL` on the STACKIT platform, so its tenant is the STACKIT project, and it
+**registers its own platform and landing zone** using an ephemeral meshStack API token:
+
+```hcl
+resource "meshstack_building_block_definition" "ske" {
+  spec = {
+    target_type         = "TENANT_LEVEL"
+    supported_platforms = [{ name = "STACKIT" }]
+  }
+  version_spec = {
+    permissions = [/* platform + landing zone admin */]   # ephemeral meshStack API key
+    inputs = {
+      project_id = { assignment_type = "PLATFORM_TENANT_ID" }
+      network_id = {
+        assignment_type = "BUILDING_BLOCK_OUTPUT"
+        argument        = jsonencode("${var.network_bbd_uuid}.network_id")
+      }
+    }
+  }
+}
+```
+
+This is the decisive property: because the block creates the cluster *and* registers it, **the
+kubeconfig never crosses a building block boundary** — so the sensitive-output gap does not apply to
+this hop either. Ordering a cluster yields a ready-to-use Kubernetes platform with a namespace landing
+zone in one atomic step. The trade-off accepted here is that a tenant-ordered block holds permission to
+create meshStack platforms and landing zones.
 
 The AI option then takes a **nullable cluster target**, defaulting to ordering its own:
 
@@ -379,8 +415,8 @@ consequences to design for:
 1. **Module scaffolding.** Only `stackit/model-serving` exists. The cloud-agnostic components belong
    in a new `modules/ai/` namespace — `ai/litellm`, `ai/langfuse` and the tenant-facing
    `ai/litellm-team` — plus `modules/kubernetes/ingress` for the TLS/ingress prerequisite and
-   `modules/stackit/ske-cluster` for the `kubernetes` option the AI option builds on. None are written
-   yet. This architecture also still needs its own `buildingblock/` and `meshstack_integration.tf` to
+   `modules/stackit/ske` for the `kubernetes` option the AI option builds on. None are written yet.
+   This architecture also still needs its own `buildingblock/` and `meshstack_integration.tf` to
    become orderable.
 2. **Bootstrap ordering — resolved for one apply.** Two credentials, two mechanisms. The *cluster*
    credential is a `STATIC` encrypted input read back through `file()`, so it is known at plan time.
@@ -414,8 +450,12 @@ It bites on the tenant-facing blocks and on making cluster choice an order-time 
 - The realistic topology is **two SKE clusters** — one hosting the shared AI platform, one hosting
   application workloads such as the SKE Starterkit. Without instance-level support, a `TENANT_LEVEL`
   block offered for type `kubernetes` appears orderable on both.
-- It would let the platform engineer answer "which cluster?" as a normal platform reference. The
-  workaround today is one BBD per cluster with the kubeconfig baked in as a static input, or a
+- It would let the platform engineer answer "which cluster?" as a normal platform reference. Note the
+  capability already exists at the *input* level — [`ske/ske-starterkit`](../../modules/ske/ske-starterkit)
+  threads `platform_ref = { uuid, kind = "meshPlatform" }` in as a static input precisely because "the
+  meshTenant v4 API references platforms by ref". So this request is about **orderability gating and
+  ergonomics**, not raw capability: `supported_platforms` cannot express what the input already can.
+- The alternatives today are one BBD per cluster with the target baked in as a static input, or a
   `PLATFORM_OPERATOR_MANUAL_INPUT` kubeconfig field — which does support `sensitive`, but turns a
   reference into hand-carried credentials.
 - The other workaround — registering each cluster as its own custom platform type — inflates the
@@ -433,10 +473,13 @@ between blocks without trouble — ingress class, cluster issuer name, load-bala
 this architecture routes around the gap by keeping the **secret path** static and encrypted while the
 **dependency path** carries only public values.
 
-What remains blocked is the genuinely self-service case: one block *creating* a cluster and another
-consuming its kubeconfig at runtime. Today that credential would have to be a plaintext `CODE` output
-visible in meshPanel. Closing this is the prerequisite for the SKE cluster itself becoming an orderable
-building block rather than foundation Terraform.
+The obvious remaining case — a block *creating* a cluster and another consuming its kubeconfig — is
+avoided rather than blocked, by making the cluster block
+[register its own platform](#the-kubernetes-option-a-self-registering-cluster-block) so the credential
+never leaves the run. What the gap still costs is **decomposition freedom**: any two capabilities that
+must exchange a secret have to be authored as one block, or have the secret injected statically from
+outside. That is a design constraint rather than a wall, but it is why "deploy the gateway" and
+"register the platform" cannot be separate, independently versioned blocks.
 
 ## Tracked: Folding In the SKE Starterkit
 
@@ -473,10 +516,8 @@ project**: the STACKIT LZ provisions the project, the SKE cluster building block
 Kubernetes platform, and that platform's landing zone hands out the namespaces the AI components and
 the starterkit need. Note the cluster building block does not exist in the hub yet — SKE clusters are
 provisioned by foundation Terraform today (`platforms/ske/kubernetes/cluster.tf` in the
-cloudfoundation repos), so hub-ifying it as `modules/stackit/ske-cluster` behind the `kubernetes`
-option is a prerequisite — see [Option Layering](#option-layering-in-stackit-landingzone). It is also
-the one place the sensitive-output gap genuinely bites: an orderable cluster block would need to hand
-its kubeconfig to the blocks installing into it.
+cloudfoundation repos), so hub-ifying it as `modules/stackit/ske` behind the `kubernetes` option is a
+prerequisite — see [Option Layering](#option-layering-in-stackit-landingzone).
 
 ## Getting Started
 
