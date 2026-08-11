@@ -1,6 +1,5 @@
 /*
- * Delivery model under discussion: opinionated one-click install, then LiteLLM registered as a
- * custom meshStack platform so model access itself becomes a landing-zone-governed order.
+ * AI Platform delivery model — the two orders.
  * Conventions: .agents/references/diagrams.md — render with: task diagrams
  */
 digraph ai_platform_oneclick {

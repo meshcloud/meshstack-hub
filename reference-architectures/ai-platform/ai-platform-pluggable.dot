@@ -1,6 +1,5 @@
 /*
- * Variant under discussion: two pluggable seams — the Kubernetes platform whose landing zone
- * provides the namespace, and the model backends LiteLLM routes to.
+ * AI Platform — the two replaceable layers.
  * Conventions: .agents/references/diagrams.md — render with: task diagrams
  */
 digraph ai_platform_pluggable {
@@ -50,7 +49,7 @@ digraph ai_platform_pluggable {
   }
 
   subgraph cluster_runtime {
-    label="  Runtime seam · any meshStack Kubernetes platform"
+    label="  Runtime layer · any meshStack Kubernetes platform"
     labeljust=l
     fontname="Helvetica" fontsize=12 fontcolor="#697180"
     style="rounded" color="#d5dae0"
@@ -65,7 +64,7 @@ digraph ai_platform_pluggable {
   }
 
   subgraph cluster_models {
-    label="  Model seam · OpenAI-compatible backends"
+    label="  Model layer · OpenAI-compatible backends"
     labeljust=l
     fontname="Helvetica" fontsize=12 fontcolor="#697180"
     style="rounded" color="#d5dae0"

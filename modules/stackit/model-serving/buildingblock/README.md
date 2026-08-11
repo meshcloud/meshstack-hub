@@ -7,8 +7,7 @@ description: Issues a scoped STACKIT AI Model Serving API token so a tenant can 
 
 # STACKIT AI Model Serving Access Building Block
 
-<!-- SCAFFOLD: implementation is a minimal first cut — see reference-architectures/stackit-ai/README.md
-     for the open design questions (token scope, LiteLLM virtual-key wiring, backplane need). -->
+<!-- Scaffold: deliberately unfinished, not ready to publish as a building block. -->
 
 This building block issues a STACKIT AI Model Serving API token scoped to a tenant's STACKIT project.
 

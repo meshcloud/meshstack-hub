@@ -19,12 +19,12 @@
 <g id="clust5" class="cluster">
 <title>cluster_runtime</title>
 <path fill="white" stroke="#d5dae0" d="M579.56,-8C579.56,-8 1059.56,-8 1059.56,-8 1065.56,-8 1071.56,-14 1071.56,-20 1071.56,-20 1071.56,-96.64 1071.56,-96.64 1071.56,-102.64 1065.56,-108.64 1059.56,-108.64 1059.56,-108.64 579.56,-108.64 579.56,-108.64 573.56,-108.64 567.56,-102.64 567.56,-96.64 567.56,-96.64 567.56,-20 567.56,-20 567.56,-14 573.56,-8 579.56,-8"/>
-<text xml:space="preserve" text-anchor="middle" x="720.96" y="-93.84" font-family="Helvetica,sans-Serif" font-size="12.00" fill="#697180"> &#160;Runtime seam · any meshStack Kubernetes platform</text>
+<text xml:space="preserve" text-anchor="middle" x="719.29" y="-93.84" font-family="Helvetica,sans-Serif" font-size="12.00" fill="#697180"> &#160;Runtime layer · any meshStack Kubernetes platform</text>
 </g>
 <g id="clust7" class="cluster">
 <title>cluster_models</title>
 <path fill="white" stroke="#d5dae0" d="M35.56,-8C35.56,-8 547.56,-8 547.56,-8 553.56,-8 559.56,-14 559.56,-20 559.56,-20 559.56,-96.64 559.56,-96.64 559.56,-102.64 553.56,-108.64 547.56,-108.64 547.56,-108.64 35.56,-108.64 35.56,-108.64 29.56,-108.64 23.56,-102.64 23.56,-96.64 23.56,-96.64 23.56,-20 23.56,-20 23.56,-14 29.56,-8 35.56,-8"/>
-<text xml:space="preserve" text-anchor="middle" x="152.95" y="-93.84" font-family="Helvetica,sans-Serif" font-size="12.00" fill="#697180"> &#160;Model seam · OpenAI&#45;compatible backends</text>
+<text xml:space="preserve" text-anchor="middle" x="151.29" y="-93.84" font-family="Helvetica,sans-Serif" font-size="12.00" fill="#697180"> &#160;Model layer · OpenAI&#45;compatible backends</text>
 </g>
 <!-- USER -->
 <g id="node1" class="node">
