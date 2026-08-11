@@ -1,0 +1,74 @@
+/*
+ * STACKIT AI reference architecture — governed, observable sovereign model serving.
+ * Conventions: .agents/references/diagrams.md — render with: task diagrams
+ */
+digraph stackit_ai {
+  rankdir=TB
+  splines=ortho
+  forcelabels=true
+  bgcolor="white"
+  nodesep=0.55
+  ranksep=0.85
+
+  node [shape=box style="rounded,filled" fontname="Helvetica" fontsize=11
+        fillcolor="#ffffff" color="#a2abb8" penwidth=1.1 margin="0.20,0.11"]
+  edge [fontname="Helvetica" fontsize=9 fontcolor="#697180" color="#8b95a3" arrowsize=0.7]
+
+  USER [label="👤 Application team" fillcolor="#ffffff" color="#a2abb8"]
+
+  subgraph cluster_stackit {
+    label="  STACKIT — sovereign infrastructure"
+    labeljust=l
+    fontname="Helvetica" fontsize=12 fontcolor="#697180"
+    style="rounded" color="#d5dae0"
+    margin=18
+
+    subgraph cluster_stack {
+      label="  AI Platform · deployed on SKE"
+      labeljust=l
+      fontname="Helvetica" fontsize=11 fontcolor="#697180"
+      style="rounded" color="#d5dae0"
+      margin=14
+
+      WEBUI    [label="💬 OpenWebUI\nuser-facing chat interface" fillcolor="#e5f2ea" color="#85bfa0"]
+      LITELLM  [label="🚪 LiteLLM\nvirtual keys · budgets · model allow-list" fillcolor="#e5f2ea" color="#85bfa0"]
+      LANGFUSE [label="📈 Langfuse\ntracing · evaluation · usage" fillcolor="#e5f2ea" color="#85bfa0"]
+      VLLM     [label="🧠 vLLM\nself-hosted models · optional"
+                fillcolor="#f0f1f3" color="#cdd2d8" fontcolor="#99a1ac" style="rounded,filled,dashed"]
+
+      { rank=same; LITELLM -> LANGFUSE [style=invis] }
+
+      WEBUI   -> LITELLM  [xlabel="completions"]
+      LITELLM -> LANGFUSE [xlabel="traces every call" style=dashed constraint=false]
+      LITELLM -> VLLM     [xlabel="optional backend" style=dashed]
+    }
+
+    MODEL [label="🧠 STACKIT AI Model Serving\nmanaged sovereign LLM API" fillcolor="#eef2f6" color="#93a7bb"]
+
+    LITELLM -> MODEL [xlabel="routes inference to"]
+  }
+
+  subgraph cluster_mesh {
+    label="  meshStack — self-service and governance"
+    labeljust=l
+    fontname="Helvetica" fontsize=12 fontcolor="#697180"
+    style="rounded" color="#d5dae0"
+    margin=18
+
+    PLAT  [label="🛰️ SKE Platform" fillcolor="#ecedfb" color="#9aa2e6"]
+    LZ    [label="🛬 Landing Zone\nAI-enabled" fillcolor="#ecedfb" color="#9aa2e6"]
+    BBD_M [label="📦 stackit/model-serving BBD\nself-service model access" fillcolor="#ecedfb" color="#9aa2e6"]
+    PROJ  [label="🗂️ Project ×N\ncarries budget and cost tags" fillcolor="#e5f2ea" color="#85bfa0"]
+
+    { rank=same; LZ -> BBD_M [style=invis] }
+
+    PLAT  -> LZ
+    LZ    -> PROJ  [xlabel="applies to"]
+    BBD_M -> PROJ  [xlabel="ordered in" constraint=false]
+  }
+
+  USER  -> WEBUI    [xlabel="chats"]
+  BBD_M -> LITELLM  [xlabel="issues virtual key" style=dotted constraint=false]
+  BBD_M -> MODEL    [xlabel="issues serving token" style=dotted constraint=false]
+  LANGFUSE -> PROJ  [xlabel="usage attribution" style=dotted constraint=false]
+}

@@ -1,0 +1,62 @@
+/*
+ * Variant under discussion: the same gateway with pluggable model backends (bring your own model).
+ * Conventions: .agents/references/diagrams.md — render with: task diagrams
+ */
+digraph stackit_ai_pluggable {
+  rankdir=TB
+  compound=true
+  splines=ortho
+  forcelabels=true
+  bgcolor="white"
+  nodesep=0.55
+  ranksep=0.85
+
+  node [shape=box style="rounded,filled" fontname="Helvetica" fontsize=11
+        fillcolor="#ffffff" color="#a2abb8" penwidth=1.1 margin="0.20,0.11"]
+  edge [fontname="Helvetica" fontsize=9 fontcolor="#697180" color="#8b95a3" arrowsize=0.7]
+
+  USER     [label="👤 Application team" fillcolor="#ffffff" color="#a2abb8"]
+  WEBUI    [label="💬 OpenWebUI\nuser-facing chat interface" fillcolor="#e5f2ea" color="#85bfa0"]
+  LITELLM  [label="🚪 LiteLLM\none API · virtual keys · budgets · allow-list" fillcolor="#e5f2ea" color="#85bfa0"]
+  LANGFUSE [label="📈 Langfuse\ntracing · evaluation · usage" fillcolor="#e5f2ea" color="#85bfa0"]
+  BBD_M    [label="📦 model-access BBD\nself-service, per tenant" fillcolor="#ecedfb" color="#9aa2e6"]
+
+  { rank=same; LITELLM -> LANGFUSE [style=invis] }
+
+  USER    -> WEBUI    [xlabel="chats"]
+  WEBUI   -> LITELLM  [xlabel="completions"]
+  LITELLM -> LANGFUSE [xlabel="traces every call" style=dashed constraint=false]
+  BBD_M   -> LITELLM  [xlabel="issues virtual key" style=dotted constraint=false]
+
+  subgraph cluster_sovereign {
+    label="  Sovereign backends"
+    labeljust=l
+    fontname="Helvetica" fontsize=12 fontcolor="#697180"
+    style="rounded" color="#d5dae0"
+    margin=18
+
+    MODEL [label="🧠 STACKIT AI Model Serving\nmanaged sovereign LLM API" fillcolor="#eef2f6" color="#93a7bb"]
+    VLLM  [label="🧠 vLLM on SKE\nself-hosted models" fillcolor="#eef2f6" color="#93a7bb"]
+
+    { rank=same; MODEL -> VLLM [style=invis] }
+  }
+
+  subgraph cluster_byom {
+    label="  Bring your own model · outside the sovereign boundary"
+    labeljust=l
+    fontname="Helvetica" fontsize=12 fontcolor="#697180"
+    style="rounded" color="#d5dae0"
+    margin=18
+
+    AZURE [label="🧠 Azure OpenAI"
+           fillcolor="#f0f1f3" color="#cdd2d8" fontcolor="#99a1ac" style="rounded,filled,dashed"]
+    OTHER [label="🧠 Any OpenAI-compatible API"
+           fillcolor="#f0f1f3" color="#cdd2d8" fontcolor="#99a1ac" style="rounded,filled,dashed"]
+
+    { rank=same; AZURE -> OTHER [style=invis] }
+  }
+
+  LITELLM -> MODEL [xlabel="routes by policy"]
+  LITELLM -> VLLM
+  LITELLM -> AZURE [xlabel="or any external model" lhead=cluster_byom style=dashed]
+}
