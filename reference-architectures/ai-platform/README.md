@@ -192,9 +192,11 @@ consequences to design for:
 1. **Module scaffolding.** Only `stackit/model-serving` exists. The cloud-agnostic components belong
    in a new `modules/ai/` namespace — `ai/litellm`, `ai/langfuse` and the tenant-facing
    `ai/litellm-team` — none of which are written yet.
-2. **Bootstrap ordering.** The LiteLLM platform can only be registered once LiteLLM is reachable (URL
-   plus admin credential). `stackit-landingzone` already registers a platform and orders a building
-   block instance in one apply, so there is a precedent — but the dependency needs designing.
+2. **Bootstrap ordering — resolved for one apply.** Provider configurations *may* reference resource
+   attributes, but fail when the value is unknown at plan time. So the RA generates the LiteLLM admin
+   key itself (`random_password`), passes it into the Helm values and derives the endpoint from a known
+   hostname — both knowable up front, leaving `depends_on` sufficient. `stackit-landingzone` already
+   uses `depends_on` between a platform and a building block instance in one apply.
 3. **Provisioning mechanism — resolved.** No LiteLLM or Langfuse Terraform provider exists, so
    `ai/litellm-team` drives both admin APIs with `Mastercard/restapi`, already the established pattern
    in this repo (13 usages), with `hashicorp/helm` for the chart deploys. No new pattern needed.
@@ -224,6 +226,12 @@ to reference a `meshPlatform` would make the catalog path pluggable and is worth
   threading a kubeconfig or platform uuid through Terraform inputs.
 - The current workaround — registering each cluster as its own custom platform type — inflates the
   platform-type list to express what is really an instance selection.
+
+**Sensitive outputs between building blocks.** If meshStack supported encrypted sensitive outputs from
+one building block into another, this architecture could be split into two properly dependent blocks —
+one deploying the gateway, one registering the platform and consuming its endpoint and admin
+credential — instead of relying on a pre-generated credential to keep everything in one apply. That is
+the cleaner decomposition and would remove the plan-time-unknown constraint entirely.
 
 ## Tracked: Folding In the SKE Starterkit
 
