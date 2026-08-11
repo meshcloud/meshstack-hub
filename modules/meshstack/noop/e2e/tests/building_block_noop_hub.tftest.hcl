@@ -48,21 +48,29 @@ run "building_block_noop_hub" {
     error_message = "noop hub building block expected output debug_input_variables_json to match expected (excluding user_permissions_json and user_permissions)"
   }
 
+  # The workspace's members differ per meshStack instance, so these two assertions check that the
+  # user permission binding is populated and well-shaped rather than naming a particular member —
+  # pinning a specific user would tie this test to one federation.
   assert {
-    condition = contains(
-      jsondecode(jsondecode(meshstack_building_block.this.status.outputs["debug_input_variables_json"].value))["user_permissions"],
-      jsondecode(file("${path.root}/tests/building_block_noop_hub.debug_input_variables_json_binding.expected.json"))
+    condition = (
+      length(jsondecode(jsondecode(meshstack_building_block.this.status.outputs["debug_input_variables_json"].value))["user_permissions"]) > 0
+      &&
+      # double decoding is required when user_permissions_json is passed as json
+      length(jsondecode(jsondecode(jsondecode(meshstack_building_block.this.status.outputs["debug_input_variables_json"].value))["user_permissions_json"])) > 0
     )
-    error_message = "could not find expected user permission"
+    error_message = "expected both user permission bindings to be populated, got user_permissions=${jsonencode(jsondecode(jsondecode(meshstack_building_block.this.status.outputs["debug_input_variables_json"].value))["user_permissions"])} and user_permissions_json=${jsondecode(jsondecode(meshstack_building_block.this.status.outputs["debug_input_variables_json"].value))["user_permissions_json"]}"
   }
 
+  # toset on both sides: comparing keys() (a list) to a tuple literal with == is always false,
+  # because OpenTofu does not unify list and tuple types for equality.
   assert {
-    condition = contains(
-      # double decoding is required when user_permissions_json is passed as json
-      jsondecode(jsondecode(jsondecode(meshstack_building_block.this.status.outputs["debug_input_variables_json"].value))["user_permissions_json"]),
-      jsondecode(file("${path.root}/tests/building_block_noop_hub.debug_input_variables_json_binding.expected.json"))
-    )
-    error_message = "could not find expected user permission"
+    condition = alltrue([
+      for p in concat(
+        jsondecode(jsondecode(meshstack_building_block.this.status.outputs["debug_input_variables_json"].value))["user_permissions"],
+        jsondecode(jsondecode(jsondecode(meshstack_building_block.this.status.outputs["debug_input_variables_json"].value))["user_permissions_json"]),
+      ) : toset(keys(p)) == toset(["email", "euid", "firstName", "lastName", "meshIdentifier", "roles", "username"])
+    ])
+    error_message = "expected every user permission to carry exactly the keys email, euid, firstName, lastName, meshIdentifier, roles, username, got user_permissions=${jsonencode(jsondecode(jsondecode(meshstack_building_block.this.status.outputs["debug_input_variables_json"].value))["user_permissions"])} and user_permissions_json=${jsondecode(jsondecode(meshstack_building_block.this.status.outputs["debug_input_variables_json"].value))["user_permissions_json"]}"
   }
 
   assert {
