@@ -1,0 +1,75 @@
+/*
+ * Delivery model under discussion: opinionated one-click install, then LiteLLM registered as a
+ * custom meshStack platform so model access itself becomes a landing-zone-governed order.
+ * Conventions: .agents/references/diagrams.md — render with: task diagrams
+ */
+digraph stackit_ai_oneclick {
+  rankdir=TB
+  splines=ortho
+  forcelabels=true
+  bgcolor="white"
+  nodesep=0.55
+  ranksep=0.85
+
+  node [shape=box style="rounded,filled" fontname="Helvetica" fontsize=11
+        fillcolor="#ffffff" color="#a2abb8" penwidth=1.1 margin="0.20,0.11"]
+  edge [fontname="Helvetica" fontsize=9 fontcolor="#697180" color="#8b95a3" arrowsize=0.7]
+
+  subgraph cluster_once {
+    label="  ① Platform team · orders once"
+    labeljust=l
+    fontname="Helvetica" fontsize=12 fontcolor="#697180"
+    style="rounded" color="#d5dae0"
+    margin=18
+
+    BBD_STACK [label="📦 ai-platform BBD\nopinionated Helm wiring" fillcolor="#ecedfb" color="#9aa2e6"]
+    NS        [label="☸️ Tenant namespace\nfrom the Kubernetes landing zone" fillcolor="#e5f2ea" color="#85bfa0"]
+    STACK     [label="🚪 OpenWebUI · LiteLLM · Langfuse\nwired together by convention" fillcolor="#e5f2ea" color="#85bfa0"]
+    PLATFORM  [label="🛰️ LiteLLM as meshStack platform\ncustom platform type" fillcolor="#ecedfb" color="#9aa2e6"]
+    LZAI      [label="🛬 AI landing zones\nallowed models · budget tier" fillcolor="#ecedfb" color="#9aa2e6"]
+
+    { rank=same; PLATFORM -> LZAI [style=invis] }
+
+    BBD_STACK -> NS    [xlabel="deploys into"]
+    NS        -> STACK [xlabel="hosts"]
+    STACK     -> PLATFORM [xlabel="registered as" style=dotted]
+    PLATFORM  -> LZAI
+  }
+
+  subgraph cluster_team {
+    label="  ② Application team · one click, per team"
+    labeljust=l
+    fontname="Helvetica" fontsize=12 fontcolor="#697180"
+    style="rounded" color="#d5dae0"
+    margin=18
+
+    BBD_TEAM [label="📦 litellm/team BBD" fillcolor="#ecedfb" color="#9aa2e6"]
+    KEY      [label="🔑 LiteLLM team and virtual key ×N\nmodels and budget from the landing zone" fillcolor="#e5f2ea" color="#85bfa0"]
+    USER     [label="👤 Application team\nchats in OpenWebUI" fillcolor="#ffffff" color="#a2abb8"]
+
+    { rank=same; KEY -> USER [style=invis] }
+
+    BBD_TEAM -> KEY [xlabel="creates"]
+    KEY      -> USER [xlabel="grants access" style=dashed]
+  }
+
+  subgraph cluster_existing {
+    label="  ③ Existing infrastructure"
+    labeljust=l
+    fontname="Helvetica" fontsize=12 fontcolor="#697180"
+    style="rounded" color="#d5dae0"
+    margin=18
+
+    K8SLZ  [label="🛬 Kubernetes landing zone\nSTACKIT SKE or Azure AKS"
+            fillcolor="#f0f1f3" color="#cdd2d8" fontcolor="#99a1ac" style="rounded,filled,dashed"]
+    MODELS [label="🧠 Model backends\nSTACKIT · Azure · self-hosted"
+            fillcolor="#f0f1f3" color="#cdd2d8" fontcolor="#99a1ac" style="rounded,filled,dashed"]
+
+    { rank=same; K8SLZ -> MODELS [style=invis] }
+  }
+
+  K8SLZ -> NS       [xlabel="provides" style=dotted constraint=false]
+  LZAI  -> BBD_TEAM [xlabel="governs" style=dotted]
+  KEY   -> STACK    [xlabel="authorises calls" style=dashed constraint=false]
+  STACK -> MODELS   [xlabel="routes by policy" constraint=false]
+}

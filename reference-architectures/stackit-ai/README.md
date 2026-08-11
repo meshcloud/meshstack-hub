@@ -1,15 +1,14 @@
 ---
 name: STACKIT AI
 description: >
-  A governed, observable AI platform on sovereign infrastructure: OpenWebUI as the user-facing
-  interface, LiteLLM as the model gateway enforcing per-tenant virtual keys and budgets, Langfuse
-  for tracing and evaluation, and STACKIT AI Model Serving as the sovereign model backend — ordered
-  per team as a meshStack building block.
+  An opinionated, one-click AI platform: OpenWebUI, LiteLLM and Langfuse installed into a Kubernetes
+  namespace landing zone, with LiteLLM registered as a meshStack platform so application teams order
+  governed model access — budget, allowed models and tracing included — as a self-service item.
 cloudProviders:
   - stackit
 buildingBlocks:
   - path: stackit/model-serving
-    role: Issues the per-tenant STACKIT AI Model Serving token and the matching LiteLLM virtual key.
+    role: Issues the STACKIT AI Model Serving credential that LiteLLM routes sovereign inference through.
 ---
 
 # STACKIT AI
@@ -18,29 +17,83 @@ buildingBlocks:
 
 <!-- TODO: sharpen after the talk. -->
 
-Enterprise AI adoption stalls on three questions that a raw model endpoint does not answer: *who may
-call which model*, *what did it cost*, and *what exactly was sent and returned*. This reference
-architecture puts a governed gateway and an observability layer in front of sovereign model serving,
-and makes tenant access a self-service building block instead of a shared API key passed around.
+Enterprise AI adoption stalls on three questions a raw model endpoint does not answer: *who may call
+which model*, *what did it cost*, and *what exactly was sent and returned*. This reference
+architecture answers them with opinionated defaults rather than a toolkit: one order installs the
+gateway, chat UI and observability stack, and a second turns model access into a governed,
+self-service catalog item.
 
 **Target audience:**
 
 - **Platform engineers** who want to offer LLM access as a governed product — per-team keys, budgets
-  and model allow-lists — rather than handing out one shared credential.
-- **Application teams** who need a stable, OpenAI-compatible endpoint and a chat UI without
-  operating model infrastructure.
+  and model allow-lists — instead of handing out one shared credential.
+- **Application teams** who need a stable OpenAI-compatible endpoint and a chat UI without operating
+  model infrastructure.
 
-## Architecture Diagram
+## Architecture
 
 The **AI platform** runs on SKE inside STACKIT. **OpenWebUI** is what users see; every call goes
 through **LiteLLM**, the single choke point where virtual keys, budgets and model allow-lists are
 enforced, and which routes inference to **STACKIT AI Model Serving**. **Langfuse** traces every call
-for evaluation and usage attribution. Self-hosted **vLLM** is shown muted — it is an optional
-backend, not required when the managed sovereign API is used. On the right, **meshStack** turns model
-access into a catalog item: ordering the building block issues the tenant's key and ties usage back
-to a project that carries budget and cost tags.
+for evaluation and usage attribution. Self-hosted **vLLM** is shown muted — an optional backend, not
+required when the managed sovereign API is used.
 
 ![STACKIT AI reference architecture](stackit-ai.svg)
+
+## Delivery Model: Two Orders
+
+The architecture is deliberately opinionated so it is ready to go rather than assembled. It splits
+into one platform-team order and one application-team order.
+
+![One-click delivery model](stackit-ai-oneclick.svg)
+
+**① Platform team, once.** An `ai-platform` building block deploys OpenWebUI, LiteLLM and Langfuse by
+Helm into a tenant namespace obtained from an existing Kubernetes landing zone, pre-wired by
+convention: LiteLLM points at Langfuse for tracing, OpenWebUI points at LiteLLM, model backends are
+registered from the credentials it was given.
+
+**② Application team, per team.** LiteLLM is then registered as a **meshStack platform**, so ordering
+model access is a normal self-service action: the landing zone carries the policy (allowed models,
+budget tier), and the building block creates the LiteLLM team and virtual key behind it.
+
+### Why LiteLLM Works as a meshStack Platform
+
+LiteLLM's native concepts already form a tenancy model, which is what meshStack replicates into:
+
+| meshStack | LiteLLM |
+|-----------|---------|
+| Project | Team |
+| Landing zone | Allowed models, budget and rate-limit tier |
+| Tenant credential | Virtual key |
+| Project roles | Team membership |
+
+This is expressible today: `meshstack_platform` supports `spec.config.custom.platform_type_ref`, and
+there is a precedent in this repo — [`modules/stackit`](../../modules/stackit) registers STACKIT
+itself as a **custom** platform type, with the actual tenant provisioning done by the
+[`stackit/project`](../../modules/stackit/project) building block. A LiteLLM platform would follow
+the same shape, with a `litellm/team` building block in place of `stackit/project`.
+
+## Pluggability: Two Independent Seams
+
+The demo stack was built so infrastructure and model serving are replaceable. That generalises into
+**two orthogonal seams** — and because they are orthogonal, this should stay *one* reference
+architecture rather than forking into a STACKIT and an Azure variant. Running on SKE while calling
+Azure OpenAI, or on AKS while calling STACKIT, are both valid combinations.
+
+| Seam | Contract | Chosen by | Implementations |
+|------|----------|-----------|-----------------|
+| **Runtime** — where the components run | A landing zone that hands out Kubernetes namespaces; the blocks declare `supportedPlatforms: kubernetes` and never name a cloud | The landing zone the platform team orders into | STACKIT SKE, Azure AKS, any conformant cluster |
+| **Model** — where inference happens | An OpenAI-compatible endpoint plus credential, surfaced as a LiteLLM `model_list` entry | LiteLLM routing policy, fed by one model-access block per provider | `stackit/model-serving`, an Azure OpenAI equivalent, self-hosted vLLM |
+
+![Pluggable seams variant](stackit-ai-pluggable.svg)
+
+Adding a cloud therefore means adding one small model-access module with the same output shape — not
+changing the architecture. The runtime seam needs no per-cloud work at all: the precedent is
+[`kubernetes/manifest`](../../modules/kubernetes/manifest), a runtime-agnostic Helm building block
+that takes a kubeconfig and declares `supportedPlatforms: kubernetes`.
+
+This architecture **consumes** a Kubernetes cluster, it does not provision one — which is why
+[`stackit-kubernetes`](../stackit-kubernetes) stays a separate, companion reference architecture.
 
 ## Governance and Observability
 
@@ -56,50 +109,34 @@ to a project that carries budget and cost tags.
 | Cost attribution and chargeback | Langfuse usage → meshStack project cost tags |
 | Credential rotation | Building block re-order / token TTL |
 
-## Open Question: STACKIT-Specific or Pluggable Models?
+## Open Questions
 
-<!-- Decision to make in the session. -->
+<!-- Decisions for the session. -->
 
-The demo stack was deliberately built so the infrastructure and model-serving layers are
-**replaceable** — it ran on Scaleway, and STACKIT AI Model Serving can drop into the model layer.
-That raises a scoping question for this reference architecture:
-
-**Option A — STACKIT AI (as drawn above).** One sovereign backend, the simplest story, fits the
-`stackit/*` module namespace and the existing STACKIT reference architectures.
-
-**Option B — AI Platform with pluggable models (bring your own model).** LiteLLM already is the
-abstraction layer, so the same architecture generalises: sovereign backends (STACKIT AI Model
-Serving, self-hosted vLLM on SKE) alongside external ones (Azure OpenAI, any OpenAI-compatible API),
-with routing policy deciding which tenant may reach outside the sovereign boundary.
-
-![Pluggable model backends variant](stackit-ai-pluggable.svg)
-
-Option B is the stronger platform story and makes the sovereignty boundary explicit rather than
-implicit, but it widens the scope beyond a STACKIT reference architecture and needs a home outside
-`modules/stackit/`.
-
-## How It Works
-
-<!-- TODO: fill in after the talk; confirm how the components are deployed (Helm charts? which
-     building blocks own them?) and whether tenants get one shared OpenWebUI or one per team. -->
-
-1. The platform team deploys the AI platform components (OpenWebUI, LiteLLM, Langfuse) onto SKE.
-2. LiteLLM is configured with STACKIT AI Model Serving as a backend and Langfuse as its trace sink.
-3. The platform team registers the model-access building block against the AI-enabled landing zone.
-4. An application team orders it in their project; the block issues a STACKIT Model Serving token and
-   a LiteLLM virtual key carrying that team's budget and model allow-list.
-5. The team's users chat through OpenWebUI; every call is authorised at the gateway, traced in
-   Langfuse, and attributed back to the meshStack project.
+1. **Scope and name.** If both seams are real, this is an *AI platform* reference architecture with
+   `cloudProviders: [stackit, azure]`, not a STACKIT-only one — STACKIT would be the sovereign
+   reference instantiation. That implies renaming the folder and finding a home for the
+   runtime-agnostic modules outside `modules/stackit/`.
+2. **Bootstrap ordering.** The LiteLLM platform can only be registered once LiteLLM is reachable (URL
+   plus admin credential). `stackit-landingzone` already registers a platform and orders a building
+   block instance in one apply, so there is a precedent — but the dependency needs designing.
+3. **Provisioning mechanism.** There is no LiteLLM Terraform provider as far as we know, so the
+   `litellm/team` block would drive LiteLLM's admin API. Needs confirming.
+4. **Metering.** The custom platform type accepts metering configuration; whether LiteLLM spend can
+   feed meshStack chargeback is unresolved.
+5. **Tenancy of the UI.** One shared OpenWebUI with per-user keys, or one instance per team?
+6. **Dropped from the demo.** FlowiseAI (agent/workflow builder) and RAGFlow (RAG and data layer) were
+   left out to keep the focus on serving, observability and governance. Follow-up architecture?
 
 ## Getting Started
 
 ### Prerequisites
 
-| Requirement          | Description                                                                 |
-|----------------------|-----------------------------------------------------------------------------|
-| STACKIT organization | With AI Model Serving enabled and a service account permitted to issue tokens. |
-| SKE cluster          | A running STACKIT Kubernetes Engine cluster to host the platform components. |
-| meshStack instance   | With Terraform/OpenTofu IaC runtime configured.                             |
+| Requirement          | Description                                                                    |
+|----------------------|--------------------------------------------------------------------------------|
+| Kubernetes landing zone | A meshStack landing zone providing namespaces — STACKIT SKE or Azure AKS.    |
+| Model backend        | STACKIT AI Model Serving enabled, or an equivalent OpenAI-compatible endpoint.   |
+| meshStack instance   | With Terraform/OpenTofu IaC runtime configured.                                 |
 
 ### Deployment Order
 
@@ -109,9 +146,10 @@ implicit, but it widens the scope beyond a STACKIT reference architecture and ne
 
 | Responsibility                                              | Platform Team | Application Team |
 |-------------------------------------------------------------|:---:|:---:|
-| Operate the SKE cluster and the AI platform components       | ✅ | ❌ |
+| Operate the Kubernetes cluster hosting the platform          | ✅ | ❌ |
+| Install and upgrade OpenWebUI, LiteLLM and Langfuse          | ✅ | ❌ |
 | Decide which models are offered and to whom                  | ✅ | ❌ |
-| Configure gateway budgets, rate limits and allow-lists       | ✅ | ❌ |
+| Define landing zones: allowed models, budgets, rate limits   | ✅ | ❌ |
 | Register and maintain building block definitions             | ✅ | ❌ |
 | Order model access from the self-service catalog             | ❌ | ✅ |
 | Stay within the granted budget and model allow-list          | ❌ | ✅ |
@@ -122,9 +160,8 @@ implicit, but it widens the scope beyond a STACKIT reference architecture and ne
 
 <!-- Scratch space — remove before merging. -->
 
-- Demo components in scope here: OpenWebUI, LiteLLM, Langfuse, STACKIT AI Model Serving.
-- Dropped from the original demo for focus: FlowiseAI (agent/workflow builder), RAGFlow (RAG and data
-  layer). Worth deciding whether these return as a follow-up reference architecture.
-- Original demo ran on Scaleway; only the model-serving and infrastructure layers need swapping.
+- Demo components in scope: OpenWebUI, LiteLLM, Langfuse, STACKIT AI Model Serving.
+- Original demo ran on Scaleway; only the runtime and model-serving layers need swapping.
 - Hub modules still missing for the platform components themselves — only `stackit/model-serving` is
-  scaffolded so far.
+  scaffolded, as a minimal first cut around `stackit_modelserving_token` (the only AI-specific
+  resource in the STACKIT provider, v0.88.0).

@@ -1,5 +1,6 @@
 /*
- * Variant under discussion: the same gateway with pluggable model backends (bring your own model).
+ * Variant under discussion: two pluggable seams — the Kubernetes platform whose landing zone
+ * provides the namespace, and the model backends LiteLLM routes to.
  * Conventions: .agents/references/diagrams.md — render with: task diagrams
  */
 digraph stackit_ai_pluggable {
@@ -15,48 +16,75 @@ digraph stackit_ai_pluggable {
         fillcolor="#ffffff" color="#a2abb8" penwidth=1.1 margin="0.20,0.11"]
   edge [fontname="Helvetica" fontsize=9 fontcolor="#697180" color="#8b95a3" arrowsize=0.7]
 
-  USER     [label="👤 Application team" fillcolor="#ffffff" color="#a2abb8"]
-  WEBUI    [label="💬 OpenWebUI\nuser-facing chat interface" fillcolor="#e5f2ea" color="#85bfa0"]
-  LITELLM  [label="🚪 LiteLLM\none API · virtual keys · budgets · allow-list" fillcolor="#e5f2ea" color="#85bfa0"]
-  LANGFUSE [label="📈 Langfuse\ntracing · evaluation · usage" fillcolor="#e5f2ea" color="#85bfa0"]
-  BBD_M    [label="📦 model-access BBD\nself-service, per tenant" fillcolor="#ecedfb" color="#9aa2e6"]
+  USER [label="👤 Application team" fillcolor="#ffffff" color="#a2abb8"]
 
-  { rank=same; LITELLM -> LANGFUSE [style=invis] }
-
-  USER    -> WEBUI    [xlabel="chats"]
-  WEBUI   -> LITELLM  [xlabel="completions"]
-  LITELLM -> LANGFUSE [xlabel="traces every call" style=dashed constraint=false]
-  BBD_M   -> LITELLM  [xlabel="issues virtual key" style=dotted constraint=false]
-
-  subgraph cluster_sovereign {
-    label="  Sovereign backends"
+  subgraph cluster_mesh {
+    label="  meshStack"
     labeljust=l
     fontname="Helvetica" fontsize=12 fontcolor="#697180"
     style="rounded" color="#d5dae0"
     margin=18
 
-    MODEL [label="🧠 STACKIT AI Model Serving\nmanaged sovereign LLM API" fillcolor="#eef2f6" color="#93a7bb"]
-    VLLM  [label="🧠 vLLM on SKE\nself-hosted models" fillcolor="#eef2f6" color="#93a7bb"]
+    BBD_COMP  [label="📦 openwebui · litellm · langfuse BBDs\nsupportedPlatforms: kubernetes" fillcolor="#ecedfb" color="#9aa2e6"]
+    LZ        [label="🛬 Landing Zone\nprovides the namespace" fillcolor="#ecedfb" color="#9aa2e6"]
+    BBD_MODEL [label="📦 model-access BBD\none per provider, same output shape" fillcolor="#ecedfb" color="#9aa2e6"]
 
-    { rank=same; MODEL -> VLLM [style=invis] }
+    { rank=same; BBD_COMP -> LZ -> BBD_MODEL [style=invis] }
   }
 
-  subgraph cluster_byom {
-    label="  Bring your own model · outside the sovereign boundary"
+  subgraph cluster_platform {
+    label="  AI Platform · Helm into a tenant namespace"
     labeljust=l
     fontname="Helvetica" fontsize=12 fontcolor="#697180"
     style="rounded" color="#d5dae0"
     margin=18
 
-    AZURE [label="🧠 Azure OpenAI"
-           fillcolor="#f0f1f3" color="#cdd2d8" fontcolor="#99a1ac" style="rounded,filled,dashed"]
-    OTHER [label="🧠 Any OpenAI-compatible API"
-           fillcolor="#f0f1f3" color="#cdd2d8" fontcolor="#99a1ac" style="rounded,filled,dashed"]
+    WEBUI    [label="💬 OpenWebUI" fillcolor="#e5f2ea" color="#85bfa0"]
+    LITELLM  [label="🚪 LiteLLM\nvirtual keys · budgets · allow-list" fillcolor="#e5f2ea" color="#85bfa0"]
+    LANGFUSE [label="📈 Langfuse\ntracing · evaluation" fillcolor="#e5f2ea" color="#85bfa0"]
 
-    { rank=same; AZURE -> OTHER [style=invis] }
+    { rank=same; WEBUI -> LITELLM -> LANGFUSE [style=invis] }
+
+    WEBUI   -> LITELLM  [xlabel="completions"]
+    LITELLM -> LANGFUSE [xlabel="traces" style=dashed constraint=false]
   }
 
-  LITELLM -> MODEL [xlabel="routes by policy"]
-  LITELLM -> VLLM
-  LITELLM -> AZURE [xlabel="or any external model" lhead=cluster_byom style=dashed]
+  subgraph cluster_runtime {
+    label="  Runtime seam · any meshStack Kubernetes platform"
+    labeljust=l
+    fontname="Helvetica" fontsize=12 fontcolor="#697180"
+    style="rounded" color="#d5dae0"
+    margin=18
+
+    SKE    [label="☸️ STACKIT SKE\nsovereign" fillcolor="#eef2f6" color="#93a7bb"]
+    AKS    [label="☸️ Azure AKS" fillcolor="#eef2f6" color="#93a7bb"]
+    ANYK8S [label="☸️ Any conformant cluster"
+            fillcolor="#f0f1f3" color="#cdd2d8" fontcolor="#99a1ac" style="rounded,filled,dashed"]
+
+    { rank=same; SKE -> AKS -> ANYK8S [style=invis] }
+  }
+
+  subgraph cluster_models {
+    label="  Model seam · OpenAI-compatible backends"
+    labeljust=l
+    fontname="Helvetica" fontsize=12 fontcolor="#697180"
+    style="rounded" color="#d5dae0"
+    margin=18
+
+    STACKITM [label="🧠 STACKIT AI Model Serving\nsovereign" fillcolor="#eef2f6" color="#93a7bb"]
+    AZUREM   [label="🧠 Azure OpenAI" fillcolor="#eef2f6" color="#93a7bb"]
+    VLLM     [label="🧠 Self-hosted vLLM"
+              fillcolor="#f0f1f3" color="#cdd2d8" fontcolor="#99a1ac" style="rounded,filled,dashed"]
+
+    { rank=same; STACKITM -> AZUREM -> VLLM [style=invis] }
+  }
+
+  USER -> WEBUI [xlabel="chats"]
+
+  BBD_COMP  -> WEBUI    [xlabel="deploys via Helm" style=dotted lhead=cluster_platform]
+  LZ        -> SKE      [xlabel="backed by" style=dotted lhead=cluster_runtime constraint=false]
+  BBD_MODEL -> LITELLM  [xlabel="virtual key and model list" style=dotted constraint=false]
+
+  LANGFUSE -> SKE      [xlabel="namespace runs on" ltail=cluster_platform lhead=cluster_runtime]
+  LITELLM  -> STACKITM [xlabel="routes by policy" lhead=cluster_models]
 }
