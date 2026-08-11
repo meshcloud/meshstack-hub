@@ -1,17 +1,19 @@
 ---
-name: STACKIT AI
+name: AI Platform
 description: >
   An opinionated, one-click AI platform: LiteLLM and Langfuse installed into a Kubernetes namespace
   landing zone, with LiteLLM registered as a meshStack platform so application teams order governed
-  model access — budget, allowed models and tracing included — as a self-service item.
+  model access — budget, allowed models and tracing included — as a self-service item. The runtime and
+  the model backend are both pluggable; STACKIT is the sovereign reference instantiation.
 cloudProviders:
   - stackit
+  - azure
 buildingBlocks:
   - path: stackit/model-serving
     role: Issues the STACKIT AI Model Serving credential that LiteLLM routes sovereign inference through.
 ---
 
-# STACKIT AI
+# AI Platform
 
 ## Overview
 
@@ -32,21 +34,22 @@ catalog item.
 
 ## Architecture
 
-The **AI platform** runs on SKE inside STACKIT and is deliberately just two components. Every call
+The diagram below shows the **STACKIT instantiation** — the sovereign reference. The platform runs on
+SKE and is deliberately just two components. Every call
 goes through **LiteLLM**, the single choke point where virtual keys, budgets and model allow-lists are
 enforced, and which routes inference to **STACKIT AI Model Serving**. **Langfuse** traces every call
 for evaluation and usage attribution. Self-hosted **vLLM** is shown muted — an optional backend, not
 required when the managed sovereign API is used. Tenant applications are muted too: what teams build
 on the endpoint is their business, not part of the platform.
 
-![STACKIT AI reference architecture](stackit-ai.svg)
+![AI Platform reference architecture](ai-platform.svg)
 
 ## Delivery Model: Two Orders
 
 The architecture is deliberately opinionated so it is ready to go rather than assembled. It splits
 into one platform-team order and one application-team order.
 
-![One-click delivery model](stackit-ai-oneclick.svg)
+![One-click delivery model](ai-platform-oneclick.svg)
 
 **① Platform team, once.** An `ai-platform` building block deploys LiteLLM and Langfuse by Helm into a
 tenant namespace obtained from an existing Kubernetes landing zone, pre-wired by convention: LiteLLM
@@ -101,16 +104,19 @@ rather than part of it. See open question 5.
 ## Pluggability: Two Independent Seams
 
 The demo stack was built so infrastructure and model serving are replaceable. That generalises into
-**two orthogonal seams** — and because they are orthogonal, this should stay *one* reference
-architecture rather than forking into a STACKIT and an Azure variant. Running on SKE while calling
-Azure OpenAI, or on AKS while calling STACKIT, are both valid combinations.
+**two orthogonal seams**, and because they are orthogonal this is *one* reference architecture rather
+than a STACKIT and an Azure fork. Running on SKE while calling Azure OpenAI, or on AKS while calling
+STACKIT, are both valid combinations.
+
+This is why the architecture is named for the capability rather than a cloud: cloud-agnostic
+components live in `modules/ai/`, and each provider contributes only a small model-access module.
 
 | Seam | Contract | Chosen by | Implementations |
 |------|----------|-----------|-----------------|
 | **Runtime** — where the components run | A landing zone that hands out Kubernetes namespaces; the blocks declare `supportedPlatforms: kubernetes` and never name a cloud | The landing zone the platform team orders into | STACKIT SKE, Azure AKS, any conformant cluster |
 | **Model** — where inference happens | An OpenAI-compatible endpoint plus credential, surfaced as a LiteLLM `model_list` entry | LiteLLM routing policy, fed by one model-access block per provider | `stackit/model-serving`, an Azure OpenAI equivalent, self-hosted vLLM |
 
-![Pluggable seams variant](stackit-ai-pluggable.svg)
+![Pluggable seams variant](ai-platform-pluggable.svg)
 
 Adding a cloud therefore means adding one small model-access module with the same output shape — not
 changing the architecture. The runtime seam needs no per-cloud work at all: the precedent is
@@ -138,10 +144,9 @@ This architecture **consumes** a Kubernetes cluster, it does not provision one �
 
 <!-- Decisions for the session. -->
 
-1. **Scope and name.** If both seams are real, this is an *AI platform* reference architecture with
-   `cloudProviders: [stackit, azure]`, not a STACKIT-only one — STACKIT would be the sovereign
-   reference instantiation. That implies renaming the folder and finding a home for the
-   runtime-agnostic modules outside `modules/stackit/`.
+1. **Module scaffolding.** Only `stackit/model-serving` exists. The cloud-agnostic components belong
+   in a new `modules/ai/` namespace — `ai/litellm`, `ai/langfuse` and the tenant-facing
+   `ai/litellm-team` — none of which are written yet.
 2. **Bootstrap ordering.** The LiteLLM platform can only be registered once LiteLLM is reachable (URL
    plus admin credential). `stackit-landingzone` already registers a platform and orders a building
    block instance in one apply, so there is a precedent — but the dependency needs designing.

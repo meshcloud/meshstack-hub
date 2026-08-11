@@ -3,7 +3,7 @@
  * provides the namespace, and the model backends LiteLLM routes to.
  * Conventions: .agents/references/diagrams.md — render with: task diagrams
  */
-digraph stackit_ai_pluggable {
+digraph ai_platform_pluggable {
   rankdir=TB
   compound=true
   splines=ortho

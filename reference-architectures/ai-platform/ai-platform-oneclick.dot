@@ -3,7 +3,7 @@
  * custom meshStack platform so model access itself becomes a landing-zone-governed order.
  * Conventions: .agents/references/diagrams.md — render with: task diagrams
  */
-digraph stackit_ai_oneclick {
+digraph ai_platform_oneclick {
   rankdir=TB
   splines=ortho
   forcelabels=true

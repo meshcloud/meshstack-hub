@@ -1,8 +1,8 @@
 /*
- * STACKIT AI reference architecture — governed, observable sovereign model serving.
+ * AI Platform reference architecture — governed, observable sovereign model serving.
  * Conventions: .agents/references/diagrams.md — render with: task diagrams
  */
-digraph stackit_ai {
+digraph ai_platform {
   rankdir=TB
   splines=ortho
   forcelabels=true

@@ -338,7 +338,9 @@ getting-started steps, and shared responsibility matrix.
 ### Conventions
 
 - Folder name: `<cloud>-<capability>` (e.g. `azure-kubernetes`, `stackit-kubernetes`), with the
-  architecture itself in `README.md`.
+  architecture itself in `README.md`. Use `<capability>` alone (e.g. `ai-platform`) when the
+  architecture is genuinely multi-cloud — it lists several `cloudProviders` and its components are
+  cloud-agnostic, with each provider contributing only a small provider-specific module.
 - Logo: colocate as `logo.png` (or `logo.svg`) in the architecture folder, the same convention
   `buildingblock/logo.png` uses. The website generator copies it to
   `website/public/assets/reference-architecture-logos/<id>.png` — never add files there by hand,
