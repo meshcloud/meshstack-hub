@@ -118,6 +118,80 @@ Note this is new ground: no reference architecture reuses another one yet. `stac
 integration file contains no `module` blocks at all, so `ai-platform` will be the first architecture
 consumed as a component.
 
+### Option Layering in `stackit-landingzone`
+
+AI is not the next option to add — it sits on top of a Kubernetes option that does not exist yet. The
+options stack:
+
+| Option | Provisions | Builds on |
+|--------|------------|-----------|
+| `network` | SNA hub network area, plus a tenant-facing `stackit/network` spoke block | — |
+| `kubernetes` | A `TENANT_LEVEL` block ordering an SKE cluster into a STACKIT project, registering it as a Kubernetes platform with a namespace landing zone | `network`, for SNA placement |
+| `ai` | Reuses `ai-platform`, auto-ordering a dedicated SKE cluster through the `kubernetes` option | `kubernetes` |
+
+**The `network` → `kubernetes` hop composes today.**
+[`stackit/network`](../../modules/stackit/network) already outputs `network_id`, which is exactly what
+`stackit_ske_cluster.network.id` consumes — and because a network id is not a secret, a
+`BUILDING_BLOCK_OUTPUT` input carries it with no missing feature. The hop that *does* need sensitive
+outputs is the next one: a cluster block handing its kubeconfig to whatever installs into it.
+
+The `kubernetes` option needs a new `modules/stackit/ske-cluster` block; SKE clusters live in
+foundation Terraform today.
+
+The AI option then takes a **nullable cluster target**, defaulting to ordering its own:
+
+```hcl
+variable "ai" {
+  type = object({
+    model  = string
+    expose = optional(string, "public")   # public | internal
+    cluster = optional(object({           # null => order a dedicated cluster
+      platform_identifier = string
+      landingzone         = string
+    }), null)
+  })
+  default = null
+}
+```
+
+Auto-ordering a **dedicated** cluster (dedicated to the platform team — distinct from a *private*
+cluster in the networking sense below) is the default because it makes the architecture one click from
+an empty STACKIT organization, and because the architecture then creates the cluster it installs into,
+which sidesteps the instance-level `supported_platforms` limitation entirely. Pointing at an existing
+cluster stays available for cheaper demos.
+
+### Exposure: Public TLS by Default, Internal Opt-In
+
+Two independent controls exist, and they are easy to conflate:
+
+| Control | What it privatises | Status |
+|---------|--------------------|--------|
+| `network.control_plane.access_scope = "SNA"` | The **Kubernetes API** only | Feature-flagged, **not GA** — needs a STACKIT support ticket per org/project |
+| `lb.stackit.cloud/internal-lb: "true"` | The **workload's** LoadBalancer address | GA, no flag, no ticket |
+
+A private control plane does nothing to keep LiteLLM off the internet — that is a Service concern. The
+internal-LB annotation gives the LoadBalancer an address from the node network instead of a floating
+public IP, and it works as a private alternative *because* tenant projects already share the SNA when
+the `network` option is enabled. Both are available in the provider version this repo already pins
+(`>= 0.88.0`).
+
+Two further constraints on the private-cluster path: `access_scope` is **immutable**, so it cannot be
+flipped on an existing cluster without replacement, and it is **mutually exclusive with the ACL
+extension** — private control plane, or public control plane with `extensions.acl.allowed_cidrs`, not
+both.
+
+**The default is `expose = "public"`**: HAProxy plus cert-manager and a Let's Encrypt `ClusterIssuer`,
+the path the foundations already run. This exercises
+[`kubernetes/ingress`](#prerequisite-cluster-ingress-and-tls) end-to-end and means the Langfuse UI
+simply works in a browser. The trade-off is deliberate and worth stating plainly: the sovereign gateway
+is then reachable from the internet, defended by virtual keys and optionally
+`spec.loadBalancerSourceRanges`. Sovereignty here is about *where the data is processed*, not about
+network reachability.
+
+`expose = "internal"` inverts this for customers who need it, at two costs: the Langfuse UI needs VPN
+or on-prem connectivity, and HTTP-01 certificate solving does not work against a private address, so
+that path needs DNS-01 or an internal CA.
+
 ### Why LiteLLM Works as a meshStack Platform
 
 LiteLLM's native concepts already form a tenancy model, which is what meshStack replicates into:
@@ -304,9 +378,10 @@ consequences to design for:
 
 1. **Module scaffolding.** Only `stackit/model-serving` exists. The cloud-agnostic components belong
    in a new `modules/ai/` namespace — `ai/litellm`, `ai/langfuse` and the tenant-facing
-   `ai/litellm-team` — plus `modules/kubernetes/ingress` for the TLS/ingress prerequisite. None are
-   written yet. This architecture also still needs its own `buildingblock/` and
-   `meshstack_integration.tf` to become orderable.
+   `ai/litellm-team` — plus `modules/kubernetes/ingress` for the TLS/ingress prerequisite and
+   `modules/stackit/ske-cluster` for the `kubernetes` option the AI option builds on. None are written
+   yet. This architecture also still needs its own `buildingblock/` and `meshstack_integration.tf` to
+   become orderable.
 2. **Bootstrap ordering — resolved for one apply.** Two credentials, two mechanisms. The *cluster*
    credential is a `STATIC` encrypted input read back through `file()`, so it is known at plan time.
    The *LiteLLM admin key* is generated by the architecture itself (`random_password`) and passed into
@@ -398,9 +473,10 @@ project**: the STACKIT LZ provisions the project, the SKE cluster building block
 Kubernetes platform, and that platform's landing zone hands out the namespaces the AI components and
 the starterkit need. Note the cluster building block does not exist in the hub yet — SKE clusters are
 provisioned by foundation Terraform today (`platforms/ske/kubernetes/cluster.tf` in the
-cloudfoundation repos), so hub-ifying it is a prerequisite. It is also the one place the sensitive-output
-gap genuinely bites: an orderable cluster block would need to hand its kubeconfig to the blocks
-installing into it.
+cloudfoundation repos), so hub-ifying it as `modules/stackit/ske-cluster` behind the `kubernetes`
+option is a prerequisite — see [Option Layering](#option-layering-in-stackit-landingzone). It is also
+the one place the sensitive-output gap genuinely bites: an orderable cluster block would need to hand
+its kubeconfig to the blocks installing into it.
 
 ## Getting Started
 
