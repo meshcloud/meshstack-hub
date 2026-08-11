@@ -1,178 +1,178 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN"
  "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
-<svg width="1195pt" height="342pt"
- viewBox="0.00 0.00 1195.00 342.00" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
-<g id="graph0" class="graph" transform="scale(1 1) rotate(0) translate(4 337.92)">
+<svg width="1088pt" height="391pt"
+ viewBox="0.00 0.00 1088.00 391.00" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+<g id="graph0" class="graph" transform="scale(1 1) rotate(0) translate(4 386.52)">
 <title>stackit_ai_pluggable</title>
-<polygon fill="white" stroke="none" points="-4,4 -4,-337.92 1190.7,-337.92 1190.7,4 -4,4"/>
+<polygon fill="white" stroke="none" points="-4,4 -4,-386.52 1083.56,-386.52 1083.56,4 -4,4"/>
 <g id="clust1" class="cluster">
 <title>cluster_mesh</title>
-<path fill="white" stroke="#d5dae0" d="M159.7,-225.28C159.7,-225.28 831.7,-225.28 831.7,-225.28 837.7,-225.28 843.7,-231.28 843.7,-237.28 843.7,-237.28 843.7,-313.92 843.7,-313.92 843.7,-319.92 837.7,-325.92 831.7,-325.92 831.7,-325.92 159.7,-325.92 159.7,-325.92 153.7,-325.92 147.7,-319.92 147.7,-313.92 147.7,-313.92 147.7,-237.28 147.7,-237.28 147.7,-231.28 153.7,-225.28 159.7,-225.28"/>
-<text xml:space="preserve" text-anchor="middle" x="188.71" y="-311.12" font-family="Helvetica,sans-Serif" font-size="12.00" fill="#697180"> &#160;meshStack</text>
+<path fill="white" stroke="#d5dae0" d="M229.56,-225.28C229.56,-225.28 863.56,-225.28 863.56,-225.28 869.56,-225.28 875.56,-231.28 875.56,-237.28 875.56,-237.28 875.56,-313.92 875.56,-313.92 875.56,-319.92 869.56,-325.92 863.56,-325.92 863.56,-325.92 229.56,-325.92 229.56,-325.92 223.56,-325.92 217.56,-319.92 217.56,-313.92 217.56,-313.92 217.56,-237.28 217.56,-237.28 217.56,-231.28 223.56,-225.28 229.56,-225.28"/>
+<text xml:space="preserve" text-anchor="middle" x="258.57" y="-311.12" font-family="Helvetica,sans-Serif" font-size="12.00" fill="#697180"> &#160;meshStack</text>
 </g>
 <g id="clust3" class="cluster">
 <title>cluster_platform</title>
-<path fill="white" stroke="#d5dae0" d="M96.7,-116.64C96.7,-116.64 606.7,-116.64 606.7,-116.64 612.7,-116.64 618.7,-122.64 618.7,-128.64 618.7,-128.64 618.7,-205.28 618.7,-205.28 618.7,-211.28 612.7,-217.28 606.7,-217.28 606.7,-217.28 96.7,-217.28 96.7,-217.28 90.7,-217.28 84.7,-211.28 84.7,-205.28 84.7,-205.28 84.7,-128.64 84.7,-128.64 84.7,-122.64 90.7,-116.64 96.7,-116.64"/>
-<text xml:space="preserve" text-anchor="middle" x="213.76" y="-202.48" font-family="Helvetica,sans-Serif" font-size="12.00" fill="#697180"> &#160;AI Platform · Helm into a tenant namespace</text>
+<path fill="white" stroke="#d5dae0" d="M128.56,-116.64C128.56,-116.64 494.56,-116.64 494.56,-116.64 500.56,-116.64 506.56,-122.64 506.56,-128.64 506.56,-128.64 506.56,-205.28 506.56,-205.28 506.56,-211.28 500.56,-217.28 494.56,-217.28 494.56,-217.28 128.56,-217.28 128.56,-217.28 122.56,-217.28 116.56,-211.28 116.56,-205.28 116.56,-205.28 116.56,-128.64 116.56,-128.64 116.56,-122.64 122.56,-116.64 128.56,-116.64"/>
+<text xml:space="preserve" text-anchor="middle" x="245.62" y="-202.48" font-family="Helvetica,sans-Serif" font-size="12.00" fill="#697180"> &#160;AI Platform · Helm into a tenant namespace</text>
 </g>
 <g id="clust5" class="cluster">
 <title>cluster_runtime</title>
-<path fill="white" stroke="#d5dae0" d="M686.7,-8C686.7,-8 1166.7,-8 1166.7,-8 1172.7,-8 1178.7,-14 1178.7,-20 1178.7,-20 1178.7,-96.64 1178.7,-96.64 1178.7,-102.64 1172.7,-108.64 1166.7,-108.64 1166.7,-108.64 686.7,-108.64 686.7,-108.64 680.7,-108.64 674.7,-102.64 674.7,-96.64 674.7,-96.64 674.7,-20 674.7,-20 674.7,-14 680.7,-8 686.7,-8"/>
-<text xml:space="preserve" text-anchor="middle" x="828.1" y="-93.84" font-family="Helvetica,sans-Serif" font-size="12.00" fill="#697180"> &#160;Runtime seam · any meshStack Kubernetes platform</text>
+<path fill="white" stroke="#d5dae0" d="M579.56,-8C579.56,-8 1059.56,-8 1059.56,-8 1065.56,-8 1071.56,-14 1071.56,-20 1071.56,-20 1071.56,-96.64 1071.56,-96.64 1071.56,-102.64 1065.56,-108.64 1059.56,-108.64 1059.56,-108.64 579.56,-108.64 579.56,-108.64 573.56,-108.64 567.56,-102.64 567.56,-96.64 567.56,-96.64 567.56,-20 567.56,-20 567.56,-14 573.56,-8 579.56,-8"/>
+<text xml:space="preserve" text-anchor="middle" x="720.96" y="-93.84" font-family="Helvetica,sans-Serif" font-size="12.00" fill="#697180"> &#160;Runtime seam · any meshStack Kubernetes platform</text>
 </g>
 <g id="clust7" class="cluster">
 <title>cluster_models</title>
-<path fill="white" stroke="#d5dae0" d="M142.7,-8C142.7,-8 654.7,-8 654.7,-8 660.7,-8 666.7,-14 666.7,-20 666.7,-20 666.7,-96.64 666.7,-96.64 666.7,-102.64 660.7,-108.64 654.7,-108.64 654.7,-108.64 142.7,-108.64 142.7,-108.64 136.7,-108.64 130.7,-102.64 130.7,-96.64 130.7,-96.64 130.7,-20 130.7,-20 130.7,-14 136.7,-8 142.7,-8"/>
-<text xml:space="preserve" text-anchor="middle" x="260.1" y="-93.84" font-family="Helvetica,sans-Serif" font-size="12.00" fill="#697180"> &#160;Model seam · OpenAI&#45;compatible backends</text>
+<path fill="white" stroke="#d5dae0" d="M35.56,-8C35.56,-8 547.56,-8 547.56,-8 553.56,-8 559.56,-14 559.56,-20 559.56,-20 559.56,-96.64 559.56,-96.64 559.56,-102.64 553.56,-108.64 547.56,-108.64 547.56,-108.64 35.56,-108.64 35.56,-108.64 29.56,-108.64 23.56,-102.64 23.56,-96.64 23.56,-96.64 23.56,-20 23.56,-20 23.56,-14 29.56,-8 35.56,-8"/>
+<text xml:space="preserve" text-anchor="middle" x="152.95" y="-93.84" font-family="Helvetica,sans-Serif" font-size="12.00" fill="#697180"> &#160;Model seam · OpenAI&#45;compatible backends</text>
 </g>
 <!-- USER -->
 <g id="node1" class="node">
 <title>USER</title>
-<path fill="#ffffff" stroke="#a2abb8" stroke-width="1.1" d="M113.4,-282.4C113.4,-282.4 12,-282.4 12,-282.4 6,-282.4 0,-276.4 0,-270.4 0,-270.4 0,-258.4 0,-258.4 0,-252.4 6,-246.4 12,-246.4 12,-246.4 113.4,-246.4 113.4,-246.4 119.4,-246.4 125.4,-252.4 125.4,-258.4 125.4,-258.4 125.4,-270.4 125.4,-270.4 125.4,-276.4 119.4,-282.4 113.4,-282.4"/>
-<text xml:space="preserve" text-anchor="middle" x="62.7" y="-261.1" font-family="Helvetica,sans-Serif" font-size="11.00">👤 Application team</text>
+<path fill="#ffffff" stroke="#a2abb8" stroke-width="1.1" d="M148.26,-382.52C148.26,-382.52 46.86,-382.52 46.86,-382.52 40.86,-382.52 34.86,-376.52 34.86,-370.52 34.86,-370.52 34.86,-358.52 34.86,-358.52 34.86,-352.52 40.86,-346.52 46.86,-346.52 46.86,-346.52 148.26,-346.52 148.26,-346.52 154.26,-346.52 160.26,-352.52 160.26,-358.52 160.26,-358.52 160.26,-370.52 160.26,-370.52 160.26,-376.52 154.26,-382.52 148.26,-382.52"/>
+<text xml:space="preserve" text-anchor="middle" x="97.56" y="-361.22" font-family="Helvetica,sans-Serif" font-size="11.00">👤 Application team</text>
 </g>
-<!-- WEBUI -->
-<g id="node5" class="node">
-<title>WEBUI</title>
-<path fill="#e5f2ea" stroke="#85bfa0" stroke-width="1.1" d="M195.01,-173.76C195.01,-173.76 114.4,-173.76 114.4,-173.76 108.4,-173.76 102.4,-167.76 102.4,-161.76 102.4,-161.76 102.4,-149.76 102.4,-149.76 102.4,-143.76 108.4,-137.76 114.4,-137.76 114.4,-137.76 195.01,-137.76 195.01,-137.76 201.01,-137.76 207.01,-143.76 207.01,-149.76 207.01,-149.76 207.01,-161.76 207.01,-161.76 207.01,-167.76 201.01,-173.76 195.01,-173.76"/>
-<text xml:space="preserve" text-anchor="middle" x="154.7" y="-152.46" font-family="Helvetica,sans-Serif" font-size="11.00">💬 OpenWebUI</text>
+<!-- APPS -->
+<g id="node2" class="node">
+<title>APPS</title>
+<path fill="#f0f1f3" stroke="#cdd2d8" stroke-width="1.1" stroke-dasharray="5,2" d="M183.12,-285.52C183.12,-285.52 12,-285.52 12,-285.52 6,-285.52 0,-279.52 0,-273.52 0,-273.52 0,-255.28 0,-255.28 0,-249.28 6,-243.28 12,-243.28 12,-243.28 183.12,-243.28 183.12,-243.28 189.12,-243.28 195.12,-249.28 195.12,-255.28 195.12,-255.28 195.12,-273.52 195.12,-273.52 195.12,-279.52 189.12,-285.52 183.12,-285.52"/>
+<text xml:space="preserve" text-anchor="middle" x="97.56" y="-267.7" font-family="Helvetica,sans-Serif" font-size="11.00" fill="#99a1ac">💬 Tenant AI applications ×N</text>
+<text xml:space="preserve" text-anchor="middle" x="97.56" y="-254.5" font-family="Helvetica,sans-Serif" font-size="11.00" fill="#99a1ac">built by teams on the gateway API</text>
 </g>
-<!-- USER&#45;&gt;WEBUI -->
-<g id="edge11" class="edge">
-<title>USER&#45;&gt;WEBUI</title>
-<path fill="none" stroke="#8b95a3" d="M113.9,-245.97C113.9,-245.97 113.9,-182.79 113.9,-182.79"/>
-<polygon fill="#8b95a3" stroke="#8b95a3" points="116.35,-182.79 113.9,-175.79 111.45,-182.79 116.35,-182.79"/>
-<text xml:space="preserve" text-anchor="middle" x="103.15" y="-217.08" font-family="Helvetica,sans-Serif" font-size="9.00" fill="#697180">chats</text>
+<!-- USER&#45;&gt;APPS -->
+<g id="edge9" class="edge">
+<title>USER&#45;&gt;APPS</title>
+<path fill="none" stroke="#8b95a3" d="M97.56,-346.16C97.56,-346.16 97.56,-294.29 97.56,-294.29"/>
+<polygon fill="#8b95a3" stroke="#8b95a3" points="100.01,-294.29 97.56,-287.29 95.11,-294.29 100.01,-294.29"/>
+<text xml:space="preserve" text-anchor="middle" x="66.29" y="-322.92" font-family="Helvetica,sans-Serif" font-size="9.00" fill="#697180">builds and uses</text>
+</g>
+<!-- LITELLM -->
+<g id="node6" class="node">
+<title>LITELLM</title>
+<path fill="#e5f2ea" stroke="#85bfa0" stroke-width="1.1" d="M312.35,-176.88C312.35,-176.88 146.77,-176.88 146.77,-176.88 140.77,-176.88 134.77,-170.88 134.77,-164.88 134.77,-164.88 134.77,-146.64 134.77,-146.64 134.77,-140.64 140.77,-134.64 146.77,-134.64 146.77,-134.64 312.35,-134.64 312.35,-134.64 318.35,-134.64 324.35,-140.64 324.35,-146.64 324.35,-146.64 324.35,-164.88 324.35,-164.88 324.35,-170.88 318.35,-176.88 312.35,-176.88"/>
+<text xml:space="preserve" text-anchor="middle" x="229.56" y="-159.06" font-family="Helvetica,sans-Serif" font-size="11.00">🚪 LiteLLM</text>
+<text xml:space="preserve" text-anchor="middle" x="229.56" y="-145.86" font-family="Helvetica,sans-Serif" font-size="11.00">virtual keys · budgets · allow&#45;list</text>
+</g>
+<!-- APPS&#45;&gt;LITELLM -->
+<g id="edge10" class="edge">
+<title>APPS&#45;&gt;LITELLM</title>
+<path fill="none" stroke="#8b95a3" d="M164.94,-242.94C164.94,-242.94 164.94,-185.69 164.94,-185.69"/>
+<polygon fill="#8b95a3" stroke="#8b95a3" points="167.39,-185.69 164.94,-178.69 162.49,-185.69 167.39,-185.69"/>
+<text xml:space="preserve" text-anchor="middle" x="130.42" y="-217.01" font-family="Helvetica,sans-Serif" font-size="9.00" fill="#697180">calls the gateway</text>
 </g>
 <!-- BBD_COMP -->
-<g id="node2" class="node">
+<g id="node3" class="node">
 <title>BBD_COMP</title>
-<path fill="#ecedfb" stroke="#9aa2e6" stroke-width="1.1" d="M376.01,-285.52C376.01,-285.52 177.39,-285.52 177.39,-285.52 171.39,-285.52 165.39,-279.52 165.39,-273.52 165.39,-273.52 165.39,-255.28 165.39,-255.28 165.39,-249.28 171.39,-243.28 177.39,-243.28 177.39,-243.28 376.01,-243.28 376.01,-243.28 382.01,-243.28 388.01,-249.28 388.01,-255.28 388.01,-255.28 388.01,-273.52 388.01,-273.52 388.01,-279.52 382.01,-285.52 376.01,-285.52"/>
-<text xml:space="preserve" text-anchor="middle" x="276.7" y="-267.7" font-family="Helvetica,sans-Serif" font-size="11.00">📦 openwebui · litellm · langfuse BBDs</text>
-<text xml:space="preserve" text-anchor="middle" x="276.7" y="-254.5" font-family="Helvetica,sans-Serif" font-size="11.00">supportedPlatforms: kubernetes</text>
+<path fill="#ecedfb" stroke="#9aa2e6" stroke-width="1.1" d="M407.92,-285.52C407.92,-285.52 247.2,-285.52 247.2,-285.52 241.2,-285.52 235.2,-279.52 235.2,-273.52 235.2,-273.52 235.2,-255.28 235.2,-255.28 235.2,-249.28 241.2,-243.28 247.2,-243.28 247.2,-243.28 407.92,-243.28 407.92,-243.28 413.92,-243.28 419.92,-249.28 419.92,-255.28 419.92,-255.28 419.92,-273.52 419.92,-273.52 419.92,-279.52 413.92,-285.52 407.92,-285.52"/>
+<text xml:space="preserve" text-anchor="middle" x="327.56" y="-267.7" font-family="Helvetica,sans-Serif" font-size="11.00">📦 litellm · langfuse BBDs</text>
+<text xml:space="preserve" text-anchor="middle" x="327.56" y="-254.5" font-family="Helvetica,sans-Serif" font-size="11.00">supportedPlatforms: kubernetes</text>
 </g>
 <!-- LZ -->
-<g id="node3" class="node">
+<g id="node4" class="node">
 <title>LZ</title>
-<path fill="#ecedfb" stroke="#9aa2e6" stroke-width="1.1" d="M565.03,-285.52C565.03,-285.52 440.38,-285.52 440.38,-285.52 434.38,-285.52 428.38,-279.52 428.38,-273.52 428.38,-273.52 428.38,-255.28 428.38,-255.28 428.38,-249.28 434.38,-243.28 440.38,-243.28 440.38,-243.28 565.03,-243.28 565.03,-243.28 571.03,-243.28 577.03,-249.28 577.03,-255.28 577.03,-255.28 577.03,-273.52 577.03,-273.52 577.03,-279.52 571.03,-285.52 565.03,-285.52"/>
-<text xml:space="preserve" text-anchor="middle" x="502.7" y="-267.7" font-family="Helvetica,sans-Serif" font-size="11.00">🛬 Landing Zone</text>
-<text xml:space="preserve" text-anchor="middle" x="502.7" y="-254.5" font-family="Helvetica,sans-Serif" font-size="11.00">provides the namespace</text>
+<path fill="#ecedfb" stroke="#9aa2e6" stroke-width="1.1" d="M596.88,-285.52C596.88,-285.52 472.23,-285.52 472.23,-285.52 466.23,-285.52 460.23,-279.52 460.23,-273.52 460.23,-273.52 460.23,-255.28 460.23,-255.28 460.23,-249.28 466.23,-243.28 472.23,-243.28 472.23,-243.28 596.88,-243.28 596.88,-243.28 602.88,-243.28 608.88,-249.28 608.88,-255.28 608.88,-255.28 608.88,-273.52 608.88,-273.52 608.88,-279.52 602.88,-285.52 596.88,-285.52"/>
+<text xml:space="preserve" text-anchor="middle" x="534.56" y="-267.7" font-family="Helvetica,sans-Serif" font-size="11.00">🛬 Landing Zone</text>
+<text xml:space="preserve" text-anchor="middle" x="534.56" y="-254.5" font-family="Helvetica,sans-Serif" font-size="11.00">provides the namespace</text>
 </g>
 <!-- BBD_COMP&#45;&gt;LZ -->
-<!-- BBD_COMP&#45;&gt;WEBUI -->
-<g id="edge12" class="edge">
-<title>BBD_COMP&#45;&gt;WEBUI</title>
-<path fill="none" stroke="#8b95a3" stroke-dasharray="1,5" d="M186.2,-242.94C186.2,-242.94 186.2,-235.32 186.2,-225.51"/>
-<polygon fill="#8b95a3" stroke="#8b95a3" points="188.65,-225.79 186.2,-218.79 183.75,-225.79 188.65,-225.79"/>
-<text xml:space="preserve" text-anchor="middle" x="151.94" y="-226.12" font-family="Helvetica,sans-Serif" font-size="9.00" fill="#697180">deploys via Helm</text>
+<!-- BBD_COMP&#45;&gt;LITELLM -->
+<g id="edge11" class="edge">
+<title>BBD_COMP&#45;&gt;LITELLM</title>
+<path fill="none" stroke="#8b95a3" stroke-dasharray="1,5" d="M264.92,-242.94C264.92,-242.94 264.92,-235.37 264.92,-225.73"/>
+<polygon fill="#8b95a3" stroke="#8b95a3" points="267.37,-225.79 264.92,-218.79 262.47,-225.79 267.37,-225.79"/>
+<text xml:space="preserve" text-anchor="middle" x="230.65" y="-226.23" font-family="Helvetica,sans-Serif" font-size="9.00" fill="#697180">deploys via Helm</text>
 </g>
 <!-- BBD_MODEL -->
-<g id="node4" class="node">
+<g id="node5" class="node">
 <title>BBD_MODEL</title>
-<path fill="#ecedfb" stroke="#9aa2e6" stroke-width="1.1" d="M813.99,-285.52C813.99,-285.52 629.41,-285.52 629.41,-285.52 623.41,-285.52 617.41,-279.52 617.41,-273.52 617.41,-273.52 617.41,-255.28 617.41,-255.28 617.41,-249.28 623.41,-243.28 629.41,-243.28 629.41,-243.28 813.99,-243.28 813.99,-243.28 819.99,-243.28 825.99,-249.28 825.99,-255.28 825.99,-255.28 825.99,-273.52 825.99,-273.52 825.99,-279.52 819.99,-285.52 813.99,-285.52"/>
-<text xml:space="preserve" text-anchor="middle" x="721.7" y="-267.7" font-family="Helvetica,sans-Serif" font-size="11.00">📦 model&#45;access BBD</text>
-<text xml:space="preserve" text-anchor="middle" x="721.7" y="-254.5" font-family="Helvetica,sans-Serif" font-size="11.00">one per provider, same output shape</text>
+<path fill="#ecedfb" stroke="#9aa2e6" stroke-width="1.1" d="M845.85,-285.52C845.85,-285.52 661.27,-285.52 661.27,-285.52 655.27,-285.52 649.27,-279.52 649.27,-273.52 649.27,-273.52 649.27,-255.28 649.27,-255.28 649.27,-249.28 655.27,-243.28 661.27,-243.28 661.27,-243.28 845.85,-243.28 845.85,-243.28 851.85,-243.28 857.85,-249.28 857.85,-255.28 857.85,-255.28 857.85,-273.52 857.85,-273.52 857.85,-279.52 851.85,-285.52 845.85,-285.52"/>
+<text xml:space="preserve" text-anchor="middle" x="753.56" y="-267.7" font-family="Helvetica,sans-Serif" font-size="11.00">📦 model&#45;access BBD</text>
+<text xml:space="preserve" text-anchor="middle" x="753.56" y="-254.5" font-family="Helvetica,sans-Serif" font-size="11.00">one per provider, same output shape</text>
 </g>
 <!-- LZ&#45;&gt;BBD_MODEL -->
 <!-- SKE -->
 <g id="node8" class="node">
 <title>SKE</title>
-<path fill="#eef2f6" stroke="#93a7bb" stroke-width="1.1" d="M802.56,-68.24C802.56,-68.24 704.85,-68.24 704.85,-68.24 698.85,-68.24 692.85,-62.24 692.85,-56.24 692.85,-56.24 692.85,-38 692.85,-38 692.85,-32 698.85,-26 704.85,-26 704.85,-26 802.56,-26 802.56,-26 808.56,-26 814.56,-32 814.56,-38 814.56,-38 814.56,-56.24 814.56,-56.24 814.56,-62.24 808.56,-68.24 802.56,-68.24"/>
-<text xml:space="preserve" text-anchor="middle" x="753.7" y="-50.42" font-family="Helvetica,sans-Serif" font-size="11.00">☸️ STACKIT SKE</text>
-<text xml:space="preserve" text-anchor="middle" x="753.7" y="-37.22" font-family="Helvetica,sans-Serif" font-size="11.00">sovereign</text>
+<path fill="#eef2f6" stroke="#93a7bb" stroke-width="1.1" d="M695.41,-68.24C695.41,-68.24 597.7,-68.24 597.7,-68.24 591.7,-68.24 585.7,-62.24 585.7,-56.24 585.7,-56.24 585.7,-38 585.7,-38 585.7,-32 591.7,-26 597.7,-26 597.7,-26 695.41,-26 695.41,-26 701.41,-26 707.41,-32 707.41,-38 707.41,-38 707.41,-56.24 707.41,-56.24 707.41,-62.24 701.41,-68.24 695.41,-68.24"/>
+<text xml:space="preserve" text-anchor="middle" x="646.56" y="-50.42" font-family="Helvetica,sans-Serif" font-size="11.00">☸️ STACKIT SKE</text>
+<text xml:space="preserve" text-anchor="middle" x="646.56" y="-37.22" font-family="Helvetica,sans-Serif" font-size="11.00">sovereign</text>
 </g>
 <!-- LZ&#45;&gt;SKE -->
-<g id="edge13" class="edge">
+<g id="edge12" class="edge">
 <title>LZ&#45;&gt;SKE</title>
-<path fill="none" stroke="#8b95a3" stroke-dasharray="1,5" d="M526.82,-242.99C526.82,-223.91 526.82,-199 526.82,-199 526.82,-199 773.99,-199 773.99,-199 773.99,-199 773.99,-152.51 773.99,-116.95"/>
-<polygon fill="#8b95a3" stroke="#8b95a3" points="776.44,-117.15 773.99,-110.15 771.54,-117.15 776.44,-117.15"/>
-<text xml:space="preserve" text-anchor="middle" x="648.92" y="-201.7" font-family="Helvetica,sans-Serif" font-size="9.00" fill="#697180">backed by</text>
-</g>
-<!-- LITELLM -->
-<g id="node6" class="node">
-<title>LITELLM</title>
-<path fill="#e5f2ea" stroke="#85bfa0" stroke-width="1.1" d="M424.49,-176.88C424.49,-176.88 258.91,-176.88 258.91,-176.88 252.91,-176.88 246.91,-170.88 246.91,-164.88 246.91,-164.88 246.91,-146.64 246.91,-146.64 246.91,-140.64 252.91,-134.64 258.91,-134.64 258.91,-134.64 424.49,-134.64 424.49,-134.64 430.49,-134.64 436.49,-140.64 436.49,-146.64 436.49,-146.64 436.49,-164.88 436.49,-164.88 436.49,-170.88 430.49,-176.88 424.49,-176.88"/>
-<text xml:space="preserve" text-anchor="middle" x="341.7" y="-159.06" font-family="Helvetica,sans-Serif" font-size="11.00">🚪 LiteLLM</text>
-<text xml:space="preserve" text-anchor="middle" x="341.7" y="-145.86" font-family="Helvetica,sans-Serif" font-size="11.00">virtual keys · budgets · allow&#45;list</text>
+<path fill="none" stroke="#8b95a3" stroke-dasharray="1,5" d="M601.16,-242.77C601.16,-242.77 601.16,-166.15 601.16,-117.14"/>
+<polygon fill="#8b95a3" stroke="#8b95a3" points="603.61,-117.15 601.16,-110.15 598.71,-117.15 603.61,-117.15"/>
+<text xml:space="preserve" text-anchor="middle" x="580.64" y="-182.66" font-family="Helvetica,sans-Serif" font-size="9.00" fill="#697180">backed by</text>
 </g>
 <!-- BBD_MODEL&#45;&gt;LITELLM -->
-<g id="edge14" class="edge">
+<g id="edge13" class="edge">
 <title>BBD_MODEL&#45;&gt;LITELLM</title>
-<path fill="none" stroke="#8b95a3" stroke-dasharray="1,5" d="M632.98,-242.95C632.98,-232.02 632.98,-221 632.98,-221 632.98,-221 432.44,-221 432.44,-221 432.44,-221 432.44,-185.64 432.44,-185.64"/>
-<polygon fill="#8b95a3" stroke="#8b95a3" points="434.89,-185.64 432.44,-178.64 429.99,-185.64 434.89,-185.64"/>
-<text xml:space="preserve" text-anchor="middle" x="476.73" y="-223.7" font-family="Helvetica,sans-Serif" font-size="9.00" fill="#697180">virtual key and model list</text>
-</g>
-<!-- WEBUI&#45;&gt;LITELLM -->
-<!-- WEBUI&#45;&gt;LITELLM -->
-<g id="edge5" class="edge">
-<title>WEBUI&#45;&gt;LITELLM</title>
-<path fill="none" stroke="#8b95a3" d="M207.29,-150C207.29,-150 238.12,-150 238.12,-150"/>
-<polygon fill="#8b95a3" stroke="#8b95a3" points="238.12,-152.45 245.12,-150 238.12,-147.55 238.12,-152.45"/>
-<text xml:space="preserve" text-anchor="middle" x="222.71" y="-141.9" font-family="Helvetica,sans-Serif" font-size="9.00" fill="#697180">completions</text>
+<path fill="none" stroke="#8b95a3" stroke-dasharray="1,5" d="M678.34,-242.9C678.34,-227.69 678.34,-210 678.34,-210 678.34,-210 294.63,-210 294.63,-210 294.63,-210 294.63,-185.71 294.63,-185.71"/>
+<polygon fill="#8b95a3" stroke="#8b95a3" points="297.08,-185.71 294.63,-178.71 292.18,-185.71 297.08,-185.71"/>
+<text xml:space="preserve" text-anchor="middle" x="441.52" y="-212.7" font-family="Helvetica,sans-Serif" font-size="9.00" fill="#697180">virtual key and model list</text>
 </g>
 <!-- LANGFUSE -->
 <g id="node7" class="node">
 <title>LANGFUSE</title>
-<path fill="#e5f2ea" stroke="#85bfa0" stroke-width="1.1" d="M588.8,-176.88C588.8,-176.88 488.61,-176.88 488.61,-176.88 482.61,-176.88 476.61,-170.88 476.61,-164.88 476.61,-164.88 476.61,-146.64 476.61,-146.64 476.61,-140.64 482.61,-134.64 488.61,-134.64 488.61,-134.64 588.8,-134.64 588.8,-134.64 594.8,-134.64 600.8,-140.64 600.8,-146.64 600.8,-146.64 600.8,-164.88 600.8,-164.88 600.8,-170.88 594.8,-176.88 588.8,-176.88"/>
-<text xml:space="preserve" text-anchor="middle" x="538.7" y="-159.06" font-family="Helvetica,sans-Serif" font-size="11.00">📈 Langfuse</text>
-<text xml:space="preserve" text-anchor="middle" x="538.7" y="-145.86" font-family="Helvetica,sans-Serif" font-size="11.00">tracing · evaluation</text>
+<path fill="#e5f2ea" stroke="#85bfa0" stroke-width="1.1" d="M476.65,-176.88C476.65,-176.88 376.46,-176.88 376.46,-176.88 370.46,-176.88 364.46,-170.88 364.46,-164.88 364.46,-164.88 364.46,-146.64 364.46,-146.64 364.46,-140.64 370.46,-134.64 376.46,-134.64 376.46,-134.64 476.65,-134.64 476.65,-134.64 482.65,-134.64 488.65,-140.64 488.65,-146.64 488.65,-146.64 488.65,-164.88 488.65,-164.88 488.65,-170.88 482.65,-176.88 476.65,-176.88"/>
+<text xml:space="preserve" text-anchor="middle" x="426.56" y="-159.06" font-family="Helvetica,sans-Serif" font-size="11.00">📈 Langfuse</text>
+<text xml:space="preserve" text-anchor="middle" x="426.56" y="-145.86" font-family="Helvetica,sans-Serif" font-size="11.00">tracing · evaluation</text>
 </g>
 <!-- LITELLM&#45;&gt;LANGFUSE -->
 <!-- LITELLM&#45;&gt;LANGFUSE -->
-<g id="edge6" class="edge">
+<g id="edge4" class="edge">
 <title>LITELLM&#45;&gt;LANGFUSE</title>
-<path fill="none" stroke="#8b95a3" stroke-dasharray="5,2" d="M437.03,-149C437.03,-149 467.56,-149 467.56,-149"/>
-<polygon fill="#8b95a3" stroke="#8b95a3" points="467.56,-151.45 474.56,-149 467.56,-146.55 467.56,-151.45"/>
-<text xml:space="preserve" text-anchor="middle" x="464.55" y="-151.7" font-family="Helvetica,sans-Serif" font-size="9.00" fill="#697180">traces</text>
+<path fill="none" stroke="#8b95a3" stroke-dasharray="5,2" d="M324.88,-149C324.88,-149 355.41,-149 355.41,-149"/>
+<polygon fill="#8b95a3" stroke="#8b95a3" points="355.41,-151.45 362.41,-149 355.41,-146.55 355.41,-151.45"/>
+<text xml:space="preserve" text-anchor="middle" x="352.4" y="-151.7" font-family="Helvetica,sans-Serif" font-size="9.00" fill="#697180">traces</text>
 </g>
 <!-- STACKITM -->
 <g id="node11" class="node">
 <title>STACKITM</title>
-<path fill="#eef2f6" stroke="#93a7bb" stroke-width="1.1" d="M314.38,-68.24C314.38,-68.24 161.03,-68.24 161.03,-68.24 155.03,-68.24 149.03,-62.24 149.03,-56.24 149.03,-56.24 149.03,-38 149.03,-38 149.03,-32 155.03,-26 161.03,-26 161.03,-26 314.38,-26 314.38,-26 320.38,-26 326.38,-32 326.38,-38 326.38,-38 326.38,-56.24 326.38,-56.24 326.38,-62.24 320.38,-68.24 314.38,-68.24"/>
-<text xml:space="preserve" text-anchor="middle" x="237.7" y="-50.42" font-family="Helvetica,sans-Serif" font-size="11.00">🧠 STACKIT AI Model Serving</text>
-<text xml:space="preserve" text-anchor="middle" x="237.7" y="-37.22" font-family="Helvetica,sans-Serif" font-size="11.00">sovereign</text>
+<path fill="#eef2f6" stroke="#93a7bb" stroke-width="1.1" d="M207.23,-68.24C207.23,-68.24 53.88,-68.24 53.88,-68.24 47.88,-68.24 41.88,-62.24 41.88,-56.24 41.88,-56.24 41.88,-38 41.88,-38 41.88,-32 47.88,-26 53.88,-26 53.88,-26 207.23,-26 207.23,-26 213.23,-26 219.23,-32 219.23,-38 219.23,-38 219.23,-56.24 219.23,-56.24 219.23,-62.24 213.23,-68.24 207.23,-68.24"/>
+<text xml:space="preserve" text-anchor="middle" x="130.56" y="-50.42" font-family="Helvetica,sans-Serif" font-size="11.00">🧠 STACKIT AI Model Serving</text>
+<text xml:space="preserve" text-anchor="middle" x="130.56" y="-37.22" font-family="Helvetica,sans-Serif" font-size="11.00">sovereign</text>
 </g>
 <!-- LITELLM&#45;&gt;STACKITM -->
-<g id="edge16" class="edge">
+<g id="edge15" class="edge">
 <title>LITELLM&#45;&gt;STACKITM</title>
-<path fill="none" stroke="#8b95a3" d="M286.64,-134.3C286.64,-134.3 286.64,-126.73 286.64,-117.09"/>
-<polygon fill="#8b95a3" stroke="#8b95a3" points="289.09,-117.15 286.64,-110.15 284.19,-117.15 289.09,-117.15"/>
-<text xml:space="preserve" text-anchor="middle" x="255.38" y="-117.59" font-family="Helvetica,sans-Serif" font-size="9.00" fill="#697180">routes by policy</text>
+<path fill="none" stroke="#8b95a3" d="M177,-134.3C177,-134.3 177,-126.73 177,-117.09"/>
+<polygon fill="#8b95a3" stroke="#8b95a3" points="179.45,-117.15 177,-110.15 174.55,-117.15 179.45,-117.15"/>
+<text xml:space="preserve" text-anchor="middle" x="145.73" y="-117.59" font-family="Helvetica,sans-Serif" font-size="9.00" fill="#697180">routes by policy</text>
 </g>
 <!-- LANGFUSE&#45;&gt;SKE -->
-<g id="edge15" class="edge">
+<g id="edge14" class="edge">
 <title>LANGFUSE&#45;&gt;SKE</title>
-<path fill="none" stroke="#8b95a3" d="M618.7,-156C672.41,-156 733.42,-156 733.42,-156 733.42,-156 733.42,-136.56 733.42,-116.98"/>
-<polygon fill="#8b95a3" stroke="#8b95a3" points="735.87,-117.15 733.42,-110.15 730.97,-117.15 735.87,-117.15"/>
-<text xml:space="preserve" text-anchor="middle" x="656.04" y="-158.7" font-family="Helvetica,sans-Serif" font-size="9.00" fill="#697180">namespace runs on</text>
+<path fill="none" stroke="#8b95a3" d="M506.56,-156C549.39,-156 593.43,-156 593.43,-156 593.43,-156 593.43,-136.56 593.43,-116.98"/>
+<polygon fill="#8b95a3" stroke="#8b95a3" points="595.88,-117.15 593.43,-110.15 590.98,-117.15 595.88,-117.15"/>
+<text xml:space="preserve" text-anchor="middle" x="529.98" y="-158.7" font-family="Helvetica,sans-Serif" font-size="9.00" fill="#697180">namespace runs on</text>
 </g>
 <!-- AKS -->
 <g id="node9" class="node">
 <title>AKS</title>
-<path fill="#eef2f6" stroke="#93a7bb" stroke-width="1.1" d="M946.7,-65.12C946.7,-65.12 866.7,-65.12 866.7,-65.12 860.7,-65.12 854.7,-59.12 854.7,-53.12 854.7,-53.12 854.7,-41.12 854.7,-41.12 854.7,-35.12 860.7,-29.12 866.7,-29.12 866.7,-29.12 946.7,-29.12 946.7,-29.12 952.7,-29.12 958.7,-35.12 958.7,-41.12 958.7,-41.12 958.7,-53.12 958.7,-53.12 958.7,-59.12 952.7,-65.12 946.7,-65.12"/>
-<text xml:space="preserve" text-anchor="middle" x="906.7" y="-43.82" font-family="Helvetica,sans-Serif" font-size="11.00">☸️ Azure AKS</text>
+<path fill="#eef2f6" stroke="#93a7bb" stroke-width="1.1" d="M839.56,-65.12C839.56,-65.12 759.56,-65.12 759.56,-65.12 753.56,-65.12 747.56,-59.12 747.56,-53.12 747.56,-53.12 747.56,-41.12 747.56,-41.12 747.56,-35.12 753.56,-29.12 759.56,-29.12 759.56,-29.12 839.56,-29.12 839.56,-29.12 845.56,-29.12 851.56,-35.12 851.56,-41.12 851.56,-41.12 851.56,-53.12 851.56,-53.12 851.56,-59.12 845.56,-65.12 839.56,-65.12"/>
+<text xml:space="preserve" text-anchor="middle" x="799.56" y="-43.82" font-family="Helvetica,sans-Serif" font-size="11.00">☸️ Azure AKS</text>
 </g>
 <!-- SKE&#45;&gt;AKS -->
 <!-- ANYK8S -->
 <g id="node10" class="node">
 <title>ANYK8S</title>
-<path fill="#f0f1f3" stroke="#cdd2d8" stroke-width="1.1" stroke-dasharray="5,2" d="M1149.04,-65.12C1149.04,-65.12 1010.36,-65.12 1010.36,-65.12 1004.36,-65.12 998.36,-59.12 998.36,-53.12 998.36,-53.12 998.36,-41.12 998.36,-41.12 998.36,-35.12 1004.36,-29.12 1010.36,-29.12 1010.36,-29.12 1149.04,-29.12 1149.04,-29.12 1155.04,-29.12 1161.04,-35.12 1161.04,-41.12 1161.04,-41.12 1161.04,-53.12 1161.04,-53.12 1161.04,-59.12 1155.04,-65.12 1149.04,-65.12"/>
-<text xml:space="preserve" text-anchor="middle" x="1079.7" y="-43.82" font-family="Helvetica,sans-Serif" font-size="11.00" fill="#99a1ac">☸️ Any conformant cluster</text>
+<path fill="#f0f1f3" stroke="#cdd2d8" stroke-width="1.1" stroke-dasharray="5,2" d="M1041.9,-65.12C1041.9,-65.12 903.22,-65.12 903.22,-65.12 897.22,-65.12 891.22,-59.12 891.22,-53.12 891.22,-53.12 891.22,-41.12 891.22,-41.12 891.22,-35.12 897.22,-29.12 903.22,-29.12 903.22,-29.12 1041.9,-29.12 1041.9,-29.12 1047.9,-29.12 1053.9,-35.12 1053.9,-41.12 1053.9,-41.12 1053.9,-53.12 1053.9,-53.12 1053.9,-59.12 1047.9,-65.12 1041.9,-65.12"/>
+<text xml:space="preserve" text-anchor="middle" x="972.56" y="-43.82" font-family="Helvetica,sans-Serif" font-size="11.00" fill="#99a1ac">☸️ Any conformant cluster</text>
 </g>
 <!-- AKS&#45;&gt;ANYK8S -->
 <!-- AZUREM -->
 <g id="node12" class="node">
 <title>AZUREM</title>
-<path fill="#eef2f6" stroke="#93a7bb" stroke-width="1.1" d="M467.29,-65.12C467.29,-65.12 378.11,-65.12 378.11,-65.12 372.11,-65.12 366.11,-59.12 366.11,-53.12 366.11,-53.12 366.11,-41.12 366.11,-41.12 366.11,-35.12 372.11,-29.12 378.11,-29.12 378.11,-29.12 467.29,-29.12 467.29,-29.12 473.29,-29.12 479.29,-35.12 479.29,-41.12 479.29,-41.12 479.29,-53.12 479.29,-53.12 479.29,-59.12 473.29,-65.12 467.29,-65.12"/>
-<text xml:space="preserve" text-anchor="middle" x="422.7" y="-43.82" font-family="Helvetica,sans-Serif" font-size="11.00">🧠 Azure OpenAI</text>
+<path fill="#eef2f6" stroke="#93a7bb" stroke-width="1.1" d="M360.15,-65.12C360.15,-65.12 270.97,-65.12 270.97,-65.12 264.97,-65.12 258.97,-59.12 258.97,-53.12 258.97,-53.12 258.97,-41.12 258.97,-41.12 258.97,-35.12 264.97,-29.12 270.97,-29.12 270.97,-29.12 360.15,-29.12 360.15,-29.12 366.15,-29.12 372.15,-35.12 372.15,-41.12 372.15,-41.12 372.15,-53.12 372.15,-53.12 372.15,-59.12 366.15,-65.12 360.15,-65.12"/>
+<text xml:space="preserve" text-anchor="middle" x="315.56" y="-43.82" font-family="Helvetica,sans-Serif" font-size="11.00">🧠 Azure OpenAI</text>
 </g>
 <!-- STACKITM&#45;&gt;AZUREM -->
 <!-- VLLM -->
 <g id="node13" class="node">
 <title>VLLM</title>
-<path fill="#f0f1f3" stroke="#cdd2d8" stroke-width="1.1" stroke-dasharray="5,2" d="M636.54,-65.12C636.54,-65.12 530.86,-65.12 530.86,-65.12 524.86,-65.12 518.86,-59.12 518.86,-53.12 518.86,-53.12 518.86,-41.12 518.86,-41.12 518.86,-35.12 524.86,-29.12 530.86,-29.12 530.86,-29.12 636.54,-29.12 636.54,-29.12 642.54,-29.12 648.54,-35.12 648.54,-41.12 648.54,-41.12 648.54,-53.12 648.54,-53.12 648.54,-59.12 642.54,-65.12 636.54,-65.12"/>
-<text xml:space="preserve" text-anchor="middle" x="583.7" y="-43.82" font-family="Helvetica,sans-Serif" font-size="11.00" fill="#99a1ac">🧠 Self&#45;hosted vLLM</text>
+<path fill="#f0f1f3" stroke="#cdd2d8" stroke-width="1.1" stroke-dasharray="5,2" d="M529.4,-65.12C529.4,-65.12 423.72,-65.12 423.72,-65.12 417.72,-65.12 411.72,-59.12 411.72,-53.12 411.72,-53.12 411.72,-41.12 411.72,-41.12 411.72,-35.12 417.72,-29.12 423.72,-29.12 423.72,-29.12 529.4,-29.12 529.4,-29.12 535.4,-29.12 541.4,-35.12 541.4,-41.12 541.4,-41.12 541.4,-53.12 541.4,-53.12 541.4,-59.12 535.4,-65.12 529.4,-65.12"/>
+<text xml:space="preserve" text-anchor="middle" x="476.56" y="-43.82" font-family="Helvetica,sans-Serif" font-size="11.00" fill="#99a1ac">🧠 Self&#45;hosted vLLM</text>
 </g>
 <!-- AZUREM&#45;&gt;VLLM -->
 </g>

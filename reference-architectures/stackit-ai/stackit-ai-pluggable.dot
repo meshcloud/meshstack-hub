@@ -17,6 +17,8 @@ digraph stackit_ai_pluggable {
   edge [fontname="Helvetica" fontsize=9 fontcolor="#697180" color="#8b95a3" arrowsize=0.7]
 
   USER [label="👤 Application team" fillcolor="#ffffff" color="#a2abb8"]
+  APPS [label="💬 Tenant AI applications ×N\nbuilt by teams on the gateway API"
+        fillcolor="#f0f1f3" color="#cdd2d8" fontcolor="#99a1ac" style="rounded,filled,dashed"]
 
   subgraph cluster_mesh {
     label="  meshStack"
@@ -25,7 +27,7 @@ digraph stackit_ai_pluggable {
     style="rounded" color="#d5dae0"
     margin=18
 
-    BBD_COMP  [label="📦 openwebui · litellm · langfuse BBDs\nsupportedPlatforms: kubernetes" fillcolor="#ecedfb" color="#9aa2e6"]
+    BBD_COMP  [label="📦 litellm · langfuse BBDs\nsupportedPlatforms: kubernetes" fillcolor="#ecedfb" color="#9aa2e6"]
     LZ        [label="🛬 Landing Zone\nprovides the namespace" fillcolor="#ecedfb" color="#9aa2e6"]
     BBD_MODEL [label="📦 model-access BBD\none per provider, same output shape" fillcolor="#ecedfb" color="#9aa2e6"]
 
@@ -39,13 +41,11 @@ digraph stackit_ai_pluggable {
     style="rounded" color="#d5dae0"
     margin=18
 
-    WEBUI    [label="💬 OpenWebUI" fillcolor="#e5f2ea" color="#85bfa0"]
     LITELLM  [label="🚪 LiteLLM\nvirtual keys · budgets · allow-list" fillcolor="#e5f2ea" color="#85bfa0"]
     LANGFUSE [label="📈 Langfuse\ntracing · evaluation" fillcolor="#e5f2ea" color="#85bfa0"]
 
-    { rank=same; WEBUI -> LITELLM -> LANGFUSE [style=invis] }
+    { rank=same; LITELLM -> LANGFUSE [style=invis] }
 
-    WEBUI   -> LITELLM  [xlabel="completions"]
     LITELLM -> LANGFUSE [xlabel="traces" style=dashed constraint=false]
   }
 
@@ -79,9 +79,10 @@ digraph stackit_ai_pluggable {
     { rank=same; STACKITM -> AZUREM -> VLLM [style=invis] }
   }
 
-  USER -> WEBUI [xlabel="chats"]
+  USER -> APPS    [xlabel="builds and uses"]
+  APPS -> LITELLM [xlabel="calls the gateway"]
 
-  BBD_COMP  -> WEBUI    [xlabel="deploys via Helm" style=dotted lhead=cluster_platform]
+  BBD_COMP  -> LITELLM  [xlabel="deploys via Helm" style=dotted lhead=cluster_platform]
   LZ        -> SKE      [xlabel="backed by" style=dotted lhead=cluster_runtime constraint=false]
   BBD_MODEL -> LITELLM  [xlabel="virtual key and model list" style=dotted constraint=false]
 

@@ -1,9 +1,9 @@
 ---
 name: STACKIT AI
 description: >
-  An opinionated, one-click AI platform: OpenWebUI, LiteLLM and Langfuse installed into a Kubernetes
-  namespace landing zone, with LiteLLM registered as a meshStack platform so application teams order
-  governed model access — budget, allowed models and tracing included — as a self-service item.
+  An opinionated, one-click AI platform: LiteLLM and Langfuse installed into a Kubernetes namespace
+  landing zone, with LiteLLM registered as a meshStack platform so application teams order governed
+  model access — budget, allowed models and tracing included — as a self-service item.
 cloudProviders:
   - stackit
 buildingBlocks:
@@ -20,23 +20,24 @@ buildingBlocks:
 Enterprise AI adoption stalls on three questions a raw model endpoint does not answer: *who may call
 which model*, *what did it cost*, and *what exactly was sent and returned*. This reference
 architecture answers them with opinionated defaults rather than a toolkit: one order installs the
-gateway, chat UI and observability stack, and a second turns model access into a governed,
-self-service catalog item.
+gateway and observability stack, and a second turns model access into a governed, self-service
+catalog item.
 
 **Target audience:**
 
 - **Platform engineers** who want to offer LLM access as a governed product — per-team keys, budgets
   and model allow-lists — instead of handing out one shared credential.
-- **Application teams** who need a stable OpenAI-compatible endpoint and a chat UI without operating
-  model infrastructure.
+- **Application teams** who need a stable, governed OpenAI-compatible endpoint to build on — chat
+  interfaces, agents, assistants — without operating model infrastructure.
 
 ## Architecture
 
-The **AI platform** runs on SKE inside STACKIT. **OpenWebUI** is what users see; every call goes
-through **LiteLLM**, the single choke point where virtual keys, budgets and model allow-lists are
+The **AI platform** runs on SKE inside STACKIT and is deliberately just two components. Every call
+goes through **LiteLLM**, the single choke point where virtual keys, budgets and model allow-lists are
 enforced, and which routes inference to **STACKIT AI Model Serving**. **Langfuse** traces every call
 for evaluation and usage attribution. Self-hosted **vLLM** is shown muted — an optional backend, not
-required when the managed sovereign API is used.
+required when the managed sovereign API is used. Tenant applications are muted too: what teams build
+on the endpoint is their business, not part of the platform.
 
 ![STACKIT AI reference architecture](stackit-ai.svg)
 
@@ -47,10 +48,9 @@ into one platform-team order and one application-team order.
 
 ![One-click delivery model](stackit-ai-oneclick.svg)
 
-**① Platform team, once.** An `ai-platform` building block deploys OpenWebUI, LiteLLM and Langfuse by
-Helm into a tenant namespace obtained from an existing Kubernetes landing zone, pre-wired by
-convention: LiteLLM points at Langfuse for tracing, OpenWebUI points at LiteLLM, model backends are
-registered from the credentials it was given.
+**① Platform team, once.** An `ai-platform` building block deploys LiteLLM and Langfuse by Helm into a
+tenant namespace obtained from an existing Kubernetes landing zone, pre-wired by convention: LiteLLM
+points at Langfuse for tracing, and model backends are registered from the credentials it was given.
 
 **② Application team, per team.** LiteLLM is then registered as a **meshStack platform**, so ordering
 model access is a normal self-service action: the landing zone carries the policy (allowed models,
@@ -72,6 +72,25 @@ there is a precedent in this repo — [`modules/stackit`](../../modules/stackit)
 itself as a **custom** platform type, with the actual tenant provisioning done by the
 [`stackit/project`](../../modules/stackit/project) building block. A LiteLLM platform would follow
 the same shape, with a `litellm/team` building block in place of `stackit/project`.
+
+### Why No Chat UI in the Core
+
+The platform is the **governed API**, not an end-user product. A bundled UI such as OpenWebUI was
+considered and deliberately left out:
+
+- It is an **application, not plumbing**. LiteLLM and Langfuse are what every AI workload needs;
+  a chat UI is one specific product built *on* them — and teams will build their own.
+- It brings its own **user, group and per-group model permissions**, a second policy store competing
+  with LiteLLM. "Who may call which model" must have exactly one home, and that home is the landing
+  zone plus the virtual key.
+- Its built-in RAG stack duplicates the already-dropped RAG layer.
+- A shared UI cuts across the tenant boundary the virtual key defines, forcing its user list to be
+  reconciled against meshStack projects.
+
+The counter-argument is real — a URL you can chat at beats an API key for demos and for business
+users who will never write a client. That is why it stays a candidate *optional* catalog block a team
+orders into its own namespace with its own key, making it the first example consumer of the platform
+rather than part of it. See open question 5.
 
 ## Pluggability: Two Independent Seams
 
@@ -124,7 +143,9 @@ This architecture **consumes** a Kubernetes cluster, it does not provision one �
    `litellm/team` block would drive LiteLLM's admin API. Needs confirming.
 4. **Metering.** The custom platform type accepts metering configuration; whether LiteLLM spend can
    feed meshStack chargeback is unresolved.
-5. **Tenancy of the UI.** One shared OpenWebUI with per-user keys, or one instance per team?
+5. **Optional chat UI.** A ready-made UI such as OpenWebUI is valuable for demos and for business
+   users who will not build their own client. Should it ship as an optional catalog block teams order
+   into their own namespace with their own virtual key?
 6. **Dropped from the demo.** FlowiseAI (agent/workflow builder) and RAGFlow (RAG and data layer) were
    left out to keep the focus on serving, observability and governance. Follow-up architecture?
 
@@ -147,7 +168,7 @@ This architecture **consumes** a Kubernetes cluster, it does not provision one �
 | Responsibility                                              | Platform Team | Application Team |
 |-------------------------------------------------------------|:---:|:---:|
 | Operate the Kubernetes cluster hosting the platform          | ✅ | ❌ |
-| Install and upgrade OpenWebUI, LiteLLM and Langfuse          | ✅ | ❌ |
+| Install and upgrade LiteLLM and Langfuse                     | ✅ | ❌ |
 | Decide which models are offered and to whom                  | ✅ | ❌ |
 | Define landing zones: allowed models, budgets, rate limits   | ✅ | ❌ |
 | Register and maintain building block definitions             | ✅ | ❌ |
@@ -160,7 +181,10 @@ This architecture **consumes** a Kubernetes cluster, it does not provision one �
 
 <!-- Scratch space — remove before merging. -->
 
-- Demo components in scope: OpenWebUI, LiteLLM, Langfuse, STACKIT AI Model Serving.
+- Demo components in scope: LiteLLM, Langfuse, STACKIT AI Model Serving.
+- OpenWebUI was dropped from the core: it is an application, not platform plumbing, and its built-in
+  user/group model permissions would be a second policy store competing with LiteLLM. Its RAG half
+  also duplicates the already-dropped RAGFlow. Kept as a candidate optional block (see open question 5).
 - Original demo ran on Scaleway; only the runtime and model-serving layers need swapping.
 - Hub modules still missing for the platform components themselves — only `stackit/model-serving` is
   scaffolded, as a minimal first cut around `stackit_modelserving_token` (the only AI-specific

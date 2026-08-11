@@ -30,7 +30,6 @@ digraph stackit_ai {
       style="rounded" color="#d5dae0"
       margin=14
 
-      WEBUI    [label="💬 OpenWebUI\nuser-facing chat interface" fillcolor="#e5f2ea" color="#85bfa0"]
       LITELLM  [label="🚪 LiteLLM\nvirtual keys · budgets · model allow-list" fillcolor="#e5f2ea" color="#85bfa0"]
       LANGFUSE [label="📈 Langfuse\ntracing · evaluation · usage" fillcolor="#e5f2ea" color="#85bfa0"]
       VLLM     [label="🧠 vLLM\nself-hosted models · optional"
@@ -38,14 +37,17 @@ digraph stackit_ai {
 
       { rank=same; LITELLM -> LANGFUSE [style=invis] }
 
-      WEBUI   -> LITELLM  [xlabel="completions"]
       LITELLM -> LANGFUSE [xlabel="traces every call" style=dashed constraint=false]
       LITELLM -> VLLM     [xlabel="optional backend" style=dashed]
     }
 
+    APPS [label="💬 Tenant AI applications ×N\nchat UIs, agents, assistants — built by teams"
+          fillcolor="#f0f1f3" color="#cdd2d8" fontcolor="#99a1ac" style="rounded,filled,dashed"]
+
     MODEL [label="🧠 STACKIT AI Model Serving\nmanaged sovereign LLM API" fillcolor="#eef2f6" color="#93a7bb"]
 
-    LITELLM -> MODEL [xlabel="routes inference to"]
+    APPS    -> LITELLM [xlabel="calls the gateway"]
+    LITELLM -> MODEL   [xlabel="routes inference to"]
   }
 
   subgraph cluster_mesh {
@@ -67,7 +69,7 @@ digraph stackit_ai {
     BBD_M -> PROJ  [xlabel="ordered in" constraint=false]
   }
 
-  USER  -> WEBUI    [xlabel="chats"]
+  USER  -> APPS     [xlabel="builds and uses"]
   BBD_M -> LITELLM  [xlabel="issues virtual key" style=dotted constraint=false]
   BBD_M -> MODEL    [xlabel="issues serving token" style=dotted constraint=false]
   LANGFUSE -> PROJ  [xlabel="usage attribution" style=dotted constraint=false]

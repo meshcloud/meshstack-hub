@@ -24,7 +24,7 @@ digraph stackit_ai_oneclick {
 
     BBD_STACK [label="📦 ai-platform BBD\nopinionated Helm wiring" fillcolor="#ecedfb" color="#9aa2e6"]
     NS        [label="☸️ Tenant namespace\nfrom the Kubernetes landing zone" fillcolor="#e5f2ea" color="#85bfa0"]
-    STACK     [label="🚪 OpenWebUI · LiteLLM · Langfuse\nwired together by convention" fillcolor="#e5f2ea" color="#85bfa0"]
+    STACK     [label="🚪 LiteLLM · Langfuse\nwired together by convention" fillcolor="#e5f2ea" color="#85bfa0"]
     PLATFORM  [label="🛰️ LiteLLM as meshStack platform\ncustom platform type" fillcolor="#ecedfb" color="#9aa2e6"]
     LZAI      [label="🛬 AI landing zones\nallowed models · budget tier" fillcolor="#ecedfb" color="#9aa2e6"]
 
@@ -45,12 +45,13 @@ digraph stackit_ai_oneclick {
 
     BBD_TEAM [label="📦 litellm/team BBD" fillcolor="#ecedfb" color="#9aa2e6"]
     KEY      [label="🔑 LiteLLM team and virtual key ×N\nmodels and budget from the landing zone" fillcolor="#e5f2ea" color="#85bfa0"]
-    USER     [label="👤 Application team\nchats in OpenWebUI" fillcolor="#ffffff" color="#a2abb8"]
+    APPS     [label="💬 Own applications\nchat UIs, agents, assistants"
+              fillcolor="#f0f1f3" color="#cdd2d8" fontcolor="#99a1ac" style="rounded,filled,dashed"]
 
-    { rank=same; KEY -> USER [style=invis] }
+    { rank=same; KEY -> APPS [style=invis] }
 
-    BBD_TEAM -> KEY [xlabel="creates"]
-    KEY      -> USER [xlabel="grants access" style=dashed]
+    BBD_TEAM -> KEY  [xlabel="creates"]
+    KEY      -> APPS [xlabel="authorises" style=dashed]
   }
 
   subgraph cluster_existing {
@@ -70,6 +71,6 @@ digraph stackit_ai_oneclick {
 
   K8SLZ -> NS       [xlabel="provides" style=dotted constraint=false]
   LZAI  -> BBD_TEAM [xlabel="governs" style=dotted]
-  KEY   -> STACK    [xlabel="authorises calls" style=dashed constraint=false]
+  APPS  -> STACK    [xlabel="call the gateway API" style=dashed constraint=false]
   STACK -> MODELS   [xlabel="routes by policy" constraint=false]
 }
