@@ -126,6 +126,28 @@ that takes a kubeconfig and declares `supportedPlatforms: kubernetes`.
 This architecture **consumes** a Kubernetes cluster, it does not provision one — which is why
 [`stackit-kubernetes`](../stackit-kubernetes) stays a separate, companion reference architecture.
 
+## Deployment vs Tenancy
+
+The platform components are deployed **once** and are internally multi-tenant. Nothing is deployed per
+application team:
+
+| Component | Deployments | Tenancy unit | Provisioned by |
+|-----------|-------------|--------------|----------------|
+| LiteLLM | one, shared | Team + virtual key | `ai/litellm-team` |
+| Langfuse | one, shared | Organization/project + scoped API key | `ai/litellm-team` |
+| STACKIT AI Model Serving | managed service | Token in the tenant's own STACKIT project | `stackit/model-serving` |
+
+This is forced for LiteLLM — a gateway only enforces budgets and allow-lists if everything goes
+through one instance — and chosen for Langfuse, where per-tenant deployments would be disproportionate
+(recent Langfuse versions need ClickHouse and Redis alongside Postgres, so each tenant install would
+carry a full data stack).
+
+The trade-off to accept consciously: **isolation rests on Langfuse's project boundary, not on a
+Kubernetes or network boundary**, and the shared instances are a common blast radius — if Langfuse is
+down, no team has tracing. For a sovereignty story this is usually fine, since the data never leaves
+the cluster; a tenant with stricter isolation requirements would need its own deployment, which this
+architecture does not attempt.
+
 ## Token Scope: Per-Tenant
 
 Each tenant gets **its own STACKIT Model Serving token**, issued into its own STACKIT project, rather
@@ -173,9 +195,9 @@ consequences to design for:
 2. **Bootstrap ordering.** The LiteLLM platform can only be registered once LiteLLM is reachable (URL
    plus admin credential). `stackit-landingzone` already registers a platform and orders a building
    block instance in one apply, so there is a precedent — but the dependency needs designing.
-3. **Provisioning mechanism.** There is no LiteLLM Terraform provider as far as we know, so the
-   `ai/litellm-team` block would drive LiteLLM's admin API — now on the critical path, since per-tenant
-   tokens mean the block must register a per-team deployment as well as the key.
+3. **Provisioning mechanism — resolved.** No LiteLLM or Langfuse Terraform provider exists, so
+   `ai/litellm-team` drives both admin APIs with `Mastercard/restapi`, already the established pattern
+   in this repo (13 usages), with `hashicorp/helm` for the chart deploys. No new pattern needed.
 4. **Metering.** The custom platform type accepts metering configuration; whether LiteLLM spend can
    feed meshStack chargeback is unresolved.
 5. **Optional chat UI.** A ready-made UI such as OpenWebUI is valuable for demos and for business
@@ -264,7 +286,7 @@ cloudfoundation repos), so hub-ifying it is a prerequisite.
 | Register and maintain building block definitions             | ✅ | ❌ |
 | Order model access from the self-service catalog             | ❌ | ✅ |
 | Stay within the granted budget and model allow-list          | ❌ | ✅ |
-| Review own traces and evaluations in Langfuse                | ❌ | ✅ |
+| Review own traces and evaluations in their Langfuse project   | ❌ | ✅ |
 | Build and operate the AI application or assistant            | ❌ | ✅ |
 
 ## Notes for the Session
