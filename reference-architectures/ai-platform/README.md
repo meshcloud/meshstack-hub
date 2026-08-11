@@ -55,15 +55,68 @@ into one platform-team order and one application-team order.
 tenant namespace obtained from an existing Kubernetes landing zone, pre-wired by convention: LiteLLM
 points at Langfuse for tracing, and model backends are registered from the credentials it was given.
 
-Step ① is performed by the reference architecture's **own Terraform apply** rather than by ordering a
-catalog building block — the same way `stackit-landingzone` provisions its platform and landing zone
-directly. This matters: the target cluster is then a plain input variable, so selecting *which* SKE
-cluster the AI platform lands in works today (see [Feature Requests](#meshstack-feature-requests)).
+Step ① is itself a **building block ordered in the platform team's own workspace** — the reference
+architecture *is* a building block, following the shape
+[`stackit-landingzone`](../stackit-landingzone) already uses: a thin `meshstack_integration.tf`
+declaring one BBD whose implementation points at this architecture's `buildingblock/`, which then
+creates the platform, landing zones and the tenant-facing BBDs. The meshStack instance is the
+Terraform runtime; the foundation repos only instantiate the architecture.
+
+Two schema details make this work today, without waiting on any new meshStack feature:
+
+- **`target_type = "WORKSPACE_LEVEL"`** (the default) attaches the block to the platform workspace
+  rather than to a tenant. `supported_platforms` is required *only* for `TENANT_LEVEL`, so this step
+  needs no platform reference at all — which is why the instance-level limitation discussed under
+  [Feature Requests](#meshstack-feature-requests) does not block it.
+- **The cluster credential arrives as an encrypted static input.** The architecture's Terraform holds
+  the admin kubeconfig, mints a scoped one, and bakes it into the BBD — exactly what
+  [`kubernetes/manifest`](../../modules/kubernetes/manifest) does at
+  `meshstack_integration.tf:159`:
+
+  ```hcl
+  assignment_type = "STATIC"
+  sensitive = { argument = {
+    secret_value = "data:application/yaml;base64,${base64encode(module.backplane.kubeconfig)}"
+  }}
+  ```
+
+  The block then applies in **one pass**, because its provider reads `file("kubeconfig.yaml")` — a
+  value known at plan time. There is no unknown-after-apply problem to solve and no terragrunt-style
+  two-unit split. The consequence to accept: because the credential is static, there is one BBD per
+  target cluster, so cluster choice is a Terraform variable rather than an order-time selection.
 
 **② Application team, per team.** LiteLLM is then registered as a **meshStack platform**, so ordering
 model access is a normal self-service action: the landing zone carries the policy (allowed models,
 budget tier), and the building block creates the LiteLLM team and virtual key behind it. This step is
 per-project and needs no cluster targeting, so it is unaffected by the limitation below.
+
+### Composition: Architectures Reuse Architectures
+
+`ai-platform` is deliberately generic — it names no cloud and depends on neither the `stackit` nor the
+`azurerm` provider. Provider-specific architectures **reuse** it and fill its two seams:
+
+```hcl
+# reference-architectures/stackit-landingzone/buildingblock/main.tf
+module "ai_platform" {
+  source = "github.com/meshcloud/meshstack-hub//reference-architectures/ai-platform/buildingblock?ref=${var.hub.git_ref}"
+  # ... SKE for the runtime seam, STACKIT Model Serving for the model seam
+}
+```
+
+Composition must use the **git URL with `?ref=${var.hub.git_ref}`**, not a relative `../../ai-platform`
+path. Relative sources appear only in `e2e/` harnesses and for directories *below* a building block's
+`repository_path`; a `../` escape out of the building block's own path is not a pattern this repo
+relies on.
+
+In `stackit-landingzone`, AI becomes an opt-in option shaped exactly like its existing
+`variable "network"` — a nullable `object({...})` with `optional()` fields, unset meaning "sandbox
+only". Enabling it plugs SKE in as the runtime and STACKIT AI Model Serving in as the model backend,
+and the resulting platform is where the SKE Starterkit can then be integrated (see
+[Tracked](#tracked-folding-in-the-ske-starterkit)).
+
+Note this is new ground: no reference architecture reuses another one yet. `stackit-landingzone`'s
+integration file contains no `module` blocks at all, so `ai-platform` will be the first architecture
+consumed as a component.
 
 ### Why LiteLLM Works as a meshStack Platform
 
@@ -118,6 +171,37 @@ components live in `modules/ai/`, and each provider contributes only a small mod
 
 ![Pluggable seams variant](ai-platform-pluggable.svg)
 
+### The Model Seam as a Contract
+
+The model seam is a plain map keyed by the model name application teams request, deliberately split so
+that only the secrets are marked sensitive:
+
+```hcl
+variable "model_backends" {
+  description = "OpenAI-compatible model backends registered in the LiteLLM gateway, keyed by model name."
+  type = map(object({
+    litellm_model = string                      # "openai/neuralmagic/Mistral-7B", "azure/gpt-4o-prod"
+    api_base      = string
+    extra_params  = optional(map(string), {})   # provider quirks, e.g. api_version
+  }))
+}
+
+variable "model_backend_api_keys" {
+  description = "API keys for the model backends, keyed by the same model name as model_backends."
+  type        = map(string)
+  sensitive   = true
+}
+```
+
+Splitting the keys out matters in practice: marking one combined structure `sensitive` would collapse
+model names, endpoints and versions into `(sensitive value)` in every plan, hiding exactly the
+human-readable detail a reviewer needs to check. Keeping the two maps in step is the caller's job, and
+the architecture validates that every `model_backends` key has a matching entry.
+
+This keeps `ai-platform` free of the `stackit` and `azurerm` providers entirely — it works because
+STACKIT AI Model Serving, Azure OpenAI and self-hosted vLLM are all OpenAI-compatible from LiteLLM's
+point of view. "Bring your own model" is then a config value, not a hub PR.
+
 Adding a cloud therefore means adding one small model-access module with the same output shape — not
 changing the architecture. The runtime seam needs no per-cloud work at all: the precedent is
 [`kubernetes/manifest`](../../modules/kubernetes/manifest), a runtime-agnostic Helm building block
@@ -125,6 +209,35 @@ that takes a kubeconfig and declares `supportedPlatforms: kubernetes`.
 
 This architecture **consumes** a Kubernetes cluster, it does not provision one — which is why
 [`stackit-kubernetes`](../stackit-kubernetes) stays a separate, companion reference architecture.
+
+### Prerequisite: Cluster Ingress and TLS
+
+LiteLLM and Langfuse both need a routable HTTPS endpoint with a valid certificate, so the runtime seam
+has one requirement beyond "hands out namespaces": an ingress controller and a certificate issuer. That
+capability does not exist in the hub yet — `modules/kubernetes/` holds only `manifest` and
+`service-account` — and it is currently **copy-pasted across the foundation repos**:
+
+| Location | cert-manager | Notes |
+|----------|--------------|-------|
+| `likvid-cloudfoundation` — SKE | v1.20.0 | |
+| `internal-cloudfoundation` — SKE | v1.20.0 | byte-identical to likvid's SKE copy |
+| `trial-cloudfoundation` — SKE | v1.20.0 | byte-identical to likvid's SKE copy |
+| `likvid-cloudfoundation` — AKS | v1.19.4 | plus an Azure load-balancer health-probe annotation |
+
+All four are `platforms/*/kubernetes/addons/` — cert-manager, an HAProxy ingress controller, and a
+Let's Encrypt `ClusterIssuer` — and the version drift between the SKE and AKS copies is the argument
+for consolidating them into a single `modules/kubernetes/ingress`.
+
+The module is shaped by **capability, not by tool**: one building block delivering "my services get a
+public HTTPS URL with a valid certificate". Bundling the issuer with the controller is not arbitrary —
+the foundations' `ClusterIssuer` hardcodes `ingressClassName = "haproxy"` in its HTTP-01 solver, so the
+issuer is not independently useful.
+
+It also lets the foundations drop a module. Today the `ClusterIssuer` needs its own terragrunt unit
+because `kubernetes_manifest` requires the CRD to exist at plan time. Rendering it through a local Helm
+chart instead — the `chart = path.module` pattern
+[`kubernetes/manifest`](../../modules/kubernetes/manifest) already uses — removes the plan-time schema
+lookup, so `addons/` and `addons/certmanager/` collapse into one.
 
 ## Deployment vs Tenancy
 
@@ -191,12 +304,16 @@ consequences to design for:
 
 1. **Module scaffolding.** Only `stackit/model-serving` exists. The cloud-agnostic components belong
    in a new `modules/ai/` namespace — `ai/litellm`, `ai/langfuse` and the tenant-facing
-   `ai/litellm-team` — none of which are written yet.
-2. **Bootstrap ordering — resolved for one apply.** Provider configurations *may* reference resource
-   attributes, but fail when the value is unknown at plan time. So the RA generates the LiteLLM admin
-   key itself (`random_password`), passes it into the Helm values and derives the endpoint from a known
-   hostname — both knowable up front, leaving `depends_on` sufficient. `stackit-landingzone` already
-   uses `depends_on` between a platform and a building block instance in one apply.
+   `ai/litellm-team` — plus `modules/kubernetes/ingress` for the TLS/ingress prerequisite. None are
+   written yet. This architecture also still needs its own `buildingblock/` and
+   `meshstack_integration.tf` to become orderable.
+2. **Bootstrap ordering — resolved for one apply.** Two credentials, two mechanisms. The *cluster*
+   credential is a `STATIC` encrypted input read back through `file()`, so it is known at plan time.
+   The *LiteLLM admin key* is generated by the architecture itself (`random_password`) and passed into
+   the Helm values, with the endpoint derived from a known hostname — so nothing needs to be read out
+   of a resource that has not been created yet, and `depends_on` is sufficient. Provider configurations
+   *may* reference resource attributes; they fail only when the value is unknown at plan time, which
+   neither of these is.
 3. **Provisioning mechanism — resolved.** No LiteLLM or Langfuse Terraform provider exists, so
    `ai/litellm-team` drives both admin APIs with `Mastercard/restapi`, already the established pattern
    in this repo (13 usages), with `hashicorp/helm` for the chart deploys. No new pattern needed.
@@ -216,22 +333,35 @@ consequences to design for:
 Kubernetes platform. By contrast `meshstack_landingzone.platform_ref` already targets a specific
 platform by uuid.
 
-This is why step ① is RA-owned Terraform rather than a catalog block. Allowing `supported_platforms`
-to reference a `meshPlatform` would make the catalog path pluggable and is worth having:
+This does **not** block step ①, since a `WORKSPACE_LEVEL` block needs no `supported_platforms` at all.
+It bites on the tenant-facing blocks and on making cluster choice an order-time decision:
 
 - The realistic topology is **two SKE clusters** — one hosting the shared AI platform, one hosting
-  application workloads such as the SKE Starterkit. Without instance-level support, an `ai-platform`
+  application workloads such as the SKE Starterkit. Without instance-level support, a `TENANT_LEVEL`
   block offered for type `kubernetes` appears orderable on both.
-- It would let the platform engineer answer "which cluster?" as a normal platform reference instead of
-  threading a kubeconfig or platform uuid through Terraform inputs.
-- The current workaround — registering each cluster as its own custom platform type — inflates the
+- It would let the platform engineer answer "which cluster?" as a normal platform reference. The
+  workaround today is one BBD per cluster with the kubeconfig baked in as a static input, or a
+  `PLATFORM_OPERATOR_MANUAL_INPUT` kubeconfig field — which does support `sensitive`, but turns a
+  reference into hand-carried credentials.
+- The other workaround — registering each cluster as its own custom platform type — inflates the
   platform-type list to express what is really an instance selection.
 
-**Sensitive outputs between building blocks.** If meshStack supported encrypted sensitive outputs from
-one building block into another, this architecture could be split into two properly dependent blocks —
-one deploying the gateway, one registering the platform and consuming its endpoint and admin
-credential — instead of relying on a pre-generated credential to keep everything in one apply. That is
-the cleaner decomposition and would remove the plan-time-unknown constraint entirely.
+**Sensitive outputs between building blocks.** The gap here is narrower than it first appears, and
+worth stating precisely. Sensitive input values *are* supported — for `USER_INPUT`,
+`PLATFORM_OPERATOR_MANUAL_INPUT` and `STATIC` — which is what makes the encrypted-kubeconfig pattern
+above work. They are excluded for exactly one assignment type, `BUILDING_BLOCK_OUTPUT`, and outputs
+themselves are typed `STRING | CODE | INTEGER | BOOLEAN` with no sensitive variant.
+
+So composition itself is fine: `dependency_refs` plus `BUILDING_BLOCK_OUTPUT` already works, and
+[`ske/forgejo-connector`](../../modules/ske/forgejo-connector) uses both today. Non-secret facts flow
+between blocks without trouble — ingress class, cluster issuer name, load-balancer IP, hostname — so
+this architecture routes around the gap by keeping the **secret path** static and encrypted while the
+**dependency path** carries only public values.
+
+What remains blocked is the genuinely self-service case: one block *creating* a cluster and another
+consuming its kubeconfig at runtime. Today that credential would have to be a plaintext `CODE` output
+visible in meshPanel. Closing this is the prerequisite for the SKE cluster itself becoming an orderable
+building block rather than foundation Terraform.
 
 ## Tracked: Folding In the SKE Starterkit
 
@@ -257,17 +387,20 @@ several providers (renaming to `OPENAI_BASE_URL` / `OPENAI_API_KEY` would additi
 client SDKs work with zero configuration), and routing the demo app through the gateway means its
 traffic shows up in Langfuse and counts against the team's budget — which is the point.
 
-**Delivery idea:** expose AI as an opt-in option the same way
-[`stackit-landingzone`](../stackit-landingzone) exposes networking — a nullable object variable
-(`variable "network"`, unset = sandbox only) — with the SKE Starterkit as a further option that
-requires the AI option to be enabled.
+**Delivery:** AI becomes an opt-in option on
+[`stackit-landingzone`](../stackit-landingzone), shaped like its existing `variable "network"`, which
+reuses this architecture as a component — see
+[Composition](#composition-architectures-reuse-architectures). The SKE Starterkit is then a further
+option that requires the AI option to be enabled.
 
 There is no layering conflict here, because the **SKE cluster is itself an offering inside a STACKIT
 project**: the STACKIT LZ provisions the project, the SKE cluster building block turns it into a
 Kubernetes platform, and that platform's landing zone hands out the namespaces the AI components and
 the starterkit need. Note the cluster building block does not exist in the hub yet — SKE clusters are
 provisioned by foundation Terraform today (`platforms/ske/kubernetes/cluster.tf` in the
-cloudfoundation repos), so hub-ifying it is a prerequisite.
+cloudfoundation repos), so hub-ifying it is a prerequisite. It is also the one place the sensitive-output
+gap genuinely bites: an orderable cluster block would need to hand its kubeconfig to the blocks
+installing into it.
 
 ## Getting Started
 
