@@ -126,6 +126,29 @@ that takes a kubeconfig and declares `supportedPlatforms: kubernetes`.
 This architecture **consumes** a Kubernetes cluster, it does not provision one — which is why
 [`stackit-kubernetes`](../stackit-kubernetes) stays a separate, companion reference architecture.
 
+## Token Scope: Per-Tenant
+
+Each tenant gets **its own STACKIT Model Serving token**, issued into its own STACKIT project, rather
+than LiteLLM holding one shared platform credential. This is an opinionated call — the shared-token
+variant is simpler and legitimate for some platform engineering setups — made for three reasons:
+
+- **Clean provider hierarchy.** The credential lives in the tenant's own STACKIT project, so the
+  STACKIT resource hierarchy keeps reflecting the tenant structure instead of collapsing all AI usage
+  onto one platform project.
+- **Cost attribution without new plumbing.** Because spend lands on the tenant's own project, it flows
+  through whatever STACKIT cost path the platform already uses, rather than needing an AI-specific
+  path that reconstructs per-team spend from gateway data and pushes it back into meshStack.
+- **Blast radius.** One tenant's credential can be revoked or rotated without touching anyone else.
+
+**Ordering stays one click.** The app team's flow is identical to the shared-token variant — the extra
+work is inside the building block, which touches two systems: it issues the STACKIT token in the
+tenant's project *and* registers the corresponding deployment, team and virtual key in LiteLLM. Two
+consequences to design for:
+
+- **Two-system consistency.** A token created but not registered in LiteLLM leaves an orphan. The
+  block needs to be idempotent and to clean up on partial failure.
+- **Rotation touches both.** Token TTL expiry must update the gateway too, not just STACKIT.
+
 ## Governance and Observability
 
 <!-- TODO: talking points — confirm which of these the demo actually showed. -->
@@ -151,7 +174,8 @@ This architecture **consumes** a Kubernetes cluster, it does not provision one �
    plus admin credential). `stackit-landingzone` already registers a platform and orders a building
    block instance in one apply, so there is a precedent — but the dependency needs designing.
 3. **Provisioning mechanism.** There is no LiteLLM Terraform provider as far as we know, so the
-   `litellm/team` block would drive LiteLLM's admin API. Needs confirming.
+   `ai/litellm-team` block would drive LiteLLM's admin API — now on the critical path, since per-tenant
+   tokens mean the block must register a per-team deployment as well as the key.
 4. **Metering.** The custom platform type accepts metering configuration; whether LiteLLM spend can
    feed meshStack chargeback is unresolved.
 5. **Optional chat UI.** A ready-made UI such as OpenWebUI is valuable for demos and for business
