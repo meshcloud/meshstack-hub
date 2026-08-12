@@ -1,0 +1,403 @@
+variable "stackit_service_account_email" {
+  type        = string
+  nullable    = false
+  default     = ""
+  description = "Email of the STACKIT service account the building block authenticates as through workload identity federation. It needs `ske.admin` on the organization, because the target project of an order is unknown when the building block definition is registered."
+}
+
+variable "stackit_region" {
+  type        = string
+  nullable    = false
+  default     = "eu01"
+  description = "STACKIT region the clusters are created in."
+}
+
+variable "stackit_dns_parent_zone_name" {
+  type        = string
+  nullable    = false
+  default     = ""
+  description = "Parent DNS zone the landing zone owns, for example `likvid.stackit.run`. Each ordered cluster gets a delegated subzone `<cluster name>.<parent zone>` under it. Leave empty to run without DNS, in which case cert-manager issues per-hostname certificates over HTTP-01."
+}
+
+variable "stackit_dns_service_account_key" {
+  type        = string
+  nullable    = false
+  default     = ""
+  sensitive   = true
+  description = "STACKIT service account key JSON, scoped to the tenant's own STACKIT project, that the cert-manager DNS-01 solver authenticates with. Required for the wildcard certificate."
+}
+
+variable "location_identifier" {
+  type        = string
+  nullable    = false
+  default     = "global"
+  description = "Identifier of the meshStack location the Kubernetes platforms are registered in."
+}
+
+variable "acme_email" {
+  type        = string
+  nullable    = false
+  default     = ""
+  description = "Contact address Let's Encrypt uses for expiry warnings and account recovery. Leave empty to register the ACME account without a contact address."
+}
+
+variable "acme_server" {
+  type        = string
+  nullable    = false
+  default     = "https://acme-v02.api.letsencrypt.org/directory"
+  description = "ACME directory URL. Point this at the Let's Encrypt staging endpoint while you test, because the production endpoint has strict rate limits."
+}
+
+variable "cluster_issuer_name" {
+  type        = string
+  nullable    = false
+  default     = "letsencrypt-prod"
+  description = "Name of the ClusterIssuer application teams reference from the `cert-manager.io/cluster-issuer` annotation on their Ingress."
+}
+
+variable "ingress_class_name" {
+  type        = string
+  nullable    = false
+  default     = "haproxy"
+  description = "Name of the IngressClass the ingress controller serves."
+}
+
+variable "meshstack" {
+  type = object({
+    owning_workspace_identifier = string
+    tags                        = optional(map(list(string)), {})
+  })
+  description = "Shared meshStack context. Tags are optional and propagated to building block definition metadata."
+}
+
+variable "hub" {
+  type = object({
+    git_ref   = optional(string, "main")
+    bbd_draft = optional(bool, true)
+  })
+  const   = true
+  default = { git_ref = "main", bbd_draft = true }
+
+  description = <<-EOT
+  `git_ref`: Hub release reference. Set to a tag (e.g. 'v1.2.3') or branch or commit sha of the meshstack-hub repo.
+  `bbd_draft`: If true, the building block definition version is kept in draft mode.
+  EOT
+}
+
+output "building_block_definition" {
+  description = "BBD is consumed in building block compositions."
+  value = {
+    uuid        = meshstack_building_block_definition.this.metadata.uuid
+    version_ref = var.hub.bbd_draft ? meshstack_building_block_definition.this.version_latest : meshstack_building_block_definition.this.version_latest_release
+  }
+}
+
+resource "meshstack_building_block_definition" "this" {
+  metadata = {
+    owned_by_workspace = var.meshstack.owning_workspace_identifier
+    tags               = var.meshstack.tags
+  }
+
+  spec = {
+    display_name        = "STACKIT Kubernetes Cluster"
+    symbol              = "https://raw.githubusercontent.com/meshcloud/meshstack-hub/${var.hub.git_ref}/reference-architectures/stackit-kubernetes/buildingblock/logo.png"
+    description         = "Creates an SKE cluster in the tenant's own STACKIT project, installs cert-manager and the HAProxy ingress controller on it, and registers it in meshStack as a Kubernetes platform with namespace landing zones."
+    support_url         = "https://portal.stackit.cloud"
+    target_type         = "TENANT_LEVEL"
+    run_transparency    = true
+    supported_platforms = [{ name = "STACKIT" }]
+
+    readme = chomp(<<-EOT
+    This building block creates a **STACKIT Kubernetes Engine cluster** inside your own STACKIT
+    project and turns it into a platform your teams can order namespaces on. One order gives you
+    the cluster, an ingress controller with Let's Encrypt certificates, and a Kubernetes platform
+    in meshStack with a development and a production namespace landing zone.
+
+    An application that runs in one of those namespaces reaches the internet over a hostname in the
+    cluster's own DNS subzone, and the certificate for that hostname already exists. You do not
+    request a certificate, and you do not create a DNS record.
+
+    ## 🎯 When to use it
+
+    Use this building block when you:
+    - need a Kubernetes cluster of your own on STACKIT rather than a namespace on a shared cluster.
+    - want your teams to order namespaces from the meshStack catalog instead of asking you for them.
+    - want every application to get an HTTPS hostname without a certificate request.
+
+    ## 💡 Usage examples
+
+    **Example 1: A team platform**
+    A team orders the cluster in its STACKIT project and names it `team-a`. meshStack registers the
+    cluster as a platform with a `team-a-dev` and a `team-a-prod` landing zone, and the team's
+    projects get namespaces on it with the quotas the landing zone grants.
+
+    **Example 2: A cluster that stays inside the network**
+    A team runs an internal application and sets **Ingress Exposure** to `internal`. The load
+    balancer in front of the ingress controller receives a private address, so the application is
+    reachable from inside the STACKIT network only, while certificates are still issued and renewed
+    automatically.
+
+    ## 🌐 Hostnames and certificates
+
+    The cluster receives a delegated DNS subzone named after it, for example
+    `team-a.likvid.stackit.run`. The SKE managed ExternalDNS extension writes the records, and
+    cert-manager holds one wildcard certificate for the whole subzone. Adding an Ingress with a
+    hostname under that subzone is all an application needs.
+
+    ## 📊 Shared Responsibility
+
+    | Responsibility | Platform Team | Application Team |
+    |---|:---:|:---:|
+    | Provide the STACKIT identity the building block runs as | ✅ | ❌ |
+    | Own the parent DNS zone and delegate a subzone per cluster | ✅ | ❌ |
+    | Register and maintain this building block definition | ✅ | ❌ |
+    | Choose the cluster name and the ingress exposure | ❌ | ✅ |
+    | Order namespaces on the resulting Kubernetes platform | ❌ | ✅ |
+    | Deploy, expose and operate the applications in those namespaces | ❌ | ✅ |
+    EOT
+    )
+  }
+
+  version_spec = {
+    draft         = var.hub.bbd_draft
+    deletion_mode = "DELETE"
+
+    # Ephemeral API key permissions for the meshStack platform and landing zones the composed
+    # `modules/kubernetes/platform` module registers.
+    permissions = [
+      "LANDINGZONE_LIST",
+      "LANDINGZONE_SAVE",
+      "LANDINGZONE_DELETE",
+      "PLATFORMINSTANCE_LIST",
+      "PLATFORMINSTANCE_SAVE",
+      "PLATFORMINSTANCE_DELETE"
+    ]
+
+    implementation = {
+      terraform = {
+        terraform_version              = "1.12.0"
+        repository_url                 = "https://github.com/meshcloud/meshstack-hub.git"
+        repository_path                = "reference-architectures/stackit-kubernetes/buildingblock"
+        ref_name                       = var.hub.git_ref
+        async                          = false
+        use_mesh_http_backend_fallback = true
+      }
+    }
+
+    inputs = {
+      # ── Tenant context and STACKIT authentication ──
+
+      stackit_project_id = {
+        display_name    = "STACKIT Project ID"
+        description     = "STACKIT project of the meshTenant the cluster is created in."
+        type            = "STRING"
+        assignment_type = "PLATFORM_TENANT_ID"
+      }
+
+      stackit_service_account_email = {
+        display_name    = "Service Account Email"
+        description     = "Email of the STACKIT service account for WIF-based authentication."
+        type            = "STRING"
+        assignment_type = "STATIC"
+        argument        = jsonencode(var.stackit_service_account_email)
+      }
+
+      STACKIT_USE_OIDC = {
+        display_name    = "STACKIT Use OIDC"
+        description     = "Enables OIDC-based WIF for the STACKIT provider."
+        type            = "STRING"
+        assignment_type = "STATIC"
+        is_environment  = true
+        argument        = jsonencode("1")
+      }
+
+      STACKIT_FEDERATED_TOKEN_FILE = {
+        display_name    = "STACKIT Federated Token File"
+        description     = "Path to the WIF token file injected by meshStack."
+        type            = "STRING"
+        assignment_type = "STATIC"
+        is_environment  = true
+        argument        = jsonencode("/var/run/secrets/workload-identity/azure/token")
+      }
+
+      stackit_region = {
+        display_name    = "STACKIT Region"
+        description     = "STACKIT region the cluster is created in."
+        type            = "STRING"
+        assignment_type = "STATIC"
+        argument        = jsonencode(var.stackit_region)
+      }
+
+      hub = {
+        display_name    = "Hub"
+        description     = "JSON object with `git_ref`, the meshstack-hub reference used to source the SKE, Kubernetes platform and ingress modules."
+        type            = "CODE"
+        assignment_type = "STATIC"
+        argument        = jsonencode(jsonencode(var.hub))
+      }
+
+      # ── What the application team decides ──
+
+      cluster_name = {
+        display_name                   = "Cluster Name"
+        description                    = "Name of the cluster. It also names the meshStack platform and the cluster's DNS subzone. STACKIT limits SKE cluster names to 11 characters."
+        type                           = "STRING"
+        assignment_type                = "USER_INPUT"
+        value_validation_regex         = "^[a-z0-9]([a-z0-9-]{0,9}[a-z0-9])?$"
+        validation_regex_error_message = "Cluster name may contain up to 11 lowercase letters, digits and hyphens, and must start and end with a letter or a digit."
+      }
+
+      expose = {
+        display_name                   = "Ingress Exposure"
+        description                    = "`public` puts the ingress controller behind a public load balancer, `internal` keeps the load balancer inside the STACKIT network, and `none` installs no ingress controller."
+        type                           = "STRING"
+        assignment_type                = "USER_INPUT"
+        updateable_by_consumer         = true
+        default_value                  = jsonencode("public")
+        value_validation_regex         = "^(public|internal|none)$"
+        validation_regex_error_message = "Ingress exposure must be public, internal or none."
+      }
+
+      # ── meshStack platform registration ──
+
+      owning_workspace_identifier = {
+        display_name    = "Workspace Identifier"
+        description     = "Workspace that owns the Kubernetes platform and its namespace landing zones."
+        type            = "STRING"
+        assignment_type = "WORKSPACE_IDENTIFIER"
+      }
+
+      location_identifier = {
+        display_name    = "Location Identifier"
+        description     = "meshStack location the Kubernetes platform is registered in."
+        type            = "STRING"
+        assignment_type = "STATIC"
+        argument        = jsonencode(var.location_identifier)
+      }
+
+      # ── Ingress and certificates, set once by the platform team ──
+
+      acme_email = {
+        display_name    = "ACME Contact Email"
+        description     = "Contact address Let's Encrypt uses for expiry warnings and account recovery."
+        type            = "STRING"
+        assignment_type = "STATIC"
+        argument        = jsonencode(var.acme_email)
+      }
+
+      acme_server = {
+        display_name    = "ACME Directory URL"
+        description     = "ACME directory URL. Point this at the Let's Encrypt staging endpoint while you test."
+        type            = "STRING"
+        assignment_type = "STATIC"
+        argument        = jsonencode(var.acme_server)
+      }
+
+      cluster_issuer_name = {
+        display_name    = "Cluster Issuer Name"
+        description     = "Name of the ClusterIssuer applications reference from their Ingress."
+        type            = "STRING"
+        assignment_type = "STATIC"
+        argument        = jsonencode(var.cluster_issuer_name)
+      }
+
+      ingress_class_name = {
+        display_name    = "Ingress Class Name"
+        description     = "Name of the IngressClass the controller serves."
+        type            = "STRING"
+        assignment_type = "STATIC"
+        argument        = jsonencode(var.ingress_class_name)
+      }
+
+      # ── DNS ──
+
+      dns_parent_zone_name = {
+        display_name    = "DNS Parent Zone"
+        description     = "Parent zone the landing zone owns. Each cluster gets a delegated subzone under it. Leave empty to run without DNS."
+        type            = "STRING"
+        assignment_type = "STATIC"
+        argument        = jsonencode(var.stackit_dns_parent_zone_name)
+      }
+
+      dns_service_account_key = {
+        display_name    = "DNS Service Account Key"
+        description     = "STACKIT service account key JSON the cert-manager DNS-01 solver authenticates with, scoped to the tenant's own project."
+        type            = "STRING"
+        assignment_type = "STATIC"
+        sensitive = {
+          argument = {
+            secret_value = var.stackit_dns_service_account_key
+          }
+        }
+      }
+    }
+
+    outputs = {
+      cluster_name = {
+        display_name    = "Cluster Name"
+        type            = "STRING"
+        assignment_type = "NONE"
+      }
+
+      cluster_url = {
+        display_name    = "Open STACKIT Project"
+        type            = "STRING"
+        assignment_type = "RESOURCE_URL"
+      }
+
+      platform_identifier = {
+        display_name    = "Kubernetes Platform"
+        type            = "STRING"
+        assignment_type = "NONE"
+      }
+
+      landing_zones = {
+        display_name    = "Namespace Landing Zones"
+        type            = "STRING"
+        assignment_type = "NONE"
+      }
+
+      apps_domain = {
+        display_name    = "Application Domain"
+        type            = "STRING"
+        assignment_type = "NONE"
+      }
+
+      ingress_ip = {
+        display_name    = "Ingress Address"
+        type            = "STRING"
+        assignment_type = "NONE"
+      }
+
+      ingress_class_name = {
+        display_name    = "Ingress Class"
+        type            = "STRING"
+        assignment_type = "NONE"
+      }
+
+      cluster_issuer_name = {
+        display_name    = "Cluster Issuer"
+        type            = "STRING"
+        assignment_type = "NONE"
+      }
+
+      kubeconfig = {
+        display_name    = "Kubeconfig"
+        type            = "STRING"
+        assignment_type = "NONE"
+        is_sensitive    = true
+      }
+    }
+  }
+}
+
+terraform {
+  required_version = ">= 1.12.0"
+
+  required_providers {
+    meshstack = {
+      source  = "meshcloud/meshstack"
+      version = ">= 0.24.0"
+    }
+  }
+}
