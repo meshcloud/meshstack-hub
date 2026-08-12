@@ -11,11 +11,13 @@
 # in, but every resource carries its own `project_id` and access is decided by the role assignments
 # the account holds on the target resource.
 #
-# So the backplane creates one service account and grants it the roles below at organization scope.
-# Organization scope is required because the building block is `TENANT_LEVEL`: the target project
-# of a future order is unknown when the platform team deploys this backplane. It also happens to
-# cover the parent zone's project on the delegation path, as long as that project lives under the
-# same organization.
+# So the backplane creates one service account and grants it the roles below above the projects
+# rather than on any single one of them. The building block is `TENANT_LEVEL`, so the target project
+# of a future order is unknown when the platform team deploys this backplane.
+#
+# `dns.admin` is granted on a folder and `iam.member-admin` on the organization, because STACKIT
+# offers each role on a different set of resource types and `dns.admin` is not among the 76 roles an
+# organization offers. See backplane/README.md for the calls that establish this.
 # ─────────────────────────────────────────────────────────────────────────────
 
 resource "stackit_service_account" "building_block" {
@@ -47,8 +49,14 @@ resource "stackit_service_account_federated_identity_provider" "building_block" 
 
 # dns.admin allows creating and deleting zones and record sets. The building block needs it in the
 # project the zone lives in, and on the delegation path also in the parent zone's project.
-resource "stackit_authorization_organization_role_assignment" "dns_admin" {
-  resource_id = var.organization_id
+#
+# The role is assigned at folder scope. Organization scope is not available: STACKIT's authorization
+# API offers a different set of roles per resource type, and no dns role appears on an organization.
+# A folder covers every project below it, so it keeps the property that makes organization scope
+# attractive — the platform team grants the role once and every project a tenant later receives is
+# covered. modules/stackit/model-serving/backplane assigns `model-serving.editor` the same way.
+resource "stackit_authorization_folder_role_assignment" "dns_admin" {
+  resource_id = var.folder_id
   role        = "dns.admin"
   subject     = stackit_service_account.building_block.email
 }

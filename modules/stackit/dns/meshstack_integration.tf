@@ -1,6 +1,11 @@
 variable "stackit_organization_id" {
   type        = string
-  description = "STACKIT organization ID under which every project the building block writes into lives."
+  description = "STACKIT organization ID the folder lives under. The backplane grants the service account 'iam.member-admin' here."
+}
+
+variable "stackit_folder_id" {
+  type        = string
+  description = "STACKIT folder ID under which every project the building block writes into lives. The backplane grants the service account 'dns.admin' on this folder, which covers every project below it. STACKIT offers no dns role at organization scope."
 }
 
 variable "stackit_project_id" {
@@ -20,10 +25,11 @@ variable "stackit_additional_organization_roles" {
 
   description = <<-EOT
   Extra STACKIT roles granted to the backplane service account at organization scope. The building
-  block creates a service account and a key for cert-manager and ExternalDNS, and STACKIT's
-  predefined role for creating service accounts could not be established, so the backplane does not
-  name one. Put the role your organization uses here, or leave the list empty and set
-  `stackit_dns_service_account_enabled` to false.
+  block creates a service account and a key for cert-manager and ExternalDNS, and the backplane does
+  not name the role that allows it, because how far the identity should reach is your decision.
+  `iam.service-account-creator`, `iam.service-account-key-admin` and `iam.service-account-admin` all
+  exist at organization scope. Put the one your organization uses here, or leave the list empty and
+  set `stackit_dns_service_account_enabled` to false.
   EOT
 }
 
@@ -83,6 +89,7 @@ module "backplane" {
   source = "github.com/meshcloud/meshstack-hub//modules/stackit/dns/backplane?ref=${var.hub.git_ref}"
 
   project_id                    = var.stackit_project_id
+  folder_id                     = var.stackit_folder_id
   organization_id               = var.stackit_organization_id
   service_account_name          = coalesce(var.stackit_service_account_name, "mesh-dns")
   additional_organization_roles = var.stackit_additional_organization_roles

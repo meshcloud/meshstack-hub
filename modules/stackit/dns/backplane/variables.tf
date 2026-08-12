@@ -4,10 +4,16 @@ variable "project_id" {
   description = "STACKIT project ID where the service account will be created."
 }
 
+variable "folder_id" {
+  type        = string
+  nullable    = false
+  description = "STACKIT folder ID under which the zones' projects live. The service account is granted 'dns.admin' on this folder, which covers every project below it, including the parent zone's project on the delegation path. STACKIT offers no dns role at organization scope, so a folder is the widest scope available for it."
+}
+
 variable "organization_id" {
   type        = string
   nullable    = false
-  description = "STACKIT organization ID where the service account will be granted permissions to manage DNS zones and records. Every project the building block writes into must live under this organization, including the parent zone's project on the delegation path."
+  description = "STACKIT organization ID the folder lives under. The service account is granted 'iam.member-admin' here, which lets the building block assign 'dns.admin' to the DNS service account it creates."
 }
 
 variable "workload_identity_federation" {
