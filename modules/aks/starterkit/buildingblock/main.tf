@@ -81,9 +81,7 @@ resource "meshstack_tenant" "this" {
 
 resource "meshstack_building_block" "repo" {
   spec = {
-    building_block_definition_version_ref = {
-      uuid = var.github_repo_definition_version_uuid
-    }
+    building_block_definition_version_ref = var.building_block_definition_version_refs["git-repository"]
 
     display_name = "${var.github_org}/${local.identifier}"
     target_ref = {
@@ -121,9 +119,7 @@ resource "meshstack_building_block" "github_actions" {
   for_each = var.landing_zone_refs
 
   spec = {
-    building_block_definition_version_ref = {
-      uuid = var.github_actions_connector_definition_version_uuid
-    }
+    building_block_definition_version_ref = var.building_block_definition_version_refs["github-actions-connector"]
     target_ref = {
       kind = "meshTenant"
       uuid = meshstack_tenant.this[each.key].metadata.uuid

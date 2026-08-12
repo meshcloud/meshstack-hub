@@ -6,24 +6,16 @@ variable "platform_ref" {
   description = "Reference (by uuid) to the meshPlatform tenants are created on — e.g. the `.ref` output of the meshstack_platform resource/backplane that owns it. Wired to the building block as a static input; required since the meshTenant v4 API references platforms by ref."
 }
 
-variable "github_actions_connector_definition_version_uuid" {
-  type        = string
-  description = "Version UUID of the GitHub Actions connector building block definition (example: `11111111-2222-3333-4444-555555555555`)."
+variable "building_block_definition_version_refs" {
+  type = map(object({
+    uuid = string
+  }))
+  description = "Building block definition version references for the child building blocks the starter kit creates, keyed by definition name (`git-repository` and `github-actions-connector`). Pass the `version_ref` member of the `building_block_definition` output of the module that owns each definition."
 }
 
 variable "github_org" {
   type        = string
   description = "GitHub organization where repositories are created (example: `acme-platform`)."
-}
-
-variable "github_repo_definition_uuid" {
-  type        = string
-  description = "UUID of the GitHub repository building block definition (example: `aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee`)."
-}
-
-variable "github_repo_definition_version_uuid" {
-  type        = string
-  description = "Version UUID of the GitHub repository building block definition (example: `ffffffff-1111-2222-3333-444444444444`)."
 }
 
 variable "github_template_repo_path" {
@@ -193,34 +185,20 @@ EOT
         type                   = "CODE"
         updateable_by_consumer = false
       }
-      "github_actions_connector_definition_version_uuid" = {
-        argument               = jsonencode(var.github_actions_connector_definition_version_uuid)
+      "building_block_definition_version_refs" = {
+        # jsonencode twice is correct for structured inputs, see the project_tags input below.
+        argument               = jsonencode(jsonencode(var.building_block_definition_version_refs))
         assignment_type        = "STATIC"
-        display_name           = "Github Actions Connector Definition Version Uuid"
+        description            = "Definition versions used to create auxiliary building blocks (composition)."
+        display_name           = "BBD Version References"
         is_environment         = false
-        type                   = "STRING"
+        type                   = "CODE"
         updateable_by_consumer = false
       }
       "github_org" = {
         argument               = jsonencode(var.github_org)
         assignment_type        = "STATIC"
         display_name           = "Github Org"
-        is_environment         = false
-        type                   = "STRING"
-        updateable_by_consumer = false
-      }
-      "github_repo_definition_uuid" = {
-        argument               = jsonencode(var.github_repo_definition_uuid)
-        assignment_type        = "STATIC"
-        display_name           = "Github Repo Definition Uuid"
-        is_environment         = false
-        type                   = "STRING"
-        updateable_by_consumer = false
-      }
-      "github_repo_definition_version_uuid" = {
-        argument               = jsonencode(var.github_repo_definition_version_uuid)
-        assignment_type        = "STATIC"
-        display_name           = "Github Repo Definition Version Uuid"
         is_environment         = false
         type                   = "STRING"
         updateable_by_consumer = false

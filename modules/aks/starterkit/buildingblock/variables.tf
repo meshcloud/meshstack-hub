@@ -20,24 +20,13 @@ variable "landing_zone_refs" {
   description = "Landing zone references keyed by stage (usually dev and prod). Wired in as a static building block input from the platform/backplane that owns the meshLandingZones (their `.ref` outputs)."
 }
 
-variable "github_repo_definition_version_uuid" {
-  type        = string
-  description = "UUID of the GitHub repository building block definition version."
-}
-
-variable "github_actions_connector_definition_version_uuid" {
-  type        = string
-  description = "UUID of the GitHub Actions connector building block definition version."
-}
-
-# No resource reads this variable any more, because a parent building block ref carries only the
-# kind and the uuid of the parent block and meshStack derives the definition from it. The variable
-# stays because meshstack_integration.tf still sets it as a static building block definition input,
-# and because removing it would change the module interface for every root configuration that
-# passes it.
-variable "github_repo_definition_uuid" {
-  type        = string
-  description = "UUID of the GitHub repository building block definition."
+variable "building_block_definition_version_refs" {
+  # meshStack passes this map as a static building block input; the matching input in
+  # meshstack_integration.tf of the parent module carries the same name.
+  type = map(object({
+    uuid = string
+  }))
+  description = "Building block definition version references for the child building blocks this starter kit creates, keyed by definition name (`git-repository` and `github-actions-connector`). The definition uuid is not part of this map, because meshStack derives the definition of a parent building block from the building block ref."
 }
 
 variable "github_repo_input_repo_visibility" {
