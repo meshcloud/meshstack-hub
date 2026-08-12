@@ -1,6 +1,17 @@
-variable "stackit_service_account_email" {
+variable "stackit_project_id" {
   type        = string
-  description = "Email of the STACKIT service account the building block authenticates with via workload identity federation. The account needs permission to create AI Model Serving tokens in the tenant projects this definition targets."
+  description = "STACKIT project ID where the backplane service account will be created."
+}
+
+variable "stackit_folder_id" {
+  type        = string
+  description = "STACKIT folder ID under which the tenant projects live. The backplane grants the service account 'model-serving.editor' on this folder, which covers every project below it."
+}
+
+variable "stackit_service_account_name" {
+  type        = string
+  default     = null
+  description = "Name of the backplane service account. Defaults to 'mesh-model-serving'. Override when deploying multiple backplane instances in the same STACKIT project."
 }
 
 variable "stackit_region" {
@@ -46,6 +57,23 @@ output "building_block_definition" {
   value = {
     uuid        = meshstack_building_block_definition.this.metadata.uuid
     version_ref = var.hub.bbd_draft ? meshstack_building_block_definition.this.version_latest : meshstack_building_block_definition.this.version_latest_release
+  }
+}
+
+data "meshstack_integrations" "integrations" {}
+
+module "backplane" {
+  source = "github.com/meshcloud/meshstack-hub//modules/stackit/model-serving/backplane?ref=${var.hub.git_ref}"
+
+  project_id           = var.stackit_project_id
+  folder_id            = var.stackit_folder_id
+  service_account_name = coalesce(var.stackit_service_account_name, "mesh-model-serving")
+
+  workload_identity_federation = {
+    issuer = data.meshstack_integrations.integrations.workload_identity_federation.replicator.issuer
+    subjects = [
+      "${trimsuffix(data.meshstack_integrations.integrations.workload_identity_federation.replicator.subject, ":replicator")}:workspace.${var.meshstack.owning_workspace_identifier}.buildingblockdefinition.${meshstack_building_block_definition.this.metadata.uuid}"
+    ]
   }
 }
 
@@ -105,7 +133,7 @@ resource "meshstack_building_block_definition" "this" {
 
       | Responsibility | Platform Team | Application Team |
       |---|:---:|:---:|
-      | Enable STACKIT AI Model Serving and provide the service account that issues tokens | ✅ | ❌ |
+      | Enable STACKIT AI Model Serving and provide the backplane identity that issues tokens | ✅ | ❌ |
       | Set the token lifetime that applies to every project | ✅ | ❌ |
       | Store the token in the application's own secret store | ❌ | ✅ |
       | Choose the model and carry the cost of the calls | ❌ | ✅ |
@@ -142,7 +170,7 @@ resource "meshstack_building_block_definition" "this" {
         description     = "Email of the STACKIT service account for WIF-based authentication."
         type            = "STRING"
         assignment_type = "STATIC"
-        argument        = jsonencode(var.stackit_service_account_email)
+        argument        = jsonencode(module.backplane.service_account_email)
       }
 
       STACKIT_USE_OIDC = {
@@ -246,6 +274,10 @@ terraform {
     meshstack = {
       source  = "meshcloud/meshstack"
       version = ">= 0.21.0"
+    }
+    stackit = {
+      source  = "stackitcloud/stackit"
+      version = ">= 0.110.0"
     }
   }
 }

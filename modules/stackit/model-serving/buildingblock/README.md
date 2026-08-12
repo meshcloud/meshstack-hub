@@ -3,9 +3,6 @@ name: STACKIT AI Model Serving Access
 supportedPlatforms:
   - stackit
 description: Issues a scoped STACKIT AI Model Serving API token so a tenant can call the sovereign LLM API.
-# The module creates the token in a STACKIT project that already exists and receives the service
-# account it authenticates with as an input, so there is no cloud-side setup to perform ahead of time.
-requiresBackplane: false
 ---
 
 # STACKIT AI Model Serving Access Building Block
@@ -22,6 +19,11 @@ endpoint as a LiteLLM backend needs nothing beyond the `api_base` and `token` ou
 
 STACKIT parses `ttl_duration` with Go's duration parser, which knows no day unit. Write 90 days as
 `2160h`; a value such as `90d` is rejected.
+
+The module receives the service account it authenticates with as an input and reaches STACKIT
+through workload identity federation, so it stores no long-lived key. The `backplane/` tier creates
+that service account and grants it `model-serving.editor` on the folder holding the tenant projects
+— see [backplane/README.md](../backplane/README.md) for the role and the scope.
 
 <!-- BEGIN_TF_DOCS -->
 ## Requirements
