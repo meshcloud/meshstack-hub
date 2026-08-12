@@ -39,7 +39,7 @@ resource "meshstack_building_block_definition" "this" {
   }
 
   spec = {
-    display_name     = "STACKIT Landing Zone"
+    display_name     = "STACKIT Landing Zone Reference Architecture"
     symbol           = "https://raw.githubusercontent.com/meshcloud/meshstack-hub/${var.hub.git_ref}/reference-architectures/stackit-landingzone/buildingblock/logo.png"
     description      = "Onboards a STACKIT sandbox platform into meshStack: a location, resourcemanager folder and the STACKIT Project platform with its default landing zone. Optionally layers on a hub-and-spoke network topology when a network config is provided."
     support_url      = "https://portal.stackit.cloud"
