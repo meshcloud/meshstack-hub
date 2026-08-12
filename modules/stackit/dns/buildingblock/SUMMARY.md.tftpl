@@ -1,0 +1,45 @@
+# DNS zone: **${zone_name}**
+
+## Details
+
+| Property | Value |
+|----------|-------|
+| **Zone name** | `${zone_name}` |
+| **Zone ID** | `${zone_id}` |
+| **STACKIT project** | `${project_id}` |
+| **Nameservers** | `ns1.stackit.cloud`, `ns2.stackit.zone` |
+
+## Records
+
+%{ if length(record_fqdns) == 0 ~}
+The zone carries no records yet.
+%{ else ~}
+%{ for fqdn in record_fqdns ~}
+- `${fqdn}`
+%{ endfor ~}
+%{ endif ~}
+
+Every name below the zone is a record in this zone. A free STACKIT subdomain admits no subzone, so
+`app.${zone_name}` is a record set here and not a zone of its own.
+
+%{ if credential_shared ~}
+## DNS credential
+
+The service account below holds the `dns.admin` role on this STACKIT project. cert-manager solves
+the ACME DNS-01 challenge with its key, and ExternalDNS writes your records with it.
+
+| Property | Value |
+|----------|-------|
+| **Service account** | `${dns_email}` |
+| **STACKIT project** | `${project_id}` |
+
+The role is project-wide, so this key can write **every record in every zone of this project**,
+including records that belong to someone else. Keep it secret and hand it only to the workloads
+that need it.
+
+Key (`sa.json` for the STACKIT cert-manager webhook):
+
+```json
+${dns_key}
+```
+%{ endif ~}
