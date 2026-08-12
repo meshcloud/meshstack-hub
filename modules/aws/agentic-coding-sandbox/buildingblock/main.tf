@@ -2,10 +2,11 @@ provider "meshstack" {
   # configured via env vars
 }
 
-## Note: all of this is arguably a not so pretty workaround for missing data objects in meshStack's terraform provider
-## to locate the right BBDs and LZs.
-## But for now this provides a suitable way to have a single platform operator input for configuring the BBD after
-## importing it from meshStack Hub, so we'll run with this approach for now until we discover something better.
+## Note: this composition is configured through a single flat YAML input so that a platform operator can
+## configure it in one place right after importing it from meshStack Hub. It is written in the most
+## human-readable form the provider can actually resolve: the platform and the landing zone are named by
+## their identifiers, while the building block definition versions have to be uuids because the provider
+## has no data source that resolves a definition (or one of its versions) by uuid or by name.
 
 locals {
   # Parse YAML configuration - validation is now handled at the variable level
@@ -15,11 +16,8 @@ locals {
   landing_zone_identifier = local.config.landing_zone.landing_zone_identifier
   platform_identifier     = local.config.landing_zone.platform_identifier
 
-  budget_alert_definition_uuid    = local.config.budget_alert_building_block.definition_uuid
-  budget_alert_definition_version = local.config.budget_alert_building_block.definition_version
-
-  enable_eu_south_2_region_definition_uuid    = local.config.enable_eu_south_2_region_building_block.definition_uuid
-  enable_eu_south_2_region_definition_version = local.config.enable_eu_south_2_region_building_block.definition_version
+  budget_alert_definition_version_uuid             = local.config.budget_alert_building_block.definition_version_uuid
+  enable_eu_south_2_region_definition_version_uuid = local.config.enable_eu_south_2_region_building_block.definition_version_uuid
 
   # Project configuration with safe defaults
   project_config        = try(local.config.project, {})
@@ -64,62 +62,71 @@ resource "meshstack_project" "sandbox" {
 }
 
 
+# meshstack_tenant runs on the meshTenant v4 API, which references its platform by uuid. Platform
+# operators configure this composition with a platform identifier, so look the platform up by its
+# full identifier (`<platform-name>.<location-name>`) and reuse the ref the data source computes.
+data "meshstack_platforms" "available" {}
+
+locals {
+  platform_ref = one([
+    for platform in data.meshstack_platforms.available.platforms : platform.ref
+    if platform.identifier == local.platform_identifier
+  ])
+}
+
 resource "meshstack_tenant" "sandbox" {
   metadata = {
-    owned_by_workspace  = meshstack_project.sandbox.metadata.owned_by_workspace
-    owned_by_project    = meshstack_project.sandbox.metadata.name
-    platform_identifier = local.platform_identifier
+    owned_by_workspace = meshstack_project.sandbox.metadata.owned_by_workspace
+    owned_by_project   = meshstack_project.sandbox.metadata.name
   }
 
   spec = {
-    landing_zone_identifier = local.landing_zone_identifier
+    platform_ref = local.platform_ref
+    landing_zone_ref = {
+      name = local.landing_zone_identifier
+    }
+  }
+
+  lifecycle {
+    precondition {
+      condition     = local.platform_ref != null
+      error_message = "No platform with identifier '${local.platform_identifier}' is visible to this composition's meshStack API key. Check landing_zone.platform_identifier in composition_config_yaml and that the API key is allowed to list platforms."
+    }
   }
 }
 
 
-# NOTE: must use bb v1 resource because v2 requires a tenant uuid
-# but the tenant v4 api that delivers the uuid is not supported by  our terraform provider yet
-resource "meshstack_buildingblock" "budget_alert" {
-  metadata = {
-    definition_uuid    = local.budget_alert_definition_uuid
-    definition_version = local.budget_alert_definition_version
-    tenant_identifier  = "${meshstack_tenant.sandbox.metadata.owned_by_workspace}.${meshstack_tenant.sandbox.metadata.owned_by_project}.${meshstack_tenant.sandbox.metadata.platform_identifier}"
-  }
-
+resource "meshstack_building_block" "budget_alert" {
   spec = {
+    building_block_definition_version_ref = {
+      uuid = local.budget_alert_definition_version_uuid
+    }
+
     display_name = "Budget Alert"
+    target_ref   = meshstack_tenant.sandbox.ref
 
     inputs = {
-      budget_name = {
-        value_string = "Agentic Coding Budget Alert"
-      }
-      monthly_budget_amount = {
-        value_int = var.budget_amount
-      }
-      contact_emails = {
-        # just a single email for now, not a comma-separated list
-        value_string = var.username
-      }
+      budget_name           = { value = jsonencode("Agentic Coding Budget Alert") }
+      monthly_budget_amount = { value = jsonencode(var.budget_amount) }
+      # just a single email for now, not a comma-separated list
+      contact_emails = { value = jsonencode(var.username) }
     }
   }
 }
 
 
 # enable spain region for the sandbox tenant because that's the only region where Anthropic's Sonnet 4 is available
-resource "meshstack_buildingblock" "enable_eu_south_2_region" {
-  metadata = {
-    definition_uuid    = local.enable_eu_south_2_region_definition_uuid
-    definition_version = local.enable_eu_south_2_region_definition_version
-    tenant_identifier  = "${meshstack_tenant.sandbox.metadata.owned_by_workspace}.${meshstack_tenant.sandbox.metadata.owned_by_project}.${meshstack_tenant.sandbox.metadata.platform_identifier}"
-  }
-
+resource "meshstack_building_block" "enable_eu_south_2_region" {
   spec = {
+    building_block_definition_version_ref = {
+      uuid = local.enable_eu_south_2_region_definition_version_uuid
+    }
+
     display_name = "Enable eu-south-2 region"
+    target_ref   = meshstack_tenant.sandbox.ref
 
     inputs = {
-      region = {
-        value_single_select = "eu-south-2"
-      }
+      region = { value = jsonencode("eu-south-2") }
     }
   }
 }
