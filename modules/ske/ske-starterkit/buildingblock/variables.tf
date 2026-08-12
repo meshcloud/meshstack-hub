@@ -57,15 +57,11 @@ variable "add_random_name_suffix" {
   description = "Whether to append a random suffix to the provided name for shared environments."
 }
 
-variable "building_block_definitions" {
-  # No resource reads the `uuid` attribute any more, because a parent building block ref carries
-  # only the kind and the uuid of the parent block and meshStack derives the definition from it.
-  # The attribute stays because it belongs to the `building_block_definition` output that
-  # meshstack_integration.tf and the e2e test pass in.
+variable "building_block_definition_version_refs" {
+  # meshStack passes this map as a static building block input; the matching input in
+  # meshstack_integration.tf of the parent module carries the same name.
   type = map(object({
     uuid = string
-    version_ref = object({
-      uuid = string
-    })
   }))
+  description = "Building block definition version references for the child building blocks this starter kit creates, keyed by definition name (`git-repository` and `forgejo-connector`). The definition uuid is not part of this map, because meshStack derives the definition of a parent building block from the building block ref."
 }

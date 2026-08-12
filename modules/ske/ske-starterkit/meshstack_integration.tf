@@ -44,14 +44,11 @@ variable "notification_subscribers" {
   default = []
 }
 
-variable "building_block_definitions" {
+variable "building_block_definition_version_refs" {
   type = map(object({
     uuid = string
-    version_ref = object({
-      content_hash = string # adding the content nicely tracks changes in dependent BBDs (draft mode)
-      uuid         = string
-    })
   }))
+  description = "Building block definition version references for the child building blocks the starter kit creates, keyed by definition name (`git-repository` and `forgejo-connector`). Pass the `version_ref` member of the `building_block_definition` output of the module that owns each definition."
 }
 
 variable "meshstack" {
@@ -225,13 +222,13 @@ resource "meshstack_building_block_definition" "this" {
         display_name    = "Add Random Name Suffix"
         argument        = jsonencode(var.add_random_name_suffix)
       }
-      "building_block_definitions" = {
+      "building_block_definition_version_refs" = {
         assignment_type = "STATIC"
         type            = "CODE"
-        description     = "Definitions used to create auxiliary building blocks (composition)."
-        display_name    = "BBDs"
+        description     = "Definition versions used to create auxiliary building blocks (composition)."
+        display_name    = "BBD Version References"
         # jsonencode twice is correct, see https://registry.terraform.io/providers/meshcloud/meshstack/latest/docs/resources/building_block_definition#argument-1
-        argument = jsonencode(jsonencode(var.building_block_definitions))
+        argument = jsonencode(jsonencode(var.building_block_definition_version_refs))
       },
 
     }

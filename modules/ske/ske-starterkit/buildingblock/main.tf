@@ -22,7 +22,7 @@ locals {
 
 resource "meshstack_building_block" "git_repository" {
   spec = {
-    building_block_definition_version_ref = var.building_block_definitions["git-repository"].version_ref # provisioned in backplane
+    building_block_definition_version_ref = var.building_block_definition_version_refs["git-repository"] # provisioned in backplane
 
     display_name = "Git Repo ${local.name}"
     target_ref = {
@@ -108,7 +108,7 @@ resource "meshstack_building_block" "forgejo_connector" {
   for_each = meshstack_tenant.this
 
   spec = {
-    building_block_definition_version_ref = var.building_block_definitions["forgejo-connector"].version_ref
+    building_block_definition_version_ref = var.building_block_definition_version_refs["forgejo-connector"]
 
     display_name = "Forgejo Connector ${title(each.key)}"
     target_ref = {

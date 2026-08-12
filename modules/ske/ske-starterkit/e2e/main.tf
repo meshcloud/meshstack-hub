@@ -144,9 +144,9 @@ module "ske_starterkit" {
   dns_zone_name          = var.test_context.dns_zone_name
   add_random_name_suffix = false
 
-  building_block_definitions = {
-    "git-repository"    = module.stackit_git_repository.building_block_definition
-    "forgejo-connector" = module.forgejo_connector.building_block_definition
+  building_block_definition_version_refs = {
+    "git-repository"    = module.stackit_git_repository.building_block_definition.version_ref
+    "forgejo-connector" = module.forgejo_connector.building_block_definition.version_ref
   }
 
   project_tags = {
