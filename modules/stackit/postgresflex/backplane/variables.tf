@@ -4,10 +4,10 @@ variable "project_id" {
   description = "STACKIT project ID where the service account will be created."
 }
 
-variable "organization_id" {
+variable "folder_id" {
   type        = string
   nullable    = false
-  description = "STACKIT organization ID where the service account will be granted permissions to manage PostgreSQL Flex instances."
+  description = "STACKIT folder ID under which the tenant projects live. The service account is granted 'postgres-flex.admin' on this folder, which covers every project below it."
 }
 
 variable "workload_identity_federation" {

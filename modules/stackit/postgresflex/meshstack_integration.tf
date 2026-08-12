@@ -1,11 +1,11 @@
-variable "stackit_organization_id" {
-  type        = string
-  description = "STACKIT organization ID under which target projects live."
-}
-
 variable "stackit_project_id" {
   type        = string
   description = "STACKIT project ID where the backplane service account will be created."
+}
+
+variable "stackit_folder_id" {
+  type        = string
+  description = "STACKIT folder ID under which the tenant projects live. The backplane grants the service account 'postgres-flex.admin' on this folder, which covers every project below it."
 }
 
 variable "stackit_service_account_name" {
@@ -70,7 +70,7 @@ module "backplane" {
   source = "github.com/meshcloud/meshstack-hub//modules/stackit/postgresflex/backplane?ref=${var.hub.git_ref}"
 
   project_id           = var.stackit_project_id
-  organization_id      = var.stackit_organization_id
+  folder_id            = var.stackit_folder_id
   service_account_name = coalesce(var.stackit_service_account_name, "mesh-postgresflex")
 
   workload_identity_federation = {
