@@ -116,10 +116,7 @@ resource "meshstack_building_block" "forgejo_connector" {
       uuid = each.value.metadata.uuid
     }
 
-    parent_building_blocks = [{
-      buildingblock_uuid = meshstack_building_block.git_repository.metadata.uuid
-      definition_uuid    = var.building_block_definitions["git-repository"].uuid
-    }]
+    parent_building_block_refs = [meshstack_building_block.git_repository.ref]
 
     inputs = {
       stage        = { value = jsonencode(each.key) }

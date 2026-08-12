@@ -128,11 +128,8 @@ resource "meshstack_building_block" "github_actions" {
       kind = "meshTenant"
       uuid = meshstack_tenant.this[each.key].metadata.uuid
     }
-    display_name = "GHA Connector ${title(each.key)}"
-    parent_building_blocks = [{
-      buildingblock_uuid = meshstack_building_block.repo.metadata.uuid
-      definition_uuid    = var.github_repo_definition_uuid
-    }]
+    display_name               = "GHA Connector ${title(each.key)}"
+    parent_building_block_refs = [meshstack_building_block.repo.ref]
     inputs = {
       github_environment_name = {
         value = jsonencode(local.github_environment_names[each.key])

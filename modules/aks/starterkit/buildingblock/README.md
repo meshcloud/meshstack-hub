@@ -15,7 +15,7 @@ This documentation is intended as a reference documentation for cloud foundation
 
 | Name | Version |
 |------|---------|
-| <a name="requirement_meshstack"></a> [meshstack](#requirement\_meshstack) | >= 0.24.0 |
+| <a name="requirement_meshstack"></a> [meshstack](#requirement\_meshstack) | >= 0.24.4 |
 
 ## Modules
 

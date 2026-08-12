@@ -58,6 +58,10 @@ variable "add_random_name_suffix" {
 }
 
 variable "building_block_definitions" {
+  # No resource reads the `uuid` attribute any more, because a parent building block ref carries
+  # only the kind and the uuid of the parent block and meshStack derives the definition from it.
+  # The attribute stays because it belongs to the `building_block_definition` output that
+  # meshstack_integration.tf and the e2e test pass in.
   type = map(object({
     uuid = string
     version_ref = object({
