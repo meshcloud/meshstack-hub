@@ -49,6 +49,7 @@ No modules.
 | <a name="output_bucket_name"></a> [bucket\_name](#output\_bucket\_name) | Name of the created Object Storage bucket. |
 | <a name="output_bucket_url_path_style"></a> [bucket\_url\_path\_style](#output\_bucket\_url\_path\_style) | Path-style URL of the bucket. |
 | <a name="output_bucket_url_virtual_hosted_style"></a> [bucket\_url\_virtual\_hosted\_style](#output\_bucket\_url\_virtual\_hosted\_style) | Virtual-hosted-style URL of the bucket. |
+| <a name="output_endpoint"></a> [endpoint](#output\_endpoint) | Base URL of the STACKIT Object Storage S3 endpoint, without the bucket name. Use this for S3 clients that take an endpoint and a bucket separately. |
 | <a name="output_s3_access_key"></a> [s3\_access\_key](#output\_s3\_access\_key) | S3-compatible access key for the bucket. |
 | <a name="output_s3_secret_access_key"></a> [s3\_secret\_access\_key](#output\_s3\_secret\_access\_key) | S3-compatible secret access key for the bucket. |
 | <a name="output_summary"></a> [summary](#output\_summary) | Summary with bucket details and access credentials. |

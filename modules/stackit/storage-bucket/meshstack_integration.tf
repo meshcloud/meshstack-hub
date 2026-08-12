@@ -213,6 +213,12 @@ resource "meshstack_building_block_definition" "this" {
         assignment_type = "NONE"
       }
 
+      endpoint = {
+        display_name    = "S3 Endpoint"
+        type            = "STRING"
+        assignment_type = "NONE"
+      }
+
       s3_access_key = {
         display_name    = "S3 Access Key"
         type            = "STRING"

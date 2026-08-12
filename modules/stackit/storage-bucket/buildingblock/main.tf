@@ -50,6 +50,13 @@ resource "aws_s3_bucket_policy" "this" {
           "s3:PutObject",
           "s3:DeleteObject",
           "s3:ListBucket",
+          # Multipart uploads: creating, uploading and completing parts is covered by s3:PutObject,
+          # but cancelling an upload and finding leftover parts are separate actions. Clients such as
+          # the AWS SDK upload helpers call AbortMultipartUpload when an upload fails part-way, and
+          # without these the abort returns 403 and the orphaned parts stay in the bucket.
+          "s3:AbortMultipartUpload",
+          "s3:ListMultipartUploadParts",
+          "s3:ListBucketMultipartUploads",
         ]
         Resource = [
           "urn:sgws:s3:::${aws_s3_bucket.this.bucket}",
