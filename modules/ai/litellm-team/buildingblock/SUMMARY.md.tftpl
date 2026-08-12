@@ -1,0 +1,27 @@
+# LiteLLM Team: **${team_alias}**
+
+## Details
+
+| Property | Value |
+|----------|-------|
+| **API Base URL** | `${api_base}` |
+| **Virtual Key** | `${virtual_key}` |
+| **Team ID** | `${team_id}` |
+| **Budget** | ${max_budget} per ${budget_duration} |
+| **Allowed models** | ${length(models) > 0 ? join(", ", models) : "set by the platform team on the gateway"} |
+
+## Calling the gateway
+
+The gateway speaks the OpenAI API and the base URL ends in `/v1`. Send the virtual key as a bearer
+token in the `Authorization` header:
+
+```sh
+curl "${api_base}/models" \
+  -H "Authorization: Bearer ${virtual_key}"
+```
+
+Point an OpenAI client library at the base URL and pass the virtual key as the API key. LiteLLM
+returns the key once, when the building block runs, so store it in your own secret store.
+
+LiteLLM stops answering once the team reaches its budget for the current period, and the spend
+counter resets at the end of every period.
