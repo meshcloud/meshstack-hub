@@ -48,7 +48,7 @@ variable "building_block_definition_version_refs" {
   type = map(object({
     uuid = string
   }))
-  description = "Building block definition version references for the child building blocks the starter kit creates, keyed by definition name (`git-repository` and `forgejo-connector`). Pass the `version_ref` member of the `building_block_definition` output of the module that owns each definition."
+  description = "Building block definition versions the starter kit creates its child building blocks from, keyed by definition name (`git-repository` and `forgejo-connector`)."
 }
 
 variable "meshstack" {
@@ -225,7 +225,7 @@ resource "meshstack_building_block_definition" "this" {
       "building_block_definition_version_refs" = {
         assignment_type = "STATIC"
         type            = "CODE"
-        description     = "Definition versions used to create auxiliary building blocks (composition)."
+        description     = "Definition versions the starter kit creates its child building blocks from."
         display_name    = "BBD Version References"
         # jsonencode twice is correct, see https://registry.terraform.io/providers/meshcloud/meshstack/latest/docs/resources/building_block_definition#argument-1
         argument = jsonencode(jsonencode(var.building_block_definition_version_refs))

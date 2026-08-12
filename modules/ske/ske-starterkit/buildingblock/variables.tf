@@ -58,10 +58,9 @@ variable "add_random_name_suffix" {
 }
 
 variable "building_block_definition_version_refs" {
-  # meshStack passes this map as a static building block input; the matching input in
-  # meshstack_integration.tf of the parent module carries the same name.
+  # The input of the same name in meshstack_integration.tf fills this in; rename both together.
   type = map(object({
     uuid = string
   }))
-  description = "Building block definition version references for the child building blocks this starter kit creates, keyed by definition name (`git-repository` and `forgejo-connector`). The definition uuid is not part of this map, because meshStack derives the definition of a parent building block from the building block ref."
+  description = "Building block definition versions this starter kit creates its child building blocks from, keyed by definition name (`git-repository` and `forgejo-connector`)."
 }
