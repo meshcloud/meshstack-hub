@@ -10,6 +10,23 @@ locals {
 
   # The chart derives the controller Service name from the release name.
   haproxy_service_name = "${var.haproxy_release_name}-kubernetes-ingress"
+
+  # Helm renders these values into the pod spec as YAML, and the API server rejects a resource
+  # quantity that is null, so drop every field the caller left unset.
+  resources = {
+    for name, spec in {
+      cert_manager                 = var.cert_manager_resources
+      cert_manager_webhook         = var.cert_manager_webhook_resources
+      cert_manager_cainjector      = var.cert_manager_cainjector_resources
+      cert_manager_startupapicheck = var.cert_manager_startupapicheck_resources
+      stackit_webhook              = var.stackit_webhook_resources
+      haproxy                      = var.haproxy_resources
+      haproxy_crdjob               = var.haproxy_crdjob_resources
+      } : name => {
+      requests = { for key, value in spec.requests : key => value if value != null }
+      limits   = { for key, value in spec.limits : key => value if value != null }
+    }
+  }
 }
 
 resource "kubernetes_namespace_v1" "cert_manager" {
@@ -36,6 +53,13 @@ resource "helm_release" "cert_manager" {
         keep    = var.cert_manager_crds_keep
       }
       extraArgs = var.cert_manager_extra_args
+
+      # The chart ships no resources for any of its four workloads, so each of them would run
+      # unbounded without these values.
+      resources       = local.resources.cert_manager
+      webhook         = { resources = local.resources.cert_manager_webhook }
+      cainjector      = { resources = local.resources.cert_manager_cainjector }
+      startupapicheck = { resources = local.resources.cert_manager_startupapicheck }
     })
   ]
 }
@@ -81,6 +105,7 @@ resource "helm_release" "stackit_cert_manager_webhook" {
         enabled    = true
         secretName = kubernetes_secret_v1.stackit_dns01[0].metadata[0].name
       }
+      resources = local.resources.stackit_webhook
     })
   ]
 
@@ -170,11 +195,16 @@ resource "helm_release" "haproxy" {
 
   values = [
     yamlencode({
+      # The chart requests 250m CPU and 400Mi memory for the controller and for the CRD Job, and
+      # sets no limit on either.
+      crdjob = { resources = local.resources.haproxy_crdjob }
+
       controller = merge(
         {
           replicaCount         = var.haproxy_replica_count
           ingressClass         = var.ingress_class_name
           ingressClassResource = { name = var.ingress_class_name }
+          resources            = local.resources.haproxy
           service = {
             type        = var.haproxy_service_type
             annotations = var.haproxy_service_annotations

@@ -75,6 +75,12 @@ module "ingress" {
 }
 ```
 
+**The resource requests and limits of the ingress controller and of cert-manager default to
+demonstration sizes.** HAProxy runs as a single replica with 100m CPU requested, which is enough
+to show a service answering over HTTPS and not enough to carry production traffic. Ask your
+platform team to raise `haproxy_replica_count` and the `*_resources` variables before you put a
+real workload behind this ingress.
+
 ## 📊 Shared Responsibility
 
 | Responsibility | Platform Team | Application Team |
