@@ -22,6 +22,11 @@ The zone carries no records yet.
 Every name below the zone is a record in this zone. A free STACKIT subdomain admits no subzone, so
 `app.${zone_name}` is a record set here and not a zone of its own.
 
+%{ if !zone_created ~}
+The zone itself belongs to someone else. This building block only added the records listed above to
+it, and removing the building block removes those records and leaves the zone in place.
+%{ endif ~}
+
 %{ if credential_shared ~}
 ## DNS credential
 

@@ -3,7 +3,7 @@
 variable "project_id" {
   type        = string
   nullable    = false
-  description = "STACKIT project ID the zone, its records and the DNS service account are created in."
+  description = "STACKIT project ID that owns the zone. The record sets and the DNS service account are created in the same project, because STACKIT DNS is project-scoped."
 }
 
 variable "service_account_email" {
@@ -22,47 +22,104 @@ variable "stackit_region" {
 
 # ── Zone ───────────────────────────────────────────────────────────────────────
 
-variable "zone_name" {
-  type        = string
+variable "create_zone" {
+  type        = bool
   nullable    = false
+  default     = true
   description = <<-EOT
-  DNS name of the zone, for example `likvid.stackit.run` or `platform.example.com`. No trailing dot.
+  Create the zone. Leave this at `true` when the caller owns the zone.
 
-  A free STACKIT subdomain admits exactly one label. `likvid.stackit.run` is accepted and
-  `cluster1.likvid.stackit.run` is rejected by the API, so everything below the zone has to be a
-  record set in `records` rather than a zone of its own. See main.tf for the API error.
+  Set it to `false` to write record sets into a zone that already exists and that another Terraform
+  configuration owns. The platform team creates `likvid.stackit.run` once, and every cluster then
+  adds its own record sets to that zone. STACKIT allows a record set with a deeper name inside an
+  existing zone, so `*.cluster1.likvid.stackit.run` is a record set in `likvid.stackit.run` and not
+  a zone of its own. See README.md.
+  EOT
+}
+
+variable "zone_id" {
+  type        = string
+  nullable    = true
+  default     = null
+  description = <<-EOT
+  UUID of the zone to write the record sets into. Only used when `create_zone` is `false`. Leave it
+  unset to let the module look the zone up by `zone_name` in `project_id`, which needs read access
+  on that project.
   EOT
 
   validation {
-    condition     = can(regex("^[a-z0-9]([a-z0-9-]*[a-z0-9])?(\\.[a-z0-9]([a-z0-9-]*[a-z0-9])?)+$", var.zone_name))
+    condition     = var.zone_id == null || !var.create_zone
+    error_message = "zone_id names a zone that already exists, so it applies only together with create_zone = false. Drop zone_id, or set create_zone = false."
+  }
+}
+
+variable "zone_name" {
+  type        = string
+  nullable    = true
+  default     = null
+  description = <<-EOT
+  DNS name of the zone, for example `likvid.stackit.run` or `platform.example.com`. No trailing dot.
+  With `create_zone = false` this is the name of the existing zone the record sets go into.
+
+  A free STACKIT subdomain admits exactly one label. `likvid.stackit.run` is accepted and
+  `cluster1.likvid.stackit.run` is rejected by the API, so everything below the zone has to be a
+  record set in `records` or in `wildcard` rather than a zone of its own. See main.tf for the API
+  error.
+
+  Leave it `null` to switch the module off, which creates and reads nothing. A composition needs
+  that because this module configures its own STACKIT provider for the meshStack run, and Terraform
+  refuses `count` on a module that does so.
+  EOT
+
+  validation {
+    condition     = var.zone_name == null ? true : can(regex("^[a-z0-9]([a-z0-9-]*[a-z0-9])?(\\.[a-z0-9]([a-z0-9-]*[a-z0-9])?)+$", var.zone_name))
     error_message = "zone_name must be a lowercase domain name with at least two labels and no trailing dot, for example likvid.stackit.run."
   }
 
   validation {
-    condition     = !endswith(var.zone_name, ".stackit.run") || length(split(".", var.zone_name)) == 3
+    condition     = var.zone_name == null ? true : (!endswith(var.zone_name, ".stackit.run") || length(split(".", var.zone_name)) == 3)
     error_message = "A zone under stackit.run may carry exactly one label, for example likvid.stackit.run. STACKIT rejects a deeper name with \"subdomain '<name>' should only have one level\". Put the deeper names into `records` instead, or use a domain you own."
   }
+
+  validation {
+    condition = var.zone_name != null || (
+      !var.create_zone &&
+      var.zone_id == null &&
+      length(var.records) == 0 &&
+      var.wildcard == null &&
+      var.delegation == null &&
+      !var.dns_service_account_enabled
+    )
+    error_message = "zone_name = null switches the module off, so everything it could create has to be off as well: create_zone = false, dns_service_account_enabled = false, no zone_id, no records, no wildcard and no delegation."
+  }
+}
+
+variable "zone_display_name" {
+  type        = string
+  nullable    = true
+  default     = null
+  description = "Name STACKIT shows for the zone, which is separate from its DNS name. Defaults to `zone_name`. Only used when `create_zone` is `true`. Set it when an existing zone carries a different name and you move it into this module, so the plan stays empty."
 }
 
 variable "zone_default_ttl" {
   type        = number
   nullable    = false
   default     = 300
-  description = "Default time to live of records in the zone, in seconds. ExternalDNS and cert-manager both write records here, so a short value keeps changes visible quickly."
+  description = "Default time to live of records in the zone, in seconds. ExternalDNS and cert-manager both write records here, so a short value keeps changes visible quickly. Only used when `create_zone` is `true`."
 }
 
 variable "contact_email" {
   type        = string
   nullable    = false
   default     = ""
-  description = "Contact address stored on the zone. Leave empty to let STACKIT pick its own default."
+  description = "Contact address stored on the zone. Leave empty to let STACKIT pick its own default. Only used when `create_zone` is `true`."
 }
 
 variable "zone_description" {
   type        = string
   nullable    = false
   default     = ""
-  description = "Description stored on the zone. Leave empty to store none."
+  description = "Description stored on the zone. Leave empty to store none. Only used when `create_zone` is `true`."
 }
 
 # ── Records ────────────────────────────────────────────────────────────────────
@@ -105,6 +162,49 @@ variable "records" {
   }
 }
 
+# ── Wildcard ───────────────────────────────────────────────────────────────────
+
+variable "wildcard" {
+  type = object({
+    address = string
+    label   = optional(string)
+    ttl     = optional(number)
+    comment = optional(string, "Wildcard app routing to HAProxy ingress load balancer")
+  })
+  nullable = true
+  default  = null
+
+  description = <<-EOT
+  One wildcard `A` record that sends every hostname below a domain to the same address, usually the
+  ingress controller's load balancer. Leave it unset to create no wildcard.
+
+  `label` decides where the wildcard sits. Leave it unset and the record is `*.<zone_name>`, which
+  covers every hostname directly under the zone. Set it to the cluster's name and the record is
+  `*.<label>.<zone_name>`, which covers the hostnames of that one cluster.
+
+  **Only one cluster can hold the wildcard at the zone apex.** The second cluster that writes
+  `*.<zone_name>` collides with the first one, so every cluster beyond the first needs a `label` of
+  its own. See README.md.
+
+  ```hcl
+  wildcard = {
+    label   = "cluster1"
+    address = "203.0.113.17"
+  }
+  ```
+  EOT
+
+  validation {
+    condition     = var.wildcard == null ? true : can(cidrnetmask("${var.wildcard.address}/32"))
+    error_message = "wildcard.address must be an IPv4 address, because the module writes it as an A record."
+  }
+
+  validation {
+    condition     = try(var.wildcard.label, null) == null ? true : can(regex("^[a-z0-9]([a-z0-9-]*[a-z0-9])?(\\.[a-z0-9]([a-z0-9-]*[a-z0-9])?)*$", var.wildcard.label))
+    error_message = "wildcard.label must be a lowercase DNS name relative to the zone, for example cluster1. Leave it unset to put the wildcard at the zone apex."
+  }
+}
+
 # ── Delegation — customer-owned domains only ───────────────────────────────────
 
 variable "delegation" {
@@ -128,6 +228,11 @@ variable "delegation" {
   `nameservers` must carry trailing dots. STACKIT relativises a value without one against the zone,
   so `ns1.stackit.cloud` is stored as `ns1.stackit.cloud.<zone>.` and the delegation points nowhere.
   EOT
+
+  validation {
+    condition     = var.delegation == null ? true : var.create_zone
+    error_message = "delegation writes the NS record that points at the zone this module creates, so it needs create_zone = true. With create_zone = false the zone already exists and delegating it is the job of whoever created it."
+  }
 
   validation {
     condition     = var.delegation == null ? true : !endswith(var.delegation.parent_zone_name, "stackit.run")

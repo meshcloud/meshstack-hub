@@ -1,11 +1,11 @@
 output "zone_name" {
-  value       = stackit_dns_zone.this.dns_name
+  value       = var.zone_name
   description = "DNS name of the zone, for example `likvid.stackit.run`. Use it as the ExternalDNS zone filter and as the zone the cert-manager DNS-01 solver operates on."
 }
 
 output "zone_id" {
-  value       = stackit_dns_zone.this.zone_id
-  description = "UUID of the zone."
+  value       = local.zone_id
+  description = "UUID of the zone the record sets were written into, whether this module created it or not."
 }
 
 output "zone_project_id" {
@@ -16,6 +16,16 @@ output "zone_project_id" {
 output "record_fqdns" {
   value       = { for name, record in stackit_dns_record_set.this : name => record.fqdn }
   description = "Fully qualified name of every record set the module created, keyed the same way as the `records` input."
+}
+
+output "wildcard_domain" {
+  value       = local.wildcard_domain
+  description = "Domain the wildcard record covers — the zone itself when no label is set, and `<label>.<zone_name>` otherwise. Application hostnames live under it, and a wildcard certificate has to be issued for `*.<wildcard_domain>`. Null when `wildcard` is unset."
+}
+
+output "wildcard_record_fqdn" {
+  value       = one(stackit_dns_record_set.wildcard[*].fqdn)
+  description = "Fully qualified name of the wildcard record set. Null when `wildcard` is unset."
 }
 
 output "delegation_record_fqdn" {
@@ -35,13 +45,17 @@ output "dns_service_account_key" {
 }
 
 output "summary" {
-  description = "Summary with the zone, its records and the DNS credential."
+  description = "Summary with the zone, its records and the DNS credential. Null when the module is switched off with `zone_name = null`."
   sensitive   = true
-  value = templatefile("${path.module}/SUMMARY.md.tftpl", {
-    zone_name         = stackit_dns_zone.this.dns_name
-    zone_id           = stackit_dns_zone.this.zone_id
-    project_id        = var.project_id
-    record_fqdns      = sort([for record in stackit_dns_record_set.this : record.fqdn])
+  value = var.zone_name == null ? null : templatefile("${path.module}/SUMMARY.md.tftpl", {
+    zone_name    = var.zone_name
+    zone_id      = local.zone_id
+    zone_created = var.create_zone
+    project_id   = var.project_id
+    record_fqdns = sort(concat(
+      [for record in stackit_dns_record_set.this : record.fqdn],
+      stackit_dns_record_set.wildcard[*].fqdn
+    ))
     credential_shared = var.dns_service_account_enabled
     dns_email         = coalesce(one(stackit_service_account.dns[*].email), "-")
     dns_key           = coalesce(one(stackit_service_account_key.dns[*].json), "-")

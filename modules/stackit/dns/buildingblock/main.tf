@@ -3,7 +3,8 @@
 #
 # The module creates one DNS zone in a STACKIT project, the record sets inside it, and a service
 # account key that lets a workload manage those records at runtime — the cert-manager DNS-01 solver
-# and ExternalDNS both take that key.
+# and ExternalDNS both take that key. With `create_zone = false` it skips the zone and writes its
+# record sets into a zone that already exists.
 #
 # STACKIT DNS is project-scoped end to end: `stackit_dns_record_set` carries its own `project_id`
 # and that project must own the `zone_id`, and the SKE `extensions.dns` block has no field for a
@@ -37,26 +38,89 @@
 # a record set inside that single zone, in a single project, written with a single credential. The
 # key this module returns can therefore write any record in the zone, including over a record that
 # belongs to somebody else. Per-zone isolation needs a customer-owned domain. See README.md.
+#
+# ── The shared zone and the per-cluster label ────────────────────────────────
+#
+# STACKIT allows a record set with a deeper name inside an existing zone, so one platform-owned
+# zone can carry many clusters. The platform team creates `likvid.stackit.run` with
+# `create_zone = true`, and each cluster then runs this module again with `create_zone = false` and
+# its own label:
+#
+#   cluster1 → wildcard = { label = "cluster1", address = <its load balancer> }
+#              gives the record set `*.cluster1.likvid.stackit.run`
+#   cluster2 → wildcard = { label = "cluster2", address = <its load balancer> }
+#
+# The label keeps each cluster's names apart, and it keeps each cluster's wildcard certificate down
+# to `*.cluster1.likvid.stackit.run` instead of the whole domain. The credential stays zone-wide
+# either way, so the label is a boundary this code draws and not one the permission system enforces.
+#
+# A cluster that leaves the label unset gets `*.likvid.stackit.run` at the zone apex instead, which
+# is the shape the SKE foundations have today. Exactly one cluster per zone can have it. See
+# README.md.
+#
+# ── Switching the module off ─────────────────────────────────────────────────
+#
+# `zone_name = null` makes the module create and read nothing. A composition needs that, because
+# this module carries its own provider configuration so that meshStack can run it as a building
+# block, and Terraform refuses `count`, `for_each` and `depends_on` on such a module:
+#
+#   Module is incompatible with count, for_each, and depends_on: the module [...] contains its own
+#   local provider configurations, and so calls to it may not use the count, for_each, enabled or
+#   depends_on arguments.
 # ─────────────────────────────────────────────────────────────────────────────
 
 locals {
   # Label(s) the zone sits at below the parent zone. Only used on the delegation path.
   delegation_label = var.delegation == null ? null : trimsuffix(var.zone_name, ".${var.delegation.parent_zone_name}")
 
-  dns_service_account_name = coalesce(
+  dns_service_account_name = var.zone_name == null ? null : coalesce(
     var.dns_service_account_name,
     "mesh-dns-${replace(var.zone_name, ".", "-")}"
   )
+
+  # The zone this module writes into. It either creates the zone, takes the id the caller passed, or
+  # looks the id up by the zone's DNS name. Null while the module is switched off.
+  zone_id = (
+    var.create_zone ? one(stackit_dns_zone.this[*].zone_id) :
+    var.zone_id != null ? var.zone_id :
+    one(data.stackit_dns_zone.existing[*].zone_id)
+  )
+
+  # Fully qualified name of the wildcard record set. `*.likvid.stackit.run` at the zone apex, or
+  # `*.cluster1.likvid.stackit.run` below a label. The SKE foundations already carry their wildcard
+  # under the fully qualified name, so writing the same form keeps their plan empty when they move
+  # to this module.
+  wildcard_name = var.wildcard == null ? null : (
+    var.wildcard.label == null
+    ? "*.${var.zone_name}"
+    : "*.${var.wildcard.label}.${var.zone_name}"
+  )
+
+  # Domain the wildcard covers. This is the domain application hostnames live under, and the domain
+  # a wildcard certificate has to be issued for.
+  wildcard_domain = var.wildcard == null ? null : trimprefix(local.wildcard_name, "*.")
 }
 
 resource "stackit_dns_zone" "this" {
+  count = var.create_zone ? 1 : 0
+
   project_id    = var.project_id
-  name          = var.zone_name
+  name          = coalesce(var.zone_display_name, var.zone_name)
   dns_name      = var.zone_name
   type          = "primary"
   default_ttl   = var.zone_default_ttl
   contact_email = var.contact_email != "" ? var.contact_email : null
   description   = var.zone_description != "" ? var.zone_description : null
+}
+
+# Reads the zone the caller does not create and does not identify by id. `dns_name` is a lookup
+# argument of the data source, so the caller gets by with the zone's name and never has to carry a
+# UUID through its inputs.
+data "stackit_dns_zone" "existing" {
+  count = var.zone_name != null && !var.create_zone && var.zone_id == null ? 1 : 0
+
+  project_id = var.project_id
+  dns_name   = var.zone_name
 }
 
 # Every name below the zone is a record set here, because a free STACKIT subdomain admits no
@@ -66,12 +130,26 @@ resource "stackit_dns_record_set" "this" {
   for_each = var.records
 
   project_id = var.project_id
-  zone_id    = stackit_dns_zone.this.zone_id
+  zone_id    = local.zone_id
   name       = each.key
   type       = each.value.type
   ttl        = each.value.ttl
   records    = each.value.records
   comment    = each.value.comment
+}
+
+# The wildcard that sends every application hostname to the ingress controller. It sits at the zone
+# apex when the caller sets no label, and below the label otherwise.
+resource "stackit_dns_record_set" "wildcard" {
+  count = var.wildcard == null ? 0 : 1
+
+  project_id = var.project_id
+  zone_id    = local.zone_id
+  name       = local.wildcard_name
+  type       = "A"
+  ttl        = var.wildcard.ttl
+  records    = [var.wildcard.address]
+  comment    = var.wildcard.comment
 }
 
 # ── Delegation — customer-owned domains only ─────────────────────────────────
