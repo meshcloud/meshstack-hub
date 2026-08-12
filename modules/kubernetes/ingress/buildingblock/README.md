@@ -3,8 +3,8 @@ name: Kubernetes Ingress with TLS
 supportedPlatforms:
   - kubernetes
 description: Installs cert-manager, the HAProxy ingress controller and a Let's Encrypt ClusterIssuer so every service in the cluster can get a public HTTPS URL with a valid certificate.
-# All credentials — cluster and DNS provider — arrive as inputs, so there is nothing to set up
-# on the cloud side.
+# The cluster credentials arrive through the providers the caller configures and the DNS provider
+# credentials arrive as inputs, so there is nothing to set up on the cloud side.
 requiresBackplane: false
 ---
 
@@ -54,23 +54,61 @@ Five foundation units carried copies of the same `certmanager.tf`, `haproxy.tf` 
 
 The module defaults match the SKE copy, which is the most current one. AKS callers set `haproxy_service_annotations` and get the newer cert-manager and the retry-backoff tuning along the way.
 
+## The caller configures the providers
+
+This module carries no `provider` block. The caller configures the `kubernetes` and the `helm`
+provider and passes both down through the `providers` argument of the module call. Two things
+follow from that.
+
+**Any credential works.** The module used to take a `cluster_endpoint`, a `cluster_ca_certificate`
+and a bearer `token`, which ruled out every cluster that hands out a client certificate instead of
+a token. STACKIT SKE is one of them: `stackit_ske_kubeconfig` issues a client certificate and a
+client key, and nothing can mint a cluster-admin token before the cluster exists. A caller that
+configures the provider itself picks whichever credential its cluster offers.
+
+**The module call accepts `count`.** A module with its own provider configuration is a legacy
+module, and OpenTofu refuses `count`, `for_each` and `depends_on` on calls to it. The restriction
+is transitive, so wrapping the module in a local module does not lift it. Compositions that make
+ingress optional need `count`, which is only possible without a local provider configuration.
+
 ## Notes for platform engineers
 
 - **Providers.** Only `kubernetes` and `helm`. No cloud provider ever enters this module, so it works on SKE, AKS and anything else that speaks the Kubernetes API. Cloud-specific behaviour arrives as strings, mainly through `haproxy_service_annotations`.
 - **Sourced, not ordered.** There is no `meshstack_integration.tf` and no `backplane/`. Foundations source `buildingblock/` from a Terragrunt unit, and reference architectures source it from their own building block.
-- **Permissions.** The token in `var.token` needs cluster-admin rights, because cert-manager installs CRDs and cluster-scoped RBAC.
+- **Permissions.** The credentials the caller puts into the two providers need cluster-admin rights, because cert-manager installs CRDs and cluster-scoped RBAC.
 - **DNS records.** Point your DNS A record at the `haproxy_lb_ip` output. Nothing can be issued or served before that record resolves.
 - **First apply.** HAProxy comes up before the wildcard certificate is issued. Until the secret exists, HAProxy serves its own self-signed certificate for unmatched hosts and picks the real one up as soon as cert-manager writes it.
 
 ## Usage
 
+The caller configures both providers and passes them into the module call.
+
 ```hcl
+provider "kubernetes" {
+  host                   = module.cluster.provider_config.host
+  cluster_ca_certificate = module.cluster.provider_config.cluster_ca_certificate
+  client_certificate     = module.cluster.provider_config.client_certificate
+  client_key             = module.cluster.provider_config.client_key
+}
+
+provider "helm" {
+  kubernetes = {
+    host                   = module.cluster.provider_config.host
+    cluster_ca_certificate = module.cluster.provider_config.cluster_ca_certificate
+    client_certificate     = module.cluster.provider_config.client_certificate
+    client_key             = module.cluster.provider_config.client_key
+  }
+}
+
 module "ingress" {
+  # The call may use count, because the module configures no provider of its own.
+  count  = var.expose == "none" ? 0 : 1
   source = "github.com/meshcloud/meshstack-hub//modules/kubernetes/ingress/buildingblock?ref=main"
 
-  cluster_endpoint       = var.cluster_endpoint
-  cluster_ca_certificate = var.cluster_ca_certificate
-  token                  = var.token
+  providers = {
+    kubernetes = kubernetes
+    helm       = helm
+  }
 
   acme_email = "ske@meshcloud.io"
 
@@ -84,11 +122,14 @@ module "ingress" {
 }
 ```
 
+A Terragrunt unit does the same through a `generate "provider"` block that writes both provider
+configurations next to the module call.
+
 <!-- BEGIN_TF_DOCS -->
 ## Requirements
 
 | Name | Version |
-| ---- | ------- |
+|------|---------|
 | <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.12.0 |
 | <a name="requirement_helm"></a> [helm](#requirement\_helm) | >= 3.0.0 |
 | <a name="requirement_kubernetes"></a> [kubernetes](#requirement\_kubernetes) | >= 2.38 |
@@ -100,7 +141,7 @@ No modules.
 ## Resources
 
 | Name | Type |
-| ---- | ---- |
+|------|------|
 | [helm_release.cert_manager](https://registry.terraform.io/providers/hashicorp/helm/latest/docs/resources/release) | resource |
 | [helm_release.haproxy](https://registry.terraform.io/providers/hashicorp/helm/latest/docs/resources/release) | resource |
 | [helm_release.issuer](https://registry.terraform.io/providers/hashicorp/helm/latest/docs/resources/release) | resource |
@@ -114,7 +155,7 @@ No modules.
 ## Inputs
 
 | Name | Description | Type | Default | Required |
-| ---- | ----------- | ---- | ------- | :------: |
+|------|-------------|------|---------|:--------:|
 | <a name="input_acme_email"></a> [acme\_email](#input\_acme\_email) | Contact address Let's Encrypt uses for expiry warnings and account recovery. | `string` | n/a | yes |
 | <a name="input_acme_private_key_secret_name"></a> [acme\_private\_key\_secret\_name](#input\_acme\_private\_key\_secret\_name) | Name of the secret in which cert-manager stores the ACME account private key. | `string` | `"letsencrypt-prod-account-key"` | no |
 | <a name="input_acme_server"></a> [acme\_server](#input\_acme\_server) | ACME directory URL. Point this at https://acme-staging-v02.api.letsencrypt.org/directory while you test, because the production endpoint has strict rate limits. | `string` | `"https://acme-v02.api.letsencrypt.org/directory"` | no |
@@ -122,8 +163,6 @@ No modules.
 | <a name="input_cert_manager_extra_args"></a> [cert\_manager\_extra\_args](#input\_cert\_manager\_extra\_args) | Extra command line arguments for the cert-manager controller. | `list(string)` | <pre>[<br/>  "--certificate-request-minimum-backoff-duration=1m"<br/>]</pre> | no |
 | <a name="input_cert_manager_namespace"></a> [cert\_manager\_namespace](#input\_cert\_manager\_namespace) | Namespace for cert-manager and, when DNS-01 runs through STACKIT, for the STACKIT cert-manager webhook. The webhook chart expects both in the same namespace. | `string` | `"cert-manager"` | no |
 | <a name="input_cert_manager_version"></a> [cert\_manager\_version](#input\_cert\_manager\_version) | Version of the cert-manager Helm chart. See https://github.com/cert-manager/cert-manager/releases. | `string` | `"v1.20.0"` | no |
-| <a name="input_cluster_ca_certificate"></a> [cluster\_ca\_certificate](#input\_cluster\_ca\_certificate) | Cluster CA certificate, base64 encoded. | `string` | n/a | yes |
-| <a name="input_cluster_endpoint"></a> [cluster\_endpoint](#input\_cluster\_endpoint) | IP address or hostname of the cluster control plane, without the https:// scheme. | `string` | n/a | yes |
 | <a name="input_cluster_issuer_name"></a> [cluster\_issuer\_name](#input\_cluster\_issuer\_name) | Name of the ClusterIssuer. Application teams reference it from the cert-manager.io/cluster-issuer annotation on their Ingress. | `string` | `"letsencrypt-prod"` | no |
 | <a name="input_dns01"></a> [dns01](#input\_dns01) | Enables a wildcard certificate for zone\_name via DNS-01. Set exactly one provider. Null keeps HTTP-01 per-hostname issuance. | <pre>object({<br/>    zone_name = string<br/>    stackit   = optional(object({ project_id = string, service_account_key = string }))<br/>    route53   = optional(object({ hosted_zone_id = string, access_key_id = string, secret_access_key = string, region = optional(string, "eu-central-1") }))<br/>  })</pre> | `null` | no |
 | <a name="input_haproxy_namespace"></a> [haproxy\_namespace](#input\_haproxy\_namespace) | Namespace for the HAProxy ingress controller. The wildcard certificate is created here as well, so its secret survives the teardown of any application namespace. | `string` | `"haproxy-ingress"` | no |
@@ -135,13 +174,12 @@ No modules.
 | <a name="input_haproxy_version"></a> [haproxy\_version](#input\_haproxy\_version) | Version of the haproxytech/kubernetes-ingress Helm chart. See https://github.com/haproxytech/helm-charts/blob/main/kubernetes-ingress/Chart.yaml. | `string` | `"1.49.0"` | no |
 | <a name="input_ingress_class_name"></a> [ingress\_class\_name](#input\_ingress\_class\_name) | Name of the IngressClass the controller serves. The HTTP-01 solver of the ClusterIssuer uses the same name. | `string` | `"haproxy"` | no |
 | <a name="input_stackit_webhook_version"></a> [stackit\_webhook\_version](#input\_stackit\_webhook\_version) | Version of the stackit-cert-manager-webhook Helm chart. Only used when dns01.stackit is set. See https://github.com/stackitcloud/stackit-cert-manager-webhook. | `string` | `"0.4.10"` | no |
-| <a name="input_token"></a> [token](#input\_token) | Token of the service account this module runs as. It needs cluster-admin rights, because cert-manager installs CRDs and cluster-scoped RBAC. | `string` | n/a | yes |
 | <a name="input_wildcard_certificate_name"></a> [wildcard\_certificate\_name](#input\_wildcard\_certificate\_name) | Name of the wildcard Certificate and of the secret it writes, both in haproxy\_namespace. Only used when dns01 is set. | `string` | `"wildcard-tls"` | no |
 
 ## Outputs
 
 | Name | Description |
-| ---- | ----------- |
+|------|-------------|
 | <a name="output_cluster_issuer_name"></a> [cluster\_issuer\_name](#output\_cluster\_issuer\_name) | Name of the ClusterIssuer an application references from the cert-manager.io/cluster-issuer annotation on its Ingress. |
 | <a name="output_haproxy_lb_ip"></a> [haproxy\_lb\_ip](#output\_haproxy\_lb\_ip) | External IP of the HAProxy LoadBalancer service. Point your DNS A record here before TLS provisioning can complete. |
 | <a name="output_haproxy_namespace"></a> [haproxy\_namespace](#output\_haproxy\_namespace) | Namespace of the HAProxy ingress controller and of the wildcard certificate secret. |

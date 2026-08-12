@@ -56,6 +56,25 @@ spec:
 
 The hostname has to resolve to the ingress load balancer before Let's Encrypt can validate it, so create the DNS record first.
 
+## ⚙️ What the platform team installs
+
+The platform team runs this module against your cluster. The module brings no cluster credentials
+of its own: the caller configures the `kubernetes` and the `helm` provider and hands both to the
+module.
+
+```hcl
+module "ingress" {
+  source = "github.com/meshcloud/meshstack-hub//modules/kubernetes/ingress/buildingblock?ref=main"
+
+  providers = {
+    kubernetes = kubernetes
+    helm       = helm
+  }
+
+  acme_email = "platform@example.com"
+}
+```
+
 ## 📊 Shared Responsibility
 
 | Responsibility | Platform Team | Application Team |

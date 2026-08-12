@@ -1,19 +1,3 @@
-variable "cluster_endpoint" {
-  type        = string
-  description = "IP address or hostname of the cluster control plane, without the https:// scheme."
-}
-
-variable "cluster_ca_certificate" {
-  type        = string
-  description = "Cluster CA certificate, base64 encoded."
-}
-
-variable "token" {
-  type        = string
-  sensitive   = true
-  description = "Token of the service account this module runs as. It needs cluster-admin rights, because cert-manager installs CRDs and cluster-scoped RBAC."
-}
-
 variable "cert_manager_version" {
   type        = string
   default     = "v1.20.0"
