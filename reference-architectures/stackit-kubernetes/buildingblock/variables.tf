@@ -15,13 +15,13 @@ variable "stackit_service_account_email" {
   type        = string
   nullable    = true
   default     = null
-  description = "Email of the STACKIT service account the SKE module authenticates as through workload identity federation. The account needs `ske.admin` on the organization, because the target project of an order is unknown when the platform team registers the building block."
+  description = "Email of the STACKIT service account the SKE and DNS modules authenticate as through workload identity federation. The account needs `ske.admin` on the folder the tenant projects live in, because the target project of an order is unknown when the platform team registers the building block, and `ske.admin` is not offered at organization scope. It also needs `dns.admin` on the project that owns the shared DNS zone."
 }
 
 variable "cluster_name" {
   type        = string
   nullable    = false
-  description = "Name of the SKE cluster. It is also the meshStack platform name and the label of the delegated DNS subzone, so it has to be unique across the landing zone. STACKIT limits SKE cluster names to 11 characters."
+  description = "Name of the SKE cluster. It is also the meshStack platform name and the cluster's label in the shared DNS zone, so it has to be unique across the landing zone. STACKIT limits SKE cluster names to 11 characters."
 
   validation {
     condition     = can(regex("^[a-z0-9]([a-z0-9-]*[a-z0-9])?$", var.cluster_name)) && length(var.cluster_name) <= 11
@@ -82,20 +82,7 @@ variable "ingress_class_name" {
   description = "Name of the IngressClass the controller serves."
 }
 
-variable "dns_parent_zone_name" {
-  type        = string
-  nullable    = false
-  default     = ""
-  description = "Parent DNS zone the landing zone owns, for example `likvid.stackit.run`. Every cluster gets a delegated subzone `<cluster_name>.<dns_parent_zone_name>` under it. Leave empty to run without DNS, in which case cert-manager issues per-hostname certificates over HTTP-01. See dns.tf."
-}
-
-variable "dns_service_account_key" {
-  type        = string
-  nullable    = false
-  default     = ""
-  sensitive   = true
-  description = "STACKIT service account key JSON, scoped to the tenant's own STACKIT project, that the cert-manager DNS-01 solver authenticates with. Required for the wildcard certificate. See dns.tf."
-}
+# The DNS inputs are declared in dns.tf, next to the design they drive.
 
 variable "hub" {
   type = object({

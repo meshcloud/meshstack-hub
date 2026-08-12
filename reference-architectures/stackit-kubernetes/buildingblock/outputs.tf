@@ -19,8 +19,8 @@ output "landing_zones" {
 }
 
 output "apps_domain" {
-  description = "Delegated DNS subzone of this cluster. Application hostnames live under it and the wildcard certificate covers it. Empty when the architecture runs without DNS."
-  value       = local.dns_enabled ? local.dns_delegated_zone_name : ""
+  description = "Domain the cluster's application hostnames live under, `<cluster_name>.<dns_parent_zone_name>` by default. The wildcard certificate covers it. Empty when the architecture runs without DNS."
+  value       = local.dns_enabled ? local.dns_apps_domain : ""
 }
 
 output "ingress_ip" {

@@ -14,7 +14,9 @@ buildingBlocks:
   - path: kubernetes/platform
     role: Registers the cluster in meshStack as a platform of type kubernetes and creates its namespace landing zones.
   - path: kubernetes/ingress
-    role: Installs cert-manager, the HAProxy ingress controller and a Let's Encrypt ClusterIssuer, and issues the wildcard certificate for the cluster's DNS subzone.
+    role: Installs cert-manager, the HAProxy ingress controller and a Let's Encrypt ClusterIssuer, and issues the wildcard certificate for the cluster's own domain.
+  - path: stackit/dns
+    role: Writes the cluster's wildcard record into the DNS zone the platform team owns and shares between clusters.
   - path: ske/ske-starterkit
     role: Orchestrates the full developer onboarding by composing dev/prod projects, SKE tenants, Git repos, and connectors into one self-service offering.
   - path: stackit/git-repository
@@ -71,27 +73,38 @@ landing-zone concern that the platform team sets once.
 
 ### 2. Hostnames and Certificates
 
-Each cluster receives a **delegated DNS subzone** named after it, for example
-`cluster1.likvid.stackit.run`, in the tenant's own STACKIT project. The landing zone owns the
-parent zone and delegates the subzone with an NS record. The SKE managed ExternalDNS extension
-writes the records from the control plane, and cert-manager holds a **single wildcard certificate**
-for the whole subzone, which HAProxy serves for every application hostname.
+The platform team owns **one DNS zone**, for example `likvid.stackit.run`, in its own STACKIT
+project, and every cluster shares it. Each ordered cluster gets its **own label inside that zone**:
+the `stackit/dns` module writes the record set `*.<cluster_name>` pointing at the cluster's HAProxy
+load balancer, so every hostname below `<app>.<cluster_name>.likvid.stackit.run` resolves to that
+cluster. cert-manager then holds a **single wildcard certificate** for
+`*.<cluster_name>.likvid.stackit.run`, which HAProxy serves for every application hostname.
 
 The result is a landing zone that promises more than a namespace: an application team that adds an
-Ingress with a hostname under the subzone gets a working HTTPS URL, without requesting a
+Ingress with a hostname under the cluster's domain gets a working HTTPS URL, without requesting a
 certificate and without creating a DNS record.
 
-> **Known risk — the delegated subzone is not verified yet.** STACKIT documents free `stackit.run`
-> subdomains as one label deep, and it separately documents creating a subzone in a different
-> project through NS delegation. Whether delegation bypasses the one-label rule *under
-> `stackit.run`* is **unverified** and is being tested separately. If it does not, the fallback is
-> a platform-owned zone: the parent zone stays in the platform team's project and each cluster gets
-> records in it rather than a subzone of its own. The DNS handling is isolated in
-> [`buildingblock/dns.tf`](buildingblock/dns.tf) so the fallback changes that one file.
->
-> Creating the subzone and the NS record also needs a `modules/stackit/dns` module, which the Hub
-> does not have yet. Until it exists, a platform team that wants the wildcard certificate creates
-> the zone and the DNS-01 service account key by hand.
+A subzone per cluster is not possible, and this is measured against the live API rather than
+assumed. A free STACKIT subdomain admits exactly one label, so creating the zone
+`cluster1.likvid.stackit.run` fails with *"subdomain should only have one level"* — in every
+project, and even with a correct NS delegation already in place in the parent zone. A record set
+with that depth **inside** the existing zone is allowed, which is what the design uses.
+
+Two consequences worth knowing before you deploy:
+
+- **The DNS credential is zone-wide.** cert-manager's DNS-01 solver authenticates with a service
+  account key that carries `dns.admin` on the zone's project, and that role cannot be narrowed to
+  one zone, let alone to one label. A cluster could write records outside its own label. The
+  building block code is what keeps clusters inside their label, and the permission system does not
+  enforce it.
+- **One cluster per zone may sit at the apex.** Set `dns_cluster_label_enabled = false` and the
+  cluster's wildcard becomes `*.likvid.stackit.run`, which gives flat hostnames and reproduces the
+  shape existing SKE foundations already have. Only one cluster in a zone can hold that record, so
+  every further cluster needs its label. Moving a cluster from the apex to a label renames every
+  hostname it serves.
+
+The DNS handling is isolated in [`buildingblock/dns.tf`](buildingblock/dns.tf), together with the
+inputs that drive it.
 
 ### 3. Developer Starterkit — `ske/ske-starterkit`
 
@@ -160,18 +173,20 @@ The connector building block creates per-stage resources:
 | meshStack instance   | With Terraform/OpenTofu IaC runtime configured.                                                                                                   |
 | STACKIT account      | With access to SKE, STACKIT Git, and the global STACKIT Harbor registry.                                                                          |
 | STACKIT Project platform | Registered in meshStack, for example through the [`stackit-landingzone`](../stackit-landingzone) reference architecture. Clusters are ordered on its tenants. |
-| STACKIT identity     | A service account with `ske.admin` on the organization and workload identity federation configured for the cluster building block definition.     |
+| STACKIT identity     | A service account with `ske.admin` on the folder the tenant projects live in, `dns.admin` on the project that owns the shared DNS zone, and workload identity federation configured for the cluster building block definition. STACKIT offers neither role at organization scope. |
 | Forgejo organization | On STACKIT Git, with an API token for the Terraform provider.                                                                                     |
 | Harbor credentials   | Robot account credentials (username and secret) for push/pull access to the STACKIT global Harbor registry; shared across all STACKIT customers. |
 | Model Serving API    | STACKIT Model Serving endpoint and API key for the platform team to provide to the connector.                                                     |
-| DNS parent zone      | A STACKIT DNS zone the landing zone owns, for example `likvid.stackit.run`. Each cluster gets a delegated subzone under it.                       |
+| DNS zone             | A STACKIT DNS zone the platform team owns, for example `likvid.stackit.run`, and the project it lives in. Every cluster writes its own label into that one zone. |
+| DNS service account key | A key with `dns.admin` on the zone's project, which cert-manager's DNS-01 solver uses to answer the ACME challenge. |
 
 ### Deployment Order
 
 1. Register the STACKIT Project platform, so tenants have a STACKIT project to order into.
 2. Register the **STACKIT Kubernetes Cluster** building block definition from
    [`meshstack_integration.tf`](meshstack_integration.tf), setting the STACKIT identity, the ACME
-   contact address and the DNS parent zone.
+   contact address, the shared DNS zone with the project that owns it, and the DNS service account
+   key.
 3. An application team orders a cluster on its STACKIT project. The order creates the cluster, its
    ingress and the Kubernetes platform with its namespace landing zones.
 4. Register the starterkit and connector building block definitions against that platform.
@@ -182,7 +197,7 @@ The connector building block creates per-stage resources:
 | Responsibility                                           | Platform Team | Application Team |
 |----------------------------------------------------------| --- | --- |
 | Provide the STACKIT identity the cluster building block runs as | ✅ | ❌ |
-| Own the parent DNS zone and delegate a subzone per cluster | ✅ | ❌ |
+| Own the shared DNS zone and the key its records are written with | ✅ | ❌ |
 | Configure STACKIT Git (Forgejo) organization             | ✅ | ❌ |
 | Manage Harbor project in global registry and credentials | ✅ | ❌ |
 | Register and maintain building block definitions         | ✅ | ❌ |
