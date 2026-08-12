@@ -237,10 +237,16 @@ variable "wildcard_certificate_name" {
   description = "Name of the wildcard Certificate and of the secret it writes, both in haproxy_namespace. Only used when dns01 is set."
 }
 
+# The default follows the published chart index rather than the GitHub release tags, because the
+# two diverged: the repository tagged a `stackit-cert-manager-webhook-0.4.10` release, but
+# https://stackitcloud.github.io/stackit-cert-manager-webhook/index.yaml was never regenerated and
+# still ends at 0.4.9. `helm_release` resolves the version through that index, so pinning 0.4.10
+# fails at apply with "no chart version found". Raise this default only after the index serves the
+# newer version.
 variable "stackit_webhook_version" {
   type        = string
-  default     = "0.4.10"
-  description = "Version of the stackit-cert-manager-webhook Helm chart. Only used when dns01.stackit is set. See https://github.com/stackitcloud/stackit-cert-manager-webhook."
+  default     = "0.4.9"
+  description = "Version of the stackit-cert-manager-webhook Helm chart. Must be a version served by the chart index at https://stackitcloud.github.io/stackit-cert-manager-webhook, which lags behind the GitHub release tags. Only used when dns01.stackit is set."
 }
 
 variable "stackit_webhook_resources" {
