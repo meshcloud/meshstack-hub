@@ -1,0 +1,23 @@
+# Model Serving Token: **${token_name}**
+
+## Details
+
+| Property | Value |
+|----------|-------|
+| **API Base URL** | `${api_base}` |
+| **API Token** | `${token}` |
+| **Token ID** | `${token_id}` |
+| **Valid Until** | ${valid_until} |
+
+## Calling the endpoint
+
+The endpoint is OpenAI-compatible and the base URL ends in `/v1`. Send the token as a bearer token
+in the `Authorization` header:
+
+```sh
+curl "${api_base}/models" \
+  -H "Authorization: Bearer ${token}"
+```
+
+Point an OpenAI client library at the base URL and pass the token as the API key. The token is shown
+here only once, so store it in your own secret store.

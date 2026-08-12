@@ -20,9 +20,11 @@ variable "token_description" {
 }
 
 variable "ttl_duration" {
-  type        = string
-  default     = "90d"
-  description = "Lifetime of the Model Serving token, e.g. '90d'."
+  type    = string
+  default = "2160h"
+  # STACKIT parses this with Go's duration parser, which knows no day unit. '90d' is rejected,
+  # so 90 days has to be written as '2160h'.
+  description = "Lifetime of the Model Serving token as a Go duration, e.g. '2160h' for 90 days. Valid units are 'ns', 'us', 'ms', 's', 'm' and 'h'."
 }
 
 variable "region" {
