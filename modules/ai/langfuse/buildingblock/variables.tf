@@ -151,7 +151,36 @@ variable "postgres_args" {
   type    = string
   default = "sslmode=require"
   # Appended to the connection URL after a '?', so no leading question mark here.
-  description = "Query string appended to the Postgres connection URL, without the leading '?'. Managed Postgres offerings terminate TLS, so requiring it is the safe default. A server without TLS needs 'sslmode=prefer' or 'sslmode=disable'."
+  description = "Query string appended to the Postgres connection URL, without the leading '?'. Managed Postgres offerings terminate TLS, so requiring it is the safe default. A server without TLS needs 'sslmode=prefer' or 'sslmode=disable'. The module appends `connection_limit` from postgres_connection_limit, and `pool_timeout` belongs here when the default of 10 seconds is too short for the pinned pool."
+
+  validation {
+    condition     = !can(regex("connection_limit", var.postgres_args))
+    error_message = "postgres_args must not carry connection_limit. Set postgres_connection_limit instead: the module appends the parameter itself, and two occurrences in one query string leave the effective pool size to the parser."
+  }
+}
+
+variable "postgres_connection_limit" {
+  type    = number
+  default = 5
+  # See the connection budget section in the module README for the arithmetic.
+  description = <<-EOT
+  Maximum number of Postgres connections one Langfuse pod opens. The module appends it to the
+  connection URL as `connection_limit`, next to `postgres_args`.
+
+  Without the parameter Prisma sizes the pool as `physical cores × 2 + 1` read from the node, not
+  from the pod's CPU limit, so a pod takes 33 connections on a 16-core node and a different number
+  after it is rescheduled onto a node with more cores.
+
+  This module runs once per tenant against a shared instance, so the platform's budget is
+  `tenants × pods per tenant × connection_limit + 15 ≤ max_connections`. STACKIT PostgreSQL Flex
+  fixes `max_connections` per flavour and reserves 15 of them, so the default of 5 is what keeps a
+  4 vCPU / 32 GiB instance at roughly 34 tenants with four pods each.
+  EOT
+
+  validation {
+    condition     = var.postgres_connection_limit >= 1
+    error_message = "postgres_connection_limit must be at least 1."
+  }
 }
 
 variable "postgres_direct_url" {
@@ -159,7 +188,25 @@ variable "postgres_direct_url" {
   sensitive = true
   default   = null
   # DIRECT_URL is what the migrations run against. Without it the entrypoint reuses DATABASE_URL.
-  description = "Full connection URL the schema migrations run against, used when the normal connection goes through a pooler or when migrations need a user with longer timeouts. Null makes the migrations reuse the normal connection."
+  description = "Full connection URL the schema migrations run against, used when the normal connection goes through a pooler or when migrations need a user with longer timeouts. The module appends `connection_limit` from postgres_direct_url_connection_limit to it. Null makes the migrations reuse the normal connection, which already carries the pinned pool."
+
+  validation {
+    condition     = var.postgres_direct_url == null ? true : !can(regex("connection_limit", var.postgres_direct_url))
+    error_message = "postgres_direct_url must not carry connection_limit. Set postgres_direct_url_connection_limit instead: the module appends the parameter itself."
+  }
+}
+
+variable "postgres_direct_url_connection_limit" {
+  type    = number
+  default = 2
+  # A migration is not a pool. The web entrypoint runs `prisma db execute` and then
+  # `prisma migrate deploy`, one after the other, and each opens a single connection.
+  description = "Maximum number of Postgres connections the migration connection opens, appended to postgres_direct_url as `connection_limit`. Two covers the `prisma db execute` and the `prisma migrate deploy` the web entrypoint runs one after the other, each of which opens a single connection. Only used when postgres_direct_url is set."
+
+  validation {
+    condition     = var.postgres_direct_url_connection_limit >= 1
+    error_message = "postgres_direct_url_connection_limit must be at least 1."
+  }
 }
 
 variable "postgres_auto_migrate" {

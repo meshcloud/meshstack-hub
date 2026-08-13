@@ -161,6 +161,32 @@ variable "postgres_ssl_mode" {
   }
 }
 
+variable "postgres_connection_limit" {
+  type    = number
+  default = 10
+  # Both the gateway and its migration Job talk to Postgres through Prisma, which sizes its pool
+  # from the node's physical cores when the connection URL names no limit. See the connection
+  # budget section in the module README.
+  description = <<-EOT
+  Maximum number of Postgres connections one gateway pod opens. The module writes it as
+  `connection_limit` on the connection URL and as `general_settings.database_connection_pool_limit`
+  in the proxy config, because the proxy rewrites the URL on startup from that setting.
+
+  Without the parameter Prisma sizes the pool as `physical cores × 2 + 1` read from the node, not
+  from the pod's CPU limit, so a pod takes 33 connections on a 16-core node and a different number
+  after it is rescheduled. The gateway is deployed once for the platform, so it costs
+  `replica_count × postgres_connection_limit` connections in total.
+
+  The default of 10 is LiteLLM's own default, so pinning the value changes nothing at runtime and
+  only bounds what the URL asks for.
+  EOT
+
+  validation {
+    condition     = var.postgres_connection_limit >= 1
+    error_message = "postgres_connection_limit must be at least 1."
+  }
+}
+
 variable "redis_host" {
   type    = string
   default = null

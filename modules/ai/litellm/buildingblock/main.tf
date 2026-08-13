@@ -15,6 +15,16 @@ locals {
     alias => "LITELLM_API_KEY_${upper(replace(alias, "/[^a-zA-Z0-9]/", "_"))}"
   }
 
+  # Prisma sizes its connection pool as `num_physical_cpus * 2 + 1` when the connection URL carries
+  # no connection_limit, and it counts the physical cores of the node instead of the pod's CPU
+  # limit. prisma-engines#4341 records that as an oversight and was closed without a fix, so a pod
+  # with a 100m limit takes 33 connections on a 16-core node and a different number after it is
+  # rescheduled. A managed Postgres caps max_connections by its flavour, so the pool is pinned here.
+  postgres_url_query = join("&", [
+    "sslmode=${var.postgres_ssl_mode}",
+    "connection_limit=${var.postgres_connection_limit}",
+  ])
+
   redis_enabled = var.redis_host != null
 
   # Whether a Redis password was given is a plain fact, while the password itself is a secret. The
@@ -74,7 +84,7 @@ locals {
       # Kubernetes substitutes $(VAR) from the environment variables declared before this one in
       # the same container, so the credentials stay in the secret and never appear in the pod spec.
       # The chart's default URL carries no port, hence the override.
-      url = "postgresql://$(DATABASE_USERNAME):$(DATABASE_PASSWORD)@$(DATABASE_HOST):${var.postgres_port}/$(DATABASE_NAME)?sslmode=${var.postgres_ssl_mode}"
+      url = "postgresql://$(DATABASE_USERNAME):$(DATABASE_PASSWORD)@$(DATABASE_HOST):${var.postgres_port}/$(DATABASE_NAME)?${local.postgres_url_query}"
 
       secret = {
         name        = kubernetes_secret_v1.postgres.metadata[0].name
@@ -115,7 +125,14 @@ locals {
       ]
 
       general_settings = merge(
-        { master_key = "os.environ/PROXY_MASTER_KEY" },
+        {
+          master_key = "os.environ/PROXY_MASTER_KEY"
+
+          # The proxy rewrites DATABASE_URL on startup and replaces connection_limit with this
+          # setting, so the parameter on db.url alone does not bind the running pods. Both carry
+          # the same number, and the pool is then the same on whichever path sets it.
+          database_connection_pool_limit = var.postgres_connection_limit
+        },
         local.coordination_redis
       )
     }

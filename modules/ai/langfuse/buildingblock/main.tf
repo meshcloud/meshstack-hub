@@ -18,6 +18,19 @@ locals {
   # host is simply lost and the connection goes to 5432.
   postgres_host_with_port = "${var.postgres_host}:${var.postgres_port}"
 
+  # Prisma sizes its connection pool as `num_physical_cpus * 2 + 1` when the connection URL carries
+  # no connection_limit, and it counts the physical cores of the node instead of the pod's CPU
+  # limit. prisma-engines#4341 records that as an oversight and was closed without a fix, so a pod
+  # with a 100m limit takes 33 connections on a 16-core node and a different number after it is
+  # rescheduled. STACKIT PostgreSQL Flex caps max_connections by the flavour and exposes no
+  # parameter group, so every pod of every tenant has to pin its pool. compact() drops the empty
+  # string a caller who cleared postgres_args leaves behind, so the query string never starts or
+  # ends with a stray '&'.
+  postgres_args = join("&", compact([
+    var.postgres_args,
+    "connection_limit=${var.postgres_connection_limit}",
+  ]))
+
   secret_name = "${var.release_name}-langfuse"
 
   secret_keys = {
@@ -57,6 +70,19 @@ locals {
   # to stay unmarked, because everything derived from a marked value carries the mark and the
   # whole chart values map would then be hidden from every plan.
   postgres_direct_url_set = try(nonsensitive(var.postgres_direct_url != null), var.postgres_direct_url != null)
+
+  # DIRECT_URL is a full URL the caller hands in, so it never passes through postgres_args and
+  # carries whatever pool the caller left on it — Prisma's node-sized default, in practice. The
+  # migrations get a limit of their own, and a much smaller one: the entrypoint runs
+  # `prisma db execute` and `prisma migrate deploy` one after the other, and each opens a single
+  # connection. The '?' test looks at the whole URL rather than at its query string alone, which is
+  # correct here because a password carrying a raw '?' already breaks Prisma with P1013.
+  postgres_direct_url_given = var.postgres_direct_url == null ? "" : var.postgres_direct_url
+  postgres_direct_url = local.postgres_direct_url_set ? join("", [
+    local.postgres_direct_url_given,
+    strcontains(local.postgres_direct_url_given, "?") ? "&" : "?",
+    "connection_limit=${var.postgres_direct_url_connection_limit}",
+  ]) : null
 
   # Helm renders these values into the pod spec as YAML, and the API server rejects a resource
   # quantity that is null, so drop every field the caller left unset.
@@ -290,9 +316,11 @@ locals {
     postgresql = {
       deploy = false
 
-      # The port is part of the host, see the comment on local.postgres_host_with_port.
+      # The port is part of the host, see the comment on local.postgres_host_with_port. The chart
+      # turns args into DATABASE_ARGS and the entrypoint appends it to the URL after a '?', so the
+      # pinned connection_limit rides along in local.postgres_args.
       host = local.postgres_host_with_port
-      args = var.postgres_args
+      args = local.postgres_args
 
       auth = {
         username       = var.postgres_username
@@ -443,7 +471,7 @@ resource "kubernetes_secret_v1" "this" {
       (local.secret_keys.init_project_secret_key) = var.init_project_secret_key
     },
     local.postgres_direct_url_set ? {
-      (local.secret_keys.postgres_direct_url) = var.postgres_direct_url
+      (local.secret_keys.postgres_direct_url) = local.postgres_direct_url
     } : {},
     local.init_user_enabled ? {
       (local.secret_keys.init_user_password) = var.init_user_password

@@ -47,7 +47,7 @@ Four points to keep in mind:
 - **The password has to be safe in a URL.** The chart builds the connection URL from `$(DATABASE_USERNAME)` and `$(DATABASE_PASSWORD)`, which Kubernetes substitutes verbatim and does not URL-encode, so a password containing `:`, `@`, `/` or `?` breaks the URL.
 - **`postgres_ssl_mode` defaults to `require`.** A managed Postgres terminates TLS and accepts this. A server without TLS needs `prefer` or `disable`.
 
-The chart's default connection URL carries no port, so the module writes its own `db.url` with `postgres_port` and the sslmode parameter in it. The credentials stay in a Kubernetes Secret and never appear in the pod spec, because the URL keeps the `$(…)` references that Kubernetes resolves from the environment.
+The chart's default connection URL carries no port, so the module writes its own `db.url` with `postgres_port`, the sslmode parameter and the pinned `connection_limit` in it. The credentials stay in a Kubernetes Secret and never appear in the pod spec, because the URL keeps the `$(…)` references that Kubernetes resolves from the environment.
 
 ### The Prisma migration Job
 
@@ -57,6 +57,31 @@ This module therefore turns the Helm hook on and the ArgoCD annotations off. The
 
 - A failing migration fails the whole `helm_release`, which is what you want — the alternative is a pod crash loop that Terraform reports as a timeout.
 - The Job needs its share of `helm_timeout`. The default of 600 seconds covers a migration and a rollout together.
+
+### The connection pool is pinned, and by two settings
+
+**Prisma sizes its connection pool as `physical cores × 2 + 1` when the connection URL names no `connection_limit`**, and it counts the physical cores of the *node*, not the pod's CPU limit. [prisma-engines#4341](https://github.com/prisma/prisma-engines/issues/4341) records that as an oversight and was closed without a fix. A pod with a `100m` CPU limit therefore takes 33 connections on a 16-core node, and a different number after it is rescheduled onto a node with a different core count.
+
+A managed Postgres caps `max_connections` by the shape you bought. STACKIT PostgreSQL Flex fixes it per flavour — 195 on 4 vCPU / 8 GiB, 785 on 4 vCPU / 32 GiB — reserves 15 for its own processes and exposes no parameter group in the API, the SDK or the Terraform provider. The pool has to be pinned on the client side, because there is no server-side lever.
+
+`var.postgres_connection_limit` pins it, and the module writes it in two places:
+
+| Where | What it binds |
+|---|---|
+| `connection_limit` on `db.url` | The Prisma migration Job, and anything else that reads `DATABASE_URL` as it stands. |
+| `general_settings.database_connection_pool_limit` | The running proxy. |
+
+Both are needed. **The proxy rewrites `DATABASE_URL` on startup** and replaces `connection_limit` with `general_settings.database_connection_pool_limit`, so the URL parameter alone does not bind the pods. The module writes the same number into both, and the pool is then the same whichever path sets it.
+
+The default is `10`, which is LiteLLM's own default, so pinning the value changes nothing at runtime. The gateway is deployed once for the whole platform, so it costs `replica_count × postgres_connection_limit` connections in total — 10 at the defaults. Budget it against the instance like this:
+
+```
+pods per tenant × connection_limit × tenants  +  15 reserved  ≤  max_connections
+```
+
+The gateway is one tenant of that sum. Everything else on the instance, a Langfuse instance per tenant above all, competes for the same ceiling. `modules/stackit/postgresflex` carries the [per-flavour table and the budget](../../../stackit/postgresflex/buildingblock/README.md#how-many-connections-one-instance-carries).
+
+`pool_timeout` is the companion parameter: a request that finds no free connection waits that long and then fails with `P2024`. LiteLLM sets it from `general_settings.database_connection_pool_timeout` and defaults to 60 seconds, which is generous, so this module leaves it alone.
 
 ## Redis
 
@@ -176,6 +201,7 @@ No modules.
 | <a name="input_model_backend_api_keys"></a> [model\_backend\_api\_keys](#input\_model\_backend\_api\_keys) | API key per model alias, keyed exactly like model\_backends. Several aliases that share one upstream endpoint repeat the same value. | `map(string)` | n/a | yes |
 | <a name="input_model_backends"></a> [model\_backends](#input\_model\_backends) | Models the gateway exposes, keyed by the alias callers ask for in the `model` field of a request.<br/><br/>- `model`: name of the model at the upstream provider. The module prefixes it with `openai/`,<br/>  which is what selects the OpenAI-compatible driver.<br/>- `api_base`: base URL of the upstream OpenAI-compatible endpoint, including the `/v1` suffix.<br/><br/>Pass the credential for each alias in `model_backend_api_keys` under the same key. | <pre>map(object({<br/>    model    = string<br/>    api_base = string<br/>  }))</pre> | n/a | yes |
 | <a name="input_namespace"></a> [namespace](#input\_namespace) | Namespace the gateway runs in. The module creates it. | `string` | `"litellm"` | no |
+| <a name="input_postgres_connection_limit"></a> [postgres\_connection\_limit](#input\_postgres\_connection\_limit) | Maximum number of Postgres connections one gateway pod opens. The module writes it as<br/>`connection_limit` on the connection URL and as `general_settings.database_connection_pool_limit`<br/>in the proxy config, because the proxy rewrites the URL on startup from that setting.<br/><br/>Without the parameter Prisma sizes the pool as `physical cores × 2 + 1` read from the node, not<br/>from the pod's CPU limit, so a pod takes 33 connections on a 16-core node and a different number<br/>after it is rescheduled. The gateway is deployed once for the platform, so it costs<br/>`replica_count × postgres_connection_limit` connections in total.<br/><br/>The default of 10 is LiteLLM's own default, so pinning the value changes nothing at runtime and<br/>only bounds what the URL asks for. | `number` | `10` | no |
 | <a name="input_postgres_database"></a> [postgres\_database](#input\_postgres\_database) | Name of the database on the Postgres server. It has to exist before the first apply; the Prisma migration Job creates the tables inside it, not the database itself. | `string` | `"litellm"` | no |
 | <a name="input_postgres_host"></a> [postgres\_host](#input\_postgres\_host) | Hostname of the Postgres server that holds virtual keys, teams, budgets and spend records. | `string` | n/a | yes |
 | <a name="input_postgres_password"></a> [postgres\_password](#input\_postgres\_password) | Password of the Postgres user. Use only characters that are safe in a URL, because the chart substitutes the value into the connection URL without encoding it. | `string` | n/a | yes |
