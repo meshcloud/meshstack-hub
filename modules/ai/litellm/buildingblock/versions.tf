@@ -12,5 +12,11 @@ terraform {
       source  = "hashicorp/kubernetes"
       version = ">= 2.38"
     }
+    # Only used to read the OIDC discovery document of the identity provider. The module creates
+    # no data source from it when var.oidc is null or when all three endpoints are given.
+    http = {
+      source  = "hashicorp/http"
+      version = ">= 3.4"
+    }
   }
 }

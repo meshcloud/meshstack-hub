@@ -48,6 +48,27 @@ Two things go wrong often enough to name them:
 - **Keep the `/v1` in the base URL.** Without it every call answers "Not Found".
 - **Use the alias, not the name of the model at the provider.** The gateway resolves the alias to a model and an endpoint, and the alias is the only name it accepts.
 
+## 🔐 The admin console holds five users, and none of them is you
+
+The gateway has a web console. It belongs to the platform team, and there is one console for the whole platform, because there is one gateway. You do not get a login to it, and this section explains why that is a rule and not an oversight.
+
+**The console holds at most five users, platform-wide.** "User" here means one row in the gateway's user table. It is not your virtual key and it is not your team:
+
+- Your virtual key costs **no** seat. The gateway creates no user when it issues a key.
+- Your team on the gateway costs **no** seat either, with the setting this platform runs.
+- A human who logs in to the console costs **one** seat, and there are five.
+
+**The failure mode is worse than a refusal.** The sixth person to log in gets in and writes the sixth row. From that point every login attempt is refused, for all six of them, including the people who were working in the console the day before. Sessions already open keep working until they expire, and that is the whole grace period. Getting out of it means the platform team deleting a user from the gateway by hand, which is an incident rather than a ticket.
+
+So there are two requests you should not make, however reasonable they look:
+
+- **Do not ask to be added as a member of your team on the gateway.** That writes one row per member and takes one of the five seats. Your virtual key already carries your budget and your rate limit; a team membership adds nothing you need.
+- **Do not ask for a user account on the gateway.** Same cost, same reason.
+
+If you need to see what your key has spent, ask the platform team. A console login is not the way to get that number.
+
+An Enterprise licence would lift the limit. This platform does not buy one, so the limit of five is a fixed property of the gateway you are using.
+
 ## 📊 Shared Responsibility
 
 | Responsibility | Platform Team | Application Team |
@@ -56,6 +77,7 @@ Two things go wrong often enough to name them:
 | Hold the credentials of the model providers | ✅ | ❌ |
 | Decide which models are available and under which alias | ✅ | ❌ |
 | Issue virtual keys and set budgets and rate limits | ✅ | ❌ |
+| Log in to the gateway's admin console | ✅ | ❌ |
 | Keep the virtual key secret and rotate it when it leaks | ❌ | ✅ |
 | Pick a model alias that fits the task and its cost | ❌ | ✅ |
 | Handle rate limit and budget errors in the application | ❌ | ✅ |

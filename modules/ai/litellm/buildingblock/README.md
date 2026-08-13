@@ -2,7 +2,7 @@
 name: LiteLLM AI Gateway
 supportedPlatforms:
   - kubernetes
-description: Installs the LiteLLM gateway into a Kubernetes namespace and registers OpenAI-compatible model endpoints behind one API, with virtual keys, teams, budgets and spend tracking backed by Postgres.
+description: Installs the LiteLLM gateway into a Kubernetes namespace and registers OpenAI-compatible model endpoints behind one API, with virtual keys, teams, budgets and spend tracking backed by Postgres, and optional OIDC single sign-on for the admin console.
 # The cluster credentials, the database connection and the upstream model credentials all arrive
 # as inputs, so there is nothing to set up on the cloud side before this module runs.
 requiresBackplane: false
@@ -124,12 +124,171 @@ Several aliases can share one upstream endpoint and one credential. Repeat the v
 
 The module writes the key into a Kubernetes Secret and points the chart at it with `masterkeySecretName`. Without that the chart generates a key of its own on every install, which no caller knows and which changes whenever the secret is recreated.
 
+## The admin console and single sign-on
+
+The console at `<public_url>/ui` belongs to the platform team. Tenants never open it: they hold a virtual key and call the API. This module deploys **one** gateway for the whole platform, so there is one console for everybody who administers it.
+
+`var.oidc` turns on the proxy's native generic OIDC provider. Two things this module deliberately does not offer:
+
+- **No static `UI_USERNAME` and `UI_PASSWORD` fallback.** A shared password on a console that hands out the powers of the master key is not access control. Either an identity provider decides who gets in, or nobody logs in.
+- **No console at all when `var.oidc` is null.** The gateway still works in full — every tenant reaches it with a virtual key — so a foundation without an identity provider gets a working gateway and no login page.
+
+Native SSO is free in the open-source proxy up to five users. The five are the subject of [the next section](#the-console-holds-five-users-platform-wide), and you have to read it before you hand the console to a sixth person.
+
+### What the module writes onto the pods
+
+`var.oidc` and `var.public_url` become plain environment variables on the proxy container, apart from the client secret, which travels in a Kubernetes Secret listed under `environmentSecrets` — the same path the model credentials take.
+
+| Environment variable | Set from | Default in the proxy at v1.96.2 |
+|---|---|---|
+| `GENERIC_CLIENT_ID` | `oidc.client_id` | none; its presence is what selects the generic provider |
+| `GENERIC_CLIENT_SECRET` | `oidc.client_secret`, through the secret | none; login fails without it |
+| `GENERIC_AUTHORIZATION_ENDPOINT` | discovery, or `oidc.authorization_endpoint` | none; login fails without it |
+| `GENERIC_TOKEN_ENDPOINT` | discovery, or `oidc.token_endpoint` | none; login fails without it |
+| `GENERIC_USERINFO_ENDPOINT` | discovery, or `oidc.userinfo_endpoint` | none; login fails without it |
+| `GENERIC_SCOPE` | `oidc.scopes` | `openid email profile` |
+| `GENERIC_USER_ID_ATTRIBUTE` | `oidc.user_id_attribute`, `sub` by default | `preferred_username` |
+| `GENERIC_USER_EMAIL_ATTRIBUTE` | `oidc.user_email_attribute` | `email` |
+| `GENERIC_USER_DISPLAY_NAME_ATTRIBUTE` | `oidc.user_display_name_attribute` | `sub` |
+| `GENERIC_USER_ROLE_ATTRIBUTE` | `oidc.user_role_attribute` | `role` |
+| `PROXY_BASE_URL` | `var.public_url` | the base URL of the incoming request |
+| `PROXY_LOGOUT_URL` | `oidc.logout_url` | none |
+| `PROXY_ADMIN_ID` | `oidc.proxy_admin_id` | none |
+| `ALLOWED_EMAIL_DOMAINS` | `oidc.allowed_email_domains`, joined with commas | none, so every authenticated user may log in |
+| `AUTO_REDIRECT_UI_LOGIN_TO_SSO` | `oidc.auto_redirect_to_sso` | `false` |
+
+A setting the caller leaves null is not written at all, so the proxy stays on its own default instead of receiving an empty string.
+
+Three details are worth carrying in your head, because the documentation and the code disagree:
+
+- **`GENERIC_USER_ID_ATTRIBUTE` defaults to `preferred_username` in the code**, while the documentation table says `sub`. This module pins `sub`. `preferred_username` is reassignable at most providers, and a reassignment produces a second row in the user table for the same person — which costs one of the five seats.
+- **`GENERIC_USER_DISPLAY_NAME_ATTRIBUTE` defaults to `sub` in the code**, not to `display_name` as the documentation says. Set it to whichever claim carries a readable name, usually `name`, or the console shows opaque subject identifiers.
+- **`ALLOWED_EMAIL_DOMAINS` matches the part after the `@` exactly.** There is no wildcard and no subdomain match, so `example.com` does not admit `mail.example.com`.
+
+### One issuer in, three endpoints out
+
+`modules/ai/langfuse` takes an issuer and reads the discovery document itself. The LiteLLM proxy does not: it reads the authorization, token and userinfo endpoints as three separate environment variables and fails the login when one of them is missing. This module closes that gap so both modules present the same `oidc` input — it reads `<issuer_url>/.well-known/openid-configuration` through the `http` data source and takes the three endpoints from there.
+
+That request runs on **every plan**, which has a cost worth stating plainly: the identity provider has to answer the machine that runs Terraform, not only the pods in the cluster. An outage at the provider, or a provider reachable from inside the cluster only, fails a plan that has nothing to do with SSO — adding a model backend, for instance.
+
+The way out is in `var.oidc`: set `authorization_endpoint`, `token_endpoint` and `userinfo_endpoint`, and the module creates no data source at all. Set one or two of them and discovery still runs for the rest, with the override winning. Prefer the three explicit endpoints in a foundation where the Terraform runner cannot reach the provider.
+
+### The callback URL
+
+Register `<public_url>/sso/callback` at the provider.
+
+The proxy builds that URL from `PROXY_BASE_URL` joined with `SERVER_ROOT_PATH` and then `/sso/callback`. This module sets no `SERVER_ROOT_PATH`, so the short form holds.
+
+`PROXY_BASE_URL` is not required by the code — it falls back to the base URL of the incoming request — but that fallback is the internal `http://` address of the pod behind a TLS-terminating Ingress, and the provider then rejects the redirect URI it receives. `var.public_url` is therefore mandatory whenever `var.oidc` is set, and the module rejects the pair at plan time.
+
+### There is no claim discovery on the free tier
+
+`/sso/debug/login`, the route the documentation offers for reading back the claims a provider returns, raises 403 without an Enterprise licence as soon as any SSO client id is configured. Take the claim names from the provider's own documentation or from its discovery document instead.
+
+## The console holds five users, platform-wide
+
+Read this section before you give a sixth person access to the console. Recovery from the failure it describes means a manual change in Postgres.
+
+### A user is a row in the user table
+
+Five is a limit on rows in `LiteLLM_UserTable`. It is **not** a limit on virtual keys, on teams, or on tenants. A platform with two hundred tenants and two thousand virtual keys can sit at zero users.
+
+`_raise_if_sso_exceeds_free_user_limit` in `litellm/proxy/management_endpoints/ui_sso.py` counts them through `UserRepository.count_billable_users()`, which is every row in `LiteLLM_UserTable` minus the rows whose metadata marks them SCIM-inactive. The comparison is strictly "greater than five", so the table may hold five rows and not six.
+
+Where rows come from, verified in the v1.96.2 source:
+
+| Action | Rows it writes to `LiteLLM_UserTable` |
+|---|---|
+| `/key/generate`, so every virtual key a tenant receives | **none.** There is an explicit guard against creating a user |
+| `/team/new` with `disable_auto_add_proxy_admin_to_teams: true` | **none** |
+| `/team/new` without that setting | **one, ever.** Every caller that authenticates with the master key is identified as the same constant user id, `default_user_id`, so the row is written on the first team and reused afterwards |
+| `/team/member_add` | one per member |
+| `/user/new` | one per user |
+| An SSO login | one per human |
+
+With this module's defaults the only rows are the humans who log in to the console. `var.disable_auto_add_proxy_admin_to_teams` defaults to `true` and is what keeps `/team/new` at zero rows.
+
+### The failure mode: the sixth login locks out everybody
+
+The check runs at login **initiation** — `/sso/key/generate`, the route behind the login button — and not at the callback. Two consequences follow, and the second one is the expensive one:
+
+- The refusal arrives as a 403 before the browser is ever sent to the identity provider, so the person sees an error on the gateway and not at their provider.
+- The check looks at the table, not at the person. The sixth human's own login still passes it, because five rows are not more than five, and it writes the sixth row. **From that moment every login initiation fails, for all six of them.** Nobody who was working in the console yesterday can start a new session today.
+
+Sessions already open keep working until they expire. That is the whole grace period.
+
+The error message names the cause:
+
+> You must be a LiteLLM Enterprise user to use SSO for more than 5 users. If you have a license please set `LITELLM_LICENSE` in your env. […] You are seeing this error message because You configured SSO […] in your env. Please unset it
+
+### Recovery: take a row out of the user table
+
+Write these steps down where your on-call can find them, because working them out during the incident costs the console for everybody.
+
+**The master key is the way out, and it keeps working.** The seat check sits on the two SSO login routes only — `/sso/key/generate` and `/sso/saml/callback` — and `user_api_key_auth` carries no seat check at all. Every `/user`, `/team` and `/key` call authenticated with the master key works while the console is locked, and the master key authenticates as `proxy_admin`.
+
+1. **Read the master key** from the Kubernetes Secret the `master_key_secret_name` output names.
+
+   ```bash
+   MASTER_KEY=$(kubectl -n litellm get secret litellm-master-key -o jsonpath='{.data.masterkey}' | base64 -d)
+   kubectl -n litellm port-forward svc/litellm 4000:4000 &
+   ```
+
+2. **List the rows.** A read-only query against Postgres shows the whole table, which is what you need for the decision. The table name is quoted CamelCase and the primary key is `user_id`:
+
+   ```sql
+   SELECT user_id, user_email, user_role, created_at
+   FROM "LiteLLM_UserTable"
+   ORDER BY created_at;
+   ```
+
+   More than five rows here is the fault. Five or fewer means the lockout has another cause.
+
+3. **Pick the surplus row.** In this architecture that is a human who no longer needs the console, and `created_at` orders the candidates. Do not pick the `default_user_id` row — see the warning below.
+
+4. **Delete it through the API, not with SQL.**
+
+   ```bash
+   curl -X POST http://localhost:4000/user/delete \
+     -H "Authorization: Bearer $MASTER_KEY" \
+     -H "Content-Type: application/json" \
+     -d '{"user_ids": ["<user_id>"]}'
+   ```
+
+   `POST /user/delete` needs the `proxy_admin` role, which the master key carries, and it is not gated behind an Enterprise licence. It removes the member from every team the user belonged to, then deletes the user's virtual keys, invitation links, organization memberships and team memberships, and the user row last.
+
+5. **Log in again.** The next login initiation counts five rows or fewer and passes.
+
+**Do not delete the row with SQL.** Four foreign keys point at `LiteLLM_UserTable` — three from `LiteLLM_InvitationLink` and one from `LiteLLM_OrganizationMembership` — and all four are `ON DELETE RESTRICT`. A user who was ever invited, or who holds an organization membership, therefore makes a raw `DELETE` fail with a constraint violation. A user with neither lets it succeed while leaving orphans behind in `LiteLLM_VerificationToken` and `LiteLLM_TeamMembership`, and the orphaned verification tokens are that user's virtual keys. The API call does the cleanup in the right order; the constraints do not.
+
+**Never delete the `default_user_id` row.** That is the row the proxy writes for callers that authenticate with the master key, and `var.disable_auto_add_proxy_admin_to_teams` is what keeps it from being written in the first place. `/user/delete` also deletes every `LiteLLM_VerificationToken` row that carries the deleted `user_id`, and **whether a virtual key issued with the master key carries `default_user_id` in that column is not verified here.** Until somebody checks that on a throwaway database, treat the row as untouchable: the downside is deleting every tenant's virtual key.
+
+Two further parts of the picture are **unverified**, and you should know which:
+
+- The counting function subtracts rows whose `metadata` carries `scim_active` set to the JSON boolean `false`, so marking a row inactive would free a seat without deleting anything. SCIM itself is Enterprise-gated, and whether a plain `/user/update` writes that metadata field on the open-source proxy is not established. Test it on a throwaway user before you rely on it under pressure. A supplied `metadata` object also replaces the row's metadata rather than merging into it.
+- `/user/delete` does not touch `LiteLLM_DailyUserSpend`, `LiteLLM_SpendLogs` or `LiteLLM_AuditLog`. None of them carries a foreign key, so nothing breaks, but the spend history of a deleted user stays in the database.
+
+### Operations that are forbidden here
+
+Two API calls write one row per member into `LiteLLM_UserTable`, and each is one line of Terraform away:
+
+- **`/team/member_add`**, which the `ncecere/litellm` provider exposes as `resource "litellm_team_member"` and `resource "litellm_team_member_add"`.
+- **`/user/new`**, for which that provider has no resource at version 2.0.1, so it takes a direct API call or a newer provider version.
+
+Neither belongs in this architecture, and no module in this repository creates either. A tenant needs no team membership and no user of its own: `modules/ai/litellm-team` creates a team and a virtual key, and the key alone carries the budget, the rate limit and the model allowance. A membership adds nothing a tenant can use and costs one of five seats.
+
+**The provider makes the mistake easy, which is exactly why the rule needs writing down.** `litellm_team_member` sits next to `litellm_team` in the provider documentation and reads like the natural next resource to add. It is not. Review any change that introduces it, and reject it unless somebody has bought an Enterprise licence first.
+
+### An Enterprise licence is out of scope
+
+`LITELLM_LICENSE` lifts the limit — the check returns immediately for a premium user — and this architecture does not buy one. Five console users is therefore a fixed property of the platform and not a temporary state to grow out of. Plan the platform team's console access around it. A sixth administrator is a licensing decision, not a Terraform change.
+
 ## Notes for platform engineers
 
-- **Providers.** Only `kubernetes` and `helm`. No cloud provider enters this module, so it runs on SKE, AKS and anything else that speaks the Kubernetes API.
+- **Providers.** `kubernetes`, `helm` and `http`. No cloud provider enters this module, so it runs on SKE, AKS and anything else that speaks the Kubernetes API. The `http` provider only reads the OIDC discovery document, and only when `var.oidc` is set without all three endpoint overrides.
 - **Permissions.** The token in `var.token` needs to create a namespace, secrets and the workloads of the release in that namespace. Cluster-admin is not required; the chart installs no CRDs and no cluster-scoped RBAC.
 - **The namespace belongs to the module.** It creates `var.namespace` and destroys it again, together with the secrets it wrote there.
-- **Reachability.** The Service is a ClusterIP, so the gateway answers inside the cluster at the `api_base` output. Put an Ingress in front of it when callers live outside the cluster.
+- **Reachability.** The Service is a ClusterIP, so the gateway answers inside the cluster at the `api_base` output. Put an Ingress in front of it when callers live outside the cluster, and in any case when you turn on console SSO: the identity provider redirects a browser to `var.public_url`, which therefore has to resolve from outside.
 
 ## Usage
 
@@ -163,6 +322,18 @@ module "litellm" {
     "chat-large" = var.stackit_model_serving_token
     "embed"      = var.stackit_model_serving_token
   }
+
+  # Leave both out for a gateway without an admin console. Everything else keeps working.
+  public_url = "https://litellm.example.com"
+
+  oidc = {
+    issuer_url    = "https://idp.example.com/realms/platform"
+    client_id     = "litellm-console"
+    client_secret = var.litellm_oidc_client_secret
+
+    user_display_name_attribute = "name"
+    allowed_email_domains       = ["example.com"]
+  }
 }
 ```
 
@@ -173,6 +344,7 @@ module "litellm" {
 |------|---------|
 | <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.12.0 |
 | <a name="requirement_helm"></a> [helm](#requirement\_helm) | >= 3.0.0 |
+| <a name="requirement_http"></a> [http](#requirement\_http) | >= 3.4 |
 | <a name="requirement_kubernetes"></a> [kubernetes](#requirement\_kubernetes) | >= 2.38 |
 
 ## Modules
@@ -187,7 +359,9 @@ No modules.
 | [kubernetes_namespace_v1.this](https://registry.terraform.io/providers/hashicorp/kubernetes/latest/docs/resources/namespace_v1) | resource |
 | [kubernetes_secret_v1.master_key](https://registry.terraform.io/providers/hashicorp/kubernetes/latest/docs/resources/secret_v1) | resource |
 | [kubernetes_secret_v1.model_credentials](https://registry.terraform.io/providers/hashicorp/kubernetes/latest/docs/resources/secret_v1) | resource |
+| [kubernetes_secret_v1.oidc](https://registry.terraform.io/providers/hashicorp/kubernetes/latest/docs/resources/secret_v1) | resource |
 | [kubernetes_secret_v1.postgres](https://registry.terraform.io/providers/hashicorp/kubernetes/latest/docs/resources/secret_v1) | resource |
+| [http_http.oidc_discovery](https://registry.terraform.io/providers/hashicorp/http/latest/docs/data-sources/http) | data source |
 
 ## Inputs
 
@@ -196,11 +370,13 @@ No modules.
 | <a name="input_chart_version"></a> [chart\_version](#input\_chart\_version) | Version of the litellm-helm chart. See https://github.com/BerriAI/litellm/pkgs/container/litellm-helm. | `string` | `"1.96.2"` | no |
 | <a name="input_cluster_ca_certificate"></a> [cluster\_ca\_certificate](#input\_cluster\_ca\_certificate) | Cluster CA certificate, base64 encoded. | `string` | n/a | yes |
 | <a name="input_cluster_endpoint"></a> [cluster\_endpoint](#input\_cluster\_endpoint) | IP address or hostname of the cluster control plane, without the https:// scheme. | `string` | n/a | yes |
+| <a name="input_disable_auto_add_proxy_admin_to_teams"></a> [disable\_auto\_add\_proxy\_admin\_to\_teams](#input\_disable\_auto\_add\_proxy\_admin\_to\_teams) | Write `general_settings.disable_auto_add_proxy_admin_to_teams: true` into the proxy config, so<br/>the proxy adds no admin member to a team it creates.<br/><br/>Leave it at `true`. With it `false`, the first call to `/team/new` writes one row to<br/>`LiteLLM_UserTable` and that row consumes one of the five console seats the free open-source<br/>proxy allows. The row is written once and not once per team, because every caller that<br/>authenticates with the master key is identified as the same constant user id, but it still costs<br/>one of the five seats. | `bool` | `true` | no |
 | <a name="input_helm_timeout"></a> [helm\_timeout](#input\_helm\_timeout) | Seconds to wait for the Helm release to become ready. The Prisma migration Job runs first and takes part of this budget. | `number` | `600` | no |
 | <a name="input_master_key"></a> [master\_key](#input\_master\_key) | Master key of the gateway. It must start with 'sk-', because LiteLLM rejects a key without that prefix. | `string` | n/a | yes |
 | <a name="input_model_backend_api_keys"></a> [model\_backend\_api\_keys](#input\_model\_backend\_api\_keys) | API key per model alias, keyed exactly like model\_backends. Several aliases that share one upstream endpoint repeat the same value. | `map(string)` | n/a | yes |
 | <a name="input_model_backends"></a> [model\_backends](#input\_model\_backends) | Models the gateway exposes, keyed by the alias callers ask for in the `model` field of a request.<br/><br/>- `model`: name of the model at the upstream provider. The module prefixes it with `openai/`,<br/>  which is what selects the OpenAI-compatible driver.<br/>- `api_base`: base URL of the upstream OpenAI-compatible endpoint, including the `/v1` suffix.<br/><br/>Pass the credential for each alias in `model_backend_api_keys` under the same key. | <pre>map(object({<br/>    model    = string<br/>    api_base = string<br/>  }))</pre> | n/a | yes |
 | <a name="input_namespace"></a> [namespace](#input\_namespace) | Namespace the gateway runs in. The module creates it. | `string` | `"litellm"` | no |
+| <a name="input_oidc"></a> [oidc](#input\_oidc) | OIDC identity provider the platform engineers log in to the admin console through. Null leaves<br/>the console without a login path, which is the correct setting for a gateway nobody administers<br/>through the browser.<br/><br/>Native SSO is free in the open-source proxy for up to five users, and it needs no Enterprise<br/>licence below that.<br/><br/>- `issuer_url`: discovery base URL of the provider, for example<br/>  `https://idp.example.com/realms/ai`. The module reads<br/>  `<issuer_url>/.well-known/openid-configuration` and takes the three endpoints from it, because<br/>  the proxy wants them spelled out and does no discovery of its own.<br/>- `client_id` and `client_secret`: credentials of the OIDC client.<br/>- `scopes`: space-separated scope list.<br/>- `authorization_endpoint`, `token_endpoint`, `userinfo_endpoint`: override one endpoint each and<br/>  skip discovery for it. Set all three when the provider is unreachable from the Terraform<br/>  runner, and the module then creates no discovery request at all.<br/>- `user_id_attribute`: claim the proxy stores as the user id. It defaults to `sub` here, not to<br/>  the proxy's own default of `preferred_username`, because `preferred_username` is reassignable<br/>  at most providers and a reassignment produces a second row in the user table for the same<br/>  person. Every row counts against the limit of five.<br/>- `user_email_attribute`, `user_display_name_attribute`, `user_role_attribute`: the rest of the<br/>  claim mapping. Null leaves the proxy on its own defaults, which are `email`, `sub` and `role`.<br/>- `allowed_email_domains`: only users whose email address carries one of these domains may log<br/>  in. The proxy compares the part after the `@` exactly, so there is no wildcard and no<br/>  subdomain match. Null lets every user the provider authenticates log in.<br/>- `proxy_admin_id`: user id that is set to the `proxy_admin` role on every login. It is compared<br/>  against the value of the `user_id_attribute` claim, so it is that claim's value and not an<br/>  email address unless the claim carries one.<br/>- `logout_url`: URL the console sends the browser to after a logout.<br/>- `auto_redirect_to_sso`: send the login page straight to the provider instead of showing a<br/>  button.<br/><br/>Register the callback URL `<public_url>/sso/callback` at the provider. The module sets no<br/>`SERVER_ROOT_PATH`, which is the only setting that would move the callback to another path.<br/><br/>**The console holds at most five users.** Read the free user limit section of the module README<br/>before you hand the console to a sixth person: the sixth login locks out everyone. | <pre>object({<br/>    issuer_url    = string<br/>    client_id     = string<br/>    client_secret = string<br/>    scopes        = optional(string, "openid email profile")<br/><br/>    authorization_endpoint = optional(string)<br/>    token_endpoint         = optional(string)<br/>    userinfo_endpoint      = optional(string)<br/><br/>    user_id_attribute           = optional(string, "sub")<br/>    user_email_attribute        = optional(string)<br/>    user_display_name_attribute = optional(string)<br/>    user_role_attribute         = optional(string)<br/><br/>    allowed_email_domains = optional(list(string))<br/>    proxy_admin_id        = optional(string)<br/>    logout_url            = optional(string)<br/>    auto_redirect_to_sso  = optional(bool, false)<br/>  })</pre> | `null` | no |
 | <a name="input_postgres_connection_limit"></a> [postgres\_connection\_limit](#input\_postgres\_connection\_limit) | Maximum number of Postgres connections one gateway pod opens. The module writes it as<br/>`connection_limit` on the connection URL and as `general_settings.database_connection_pool_limit`<br/>in the proxy config, because the proxy rewrites the URL on startup from that setting.<br/><br/>Without the parameter Prisma sizes the pool as `physical cores × 2 + 1` read from the node, not<br/>from the pod's CPU limit, so a pod takes 33 connections on a 16-core node and a different number<br/>after it is rescheduled. The gateway is deployed once for the platform, so it costs<br/>`replica_count × postgres_connection_limit` connections in total.<br/><br/>The default of 10 is LiteLLM's own default, so pinning the value changes nothing at runtime and<br/>only bounds what the URL asks for. | `number` | `10` | no |
 | <a name="input_postgres_database"></a> [postgres\_database](#input\_postgres\_database) | Name of the database on the Postgres server. It has to exist before the first apply; the Prisma migration Job creates the tables inside it, not the database itself. | `string` | `"litellm"` | no |
 | <a name="input_postgres_host"></a> [postgres\_host](#input\_postgres\_host) | Hostname of the Postgres server that holds virtual keys, teams, budgets and spend records. | `string` | n/a | yes |
@@ -208,6 +384,7 @@ No modules.
 | <a name="input_postgres_port"></a> [postgres\_port](#input\_postgres\_port) | Port of the Postgres server. | `number` | `5432` | no |
 | <a name="input_postgres_ssl_mode"></a> [postgres\_ssl\_mode](#input\_postgres\_ssl\_mode) | Value of the sslmode parameter on the Postgres connection URL. One of 'disable', 'prefer', 'require', 'verify-ca' or 'verify-full'. | `string` | `"require"` | no |
 | <a name="input_postgres_username"></a> [postgres\_username](#input\_postgres\_username) | User the gateway connects as. It needs rights to create and alter tables, because the Prisma migration Job runs the schema migrations under this user. | `string` | n/a | yes |
+| <a name="input_public_url"></a> [public\_url](#input\_public\_url) | Canonical URL the gateway is reached at from outside the cluster, for example<br/>`https://litellm.example.com`, without a trailing slash. The module writes it as<br/>`PROXY_BASE_URL`, and the proxy builds the SSO callback as `<public_url>/sso/callback`.<br/><br/>Required when `var.oidc` is set. The proxy falls back to the base URL of the incoming request,<br/>which behind a TLS-terminating Ingress is the internal `http://` address of the pod, and the<br/>provider then rejects the redirect URI. The module creates no Ingress, so this is the URL of<br/>whatever Ingress or load balancer stands in front of the Service. | `string` | `null` | no |
 | <a name="input_redis_host"></a> [redis\_host](#input\_redis\_host) | Hostname of an existing Redis instance the gateway coordinates through. Leave it null to run without Redis, which is only correct with a single replica. | `string` | `null` | no |
 | <a name="input_redis_password"></a> [redis\_password](#input\_redis\_password) | Password of the Redis instance. Leave it null for a Redis without authentication. Only used when redis\_host is set. | `string` | `null` | no |
 | <a name="input_redis_port"></a> [redis\_port](#input\_redis\_port) | Port of the Redis instance. Only used when redis\_host is set. | `number` | `6379` | no |
@@ -220,8 +397,10 @@ No modules.
 | Name | Description |
 |------|-------------|
 | <a name="output_api_base"></a> [api\_base](#output\_api\_base) | In-cluster base URL of the gateway, including the '/v1' suffix. Callers send the master key or a virtual key as a bearer token. |
+| <a name="output_console_url"></a> [console\_url](#output\_console\_url) | URL of the admin console. Null when var.public\_url is not set, because the console is then reachable in-cluster only. |
 | <a name="output_master_key_secret_name"></a> [master\_key\_secret\_name](#output\_master\_key\_secret\_name) | Name of the secret in the gateway namespace that holds the master key under the 'masterkey' key. |
 | <a name="output_model_aliases"></a> [model\_aliases](#output\_model\_aliases) | Model aliases the gateway exposes. A caller puts one of them in the 'model' field of a request. |
 | <a name="output_namespace"></a> [namespace](#output\_namespace) | Namespace the gateway runs in. |
+| <a name="output_oidc_callback_url"></a> [oidc\_callback\_url](#output\_oidc\_callback\_url) | Callback URL to register at the identity provider. Null when var.oidc is not set. |
 | <a name="output_service_name"></a> [service\_name](#output\_service\_name) | Name of the Service in front of the gateway pods. |
 <!-- END_TF_DOCS -->

@@ -50,6 +50,131 @@ variable "helm_timeout" {
   description = "Seconds to wait for the Helm release to become ready. The Prisma migration Job runs first and takes part of this budget."
 }
 
+# --- Admin console ----------------------------------------------------------------------------
+
+variable "public_url" {
+  type    = string
+  default = null
+  # The proxy reads it as PROXY_BASE_URL and builds the SSO callback from it. Its fallback is the
+  # base URL of the incoming request, which behind a TLS-terminating Ingress is the internal
+  # http://<pod> address, so the redirect URI never matches what the provider has registered.
+  description = <<-EOT
+  Canonical URL the gateway is reached at from outside the cluster, for example
+  `https://litellm.example.com`, without a trailing slash. The module writes it as
+  `PROXY_BASE_URL`, and the proxy builds the SSO callback as `<public_url>/sso/callback`.
+
+  Required when `var.oidc` is set. The proxy falls back to the base URL of the incoming request,
+  which behind a TLS-terminating Ingress is the internal `http://` address of the pod, and the
+  provider then rejects the redirect URI. The module creates no Ingress, so this is the URL of
+  whatever Ingress or load balancer stands in front of the Service.
+  EOT
+
+  validation {
+    condition     = var.public_url == null || startswith(coalesce(var.public_url, ""), "https://")
+    error_message = "public_url must be an https URL, because the identity provider redirects the browser back to it."
+  }
+
+  validation {
+    condition     = var.public_url == null || !endswith(coalesce(var.public_url, ""), "/")
+    error_message = "public_url must not end with a slash. The proxy appends '/sso/callback' to it."
+  }
+}
+
+variable "oidc" {
+  description = <<-EOT
+  OIDC identity provider the platform engineers log in to the admin console through. Null leaves
+  the console without a login path, which is the correct setting for a gateway nobody administers
+  through the browser.
+
+  Native SSO is free in the open-source proxy for up to five users, and it needs no Enterprise
+  licence below that.
+
+  - `issuer_url`: discovery base URL of the provider, for example
+    `https://idp.example.com/realms/ai`. The module reads
+    `<issuer_url>/.well-known/openid-configuration` and takes the three endpoints from it, because
+    the proxy wants them spelled out and does no discovery of its own.
+  - `client_id` and `client_secret`: credentials of the OIDC client.
+  - `scopes`: space-separated scope list.
+  - `authorization_endpoint`, `token_endpoint`, `userinfo_endpoint`: override one endpoint each and
+    skip discovery for it. Set all three when the provider is unreachable from the Terraform
+    runner, and the module then creates no discovery request at all.
+  - `user_id_attribute`: claim the proxy stores as the user id. It defaults to `sub` here, not to
+    the proxy's own default of `preferred_username`, because `preferred_username` is reassignable
+    at most providers and a reassignment produces a second row in the user table for the same
+    person. Every row counts against the limit of five.
+  - `user_email_attribute`, `user_display_name_attribute`, `user_role_attribute`: the rest of the
+    claim mapping. Null leaves the proxy on its own defaults, which are `email`, `sub` and `role`.
+  - `allowed_email_domains`: only users whose email address carries one of these domains may log
+    in. The proxy compares the part after the `@` exactly, so there is no wildcard and no
+    subdomain match. Null lets every user the provider authenticates log in.
+  - `proxy_admin_id`: user id that is set to the `proxy_admin` role on every login. It is compared
+    against the value of the `user_id_attribute` claim, so it is that claim's value and not an
+    email address unless the claim carries one.
+  - `logout_url`: URL the console sends the browser to after a logout.
+  - `auto_redirect_to_sso`: send the login page straight to the provider instead of showing a
+    button.
+
+  Register the callback URL `<public_url>/sso/callback` at the provider. The module sets no
+  `SERVER_ROOT_PATH`, which is the only setting that would move the callback to another path.
+
+  **The console holds at most five users.** Read the free user limit section of the module README
+  before you hand the console to a sixth person: the sixth login locks out everyone.
+  EOT
+
+  type = object({
+    issuer_url    = string
+    client_id     = string
+    client_secret = string
+    scopes        = optional(string, "openid email profile")
+
+    authorization_endpoint = optional(string)
+    token_endpoint         = optional(string)
+    userinfo_endpoint      = optional(string)
+
+    user_id_attribute           = optional(string, "sub")
+    user_email_attribute        = optional(string)
+    user_display_name_attribute = optional(string)
+    user_role_attribute         = optional(string)
+
+    allowed_email_domains = optional(list(string))
+    proxy_admin_id        = optional(string)
+    logout_url            = optional(string)
+    auto_redirect_to_sso  = optional(bool, false)
+  })
+
+  default   = null
+  sensitive = true
+
+  # The messages carry no interpolation, because var.oidc is sensitive and Terraform refuses to
+  # print a sensitive value in an error message.
+  validation {
+    condition     = var.oidc == null || startswith(var.oidc.issuer_url, "https://")
+    error_message = "oidc.issuer_url must be an https URL. It is the discovery base URL, not the authorization endpoint."
+  }
+
+  validation {
+    condition     = var.oidc == null || var.public_url != null
+    error_message = "Set var.public_url together with var.oidc. The proxy builds the SSO callback URL from PROXY_BASE_URL, and login fails without it."
+  }
+}
+
+variable "disable_auto_add_proxy_admin_to_teams" {
+  type    = bool
+  default = true
+  # This is the switch that keeps LiteLLM_UserTable empty, which is what keeps the console inside
+  # the free limit of five users. See the free user limit section of the module README.
+  description = <<-EOT
+  Write `general_settings.disable_auto_add_proxy_admin_to_teams: true` into the proxy config, so
+  the proxy adds no admin member to a team it creates.
+
+  Leave it at `true`. With it `false`, the first call to `/team/new` writes one row to
+  `LiteLLM_UserTable` and that row consumes one of the five console seats the free open-source
+  proxy allows. The row is written once and not once per team, because every caller that
+  authenticates with the master key is identified as the same constant user id, but it still costs
+  one of the five seats.
+  EOT
+}
+
 variable "master_key" {
   type      = string
   sensitive = true

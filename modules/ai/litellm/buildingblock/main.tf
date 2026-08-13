@@ -54,6 +54,73 @@ locals {
     )
   } : {}
 
+  # var.oidc is sensitive as a whole, so every expression derived from it carries the sensitivity
+  # mark, and a values map that carries the mark hides the whole Helm release from every plan.
+  # Unmark the plain facts — is SSO on, which issuer, which client, which endpoints — while the
+  # client secret keeps its mark and reaches the pods through a secret. nonsensitive() rejects an
+  # argument that carries no mark, so try() falls back to the bare value.
+  oidc_enabled = try(nonsensitive(var.oidc != null), var.oidc != null)
+  oidc = local.oidc_enabled ? {
+    issuer_url                  = try(nonsensitive(var.oidc.issuer_url), var.oidc.issuer_url)
+    client_id                   = try(nonsensitive(var.oidc.client_id), var.oidc.client_id)
+    scopes                      = try(nonsensitive(var.oidc.scopes), var.oidc.scopes)
+    authorization_endpoint      = try(nonsensitive(var.oidc.authorization_endpoint), var.oidc.authorization_endpoint)
+    token_endpoint              = try(nonsensitive(var.oidc.token_endpoint), var.oidc.token_endpoint)
+    userinfo_endpoint           = try(nonsensitive(var.oidc.userinfo_endpoint), var.oidc.userinfo_endpoint)
+    user_id_attribute           = try(nonsensitive(var.oidc.user_id_attribute), var.oidc.user_id_attribute)
+    user_email_attribute        = try(nonsensitive(var.oidc.user_email_attribute), var.oidc.user_email_attribute)
+    user_display_name_attribute = try(nonsensitive(var.oidc.user_display_name_attribute), var.oidc.user_display_name_attribute)
+    user_role_attribute         = try(nonsensitive(var.oidc.user_role_attribute), var.oidc.user_role_attribute)
+    allowed_email_domains       = try(nonsensitive(var.oidc.allowed_email_domains), var.oidc.allowed_email_domains)
+    proxy_admin_id              = try(nonsensitive(var.oidc.proxy_admin_id), var.oidc.proxy_admin_id)
+    logout_url                  = try(nonsensitive(var.oidc.logout_url), var.oidc.logout_url)
+    auto_redirect_to_sso        = try(nonsensitive(var.oidc.auto_redirect_to_sso), var.oidc.auto_redirect_to_sso)
+  } : null
+
+  # The proxy reads the three endpoints as separate environment variables and performs no discovery
+  # of its own, while the caller supplies an issuer. The gap is closed here, with the discovery
+  # document read at plan time. A caller who overrides all three endpoints skips the request
+  # entirely, which is the way out when the provider is unreachable from the Terraform runner.
+  oidc_endpoint_overrides = local.oidc_enabled ? {
+    authorization_endpoint = local.oidc.authorization_endpoint
+    token_endpoint         = local.oidc.token_endpoint
+    userinfo_endpoint      = local.oidc.userinfo_endpoint
+  } : {}
+
+  oidc_discovery_needed = local.oidc_enabled && anytrue([
+    for endpoint in values(local.oidc_endpoint_overrides) : endpoint == null
+  ])
+
+  oidc_discovery = local.oidc_discovery_needed ? jsondecode(data.http.oidc_discovery[0].response_body) : {}
+
+  oidc_endpoints = {
+    for name, override in local.oidc_endpoint_overrides :
+    name => coalesce(override, try(local.oidc_discovery[name], null))
+  }
+
+  # Every value here is a plain string in the pod spec, so the client secret is not among them.
+  # A null entry is dropped, which leaves the proxy on its own default for that setting.
+  oidc_env = local.oidc_enabled ? {
+    for name, value in {
+      GENERIC_CLIENT_ID              = local.oidc.client_id
+      GENERIC_AUTHORIZATION_ENDPOINT = local.oidc_endpoints.authorization_endpoint
+      GENERIC_TOKEN_ENDPOINT         = local.oidc_endpoints.token_endpoint
+      GENERIC_USERINFO_ENDPOINT      = local.oidc_endpoints.userinfo_endpoint
+      GENERIC_SCOPE                  = local.oidc.scopes
+
+      GENERIC_USER_ID_ATTRIBUTE           = local.oidc.user_id_attribute
+      GENERIC_USER_EMAIL_ATTRIBUTE        = local.oidc.user_email_attribute
+      GENERIC_USER_DISPLAY_NAME_ATTRIBUTE = local.oidc.user_display_name_attribute
+      GENERIC_USER_ROLE_ATTRIBUTE         = local.oidc.user_role_attribute
+
+      PROXY_BASE_URL                = var.public_url
+      PROXY_LOGOUT_URL              = local.oidc.logout_url
+      PROXY_ADMIN_ID                = local.oidc.proxy_admin_id
+      ALLOWED_EMAIL_DOMAINS         = local.oidc.allowed_email_domains == null ? null : join(",", local.oidc.allowed_email_domains)
+      AUTO_REDIRECT_UI_LOGIN_TO_SSO = local.oidc.auto_redirect_to_sso ? "true" : null
+    } : name => value if value != null
+  } : {}
+
   chart_values = {
     replicaCount = var.replica_count
 
@@ -67,9 +134,17 @@ locals {
     masterkeySecretName = kubernetes_secret_v1.master_key.metadata[0].name
     masterkeySecretKey  = "masterkey"
 
-    # Exports the secret into the pods as environment variables, which is what the
+    # Exports the secrets into the pods as environment variables, which is what the
     # os.environ/<NAME> references in proxy_config resolve against.
-    environmentSecrets = [kubernetes_secret_v1.model_credentials.metadata[0].name]
+    environmentSecrets = concat(
+      [kubernetes_secret_v1.model_credentials.metadata[0].name],
+      [for secret in kubernetes_secret_v1.oidc : secret.metadata[0].name],
+    )
+
+    # The chart renders these as plain `env` entries on the container. The proxy reads its SSO
+    # settings from the environment and not from the proxy config, so they belong here rather than
+    # under proxy_config.
+    envVars = local.oidc_env
 
     db = {
       # The chart bundles a Bitnami postgresql subchart and turns it on by default. Those images
@@ -132,9 +207,43 @@ locals {
           # setting, so the parameter on db.url alone does not bind the running pods. Both carry
           # the same number, and the pool is then the same on whichever path sets it.
           database_connection_pool_limit = var.postgres_connection_limit
+
+          # Keeps LiteLLM_UserTable empty, and the console therefore inside the free limit of five
+          # users. Without it the first /team/new call writes one row and takes one of the five.
+          disable_auto_add_proxy_admin_to_teams = var.disable_auto_add_proxy_admin_to_teams
         },
         local.coordination_redis
       )
+    }
+  }
+}
+
+# The identity provider publishes its authorization, token and userinfo endpoints in this document,
+# and the proxy wants all three named individually. Reading it here keeps var.oidc down to an
+# issuer and holds the interface identical to modules/ai/langfuse, which discovers the same
+# document itself. The request runs on every plan, so the provider has to answer the Terraform
+# runner; the three endpoint overrides in var.oidc are the way around that.
+data "http" "oidc_discovery" {
+  count = local.oidc_discovery_needed ? 1 : 0
+
+  url = "${trimsuffix(local.oidc.issuer_url, "/")}/.well-known/openid-configuration"
+
+  request_headers = {
+    Accept = "application/json"
+  }
+
+  lifecycle {
+    postcondition {
+      condition     = self.status_code == 200
+      error_message = "The OIDC discovery document did not answer with 200. Check oidc.issuer_url, or set authorization_endpoint, token_endpoint and userinfo_endpoint in var.oidc to skip discovery."
+    }
+
+    postcondition {
+      condition = alltrue([
+        for field in ["authorization_endpoint", "token_endpoint", "userinfo_endpoint"] :
+        try(jsondecode(self.response_body)[field], null) != null
+      ])
+      error_message = "The OIDC discovery document names no authorization_endpoint, token_endpoint or userinfo_endpoint. Set the missing ones in var.oidc."
     }
   }
 }
@@ -181,6 +290,22 @@ resource "kubernetes_secret_v1" "model_credentials" {
     },
     local.redis_env
   )
+}
+
+# The client secret is the only sensitive part of the SSO configuration, so it travels the same way
+# as the model credentials: a secret listed under environmentSecrets, which the chart exports into
+# the pods with envFrom. Everything else about the provider stays a plain value in the pod spec.
+resource "kubernetes_secret_v1" "oidc" {
+  count = local.oidc_enabled ? 1 : 0
+
+  metadata {
+    name      = "${var.release_name}-oidc"
+    namespace = kubernetes_namespace_v1.this.metadata[0].name
+  }
+
+  data = {
+    GENERIC_CLIENT_SECRET = var.oidc.client_secret
+  }
 }
 
 # The chart is published to GHCR as an OCI artifact and has no classic Helm repository. The helm

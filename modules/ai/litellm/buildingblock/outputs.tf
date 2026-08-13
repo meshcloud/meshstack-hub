@@ -24,6 +24,16 @@ output "model_aliases" {
   value       = sort(keys(var.model_backends))
 }
 
+output "console_url" {
+  description = "URL of the admin console. Null when var.public_url is not set, because the console is then reachable in-cluster only."
+  value       = var.public_url == null ? null : "${var.public_url}/ui"
+}
+
+output "oidc_callback_url" {
+  description = "Callback URL to register at the identity provider. Null when var.oidc is not set."
+  value       = local.oidc_enabled ? "${var.public_url}/sso/callback" : null
+}
+
 output "master_key_secret_name" {
   description = "Name of the secret in the gateway namespace that holds the master key under the 'masterkey' key."
   value       = kubernetes_secret_v1.master_key.metadata[0].name
