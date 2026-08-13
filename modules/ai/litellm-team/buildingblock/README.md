@@ -23,9 +23,12 @@ The key omits `models` on purpose. The provider sends `all-team-models` to LiteL
 is set and `models` is left out, so the model allow-list stays on the team alone and a landing zone
 change reaches the key without recreating it.
 
-LiteLLM returns the virtual key once, at creation, and never again. The `virtual_key` output is
-marked sensitive and the `summary` output carries the key as well, so the value is available to the
-application team on the building block run and nowhere else.
+LiteLLM returns the virtual key once, at creation, and never again. The `virtual_key` output is a
+plain Terraform output marked sensitive, so the key stays in the state of the run and a composing
+module can read it. It is deliberately not a building block output: `version_spec.outputs` of
+`meshstack_building_block_definition` has no `sensitive` block, so meshStack would store and display
+the key in cleartext in meshPanel. The `summary` output carries the key ID, which is a hash of the
+key, and never the key itself.
 
 The `ncecere/litellm` provider is pinned to exactly `2.0.1`. This is a deliberate exception to the
 hub rule that provider constraints use `>=`, and `versions.tf` explains why.
@@ -70,7 +73,7 @@ No modules.
 |------|-------------|
 | <a name="output_api_base"></a> [api\_base](#output\_api\_base) | OpenAI-compatible base URL of the LiteLLM gateway, including the '/v1' suffix. |
 | <a name="output_key_id"></a> [key\_id](#output\_key\_id) | Hash of the virtual key. LiteLLM identifies the key by this value, and it is safe to show in logs. |
-| <a name="output_summary"></a> [summary](#output\_summary) | Summary with the endpoint, the virtual key and the budget. |
+| <a name="output_summary"></a> [summary](#output\_summary) | Summary with the endpoint, the team, the key ID and the budget. It does not contain the virtual key. |
 | <a name="output_team_alias"></a> [team\_alias](#output\_team\_alias) | Alias of the LiteLLM team, shown in the LiteLLM UI. |
 | <a name="output_team_id"></a> [team\_id](#output\_team\_id) | ID of the LiteLLM team. meshStack uses it as the platform tenant ID, so later building blocks can bind resources to this team. |
 | <a name="output_virtual_key"></a> [virtual\_key](#output\_virtual\_key) | The virtual key the application sends as a bearer token. LiteLLM returns it once, at creation, and never again. |

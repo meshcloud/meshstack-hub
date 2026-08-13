@@ -8,6 +8,9 @@ output "team_alias" {
   description = "Alias of the LiteLLM team, shown in the LiteLLM UI."
 }
 
+# This is a plain Terraform output marked sensitive, not a building block output. It stays in the
+# state of the run and a composing module reads it to deliver the key to the application team.
+# It must never become a building block output, because building block outputs cannot be sensitive.
 output "virtual_key" {
   value       = litellm_key.this.key
   sensitive   = true
@@ -24,13 +27,15 @@ output "api_base" {
   description = "OpenAI-compatible base URL of the LiteLLM gateway, including the '/v1' suffix."
 }
 
+# meshStack publishes this value in meshPanel through the `SUMMARY` assignment type, so the template
+# must not contain the virtual key. It carries the key ID instead, which is a hash of the key.
 output "summary" {
-  description = "Summary with the endpoint, the virtual key and the budget."
-  sensitive   = true
+  description = "Summary with the endpoint, the team, the key ID and the budget. It does not contain the virtual key."
   value = templatefile("${path.module}/SUMMARY.md.tftpl", {
     team_alias      = litellm_team.this.team_alias
     team_id         = litellm_team.this.id
-    virtual_key     = litellm_key.this.key
+    key_alias       = local.key_alias
+    key_id          = litellm_key.this.id
     api_base        = local.api_base
     max_budget      = var.max_budget
     budget_duration = var.budget_duration

@@ -100,16 +100,20 @@ resource "meshstack_building_block_definition" "this" {
       ## 💡 Usage examples
 
       **Example 1: A chat assistant in a web application**
-      A team creates a tenant in the AI landing zone and reads the base URL and the virtual key from
-      the outputs. The team stores both in a Kubernetes secret and points the OpenAI client library
-      of the application at them.
+      A team creates a tenant in the AI landing zone. The platform writes the virtual key into a
+      Kubernetes Secret in the namespace of the project, and the team mounts that Secret and points
+      the OpenAI client library of the application at the base URL.
 
       **Example 2: Keeping an evaluation job inside a budget**
       A team runs a nightly job that grades model answers. The job uses the same virtual key, so its
       spend counts against the project budget and LiteLLM stops the calls before the budget is
       exceeded rather than after the invoice arrives.
 
-      ## 🔑 Calling the gateway
+      ## 🔑 Getting the virtual key
+
+      The virtual key is a bearer token, so this building block never shows it in meshPanel. The
+      platform delivers it as a Kubernetes Secret in the namespace of your project, and your workload
+      reads it from there.
 
       The `api_base` output already ends in `/v1`. Send the virtual key as a bearer token:
 
@@ -118,9 +122,6 @@ resource "meshstack_building_block_definition" "this" {
         -H "Authorization: Bearer $VIRTUAL_KEY"
       ```
 
-      LiteLLM returns the virtual key once, when the building block runs, and never shows it again.
-      Copy it into your own secret store.
-
       ## 📊 Shared Responsibility
 
       | Responsibility | Platform Team | Application Team |
@@ -128,7 +129,8 @@ resource "meshstack_building_block_definition" "this" {
       | Operate the LiteLLM gateway and the model backends behind it | ✅ | ❌ |
       | Set the budget, the budget period and the allowed models per landing zone | ✅ | ❌ |
       | Create the team and the virtual key when the tenant is created | ✅ | ❌ |
-      | Store the virtual key in the application's own secret store | ❌ | ✅ |
+      | Deliver the virtual key into the namespace of the project as a Kubernetes Secret | ✅ | ❌ |
+      | Mount the Secret into the workload and keep it out of source control | ❌ | ✅ |
       | Stay within the granted budget and the allowed models | ❌ | ✅ |
       | Build and operate the application that calls the gateway | ❌ | ✅ |
       EOT
@@ -238,12 +240,10 @@ resource "meshstack_building_block_definition" "this" {
         assignment_type = "NONE"
       }
 
-      virtual_key = {
-        display_name    = "Virtual Key"
-        description     = "The key the application sends as a bearer token. LiteLLM returns it only at creation."
-        type            = "STRING"
-        assignment_type = "NONE"
-      }
+      # The virtual key is deliberately not a building block output. `version_spec.outputs` has no
+      # `sensitive` block, unlike `version_spec.inputs`, so every building block output is stored
+      # and displayed in cleartext in meshPanel. The `buildingblock` module still returns the key as
+      # a Terraform output marked sensitive, which keeps it in state for a composing module to read.
 
       key_id = {
         display_name    = "Key ID"

@@ -5,10 +5,18 @@
 | Property | Value |
 |----------|-------|
 | **API Base URL** | `${api_base}` |
-| **Virtual Key** | `${virtual_key}` |
 | **Team ID** | `${team_id}` |
+| **Key Alias** | `${key_alias}` |
+| **Key ID** | `${key_id}` |
 | **Budget** | ${max_budget} per ${budget_duration} |
 | **Allowed models** | ${length(models) > 0 ? join(", ", models) : "set by the platform team on the gateway"} |
+
+## Where the virtual key is
+
+The virtual key is a bearer token, so it is not shown here. The platform writes it as a Kubernetes
+Secret into the namespace of this project, and your workload reads it from there. The key ID above
+is the SHA256 hash of the key, not the key itself. Use it to identify the key in the LiteLLM UI and
+in support requests.
 
 ## Calling the gateway
 
@@ -17,11 +25,10 @@ token in the `Authorization` header:
 
 ```sh
 curl "${api_base}/models" \
-  -H "Authorization: Bearer ${virtual_key}"
+  -H "Authorization: Bearer $VIRTUAL_KEY"
 ```
 
-Point an OpenAI client library at the base URL and pass the virtual key as the API key. LiteLLM
-returns the key once, when the building block runs, so store it in your own secret store.
+Point an OpenAI client library at the base URL and pass the virtual key as the API key.
 
 LiteLLM stops answering once the team reaches its budget for the current period, and the spend
 counter resets at the end of every period.
