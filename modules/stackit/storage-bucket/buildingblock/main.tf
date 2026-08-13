@@ -13,3 +13,26 @@ module "bucket" {
   bucket_name                 = var.bucket_name
   admin_credentials_group_urn = var.admin_credentials_group_urn
 }
+
+# The four resources used to live in this root, so every building block ordered before the move has
+# them in its state under the old address. Without these blocks the next run would destroy the
+# bucket and create a new one, taking every object with it.
+moved {
+  from = aws_s3_bucket.this
+  to   = module.bucket.aws_s3_bucket.this
+}
+
+moved {
+  from = aws_s3_bucket_policy.this
+  to   = module.bucket.aws_s3_bucket_policy.this
+}
+
+moved {
+  from = stackit_objectstorage_credentials_group.this
+  to   = module.bucket.stackit_objectstorage_credentials_group.this
+}
+
+moved {
+  from = stackit_objectstorage_credential.this
+  to   = module.bucket.stackit_objectstorage_credential.this
+}
