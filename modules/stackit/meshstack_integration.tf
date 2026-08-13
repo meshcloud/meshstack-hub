@@ -395,6 +395,20 @@ resource "meshstack_building_block_definition" "this" {
   }
 }
 
+# --- State address migrations (no resource recreation) ---
+# Both resources gained `for_each = local.project_variants` when the `networked` project variant was
+# added. The `default` key holds what the single, unkeyed resource used to hold. Without these moves
+# a deployed integration destroys the landing zone its tenants are assigned to, and the `STACKIT
+# Project` definition that every tenant project building block instantiates.
+moved {
+  from = meshstack_landingzone.stackit_default
+  to   = meshstack_landingzone.this["default"]
+}
+moved {
+  from = meshstack_building_block_definition.this
+  to   = meshstack_building_block_definition.this["default"]
+}
+
 terraform {
   required_version = ">= 1.12.0"
 

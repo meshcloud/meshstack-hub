@@ -36,6 +36,17 @@ resource "stackit_resourcemanager_project" "foundation" {
   parent_container_id = var.stackit_org
 }
 
+# --- State address migration (no resource recreation) ---
+# The sandbox landing zone called this project `backplane`. Unifying the sandbox and hub-and-spoke
+# architectures renamed it to `foundation`, because it now holds more than the backplane service
+# account. Without this move a deployed landing zone destroys the project, and with it the
+# project-creation service account that every tenant project names as its owner.
+# `name` carries no RequiresReplace, so the `-backplane` -> `-foundation` rename updates in place.
+moved {
+  from = stackit_resourcemanager_project.backplane
+  to   = stackit_resourcemanager_project.foundation
+}
+
 module "stackit_integration" {
   source = "github.com/meshcloud/meshstack-hub//modules/stackit?ref=${var.hub.git_ref}"
 
