@@ -39,9 +39,9 @@ spec:
                   number: 8080
 ```
 
-When the platform team runs a wildcard certificate for the cluster domain, that is all you need — the controller already serves a valid certificate for every hostname in the zone.
+When the platform team runs a wildcard certificate for the cluster domain, that is all you need — the controller already serves a valid certificate for every hostname in that domain.
 
-For a hostname outside that zone, ask cert-manager for its own certificate. Add the ClusterIssuer annotation and a `tls` section:
+For a hostname outside the cluster domain, ask cert-manager for its own certificate. Add the ClusterIssuer annotation and a `tls` section:
 
 ```yaml
 metadata:

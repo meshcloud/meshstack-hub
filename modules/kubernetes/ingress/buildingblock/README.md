@@ -28,7 +28,15 @@ This module renders the ClusterIssuer through a Helm chart that lives in the mod
 
 **HTTP-01, per hostname (default).** Leave `dns01` unset. cert-manager solves the ACME challenge over the ingress itself, so every hostname an application team asks for gets its own certificate. The hostname has to resolve to the load balancer before issuance can finish.
 
-**DNS-01, one wildcard for the whole zone.** Set `dns01` with a `zone_name` and exactly one provider. The module then creates a single `Certificate` for `*.<zone_name>` in `haproxy_namespace` and points HAProxy's `controller.defaultTLSSecret.secret` at the resulting secret. HAProxy serves that certificate for every host that brings none of its own, so a new application needs no certificate request at all. The certificate lives in the long-lived HAProxy namespace, so tearing an application namespace down never takes it with it. The HTTP-01 solver stays in place next to the DNS-01 one for hostnames outside the zone.
+**DNS-01, one wildcard certificate.** Set `dns01` with a `zone_name` and exactly one provider. The module then creates a single `Certificate` for `*.<zone_name>` in `haproxy_namespace` and points HAProxy's `controller.defaultTLSSecret.secret` at the resulting secret. HAProxy serves that certificate for every host that brings none of its own, so a new application needs no certificate request at all. The certificate lives in the long-lived HAProxy namespace, so tearing an application namespace down never takes it with it. The HTTP-01 solver stays in place next to the DNS-01 one for hostnames outside the zone.
+
+### The certificate may cover less than the zone
+
+`zone_name` is the zone the solver is authorised for, and `certificate_domain` is the domain the certificate covers. They are the same by default: a caller that sets no `certificate_domain` gets `*.<zone_name>`.
+
+Set `certificate_domain` to a name below the zone when several clusters share one zone. With the zone `likvid.stackit.run` and `certificate_domain = "cluster1.likvid.stackit.run"`, the module issues `*.cluster1.likvid.stackit.run`, while the ClusterIssuer keeps the zone itself in the `dnsZones` selector of the solver. That selector matches every name below the zone, so the solver still answers the challenge for the narrower certificate, and the credential it uses stays a zone-wide one. The `wildcard_certificate_domain` output reports the domain that was used.
+
+The module rejects a `certificate_domain` outside the zone, because the solver cannot answer for it.
 
 ### DNS-01 providers
 
@@ -143,6 +151,10 @@ module "ingress" {
 
   dns01 = {
     zone_name = "likvid.stackit.run"
+
+    # Optional. Without it the certificate covers `*.likvid.stackit.run`, the whole zone.
+    certificate_domain = "cluster1.likvid.stackit.run"
+
     stackit = {
       project_id          = var.stackit_project_id
       service_account_key = var.stackit_service_account_key
@@ -197,7 +209,7 @@ No modules.
 | <a name="input_cert_manager_version"></a> [cert\_manager\_version](#input\_cert\_manager\_version) | Version of the cert-manager Helm chart. See https://github.com/cert-manager/cert-manager/releases. | `string` | `"v1.20.0"` | no |
 | <a name="input_cert_manager_webhook_resources"></a> [cert\_manager\_webhook\_resources](#input\_cert\_manager\_webhook\_resources) | Resource requests and limits of the cert-manager admission webhook. The default is sized for a<br/>demonstration cluster and a production consumer has to raise it.<br/><br/>The webhook validates cert-manager objects and holds no cache, so it is the smallest of the<br/>three cert-manager pods. Every apply that touches a Certificate or an Issuer goes through it,<br/>so keep the limit above the request. A production cluster wants `100m` CPU and `256Mi` memory. | <pre>object({<br/>    requests = optional(object({ cpu = optional(string), memory = optional(string) }), {})<br/>    limits   = optional(object({ cpu = optional(string), memory = optional(string) }), {})<br/>  })</pre> | <pre>{<br/>  "limits": {<br/>    "cpu": "100m",<br/>    "memory": "128Mi"<br/>  },<br/>  "requests": {<br/>    "cpu": "10m",<br/>    "memory": "32Mi"<br/>  }<br/>}</pre> | no |
 | <a name="input_cluster_issuer_name"></a> [cluster\_issuer\_name](#input\_cluster\_issuer\_name) | Name of the ClusterIssuer. Application teams reference it from the cert-manager.io/cluster-issuer annotation on their Ingress. | `string` | `"letsencrypt-prod"` | no |
-| <a name="input_dns01"></a> [dns01](#input\_dns01) | Enables a wildcard certificate for zone\_name via DNS-01. Set exactly one provider. Null keeps HTTP-01 per-hostname issuance. | <pre>object({<br/>    zone_name = string<br/>    stackit   = optional(object({ project_id = string, service_account_key = string }))<br/>    route53   = optional(object({ hosted_zone_id = string, access_key_id = string, secret_access_key = string, region = optional(string, "eu-central-1") }))<br/>  })</pre> | `null` | no |
+| <a name="input_dns01"></a> [dns01](#input\_dns01) | Enables a wildcard certificate via DNS-01. Set exactly one provider. Null keeps HTTP-01<br/>per-hostname issuance.<br/><br/>`zone_name` is the DNS zone the solver is authorised for, and the ClusterIssuer selects the<br/>solver for every name inside it. `certificate_domain` is the domain the wildcard certificate<br/>covers and defaults to `zone_name`, which gives `*.<zone_name>`. Set it to a name below the<br/>zone, for example `cluster1.likvid.stackit.run` inside the zone `likvid.stackit.run`, to narrow<br/>the certificate to that label while the solver keeps answering for the whole zone. | <pre>object({<br/>    zone_name          = string<br/>    certificate_domain = optional(string)<br/>    stackit            = optional(object({ project_id = string, service_account_key = string }))<br/>    route53            = optional(object({ hosted_zone_id = string, access_key_id = string, secret_access_key = string, region = optional(string, "eu-central-1") }))<br/>  })</pre> | `null` | no |
 | <a name="input_haproxy_crdjob_resources"></a> [haproxy\_crdjob\_resources](#input\_haproxy\_crdjob\_resources) | Resource requests and limits of the Job the HAProxy chart runs to install its CRDs. The default<br/>is sized for a demonstration cluster and a production consumer has to raise it.<br/><br/>The chart requests `250m` CPU and `400Mi` memory for this Job. The Job applies a handful of<br/>CRDs and exits, so a much smaller request is enough, and a smaller request also means the Job<br/>still schedules on a small node. | <pre>object({<br/>    requests = optional(object({ cpu = optional(string), memory = optional(string) }), {})<br/>    limits   = optional(object({ cpu = optional(string), memory = optional(string) }), {})<br/>  })</pre> | <pre>{<br/>  "limits": {<br/>    "cpu": "200m",<br/>    "memory": "256Mi"<br/>  },<br/>  "requests": {<br/>    "cpu": "50m",<br/>    "memory": "64Mi"<br/>  }<br/>}</pre> | no |
 | <a name="input_haproxy_namespace"></a> [haproxy\_namespace](#input\_haproxy\_namespace) | Namespace for the HAProxy ingress controller. The wildcard certificate is created here as well, so its secret survives the teardown of any application namespace. | `string` | `"haproxy-ingress"` | no |
 | <a name="input_haproxy_release_name"></a> [haproxy\_release\_name](#input\_haproxy\_release\_name) | Helm release name of the HAProxy ingress controller. The chart names the controller Service '<release>-kubernetes-ingress'. | `string` | `"haproxy"` | no |
@@ -220,5 +232,6 @@ No modules.
 | <a name="output_haproxy_lb_ip"></a> [haproxy\_lb\_ip](#output\_haproxy\_lb\_ip) | External IP of the HAProxy LoadBalancer service. Point your DNS A record here before TLS provisioning can complete. |
 | <a name="output_haproxy_namespace"></a> [haproxy\_namespace](#output\_haproxy\_namespace) | Namespace of the HAProxy ingress controller and of the wildcard certificate secret. |
 | <a name="output_ingress_class_name"></a> [ingress\_class\_name](#output\_ingress\_class\_name) | Name of the IngressClass an application puts on its Ingress to be served by this controller. |
+| <a name="output_wildcard_certificate_domain"></a> [wildcard\_certificate\_domain](#output\_wildcard\_certificate\_domain) | Domain the wildcard certificate covers, so the certificate is issued for `*.<domain>`. Equals dns01.zone\_name when the caller set no dns01.certificate\_domain. Null when dns01 is not set. |
 | <a name="output_wildcard_certificate_secret_name"></a> [wildcard\_certificate\_secret\_name](#output\_wildcard\_certificate\_secret\_name) | Name of the secret in haproxy\_namespace holding the wildcard certificate. Null when dns01 is not set. |
 <!-- END_TF_DOCS -->

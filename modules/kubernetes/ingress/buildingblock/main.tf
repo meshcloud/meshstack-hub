@@ -8,6 +8,14 @@ locals {
   dns01_route53_enabled = local.dns01_enabled ? try(nonsensitive(var.dns01.route53 != null), var.dns01.route53 != null) : false
   dns01_zone_name       = local.dns01_enabled ? try(nonsensitive(var.dns01.zone_name), var.dns01.zone_name) : null
 
+  # The solver answers for the whole zone, while the certificate may cover a narrower domain
+  # inside it. A caller that sets no certificate_domain gets the zone itself, which is the
+  # wildcard `*.<zone_name>`.
+  dns01_certificate_domain = local.dns01_enabled ? coalesce(
+    try(nonsensitive(var.dns01.certificate_domain), var.dns01.certificate_domain),
+    local.dns01_zone_name
+  ) : null
+
   # The chart derives the controller Service name from the release name.
   haproxy_service_name = "${var.haproxy_release_name}-kubernetes-ingress"
 
@@ -170,6 +178,7 @@ resource "helm_release" "issuer" {
       }
       wildcardCertificate = {
         enabled    = local.dns01_enabled
+        domain     = local.dns01_certificate_domain
         name       = var.wildcard_certificate_name
         namespace  = kubernetes_namespace_v1.haproxy_ingress.metadata[0].name
         secretName = var.wildcard_certificate_name

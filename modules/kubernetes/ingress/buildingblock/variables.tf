@@ -272,11 +272,21 @@ variable "stackit_webhook_resources" {
 }
 
 variable "dns01" {
-  description = "Enables a wildcard certificate for zone_name via DNS-01. Set exactly one provider. Null keeps HTTP-01 per-hostname issuance."
+  description = <<-EOT
+  Enables a wildcard certificate via DNS-01. Set exactly one provider. Null keeps HTTP-01
+  per-hostname issuance.
+
+  `zone_name` is the DNS zone the solver is authorised for, and the ClusterIssuer selects the
+  solver for every name inside it. `certificate_domain` is the domain the wildcard certificate
+  covers and defaults to `zone_name`, which gives `*.<zone_name>`. Set it to a name below the
+  zone, for example `cluster1.likvid.stackit.run` inside the zone `likvid.stackit.run`, to narrow
+  the certificate to that label while the solver keeps answering for the whole zone.
+  EOT
   type = object({
-    zone_name = string
-    stackit   = optional(object({ project_id = string, service_account_key = string }))
-    route53   = optional(object({ hosted_zone_id = string, access_key_id = string, secret_access_key = string, region = optional(string, "eu-central-1") }))
+    zone_name          = string
+    certificate_domain = optional(string)
+    stackit            = optional(object({ project_id = string, service_account_key = string }))
+    route53            = optional(object({ hosted_zone_id = string, access_key_id = string, secret_access_key = string, region = optional(string, "eu-central-1") }))
   })
   default   = null
   sensitive = true
@@ -286,5 +296,12 @@ variable "dns01" {
       (try(var.dns01.stackit, null) == null ? 0 : 1) + (try(var.dns01.route53, null) == null ? 0 : 1) == 1
     )
     error_message = "Set exactly one DNS-01 provider in var.dns01: either stackit or route53."
+  }
+
+  # The message carries no interpolation, because var.dns01 is sensitive and Terraform refuses to
+  # print a sensitive value in an error message.
+  validation {
+    condition     = var.dns01 == null || try(var.dns01.certificate_domain, null) == null || endswith(var.dns01.certificate_domain, var.dns01.zone_name)
+    error_message = "dns01.certificate_domain must be dns01.zone_name or a name below it, because the DNS-01 solver only answers for names inside the zone."
   }
 }
