@@ -2,7 +2,7 @@ variable "stackit_service_account_email" {
   type        = string
   nullable    = false
   default     = ""
-  description = "Email of the STACKIT service account the building block authenticates as through workload identity federation. It needs `ske.admin` on the organization, because the target project of an order is unknown when the building block definition is registered."
+  description = "Email of the STACKIT service account the building block authenticates as through workload identity federation. It needs `ske.admin` on the folder the tenant projects live in, because the target project of an order is unknown when the building block definition is registered, and STACKIT does not offer `ske.admin` at organization scope. It also needs `dns.admin` on the project that owns the shared DNS zone."
 }
 
 variable "stackit_region" {
@@ -16,7 +16,21 @@ variable "stackit_dns_parent_zone_name" {
   type        = string
   nullable    = false
   default     = ""
-  description = "Parent DNS zone the landing zone owns, for example `likvid.stackit.run`. Each ordered cluster gets a delegated subzone `<cluster name>.<parent zone>` under it. Leave empty to run without DNS, in which case cert-manager issues per-hostname certificates over HTTP-01."
+  description = "DNS zone the platform team owns and every ordered cluster shares, for example `likvid.stackit.run`. Each cluster writes the record set `*.<cluster name>` into it and creates no zone of its own. Leave empty to run without DNS, in which case cert-manager issues per-hostname certificates over HTTP-01."
+}
+
+variable "stackit_dns_zone_project_id" {
+  type        = string
+  nullable    = false
+  default     = ""
+  description = "STACKIT project UUID that owns `stackit_dns_parent_zone_name`, which is usually the platform team's own project. Leave empty when the zone lives in the tenant's own STACKIT project, because the cluster then defaults to the project it is created in."
+}
+
+variable "stackit_dns_cluster_label_enabled" {
+  type        = bool
+  nullable    = false
+  default     = true
+  description = "Give each cluster its own label inside the shared zone, so its hostnames are `<app>.<cluster name>.<parent zone>`. Set it to false to put the cluster's wildcard at the zone apex instead, which gives the flat hostnames `<app>.<parent zone>`. Only one cluster per zone can hold the apex."
 }
 
 variable "stackit_dns_service_account_key" {
@@ -24,7 +38,7 @@ variable "stackit_dns_service_account_key" {
   nullable    = false
   default     = ""
   sensitive   = true
-  description = "STACKIT service account key JSON, scoped to the tenant's own STACKIT project, that the cert-manager DNS-01 solver authenticates with. Required for the wildcard certificate."
+  description = "STACKIT service account key JSON that the cert-manager DNS-01 solver authenticates with. It needs `dns.admin` on the project that owns the shared zone, and it can write every record in that zone. Required for the wildcard certificate."
 }
 
 variable "location_identifier" {
@@ -114,8 +128,8 @@ resource "meshstack_building_block_definition" "this" {
     in meshStack with a development and a production namespace landing zone.
 
     An application that runs in one of those namespaces reaches the internet over a hostname in the
-    cluster's own DNS subzone, and the certificate for that hostname already exists. You do not
-    request a certificate, and you do not create a DNS record.
+    cluster's own domain, and the certificate for that hostname already exists. You do not request
+    a certificate, and you do not create a DNS record.
 
     ## 🎯 When to use it
 
@@ -139,17 +153,18 @@ resource "meshstack_building_block_definition" "this" {
 
     ## 🌐 Hostnames and certificates
 
-    The cluster receives a delegated DNS subzone named after it, for example
-    `team-a.likvid.stackit.run`. The SKE managed ExternalDNS extension writes the records, and
-    cert-manager holds one wildcard certificate for the whole subzone. Adding an Ingress with a
-    hostname under that subzone is all an application needs.
+    The platform team owns one DNS zone that every cluster shares, and each cluster gets its own
+    label inside it, named after the cluster. Your applications live under
+    `<app>.team-a.likvid.stackit.run`, one record set points that whole label at your ingress load
+    balancer, and cert-manager holds one wildcard certificate for it. Adding an Ingress with a
+    hostname under the cluster's domain is all an application needs.
 
     ## 📊 Shared Responsibility
 
     | Responsibility | Platform Team | Application Team |
     |---|:---:|:---:|
     | Provide the STACKIT identity the building block runs as | ✅ | ❌ |
-    | Own the parent DNS zone and delegate a subzone per cluster | ✅ | ❌ |
+    | Own the shared DNS zone and the key its records are written with | ✅ | ❌ |
     | Register and maintain this building block definition | ✅ | ❌ |
     | Choose the cluster name and the ingress exposure | ❌ | ✅ |
     | Order namespaces on the resulting Kubernetes platform | ❌ | ✅ |
@@ -240,7 +255,7 @@ resource "meshstack_building_block_definition" "this" {
 
       cluster_name = {
         display_name                   = "Cluster Name"
-        description                    = "Name of the cluster. It also names the meshStack platform and the cluster's DNS subzone. STACKIT limits SKE cluster names to 11 characters."
+        description                    = "Name of the cluster. It also names the meshStack platform and the cluster's label in the shared DNS zone. STACKIT limits SKE cluster names to 11 characters."
         type                           = "STRING"
         assignment_type                = "USER_INPUT"
         value_validation_regex         = "^[a-z0-9]([a-z0-9-]{0,9}[a-z0-9])?$"
@@ -313,15 +328,34 @@ resource "meshstack_building_block_definition" "this" {
 
       dns_parent_zone_name = {
         display_name    = "DNS Parent Zone"
-        description     = "Parent zone the landing zone owns. Each cluster gets a delegated subzone under it. Leave empty to run without DNS."
+        description     = "Zone the platform team owns and every cluster shares. Each cluster writes the record set `*.<cluster name>` into it. Leave empty to run without DNS."
         type            = "STRING"
         assignment_type = "STATIC"
         argument        = jsonencode(var.stackit_dns_parent_zone_name)
       }
 
+      # The shared zone lives in the platform team's project, not in the tenant's own project the
+      # cluster is created in. Without this input the cluster looks the zone up in its own project
+      # and finds nothing.
+      dns_zone_project_id = {
+        display_name    = "DNS Zone Project ID"
+        description     = "STACKIT project that owns the shared DNS zone. Leave empty when the zone lives in the tenant's own project."
+        type            = "STRING"
+        assignment_type = "STATIC"
+        argument        = jsonencode(var.stackit_dns_zone_project_id)
+      }
+
+      dns_cluster_label_enabled = {
+        display_name    = "DNS Label per Cluster"
+        description     = "Give each cluster its own label inside the shared zone, so its hostnames are `<app>.<cluster name>.<parent zone>`. Turn it off to put the cluster's wildcard at the zone apex, which only one cluster per zone can hold."
+        type            = "BOOLEAN"
+        assignment_type = "STATIC"
+        argument        = jsonencode(var.stackit_dns_cluster_label_enabled)
+      }
+
       dns_service_account_key = {
         display_name    = "DNS Service Account Key"
-        description     = "STACKIT service account key JSON the cert-manager DNS-01 solver authenticates with, scoped to the tenant's own project."
+        description     = "STACKIT service account key JSON the cert-manager DNS-01 solver authenticates with. It needs `dns.admin` on the project that owns the shared zone."
         type            = "STRING"
         assignment_type = "STATIC"
         sensitive = {

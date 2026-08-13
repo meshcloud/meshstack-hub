@@ -29,9 +29,9 @@ module "platform" {
   platform_description  = "Provides a Kubernetes namespace on the STACKIT Kubernetes Engine cluster ${var.cluster_name}, with a shared HTTPS ingress."
 }
 
-# cert-manager, the HAProxy ingress controller and the Let's Encrypt ClusterIssuer. With a
-# delegated DNS subzone the module also issues one wildcard certificate for that subzone, which
-# HAProxy serves for every application hostname.
+# cert-manager, the HAProxy ingress controller and the Let's Encrypt ClusterIssuer. With DNS on,
+# the module also issues one wildcard certificate for the cluster's own domain inside the shared
+# zone, which HAProxy serves for every application hostname.
 module "ingress" {
   count  = var.expose == "none" ? 0 : 1
   source = "github.com/meshcloud/meshstack-hub//modules/kubernetes/ingress/buildingblock?ref=${var.hub.git_ref}"
