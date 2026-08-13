@@ -193,6 +193,38 @@ run "creates_only_the_database_and_the_user" {
   }
 }
 
+# The submodule is the entry point a composition sources when it creates one database per tenant
+# with for_each. It has to work on its own, with the provider configured by the caller — here the
+# mock above — rather than by a provider block of its own.
+run "the_submodule_works_without_a_provider_block_of_its_own" {
+  command = plan
+
+  module {
+    source = "./database"
+  }
+
+  variables {
+    project_id     = "aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee"
+    stackit_region = "eu01"
+
+    existing_instance_id = "3f2504e0-4f89-11d3-9a0c-0305e82c3301"
+
+    database_name       = "langfuse_acme"
+    database_username   = "langfuse_acme"
+    database_user_roles = ["login"]
+  }
+
+  assert {
+    condition     = output.connection_string == "postgresql://langfuse_acme:pa%2Fss%2Bwo%3Frd@shared.postgresflex.eu01.onstackit.cloud:5432/langfuse_acme?sslmode=require"
+    error_message = "the submodule must assemble the same connection string as the root"
+  }
+
+  assert {
+    condition     = output.instance_id == "3f2504e0-4f89-11d3-9a0c-0305e82c3301"
+    error_message = "the submodule must report the shared instance it created the database in"
+  }
+}
+
 run "rejects_an_empty_existing_instance_id" {
   command = plan
 

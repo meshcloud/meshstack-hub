@@ -17,6 +17,41 @@ The module is used in two ways. A reference architecture sources it directly as 
 which keeps STACKIT resources out of the architecture itself. An application team orders it as a
 building block through meshStack, wired up by the `meshstack_integration.tf` at the module root.
 
+## Two entry points, and they differ only in who configures the provider
+
+`buildingblock/` is the root meshStack runs when an application team orders the building block. It
+configures the `stackit` provider and calls `buildingblock/database` once.
+
+`buildingblock/database` holds the instance, the database and the owner user, and declares no
+provider configuration. A composition that creates one database per tenant sources this module. It
+cannot source `buildingblock/`, because a module that carries its own provider configuration is a
+legacy module and OpenTofu rejects `count`, `for_each` and `depends_on` on every call to it.
+
+```hcl
+provider "stackit" {
+  default_region        = "eu01"
+  service_account_email = var.stackit_service_account_email
+  use_oidc              = true
+}
+
+module "tenant_database" {
+  for_each = var.tenants
+  source   = "github.com/meshcloud/meshstack-hub//modules/stackit/postgresflex/buildingblock/database?ref=main"
+
+  project_id           = var.stackit_project_id
+  existing_instance_id = var.shared_instance_id
+
+  database_name       = "langfuse_${each.key}"
+  database_username   = "langfuse_${each.key}"
+  database_user_roles = ["login"]
+}
+```
+
+Both entry points take the same inputs, apart from `service_account_email`, which only the root
+needs for its provider. They return the same outputs, and the root passes every one of them
+through. Building blocks ordered before the resources moved into the submodule keep their instance:
+three `moved` blocks in the root carry every address across.
+
 ## Two modes: a whole instance, or a database inside one
 
 `existing_instance_id` selects the mode, and exactly one of it and `instance_name` must be set.
@@ -46,10 +81,8 @@ module "tenant_database" {
 ```
 
 One call creates one database and one user, so a caller that serves several tenants at once calls
-the module once per tenant. It cannot do that with `for_each`: `buildingblock/` carries its own
-`provider.tf`, which makes it a legacy module, and OpenTofu rejects `count`, `for_each` and
-`depends_on` on every call to such a module. A building block that meshStack runs once per tenant is
-unaffected, and so is an IaC runtime that replaces `provider.tf` with a generated one.
+the module once per tenant. Source `buildingblock/database` for that and drive it with `for_each`,
+as the section above shows.
 
 Database-only mode skips the instance resource, so every input describing the instance shape has no
 effect: `instance_name`, `flavor_cpu`, `flavor_ram`, `replicas`, `storage_class`, `storage_size`,
@@ -131,6 +164,11 @@ connections, 40 pods take 1320, and the number changes silently when a pod is re
 larger node. Unpinned, the platform runs out of connections at five tenants; pinned at 5, it reaches
 several dozen.
 
+Both consumers pin the value themselves. `modules/ai/langfuse` appends `connection_limit` from
+`postgres_connection_limit`, which defaults to 5, and gives the migration connection a limit of its
+own. `modules/ai/litellm` writes the same parameter from `postgres_connection_limit`, which defaults
+to 10 there because the gateway is deployed once for the whole platform rather than once per tenant.
+
 Put a PgBouncer in transaction mode in front of the instance when the sum above passes 90 % of the
 usable column, when you cannot guarantee that every pod pins its pool, or when the only reason to
 move to 16/128 would be the connection count. A pooler that collapses 800 mostly idle client
@@ -211,18 +249,13 @@ between 32 and 90.
 
 ## Modules
 
-No modules.
+| Name | Source | Version |
+|------|--------|---------|
+| <a name="module_database"></a> [database](#module\_database) | ./database | n/a |
 
 ## Resources
 
-| Name | Type |
-|------|------|
-| [stackit_postgresflex_database.this](https://registry.terraform.io/providers/stackitcloud/stackit/latest/docs/resources/postgresflex_database) | resource |
-| [stackit_postgresflex_instance.this](https://registry.terraform.io/providers/stackitcloud/stackit/latest/docs/resources/postgresflex_instance) | resource |
-| [stackit_postgresflex_user.this](https://registry.terraform.io/providers/stackitcloud/stackit/latest/docs/resources/postgresflex_user) | resource |
-| [stackit_postgresflex_flavors.available](https://registry.terraform.io/providers/stackitcloud/stackit/latest/docs/data-sources/postgresflex_flavors) | data source |
-| [stackit_postgresflex_instance.existing](https://registry.terraform.io/providers/stackitcloud/stackit/latest/docs/data-sources/postgresflex_instance) | data source |
-| [stackit_public_ip_ranges.stackit](https://registry.terraform.io/providers/stackitcloud/stackit/latest/docs/data-sources/public_ip_ranges) | data source |
+No resources.
 
 ## Inputs
 
