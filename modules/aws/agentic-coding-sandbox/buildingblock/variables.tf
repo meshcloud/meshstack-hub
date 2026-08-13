@@ -8,13 +8,11 @@ YAML configuration for landing zone and building blocks. Expected structure:
 ```yaml
 landing_zone:
   landing_zone_identifier: "my-landing-zone"
-  platform_identifier: "my-platform"
+  platform_identifier: "my-platform.my-location" # full platform identifier, <platform-name>.<location-name>
 budget_alert_building_block:
-  definition_uuid: "uuid-here"
-  definition_version: 1
+  definition_version_uuid: "uuid-here" # uuid of the building block definition *version* to provision
 enable_eu_south_2_region_building_block:
-  definition_uuid: "uuid-here"
-  definition_version: 1
+  definition_version_uuid: "uuid-here"
 project:
   default_tags:
     environment: "sandbox"
@@ -39,23 +37,13 @@ EOF
   }
 
   validation {
-    condition     = can(yamldecode(var.composition_config_yaml).budget_alert_building_block.definition_uuid) && yamldecode(var.composition_config_yaml).budget_alert_building_block.definition_uuid != null
-    error_message = "budget_alert_building_block.definition_uuid is required in composition_config_yaml"
+    condition     = can(yamldecode(var.composition_config_yaml).budget_alert_building_block.definition_version_uuid) && yamldecode(var.composition_config_yaml).budget_alert_building_block.definition_version_uuid != null
+    error_message = "budget_alert_building_block.definition_version_uuid is required in composition_config_yaml"
   }
 
   validation {
-    condition     = can(yamldecode(var.composition_config_yaml).budget_alert_building_block.definition_version) && yamldecode(var.composition_config_yaml).budget_alert_building_block.definition_version != null
-    error_message = "budget_alert_building_block.definition_version is required in composition_config_yaml"
-  }
-
-  validation {
-    condition     = can(yamldecode(var.composition_config_yaml).enable_eu_south_2_region_building_block.definition_uuid) && yamldecode(var.composition_config_yaml).enable_eu_south_2_region_building_block.definition_uuid != null
-    error_message = "enable_eu_south_2_region_building_block.definition_uuid is required in composition_config_yaml"
-  }
-
-  validation {
-    condition     = can(yamldecode(var.composition_config_yaml).enable_eu_south_2_region_building_block.definition_version) && yamldecode(var.composition_config_yaml).enable_eu_south_2_region_building_block.definition_version != null
-    error_message = "enable_eu_south_2_region_building_block.definition_version is required in composition_config_yaml"
+    condition     = can(yamldecode(var.composition_config_yaml).enable_eu_south_2_region_building_block.definition_version_uuid) && yamldecode(var.composition_config_yaml).enable_eu_south_2_region_building_block.definition_version_uuid != null
+    error_message = "enable_eu_south_2_region_building_block.definition_version_uuid is required in composition_config_yaml"
   }
 }
 
