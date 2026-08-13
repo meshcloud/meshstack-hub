@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN"
  "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
-<svg width="1077pt" height="442pt"
- viewBox="0.00 0.00 1077.00 442.00" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
-<g id="graph0" class="graph" transform="scale(1 1) rotate(0) translate(4 438.12)">
+<svg width="1097pt" height="448pt"
+ viewBox="0.00 0.00 1097.00 448.00" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+<g id="graph0" class="graph" transform="scale(1 1) rotate(0) translate(4 444.36)">
 <title>ai_platform</title>
-<polygon fill="white" stroke="none" points="-4,4 -4,-438.12 1073,-438.12 1073,4 -4,4"/>
+<polygon fill="white" stroke="none" points="-4,4 -4,-444.36 1093,-444.36 1093,4 -4,4"/>
 <g id="clust1" class="cluster">
 <title>cluster_stackit</title>
 <path fill="white" stroke="#d5dae0" d="M20,-8C20,-8 680,-8 680,-8 686,-8 692,-14 692,-20 692,-20 692,-317.12 692,-317.12 692,-323.12 686,-329.12 680,-329.12 680,-329.12 20,-329.12 20,-329.12 14,-329.12 8,-323.12 8,-317.12 8,-317.12 8,-20 8,-20 8,-14 14,-8 20,-8"/>
@@ -14,18 +14,18 @@
 <g id="clust2" class="cluster">
 <title>cluster_stack</title>
 <path fill="white" stroke="#d5dae0" d="M38,-26C38,-26 470,-26 470,-26 476,-26 482,-32 482,-38 482,-38 482,-208.68 482,-208.68 482,-214.68 476,-220.68 470,-220.68 470,-220.68 38,-220.68 38,-220.68 32,-220.68 26,-214.68 26,-208.68 26,-208.68 26,-38 26,-38 26,-32 32,-26 38,-26"/>
-<text xml:space="preserve" text-anchor="middle" x="112.87" y="-206.78" font-family="Helvetica,sans-Serif" font-size="11.00" fill="#697180"> &#160;AI Platform · deployed on SKE</text>
+<text xml:space="preserve" text-anchor="middle" x="167.89" y="-206.78" font-family="Helvetica,sans-Serif" font-size="11.00" fill="#697180"> &#160;AI Platform · in a namespace from stackit&#45;kubernetes</text>
 </g>
 <g id="clust4" class="cluster">
 <title>cluster_mesh</title>
-<path fill="white" stroke="#d5dae0" d="M712,-125.24C712,-125.24 1049,-125.24 1049,-125.24 1055,-125.24 1061,-131.24 1061,-137.24 1061,-137.24 1061,-414.12 1061,-414.12 1061,-420.12 1055,-426.12 1049,-426.12 1049,-426.12 712,-426.12 712,-426.12 706,-426.12 700,-420.12 700,-414.12 700,-414.12 700,-137.24 700,-137.24 700,-131.24 706,-125.24 712,-125.24"/>
-<text xml:space="preserve" text-anchor="middle" x="824.39" y="-411.32" font-family="Helvetica,sans-Serif" font-size="12.00" fill="#697180"> &#160;meshStack — self&#45;service and governance</text>
+<path fill="white" stroke="#d5dae0" d="M712,-125.24C712,-125.24 1069,-125.24 1069,-125.24 1075,-125.24 1081,-131.24 1081,-137.24 1081,-137.24 1081,-420.36 1081,-420.36 1081,-426.36 1075,-432.36 1069,-432.36 1069,-432.36 712,-432.36 712,-432.36 706,-432.36 700,-426.36 700,-420.36 700,-420.36 700,-137.24 700,-137.24 700,-131.24 706,-125.24 712,-125.24"/>
+<text xml:space="preserve" text-anchor="middle" x="824.39" y="-417.56" font-family="Helvetica,sans-Serif" font-size="12.00" fill="#697180"> &#160;meshStack — self&#45;service and governance</text>
 </g>
 <!-- USER -->
 <g id="node1" class="node">
 <title>USER</title>
-<path fill="#ffffff" stroke="#a2abb8" stroke-width="1.1" d="M201.7,-385.72C201.7,-385.72 100.3,-385.72 100.3,-385.72 94.3,-385.72 88.3,-379.72 88.3,-373.72 88.3,-373.72 88.3,-361.72 88.3,-361.72 88.3,-355.72 94.3,-349.72 100.3,-349.72 100.3,-349.72 201.7,-349.72 201.7,-349.72 207.7,-349.72 213.7,-355.72 213.7,-361.72 213.7,-361.72 213.7,-373.72 213.7,-373.72 213.7,-379.72 207.7,-385.72 201.7,-385.72"/>
-<text xml:space="preserve" text-anchor="middle" x="151" y="-364.42" font-family="Helvetica,sans-Serif" font-size="11.00">👤 Application team</text>
+<path fill="#ffffff" stroke="#a2abb8" stroke-width="1.1" d="M201.7,-388.84C201.7,-388.84 100.3,-388.84 100.3,-388.84 94.3,-388.84 88.3,-382.84 88.3,-376.84 88.3,-376.84 88.3,-364.84 88.3,-364.84 88.3,-358.84 94.3,-352.84 100.3,-352.84 100.3,-352.84 201.7,-352.84 201.7,-352.84 207.7,-352.84 213.7,-358.84 213.7,-364.84 213.7,-364.84 213.7,-376.84 213.7,-376.84 213.7,-382.84 207.7,-388.84 201.7,-388.84"/>
+<text xml:space="preserve" text-anchor="middle" x="151" y="-367.54" font-family="Helvetica,sans-Serif" font-size="11.00">👤 Application team</text>
 </g>
 <!-- APPS -->
 <g id="node5" class="node">
@@ -37,9 +37,9 @@
 <!-- USER&#45;&gt;APPS -->
 <g id="edge10" class="edge">
 <title>USER&#45;&gt;APPS</title>
-<path fill="none" stroke="#8b95a3" d="M151,-349.36C151,-349.36 151,-297.49 151,-297.49"/>
-<polygon fill="#8b95a3" stroke="#8b95a3" points="153.45,-297.49 151,-290.49 148.55,-297.49 153.45,-297.49"/>
-<text xml:space="preserve" text-anchor="middle" x="119.73" y="-326.12" font-family="Helvetica,sans-Serif" font-size="9.00" fill="#697180">builds and uses</text>
+<path fill="none" stroke="#8b95a3" d="M151,-352.38C151,-352.38 151,-297.62 151,-297.62"/>
+<polygon fill="#8b95a3" stroke="#8b95a3" points="153.45,-297.62 151,-290.62 148.55,-297.62 153.45,-297.62"/>
+<text xml:space="preserve" text-anchor="middle" x="119.73" y="-327.7" font-family="Helvetica,sans-Serif" font-size="9.00" fill="#697180">builds and uses</text>
 </g>
 <!-- LITELLM -->
 <g id="node2" class="node">
@@ -59,9 +59,9 @@
 <!-- LITELLM&#45;&gt;LANGFUSE -->
 <g id="edge2" class="edge">
 <title>LITELLM&#45;&gt;LANGFUSE</title>
-<path fill="none" stroke="#8b95a3" stroke-dasharray="5,2" d="M262.52,-157C262.52,-157 292.82,-157 292.82,-157"/>
-<polygon fill="#8b95a3" stroke="#8b95a3" points="292.82,-159.45 299.82,-157 292.82,-154.55 292.82,-159.45"/>
-<text xml:space="preserve" text-anchor="middle" x="277.67" y="-148.9" font-family="Helvetica,sans-Serif" font-size="9.00" fill="#697180">traces every call</text>
+<path fill="none" stroke="#8b95a3" stroke-dasharray="5,2" d="M262.52,-154C262.52,-154 292.82,-154 292.82,-154"/>
+<polygon fill="#8b95a3" stroke="#8b95a3" points="292.82,-156.45 299.82,-154 292.82,-151.55 292.82,-156.45"/>
+<text xml:space="preserve" text-anchor="middle" x="277.67" y="-145.9" font-family="Helvetica,sans-Serif" font-size="9.00" fill="#697180">traces every call</text>
 </g>
 <!-- VLLM -->
 <g id="node4" class="node">
@@ -91,6 +91,20 @@
 <polygon fill="#8b95a3" stroke="#8b95a3" points="487.49,-63.45 494.49,-61 487.49,-58.55 487.49,-63.45"/>
 <text xml:space="preserve" text-anchor="middle" x="290.31" y="-63.7" font-family="Helvetica,sans-Serif" font-size="9.00" fill="#697180">routes inference to</text>
 </g>
+<!-- PLAT -->
+<g id="node7" class="node">
+<title>PLAT</title>
+<path fill="#ecedfb" stroke="#9aa2e6" stroke-width="1.1" d="M849.2,-391.96C849.2,-391.96 736.8,-391.96 736.8,-391.96 730.8,-391.96 724.8,-385.96 724.8,-379.96 724.8,-379.96 724.8,-361.72 724.8,-361.72 724.8,-355.72 730.8,-349.72 736.8,-349.72 736.8,-349.72 849.2,-349.72 849.2,-349.72 855.2,-349.72 861.2,-355.72 861.2,-361.72 861.2,-361.72 861.2,-379.96 861.2,-379.96 861.2,-385.96 855.2,-391.96 849.2,-391.96"/>
+<text xml:space="preserve" text-anchor="middle" x="793" y="-374.14" font-family="Helvetica,sans-Serif" font-size="11.00">🛰️ LiteLLM Platform</text>
+<text xml:space="preserve" text-anchor="middle" x="793" y="-360.94" font-family="Helvetica,sans-Serif" font-size="11.00">custom platform type</text>
+</g>
+<!-- LITELLM&#45;&gt;PLAT -->
+<g id="edge11" class="edge">
+<title>LITELLM&#45;&gt;PLAT</title>
+<path fill="none" stroke="#8b95a3" stroke-dasharray="1,5" d="M262.57,-175C277.63,-175 288.02,-175 288.02,-175 288.02,-175 288.02,-371 288.02,-371 288.02,-371 715.86,-371 715.86,-371"/>
+<polygon fill="#8b95a3" stroke="#8b95a3" points="715.86,-373.45 722.86,-371 715.86,-368.55 715.86,-373.45"/>
+<text xml:space="preserve" text-anchor="middle" x="365.2" y="-373.7" font-family="Helvetica,sans-Serif" font-size="9.00" fill="#697180">registered as</text>
+</g>
 <!-- PROJ -->
 <g id="node10" class="node">
 <title>PROJ</title>
@@ -99,7 +113,7 @@
 <text xml:space="preserve" text-anchor="middle" x="801" y="-154.46" font-family="Helvetica,sans-Serif" font-size="11.00">carries budget and cost tags</text>
 </g>
 <!-- LANGFUSE&#45;&gt;PROJ -->
-<g id="edge13" class="edge">
+<g id="edge14" class="edge">
 <title>LANGFUSE&#45;&gt;PROJ</title>
 <path fill="none" stroke="#8b95a3" stroke-dasharray="1,5" d="M468.68,-164C468.68,-164 708.58,-164 708.58,-164"/>
 <polygon fill="#8b95a3" stroke="#8b95a3" points="708.58,-166.45 715.58,-164 708.58,-161.55 708.58,-166.45"/>
@@ -112,60 +126,54 @@
 <polygon fill="#8b95a3" stroke="#8b95a3" points="116.35,-194.24 113.9,-187.24 111.45,-194.24 116.35,-194.24"/>
 <text xml:space="preserve" text-anchor="middle" x="79.38" y="-222.92" font-family="Helvetica,sans-Serif" font-size="9.00" fill="#697180">calls the gateway</text>
 </g>
-<!-- PLAT -->
-<g id="node7" class="node">
-<title>PLAT</title>
-<path fill="#ecedfb" stroke="#9aa2e6" stroke-width="1.1" d="M825.64,-385.72C825.64,-385.72 730.36,-385.72 730.36,-385.72 724.36,-385.72 718.36,-379.72 718.36,-373.72 718.36,-373.72 718.36,-361.72 718.36,-361.72 718.36,-355.72 724.36,-349.72 730.36,-349.72 730.36,-349.72 825.64,-349.72 825.64,-349.72 831.64,-349.72 837.64,-355.72 837.64,-361.72 837.64,-361.72 837.64,-373.72 837.64,-373.72 837.64,-379.72 831.64,-385.72 825.64,-385.72"/>
-<text xml:space="preserve" text-anchor="middle" x="778" y="-364.42" font-family="Helvetica,sans-Serif" font-size="11.00">🛰️ SKE Platform</text>
-</g>
 <!-- LZ -->
 <g id="node8" class="node">
 <title>LZ</title>
-<path fill="#ecedfb" stroke="#9aa2e6" stroke-width="1.1" d="M817.68,-288.72C817.68,-288.72 730.32,-288.72 730.32,-288.72 724.32,-288.72 718.32,-282.72 718.32,-276.72 718.32,-276.72 718.32,-258.48 718.32,-258.48 718.32,-252.48 724.32,-246.48 730.32,-246.48 730.32,-246.48 817.68,-246.48 817.68,-246.48 823.68,-246.48 829.68,-252.48 829.68,-258.48 829.68,-258.48 829.68,-276.72 829.68,-276.72 829.68,-282.72 823.68,-288.72 817.68,-288.72"/>
-<text xml:space="preserve" text-anchor="middle" x="774" y="-270.9" font-family="Helvetica,sans-Serif" font-size="11.00">🛬 Landing Zone</text>
-<text xml:space="preserve" text-anchor="middle" x="774" y="-257.7" font-family="Helvetica,sans-Serif" font-size="11.00">AI&#45;enabled</text>
+<path fill="#ecedfb" stroke="#9aa2e6" stroke-width="1.1" d="M856.24,-288.72C856.24,-288.72 729.76,-288.72 729.76,-288.72 723.76,-288.72 717.76,-282.72 717.76,-276.72 717.76,-276.72 717.76,-258.48 717.76,-258.48 717.76,-252.48 723.76,-246.48 729.76,-246.48 729.76,-246.48 856.24,-246.48 856.24,-246.48 862.24,-246.48 868.24,-252.48 868.24,-258.48 868.24,-258.48 868.24,-276.72 868.24,-276.72 868.24,-282.72 862.24,-288.72 856.24,-288.72"/>
+<text xml:space="preserve" text-anchor="middle" x="793" y="-270.9" font-family="Helvetica,sans-Serif" font-size="11.00">🛬 AI Landing Zone</text>
+<text xml:space="preserve" text-anchor="middle" x="793" y="-257.7" font-family="Helvetica,sans-Serif" font-size="11.00">allowed models · budget</text>
 </g>
 <!-- PLAT&#45;&gt;LZ -->
 <g id="edge7" class="edge">
 <title>PLAT&#45;&gt;LZ</title>
-<path fill="none" stroke="#8b95a3" d="M774.02,-349.36C774.02,-349.36 774.02,-297.49 774.02,-297.49"/>
-<polygon fill="#8b95a3" stroke="#8b95a3" points="776.47,-297.49 774.02,-290.49 771.57,-297.49 776.47,-297.49"/>
+<path fill="none" stroke="#8b95a3" d="M793,-349.45C793,-349.45 793,-297.48 793,-297.48"/>
+<polygon fill="#8b95a3" stroke="#8b95a3" points="795.45,-297.48 793,-290.48 790.55,-297.48 795.45,-297.48"/>
 </g>
 <!-- BBD_M -->
 <g id="node9" class="node">
 <title>BBD_M</title>
-<path fill="#ecedfb" stroke="#9aa2e6" stroke-width="1.1" d="M1030.53,-288.72C1030.53,-288.72 881.47,-288.72 881.47,-288.72 875.47,-288.72 869.47,-282.72 869.47,-276.72 869.47,-276.72 869.47,-258.48 869.47,-258.48 869.47,-252.48 875.47,-246.48 881.47,-246.48 881.47,-246.48 1030.53,-246.48 1030.53,-246.48 1036.53,-246.48 1042.53,-252.48 1042.53,-258.48 1042.53,-258.48 1042.53,-276.72 1042.53,-276.72 1042.53,-282.72 1036.53,-288.72 1030.53,-288.72"/>
-<text xml:space="preserve" text-anchor="middle" x="956" y="-270.9" font-family="Helvetica,sans-Serif" font-size="11.00">📦 stackit/model&#45;serving BBD</text>
-<text xml:space="preserve" text-anchor="middle" x="956" y="-257.7" font-family="Helvetica,sans-Serif" font-size="11.00">self&#45;service model access</text>
+<path fill="#ecedfb" stroke="#9aa2e6" stroke-width="1.1" d="M1051.37,-288.72C1051.37,-288.72 920.63,-288.72 920.63,-288.72 914.63,-288.72 908.63,-282.72 908.63,-276.72 908.63,-276.72 908.63,-258.48 908.63,-258.48 908.63,-252.48 914.63,-246.48 920.63,-246.48 920.63,-246.48 1051.37,-246.48 1051.37,-246.48 1057.37,-246.48 1063.37,-252.48 1063.37,-258.48 1063.37,-258.48 1063.37,-276.72 1063.37,-276.72 1063.37,-282.72 1057.37,-288.72 1051.37,-288.72"/>
+<text xml:space="preserve" text-anchor="middle" x="986" y="-270.9" font-family="Helvetica,sans-Serif" font-size="11.00">📦 ai/litellm&#45;team BBD</text>
+<text xml:space="preserve" text-anchor="middle" x="986" y="-257.7" font-family="Helvetica,sans-Serif" font-size="11.00">self&#45;service model access</text>
 </g>
 <!-- LZ&#45;&gt;BBD_M -->
 <!-- LZ&#45;&gt;PROJ -->
 <g id="edge8" class="edge">
 <title>LZ&#45;&gt;PROJ</title>
-<path fill="none" stroke="#8b95a3" d="M774,-246.21C774,-246.21 774,-194.24 774,-194.24"/>
-<polygon fill="#8b95a3" stroke="#8b95a3" points="776.45,-194.24 774,-187.24 771.55,-194.24 776.45,-194.24"/>
-<text xml:space="preserve" text-anchor="middle" x="754.74" y="-222.92" font-family="Helvetica,sans-Serif" font-size="9.00" fill="#697180">applies to</text>
+<path fill="none" stroke="#8b95a3" d="M793,-246.21C793,-246.21 793,-194.24 793,-194.24"/>
+<polygon fill="#8b95a3" stroke="#8b95a3" points="795.45,-194.24 793,-187.24 790.55,-194.24 795.45,-194.24"/>
+<text xml:space="preserve" text-anchor="middle" x="773.74" y="-222.92" font-family="Helvetica,sans-Serif" font-size="9.00" fill="#697180">applies to</text>
 </g>
 <!-- BBD_M&#45;&gt;LITELLM -->
-<g id="edge11" class="edge">
+<g id="edge12" class="edge">
 <title>BBD_M&#45;&gt;LITELLM</title>
-<path fill="none" stroke="#8b95a3" stroke-dasharray="1,5" d="M874.48,-246.02C874.48,-231.88 874.48,-216 874.48,-216 874.48,-216 188.1,-216 188.1,-216 188.1,-216 188.1,-194.47 188.1,-194.47"/>
+<path fill="none" stroke="#8b95a3" stroke-dasharray="1,5" d="M960.21,-246.02C960.21,-231.88 960.21,-216 960.21,-216 960.21,-216 188.1,-216 188.1,-216 188.1,-216 188.1,-194.47 188.1,-194.47"/>
 <polygon fill="#8b95a3" stroke="#8b95a3" points="190.55,-194.47 188.1,-187.47 185.65,-194.47 190.55,-194.47"/>
-<text xml:space="preserve" text-anchor="middle" x="501.27" y="-218.7" font-family="Helvetica,sans-Serif" font-size="9.00" fill="#697180">issues virtual key</text>
+<text xml:space="preserve" text-anchor="middle" x="544.14" y="-218.7" font-family="Helvetica,sans-Serif" font-size="9.00" fill="#697180">issues virtual key</text>
 </g>
 <!-- BBD_M&#45;&gt;MODEL -->
-<g id="edge12" class="edge">
+<g id="edge13" class="edge">
 <title>BBD_M&#45;&gt;MODEL</title>
-<path fill="none" stroke="#8b95a3" stroke-dasharray="1,5" d="M963.52,-246.27C963.52,-193.48 963.52,-61 963.52,-61 963.52,-61 682.74,-61 682.74,-61"/>
-<polygon fill="#8b95a3" stroke="#8b95a3" points="682.74,-58.55 675.74,-61 682.74,-63.45 682.74,-58.55"/>
-<text xml:space="preserve" text-anchor="middle" x="874.99" y="-63.7" font-family="Helvetica,sans-Serif" font-size="9.00" fill="#697180">issues serving token</text>
+<path fill="none" stroke="#8b95a3" stroke-dasharray="1,5" d="M1011.79,-246.27C1011.79,-193.48 1011.79,-61 1011.79,-61 1011.79,-61 682.72,-61 682.72,-61"/>
+<polygon fill="#8b95a3" stroke="#8b95a3" points="682.72,-58.55 675.72,-61 682.72,-63.45 682.72,-58.55"/>
+<text xml:space="preserve" text-anchor="middle" x="899.12" y="-63.7" font-family="Helvetica,sans-Serif" font-size="9.00" fill="#697180">issues serving token</text>
 </g>
 <!-- BBD_M&#45;&gt;PROJ -->
 <g id="edge9" class="edge">
 <title>BBD_M&#45;&gt;PROJ</title>
-<path fill="none" stroke="#8b95a3" d="M879.49,-246.21C879.49,-246.21 879.49,-194.24 879.49,-194.24"/>
-<polygon fill="#8b95a3" stroke="#8b95a3" points="881.94,-194.24 879.49,-187.24 877.04,-194.24 881.94,-194.24"/>
-<text xml:space="preserve" text-anchor="middle" x="859.22" y="-222.92" font-family="Helvetica,sans-Serif" font-size="9.00" fill="#697180">ordered in</text>
+<path fill="none" stroke="#8b95a3" d="M908.37,-261C890.38,-261 876.37,-261 876.37,-261 876.37,-261 876.37,-194.32 876.37,-194.32"/>
+<polygon fill="#8b95a3" stroke="#8b95a3" points="878.82,-194.32 876.37,-187.32 873.92,-194.32 878.82,-194.32"/>
+<text xml:space="preserve" text-anchor="middle" x="856.11" y="-235.56" font-family="Helvetica,sans-Serif" font-size="9.00" fill="#697180">ordered in</text>
 </g>
 </g>
 </svg>

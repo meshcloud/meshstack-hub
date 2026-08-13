@@ -24,7 +24,7 @@ digraph ai_platform {
     margin=18
 
     subgraph cluster_stack {
-      label="  AI Platform · deployed on SKE"
+      label="  AI Platform · in a namespace from stackit-kubernetes"
       labeljust=l
       fontname="Helvetica" fontsize=11 fontcolor="#697180"
       style="rounded" color="#d5dae0"
@@ -57,9 +57,9 @@ digraph ai_platform {
     style="rounded" color="#d5dae0"
     margin=18
 
-    PLAT  [label="🛰️ SKE Platform" fillcolor="#ecedfb" color="#9aa2e6"]
-    LZ    [label="🛬 Landing Zone\nAI-enabled" fillcolor="#ecedfb" color="#9aa2e6"]
-    BBD_M [label="📦 stackit/model-serving BBD\nself-service model access" fillcolor="#ecedfb" color="#9aa2e6"]
+    PLAT  [label="🛰️ LiteLLM Platform\ncustom platform type" fillcolor="#ecedfb" color="#9aa2e6"]
+    LZ    [label="🛬 AI Landing Zone\nallowed models · budget" fillcolor="#ecedfb" color="#9aa2e6"]
+    BBD_M [label="📦 ai/litellm-team BBD\nself-service model access" fillcolor="#ecedfb" color="#9aa2e6"]
     PROJ  [label="🗂️ Project ×N\ncarries budget and cost tags" fillcolor="#e5f2ea" color="#85bfa0"]
 
     { rank=same; LZ -> BBD_M [style=invis] }
@@ -70,6 +70,7 @@ digraph ai_platform {
   }
 
   USER  -> APPS     [xlabel="builds and uses"]
+  LITELLM -> PLAT   [xlabel="registered as" style=dotted constraint=false]
   BBD_M -> LITELLM  [xlabel="issues virtual key" style=dotted constraint=false]
   BBD_M -> MODEL    [xlabel="issues serving token" style=dotted constraint=false]
   LANGFUSE -> PROJ  [xlabel="usage attribution" style=dotted constraint=false]

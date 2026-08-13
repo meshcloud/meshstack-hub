@@ -22,26 +22,37 @@ digraph stackit_kubernetes {
     margin=18
 
     ORG    [label="🏢 STACKIT Organization" fillcolor="#ffffff" color="#a2abb8"]
-    SKE    [label="☸️ SKE cluster\nrun by the platform team" fillcolor="#eef2f6" color="#93a7bb"]
+    ZONE   [label="🌐 Shared DNS zone\nowned by the platform team" fillcolor="#ffffff" color="#a2abb8"]
+    REC    [label="🌐 Wildcard record ×1 per cluster\n*.cluster1.likvid.stackit.run" fillcolor="#e5f2ea" color="#85bfa0"]
+    SKE    [label="☸️ SKE cluster ×N\nordered by an application team" fillcolor="#e5f2ea" color="#85bfa0"]
+    ING    [label="🚪 HAProxy ingress controller\none load balancer per cluster" fillcolor="#e5f2ea" color="#85bfa0"]
+    CERT   [label="🔑 Wildcard certificate\ncert-manager · Let's Encrypt ClusterIssuer" fillcolor="#e5f2ea" color="#85bfa0"]
+    NS     [label="☸️ Namespace ×2\ndev + prod" fillcolor="#e5f2ea" color="#85bfa0"]
     GIT    [label="🔀 STACKIT Git\nForgejo instance" fillcolor="#eef2f6" color="#93a7bb"]
     HARBOR [label="🗄️ STACKIT Harbor\nregistry shared across customers" fillcolor="#eef2f6" color="#93a7bb"]
     MODEL  [label="🧠 STACKIT Model Serving\nsovereign LLM API" fillcolor="#eef2f6" color="#93a7bb"]
-    NS     [label="☸️ Namespace ×2\ndev + prod" fillcolor="#e5f2ea" color="#85bfa0"]
     REPO   [label="🔀 App repository ×1\nper application team" fillcolor="#e5f2ea" color="#85bfa0"]
     ACT    [label="⚙️ Forgejo Actions ×2\ndev + prod pipeline" fillcolor="#e5f2ea" color="#85bfa0"]
 
-    { rank=same; SKE -> GIT -> HARBOR -> MODEL [style=invis] }
+    { rank=same; ZONE -> SKE -> GIT -> HARBOR [style=invis] }
 
-    ORG -> SKE
-    ORG -> GIT
-    SKE -> NS   [xlabel="contains"]
-    GIT -> REPO [xlabel="hosts"]
+    ORG  -> ZONE
+    ORG  -> SKE
+    ORG  -> GIT
+    ZONE -> REC  [xlabel="contains"]
+    SKE  -> ING  [xlabel="runs"]
+    SKE  -> NS   [xlabel="contains"]
+    GIT  -> REPO [xlabel="hosts"]
+    ING  -> CERT [xlabel="serves"]
 
-    REPO -> ACT [xlabel="runs pipeline"]
+    NS   -> MODEL  [xlabel="calls with injected key" style=dashed]
+    REPO -> ACT    [xlabel="runs pipeline"]
+
+    REC  -> ING    [xlabel="resolves to" style=dashed constraint=false]
+    ZONE -> CERT   [xlabel="solves DNS-01" style=dashed constraint=false dir=back]
     ACT  -> HARBOR [xlabel="pushes images" style=dashed constraint=false]
     ACT  -> NS     [xlabel="deploys to" style=dashed constraint=false]
     NS   -> HARBOR [xlabel="pulls images" style=dashed constraint=false]
-    NS   -> MODEL  [xlabel="calls with injected key" style=dashed constraint=false]
   }
 
   subgraph cluster_mesh {
@@ -51,22 +62,28 @@ digraph stackit_kubernetes {
     style="rounded" color="#d5dae0"
     margin=18
 
-    PLAT  [label="🛰️ SKE Platform" fillcolor="#ecedfb" color="#9aa2e6"]
-    LZ    [label="🛬 Landing Zone ×2\ndev + prod" fillcolor="#ecedfb" color="#9aa2e6"]
-    PROJ  [label="🗂️ Project ×2\ndev + prod" fillcolor="#e5f2ea" color="#85bfa0"]
-    BBD_S [label="📦 ske/ske-starterkit BBD\nself-service catalog entry" fillcolor="#ecedfb" color="#9aa2e6"]
-    BBD_R [label="📦 stackit/git-repository BBD" fillcolor="#ecedfb" color="#9aa2e6"]
-    BBD_C [label="📦 ske/forgejo-connector BBD" fillcolor="#ecedfb" color="#9aa2e6"]
+    PLAT_ST [label="🛰️ STACKIT Project Platform\nfrom stackit-landingzone"
+             fillcolor="#f0f1f3" color="#cdd2d8" fontcolor="#99a1ac" style="rounded,filled,dashed"]
+    BBD_K   [label="📦 STACKIT Kubernetes Cluster BBD\nTENANT_LEVEL · one order per cluster\ncomposes stackit/ske · kubernetes/platform\nkubernetes/ingress · stackit/dns" fillcolor="#ecedfb" color="#9aa2e6"]
+    PLAT    [label="🛰️ Kubernetes Platform ×1\nper ordered cluster" fillcolor="#ecedfb" color="#9aa2e6"]
+    LZ      [label="🛬 Landing Zone ×2\ndev + prod" fillcolor="#ecedfb" color="#9aa2e6"]
+    PROJ    [label="🗂️ Project ×2\ndev + prod" fillcolor="#e5f2ea" color="#85bfa0"]
+    BBD_S   [label="📦 ske/ske-starterkit BBD\nself-service catalog entry" fillcolor="#ecedfb" color="#9aa2e6"]
+    BBD_R   [label="📦 stackit/git-repository BBD" fillcolor="#ecedfb" color="#9aa2e6"]
+    BBD_C   [label="📦 ske/forgejo-connector BBD" fillcolor="#ecedfb" color="#9aa2e6"]
 
-    { rank=same; BBD_R -> BBD_C [style=invis] }
+    BBD_R -> BBD_C [style=invis]
 
-    PLAT  -> LZ
-    LZ    -> PROJ  [xlabel="applies to"]
-    BBD_S -> BBD_R [xlabel="composes"]
-    BBD_S -> BBD_C
-    BBD_S -> PROJ  [xlabel="creates" style=dotted constraint=false]
+    PLAT_ST -> BBD_K [xlabel="cluster ordered on"]
+    BBD_K   -> PLAT  [xlabel="registers"]
+    PLAT    -> LZ
+    LZ      -> PROJ  [xlabel="applies to"]
+    BBD_S   -> BBD_R [xlabel="composes"]
+    BBD_S   -> BBD_C
+    BBD_S   -> PROJ  [xlabel="creates" style=dotted constraint=false]
   }
 
+  BBD_K -> SKE  [xlabel="creates" style=dotted constraint=false]
   PLAT  -> SKE  [xlabel="replicates into" style=dotted constraint=false]
   PROJ  -> NS   [xlabel="tenant namespace" style=dotted constraint=false]
   BBD_R -> REPO [xlabel="provisions" style=dotted constraint=false]
