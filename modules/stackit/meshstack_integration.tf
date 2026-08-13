@@ -186,6 +186,12 @@ resource "meshstack_platform" "stackit" {
     config = {
       custom = {
         platform_type_ref = { name = "STACKIT" }
+        metering = {
+          processing = {
+            compact_timelines_after_days = 30
+            delete_raw_data_after_days   = 65
+          }
+        }
       }
     }
   }
