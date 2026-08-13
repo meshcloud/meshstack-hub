@@ -12,5 +12,29 @@ terraform {
       # version is therefore pinned here and raised deliberately after a review of the changelog.
       version = "= 2.0.1"
     }
+
+    kubernetes = {
+      source  = "hashicorp/kubernetes"
+      version = ">= 2.38"
+    }
+
+    helm = {
+      source = "hashicorp/helm"
+      # The helm provider takes its cluster credentials as the `kubernetes = {}` attribute
+      # starting with 3.0.0. Earlier versions expect a `kubernetes {}` block instead.
+      version = ">= 3.0.0"
+    }
+
+    meshstack = {
+      source  = "meshcloud/meshstack"
+      version = ">= 0.24.0"
+    }
+
+    random = {
+      source = "hashicorp/random"
+      # random_bytes arrived in 3.5.0. Its `hex` and `base64` attributes are marked sensitive,
+      # unlike those of random_id, which keeps the generated Langfuse secrets out of the plan.
+      version = ">= 3.5.0"
+    }
   }
 }

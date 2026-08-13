@@ -1,0 +1,54 @@
+# AI Model Access
+
+Your project has a governed, OpenAI-compatible model endpoint and a tracing instance of its own.
+
+## Where the credential is
+
+The credential is a bearer token, so it is not shown here. The platform wrote it into a Kubernetes
+Secret in your namespace:
+
+| Property | Value |
+|----------|-------|
+| **Namespace** | `${secret_namespace}` |
+| **Secret** | `${secret_name}` |
+| **Key with the credential** | `${secret_key_env}` |
+| **Key with the endpoint** | `${base_url_env}` |
+
+The two keys carry the names the OpenAI client libraries read from the environment, so a Deployment
+can mount the whole Secret and the client needs no configuration:
+
+```yaml
+envFrom:
+  - secretRef:
+      name: ${secret_name}
+```
+
+## Endpoint
+
+| Property | Value |
+|----------|-------|
+| **Base URL** | `${api_base}` |
+| **Team** | `${team_alias}` |
+| **Team ID** | `${team_id}` |
+| **Key ID** | `${key_id}` |
+| **Budget** | ${max_budget} per ${budget_duration} |
+| **Allowed models** | ${length(models) > 0 ? join(", ", models) : "set by the platform team on the gateway"} |
+
+The key ID above is the SHA256 hash of the credential, not the credential itself. Use it to identify
+the credential in support requests.
+
+The base URL ends in `/v1`, so an OpenAI client library works unchanged:
+
+```sh
+curl "${api_base}/models" \
+  -H "Authorization: Bearer $OPENAI_API_KEY"
+```
+
+The endpoint stops answering once your project reaches its budget for the current period, and the
+spend counter resets at the end of every period.
+
+## Tracing
+
+Your project has its own tracing instance at ${langfuse_url}. Log in with your usual account. Every
+call your application sends through the endpoint above can be traced there, and the traces, the
+evaluations and the stored credentials of this instance belong to your project alone.
