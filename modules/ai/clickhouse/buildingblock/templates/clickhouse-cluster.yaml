@@ -1,0 +1,35 @@
+# The operator turns this resource into a StatefulSet per replica, a public headless Service named
+# '<name>-clickhouse-headless' and a ClickHouse cluster named 'default'. Langfuse writes its
+# ON CLUSTER DDL against that cluster name.
+apiVersion: clickhouse.com/v1alpha1
+kind: ClickHouseCluster
+metadata:
+  name: {{ .Values.cluster.name }}
+  namespace: {{ .Release.Namespace }}
+spec:
+  replicas: {{ .Values.clickhouse.replicas }}
+  # Fixed at 1 — Langfuse does not support a sharded ClickHouse, and its own Helm chart fails the
+  # install with any other value.
+  shards: 1
+  keeperClusterRef:
+    name: {{ .Values.cluster.name }}
+  containerTemplate:
+    image:
+      repository: {{ .Values.clickhouse.image.repository | quote }}
+      tag: {{ .Values.clickhouse.image.tag | quote }}
+    resources:
+      {{- toYaml .Values.clickhouse.resources | nindent 6 }}
+  dataVolumeClaimSpec:
+    {{- with .Values.clickhouse.storageClassName }}
+    storageClassName: {{ . | quote }}
+    {{- end }}
+    resources:
+      requests:
+        storage: {{ .Values.clickhouse.storage | quote }}
+  settings:
+    # The operator creates the 'default' user with this password. Terraform owns the secret, so the
+    # same value reaches the caller that creates the per-tenant databases and users.
+    defaultUserPassword:
+      secret:
+        name: {{ .Values.auth.secretName }}
+        key: {{ .Values.auth.secretKey }}

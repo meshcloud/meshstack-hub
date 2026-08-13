@@ -1,0 +1,59 @@
+{{- if .Values.readiness.enabled }}
+# Helm's --wait watches the resources the release creates. A ClickHouseCluster is a custom
+# resource, and Helm has no idea what "ready" means for it, so the release would report success
+# while the operator is still creating the StatefulSets. This Job runs as a post-install and
+# post-upgrade hook, and Helm waits for a hook Job to finish, so the release only completes once
+# ClickHouse answers a query.
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: {{ .Values.cluster.name }}-clickhouse-readiness
+  namespace: {{ .Release.Namespace }}
+  annotations:
+    helm.sh/hook: post-install,post-upgrade
+    helm.sh/hook-weight: "0"
+    helm.sh/hook-delete-policy: before-hook-creation,hook-succeeded
+spec:
+  backoffLimit: 0
+  # The deadline turns an endless wait into a failed release with a readable log, which is easier
+  # to diagnose than a Terraform timeout.
+  activeDeadlineSeconds: {{ .Values.readiness.timeoutSeconds }}
+  template:
+    metadata:
+      name: {{ .Values.cluster.name }}-clickhouse-readiness
+    spec:
+      restartPolicy: Never
+      containers:
+        - name: wait
+          # The same image the server runs, so the node has it in its cache already and no second
+          # image has to be pulled.
+          image: "{{ .Values.clickhouse.image.repository }}:{{ .Values.clickhouse.image.tag }}"
+          env:
+            - name: CLICKHOUSE_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ .Values.auth.secretName }}
+                  key: {{ .Values.auth.secretKey }}
+          command:
+            - /bin/bash
+            - -c
+            - |
+              set -u
+              host="{{ .Values.cluster.name }}-clickhouse-headless.{{ .Release.Namespace }}.svc.cluster.local"
+              until clickhouse-client --host "$host" --port {{ .Values.clickhouse.nativePort }} \
+                  --user "{{ .Values.auth.username }}" --password "$CLICKHOUSE_PASSWORD" \
+                  --query "SELECT 1" > /dev/null 2>&1; do
+                echo "waiting for ClickHouse at $host:{{ .Values.clickhouse.nativePort }}"
+                sleep 5
+              done
+              echo "ClickHouse is accepting queries"
+          # The pod runs a sleep loop and one query, so it needs almost nothing. A small request
+          # also keeps it schedulable on a node the ClickHouse replicas have already filled.
+          resources:
+            requests:
+              cpu: 50m
+              memory: 64Mi
+            limits:
+              cpu: 200m
+              memory: 256Mi
+{{- end }}
