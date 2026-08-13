@@ -6,18 +6,20 @@ variables {
   demo_app_cluster_kubeconfig    = "current-context: demo-app\n"
   demo_app_platform_identifier   = "kubernetes.eu01"
 
-  langfuse_domain               = "ai.example.com"
-  langfuse_postgres_host        = "shared.postgresflex.eu01.onstackit.cloud"
-  langfuse_postgres_username    = "langfuse"
-  langfuse_postgres_password    = "langfuse-password"
-  langfuse_clickhouse_host      = "clickhouse-headless.clickhouse.svc.cluster.local"
-  langfuse_clickhouse_username  = "langfuse"
-  langfuse_clickhouse_password  = "clickhouse-password"
-  langfuse_valkey_host          = "valkey.valkey.svc.cluster.local"
-  langfuse_valkey_password      = "valkey-password"
-  langfuse_s3_endpoint          = "https://object.storage.eu01.onstackit.cloud"
-  langfuse_s3_access_key_id     = "AKIAMOCKACCESSKEY"
-  langfuse_s3_secret_access_key = "mock-secret-access-key"
+  langfuse_domain = "ai.example.com"
+
+  stackit_project_id                     = "6e8c1f30-6c4d-4b1f-9f7a-2c9d8e5f1a2b"
+  stackit_service_account_key            = "{\"id\":\"mock-key\"}"
+  stackit_s3_admin_access_key            = "AKIAMOCKADMINKEY"
+  stackit_s3_admin_secret_access_key     = "mock-admin-secret-access-key"
+  stackit_s3_admin_credentials_group_urn = "urn:sgws:identity::12345678901234567890:group/mock-admin-group"
+
+  langfuse_postgres_instance_id = "3f2504e0-4f89-11d3-9a0c-0305e82c3301"
+
+  langfuse_clickhouse_host = "clickhouse-clickhouse-headless.clickhouse.svc.cluster.local"
+
+  langfuse_valkey_host     = "valkey.valkey.svc.cluster.local"
+  langfuse_valkey_password = "valkey-password"
 
   oidc_issuer_url    = "https://idp.example.com/realms/ai"
   oidc_client_id     = "langfuse"

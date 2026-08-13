@@ -1,0 +1,37 @@
+# Every value is set by the Terraform module that installs this chart. The keys are listed here so the
+# shape of the values is documented in one place. The templates call `required` on every value that
+# would otherwise render a statement with a hole in it, so a chart rendered by hand fails instead.
+
+clickhouse:
+  # Fully qualified in-cluster hostname of the shared ClickHouse cluster.
+  host: ""
+  # Native protocol port. clickhouse-client speaks it.
+  nativePort: 9000
+  # Name of the cluster as the server knows it. Every statement runs ON CLUSTER with it.
+  ddlCluster: default
+  # Image the Jobs run clickhouse-client from. The same image the servers run, so the node has it
+  # cached already.
+  image: ""
+
+# The administrative user. It creates the tenant's database and user, so it must never reach a tenant.
+admin:
+  username: default
+  # Secret in the release namespace that holds the administrative password, and the key inside it.
+  secretName: ""
+  secretKey: password
+
+# The tenant. Every name here is derived from the meshStack workspace and project by the calling
+# module, so two tenants never collide.
+tenant:
+  database: ""
+  username: ""
+  # The rights the user holds on its own database, and nothing beyond them.
+  grants: []
+  # Secret in the release namespace that holds the password of the tenant's user.
+  secretName: ""
+  secretKey: password
+
+job:
+  # Seconds a Job may run before Kubernetes fails it. It covers the wait for the cluster to answer a
+  # query and the statements themselves.
+  timeoutSeconds: 600

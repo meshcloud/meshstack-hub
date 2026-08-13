@@ -2,6 +2,11 @@
 # context alone. `modules/ai/langfuse` takes each of them as an explicit input, because it is
 # instantiated once per tenant against shared backends and two tenants that collide on a name share
 # their data.
+#
+# This module creates the Postgres database, the ClickHouse database and the bucket under these
+# names, so a name that changes takes the resource with it: Terraform replaces the database, the user
+# or the bucket, and the data in it is gone. Treat every expression here as part of the module's
+# contract.
 
 locals {
   # A project identifier alone can repeat across workspaces, so every derived name starts from the
@@ -44,6 +49,22 @@ locals {
   # an operator reads one name in two places.
   langfuse_postgres_database   = "langfuse_${local.tenant_slug_sql_short}_${local.tenant_hash}"
   langfuse_clickhouse_database = "langfuse_${local.tenant_slug_sql_short}_${local.tenant_hash}"
+
+  # The owner of the Postgres database and the tenant's ClickHouse user carry the name of the database
+  # they are scoped to, which is what an owner is usually called in both systems. Both names have to
+  # be per-tenant: a Postgres role and a ClickHouse user are objects of the whole server, so two
+  # tenants sharing a user share every grant that user holds.
+  langfuse_postgres_username   = local.langfuse_postgres_database
+  langfuse_clickhouse_username = local.langfuse_clickhouse_database
+
+  # The Kubernetes objects that run the ClickHouse DDL live in the shared ClickHouse namespace, so
+  # each one carries the tenant in its name. Helm stops a release name at 53 characters, the tightest
+  # limit of the family, and every object of the release derives its name from the release name plus a
+  # suffix of at most seven characters, which keeps a Job name inside the 63 characters a label value
+  # may carry.
+  clickhouse_ddl_slug_budget = 53 - length("langfuse") - 1 - 1 - length(local.tenant_hash)
+  clickhouse_ddl_slug_short  = replace(substr(local.tenant_slug_dns, 0, min(length(local.tenant_slug_dns), local.clickhouse_ddl_slug_budget)), "/-+$/", "")
+  clickhouse_ddl_name        = "langfuse-${local.clickhouse_ddl_slug_short}-${local.tenant_hash}"
 
   # One bucket per tenant. The three kinds of upload separate by prefix inside it.
   langfuse_bucket = "langfuse-${local.tenant_slug_dns_short}-${local.tenant_hash}"

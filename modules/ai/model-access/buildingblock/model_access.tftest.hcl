@@ -43,18 +43,21 @@ variables {
 
   demo_app_platform_identifier = "kubernetes.eu01"
 
-  langfuse_domain               = "ai.example.com"
-  langfuse_postgres_host        = "shared.postgresflex.eu01.onstackit.cloud"
-  langfuse_postgres_username    = "langfuse"
-  langfuse_postgres_password    = "langfuse-password"
-  langfuse_clickhouse_host      = "clickhouse-headless.clickhouse.svc.cluster.local"
-  langfuse_clickhouse_username  = "langfuse"
-  langfuse_clickhouse_password  = "clickhouse-password"
-  langfuse_valkey_host          = "valkey.valkey.svc.cluster.local"
-  langfuse_valkey_password      = "valkey-password"
-  langfuse_s3_endpoint          = "https://object.storage.eu01.onstackit.cloud"
-  langfuse_s3_access_key_id     = "AKIAMOCKACCESSKEY"
-  langfuse_s3_secret_access_key = "mock-secret-access-key"
+  langfuse_domain = "ai.example.com"
+
+  # STACKIT, where the module creates the tenant's Postgres database, its owner user and its bucket.
+  stackit_project_id                     = "6e8c1f30-6c4d-4b1f-9f7a-2c9d8e5f1a2b"
+  stackit_service_account_key            = "{\"id\":\"mock-key\"}"
+  stackit_s3_admin_access_key            = "AKIAMOCKADMINKEY"
+  stackit_s3_admin_secret_access_key     = "mock-admin-secret-access-key"
+  stackit_s3_admin_credentials_group_urn = "urn:sgws:identity::12345678901234567890:group/mock-admin-group"
+
+  langfuse_postgres_instance_id = "3f2504e0-4f89-11d3-9a0c-0305e82c3301"
+
+  langfuse_clickhouse_host = "clickhouse-clickhouse-headless.clickhouse.svc.cluster.local"
+
+  langfuse_valkey_host     = "valkey.valkey.svc.cluster.local"
+  langfuse_valkey_password = "valkey-password"
 
   oidc = {
     issuer_url    = "https://idp.example.com/realms/ai"
@@ -102,6 +105,58 @@ mock_provider "random" {
 mock_provider "helm" { alias = "ai_platform" }
 mock_provider "kubernetes" { alias = "ai_platform" }
 mock_provider "kubernetes" { alias = "demo_app" }
+
+# The two STACKIT submodules read the shared instance and generate credentials, and both feed values
+# into `modules/ai/langfuse`, which validates several of them. Every value a generated mock would leave
+# null or shape wrongly is therefore set here: the connection info the submodule reads the host and the
+# port off, the ACL its summary joins into a string, and the two passwords Langfuse checks the alphabet
+# of.
+mock_provider "stackit" {
+  mock_data "stackit_postgresflex_instance" {
+    defaults = {
+      name    = "shared-langfuse"
+      version = "17"
+
+      connection_info = {
+        write = {
+          host = "shared.postgresflex.eu01.onstackit.cloud"
+          port = 5432
+        }
+      }
+
+      network = {
+        acl              = ["45.129.40.0/21"]
+        access_scope     = "PUBLIC"
+        instance_address = "10.0.0.10"
+        router_address   = "10.0.0.1"
+      }
+    }
+  }
+
+  mock_resource "stackit_postgresflex_user" {
+    defaults = {
+      password = "mockPostgresPassword"
+    }
+  }
+
+  mock_resource "stackit_objectstorage_credentials_group" {
+    defaults = {
+      credentials_group_id = "44444444-4444-4444-4444-444444444444"
+      urn                  = "urn:sgws:identity::12345678901234567890:group/mock-tenant-group"
+    }
+  }
+
+  mock_resource "stackit_objectstorage_credential" {
+    defaults = {
+      access_key        = "AKIAMOCKTENANTKEY"
+      secret_access_key = "mock-tenant-secret-access-key"
+    }
+  }
+}
+
+# The bucket itself is created with the `aws` provider used as a generic S3 client, so the mock covers
+# the bucket and its policy.
+mock_provider "aws" {}
 
 mock_provider "meshstack" {
   mock_data "meshstack_tenants" {
@@ -251,6 +306,108 @@ run "identifiers_with_unexpected_characters_are_folded_into_valid_names" {
   assert {
     condition     = output.langfuse_backend_names.postgres_database == "langfuse_acme_corp_payments_eu_${substr(sha256("ACME_Corp.Payments.EU"), 0, 8)}"
     error_message = "the SQL form has to use underscores for the same runs of characters"
+  }
+}
+
+# --- The per-tenant backend resources -----------------------------------------------------------
+
+run "the_backend_resources_carry_the_names_naming_tf_derives" {
+  command = plan
+
+  assert {
+    # Read off the created database rather than off the local it came from: the module now owns the
+    # name, so a rename would replace the database and take the data in it with it.
+    condition     = output.langfuse_backend_names.postgres_database == "langfuse_acme_payments_${substr(sha256("acme.payments"), 0, 8)}"
+    error_message = "the database created on the shared Postgres instance has to carry the name naming.tf derives"
+  }
+
+  assert {
+    # A Postgres role is an object of the whole server, so the owner has to be per-tenant as well.
+    condition     = output.langfuse_backend_names.postgres_username == "langfuse_acme_payments_${substr(sha256("acme.payments"), 0, 8)}"
+    error_message = "the owner of the tenant's Postgres database has to carry the name of the database it owns"
+  }
+
+  assert {
+    condition     = output.langfuse_backend_names.bucket == "langfuse-acme-payments-${substr(sha256("acme.payments"), 0, 8)}"
+    error_message = "the created bucket has to carry the name naming.tf derives"
+  }
+
+  assert {
+    # The DDL Job receives the two ClickHouse names as Helm values, so this is where they are checked.
+    condition     = yamldecode(helm_release.clickhouse_ddl.values[0]).tenant.database == "langfuse_acme_payments_${substr(sha256("acme.payments"), 0, 8)}"
+    error_message = "the DDL Job has to create the ClickHouse database under the name naming.tf derives"
+  }
+
+  assert {
+    condition     = yamldecode(helm_release.clickhouse_ddl.values[0]).tenant.username == "langfuse_acme_payments_${substr(sha256("acme.payments"), 0, 8)}"
+    error_message = "the ClickHouse user has to carry the name of the database it is scoped to"
+  }
+
+  assert {
+    # The DDL runs in the namespace of the shared cluster, because the administrative password is a
+    # Secret in it and the tenant's own namespace does not exist yet at that point.
+    condition     = helm_release.clickhouse_ddl.namespace == "clickhouse" && kubernetes_secret_v1.langfuse_clickhouse_user.metadata[0].namespace == "clickhouse"
+    error_message = "the DDL release and the Secret holding the tenant's ClickHouse password have to live in the namespace of the shared cluster"
+  }
+}
+
+run "the_clickhouse_user_is_granted_only_what_langfuse_uses" {
+  command = plan
+
+  assert {
+    # The full list, in order, so adding or removing a right is a deliberate change this test has to be
+    # updated for.
+    condition = yamldecode(helm_release.clickhouse_ddl.values[0]).tenant.grants == [
+      "SELECT",
+      "INSERT",
+      "CREATE",
+      "DROP TABLE",
+      "ALTER UPDATE",
+      "ALTER DELETE",
+      "ALTER DROP INDEX",
+    ]
+    error_message = "the grant list of the tenant's ClickHouse user changed; it has to be exactly what Langfuse uses on its own database"
+  }
+
+  assert {
+    # golang-migrate creates tables inside a database that already exists and never creates one, so
+    # this right would only let a tenant create databases outside its own scope.
+    condition     = !contains(yamldecode(helm_release.clickhouse_ddl.values[0]).tenant.grants, "CREATE DATABASE")
+    error_message = "the tenant's ClickHouse user must not be granted CREATE DATABASE"
+  }
+
+  assert {
+    # Required as soon as the cluster has more than one replica, and harmless with one.
+    condition     = yamldecode(helm_release.clickhouse_ddl.values[0]).clickhouse.ddlCluster == "default"
+    error_message = "the DDL has to name the cluster the shared ClickHouse answers as, because every statement runs ON CLUSTER"
+  }
+}
+
+run "long_identifiers_keep_the_ddl_release_name_inside_the_helm_limit" {
+  command = plan
+
+  variables {
+    workspace_identifier = "a-very-long-workspace-identifier-indeed1"
+    project_identifier   = "a-very-long-project-identifier-for-tests"
+  }
+
+  assert {
+    # Helm stops a release name at 53 characters. Every object of the release derives its name from the
+    # release name, so this limit is the tightest of the family and the one the budget is cut for.
+    condition     = length(helm_release.clickhouse_ddl.name) <= 53
+    error_message = "the name of the DDL release has to stay inside the 53 characters Helm allows"
+  }
+
+  assert {
+    # The Job names are '<release>-create' and '<release>-drop', and a Job name ends up in a label
+    # value, which stops at 63 characters.
+    condition     = length("${helm_release.clickhouse_ddl.name}-create") <= 63
+    error_message = "the Job names derived from the release name have to stay inside the 63 characters a label value allows"
+  }
+
+  assert {
+    condition     = endswith(helm_release.clickhouse_ddl.name, substr(sha256("a-very-long-workspace-identifier-indeed1.a-very-long-project-identifier-for-tests"), 0, 8))
+    error_message = "the truncated release name has to end in the hash of the untruncated identifier pair, or two long identifier pairs collide on one release"
   }
 }
 

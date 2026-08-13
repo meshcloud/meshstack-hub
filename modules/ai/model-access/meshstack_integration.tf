@@ -42,7 +42,7 @@ variable "ai_platform_cluster_kubeconfig" {
 variable "demo_app_cluster_kubeconfig" {
   type        = string
   sensitive   = true
-  description = "kubeconfig of the demo application cluster, as YAML. Only the Secret with the model credential is written here, so the credential needs no more than `get`, `create`, `update` and `patch` on secrets."
+  description = "kubeconfig of the demo application cluster, as YAML. Only the Secret with the model credential is written here, so the credential needs no more than `get`, `create`, `update`, `patch` and `delete` on secrets. `delete` is needed because this definition deletes what it created when the building block is deleted."
 }
 
 variable "demo_app_platform_identifier" {
@@ -73,20 +73,37 @@ variable "langfuse_default_org_role" {
   description = "Role every user who logs in through the identity provider receives in a tenant's tracing organisation. Set 'NONE' when one OIDC client is shared across tenants and auto-join is not wanted."
 }
 
-variable "langfuse_postgres_host" {
+variable "stackit_project_id" {
   type        = string
-  description = "Hostname of the shared Postgres server the tracing instances keep their relational data in, each in a database of its own."
+  description = "STACKIT project the shared PostgreSQL Flex instance and the tenants' buckets live in. The building block creates one database and one bucket per tenant inside it."
 }
 
-variable "langfuse_postgres_username" {
-  type        = string
-  description = "Postgres user the tracing instances connect as. It has to own each tenant's database, because the schema migrations run under it on every pod start."
-}
-
-variable "langfuse_postgres_password" {
+variable "stackit_service_account_key" {
   type        = string
   sensitive   = true
-  description = "Password of the Postgres user. Use only characters that are safe in a URL, because Langfuse builds its connection URL by string substitution."
+  description = "Service account key of the STACKIT service account, as the JSON STACKIT returns when the key is created. The account needs permission to create databases and users on the PostgreSQL Flex instance and to create Object Storage credentials groups in the project."
+}
+
+variable "stackit_s3_admin_access_key" {
+  type        = string
+  sensitive   = true
+  description = "Access key of the administrative Object Storage credential the buckets are created with. It has to belong to the credentials group named by `stackit_s3_admin_credentials_group_urn`."
+}
+
+variable "stackit_s3_admin_secret_access_key" {
+  type        = string
+  sensitive   = true
+  description = "Secret access key of the administrative Object Storage credential."
+}
+
+variable "stackit_s3_admin_credentials_group_urn" {
+  type        = string
+  description = "URN of the administrative Object Storage credentials group. Every tenant's bucket policy keeps access for this group, so the platform team can still reach a bucket."
+}
+
+variable "langfuse_postgres_instance_id" {
+  type        = string
+  description = "UUID of the shared STACKIT PostgreSQL Flex instance the tenants' databases are created in. Take it from the `instance_id` output of the `stackit/postgresflex` module."
 }
 
 variable "langfuse_clickhouse_host" {
@@ -94,15 +111,52 @@ variable "langfuse_clickhouse_host" {
   description = "Fully qualified hostname of the shared ClickHouse cluster, without a scheme. Take it from the `host` output of the `ai/clickhouse` module."
 }
 
-variable "langfuse_clickhouse_username" {
-  type        = string
-  description = "ClickHouse user the tracing instances connect as."
+variable "langfuse_clickhouse_native_port" {
+  type        = number
+  default     = 9000
+  description = "Native protocol port of the shared ClickHouse cluster. Take it from the `native_port` output of the `ai/clickhouse` module."
 }
 
-variable "langfuse_clickhouse_password" {
+variable "langfuse_clickhouse_namespace" {
   type        = string
-  sensitive   = true
-  description = "Password of the ClickHouse user. Avoid '&', '=', '#', '?', '%', '+', '@' and spaces, because the Langfuse migration script puts the value into a query string without encoding it."
+  default     = "clickhouse"
+  description = "Namespace of the shared ClickHouse cluster in the AI platform cluster. Each tenant's DDL Job runs in it. Take it from the `namespace` output of the `ai/clickhouse` module."
+}
+
+variable "langfuse_clickhouse_ddl_cluster_name" {
+  type        = string
+  default     = "default"
+  description = "Name of the ClickHouse cluster as the server knows it. Every statement the building block runs names it in an ON CLUSTER clause. Take it from the `ddl_cluster_name` output of the `ai/clickhouse` module."
+}
+
+variable "langfuse_clickhouse_admin_username" {
+  type        = string
+  default     = "default"
+  description = "Administrative ClickHouse user the DDL Job authenticates as to create a tenant's database and user. Take it from the `admin_username` output of the `ai/clickhouse` module."
+}
+
+variable "langfuse_clickhouse_admin_secret_name" {
+  type        = string
+  default     = "clickhouse-admin"
+  description = "Name of the Kubernetes Secret in the ClickHouse namespace that holds the administrative password. The DDL Job mounts it, so the password never becomes an input of this definition. Take it from the `admin_secret` output of the `ai/clickhouse` module."
+}
+
+variable "langfuse_clickhouse_admin_secret_key" {
+  type        = string
+  default     = "password"
+  description = "Key inside the administrative Secret that holds the password."
+}
+
+variable "langfuse_clickhouse_client_image" {
+  type        = string
+  default     = "clickhouse/clickhouse-server:26.4"
+  description = "Image the DDL Job runs `clickhouse-client` from. Keep the tag on the version the shared cluster runs, so no second image has to be pulled."
+}
+
+variable "langfuse_clickhouse_ddl_timeout" {
+  type        = number
+  default     = 600
+  description = "Seconds each ClickHouse DDL Job may run. It covers waiting for the cluster to answer a query and running the statements."
 }
 
 variable "langfuse_valkey_host" {
@@ -120,23 +174,6 @@ variable "langfuse_valkey_database_count" {
   type        = number
   default     = 16
   description = "Number of Valkey database indices the instance serves. A stock Valkey serves 16, numbered 0 to 15."
-}
-
-variable "langfuse_s3_endpoint" {
-  type        = string
-  description = "Endpoint URL of the object storage the tenants' buckets live in, including the scheme."
-}
-
-variable "langfuse_s3_access_key_id" {
-  type        = string
-  sensitive   = true
-  description = "Access key id of the object storage credential."
-}
-
-variable "langfuse_s3_secret_access_key" {
-  type        = string
-  sensitive   = true
-  description = "Secret access key of the object storage credential."
 }
 
 # The identity provider is deliberately six flat variables rather than one object with optional
@@ -303,6 +340,7 @@ resource "meshstack_building_block_definition" "this" {
       | Operate the gateway, the model backends and the tracing backends | ✅ | ❌ |
       | Set the budget, the budget period and the allowed models per landing zone | ✅ | ❌ |
       | Create the endpoint credential and the tracing instance when the tenant is created | ✅ | ❌ |
+      | Create the database, the bucket and the trace storage the tracing instance of your project uses | ✅ | ❌ |
       | Deliver the credential into the namespace of the project as a Kubernetes Secret | ✅ | ❌ |
       | Upgrade the tracing instance | ✅ | ❌ |
       | Mount the Secret into the workload and keep the credential out of source control | ❌ | ✅ |
@@ -496,34 +534,79 @@ resource "meshstack_building_block_definition" "this" {
         }
       }
 
-      langfuse_postgres_host = {
-        display_name    = "Postgres Host"
-        description     = "Hostname of the shared Postgres server."
+      # ── STACKIT, where the per-tenant backends are created ──
+      #
+      # The building block creates the tenant's Postgres database, its owner user and its bucket, so it
+      # needs a STACKIT credential. The user and the password of each backend are not inputs any more:
+      # the building block derives the names and reads the credentials off the resources it created.
+
+      stackit_project_id = {
+        display_name    = "STACKIT Project"
+        description     = "STACKIT project the shared Postgres instance and the tenants' buckets live in."
         type            = "STRING"
         assignment_type = "STATIC"
-        argument        = jsonencode(var.langfuse_postgres_host)
+        argument        = jsonencode(var.stackit_project_id)
       }
 
-      langfuse_postgres_username = {
-        display_name    = "Postgres User"
-        description     = "Postgres user the tracing instances connect as."
-        type            = "STRING"
-        assignment_type = "STATIC"
-        argument        = jsonencode(var.langfuse_postgres_username)
-      }
-
-      langfuse_postgres_password = {
-        display_name    = "Postgres Password"
-        description     = "Password of the Postgres user."
+      stackit_service_account_key = {
+        display_name    = "STACKIT Service Account Key"
+        description     = "Service account key the building block authenticates against STACKIT with, as JSON."
         type            = "STRING"
         assignment_type = "STATIC"
         sensitive = {
           argument = {
-            secret_value   = var.langfuse_postgres_password
-            secret_version = nonsensitive(sha256(var.langfuse_postgres_password))
+            secret_value   = var.stackit_service_account_key
+            secret_version = nonsensitive(sha256(var.stackit_service_account_key))
           }
         }
       }
+
+      stackit_s3_admin_access_key = {
+        display_name    = "Object Storage Admin Access Key"
+        description     = "Access key of the administrative Object Storage credential the buckets are created with."
+        type            = "STRING"
+        assignment_type = "STATIC"
+        sensitive = {
+          argument = {
+            secret_value   = var.stackit_s3_admin_access_key
+            secret_version = nonsensitive(sha256(var.stackit_s3_admin_access_key))
+          }
+        }
+      }
+
+      stackit_s3_admin_secret_access_key = {
+        display_name    = "Object Storage Admin Secret Access Key"
+        description     = "Secret access key of the administrative Object Storage credential."
+        type            = "STRING"
+        assignment_type = "STATIC"
+        sensitive = {
+          argument = {
+            secret_value   = var.stackit_s3_admin_secret_access_key
+            secret_version = nonsensitive(sha256(var.stackit_s3_admin_secret_access_key))
+          }
+        }
+      }
+
+      stackit_s3_admin_credentials_group_urn = {
+        display_name    = "Object Storage Admin Credentials Group"
+        description     = "URN of the administrative Object Storage credentials group every tenant's bucket policy keeps access for."
+        type            = "STRING"
+        assignment_type = "STATIC"
+        argument        = jsonencode(var.stackit_s3_admin_credentials_group_urn)
+      }
+
+      langfuse_postgres_instance_id = {
+        display_name    = "Postgres Instance"
+        description     = "UUID of the shared PostgreSQL Flex instance the tenants' databases are created in."
+        type            = "STRING"
+        assignment_type = "STATIC"
+        argument        = jsonencode(var.langfuse_postgres_instance_id)
+      }
+
+      # ── The shared ClickHouse cluster ──
+      #
+      # Every value here comes from an output of the `ai/clickhouse` module. The administrative password
+      # is deliberately absent: the DDL Job mounts the Secret the cluster already holds it in.
 
       langfuse_clickhouse_host = {
         display_name    = "ClickHouse Host"
@@ -533,25 +616,68 @@ resource "meshstack_building_block_definition" "this" {
         argument        = jsonencode(var.langfuse_clickhouse_host)
       }
 
-      langfuse_clickhouse_username = {
-        display_name    = "ClickHouse User"
-        description     = "ClickHouse user the tracing instances connect as."
-        type            = "STRING"
+      langfuse_clickhouse_native_port = {
+        display_name    = "ClickHouse Native Port"
+        description     = "Native protocol port of the shared ClickHouse cluster."
+        type            = "INTEGER"
         assignment_type = "STATIC"
-        argument        = jsonencode(var.langfuse_clickhouse_username)
+        argument        = jsonencode(var.langfuse_clickhouse_native_port)
       }
 
-      langfuse_clickhouse_password = {
-        display_name    = "ClickHouse Password"
-        description     = "Password of the ClickHouse user."
+      langfuse_clickhouse_namespace = {
+        display_name    = "ClickHouse Namespace"
+        description     = "Namespace of the shared ClickHouse cluster. Each tenant's DDL Job runs in it."
         type            = "STRING"
         assignment_type = "STATIC"
-        sensitive = {
-          argument = {
-            secret_value   = var.langfuse_clickhouse_password
-            secret_version = nonsensitive(sha256(var.langfuse_clickhouse_password))
-          }
-        }
+        argument        = jsonencode(var.langfuse_clickhouse_namespace)
+      }
+
+      langfuse_clickhouse_ddl_cluster_name = {
+        display_name    = "ClickHouse Cluster Name"
+        description     = "Name of the ClickHouse cluster as the server knows it. Every statement runs ON CLUSTER with it."
+        type            = "STRING"
+        assignment_type = "STATIC"
+        argument        = jsonencode(var.langfuse_clickhouse_ddl_cluster_name)
+      }
+
+      langfuse_clickhouse_admin_username = {
+        display_name    = "ClickHouse Admin User"
+        description     = "Administrative ClickHouse user that creates a tenant's database and user."
+        type            = "STRING"
+        assignment_type = "STATIC"
+        argument        = jsonencode(var.langfuse_clickhouse_admin_username)
+      }
+
+      langfuse_clickhouse_admin_secret_name = {
+        display_name    = "ClickHouse Admin Secret"
+        description     = "Name of the Kubernetes Secret in the ClickHouse namespace that holds the administrative password."
+        type            = "STRING"
+        assignment_type = "STATIC"
+        argument        = jsonencode(var.langfuse_clickhouse_admin_secret_name)
+      }
+
+      langfuse_clickhouse_admin_secret_key = {
+        display_name    = "ClickHouse Admin Secret Key"
+        description     = "Key inside the administrative Secret that holds the password."
+        type            = "STRING"
+        assignment_type = "STATIC"
+        argument        = jsonencode(var.langfuse_clickhouse_admin_secret_key)
+      }
+
+      langfuse_clickhouse_client_image = {
+        display_name    = "ClickHouse Client Image"
+        description     = "Image the DDL Job runs `clickhouse-client` from."
+        type            = "STRING"
+        assignment_type = "STATIC"
+        argument        = jsonencode(var.langfuse_clickhouse_client_image)
+      }
+
+      langfuse_clickhouse_ddl_timeout = {
+        display_name    = "ClickHouse DDL Timeout"
+        description     = "Seconds each ClickHouse DDL Job may run."
+        type            = "INTEGER"
+        assignment_type = "STATIC"
+        argument        = jsonencode(var.langfuse_clickhouse_ddl_timeout)
       }
 
       langfuse_valkey_host = {
@@ -581,40 +707,6 @@ resource "meshstack_building_block_definition" "this" {
         type            = "INTEGER"
         assignment_type = "STATIC"
         argument        = jsonencode(var.langfuse_valkey_database_count)
-      }
-
-      langfuse_s3_endpoint = {
-        display_name    = "Object Storage Endpoint"
-        description     = "Endpoint URL of the object storage, including the scheme."
-        type            = "STRING"
-        assignment_type = "STATIC"
-        argument        = jsonencode(var.langfuse_s3_endpoint)
-      }
-
-      langfuse_s3_access_key_id = {
-        display_name    = "Object Storage Access Key Id"
-        description     = "Access key id of the object storage credential."
-        type            = "STRING"
-        assignment_type = "STATIC"
-        sensitive = {
-          argument = {
-            secret_value   = var.langfuse_s3_access_key_id
-            secret_version = nonsensitive(sha256(var.langfuse_s3_access_key_id))
-          }
-        }
-      }
-
-      langfuse_s3_secret_access_key = {
-        display_name    = "Object Storage Secret Access Key"
-        description     = "Secret access key of the object storage credential."
-        type            = "STRING"
-        assignment_type = "STATIC"
-        sensitive = {
-          argument = {
-            secret_value   = var.langfuse_s3_secret_access_key
-            secret_version = nonsensitive(sha256(var.langfuse_s3_secret_access_key))
-          }
-        }
       }
 
       hub = {

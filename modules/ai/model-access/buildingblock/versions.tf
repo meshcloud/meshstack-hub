@@ -30,6 +30,23 @@ terraform {
       version = ">= 0.24.0"
     }
 
+    stackit = {
+      source = "stackitcloud/stackit"
+      # The floor of modules/stackit/postgresflex/buildingblock/database, which this module sources.
+      # Earlier versions do not carry the v3 PostgreSQL Flex schema.
+      version = ">= 0.110.0"
+    }
+
+    aws = {
+      source = "hashicorp/aws"
+      # An upper bound, and the second deliberate exception to the hub rule that provider constraints
+      # use '>='. It is not a choice made here: modules/stackit/storage-bucket/buildingblock/bucket
+      # carries the same constraint, because v5 of this provider always sends LocationConstraint in
+      # CreateBucket while STACKIT's StorageGRID only accepts a request without it. A wider
+      # constraint here would not intersect with the submodule's and init would fail.
+      version = ">= 4.0, < 5.0"
+    }
+
     random = {
       source = "hashicorp/random"
       # random_bytes arrived in 3.5.0. Its `hex` and `base64` attributes are marked sensitive,

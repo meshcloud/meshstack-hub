@@ -48,15 +48,18 @@ output "langfuse_oidc_callback_url" {
   description = "Callback URL to register at the identity provider for this tenant's Langfuse instance."
 }
 
-# This building block does not create the Postgres database, the ClickHouse database or the bucket.
-# It derives their names and connects to them, so the platform team's own provisioning has to create
-# them under exactly these names before the first apply. The output reports them.
+# The names of the per-tenant resources in the four shared backends. The Postgres and the bucket names
+# are read back off the resources that carry them rather than off the locals they were derived from, so
+# the output describes what the run created. The ClickHouse pair comes from the derivation, because
+# ClickHouse has no Terraform resource here and the names travel into the DDL Job as Helm values.
 output "langfuse_backend_names" {
-  description = "The per-tenant names the tenant's Langfuse instance uses in the four shared backends. The Postgres database, the ClickHouse database and the bucket have to exist under these names before the first apply."
+  description = "The per-tenant names the tenant's Langfuse instance uses in the four shared backends. The module creates the Postgres database and its owner user, the ClickHouse database and its user, and the bucket; Valkey is separated by key prefix and database index alone."
   value = {
-    postgres_database   = local.langfuse_postgres_database
+    postgres_database   = module.postgres.database_name
+    postgres_username   = module.postgres.username
     clickhouse_database = local.langfuse_clickhouse_database
-    bucket              = local.langfuse_bucket
+    clickhouse_username = local.langfuse_clickhouse_username
+    bucket              = module.bucket.bucket_name
     valkey_key_prefix   = local.langfuse_valkey_key_prefix
     valkey_database     = local.langfuse_valkey_database
   }

@@ -1,0 +1,64 @@
+# The Job that creates the tenant's database and its scoped user.
+#
+# It is a post-install and post-upgrade hook, so Helm runs it on the first apply and on every later
+# one, and Helm waits for a hook Job to finish. A statement that fails takes the Job with it, the Job
+# takes the release, and the release takes the Terraform apply — which is the whole point of running
+# the DDL from here instead of from a script somebody remembers to run.
+#
+# The delete policy keeps a failed Job for its log and removes a successful one right away, so the
+# shared ClickHouse namespace does not collect one finished Job per tenant per apply.
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: {{ .Release.Name }}-create
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app.kubernetes.io/managed-by: meshstack
+    app.kubernetes.io/part-of: ai-model-access
+  annotations:
+    helm.sh/hook: post-install,post-upgrade
+    helm.sh/hook-weight: "0"
+    helm.sh/hook-delete-policy: before-hook-creation,hook-succeeded
+spec:
+  # One attempt. The script waits for the cluster itself, so a failure past that point is a failure of
+  # a statement, and repeating it would only hide the error behind a retry.
+  backoffLimit: 0
+  activeDeadlineSeconds: {{ .Values.job.timeoutSeconds }}
+  template:
+    metadata:
+      name: {{ .Release.Name }}-create
+      labels:
+        app.kubernetes.io/managed-by: meshstack
+        app.kubernetes.io/part-of: ai-model-access
+    spec:
+      restartPolicy: Never
+      # The Job talks to ClickHouse and never to the Kubernetes API.
+      automountServiceAccountToken: false
+      containers:
+        - name: ddl
+          image: {{ required "clickhouse.image is required" .Values.clickhouse.image | quote }}
+          env:
+            - name: ADMIN_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ required "admin.secretName is required" .Values.admin.secretName }}
+                  key: {{ .Values.admin.secretKey }}
+            - name: TENANT_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ required "tenant.secretName is required" .Values.tenant.secretName }}
+                  key: {{ .Values.tenant.secretKey }}
+          command:
+            - /bin/bash
+            - -c
+            - |
+              {{- include "clickhouse-ddl.script.create" . | nindent 14 }}
+          # The pod sends a handful of statements and waits, so it needs almost nothing. A small
+          # request also keeps it schedulable on a node the ClickHouse replicas have already filled.
+          resources:
+            requests:
+              cpu: 50m
+              memory: 64Mi
+            limits:
+              cpu: 200m
+              memory: 256Mi
