@@ -89,6 +89,14 @@ resource "meshstack_building_block_definition" "this" {
       A CI pipeline caches build dependencies in a STACKIT bucket, reducing build times
       while keeping artifacts isolated per project.
 
+      ## 🪣 One bucket per consumer
+
+      Each order creates one bucket and one credentials group, and the bucket policy denies every
+      principal outside that group. A team that runs a shared service and wants each of its tenants
+      to have its own storage orders the building block once per tenant, which gives every tenant a
+      credential that reaches its own bucket and nothing else. The bucket name is the identifier, so
+      it must be unique within the STACKIT project.
+
       ## 📊 Shared Responsibility
 
       | Responsibility | Platform Team | Application Team |
@@ -215,6 +223,18 @@ resource "meshstack_building_block_definition" "this" {
 
       endpoint = {
         display_name    = "S3 Endpoint"
+        type            = "STRING"
+        assignment_type = "NONE"
+      }
+
+      region = {
+        display_name    = "S3 Region"
+        type            = "STRING"
+        assignment_type = "NONE"
+      }
+
+      credentials_group_urn = {
+        display_name    = "Credentials Group URN"
         type            = "STRING"
         assignment_type = "NONE"
       }
