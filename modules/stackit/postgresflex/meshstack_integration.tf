@@ -224,7 +224,7 @@ resource "meshstack_building_block_definition" "this" {
 
       flavor_ram = {
         display_name    = "Memory (GiB)"
-        description     = "Memory in GiB. Must form a valid pair with the number of vCPUs."
+        description     = "Memory in GiB. Must form a valid pair with the number of vCPUs. Memory also decides how many connections the instance accepts: 4 GiB gives 95, 8 GiB gives 195, 16 GiB gives 385, 32 GiB gives 785 and 128 GiB gives 3170. The vCPU count has no effect on that limit."
         type            = "INTEGER"
         assignment_type = "USER_INPUT"
         default_value   = jsonencode(4)
@@ -346,6 +346,12 @@ resource "meshstack_building_block_definition" "this" {
 
       connection_string = {
         display_name    = "Connection String"
+        type            = "STRING"
+        assignment_type = "NONE"
+      }
+
+      direct_connection_string = {
+        display_name    = "Direct Connection String"
         type            = "STRING"
         assignment_type = "NONE"
       }

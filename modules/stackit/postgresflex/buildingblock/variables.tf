@@ -20,16 +20,56 @@ variable "stackit_region" {
   description = "STACKIT region the instance is created in. Ignored when the caller supplies its own provider configuration."
 }
 
+# ── Create an instance, or use an existing one ─────────────────────────────────
+
+variable "existing_instance_id" {
+  type        = string
+  nullable    = true
+  default     = null
+  description = <<-EOT
+  UUID of a PostgreSQL Flex instance that already exists. Leave it unset and the module creates the
+  instance, the database and the owner user as one unit. Set it and the module creates only the
+  database and the owner user inside that instance, so several tenants can share one instance and
+  stay separated by database name.
+
+  Database-only mode skips the instance resource, so every input describing the instance shape has
+  no effect: `instance_name`, `flavor_cpu`, `flavor_ram`, `replicas`, `storage_class`,
+  `storage_size`, `postgres_version`, `backup_schedule`, `retention_days`, `acl`,
+  `allow_stackit_public_ip_ranges` and `network_access_scope`. `project_id` must name the project
+  the shared instance lives in and `stackit_region` its region.
+  EOT
+
+  # A caller that builds this value with an expression such as `try(...)` or `lookup(...)` easily
+  # ends up passing an empty string. That would select database-only mode and then send an empty
+  # instance ID to the API, so the module rejects it here instead of failing on a request the
+  # message of which explains nothing.
+  validation {
+    condition     = var.existing_instance_id == null ? true : trimspace(var.existing_instance_id) != ""
+    error_message = "existing_instance_id must be null or a UUID. An empty string selects database-only mode and then names no instance."
+  }
+
+  validation {
+    condition     = var.existing_instance_id == null ? true : can(regex("^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$", var.existing_instance_id))
+    error_message = "existing_instance_id must be a UUID, for example 3f2504e0-4f89-11d3-9a0c-0305e82c3301."
+  }
+}
+
 # ── Instance shape ─────────────────────────────────────────────────────────────
 
 variable "instance_name" {
   type        = string
-  nullable    = false
-  description = "Name of the PostgreSQL Flex instance."
+  nullable    = true
+  default     = null
+  description = "Name of the PostgreSQL Flex instance the module creates. Leave it unset in database-only mode, where `existing_instance_id` selects the instance instead."
 
   validation {
-    condition     = can(regex("^[a-z0-9]([a-z0-9-]*[a-z0-9])?$", var.instance_name))
+    condition     = var.instance_name == null ? true : can(regex("^[a-z0-9]([a-z0-9-]*[a-z0-9])?$", var.instance_name))
     error_message = "The instance name may contain lowercase letters, digits and hyphens, and must start and end with a letter or a digit."
+  }
+
+  validation {
+    condition     = (var.instance_name == null) != (var.existing_instance_id == null)
+    error_message = "Set exactly one of instance_name and existing_instance_id. Set instance_name to create a new instance together with the database and the user, or set existing_instance_id to create only the database and the user inside an instance that already exists."
   }
 }
 
@@ -44,7 +84,7 @@ variable "flavor_ram" {
   type        = number
   nullable    = false
   default     = 4
-  description = "Memory of the instance flavor in GiB. Must form a valid pair with `flavor_cpu`."
+  description = "Memory of the instance flavor in GiB. Must form a valid pair with `flavor_cpu`. Memory also decides `max_connections`: 4 GiB gives 95, 8 GiB gives 195, 16 GiB gives 385, 32 GiB gives 785 and 128 GiB gives 3170, of which STACKIT reserves 15 for itself. The vCPU count has no effect on the limit."
 }
 
 variable "replicas" {
@@ -194,7 +234,7 @@ variable "database_user_roles" {
   type        = list(string)
   nullable    = false
   default     = ["login", "createdb"]
-  description = "Roles granted to the database user. STACKIT supports `login` and `createdb`."
+  description = "Roles granted to the database user. STACKIT supports `login` and `createdb`. Applications that run their migrations with `prisma migrate deploy`, Langfuse among them, need only `login`."
 
   validation {
     condition     = alltrue([for role in var.database_user_roles : contains(["login", "createdb"], role)])
