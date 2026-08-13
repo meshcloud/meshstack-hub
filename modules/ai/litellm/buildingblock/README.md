@@ -221,53 +221,6 @@ The error message names the cause:
 
 > You must be a LiteLLM Enterprise user to use SSO for more than 5 users. If you have a license please set `LITELLM_LICENSE` in your env. […] You are seeing this error message because You configured SSO […] in your env. Please unset it
 
-### Recovery: take a row out of the user table
-
-Write these steps down where your on-call can find them, because working them out during the incident costs the console for everybody.
-
-**The master key is the way out, and it keeps working.** The seat check sits on the two SSO login routes only — `/sso/key/generate` and `/sso/saml/callback` — and `user_api_key_auth` carries no seat check at all. Every `/user`, `/team` and `/key` call authenticated with the master key works while the console is locked, and the master key authenticates as `proxy_admin`.
-
-1. **Read the master key** from the Kubernetes Secret the `master_key_secret_name` output names.
-
-   ```bash
-   MASTER_KEY=$(kubectl -n litellm get secret litellm-master-key -o jsonpath='{.data.masterkey}' | base64 -d)
-   kubectl -n litellm port-forward svc/litellm 4000:4000 &
-   ```
-
-2. **List the rows.** A read-only query against Postgres shows the whole table, which is what you need for the decision. The table name is quoted CamelCase and the primary key is `user_id`:
-
-   ```sql
-   SELECT user_id, user_email, user_role, created_at
-   FROM "LiteLLM_UserTable"
-   ORDER BY created_at;
-   ```
-
-   More than five rows here is the fault. Five or fewer means the lockout has another cause.
-
-3. **Pick the surplus row.** In this architecture that is a human who no longer needs the console, and `created_at` orders the candidates. Do not pick the `default_user_id` row — see the warning below.
-
-4. **Delete it through the API, not with SQL.**
-
-   ```bash
-   curl -X POST http://localhost:4000/user/delete \
-     -H "Authorization: Bearer $MASTER_KEY" \
-     -H "Content-Type: application/json" \
-     -d '{"user_ids": ["<user_id>"]}'
-   ```
-
-   `POST /user/delete` needs the `proxy_admin` role, which the master key carries, and it is not gated behind an Enterprise licence. It removes the member from every team the user belonged to, then deletes the user's virtual keys, invitation links, organization memberships and team memberships, and the user row last.
-
-5. **Log in again.** The next login initiation counts five rows or fewer and passes.
-
-**Do not delete the row with SQL.** Four foreign keys point at `LiteLLM_UserTable` — three from `LiteLLM_InvitationLink` and one from `LiteLLM_OrganizationMembership` — and all four are `ON DELETE RESTRICT`. A user who was ever invited, or who holds an organization membership, therefore makes a raw `DELETE` fail with a constraint violation. A user with neither lets it succeed while leaving orphans behind in `LiteLLM_VerificationToken` and `LiteLLM_TeamMembership`, and the orphaned verification tokens are that user's virtual keys. The API call does the cleanup in the right order; the constraints do not.
-
-**Never delete the `default_user_id` row.** That is the row the proxy writes for callers that authenticate with the master key, and `var.disable_auto_add_proxy_admin_to_teams` is what keeps it from being written in the first place. `/user/delete` also deletes every `LiteLLM_VerificationToken` row that carries the deleted `user_id`, and **whether a virtual key issued with the master key carries `default_user_id` in that column is not verified here.** Until somebody checks that on a throwaway database, treat the row as untouchable: the downside is deleting every tenant's virtual key.
-
-Two further parts of the picture are **unverified**, and you should know which:
-
-- The counting function subtracts rows whose `metadata` carries `scim_active` set to the JSON boolean `false`, so marking a row inactive would free a seat without deleting anything. SCIM itself is Enterprise-gated, and whether a plain `/user/update` writes that metadata field on the open-source proxy is not established. Test it on a throwaway user before you rely on it under pressure. A supplied `metadata` object also replaces the row's metadata rather than merging into it.
-- `/user/delete` does not touch `LiteLLM_DailyUserSpend`, `LiteLLM_SpendLogs` or `LiteLLM_AuditLog`. None of them carries a foreign key, so nothing breaks, but the spend history of a deleted user stays in the database.
-
 ### Operations that are forbidden here
 
 Two API calls write one row per member into `LiteLLM_UserTable`, and each is one line of Terraform away:
@@ -336,6 +289,24 @@ module "litellm" {
   }
 }
 ```
+
+## Follow-up
+
+**A locked console has no tested recovery path yet.** Once a sixth row exists in
+`LiteLLM_UserTable`, every login initiation fails and nobody can start a new session. The defaults
+here make that unlikely — `var.disable_auto_add_proxy_admin_to_teams` keeps Terraform from writing
+any row, and `user_id_attribute` is pinned to `sub` so one person cannot become two rows — but the
+risk does not go away, because each console user is one of five.
+
+Removing a row through the API is the likely way out, and the master key does keep working while the
+console is locked, because the seat check sits on the two SSO login routes and not in the general
+authentication path. What is **not** tested is the side effects, so no procedure is documented here.
+Two things need establishing on a throwaway database first: whether deleting a user also deletes
+virtual keys that carry the same `user_id`, and whether the `scim_active` flag the counting function
+honours can be set without an Enterprise licence.
+
+Until then, treat five console users as a hard limit to plan around rather than a threshold to
+recover from.
 
 <!-- BEGIN_TF_DOCS -->
 ## Requirements
