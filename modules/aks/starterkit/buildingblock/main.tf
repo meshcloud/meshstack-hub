@@ -56,13 +56,6 @@ resource "meshstack_project_user_binding" "creator_admin" {
   }
 }
 
-# Resolves the platform's full identifier (`<platform>.<location>`) from its ref, for meshPanel deep-links.
-data "meshstack_platform" "this" {
-  metadata = {
-    uuid = var.platform_ref.uuid
-  }
-}
-
 resource "meshstack_tenant" "this" {
   for_each = var.landing_zone_refs
 
