@@ -51,7 +51,7 @@ export class PlatformCardsComponent {
     this.logoBackgroundColors[cardTitle] = color;
   }
 
-  public getCategoryLabel(category?: 'hyperscaler' | 'european' | 'china' | 'devops' | 'private-cloud'): { emoji: string; text: string } | null {
+  public getCategoryLabel(category?: 'hyperscaler' | 'european' | 'china' | 'devops' | 'private-cloud' | 'ai'): { emoji: string; text: string } | null {
     if (!category) {return null;}
 
     switch (category) {
@@ -65,6 +65,8 @@ export class PlatformCardsComponent {
       return { emoji: '🔧', text: 'DevOps' };
     case 'private-cloud':
       return { emoji: '🔒', text: 'Private Cloud' };
+    case 'ai':
+      return { emoji: '🤖', text: 'AI' };
     default:
       return null;
     }

@@ -2,7 +2,7 @@ export interface Platform {
   platformType: string;
   name: string;
   description: string;
-  category?: 'hyperscaler' | 'european' | 'china' | 'devops' | 'private-cloud';
+  category?: 'hyperscaler' | 'european' | 'china' | 'devops' | 'private-cloud' | 'ai';
   benefits?: string[];
   logo: string;
   readme: string;
