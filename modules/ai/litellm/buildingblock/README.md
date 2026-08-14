@@ -228,7 +228,7 @@ Two API calls write one row per member into `LiteLLM_UserTable`, and each is one
 - **`/team/member_add`**, which the `ncecere/litellm` provider exposes as `resource "litellm_team_member"` and `resource "litellm_team_member_add"`.
 - **`/user/new`**, for which that provider has no resource at version 2.0.1, so it takes a direct API call or a newer provider version.
 
-Neither belongs in this architecture, and no module in this repository creates either. A tenant needs no team membership and no user of its own: `modules/ai/litellm-team` creates a team and a virtual key, and the key alone carries the budget, the rate limit and the model allowance. A membership adds nothing a tenant can use and costs one of five seats.
+Neither belongs in this architecture, and no module in this repository creates either. A tenant needs no team membership and no user of its own: `modules/ai/model-access` creates a team and a virtual key, and the key alone carries the budget, the rate limit and the model allowance. A membership adds nothing a tenant can use and costs one of five seats.
 
 **The provider makes the mistake easy, which is exactly why the rule needs writing down.** `litellm_team_member` sits next to `litellm_team` in the provider documentation and reads like the natural next resource to add. It is not. Review any change that introduces it, and reject it unless somebody has bought an Enterprise licence first.
 
@@ -339,6 +339,8 @@ No modules.
 | Name | Description | Type | Default | Required |
 |------|-------------|------|---------|:--------:|
 | <a name="input_chart_version"></a> [chart\_version](#input\_chart\_version) | Version of the litellm-helm chart. See https://github.com/BerriAI/litellm/pkgs/container/litellm-helm. | `string` | `"1.96.2"` | no |
+| <a name="input_client_certificate"></a> [client\_certificate](#input\_client\_certificate) | PEM-encoded client certificate this module authenticates with, as an alternative to `token`. Pass the decoded certificate, not the base64 blob a kubeconfig carries. | `string` | `null` | no |
+| <a name="input_client_key"></a> [client\_key](#input\_client\_key) | PEM-encoded private key belonging to `client_certificate`. Pass the decoded key, not the base64 blob a kubeconfig carries. | `string` | `null` | no |
 | <a name="input_cluster_ca_certificate"></a> [cluster\_ca\_certificate](#input\_cluster\_ca\_certificate) | Cluster CA certificate, base64 encoded. | `string` | n/a | yes |
 | <a name="input_cluster_endpoint"></a> [cluster\_endpoint](#input\_cluster\_endpoint) | IP address or hostname of the cluster control plane, without the https:// scheme. | `string` | n/a | yes |
 | <a name="input_disable_auto_add_proxy_admin_to_teams"></a> [disable\_auto\_add\_proxy\_admin\_to\_teams](#input\_disable\_auto\_add\_proxy\_admin\_to\_teams) | Write `general_settings.disable_auto_add_proxy_admin_to_teams: true` into the proxy config, so<br/>the proxy adds no admin member to a team it creates.<br/><br/>Leave it at `true`. With it `false`, the first call to `/team/new` writes one row to<br/>`LiteLLM_UserTable` and that row consumes one of the five console seats the free open-source<br/>proxy allows. The row is written once and not once per team, because every caller that<br/>authenticates with the master key is identified as the same constant user id, but it still costs<br/>one of the five seats. | `bool` | `true` | no |
@@ -361,7 +363,7 @@ No modules.
 | <a name="input_redis_port"></a> [redis\_port](#input\_redis\_port) | Port of the Redis instance. Only used when redis\_host is set. | `number` | `6379` | no |
 | <a name="input_release_name"></a> [release\_name](#input\_release\_name) | Helm release name of the gateway. | `string` | `"litellm"` | no |
 | <a name="input_replica_count"></a> [replica\_count](#input\_replica\_count) | Number of gateway pods. Set redis\_host as well when this is greater than 1. | `number` | `1` | no |
-| <a name="input_token"></a> [token](#input\_token) | Token of the service account this module runs as. It needs permission to create a namespace, secrets and the workloads of the Helm release. | `string` | n/a | yes |
+| <a name="input_token"></a> [token](#input\_token) | Token of the service account this module runs as. It needs permission to create a namespace, secrets and the workloads of the Helm release. Leave it null and set `client_certificate` and `client_key` instead when the cluster hands out a certificate pair. | `string` | `null` | no |
 
 ## Outputs
 
@@ -374,4 +376,5 @@ No modules.
 | <a name="output_namespace"></a> [namespace](#output\_namespace) | Namespace the gateway runs in. |
 | <a name="output_oidc_callback_url"></a> [oidc\_callback\_url](#output\_oidc\_callback\_url) | Callback URL to register at the identity provider. Null when var.oidc is not set. |
 | <a name="output_service_name"></a> [service\_name](#output\_service\_name) | Name of the Service in front of the gateway pods. |
+| <a name="output_service_port"></a> [service\_port](#output\_service\_port) | Port the Service in front of the gateway pods listens on. An Ingress backend needs it. |
 <!-- END_TF_DOCS -->

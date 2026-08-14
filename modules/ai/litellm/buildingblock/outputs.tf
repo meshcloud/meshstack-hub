@@ -38,3 +38,10 @@ output "master_key_secret_name" {
   description = "Name of the secret in the gateway namespace that holds the master key under the 'masterkey' key."
   value       = kubernetes_secret_v1.master_key.metadata[0].name
 }
+
+output "service_port" {
+  # The chart fixes the port and the module does not take it as an input, so a caller that puts an
+  # Ingress in front of the Service reads it here instead of repeating a number it does not own.
+  description = "Port the Service in front of the gateway pods listens on. An Ingress backend needs it."
+  value       = local.service_port
+}

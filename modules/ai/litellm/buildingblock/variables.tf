@@ -8,10 +8,41 @@ variable "cluster_ca_certificate" {
   description = "Cluster CA certificate, base64 encoded."
 }
 
+# The cluster credential is either a service account token or a client certificate pair. A
+# composition that installs the gateway on a cluster it just created usually holds the certificate
+# pair, because that is what a managed cluster's credential API returns — STACKIT SKE among them.
+# `modules/ai/model-access` accepts both for the same reason.
 variable "token" {
   type        = string
   sensitive   = true
-  description = "Token of the service account this module runs as. It needs permission to create a namespace, secrets and the workloads of the Helm release."
+  default     = null
+  description = "Token of the service account this module runs as. It needs permission to create a namespace, secrets and the workloads of the Helm release. Leave it null and set `client_certificate` and `client_key` instead when the cluster hands out a certificate pair."
+
+  # The message carries no interpolation, because both values are sensitive and Terraform refuses
+  # to print a sensitive value in an error message.
+  validation {
+    condition     = (var.token != null) != (var.client_certificate != null)
+    error_message = "Set either token or client_certificate, not both and not neither. Without a credential every call to the API server is anonymous and the install fails on the first namespace."
+  }
+}
+
+variable "client_certificate" {
+  type        = string
+  sensitive   = true
+  default     = null
+  description = "PEM-encoded client certificate this module authenticates with, as an alternative to `token`. Pass the decoded certificate, not the base64 blob a kubeconfig carries."
+}
+
+variable "client_key" {
+  type        = string
+  sensitive   = true
+  default     = null
+  description = "PEM-encoded private key belonging to `client_certificate`. Pass the decoded key, not the base64 blob a kubeconfig carries."
+
+  validation {
+    condition     = (var.client_certificate == null) == (var.client_key == null)
+    error_message = "client_certificate and client_key belong together. Set both or neither."
+  }
 }
 
 variable "namespace" {
