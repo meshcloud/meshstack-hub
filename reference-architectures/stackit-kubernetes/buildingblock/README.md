@@ -21,9 +21,19 @@ moves the whole composition to another Hub release.
 
 It is a `TENANT_LEVEL` building block ordered against the STACKIT Project platform, so the cluster
 lands in the meshTenant's own STACKIT project. The application team decides two things, the cluster
-name and the ingress exposure. Everything else — the ACME contact, the Let's Encrypt endpoint, the
-chart versions, the issuer name and the ingress class — is a landing-zone concern and arrives as a
-static input or stays at the module default.
+name and the ingress exposure. Everything else — the Let's Encrypt endpoint, the chart versions, the
+issuer name and the ingress class — is a landing-zone concern and arrives as a static input or stays
+at the module default.
+
+The four modules run as **one** STACKIT service account, which
+[`../meshstack_integration.tf`](../meshstack_integration.tf) creates by calling
+[`modules/stackit/ske/backplane`](../../../modules/stackit/ske/backplane). That backplane grants
+`ske.admin` on the tenant folder and `dns.admin` on the shared zone's project, which is the whole
+set of permissions this composition needs.
+
+The ACME account is registered without a contact address. `acme_email` is passed as `""` in
+[`main.tf`](main.tf) and is not an input of this building block — see the architecture README for
+why.
 
 [`dns.tf`](dns.tf) holds the whole DNS design: one zone the platform team owns and every cluster
 shares, one label per cluster inside it, and the inputs that drive both. Read that file before you

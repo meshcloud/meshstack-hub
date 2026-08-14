@@ -15,7 +15,16 @@ variable "stackit_service_account_email" {
   type        = string
   nullable    = true
   default     = null
-  description = "Email of the STACKIT service account the SKE and DNS modules authenticate as through workload identity federation. The account needs `ske.admin` on the folder the tenant projects live in, because the target project of an order is unknown when the platform team registers the building block, and `ske.admin` is not offered at organization scope. It also needs `dns.admin` on the project that owns the shared DNS zone."
+  description = <<-EOT
+  Email of the STACKIT service account the SKE and DNS modules authenticate as through workload
+  identity federation. One account for both, created by `modules/stackit/ske/backplane`, which
+  `../meshstack_integration.tf` calls and wires into this input.
+
+  The account holds `ske.admin` on the folder the tenant projects live in, because the target
+  project of an order is unknown when the platform team registers the building block, and
+  `ske.admin` is not offered at organization scope. It holds `dns.admin` on the project that owns
+  the shared DNS zone, which is a static input and therefore nameable.
+  EOT
 }
 
 variable "cluster_name" {
@@ -52,13 +61,6 @@ variable "location_identifier" {
   nullable    = false
   default     = "global"
   description = "Identifier of the meshStack location the Kubernetes platform is registered in."
-}
-
-variable "acme_email" {
-  type        = string
-  nullable    = false
-  default     = ""
-  description = "Contact address Let's Encrypt uses for expiry warnings and account recovery. Leave empty to register the ACME account without a contact address."
 }
 
 variable "acme_server" {

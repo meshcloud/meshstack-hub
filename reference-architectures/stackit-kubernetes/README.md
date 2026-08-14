@@ -71,6 +71,30 @@ The team ordering a cluster decides two things: its name and how the ingress is 
 network — or `none`, which installs no ingress controller at all. Everything else is a
 landing-zone concern that the platform team sets once.
 
+#### One identity for the whole run
+
+All of it runs as a **single STACKIT service account**, created by
+[`modules/stackit/ske/backplane`](../../modules/stackit/ske/backplane), which
+[`meshstack_integration.tf`](meshstack_integration.tf) calls. The account authenticates through
+workload identity federation, so no long-lived key exists for it, and it holds exactly two grants —
+at two different scopes, for a reason that is the whole design of the backplane's role inputs:
+
+| Role | Scope | Why that scope |
+| --- | --- | --- |
+| `ske.admin` | the folder in `stackit_folder_id` | The cluster is created in the STACKIT project of whichever meshTenant orders it, so no project can be named when the definition is registered. A folder covers all of them. |
+| `dns.admin` | the project in `stackit_dns_zone_project_id` | The shared zone's project is a static input filled in at registration time. Naming it keeps the identity off every other project. |
+
+Neither role exists at organization scope on STACKIT — the authorization API offers a different set
+of roles per resource type, and an organization offers 76 of them, including neither of these.
+
+The second grant is what makes one backplane enough. Drop it and the composition still creates the
+cluster, then fails with a `403` when it writes the wildcard record.
+
+The account is named `mesh-ske` by default. If you already run one by hand under that name, either
+import it into this configuration or give the backplane a name of its own with
+`stackit_service_account_name` — STACKIT rejects a second account with the same name in the same
+project.
+
 ### 2. Hostnames and Certificates
 
 The platform team owns **one DNS zone**, for example `likvid.stackit.run`, in its own STACKIT
@@ -105,6 +129,19 @@ Two consequences worth knowing before you deploy:
 
 The DNS handling is isolated in [`buildingblock/dns.tf`](buildingblock/dns.tf), together with the
 inputs that drive it.
+
+#### The ACME account has no contact address
+
+This architecture registers its Let's Encrypt account without one, and there is no `acme_email`
+input on the building block. Let's Encrypt accepts an account with no contact address, and a
+certificate that fails to renew shows up on the `Certificate` resource in the cluster, where an
+operator watching the cluster sees it. The mail is a backstop, not the signal.
+
+Exposing the address is a **later feature**, for operators who do want mail about expiring
+certificates. It cannot simply be a constant: `modules/kubernetes/ingress` keeps `acme_email`
+required precisely because the address is not one value across an estate — the SKE foundation units
+use `ske@meshcloud.io`, but other units of other clouds use their own. So the module keeps the
+input, and this architecture passes `""` until there is a real value to pass.
 
 ### 3. Developer Starterkit — `ske/ske-starterkit`
 
@@ -173,7 +210,7 @@ The connector building block creates per-stage resources:
 | meshStack instance   | With Terraform/OpenTofu IaC runtime configured.                                                                                                   |
 | STACKIT account      | With access to SKE, STACKIT Git, and the global STACKIT Harbor registry.                                                                          |
 | STACKIT Project platform | Registered in meshStack, for example through the [`stackit-landingzone`](../stackit-landingzone) reference architecture. Clusters are ordered on its tenants. |
-| STACKIT identity     | A service account with `ske.admin` on the folder the tenant projects live in, `dns.admin` on the project that owns the shared DNS zone, and workload identity federation configured for the cluster building block definition. STACKIT offers neither role at organization scope. |
+| STACKIT identity     | Created for you by [`modules/stackit/ske/backplane`](../../modules/stackit/ske/backplane), which [`meshstack_integration.tf`](meshstack_integration.tf) calls. You supply the STACKIT project the account lives in and the folder the tenant projects live under; the backplane does the roles and the workload identity federation. The STACKIT provider you apply that file with needs `experiments = ["iam"]`. |
 | Forgejo organization | On STACKIT Git, with an API token for the Terraform provider.                                                                                     |
 | Harbor credentials   | Robot account credentials (username and secret) for push/pull access to the STACKIT global Harbor registry; shared across all STACKIT customers. |
 | Model Serving API    | STACKIT Model Serving endpoint and API key for the platform team to provide to the connector.                                                     |
@@ -184,9 +221,10 @@ The connector building block creates per-stage resources:
 
 1. Register the STACKIT Project platform, so tenants have a STACKIT project to order into.
 2. Register the **STACKIT Kubernetes Cluster** building block definition from
-   [`meshstack_integration.tf`](meshstack_integration.tf), setting the STACKIT identity, the ACME
-   contact address, the shared DNS zone with the project that owns it, and the DNS service account
-   key.
+   [`meshstack_integration.tf`](meshstack_integration.tf), setting the STACKIT project and folder
+   the backplane works with, the shared DNS zone with the project that owns it, and the DNS service
+   account key. Applying that file creates the service account, its WIF identity provider and both
+   role assignments, so nothing about the identity is set up by hand.
 3. An application team orders a cluster on its STACKIT project. The order creates the cluster, its
    ingress and the Kubernetes platform with its namespace landing zones.
 4. Register the starterkit and connector building block definitions against that platform.

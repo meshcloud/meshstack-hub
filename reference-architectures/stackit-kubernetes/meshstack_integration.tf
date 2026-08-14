@@ -1,8 +1,20 @@
-variable "stackit_service_account_email" {
+variable "stackit_backplane_project_id" {
   type        = string
   nullable    = false
-  default     = ""
-  description = "Email of the STACKIT service account the building block authenticates as through workload identity federation. It needs `ske.admin` on the folder the tenant projects live in, because the target project of an order is unknown when the building block definition is registered, and STACKIT does not offer `ske.admin` at organization scope. It also needs `dns.admin` on the project that owns the shared DNS zone."
+  description = "STACKIT project the backplane creates its service account in. This is the platform team's own project. It is deliberately not called `stackit_project_id`: the building block definition already carries an input of that name, which meshStack fills from the ordering tenant's STACKIT project."
+}
+
+variable "stackit_folder_id" {
+  type        = string
+  nullable    = false
+  description = "STACKIT folder the tenant projects live under. The backplane grants the service account `ske.admin` here, which covers every project below it. The cluster lands in whichever tenant project places the order, so no single project can be named, and STACKIT offers no ske role at organization scope."
+}
+
+variable "stackit_service_account_name" {
+  type        = string
+  nullable    = true
+  default     = null
+  description = "Name of the backplane service account. Defaults to `mesh-ske`. Override when deploying several instances of this architecture into the same STACKIT project."
 }
 
 variable "stackit_region" {
@@ -20,10 +32,18 @@ variable "stackit_dns_parent_zone_name" {
 }
 
 variable "stackit_dns_zone_project_id" {
-  type        = string
-  nullable    = false
-  default     = ""
-  description = "STACKIT project UUID that owns `stackit_dns_parent_zone_name`, which is usually the platform team's own project. Leave empty when the zone lives in the tenant's own STACKIT project, because the cluster then defaults to the project it is created in."
+  type     = string
+  nullable = false
+  default  = ""
+
+  description = <<-EOT
+  STACKIT project UUID that owns `stackit_dns_parent_zone_name`, which is usually the platform
+  team's own project. The backplane grants the service account `dns.admin` on exactly this project.
+
+  Leave empty when the zone lives in the tenant's own STACKIT project, because the cluster then
+  defaults to the project it is created in. That project is unknowable here, so the backplane can
+  grant nothing for it — add `dns.admin` on `stackit_folder_id` yourself if you run DNS that way.
+  EOT
 }
 
 variable "stackit_dns_cluster_label_enabled" {
@@ -46,13 +66,6 @@ variable "location_identifier" {
   nullable    = false
   default     = "global"
   description = "Identifier of the meshStack location the Kubernetes platforms are registered in."
-}
-
-variable "acme_email" {
-  type        = string
-  nullable    = false
-  default     = ""
-  description = "Contact address Let's Encrypt uses for expiry warnings and account recovery. Leave empty to register the ACME account without a contact address."
 }
 
 variable "acme_server" {
@@ -103,6 +116,44 @@ output "building_block_definition" {
   value = {
     uuid        = meshstack_building_block_definition.this.metadata.uuid
     version_ref = var.hub.bbd_draft ? meshstack_building_block_definition.this.version_latest : meshstack_building_block_definition.this.version_latest_release
+  }
+}
+
+data "meshstack_integrations" "integrations" {}
+
+# One backplane, one service account, one identity the whole composition runs as. The building block
+# creates the cluster and writes the cluster's wildcard record into the shared DNS zone in the same
+# Terraform run, so both modules authenticate as this account.
+#
+# The two roles sit at different scopes, and the reason is worth keeping in view: scope follows what
+# can be named here.
+#
+#   - `ske.admin` covers a folder. The cluster is created in the STACKIT project of whichever
+#     meshTenant places the order — that is the `stackit_project_id` building block definition input
+#     below, which meshStack fills from `PLATFORM_TENANT_ID` — and the platform team registers this
+#     definition long before it knows which projects those will be.
+#   - `dns.admin` covers one project. The shared zone's project is `stackit_dns_zone_project_id`, a
+#     static input the platform team fills in right here, so naming it costs nothing and keeps the
+#     identity off every other project. Without this grant the DNS module fails with a 403 the
+#     moment a tenant orders a cluster.
+#
+# The caller's STACKIT provider needs `experiments = ["iam"]` — the role assignment resources sit
+# behind that provider experiment.
+module "backplane" {
+  source = "github.com/meshcloud/meshstack-hub//modules/stackit/ske/backplane?ref=${var.hub.git_ref}"
+
+  project_id           = var.stackit_backplane_project_id
+  folder_id            = var.stackit_folder_id
+  service_account_name = coalesce(var.stackit_service_account_name, "mesh-ske")
+
+  additional_roles_project_id = var.stackit_dns_zone_project_id
+  additional_project_roles    = var.stackit_dns_zone_project_id == "" ? [] : ["dns.admin"]
+
+  workload_identity_federation = {
+    issuer = data.meshstack_integrations.integrations.workload_identity_federation.replicator.issuer
+    subjects = [
+      "${trimsuffix(data.meshstack_integrations.integrations.workload_identity_federation.replicator.subject, ":replicator")}:workspace.${var.meshstack.owning_workspace_identifier}.buildingblockdefinition.${meshstack_building_block_definition.this.metadata.uuid}"
+    ]
   }
 }
 
@@ -214,7 +265,7 @@ resource "meshstack_building_block_definition" "this" {
         description     = "Email of the STACKIT service account for WIF-based authentication."
         type            = "STRING"
         assignment_type = "STATIC"
-        argument        = jsonencode(var.stackit_service_account_email)
+        argument        = jsonencode(module.backplane.service_account_email)
       }
 
       STACKIT_USE_OIDC = {
@@ -292,13 +343,9 @@ resource "meshstack_building_block_definition" "this" {
 
       # ── Ingress and certificates, set once by the platform team ──
 
-      acme_email = {
-        display_name    = "ACME Contact Email"
-        description     = "Contact address Let's Encrypt uses for expiry warnings and account recovery."
-        type            = "STRING"
-        assignment_type = "STATIC"
-        argument        = jsonencode(var.acme_email)
-      }
+      # No `acme_email` input. Let's Encrypt accepts an account without a contact address, and
+      # cert-manager reports a failed renewal inside the cluster, so the address is a backstop
+      # rather than a requirement. Exposing it is a later feature — see README.md.
 
       acme_server = {
         display_name    = "ACME Directory URL"
@@ -432,6 +479,10 @@ terraform {
     meshstack = {
       source  = "meshcloud/meshstack"
       version = ">= 0.24.0"
+    }
+    stackit = {
+      source  = "stackitcloud/stackit"
+      version = ">= 0.110.0"
     }
   }
 }

@@ -41,7 +41,12 @@ module "ingress" {
     helm       = helm
   }
 
-  acme_email          = var.acme_email
+  # The ACME account is registered without a contact address. Let's Encrypt accepts that, and
+  # cert-manager reports a failed renewal on the Certificate resource inside the cluster, so the
+  # mail is a backstop rather than the signal an operator relies on. `modules/kubernetes/ingress`
+  # keeps the input required on purpose — the address is not one value across the estate — and this
+  # architecture simply has nobody to name here. See the architecture README.
+  acme_email          = ""
   acme_server         = var.acme_server
   cluster_issuer_name = var.cluster_issuer_name
   ingress_class_name  = var.ingress_class_name
