@@ -1,0 +1,43 @@
+apiVersion: cert-manager.io/v1
+kind: ClusterIssuer
+metadata:
+  name: {{ .Values.clusterIssuer.name }}
+spec:
+  acme:
+    email: {{ .Values.clusterIssuer.email | quote }}
+    server: {{ .Values.clusterIssuer.server | quote }}
+    privateKeySecretRef:
+      name: {{ .Values.clusterIssuer.privateKeySecretName }}
+    solvers:
+      {{- with .Values.dns01.stackit }}
+      # DNS-01 through the STACKIT webhook. It answers for the whole zone, which is the only way
+      # to get a wildcard certificate — HTTP-01 can never validate one.
+      - dns01:
+          webhook:
+            solverName: stackit
+            groupName: acme.stackit.de
+            config:
+              projectId: {{ .projectId | quote }}
+        selector:
+          dnsZones:
+            - {{ $.Values.dns01.zoneName | quote }}
+      {{- end }}
+      {{- with .Values.dns01.route53 }}
+      # cert-manager solves DNS-01 against Route53 itself, so this branch needs no extra chart.
+      - dns01:
+          route53:
+            region: {{ .region | quote }}
+            hostedZoneID: {{ .hostedZoneID | quote }}
+            accessKeyID: {{ .accessKeyID | quote }}
+            secretAccessKeySecretRef:
+              name: {{ .secretAccessKeySecretName }}
+              key: {{ .secretAccessKeySecretKey }}
+        selector:
+          dnsZones:
+            - {{ $.Values.dns01.zoneName | quote }}
+      {{- end }}
+      # HTTP-01 stays in place for every hostname outside the DNS-01 zone. cert-manager prefers
+      # the DNS-01 solver above, because its dnsZones selector is more specific than this one.
+      - http01:
+          ingress:
+            ingressClassName: {{ .Values.ingressClassName }}

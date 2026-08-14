@@ -1,0 +1,5 @@
+apiVersion: v2
+name: meshstack-ingress-issuer
+description: ClusterIssuer and wildcard Certificate for the meshStack Kubernetes ingress building block.
+type: application
+version: 1.0.0

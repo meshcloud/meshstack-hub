@@ -1,0 +1,27 @@
+# Azure OpenAI Model: **${model_name}**
+
+## Details
+
+| Property | Value |
+|----------|-------|
+| **API Base URL** | `${api_base}` |
+| **Model name** | `${model_name}` |
+| **Azure deployment** | `${deployment_name}` |
+| **Azure endpoint** | `${azure_endpoint}` |
+| **Azure API version** | `${azure_api_version}` |
+| **Model ID** | `${model_id}` |
+
+## Calling the model
+
+Call the LiteLLM gateway, not the Azure endpoint. Send your own virtual key as a bearer token and
+pass the model name in the `model` field:
+
+```sh
+curl "${api_base}/chat/completions" \
+  -H "Authorization: Bearer $VIRTUAL_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{"model": "${model_name}", "messages": [{"role": "user", "content": "Hello"}]}'
+```
+
+The Azure credential stays on the gateway. Your application never sees it and never talks to Azure
+directly, so the platform team can rotate the credential without a change on your side.

@@ -37,10 +37,5 @@ variable "admin_credentials_group_urn" {
 variable "bucket_name" {
   type        = string
   nullable    = false
-  description = "Name of the Object Storage bucket. Must be DNS-conformant."
-
-  validation {
-    condition     = can(regex("^[a-z0-9][a-z0-9.-]{1,61}[a-z0-9]$", var.bucket_name))
-    error_message = "Bucket name must be 3-63 characters, start and end with a lowercase letter or digit, and contain only lowercase letters, digits, hyphens, and dots."
-  }
+  description = "Name of the Object Storage bucket. Must be DNS-conformant: 3 to 63 characters, lowercase letters, digits, hyphens and dots, starting and ending with a letter or a digit. The credentials group created for the bucket carries the same name, so the name must be unique within the project. `./bucket` validates the value."
 }

@@ -1,0 +1,78 @@
+/*
+ * AI Platform reference architecture — the STACKIT implementation.
+ * Conventions: .agents/references/diagrams.md — render with: task diagrams
+ */
+digraph ai_platform {
+  rankdir=TB
+  splines=ortho
+  forcelabels=true
+  bgcolor="white"
+  nodesep=0.55
+  ranksep=0.85
+
+  node [shape=box style="rounded,filled" fontname="Helvetica" fontsize=11
+        fillcolor="#ffffff" color="#a2abb8" penwidth=1.1 margin="0.20,0.11"]
+  edge [fontname="Helvetica" fontsize=9 fontcolor="#697180" color="#8b95a3" arrowsize=0.7]
+
+  USER [label="👤 Application team" fillcolor="#ffffff" color="#a2abb8"]
+
+  subgraph cluster_stackit {
+    label="  STACKIT — sovereign infrastructure"
+    labeljust=l
+    fontname="Helvetica" fontsize=12 fontcolor="#697180"
+    style="rounded" color="#d5dae0"
+    margin=18
+
+    subgraph cluster_stack {
+      label="  AI Platform · on the cluster from stackit-kubernetes"
+      labeljust=l
+      fontname="Helvetica" fontsize=11 fontcolor="#697180"
+      style="rounded" color="#d5dae0"
+      margin=14
+
+      LITELLM  [label="🚪 LiteLLM ×1\nvirtual keys · budgets · model allow-list" fillcolor="#e5f2ea" color="#85bfa0"]
+      LANGFUSE [label="📈 Langfuse ×N\none tracing instance per tenant\nsharing Postgres, ClickHouse, Valkey and S3" fillcolor="#e5f2ea" color="#85bfa0"]
+      VLLM     [label="🧠 vLLM\nself-hosted models · optional"
+                fillcolor="#f0f1f3" color="#cdd2d8" fontcolor="#99a1ac" style="rounded,filled,dashed"]
+
+      { rank=same; LITELLM -> LANGFUSE [style=invis] }
+
+      LITELLM -> VLLM [xlabel="optional backend" style=dashed]
+    }
+
+    APPS [label="💬 Tenant AI applications ×N\nchat UIs, agents, assistants — built by teams"
+          fillcolor="#f0f1f3" color="#cdd2d8" fontcolor="#99a1ac" style="rounded,filled,dashed"]
+
+    MODEL [label="🧠 STACKIT AI Model Serving\nmanaged sovereign LLM API" fillcolor="#eef2f6" color="#93a7bb"]
+
+    APPS     -> LITELLM  [xlabel="calls the gateway"]
+    APPS     -> LANGFUSE [xlabel="sends traces to" style=dashed]
+    LITELLM  -> MODEL    [xlabel="routes inference to"]
+  }
+
+  subgraph cluster_mesh {
+    label="  meshStack — self-service and governance"
+    labeljust=l
+    fontname="Helvetica" fontsize=12 fontcolor="#697180"
+    style="rounded" color="#d5dae0"
+    margin=18
+
+    PLAT  [label="🛰️ LiteLLM Platform\ncustom platform type" fillcolor="#ecedfb" color="#9aa2e6"]
+    LZ    [label="🛬 AI Landing Zone\nallowed models · budget" fillcolor="#ecedfb" color="#9aa2e6"]
+    BBD_M [label="📦 ai/model-access BBD\nmandatory in the landing zone" fillcolor="#ecedfb" color="#9aa2e6"]
+    PROJ  [label="🗂️ Project ×N\ncarries budget and cost tags" fillcolor="#e5f2ea" color="#85bfa0"]
+
+    # The landing zone is the layer above both: it applies to the project and it makes the
+    # definition mandatory, so the two sit on one row below it.
+    { rank=same; BBD_M -> PROJ [style=invis] }
+
+    PLAT -> LZ
+    LZ   -> BBD_M [xlabel="makes mandatory"]
+    LZ   -> PROJ  [xlabel="applies to"]
+  }
+
+  USER     -> APPS     [xlabel="builds and uses"]
+  LITELLM  -> PLAT     [xlabel="registered as" style=dotted constraint=false]
+  BBD_M    -> LITELLM  [xlabel="issues virtual key" style=dotted constraint=false]
+  BBD_M    -> LANGFUSE [xlabel="deploys per tenant" style=dotted constraint=false]
+}

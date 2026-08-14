@@ -1,0 +1,23 @@
+{{- if .Values.wildcardCertificate.enabled }}
+{{- /*
+wildcardCertificate.domain is the DNS-01 zone, unless the caller narrowed the certificate to a name
+inside that zone. Helm drops this comment from the rendered manifest, so the manifest of a caller
+that sets no certificate domain stays exactly as it was.
+*/}}
+# One certificate covers every hostname in the zone. It lives in the HAProxy namespace, which
+# outlives any application namespace, so tearing an application down never takes the certificate
+# with it. HAProxy serves the resulting secret as its default TLS certificate.
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: {{ .Values.wildcardCertificate.name }}
+  namespace: {{ .Values.wildcardCertificate.namespace }}
+spec:
+  secretName: {{ .Values.wildcardCertificate.secretName }}
+  dnsNames:
+    - {{ printf "*.%s" .Values.wildcardCertificate.domain | quote }}
+  issuerRef:
+    name: {{ .Values.clusterIssuer.name }}
+    kind: ClusterIssuer
+    group: cert-manager.io
+{{- end }}

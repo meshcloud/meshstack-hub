@@ -1,0 +1,5 @@
+apiVersion: v2
+name: meshstack-langfuse-clickhouse-ddl
+description: Per-tenant ClickHouse database and scoped user for a Langfuse instance, created by a post-install hook Job and dropped again by a pre-delete hook Job.
+type: application
+version: 1.0.0

@@ -1,0 +1,16 @@
+# Both Jobs of this chart are Helm hooks, and a hook is not part of the manifest of the release. This
+# ConfigMap is, so the release owns one object: an operator sees which tenant a release belongs to and
+# what it granted, and `helm uninstall` has something to remove after the pre-delete hook has run.
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Release.Name }}-ddl
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app.kubernetes.io/managed-by: meshstack
+    app.kubernetes.io/part-of: ai-model-access
+data:
+  database: {{ required "tenant.database is required" .Values.tenant.database | quote }}
+  username: {{ required "tenant.username is required" .Values.tenant.username | quote }}
+  cluster: {{ .Values.clickhouse.ddlCluster | quote }}
+  grants: {{ join ", " .Values.tenant.grants | quote }}

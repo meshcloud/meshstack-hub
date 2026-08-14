@@ -60,12 +60,54 @@ resource "random_string" "suffix" {
   numeric = false
 }
 
+# The platform registration used to be a local submodule that hand-rolled the service account, the
+# secret and the cluster role. It is the hub module now, so the smoke test exercises the same code
+# the foundations run. The module configures its own `kubernetes` provider, which is why the four
+# credentials are passed as inputs rather than through the provider block in `provider.tf`.
 module "meshstack_kubernetes_platform" {
-  source = "./meshstack_kubernetes_platform"
+  source = "../../../kubernetes/platform/buildingblock"
 
-  kube_host   = local.ske_kubeconfig["clusters"][0]["cluster"]["server"]
-  workspace   = var.test_context.workspace
-  test_suffix = random_string.suffix.result
+  kube_host              = local.ske_kubeconfig["clusters"][0]["cluster"]["server"]
+  cluster_ca_certificate = base64decode(local.ske_kubeconfig["clusters"][0]["cluster"]["certificate-authority-data"])
+  client_certificate     = base64decode(local.ske_kubeconfig["users"][0]["user"]["client-certificate-data"])
+  client_key             = base64decode(local.ske_kubeconfig["users"][0]["user"]["client-key-data"])
+
+  owning_workspace_identifier = var.test_context.workspace
+  location_identifier         = "global"
+
+  platform_name         = "smoke-test-ske-platform-${random_string.suffix.result}"
+  platform_display_name = "Smoke Test ${random_string.suffix.result}"
+  platform_description  = "Platform for Smoke Test ${random_string.suffix.result}"
+  documentation_url     = "https://kubernetes.io"
+
+  # Every run gets a namespace and a name suffix of its own, so two runs never fight over the same
+  # service account or cluster role.
+  service_account_namespace = "smoke-test-${random_string.suffix.result}"
+  resource_name_suffix      = random_string.suffix.result
+
+  # The starterkit building block requests no quotas, so the platform offers none.
+  quota_definitions = []
+
+  landing_zones = {
+    dev = {
+      display_name = "Smoke Test Landing Zone ${random_string.suffix.result}"
+      description  = "Landing Zone for Smoke Test ${random_string.suffix.result}"
+      info_link    = "https://dontcare.com"
+      tags = {
+        "confidentiality" = ["Internal"]
+        "environment"     = ["dev"]
+      }
+    }
+    prod = {
+      display_name = "Smoke Test Landing Zone ${random_string.suffix.result}"
+      description  = "Landing Zone for Smoke Test ${random_string.suffix.result}"
+      info_link    = "https://dontcare.com"
+      tags = {
+        "confidentiality" = ["Internal"]
+        "environment"     = ["prod"]
+      }
+    }
+  }
 }
 
 module "stackit_git_repository" {

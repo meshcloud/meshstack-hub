@@ -1,0 +1,22 @@
+# PostgreSQL Flex: **${instance_name}**
+
+## Details
+
+| Property | Value |
+|----------|-------|
+| **Instance ID** | `${instance_id}` |
+| **PostgreSQL Version** | `${version}` |
+| **Host** | `${host}` |
+| **Port** | `${port}` |
+| **Database** | `${database_name}` |
+| **Username** | `${username}` |
+| **Password** | `${password}` |
+| **Allowed Source Ranges** | `${acl}` |
+
+## Connect
+
+```sh
+psql "postgresql://${username}@${host}:${port}/${database_name}?sslmode=require"
+```
+
+Your client must reach the instance from one of the allowed source ranges listed above.

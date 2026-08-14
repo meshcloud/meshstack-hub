@@ -93,6 +93,10 @@ in one diagram to a box in another without reading the label.
 | 🔌 | network, subnet |
 | ☸️ | Kubernetes cluster |
 | 🗄️ | container registry |
+| 👤 | end user, application team acting as a user |
+| 💬 | user-facing chat interface |
+| 🚪 | gateway, abstraction layer |
+| 📈 | observability, tracing, evaluation |
 | ⚙️ | CI/CD wiring |
 | 🔀 | git repository |
 | 🧠 | model serving / AI API |
@@ -105,7 +109,7 @@ a concept already listed.
 
 Copy the emoji straight from this table — several of them carry a **U+FE0F variation selector** that
 is invisible in the source but decides whether the glyph renders in colour. `☸ ⚙ 🗄 🗂 🛰` default to
-*text* presentation and come out as small monochrome symbols without it; `🏢 📁 🔑 🌐 🔌 🔀 🧠 🛬 📦`
+*text* presentation and come out as small monochrome symbols without it; `🏢 📁 🔑 🌐 🔌 🔀 🧠 🛬 📦 👤 💬 🚪 📈`
 are colour by default. If an icon renders monochrome in the SVG, it is missing the selector.
 
 The **same emoji with a different fill** is deliberate and useful: a green `🔀` repo inside the

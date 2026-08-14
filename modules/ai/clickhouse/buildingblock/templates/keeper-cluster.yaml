@@ -1,0 +1,24 @@
+# Keeper replaces ZooKeeper as the coordination service of the cluster. It holds the replication
+# queues and the distributed DDL queue, so the ClickHouseCluster below refers to it and cannot
+# start without it.
+apiVersion: clickhouse.com/v1alpha1
+kind: KeeperCluster
+metadata:
+  name: {{ .Values.cluster.name }}
+  namespace: {{ .Release.Namespace }}
+spec:
+  # Raft needs an odd number of replicas to form a quorum.
+  replicas: {{ .Values.keeper.replicas }}
+  containerTemplate:
+    image:
+      repository: {{ .Values.keeper.image.repository | quote }}
+      tag: {{ .Values.keeper.image.tag | quote }}
+    resources:
+      {{- toYaml .Values.keeper.resources | nindent 6 }}
+  dataVolumeClaimSpec:
+    {{- with .Values.keeper.storageClassName }}
+    storageClassName: {{ . | quote }}
+    {{- end }}
+    resources:
+      requests:
+        storage: {{ .Values.keeper.storage | quote }}

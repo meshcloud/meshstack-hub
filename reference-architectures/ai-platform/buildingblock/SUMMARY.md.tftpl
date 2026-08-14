@@ -1,0 +1,49 @@
+# AI Platform
+
+The gateway and the shared tracing backends are installed, and model access is a catalog item.
+
+## The gateway
+
+| Property | Value |
+|----------|-------|
+| **URL** | ${litellm_url} |
+| **Admin console** | ${litellm_console_url} |
+| **OpenAI-compatible base URL** | `${litellm_api_base}` |
+| **Namespace** | `${litellm_namespace}` |
+| **Model aliases offered** | ${model_aliases} |
+
+The master key is the root credential of the gateway and is deliberately not shown here, because
+every building block output is stored in cleartext. It lives in the Secret `${master_key_secret}` in
+the namespace `${litellm_namespace}`.
+
+**The admin console holds at most five users.** Native single sign-on is free in the open-source
+proxy up to that number, and the sixth login locks out everyone. Plan the platform team's console
+access around it.
+
+## Shared backends
+
+| Backend | Where |
+|---------|-------|
+| Postgres, for virtual keys, teams, budgets and spend | database `${postgres_database}` on the shared PostgreSQL Flex instance |
+| ClickHouse, for every tenant's traces | `${clickhouse_host}` |
+| Valkey, for every tenant's ingestion queue | `${valkey_host}` |
+| Object storage, one bucket per tenant | created per tenant, in the STACKIT project of this architecture |
+
+Each tenant's tracing instance is published under `${apps_domain}`, on a hostname derived from the
+workspace and the project.
+
+## Self-service
+
+The gateway is registered as the meshStack platform **${platform_identifier}**. Every landing zone
+below makes model access mandatory, so a project that lands in one receives its team, its virtual
+key, its tracing instance and the Kubernetes Secret carrying the credential without ordering
+anything.
+
+| Landing zone | Allowed models | Budget |
+|--------------|----------------|--------|
+%{ for lz in landing_zones ~}
+| ${lz.display_name} (`${lz.name}`) | ${lz.models} | ${lz.max_budget} per ${lz.budget_duration} |
+%{ endfor ~}
+
+Publish the landing zones you want application teams to see, and they can start ordering projects
+on them.

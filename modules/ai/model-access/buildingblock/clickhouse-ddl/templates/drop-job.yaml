@@ -1,0 +1,53 @@
+# The Job that removes the tenant's database and its user again.
+#
+# It is a pre-delete hook. `helm uninstall` runs it and waits for it before it removes anything else,
+# and destroying this Helm release is what the meshStack runner does when the building block is
+# deleted, so the tenant's trace data does not outlive the tenant.
+#
+# It reads no tenant password, because dropping a user needs none. The Secret holding that password is
+# a Terraform resource and is destroyed with the rest of the run.
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: {{ .Release.Name }}-drop
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app.kubernetes.io/managed-by: meshstack
+    app.kubernetes.io/part-of: ai-model-access
+  annotations:
+    helm.sh/hook: pre-delete
+    helm.sh/hook-weight: "0"
+    helm.sh/hook-delete-policy: before-hook-creation,hook-succeeded
+spec:
+  backoffLimit: 0
+  activeDeadlineSeconds: {{ .Values.job.timeoutSeconds }}
+  template:
+    metadata:
+      name: {{ .Release.Name }}-drop
+      labels:
+        app.kubernetes.io/managed-by: meshstack
+        app.kubernetes.io/part-of: ai-model-access
+    spec:
+      restartPolicy: Never
+      automountServiceAccountToken: false
+      containers:
+        - name: ddl
+          image: {{ required "clickhouse.image is required" .Values.clickhouse.image | quote }}
+          env:
+            - name: ADMIN_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: {{ required "admin.secretName is required" .Values.admin.secretName }}
+                  key: {{ .Values.admin.secretKey }}
+          command:
+            - /bin/bash
+            - -c
+            - |
+              {{- include "clickhouse-ddl.script.drop" . | nindent 14 }}
+          resources:
+            requests:
+              cpu: 50m
+              memory: 64Mi
+            limits:
+              cpu: 200m
+              memory: 256Mi

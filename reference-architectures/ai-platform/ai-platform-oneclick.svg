@@ -1,0 +1,168 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN"
+ "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<svg width="1007pt" height="659pt"
+ viewBox="0.00 0.00 1007.00 659.00" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+<g id="graph0" class="graph" transform="scale(1 1) rotate(0) translate(4 655.44)">
+<title>ai_platform_oneclick</title>
+<polygon fill="white" stroke="none" points="-4,4 -4,-655.44 1002.72,-655.44 1002.72,4 -4,4"/>
+<g id="clust1" class="cluster">
+<title>cluster_once</title>
+<path fill="white" stroke="#d5dae0" d="M93.72,-323.12C93.72,-323.12 521.72,-323.12 521.72,-323.12 527.72,-323.12 533.72,-329.12 533.72,-335.12 533.72,-335.12 533.72,-624.84 533.72,-624.84 533.72,-630.84 527.72,-636.84 521.72,-636.84 521.72,-636.84 93.72,-636.84 93.72,-636.84 87.72,-636.84 81.72,-630.84 81.72,-624.84 81.72,-624.84 81.72,-335.12 81.72,-335.12 81.72,-329.12 87.72,-323.12 93.72,-323.12"/>
+<text xml:space="preserve" text-anchor="middle" x="175.42" y="-622.04" font-family="Helvetica,sans-Serif" font-size="12.00" fill="#697180"> &#160;① Platform team · orders once</text>
+</g>
+<g id="clust3" class="cluster">
+<title>cluster_team</title>
+<path fill="white" stroke="#d5dae0" d="M245.72,-8C245.72,-8 719.72,-8 719.72,-8 725.72,-8 731.72,-14 731.72,-20 731.72,-20 731.72,-303.12 731.72,-303.12 731.72,-309.12 725.72,-315.12 719.72,-315.12 719.72,-315.12 245.72,-315.12 245.72,-315.12 239.72,-315.12 233.72,-309.12 233.72,-303.12 233.72,-303.12 233.72,-20 233.72,-20 233.72,-14 239.72,-8 245.72,-8"/>
+<text xml:space="preserve" text-anchor="middle" x="380.13" y="-300.32" font-family="Helvetica,sans-Serif" font-size="12.00" fill="#697180"> &#160;② Application team · orders a project, nothing else</text>
+</g>
+<g id="clust5" class="cluster">
+<title>cluster_existing</title>
+<path fill="white" stroke="#d5dae0" d="M553.72,-529.6C553.72,-529.6 978.72,-529.6 978.72,-529.6 984.72,-529.6 990.72,-535.6 990.72,-541.6 990.72,-541.6 990.72,-631.44 990.72,-631.44 990.72,-637.44 984.72,-643.44 978.72,-643.44 978.72,-643.44 553.72,-643.44 553.72,-643.44 547.72,-643.44 541.72,-637.44 541.72,-631.44 541.72,-631.44 541.72,-541.6 541.72,-541.6 541.72,-535.6 547.72,-529.6 553.72,-529.6"/>
+<text xml:space="preserve" text-anchor="middle" x="617.41" y="-628.64" font-family="Helvetica,sans-Serif" font-size="12.00" fill="#697180"> &#160;③ Existing infrastructure</text>
+</g>
+<!-- BBD_STACK -->
+<g id="node1" class="node">
+<title>BBD_STACK</title>
+<path fill="#ecedfb" stroke="#9aa2e6" stroke-width="1.1" d="M279.9,-596.44C279.9,-596.44 137.54,-596.44 137.54,-596.44 131.54,-596.44 125.54,-590.44 125.54,-584.44 125.54,-584.44 125.54,-566.2 125.54,-566.2 125.54,-560.2 131.54,-554.2 137.54,-554.2 137.54,-554.2 279.9,-554.2 279.9,-554.2 285.9,-554.2 291.9,-560.2 291.9,-566.2 291.9,-566.2 291.9,-584.44 291.9,-584.44 291.9,-590.44 285.9,-596.44 279.9,-596.44"/>
+<text xml:space="preserve" text-anchor="middle" x="208.72" y="-578.62" font-family="Helvetica,sans-Serif" font-size="11.00">📦 ai&#45;platform BBD</text>
+<text xml:space="preserve" text-anchor="middle" x="208.72" y="-565.42" font-family="Helvetica,sans-Serif" font-size="11.00">every input static · one click</text>
+</g>
+<!-- STACK -->
+<g id="node2" class="node">
+<title>STACK</title>
+<path fill="#e5f2ea" stroke="#85bfa0" stroke-width="1.1" d="M305.89,-486.6C305.89,-486.6 111.54,-486.6 111.54,-486.6 105.54,-486.6 99.54,-480.6 99.54,-474.6 99.54,-474.6 99.54,-456.36 99.54,-456.36 99.54,-450.36 105.54,-444.36 111.54,-444.36 111.54,-444.36 305.89,-444.36 305.89,-444.36 311.89,-444.36 317.89,-450.36 317.89,-456.36 317.89,-456.36 317.89,-474.6 317.89,-474.6 317.89,-480.6 311.89,-486.6 305.89,-486.6"/>
+<text xml:space="preserve" text-anchor="middle" x="208.72" y="-468.78" font-family="Helvetica,sans-Serif" font-size="11.00">🚪 LiteLLM and the shared ClickHouse</text>
+<text xml:space="preserve" text-anchor="middle" x="208.72" y="-455.58" font-family="Helvetica,sans-Serif" font-size="11.00">installed by Helm into the cluster</text>
+</g>
+<!-- BBD_STACK&#45;&gt;STACK -->
+<g id="edge2" class="edge">
+<title>BBD_STACK&#45;&gt;STACK</title>
+<path fill="none" stroke="#8b95a3" d="M208.72,-553.88C208.72,-553.88 208.72,-495.38 208.72,-495.38"/>
+<polygon fill="#8b95a3" stroke="#8b95a3" points="211.17,-495.38 208.72,-488.38 206.27,-495.38 211.17,-495.38"/>
+<text xml:space="preserve" text-anchor="middle" x="194.96" y="-527.33" font-family="Helvetica,sans-Serif" font-size="9.00" fill="#697180">installs</text>
+</g>
+<!-- PLATFORM -->
+<g id="node3" class="node">
+<title>PLATFORM</title>
+<path fill="#ecedfb" stroke="#9aa2e6" stroke-width="1.1" d="M295.37,-383.36C295.37,-383.36 112.06,-383.36 112.06,-383.36 106.06,-383.36 100.06,-377.36 100.06,-371.36 100.06,-371.36 100.06,-353.12 100.06,-353.12 100.06,-347.12 106.06,-341.12 112.06,-341.12 112.06,-341.12 295.37,-341.12 295.37,-341.12 301.37,-341.12 307.37,-347.12 307.37,-353.12 307.37,-353.12 307.37,-371.36 307.37,-371.36 307.37,-377.36 301.37,-383.36 295.37,-383.36"/>
+<text xml:space="preserve" text-anchor="middle" x="203.72" y="-365.54" font-family="Helvetica,sans-Serif" font-size="11.00">🛰️ LiteLLM as meshStack platform</text>
+<text xml:space="preserve" text-anchor="middle" x="203.72" y="-352.34" font-family="Helvetica,sans-Serif" font-size="11.00">custom platform type</text>
+</g>
+<!-- STACK&#45;&gt;PLATFORM -->
+<g id="edge3" class="edge">
+<title>STACK&#45;&gt;PLATFORM</title>
+<path fill="none" stroke="#8b95a3" stroke-dasharray="1,5" d="M203.72,-444.09C203.72,-444.09 203.72,-392.12 203.72,-392.12"/>
+<polygon fill="#8b95a3" stroke="#8b95a3" points="206.17,-392.12 203.72,-385.12 201.27,-392.12 206.17,-392.12"/>
+<text xml:space="preserve" text-anchor="middle" x="177.7" y="-420.8" font-family="Helvetica,sans-Serif" font-size="9.00" fill="#697180">registered as</text>
+</g>
+<!-- MODELS -->
+<g id="node10" class="node">
+<title>MODELS</title>
+<path fill="#f0f1f3" stroke="#cdd2d8" stroke-width="1.1" stroke-dasharray="5,2" d="M960.84,-596.44C960.84,-596.44 802.6,-596.44 802.6,-596.44 796.6,-596.44 790.6,-590.44 790.6,-584.44 790.6,-584.44 790.6,-566.2 790.6,-566.2 790.6,-560.2 796.6,-554.2 802.6,-554.2 802.6,-554.2 960.84,-554.2 960.84,-554.2 966.84,-554.2 972.84,-560.2 972.84,-566.2 972.84,-566.2 972.84,-584.44 972.84,-584.44 972.84,-590.44 966.84,-596.44 960.84,-596.44"/>
+<text xml:space="preserve" text-anchor="middle" x="881.72" y="-578.62" font-family="Helvetica,sans-Serif" font-size="11.00" fill="#99a1ac">🧠 Model backends</text>
+<text xml:space="preserve" text-anchor="middle" x="881.72" y="-565.42" font-family="Helvetica,sans-Serif" font-size="11.00" fill="#99a1ac">STACKIT · Azure · self&#45;hosted</text>
+</g>
+<!-- STACK&#45;&gt;MODELS -->
+<g id="edge13" class="edge">
+<title>STACK&#45;&gt;MODELS</title>
+<path fill="none" stroke="#8b95a3" d="M318.34,-465C509.05,-465 881.72,-465 881.72,-465 881.72,-465 881.72,-545.27 881.72,-545.27"/>
+<polygon fill="#8b95a3" stroke="#8b95a3" points="879.27,-545.27 881.72,-552.27 884.17,-545.27 879.27,-545.27"/>
+<text xml:space="preserve" text-anchor="middle" x="608.9" y="-467.7" font-family="Helvetica,sans-Serif" font-size="9.00" fill="#697180">routes by policy</text>
+</g>
+<!-- LZAI -->
+<g id="node4" class="node">
+<title>LZAI</title>
+<path fill="#ecedfb" stroke="#9aa2e6" stroke-width="1.1" d="M504.13,-383.36C504.13,-383.36 359.31,-383.36 359.31,-383.36 353.31,-383.36 347.31,-377.36 347.31,-371.36 347.31,-371.36 347.31,-353.12 347.31,-353.12 347.31,-347.12 353.31,-341.12 359.31,-341.12 359.31,-341.12 504.13,-341.12 504.13,-341.12 510.13,-341.12 516.13,-347.12 516.13,-353.12 516.13,-353.12 516.13,-371.36 516.13,-371.36 516.13,-377.36 510.13,-383.36 504.13,-383.36"/>
+<text xml:space="preserve" text-anchor="middle" x="431.72" y="-365.54" font-family="Helvetica,sans-Serif" font-size="11.00">🛬 AI landing zones</text>
+<text xml:space="preserve" text-anchor="middle" x="431.72" y="-352.34" font-family="Helvetica,sans-Serif" font-size="11.00">allowed models · budget tier</text>
+</g>
+<!-- PLATFORM&#45;&gt;LZAI -->
+<!-- PLATFORM&#45;&gt;LZAI -->
+<g id="edge4" class="edge">
+<title>PLATFORM&#45;&gt;LZAI</title>
+<path fill="none" stroke="#8b95a3" d="M307.71,-355C307.71,-355 338.49,-355 338.49,-355"/>
+<polygon fill="#8b95a3" stroke="#8b95a3" points="338.49,-357.45 345.49,-355 338.49,-352.55 338.49,-357.45"/>
+</g>
+<!-- BBD_TEAM -->
+<g id="node5" class="node">
+<title>BBD_TEAM</title>
+<path fill="#ecedfb" stroke="#9aa2e6" stroke-width="1.1" d="M507.81,-274.72C507.81,-274.72 355.63,-274.72 355.63,-274.72 349.63,-274.72 343.63,-268.72 343.63,-262.72 343.63,-262.72 343.63,-244.48 343.63,-244.48 343.63,-238.48 349.63,-232.48 355.63,-232.48 355.63,-232.48 507.81,-232.48 507.81,-232.48 513.81,-232.48 519.81,-238.48 519.81,-244.48 519.81,-244.48 519.81,-262.72 519.81,-262.72 519.81,-268.72 513.81,-274.72 507.81,-274.72"/>
+<text xml:space="preserve" text-anchor="middle" x="431.72" y="-256.9" font-family="Helvetica,sans-Serif" font-size="11.00">📦 ai/model&#45;access BBD</text>
+<text xml:space="preserve" text-anchor="middle" x="431.72" y="-243.7" font-family="Helvetica,sans-Serif" font-size="11.00">mandatory in the landing zone</text>
+</g>
+<!-- LZAI&#45;&gt;BBD_TEAM -->
+<g id="edge11" class="edge">
+<title>LZAI&#45;&gt;BBD_TEAM</title>
+<path fill="none" stroke="#8b95a3" stroke-dasharray="1,5" d="M431.72,-340.78C431.72,-340.78 431.72,-283.53 431.72,-283.53"/>
+<polygon fill="#8b95a3" stroke="#8b95a3" points="434.17,-283.53 431.72,-276.53 429.27,-283.53 434.17,-283.53"/>
+<text xml:space="preserve" text-anchor="middle" x="395.95" y="-314.85" font-family="Helvetica,sans-Serif" font-size="9.00" fill="#697180">makes mandatory</text>
+</g>
+<!-- KEY -->
+<g id="node6" class="node">
+<title>KEY</title>
+<path fill="#e5f2ea" stroke="#85bfa0" stroke-width="1.1" d="M471.33,-171.48C471.33,-171.48 264.11,-171.48 264.11,-171.48 258.11,-171.48 252.11,-165.48 252.11,-159.48 252.11,-159.48 252.11,-141.24 252.11,-141.24 252.11,-135.24 258.11,-129.24 264.11,-129.24 264.11,-129.24 471.33,-129.24 471.33,-129.24 477.33,-129.24 483.33,-135.24 483.33,-141.24 483.33,-141.24 483.33,-159.48 483.33,-159.48 483.33,-165.48 477.33,-171.48 471.33,-171.48"/>
+<text xml:space="preserve" text-anchor="middle" x="367.72" y="-153.66" font-family="Helvetica,sans-Serif" font-size="11.00">🔑 Team and virtual key ×N</text>
+<text xml:space="preserve" text-anchor="middle" x="367.72" y="-140.46" font-family="Helvetica,sans-Serif" font-size="11.00">models and budget from the landing zone</text>
+</g>
+<!-- BBD_TEAM&#45;&gt;KEY -->
+<g id="edge6" class="edge">
+<title>BBD_TEAM&#45;&gt;KEY</title>
+<path fill="none" stroke="#8b95a3" d="M413.48,-232.21C413.48,-232.21 413.48,-180.24 413.48,-180.24"/>
+<polygon fill="#8b95a3" stroke="#8b95a3" points="415.93,-180.24 413.48,-173.24 411.03,-180.24 415.93,-180.24"/>
+<text xml:space="preserve" text-anchor="middle" x="398.72" y="-208.92" font-family="Helvetica,sans-Serif" font-size="9.00" fill="#697180">creates</text>
+</g>
+<!-- TRACE -->
+<g id="node7" class="node">
+<title>TRACE</title>
+<path fill="#e5f2ea" stroke="#85bfa0" stroke-width="1.1" d="M702.14,-171.48C702.14,-171.48 535.29,-171.48 535.29,-171.48 529.29,-171.48 523.29,-165.48 523.29,-159.48 523.29,-159.48 523.29,-141.24 523.29,-141.24 523.29,-135.24 529.29,-129.24 535.29,-129.24 535.29,-129.24 702.14,-129.24 702.14,-129.24 708.14,-129.24 714.14,-135.24 714.14,-141.24 714.14,-141.24 714.14,-159.48 714.14,-159.48 714.14,-165.48 708.14,-171.48 702.14,-171.48"/>
+<text xml:space="preserve" text-anchor="middle" x="618.72" y="-153.66" font-family="Helvetica,sans-Serif" font-size="11.00">📈 Own tracing instance ×N</text>
+<text xml:space="preserve" text-anchor="middle" x="618.72" y="-140.46" font-family="Helvetica,sans-Serif" font-size="11.00">with its own database and bucket</text>
+</g>
+<!-- BBD_TEAM&#45;&gt;TRACE -->
+<g id="edge7" class="edge">
+<title>BBD_TEAM&#45;&gt;TRACE</title>
+<path fill="none" stroke="#8b95a3" d="M520.17,-254C532.64,-254 541.3,-254 541.3,-254 541.3,-254 541.3,-180.35 541.3,-180.35"/>
+<polygon fill="#8b95a3" stroke="#8b95a3" points="543.75,-180.35 541.3,-173.35 538.85,-180.35 543.75,-180.35"/>
+<text xml:space="preserve" text-anchor="middle" x="525.79" y="-219.64" font-family="Helvetica,sans-Serif" font-size="9.00" fill="#697180">deploys</text>
+</g>
+<!-- KEY&#45;&gt;TRACE -->
+<!-- APPS -->
+<g id="node8" class="node">
+<title>APPS</title>
+<path fill="#f0f1f3" stroke="#cdd2d8" stroke-width="1.1" stroke-dasharray="5,2" d="M437.37,-68.24C437.37,-68.24 298.06,-68.24 298.06,-68.24 292.06,-68.24 286.06,-62.24 286.06,-56.24 286.06,-56.24 286.06,-38 286.06,-38 286.06,-32 292.06,-26 298.06,-26 298.06,-26 437.37,-26 437.37,-26 443.37,-26 449.37,-32 449.37,-38 449.37,-38 449.37,-56.24 449.37,-56.24 449.37,-62.24 443.37,-68.24 437.37,-68.24"/>
+<text xml:space="preserve" text-anchor="middle" x="367.72" y="-50.42" font-family="Helvetica,sans-Serif" font-size="11.00" fill="#99a1ac">💬 Own applications</text>
+<text xml:space="preserve" text-anchor="middle" x="367.72" y="-37.22" font-family="Helvetica,sans-Serif" font-size="11.00" fill="#99a1ac">chat UIs, agents, assistants</text>
+</g>
+<!-- KEY&#45;&gt;APPS -->
+<g id="edge8" class="edge">
+<title>KEY&#45;&gt;APPS</title>
+<path fill="none" stroke="#8b95a3" stroke-dasharray="5,2" d="M367.72,-128.97C367.72,-128.97 367.72,-77 367.72,-77"/>
+<polygon fill="#8b95a3" stroke="#8b95a3" points="370.17,-77 367.72,-70 365.27,-77 370.17,-77"/>
+<text xml:space="preserve" text-anchor="middle" x="325.44" y="-105.68" font-family="Helvetica,sans-Serif" font-size="9.00" fill="#697180">delivered as a Secret</text>
+</g>
+<!-- APPS&#45;&gt;STACK -->
+<g id="edge12" class="edge">
+<title>APPS&#45;&gt;STACK</title>
+<path fill="none" stroke="#8b95a3" stroke-dasharray="5,2" d="M285.71,-47C201.15,-47 81.54,-47 81.54,-47 81.54,-47 81.54,-465 81.54,-465 81.54,-465 90.71,-465 90.71,-465"/>
+<polygon fill="#8b95a3" stroke="#8b95a3" points="90.71,-467.45 97.71,-465 90.71,-462.55 90.71,-467.45"/>
+<text xml:space="preserve" text-anchor="middle" x="40.77" y="-161.2" font-family="Helvetica,sans-Serif" font-size="9.00" fill="#697180">call the gateway API</text>
+</g>
+<!-- K8SLZ -->
+<g id="node9" class="node">
+<title>K8SLZ</title>
+<path fill="#f0f1f3" stroke="#cdd2d8" stroke-width="1.1" stroke-dasharray="5,2" d="M738.12,-603.04C738.12,-603.04 571.31,-603.04 571.31,-603.04 565.31,-603.04 559.31,-597.04 559.31,-591.04 559.31,-591.04 559.31,-559.6 559.31,-559.6 559.31,-553.6 565.31,-547.6 571.31,-547.6 571.31,-547.6 738.12,-547.6 738.12,-547.6 744.12,-547.6 750.12,-553.6 750.12,-559.6 750.12,-559.6 750.12,-591.04 750.12,-591.04 750.12,-597.04 744.12,-603.04 738.12,-603.04"/>
+<text xml:space="preserve" text-anchor="middle" x="654.72" y="-585.22" font-family="Helvetica,sans-Serif" font-size="11.00" fill="#99a1ac">☸️ Cluster with ingress and TLS</text>
+<text xml:space="preserve" text-anchor="middle" x="654.72" y="-572.02" font-family="Helvetica,sans-Serif" font-size="11.00" fill="#99a1ac">from stackit&#45;kubernetes</text>
+<text xml:space="preserve" text-anchor="middle" x="654.72" y="-558.82" font-family="Helvetica,sans-Serif" font-size="11.00" fill="#99a1ac">or any conformant cluster</text>
+</g>
+<!-- K8SLZ&#45;&gt;STACK -->
+<g id="edge10" class="edge">
+<title>K8SLZ&#45;&gt;STACK</title>
+<path fill="none" stroke="#8b95a3" stroke-dasharray="1,5" d="M559.13,-575C455.55,-575 304.89,-575 304.89,-575 304.89,-575 304.89,-495.63 304.89,-495.63"/>
+<polygon fill="#8b95a3" stroke="#8b95a3" points="307.34,-495.63 304.89,-488.63 302.44,-495.63 307.34,-495.63"/>
+<text xml:space="preserve" text-anchor="middle" x="381.57" y="-577.7" font-family="Helvetica,sans-Serif" font-size="9.00" fill="#697180">hosts</text>
+</g>
+<!-- K8SLZ&#45;&gt;MODELS -->
+</g>
+</svg>

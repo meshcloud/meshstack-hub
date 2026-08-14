@@ -4,7 +4,7 @@ export interface PlatformCard {
     routePath: string;
     description?: string;
     buildingBlockCount?: number;
-    category?: 'hyperscaler' | 'european' | 'china' | 'devops' | 'private-cloud';
+    category?: 'hyperscaler' | 'european' | 'china' | 'devops' | 'private-cloud' | 'ai';
     benefits?: string[];
     official?: boolean;
     terraformSnippet?: string;
