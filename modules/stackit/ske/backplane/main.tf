@@ -42,3 +42,18 @@ resource "stackit_authorization_folder_role_assignment" "ske_admin" {
   role        = "ske.admin"
   subject     = stackit_service_account.building_block.email
 }
+
+# Roles a composition needs on top of `ske.admin`, granted at project scope.
+#
+# These sit on the opposite side of the folder-versus-project question from `ske.admin` above, and
+# for a reason that is worth keeping in view: scope follows what the caller can name. `ske.admin`
+# has to cover a folder because the cluster lands in whichever tenant project places the order.
+# A role like `dns.admin` on the shared zone's project has a target the platform team fills in when
+# it registers the building block, so it goes on that one project and nothing else.
+resource "stackit_authorization_project_role_assignment" "additional" {
+  for_each = var.additional_project_roles
+
+  resource_id = var.additional_roles_project_id
+  role        = each.value
+  subject     = stackit_service_account.building_block.email
+}

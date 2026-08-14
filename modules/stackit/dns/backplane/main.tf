@@ -11,13 +11,12 @@
 # in, but every resource carries its own `project_id` and access is decided by the role assignments
 # the account holds on the target resource.
 #
-# So the backplane creates one service account and grants it the roles below above the projects
-# rather than on any single one of them. The building block is `TENANT_LEVEL`, so the target project
-# of a future order is unknown when the platform team deploys this backplane.
+# So the backplane creates one service account and grants it the roles below on the projects it has
+# to reach, or above them when it cannot name them.
 #
-# `dns.admin` is granted on a folder and `iam.member-admin` on the organization, because STACKIT
-# offers each role on a different set of resource types and `dns.admin` is not among the 76 roles an
-# organization offers. See backplane/README.md for the calls that establish this.
+# `iam.member-admin` is granted on the organization, because that is where STACKIT offers it.
+# `dns.admin` is not among the 76 roles an organization offers, so it goes on projects or on a
+# folder. See backplane/README.md for the calls that establish this.
 # ─────────────────────────────────────────────────────────────────────────────
 
 resource "stackit_service_account" "building_block" {
@@ -50,15 +49,40 @@ resource "stackit_service_account_federated_identity_provider" "building_block" 
 # dns.admin allows creating and deleting zones and record sets. The building block needs it in the
 # project the zone lives in, and on the delegation path also in the parent zone's project.
 #
-# The role is assigned at folder scope. Organization scope is not available: STACKIT's authorization
-# API offers a different set of roles per resource type, and no dns role appears on an organization.
-# A folder covers every project below it, so it keeps the property that makes organization scope
-# attractive — the platform team grants the role once and every project a tenant later receives is
-# covered. modules/stackit/model-serving/backplane assigns `model-serving.editor` the same way.
+# Grant it on the projects, whenever the caller can name them. Scope follows what is knowable at
+# grant time, and a project-scoped grant keeps the identity off every project that is not involved.
+# The delegation path's parent zone project is always knowable — it is `delegation.parent_zone_project_id`
+# on the building block — and so is the zone project of any composition that fixes it statically.
+resource "stackit_authorization_project_role_assignment" "dns_admin" {
+  for_each = var.zone_project_ids
+
+  resource_id = each.value
+  role        = "dns.admin"
+  subject     = stackit_service_account.building_block.email
+}
+
+# The folder-scoped grant is the fallback for the one case where no project can be named: the
+# `TENANT_LEVEL` building block definition in ../meshstack_integration.tf takes its `project_id`
+# from `PLATFORM_TENANT_ID`, so the zone lands in whichever tenant project places the order, and the
+# platform team registers the definition long before it knows which those are. A folder covers every
+# project below it.
+#
+# Organization scope is not an option either way: STACKIT's authorization API offers a different set
+# of roles per resource type, and no dns role appears on an organization. See backplane/README.md
+# for the calls that establish this.
 resource "stackit_authorization_folder_role_assignment" "dns_admin" {
+  count = var.folder_id == null ? 0 : 1
+
   resource_id = var.folder_id
   role        = "dns.admin"
   subject     = stackit_service_account.building_block.email
+}
+
+# The folder grant used to be unconditional, so an existing state carries it at the unindexed
+# address.
+moved {
+  from = stackit_authorization_folder_role_assignment.dns_admin
+  to   = stackit_authorization_folder_role_assignment.dns_admin[0]
 }
 
 # iam.member-admin allows assigning roles. The building block uses it to give the DNS service

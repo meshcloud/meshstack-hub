@@ -4,8 +4,9 @@ This module sets up the shared backplane configuration for the STACKIT DNS build
 creates a dedicated service account with a Workload Identity Federation (WIF) identity provider and
 grants it the roles the building block needs:
 
-- **`dns.admin`**, on a folder — create and delete DNS zones and record sets in every project below
-  that folder.
+- **`dns.admin`**, on the projects named in `zone_project_ids` — create and delete DNS zones and
+  record sets in each of them. Or, when no project can be named, on the folder in `folder_id`,
+  which covers every project below it.
 - **`iam.member-admin`**, on the organization — assign the `dns.admin` role to the DNS service
   account the building block creates in the zone's project.
 
@@ -25,17 +26,32 @@ but every resource carries its own `project_id`, and access is decided by the ro
 account holds on the target resource. So there is no second provider, no second credential, and no
 credential handed from one project to the other.
 
-What makes it work is the scope of the role assignment. This backplane grants `dns.admin` at
-**folder** scope, because the building block is `TENANT_LEVEL`: the platform team deploys the
-backplane once, long before it knows which projects future orders will land in, so the role cannot
-be scoped to a single project ahead of time. A folder covers every project below it, so the same
-grant also covers the parent zone's project on the delegation path.
+What makes it work is the scope of the role assignment.
 
-**Every project involved must therefore live under `folder_id`.** If the platform team keeps its
-parent zone in a project outside that folder, add a `stackit_authorization_project_role_assignment`
-with `dns.admin` on that project for the same service account.
+## Project scope where the projects are known, folder scope where they are not
 
-## Why folder scope and not organization scope
+Scope follows what the caller can name when the backplane is deployed.
+
+**`zone_project_ids` is the default path.** Name the projects that own the zones and the service
+account is granted `dns.admin` on exactly those. Two cases make the projects knowable:
+
+- A composition fixes the zone's project as a static input. `reference-architectures/stackit-kubernetes`
+  does this — the platform team owns one zone in its own project and fills that project in when it
+  registers the building block definition.
+- The delegation path. The parent zone's project is `delegation.parent_zone_project_id` on the
+  building block, so it is named there too.
+
+**`folder_id` is the fallback, for one case only.** The `TENANT_LEVEL` building block definition in
+`../meshstack_integration.tf` takes its `project_id` from `PLATFORM_TENANT_ID`, so the zone lands in
+whichever tenant project places the order, and the platform team registers the definition long
+before it knows which those are. A folder covers every project below it, so it keeps the property
+that makes a wide scope attractive: grant once, and every project a tenant later receives is
+covered. **Every project involved then has to live under that folder** — a parent zone kept outside
+it needs its project listed in `zone_project_ids` as well.
+
+Set at least one of the two. Setting both is fine and is what a mixed deployment needs.
+
+## Why not organization scope, in either case
 
 The sibling backplanes grant their role at organization scope, and `modules/stackit/network/backplane`
 is right to do so, but that does not generalise. STACKIT's authorization API offers a different set
@@ -58,8 +74,8 @@ real one rather than an artifact of the call: `iaas.network.admin`, `organizatio
 `iam.member-admin` and `resource-manager.admin` are all present at organization scope.
 
 `iam.member-admin` is one of the 76, which is why this module still assigns that one on the
-organization. When tenant projects are spread over several folders, deploy one backplane instance
-per folder and override `service_account_name`.
+organization. When tenant projects are spread over several folders and none of them can be named,
+deploy one backplane instance per folder and override `service_account_name`.
 
 ## The one permission this module does not grant
 
@@ -104,11 +120,11 @@ provider "stackit" {
 ## Prerequisites
 
 - A STACKIT project where the service account will be created.
-- A STACKIT service account with permissions to manage service accounts and folder-level and
-  organization-level role assignments.
-- The STACKIT folder ID under which every project involved lives. Projects placed directly under the
-  organization are not covered.
-- The STACKIT organization ID that folder lives under.
+- A STACKIT service account with permissions to manage service accounts, organization-level role
+  assignments, and project-level or folder-level role assignments depending on which scope you use.
+- Either the STACKIT projects that own the zones, or the folder ID under which every project
+  involved lives. Projects placed directly under the organization are not covered by a folder.
+- The STACKIT organization ID.
 - meshStack WIF issuer and subject from `data.meshstack_integrations.integrations`.
 
 ## Usage
@@ -118,8 +134,12 @@ module "dns_backplane" {
   source = "./backplane"
 
   project_id      = "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
-  folder_id       = "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
   organization_id = "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
+
+  # Name the zones' projects where you can. Fall back to folder_id only when the zone lands in
+  # whichever tenant project places the order.
+  zone_project_ids = ["xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"]
+  folder_id        = null
 
   # The role your organization uses to create service accounts in tenant projects.
   additional_organization_roles = []
@@ -150,6 +170,7 @@ No modules.
 | [stackit_authorization_folder_role_assignment.dns_admin](https://registry.terraform.io/providers/stackitcloud/stackit/latest/docs/resources/authorization_folder_role_assignment) | resource |
 | [stackit_authorization_organization_role_assignment.additional](https://registry.terraform.io/providers/stackitcloud/stackit/latest/docs/resources/authorization_organization_role_assignment) | resource |
 | [stackit_authorization_organization_role_assignment.member_admin](https://registry.terraform.io/providers/stackitcloud/stackit/latest/docs/resources/authorization_organization_role_assignment) | resource |
+| [stackit_authorization_project_role_assignment.dns_admin](https://registry.terraform.io/providers/stackitcloud/stackit/latest/docs/resources/authorization_project_role_assignment) | resource |
 | [stackit_service_account.building_block](https://registry.terraform.io/providers/stackitcloud/stackit/latest/docs/resources/service_account) | resource |
 | [stackit_service_account_federated_identity_provider.building_block](https://registry.terraform.io/providers/stackitcloud/stackit/latest/docs/resources/service_account_federated_identity_provider) | resource |
 
@@ -158,11 +179,12 @@ No modules.
 | Name | Description | Type | Default | Required |
 |------|-------------|------|---------|:--------:|
 | <a name="input_additional_organization_roles"></a> [additional\_organization\_roles](#input\_additional\_organization\_roles) | Extra STACKIT roles granted to the service account at organization scope. Use this for the role your organization uses to create service accounts and service account keys in tenant projects, which the building block needs for the DNS credential. See backplane/README.md. | `list(string)` | `[]` | no |
-| <a name="input_folder_id"></a> [folder\_id](#input\_folder\_id) | STACKIT folder ID under which the zones' projects live. The service account is granted 'dns.admin' on this folder, which covers every project below it, including the parent zone's project on the delegation path. STACKIT offers no dns role at organization scope, so a folder is the widest scope available for it. | `string` | n/a | yes |
+| <a name="input_folder_id"></a> [folder\_id](#input\_folder\_id) | STACKIT folder ID under which the zones' projects live. The service account is granted `dns.admin`<br/>on this folder, which covers every project below it.<br/><br/>This is the fallback for the one case where no project can be named: the `TENANT_LEVEL` building<br/>block definition takes its `project_id` from `PLATFORM_TENANT_ID`, so the zone lands in whichever<br/>tenant project places the order. Prefer `zone_project_ids` whenever the projects are known.<br/>STACKIT offers no dns role at organization scope, so a folder is the widest scope available for it. | `string` | `null` | no |
 | <a name="input_organization_id"></a> [organization\_id](#input\_organization\_id) | STACKIT organization ID the folder lives under. The service account is granted 'iam.member-admin' here, which lets the building block assign 'dns.admin' to the DNS service account it creates. | `string` | n/a | yes |
 | <a name="input_project_id"></a> [project\_id](#input\_project\_id) | STACKIT project ID where the service account will be created. | `string` | n/a | yes |
 | <a name="input_service_account_name"></a> [service\_account\_name](#input\_service\_account\_name) | Name of the service account created in the STACKIT project. Override when deploying multiple backplane instances in the same project. | `string` | `"mesh-dns"` | no |
 | <a name="input_workload_identity_federation"></a> [workload\_identity\_federation](#input\_workload\_identity\_federation) | WIF issuer URL and subject list for the meshStack building block identity provider. | <pre>object({<br/>    issuer   = string<br/>    subjects = list(string)<br/>  })</pre> | n/a | yes |
+| <a name="input_zone_project_ids"></a> [zone\_project\_ids](#input\_zone\_project\_ids) | STACKIT projects that own the zones the building block writes into. The service account is granted<br/>`dns.admin` on each of them, at **project** scope.<br/><br/>Use this wherever the projects are knowable when the backplane is deployed — a composition that<br/>fixes the zone project as a static input, or the delegation path, where the parent zone's project<br/>is named by `delegation.parent_zone_project_id`. Fall back to `folder_id` only when they are not. | `set(string)` | `[]` | no |
 
 ## Outputs
 

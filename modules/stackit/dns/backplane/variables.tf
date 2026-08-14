@@ -4,10 +4,40 @@ variable "project_id" {
   description = "STACKIT project ID where the service account will be created."
 }
 
+variable "zone_project_ids" {
+  type     = set(string)
+  nullable = false
+  default  = []
+
+  description = <<-EOT
+  STACKIT projects that own the zones the building block writes into. The service account is granted
+  `dns.admin` on each of them, at **project** scope.
+
+  Use this wherever the projects are knowable when the backplane is deployed — a composition that
+  fixes the zone project as a static input, or the delegation path, where the parent zone's project
+  is named by `delegation.parent_zone_project_id`. Fall back to `folder_id` only when they are not.
+  EOT
+}
+
 variable "folder_id" {
-  type        = string
-  nullable    = false
-  description = "STACKIT folder ID under which the zones' projects live. The service account is granted 'dns.admin' on this folder, which covers every project below it, including the parent zone's project on the delegation path. STACKIT offers no dns role at organization scope, so a folder is the widest scope available for it."
+  type     = string
+  nullable = true
+  default  = null
+
+  description = <<-EOT
+  STACKIT folder ID under which the zones' projects live. The service account is granted `dns.admin`
+  on this folder, which covers every project below it.
+
+  This is the fallback for the one case where no project can be named: the `TENANT_LEVEL` building
+  block definition takes its `project_id` from `PLATFORM_TENANT_ID`, so the zone lands in whichever
+  tenant project places the order. Prefer `zone_project_ids` whenever the projects are known.
+  STACKIT offers no dns role at organization scope, so a folder is the widest scope available for it.
+  EOT
+
+  validation {
+    condition     = var.folder_id != null || length(var.zone_project_ids) > 0
+    error_message = "The service account needs dns.admin somewhere. Name the zones' projects in zone_project_ids, or set folder_id when the target project is unknowable at grant time."
+  }
 }
 
 variable "organization_id" {

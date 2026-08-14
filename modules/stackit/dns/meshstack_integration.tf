@@ -4,8 +4,29 @@ variable "stackit_organization_id" {
 }
 
 variable "stackit_folder_id" {
-  type        = string
-  description = "STACKIT folder ID under which every project the building block writes into lives. The backplane grants the service account 'dns.admin' on this folder, which covers every project below it. STACKIT offers no dns role at organization scope."
+  type    = string
+  default = null
+
+  description = <<-EOT
+  STACKIT folder ID under which every project the building block writes into lives. The backplane
+  grants the service account `dns.admin` on this folder, which covers every project below it.
+
+  This building block definition is `TENANT_LEVEL` and takes its project from `PLATFORM_TENANT_ID`,
+  so the zone lands in whichever tenant project places the order and no project can be named ahead
+  of it — which is what folder scope is for. STACKIT offers no dns role at organization scope.
+  EOT
+}
+
+variable "stackit_dns_zone_project_ids" {
+  type    = list(string)
+  default = []
+
+  description = <<-EOT
+  STACKIT projects the backplane service account is granted `dns.admin` on at project scope, on top
+  of `stackit_folder_id`. Name the projects that own zones the building block writes into but that
+  live outside the folder — typically the platform team's own project holding the parent zone on the
+  delegation path.
+  EOT
 }
 
 variable "stackit_project_id" {
@@ -90,6 +111,7 @@ module "backplane" {
 
   project_id                    = var.stackit_project_id
   folder_id                     = var.stackit_folder_id
+  zone_project_ids              = toset(var.stackit_dns_zone_project_ids)
   organization_id               = var.stackit_organization_id
   service_account_name          = coalesce(var.stackit_service_account_name, "mesh-dns")
   additional_organization_roles = var.stackit_additional_organization_roles
