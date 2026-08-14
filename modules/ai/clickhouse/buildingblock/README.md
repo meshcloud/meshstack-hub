@@ -103,14 +103,16 @@ CREATE USER IF NOT EXISTS tenant_x ON CLUSTER default
   IDENTIFIED WITH sha256_password BY '<password>'
   DEFAULT DATABASE tenant_x;
 
-GRANT SELECT, INSERT, CREATE, DROP TABLE, ALTER UPDATE, ALTER DELETE, ALTER DROP INDEX
-  ON tenant_x.* TO tenant_x ON CLUSTER default;
+GRANT ON CLUSTER default
+  SELECT, INSERT, CREATE, DROP TABLE, ALTER UPDATE, ALTER DELETE, ALTER DROP INDEX
+  ON tenant_x.* TO tenant_x;
 ```
 
-Two points about that grant list:
+Three points about those statements:
 
 - **The tenant user does not need `CREATE DATABASE`.** Langfuse runs its ClickHouse schema migrations with golang-migrate, and golang-migrate never creates a database — it only creates tables inside one that already exists. Granting `CREATE DATABASE` would let a tenant create databases outside its own scope.
 - **`ON CLUSTER default` is required** whenever the ClickHouse cluster has more than one replica, and harmless with one. `default` is the cluster name the operator configures, exposed as the `ddl_cluster_name` output.
+- **The clause does not sit in the same place in every statement.** `CREATE DATABASE` and `CREATE USER` take it after the object name, but `GRANT` and `REVOKE` take it directly after the keyword, before the privilege list — `GRANT ON CLUSTER default SELECT ... ON db.* TO user`. Putting it at the end of a `GRANT` is a syntax error.
 
 There is no first-class Terraform provider for DDL against a self-hosted ClickHouse. In practice a composition runs the statements from a Kubernetes Job in the ClickHouse namespace, using the `clickhouse/clickhouse-server` image and mounting the administrative password from the Secret named by the `admin_secret` output.
 
