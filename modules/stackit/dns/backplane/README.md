@@ -13,6 +13,13 @@ grants it the roles the building block needs:
 Authentication uses WIF (OIDC token exchange) — no long-lived service account key is created or
 stored for the building block identity itself.
 
+This backplane exists for the meshStack-ordered path, where meshStack federates a token into the run
+and `../buildingblock` authenticates with it. A composition that brings its own STACKIT credentials
+does not deploy this module at all: it configures the provider itself and sources
+`../buildingblock/zone`, the submodule that declares none. Its own credential then needs the same
+`dns.admin` reach described below, plus whatever role it uses to create service accounts.
+`reference-architectures/stackit-landingzone` takes that route.
+
 ## How one identity reaches one or two STACKIT projects
 
 On the usual path the building block writes into a single project: the zone, its records and the

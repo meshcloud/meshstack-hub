@@ -1,23 +1,7 @@
-# ── Backplane inputs (static, set once per building block definition) ──────────
-
 variable "project_id" {
   type        = string
   nullable    = false
   description = "STACKIT project ID that owns the zone. The record sets and the DNS service account are created in the same project, because STACKIT DNS is project-scoped."
-}
-
-variable "service_account_email" {
-  type        = string
-  nullable    = true
-  default     = null
-  description = "Email of the STACKIT service account the provider authenticates as via workload identity federation. Leave unset when the caller supplies its own provider configuration."
-}
-
-variable "stackit_region" {
-  type        = string
-  nullable    = false
-  default     = "eu01"
-  description = "STACKIT region used as the provider's default. STACKIT DNS itself is global. Ignored when the caller supplies its own provider configuration."
 }
 
 # ── Zone ───────────────────────────────────────────────────────────────────────
@@ -33,7 +17,7 @@ variable "create_zone" {
   configuration owns. The platform team creates `likvid.stackit.run` once, and every cluster then
   adds its own record sets to that zone. STACKIT allows a record set with a deeper name inside an
   existing zone, so `*.cluster1.likvid.stackit.run` is a record set in `likvid.stackit.run` and not
-  a zone of its own. See README.md.
+  a zone of its own. See ../README.md.
   EOT
 }
 
@@ -63,12 +47,13 @@ variable "zone_name" {
 
   A free STACKIT subdomain admits exactly one label. `likvid.stackit.run` is accepted and
   `cluster1.likvid.stackit.run` is rejected by the API, so everything below the zone has to be a
-  record set in `records` or in `wildcard` rather than a zone of its own. See zone/main.tf for the
-  API error.
+  record set in `records` or in `wildcard` rather than a zone of its own. See main.tf for the API
+  error.
 
-  Leave it `null` to switch the module off, which creates and reads nothing. A composition needs
-  that because this module configures its own STACKIT provider for the meshStack run, and Terraform
-  refuses `count` on a module that does so.
+  Leave it `null` to switch the module off, which creates and reads nothing. A caller of this module
+  usually reaches for `count = 0` instead — this module carries no provider configuration precisely
+  so that it can. The null switch is for the root above, which configures its own STACKIT provider
+  for the meshStack run and therefore cannot be counted.
   EOT
 
   validation {
@@ -184,7 +169,7 @@ variable "wildcard" {
 
   **Only one cluster can hold the wildcard at the zone apex.** The second cluster that writes
   `*.<zone_name>` collides with the first one, so every cluster beyond the first needs a `label` of
-  its own. See README.md.
+  its own. See ../README.md.
 
   ```hcl
   wildcard = {
@@ -223,7 +208,7 @@ variable "delegation" {
 
   **This works only for a domain the customer owns.** Under a free STACKIT suffix such as
   `stackit.run` the zone itself cannot be created, so the delegation has nothing to point at — see
-  the API error quoted in zone/main.tf. The module refuses that combination.
+  the API error quoted in main.tf. The module refuses that combination.
 
   `nameservers` must carry trailing dots. STACKIT relativises a value without one against the zone,
   so `ns1.stackit.cloud` is stored as `ns1.stackit.cloud.<zone>.` and the delegation points nowhere.
@@ -262,7 +247,7 @@ variable "dns_service_account_name" {
   Name of the DNS service account. Defaults to `mesh-dns-<first label, truncated>-<4 hex digits of
   the zone name>`, for example `mesh-dns-likvid-9a3c`, which keeps two zones in the same project
   apart. **STACKIT caps the name at 20 characters**, which is why the zone name is not pasted in
-  whole — see zone/main.tf for the provider error.
+  whole — see main.tf for the provider error.
   EOT
 
   validation {

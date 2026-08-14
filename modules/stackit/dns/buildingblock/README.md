@@ -16,6 +16,37 @@ The module is used in two ways. A reference architecture sources it directly as 
 which keeps STACKIT resources out of the architecture itself. A team orders it as a building block
 through meshStack, wired up by the `meshstack_integration.tf` at the module root.
 
+## Two tiers: this root, and `zone/`
+
+Every resource lives in `zone/`, a submodule that declares **no provider configuration**. This root
+is that submodule plus a `provider "stackit"` with `use_oidc = true`, which is what meshStack runs
+when a team orders the building block.
+
+Source **this root** when meshStack drives the run and federates a workload identity token into it.
+Source **`zone/`** from a composition that brings its own credentials, and there is no way around
+it: a provider a child module configures itself cannot be overridden by its caller, so a caller
+holding a STACKIT service account key must call a module that declares none. The same applies to
+`count`, `for_each` and `depends_on`, which Terraform refuses on a module with its own providers.
+
+```hcl
+provider "stackit" {
+  service_account_key = var.stackit_service_account_key
+  experiments         = ["iam"] # gates stackit_authorization_project_role_assignment
+}
+
+module "dns_zone" {
+  count  = var.dns_enabled ? 1 : 0
+  source = "github.com/meshcloud/meshstack-hub//modules/stackit/dns/buildingblock/zone?ref=main"
+
+  project_id = var.platform_project_id
+  zone_name  = "likvid.stackit.run"
+}
+```
+
+`reference-architectures/stackit-landingzone` does exactly this to create the one zone its ordered
+clusters share. `zone/` takes every input this root does except `service_account_email` and
+`stackit_region`, which only ever configured the provider, and returns the same outputs.
+
 ## One zone, one project, one credential
 
 STACKIT DNS is project-scoped end to end. `stackit_dns_record_set` carries its own `project_id` and
@@ -143,14 +174,18 @@ state into the module and the plan stays empty:
 ```hcl
 moved {
   from = stackit_dns_zone.this
-  to   = module.dns.stackit_dns_zone.this[0]
+  to   = module.dns.module.zone.stackit_dns_zone.this[0]
 }
 
 moved {
   from = stackit_dns_record_set.A
-  to   = module.dns.stackit_dns_record_set.wildcard[0]
+  to   = module.dns.module.zone.stackit_dns_record_set.wildcard[0]
 }
 ```
+
+The extra `module.zone` in the target is the submodule described above. Drop it when you source
+`zone/` directly instead of this root. Callers that were already on this root before the split need
+no `moved` block of their own — main.tf carries one per resource.
 
 ## The permission trade-off you are accepting
 
@@ -224,6 +259,17 @@ Set `dns_service_account_enabled = false` when records are managed through Terra
 the backplane identity may not create service accounts. Both `dns_service_account_*` outputs are
 `null` in that case.
 
+The account's name is derived as `mesh-dns-<zone's first label, truncated>-<4 hex digits of the full
+zone name>`, for example `mesh-dns-likvid-9a3c`. **STACKIT caps a service account name at 20
+characters**, which the zone name pasted in whole overruns for every free STACKIT subdomain —
+`mesh-dns-likvid-stackit-run` is 27 and the provider rejects it at plan time with *"Attribute name
+string length must be at most 20"*. Override the name with `dns_service_account_name` if you want a
+different one; it is validated against the same cap.
+
+`../backplane` cannot supply this credential. It federates an OIDC identity and issues no static
+key, and a static key is what a controller running inside a cluster needs: the workload identity
+token is federated into the Terraform run, and nothing in the cluster holds one afterwards.
+
 `dns_service_account_key_ttl_days` is unset by default, so the key stays valid until it is deleted.
 A key that expires has to be rotated by re-applying the building block before a certificate can
 renew.
@@ -238,21 +284,13 @@ renew.
 
 ## Modules
 
-No modules.
+| Name | Source | Version |
+|------|--------|---------|
+| <a name="module_zone"></a> [zone](#module\_zone) | ./zone | n/a |
 
 ## Resources
 
-| Name | Type |
-|------|------|
-| [stackit_authorization_project_role_assignment.dns](https://registry.terraform.io/providers/stackitcloud/stackit/latest/docs/resources/authorization_project_role_assignment) | resource |
-| [stackit_dns_record_set.delegation](https://registry.terraform.io/providers/stackitcloud/stackit/latest/docs/resources/dns_record_set) | resource |
-| [stackit_dns_record_set.this](https://registry.terraform.io/providers/stackitcloud/stackit/latest/docs/resources/dns_record_set) | resource |
-| [stackit_dns_record_set.wildcard](https://registry.terraform.io/providers/stackitcloud/stackit/latest/docs/resources/dns_record_set) | resource |
-| [stackit_dns_zone.this](https://registry.terraform.io/providers/stackitcloud/stackit/latest/docs/resources/dns_zone) | resource |
-| [stackit_service_account.dns](https://registry.terraform.io/providers/stackitcloud/stackit/latest/docs/resources/service_account) | resource |
-| [stackit_service_account_key.dns](https://registry.terraform.io/providers/stackitcloud/stackit/latest/docs/resources/service_account_key) | resource |
-| [stackit_dns_zone.existing](https://registry.terraform.io/providers/stackitcloud/stackit/latest/docs/data-sources/dns_zone) | data source |
-| [stackit_dns_zone.parent](https://registry.terraform.io/providers/stackitcloud/stackit/latest/docs/data-sources/dns_zone) | data source |
+No resources.
 
 ## Inputs
 
@@ -260,10 +298,10 @@ No modules.
 |------|-------------|------|---------|:--------:|
 | <a name="input_contact_email"></a> [contact\_email](#input\_contact\_email) | Contact address stored on the zone. Leave empty to let STACKIT pick its own default. Only used when `create_zone` is `true`. | `string` | `""` | no |
 | <a name="input_create_zone"></a> [create\_zone](#input\_create\_zone) | Create the zone. Leave this at `true` when the caller owns the zone.<br/><br/>Set it to `false` to write record sets into a zone that already exists and that another Terraform<br/>configuration owns. The platform team creates `likvid.stackit.run` once, and every cluster then<br/>adds its own record sets to that zone. STACKIT allows a record set with a deeper name inside an<br/>existing zone, so `*.cluster1.likvid.stackit.run` is a record set in `likvid.stackit.run` and not<br/>a zone of its own. See README.md. | `bool` | `true` | no |
-| <a name="input_delegation"></a> [delegation](#input\_delegation) | Write the `NS` record that delegates this zone from a parent zone in another STACKIT project.<br/>Leave unset, which is the default and the usual case.<br/><br/>**This works only for a domain the customer owns.** Under a free STACKIT suffix such as<br/>`stackit.run` the zone itself cannot be created, so the delegation has nothing to point at — see<br/>the API error quoted in main.tf. The module refuses that combination.<br/><br/>`nameservers` must carry trailing dots. STACKIT relativises a value without one against the zone,<br/>so `ns1.stackit.cloud` is stored as `ns1.stackit.cloud.<zone>.` and the delegation points nowhere. | <pre>object({<br/>    parent_zone_project_id = string<br/>    parent_zone_name       = string<br/>    nameservers            = optional(list(string), ["ns1.stackit.cloud.", "ns2.stackit.zone."])<br/>    ttl                    = optional(number, 3600)<br/>  })</pre> | `null` | no |
+| <a name="input_delegation"></a> [delegation](#input\_delegation) | Write the `NS` record that delegates this zone from a parent zone in another STACKIT project.<br/>Leave unset, which is the default and the usual case.<br/><br/>**This works only for a domain the customer owns.** Under a free STACKIT suffix such as<br/>`stackit.run` the zone itself cannot be created, so the delegation has nothing to point at — see<br/>the API error quoted in zone/main.tf. The module refuses that combination.<br/><br/>`nameservers` must carry trailing dots. STACKIT relativises a value without one against the zone,<br/>so `ns1.stackit.cloud` is stored as `ns1.stackit.cloud.<zone>.` and the delegation points nowhere. | <pre>object({<br/>    parent_zone_project_id = string<br/>    parent_zone_name       = string<br/>    nameservers            = optional(list(string), ["ns1.stackit.cloud.", "ns2.stackit.zone."])<br/>    ttl                    = optional(number, 3600)<br/>  })</pre> | `null` | no |
 | <a name="input_dns_service_account_enabled"></a> [dns\_service\_account\_enabled](#input\_dns\_service\_account\_enabled) | Create a service account with `dns.admin` on the zone's project and a key for it. cert-manager's DNS-01 solver and ExternalDNS both authenticate with that key. Turn it off when the consumer manages records through Terraform only, or when the backplane identity may not create service accounts. | `bool` | `true` | no |
 | <a name="input_dns_service_account_key_ttl_days"></a> [dns\_service\_account\_key\_ttl\_days](#input\_dns\_service\_account\_key\_ttl\_days) | Validity of the DNS service account key in days. Leave unset to create a key that stays valid until it is deleted. A key that expires has to be rotated by re-applying the building block before a certificate can renew. | `number` | `null` | no |
-| <a name="input_dns_service_account_name"></a> [dns\_service\_account\_name](#input\_dns\_service\_account\_name) | Name of the DNS service account. Defaults to `mesh-dns-<zone name with dots replaced by hyphens>`, which keeps two zones in the same project apart. | `string` | `null` | no |
+| <a name="input_dns_service_account_name"></a> [dns\_service\_account\_name](#input\_dns\_service\_account\_name) | Name of the DNS service account. Defaults to `mesh-dns-<first label, truncated>-<4 hex digits of<br/>the zone name>`, for example `mesh-dns-likvid-9a3c`, which keeps two zones in the same project<br/>apart. **STACKIT caps the name at 20 characters**, which is why the zone name is not pasted in<br/>whole — see zone/main.tf for the provider error. | `string` | `null` | no |
 | <a name="input_project_id"></a> [project\_id](#input\_project\_id) | STACKIT project ID that owns the zone. The record sets and the DNS service account are created in the same project, because STACKIT DNS is project-scoped. | `string` | n/a | yes |
 | <a name="input_records"></a> [records](#input\_records) | Record sets to create in the zone, keyed by the name relative to the zone. A key of `cluster1` in<br/>the zone `likvid.stackit.run` gives `cluster1.likvid.stackit.run`, and `*.cluster1` gives the<br/>wildcard below it.<br/><br/>A value that is itself a domain name — the target of a `CNAME`, `MX` or `NS` record — must end in<br/>a dot. STACKIT relativises a value without one against the zone, so `example.com` is stored as<br/>`example.com.likvid.stackit.run.`.<pre>hcl<br/>records = {<br/>  "cluster1"   = { type = "A", records = ["203.0.113.17"] }<br/>  "*.cluster1" = { type = "A", records = ["203.0.113.17"] }<br/>}</pre> | <pre>map(object({<br/>    type    = string<br/>    records = list(string)<br/>    ttl     = optional(number)<br/>    comment = optional(string)<br/>  }))</pre> | `{}` | no |
 | <a name="input_service_account_email"></a> [service\_account\_email](#input\_service\_account\_email) | Email of the STACKIT service account the provider authenticates as via workload identity federation. Leave unset when the caller supplies its own provider configuration. | `string` | `null` | no |
@@ -273,7 +311,7 @@ No modules.
 | <a name="input_zone_description"></a> [zone\_description](#input\_zone\_description) | Description stored on the zone. Leave empty to store none. Only used when `create_zone` is `true`. | `string` | `""` | no |
 | <a name="input_zone_display_name"></a> [zone\_display\_name](#input\_zone\_display\_name) | Name STACKIT shows for the zone, which is separate from its DNS name. Defaults to `zone_name`. Only used when `create_zone` is `true`. Set it when an existing zone carries a different name and you move it into this module, so the plan stays empty. | `string` | `null` | no |
 | <a name="input_zone_id"></a> [zone\_id](#input\_zone\_id) | UUID of the zone to write the record sets into. Only used when `create_zone` is `false`. Leave it<br/>unset to let the module look the zone up by `zone_name` in `project_id`, which needs read access<br/>on that project. | `string` | `null` | no |
-| <a name="input_zone_name"></a> [zone\_name](#input\_zone\_name) | DNS name of the zone, for example `likvid.stackit.run` or `platform.example.com`. No trailing dot.<br/>With `create_zone = false` this is the name of the existing zone the record sets go into.<br/><br/>A free STACKIT subdomain admits exactly one label. `likvid.stackit.run` is accepted and<br/>`cluster1.likvid.stackit.run` is rejected by the API, so everything below the zone has to be a<br/>record set in `records` or in `wildcard` rather than a zone of its own. See main.tf for the API<br/>error.<br/><br/>Leave it `null` to switch the module off, which creates and reads nothing. A composition needs<br/>that because this module configures its own STACKIT provider for the meshStack run, and Terraform<br/>refuses `count` on a module that does so. | `string` | `null` | no |
+| <a name="input_zone_name"></a> [zone\_name](#input\_zone\_name) | DNS name of the zone, for example `likvid.stackit.run` or `platform.example.com`. No trailing dot.<br/>With `create_zone = false` this is the name of the existing zone the record sets go into.<br/><br/>A free STACKIT subdomain admits exactly one label. `likvid.stackit.run` is accepted and<br/>`cluster1.likvid.stackit.run` is rejected by the API, so everything below the zone has to be a<br/>record set in `records` or in `wildcard` rather than a zone of its own. See zone/main.tf for the<br/>API error.<br/><br/>Leave it `null` to switch the module off, which creates and reads nothing. A composition needs<br/>that because this module configures its own STACKIT provider for the meshStack run, and Terraform<br/>refuses `count` on a module that does so. | `string` | `null` | no |
 
 ## Outputs
 
