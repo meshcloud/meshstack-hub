@@ -4,6 +4,10 @@ locals {
 
   # Only resolvable once the hub network area building block has completed.
   network_area_id = local.network_enabled ? jsondecode(meshstack_building_block.network_area_hub[0].status.outputs["network_area_id"].value) : null
+
+  # The meshStack location every platform this building block registers is placed in — the STACKIT
+  # Project platform, and with the options on, the Kubernetes platforms and the AI gateway too.
+  location_identifier = var.use_global_location ? "global" : meshstack_location.this[0].metadata.name
 }
 
 # ── Sandbox landing zone foundation (always deployed) ──
@@ -55,7 +59,7 @@ module "stackit_integration" {
 
   meshstack = {
     owning_workspace_identifier = var.workspace
-    location_name               = var.use_global_location ? "global" : meshstack_location.this[0].metadata.name
+    location_name               = local.location_identifier
     platform_identifier         = var.platform_identifier
     tags                        = var.tags
   }

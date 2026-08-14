@@ -22,20 +22,30 @@ digraph stackit_landingzone {
     margin=18
 
     ORG    [label="🏢 STACKIT Organization" fillcolor="#ffffff" color="#a2abb8"]
-    FOUND  [label="🔑 Foundation Project\nhosts the project-creation service account" fillcolor="#ffffff" color="#a2abb8"]
+    FOUND  [label="🔑 Foundation Project\nservice accounts and the DNS zone" fillcolor="#ffffff" color="#a2abb8"]
     FOLDER [label="📁 Resourcemanager Folder\ntenant projects are created here" fillcolor="#ffffff" color="#a2abb8"]
-    NA     [label="🌐 Network Area ×1\nshared IPv4 address plan · hub" fillcolor="#e5f2ea" color="#85bfa0"]
+    NA     [label="🌐 Network Area ×1\nnetwork option · shared address plan" fillcolor="#e5f2ea" color="#85bfa0"]
+    ZONE   [label="🌐 Shared DNS Zone ×1\nkubernetes option · one label deep" fillcolor="#e5f2ea" color="#85bfa0"]
     PRJ    [label="🗂️ STACKIT Project ×N" fillcolor="#e5f2ea" color="#85bfa0"]
     SPOKE  [label="🔌 Routed Network ×N\nspoke subnet" fillcolor="#e5f2ea" color="#85bfa0"]
+    SKE    [label="☸️ SKE Cluster ×N\nkubernetes option · HTTPS ingress" fillcolor="#e5f2ea" color="#85bfa0"]
+    AI     [label="🚪 Gateway and trace storage\nai option · installed once" fillcolor="#e5f2ea" color="#85bfa0"]
 
-    { rank=same; FOUND -> FOLDER -> NA [style=invis] }
+    { rank=same; FOUND -> NA -> FOLDER [style=invis] }
+    // SKE first, so the flat NA -> SPOKE edge pulls SPOKE towards NA rather than dragging NA across
+    // the whole cluster. Both rank chains are declared in the direction the real edges imply.
+    { rank=same; SKE -> SPOKE [style=invis] }
 
     ORG    -> FOUND
     ORG    -> FOLDER
     ORG    -> NA
+    FOUND  -> ZONE  [xlabel="holds"]
     FOLDER -> PRJ   [xlabel="holds"]
     PRJ    -> SPOKE [xlabel="contains"]
+    PRJ    -> SKE   [xlabel="contains"]
+    SKE    -> AI    [xlabel="hosts"]
     NA     -> SPOKE [xlabel="assigns CIDR to" style=dashed constraint=false]
+    SKE    -> ZONE  [xlabel="writes its own label into" style=dashed constraint=false]
   }
 
   subgraph cluster_mesh {
@@ -47,23 +57,37 @@ digraph stackit_landingzone {
 
     PLAT     [label="🛰️ STACKIT Project Platform" fillcolor="#ecedfb" color="#9aa2e6"]
     DEFLZ    [label="🛬 Default Landing Zone" fillcolor="#ecedfb" color="#9aa2e6"]
-    NETLZ    [label="🛬 Networked Landing Zone\noptional · with network config" fillcolor="#ecedfb" color="#9aa2e6"]
+    NETLZ    [label="🛬 Networked Landing Zone\nnetwork option" fillcolor="#ecedfb" color="#9aa2e6"]
     PRJBBD   [label="📦 stackit/project BBD" fillcolor="#ecedfb" color="#9aa2e6"]
-    NABBD    [label="📦 stackit/network-area BBD\noptional · platform team orders it once" fillcolor="#ecedfb" color="#9aa2e6"]
-    SPOKEBBD [label="📦 stackit/network BBD\noptional · tenant-level self-service" fillcolor="#ecedfb" color="#9aa2e6"]
+    NABBD    [label="📦 stackit/network-area BBD\nnetwork option · ordered once" fillcolor="#ecedfb" color="#9aa2e6"]
+    SPOKEBBD [label="📦 stackit/network BBD\nnetwork option · tenant-level" fillcolor="#ecedfb" color="#9aa2e6"]
+    K8SBBD   [label="📦 stackit-kubernetes BBD\nkubernetes option · tenant-level" fillcolor="#ecedfb" color="#9aa2e6"]
+    AIBBD    [label="📦 ai-platform BBD\nai option · ordered once" fillcolor="#ecedfb" color="#9aa2e6"]
+    K8SPLAT  [label="🛰️ Kubernetes Platform ×N\none per ordered cluster" fillcolor="#ecedfb" color="#9aa2e6"]
+    K8SLZ    [label="🛬 Namespace Landing Zones\ndev and prod per cluster" fillcolor="#ecedfb" color="#9aa2e6"]
+    AIPLAT   [label="🛰️ AI Model Gateway Platform\nAI-MODEL platform type" fillcolor="#ecedfb" color="#9aa2e6"]
+    AILZ     [label="🛬 AI Landing Zones\nmodel access is mandatory" fillcolor="#ecedfb" color="#9aa2e6"]
 
-    { rank=same; DEFLZ -> NETLZ [style=invis] }
-    { rank=same; PRJBBD -> SPOKEBBD -> NABBD [style=invis] }
+    { rank=same; PLAT -> K8SPLAT -> AIPLAT [style=invis] }
+    { rank=same; NETLZ -> DEFLZ -> K8SLZ -> AILZ [style=invis] }
+    { rank=same; PRJBBD -> SPOKEBBD -> NABBD -> K8SBBD -> AIBBD [style=invis] }
 
-    PLAT  -> DEFLZ
-    PLAT  -> NETLZ
-    DEFLZ -> PRJBBD   [xlabel="requests"]
-    NETLZ -> SPOKEBBD [xlabel="offers to tenants"]
+    PLAT    -> DEFLZ
+    PLAT    -> NETLZ
+    DEFLZ   -> PRJBBD   [xlabel="requests"]
+    DEFLZ   -> K8SBBD   [xlabel="offers to tenants"]
+    NETLZ   -> SPOKEBBD [xlabel="offers to tenants"]
+    K8SPLAT -> K8SLZ    [xlabel="hands out namespaces"]
+    AIPLAT  -> AILZ     [xlabel="carries the policy"]
   }
 
-  FOUND    -> PLAT  [xlabel="authenticates" style=dotted constraint=false]
-  PRJBBD   -> PRJ   [xlabel="provisions" style=dotted constraint=false]
-  NABBD    -> NA    [xlabel="provisions" style=dotted constraint=false]
-  SPOKEBBD -> SPOKE [xlabel="provisions" style=dotted constraint=false]
-  NETLZ    -> NA    [xlabel="tagged with area id" style=dotted constraint=false]
+  FOUND    -> PLAT    [xlabel="authenticates" style=dotted constraint=false]
+  PRJBBD   -> PRJ     [xlabel="provisions" style=dotted constraint=false]
+  NABBD    -> NA      [xlabel="provisions" style=dotted constraint=false]
+  SPOKEBBD -> SPOKE   [xlabel="provisions" style=dotted constraint=false]
+  NETLZ    -> NA      [xlabel="tagged with area id" style=dotted constraint=false]
+  K8SBBD   -> SKE     [xlabel="provisions" style=dotted constraint=false]
+  SKE      -> K8SPLAT [xlabel="registered as" style=dotted constraint=false]
+  AIBBD    -> AI      [xlabel="installs" style=dotted constraint=false]
+  AI       -> AIPLAT  [xlabel="registered as" style=dotted constraint=false]
 }

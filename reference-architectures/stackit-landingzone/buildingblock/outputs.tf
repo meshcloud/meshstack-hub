@@ -13,6 +13,16 @@ output "foundation_project_url" {
   description = "Deep link to the foundation project in the STACKIT portal."
 }
 
+output "dns_zone_name" {
+  value       = local.kubernetes_enabled ? module.dns_zone[0].zone_name : ""
+  description = "DNS name of the shared zone every ordered cluster writes its own label into. Empty when the Kubernetes option is off."
+}
+
+output "ai_gateway_url" {
+  value       = local.ai_enabled ? jsondecode(meshstack_building_block.ai_platform[0].status.outputs["litellm_url"].value) : ""
+  description = "URL of the LiteLLM gateway the AI platform published on the cluster's application domain. Empty when the AI option is off."
+}
+
 output "summary" {
   description = "Summary of the meshStack resources created by this reference architecture."
   value = templatefile("${path.module}/SUMMARY.md.tftpl", {
@@ -31,5 +41,16 @@ output "summary" {
     network_area_hub_uuid      = local.network_enabled ? meshstack_building_block.network_area_hub[0].metadata.uuid : ""
     network_area_id            = local.network_enabled ? local.network_area_id : ""
     network_area_url           = local.network_enabled ? "https://portal.stackit.cloud/network-area/network-areas/${local.network_area_id}/overview?organization=${var.stackit_org}" : ""
+
+    # No value below carries a credential, and none is read from `var.ai`, which is sensitive: the
+    # summary is a plain-text building block output and would turn sensitive as a whole.
+    kubernetes_enabled = local.kubernetes_enabled
+    dns_zone_name      = local.kubernetes_enabled ? module.dns_zone[0].zone_name : ""
+    dns_zone_url       = local.kubernetes_enabled ? "https://portal.stackit.cloud/projects/${local.dns_zone_project_id}/dns" : ""
+    dns_zone_label     = local.kubernetes_enabled && var.kubernetes.dns_cluster_label_enabled
+
+    ai_enabled     = local.ai_enabled
+    ai_platform_bb = local.ai_enabled ? meshstack_building_block.ai_platform[0].metadata.uuid : ""
+    ai_gateway_url = local.ai_enabled ? jsondecode(meshstack_building_block.ai_platform[0].status.outputs["litellm_url"].value) : ""
   })
 }

@@ -39,9 +39,10 @@ resource "meshstack_building_block_definition" "this" {
   }
 
   spec = {
-    display_name     = "STACKIT Landing Zone"
-    symbol           = "https://raw.githubusercontent.com/meshcloud/meshstack-hub/${var.hub.git_ref}/reference-architectures/stackit-landingzone/buildingblock/logo.png"
-    description      = "Onboards a STACKIT sandbox platform into meshStack: a location, resourcemanager folder and the STACKIT Project platform with its default landing zone. Optionally layers on a hub-and-spoke network topology when a network config is provided."
+    display_name = "STACKIT Landing Zone"
+    symbol       = "https://raw.githubusercontent.com/meshcloud/meshstack-hub/${var.hub.git_ref}/reference-architectures/stackit-landingzone/buildingblock/logo.png"
+    # meshStack caps spec.description at 255 characters.
+    description      = "Onboards a STACKIT sandbox platform into meshStack: a location, resourcemanager folder and the STACKIT Project platform with its default landing zone. Optionally layers on hub-and-spoke networking, a Kubernetes platform with HTTPS, and an AI platform."
     support_url      = "https://portal.stackit.cloud"
     target_type      = "WORKSPACE_LEVEL"
     run_transparency = true
@@ -53,10 +54,14 @@ resource "meshstack_building_block_definition" "this" {
     STACKIT resourcemanager folder for the workspace and wires up the **STACKIT Project** platform
     together with its default landing zone.
 
-    Optionally, when you provide a **network** configuration, it additionally layers on a
-    hub-and-spoke network topology: a shared network-area address plan (the hub) and a self-service
-    routed-network building block (the spoke) that application teams can order inside their own
-    STACKIT projects.
+    Three optional layers stack on top of that foundation, each enabled by providing one JSON
+    object and each building on the one before it:
+
+    | Option | What it adds | Builds on |
+    |---|---|---|
+    | **network** | A shared network-area address plan (the hub) and a self-service routed-network building block (the spoke) application teams order inside their own STACKIT projects | — |
+    | **kubernetes** | The shared DNS zone, and the **STACKIT Kubernetes Cluster** building block an application team orders on its own project to get a cluster, an HTTPS ingress and a Kubernetes platform with namespace landing zones | the sandbox platform |
+    | **ai** | The **AI Platform** — the LiteLLM gateway, the shared trace storage, the `AI-MODEL` platform type and the AI landing zones — installed into a cluster ordered through the Kubernetes option | **kubernetes** |
 
     ## 🎯 When to use it
 
@@ -66,6 +71,11 @@ resource "meshstack_building_block_definition" "this" {
     - (optionally) want all tenant projects to draw from a single, non-overlapping IPv4 address plan
       and let application teams self-service order routed subnets — enable this by providing the
       **network** configuration.
+    - (optionally) want application teams to order their own Kubernetes clusters, where an
+      application that adds an Ingress gets a working HTTPS hostname without requesting a
+      certificate — enable this by providing the **kubernetes** configuration.
+    - (optionally) want governed model access as a property of a landing zone — enable this by
+      providing the **ai** configuration on top of the Kubernetes one.
 
     ## 💡 Usage examples
 
@@ -97,6 +107,32 @@ resource "meshstack_building_block_definition" "this" {
     }
     ```
 
+    **Example 3: Add a Kubernetes platform teams order clusters on**
+    A platform engineer provides a **kubernetes** configuration naming the DNS zone the platform team
+    owns, for example `likvid.stackit.run`. The building block creates that zone once in the
+    foundation project, together with the credential that writes into it, and registers the **STACKIT
+    Kubernetes Cluster** building block. An application team then orders a cluster on one of its
+    STACKIT projects and gets the cluster, an HTTPS ingress and a Kubernetes platform whose landing
+    zones hand out namespaces — where an application that adds an Ingress already has a resolving
+    hostname and a valid certificate.
+
+    ```json
+    {
+      "dns_zone_name": "likvid.stackit.run",
+      "dns_cluster_label_enabled": true,
+      "stackit_region": "eu01",
+      "acme_server": "https://acme-v02.api.letsencrypt.org/directory"
+    }
+    ```
+
+    **Example 4: Add the AI platform on top of it**
+    The platform engineer orders one cluster through the option above, then provides an **ai**
+    configuration with that cluster's name and kubeconfig, the model backends behind the gateway, the
+    shared Postgres, Valkey and object storage credentials, and the OIDC client. The building block
+    registers and orders the **AI Platform**, and every project that lands in an AI landing zone
+    afterwards receives a governed model endpoint, a budget, the credential as a Kubernetes Secret and
+    a tracing instance of its own.
+
     ## 📦 Resources created
 
     - **meshStack location** – named after the chosen platform identifier.
@@ -110,11 +146,38 @@ resource "meshstack_building_block_definition" "this" {
       zone** *(only when a network configuration is provided)* – the shared hub address plan, the
       self-service `STACKIT Network` building block, and a second `STACKIT Networked Project`
       building block definition plus landing zone that places projects into the hub network area.
+    - **Shared DNS zone + DNS credential + `STACKIT Kubernetes Cluster` building block** *(only when a
+      kubernetes configuration is provided)* – one STACKIT DNS zone in the foundation project, a
+      service account with `dns.admin` on it and a key for that account, and the tenant-level cluster
+      building block definition that composes SKE, the ingress, the Kubernetes platform and the record
+      set for each cluster's own label inside the zone.
+    - **`AI-MODEL` platform type + `AI Platform` building block definition and one order of it** *(only
+      when an ai configuration is provided)* – the LiteLLM gateway and the shared ClickHouse installed
+      into the named cluster, the gateway registered as a meshStack platform, and one AI landing zone
+      per entry with `ai/model-access` made mandatory.
+
+    ## 🌐 Hostnames and certificates
+
+    *(Only when a kubernetes configuration is provided.)* The landing zone owns **one** DNS zone and
+    every ordered cluster shares it. A free STACKIT subdomain admits exactly one label, so a zone per
+    cluster is impossible — this was tested against the live API, which rejects a two-label zone with
+    *"subdomain should only have one level"*. Each cluster therefore takes a **label inside the shared
+    zone**: cluster `cluster1` gets `*.cluster1`, and its wildcard certificate covers
+    `*.cluster1.<zone>`.
+
+    One trade-off comes with that and is worth knowing before you deploy: `dns.admin` is a project
+    role and cannot be narrowed to one zone, let alone to one label, so **the DNS credential is
+    zone-wide** and a cluster could write records outside its own label. What keeps clusters inside
+    their label is the building block code, not the credential — a code-enforced boundary and not a
+    permission boundary.
 
     ## 🔑 Authentication
 
     You provide the STACKIT organization UUID, owner email, tags, default role mapping and a service account key as inputs.
     The building block authenticates to STACKIT with the service account key, which needs `resource-manager.admin` on the organization.
+    With the **kubernetes** option on it also creates a DNS zone, a service account and a key in the
+    foundation project, so it needs `dns.admin` and the service-account roles there as well — which
+    it has when it created that project itself.
 
     ## 📊 Shared responsibility
 
@@ -124,8 +187,16 @@ resource "meshstack_building_block_definition" "this" {
     | Provision the location, folder and STACKIT Project platform | ✅ | ❌ |
     | (Optional) Provide the network CIDR plan and provision the hub network area | ✅ | ❌ |
     | (Optional) Register the spoke `STACKIT Network` building block for self-service | ✅ | ❌ |
+    | (Optional) Own the shared DNS zone and the key its records are written with | ✅ | ❌ |
+    | (Optional) Register the `STACKIT Kubernetes Cluster` building block | ✅ | ❌ |
+    | (Optional) Provide the model backends, their upstream credentials and the identity provider | ✅ | ❌ |
+    | (Optional) Provide the shared Postgres, Valkey and object storage the AI platform uses | ✅ | ❌ |
+    | (Optional) Define the AI landing zones: allowed models, budget and budget period | ✅ | ❌ |
     | Request STACKIT projects through the landing zone | ❌ | ✅ |
     | (Optional) Order spoke networks inside their STACKIT projects | ❌ | ✅ |
+    | (Optional) Order a cluster and choose its name and ingress exposure | ❌ | ✅ |
+    | (Optional) Order namespaces on the resulting Kubernetes platform | ❌ | ✅ |
+    | (Optional) Order projects in an AI landing zone and stay within the granted budget | ❌ | ✅ |
     | Manage workloads inside the provisioned STACKIT projects | ❌ | ✅ |
     EOT
     )
@@ -136,7 +207,13 @@ resource "meshstack_building_block_definition" "this" {
     deletion_mode = "DELETE"
 
     # Ephemeral API key permissions for meshStack resources created by this building block and its
-    # nested foundation/network-area/network integrations (all part of the same Terraform run).
+    # nested foundation, network-area, network, stackit-kubernetes and ai-platform integrations (all
+    # part of the same Terraform run).
+    #
+    # `meshstack_platform_type`, which the nested ai-platform integration creates, needs no permission
+    # of its own: the provider groups platform types with platform instances and locations under
+    # `PLATFORMINSTANCE_*` (client/api_key_permissions.go), and this building block already creates a
+    # `meshstack_location` with exactly that set.
     permissions = [
       "INTEGRATION_LIST",
       "BUILDINGBLOCKDEFINITION_LIST",
@@ -255,6 +332,52 @@ resource "meshstack_building_block_definition" "this" {
         default_value          = jsonencode(jsonencode(null))
       }
 
+      # ── Optional Kubernetes platform ──
+      # Leave `kubernetes` as null to deploy without one. Provide a JSON object to create the shared
+      # DNS zone once, in the foundation project, and register the `stackit-kubernetes` reference
+      # architecture as a tenant-level building block definition. An ordered cluster never creates a
+      # zone: it writes the record set `*.<cluster name>` into this one.
+
+      kubernetes = {
+        display_name           = "Kubernetes Platform"
+        description            = <<-DESC
+        Optional JSON object enabling the Kubernetes platform. Leave as `null` to deploy without one.
+        Only `dns_zone_name` is required — the zone the platform team owns and every ordered cluster
+        shares, for example `likvid.stackit.run`. A free STACKIT subdomain admits exactly one label,
+        so a zone per cluster is impossible and every cluster takes a label inside this one instead.
+        DESC
+        type                   = "CODE"
+        assignment_type        = "USER_INPUT"
+        updateable_by_consumer = true
+        default_value          = jsonencode(jsonencode(null))
+      }
+
+      # ── Optional AI platform, layered on top of the Kubernetes one ──
+      # Leave `ai` as null to deploy without one. The object carries six credentials — the cluster
+      # kubeconfig, the upstream model keys, the Valkey password, both object storage keys and the
+      # OIDC client secret — so the input is sensitive and meshStack stores it encrypted. Its default
+      # is the sensitive variant of `null`, which is what keeps the option optional.
+
+      ai = {
+        display_name           = "AI Platform"
+        description            = <<-DESC
+        Optional JSON object enabling the AI platform. Leave as `null` to deploy without one. It
+        requires the Kubernetes option: `cluster_name` names a cluster ordered through it, and the
+        application domain and the platform identifier are derived from that name together with the
+        shared DNS zone. Supply the cluster's kubeconfig, the model backends with their upstream API
+        keys, the shared Postgres, Valkey and object storage credentials, and the OIDC client.
+        DESC
+        type                   = "CODE"
+        assignment_type        = "USER_INPUT"
+        updateable_by_consumer = true
+
+        sensitive = {
+          default_value = {
+            secret_value = jsonencode(null)
+          }
+        }
+      }
+
       # ── meshStack context ──
 
       workspace = {
@@ -299,6 +422,18 @@ resource "meshstack_building_block_definition" "this" {
         display_name    = "Open Foundation Project"
         type            = "STRING"
         assignment_type = "RESOURCE_URL"
+      }
+
+      dns_zone_name = {
+        display_name    = "Shared DNS Zone"
+        type            = "STRING"
+        assignment_type = "NONE"
+      }
+
+      ai_gateway_url = {
+        display_name    = "AI Model Gateway"
+        type            = "STRING"
+        assignment_type = "NONE"
       }
 
       summary = {

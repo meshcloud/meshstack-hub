@@ -13,6 +13,13 @@
 | **Hub Network Area Building Block** | @buildingblock[${network_area_hub_uuid}] |
 | **Networked Landing Zone** | `${networked_landingzone_name}` |
 %{ endif ~}
+%{ if kubernetes_enabled ~}
+| **Shared DNS Zone** | [Open in STACKIT Portal](${dns_zone_url}) (`${dns_zone_name}`) |
+%{ endif ~}
+%{ if ai_enabled ~}
+| **AI Platform Building Block** | @buildingblock[${ai_platform_bb}] |
+| **AI Model Gateway** | [${ai_gateway_url}](${ai_gateway_url}) |
+%{ endif ~}
 
 %{ if network_enabled ~}
 Hub-and-spoke networking is enabled. Application teams can order the **STACKIT Network** building
@@ -21,4 +28,27 @@ spoke network drawn from the hub's address plan.
 %{ else ~}
 Application teams can now request STACKIT projects against the `${platform_identifier}-default`
 landing zone. Provide a `network` object to additionally enable hub-and-spoke networking.
+%{ endif ~}
+
+%{ if kubernetes_enabled ~}
+The **STACKIT Kubernetes Cluster** building block is registered. An application team orders it on one
+of its STACKIT projects and receives a cluster, an HTTPS ingress and a Kubernetes platform whose
+landing zones hand out namespaces.
+%{ if dns_zone_label ~}
+Each cluster takes a label of its own inside `${dns_zone_name}`, so its applications answer on
+`<app>.<cluster name>.${dns_zone_name}`.
+%{ else ~}
+Clusters put their wildcard at the apex of `${dns_zone_name}`, so applications answer on
+`<app>.${dns_zone_name}`. **Only one cluster per zone can hold the apex** — every further cluster
+needs a label of its own.
+%{ endif ~}
+The DNS credential carries `dns.admin` on the zone's project and can therefore write every record in
+the zone. What keeps each cluster inside its own label is the building block code, not the
+credential.
+%{ endif ~}
+
+%{ if ai_enabled ~}
+The **AI Platform** is installed and ordered. Publish the AI landing zones, and every project that
+lands in one receives a governed model endpoint, a budget, the credential as a Kubernetes Secret and
+a tracing instance of its own — without ordering anything.
 %{ endif ~}
