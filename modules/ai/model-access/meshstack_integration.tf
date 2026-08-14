@@ -10,9 +10,13 @@ variable "litellm_admin_api_key" {
 }
 
 variable "litellm_platform_type_name" {
-  type        = string
-  default     = "LiteLLM"
-  description = "Name of the meshStack platform type the LiteLLM platform is registered under. It must match the platform type used by the `ai/litellm` module, because this building block runs on the AI model tenant."
+  type = string
+  # The platform type is named for the capability, not for the product that delivers it, the same way
+  # this building block is "AI Model Access" rather than a LiteLLM block. A dash, not an underscore:
+  # meshstack_platform_type.metadata.name is validated against ^[A-Z0-9]+(-[A-Z0-9]+)*$, so both a
+  # mixed-case name and an underscore are rejected.
+  default     = "AI-MODEL"
+  description = "Name of the meshStack platform type the LiteLLM gateway is registered under. It must match the platform type the AI platform reference architecture creates, because this building block runs on the AI model tenant."
 }
 
 variable "litellm_team_models" {

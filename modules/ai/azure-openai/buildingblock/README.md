@@ -23,7 +23,7 @@ endpoint, the key and the deployment name in as static inputs.
 
 The `team_id` input scopes the entry to one LiteLLM team, so the gateway offers the model to that
 tenant alone and attributes its spend to that team. In the AI landing zone the team ID comes from
-the platform tenant ID that `ai/litellm-team` produces, so the application team fills in nothing.
+the platform tenant ID that `ai/model-access` produces, so the application team fills in nothing.
 
 Azure OpenAI addresses a **deployment**, not a model. The provider joins `custom_llm_provider` and
 `base_model` into `azure/<base_model>`, so `azure_deployment_name` must carry the Azure deployment

@@ -1,5 +1,5 @@
 /*
- * AI Platform delivery model — the two orders.
+ * AI Platform delivery model — one order, then one landing zone.
  * Conventions: .agents/references/diagrams.md — render with: task diagrams
  */
 digraph ai_platform_oneclick {
@@ -21,36 +21,36 @@ digraph ai_platform_oneclick {
     style="rounded" color="#d5dae0"
     margin=18
 
-    BBD_STACK [label="📦 ai-platform BBD\nopinionated Helm wiring" fillcolor="#ecedfb" color="#9aa2e6"]
-    NS        [label="☸️ Tenant namespace\nfrom the Kubernetes landing zone" fillcolor="#e5f2ea" color="#85bfa0"]
-    STACK     [label="🚪 LiteLLM · Langfuse\nwired together by convention" fillcolor="#e5f2ea" color="#85bfa0"]
+    BBD_STACK [label="📦 ai-platform BBD\nevery input static · one click" fillcolor="#ecedfb" color="#9aa2e6"]
+    STACK     [label="🚪 LiteLLM and the shared ClickHouse\ninstalled by Helm into the cluster" fillcolor="#e5f2ea" color="#85bfa0"]
     PLATFORM  [label="🛰️ LiteLLM as meshStack platform\ncustom platform type" fillcolor="#ecedfb" color="#9aa2e6"]
     LZAI      [label="🛬 AI landing zones\nallowed models · budget tier" fillcolor="#ecedfb" color="#9aa2e6"]
 
     { rank=same; PLATFORM -> LZAI [style=invis] }
 
-    BBD_STACK -> NS    [xlabel="deploys into"]
-    NS        -> STACK [xlabel="hosts"]
+    BBD_STACK -> STACK    [xlabel="installs"]
     STACK     -> PLATFORM [xlabel="registered as" style=dotted]
     PLATFORM  -> LZAI
   }
 
   subgraph cluster_team {
-    label="  ② Application team · one click, per team"
+    label="  ② Application team · orders a project, nothing else"
     labeljust=l
     fontname="Helvetica" fontsize=12 fontcolor="#697180"
     style="rounded" color="#d5dae0"
     margin=18
 
-    BBD_TEAM [label="📦 ai/litellm-team BBD" fillcolor="#ecedfb" color="#9aa2e6"]
-    KEY      [label="🔑 LiteLLM team and virtual key ×N\nmodels and budget from the landing zone" fillcolor="#e5f2ea" color="#85bfa0"]
+    BBD_TEAM [label="📦 ai/model-access BBD\nmandatory in the landing zone" fillcolor="#ecedfb" color="#9aa2e6"]
+    KEY      [label="🔑 Team and virtual key ×N\nmodels and budget from the landing zone" fillcolor="#e5f2ea" color="#85bfa0"]
+    TRACE    [label="📈 Own tracing instance ×N\nwith its own database and bucket" fillcolor="#e5f2ea" color="#85bfa0"]
     APPS     [label="💬 Own applications\nchat UIs, agents, assistants"
               fillcolor="#f0f1f3" color="#cdd2d8" fontcolor="#99a1ac" style="rounded,filled,dashed"]
 
-    { rank=same; KEY -> APPS [style=invis] }
+    { rank=same; KEY -> TRACE [style=invis] }
 
-    BBD_TEAM -> KEY  [xlabel="creates"]
-    KEY      -> APPS [xlabel="authorises" style=dashed]
+    BBD_TEAM -> KEY   [xlabel="creates"]
+    BBD_TEAM -> TRACE [xlabel="deploys"]
+    KEY      -> APPS  [xlabel="delivered as a Secret" style=dashed]
   }
 
   subgraph cluster_existing {
@@ -60,7 +60,7 @@ digraph ai_platform_oneclick {
     style="rounded" color="#d5dae0"
     margin=18
 
-    K8SLZ  [label="🛬 Kubernetes landing zone\nfrom stackit-kubernetes\nor any conformant cluster"
+    K8SLZ  [label="☸️ Cluster with ingress and TLS\nfrom stackit-kubernetes\nor any conformant cluster"
             fillcolor="#f0f1f3" color="#cdd2d8" fontcolor="#99a1ac" style="rounded,filled,dashed"]
     MODELS [label="🧠 Model backends\nSTACKIT · Azure · self-hosted"
             fillcolor="#f0f1f3" color="#cdd2d8" fontcolor="#99a1ac" style="rounded,filled,dashed"]
@@ -68,8 +68,8 @@ digraph ai_platform_oneclick {
     { rank=same; K8SLZ -> MODELS [style=invis] }
   }
 
-  K8SLZ -> NS       [xlabel="provides" style=dotted constraint=false]
-  LZAI  -> BBD_TEAM [xlabel="governs" style=dotted]
+  K8SLZ -> STACK    [xlabel="hosts" style=dotted constraint=false]
+  LZAI  -> BBD_TEAM [xlabel="makes mandatory" style=dotted]
   APPS  -> STACK    [xlabel="call the gateway API" style=dashed constraint=false]
   STACK -> MODELS   [xlabel="routes by policy" constraint=false]
 }
