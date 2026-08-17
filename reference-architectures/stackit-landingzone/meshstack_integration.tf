@@ -178,7 +178,7 @@ resource "meshstack_building_block_definition" "this" {
 
       hub = {
         display_name    = "Hub"
-        description     = "JSON object with `git_ref` (meshstack-hub reference used to source the nested STACKIT integration modules) and `bbd_draft` (forwarded to those nested integrations' own building block definition draft state)."
+        description     = "HCL object with `git_ref` (meshstack-hub reference used to source the nested STACKIT integration modules) and `bbd_draft` (forwarded to those nested integrations' own building block definition draft state)."
         type            = "CODE"
         assignment_type = "STATIC"
         argument        = jsonencode(jsonencode(var.hub))
@@ -204,7 +204,7 @@ resource "meshstack_building_block_definition" "this" {
 
       tags = {
         display_name           = "Tags"
-        description            = "JSON object with `landingzone` and `building_block` tag maps forwarded to the nested STACKIT integrations."
+        description            = "HCL object with `landingzone` and `building_block` tag maps forwarded to the nested STACKIT integrations."
         type                   = "CODE"
         assignment_type        = "USER_INPUT"
         updateable_by_consumer = true
@@ -217,7 +217,7 @@ resource "meshstack_building_block_definition" "this" {
 
       role_mapping = {
         display_name           = "STACKIT Project Role Mapping"
-        description            = "JSON object mapping meshStack roles from project users to STACKIT project roles. Values can be built-in STACKIT roles or custom STACKIT role names."
+        description            = "HCL object mapping meshStack roles from project users to STACKIT project roles. Values can be built-in STACKIT roles or custom STACKIT role names."
         type                   = "CODE"
         assignment_type        = "USER_INPUT"
         updateable_by_consumer = true
@@ -239,14 +239,14 @@ resource "meshstack_building_block_definition" "this" {
       }
 
       # ── Optional hub-and-spoke networking ──
-      # Leave `network` as null to deploy only the sandbox landing zone. Provide a JSON object to
+      # Leave `network` as null to deploy only the sandbox landing zone. Provide an object to
       # additionally provision the hub network area, register the spoke network building block, and
       # create a networked landing zone.
 
       network = {
         display_name           = "Network (Hub-and-Spoke)"
         description            = <<-DESC
-        Optional JSON object enabling hub-and-spoke networking. Leave as `null` to deploy only the
+        Optional HCL object enabling hub-and-spoke networking. Leave as `null` to deploy only the
         sandbox landing zone. When set, all fields are optional
         DESC
         type                   = "CODE"

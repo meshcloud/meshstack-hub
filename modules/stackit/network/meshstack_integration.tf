@@ -195,7 +195,7 @@ resource "meshstack_building_block_definition" "this" {
 
       ipv4_nameservers = {
         display_name    = "IPv4 Nameservers"
-        description     = "JSON list of IPv4 nameservers for the network. Leave empty to use the network area's default nameservers."
+        description     = "HCL list of IPv4 nameservers for the network. Leave empty to use the network area's default nameservers."
         type            = "CODE"
         assignment_type = "USER_INPUT"
         default_value   = jsonencode(jsonencode([]))

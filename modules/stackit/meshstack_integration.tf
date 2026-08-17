@@ -343,7 +343,7 @@ resource "meshstack_building_block_definition" "this" {
 
       role_mapping = {
         display_name    = "Role Mapping"
-        description     = "JSON object mapping meshStack roles to STACKIT project roles. Values can be built-in STACKIT roles or custom STACKIT role names."
+        description     = "HCL object mapping meshStack roles to STACKIT project roles. Values can be built-in STACKIT roles or custom STACKIT role names."
         type            = "CODE"
         assignment_type = "STATIC"
         argument        = jsonencode(jsonencode(var.role_mapping))
