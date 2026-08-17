@@ -171,7 +171,7 @@ resource "meshstack_building_block_definition" "this" {
 
       network_ranges = {
         display_name    = "Network Ranges"
-        description     = "JSON list of IPv4 CIDR ranges available to projects within the network area, e.g. [\"10.0.0.0/16\"]."
+        description     = "HCL list of IPv4 CIDR ranges available to projects within the network area, e.g. [\"10.0.0.0/16\"]."
         type            = "CODE"
         assignment_type = "USER_INPUT"
       }
@@ -211,7 +211,7 @@ resource "meshstack_building_block_definition" "this" {
 
       default_nameservers = {
         display_name    = "Default Nameservers"
-        description     = "JSON list of default IPv4 nameservers assigned to networks created within the network area."
+        description     = "HCL list of default IPv4 nameservers assigned to networks created within the network area."
         type            = "CODE"
         assignment_type = "USER_INPUT"
         default_value   = jsonencode(jsonencode([]))
