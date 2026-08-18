@@ -19,6 +19,40 @@ import { join, relative } from "path";
 const ROOT = new URL("../../", import.meta.url).pathname.replace(/\/$/, "");
 const MODULES_DIR = join(ROOT, "modules");
 
+// ─── THE PROVIDER FLOOR KNOB ────────────────────────────────────────────────
+//
+// One central place defining the minimum provider version the *entire hub* is
+// meant to be tested and used with. Crank a value here and the `provider_floor`
+// check turns red on every module still declaring less — that list is the work
+// item for the bump. Nothing else in the repo hardcodes the floor.
+//
+// Keyed by registry source address (`namespace/type`), because the local name in
+// `required_providers` is per-module and cannot be relied on.
+//
+// Why a floor is needed at all: nothing else establishes one. Module
+// `required_providers` blocks that omit `version` let a local `tofu init` resolve
+// an arbitrarily old provider, and the hub commits no `.terraform.lock.hcl`
+// (root configurations own locking). CI does not catch this either — the
+// smoke-test workflow builds the provider from `main` and injects it through
+// Terraform `dev_overrides`, which bypasses both `required_providers` and any
+// lockfile. So this floor is what protects *local* runs.
+//
+// Why meshstack sits at 0.23.0: that is the first release carrying the current
+// `meshstack_building_block` resource. Older providers (on-disk local lockfiles
+// were found reaching back to 0.20.5) predate the lifecycle-aware building block
+// delete poll, where `DeletionSuccessful` accepted only a 404 and could not see a
+// soft delete. A local e2e destroy then returns before the block is gone and the
+// following building-block-*definition* delete fails with
+// 409 "…because there are existing BuildingBlocks referencing it", stranding
+// objects in the smoke-test workspace.
+const PROVIDER_FLOOR = {
+  "meshcloud/meshstack": "0.23.0",
+};
+
+// Tiers a module owns whose provider constraints are subject to PROVIDER_FLOOR.
+// `.` is the module root, i.e. `meshstack_integration.tf`.
+const FLOOR_TIERS = [".", "backplane", "buildingblock", "e2e"];
+
 // ─── Category definitions ───────────────────────────────────────────────────
 
 const CATEGORIES = {
@@ -155,6 +189,53 @@ const detectors = [
       return {
         pass: false,
         detail: `use a minimum constraint (>=) instead: ${shown}${more}`,
+      };
+    },
+  },
+  {
+    id: "provider_floor",
+    category: "core",
+    name: "Provider constraints meet the hub-wide version floor",
+    emoji: "⬆️",
+    fn: (mod) => {
+      // Every tier is in scope: the floor is what the hub as a whole is tested and
+      // used with, and each tier gets initialised somewhere — the integration by
+      // consumers, backplane + buildingblock by meshStack, and all three plus the
+      // e2e root by `task e2e:run` locally.
+      const entries = collectProviderEntries(mod, FLOOR_TIERS).filter(
+        (e) => e.source && PROVIDER_FLOOR[e.source]
+      );
+
+      if (entries.length === 0) {
+        return { pass: null, detail: "declares no floor-managed provider" };
+      }
+
+      const violations = [];
+      for (const e of entries) {
+        const floor = PROVIDER_FLOOR[e.source];
+        if (e.constraint === null) {
+          violations.push(`${e.file}: ${e.name} has no version (need ">= ${floor}")`);
+          continue;
+        }
+        const lower = constraintLowerBound(e.constraint);
+        if (lower === null) {
+          violations.push(
+            `${e.file}: ${e.name} = "${e.constraint}" sets no lower bound (need ">= ${floor}")`
+          );
+          continue;
+        }
+        if (compareVersions(lower, floor) < 0) {
+          violations.push(`${e.file}: ${e.name} = "${e.constraint}" is below ${floor}`);
+        }
+      }
+
+      if (violations.length === 0) return { pass: true };
+
+      const shown = violations.slice(0, 4).join(", ");
+      const more = violations.length > 4 ? `, +${violations.length - 4} more` : "";
+      return {
+        pass: false,
+        detail: `raise to the floor in tools/scorecard/scorecard.mjs (PROVIDER_FLOOR): ${shown}${more}`,
       };
     },
   },
@@ -871,21 +952,28 @@ function stripHeredocs(content) {
   return content.replace(/<<-?\s*([A-Za-z_]\w*)\r?\n[\s\S]*?^\s*\1\s*$/gm, "");
 }
 
-// Every `version` attribute inside a `required_providers` block across BOTH tiers.
-//
-// Both tiers matter because they are consumed together: a hub e2e test module loads the
-// backplane and the buildingblock into one configuration, so their constraints have to
-// intersect on a version that exists. A `~>` or exact pin in either tier caps the whole
-// configuration — that is how modules/meshstack/noop pinned the e2e suite to meshstack
-// v0.21.0 from its backplane while its buildingblock declared only `>=`.
-//
-// Constraints are read from any .tf file, not just versions.tf: `provider.tf` is part of the
-// documented module layout and legitimately carries required_providers.
-function collectProviderConstraints(mod) {
-  const constraints = [];
+// The .tf files belonging to one tier. `.` is the module root — only its top-level
+// files, so `meshstack_integration.tf` is covered without re-walking the other tiers.
+function tfFilesForTier(mod, tier) {
+  if (tier !== ".") return collectTfFilesRecursive(join(mod.path, tier));
+  return readdirSync(mod.path)
+    .filter((e) => e.endsWith(".tf"))
+    .map((e) => join(mod.path, e))
+    .filter((p) => statSync(p).isFile());
+}
 
-  for (const tier of ["backplane", "buildingblock"]) {
-    for (const file of collectTfFilesRecursive(join(mod.path, tier))) {
+// Every provider entry inside a `required_providers` block across the given tiers,
+// as { file, tier, name, source, constraint } — `source`/`constraint` are null when the
+// entry omits them. Entries are returned even without a version so callers can tell
+// "declared with no constraint" (unbounded) apart from "provider not used at all".
+//
+// Entries are read from any .tf file, not just versions.tf: `provider.tf` is part of the
+// documented module layout and legitimately carries required_providers.
+function collectProviderEntries(mod, tiers) {
+  const entries = [];
+
+  for (const tier of tiers) {
+    for (const file of tfFilesForTier(mod, tier)) {
       const content = stripHeredocs(readFileSync(file, "utf-8"));
 
       for (const m of content.matchAll(/required_providers\s*\{/g)) {
@@ -897,18 +985,70 @@ function collectProviderConstraints(mod) {
         // Provider entries hold no nested braces, so a flat `name = { ... }` match is enough.
         for (const entry of body.matchAll(/([\w-]+)\s*=\s*\{([^{}]*)\}/g)) {
           const version = entry[2].match(/version\s*=\s*"([^"]+)"/);
-          if (!version) continue;
-          constraints.push({
+          const source = entry[2].match(/source\s*=\s*"([^"]+)"/);
+          entries.push({
             file: relative(mod.path, file),
-            provider: entry[1],
-            constraint: version[1],
+            tier,
+            name: entry[1],
+            source: source ? source[1] : null,
+            constraint: version ? version[1] : null,
           });
         }
       }
     }
   }
 
-  return constraints;
+  return entries;
+}
+
+// Every `version` attribute inside a `required_providers` block across BOTH tiers.
+//
+// Both tiers matter because they are consumed together: a hub e2e test module loads the
+// backplane and the buildingblock into one configuration, so their constraints have to
+// intersect on a version that exists. A `~>` or exact pin in either tier caps the whole
+// configuration — that is how modules/meshstack/noop pinned the e2e suite to meshstack
+// v0.21.0 from its backplane while its buildingblock declared only `>=`.
+function collectProviderConstraints(mod) {
+  return collectProviderEntries(mod, ["backplane", "buildingblock"]).filter(
+    (e) => e.constraint !== null
+  ).map((e) => ({ file: e.file, provider: e.name, constraint: e.constraint }));
+}
+
+// ─── Version constraint arithmetic ──────────────────────────────────────────
+
+function parseVersion(v) {
+  const parts = v.split(".").map((p) => parseInt(p, 10));
+  return [parts[0] || 0, parts[1] || 0, parts[2] || 0];
+}
+
+function compareVersions(a, b) {
+  const pa = parseVersion(a);
+  const pb = parseVersion(b);
+  for (let i = 0; i < 3; i++) {
+    if (pa[i] !== pb[i]) return pa[i] < pb[i] ? -1 : 1;
+  }
+  return 0;
+}
+
+// The lowest version a Terraform constraint string still admits, or null when it
+// admits arbitrarily old versions (e.g. "< 1.0.0", or an empty/unparsable string).
+// `>` is treated as its own version — deliberately conservative: `> 0.22.0` admits
+// 0.22.1, which is still below a 0.23.0 floor, so it must not pass.
+function constraintLowerBound(constraint) {
+  let lower = null;
+
+  for (const raw of constraint.split(",")) {
+    const term = raw.trim();
+    if (term === "") continue;
+    const m = term.match(/^(>=|>|~>|==|=|!=|<=|<)?\s*v?(\d+(?:\.\d+){0,2})/);
+    if (!m) continue;
+    const op = m[1] ?? "=";
+    if (op === "<" || op === "<=" || op === "!=") continue;
+    // >=, >, ~>, ==, = all put a floor at the stated version.
+    if (lower === null || compareVersions(m[2], lower) > 0) lower = m[2];
+  }
+
+  return lower;
 }
 
 function readAllBackplaneTf(mod) {
