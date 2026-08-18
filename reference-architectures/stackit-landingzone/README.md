@@ -85,13 +85,36 @@ When a **network** configuration is provided, it additionally:
    `networkArea` label, so new STACKIT projects created against that landing zone are placed in the
    hub's network area.
 
+## Service Accounts
+
+You supply one account, as `stackit_service_account_key`, and the architecture creates another. The
+account you supply creates the folder, the foundation project and the meshStack objects, and its key
+is reused on every run rather than only the first. The account it creates lives in the foundation
+project and is what creates tenant projects; it authenticates through workload identity federation,
+so no key for it is ever stored.
+
+`stackit_owner_email` decides who owns the folder and the foundation project, and it is tied to how
+much privilege you gave the account you supplied. `resource-manager.admin` lets an account create a
+project but not act inside one it does not own, and creating the tenant-project account inside the
+foundation project is exactly such an action. With that role, the owner must therefore be the
+supplied account's own address; anything else fails the run with
+`POST /v2/projects/<id>/service-accounts -> 403`. An organization owner has no such limit and can
+name any address.
+
+So the choice is between a narrow key whose service account owns the two resources, and an
+organization-owner key that lets a team mailbox own them and show a real owner in the STACKIT
+portal. Prefer the narrow key unless you want the named owner, and note that portal access is not a
+reason to widen it — an organization role already reaches into every folder and project underneath.
+`owner_email` also applies at creation only, so changing it later requires recreating the folder and
+the foundation project.
+
 ## Getting Started
 
 ### Prerequisites
 
 | Requirement          | Description                                                                       |
 |----------------------|-----------------------------------------------------------------------------------|
-| STACKIT organization | With a service account key that has `resource-manager.admin` on the organization. |
+| STACKIT organization | With a service account key that has `resource-manager.admin` on the organization. See [Service Accounts](#service-accounts) — that role constrains which `stackit_owner_email` values work. |
 | CIDR plan            | *(Only when enabling networking)* A non-overlapping IPv4 address plan chosen up front for the hub network ranges and transfer network. |
 
 ### Deployment Order
