@@ -77,7 +77,7 @@ End users provide:
 
 | Name | Version |
 |------|---------|
-| <a name="requirement_meshstack"></a> [meshstack](#requirement\_meshstack) | >= 0.7.1 |
+| <a name="requirement_meshstack"></a> [meshstack](#requirement\_meshstack) | >= 0.23.0 |
 
 ## Modules
 
