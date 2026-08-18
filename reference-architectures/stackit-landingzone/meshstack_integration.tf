@@ -169,7 +169,7 @@ resource "meshstack_building_block_definition" "this" {
 
       stackit_service_account_key = {
         display_name           = "STACKIT Service Account Key"
-        description            = "STACKIT service account key JSON with `resource-manager.admin` on the organization. Paste the full JSON as a secret input."
+        description            = "Full key JSON of the deployment service account, reused on every run. Needs `resource-manager.admin` on the organization, or organization owner to allow a different `stackit_owner_email`."
         type                   = "CODE"
         assignment_type        = "USER_INPUT"
         updateable_by_consumer = true
@@ -197,7 +197,7 @@ resource "meshstack_building_block_definition" "this" {
 
       stackit_owner_email = {
         display_name    = "STACKIT Owner Email"
-        description     = "Owner email assigned to the STACKIT resourcemanager folder and foundation project."
+        description     = "Owner of the STACKIT folder and foundation project, applied at creation only. Must be the deployment account's own address unless that account is an organization owner."
         type            = "STRING"
         assignment_type = "USER_INPUT"
       }
