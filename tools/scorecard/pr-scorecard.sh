@@ -25,6 +25,11 @@ MODULES=$(git diff --name-only "${BASE_REF}...HEAD" \
   | sed 's|^modules/\([^/]*/[^/]*\)/.*|\1|' \
   | sort -u || true)
 
+# A change to the scorecard tool itself is hub-wide in effect: a new detector, or a cranked
+# PROVIDER_FLOOR, can turn modules red that this PR never touched. Scoping the report to
+# changed modules would show nothing at all for a PR that only turns the floor knob.
+TOOL_CHANGED=$(git diff --name-only "${BASE_REF}...HEAD" | grep -E '^tools/scorecard/' || true)
+
 emit() {
   if [ -n "$OUTPUT_FILE" ]; then
     printf '%s\n' "$@" >> "$OUTPUT_FILE"
@@ -34,6 +39,18 @@ emit() {
 }
 
 [ -n "$OUTPUT_FILE" ] && : > "$OUTPUT_FILE"
+
+if [ -n "$TOOL_CHANGED" ]; then
+  emit "> Scorecard run on commit \`$(git rev-parse HEAD)\` relative to \`${BASE_REF}\`" \
+    "" \
+    "> ⚙️ Scorecard tooling changed — reporting on **all** modules, not just the ones this PR touches." \
+    ""
+  echo "Scorecard tooling changed — running the full hub" >&2
+  node "$SCRIPT_DIR/scorecard.mjs" 2>&1 | {
+    if [ -n "$OUTPUT_FILE" ]; then cat >> "$OUTPUT_FILE"; else cat; fi
+  } || true
+  exit 0
+fi
 
 if [ -z "$MODULES" ]; then
   emit "_No module changes detected relative to \`${BASE_REF}\`._"

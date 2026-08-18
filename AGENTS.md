@@ -202,6 +202,37 @@ The `availability` field controls publication state and access restrictions. mes
 
 ---
 
+<!-- scorecard-checks: provider_floor -->
+## Provider Version Floor
+
+A `>=` constraint says "not older than this"; the floor says **how old is still acceptable
+anywhere in the hub**. It is declared in exactly one place — the `PROVIDER_FLOOR` map at the top of
+[`tools/scorecard/scorecard.mjs`](tools/scorecard/scorecard.mjs) — and the `provider_floor`
+scorecard check enforces it across every tier a module owns: `meshstack_integration.tf`,
+`backplane/`, `buildingblock/` and `e2e/` (including nested submodules).
+
+Two things fail the check:
+
+- a `required_providers` entry for a floor-managed provider with **no** `version` at all — that is
+  unbounded, so `tofu init` may resolve an arbitrarily old release
+- a constraint whose lower bound is **below** the floor (`>= 0.21.0` against a 0.23.0 floor, or a
+  constraint with no lower bound at all such as `< 1.0.0`)
+
+**To raise the floor for the whole hub**: edit the one value in `PROVIDER_FLOOR`, then run
+`node tools/scorecard/scorecard.mjs --category=core`. Every module still declaring less turns red
+and the failure detail names the file and the current constraint — that list is the bump work item.
+The check verifies rather than rewrites, because HCL `required_providers` `version` must be a string
+literal (no interpolation), so there is nothing a module could reference; and because the constraint
+is a deliberate, reviewable statement about what a module needs.
+
+Why the floor is load-bearing even though nothing pins in CI: the hub commits no
+`.terraform.lock.hcl` (root configurations own locking), and the smoke-test workflow injects a
+provider built from `main` through Terraform `dev_overrides`, which bypasses both
+`required_providers` and any lockfile. The floor is therefore what protects **local** runs
+(`task e2e:run`, `terraform validate`) from silently resolving a stale provider.
+
+---
+
 ## Scorecard
 
 The repository includes a scorecard tool that checks module maturity across four categories:
