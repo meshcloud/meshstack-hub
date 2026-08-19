@@ -1,6 +1,7 @@
 # Case study: migrating nine tenants off a custom STACKIT platform
 
-A worked example, kept because the failures are more instructive than the procedure. Nine meshTenants moved
+Evidence rather than instruction: the procedure itself is in `tenant-migration-runbook.md`, and this file
+records what actually happened, because the failures are more instructive than the procedure. Nine meshTenants moved
 from a hand-built custom platform (`stackit.sovereign`, owned by one workspace) to a platform deployed by
 the STACKIT landing zone reference architecture (`likvid-stackit.global`), on a demo meshStack instance.
 
@@ -83,7 +84,7 @@ curl -X PATCH -H "Authorization: Bearer $(stackit auth get-access-token)" \
 
 Three things this taught, in order of usefulness:
 
-**Lying in the seed does not work.** Recording `labels: null` in the pushed state looks like it should
+**A seed that misreports reality does not work.** Recording `labels: null` in the pushed state looks like it should
 suppress the diff, but the runner refreshes before it plans, and the refresh puts reality back.
 
 **A failed first run has a consequence beyond the red status.** The apply dies before the
@@ -117,7 +118,7 @@ project id survived, and the meshTenant's `platform_tenant_id` — which *is* th
 `owner_email` is create-only in STACKIT, so the provider recorded the new value while the actual owner did
 not change; that is a silent state-versus-reality divergence worth knowing about but harmless here.
 
-**Adoption avoided a permanent mess.** STACKIT deletions sit in `DELETING` for weeks — observed at 21 and
+**Adoption avoided a permanent obstruction.** STACKIT deletions sit in `DELETING` for weeks — observed at 21 and
 134 days on this organization — and block the parent folder's deletion with a `409`. Creating replacements
 and deleting the originals would have left seven tombstones inside the new platform's folder, making it
 undeletable for good. Adopting sidesteps the problem instead of paying for it seven times.
@@ -130,8 +131,8 @@ three `400` messages that establish this are in the cookbook.
 
 What worked instead was deactivating its three landing zones and deleting the old mandatory BBD. Since a
 meshTenant cannot exist without a landing zone, that makes the platform unorderable regardless of its
-availability. The platform row was deliberately left `ACTIVE`: deleting it burns the identifier
-permanently, and it was still the `SUCCESSFUL` metering comparison against the new platform's `FAILED`
+availability. The platform row was deliberately left `ACTIVE`: deleting it permanently consumes the
+identifier, and it was still the `SUCCESSFUL` metering comparison against the new platform's `FAILED`
 metering — a useful control while that question was open.
 
 ## Two corrections the migration forced on the plan

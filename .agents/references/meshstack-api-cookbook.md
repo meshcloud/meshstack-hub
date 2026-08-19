@@ -17,6 +17,8 @@ MT=$(curl -s -u "<client-id>:<api-secret>" -d 'grant_type=client_credentials' \
 
 ## Media types that matter
 
+The full header value is `application/vnd.meshcloud.api.<value>`; the table lists the `<value>` part.
+
 | Object | `Accept` | Notes |
 |---|---|---|
 | meshTenant | `meshtenant.v3.hal+json` | Has `spec.localId` — the cloud resource id — but no uuid. |
@@ -30,10 +32,19 @@ MT=$(curl -s -u "<client-id>:<api-secret>" -d 'grant_type=client_credentials' \
 | meshProject | `meshproject.v2.hal+json` | Tags are under `spec.tags`, **not** `metadata.tags`. |
 | meshProjectUserBinding | `meshprojectuserbinding.v3.hal+json` | |
 
-## Traps, each of which cost real time
+A request therefore looks like this:
+
+```sh
+curl -sS --fail-with-body -H "Authorization: Bearer $MT" \
+  -H 'Accept: application/vnd.meshcloud.api.meshtenant.v4-preview.hal+json' \
+  "$MESHSTACK/api/meshobjects/meshtenants?workspaceIdentifier=$WS"
+```
+
+## Traps that cost real time
 
 **A 401 looks like an empty result.** `jq` on an error body yields `null` or an empty list, so a stale
-token reads as "no tenants exist". Always check the HTTP status before believing an empty list.
+token reads as "no tenants exist". Always check the HTTP status before believing an empty list —
+`--fail-with-body` is enough.
 
 **`meshtenants` returns nothing without a filter.** Use `?workspaceIdentifier=<ws>`. There is no
 instance-wide listing, so an inventory means iterating workspaces.
@@ -103,9 +114,9 @@ Going the other way, to public, is also ordered. `setAllowedWorkspaces()` reject
 not contain the owner until `wasOncePublished` is true, so the sequence is: publish first, which leaves the
 platform visibly `RESTRICTED`, then clear the list to become `PUBLIC`.
 
-**Platform deletion burns the identifier.** The delete is soft, but the identifier check does not exclude
-deleted rows, so the name can never be reused. Recovering from that has meant deleting a row from the
-database.
+**Platform deletion permanently consumes the identifier.** The delete is soft, but the identifier check
+does not exclude deleted rows, so the name can never be reused. Recovering from that has meant deleting a
+row from the database.
 
 ## Auditing where building block code actually lives
 
