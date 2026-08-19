@@ -10,6 +10,12 @@ variable "link_url" {
   description = "Target of the link the created building block publishes. The created definition runs the hub's `link` building block, which provisions nothing but this address."
 }
 
+variable "platform_name" {
+  type        = string
+  default     = "Composition Demo Platform"
+  description = "Display name of the empty platform this composition creates. Its identifier is generated from the building block UUID, because a platform identifier cannot be reused once deleted."
+}
+
 variable "meshstack" {
   type = object({
     owning_workspace_identifier = string
@@ -51,7 +57,7 @@ resource "meshstack_building_block_definition" "this" {
 
   spec = {
     display_name = "Composition Demo"
-    description  = "Reference building block demonstrating the composition pattern: creates a Link building block definition and a building block from it using the run's ephemeral API key."
+    description  = "Reference building block demonstrating the composition pattern: creates a Link building block definition with a building block from it, plus an empty platform with a landing zone, all using the run's ephemeral API key."
     target_type  = "WORKSPACE_LEVEL"
     symbol       = "https://raw.githubusercontent.com/meshcloud/meshstack-hub/${var.hub.git_ref}/modules/meshstack/composition/buildingblock/logo.png"
 
@@ -59,23 +65,24 @@ resource "meshstack_building_block_definition" "this" {
     run_transparency = true
 
     readme = chomp(<<-EOT
-    Creates a link building block definition in your workspace and a building block from it. Both
-    carry a "created by building block" reference back to this building block, so you can follow
-    where they came from. Nothing is provisioned outside meshStack, and no step needs an operator.
+    Creates four meshObjects in your workspace: a link building block definition with a building block
+    from it, and an empty platform with a landing zone on it. All of them carry a "created by building
+    block" reference back to this building block, so you can follow where they came from. Nothing is
+    provisioned outside meshStack, and no step needs an operator.
 
     ## 🎯 When to use it
 
     Use this building block when you:
     - Want to see the composition pattern end to end — a building block provisioning meshObjects
       through the meshStack API rather than cloud resources.
-    - Need a self-service way to hand a workspace its own building block definition without a
-      platform engineer creating one by hand.
+    - Need a self-service way to hand a workspace its own building block definition or platform
+      without a platform engineer creating one by hand.
 
     ## 💡 Usage examples
 
     **Example 1: Exploring compositions**
-    A developer adds this building block to a sandbox workspace and inspects the definition and
-    building block that appear, following the creator link on each back to this building block.
+    A developer adds this building block to a sandbox workspace and inspects the meshObjects that
+    appear, following the creator link on each back to this building block.
 
     **Example 2: Offering a workspace its own marketplace link**
     A team wants a documentation link published in their own workspace's marketplace and gets both
@@ -87,7 +94,7 @@ resource "meshstack_building_block_definition" "this" {
     |---|:---:|:---:|
     | Maintain this composition and its permissions | ✅ | ❌ |
     | Operate whatever the published link points at | ❌ | ❌ |
-    | Choose the name and link target | ❌ | ✅ |
+    | Choose the names, the link target and the platform name | ❌ | ✅ |
     | Decide when to add or remove this building block | ❌ | ✅ |
     EOT
     )
@@ -125,6 +132,20 @@ resource "meshstack_building_block_definition" "this" {
         description     = "Target of the link the created building block publishes."
         default_value   = jsonencode(var.link_url)
       }
+      platform_name = {
+        assignment_type = "USER_INPUT"
+        type            = "STRING"
+        display_name    = "Platform Name"
+        description     = "Display name of the empty platform this composition creates."
+        default_value   = jsonencode(var.platform_name)
+      }
+      # Names the created platform, location and platform type, whose identifiers are globally unique.
+      building_block_uuid = {
+        assignment_type = "TENANT_BUILDING_BLOCK_UUID"
+        type            = "STRING"
+        display_name    = "Building Block UUID"
+        description     = "UUID of this building block, used to name the created platform and its location and type."
+      }
       workspace_identifier = {
         assignment_type = "WORKSPACE_IDENTIFIER"
         type            = "STRING"
@@ -151,6 +172,16 @@ resource "meshstack_building_block_definition" "this" {
         type            = "STRING"
         display_name    = "Created Building Block"
       }
+      created_platform_uuid = {
+        assignment_type = "NONE"
+        type            = "STRING"
+        display_name    = "Created Platform"
+      }
+      created_landing_zone_identifier = {
+        assignment_type = "NONE"
+        type            = "STRING"
+        display_name    = "Created Landing Zone"
+      }
       summary = {
         assignment_type = "SUMMARY"
         type            = "STRING"
@@ -167,6 +198,13 @@ resource "meshstack_building_block_definition" "this" {
       "BUILDINGBLOCK_LIST",
       "BUILDINGBLOCK_SAVE",
       "BUILDINGBLOCK_DELETE",
+      # Platform instance rights also cover locations and platform types.
+      "PLATFORMINSTANCE_LIST",
+      "PLATFORMINSTANCE_SAVE",
+      "PLATFORMINSTANCE_DELETE",
+      "LANDINGZONE_LIST",
+      "LANDINGZONE_SAVE",
+      "LANDINGZONE_DELETE",
     ]
   }
 }

@@ -21,3 +21,14 @@ variable "hub_git_ref" {
   type        = string
   description = "Hub reference the created building block definition clones its implementation from. Wired in as a static input from the composition's own `var.hub.git_ref`, so both definitions stay on the same hub revision."
 }
+
+variable "platform_name" {
+  type        = string
+  default     = "Composition Demo Platform"
+  description = "Display name of the platform this composition creates. Its identifier is generated instead of taken from here, because a platform identifier cannot be reused once deleted."
+}
+
+variable "building_block_uuid" {
+  type        = string
+  description = "UUID of the building block this run belongs to. Wired in as a TENANT_BUILDING_BLOCK_UUID input and used to name the created platform, location and platform type, whose identifiers must be globally unique."
+}
