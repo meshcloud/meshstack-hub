@@ -127,8 +127,12 @@ it by Git repository path. To answer the question properly, read the sources off
 # per definition
 GET /api/meshobjects/meshbuildingblockdefinitionversions?buildingBlockDefinitionUuid=<uuid>
 # then read each version's
-.spec.source.terraform.repositoryUrl and .spec.source.terraform.repositoryPath
+.spec.implementation.terraform.repositoryUrl and .spec.implementation.terraform.repositoryPath
 ```
+
+The field is `spec.implementation`, not `spec.source`. Write the fallback
+`(.spec.implementation // .spec.source)` if you want the query to survive either shape, because a plain
+`.spec.source` returns null and reads as "this definition has no source".
 
 Two things to get right:
 
