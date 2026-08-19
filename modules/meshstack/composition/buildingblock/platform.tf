@@ -60,12 +60,13 @@ resource "meshstack_platform" "created" {
       name = meshstack_location.created.metadata.name
     }
 
+    # Keeps the platform out of the marketplace, which is where an empty platform belongs. meshStack
+    # ties the three fields together: UNPUBLISHED is only allowed with PRIVATE, and PRIVATE requires
+    # `restricted_to_workspaces` to name exactly the owner.
     availability = {
-      # UNPUBLISHED keeps the platform out of the marketplace, which is where an empty platform belongs.
-      # The restriction still has to be PUBLIC: meshStack requires `restricted_to_workspaces` to name
-      # exactly the owner for PRIVATE, and the provider defaults that set to empty.
-      restriction       = "PUBLIC"
-      publication_state = "UNPUBLISHED"
+      restriction              = "PRIVATE"
+      publication_state        = "UNPUBLISHED"
+      restricted_to_workspaces = [var.workspace_identifier]
     }
 
     config = {

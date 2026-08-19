@@ -73,9 +73,9 @@ escalation guard (a nested definition may only request a subset of its parent's 
   deleted. The module therefore derives all three from `building_block_uuid`, a
   `TENANT_BUILDING_BLOCK_UUID` input carrying the UUID of the building block the run belongs to, so
   each building block gets identifiers of its own that survive re-runs.
-- The created platform is `PUBLIC` but `UNPUBLISHED`, which keeps it out of the marketplace. The
-  restriction cannot be `PRIVATE`: meshStack then requires `restricted_to_workspaces` to name exactly
-  the owner, and the provider defaults that set to empty.
+- The created platform is `PRIVATE` and `UNPUBLISHED`, which keeps it out of the marketplace.
+  meshStack ties those two together — `UNPUBLISHED` is rejected for any other restriction — and
+  `PRIVATE` in turn requires `restricted_to_workspaces` to name exactly the owning workspace.
 
 <!-- BEGIN_TF_DOCS -->
 ## Requirements
