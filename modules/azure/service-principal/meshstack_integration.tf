@@ -3,6 +3,11 @@ variable "azure_tenant_id" {
   description = "Azure Entra tenant ID where service principals will be created."
 }
 
+variable "azure_subscription_id" {
+  type        = string
+  description = "Azure subscription ID where the service principal's role assignments will be created."
+}
+
 variable "azure_scope" {
   type        = string
   description = "Azure management group or subscription ID used for backplane role scope."
@@ -179,7 +184,8 @@ resource "meshstack_building_block_definition" "this" {
         type            = "STRING"
         display_name    = "Azure Subscription ID"
         description     = "The Azure subscription ID where role assignments will be created."
-        assignment_type = "PLATFORM_TENANT_ID"
+        assignment_type = "STATIC"
+        argument        = jsonencode(var.azure_subscription_id)
       }
       azure_role = {
         type            = "STRING"
