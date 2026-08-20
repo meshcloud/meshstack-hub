@@ -132,6 +132,27 @@ output "landingzone_names" {
   value       = { for key, lz in meshstack_landingzone.this : key => lz.metadata.name }
 }
 
+# The next two outputs exist for building block compositions that create meshTenants on this platform,
+# such as a starterkit. The meshTenant v4 API references both the platform and the landing zone by ref,
+# so a composition cannot get by with the identifiers above.
+output "platform_ref" {
+  description = "Reference to the meshPlatform this integration creates, for compositions that create meshTenants on it."
+  value = {
+    uuid = meshstack_platform.stackit.metadata.uuid
+    kind = "meshPlatform"
+  }
+}
+
+output "landingzone_refs" {
+  description = "References to the created landing zones, keyed by project variant (`default`, and `networked` when `stackit_networked_projects_enabled` is true)."
+  value = {
+    for key, lz in meshstack_landingzone.this : key => {
+      name = lz.metadata.name
+      kind = "meshLandingZone"
+    }
+  }
+}
+
 # One STACKIT Project building block definition plus landing zone per project variant. The
 # `networked` variant carries the `networkArea` label as a static building block input, so projects
 # are placed in the network area without any landing zone tag lookup at run time.

@@ -202,16 +202,21 @@ resource "meshstack_building_block_definition" "this" {
         assignment_type = "USER_INPUT"
       }
 
+      # Keep this description under roughly 200 characters. meshStack answers a longer one with
+      # `500 InternalError` on the version update, not a 400 — the longest description any live
+      # definition here carries is 206, and 387 fails.
       tags = {
         display_name           = "Tags"
-        description            = "HCL object with `landingzone` and `building_block` tag maps forwarded to the nested STACKIT integrations."
+        description            = "HCL object of tag maps forwarded to the nested integrations: `landingzone`, `building_block`, and `project` for the meshProjects the starterkit creates. Set `project` where project tags are mandatory."
         type                   = "CODE"
         assignment_type        = "USER_INPUT"
         updateable_by_consumer = true
 
         default_value = jsonencode(jsonencode({
-          landingzone    = {}
-          building_block = {}
+          landingzone           = {}
+          building_block        = {}
+          project               = {}
+          project_owner_tag_key = ""
         }))
       }
 
@@ -299,6 +304,14 @@ resource "meshstack_building_block_definition" "this" {
         display_name    = "Open Foundation Project"
         type            = "STRING"
         assignment_type = "RESOURCE_URL"
+      }
+
+      # Exposed so a consumer can order starterkit instances as code. The definition is created inside
+      # this building block's run, so there is no module output to read it from.
+      starterkit_bbd_version_uuid = {
+        display_name    = "Starterkit BBD Version UUID"
+        type            = "STRING"
+        assignment_type = "NONE"
       }
 
       summary = {

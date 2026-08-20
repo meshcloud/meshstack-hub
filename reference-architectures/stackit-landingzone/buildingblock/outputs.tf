@@ -13,6 +13,11 @@ output "foundation_project_url" {
   description = "Deep link to the foundation project in the STACKIT portal."
 }
 
+output "starterkit_bbd_version_uuid" {
+  value       = module.stackit_project_starterkit.building_block_definition.version_ref.uuid
+  description = "Version uuid of the STACKIT Project Starterkit definition this architecture registered. Exposed so a consumer can order starterkit instances as code — the definition is created inside this run, so it cannot be reached through a module output."
+}
+
 output "summary" {
   description = "Summary of the meshStack resources created by this reference architecture."
   value = templatefile("${path.module}/SUMMARY.md.tftpl", {
@@ -28,7 +33,7 @@ output "summary" {
 
     network_enabled            = local.network_enabled
     networked_landingzone_name = local.network_enabled ? module.stackit_integration.landingzone_names["networked"] : ""
-    network_area_hub_uuid      = local.network_enabled ? meshstack_building_block.network_area_hub[0].metadata.uuid : ""
+    network_area_hub_uuid      = local.network_enabled ? meshstack_building_block.network_area_hub.metadata.uuid : ""
     network_area_id            = local.network_enabled ? local.network_area_id : ""
     network_area_url           = local.network_enabled ? "https://portal.stackit.cloud/network-area/network-areas/${local.network_area_id}/overview?organization=${var.stackit_org}" : ""
   })
