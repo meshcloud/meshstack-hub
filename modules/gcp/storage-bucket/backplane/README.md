@@ -4,6 +4,10 @@ This module provisions the necessary IAM resources for the GCP Storage Bucket bu
 
 ## Usage
 
+This module expects a configured `google` provider from its caller — it deliberately declares no
+`provider` block of its own, so callers can wrap it in a module call that uses `count`, `for_each`
+or `depends_on`.
+
 ```hcl
 module "gcp_storage_bucket_backplane" {
   source = "git::https://github.com/meshcloud/meshstack-hub.git//modules/gcp/storage-bucket/backplane"
@@ -24,6 +28,13 @@ module "gcp_storage_bucket_backplane" {
 ```
 
 ## Workload Identity Federation
+
+> **Operational note — pool identifiers are not immediately reusable.** GCP soft-deletes workload
+> identity pools and providers and keeps them for ~30 days, during which their identifiers cannot
+> be claimed again. Destroying and re-applying this backplane with the same
+> `workload_identity_pool_identifier` therefore fails until the retention window elapses. Pick a
+> fresh identifier per deployment if you need to recreate the backplane, and be aware that
+> soft-deleted pools still count towards the project's workload identity pool limit.
 
 When `workload_identity_federation` is configured, the module grants access to the entire workload identity pool at the IAM level, then uses attribute conditions at the provider level to restrict which identities can actually authenticate.
 

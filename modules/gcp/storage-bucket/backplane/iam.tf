@@ -33,6 +33,7 @@ resource "google_iam_workload_identity_pool_provider" "meshstack" {
 }
 
 resource "google_service_account" "buildingblock_storage_sa" {
+  project      = var.project_id
   account_id   = var.service_account_id
   display_name = "Building Block Storage Service Account"
   description  = "Service account for storage bucket building block"
