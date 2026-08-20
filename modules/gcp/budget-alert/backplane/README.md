@@ -2,6 +2,46 @@
 
 This building block requires access to the organization's billing account and a dedicated GCP project to manage notification channels.
 
+### Roles granted to the building block's service account
+
+The backplane creates a service account and exports its key as `credentials_json`; that is the
+identity the **building block** runs as. It receives only what the building block's own resources
+need:
+
+| Role | Scope | For |
+|------|-------|-----|
+| `roles/billing.costsManager` | billing account | `google_billing_budget` |
+| `roles/billing.viewer` | billing account | reading billing data for the budget |
+| `roles/monitoring.notificationChannelEditor` | backplane project | `google_monitoring_notification_channel` |
+
+The building block never enables a service, so it is deliberately **not** granted
+`roles/serviceusage.serviceUsageAdmin` — that would let a tenant-facing identity enable arbitrary
+APIs on the project for no benefit.
+
+### Roles required by the identity applying this backplane
+
+The platform engineer or CI principal that applies this module needs, on the backplane project:
+
+| Role | For |
+|------|-----|
+| `roles/serviceusage.serviceUsageAdmin` | `google_project_service` |
+| `roles/iam.serviceAccountAdmin` | `google_service_account` and its key |
+| `roles/resourcemanager.projectIamAdmin` | `google_project_iam_member` |
+
+plus `roles/billing.admin` (or an equivalent) on the billing account for the
+`google_billing_account_iam_member` grants.
+
+`roles/serviceusage.serviceUsageAdmin` cannot be bootstrapped by the module — enabling a service
+already requires it — so it must be granted out of band before the first apply, as must the Service
+Usage API itself (`gcloud services enable serviceusage.googleapis.com --project <project>`).
+
+## Operational notes
+
+`google_project_service.billingbudgets` sets `disable_on_destroy = false`, so destroying this
+backplane leaves `billingbudgets.googleapis.com` enabled on the project. This is intentional: the
+backplane does not own the project exclusively and may be short-lived, and disabling a project-wide
+API on teardown would break anything else in that project that depends on it.
+
 <!-- BEGIN_TF_DOCS -->
 ## Requirements
 
@@ -20,7 +60,6 @@ No modules.
 | [google_billing_account_iam_member.billing_viewer](https://registry.terraform.io/providers/hashicorp/google/6.12.0/docs/resources/billing_account_iam_member) | resource |
 | [google_billing_account_iam_member.budget_admin](https://registry.terraform.io/providers/hashicorp/google/6.12.0/docs/resources/billing_account_iam_member) | resource |
 | [google_project_iam_member.notification_channel_admin](https://registry.terraform.io/providers/hashicorp/google/6.12.0/docs/resources/project_iam_member) | resource |
-| [google_project_iam_member.serviceusage_admin](https://registry.terraform.io/providers/hashicorp/google/6.12.0/docs/resources/project_iam_member) | resource |
 | [google_project_service.billingbudgets](https://registry.terraform.io/providers/hashicorp/google/6.12.0/docs/resources/project_service) | resource |
 | [google_service_account.backplane](https://registry.terraform.io/providers/hashicorp/google/6.12.0/docs/resources/service_account) | resource |
 | [google_service_account_key.backplane](https://registry.terraform.io/providers/hashicorp/google/6.12.0/docs/resources/service_account_key) | resource |
