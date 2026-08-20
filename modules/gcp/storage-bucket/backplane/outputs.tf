@@ -1,7 +1,6 @@
 output "credentials_json" {
-  # These credentials are only usable once the IAM grants behind them have propagated, so the output
-  # waits. Consumers embed this in a building block definition and may order a building block
-  # seconds later; depending on the wait here means they inherit the ordering without knowing about it.
+  # A consumer embeds these credentials in a building block definition and can order a building
+  # block seconds later. Waiting here orders that consumer after the wait without it knowing.
   depends_on = [time_sleep.wait_for_iam]
 
   sensitive = true

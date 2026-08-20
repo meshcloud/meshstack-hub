@@ -10,7 +10,7 @@ variable "service_account_id" {
 }
 
 variable "iam_propagation_delay_seconds" {
-  description = "Seconds to wait after granting the building block's IAM roles before publishing its credentials, to absorb GCP IAM eventual consistency. Google's guidance is to allow two to seven minutes before retrying a denied impersonation; the default sits just inside that. Set to 0 if the backplane is always provisioned well ahead of any building block run."
+  description = "Seconds to wait after granting the building block's IAM roles before publishing its credentials. GCP IAM is eventually consistent, and Google's guidance is to allow two to seven minutes before retrying a denied impersonation. Set to 0 if the backplane is always provisioned well before any building block run."
   type        = number
   default     = 180
 }
