@@ -32,6 +32,7 @@ conventions, see the reference files in `.agents/references/`.
 4. **Implement `backplane/`** (if needed) — read the provider-specific reference:
    - AWS → `.agents/references/aws-backplane.md`
    - Azure → `.agents/references/azure-backplane.md`
+   - GCP → `.agents/references/gcp-backplane.md`
    - STACKIT → `.agents/references/stackit-backplane.md`
 
 5. **Write the BBD readme** → `.agents/references/bbd-readme.md`
@@ -93,5 +94,6 @@ conventions, see the reference files in `.agents/references/`.
 | BBD readme | `.agents/references/bbd-readme.md` |
 | AWS backplane identity | `.agents/references/aws-backplane.md` |
 | Azure backplane identity | `.agents/references/azure-backplane.md` |
+| GCP backplane conventions | `.agents/references/gcp-backplane.md` |
 | STACKIT backplane identity | `.agents/references/stackit-backplane.md` |
 | E2E tests | `.agents/skills/e2e-test/SKILL.md` |

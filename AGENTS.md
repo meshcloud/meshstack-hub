@@ -230,6 +230,14 @@ See [.agents/references/aws-backplane.md](.agents/references/aws-backplane.md) f
 
 See [.agents/references/azure-backplane.md](.agents/references/azure-backplane.md) for the full Azure backplane identity conventions, including UAMI patterns, WIF wiring, required variables/outputs, and the Azure backplane checklist.
 
+## GCP Backplane Conventions
+
+See [.agents/references/gcp-backplane.md](.agents/references/gcp-backplane.md) for the full GCP backplane conventions, including the workload identity federation pattern, project API enablement (`google_project_service` with `disable_on_destroy = false`), required permissions for the applying identity, the workload identity pool soft-delete constraint, and the GCP backplane checklist.
+
+## STACKIT Backplane Identity Conventions
+
+See [.agents/references/stackit-backplane.md](.agents/references/stackit-backplane.md) for the full STACKIT backplane identity conventions, including the WIF pattern, required variables/outputs, provider configuration, and the STACKIT backplane checklist.
+
 ---
 
 <!-- scorecard-checks: readme_frontmatter, logo, app_team_readme, bbd_readme, bbd_readme_no_leading_heading, bbd_readme_shared_responsibility, no_documentation_md_output -->
@@ -413,3 +421,4 @@ See [.agents/skills/e2e-test/SKILL.md](.agents/skills/e2e-test/SKILL.md) (the `e
 - [ ] `meshstack_platform` resources include `lifecycle { ignore_changes = [spec.availability] }`
 - [ ] No trailing whitespace
 - [ ] **Azure modules**: also follow the [Azure Backplane Checklist](.agents/references/azure-backplane.md#checklist-for-azure-backplanes)
+- [ ] **GCP modules**: also follow the [GCP Backplane Checklist](.agents/references/gcp-backplane.md#checklist-for-gcp-backplanes)

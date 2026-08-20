@@ -1,6 +1,39 @@
 # GCP Storage Bucket Backplane
 
-This module provisions the necessary IAM resources for the GCP Storage Bucket building block.
+This module prepares the GCP project for the GCP Storage Bucket building block: it enables the APIs
+the building block depends on, creates the service account the building block runs as, and — on the
+workload identity path — the workload identity pool and provider that let the meshStack building
+block runner federate into that service account.
+
+## Permissions
+
+The identity that applies this module (a platform engineer or a CI principal, **not** the building
+block's own service account) needs the following on `var.project_id`:
+
+| Role | What it is for |
+|---|---|
+| `roles/serviceusage.serviceUsageAdmin` | enable the project APIs listed below |
+| `roles/iam.workloadIdentityPoolAdmin` | create the workload identity pool and its OIDC provider |
+| `roles/iam.serviceAccountAdmin` | create the building block service account and set its IAM policy |
+| `roles/resourcemanager.projectIamAdmin` | grant that service account `roles/storage.admin` |
+
+`roles/owner` covers all four. `serviceusage.serviceUsageAdmin` cannot be self-granted by this
+module — enabling a service already requires it — so it has to be in place before the first apply.
+
+The module deliberately does **not** grant `roles/serviceusage.serviceUsageAdmin` to the building
+block's service account: the building block only creates buckets and never enables a service, so
+the grant would widen the per-tenant automation principal for no functional reason.
+
+### APIs enabled
+
+`iam`, `cloudresourcemanager`, `sts`, `iamcredentials` and `storage`. All are enabled with
+`disable_on_destroy = false` — destroying this backplane must not switch project-wide APIs off
+under other tenants of the same project.
+
+If your organization enables APIs centrally and will not grant this module
+`serviceusage.serviceUsageAdmin`, adopt the already-enabled services into state
+(`tofu import 'google_project_service.required["storage.googleapis.com"]' <project>/storage.googleapis.com`,
+and so on) before applying.
 
 ## Usage
 
@@ -90,6 +123,7 @@ No modules.
 | [google_iam_workload_identity_pool.meshstack](https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/iam_workload_identity_pool) | resource |
 | [google_iam_workload_identity_pool_provider.meshstack](https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/iam_workload_identity_pool_provider) | resource |
 | [google_project_iam_member.storage_admin](https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/project_iam_member) | resource |
+| [google_project_service.required](https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/project_service) | resource |
 | [google_service_account.buildingblock_storage_sa](https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/service_account) | resource |
 | [google_service_account_iam_binding.workload_identity_binding](https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/service_account_iam_binding) | resource |
 | [google_service_account_key.buildingblock_storage_key](https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/service_account_key) | resource |

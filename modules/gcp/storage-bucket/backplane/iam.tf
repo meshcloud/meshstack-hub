@@ -1,6 +1,10 @@
 resource "google_iam_workload_identity_pool" "meshstack" {
   count = var.workload_identity_federation == null ? 0 : 1
 
+  # Nothing here references google_project_service, so without this the pool can be created before
+  # iam.googleapis.com is enabled and fail with SERVICE_DISABLED.
+  depends_on = [google_project_service.required]
+
   project                   = var.project_id
   workload_identity_pool_id = var.workload_identity_federation.workload_identity_pool_identifier
   description               = "Identity pool for meshStack building blocks"
@@ -33,6 +37,8 @@ resource "google_iam_workload_identity_pool_provider" "meshstack" {
 }
 
 resource "google_service_account" "buildingblock_storage_sa" {
+  depends_on = [google_project_service.required]
+
   project      = var.project_id
   account_id   = var.service_account_id
   display_name = "Building Block Storage Service Account"
@@ -49,6 +55,8 @@ resource "google_service_account_iam_binding" "workload_identity_binding" {
 }
 
 resource "google_project_iam_member" "storage_admin" {
+  depends_on = [google_project_service.required]
+
   project = var.project_id
   role    = "roles/storage.admin"
   member  = "serviceAccount:${google_service_account.buildingblock_storage_sa.email}"
