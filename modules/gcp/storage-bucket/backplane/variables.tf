@@ -9,6 +9,12 @@ variable "service_account_id" {
   default     = "buildingblock-storage-sa"
 }
 
+variable "iam_propagation_delay_seconds" {
+  description = "Seconds to wait after granting the building block's IAM roles before publishing its credentials, to absorb GCP IAM eventual consistency. Google's guidance is to allow two to seven minutes before retrying a denied impersonation; the default sits just inside that. Set to 0 if the backplane is always provisioned well ahead of any building block run."
+  type        = number
+  default     = 180
+}
+
 variable "workload_identity_federation" {
   description = "Configuration for workload identity federation. Supports multiple subjects with exact matching and partial matching using startsWith()."
   type = object({

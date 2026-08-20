@@ -157,6 +157,52 @@ unless the building block itself enables services. `modules/gcp/budget-alert/bac
 it, and its building block never calls serviceusage, so that grant is dead privilege rather than a
 pattern to copy.
 
+## IAM is eventually consistent — make the credentials wait
+
+A backplane that grants a role and publishes credentials in the same apply is publishing credentials
+that do not work yet. GCP IAM propagation is slow enough to matter: Google's workload identity
+federation guidance is to allow **two to seven minutes** after adding a
+`roles/iam.workloadIdentityUser` binding before retrying a denied impersonation.
+
+The failure is easy to misread, because the token exchange succeeds and only the impersonation is
+refused — which looks like a misconfigured pool rather than a timing problem:
+
+```
+Error: Post "https://storage.googleapis.com/storage/v1/b?...&project=...":
+oauth2/google: status code 403: Permission 'iam.serviceAccounts.getAccessToken' denied on
+resource (or it may not exist). ... "reason": "IAM_PERMISSION_DENIED"
+```
+
+If you see that, verify the binding before assuming it is wrong — reading the live policy takes one
+call and rules out the whole structural half of the search space:
+
+```sh
+gcloud iam service-accounts get-iam-policy <sa-email> --project <project>
+```
+
+Express the wait so consumers inherit it, rather than leaving it to each caller:
+
+```hcl
+resource "time_sleep" "wait_for_iam" {
+  depends_on      = [google_service_account_iam_binding.workload_identity, google_project_iam_member.buildingblock]
+  create_duration = "${var.iam_propagation_delay_seconds}s"
+}
+
+output "credentials_json" {
+  depends_on = [time_sleep.wait_for_iam] # credentials are not usable until the grants have propagated
+  sensitive  = true
+  value      = ...
+}
+```
+
+Putting the `depends_on` on the **output** is what makes this work without cooperation: a consumer
+that builds a building block definition from `credentials_json` and orders a building block seconds
+later is ordered after the wait automatically. This matters for compositions and reference
+architectures, which really do apply a backplane and order building blocks in one run.
+
+Follow the existing hub convention for the delay itself: a `*_delay_seconds` variable with a
+default, as `modules/azure/spoke-network/buildingblock` does for Azure role assignments.
+
 ## Workload identity pools are not immediately reusable
 
 GCP **soft-deletes** workload identity pools and providers and keeps them for ~30 days, during which
@@ -245,6 +291,7 @@ Both existing modules expose these two. Do not add a `documentation_md` output �
 - [ ] `attribute_condition` restricts `google.subject` to the configured subjects
 - [ ] `google_service_account_iam_binding` grants `roles/iam.workloadIdentityUser` on the pool
 - [ ] Workload identity pool identifier is an input, not a hardcoded literal
+- [ ] A `time_sleep` absorbs IAM propagation and the `credentials_json` output `depends_on` it
 - [ ] `credentials_json` (sensitive) and `service_account_email` outputs present
 - [ ] `backplane/README.md` documents the four required roles for the applying identity, the APIs
       enabled, and the pool soft-delete constraint
