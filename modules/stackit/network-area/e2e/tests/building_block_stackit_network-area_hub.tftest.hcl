@@ -21,7 +21,7 @@ run "building_block_stackit_network_area_hub" {
 
   # network_ranges is a CODE output, so its value decodes twice.
   assert {
-    condition     = jsondecode(jsondecode(meshstack_building_block.this.status.outputs["network_ranges"].value)) == tolist(["10.234.0.0/16"])
+    condition     = jsondecode(jsondecode(meshstack_building_block.this.status.outputs["network_ranges"].value)) == ["10.234.0.0/16"]
     error_message = "stackit network-area hub building block expected network_ranges to be ['10.234.0.0/16'], got ${meshstack_building_block.this.status.outputs["network_ranges"].value}"
   }
 
