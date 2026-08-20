@@ -53,7 +53,6 @@ flowchart TD
   end
   subgraph Azure
     subgraph bbsub[Building Block Backplane Subscription]
-      bbsubtfstate[StarterKit BB TF State]
       bbspn[StarterKit SPN]
 
     end
@@ -63,8 +62,11 @@ flowchart TD
 
   BB --> github
   BB --> Azure
-  bbspn --Storage Blob Owner--> bbsubtfstate
 ```
+
+The backplane does not set up a state backend for the building block itself. meshStack keeps the
+state of a building block run, so the backplane only hands out provider credentials via its
+`provider_config` output.
 
 ### Deployment of a Building Block
 
@@ -84,7 +86,6 @@ flowchart TD
   end
   subgraph Azure
     subgraph bbsub[Building Block Backplane Subscription]
-      bbsubtfstate[StarterKit BB TF State]
       bbspn[StarterKit SPN]
 
     end
@@ -109,7 +110,6 @@ flowchart TD
   ghrepotemplate -.from template.-> ghrepo
   ghactionsuami --Storage Blob Owner--> sbsubtfstate
   ghpipeline --Workload Identity Federation--> ghactionsuami
-  bbspn --Storage Blob Owner--> bbsubtfstate
   ghactionsuami --Owner--> rgapp
 
   linkStyle 0,1,2,3,4,5 stroke:#ff3,stroke-width:4px;
