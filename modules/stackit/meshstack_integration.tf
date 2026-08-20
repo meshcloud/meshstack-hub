@@ -127,6 +127,14 @@ output "service_account_email" {
   value       = module.backplane.service_account_email
 }
 
+output "platform" {
+  description = "The meshStack platform tenant projects are created on. Use `uuid` as the `platform_ref` of a meshTenant."
+  value = {
+    uuid = meshstack_platform.stackit.metadata.uuid
+    name = meshstack_platform.stackit.metadata.name
+  }
+}
+
 output "landingzone_names" {
   description = "meshStack landing zone names created per project variant (`default`, and `networked` when `stackit_networked_projects_enabled` is true), keyed by variant."
   value       = { for key, lz in meshstack_landingzone.this : key => lz.metadata.name }
