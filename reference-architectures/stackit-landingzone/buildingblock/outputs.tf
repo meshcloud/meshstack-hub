@@ -4,12 +4,12 @@ output "lz_folder_container_id" {
 }
 
 output "foundation_project_id" {
-  value       = stackit_resourcemanager_project.foundation.project_id
-  description = "Project ID of the STACKIT foundation project that hosts the landing-zone core assets (the service account used for tenant project creation)."
+  value       = local.foundation_project_id
+  description = "Project ID of the STACKIT foundation project that hosts the landing-zone core assets (the service account used for tenant project creation). The project this landing zone created, or the one supplied through `existing_foundation_project_id`."
 }
 
 output "foundation_project_url" {
-  value       = "https://portal.stackit.cloud/projects/${stackit_resourcemanager_project.foundation.project_id}"
+  value       = "https://portal.stackit.cloud/projects/${local.foundation_project_id}"
   description = "Deep link to the foundation project in the STACKIT portal."
 }
 
@@ -21,10 +21,10 @@ output "summary" {
     organization_url       = "https://portal.stackit.cloud/dashboard?organization=${var.stackit_org}"
     lz_folder_container_id = stackit_resourcemanager_folder.this.container_id
     lz_folder_url          = "https://portal.stackit.cloud/dashboard?organization=${var.stackit_org}&folder=${stackit_resourcemanager_folder.this.folder_id}"
-    foundation_project_id  = stackit_resourcemanager_project.foundation.project_id
-    foundation_project_url = "https://portal.stackit.cloud/projects/${stackit_resourcemanager_project.foundation.project_id}"
+    foundation_project_id  = local.foundation_project_id
+    foundation_project_url = "https://portal.stackit.cloud/projects/${local.foundation_project_id}"
     service_account_email  = module.stackit_integration.service_account_email
-    service_account_url    = "https://portal.stackit.cloud/service-accounts/${module.stackit_integration.service_account_email}/overview?project=${stackit_resourcemanager_project.foundation.project_id}"
+    service_account_url    = "https://portal.stackit.cloud/service-accounts/${module.stackit_integration.service_account_email}/overview?project=${local.foundation_project_id}"
 
     network_enabled            = local.network_enabled
     networked_landingzone_name = local.network_enabled ? module.stackit_integration.landingzone_names["networked"] : ""

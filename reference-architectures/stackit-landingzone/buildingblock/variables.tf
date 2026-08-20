@@ -34,6 +34,26 @@ variable "stackit_service_account_key" {
   description = "STACKIT service account key JSON with `resource-manager.admin` on the organization. Used to create the landing-zone folder and foundation project."
 }
 
+variable "existing_foundation_project_id" {
+  type        = string
+  default     = null
+  description = <<-DESC
+  Project ID of an existing STACKIT project to use as the foundation project. Leave unset to let the
+  landing zone create `<platform_identifier>-foundation` itself, which is the normal case. Set it when
+  the project has to be owned elsewhere — for example by a bootstrap configuration that runs before
+  this landing zone and whose own credentials live in that project. The deploying service account then
+  needs a project-scoped role on the supplied project, because the nested integrations create a service
+  account inside it; organization owner is enough, a narrow `resource-manager.admin` is not.
+  DESC
+
+  # An empty string counts as unset, because a meshStack `STRING` input that the consumer leaves blank
+  # arrives here as `""` rather than as null.
+  validation {
+    condition     = var.existing_foundation_project_id == null || var.existing_foundation_project_id == "" || can(regex("^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$", var.existing_foundation_project_id))
+    error_message = "existing_foundation_project_id must be a valid UUID."
+  }
+}
+
 variable "platform_identifier" {
   type        = string
   nullable    = false

@@ -202,6 +202,21 @@ resource "meshstack_building_block_definition" "this" {
         assignment_type = "USER_INPUT"
       }
 
+      existing_foundation_project_id = {
+        display_name           = "Existing Foundation Project ID"
+        description            = <<-DESC
+        Project ID of an existing STACKIT project to use as the foundation project. Leave blank to let
+        the landing zone create `<platform identifier>-foundation` itself, which is the normal case. Set
+        it when the project must be owned elsewhere, for example by a bootstrap configuration that runs
+        before this landing zone and keeps its own credentials in that project. The deployment account
+        then needs a project-scoped role on it, so it has to be an organization owner.
+        DESC
+        type                   = "STRING"
+        assignment_type        = "USER_INPUT"
+        updateable_by_consumer = true
+        default_value          = jsonencode("")
+      }
+
       tags = {
         display_name           = "Tags"
         description            = "HCL object with `landingzone` and `building_block` tag maps forwarded to the nested STACKIT integrations."

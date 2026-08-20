@@ -4,6 +4,13 @@ locals {
 
   # Only resolvable once the hub network area building block has completed.
   network_area_id = local.network_enabled ? jsondecode(meshstack_building_block.network_area_hub[0].status.outputs["network_area_id"].value) : null
+
+  # The foundation project is created here unless the operator supplies one. A blank input counts as
+  # unset, see `variable "existing_foundation_project_id"`.
+  create_foundation_project = coalesce(var.existing_foundation_project_id, "") == ""
+
+  # Everything downstream reads this rather than the resource, so it works either way.
+  foundation_project_id = local.create_foundation_project ? one(stackit_resourcemanager_project.foundation[*].project_id) : var.existing_foundation_project_id
 }
 
 # ── Sandbox landing zone foundation (always deployed) ──
@@ -29,8 +36,11 @@ resource "stackit_resourcemanager_folder" "this" {
 }
 
 # Foundation project hosting the landing-zone core assets (the project-creation service account).
-# Created directly under the organization (not the landing-zone folder).
+# Created directly under the organization (not the landing-zone folder), and skipped entirely when the
+# operator supplies a project instead.
 resource "stackit_resourcemanager_project" "foundation" {
+  count = local.create_foundation_project ? 1 : 0
+
   name                = "${var.platform_identifier}-foundation"
   owner_email         = var.stackit_owner_email
   parent_container_id = var.stackit_org
@@ -42,9 +52,11 @@ resource "stackit_resourcemanager_project" "foundation" {
 # account. Without this move a deployed landing zone destroys the project, and with it the
 # project-creation service account that every tenant project names as its owner.
 # `name` carries no RequiresReplace, so the `-backplane` -> `-foundation` rename updates in place.
+# The target carries `[0]` because the resource gained a `count`; an unindexed target here is a
+# plan-time error for every deployment, including those that never set the new input.
 moved {
   from = stackit_resourcemanager_project.backplane
-  to   = stackit_resourcemanager_project.foundation
+  to   = stackit_resourcemanager_project.foundation[0]
 }
 
 module "stackit_integration" {
@@ -52,7 +64,7 @@ module "stackit_integration" {
 
   stackit_organization_id                 = var.stackit_org
   stackit_parent_container_id             = stackit_resourcemanager_folder.this.container_id
-  stackit_project_id                      = stackit_resourcemanager_project.foundation.project_id
+  stackit_project_id                      = local.foundation_project_id
   stackit_service_account_name            = substr(var.platform_identifier, 0, 20)
   role_mapping                            = var.role_mapping
   stackit_organization_onboarding_enabled = var.stackit_organization_onboarding_enabled
@@ -79,7 +91,7 @@ module "network_area_integration" {
   source = "github.com/meshcloud/meshstack-hub//modules/stackit/network-area?ref=${var.hub.git_ref}"
 
   stackit_organization_id = var.stackit_org
-  stackit_project_id      = stackit_resourcemanager_project.foundation.project_id
+  stackit_project_id      = local.foundation_project_id
 
   meshstack = { owning_workspace_identifier = var.workspace, tags = var.tags.building_block }
   hub       = var.hub
@@ -90,7 +102,7 @@ module "network_integration" {
   source = "github.com/meshcloud/meshstack-hub//modules/stackit/network?ref=${var.hub.git_ref}"
 
   stackit_organization_id           = var.stackit_org
-  stackit_project_id                = stackit_resourcemanager_project.foundation.project_id
+  stackit_project_id                = local.foundation_project_id
   stackit_network_min_prefix_length = var.network.tenant_network_min_prefix_length
   stackit_network_max_prefix_length = var.network.tenant_network_max_prefix_length
 
