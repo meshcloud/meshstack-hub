@@ -1,4 +1,9 @@
 output "credentials_json" {
+  # These credentials are only usable once the IAM grants behind them have propagated, so the output
+  # waits. Consumers embed this in a building block definition and may order a building block
+  # seconds later; depending on the wait here means they inherit the ordering without knowing about it.
+  depends_on = [time_sleep.wait_for_iam]
+
   sensitive = true
   value = var.workload_identity_federation == null ? (
     base64decode(google_service_account_key.buildingblock_storage_key[0].private_key)

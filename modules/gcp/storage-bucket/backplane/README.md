@@ -69,6 +69,25 @@ module "gcp_storage_bucket_backplane" {
 }
 ```
 
+## IAM propagation
+
+Applying this backplane takes about three minutes longer than the resources alone suggest. That is
+deliberate: GCP IAM is eventually consistent, and Google's guidance is to allow two to seven minutes
+after adding a `roles/iam.workloadIdentityUser` binding before a denied impersonation will start
+working. The `credentials_json` output waits on `time_sleep.wait_for_iam`, so a caller that creates a
+building block definition from it and orders a building block immediately does not race the grant.
+
+Without the wait, the building block run fails in a way that looks like a broken pool but is not —
+the token exchange succeeds and only the impersonation is refused:
+
+```
+oauth2/google: status code 403: Permission 'iam.serviceAccounts.getAccessToken' denied on
+resource (or it may not exist). ... "reason": "IAM_PERMISSION_DENIED"
+```
+
+Tune or disable the wait with `iam_propagation_delay_seconds` (set it to `0` if you always provision
+the backplane well before any building block runs).
+
 ## Workload Identity Federation
 
 > **Operational note — pool identifiers are not immediately reusable.** GCP soft-deletes workload
@@ -120,6 +139,7 @@ This configuration will accept any subject that starts with `system:serviceaccou
 |------|---------|
 | <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.0 |
 | <a name="requirement_google"></a> [google](#requirement\_google) | >= 7.0 |
+| <a name="requirement_time"></a> [time](#requirement\_time) | >= 0.9 |
 
 ## Modules
 
@@ -136,11 +156,13 @@ No modules.
 | [google_service_account.buildingblock_storage_sa](https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/service_account) | resource |
 | [google_service_account_iam_binding.workload_identity_binding](https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/service_account_iam_binding) | resource |
 | [google_service_account_key.buildingblock_storage_key](https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/service_account_key) | resource |
+| [time_sleep.wait_for_iam](https://registry.terraform.io/providers/hashicorp/time/latest/docs/resources/sleep) | resource |
 
 ## Inputs
 
 | Name | Description | Type | Default | Required |
 |------|-------------|------|---------|:--------:|
+| <a name="input_iam_propagation_delay_seconds"></a> [iam\_propagation\_delay\_seconds](#input\_iam\_propagation\_delay\_seconds) | Seconds to wait after granting the building block's IAM roles before publishing its credentials, to absorb GCP IAM eventual consistency. Google's guidance is to allow two to seven minutes before retrying a denied impersonation; the default sits just inside that. Set to 0 if the backplane is always provisioned well ahead of any building block run. | `number` | `180` | no |
 | <a name="input_project_id"></a> [project\_id](#input\_project\_id) | The GCP project ID | `string` | n/a | yes |
 | <a name="input_service_account_id"></a> [service\_account\_id](#input\_service\_account\_id) | The ID of the service account to create | `string` | `"buildingblock-storage-sa"` | no |
 | <a name="input_workload_identity_federation"></a> [workload\_identity\_federation](#input\_workload\_identity\_federation) | Configuration for workload identity federation. Supports multiple subjects with exact matching and partial matching using startsWith(). | <pre>object({<br/>    workload_identity_pool_identifier = string       // Identifier for the workload identity pool<br/>    audience                          = string       // Audience for the OIDC tokens<br/>    issuer                            = string       // OIDC issuer URL<br/>    subjects                          = list(string) // Subjects for workload identity federation - can use exact matches or startsWith patterns<br/>    subject_token_file_path           = string       // Path to the file containing the OIDC token<br/>  })</pre> | `null` | no |
