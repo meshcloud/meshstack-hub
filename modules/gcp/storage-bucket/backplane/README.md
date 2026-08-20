@@ -20,6 +20,15 @@ block's own service account) needs the following on `var.project_id`:
 `roles/owner` covers all four. `serviceusage.serviceUsageAdmin` cannot be self-granted by this
 module — enabling a service already requires it — so it has to be in place before the first apply.
 
+The **Service Usage API must also be enabled on the project already**. This module cannot turn it on,
+because it is the API that does the enabling, and a project where it is off fails on the read before
+any enable is attempted (`Failed to list enabled services … reason: SERVICE_DISABLED`). It is a
+one-time step for the project owner:
+
+```sh
+gcloud services enable serviceusage.googleapis.com --project <project>
+```
+
 The module deliberately does **not** grant `roles/serviceusage.serviceUsageAdmin` to the building
 block's service account: the building block only creates buckets and never enables a service, so
 the grant would widen the per-tenant automation principal for no functional reason.

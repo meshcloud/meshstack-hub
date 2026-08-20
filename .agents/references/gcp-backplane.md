@@ -112,8 +112,19 @@ explicitly. A backplane is not the exclusive owner of its project and can be sho
 test provisions and destroys one per run — so a teardown that switched project-wide APIs off would
 break every other tenant of that project.
 
-`serviceusage.googleapis.com` itself is not in the list: it is enabled on every project by default
-and is the API used to do the enabling.
+`serviceusage.googleapis.com` itself cannot be in the list — it is the API that does the enabling,
+so `google_project_service` cannot bootstrap it. Do not assume it is already on: a project where it
+is disabled fails on the *read*, before any enable is attempted, with
+
+```
+Error: Error when reading or editing Project Service : ... Failed to list enabled services
+for project <project>: googleapi: Error 403: Service Usage API has not been used in project
+<number> before or it is disabled.  ...  "reason": "SERVICE_DISABLED"
+```
+
+Enabling it is a one-time out-of-band step for the project owner
+(`gcloud services enable serviceusage.googleapis.com --project <project>`), and
+`backplane/README.md` should say so.
 
 Resources that need an API must **`depends_on` the enablement**, because nothing in them references
 it:
@@ -138,7 +149,8 @@ engineer or a CI principal — needs, on the target project:
 | `roles/resourcemanager.projectIamAdmin` | `google_project_iam_member` |
 
 `serviceusage.serviceUsageAdmin` cannot be bootstrapped by the module — enabling a service already
-requires it — so it must be granted out of band before the first apply.
+requires it — so it must be granted out of band before the first apply, as must the Service Usage
+API itself.
 
 Do **not** grant `roles/serviceusage.serviceUsageAdmin` to the *building block's* service account
 unless the building block itself enables services. `modules/gcp/budget-alert/backplane` does grant
