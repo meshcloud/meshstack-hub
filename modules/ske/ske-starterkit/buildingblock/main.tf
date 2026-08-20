@@ -92,9 +92,6 @@ resource "meshstack_tenant" "this" {
     platform_ref     = var.platform_ref
     landing_zone_ref = each.value
   }
-
-  # FIXME: remove after BD-2288 is fixed
-  depends_on = [meshstack_project_user_binding.creator_to_admin]
 }
 
 # Anticipates terraform-provider-meshstack v0.24.0 (#226): meshstack_tenant now runs on the

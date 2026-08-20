@@ -68,8 +68,6 @@ resource "meshstack_tenant" "this" {
     platform_ref     = var.platform_ref
     landing_zone_ref = var.landing_zone_refs[each.key]
   }
-
-  depends_on = [meshstack_project_user_binding.creator_admin]
 }
 
 resource "meshstack_building_block" "repo" {
