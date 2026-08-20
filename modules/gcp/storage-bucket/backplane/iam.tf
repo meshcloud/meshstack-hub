@@ -66,18 +66,6 @@ resource "google_service_account_iam_binding" "workload_identity_binding" {
   members = ["principalSet://iam.googleapis.com/${google_iam_workload_identity_pool.meshstack[0].name}/*"]
 }
 
-# Wait for the workload identity binding to become effective. GCP IAM is eventually consistent, and
-# Google's own workload identity federation troubleshooting guidance is to wait two to seven minutes
-# after adding a `roles/iam.workloadIdentityUser` binding before retrying. Until it lands, the
-# meshStack building block runner completes the STS token exchange — proving the pool, provider,
-# attribute mapping and condition are all correct — and is then refused at the impersonation step:
-#
-# > Error: Post "https://storage.googleapis.com/storage/v1/b?...&project=...":
-# > oauth2/google: status code 403: Permission 'iam.serviceAccounts.getAccessToken' denied on
-# > resource (or it may not exist). ... "reason": "IAM_PERMISSION_DENIED"
-#
-# The wait is attached to the credentials output rather than only sitting here, so any consumer that
-# builds a building block definition from `credentials_json` is ordered after it automatically.
 resource "google_project_iam_member" "storage_admin" {
   depends_on = [google_project_service.required]
 
