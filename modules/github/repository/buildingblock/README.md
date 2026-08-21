@@ -4,6 +4,10 @@ supportedPlatforms:
   - github
 description: |
   Automates GitHub repository setup with predefined configurations and access control.
+# No cloud-side setup is needed: the GitHub App credentials (org, app id, installation id, PEM key)
+# are passed in as static inputs by the platform team, so there is nothing for a backplane to
+# provision.
+requiresBackplane: false
 ---
 
 # GitHub Repository Building Block
