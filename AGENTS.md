@@ -394,6 +394,19 @@ See [.agents/skills/e2e-test/SKILL.md](.agents/skills/e2e-test/SKILL.md) (the `e
 
 ---
 
+## Tenant Migration
+
+Moving meshTenants between meshPlatforms — for example off a hand-built custom platform onto one deployed
+by a reference architecture — cannot use meshStack's import path when the landing zone carries a mandatory
+building block definition. The tenants must instead adopt their existing cloud resources through the
+building block's Terraform state.
+
+See [.agents/skills/tenant-migration/SKILL.md](.agents/skills/tenant-migration/SKILL.md) (the
+`tenant-migration` skill) for the workflow, the tenant classes, the per-tenant runbook, building block
+state doctoring and the meshStack API cookbook that the migration relies on.
+
+---
+
 ## Checklist for New Modules
 
 - [ ] `backplane/` (optional) and `buildingblock/` with all required files
