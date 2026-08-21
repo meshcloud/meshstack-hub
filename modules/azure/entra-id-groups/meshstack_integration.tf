@@ -3,11 +3,6 @@ variable "azure_tenant_id" {
   description = "Azure Entra tenant ID where groups will be created."
 }
 
-variable "azure_scope" {
-  type        = string
-  description = "Azure management group or subscription ID used as the backplane UAMI's role assignment scope."
-}
-
 variable "azure_location" {
   type        = string
   description = "Azure region for the backplane resource group and UAMI (e.g. 'westeurope')."
@@ -16,7 +11,7 @@ variable "azure_location" {
 variable "backplane_name" {
   type        = string
   default     = "azure-entra-id-groups"
-  description = "Name for the backplane resources (resource group, UAMI, role definition). Must match pattern ^[-a-z0-9]+$."
+  description = "Name for the backplane resources (resource group, UAMI). Must match pattern ^[-a-z0-9]+$."
 
   validation {
     condition     = can(regex("^[-a-z0-9]+$", var.backplane_name))
@@ -64,7 +59,6 @@ data "meshstack_integrations" "integrations" {}
 module "backplane" {
   source   = "github.com/meshcloud/meshstack-hub//modules/azure/entra-id-groups/backplane?ref=${var.hub.git_ref}"
   name     = var.backplane_name
-  scope    = var.azure_scope
   location = var.azure_location
 
   workload_identity_federation = {
@@ -89,6 +83,7 @@ resource "meshstack_building_block_definition" "this" {
     notification_subscribers = var.notification_subscribers
     symbol                   = "https://raw.githubusercontent.com/meshcloud/meshstack-hub/main/modules/azure/entra-id-groups/buildingblock/logo.png"
     target_type              = "TENANT_LEVEL"
+    supported_platforms      = [{ name = "AZURE" }]
 
     readme = chomp(<<-EOT
       Automatically provision Entra ID security groups for every role in a meshStack project. Groups are named consistently using the workspace identifier, project identifier, an optional prefix, and the role name as suffix — giving your teams a predictable, auditable group structure in Azure Active Directory.
@@ -195,13 +190,13 @@ resource "meshstack_building_block_definition" "this" {
         type            = "STRING"
         display_name    = "Workspace Identifier"
         description     = "meshStack workspace identifier. Injected automatically from the platform context."
-        assignment_type = "PLATFORM_TENANT_WORKSPACE_IDENTIFIER"
+        assignment_type = "WORKSPACE_IDENTIFIER"
       }
       project_identifier = {
         type            = "STRING"
         display_name    = "Project Identifier"
         description     = "meshStack project identifier. Injected automatically from the platform context."
-        assignment_type = "PLATFORM_TENANT_PROJECT_IDENTIFIER"
+        assignment_type = "PROJECT_IDENTIFIER"
       }
       project_roles = {
         type            = "STRING"

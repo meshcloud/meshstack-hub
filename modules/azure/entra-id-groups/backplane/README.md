@@ -18,12 +18,17 @@ The platform engineer running this backplane needs:
 
 | Permission | Scope | Why |
 |---|---|---|
-| `Managed Identity Contributor` | Target subscription | Create and update the UAMI |
-| `Owner` or `User Access Administrator` | `var.scope` | Create role assignments on the UAMI |
-| `Privileged Role Administrator` (Entra) | Tenant | Grant admin-consented Microsoft Graph app roles |
+| `Contributor` (or `Managed Identity Contributor` plus resource group creation rights) | Target subscription | Create the resource group, the UAMI, and its federated identity credentials |
+| `AppRoleAssignment.ReadWrite.All` + `Application.Read.All` (Microsoft Graph app roles), **or** the `Privileged Role Administrator` Entra role | Tenant | Grant the UAMI the admin-consented Microsoft Graph app roles listed above |
 
 ## Operational notes
 
-- The UAMI principal ID maps to a service principal in Entra. The `User.Read.All`, `Group.ReadWrite.All`, and `AdministrativeUnit.ReadWrite.All` app role assignments require **admin consent** — ensure a Global Administrator or Privileged Role Administrator approves the assignments in the Entra portal after the first `apply`.
+- The UAMI principal ID maps to a service principal in Entra. Creating the `User.Read.All`,
+  `Group.ReadWrite.All`, and `AdministrativeUnit.ReadWrite.All` app role assignments **is** the
+  admin consent — there is no separate portal approval step, but the identity running the apply must
+  be privileged enough to grant them. Note that `Application Administrator` and
+  `Cloud Application Administrator` are **not** sufficient: Entra explicitly excludes Microsoft Graph
+  application permissions from what those roles may consent to. Use `Privileged Role Administrator`
+  or `Global Administrator`, or an automation principal holding `AppRoleAssignment.ReadWrite.All`.
 - No secrets are created; the UAMI authenticates via OIDC token exchange.
 - The backplane resource group is named after `var.name` and must be unique within the subscription.
