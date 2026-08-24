@@ -13,10 +13,15 @@ variable "azure_scope" {
   description = "Azure management group or subscription ID used for backplane role scope."
 }
 
+variable "azure_location" {
+  type        = string
+  description = "Azure region for the backplane resource group and managed identity (e.g. 'westeurope')."
+}
+
 variable "backplane_name" {
   type        = string
   default     = "azure-service-principal"
-  description = "Name for the backplane resources (service principal, role definition). Must match pattern ^[-a-z0-9]+$."
+  description = "Name for the backplane resources (resource group, managed identity, role definition). Must match pattern ^[-a-z0-9]+$."
 }
 
 variable "notification_subscribers" {
@@ -60,15 +65,16 @@ output "building_block_definition" {
 data "meshstack_integrations" "integrations" {}
 
 module "backplane" {
-  source = "github.com/meshcloud/meshstack-hub//modules/azure/service-principal/backplane?ref=${var.hub.git_ref}"
-  name   = var.backplane_name
-  scope  = var.azure_scope
-
-  create_service_principal_name = var.backplane_name
+  source   = "github.com/meshcloud/meshstack-hub//modules/azure/service-principal/backplane?ref=${var.hub.git_ref}"
+  name     = var.backplane_name
+  scope    = var.azure_scope
+  location = var.azure_location
 
   workload_identity_federation = {
-    issuer  = data.meshstack_integrations.integrations.workload_identity_federation.replicator.issuer
-    subject = "${trimsuffix(data.meshstack_integrations.integrations.workload_identity_federation.replicator.subject, ":replicator")}:workspace.${var.meshstack.owning_workspace_identifier}.buildingblockdefinition.${meshstack_building_block_definition.this.metadata.uuid}"
+    issuer = data.meshstack_integrations.integrations.workload_identity_federation.replicator.issuer
+    subjects = [
+      "${trimsuffix(data.meshstack_integrations.integrations.workload_identity_federation.replicator.subject, ":replicator")}:workspace.${var.meshstack.owning_workspace_identifier}.buildingblockdefinition.${meshstack_building_block_definition.this.metadata.uuid}"
+    ]
   }
 }
 
