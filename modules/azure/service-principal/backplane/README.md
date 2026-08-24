@@ -27,6 +27,35 @@ The automation principal requires the following Microsoft Graph API application 
 
 > **Note:** `Application.ReadWrite.OwnedBy` requires admin consent in Azure AD before the backplane can function.
 
+## Why this backplane is not yet a UAMI
+
+[Azure backplane conventions](../../../../.agents/references/azure-backplane.md) require a
+User-Assigned Managed Identity. This backplane still uses an app registration, and the scorecard's
+Azure Backplane category reports that. The migration is understood but deliberately not done,
+because for *this* building block it is not a drop-in replacement:
+
+- The building block creates an Entra application per tenant and records the deploying identity as
+  its **owner**. `Application.ReadWrite.OwnedBy` is scoped to owned applications, so replacing the
+  deploy identity leaves every previously provisioned application owned by a principal that no
+  longer exists. The new UAMI could neither read, update nor delete them: existing building block
+  instances would become permanently stuck, and cleaning them up needs a Global Administrator
+  walking the directory. Groups (as in `azure/entra-id-groups`) do not have this problem, because
+  `Group.ReadWrite.All` is tenant-wide rather than ownership-scoped — which is why the UAMI
+  convention transfers cleanly there but not here.
+- A migration therefore needs an out-of-band, privileged step that adds the new UAMI as an owner of
+  every existing application *before* the identity is switched over.
+- It is also a breaking change to this module's inputs and outputs (`create_service_principal_name`,
+  `existing_principal_ids`, the shape of `workload_identity_federation`, a new required `location`,
+  and the `created_*` / `application_password*` / `provider_tf` outputs).
+- One point is unverified and must be settled by an e2e run rather than by review: the building
+  block resolves its own object ID via `data.azurerm_client_config.current.object_id` to set the
+  application owner. Whether that resolves under a UAMI federated-credential login without an
+  additional Microsoft Graph read grant is untested. If it does not, new applications would be
+  created ownerless — the same failure mode, on new instances instead of old ones.
+
+Until that migration is planned, `output "identity"` provides the normalised
+`{ client_id, principal_id, tenant_id }` shape so consumers are not coupled to the principal type.
+
 ## Operational Notes
 
 - The backplane must be deployed once per platform team before any building block instances can be created.
@@ -81,6 +110,7 @@ No modules.
 | <a name="output_application_password_value"></a> [application\_password\_value](#output\_application\_password\_value) | The actual password value for the created application password. |
 | <a name="output_created_application"></a> [created\_application](#output\_created\_application) | Information about the created Azure AD application. |
 | <a name="output_created_service_principal"></a> [created\_service\_principal](#output\_created\_service\_principal) | Information about the created service principal. |
+| <a name="output_identity"></a> [identity](#output\_identity) | Client, principal and tenant ID of the automation principal that deploys the building block. |
 | <a name="output_provider_tf"></a> [provider\_tf](#output\_provider\_tf) | Ready-to-use provider.tf configuration for buildingblock deployment |
 | <a name="output_role_assignment_ids"></a> [role\_assignment\_ids](#output\_role\_assignment\_ids) | The IDs of the role assignments for all service principals. |
 | <a name="output_role_assignment_principal_ids"></a> [role\_assignment\_principal\_ids](#output\_role\_assignment\_principal\_ids) | The principal IDs of all service principals that have been assigned the role. |

@@ -141,7 +141,7 @@ resource "meshstack_building_block_definition" "this" {
         description     = "Client ID of the service principal used to authenticate with Azure."
         assignment_type = "STATIC"
         is_environment  = true
-        argument        = jsonencode(module.backplane.created_service_principal.client_id)
+        argument        = jsonencode(module.backplane.identity.client_id)
       }
       ARM_TENANT_ID = {
         type            = "STRING"
