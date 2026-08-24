@@ -2,11 +2,30 @@
 
 This building block requires access to the organization's billing account and a dedicated GCP project to manage notification channels.
 
+### Authentication
+
+Pass `workload_identity_federation` and the backplane creates a workload identity pool and provider
+alongside the service account, grants the pool `roles/iam.workloadIdentityUser` on it, and exports
+`credentials_json` as an
+[external account](https://cloud.google.com/iam/docs/workload-identity-federation) document. No
+long-lived secret exists. `issuer`, `audience` and `subjects` must come from
+`data.meshstack_integrations` — see `meshstack_integration.tf`.
+
+Leave it null and the backplane falls back to a `google_service_account_key`. That path is legacy:
+it mints a long-lived credential, and it needs `roles/iam.serviceAccountKeyAdmin` on top of the roles
+below, because `roles/iam.serviceAccountAdmin` does **not** include
+`iam.serviceAccountKeys.create`. The federated path therefore needs strictly fewer privileges.
+
+GCP **soft-deletes** workload identity pools and providers for ~30 days and will not reissue their
+identifiers in that window. `workload_identity_pool_identifier` is an input for exactly that reason:
+a backplane that has to be recreated needs a fresh one, and a caller that creates and destroys
+backplanes repeatedly (an e2e test) must derive a unique identifier per run. The soft-deleted pools
+count against the project's pool limit while they linger.
+
 ### Roles granted to the building block's service account
 
-The backplane creates a service account and exports its key as `credentials_json`; that is the
-identity the **building block** runs as. It receives only what the building block's own resources
-need:
+The service account the backplane creates is the identity the **building block** runs as. It
+receives only what the building block's own resources need:
 
 | Role | Scope | For |
 |------|-------|-----|
@@ -25,11 +44,16 @@ The platform engineer or CI principal that applies this module needs, on the bac
 | Role | For |
 |------|-----|
 | `roles/serviceusage.serviceUsageAdmin` | `google_project_service` |
-| `roles/iam.serviceAccountAdmin` | `google_service_account` and its key |
+| `roles/iam.serviceAccountAdmin` | `google_service_account` and its IAM policy |
+| `roles/iam.workloadIdentityPoolAdmin` | `google_iam_workload_identity_pool` / `_provider` |
 | `roles/resourcemanager.projectIamAdmin` | `google_project_iam_member` |
+| `roles/iam.serviceAccountKeyAdmin` | **only** on the legacy key path — `roles/iam.serviceAccountAdmin` does not cover `iam.serviceAccountKeys.create` |
 
-plus `roles/billing.admin` (or an equivalent) on the billing account for the
-`google_billing_account_iam_member` grants.
+plus, on the **billing account**, permission to read and write its IAM policy for the
+`google_billing_account_iam_member` grants. `roles/billing.admin` is the only predefined role that
+carries `billing.accounts.setIamPolicy`; an organization-level custom role holding just
+`billing.accounts.getIamPolicy` and `billing.accounts.setIamPolicy` is narrower by default, though
+not a containment boundary — anything that can set the policy can grant itself the rest.
 
 `roles/serviceusage.serviceUsageAdmin` cannot be bootstrapped by the module — enabling a service
 already requires it — so it must be granted out of band before the first apply, as must the Service
@@ -39,15 +63,18 @@ Usage API itself (`gcloud services enable serviceusage.googleapis.com --project 
 
 | API | For |
 |------|-----|
-| `iam.googleapis.com` | the service account and its key |
+| `iam.googleapis.com` | the service account, the pool and its provider |
 | `cloudresourcemanager.googleapis.com` | the project-level IAM binding |
 | `cloudbilling.googleapis.com` | the billing account IAM bindings, billed to this project as quota project |
-| `billingbudgets.googleapis.com` | `google_billing_budget`, at building block run time |
-| `monitoring.googleapis.com` | `google_monitoring_notification_channel`, at building block run time |
+| `sts.googleapis.com` | federated token exchange at building block run time |
+| `iamcredentials.googleapis.com` | service account impersonation at run time |
+| `billingbudgets.googleapis.com` | `google_billing_budget`, at run time |
+| `monitoring.googleapis.com` | `google_monitoring_notification_channel`, at run time |
 
-`monitoring.googleapis.com` is on by default in many projects, which is why it went unnoticed for a
-while — but a project that has never used it answers the notification channel call with
-`SERVICE_DISABLED`, and the building block run then fails.
+`monitoring.googleapis.com` is on by default in many projects, which is why its absence here went
+unnoticed for a while — but a project that has never used it answers the notification channel call
+with `SERVICE_DISABLED`, and the building block run then fails. The e2e target project was exactly
+such a project.
 
 ## Operational notes
 
@@ -79,9 +106,12 @@ No modules.
 |------|------|
 | [google_billing_account_iam_member.billing_viewer](https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/billing_account_iam_member) | resource |
 | [google_billing_account_iam_member.budget_admin](https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/billing_account_iam_member) | resource |
+| [google_iam_workload_identity_pool.meshstack](https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/iam_workload_identity_pool) | resource |
+| [google_iam_workload_identity_pool_provider.meshstack](https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/iam_workload_identity_pool_provider) | resource |
 | [google_project_iam_member.notification_channel_admin](https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/project_iam_member) | resource |
 | [google_project_service.required](https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/project_service) | resource |
 | [google_service_account.backplane](https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/service_account) | resource |
+| [google_service_account_iam_binding.workload_identity](https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/service_account_iam_binding) | resource |
 | [google_service_account_key.backplane](https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/service_account_key) | resource |
 | [time_sleep.wait_for_iam](https://registry.terraform.io/providers/hashicorp/time/latest/docs/resources/sleep) | resource |
 | [google_project.backplane](https://registry.terraform.io/providers/hashicorp/google/latest/docs/data-sources/project) | data source |
@@ -94,6 +124,7 @@ No modules.
 | <a name="input_backplane_service_account_name"></a> [backplane\_service\_account\_name](#input\_backplane\_service\_account\_name) | The name of the service account to be created for the backplane | `string` | `"building-block-budget-alert"` | no |
 | <a name="input_billing_account_id"></a> [billing\_account\_id](#input\_billing\_account\_id) | The billing account ID where budget permissions will be granted | `string` | n/a | yes |
 | <a name="input_iam_propagation_delay_seconds"></a> [iam\_propagation\_delay\_seconds](#input\_iam\_propagation\_delay\_seconds) | Seconds to wait after granting the building block's IAM roles before publishing its credentials. GCP IAM is eventually consistent, and billing-account grants are among the slower ones. Set to 0 if the backplane is always provisioned well before any building block run. | `number` | `180` | no |
+| <a name="input_workload_identity_federation"></a> [workload\_identity\_federation](#input\_workload\_identity\_federation) | Workload identity federation settings, sourced from data.meshstack\_integrations. Null falls back to a service account key. | <pre>object({<br/>    workload_identity_pool_identifier = string<br/>    audience                          = string<br/>    issuer                            = string<br/>    subjects                          = list(string)<br/>    subject_token_file_path           = string<br/>  })</pre> | `null` | no |
 
 ## Outputs
 
@@ -101,7 +132,7 @@ No modules.
 |------|-------------|
 | <a name="output_backplane_project_id"></a> [backplane\_project\_id](#output\_backplane\_project\_id) | The project hosting the building block backplane resources |
 | <a name="output_billing_account_id"></a> [billing\_account\_id](#output\_billing\_account\_id) | The billing account ID where budget permissions were granted |
-| <a name="output_credentials_json"></a> [credentials\_json](#output\_credentials\_json) | The JSON credentials for the backplane service account |
+| <a name="output_credentials_json"></a> [credentials\_json](#output\_credentials\_json) | Credentials for the backplane service account: an external account document on the federated path, the decoded key otherwise |
 | <a name="output_service_account_email"></a> [service\_account\_email](#output\_service\_account\_email) | Email address of the backplane service account |
 | <a name="output_service_account_id"></a> [service\_account\_id](#output\_service\_account\_id) | ID of the backplane service account |
 <!-- END_TF_DOCS -->
