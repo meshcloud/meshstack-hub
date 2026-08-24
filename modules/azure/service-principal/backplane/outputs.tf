@@ -24,6 +24,18 @@ output "role_assignment_principal_ids" {
   description = "The principal IDs of all service principals that have been assigned the role."
 }
 
+# Normalised shape every Azure backplane exposes, so consumers wire ARM_CLIENT_ID the same way
+# regardless of the principal type. Here the principal is an app registration rather than the UAMI
+# the convention asks for — see README.md for why that migration is still outstanding.
+output "identity" {
+  value = var.create_service_principal_name != null ? {
+    client_id    = azuread_service_principal.buildingblock_deploy[0].client_id
+    principal_id = azuread_service_principal.buildingblock_deploy[0].object_id
+    tenant_id    = data.azurerm_subscription.current.tenant_id
+  } : null
+  description = "Client, principal and tenant ID of the automation principal that deploys the building block."
+}
+
 output "created_service_principal" {
   value = var.create_service_principal_name != null ? {
     object_id    = azuread_service_principal.buildingblock_deploy[0].object_id
