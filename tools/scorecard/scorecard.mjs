@@ -19,6 +19,21 @@ import { join, relative } from "path";
 const ROOT = new URL("../../", import.meta.url).pathname.replace(/\/$/, "");
 const MODULES_DIR = join(ROOT, "modules");
 
+// A building block definition's terraform_version selects a HashiCorp Terraform binary up to
+// 1.5.5 and an OpenTofu one above it. 1.10.0 is where OpenTofu started short-circuiting && and
+// ||, so anything below it faults on the common `var.x == null || var.x.attr` guard.
+const TERRAFORM_VERSION_FLOOR = "1.12.0";
+
+const compareVersions = (a, b) => {
+  const pa = a.split(".").map(Number);
+  const pb = b.split(".").map(Number);
+  for (let i = 0; i < Math.max(pa.length, pb.length); i++) {
+    const d = (pa[i] ?? 0) - (pb[i] ?? 0);
+    if (d !== 0) return d;
+  }
+  return 0;
+};
+
 // ─── Category definitions ───────────────────────────────────────────────────
 
 const CATEGORIES = {
@@ -235,6 +250,33 @@ const detectors = [
       const hasRefName = /ref_name\s*=/.test(content);
       if (!hasRefName) return { pass: false, detail: "no ref_name found" };
       return { pass: /ref_name\s*=\s*var\.hub\.git_ref/.test(content) };
+    },
+  },
+  {
+    id: "bbd_terraform_version_floor",
+    category: "integration",
+    name: `BBD terraform_version >= ${TERRAFORM_VERSION_FLOOR}`,
+    emoji: "🌱",
+    fn: (mod) => {
+      const content = readIntegrationTf(mod);
+      if (!content) return { pass: false, detail: "no integration file" };
+
+      if (!/^\s*terraform\s*=\s*\{/m.test(content)) {
+        return { pass: null, detail: "not applicable — non-terraform implementation" };
+      }
+
+      const found = [...content.matchAll(/terraform_version\s*=\s*"([^"]+)"/g)].map((m) => m[1]);
+      if (found.length === 0) {
+        return { pass: false, detail: `terraform_version not set — pin "${TERRAFORM_VERSION_FLOOR}" or newer` };
+      }
+
+      const stale = found.filter((v) => compareVersions(v, TERRAFORM_VERSION_FLOOR) < 0);
+      if (stale.length === 0) return { pass: true };
+
+      return {
+        pass: false,
+        detail: `${[...new Set(stale)].join(", ")} predates the hub floor ${TERRAFORM_VERSION_FLOOR}`,
+      };
     },
   },
   {
