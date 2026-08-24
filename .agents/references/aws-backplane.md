@@ -17,7 +17,8 @@ Use WIF when the building block acts within a single AWS account (the backplane 
 - **OIDC-native**: AWS supports federated OIDC identities via `aws_iam_openid_connect_provider` out of the box.
 - **Shared OIDC provider**: Multiple backplanes can share a single OIDC provider in the same AWS account using `create_oidc_provider = false`.
 
-### Implementation Pattern
+<!-- scorecard-checks: aws_wif_oidc_provider, aws_wif_subject_condition -->
+### Implementation Pattern (WIF)
 
 ```hcl
 # backplane/main.tf — WIF-based automation principal
@@ -82,6 +83,7 @@ resource "aws_iam_role" "backplane" {
 # Attach a service-specific policy to aws_iam_role.backplane
 ```
 
+<!-- scorecard-checks: aws_wif_nonnullable, aws_wif_create_oidc_provider -->
 ### Backplane Variables (WIF)
 
 ```hcl
@@ -102,6 +104,7 @@ variable "create_oidc_provider" {
 }
 ```
 
+<!-- scorecard-checks: aws_wif_role_output -->
 ### Backplane Outputs (WIF)
 
 ```hcl
@@ -125,7 +128,8 @@ Use this pattern when the building block must act in **many target accounts** ac
 - **OU-scoped access**: Access is limited to the specified OUs; accounts outside those OUs cannot be reached.
 - **Minimal IAM user**: The IAM user in the backplane account only holds `sts:AssumeRole` on the specific role name — no direct service permissions.
 
-### Implementation Pattern
+<!-- scorecard-checks: aws_cross_account_provider_aliases, aws_stackset_auto_deployment -->
+### Implementation Pattern (Cross-Account)
 
 ```hcl
 # backplane/main.tf — IAM user + CloudFormation StackSet pattern
@@ -252,6 +256,7 @@ variable "stackset_region" {
 }
 ```
 
+<!-- scorecard-checks: aws_cross_account_outputs -->
 ### Backplane Outputs (Cross-Account)
 
 ```hcl
@@ -274,6 +279,7 @@ output "role_name" {
 
 ---
 
+<!-- scorecard-checks: aws_wif_no_access_key -->
 ## What to Avoid
 
 - ❌ Long-lived IAM access keys for single-account building blocks — use WIF (Pattern A) instead
@@ -281,10 +287,23 @@ output "role_name" {
 - ❌ Overly broad IAM policies (`"*"` actions on `"*"` resources) — scope to minimum required actions and resources
 - ❌ `retain_stacks_on_account_removal = true` in StackSets — orphaned roles in removed accounts are a security risk
 
+The first of these has a specific shape worth naming: a `workload_identity_federation` variable that
+defaults to `null`, with `count = var.workload_identity_federation == null ? 1 : 0` selecting an
+`aws_iam_user` and an `aws_iam_access_key` on the null branch. That is a single-account backplane
+keeping a long-lived key as a fallback, and it is what the bullet forbids — the choice is between the
+two patterns, not between federation and a key inside Pattern A. Pattern B's access key is a
+different thing: it is the only credential that pattern has, and it authenticates a principal whose
+sole permission is `sts:AssumeRole`.
+
+`modules/aws/s3_bucket`, `modules/aws/route53-dns-record` and `modules/aws/route53-dns-alias-record`
+still carry the fallback shape. They are the remaining exceptions, not a pattern to copy — fix one
+the next time you are in it.
+
 ---
 
 ## `meshstack_integration.tf` Wiring (AWS)
 
+<!-- scorecard-checks: aws_wif_integration_env -->
 ### WIF pattern
 
 ```hcl
