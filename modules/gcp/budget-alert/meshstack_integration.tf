@@ -175,7 +175,7 @@ resource "meshstack_building_block_definition" "this" {
         type            = "FILE"
         assignment_type = "STATIC"
         display_name    = "Credentials File"
-        description     = "Key of the backplane service account, passed to the building block as a file."
+        description     = "External account credentials of the backplane service account, passed to the building block as a file. It holds no secret — the runner exchanges its own identity token for a short-lived access token."
 
         sensitive = {
           argument = {
