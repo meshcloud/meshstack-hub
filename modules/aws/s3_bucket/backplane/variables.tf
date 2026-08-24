@@ -4,9 +4,15 @@ variable "workload_identity_federation" {
     audience = string,
     subjects = list(string)
   })
-  default     = null
+  nullable    = false
   description = <<-EOT
-  Set these options to add a trusted identity provider from meshStack to allow workload identity federation for authentication, which can be used instead of access keys.
+  Trusted identity provider from meshStack that the building block runner federates into.
   Supports multiple subjects and wildcard patterns (e.g., 'system:serviceaccount:namespace:*').
   EOT
+}
+
+variable "create_oidc_provider" {
+  type        = bool
+  default     = true
+  description = "Set to false if the OIDC provider for the meshStack issuer already exists in this AWS account (e.g., created by another backplane). The existing provider will be looked up by URL instead of created."
 }

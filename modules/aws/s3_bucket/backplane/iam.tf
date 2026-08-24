@@ -5,11 +5,6 @@ resource "random_string" "name_suffix" {
   special = false
 }
 
-resource "aws_iam_user" "buildingblock_s3_user" {
-  count = var.workload_identity_federation == null ? 1 : 0
-  name  = "buildingblock-s3-user-${random_string.name_suffix.result}"
-}
-
 data "aws_iam_policy_document" "s3_full_access" {
   statement {
     actions = [
@@ -23,42 +18,42 @@ data "aws_iam_policy_document" "s3_full_access" {
 }
 
 resource "aws_iam_policy" "buildingblock_s3_policy" {
-  name        = var.workload_identity_federation == null ? "S3BuildingBlockPolicy-${random_string.name_suffix.result}" : "S3BuildingBlockFederatedPolicy-${random_string.name_suffix.result}"
+  name        = "S3BuildingBlockFederatedPolicy-${random_string.name_suffix.result}"
   description = "Policy for the S3 Building Block"
   policy      = data.aws_iam_policy_document.s3_full_access.json
-}
-
-resource "aws_iam_user_policy_attachment" "buildingblock_s3_user_policy_attachment" {
-  count = var.workload_identity_federation == null ? 1 : 0
-
-  user       = aws_iam_user.buildingblock_s3_user[0].name
-  policy_arn = aws_iam_policy.buildingblock_s3_policy.arn
-}
-
-resource "aws_iam_access_key" "buildingblock_s3_access_key" {
-  count = var.workload_identity_federation == null ? 1 : 0
-
-  user = aws_iam_user.buildingblock_s3_user[0].name
 }
 
 # Workload Identity Federation
 
 resource "aws_iam_openid_connect_provider" "buildingblock_oidc_provider" {
-  count = var.workload_identity_federation != null ? 1 : 0
+  count = var.create_oidc_provider ? 1 : 0
 
   url            = var.workload_identity_federation.issuer
   client_id_list = [var.workload_identity_federation.audience]
 }
 
+data "aws_iam_openid_connect_provider" "buildingblock_oidc_provider" {
+  count = var.create_oidc_provider ? 0 : 1
+
+  url = var.workload_identity_federation.issuer
+}
+
+locals {
+  assume_federated_role_name = "BuildingBlockS3IdentityFederation-${random_string.name_suffix.result}"
+  oidc_provider_arn = try(
+    aws_iam_openid_connect_provider.buildingblock_oidc_provider[0].arn,
+    data.aws_iam_openid_connect_provider.buildingblock_oidc_provider[0].arn
+  )
+}
+
 data "aws_iam_policy_document" "workload_identity_federation" {
-  count   = var.workload_identity_federation != null ? 1 : 0
   version = "2012-10-17"
 
   statement {
     effect = "Allow"
     principals {
       type        = "Federated"
-      identifiers = [aws_iam_openid_connect_provider.buildingblock_oidc_provider[0].arn]
+      identifiers = [local.oidc_provider_arn]
     }
     actions = ["sts:AssumeRoleWithWebIdentity"]
 
@@ -78,20 +73,24 @@ data "aws_iam_policy_document" "workload_identity_federation" {
   }
 }
 
-locals {
-  assume_federated_role_name = "BuildingBlockS3IdentityFederation-${random_string.name_suffix.result}"
-}
-
 resource "aws_iam_role" "assume_federated_role" {
-  count = var.workload_identity_federation != null ? 1 : 0
-
   name               = local.assume_federated_role_name
-  assume_role_policy = data.aws_iam_policy_document.workload_identity_federation[0].json
+  assume_role_policy = data.aws_iam_policy_document.workload_identity_federation.json
 }
 
 resource "aws_iam_role_policy_attachment" "buildingblock_s3" {
-  count = var.workload_identity_federation != null ? 1 : 0
-
-  role       = aws_iam_role.assume_federated_role[0].name
+  role       = aws_iam_role.assume_federated_role.name
   policy_arn = aws_iam_policy.buildingblock_s3_policy.arn
+}
+
+# Both were count-guarded while the backplane still offered an IAM access key fallback. Without these
+# a deployment that is already on the federated path would destroy and recreate its live IAM role.
+moved {
+  from = aws_iam_role.assume_federated_role[0]
+  to   = aws_iam_role.assume_federated_role
+}
+
+moved {
+  from = aws_iam_role_policy_attachment.buildingblock_s3[0]
+  to   = aws_iam_role_policy_attachment.buildingblock_s3
 }

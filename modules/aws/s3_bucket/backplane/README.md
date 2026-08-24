@@ -1,19 +1,38 @@
 ---
 name: AWS S3 Buildingblock Backplane
 summary: |
-  Deploys an IAM user with full S3 access
+  Deploys the federated IAM role the S3 building block assumes, with full S3 access
 # optional: add additional metadata about implemented security controls
 ---
 
 # AWS S3 Buildingblock Backplane
 
-This will deploy an IAM user (or role only in case of using `workload_identity_federation`) with full S3 access (`s3:*`)
+This deploys the IAM role that the S3 building block assumes, with full S3 access (`s3:*`).
+
+## Authentication
+
+The building block authenticates by **workload identity federation** — the only credential path this
+backplane offers, so `workload_identity_federation` is required. The backplane registers the
+meshStack issuer as an OIDC provider, creates an IAM role whose trust policy accepts only the
+subjects of this building block definition, and exports the role ARN as
+`workload_identity_federation_role`. No long-lived credential exists anywhere in the module.
+
+AWS allows **one OIDC provider per issuer URL per account**. A second backplane in the same account
+must therefore set `create_oidc_provider = false` and reuse the existing one — otherwise its apply
+fails with `EntityAlreadyExists`.
+
+## Required permissions
+
+The platform engineer or CI principal applying this module needs `iam:*` on the OIDC provider, the
+role and the policy it manages (`CreateOpenIDConnectProvider`, `CreateRole`, `CreatePolicy`,
+`AttachRolePolicy` and their `Get`/`Delete` counterparts). `arn:aws:iam::aws:policy/IAMFullAccess`
+covers it.
 
 ## Usage
 
 ```hcl
 provider "aws" {
-  region = "your-region" # e.g. eu-central-1
+  region = "eu-central-1" # or any other region
 }
 
 module "aws_s3_bucket_backplane" {
@@ -23,16 +42,23 @@ module "aws_s3_bucket_backplane" {
     issuer   = "https://your-oidc-issuer"
     audience = "your-audience"
     subjects = [
-      "system:serviceaccount:your-namespace:your-service-account-name",  # Exact match
-      "system:serviceaccount:your-namespace:*",                          # Wildcard match
+      "system:serviceaccount:your-namespace:your-service-account-name", # Exact match
+      "system:serviceaccount:your-namespace:*",                         # Wildcard match
     ]
-  } # Optional, if not provided, IAM access keys will be created instead
-}
+  }
 
-output "aws_s3_bucket_backplane" {
-  value = module.aws_s3_bucket_backplane
+  # Set to false when another backplane already created the meshStack OIDC provider in this account.
+  create_oidc_provider = true
 }
 ```
+
+## Migrating from the access key path
+
+Earlier revisions created an IAM user and an `aws_iam_access_key` when `workload_identity_federation`
+was left null. That path is gone. A deployment still on it must pass `workload_identity_federation`,
+and the next apply destroys the IAM user and revokes its key — that is the intended migration. A
+deployment already on the federated path is unaffected: `moved` blocks carry its role and policy
+attachment across the removed `count`.
 
 <!-- BEGIN_TF_DOCS -->
 ## Requirements
@@ -50,15 +76,13 @@ No modules.
 
 | Name | Type |
 |------|------|
-| [aws_iam_access_key.buildingblock_s3_access_key](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/iam_access_key) | resource |
 | [aws_iam_openid_connect_provider.buildingblock_oidc_provider](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/iam_openid_connect_provider) | resource |
 | [aws_iam_policy.buildingblock_s3_policy](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/iam_policy) | resource |
 | [aws_iam_role.assume_federated_role](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/iam_role) | resource |
 | [aws_iam_role_policy_attachment.buildingblock_s3](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/iam_role_policy_attachment) | resource |
-| [aws_iam_user.buildingblock_s3_user](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/iam_user) | resource |
-| [aws_iam_user_policy_attachment.buildingblock_s3_user_policy_attachment](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/iam_user_policy_attachment) | resource |
 | [random_string.name_suffix](https://registry.terraform.io/providers/hashicorp/random/latest/docs/resources/string) | resource |
 | [aws_caller_identity.current](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/caller_identity) | data source |
+| [aws_iam_openid_connect_provider.buildingblock_oidc_provider](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/iam_openid_connect_provider) | data source |
 | [aws_iam_policy_document.s3_full_access](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/iam_policy_document) | data source |
 | [aws_iam_policy_document.workload_identity_federation](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/iam_policy_document) | data source |
 
@@ -66,12 +90,12 @@ No modules.
 
 | Name | Description | Type | Default | Required |
 |------|-------------|------|---------|:--------:|
-| <a name="input_workload_identity_federation"></a> [workload\_identity\_federation](#input\_workload\_identity\_federation) | Set these options to add a trusted identity provider from meshStack to allow workload identity federation for authentication, which can be used instead of access keys.<br/>Supports multiple subjects and wildcard patterns (e.g., 'system:serviceaccount:namespace:*'). | <pre>object({<br/>    issuer   = string,<br/>    audience = string,<br/>    subjects = list(string)<br/>  })</pre> | `null` | no |
+| <a name="input_create_oidc_provider"></a> [create\_oidc\_provider](#input\_create\_oidc\_provider) | Set to false if the OIDC provider for the meshStack issuer already exists in this AWS account (e.g., created by another backplane). The existing provider will be looked up by URL instead of created. | `bool` | `true` | no |
+| <a name="input_workload_identity_federation"></a> [workload\_identity\_federation](#input\_workload\_identity\_federation) | Trusted identity provider from meshStack that the building block runner federates into.<br/>Supports multiple subjects and wildcard patterns (e.g., 'system:serviceaccount:namespace:*'). | <pre>object({<br/>    issuer   = string,<br/>    audience = string,<br/>    subjects = list(string)<br/>  })</pre> | n/a | yes |
 
 ## Outputs
 
 | Name | Description |
 |------|-------------|
-| <a name="output_credentials"></a> [credentials](#output\_credentials) | Access credentials for the S3 bucket, only available if workload\_identity\_federation variable is null. |
-| <a name="output_workload_identity_federation_role_arn"></a> [workload\_identity\_federation\_role\_arn](#output\_workload\_identity\_federation\_role\_arn) | Workload identity federation role ARN |
+| <a name="output_workload_identity_federation_role"></a> [workload\_identity\_federation\_role](#output\_workload\_identity\_federation\_role) | Workload identity federation role ARN |
 <!-- END_TF_DOCS -->

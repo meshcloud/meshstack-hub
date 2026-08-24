@@ -12,6 +12,12 @@ variable "workload_identity" {
   description = "Workload identity federation configuration for AWS authentication."
 }
 
+variable "create_oidc_provider" {
+  type        = bool
+  default     = true
+  description = "Set to false if the OIDC provider for the meshStack issuer already exists in this AWS account (e.g., created by another backplane). The existing provider will be looked up by URL instead of created."
+}
+
 variable "meshstack" {
   type = object({
     owning_workspace_identifier = string
@@ -46,6 +52,8 @@ output "building_block_definition" {
 
 module "backplane" {
   source = "github.com/meshcloud/meshstack-hub//modules/aws/s3_bucket/backplane?ref=${var.hub.git_ref}"
+
+  create_oidc_provider = var.create_oidc_provider
 
   workload_identity_federation = {
     issuer   = var.workload_identity.issuer
@@ -121,7 +129,7 @@ resource "meshstack_building_block_definition" "this" {
         description     = "The ARN of the AWS role to assume for provisioning the S3 bucket"
         assignment_type = "STATIC"
         is_environment  = true
-        argument        = jsonencode(module.backplane.workload_identity_federation_role_arn)
+        argument        = jsonencode(module.backplane.workload_identity_federation_role)
       }
       AWS_WEB_IDENTITY_TOKEN_FILE = {
         type            = "STRING"
