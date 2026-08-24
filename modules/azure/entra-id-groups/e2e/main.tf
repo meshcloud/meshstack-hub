@@ -44,6 +44,11 @@ module "entra_id_groups" {
   azure_tenant_id = var.test_context.fixtures.azure.entra_tenant_id
   azure_location  = "westeurope"
 
+  # The project members are B2B guests in the test tenant, so their user principal name is the
+  # rewritten "<user>_<domain>#EXT#@<tenant>.onmicrosoft.com" form and a upn lookup misses them.
+  # Their mail attribute keeps the original address, which is what "email" matches on.
+  azure_user_lookup_attribute = "email"
+
   backplane_name = local.backplane_name
 }
 

@@ -34,6 +34,12 @@ Set *Project Roles* to `devops,qa,readonly` to create:
 
 Provide the object ID of an existing Entra Administrative Unit. All generated groups are added as members of that AU, restricting who can manage them in the directory.
 
+## Members that cannot be resolved
+
+Project members are matched to directory users by the attribute your platform team configured — the SMTP address by default. A member with no object in the directory, such as an external collaborator or a service account, is skipped rather than failing the deployment: the groups are still created and every other member is still assigned. The run summary names anyone who was skipped, and the *Unresolved Members* output lists them so you can act on it.
+
+Such a member keeps their meshStack project roles, but they will not inherit any access granted through these groups until they exist in the directory.
+
 ## Shared Responsibilities
 
 | Responsibility | Platform Team | Application Team |

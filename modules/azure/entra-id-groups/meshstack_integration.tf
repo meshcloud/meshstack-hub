@@ -8,6 +8,17 @@ variable "azure_location" {
   description = "Azure region for the backplane resource group and UAMI (e.g. 'westeurope')."
 }
 
+variable "azure_user_lookup_attribute" {
+  type        = string
+  default     = "email"
+  description = "Directory attribute used to match meshStack project members to Entra users. 'email' matches the user's SMTP address (the portal's Email field) and is the right choice when members are B2B guests, whose user principal name is rewritten on invitation. 'upn' matches the user principal name and only works for members native to this tenant."
+
+  validation {
+    condition     = contains(["upn", "email"], var.azure_user_lookup_attribute)
+    error_message = "Must be 'upn' or 'email'."
+  }
+}
+
 variable "backplane_name" {
   type        = string
   default     = "azure-entra-id-groups"
@@ -115,6 +126,12 @@ resource "meshstack_building_block_definition" "this" {
 
       Provide the object ID of an existing Entra Administrative Unit. All generated groups are added as members of that AU, restricting who can manage them in the directory.
 
+      ## Members that cannot be resolved
+
+      Project members are matched to directory users by the attribute your platform team configured — the SMTP address by default. A member with no object in the directory, such as an external collaborator or a service account, is skipped rather than failing the deployment: the groups are still created and every other member is still assigned. The run summary names anyone who was skipped, and the *Unresolved Members* output lists them so you can act on it.
+
+      Such a member keeps their meshStack project roles, but they will not inherit any access granted through these groups until they exist in the directory.
+
       ## Shared Responsibilities
 
       | Responsibility | Platform Team | Application Team |
@@ -215,9 +232,9 @@ resource "meshstack_building_block_definition" "this" {
       user_lookup_attribute = {
         type            = "STRING"
         display_name    = "User Lookup Attribute"
-        description     = "Azure AD attribute used to look up users. 'upn' matches on User Principal Name; 'email' matches on the primary mail address."
+        description     = "Directory attribute used to look up users. 'email' matches the SMTP address; 'upn' matches the User Principal Name."
         assignment_type = "STATIC"
-        argument        = jsonencode("upn")
+        argument        = jsonencode(var.azure_user_lookup_attribute)
       }
       users = {
         type            = "CODE"
@@ -239,6 +256,18 @@ resource "meshstack_building_block_definition" "this" {
         display_name    = "Group Display Names"
         description     = "JSON map of project role name to Entra group display name."
         assignment_type = "NONE"
+      }
+      unresolved_users = {
+        type            = "STRING"
+        display_name    = "Unresolved Members"
+        description     = "Project members with no matching object in the directory. They keep their meshStack project roles but were not added to any group."
+        assignment_type = "NONE"
+      }
+      summary = {
+        type            = "STRING"
+        display_name    = "Summary"
+        description     = "Markdown summary of the created groups, and a warning naming any members that could not be resolved."
+        assignment_type = "SUMMARY"
       }
     }
   }
