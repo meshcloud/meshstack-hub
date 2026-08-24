@@ -9,6 +9,10 @@ output "service_account_id" {
 }
 
 output "credentials_json" {
+  # A consumer embeds these credentials in a building block definition and can order a building
+  # block seconds later. Waiting here orders that consumer after the wait without it knowing.
+  depends_on = [time_sleep.wait_for_iam]
+
   description = "The JSON credentials for the backplane service account"
   value       = base64decode(google_service_account_key.backplane.private_key)
   sensitive   = true

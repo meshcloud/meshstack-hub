@@ -14,3 +14,9 @@ variable "backplane_service_account_name" {
   description = "The name of the service account to be created for the backplane"
   default     = "building-block-budget-alert"
 }
+
+variable "iam_propagation_delay_seconds" {
+  type        = number
+  description = "Seconds to wait after granting the building block's IAM roles before publishing its credentials. GCP IAM is eventually consistent, and billing-account grants are among the slower ones. Set to 0 if the backplane is always provisioned well before any building block run."
+  default     = 180
+}
