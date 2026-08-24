@@ -8,6 +8,15 @@ variable "gcp_backplane_project_id" {
   description = "GCP project ID hosting the backplane service account and the Cloud Monitoring notification channels the budget alerts are delivered through."
 }
 
+variable "workload_identity" {
+  type = object({
+    pool_identifier         = optional(string, "meshstack-building-block-pool")
+    subject_token_file_path = optional(string, "/var/run/secrets/workload-identity/gcp/token")
+  })
+  default     = {}
+  description = "Workload identity federation settings for GCP authentication. GCP soft-deletes a workload identity pool for ~30 days and refuses to reissue its id in that window, so a backplane that has to be recreated needs a fresh pool_identifier."
+}
+
 variable "default_alert_thresholds_yaml" {
   type        = string
   description = "Default alert thresholds offered to application teams, as a YAML list of objects with 'percent' and 'basis' (ACTUAL or FORECASTED) fields."
@@ -51,11 +60,25 @@ output "building_block_definition" {
   }
 }
 
+# The building block runners share the OIDC issuer and audience of meshStack integrations, so the
+# federation settings are read from meshStack rather than hardcoded.
+data "meshstack_integrations" "integrations" {}
+
 module "backplane" {
   source = "github.com/meshcloud/meshstack-hub//modules/gcp/budget-alert/backplane?ref=${var.hub.git_ref}"
 
   backplane_project_id = var.gcp_backplane_project_id
   billing_account_id   = var.gcp_billing_account_id
+
+  workload_identity_federation = {
+    workload_identity_pool_identifier = var.workload_identity.pool_identifier
+    audience                          = data.meshstack_integrations.integrations.workload_identity_federation.replicator.gcp.audience
+    issuer                            = data.meshstack_integrations.integrations.workload_identity_federation.replicator.issuer
+    subjects = [
+      "${trimsuffix(data.meshstack_integrations.integrations.workload_identity_federation.replicator.subject, ":replicator")}:workspace.${var.meshstack.owning_workspace_identifier}.buildingblockdefinition"
+    ]
+    subject_token_file_path = var.workload_identity.subject_token_file_path
+  }
 }
 
 resource "meshstack_building_block_definition" "this" {

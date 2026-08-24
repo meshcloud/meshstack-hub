@@ -41,6 +41,12 @@ module "gcp_budget_alert" {
 
   gcp_backplane_project_id = var.test_context.fixtures.gcp.project_id
   gcp_billing_account_id   = var.test_context.fixtures.gcp.billing_account_id
+
+  # GCP soft-deletes workload identity pools for ~30 days and refuses to reissue their ids in that
+  # window, so a fixed pool id makes every rerun fail.
+  workload_identity = {
+    pool_identifier = "hub-e2e-budget-${var.test_context.name_suffix}"
+  }
 }
 
 locals {
