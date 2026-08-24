@@ -414,6 +414,10 @@ the diagram checklist.
 
 Modules that can be smoke-tested against a live meshStack instance should include an `e2e/` directory alongside the module root.
 
+An `e2e/` module takes every environment fact from `var.test_context` and **never from the
+environment** — only secrets arrive as scalar `TF_VAR_*`. A `TF_VAR_` fixture has to be wired in the
+harness repo as well, which is a second place for it to go missing.
+
 See [.agents/skills/e2e-test/SKILL.md](.agents/skills/e2e-test/SKILL.md) (the `e2e-test` skill) for the full e2e testing conventions, including the `e2e/` structure, `test_context` wiring, `e2e/main.tf` and `*.tftest.hcl` conventions, the new-test checklist, and how to run and debug tests via the smoke-test runner.
 
 <!-- scorecard-checks: no_buildingblock_tftest -->
