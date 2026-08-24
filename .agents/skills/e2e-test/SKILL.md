@@ -172,6 +172,44 @@ resource "meshstack_building_block" "this" {
 }
 ```
 
+### Isolating a shared mutable fixture
+
+Some building blocks provision *into* a long-lived fixture rather than creating something disposable
+— `meshstack/github-workflow`, for instance, has its backplane commit workflow files into a fixture
+GitHub repository. Exercising the backplane honestly means those writes really happen, so pointing
+them at the fixture's main line rewrites shared history on every run. That is tolerable nightly and
+not tolerable hourly.
+
+Give each case its **own ephemeral slice of the fixture**, created and destroyed by the e2e module:
+
+```hcl
+resource "github_branch" "ephemeral" {
+  repository    = local.github_repository_name
+  branch        = "e2e/github-workflow-${local.execution_mode}-${var.test_context.name_suffix}"
+  source_branch = var.test_context.fixtures.github.branch # base branch to fork from
+}
+```
+
+- **Own it in the `e2e/` module, not the backplane.** A real platform team wants its workflows on a
+  durable branch it chose; ephemerality is a property of the test. Keeping it here also means no new
+  fixture inputs — reuse the credentials the module under test already receives — and it works in
+  foundation mode too.
+- **Name it from `name_suffix` plus any variant discriminator.** `name_suffix` is a fresh timestamp
+  per run, so a leaked slice can never block a later run, and the name says which run and which case
+  leaked it.
+- **Make teardown ordered.** Add the fixture slice to the building block's `depends_on`: the delete
+  run needs the destroy workflow to still be there, and OpenTofu would otherwise be free to delete
+  the branch in parallel with the delete run.
+- **Accept the leak.** `tofu test` destroys even on failure, but a hard kill (cancelled job, dead
+  runner) leaves the slice behind, and nothing reclaims it. That is a deliberate trade: an orphaned
+  git ref is cheap and attributable, unlike an orphaned cloud resource. Say so rather than implying
+  cleanup is guaranteed.
+
+A useful fact if the fixture is a GitHub repository: a workflow **can** be dispatched on a
+non-default branch even though the file is absent from the default branch, and the run executes that
+branch's copy. `GET /actions/workflows` stays empty in that state, which makes it look unregistered —
+it is not. So no stub workflow on the default branch is needed.
+
 ### Workspace-level vs tenant-level `target_ref`
 
 ```hcl
@@ -394,3 +432,4 @@ source setup-override-provider.sh
 - [ ] tftest asserts `status.status == "SUCCEEDED"` and key outputs (references `var.test_context.*` directly — non-null in both modes)
 - [ ] Variant flags (sync/async and similar) are **root variables of the `e2e/` module** with a default, not `test_context` fields
 - [ ] One `.tftest.hcl` file per variant, pinning the flag in a file-level `variables` block — never several `run` blocks sharing one file's state
+- [ ] Writes into a long-lived shared fixture go to a per-run ephemeral slice named from `name_suffix`, owned by the `e2e/` module and included in the building block's `depends_on`
