@@ -1,62 +1,40 @@
 data "azurerm_subscription" "current" {}
 
-data "azurerm_client_config" "current" {}
-
 # -----------------------------------------------------------------------------
-# Service Principal for Building Block Deployment
+# Automation principal for building block deployment
+#
+# A User-Assigned Managed Identity rather than an app registration: it needs no Entra
+# Application.ReadWrite.All to create, it federates with meshStack's replicator out of the box, and
+# it produces no secret to rotate. See ../../../../.agents/references/azure-backplane.md.
 # -----------------------------------------------------------------------------
 
-resource "azuread_application" "buildingblock_deploy" {
-  count = var.create_service_principal_name != null ? 1 : 0
-
-  display_name = "${var.name}-${var.create_service_principal_name}"
-
-  # Without an explicit owner the provider sends an empty owner list, which drops the creator that
-  # Entra would otherwise record. Application.ReadWrite.OwnedBy then covers none of this app, so a
-  # deployer holding only that role can create the application but neither add a service principal
-  # to it nor delete it. The buildingblock tier already defaults owners the same way.
-  owners = [data.azurerm_client_config.current.object_id]
-
-  required_resource_access {
-    resource_app_id = "00000003-0000-0000-c000-000000000000" # Microsoft Graph
-
-    resource_access {
-      id   = "18a4783c-866b-4cc7-a460-3d5e5662c884" # Application.ReadWrite.OwnedBy
-      type = "Role"
-    }
-  }
+resource "azurerm_resource_group" "buildingblock_deploy" {
+  name     = var.name
+  location = var.location
 }
 
-resource "azuread_service_principal" "buildingblock_deploy" {
-  count = var.create_service_principal_name != null ? 1 : 0
-
-  client_id                    = azuread_application.buildingblock_deploy[0].client_id
-  app_role_assignment_required = false
-  owners                       = [data.azurerm_client_config.current.object_id]
+resource "azurerm_user_assigned_identity" "buildingblock_deploy" {
+  name                = var.name
+  location            = var.location
+  resource_group_name = azurerm_resource_group.buildingblock_deploy.name
 }
 
-resource "azuread_application_federated_identity_credential" "buildingblock_deploy" {
-  count = var.create_service_principal_name != null && var.workload_identity_federation != null ? 1 : 0
+resource "azurerm_federated_identity_credential" "buildingblock_deploy" {
+  for_each = { for i, s in var.workload_identity_federation.subjects : tostring(i) => s }
 
-  application_id = azuread_application.buildingblock_deploy[0].id
-  display_name   = var.create_service_principal_name
-  audiences      = ["api://AzureADTokenExchange"]
-  issuer         = var.workload_identity_federation.issuer
-  subject        = var.workload_identity_federation.subject
-}
-
-resource "azuread_application_password" "buildingblock_deploy" {
-  count = var.create_service_principal_name != null && var.workload_identity_federation == null ? 1 : 0
-
-  application_id = azuread_application.buildingblock_deploy[0].id
-  display_name   = "${var.create_service_principal_name}-password"
+  name                      = "subject-${each.key}"
+  user_assigned_identity_id = azurerm_user_assigned_identity.buildingblock_deploy.id
+  audience                  = ["api://AzureADTokenExchange"]
+  issuer                    = var.workload_identity_federation.issuer
+  subject                   = each.value
 }
 
 # -----------------------------------------------------------------------------
-# Microsoft Graph API Permissions
-# The service principal needs to create Azure AD applications and service principals.
-# We grant Application.ReadWrite.OwnedBy which allows creating apps and managing
-# apps that this service principal owns.
+# Microsoft Graph API permissions
+#
+# Application.ReadWrite.OwnedBy lets the identity create applications and service principals, and
+# fully manage the ones it owns. The building block records this identity as the owner of every
+# application it creates, so this grant covers the whole lifecycle including deletion.
 # -----------------------------------------------------------------------------
 
 data "azuread_service_principal" "msgraph" {
@@ -64,26 +42,14 @@ data "azuread_service_principal" "msgraph" {
 }
 
 resource "azuread_app_role_assignment" "msgraph_application_readwrite_ownedby" {
-  count = var.create_service_principal_name != null ? 1 : 0
-
   app_role_id         = data.azuread_service_principal.msgraph.app_role_ids["Application.ReadWrite.OwnedBy"]
-  principal_object_id = azuread_service_principal.buildingblock_deploy[0].object_id
-  resource_object_id  = data.azuread_service_principal.msgraph.object_id
-}
-
-# Grant the same permissions to existing principals
-resource "azuread_app_role_assignment" "msgraph_application_readwrite_ownedby_existing" {
-  for_each = var.existing_principal_ids
-
-  app_role_id         = data.azuread_service_principal.msgraph.app_role_ids["Application.ReadWrite.OwnedBy"]
-  principal_object_id = each.value
+  principal_object_id = azurerm_user_assigned_identity.buildingblock_deploy.principal_id
   resource_object_id  = data.azuread_service_principal.msgraph.object_id
 }
 
 # -----------------------------------------------------------------------------
-# Azure RBAC Role Definition and Assignments
-# The service principal needs to assign roles to created service principals
-# on target subscriptions.
+# Azure RBAC role definition and assignment
+# The identity needs to assign roles to the service principals the building block creates.
 # -----------------------------------------------------------------------------
 
 resource "azurerm_role_definition" "buildingblock_deploy" {
@@ -108,18 +74,8 @@ resource "azurerm_role_definition" "buildingblock_deploy" {
   assignable_scopes = [var.scope]
 }
 
-resource "azurerm_role_assignment" "existing_principals" {
-  for_each = var.existing_principal_ids
-
+resource "azurerm_role_assignment" "buildingblock_deploy" {
   role_definition_id = azurerm_role_definition.buildingblock_deploy.role_definition_resource_id
-  principal_id       = each.value
-  scope              = var.scope
-}
-
-resource "azurerm_role_assignment" "created_principal" {
-  count = var.create_service_principal_name != null ? 1 : 0
-
-  role_definition_id = azurerm_role_definition.buildingblock_deploy.role_definition_resource_id
-  principal_id       = azuread_service_principal.buildingblock_deploy[0].object_id
+  principal_id       = azurerm_user_assigned_identity.buildingblock_deploy.principal_id
   scope              = var.scope
 }

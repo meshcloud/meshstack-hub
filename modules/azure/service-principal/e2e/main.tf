@@ -45,6 +45,7 @@ module "service_principal" {
   azure_tenant_id       = var.test_context.fixtures.azure.entra_tenant_id
   azure_subscription_id = var.test_context.fixtures.azure.subscription_uuid
   azure_scope           = local.azure_scope
+  azure_location        = "westeurope"
 
   backplane_name = local.backplane_name
 }
