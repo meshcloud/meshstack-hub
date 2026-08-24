@@ -27,15 +27,11 @@ optional with a `google_service_account_key` fallback:
   other role, because `roles/iam.serviceAccountAdmin` does **not** include
   `iam.serviceAccountKeys.create`. Federation needs strictly fewer privileges.
 - Supporting both doubles the module: a `count` on every federation resource, a conditional
-  `credentials_json`, and two sets of required roles to document. `modules/gcp/budget-alert/backplane`
-  carried exactly that and was simplified down to the federated path alone.
+  `credentials_json`, and two sets of required roles to document.
 
 This is also what the platform tier next door already asks for: `modules/gcp/meshstack_integration.tf`
 configures the GCP meshPlatform with `service_account_keys = false # Use only workload identity
 federation`. A backplane that mints a key contradicts the platform it runs on.
-
-`modules/gcp/storage-bucket/backplane` still has the optional-WIF shape with a key fallback. It is
-the remaining exception, not a pattern to copy — fix it the next time you are in that module.
 
 <!-- scorecard-checks: gcp_uses_wif, gcp_wif_attribute_condition, gcp_workload_identity_user_binding, gcp_no_sa_key -->
 ## Implementation Pattern (workload identity federation)
