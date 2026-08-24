@@ -19,14 +19,32 @@ locals {
   }
 }
 
-data "azuread_user" "by_upn" {
-  for_each            = var.user_lookup_attribute == "upn" ? local.unique_user_euids : toset([])
-  user_principal_name = each.value
+# One bulk lookup with ignore_missing, rather than a data source per member: a project member who
+# has no object in the directory (external collaborator, service account, a guest that was never
+# invited) must not fail the whole building block. Unresolved members are reported through the
+# unresolved_users output and the run summary instead of aborting the run.
+data "azuread_users" "members" {
+  count = length(local.unique_user_euids) > 0 ? 1 : 0
+
+  ignore_missing = true
+
+  mails                = var.user_lookup_attribute == "email" ? sort(tolist(local.unique_user_euids)) : null
+  user_principal_names = var.user_lookup_attribute == "upn" ? sort(tolist(local.unique_user_euids)) : null
 }
 
-data "azuread_user" "by_email" {
-  for_each = var.user_lookup_attribute == "email" ? local.unique_user_euids : toset([])
-  mail     = each.value
+locals {
+  lookup_values = {
+    for u in try(data.azuread_users.members[0].users, []) :
+    lower(coalesce(var.user_lookup_attribute == "email" ? u.mail : u.user_principal_name, "")) => u.object_id
+    if coalesce(var.user_lookup_attribute == "email" ? u.mail : u.user_principal_name, "") != ""
+  }
+
+  # Directory lookups are case-insensitive, so match on a lowercased key to avoid treating a
+  # member whose meshStack euid differs only in case from the directory value as unresolved.
+  unresolved_user_euids = sort([
+    for euid in local.unique_user_euids : euid
+    if !contains(keys(local.lookup_values), lower(euid))
+  ])
 }
 
 resource "azuread_group" "project_role" {
@@ -39,8 +57,11 @@ resource "azuread_group" "project_role" {
 }
 
 resource "azuread_group_member" "project_role" {
-  for_each = local.user_role_assignments
+  for_each = {
+    for key, assignment in local.user_role_assignments : key => assignment
+    if contains(keys(local.lookup_values), lower(assignment.euid))
+  }
 
   group_object_id  = azuread_group.project_role[each.value.role].object_id
-  member_object_id = var.user_lookup_attribute == "upn" ? data.azuread_user.by_upn[each.value.euid].object_id : data.azuread_user.by_email[each.value.euid].object_id
+  member_object_id = local.lookup_values[lower(each.value.euid)]
 }
