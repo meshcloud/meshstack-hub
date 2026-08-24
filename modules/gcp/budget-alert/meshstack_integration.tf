@@ -235,9 +235,11 @@ resource "meshstack_building_block_definition" "this" {
         assignment_type = "USER_INPUT"
         display_name    = "Alert Thresholds"
         description     = "YAML list of alert thresholds, each with a 'percent' and a 'basis' of ACTUAL or FORECASTED."
-        # CODE values are parsed by the runner, so a YAML document has to be encoded twice to arrive
-        # as the string the building block expects.
-        default_value = jsonencode(jsonencode(var.default_alert_thresholds_yaml))
+        # A CODE value reaches Terraform verbatim; the receiving variable's type decides whether it
+        # is then parsed as HCL. alert_thresholds_yaml is a string, so the raw YAML document is what
+        # has to be sent. Encoding it twice delivers the quotes as literal characters and yamldecode
+        # hands back one string instead of a list.
+        default_value = jsonencode(var.default_alert_thresholds_yaml)
       }
     }
 
