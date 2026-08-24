@@ -87,6 +87,30 @@ terraform {
 }
 ```
 
+<!-- scorecard-checks: bbd_terraform_version_floor -->
+### Runtime version (`terraform_version`)
+
+`version_spec.implementation.terraform.terraform_version` selects the binary the building block
+runner downloads and executes. Despite the name it is **not always Terraform**: the runner routes
+`<= 1.5.5` to a HashiCorp Terraform release and anything **above 1.5.5 to the matching OpenTofu
+release**. Every hub module is therefore an OpenTofu module, and any published OpenTofu version is
+selectable — meshStack applies no allow-list and has no default (the field is required).
+
+**Pin `1.12.5` in new modules.** Two reasons not to go lower:
+
+- OpenTofu only started short-circuiting `&&` and `||` in **1.10.0**. Below that, a guard like
+  `var.x == null || var.x.attr == "y"` evaluates the right operand against a `null` and faults at
+  run time. `tofu validate`, `tofu fmt` and the scorecard all miss this — only a real building
+  block run surfaces it.
+- 1.12.x matches the OpenTofu the repo's own toolchain provides, so `tofu test` locally exercises
+  the same engine a building block run will.
+
+The meshStack panel prefills `1.9.0` when you create a definition through the UI. Do not carry that
+value into a hub module.
+
+The scorecard enforces a floor of `1.12.0` rather than an exact value, and reports `➖` for the
+`manual` and `github_workflows` implementation types, where the field does not exist.
+
 <!-- scorecard-checks: variable_hub, variable_meshstack, bbd_draft, bbd_tags_forwarded, bbd_inputs_explicit_defaults -->
 ### Shared Variable Conventions
 

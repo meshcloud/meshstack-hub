@@ -92,7 +92,7 @@ resource "meshstack_building_block_definition" "this" {
         ref_name          = var.hub.git_ref
         repository_path   = "modules/meshstack/noop/buildingblock"
         repository_url    = "https://github.com/meshcloud/meshstack-hub.git"
-        terraform_version = "1.11.0"
+        terraform_version = "1.12.5"
         pre_run_script    = file("${path.module}/buildingblock/prerun.sh")
       }
     }

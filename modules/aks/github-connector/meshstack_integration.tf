@@ -113,7 +113,7 @@ EOT
     implementation = {
       terraform = {
         repository_url                 = "https://github.com/meshcloud/meshstack-hub.git"
-        terraform_version              = "1.9.0"
+        terraform_version              = "1.12.5"
         async                          = false
         ref_name                       = var.hub.git_ref
         repository_path                = "modules/aks/github-connector/buildingblock"
