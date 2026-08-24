@@ -254,6 +254,12 @@ resource "meshstack_building_block_definition" "this" {
         description     = "The name of the role assigned to the service principal."
         assignment_type = "NONE"
       }
+      role_assignment_id = {
+        type            = "STRING"
+        display_name    = "Role Assignment ID"
+        description     = "Resource ID of the Azure RBAC role assignment created for the service principal."
+        assignment_type = "NONE"
+      }
       secret_expiration_date = {
         type            = "STRING"
         display_name    = "Secret Expiration Date"
