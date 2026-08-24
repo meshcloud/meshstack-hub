@@ -184,7 +184,7 @@ resource "meshstack_building_block_definition" "this" {
         display_name    = "Group Name Prefix"
         description     = "Optional prefix prepended to all group display names (e.g. 'plat'). Leave empty to omit."
         assignment_type = "USER_INPUT"
-        argument        = jsonencode("")
+        default_value   = jsonencode("")
       }
       workspace_identifier = {
         type            = "STRING"
@@ -203,14 +203,14 @@ resource "meshstack_building_block_definition" "this" {
         display_name    = "Project Roles"
         description     = "Comma-separated list of project role name suffixes. One Entra group is created per role. Defaults to the three standard meshStack roles."
         assignment_type = "USER_INPUT"
-        argument        = jsonencode("admin,user,reader")
+        default_value   = jsonencode("admin,user,reader")
       }
       administrative_unit_id = {
         type            = "STRING"
         display_name    = "Administrative Unit ID"
         description     = "Object ID of the Entra Administrative Unit to add the groups to. Leave empty to skip AU membership."
         assignment_type = "USER_INPUT"
-        argument        = jsonencode("")
+        default_value   = jsonencode("")
       }
       user_lookup_attribute = {
         type            = "STRING"

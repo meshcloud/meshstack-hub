@@ -178,7 +178,7 @@ resource "meshstack_building_block_definition" "this" {
         display_name    = "Description"
         description     = "Description for the Azure AD application."
         assignment_type = "USER_INPUT"
-        argument        = jsonencode("Service principal managed by meshStack")
+        default_value   = jsonencode("Service principal managed by meshStack")
       }
       azure_subscription_id = {
         type            = "STRING"
@@ -192,21 +192,21 @@ resource "meshstack_building_block_definition" "this" {
         display_name    = "Azure Role"
         description     = "Azure RBAC built-in role to assign (e.g., 'Contributor', 'Reader'). Leave empty if using a custom role."
         assignment_type = "USER_INPUT"
-        argument        = jsonencode("Contributor")
+        default_value   = jsonencode("Contributor")
       }
       create_client_secret = {
         type            = "BOOLEAN"
         display_name    = "Create Client Secret"
         description     = "Whether to create a client secret for the service principal."
         assignment_type = "USER_INPUT"
-        argument        = jsonencode(true)
+        default_value   = jsonencode(true)
       }
       secret_rotation_days = {
         type            = "INTEGER"
         display_name    = "Secret Rotation Days"
         description     = "Number of days before the client secret expires (30-730 days)."
         assignment_type = "USER_INPUT"
-        argument        = jsonencode(90)
+        default_value   = jsonencode(90)
       }
     }
 
