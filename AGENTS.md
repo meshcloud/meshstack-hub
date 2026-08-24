@@ -424,6 +424,14 @@ anywhere else: CI runs `pre-commit run --all-files` — `terraform-docs`, `terra
 trailing whitespace and `ci/validate_modules.sh` — and the scorecard's Testing category scores
 `e2e/` coverage exclusively.
 
+The reason is narrower than it looks: nothing in CI runs `tofu init`, so nothing can run `tofu test`
+either. A future change could lift that — the `.#github_actions` nix devshell already ships
+OpenTofu, and a `local` pre-commit hook would run building-block unit tests inside the existing
+build job with no new workflow and no credentials. Measured cost is the provider download: about 9
+seconds cold for two Azure modules, dominated by azurerm. Until someone takes that on, the rule
+below stands. The same missing `tofu init` is why nothing catches a module that no longer parses
+against a new major provider version, which is a bigger prize than the tests.
+
 **Do not add a `*.tftest.hcl` under `buildingblock/`.** Nothing will execute it, so it rots
 unnoticed. Of the files that predate the `e2e/` suite, an audit found 20 of 21 could no longer
 run at all, and 7 had never been runnable in the first place because their `variables` blocks
@@ -435,6 +443,14 @@ the `e2e/` suites have not caught up with yet. The `no_buildingblock_tftest` sco
 flags each one as migration debt rather than failing the build. **Migrate, do not delete:** fold a
 file's coverage into the module's `e2e/` suite first, then remove it. Deleting one outright is
 only correct when an `e2e/` test already covers the same ground as well or better.
+
+Migrating does not always mean keeping the runs. Check each one against two bars: is the behaviour
+worth testing, and can the live apply not reach it? Where the apply can reach it, **add an assertion
+to the apply** — it runs against real infrastructure and is worth more than a mock. Where it cannot,
+the run belongs in a mocked `e2e/tests/<cloud>_<service>_unit.tftest.hcl` targeting
+`module { source = "../buildingblock" }`; see the `e2e-test` skill. Runs that clear neither bar —
+variable validation, or anything reachable only through an input the building block definition does
+not expose — are dropped, with the reasoning recorded in the commit.
 
 ---
 
