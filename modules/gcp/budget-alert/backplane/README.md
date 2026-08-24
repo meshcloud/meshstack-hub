@@ -4,20 +4,12 @@ This building block requires access to the organization's billing account and a 
 
 ### Authentication
 
-The building block authenticates by **workload identity federation** — the only credential path this
-backplane offers, so `workload_identity_federation` is required. The backplane creates a workload
-identity pool and provider alongside the service account, grants the pool
-`roles/iam.workloadIdentityUser` on it, and exports `credentials_json` as an
-[external account](https://cloud.google.com/iam/docs/workload-identity-federation) document. No
-long-lived secret exists anywhere in the module. `issuer`, `audience` and `subjects` must come from
-`data.meshstack_integrations` — see `meshstack_integration.tf`.
-
-There is deliberately no service account key fallback. A key is a long-lived credential to rotate,
-revoke and protect, and minting one costs the applying identity `roles/iam.serviceAccountKeyAdmin`
-on top of the roles below, because `roles/iam.serviceAccountAdmin` does **not** include
-`iam.serviceAccountKeys.create`. Federation needs strictly fewer privileges and leaves nothing to
-leak — the same reason `modules/azure/` requires a UAMI with a federated credential and forbids
-client secrets.
+The building block authenticates by **workload identity federation**; `workload_identity_federation`
+is required. The backplane creates a workload identity pool and provider alongside the service
+account, grants the pool `roles/iam.workloadIdentityUser` on it, and exports `credentials_json` as an
+[external account](https://cloud.google.com/iam/docs/workload-identity-federation) document.
+`issuer`, `audience` and `subjects` must come from `data.meshstack_integrations` — see
+`meshstack_integration.tf`.
 
 GCP **soft-deletes** workload identity pools and providers for ~30 days and will not reissue their
 identifiers in that window. `workload_identity_pool_identifier` is an input for exactly that reason:
