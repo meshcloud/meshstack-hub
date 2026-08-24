@@ -1,5 +1,7 @@
 data "azurerm_subscription" "current" {}
 
+data "azurerm_client_config" "current" {}
+
 # -----------------------------------------------------------------------------
 # Service Principal for Building Block Deployment
 # -----------------------------------------------------------------------------
@@ -8,6 +10,12 @@ resource "azuread_application" "buildingblock_deploy" {
   count = var.create_service_principal_name != null ? 1 : 0
 
   display_name = "${var.name}-${var.create_service_principal_name}"
+
+  # Without an explicit owner the provider sends an empty owner list, which drops the creator that
+  # Entra would otherwise record. Application.ReadWrite.OwnedBy then covers none of this app, so a
+  # deployer holding only that role can create the application but neither add a service principal
+  # to it nor delete it. The buildingblock tier already defaults owners the same way.
+  owners = [data.azurerm_client_config.current.object_id]
 
   required_resource_access {
     resource_app_id = "00000003-0000-0000-c000-000000000000" # Microsoft Graph
@@ -24,6 +32,7 @@ resource "azuread_service_principal" "buildingblock_deploy" {
 
   client_id                    = azuread_application.buildingblock_deploy[0].client_id
   app_role_assignment_required = false
+  owners                       = [data.azurerm_client_config.current.object_id]
 }
 
 resource "azuread_application_federated_identity_credential" "buildingblock_deploy" {
