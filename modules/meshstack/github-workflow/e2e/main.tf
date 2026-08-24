@@ -13,13 +13,24 @@ variable "test_context" {
         app_private_key     = string
         repository          = string
         branch              = optional(string, "main")
-        apply_workflow      = optional(string, "apply.yml")
-        destroy_workflow    = optional(string)
-        async               = optional(bool, false)
       })
     })
   })
   nullable = false
+}
+
+# Variant selector. This is a root variable rather than a `test_context` field because it changes
+# the BBD implementation this module builds (sync vs async apply/destroy workflows), which makes it
+# a property of the test case, not of the environment the case runs in. Each `tests/*.tftest.hcl`
+# file pins it in a file-level `variables` block, so `tofu test` covers both variants in one run.
+variable "github_async" {
+  type        = bool
+  default     = false
+  description = "Exercise the async GitHub workflow variant (meshStack run-token callback) instead of the sync one."
+}
+
+locals {
+  execution_mode = var.github_async ? "async" : "sync"
 }
 
 module "github_workflow" {
@@ -31,9 +42,11 @@ module "github_workflow" {
   github_app_private_key     = var.test_context.fixtures.github.app_private_key
   github_repository          = var.test_context.fixtures.github.repository
   github_branch              = var.test_context.fixtures.github.branch
-  github_apply_workflow      = var.test_context.fixtures.github.apply_workflow
-  github_destroy_workflow    = try(var.test_context.fixtures.github.destroy_workflow, null)
-  github_async               = try(var.test_context.fixtures.github.async, false)
+  github_async               = var.github_async
+
+  # A non-null value opts the building block definition into destroy automation; the module itself
+  # picks the sync or async destroy workflow file based on `github_async`.
+  github_destroy_workflow = "destroy.yml"
 
   meshstack = {
     owning_workspace_identifier = var.test_context.workspace
@@ -44,10 +57,6 @@ module "github_workflow" {
     git_ref   = var.test_context.hub_git_ref
     bbd_draft = true
   }
-}
-
-locals {
-  execution_mode = try(var.test_context.fixtures.github.async, false) ? "async" : "sync"
 }
 
 resource "meshstack_building_block" "this" {

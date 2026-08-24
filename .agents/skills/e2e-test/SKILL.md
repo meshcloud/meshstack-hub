@@ -92,6 +92,12 @@ Conventions that keep this clean and correct:
   statically evaluated) in both modes.
 - **Cloud resource IDs live under `fixtures`** (e.g. `var.test_context.fixtures.stackit.project_id`),
   never as a flat top-level field.
+- **`test_context` describes the environment, not the test case.** A flag that selects *which variant
+  of the module under test to build* (e.g. a sync vs async implementation) does not belong in
+  `test_context` — it belongs in a **root variable of the `e2e/` module**, pinned per test file. See
+  [Covering several variants of one module](#covering-several-variants-of-one-module). Putting it in
+  `test_context` forces the variant to be chosen before `tofu test` starts, which pushes a
+  test-matrix concern out of the hub and into whatever invokes it.
 
 ### Provider authentication secrets
 
@@ -188,7 +194,8 @@ target_ref = {
 <!-- scorecard-checks: e2e_tftest -->
 ## `e2e/tests/*.tftest.hcl` conventions
 
-- Name the file `<cloud>_<service>_hub.tftest.hcl` (e.g. `building_block_noop_hub.tftest.hcl`).
+- Name the file `<cloud>_<service>_hub.tftest.hcl` (e.g. `building_block_noop_hub.tftest.hcl`), or
+  `<cloud>_<service>_<variant>_hub.tftest.hcl` when a module has several variants.
 - Always assert `status.status == "SUCCEEDED"` as the first check.
 - Assert meaningful output values (URLs, strings, booleans) to validate the building block executed
   correctly. Every output `value` is a `jsonencode`d string — read it with
@@ -198,6 +205,57 @@ target_ref = {
   null in foundation mode and would crash the assertion.
 - Use `file("${path.root}/tests/<name>.expected.*")` for large expected values (JSON, Markdown) to
   keep assertions readable.
+
+### Covering several variants of one module
+
+Some modules build a materially different building block definition depending on an input — for
+example `meshstack/github-workflow`, whose `github_async` flag swaps the apply and destroy workflows
+and the declared outputs. Model each variant as **its own test file**, selected by a **root variable
+of the `e2e/` module** with a safe default:
+
+```hcl
+# e2e/main.tf — the variant is a root variable, not a test_context field
+variable "github_async" {
+  type        = bool
+  default     = false
+  description = "Exercise the async variant instead of the sync one."
+}
+```
+
+```hcl
+# e2e/tests/meshstack_github_workflow_async_hub.tftest.hcl
+variables {
+  github_async = true
+}
+
+run "meshstack_github_workflow_async_hub" {
+  # assertions specific to this variant — no need to guard them on the variant flag
+}
+```
+
+Whatever runs the tests needs no per-variant plumbing: a single `tofu test` invocation picks up
+every `*.tftest.hcl` file, so one job covers all variants.
+
+**Use separate files, not several `run` blocks in one file.** The two are not interchangeable:
+
+| | Two test files | Two `run` blocks in one file |
+|---|---|---|
+| State | One per file | Shared across runs |
+| Teardown | End of each file, before the next starts | Once, at end of file |
+| Resource lifecycle | Fresh create → assert → destroy per variant | Variant 2 **updates variant 1's objects in place** |
+
+Sharing state across `run` blocks is wrong for building blocks specifically, and not just untidy.
+`meshstack_building_block` applies a `display_name` change as an in-place rename that **does not
+trigger a building block run**, and a `building_block_definition_version_ref` change as an **in-place
+upgrade** that the backend only accepts towards the latest *released* version. Since e2e definitions
+are built as drafts (`bbd_draft = true`), a second `run` block would either silently assert against
+the first variant's run or be rejected outright — never provision the second variant cleanly.
+
+Separate files also **serialize the variants for free**: `tofu test` executes test files sequentially
+and destroys each file's resources before starting the next. Variants that contend for the same
+external resource (the same workflow files in a fixture repository, say) therefore cannot race, with
+no external locking or concurrency group needed. Verify assumptions like this against the OpenTofu
+version in use rather than trusting them.
 
 ---
 
@@ -334,3 +392,5 @@ source setup-override-provider.sh
 - [ ] `meshstack_building_block` has `depends_on = [module.<integration_module>]` to prevent WIF teardown race (delete run must finish before backplane resources are destroyed)
 - [ ] `meshstack_building_block` has `wait_for_completion = true`
 - [ ] tftest asserts `status.status == "SUCCEEDED"` and key outputs (references `var.test_context.*` directly — non-null in both modes)
+- [ ] Variant flags (sync/async and similar) are **root variables of the `e2e/` module** with a default, not `test_context` fields
+- [ ] One `.tftest.hcl` file per variant, pinning the flag in a file-level `variables` block — never several `run` blocks sharing one file's state
