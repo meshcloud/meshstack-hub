@@ -220,6 +220,12 @@ resource "meshstack_building_block_definition" "this" {
         description     = "The configured monthly budget amount."
         assignment_type = "NONE"
       }
+      summary = {
+        type            = "STRING"
+        display_name    = "Summary"
+        description     = "A markdown summary of the created budget, including the alert recipients."
+        assignment_type = "SUMMARY"
+      }
     }
   }
 }
