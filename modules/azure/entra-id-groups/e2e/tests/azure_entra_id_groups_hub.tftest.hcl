@@ -40,13 +40,16 @@ run "azure_entra_id_groups_hub" {
     error_message = "expected every project member to resolve by email, but unresolved_users was ${meshstack_building_block.this.status.outputs["unresolved_users"].value}"
   }
 
-  # The summary is what a platform team reads after a run; assert the groups table rendered and that
-  # no unresolved-members warning was emitted.
+  # The summary is what a platform team reads after a run; assert the groups table rendered, that no
+  # unresolved-members warning was emitted, and that memberships were actually assigned. Without the
+  # last one the run still passes when project_roles matches none of the members' roles, which
+  # creates the groups but leaves every one of them empty.
   assert {
     condition = alltrue([
       can(regex("Entra ID Groups", meshstack_building_block.this.status.outputs["summary"].value)),
       !can(regex("Unresolved members", meshstack_building_block.this.status.outputs["summary"].value)),
+      can(regex("[1-9][0-9]* group membership", meshstack_building_block.this.status.outputs["summary"].value)),
     ])
-    error_message = "expected the summary to render the group table without an unresolved-members warning, got ${meshstack_building_block.this.status.outputs["summary"].value}"
+    error_message = "expected the summary to render the group table with at least one membership assigned and no unresolved-members warning, got ${meshstack_building_block.this.status.outputs["summary"].value}"
   }
 }
