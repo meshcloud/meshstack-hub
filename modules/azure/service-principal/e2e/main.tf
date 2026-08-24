@@ -68,6 +68,13 @@ resource "meshstack_building_block" "this" {
 
     inputs = {
       display_name = { value = jsonencode(local.application_display_name) }
+
+      # Set explicitly rather than relying on the BBD's default_value: the buildingblock defaults
+      # azure_role to null, so if a default_value is only a form pre-fill and is not applied when
+      # ordering through the API, no role assignment happens and the role_name assertion below
+      # would be testing the default rather than the role assignment path.
+      azure_role           = { value = jsonencode("Contributor") }
+      create_client_secret = { value = jsonencode(true) }
     }
   }
 }
