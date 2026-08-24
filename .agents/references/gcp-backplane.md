@@ -1,5 +1,5 @@
 ---
-description: GCP backplane conventions for meshstack-hub modules under modules/gcp/. Covers the workload identity federation pattern (pool + provider + service account), project API enablement with disable_on_destroy = false, required permissions for the applying identity, the workload identity pool soft-delete constraint, and the GCP backplane checklist.
+description: GCP backplane identity conventions for meshstack-hub modules under modules/gcp/. Covers the mandatory workload identity federation pattern (pool + provider + service account), why there is no service account key path, project API enablement with disable_on_destroy = false, required permissions for the applying identity, the workload identity pool soft-delete constraint, and the GCP backplane checklist.
 ---
 
 # GCP Backplane Conventions
@@ -9,22 +9,31 @@ building block depends on, creates the **service account** the building block ru
 service account its roles, and — on the workload identity path — creates the **workload identity
 pool and provider** that let the meshStack building block runner federate into it.
 
-> **Status: partly unsettled.** Only two GCP backplanes exist today —
-> `modules/gcp/storage-bucket/backplane` (workload identity federation, with a service account key
-> fallback) and `modules/gcp/budget-alert/backplane` (service account key only). Where they agree,
-> this document states a convention. Where they disagree it says so explicitly rather than
-> retrofitting a rule onto one of them.
+## Authentication: workload identity federation, and nothing else
 
-## Authentication: prefer workload identity federation
+A GCP backplane **must** authenticate the building block by **workload identity federation**. This
+matches what the other providers already require of their backplanes — Azure a UAMI with a federated
+identity credential and no client secrets, STACKIT a service account with a federated identity
+provider and no `stackit_service_account_key` — and it is enforced the same way, by scorecard checks
+rather than by review.
 
-New GCP backplanes should use **workload identity federation**, matching Azure (UAMI + federated
-credential) and STACKIT (service account + federated identity provider). Service account keys are
-long-lived secrets that have to be rotated, revoked and protected.
+`workload_identity_federation` is therefore a **required, non-nullable** input. Do not make it
+optional with a `google_service_account_key` fallback:
 
-`modules/gcp/budget-alert/backplane` still issues a `google_service_account_key`. Treat that as
-legacy, not as the pattern to copy.
+- A key is a long-lived secret that has to be rotated, revoked, protected in transit, and kept out
+  of state dumps and logs. A federated credential is a pointer to the runner's own token file and
+  carries nothing worth stealing.
+- The key path costs the *applying* identity `roles/iam.serviceAccountKeyAdmin` on top of every
+  other role, because `roles/iam.serviceAccountAdmin` does **not** include
+  `iam.serviceAccountKeys.create`. Federation needs strictly fewer privileges.
+- Supporting both doubles the module: a `count` on every federation resource, a conditional
+  `credentials_json`, and two sets of required roles to document. `modules/gcp/budget-alert/backplane`
+  carried exactly that and was simplified down to the federated path alone.
 
-<!-- The WIF pattern below is implemented in modules/gcp/storage-bucket/backplane. -->
+`modules/gcp/storage-bucket/backplane` still has the optional-WIF shape with a key fallback. It is
+the remaining exception, not a pattern to copy — fix it the next time you are in that module.
+
+<!-- scorecard-checks: gcp_uses_wif, gcp_wif_attribute_condition, gcp_workload_identity_user_binding, gcp_no_sa_key -->
 ## Implementation Pattern (workload identity federation)
 
 ```hcl
@@ -81,6 +90,7 @@ The backplane's `credentials_json` output is then an
 document (`type = "external_account"`) pointing at the runner's token file, passed to the building
 block as a `FILE` input with `GOOGLE_APPLICATION_CREDENTIALS` set to its path.
 
+<!-- scorecard-checks: gcp_project_service_disable_on_destroy -->
 ## Project API enablement
 
 **A GCP backplane must enable the APIs its building block depends on.** A project that has never
@@ -153,10 +163,14 @@ requires it — so it must be granted out of band before the first apply, as mus
 API itself.
 
 Do **not** grant `roles/serviceusage.serviceUsageAdmin` to the *building block's* service account
-unless the building block itself enables services. `modules/gcp/budget-alert/backplane` does grant
-it, and its building block never calls serviceusage, so that grant is dead privilege rather than a
-pattern to copy.
+unless the building block itself enables services. A building block that never calls serviceusage
+and holds the role anyway is dead privilege: it lets a tenant-facing identity enable arbitrary APIs
+on the project for no benefit.
 
+`roles/iam.serviceAccountKeyAdmin` is deliberately absent from the table — nothing in a GCP backplane
+mints a key, and the role exists only on the path this document forbids.
+
+<!-- scorecard-checks: gcp_iam_propagation_wait -->
 ## IAM is eventually consistent — make the credentials wait
 
 A backplane that grants a role and publishes credentials in the same apply is publishing credentials
@@ -215,6 +229,7 @@ their identifiers cannot be claimed again — the Terraform provider does not un
   project's workload identity pool limit.
 - Note the constraint in `backplane/README.md`.
 
+<!-- scorecard-checks: gcp_no_provider_block -->
 ## No provider block in the backplane
 
 `backplane/` must not contain a `provider "google"` block; the caller supplies the provider. A module
@@ -223,6 +238,7 @@ whose tree contains a provider configuration is a *legacy module* that callers m
 build-from-source path. Because of that, **every resource sets `project = var.project_id`
 explicitly** rather than inheriting a provider-level default project.
 
+<!-- scorecard-checks: gcp_wif_nonnullable -->
 ## Backplane Variables (GCP)
 
 Naming is **not yet consistent** across the two existing modules: `storage-bucket` uses
@@ -249,17 +265,19 @@ variable "workload_identity_federation" {
     subjects                          = list(string)
     subject_token_file_path           = string
   })
-  default     = null # null falls back to a service account key
+  nullable    = false # required: there is no service account key fallback
   description = "Workload identity federation settings sourced from data.meshstack_integrations."
 }
 ```
 
+<!-- scorecard-checks: gcp_credentials_output -->
 ## Backplane Outputs (GCP)
 
 ```hcl
 output "credentials_json" {
-  sensitive = true
-  value     = <external_account document, or the decoded key on the legacy path>
+  depends_on = [time_sleep.wait_for_iam]
+  sensitive  = true
+  value      = <the external_account document>
 }
 
 output "service_account_email" {
@@ -274,7 +292,9 @@ Both existing modules expose these two. Do not add a `documentation_md` output �
 - ❌ `provider "google"` block inside `backplane/` — makes the module unusable with `count`/`depends_on`
 - ❌ Omitting `project` on a resource and relying on a provider default project
 - ❌ `google_project_service` without `disable_on_destroy = false`
-- ❌ `google_service_account_key` for new modules — use workload identity federation
+- ❌ `google_service_account_key` — use workload identity federation
+- ❌ Conditional WIF-vs-key logic: a nullable `workload_identity_federation` and a `count` on every
+  federation resource
 - ❌ Hardcoded `issuer`, `audience` or `subjects` — source them from `data.meshstack_integrations`
 - ❌ Hardcoded workload identity pool identifier — soft-delete makes it unreusable for ~30 days
 - ❌ Granting the building block's service account `roles/serviceusage.serviceUsageAdmin` when the
@@ -287,7 +307,9 @@ Both existing modules expose these two. Do not add a `documentation_md` output �
 - [ ] `google_project_service` covers the backplane's own APIs *and* the building block's run-time APIs
 - [ ] `google_project_service` sets `disable_on_destroy = false`
 - [ ] Resources needing an API carry `depends_on = [google_project_service.required]`
-- [ ] Workload identity pool + provider present (not a `google_service_account_key`) for new modules
+- [ ] Workload identity pool + provider present
+- [ ] No `google_service_account_key` anywhere in `backplane/`
+- [ ] `workload_identity_federation` is `nullable = false` — no key fallback, no `default = null`
 - [ ] `attribute_condition` restricts `google.subject` to the configured subjects
 - [ ] `google_service_account_iam_binding` grants `roles/iam.workloadIdentityUser` on the pool
 - [ ] Workload identity pool identifier is an input, not a hardcoded literal

@@ -56,6 +56,13 @@ const CATEGORIES = {
     appliesTo: (mod) =>
       mod.provider === "azure" && existsSync(join(mod.path, "backplane")),
   },
+  gcp_backplane: {
+    id: "gcp_backplane",
+    name: "GCP Backplane",
+    description: "GCP workload-identity-federation automation principal conventions",
+    appliesTo: (mod) =>
+      mod.provider === "gcp" && existsSync(join(mod.path, "backplane")),
+  },
   stackit_backplane: {
     id: "stackit_backplane",
     name: "STACKIT Backplane",
@@ -558,6 +565,164 @@ const detectors = [
     },
   },
 
+  // ─── GCP Backplane ──────────────────────────────────────────────────────
+  {
+    id: "gcp_uses_wif",
+    category: "gcp_backplane",
+    name: "Uses google_iam_workload_identity_pool + _provider",
+    emoji: "🔐",
+    fn: (mod) => {
+      const allTf = readAllBackplaneTf(mod);
+      if (!allTf) return { pass: false, detail: "no backplane tf files" };
+      const hasPool = /resource\s+"google_iam_workload_identity_pool"/.test(allTf);
+      const hasProvider = /resource\s+"google_iam_workload_identity_pool_provider"/.test(allTf);
+      return {
+        pass: hasPool && hasProvider,
+        detail: hasPool ? "pool present without a provider" : "no workload identity pool",
+      };
+    },
+  },
+  {
+    id: "gcp_no_sa_key",
+    category: "gcp_backplane",
+    name: "No google_service_account_key resource",
+    emoji: "🚫",
+    fn: (mod) => {
+      const allTf = readAllBackplaneTf(mod);
+      if (!allTf) return { pass: true, detail: "no backplane tf files" };
+      return {
+        pass: !/resource\s+"google_service_account_key"/.test(allTf),
+        detail: "google_service_account_key found — migrate to workload identity federation",
+      };
+    },
+  },
+  {
+    id: "gcp_wif_nonnullable",
+    category: "gcp_backplane",
+    name: "workload_identity_federation is non-nullable",
+    emoji: "⚡",
+    fn: (mod) => {
+      const varsTf = readBackplaneFile(mod, "variables.tf");
+      if (!varsTf) return { pass: false, detail: "no variables.tf" };
+      const wifVar = extractVariableBlocks(varsTf).get("workload_identity_federation");
+      if (!wifVar) return { pass: false, detail: "variable not found" };
+      const hasDefaultNull = /default\s*=\s*null/.test(wifVar);
+      return {
+        pass: /nullable\s*=\s*false/.test(wifVar) || !hasDefaultNull,
+        detail: hasDefaultNull
+          ? "default = null makes WIF optional — a service account key fallback is not a supported path"
+          : undefined,
+      };
+    },
+  },
+  {
+    id: "gcp_workload_identity_user_binding",
+    category: "gcp_backplane",
+    name: "Grants roles/iam.workloadIdentityUser on the service account",
+    emoji: "🪪",
+    fn: (mod) => {
+      const allTf = readAllBackplaneTf(mod);
+      if (!allTf) return { pass: false, detail: "no backplane tf files" };
+      const hasBinding = /resource\s+"google_service_account_iam_(binding|member)"/.test(allTf);
+      const hasRole = /roles\/iam\.workloadIdentityUser/.test(allTf);
+      return {
+        pass: hasBinding && hasRole,
+        detail: hasBinding
+          ? "service account IAM binding does not grant roles/iam.workloadIdentityUser"
+          : "no google_service_account_iam_binding for the pool",
+      };
+    },
+  },
+  {
+    id: "gcp_wif_attribute_condition",
+    category: "gcp_backplane",
+    name: "Pool provider restricts google.subject via attribute_condition",
+    emoji: "🛂",
+    fn: (mod) => {
+      const allTf = readAllBackplaneTf(mod);
+      if (!allTf) return { pass: false, detail: "no backplane tf files" };
+      const hasCondition = /attribute_condition\s*=/.test(allTf);
+      return {
+        pass: hasCondition && /google\.subject/.test(allTf),
+        detail: hasCondition
+          ? "attribute_condition does not constrain google.subject"
+          : "no attribute_condition — the pool provider accepts every subject the issuer signs",
+      };
+    },
+  },
+  {
+    id: "gcp_credentials_output",
+    category: "gcp_backplane",
+    name: "Outputs credentials_json (sensitive) and service_account_email",
+    emoji: "📤",
+    fn: (mod) => {
+      const outputsTf = readBackplaneFile(mod, "outputs.tf");
+      if (!outputsTf) return { pass: false, detail: "no outputs.tf" };
+      const blocks = extractOutputBlocks(outputsTf);
+      const credentials = blocks.get("credentials_json");
+      const hasEmail = blocks.has("service_account_email");
+      if (!credentials) return { pass: false, detail: 'missing output "credentials_json"' };
+      if (!hasEmail) return { pass: false, detail: 'missing output "service_account_email"' };
+      return {
+        pass: /sensitive\s*=\s*true/.test(credentials),
+        detail: "credentials_json is not marked sensitive = true",
+      };
+    },
+  },
+  {
+    id: "gcp_iam_propagation_wait",
+    category: "gcp_backplane",
+    name: "credentials_json waits on a time_sleep for IAM propagation",
+    emoji: "⏳",
+    fn: (mod) => {
+      const allTf = readAllBackplaneTf(mod);
+      if (!allTf) return { pass: false, detail: "no backplane tf files" };
+      if (!/resource\s+"time_sleep"/.test(allTf))
+        return { pass: false, detail: "no time_sleep — credentials are published before the IAM grants take effect" };
+      const outputsTf = readBackplaneFile(mod, "outputs.tf");
+      const credentials = outputsTf ? extractOutputBlocks(outputsTf).get("credentials_json") : null;
+      if (!credentials) return { pass: false, detail: 'missing output "credentials_json"' };
+      return {
+        pass: /depends_on\s*=\s*\[[^\]]*time_sleep\./.test(credentials),
+        detail: "credentials_json does not depends_on the time_sleep, so consumers do not inherit the wait",
+      };
+    },
+  },
+  {
+    id: "gcp_project_service_disable_on_destroy",
+    category: "gcp_backplane",
+    name: "google_project_service sets disable_on_destroy = false",
+    emoji: "🔌",
+    fn: (mod) => {
+      const allTf = readAllBackplaneTf(mod);
+      if (!allTf) return { pass: false, detail: "no backplane tf files" };
+      const blocks = extractResourceBlocks(allTf, "google_project_service");
+      if (blocks.size === 0)
+        return { pass: null, detail: "no google_project_service resources" };
+      const offenders = [...blocks]
+        .filter(([, body]) => !/disable_on_destroy\s*=\s*false/.test(body))
+        .map(([name]) => name);
+      return {
+        pass: offenders.length === 0,
+        detail: `disable_on_destroy is not false on ${offenders.join(", ")} — a destroy would switch the API off project-wide`,
+      };
+    },
+  },
+  {
+    id: "gcp_no_provider_block",
+    category: "gcp_backplane",
+    name: 'No provider "google" block in backplane/',
+    emoji: "🧹",
+    fn: (mod) => {
+      const allTf = readAllBackplaneTf(mod);
+      if (!allTf) return { pass: true, detail: "no backplane tf files" };
+      return {
+        pass: !/^provider\s+"google"/m.test(allTf),
+        detail: 'provider "google" found — a module with a provider block cannot be wrapped in count/for_each/depends_on',
+      };
+    },
+  },
+
   // ─── STACKIT Backplane ──────────────────────────────────────────────────
   {
     id: "stackit_uses_wif",
@@ -689,10 +854,27 @@ function extractBBDResourceBlocks(content) {
 }
 
 function extractVariableBlocks(content) {
+  return extractNamedBlocks(content, "variable");
+}
+
+function extractOutputBlocks(content) {
+  return extractNamedBlocks(content, "output");
+}
+
+// name → body for every `resource "<type>" "<name>"` block of the given type.
+function extractResourceBlocks(content, type) {
+  return extractNamedBlocks(content, `resource\\s+"${type}"`);
+}
+
+// Brace-matched so a nested `object({...})` or a one-line block cannot swallow the block that
+// follows it — which a lazy `[\s\S]*?^}` regex does.
+function extractNamedBlocks(content, kind) {
   const blocks = new Map();
-  const re = /^variable\s+"([^"]+)"\s*\{[\s\S]*?^}/gm;
+  const re = new RegExp(`^${kind}\\s+"([^"]+)"\\s*\\{`, "gm");
   for (const m of content.matchAll(re)) {
-    blocks.set(m[1], m[0]);
+    const open = content.indexOf("{", m.index);
+    const close = findMatchingBrace(content, open);
+    if (close > open) blocks.set(m[1], content.slice(m.index, close + 1));
   }
   return blocks;
 }
@@ -1002,6 +1184,7 @@ function discoverModules() {
 const REF_FILES = [
   "AGENTS.md",
   ".agents/references/azure-backplane.md",
+  ".agents/references/gcp-backplane.md",
   ".agents/references/stackit-backplane.md",
   ".agents/references/bbd-readme.md",
   ".agents/skills/e2e-test/SKILL.md",
