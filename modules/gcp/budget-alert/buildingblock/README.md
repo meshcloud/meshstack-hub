@@ -49,4 +49,7 @@ No modules.
 | Name | Description |
 |------|-------------|
 | <a name="output_budget_id"></a> [budget\_id](#output\_budget\_id) | The ID of the created budget |
+| <a name="output_budget_url"></a> [budget\_url](#output\_budget\_url) | Link to the budget in the GCP console |
+| <a name="output_notification_channel_id"></a> [notification\_channel\_id](#output\_notification\_channel\_id) | The ID of the Cloud Monitoring notification channel the budget alerts are delivered to |
+| <a name="output_summary"></a> [summary](#output\_summary) | Markdown summary of the created budget |
 <!-- END_TF_DOCS -->
