@@ -11,8 +11,7 @@ resource "google_service_account" "backplane" {
 }
 
 resource "google_iam_workload_identity_pool" "meshstack" {
-  count = var.workload_identity_federation == null ? 0 : 1
-
+  # Nothing below references the APIs, so Terraform cannot infer this ordering on its own.
   depends_on = [google_project_service.required]
 
   project                   = data.google_project.backplane.project_id
@@ -21,10 +20,8 @@ resource "google_iam_workload_identity_pool" "meshstack" {
 }
 
 resource "google_iam_workload_identity_pool_provider" "meshstack" {
-  count = var.workload_identity_federation == null ? 0 : 1
-
   project                            = data.google_project.backplane.project_id
-  workload_identity_pool_id          = google_iam_workload_identity_pool.meshstack[0].workload_identity_pool_id
+  workload_identity_pool_id          = google_iam_workload_identity_pool.meshstack.workload_identity_pool_id
   workload_identity_pool_provider_id = var.workload_identity_federation.workload_identity_pool_identifier
 
   description = "OIDC identity provider for meshStack building blocks"
@@ -45,11 +42,9 @@ resource "google_iam_workload_identity_pool_provider" "meshstack" {
 }
 
 resource "google_service_account_iam_binding" "workload_identity" {
-  count = var.workload_identity_federation == null ? 0 : 1
-
   service_account_id = google_service_account.backplane.name
   role               = "roles/iam.workloadIdentityUser"
-  members            = ["principalSet://iam.googleapis.com/${google_iam_workload_identity_pool.meshstack[0].name}/*"]
+  members            = ["principalSet://iam.googleapis.com/${google_iam_workload_identity_pool.meshstack.name}/*"]
 }
 
 # Grant billing account permissions to create budgets
@@ -76,15 +71,6 @@ resource "google_project_iam_member" "notification_channel_admin" {
   project = data.google_project.backplane.project_id
   role    = "roles/monitoring.notificationChannelEditor"
   member  = "serviceAccount:${google_service_account.backplane.email}"
-}
-
-# Legacy credential path, kept for consumers that have not moved to workload identity federation.
-# Creating one needs roles/iam.serviceAccountKeyAdmin, which roles/iam.serviceAccountAdmin does not
-# include — so a caller on the federated path needs strictly fewer privileges than one on this path.
-resource "google_service_account_key" "backplane" {
-  count = var.workload_identity_federation == null ? 1 : 0
-
-  service_account_id = google_service_account.backplane.name
 }
 
 # `disable_on_destroy = false` is deliberate and load-bearing: destroying this backplane must not

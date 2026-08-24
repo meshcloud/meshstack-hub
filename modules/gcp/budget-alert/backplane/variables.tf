@@ -1,4 +1,3 @@
-
 variable "backplane_project_id" {
   type        = string
   description = "The project hosting the building block backplane resources"
@@ -15,6 +14,10 @@ variable "backplane_service_account_name" {
   default     = "building-block-budget-alert"
 }
 
+# Required, not optional: workload identity federation is the only credential path this backplane
+# offers. A service account key would be a long-lived secret to rotate and protect, and minting one
+# costs the applying identity roles/iam.serviceAccountKeyAdmin on top of everything else, because
+# roles/iam.serviceAccountAdmin does not include iam.serviceAccountKeys.create.
 variable "workload_identity_federation" {
   type = object({
     workload_identity_pool_identifier = string
@@ -23,8 +26,8 @@ variable "workload_identity_federation" {
     subjects                          = list(string)
     subject_token_file_path           = string
   })
-  description = "Workload identity federation settings, sourced from data.meshstack_integrations. Null falls back to a service account key."
-  default     = null
+  nullable    = false
+  description = "Workload identity federation settings, sourced from data.meshstack_integrations."
 }
 
 variable "iam_propagation_delay_seconds" {
