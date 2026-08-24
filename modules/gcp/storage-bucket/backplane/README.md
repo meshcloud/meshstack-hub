@@ -1,9 +1,9 @@
 # GCP Storage Bucket Backplane
 
 This module prepares the GCP project for the GCP Storage Bucket building block: it enables the APIs
-the building block depends on, creates the service account the building block runs as, and — on the
-workload identity path — the workload identity pool and provider that let the meshStack building
-block runner federate into that service account.
+the building block depends on, creates the service account the building block runs as, and creates
+the workload identity pool and provider that let the meshStack building block runner federate into
+that service account.
 
 ## Permissions
 
@@ -65,7 +65,7 @@ module "gcp_storage_bucket_backplane" {
       "system:serviceaccount:your-namespace:another-service-account",
     ]
     subject_token_file_path = "/path/to/your/token/file"
-  } # Optional, if not provided, a service account key will be created instead
+  }
 }
 ```
 
@@ -97,7 +97,7 @@ the backplane well before any building block runs).
 > fresh identifier per deployment if you need to recreate the backplane, and be aware that
 > soft-deleted pools still count towards the project's workload identity pool limit.
 
-When `workload_identity_federation` is configured, the module grants access to the entire workload identity pool at the IAM level, then uses attribute conditions at the provider level to restrict which identities can actually authenticate.
+The module grants access to the entire workload identity pool at the IAM level, then uses attribute conditions at the provider level to restrict which identities can actually authenticate.
 
 ### Subject Matching
 
@@ -155,7 +155,6 @@ No modules.
 | [google_project_service.required](https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/project_service) | resource |
 | [google_service_account.buildingblock_storage_sa](https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/service_account) | resource |
 | [google_service_account_iam_binding.workload_identity_binding](https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/service_account_iam_binding) | resource |
-| [google_service_account_key.buildingblock_storage_key](https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/service_account_key) | resource |
 | [time_sleep.wait_for_iam](https://registry.terraform.io/providers/hashicorp/time/latest/docs/resources/sleep) | resource |
 
 ## Inputs
@@ -165,13 +164,13 @@ No modules.
 | <a name="input_iam_propagation_delay_seconds"></a> [iam\_propagation\_delay\_seconds](#input\_iam\_propagation\_delay\_seconds) | Seconds to wait after granting the building block's IAM roles before publishing its credentials. GCP IAM is eventually consistent, and Google's guidance is to allow two to seven minutes before retrying a denied impersonation. Set to 0 if the backplane is always provisioned well before any building block run. | `number` | `180` | no |
 | <a name="input_project_id"></a> [project\_id](#input\_project\_id) | The GCP project ID | `string` | n/a | yes |
 | <a name="input_service_account_id"></a> [service\_account\_id](#input\_service\_account\_id) | The ID of the service account to create | `string` | `"buildingblock-storage-sa"` | no |
-| <a name="input_workload_identity_federation"></a> [workload\_identity\_federation](#input\_workload\_identity\_federation) | Configuration for workload identity federation. Supports multiple subjects with exact matching and partial matching using startsWith(). | <pre>object({<br/>    workload_identity_pool_identifier = string       // Identifier for the workload identity pool<br/>    audience                          = string       // Audience for the OIDC tokens<br/>    issuer                            = string       // OIDC issuer URL<br/>    subjects                          = list(string) // Subjects for workload identity federation - can use exact matches or startsWith patterns<br/>    subject_token_file_path           = string       // Path to the file containing the OIDC token<br/>  })</pre> | `null` | no |
+| <a name="input_workload_identity_federation"></a> [workload\_identity\_federation](#input\_workload\_identity\_federation) | Configuration for workload identity federation. Supports multiple subjects with exact matching and partial matching using startsWith(). | <pre>object({<br/>    workload_identity_pool_identifier = string       // Identifier for the workload identity pool<br/>    audience                          = string       // Audience for the OIDC tokens<br/>    issuer                            = string       // OIDC issuer URL<br/>    subjects                          = list(string) // Subjects for workload identity federation - can use exact matches or startsWith patterns<br/>    subject_token_file_path           = string       // Path to the file containing the OIDC token<br/>  })</pre> | n/a | yes |
 
 ## Outputs
 
 | Name | Description |
 |------|-------------|
-| <a name="output_credentials_json"></a> [credentials\_json](#output\_credentials\_json) | n/a |
+| <a name="output_credentials_json"></a> [credentials\_json](#output\_credentials\_json) | External account credentials for the building block's service account. Contains no long-lived secret — it points the runner at its own token file. |
 | <a name="output_service_account_email"></a> [service\_account\_email](#output\_service\_account\_email) | Email of the service account |
 | <a name="output_workload_identity_pool_name"></a> [workload\_identity\_pool\_name](#output\_workload\_identity\_pool\_name) | Name of the workload identity pool |
 | <a name="output_workload_identity_provider_name"></a> [workload\_identity\_provider\_name](#output\_workload\_identity\_provider\_name) | Name of the workload identity provider |

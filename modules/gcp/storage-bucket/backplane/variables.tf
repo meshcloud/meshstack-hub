@@ -24,5 +24,5 @@ variable "workload_identity_federation" {
     subjects                          = list(string) // Subjects for workload identity federation - can use exact matches or startsWith patterns
     subject_token_file_path           = string       // Path to the file containing the OIDC token
   })
-  default = null
+  nullable = false
 }

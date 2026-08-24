@@ -4,8 +4,7 @@ resource "google_project_service" "required" {
   for_each = toset([
     "iam.googleapis.com",
     "cloudresourcemanager.googleapis.com",
-    # Used by the workload identity path only. Enabled anyway, so the set does not depend on which
-    # credential path the backplane was configured for.
+    # Federated token exchange and service account impersonation at building block run time.
     "sts.googleapis.com",
     "iamcredentials.googleapis.com",
     "storage.googleapis.com",
