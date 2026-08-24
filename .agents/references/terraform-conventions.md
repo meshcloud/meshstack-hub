@@ -12,6 +12,10 @@ conventions elsewhere in this repo depend on OpenTofu-specific features, e.g. `c
 `variable "hub"` for static evaluation at `init` time (AGENTS.md § Shared Variable Conventions)
 and `lifecycle.enabled` below.
 
+Which OpenTofu a module actually gets at run time is set by its building block definition's
+`terraform_version` — see AGENTS.md § Runtime version. Features used here must exist in the version
+pinned there.
+
 ## Prefer `lifecycle.enabled` Over `count = condition ? 1 : 0`
 
 OpenTofu >= 1.11.0 supports a `lifecycle { enabled = <bool> }` meta-argument that conditionally
