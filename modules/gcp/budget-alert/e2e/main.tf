@@ -84,8 +84,9 @@ resource "meshstack_building_block" "this" {
       monthly_budget_amount = { value = jsonencode(local.budget_amount) }
       budget_currency       = { value = jsonencode(local.budget_currency) }
       contact_email         = { value = jsonencode("smoke-test-budget-alert@meshcloud.io") }
-      # CODE inputs are parsed by the runner, so the value is encoded twice.
-      alert_thresholds_yaml = { value = jsonencode(jsonencode(local.alert_thresholds_yaml)) }
+      # A CODE value reaches Terraform verbatim and alert_thresholds_yaml is a string variable, so
+      # the raw YAML is sent. Encoding it twice would arrive as a quoted scalar.
+      alert_thresholds_yaml = { value = jsonencode(local.alert_thresholds_yaml) }
     }
   }
 }

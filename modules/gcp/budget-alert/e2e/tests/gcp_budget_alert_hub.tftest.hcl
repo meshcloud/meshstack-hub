@@ -31,8 +31,8 @@ run "building_block_gcp_budget_alert_hub" {
     error_message = "gcp budget-alert hub building block expected summary to report the requested budget amount, got ${jsondecode(meshstack_building_block.this.status.outputs["summary"].value)}"
   }
 
-  # Proves the double-encoded CODE input arrived as the YAML the building block decodes, rather than
-  # the definition's default thresholds.
+  # Proves the CODE input arrived as YAML the building block could decode into a list, rather than as
+  # the definition's default thresholds or as a quoted scalar.
   assert {
     condition     = strcontains(jsondecode(meshstack_building_block.this.status.outputs["summary"].value), "| 42% | ACTUAL |")
     error_message = "gcp budget-alert hub building block expected summary to report the requested threshold, got ${jsondecode(meshstack_building_block.this.status.outputs["summary"].value)}"
