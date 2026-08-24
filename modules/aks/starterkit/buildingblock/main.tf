@@ -68,6 +68,16 @@ resource "meshstack_tenant" "this" {
     platform_ref     = var.platform_ref
     landing_zone_ref = var.landing_zone_refs[each.key]
   }
+
+  # This orders the destroy, not the create. Deleted in parallel, the tenant and the binding are both
+  # the run's first write, so both run the same `INSERT ... ON DUPLICATE KEY UPDATE` on meshStack's
+  # Author table for the run's fresh ephemeral API key. The two deadlock, the loser's transaction is
+  # marked rollback-only, and its delete returns a 500 that fails the whole destroy run. Ordering them
+  # means the first delete creates the Author row and the second one finds it.
+  #
+  # A band-aid: meshStack does not retry on a deadlock. Remove it once meshStack does. This is not the
+  # BD-2288 create-ordering workaround that ddd5dba removed from here — that one is still fixed.
+  depends_on = [meshstack_project_user_binding.creator_admin]
 }
 
 resource "meshstack_building_block" "repo" {
