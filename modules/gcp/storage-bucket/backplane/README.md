@@ -170,7 +170,7 @@ No modules.
 
 | Name | Description |
 |------|-------------|
-| <a name="output_credentials_json"></a> [credentials\_json](#output\_credentials\_json) | External account credentials for the building block's service account. Contains no long-lived secret — it points the runner at its own token file. |
+| <a name="output_credentials_json"></a> [credentials\_json](#output\_credentials\_json) | External account credentials for the building block's service account. Points the runner at its own OIDC token file, which it exchanges for a short-lived access token. |
 | <a name="output_service_account_email"></a> [service\_account\_email](#output\_service\_account\_email) | Email of the service account |
 | <a name="output_workload_identity_pool_name"></a> [workload\_identity\_pool\_name](#output\_workload\_identity\_pool\_name) | Name of the workload identity pool |
 | <a name="output_workload_identity_provider_name"></a> [workload\_identity\_provider\_name](#output\_workload\_identity\_provider\_name) | Name of the workload identity provider |
