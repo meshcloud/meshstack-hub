@@ -36,6 +36,19 @@ The block adopts the resource instead of creating a replacement.
 
 ---
 
+## The scripts that did this once
+
+`scripts/` holds the tooling that migrated seven STACKIT tenants: `adopt-seed.sh` builds the seed state
+from the live cloud resource, `migrate.sh` runs one tenant end to end, and `adopt/` is the plan harness.
+Read [`scripts/README.md`](scripts/README.md) before using them.
+
+They are a worked example rather than a general tool — the migration logic is portable, the platform and
+role details are STACKIT-specific. Every instance-specific value comes from a `MIG_*` environment
+variable with no default. For a different platform, keep the shape and replace the harness and
+`role_mapping`.
+
+---
+
 ## Workflow
 
 1. **Inventory the tenants and classify each one.** The class decides the procedure — see *Classify the
