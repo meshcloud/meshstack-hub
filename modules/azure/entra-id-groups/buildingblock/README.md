@@ -19,16 +19,16 @@ Use this building block when you want to:
 **Default meshStack roles (admin / user / reader):**
 
 A project `my-project` in workspace `my-workspace` with prefix `plat` produces three groups:
-- `plat-my-workspace-my-project-admin`
-- `plat-my-workspace-my-project-user`
-- `plat-my-workspace-my-project-reader`
+- `plat.my-workspace.my-project.admin`
+- `plat.my-workspace.my-project.user`
+- `plat.my-workspace.my-project.reader`
 
 **Custom roles:**
 
 Set *Project Roles* to `devops,qa,readonly` to create:
-- `plat-my-workspace-my-project-devops`
-- `plat-my-workspace-my-project-qa`
-- `plat-my-workspace-my-project-readonly`
+- `plat.my-workspace.my-project.devops`
+- `plat.my-workspace.my-project.qa`
+- `plat.my-workspace.my-project.readonly`
 
 **With Administrative Unit:**
 
