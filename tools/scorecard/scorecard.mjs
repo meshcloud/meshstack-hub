@@ -651,6 +651,34 @@ const detectors = [
     }),
   },
   {
+    id: "no_buildingblock_tftest",
+    category: "testing",
+    name: "no .tftest.hcl outside e2e/",
+    emoji: "🚫",
+    fn: (mod) => {
+      // Nothing in this repo runs `tofu test` outside e2e/, so a *.tftest.hcl under
+      // buildingblock/ is never executed and rots unnoticed. The ones still present predate the
+      // e2e suite and are kept as a record of intent to migrate, not as working tests — this
+      // check is the migration backlog. Fold the coverage into the module's e2e/ suite, then
+      // delete the file. See AGENTS.md, "Where Terraform Tests Live".
+      const bb = join(mod.path, "buildingblock");
+      if (!existsSync(bb)) return { pass: null, detail: "no buildingblock/ directory" };
+      const stray = [];
+      const walk = (dir) => {
+        for (const entry of readdirSync(dir, { withFileTypes: true })) {
+          if (entry.name === ".terraform") continue;
+          const full = join(dir, entry.name);
+          if (entry.isDirectory()) walk(full);
+          else if (entry.name.endsWith(".tftest.hcl")) stray.push(relative(mod.path, full));
+        }
+      };
+      walk(bb);
+      return stray.length
+        ? { pass: false, detail: `${stray.join(", ")} never runs; migrate to e2e/` }
+        : { pass: true };
+    },
+  },
+  {
     id: "e2e_tftest",
     category: "testing",
     name: "e2e/ contains .tftest.hcl files",

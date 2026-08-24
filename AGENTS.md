@@ -416,6 +416,26 @@ Modules that can be smoke-tested against a live meshStack instance should includ
 
 See [.agents/skills/e2e-test/SKILL.md](.agents/skills/e2e-test/SKILL.md) (the `e2e-test` skill) for the full e2e testing conventions, including the `e2e/` structure, `test_context` wiring, `e2e/main.tf` and `*.tftest.hcl` conventions, the new-test checklist, and how to run and debug tests via the smoke-test runner.
 
+<!-- scorecard-checks: no_buildingblock_tftest -->
+### Where Terraform Tests Live
+
+**`e2e/` is the only place a `*.tftest.hcl` file runs.** Nothing in this repo runs `tofu test`
+anywhere else: CI runs `pre-commit run --all-files` — `terraform-docs`, `terraform fmt`,
+trailing whitespace and `ci/validate_modules.sh` — and the scorecard's Testing category scores
+`e2e/` coverage exclusively.
+
+**Do not add a `*.tftest.hcl` under `buildingblock/`.** Nothing will execute it, so it rots
+unnoticed. Of the files that predate the `e2e/` suite, an audit found 20 of 21 could no longer
+run at all, and 7 had never been runnable in the first place because their `variables` blocks
+omitted required module inputs.
+
+Those files are still in the tree on purpose. They were written for manual verification and they
+record intent — scenario matrices, variable-validation cases, conditional-creation logic — that
+the `e2e/` suites have not caught up with yet. The `no_buildingblock_tftest` scorecard check
+flags each one as migration debt rather than failing the build. **Migrate, do not delete:** fold a
+file's coverage into the module's `e2e/` suite first, then remove it. Deleting one outright is
+only correct when an `e2e/` test already covers the same ground as well or better.
+
 ---
 
 ## Checklist for New Modules
