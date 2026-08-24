@@ -125,7 +125,7 @@ No modules.
 |------|-------------|
 | <a name="output_backplane_project_id"></a> [backplane\_project\_id](#output\_backplane\_project\_id) | The project hosting the building block backplane resources |
 | <a name="output_billing_account_id"></a> [billing\_account\_id](#output\_billing\_account\_id) | The billing account ID where budget permissions were granted |
-| <a name="output_credentials_json"></a> [credentials\_json](#output\_credentials\_json) | External account credentials for the backplane service account, for the building block to authenticate with. Contains no long-lived secret — it points the runner at its own token file. |
+| <a name="output_credentials_json"></a> [credentials\_json](#output\_credentials\_json) | External account credentials the building block authenticates with. Points the runner at its own OIDC token file, which it exchanges for a short-lived access token. |
 | <a name="output_service_account_email"></a> [service\_account\_email](#output\_service\_account\_email) | Email address of the backplane service account |
 | <a name="output_service_account_id"></a> [service\_account\_id](#output\_service\_account\_id) | ID of the backplane service account |
 <!-- END_TF_DOCS -->

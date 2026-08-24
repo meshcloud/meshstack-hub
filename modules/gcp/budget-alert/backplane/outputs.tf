@@ -13,7 +13,7 @@ output "credentials_json" {
   # block seconds later. Waiting here orders that consumer after the wait without it knowing.
   depends_on = [time_sleep.wait_for_iam]
 
-  description = "External account credentials for the backplane service account, for the building block to authenticate with. Contains no long-lived secret — it points the runner at its own token file."
+  description = "External account credentials the building block authenticates with. Points the runner at its own OIDC token file, which it exchanges for a short-lived access token."
   sensitive   = true
   value = jsonencode({
     universe_domain                   = "googleapis.com"
