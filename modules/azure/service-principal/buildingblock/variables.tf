@@ -33,7 +33,11 @@ variable "custom_role" {
   default = null
 
   validation {
-    condition     = var.custom_role == null || length(coalesce(var.custom_role.actions, [])) > 0 || length(coalesce(var.custom_role.data_actions, [])) > 0
+    # try() guards the attribute access: the Terraform version the runner pins evaluates both
+    # operands of || even when the left one already decides the result, so a null custom_role
+    # faulted here with "Attempt to get attribute from null value" and no building block could
+    # ever apply. actions and data_actions default to [] whenever custom_role itself is set.
+    condition     = var.custom_role == null || try(length(var.custom_role.actions) + length(var.custom_role.data_actions) > 0, false)
     error_message = "custom_role must have at least one action or data_action defined"
   }
 }
