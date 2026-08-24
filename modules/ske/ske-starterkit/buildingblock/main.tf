@@ -94,13 +94,6 @@ resource "meshstack_tenant" "this" {
   }
 }
 
-# Anticipates terraform-provider-meshstack v0.24.0 (#226): meshstack_tenant now runs on the
-# meshTenant v4 API, so meshstack_tenant_v4 usages migrate here in place (both share the v4 body).
-moved {
-  from = meshstack_tenant_v4.this
-  to   = meshstack_tenant.this
-}
-
 resource "meshstack_building_block" "forgejo_connector" {
   for_each = meshstack_tenant.this
 

@@ -132,22 +132,12 @@ resource "meshstack_building_block" "github_actions" {
 }
 
 # --- State address migrations (no resource recreation) ---
-# The moves are chained: hop 1 is the resource-type migration (meshTenant v4 GA rename;
-# meshstack_building_block_v2 -> meshstack_building_block), hop 2 is this PR's dev/prod -> for_each
-# address change. Terraform follows the chain, so a deployed meshstack_tenant_v4.dev migrates
-# v4 -> GA -> for_each in sequence without recreation.
+# The building block moves are chained: hop 1 is the resource-type migration
+# (meshstack_building_block_v2 -> meshstack_building_block), hop 2 is the dev/prod -> for_each address
+# change. Terraform follows the chain, so a deployed meshstack_building_block_v2.github_actions_dev
+# migrates v2 -> GA -> for_each in sequence without recreation.
 
 # Hop 1 — resource-type migrations.
-# Anticipates terraform-provider-meshstack v0.24.0 (#226): meshstack_tenant runs on the meshTenant
-# v4 API (shares the v4 body with meshstack_tenant_v4, so the move upgrades state in place).
-moved {
-  from = meshstack_tenant_v4.dev
-  to   = meshstack_tenant.dev
-}
-moved {
-  from = meshstack_tenant_v4.prod
-  to   = meshstack_tenant.prod
-}
 moved {
   from = meshstack_building_block_v2.repo
   to   = meshstack_building_block.repo
