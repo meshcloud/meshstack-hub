@@ -9,8 +9,8 @@ variable "workload_identity_federation" {
     audience = string,
     subjects = list(string)
   })
-  default     = null
-  description = "Set these options to add a trusted identity provider from meshStack to allow workload identity federation for authentication which can be used instead of access keys. Supports multiple subjects and wildcard patterns (e.g., 'system:serviceaccount:namespace:*')."
+  nullable    = false
+  description = "Trusted identity provider from meshStack that the building block runner federates into. Supports multiple subjects and wildcard patterns (e.g., 'system:serviceaccount:namespace:*')."
 }
 
 variable "create_oidc_provider" {
