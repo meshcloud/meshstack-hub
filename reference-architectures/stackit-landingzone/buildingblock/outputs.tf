@@ -15,7 +15,7 @@ output "foundation_project_url" {
 
 output "starterkit_bbd_version_uuid" {
   value       = module.stackit_project_starterkit.building_block_definition.version_ref.uuid
-  description = "Version uuid of the STACKIT Project Starterkit definition this architecture registered. Exposed so a consumer can order starterkit instances as code — the definition is created inside this run, so it cannot be reached through a module output."
+  description = "Version uuid of the STACKIT Project Starterkit definition this architecture registered. The definition is created inside this run, so it cannot be reached through a module output. Do not use it to order starterkit instances as code: the starterkit deletes itself at the end of its run, so an as-code order never converges and creates another project on every apply."
 }
 
 output "summary" {

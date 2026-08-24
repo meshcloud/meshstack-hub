@@ -178,6 +178,10 @@ resource "meshstack_building_block_definition" "this" {
 
     One order creates one project. If you want separate development and production environments, order the starterkit twice.
 
+    ## The starterkit removes itself when it is done
+
+    Once everything above exists, this building block deletes itself, so you are not left with a block you cannot do anything further with. **Nothing it created is removed with it** — the meshProject, the STACKIT project and the network stay yours, and you manage them from then on. To get rid of them later, delete the meshProject.
+
     ## Shared Responsibilities
 
     | Responsibility | Platform Team | Application Team |
@@ -197,6 +201,13 @@ resource "meshstack_building_block_definition" "this" {
 
   version_spec = {
     draft = var.hub.bbd_draft
+
+    # PURGE, not DELETE, because the block deletes itself at the end of its own run — see
+    # `terraform_data.self_purge` in the building block. Under PURGE meshStack runs no teardown, so
+    # the meshProject, the meshTenant and the spoke network block all survive that delete and stay
+    # with the application team. Under DELETE the self-delete would tear down everything the
+    # starterkit just created.
+    deletion_mode = "PURGE"
 
     implementation = {
       terraform = {

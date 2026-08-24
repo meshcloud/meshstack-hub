@@ -306,8 +306,10 @@ resource "meshstack_building_block_definition" "this" {
         assignment_type = "RESOURCE_URL"
       }
 
-      # Exposed so a consumer can order starterkit instances as code. The definition is created inside
-      # this building block's run, so there is no module output to read it from.
+      # Exposed because the definition is created inside this building block's run, so there is no
+      # module output to read it from. Not for ordering starterkit instances as code — the starterkit
+      # deletes itself at the end of its run, so an as-code order creates another project on every
+      # apply instead of converging. See the starterkit's readme.
       starterkit_bbd_version_uuid = {
         display_name    = "Starterkit BBD Version UUID"
         type            = "STRING"

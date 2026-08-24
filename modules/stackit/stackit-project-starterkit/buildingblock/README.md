@@ -19,6 +19,31 @@ network by the `STACKIT Network` block this module orders inside the tenant. Tha
 deliberate: this module decides *what* to create in meshStack, and the other blocks decide *how* the
 STACKIT side is built.
 
+## The block deletes itself
+
+At the end of a successful run this building block deletes itself. The application team is left with
+the meshProject, the meshTenant and the spoke network block, and not with a starterkit block they can
+do nothing further with.
+
+The definition must therefore set `deletion_mode = "PURGE"`. Under `PURGE` meshStack fabricates a
+successful destroy run instead of asking a runner for one, so the delete tears nothing down. Under
+`DELETE` the same call would destroy everything the starterkit just created. The two halves belong
+together: `terraform_data.self_purge` in this module, and `deletion_mode` in
+`meshstack_integration.tf`.
+
+The module is split into a thin top level and `./this` for exactly this reason. Everything the
+starterkit creates lives in `./this`, so `depends_on = [module.this]` on the purge resource covers all
+of it — including whatever gets added later, without anyone having to extend a resource list.
+
+> ⚠️ **This building block can only be ordered from the panel. Do not order it as code.**
+>
+> The Terraform provider drops a building block from state as soon as a read reports it deleted, and
+> this block deletes itself on every successful run. So `terraform apply` never converges: each apply
+> sees an empty state and orders a fresh instance, which creates **another meshProject, meshTenant and
+> STACKIT project** with a new random suffix. The abandoned ones are not cleaned up, and a STACKIT
+> project that fails to delete stays in `DELETING` forever. An as-code order of this block is a project
+> factory, not an idempotent resource.
+
 ## Stageless
 
 One order creates one project. There is no dev/prod pair and no stage selection — a team that wants two
@@ -60,18 +85,15 @@ mandatory block's output. By the time the network block is ordered, the project 
 
 ## Modules
 
-No modules.
+| Name | Source | Version |
+|------|--------|---------|
+| <a name="module_this"></a> [this](#module\_this) | ./this | n/a |
 
 ## Resources
 
 | Name | Type |
 |------|------|
-| [meshstack_building_block.network](https://registry.terraform.io/providers/meshcloud/meshstack/latest/docs/resources/building_block) | resource |
-| [meshstack_project.this](https://registry.terraform.io/providers/meshcloud/meshstack/latest/docs/resources/project) | resource |
-| [meshstack_project_user_binding.creator_to_admin](https://registry.terraform.io/providers/meshcloud/meshstack/latest/docs/resources/project_user_binding) | resource |
-| [meshstack_tenant.this](https://registry.terraform.io/providers/meshcloud/meshstack/latest/docs/resources/tenant) | resource |
-| [random_string.name_suffix](https://registry.terraform.io/providers/hashicorp/random/latest/docs/resources/string) | resource |
-| [random_uuid.binding](https://registry.terraform.io/providers/hashicorp/random/latest/docs/resources/uuid) | resource |
+| [terraform_data.self_purge](https://registry.terraform.io/providers/hashicorp/terraform/latest/docs/resources/data) | resource |
 
 ## Inputs
 
@@ -81,6 +103,7 @@ No modules.
 | <a name="input_creator"></a> [creator](#input\_creator) | Creator of the starterkit, who is granted the Project Admin role on the created project. | <pre>object({<br/>    type        = string<br/>    identifier  = string<br/>    displayName = string<br/>    username    = optional(string)<br/>    email       = optional(string)<br/>    euid        = optional(string)<br/>  })</pre> | n/a | yes |
 | <a name="input_landing_zone"></a> [landing\_zone](#input\_landing\_zone) | Key into `landing_zone_refs`, chosen by the application team from the definition's select. | `string` | n/a | yes |
 | <a name="input_landing_zone_refs"></a> [landing\_zone\_refs](#input\_landing\_zone\_refs) | Landing zones the application team can choose from, keyed by the label shown in the select. | <pre>map(object({<br/>    name = string<br/>    kind = string<br/>  }))</pre> | n/a | yes |
+| <a name="input_meshstack_building_block_id"></a> [meshstack\_building\_block\_id](#input\_meshstack\_building\_block\_id) | UUID of this building block, injected by the meshStack runner. Used to delete this block at the end of its own run. | `string` | n/a | yes |
 | <a name="input_name"></a> [name](#input\_name) | Base name for the created meshProject and, through PROJECT\_IDENTIFIER, its STACKIT project. | `string` | n/a | yes |
 | <a name="input_network"></a> [network](#input\_network) | Spoke network created inside the project, in landing zones attached to a network area. Named after the project. Set to null to get a project with no network. | <pre>object({<br/>    prefix_length    = optional(number, 25)<br/>    ipv4_nameservers = optional(list(string), [])<br/>  })</pre> | `{}` | no |
 | <a name="input_network_bbd_version_refs"></a> [network\_bbd\_version\_refs](#input\_network\_bbd\_version\_refs) | Version refs of the STACKIT Network building block definition, keyed by landing zone label. A landing zone without an entry cannot have a spoke network. | <pre>map(object({<br/>    uuid = string<br/>  }))</pre> | `{}` | no |
