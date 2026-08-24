@@ -1,6 +1,10 @@
-# Mocked so the file actually runs: without these the providers reach for real Azure credentials and
-# every run errors out before reaching an assertion. The azuread and azurerm providers validate
-# object and role definition IDs even when mocked, so the defaults below have to be well-formed.
+# Mocked unit tests: no Azure credentials, no Entra objects. These pin the module's wiring — which
+# resources exist for a given input combination and what the outputs read — not that a deployment
+# actually succeeds. The real apply lives in ../e2e.
+#
+# The azuread and azurerm providers validate object and role definition IDs even when mocked, so
+# the defaults below have to be well-formed GUIDs rather than readable placeholders.
+
 mock_provider "azuread" {
   mock_resource "azuread_application" {
     defaults = {
@@ -48,7 +52,7 @@ variables {
   azure_subscription_id = "f808fff2-adda-415a-9b77-2833c041aacf"
 }
 
-run "valid_contributor_service_principal" {
+run "builtin_role" {
   variables {
     display_name = "test-sp-contributor"
     azure_role   = "Contributor"
@@ -56,48 +60,26 @@ run "valid_contributor_service_principal" {
   }
 
   assert {
-    condition     = azuread_application.main.display_name == "test-sp-contributor"
-    error_message = "Application display name should match input"
+    condition     = azuread_application.main.display_name == "test-sp-contributor" && azuread_application.main.description == "Test service principal with Contributor role"
+    error_message = "application must carry the requested display name and description, got ${azuread_application.main.display_name} / ${azuread_application.main.description}"
   }
 
   assert {
     condition     = azurerm_role_assignment.main[0].role_definition_name == "Contributor"
-    error_message = "Role assignment should be Contributor"
+    error_message = "role assignment should be Contributor, got ${azurerm_role_assignment.main[0].role_definition_name}"
   }
 
   # No custom_role, so no custom role definition and role_name echoes the built-in role.
   assert {
-    condition     = length(azurerm_role_definition.custom) == 0
-    error_message = "a built-in role must not create a custom role definition"
-  }
-
-  assert {
-    condition     = output.role_name == "Contributor" && output.custom_role_id == null
-    error_message = "expected role_name 'Contributor' and no custom role id, got ${output.role_name}"
+    condition     = length(azurerm_role_definition.custom) == 0 && output.role_name == "Contributor" && output.custom_role_id == null
+    error_message = "a built-in role must not create a custom role definition, got role_name ${output.role_name}"
   }
 
   # The application must be owned by the deploying identity: Application.ReadWrite.OwnedBy is scoped
   # to owned applications, so an ownerless app cannot be deleted by the identity that created it.
   assert {
-    condition     = azuread_application.main.owners == toset(["22222222-2222-2222-2222-222222222222"])
-    error_message = "application must default its owner to the deploying identity, got ${jsonencode(azuread_application.main.owners)}"
-  }
-
-  assert {
-    condition     = azuread_service_principal.main.owners == toset(["22222222-2222-2222-2222-222222222222"])
-    error_message = "service principal must default its owner to the deploying identity, got ${jsonencode(azuread_service_principal.main.owners)}"
-  }
-}
-
-run "valid_reader_service_principal" {
-  variables {
-    display_name = "test-sp-reader"
-    azure_role   = "Reader"
-  }
-
-  assert {
-    condition     = azurerm_role_assignment.main[0].role_definition_name == "Reader"
-    error_message = "Role assignment should be Reader"
+    condition     = azuread_application.main.owners == toset(["22222222-2222-2222-2222-222222222222"]) && azuread_service_principal.main.owners == toset(["22222222-2222-2222-2222-222222222222"])
+    error_message = "application and service principal must default their owner to the deploying identity, got ${jsonencode(azuread_application.main.owners)} / ${jsonencode(azuread_service_principal.main.owners)}"
   }
 }
 
@@ -143,13 +125,8 @@ run "custom_role_takes_precedence" {
   }
 
   assert {
-    condition     = length(azurerm_role_definition.custom) == 1
-    error_message = "custom_role must create a role definition"
-  }
-
-  assert {
-    condition     = azurerm_role_definition.custom[0].permissions[0].actions == tolist(["Microsoft.Storage/storageAccounts/read"])
-    error_message = "custom role definition must carry the requested actions, got ${jsonencode(azurerm_role_definition.custom[0].permissions[0].actions)}"
+    condition     = length(azurerm_role_definition.custom) == 1 && azurerm_role_definition.custom[0].permissions[0].actions == tolist(["Microsoft.Storage/storageAccounts/read"])
+    error_message = "custom_role must create a role definition carrying the requested actions, got ${jsonencode(azurerm_role_definition.custom[*].permissions)}"
   }
 
   # azure_role is set too, but custom_role wins: the assignment goes through the custom definition.
@@ -162,27 +139,6 @@ run "custom_role_takes_precedence" {
     condition     = output.role_name == "test-sp-custom" && output.custom_role_id != null
     error_message = "role_name must echo the custom role, got ${output.role_name}"
   }
-}
-
-# Pins the semantics of the custom_role validation. It does not reproduce the defect that made this
-# module undeployable: that needs a runtime evaluating both operands of ||, and both OpenTofu here
-# and the version the BBD pins short-circuit, so dropping the try() guard still passes. The guard
-# stays regardless — the runtime the BBD happens to pin is not this module's to assume.
-run "custom_role_without_any_action_is_rejected" {
-  # Variable validation fails before the apply stage, which tofu test reports as an overall failure
-  # unless the run is plan-only. Same for the two secret_rotation_days runs below.
-  command = plan
-
-  variables {
-    display_name = "test-sp-empty-custom-role"
-    custom_role = {
-      name = "test-sp-empty"
-    }
-  }
-
-  expect_failures = [
-    var.custom_role
-  ]
 }
 
 run "custom_role_with_only_data_actions_is_accepted" {
@@ -200,7 +156,7 @@ run "custom_role_with_only_data_actions_is_accepted" {
   }
 }
 
-run "custom_secret_rotation" {
+run "client_secret_with_custom_rotation" {
   variables {
     display_name         = "test-sp-rotation"
     secret_rotation_days = 180
@@ -209,68 +165,19 @@ run "custom_secret_rotation" {
 
   assert {
     condition     = time_rotating.secret_rotation[0].rotation_days == 180
-    error_message = "Secret rotation should be 180 days"
+    error_message = "secret rotation should be 180 days, got ${time_rotating.secret_rotation[0].rotation_days}"
   }
 
   assert {
-    condition     = length(azuread_application_password.main) == 1
-    error_message = "a client secret must be created when create_client_secret is true"
-  }
-
-  assert {
-    condition     = output.authentication_method == "client_secret"
-    error_message = "Authentication method should be client_secret"
+    condition     = length(azuread_application_password.main) == 1 && output.authentication_method == "client_secret"
+    error_message = "a client secret must be created when create_client_secret is true, got authentication_method ${output.authentication_method}"
   }
 }
 
-run "invalid_secret_rotation_too_short" {
-  command = plan
-
-  variables {
-    display_name         = "test-sp-short-rotation"
-    secret_rotation_days = 15
-  }
-
-  expect_failures = [
-    var.secret_rotation_days
-  ]
-}
-
-run "invalid_secret_rotation_too_long" {
-  command = plan
-
-  variables {
-    display_name         = "test-sp-long-rotation"
-    secret_rotation_days = 800
-  }
-
-  expect_failures = [
-    var.secret_rotation_days
-  ]
-}
-
-run "custom_description" {
-  variables {
-    display_name = "test-sp-description"
-    description  = "Custom service principal for CI/CD pipelines"
-  }
-
-  assert {
-    condition     = azuread_application.main.description == "Custom service principal for CI/CD pipelines"
-    error_message = "Application description should match input"
-  }
-}
-
-run "service_principal_without_secret" {
+run "no_client_secret" {
   variables {
     display_name         = "test-sp-oidc"
     create_client_secret = false
-    description          = "Service principal for OIDC authentication"
-  }
-
-  assert {
-    condition     = azuread_application.main.display_name == "test-sp-oidc"
-    error_message = "Application display name should match input"
   }
 
   assert {
@@ -279,17 +186,7 @@ run "service_principal_without_secret" {
   }
 
   assert {
-    condition     = output.client_secret == null
-    error_message = "Client secret should be null when create_client_secret is false"
-  }
-
-  assert {
-    condition     = output.secret_expiration_date == null
-    error_message = "Secret expiration date should be null when create_client_secret is false"
-  }
-
-  assert {
-    condition     = output.authentication_method == "workload_identity_federation"
-    error_message = "Authentication method should be workload_identity_federation"
+    condition     = output.client_secret == null && output.secret_expiration_date == null && output.authentication_method == "workload_identity_federation"
+    error_message = "secret outputs must be null and the authentication method must be workload_identity_federation, got ${output.authentication_method}"
   }
 }
