@@ -59,7 +59,10 @@ resource "meshstack_building_block" "this" {
     }
 
     inputs = {
-      contact_emails        = { value = jsonencode("e2e-test@example.com") }
+      # Two recipients, deliberately with the separating space the input's own example uses, so the
+      # run exercises the comma splitting and trimming in local.contact_emails_list. A single
+      # address would pass straight through and prove nothing about the parsing.
+      contact_emails        = { value = jsonencode("e2e-test@example.com, e2e-test-second@example.com") }
       monthly_budget_amount = { value = jsonencode(1000) }
       budget_name           = { value = jsonencode(local.budget_name) }
     }

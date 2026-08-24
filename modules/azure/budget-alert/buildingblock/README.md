@@ -51,4 +51,5 @@ No modules.
 | Name | Description |
 |------|-------------|
 | <a name="output_budget_amount"></a> [budget\_amount](#output\_budget\_amount) | n/a |
+| <a name="output_summary"></a> [summary](#output\_summary) | Markdown summary of the created budget |
 <!-- END_TF_DOCS -->
