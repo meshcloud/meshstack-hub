@@ -12,7 +12,7 @@ terraform {
     }
     meshstack = {
       source  = "meshcloud/meshstack"
-      version = ">= 0.21.0"
+      version = ">= 0.23.0"
     }
     time = {
       source  = "hashicorp/time"
