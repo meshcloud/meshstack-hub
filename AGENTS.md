@@ -434,6 +434,7 @@ See [.agents/skills/e2e-test/SKILL.md](.agents/skills/e2e-test/SKILL.md) (the `e
 - [ ] Variables referenced from `meshstack_building_block_definition` input `argument` fields have explicit defaults (never rely on `optional()` defaults via bare `default = {}`)
 - [ ] `ref_name` uses `var.hub.git_ref` — no hardcoded `"main"`
 - [ ] `version_spec.draft` uses `var.hub.bbd_draft`
+- [ ] `terraform_version` is `1.12.5` — never the panel's `1.9.0` prefill, which predates OpenTofu's short-circuiting `&&`/`||`
 - [ ] `metadata.tags = var.meshstack.tags` in `meshstack_building_block_definition` resource
 - [ ] Tags are modeled via `var.meshstack.tags` (no separate top-level `variable "tags"` in integrations)
 - [ ] `building_block_definition` output is exposed as `{ uuid, version_ref }` with `version_ref` using `bbd_draft ? version_latest : version_latest_release`
