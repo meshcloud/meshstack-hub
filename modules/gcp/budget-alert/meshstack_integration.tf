@@ -74,11 +74,15 @@ module "backplane" {
     workload_identity_pool_identifier = var.workload_identity.pool_identifier
     audience                          = data.meshstack_integrations.integrations.workload_identity_federation.replicator.gcp.audience
     issuer                            = data.meshstack_integrations.integrations.workload_identity_federation.replicator.issuer
-    subjects = [
-      "${trimsuffix(data.meshstack_integrations.integrations.workload_identity_federation.replicator.subject, ":replicator")}:workspace.${var.meshstack.owning_workspace_identifier}.buildingblockdefinition"
-    ]
-    subject_token_file_path = var.workload_identity.subject_token_file_path
+    subject_token_file_path           = var.workload_identity.subject_token_file_path
   }
+
+  # The building block runner names its per-run service account after the building block definition,
+  # so pinning the uuid here is what keeps a second definition in this workspace from federating into
+  # the backplane's service account.
+  workload_identity_subjects = [
+    "${trimsuffix(data.meshstack_integrations.integrations.workload_identity_federation.replicator.subject, ":replicator")}:workspace.${var.meshstack.owning_workspace_identifier}.buildingblockdefinition.${meshstack_building_block_definition.this.metadata.uuid}"
+  ]
 }
 
 resource "meshstack_building_block_definition" "this" {

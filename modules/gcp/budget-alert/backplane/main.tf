@@ -35,16 +35,24 @@ resource "google_iam_workload_identity_pool_provider" "meshstack" {
     "google.subject" = "assertion.sub"
   }
 
+  # Exact match, not a prefix: the subjects carry the building block definition uuid, and a
+  # startsWith() against a prefix would admit every other building block definition whose runner
+  # service account name happens to share it.
   attribute_condition = join(" || ", [
-    for subject in var.workload_identity_federation.subjects :
-    "google.subject.startsWith('${subject}')"
+    for subject in var.workload_identity_subjects :
+    "google.subject == '${subject}'"
   ])
 }
 
 resource "google_service_account_iam_binding" "workload_identity" {
   service_account_id = google_service_account.backplane.name
   role               = "roles/iam.workloadIdentityUser"
-  members            = ["principalSet://iam.googleapis.com/${google_iam_workload_identity_pool.meshstack.name}/*"]
+
+  # Pool-wide, and that is as narrow as it gets here: the pool holds exactly one provider and that
+  # provider admits exactly one subject, so this set has exactly one member. Naming the subject here
+  # instead would make this binding depend on the building block definition uuid, and the
+  # credentials output waits on this binding — see the comment on the audience in outputs.tf.
+  members = ["principalSet://iam.googleapis.com/${google_iam_workload_identity_pool.meshstack.name}/*"]
 }
 
 # Grant billing account permissions to create budgets

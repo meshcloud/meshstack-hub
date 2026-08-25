@@ -1,3 +1,13 @@
+locals {
+  # Deliberately assembled from the provider's own identifiers rather than read off
+  # google_iam_workload_identity_pool_provider.meshstack.name, to keep the credentials output free of
+  # any dependency on the pool provider — the one resource that consumes
+  # var.workload_identity_subjects. Those subjects name the building block definition, the definition
+  # carries these credentials, and reading the attribute back would close that loop into a cycle.
+  # The format is the documented resource name of a pool provider.
+  workload_identity_pool_provider_name = "projects/${data.google_project.backplane.number}/locations/global/workloadIdentityPools/${var.workload_identity_federation.workload_identity_pool_identifier}/providers/${var.workload_identity_federation.workload_identity_pool_identifier}"
+}
+
 output "service_account_email" {
   description = "Email address of the backplane service account"
   value       = google_service_account.backplane.email
@@ -18,7 +28,7 @@ output "credentials_json" {
   value = jsonencode({
     universe_domain                   = "googleapis.com"
     type                              = "external_account"
-    audience                          = "//iam.googleapis.com/${google_iam_workload_identity_pool_provider.meshstack.name}"
+    audience                          = "//iam.googleapis.com/${local.workload_identity_pool_provider_name}"
     subject_token_type                = "urn:ietf:params:oauth:token-type:jwt"
     token_url                         = "https://sts.googleapis.com/v1/token"
     service_account_impersonation_url = "https://iamcredentials.googleapis.com/v1/projects/-/serviceAccounts/${google_service_account.backplane.email}:generateAccessToken"

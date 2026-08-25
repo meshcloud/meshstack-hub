@@ -19,11 +19,21 @@ variable "workload_identity_federation" {
     workload_identity_pool_identifier = string
     audience                          = string
     issuer                            = string
-    subjects                          = list(string)
     subject_token_file_path           = string
   })
   nullable    = false
-  description = "Workload identity federation settings, sourced from data.meshstack_integrations."
+  description = "Workload identity federation settings, sourced from data.meshstack_integrations. The accepted subjects are a separate variable — see workload_identity_subjects."
+}
+
+# Deliberately not a field of workload_identity_federation. Its value names the building block
+# definition, which in turn carries the credentials_json output — and OpenTofu tracks module input
+# dependencies per variable, not per attribute. Folding the subjects into that object would make
+# every resource that reads any of its fields depend on the building block definition, and the
+# credentials would depend on themselves.
+variable "workload_identity_subjects" {
+  type        = list(string)
+  nullable    = false
+  description = "Full `sub` claims of the OIDC tokens the pool provider accepts, matched exactly. Each must name the building block definition that authenticates with these credentials."
 }
 
 variable "iam_propagation_delay_seconds" {

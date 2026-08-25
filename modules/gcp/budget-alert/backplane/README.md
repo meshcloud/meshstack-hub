@@ -8,14 +8,46 @@ The building block authenticates by **workload identity federation**; `workload_
 is required. The backplane creates a workload identity pool and provider alongside the service
 account, grants the pool `roles/iam.workloadIdentityUser` on it, and exports `credentials_json` as an
 [external account](https://cloud.google.com/iam/docs/workload-identity-federation) document.
-`issuer`, `audience` and `subjects` must come from `data.meshstack_integrations` — see
-`meshstack_integration.tf`.
+`issuer`, `audience` and `workload_identity_subjects` must come from `data.meshstack_integrations` —
+see `meshstack_integration.tf`.
 
 GCP **soft-deletes** workload identity pools and providers for ~30 days and will not reissue their
 identifiers in that window. `workload_identity_pool_identifier` is an input for exactly that reason:
 a backplane that has to be recreated needs a fresh one, and a caller that creates and destroys
 backplanes repeatedly (an e2e test) must derive a unique identifier per run. The soft-deleted pools
 count against the project's pool limit while they linger.
+
+#### Subject matching is exact
+
+The provider's `attribute_condition` compares `google.subject` for **equality** against each entry of
+`workload_identity_subjects`, so each entry must be the complete `sub` claim of the token to accept —
+including the building block definition uuid that the runner puts in its per-run service account name
+(`workspace.<workspace>.buildingblockdefinition.<bbd-uuid>`). A prefix that stopped at
+`buildingblockdefinition` would let every other building block definition in the same workspace
+federate into this service account.
+
+The `roles/iam.workloadIdentityUser` binding is pool-wide
+(`principalSet://iam.googleapis.com/.../workloadIdentityPools/POOL_ID/*`), which is not wider than
+that condition: the pool holds one provider and the provider accepts one subject. Naming the subject
+in the binding as well would make the binding depend on the building block definition uuid, and
+`credentials_json` waits on that binding for IAM propagation — closing a dependency cycle.
+
+#### Why the subjects are their own variable
+
+The subjects name the building block definition, and that same definition carries `credentials_json`
+as an input, so nothing on the credential path may depend on them. OpenTofu tracks module input
+dependencies **per variable**, not per attribute: a `subjects` field inside
+`workload_identity_federation` would taint every resource that reads any other field of that object,
+including the pool, the `roles/iam.workloadIdentityUser` binding and — through the propagation wait —
+the credentials themselves. `workload_identity_subjects` confines the dependency to the pool provider,
+the one resource that needs it.
+
+For the same reason `credentials_json` assembles its `audience` from the project number and the pool
+identifier rather than reading `google_iam_workload_identity_pool_provider.meshstack.name`: reading
+it back would put the pool provider on the credential path.
+
+`tofu validate` on this module alone surfaces neither cycle. Only a root that wires
+`meshstack_integration.tf` against a local `backplane/` does.
 
 ### Roles granted to the building block's service account
 
@@ -117,7 +149,8 @@ No modules.
 | <a name="input_backplane_service_account_name"></a> [backplane\_service\_account\_name](#input\_backplane\_service\_account\_name) | The name of the service account to be created for the backplane | `string` | `"building-block-budget-alert"` | no |
 | <a name="input_billing_account_id"></a> [billing\_account\_id](#input\_billing\_account\_id) | The billing account ID where budget permissions will be granted | `string` | n/a | yes |
 | <a name="input_iam_propagation_delay_seconds"></a> [iam\_propagation\_delay\_seconds](#input\_iam\_propagation\_delay\_seconds) | Seconds to wait after granting the building block's IAM roles before publishing its credentials. GCP IAM is eventually consistent, and billing-account grants are among the slower ones. Set to 0 if the backplane is always provisioned well before any building block run. | `number` | `180` | no |
-| <a name="input_workload_identity_federation"></a> [workload\_identity\_federation](#input\_workload\_identity\_federation) | Workload identity federation settings, sourced from data.meshstack\_integrations. | <pre>object({<br/>    workload_identity_pool_identifier = string<br/>    audience                          = string<br/>    issuer                            = string<br/>    subjects                          = list(string)<br/>    subject_token_file_path           = string<br/>  })</pre> | n/a | yes |
+| <a name="input_workload_identity_federation"></a> [workload\_identity\_federation](#input\_workload\_identity\_federation) | Workload identity federation settings, sourced from data.meshstack\_integrations. The accepted subjects are a separate variable — see workload\_identity\_subjects. | <pre>object({<br/>    workload_identity_pool_identifier = string<br/>    audience                          = string<br/>    issuer                            = string<br/>    subject_token_file_path           = string<br/>  })</pre> | n/a | yes |
+| <a name="input_workload_identity_subjects"></a> [workload\_identity\_subjects](#input\_workload\_identity\_subjects) | Full `sub` claims of the OIDC tokens the pool provider accepts, matched exactly. Each must name the building block definition that authenticates with these credentials. | `list(string)` | n/a | yes |
 
 ## Outputs
 
