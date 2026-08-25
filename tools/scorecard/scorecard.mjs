@@ -49,6 +49,15 @@ const CATEGORIES = {
     description: "meshstack_integration.tf conventions",
     appliesTo: (mod) => existsSync(join(mod.path, "meshstack_integration.tf")),
   },
+  aws_backplane: {
+    id: "aws_backplane",
+    name: "AWS Backplane",
+    description: "AWS automation principal conventions (WIF or cross-account StackSet)",
+    // A backplane/ holding no .tf files of its own declares no automation principal — the
+    // agentic-coding-sandbox composition keeps only a landingzone/ submodule there — so the
+    // category does not apply to it.
+    appliesTo: (mod) => mod.provider === "aws" && readAllBackplaneTf(mod) !== null,
+  },
   azure_backplane: {
     id: "azure_backplane",
     name: "Azure Backplane",
@@ -77,6 +86,38 @@ const CATEGORIES = {
     appliesTo: () => true,
   },
 };
+
+// AWS backplanes come in two documented identity patterns, and most checks belong to exactly one:
+//   "wif"           — OIDC provider + IAM role, for a building block acting in a single account
+//   "cross_account" — IAM user + assumable role (usually distributed by a StackSet), for org-wide
+//                     building blocks that must reach every account in an OU
+// A backplane carrying federation machinery is classified "wif" even when it also mints an access
+// key: that hybrid is the optional-WIF-with-key-fallback shape the reference forbids, and
+// aws_wif_no_access_key is what reports it. Everything else that mints a key is cross-account.
+function awsBackplanePattern(mod) {
+  const allTf = readAllBackplaneTf(mod);
+  if (!allTf) return "none";
+  const federated =
+    /(resource|data)\s+"aws_iam_openid_connect_provider"/.test(allTf) ||
+    /^variable\s+"(workload_identity_federation|oidc_provider_arn)"/m.test(allTf);
+  if (federated) return "wif";
+  return /resource\s+"aws_iam_access_key"/.test(allTf) ? "cross_account" : "none";
+}
+
+// The fixed notice on `oidc_provider_arn` / `aws_oidc_provider_arn`. Deliberately two lines and
+// nothing more, so it can be copied verbatim into every meshstack_integration.tf.
+const AWS_OIDC_PROVIDER_NOTICE = [
+  "ARN of the IAM OIDC provider for the meshStack runner WIF token issuer in this AWS account.",
+  "See .agents/references/aws-backplane.md#the-shared-oidc-provider",
+];
+
+function hasOidcProviderNotice(variableBlock) {
+  const text = variableBlock.replace(/\s+/g, " ");
+  return AWS_OIDC_PROVIDER_NOTICE.every((line) => text.includes(line.replace(/\s+/g, " ")));
+}
+
+const NOT_WIF = { pass: null, detail: "not a workload identity federation backplane" };
+const NOT_CROSS_ACCOUNT = { pass: null, detail: "not a cross-account backplane" };
 
 // ─── Detector functions ─────────────────────────────────────────────────────
 // Each detector returns { pass: boolean, detail?: string }
@@ -430,6 +471,232 @@ const detectors = [
       return {
         pass: /lifecycle\s*\{[\s\S]*?ignore_changes\s*=\s*\[[^\]]*spec\.availability[^\]]*\]/.test(content),
         detail: "add lifecycle { ignore_changes = [spec.availability] } to meshstack_platform resource",
+      };
+    },
+  },
+
+  // ─── AWS Backplane ──────────────────────────────────────────────────────
+  // AWS documents two legitimate identity patterns, so a check has to know which one a backplane
+  // implements before it can judge it. Pattern B mints an `aws_iam_access_key` on purpose, so a
+  // blanket "no access key" check would be wrong there — it only applies on the federation path.
+  {
+    id: "aws_wif_external_oidc_provider",
+    category: "aws_backplane",
+    name: "Takes oidc_provider_arn instead of creating a provider",
+    emoji: "🔐",
+    fn: (mod) => {
+      if (awsBackplanePattern(mod) !== "wif") return NOT_WIF;
+      const allTf = readAllBackplaneTf(mod);
+      if (/resource\s+"aws_iam_openid_connect_provider"/.test(allTf)) {
+        return {
+          pass: false,
+          detail: "creates its own aws_iam_openid_connect_provider — AWS registers one per issuer URL per account, so it is shared platform infrastructure a backplane must be given, not claim",
+        };
+      }
+      const varsTf = readBackplaneFile(mod, "variables.tf");
+      const arnVar = varsTf ? extractVariableBlocks(varsTf).get("oidc_provider_arn") : null;
+      if (!arnVar) return { pass: false, detail: 'missing variable "oidc_provider_arn"' };
+      if (/^\s*default\s*=/m.test(arnVar))
+        return { pass: false, detail: "oidc_provider_arn has a default — the provider has to be deployed first, so there is nothing sensible to default to" };
+      if (/^variable\s+"create_oidc_provider"/m.test(allTf))
+        return { pass: false, detail: "leftover create_oidc_provider variable — the toggle is gone with the resource" };
+      return {
+        pass: /nullable\s*=\s*false/.test(arnVar),
+        detail: "oidc_provider_arn is not nullable = false",
+      };
+    },
+  },
+  {
+    id: "aws_oidc_provider_notice",
+    category: "aws_backplane",
+    name: "oidc_provider_arn carries the shared-provider notice",
+    emoji: "📌",
+    fn: (mod) => {
+      if (awsBackplanePattern(mod) !== "wif") return NOT_WIF;
+      // The notice is the only signpost a first-time platform engineer gets: AWS has no plural
+      // OIDC-provider data source, so a missing provider cannot be turned into a friendly
+      // precondition, and terraform-docs renders backplane variables but not integration comments.
+      // It is therefore copied verbatim into both variables and linted here.
+      const varsTf = readBackplaneFile(mod, "variables.tf");
+      const backplaneVar = varsTf ? extractVariableBlocks(varsTf).get("oidc_provider_arn") : null;
+      if (!backplaneVar) return { pass: false, detail: 'missing variable "oidc_provider_arn"' };
+      if (!hasOidcProviderNotice(backplaneVar))
+        return { pass: false, detail: "backplane oidc_provider_arn description is not the fixed notice — see AWS_OIDC_PROVIDER_NOTICE in this file" };
+
+      const integration = readIntegrationTf(mod);
+      if (!integration) return { pass: null, detail: "no integration file" };
+      const integrationVar = extractVariableBlocks(integration).get("aws_oidc_provider_arn");
+      if (!integrationVar) return { pass: false, detail: 'integration is missing variable "aws_oidc_provider_arn"' };
+      return {
+        pass: hasOidcProviderNotice(integrationVar),
+        detail: "integration aws_oidc_provider_arn description is not the fixed notice",
+      };
+    },
+  },
+  {
+    id: "aws_wif_no_access_key",
+    category: "aws_backplane",
+    name: "No aws_iam_access_key on the federation path",
+    emoji: "🚫",
+    fn: (mod) => {
+      if (awsBackplanePattern(mod) !== "wif") return NOT_WIF;
+      const allTf = readAllBackplaneTf(mod);
+      return {
+        pass: !/resource\s+"aws_iam_access_key"/.test(allTf),
+        detail: "aws_iam_access_key alongside workload identity federation — a long-lived key fallback is not a supported path for a single-account building block",
+      };
+    },
+  },
+  {
+    id: "aws_wif_nonnullable",
+    category: "aws_backplane",
+    name: "workload_identity_federation is non-nullable",
+    emoji: "⚡",
+    fn: (mod) => {
+      if (awsBackplanePattern(mod) !== "wif") return NOT_WIF;
+      const varsTf = readBackplaneFile(mod, "variables.tf");
+      if (!varsTf) return { pass: false, detail: "no variables.tf" };
+      const wifVar = extractVariableBlocks(varsTf).get("workload_identity_federation");
+      if (!wifVar) return { pass: false, detail: 'variable "workload_identity_federation" not found' };
+      const hasDefaultNull = /default\s*=\s*null/.test(wifVar);
+      return {
+        pass: /nullable\s*=\s*false/.test(wifVar) || !hasDefaultNull,
+        detail: hasDefaultNull
+          ? "default = null makes federation optional — the null branch is the access key path"
+          : undefined,
+      };
+    },
+  },
+  {
+    id: "aws_wif_subject_condition",
+    category: "aws_backplane",
+    name: "Trust policy scopes :sub to the BBD's WIF subjects",
+    emoji: "🛂",
+    fn: (mod) => {
+      if (awsBackplanePattern(mod) !== "wif") return NOT_WIF;
+      const allTf = readAllBackplaneTf(mod);
+      // The condition variable is a template carrying nested quotes —
+      // `"${trimprefix(var....issuer, "https://")}:sub"` — so match to end of line, not to the
+      // next quote.
+      const hasSubCondition = /^\s*variable\s*=.*:sub"/m.test(allTf);
+      const hasSubjects = /var\.workload_identity_federation\.subjects/.test(allTf);
+      return {
+        pass: hasSubCondition && hasSubjects,
+        detail: hasSubCondition
+          ? "the :sub condition does not use var.workload_identity_federation.subjects, so it is not scoped to this building block definition"
+          : "no :sub condition — the role is assumable by every subject the meshStack issuer signs",
+      };
+    },
+  },
+  {
+    id: "aws_wif_role_output",
+    category: "aws_backplane",
+    name: "Outputs workload_identity_federation_role as a constructed ARN",
+    emoji: "📤",
+    fn: (mod) => {
+      if (awsBackplanePattern(mod) !== "wif") return NOT_WIF;
+      const outputsTf = readBackplaneFile(mod, "outputs.tf");
+      if (!outputsTf) return { pass: false, detail: "no outputs.tf" };
+      const blocks = extractOutputBlocks(outputsTf);
+      const roleOutput = blocks.get("workload_identity_federation_role");
+      if (!roleOutput) {
+        const nearMiss = [...blocks.keys()].find((n) => n.startsWith("workload_identity_federation_role"));
+        return {
+          pass: false,
+          detail: nearMiss
+            ? `output is named "${nearMiss}" — the convention is "workload_identity_federation_role"`
+            : 'missing output "workload_identity_federation_role"',
+        };
+      }
+      return {
+        pass: /arn:aws:iam::/.test(roleOutput) && !/aws_iam_role\.[\w-]+(\[\d+\])?\.arn/.test(roleOutput),
+        detail: "ARN is read off aws_iam_role instead of being constructed — that closes a dependency cycle through the BBD UUID in the WIF subjects",
+      };
+    },
+  },
+  {
+    id: "aws_wif_integration_env",
+    category: "aws_backplane",
+    name: "Integration wires AWS_ROLE_ARN and AWS_WEB_IDENTITY_TOKEN_FILE",
+    emoji: "🌐",
+    fn: (mod) => {
+      if (awsBackplanePattern(mod) !== "wif") return NOT_WIF;
+      const content = readIntegrationTf(mod);
+      if (!content) return { pass: false, detail: "no integration file" };
+      const hasRoleArn = /\bAWS_ROLE_ARN\b/.test(content);
+      const hasTokenFile = /\bAWS_WEB_IDENTITY_TOKEN_FILE\b/.test(content);
+      return {
+        pass: hasRoleArn && hasTokenFile,
+        detail: hasRoleArn
+          ? "AWS_WEB_IDENTITY_TOKEN_FILE is not wired — the AWS SDK has no token to exchange"
+          : "AWS_ROLE_ARN is not wired as an environment input",
+      };
+    },
+  },
+  {
+    id: "aws_cross_account_provider_aliases",
+    category: "aws_backplane",
+    name: "Declares aws.management and aws.backplane aliases",
+    emoji: "🧭",
+    fn: (mod) => {
+      if (awsBackplanePattern(mod) !== "cross_account") return NOT_CROSS_ACCOUNT;
+      const allTf = readAllBackplaneTf(mod);
+      // Read the configuration_aliases list itself: a bare `provider = aws.backplane` elsewhere in
+      // the module is a use, not a declaration.
+      const aliases = allTf.match(/configuration_aliases\s*=\s*\[[^\]]*\]/)?.[0];
+      if (!aliases) return { pass: false, detail: "no configuration_aliases — the caller cannot point the backplane at two accounts" };
+      const hasManagement = /aws\.management\b/.test(aliases);
+      const hasBackplane = /aws\.backplane\b/.test(aliases);
+      return {
+        pass: hasManagement && hasBackplane,
+        detail: hasManagement
+          ? "no aws.backplane alias — the IAM user must live in a dedicated automation account"
+          : "no aws.management alias — the org-wide resources must be applied against the management account",
+      };
+    },
+  },
+  {
+    id: "aws_stackset_auto_deployment",
+    category: "aws_backplane",
+    name: "StackSet is SERVICE_MANAGED, auto-deploying, retaining nothing",
+    emoji: "📚",
+    fn: (mod) => {
+      if (awsBackplanePattern(mod) !== "cross_account") return NOT_CROSS_ACCOUNT;
+      const allTf = readAllBackplaneTf(mod);
+      const blocks = extractResourceBlocks(allTf, "aws_cloudformation_stack_set");
+      if (blocks.size === 0) return { pass: null, detail: "no aws_cloudformation_stack_set resources" };
+      const faults = [];
+      for (const [name, body] of blocks) {
+        if (!/permission_model\s*=\s*"SERVICE_MANAGED"/.test(body)) faults.push(`${name}: not SERVICE_MANAGED`);
+        if (!/auto_deployment\s*\{[^}]*enabled\s*=\s*true/.test(body)) faults.push(`${name}: auto_deployment not enabled`);
+        if (!/retain_stacks_on_account_removal\s*=\s*false/.test(body)) faults.push(`${name}: retain_stacks_on_account_removal is not false`);
+        if (!/ignore_changes\s*=\s*\[[^\]]*administration_role_arn/.test(body)) faults.push(`${name}: administration_role_arn not in ignore_changes`);
+      }
+      return { pass: faults.length === 0, detail: faults.join("; ") };
+    },
+  },
+  {
+    id: "aws_cross_account_outputs",
+    category: "aws_backplane",
+    name: "Outputs the access key, a sensitive secret, and the target role name",
+    emoji: "🔑",
+    fn: (mod) => {
+      if (awsBackplanePattern(mod) !== "cross_account") return NOT_CROSS_ACCOUNT;
+      const outputsTf = readBackplaneFile(mod, "outputs.tf");
+      if (!outputsTf) return { pass: false, detail: "no outputs.tf" };
+      const blocks = extractOutputBlocks(outputsTf);
+      if (!blocks.has("aws_access_key_id")) return { pass: false, detail: 'missing output "aws_access_key_id"' };
+      const secret = blocks.get("aws_secret_access_key");
+      if (!secret) return { pass: false, detail: 'missing output "aws_secret_access_key"' };
+      if (!/sensitive\s*=\s*true/.test(secret))
+        return { pass: false, detail: "aws_secret_access_key is not marked sensitive = true" };
+      // role_name names the role a StackSet deploys into the target accounts. A backplane that
+      // reaches a single account through a role it creates itself has no such name to publish, so
+      // only StackSet-based backplanes are held to it.
+      const hasStackSet = extractResourceBlocks(readAllBackplaneTf(mod), "aws_cloudformation_stack_set").size > 0;
+      return {
+        pass: !hasStackSet || blocks.has("role_name"),
+        detail: 'missing output "role_name" — the building block cannot name the role it assumes in the target account',
       };
     },
   },
@@ -1211,6 +1478,7 @@ function discoverModules() {
 
 const REF_FILES = [
   "AGENTS.md",
+  ".agents/references/aws-backplane.md",
   ".agents/references/azure-backplane.md",
   ".agents/references/gcp-backplane.md",
   ".agents/references/stackit-backplane.md",
@@ -1479,9 +1747,13 @@ function main() {
       const checkMarks = cr.checks
         .map((c) => (c.result.pass === null ? "➖" : c.result.pass ? "✅" : "❌"))
         .join(" | ");
-      const scoreEmoji = cr.score >= 80 ? "🟢" : cr.score >= 50 ? "🟡" : "🔴";
+      // A pattern-scoped category can mark every one of its checks not applicable, which leaves
+      // no score to render.
+      const scoreCell = cr.score === null
+        ? "—"
+        : `${cr.score >= 80 ? "🟢" : cr.score >= 50 ? "🟡" : "🔴"} ${cr.score}%`;
       lines.push(
-        `| \`${r.mod.id}\` | ${scoreEmoji} ${cr.score}% | ${checkMarks} |`
+        `| \`${r.mod.id}\` | ${scoreCell} | ${checkMarks} |`
       );
     }
     lines.push("");

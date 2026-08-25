@@ -17,6 +17,7 @@ Use WIF when the building block acts within a single AWS account (the backplane 
 - **OIDC-native**: AWS supports federated OIDC identities via `aws_iam_openid_connect_provider` out of the box.
 - **Shared OIDC provider**: Multiple backplanes can share a single OIDC provider in the same AWS account using `create_oidc_provider = false`.
 
+<!-- scorecard-checks: aws_wif_external_oidc_provider, aws_oidc_provider_notice -->
 ### The shared OIDC provider
 
 **A WIF backplane does not create its OIDC provider. It takes the ARN of one as an input.**
@@ -61,6 +62,7 @@ removed {
 Then `import` the provider into the root that applies `modules/aws/oidc-provider`, and pass its ARN
 to the backplanes that used to create it.
 
+<!-- scorecard-checks: aws_wif_subject_condition -->
 ### Implementation Pattern (WIF)
 
 ```hcl
@@ -107,6 +109,7 @@ resource "aws_iam_role" "backplane" {
 # Attach a service-specific policy to aws_iam_role.backplane
 ```
 
+<!-- scorecard-checks: aws_wif_nonnullable -->
 ### Backplane Variables (WIF)
 
 ```hcl
@@ -133,6 +136,7 @@ variable "oidc_provider_arn" {
 The `oidc_provider_arn` description is a fixed notice, copied verbatim into the matching
 `aws_oidc_provider_arn` variable in `meshstack_integration.tf`. The scorecard enforces both.
 
+<!-- scorecard-checks: aws_wif_role_output -->
 ### Backplane Outputs (WIF)
 
 ```hcl
@@ -156,6 +160,7 @@ Use this pattern when the building block must act in **many target accounts** ac
 - **OU-scoped access**: Access is limited to the specified OUs; accounts outside those OUs cannot be reached.
 - **Minimal IAM user**: The IAM user in the backplane account only holds `sts:AssumeRole` on the specific role name — no direct service permissions.
 
+<!-- scorecard-checks: aws_cross_account_provider_aliases, aws_stackset_auto_deployment -->
 ### Implementation Pattern (Cross-Account)
 
 ```hcl
@@ -283,6 +288,7 @@ variable "stackset_region" {
 }
 ```
 
+<!-- scorecard-checks: aws_cross_account_outputs -->
 ### Backplane Outputs (Cross-Account)
 
 ```hcl
@@ -305,6 +311,7 @@ output "role_name" {
 
 ---
 
+<!-- scorecard-checks: aws_wif_no_access_key -->
 ## What to Avoid
 
 - ❌ Long-lived IAM access keys for single-account building blocks — use WIF (Pattern A) instead
@@ -328,6 +335,7 @@ the next time you are in it.
 
 ## `meshstack_integration.tf` Wiring (AWS)
 
+<!-- scorecard-checks: aws_wif_integration_env -->
 ### WIF pattern
 
 ```hcl
