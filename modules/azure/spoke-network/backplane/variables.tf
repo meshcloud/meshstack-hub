@@ -20,6 +20,12 @@ variable "hub_scope" {
   description = "Scope where the hub vnet lives (management group or subscription ID). The identity is granted vnet peering permissions here so it can peer the spoke into the hub."
 }
 
+variable "subscription_id" {
+  type        = string
+  nullable    = false
+  description = "Subscription (bare GUID) where the UAMI and its resource group are created. Typically the hub subscription so the identity lives in a stable, platform-owned place. Deploy the backplane once per hub environment (e.g. hub-dev, hub-prod) with the respective subscription."
+}
+
 variable "location" {
   type        = string
   nullable    = false
