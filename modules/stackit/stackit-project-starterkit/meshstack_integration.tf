@@ -138,7 +138,7 @@ resource "meshstack_building_block_definition" "this" {
     # created rather than after the catalogue entry. The `(Starterkit)` suffix keeps it apart from the
     # `STACKIT Project` block the landing zone attaches to the tenant, which every starterkit order also
     # produces — without it the two read identically in a project's block list.
-    display_name = "STACKIT Project {{name}} (Starterkit)"
+    display_name = "STACKIT Project (Starterkit)"
     symbol       = "https://raw.githubusercontent.com/meshcloud/meshstack-hub/${var.hub.git_ref}/modules/stackit/stackit-project-starterkit/buildingblock/logo.png"
     description  = "Creates a meshProject with a STACKIT project in the selected landing zone, and grants the creator Project Admin."
     # No `supported_platforms`: meshStack rejects a workspace-scoped definition that declares any, with
