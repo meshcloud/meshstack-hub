@@ -5,10 +5,9 @@
 
 
 variables {
-  spoke_rg_name       = "connectivity"
-  name                = "terraform-test"
-  address_space       = "10.123.123.0/24"
-  azure_delay_seconds = 0 # we have a betterway to reduce flakiness, see the run "deploy_rg" step below
+  spoke_rg_name = "connectivity"
+  name          = "terraform-test"
+  address_space = "10.123.123.0/24"
 }
 
 run "setup_tests" {

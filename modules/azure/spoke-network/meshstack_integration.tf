@@ -1,19 +1,16 @@
 variable "azure_hub_subscription_id" {
   type        = string
   description = "PROVIDER TARGET: hub subscription the azurerm provider reads the hub vnet from and creates the hub-side peering in. Bare GUID (e.g. '92eae5db-...'), NOT a '/subscriptions/...' path. Same sub as azure_hub_scope in a simple setup, but different format/purpose (that one is the RBAC scope)."
-  default     = "92eae5db-f627-4428-827f-9261eab6e7e7"
 }
 
 variable "azure_scope" {
   type        = string
   description = "RBAC SCOPE: where the spoke deploy role is granted. Full resource path — a management group ('/providers/Microsoft.Management/managementGroups/<id>') or a subscription ('/subscriptions/<guid>'). Typically the parent of all landing zones. Not to be confused with azure_subscription_id (the provider target GUID)."
-  default     = "/providers/Microsoft.Management/managementGroups/9110cc87-a5b1-4121-85ca-784ab55d7082"
 }
 
 variable "azure_hub_scope" {
   type        = string
   description = "RBAC SCOPE: where the hub peering role is granted. Full resource path — a management group ('/providers/Microsoft.Management/managementGroups/<id>') or a subscription ('/subscriptions/<guid>') containing the hub vnet. Same sub as azure_hub_subscription_id in a simple setup, but this is the full path (RBAC scope), that one is the bare GUID (provider target)."
-  default     = "/subscriptions/92eae5db-f627-4428-827f-9261eab6e7e7"
 }
 
 variable "azure_location" {
@@ -25,14 +22,11 @@ variable "azure_location" {
 variable "azure_hub_resource_group_name" {
   type        = string
   description = "Name of the resource group that contains the hub vnet to peer into."
-  default     = "meshcloud-dev-hub-vnet-rg"
 }
 
 variable "azure_hub_vnet_name" {
   type        = string
   description = "Name of the hub vnet to peer the spoke into."
-  default     = "meshcloud-dev-hub-vnet"
-
 }
 
 variable "azure_spoke_resource_group_name" {
