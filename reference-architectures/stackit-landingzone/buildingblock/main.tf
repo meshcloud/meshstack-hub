@@ -1,4 +1,8 @@
 locals {
+  # The identifier is unique across the whole meshStack instance and lands in every landing zone
+  # name, so a playground deployment suffixes it instead of occupying the plain name.
+  platform_identifier = var.playground_mode ? "${var.platform_identifier}-${random_string.playground_suffix.result}" : var.platform_identifier
+
   # Hub-and-spoke networking is deployed only when the operator supplies a `network` object.
   network_enabled = var.network != null
 
@@ -8,34 +12,52 @@ locals {
 
 # ── Sandbox landing zone foundation (always deployed) ──
 
+resource "random_string" "playground_suffix" {
+  lifecycle {
+    enabled = var.playground_mode
+  }
+
+  length  = 6
+  special = false
+  upper   = false
+}
+
 resource "meshstack_location" "this" {
   lifecycle {
     enabled = !var.use_global_location
   }
 
   metadata = {
-    name               = var.platform_identifier
+    name               = local.platform_identifier
     owned_by_workspace = var.workspace
   }
 
   spec = {
-    display_name = var.platform_identifier
+    display_name = local.platform_identifier
     description  = "STACKIT sandbox location created by the STACKIT Landing Zone."
   }
 }
 
 resource "stackit_resourcemanager_folder" "this" {
-  name                = var.platform_identifier
+  name                = local.platform_identifier
   owner_email         = var.stackit_owner_email
   parent_container_id = var.stackit_org
+
+  lifecycle {
+    prevent_destroy = !var.playground_mode
+  }
 }
 
 # Foundation project hosting the landing-zone core assets (the project-creation service account).
 # Created directly under the organization (not the landing-zone folder).
 resource "stackit_resourcemanager_project" "foundation" {
-  name                = "${var.platform_identifier}-foundation"
+  name                = "${local.platform_identifier}-foundation"
   owner_email         = var.stackit_owner_email
   parent_container_id = var.stackit_org
+
+  lifecycle {
+    prevent_destroy = !var.playground_mode
+  }
 }
 
 # --- State address migration (no resource recreation) ---
@@ -55,7 +77,7 @@ module "stackit_integration" {
   stackit_organization_id                 = var.stackit_org
   stackit_parent_container_id             = stackit_resourcemanager_folder.this.container_id
   stackit_project_id                      = stackit_resourcemanager_project.foundation.project_id
-  stackit_service_account_name            = substr(var.platform_identifier, 0, 20)
+  stackit_service_account_name            = substr(local.platform_identifier, 0, 20)
   role_mapping                            = var.role_mapping
   stackit_organization_onboarding_enabled = var.stackit_organization_onboarding_enabled
 
@@ -69,7 +91,7 @@ module "stackit_integration" {
   meshstack = {
     owning_workspace_identifier = var.workspace
     location_name               = var.use_global_location ? "global" : meshstack_location.this.metadata.name
-    platform_identifier         = var.platform_identifier
+    platform_identifier         = local.platform_identifier
     tags                        = var.tags
   }
 }

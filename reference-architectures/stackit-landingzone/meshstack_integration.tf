@@ -24,6 +24,14 @@ variable "hub" {
   EOT
 }
 
+variable "playground_mode" {
+  type     = bool
+  nullable = false
+  default  = true
+
+  description = "Deploy a throwaway platform: the platform identifier gets a random suffix so it does not occupy a name for good, and the landing-zone folder and foundation project are left destroyable. Set to false for a platform that is actually used. Passed to the building block as a STATIC input, so whoever orders the architecture cannot choose. A playground platform and the building block definitions it registers are not meant to be published to other workspaces."
+}
+
 output "building_block_definition" {
   description = "BBD is consumed in building block compositions."
   value = {
@@ -110,6 +118,22 @@ resource "meshstack_building_block_definition" "this" {
       zone** *(only when a network configuration is provided)* – the shared hub address plan, the
       self-service `STACKIT Network` building block, and a second `STACKIT Networked Project`
       building block definition plus landing zone that places projects into the hub network area.
+
+    ## 🧪 Playground mode
+
+    **Playground Mode** is fixed by whoever deployed this definition and cannot be chosen when
+    ordering. It defaults to `true`, which deploys a throwaway platform: the platform identifier gets
+    a random suffix, and neither the landing-zone folder nor the foundation project is protected
+    against deletion, so the whole thing can be deleted again in one step.
+
+    The suffix matters because a platform identifier is unique across the whole meshStack instance
+    and becomes part of every landing zone name under it. A playground deployment would otherwise
+    occupy the plain name for good. Such a platform and the building block definitions it registers
+    are meant for the deploying workspace only — do not publish them to other workspaces.
+
+    A platform that is actually used is deployed from a definition with **Playground Mode** set to
+    `false`. The identifier is then taken as given, and the folder and foundation project are guarded
+    with `prevent_destroy`, so a deletion run fails rather than taking every tenant project with it.
 
     ## 🔑 Authentication
 
@@ -284,6 +308,14 @@ resource "meshstack_building_block_definition" "this" {
         type            = "BOOLEAN"
         assignment_type = "USER_INPUT"
         default_value   = jsonencode(false)
+      }
+
+      playground_mode = {
+        display_name    = "Playground Mode"
+        description     = "Throwaway deployment: the identifier gets a random suffix and nothing is protected against deletion. Do not publish such a platform or its definitions to other workspaces. Set false for real use."
+        type            = "BOOLEAN"
+        assignment_type = "STATIC"
+        argument        = jsonencode(var.playground_mode)
       }
     }
 

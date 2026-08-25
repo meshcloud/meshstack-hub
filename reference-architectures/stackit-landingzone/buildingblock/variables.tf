@@ -84,6 +84,12 @@ variable "network" {
   description = "Optional hub-and-spoke network topology. Leave unset (null) to deploy only the sandbox landing zone. When set, additionally provisions a shared hub network area with the given address plan (`hub_*` fields), registers the self-service spoke `STACKIT Network` building block (`tenant_network_*` prefix bounds), and adds a dedicated `networked` STACKIT Project building block definition and landing zone whose projects are placed in the hub network area."
 }
 
+variable "playground_mode" {
+  type        = bool
+  nullable    = false
+  description = "Deploy a throwaway platform: the platform identifier gets a random suffix so it does not occupy a name for good, and the landing-zone folder and foundation project are left destroyable. Set to false for a platform that is actually used. A playground platform and the building block definitions it registers are not meant to be published to other workspaces."
+}
+
 variable "hub" {
   type = object({
     git_ref   = optional(string, "main")

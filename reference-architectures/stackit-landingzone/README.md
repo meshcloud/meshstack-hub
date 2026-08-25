@@ -126,6 +126,34 @@ spoke `stackit/network` building block in the same apply. Application teams can 
 projects and — when networking is enabled — order `stackit/network` inside their own STACKIT
 projects once those projects exist.
 
+### Playground Mode
+
+`playground_mode` defaults to `true`, so an unconfigured deployment is a throwaway one. Two things
+change with it:
+
+| | `playground_mode = true` | `playground_mode = false` |
+|---|---|---|
+| Platform identifier | random suffix appended | taken exactly as given |
+| Landing-zone folder and foundation project | destroyable | guarded with `prevent_destroy` |
+
+The suffix exists because a platform identifier is unique across the whole meshStack instance, and
+`modules/stackit` builds every landing zone name from it as `<platform_identifier>-<variant>`. A
+playground deployment that took the plain name would occupy it for good, across the instance.
+
+**A playground platform is for the deploying workspace only.** Neither it nor the building block
+definitions it registers should be published to other workspaces: the platform can disappear at any
+time, and its name is not the one a real deployment will use.
+
+Set `playground_mode = false` for a platform that is actually used, as the `stackit-platform`
+workspace in likvid-cloudfoundation does. The guard is then a plan-time rule, so it also catches a
+teardown caused by a change that forces the folder to be replaced. It cannot catch a deletion that
+happens outside the Terraform run, such as someone removing the folder in the STACKIT portal.
+
+The flag belongs to whoever deploys the definition, not to whoever orders it. It reaches the
+building block as a `STATIC` input, so it does not appear as a choice in the order form and a
+consumer cannot turn a real platform into a playground one, or the reverse. Change it by setting
+`playground_mode` on the reference architecture module and deploying a new definition version.
+
 ## Shared Responsibilities
 
 | Responsibility                                                                | Platform Team | Application Team |
