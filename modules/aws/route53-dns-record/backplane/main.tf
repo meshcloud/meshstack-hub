@@ -6,12 +6,6 @@ resource "random_string" "name_suffix" {
   upper   = false
 }
 
-resource "aws_iam_user" "buildingblock_route53_record_user" {
-  count = var.workload_identity_federation == null ? 1 : 0
-
-  name = "buildingblock-route53-record-user-${random_string.name_suffix.result}"
-}
-
 data "aws_iam_policy_document" "route53_record_access" {
   # Global Route53 actions that don't support resource-level permissions
   statement {
@@ -38,57 +32,22 @@ data "aws_iam_policy_document" "route53_record_access" {
   }
 }
 
-locals {
-  policy_name = var.workload_identity_federation == null ? "Route53RecordBuildingBlockPolicy-${random_string.name_suffix.result}" : "Route53RecordBuildingBlockFederatedPolicy-${random_string.name_suffix.result}"
-  oidc_provider_arn = var.workload_identity_federation == null ? null : try(
-    aws_iam_openid_connect_provider.buildingblock_oidc_provider[0].arn,
-    data.aws_iam_openid_connect_provider.buildingblock_oidc_provider[0].arn
-  )
-}
-
 resource "aws_iam_policy" "buildingblock_route53_record_policy" {
-  name        = local.policy_name
+  name        = "Route53RecordBuildingBlockFederatedPolicy-${random_string.name_suffix.result}"
   description = "Policy for the Route53 DNS Record Building Block"
   policy      = data.aws_iam_policy_document.route53_record_access.json
 }
 
-resource "aws_iam_user_policy_attachment" "buildingblock_route53_record_user_policy_attachment" {
-  count = var.workload_identity_federation == null ? 1 : 0
-
-  user       = aws_iam_user.buildingblock_route53_record_user[0].name
-  policy_arn = aws_iam_policy.buildingblock_route53_record_policy.arn
-}
-
-resource "aws_iam_access_key" "buildingblock_route53_record_access_key" {
-  count = var.workload_identity_federation == null ? 1 : 0
-
-  user = aws_iam_user.buildingblock_route53_record_user[0].name
-}
-
 # Workload Identity Federation
 
-resource "aws_iam_openid_connect_provider" "buildingblock_oidc_provider" {
-  count = (var.workload_identity_federation != null && var.create_oidc_provider) ? 1 : 0
-
-  url            = var.workload_identity_federation.issuer
-  client_id_list = [var.workload_identity_federation.audience]
-}
-
-data "aws_iam_openid_connect_provider" "buildingblock_oidc_provider" {
-  count = (var.workload_identity_federation != null && !var.create_oidc_provider) ? 1 : 0
-
-  url = var.workload_identity_federation.issuer
-}
-
 data "aws_iam_policy_document" "workload_identity_federation" {
-  count   = var.workload_identity_federation != null ? 1 : 0
   version = "2012-10-17"
 
   statement {
     effect = "Allow"
     principals {
       type        = "Federated"
-      identifiers = [local.oidc_provider_arn]
+      identifiers = [var.oidc_provider_arn]
     }
     actions = ["sts:AssumeRoleWithWebIdentity"]
 
@@ -109,15 +68,35 @@ data "aws_iam_policy_document" "workload_identity_federation" {
 }
 
 resource "aws_iam_role" "assume_federated_role" {
-  count = var.workload_identity_federation != null ? 1 : 0
-
   name               = "BuildingBlockRoute53RecordIdentityFederation-${random_string.name_suffix.result}"
-  assume_role_policy = data.aws_iam_policy_document.workload_identity_federation[0].json
+  assume_role_policy = data.aws_iam_policy_document.workload_identity_federation.json
 }
 
 resource "aws_iam_role_policy_attachment" "buildingblock_route53_record" {
-  count = var.workload_identity_federation != null ? 1 : 0
-
-  role       = aws_iam_role.assume_federated_role[0].name
+  role       = aws_iam_role.assume_federated_role.name
   policy_arn = aws_iam_policy.buildingblock_route53_record_policy.arn
+}
+
+# Both were count-guarded while the backplane still offered an IAM access key fallback. Without these
+# a deployment that is already on the federated path would destroy and recreate its live IAM role.
+moved {
+  from = aws_iam_role.assume_federated_role[0]
+  to   = aws_iam_role.assume_federated_role
+}
+
+moved {
+  from = aws_iam_role_policy_attachment.buildingblock_route53_record[0]
+  to   = aws_iam_role_policy_attachment.buildingblock_route53_record
+}
+
+# The provider is account-level shared infrastructure now, applied by modules/aws/oidc-provider.
+# `destroy = false` makes an account that already applied this backplane forget it rather than
+# delete it out from under every other backplane federating through it — import it into the root
+# that owns modules/aws/oidc-provider instead.
+removed {
+  from = aws_iam_openid_connect_provider.buildingblock_oidc_provider
+
+  lifecycle {
+    destroy = false
+  }
 }
