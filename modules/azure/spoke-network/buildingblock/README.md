@@ -56,5 +56,6 @@ No modules.
 
 | Name | Description |
 | ---- | ----------- |
+| <a name="output_summary"></a> [summary](#output\_summary) | Markdown summary of the created spoke network and its hub peering. |
 | <a name="output_vnet_id"></a> [vnet\_id](#output\_vnet\_id) | The ID of the virtual network created by this module. |
 <!-- END_TF_DOCS -->
