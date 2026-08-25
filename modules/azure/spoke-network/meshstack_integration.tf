@@ -1,16 +1,32 @@
+
+
+variable "azure_tenant_id" {
+  type        = string
+  description = "Azure Entra tenant ID where the spoke network and hub live."
+
+}
+
+# variable "azure_subscription_id" {
+#   type        = string
+#   description = "Azure subscription ID of the spoke landing zone where the vnet is created."
+# }
+
 variable "azure_hub_subscription_id" {
   type        = string
   description = "PROVIDER TARGET: hub subscription the azurerm provider reads the hub vnet from and creates the hub-side peering in. Bare GUID (e.g. '92eae5db-...'), NOT a '/subscriptions/...' path. Same sub as azure_hub_scope in a simple setup, but different format/purpose (that one is the RBAC scope)."
+
 }
 
 variable "azure_scope" {
   type        = string
   description = "RBAC SCOPE: where the spoke deploy role is granted. Full resource path — a management group ('/providers/Microsoft.Management/managementGroups/<id>') or a subscription ('/subscriptions/<guid>'). Typically the parent of all landing zones. Not to be confused with azure_subscription_id (the provider target GUID)."
+
 }
 
 variable "azure_hub_scope" {
   type        = string
   description = "RBAC SCOPE: where the hub peering role is granted. Full resource path — a management group ('/providers/Microsoft.Management/managementGroups/<id>') or a subscription ('/subscriptions/<guid>') containing the hub vnet. Same sub as azure_hub_subscription_id in a simple setup, but this is the full path (RBAC scope), that one is the bare GUID (provider target)."
+
 }
 
 variable "azure_location" {
@@ -22,17 +38,26 @@ variable "azure_location" {
 variable "azure_hub_resource_group_name" {
   type        = string
   description = "Name of the resource group that contains the hub vnet to peer into."
+
 }
 
 variable "azure_hub_vnet_name" {
   type        = string
   description = "Name of the hub vnet to peer the spoke into."
+
+
 }
 
 variable "azure_spoke_resource_group_name" {
   type        = string
   default     = "connectivity"
   description = "Name of the resource group created in the spoke subscription to host the spoke vnet."
+}
+
+variable "azure_backplane_subscription_id" {
+  type        = string
+  description = "Subscription (bare GUID) where the backplane UAMI + its resource group are created. Typically the hub subscription, so the automation identity lives in a stable, platform-owned place. Deploy once per hub environment (hub-dev, hub-prod) with the respective subscription."
+
 }
 
 variable "backplane_name" {
@@ -53,6 +78,14 @@ variable "meshstack" {
     tags                        = optional(map(list(string)), {})
   })
   description = "Shared meshStack context. Tags are optional and propagated to building block definition metadata."
+  default = {
+    owning_workspace_identifier = "flori-land"
+    # tags = {
+    #   confidentiality = ["Internal"]
+    #   environment     = ["dev", "prod"]
+    # }
+  }
+
 }
 
 variable "hub" {
@@ -84,10 +117,11 @@ data "meshstack_integrations" "integrations" {}
 module "backplane" {
   source = "github.com/meshcloud/meshstack-hub//modules/azure/spoke-network/backplane?ref=${var.hub.git_ref}"
 
-  name      = var.backplane_name
-  scope     = var.azure_scope
-  hub_scope = var.azure_hub_scope
-  location  = var.azure_location
+  name            = var.backplane_name
+  scope           = var.azure_scope
+  hub_scope       = var.azure_hub_scope
+  location        = var.azure_location
+  subscription_id = var.azure_backplane_subscription_id
 
   workload_identity_federation = {
     issuer = data.meshstack_integrations.integrations.workload_identity_federation.replicator.issuer
@@ -168,10 +202,10 @@ resource "meshstack_building_block_definition" "this" {
           fi
 
           echo "Pre-applying spoke resource group + Owner role assignment (target 1/2)..."
-          tofu apply -input=false -auto-approve -no-color -target=azurerm_role_assignment.spoke_rg
+          tofu apply -input=false -auto-approve -target=azurerm_role_assignment.spoke_rg
 
           echo "Pre-applying spoke vnet (target 2/2)..."
-          tofu apply -input=false -auto-approve -no-color -target=azurerm_virtual_network.spoke_vnet
+          tofu apply -input=false -auto-approve -target=azurerm_virtual_network.spoke_vnet
 
           echo "Prerequisites applied; the main run will now create the hub peering."
         SH
@@ -258,6 +292,8 @@ resource "meshstack_building_block_definition" "this" {
         display_name    = "Spoke Network Name"
         description     = "Name of the spoke network. Used as the basis for the vnet and peering resource names."
         assignment_type = "PROJECT_IDENTIFIER"
+        #value_validation_regex         = "^[a-z0-9][-a-z0-9]{1,40}$"
+        #validation_regex_error_message = "Only lowercase letters, numbers and dashes are allowed (2–41 characters, must start with a letter or number)."
       }
       address_space = {
         type                           = "STRING"
