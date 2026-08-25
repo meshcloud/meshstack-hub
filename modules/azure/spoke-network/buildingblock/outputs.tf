@@ -24,13 +24,11 @@ output "summary" {
 
     ## Hub Peering
 
-    The spoke is peered bidirectionally with the central hub.
+    The spoke is peered bidirectionally with the central hub `${data.azurerm_virtual_network.hub_vnet.name}` (resource group `${data.azurerm_resource_group.hub_rg.name}`).
 
-    | Property | Value |
-    |----------|-------|
-    | **Hub VNet** | `${data.azurerm_virtual_network.hub_vnet.name}` |
-    | **Hub Resource Group** | `${data.azurerm_resource_group.hub_rg.name}` |
-    | **Peering (spoke → hub)** | `${azurerm_virtual_network_peering.spoke_hub_peer.name}` |
-    | **Peering (hub → spoke)** | `${azurerm_virtual_network_peering.hub_spoke_peer.name}` |
+    | Direction | From | To |
+    |-----------|------|----|
+    | Spoke → Hub | `${azurerm_virtual_network.spoke_vnet.name}` | `${data.azurerm_virtual_network.hub_vnet.name}` |
+    | Hub → Spoke | `${data.azurerm_virtual_network.hub_vnet.name}` | `${azurerm_virtual_network.spoke_vnet.name}` |
   EOT
 }
