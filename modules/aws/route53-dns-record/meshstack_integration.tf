@@ -26,10 +26,13 @@ variable "record_types" {
   description = "List of DNS record types offered in the record type selector."
 }
 
-variable "create_oidc_provider" {
-  type        = bool
-  default     = true
-  description = "Set to false if the OIDC provider for the meshStack issuer already exists in this AWS account (e.g., created by another backplane). The existing provider will be looked up by URL instead of created."
+variable "aws_oidc_provider_arn" {
+  type        = string
+  nullable    = false
+  description = <<-EOT
+  ARN of the IAM OIDC provider for the meshStack runner WIF token issuer in this AWS account.
+  See .agents/references/aws-backplane.md#the-shared-oidc-provider
+  EOT
 }
 
 variable "meshstack" {
@@ -69,8 +72,8 @@ data "meshstack_integrations" "integrations" {}
 module "backplane" {
   source = "github.com/meshcloud/meshstack-hub//modules/aws/route53-dns-record/backplane?ref=${var.hub.git_ref}"
 
-  hosted_zone_ids      = var.hosted_zone_ids
-  create_oidc_provider = var.create_oidc_provider
+  hosted_zone_ids   = var.hosted_zone_ids
+  oidc_provider_arn = var.aws_oidc_provider_arn
 
   workload_identity_federation = {
     issuer   = data.meshstack_integrations.integrations.workload_identity_federation.replicator.issuer

@@ -11,8 +11,11 @@ variable "workload_identity_federation" {
   EOT
 }
 
-variable "create_oidc_provider" {
-  type        = bool
-  default     = true
-  description = "Set to false if the OIDC provider for the meshStack issuer already exists in this AWS account (e.g., created by another backplane). The existing provider will be looked up by URL instead of created."
+variable "oidc_provider_arn" {
+  type        = string
+  nullable    = false
+  description = <<-EOT
+  ARN of the IAM OIDC provider for the meshStack runner WIF token issuer in this AWS account.
+  See .agents/references/aws-backplane.md#the-shared-oidc-provider
+  EOT
 }

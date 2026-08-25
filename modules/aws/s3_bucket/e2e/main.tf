@@ -16,10 +16,9 @@ variable "test_context" {
         account_id = string
         region     = string
 
-        # False in the smoke-test account: the meshStack issuer's OIDC provider is a long-lived
-        # fixture there, because AWS permits one per issuer URL per account and several AWS e2e
-        # cases run in parallel.
-        create_oidc_provider = bool
+        # The account's shared OIDC provider for the meshStack runner issuer. AWS permits one per
+        # issuer URL per account, so the harness owns it rather than each e2e run creating one.
+        oidc_provider_arn = string
       })
     }))
   })
@@ -57,8 +56,8 @@ module "aws_s3_bucket" {
     bbd_draft = true
   }
 
-  aws_region           = var.test_context.fixtures.aws.region
-  create_oidc_provider = var.test_context.fixtures.aws.create_oidc_provider
+  aws_region            = var.test_context.fixtures.aws.region
+  aws_oidc_provider_arn = var.test_context.fixtures.aws.oidc_provider_arn
 
   workload_identity = {
     issuer                   = local.replicator.issuer
