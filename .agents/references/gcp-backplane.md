@@ -90,21 +90,51 @@ The backplane's `credentials_json` output is then an
 document (`type = "external_account"`) pointing at the runner's token file, passed to the building
 block as a `FILE` input with `GOOGLE_APPLICATION_CREDENTIALS` set to its path.
 
-### Why GCP subjects stop at the workspace
+### Why GCP WIF subjects stop at the workspace
 
 `modules/azure/`, `modules/aws/` and `modules/stackit/` append the building block definition uuid to
-the subject; GCP deliberately does not. Pinning the uuid makes the pool provider depend on the
-definition, while the definition already depends on the backplane because it embeds
-`credentials_json` — whose audience is that same pool provider's resource name. Breaking that cycle
-costs a hand-assembled audience string with no compile-time check against the real resource, plus an
-inverted create order in which the pool provider becomes the last resource applied, after the
-definition is already live.
+the subject; GCP deliberately does not because this creates a dependency cycle of the following form
 
-The trade-off is accepted deliberately, so do not "fix" it without re-reading the cycle above.
-`startsWith` admits any building block definition owned by the same platform workspace, so all of
+```hcl
+# --- backplane module ---
+resource "google_iam_workload_identity_pool_provider" "meshstack" {
+  # trust condition wants to name the specific BBD so that only a single BBD can assume the role
+  attribute_condition = "google.subject.startsWith('...buildingblockdefinition.${var.bbd_uuid}')"
+  ...
+}
+
+output "credentials_json" {
+  # audience must reference *this* pool provider's resource name
+  value = jsonencode({
+    audience = "//iam.googleapis.com/${google_iam_workload_identity_pool_provider.meshstack.name}"
+    ...
+  })
+}
+
+# --- root module ---
+resource "meshstack_building_block_definition" "gcp_storage_bucket" {
+  # the BBD needs the backplane's credentials as a static input...
+  spec = {
+    inputs = {
+      secret_value = "data:application/json;base64,${base64encode(module.backplane.credentials_json)}"
+    }
+  }
+}
+
+module "backplane" {
+  source = "./backplane"
+  # ...but the backplane needs the BBD's uuid to scope the trust condition, we now have a dependency cycle
+  bbd_uuid = meshstack_building_block_definition.gcp_storage_bucket.id
+}
+```
+
+The current workaround for this problem is to use an `attribute_condition` that does not pin the BBD uuid.
+A `startsWith` admits any building block definition owned by the same platform team workspace, so all of
 them share the backplane's federated identity — but authoring a definition in that workspace is
 already a privileged action, and in practice it coincides with being able to change the backplane
 itself. The residual cost is audit attribution: Cloud Audit Logs cannot tell which definition acted.
+Monitor https://feedback.meshcloud.io/feature-requests/p/introduce-building-block-definition-version-spec-resource-in-meshstack-terraform
+for progress on this matter.
 
 <!-- scorecard-checks: gcp_project_service_disable_on_destroy -->
 ## Project API enablement
