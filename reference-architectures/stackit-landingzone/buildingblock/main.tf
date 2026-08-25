@@ -112,31 +112,30 @@ module "stackit_project_starterkit" {
     local.network_enabled ? { "hub&spoke" = module.stackit_integration.landingzone_refs["networked"] } : {}
   )
 
-  # `sandbox` is always present, so this default holds whether or not networking is enabled. Naming it
-  # rather than taking the first key matters: `keys()` sorts alphabetically, so the first key is
-  # `hub&spoke` as soon as networking is on.
   default_landing_zone = "sandbox"
 
-  # Only `hub&spoke` gets an entry, so that is the only landing zone where the starterkit creates a
-  # spoke network. An empty map — networking disabled — means it never does, and the `network` input it
-  # still shows is simply ignored.
-  network_bbd_version_refs = local.network_enabled ? {
-    "hub&spoke" = module.network_integration.building_block_definition.version_ref
-  } : {}
+  # `hub&spoke` is the only landing zone attached to a network area, so it is the only one where the
+  # starterkit creates a spoke network. Null — networking disabled — drops the `Network` input from the
+  # definition rather than showing a field nothing reads.
+  network = local.network_enabled ? {
+    matching_landing_zones = ["hub&spoke"]
+    bbd_version_ref        = module.network_integration.building_block_definition.version_ref
 
-  # The same bounds the `STACKIT Network` definition validates against, so the starterkit can render
-  # the allowed range into its `network` default and reject a default the area would refuse. The
-  # fallbacks only apply when networking is off, where no spoke network can be created anyway.
-  network_prefix_length = {
-    min = try(var.network.tenant_network_min_prefix_length, 24)
-    max = try(var.network.tenant_network_max_prefix_length, 28)
+    # The same bounds the `STACKIT Network` definition validates against, so the starterkit renders the
+    # allowed range into its `network` default and rejects a default the area would refuse.
+    prefix_length_min = var.network.tenant_network_min_prefix_length
+    prefix_length_max = var.network.tenant_network_max_prefix_length
+  } : null
+
+  meshstack = {
+    owning_workspace_identifier = var.workspace
+    tags = {
+      building_block        = var.tags.building_block
+      project               = var.tags.project
+      project_owner_tag_key = var.tags.project_owner_tag_key
+    }
   }
-
-  project_tags  = var.tags.project
-  owner_tag_key = var.tags.project_owner_tag_key
-
-  meshstack = { owning_workspace_identifier = var.workspace, tags = var.tags.building_block }
-  hub       = var.hub
+  hub = var.hub
 }
 
 # ── Hub-and-spoke network topology (optional — deployed only when var.network is set) ──

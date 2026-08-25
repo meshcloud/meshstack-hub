@@ -231,7 +231,7 @@ resource "meshstack_building_block_definition" "this" {
       # definition here carries is 206, and 387 fails.
       tags = {
         display_name           = "Tags"
-        description            = "HCL object of tag maps forwarded to the nested integrations: `landingzone`, `building_block`, and `project` for the meshProjects the starterkit creates. Set `project` where project tags are mandatory."
+        description            = "HCL object of tag maps forwarded to the nested integrations: `landingzone`, `building_block`, and `project` for the meshProjects the starterkit creates. Adapt `project*` where project tags are mandatory."
         type                   = "CODE"
         assignment_type        = "USER_INPUT"
         updateable_by_consumer = true

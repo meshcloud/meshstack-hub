@@ -15,15 +15,14 @@ locals {
   # meshStack. `landing_zone_refs` is validated to contain the key.
   landing_zone_ref = var.landing_zone_refs[var.landing_zone]
 
-  owner_tags = var.owner_tag_key == "" ? {} : { (var.owner_tag_key) = [var.creator.displayName] }
-
   # A service account or an API key has no username to bind a role to.
   creator_is_user = var.creator.type == "User" && var.creator.username != null
 
-  # A spoke network is created only where the landing zone is attached to a network area, which is
-  # exactly where `network_bbd_version_refs` has an entry. So the `network` object can carry a usable
-  # default without breaking orders in landing zones that have no network area — there it is ignored.
-  network_enabled = var.network != null && contains(keys(var.network_bbd_version_refs), var.landing_zone)
+  owner_tags = var.tags.project_owner_tag_key == "" ? {} : { (var.tags.project_owner_tag_key) = [var.creator.displayName] }
+
+  # The landing zone decides whether an order gets a network at all; `network` only shapes it, and is
+  # null wherever the definition did not offer the input.
+  network_enabled = var.network != null && contains(var.network_static.matching_landing_zones, var.landing_zone)
 }
 
 resource "meshstack_project" "this" {
@@ -34,7 +33,7 @@ resource "meshstack_project" "this" {
 
   spec = {
     display_name = var.name
-    tags         = merge(var.project_tags, local.owner_tags)
+    tags         = merge(var.tags.project, local.owner_tags)
   }
 }
 
@@ -104,15 +103,9 @@ resource "meshstack_building_block" "network" {
   }
 
   spec = {
-    building_block_definition_version_ref = {
-      uuid = var.network_bbd_version_refs[var.landing_zone].uuid
-    }
-
-    display_name = "Network ${local.name}"
-    target_ref = {
-      kind = "meshTenant"
-      uuid = meshstack_tenant.this.metadata.uuid
-    }
+    building_block_definition_version_ref = var.network_static.bbd_version_ref
+    display_name                          = "Network ${local.name}"
+    target_ref                            = meshstack_tenant.this.ref
 
     inputs = {
       network_name          = { value = jsonencode(local.name) }

@@ -27,49 +27,32 @@ variable "default_landing_zone" {
   }
 }
 
-variable "network_bbd_version_refs" {
-  type = map(object({
-    uuid = string
-  }))
-  default     = {}
-  description = "Version refs of the STACKIT Network building block definition, keyed by the same labels as `landing_zone_refs`. Give an entry only for landing zones attached to a network area — that is what decides where a spoke network can be created. Leave empty to offer no networks at all."
-}
-
-# Prefix-length bounds of the network area the spoke subnets are drawn from — the same values the
-# `STACKIT Network` definition validates against. Used to render the allowed range into the `network`
-# default and to catch a default the area would reject. One object rather than two numbers because a
-# bound on its own means nothing.
-variable "network_prefix_length" {
+variable "network" {
   type = object({
-    min = number
-    max = number
+    matching_landing_zones = set(string)
+    bbd_version_ref        = object({ uuid = string })
+    prefix_length_min      = number
+    prefix_length_max      = number
   })
-  default     = { min = 24, max = 28 }
-  description = "Smallest and largest IPv4 prefix length the network area allows for a spoke subnet."
+  default     = null
+  description = "Spoke networks the starterkit can create. `matching_landing_zones` names the `landing_zone_refs` labels attached to a network area — only there is a network created, and only if the set is non-empty does the definition offer the `network` input at all. `bbd_version_ref` is the STACKIT Network definition version that creates it, and the prefix-length bounds are the ones that definition validates against. Null to offer no networks."
 
   validation {
-    condition     = var.network_prefix_length.max >= var.network_prefix_length.min
-    error_message = "network_prefix_length.max must not be smaller than network_prefix_length.min."
+    condition     = var.network == null || alltrue([for lz in var.network.matching_landing_zones : contains(keys(var.landing_zone_refs), lz)])
+    error_message = "network.matching_landing_zones must only contain keys of landing_zone_refs: ${join(", ", keys(var.landing_zone_refs))}."
+  }
+
+  validation {
+    condition     = var.network == null || var.network.prefix_length_max >= var.network.prefix_length_min
+    error_message = "network.prefix_length_max must not be smaller than network.prefix_length_min."
   }
 
   validation {
     # The pre-filled value is hardcoded, so bounds that exclude it would fail every order that leaves
     # the field alone — which is the case the default exists for.
-    condition     = local.default_network_prefix_length >= var.network_prefix_length.min && local.default_network_prefix_length <= var.network_prefix_length.max
-    error_message = "The network default of /${local.default_network_prefix_length} is outside the allowed range ${var.network_prefix_length.min}-${var.network_prefix_length.max}. Widen the bounds or change the default."
+    condition     = var.network == null || (local.default_network_prefix_length >= var.network.prefix_length_min && local.default_network_prefix_length <= var.network.prefix_length_max)
+    error_message = "The network default of /${local.default_network_prefix_length} is outside the allowed range. Widen the bounds or change the default."
   }
-}
-
-variable "project_tags" {
-  type        = map(list(string))
-  default     = {}
-  description = "Tags applied to the meshProject the starterkit creates. Instance-specific, because which meshProject tags are mandatory is a property of the meshStack instance. Leaving this empty on an instance with mandatory project tags makes project creation fail."
-}
-
-variable "owner_tag_key" {
-  type        = string
-  default     = ""
-  description = "meshProject tag key that receives the creator's display name. Empty string to set no owner tag."
 }
 
 variable "add_random_name_suffix" {
@@ -87,10 +70,14 @@ variable "notification_subscribers" {
 variable "meshstack" {
   type = object({
     owning_workspace_identifier = string
-    tags                        = optional(map(list(string)), {})
+    tags = object({
+      building_block        = map(list(string))
+      project               = map(list(string))
+      project_owner_tag_key = string
+    })
   })
   nullable    = false
-  description = "Shared meshStack context. Tags are optional and propagated to building block definition metadata."
+  description = "Shared meshStack context. `tags.building_block` goes on the definition's own metadata; `tags.project` and `tags.project_owner_tag_key` are passed through to the meshProjects the starterkit creates."
 }
 
 variable "hub" {
@@ -125,12 +112,16 @@ locals {
   # Pre-filled subnet size. Hardcoded rather than a variable: the point of the default is that a
   # networked order needs no input, not that every deployment picks its own.
   default_network_prefix_length = 25
+
+  # Null `network`, or an object naming no landing zone, both mean the same thing: no order can ever
+  # get a spoke network, so the definition does not offer the input.
+  network_enabled = length(try(var.network.matching_landing_zones, [])) > 0
 }
 
 resource "meshstack_building_block_definition" "this" {
   metadata = {
     owned_by_workspace = var.meshstack.owning_workspace_identifier
-    tags               = var.meshstack.tags
+    tags               = var.meshstack.tags.building_block
   }
 
   spec = {
@@ -174,7 +165,7 @@ resource "meshstack_building_block_definition" "this" {
     - A **routed network** inside the project, in landing zones attached to a network area, named after the project. The **Network** input controls its prefix length and nameservers; leaving it as it comes gives you a `/25`. Set it to `null` if you would rather have no network.
     - The **Project Admin** role for you, if you ordered this as a user rather than through an API key.
 
-    In a landing zone with no network area the **Network** input is ignored, so the same defaults work everywhere.
+    You only see the **Network** input where at least one landing zone is attached to a network area. Picking a landing zone that is not attached to one gives you a project with no network, whatever the input says.
 
     One order creates one project. If you want separate development and production environments, order the starterkit twice.
 
@@ -220,7 +211,7 @@ resource "meshstack_building_block_definition" "this" {
       }
     }
 
-    inputs = {
+    inputs = merge({
       # ── Filled in by meshStack per run ──
 
       creator = {
@@ -257,33 +248,6 @@ resource "meshstack_building_block_definition" "this" {
         default_value     = jsonencode(var.default_landing_zone)
       }
 
-      network = {
-        assignment_type        = "USER_INPUT"
-        type                   = "CODE"
-        display_name           = "Network"
-        description            = "HCL object for the spoke network created inside the project: `prefix_length` and `ipv4_nameservers`. The network is named after the project. Null for no network."
-        updateable_by_consumer = true
-
-        # Hand-written HCL rather than `jsonencode` of an object, because this is what the application
-        # team is shown in the order form: a formatted block with one field per line is editable, a
-        # single-line JSON string is not. The outer `jsonencode` wraps the document as a string, the
-        # same shape `argument` uses for a CODE input.
-        #
-        # A concrete object rather than null, so ordering in a networked landing zone creates a spoke
-        # network with no input from the application team. Harmless in landing zones with no network
-        # area, where the building block ignores it.
-        default_value = jsonencode(chomp(<<-NETWORK
-        {
-          # Subnet size as an IPv4 prefix length (${var.network_prefix_length.min}-${var.network_prefix_length.max}).
-          prefix_length = ${local.default_network_prefix_length}
-
-          # Leave empty to inherit the network area's default nameservers.
-          ipv4_nameservers = []
-        }
-        NETWORK
-        ))
-      }
-
       # ── Set by the platform team ──
 
       platform_ref = {
@@ -307,32 +271,27 @@ resource "meshstack_building_block_definition" "this" {
         argument = jsonencode(jsonencode(var.landing_zone_refs))
       }
 
-      # Which landing zones can have a spoke network, and which definition version creates it. Keyed
-      # by the same labels as `landing_zone_refs`, so the building block resolves it with the label the
-      # application team selected.
-      network_bbd_version_refs = {
+      # Always declared, even with networking off: the building block reads
+      # `matching_landing_zones` to decide whether the order gets a network, and an empty set is the
+      # answer "never".
+      network_static = {
         assignment_type = "STATIC"
         type            = "CODE"
-        display_name    = "Network BBD Version References"
-        description     = "HCL object mapping a landing zone label to the STACKIT Network definition version used inside it."
-        argument        = jsonencode(jsonencode(var.network_bbd_version_refs))
+        display_name    = "Network (Static)"
+        description     = "HCL object naming the landing zones that get a spoke network, and the STACKIT Network definition version that creates it."
+        argument = jsonencode(jsonencode({
+          matching_landing_zones = local.network_enabled ? var.network.matching_landing_zones : []
+          bbd_version_ref        = local.network_enabled ? var.network.bbd_version_ref : null
+        }))
       }
 
-      project_tags = {
+      tags = {
         assignment_type = "STATIC"
         type            = "CODE"
-        display_name    = "Project Tags"
+        display_name    = "Tags"
         description     = "HCL object of tags applied to the created meshProject."
         # jsonencode twice is correct, see landing_zone_refs note above.
-        argument = jsonencode(jsonencode(var.project_tags))
-      }
-
-      owner_tag_key = {
-        assignment_type = "STATIC"
-        type            = "STRING"
-        display_name    = "Owner Tag Key"
-        description     = "meshProject tag key that receives the creator's display name. Empty to set no owner tag."
-        argument        = jsonencode(var.owner_tag_key)
+        argument = jsonencode(jsonencode(var.meshstack.tags))
       }
 
       add_random_name_suffix = {
@@ -342,7 +301,33 @@ resource "meshstack_building_block_definition" "this" {
         description     = "Append a five-character random suffix to the project name."
         argument        = jsonencode(var.add_random_name_suffix)
       }
-    }
+      },
+      # Offered only where a network can actually be created. With no networked landing zone the
+      # input would be a field the application team can fill in and that nothing ever reads.
+      local.network_enabled ? {
+        network = {
+          assignment_type        = "USER_INPUT"
+          type                   = "CODE"
+          display_name           = "Network"
+          description            = "HCL object for the spoke network created inside the project: `prefix_length` and `ipv4_nameservers`. The network is named after the project. Null for no network."
+          updateable_by_consumer = true
+
+          # Hand-written HCL rather than `jsonencode` of an object, because this is what the
+          # application team is shown in the order form: a formatted block with one field per line is
+          # editable, a single-line JSON string is not. The outer `jsonencode` wraps the document as a
+          # string, the same shape `argument` uses for a CODE input.
+          default_value = jsonencode(chomp(<<-NETWORK
+          {
+            # Subnet size as an IPv4 prefix length (${try(var.network.prefix_length_min, 24)}-${try(var.network.prefix_length_max, 28)}).
+            prefix_length = ${local.default_network_prefix_length}
+
+            # Leave empty to inherit the network area's default nameservers.
+            ipv4_nameservers = []
+          }
+          NETWORK
+          ))
+        }
+    } : {})
 
     outputs = {
       project_identifier = {

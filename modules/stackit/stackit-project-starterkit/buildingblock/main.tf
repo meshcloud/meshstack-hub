@@ -6,17 +6,20 @@
 module "this" {
   source = "./this"
 
-  creator                  = var.creator
-  name                     = var.name
-  landing_zone             = var.landing_zone
-  workspace_identifier     = var.workspace_identifier
-  platform_ref             = var.platform_ref
-  landing_zone_refs        = var.landing_zone_refs
-  network_bbd_version_refs = var.network_bbd_version_refs
-  network                  = var.network
-  project_tags             = var.project_tags
-  owner_tag_key            = var.owner_tag_key
-  add_random_name_suffix   = var.add_random_name_suffix
+  creator              = var.creator
+  workspace_identifier = var.workspace_identifier
+  tags                 = var.tags
+
+  name         = var.name
+  landing_zone = var.landing_zone
+
+  platform_ref      = var.platform_ref
+  landing_zone_refs = var.landing_zone_refs
+
+  network        = var.network
+  network_static = var.network_static
+
+  add_random_name_suffix = var.add_random_name_suffix
 }
 
 # The starterkit hands the meshProject and meshTenant over to the application team and then removes

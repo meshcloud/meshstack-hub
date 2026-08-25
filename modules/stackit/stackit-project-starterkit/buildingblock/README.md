@@ -99,18 +99,17 @@ mandatory block's output. By the time the network block is ordered, the project 
 
 | Name | Description | Type | Default | Required |
 |------|-------------|------|---------|:--------:|
-| <a name="input_add_random_name_suffix"></a> [add\_random\_name\_suffix](#input\_add\_random\_name\_suffix) | Append a five-character random suffix to `name`. The STACKIT project name is the meshProject identifier, so this suffix is what keeps two teams' projects of the same name apart. | `bool` | `true` | no |
-| <a name="input_creator"></a> [creator](#input\_creator) | Creator of the starterkit, who is granted the Project Admin role on the created project. | <pre>object({<br/>    type        = string<br/>    identifier  = string<br/>    displayName = string<br/>    username    = optional(string)<br/>    email       = optional(string)<br/>    euid        = optional(string)<br/>  })</pre> | n/a | yes |
-| <a name="input_landing_zone"></a> [landing\_zone](#input\_landing\_zone) | Key into `landing_zone_refs`, chosen by the application team from the definition's select. | `string` | n/a | yes |
-| <a name="input_landing_zone_refs"></a> [landing\_zone\_refs](#input\_landing\_zone\_refs) | Landing zones the application team can choose from, keyed by the label shown in the select. | <pre>map(object({<br/>    name = string<br/>    kind = string<br/>  }))</pre> | n/a | yes |
-| <a name="input_meshstack_building_block_id"></a> [meshstack\_building\_block\_id](#input\_meshstack\_building\_block\_id) | UUID of this building block, injected by the meshStack runner. Used to delete this block at the end of its own run. | `string` | n/a | yes |
-| <a name="input_name"></a> [name](#input\_name) | Base name for the created meshProject and, through PROJECT\_IDENTIFIER, its STACKIT project. | `string` | n/a | yes |
-| <a name="input_network"></a> [network](#input\_network) | Spoke network created inside the project, in landing zones attached to a network area. Named after the project. Set to null to get a project with no network. | <pre>object({<br/>    prefix_length    = optional(number, 25)<br/>    ipv4_nameservers = optional(list(string), [])<br/>  })</pre> | `{}` | no |
-| <a name="input_network_bbd_version_refs"></a> [network\_bbd\_version\_refs](#input\_network\_bbd\_version\_refs) | Version refs of the STACKIT Network building block definition, keyed by landing zone label. A landing zone without an entry cannot have a spoke network. | <pre>map(object({<br/>    uuid = string<br/>  }))</pre> | `{}` | no |
-| <a name="input_owner_tag_key"></a> [owner\_tag\_key](#input\_owner\_tag\_key) | meshProject tag key that receives the creator's display name. Empty string to set no owner tag. | `string` | `""` | no |
-| <a name="input_platform_ref"></a> [platform\_ref](#input\_platform\_ref) | Reference to the meshPlatform the tenant is created on. Required because the meshTenant v4 API references platforms by ref. | <pre>object({<br/>    uuid = string<br/>    kind = string<br/>  })</pre> | n/a | yes |
-| <a name="input_project_tags"></a> [project\_tags](#input\_project\_tags) | Tags applied to the created meshProject. Which tags are mandatory is a property of the meshStack instance, so this is set by the platform team. Leaving it empty on an instance with mandatory project tags makes project creation fail. | `map(list(string))` | `{}` | no |
-| <a name="input_workspace_identifier"></a> [workspace\_identifier](#input\_workspace\_identifier) | Identifier of the meshStack workspace the created project belongs to. | `string` | n/a | yes |
+| <a name="input_add_random_name_suffix"></a> [add\_random\_name\_suffix](#input\_add\_random\_name\_suffix) | n/a | `bool` | n/a | yes |
+| <a name="input_creator"></a> [creator](#input\_creator) | n/a | <pre>object({<br/>    type        = string<br/>    identifier  = string<br/>    displayName = string<br/>    username    = optional(string)<br/>    email       = optional(string)<br/>    euid        = optional(string)<br/>  })</pre> | n/a | yes |
+| <a name="input_landing_zone"></a> [landing\_zone](#input\_landing\_zone) | n/a | `string` | n/a | yes |
+| <a name="input_landing_zone_refs"></a> [landing\_zone\_refs](#input\_landing\_zone\_refs) | n/a | <pre>map(object({<br/>    name = string<br/>    kind = string<br/>  }))</pre> | n/a | yes |
+| <a name="input_meshstack_building_block_id"></a> [meshstack\_building\_block\_id](#input\_meshstack\_building\_block\_id) | Written by the runner, not by the definition's inputs: it is the uuid of the building block this run belongs to. `terraform_data.self_purge` uses it to delete that block once the starterkit is done. | `string` | n/a | yes |
+| <a name="input_name"></a> [name](#input\_name) | n/a | `string` | n/a | yes |
+| <a name="input_network"></a> [network](#input\_network) | The only variable here that keeps a default. The definition declares this input only where a spoke network can be created, so with networking off no value arrives at all. | <pre>object({<br/>    prefix_length    = number<br/>    ipv4_nameservers = list(string)<br/>  })</pre> | `null` | no |
+| <a name="input_network_static"></a> [network\_static](#input\_network\_static) | n/a | <pre>object({<br/>    matching_landing_zones = set(string)<br/>    bbd_version_ref        = object({ uuid = string })<br/>  })</pre> | n/a | yes |
+| <a name="input_platform_ref"></a> [platform\_ref](#input\_platform\_ref) | n/a | <pre>object({<br/>    uuid = string<br/>    kind = string<br/>  })</pre> | n/a | yes |
+| <a name="input_tags"></a> [tags](#input\_tags) | n/a | <pre>object({<br/>    project               = map(list(string))<br/>    project_owner_tag_key = string<br/>  })</pre> | n/a | yes |
+| <a name="input_workspace_identifier"></a> [workspace\_identifier](#input\_workspace\_identifier) | n/a | `string` | n/a | yes |
 
 ## Outputs
 

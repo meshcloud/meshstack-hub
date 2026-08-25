@@ -49,11 +49,17 @@ variable "tags" {
   type = object({
     landingzone           = map(list(string))
     building_block        = map(list(string))
-    project               = optional(map(list(string)), {})
-    project_owner_tag_key = optional(string, "")
+    project               = map(list(string))
+    project_owner_tag_key = string
   })
   nullable    = false
-  description = "Tags forwarded to the nested STACKIT integrations. `landingzone` tags are applied to the created landing zones; `building_block` tags are applied to the nested building block definitions; `project` tags are applied to the meshProjects the starterkit creates, and `project_owner_tag_key` names the tag that receives the creator's display name."
+  description = <<-EOT
+  Tags forwarded to the nested STACKIT integrations.
+  `landingzone` tags are applied to the created landing zones.
+  `building_block` tags are applied to the nested building block definitions.
+  `project` tags are applied to the meshProjects the starterkit creates.
+  `project_owner_tag_key` names the tag that receives the creator's display name.
+  EOT
 }
 
 variable "role_mapping" {

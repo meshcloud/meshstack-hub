@@ -1,7 +1,8 @@
 # Every variable here is passed straight through to `./this`, which is where the descriptions and
-# the validation rules live. They are repeated here only because Terraform has no way to forward a
-# child module's variable declarations, and the building block definition's input contract is this
-# file. Keep the two in step: an input added in `./this` is not orderable until it is added here too.
+# the validation rules live, next to the code that uses them. They are repeated here only because
+# Terraform has no way to forward a child module's variable declarations, and the building block
+# definition's input contract is this file. Keep the two in step: an input added in `./this` is not
+# orderable until it is added here too.
 
 variable "creator" {
   type = object({
@@ -12,25 +13,22 @@ variable "creator" {
     email       = optional(string)
     euid        = optional(string)
   })
-  description = "Creator of the starterkit, who is granted the Project Admin role on the created project."
+  nullable = false
 }
 
 variable "name" {
-  type        = string
-  nullable    = false
-  description = "Base name for the created meshProject and, through PROJECT_IDENTIFIER, its STACKIT project."
+  type     = string
+  nullable = false
 }
 
 variable "landing_zone" {
-  type        = string
-  nullable    = false
-  description = "Key into `landing_zone_refs`, chosen by the application team from the definition's select."
+  type     = string
+  nullable = false
 }
 
 variable "workspace_identifier" {
-  type        = string
-  nullable    = false
-  description = "Identifier of the meshStack workspace the created project belongs to."
+  type     = string
+  nullable = false
 }
 
 variable "platform_ref" {
@@ -38,8 +36,7 @@ variable "platform_ref" {
     uuid = string
     kind = string
   })
-  nullable    = false
-  description = "Reference to the meshPlatform the tenant is created on. Required because the meshTenant v4 API references platforms by ref."
+  nullable = false
 }
 
 variable "landing_zone_refs" {
@@ -47,49 +44,43 @@ variable "landing_zone_refs" {
     name = string
     kind = string
   }))
-  nullable    = false
-  description = "Landing zones the application team can choose from, keyed by the label shown in the select."
+  nullable = false
 }
 
-variable "network_bbd_version_refs" {
-  type = map(object({
-    uuid = string
-  }))
-  default     = {}
-  description = "Version refs of the STACKIT Network building block definition, keyed by landing zone label. A landing zone without an entry cannot have a spoke network."
-}
-
+# The only variable here that keeps a default. The definition declares this input only where a spoke
+# network can be created, so with networking off no value arrives at all.
 variable "network" {
   type = object({
-    prefix_length    = optional(number, 25)
-    ipv4_nameservers = optional(list(string), [])
+    prefix_length    = number
+    ipv4_nameservers = list(string)
   })
-  default     = {}
-  description = "Spoke network created inside the project, in landing zones attached to a network area. Named after the project. Set to null to get a project with no network."
+  default = null
 }
 
-variable "project_tags" {
-  type        = map(list(string))
-  default     = {}
-  description = "Tags applied to the created meshProject. Which tags are mandatory is a property of the meshStack instance, so this is set by the platform team. Leaving it empty on an instance with mandatory project tags makes project creation fail."
+variable "network_static" {
+  type = object({
+    matching_landing_zones = set(string)
+    bbd_version_ref        = object({ uuid = string })
+  })
+  nullable = false
 }
 
-variable "owner_tag_key" {
-  type        = string
-  default     = ""
-  description = "meshProject tag key that receives the creator's display name. Empty string to set no owner tag."
+variable "tags" {
+  type = object({
+    project               = map(list(string))
+    project_owner_tag_key = string
+  })
+  nullable = false
 }
 
 variable "add_random_name_suffix" {
-  type        = bool
-  default     = true
-  description = "Append a five-character random suffix to `name`. The STACKIT project name is the meshProject identifier, so this suffix is what keeps two teams' projects of the same name apart."
+  type     = bool
+  nullable = false
 }
 
 # Written by the runner, not by the definition's inputs: it is the uuid of the building block this run
 # belongs to. `terraform_data.self_purge` uses it to delete that block once the starterkit is done.
 variable "meshstack_building_block_id" {
-  type        = string
-  nullable    = false
-  description = "UUID of this building block, injected by the meshStack runner. Used to delete this block at the end of its own run."
+  type     = string
+  nullable = false
 }
