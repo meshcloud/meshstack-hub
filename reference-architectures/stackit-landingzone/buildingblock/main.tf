@@ -3,6 +3,19 @@ locals {
   # name, so a playground deployment suffixes it instead of occupying the plain name.
   platform_identifier = var.playground_mode ? "${var.platform_identifier}-${random_string.playground_suffix.result}" : var.platform_identifier
 
+  # STACKIT caps a service account name at 20 characters and rejects one ending in a dash, so cutting
+  # the identifier to length can produce an invalid name — a playground deployment gave
+  # `likvid-stackit-test-`. Cut shorter instead, drop whatever dashes the cut exposed, and end with a
+  # hash of the full identifier so two names sharing a prefix stay apart.
+  #
+  # Only when it does not fit: a name that already fits passes through untouched, because changing it
+  # replaces the service account every tenant project names as its owner.
+  service_account_name = length(local.platform_identifier) <= 20 ? local.platform_identifier : format(
+    "%s-%s",
+    replace(substr(local.platform_identifier, 0, 15), "/-+$/", ""),
+    substr(sha256(local.platform_identifier), 0, 4)
+  )
+
   # Hub-and-spoke networking is deployed only when the operator supplies a `network` object.
   network_enabled = var.network != null
 
@@ -77,7 +90,7 @@ module "stackit_integration" {
   stackit_organization_id                 = var.stackit_org
   stackit_parent_container_id             = stackit_resourcemanager_folder.this.container_id
   stackit_project_id                      = stackit_resourcemanager_project.foundation.project_id
-  stackit_service_account_name            = substr(local.platform_identifier, 0, 20)
+  stackit_service_account_name            = local.service_account_name
   role_mapping                            = var.role_mapping
   stackit_organization_onboarding_enabled = var.stackit_organization_onboarding_enabled
 
