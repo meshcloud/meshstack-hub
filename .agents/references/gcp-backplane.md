@@ -90,6 +90,22 @@ The backplane's `credentials_json` output is then an
 document (`type = "external_account"`) pointing at the runner's token file, passed to the building
 block as a `FILE` input with `GOOGLE_APPLICATION_CREDENTIALS` set to its path.
 
+### Why GCP subjects stop at the workspace
+
+`modules/azure/`, `modules/aws/` and `modules/stackit/` append the building block definition uuid to
+the subject; GCP deliberately does not. Pinning the uuid makes the pool provider depend on the
+definition, while the definition already depends on the backplane because it embeds
+`credentials_json` — whose audience is that same pool provider's resource name. Breaking that cycle
+costs a hand-assembled audience string with no compile-time check against the real resource, plus an
+inverted create order in which the pool provider becomes the last resource applied, after the
+definition is already live.
+
+The trade-off is accepted deliberately, so do not "fix" it without re-reading the cycle above.
+`startsWith` admits any building block definition owned by the same platform workspace, so all of
+them share the backplane's federated identity — but authoring a definition in that workspace is
+already a privileged action, and in practice it coincides with being able to change the backplane
+itself. The residual cost is audit attribution: Cloud Audit Logs cannot tell which definition acted.
+
 <!-- scorecard-checks: gcp_project_service_disable_on_destroy -->
 ## Project API enablement
 
