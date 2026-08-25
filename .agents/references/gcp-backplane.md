@@ -1,5 +1,5 @@
 ---
-description: GCP backplane identity conventions for meshstack-hub modules under modules/gcp/. Covers the mandatory workload identity federation pattern (pool + provider + service account), why there is no service account key path, project API enablement with disable_on_destroy = false, required permissions for the applying identity, the workload identity pool soft-delete constraint, and the GCP backplane checklist.
+description: GCP backplane identity conventions for meshstack-hub modules under modules/gcp/. Covers the mandatory workload identity federation pattern (pool + provider + service account), why there is no service account key path, scoping the subject to one building block definition and the two steps that keep its uuid from closing a dependency cycle, project API enablement with disable_on_destroy = false, required permissions for the applying identity, the workload identity pool soft-delete constraint, and the GCP backplane checklist.
 ---
 
 # GCP Backplane Conventions
@@ -56,10 +56,10 @@ resource "google_iam_workload_identity_pool_provider" "meshstack" {
     "google.subject" = "assertion.sub"
   }
 
-  # Restrict token acceptance to the configured subjects.
+  # Exact match, never startsWith() — see "Scope the subject to one building block definition".
   attribute_condition = join(" || ", [
-    for subject in var.workload_identity_federation.subjects :
-    "google.subject.startsWith('${subject}')"
+    for subject in var.workload_identity_subjects :
+    "google.subject == '${subject}'"
   ])
 }
 
@@ -81,7 +81,7 @@ resource "google_project_iam_member" "buildingblock" {
 }
 ```
 
-`issuer`, `audience` and `subjects` must always come from `data.meshstack_integrations` in
+`issuer`, `audience` and the subjects must always come from `data.meshstack_integrations` in
 `meshstack_integration.tf` — never hardcoded. See the AWS and Azure references for the shared
 subject-derivation idiom.
 
@@ -89,6 +89,73 @@ The backplane's `credentials_json` output is then an
 [external account](https://cloud.google.com/iam/docs/workload-identity-federation) credential
 document (`type = "external_account"`) pointing at the runner's token file, passed to the building
 block as a `FILE` input with `GOOGLE_APPLICATION_CREDENTIALS` set to its path.
+
+## Scope the subject to one building block definition
+
+The building block runner names its per-run Kubernetes service account
+`workspace.<workspace>.buildingblockdefinition.<bbd-uuid>`, so the token's `sub` claim is
+`system:serviceaccount:<namespace>:workspace.<workspace>.buildingblockdefinition.<bbd-uuid>`. The
+subject must carry that uuid and be matched **exactly**, as every other provider's backplane already
+does. A subject that stops at `buildingblockdefinition`, or an exact subject matched with
+`startsWith()`, admits **every** building block definition in the workspace — a second definition in
+the same workspace can then federate into this backplane's service account and inherit its roles.
+
+```hcl
+# meshstack_integration.tf
+workload_identity_subjects = [
+  "${trimsuffix(data.meshstack_integrations.integrations.workload_identity_federation.replicator.subject, ":replicator")}:workspace.${var.meshstack.owning_workspace_identifier}.buildingblockdefinition.${meshstack_building_block_definition.this.metadata.uuid}"
+]
+```
+
+### Breaking the dependency cycle the uuid creates
+
+The building block definition carries `credentials_json` as a `FILE` input, so it already depends on
+the backplane. Feeding its uuid back in as a subject closes that loop — unless **nothing on the
+credential path depends on a resource that consumes the subjects**. GCP needs two deliberate steps
+for that.
+
+**1. Keep the subjects out of `workload_identity_federation`.** OpenTofu tracks module input
+dependencies **per variable**, not per attribute. A `subjects` field inside that object taints every
+resource that reads any other field of it — the pool via its identifier, the
+`roles/iam.workloadIdentityUser` binding via the pool, and the credentials via the IAM propagation
+wait. A separate `variable "workload_identity_subjects"` confines the dependency to the pool
+provider, the only resource that needs it.
+
+**2. Assemble the pool provider's resource name instead of reading the attribute back** — the same
+trick `modules/aws/` uses for its role ARN.
+
+```hcl
+data "google_project" "this" {
+  project_id = var.project_id
+}
+
+locals {
+  # Not google_iam_workload_identity_pool_provider.meshstack.name: that resource consumes
+  # var.workload_identity_subjects, and the subjects name the building block definition that
+  # carries these credentials.
+  workload_identity_pool_provider_name = "projects/${data.google_project.this.number}/locations/global/workloadIdentityPools/${var.workload_identity_federation.workload_identity_pool_identifier}/providers/${var.workload_identity_federation.workload_identity_pool_identifier}"
+}
+
+output "credentials_json" {
+  # ...
+  value = jsonencode({
+    audience = "//iam.googleapis.com/${local.workload_identity_pool_provider_name}"
+    # ...
+  })
+}
+```
+
+The pool itself does **not** consume the subjects, so `google_service_account_iam_binding` and
+`time_sleep.wait_for_iam` may keep referencing it. That is why the binding stays pool-wide
+(`principalSet://.../workloadIdentityPools/<pool>/*`) rather than naming the subject with
+`principal://.../subject/<sub>`: a subject-scoped member would put the subjects back on the credential
+path through the IAM propagation wait, and dropping the binding from that wait would trade a real
+`iam.serviceAccounts.getAccessToken` 403 for a theoretical second gate. The pool-wide set has exactly
+one member anyway — one pool, one provider, one accepted subject.
+
+`tofu validate` on the backplane alone surfaces neither cycle. Check both by initialising and
+validating a root that wires `meshstack_integration.tf` against a local `./backplane` — that is where
+OpenTofu reports `Error: Cycle: ...`.
 
 <!-- scorecard-checks: gcp_project_service_disable_on_destroy -->
 ## Project API enablement
@@ -262,11 +329,17 @@ variable "workload_identity_federation" {
     workload_identity_pool_identifier = string
     audience                          = string
     issuer                            = string
-    subjects                          = list(string)
     subject_token_file_path           = string
   })
   nullable    = false # required: there is no service account key fallback
   description = "Workload identity federation settings sourced from data.meshstack_integrations."
+}
+
+# Deliberately not a field of the object above — see "Breaking the dependency cycle the uuid creates".
+variable "workload_identity_subjects" {
+  type        = list(string)
+  nullable    = false
+  description = "Full `sub` claims of the OIDC tokens the pool provider accepts, matched exactly."
 }
 ```
 
@@ -295,7 +368,11 @@ Both existing modules expose these two. Do not add a `documentation_md` output �
 - ❌ `google_service_account_key` — use workload identity federation
 - ❌ Conditional WIF-vs-key logic: a nullable `workload_identity_federation` and a `count` on every
   federation resource
-- ❌ Hardcoded `issuer`, `audience` or `subjects` — source them from `data.meshstack_integrations`
+- ❌ Hardcoded `issuer`, `audience` or subjects — source them from `data.meshstack_integrations`
+- ❌ A subject that stops at `buildingblockdefinition`, or `startsWith()` on the subject — both admit
+  every building block definition in the workspace
+- ❌ `subjects` as a field of `workload_identity_federation` — it drags the whole object onto the
+  credential path and the configuration no longer plans
 - ❌ Hardcoded workload identity pool identifier — soft-delete makes it unreusable for ~30 days
 - ❌ Granting the building block's service account `roles/serviceusage.serviceUsageAdmin` when the
   building block does not enable services
@@ -310,7 +387,10 @@ Both existing modules expose these two. Do not add a `documentation_md` output �
 - [ ] Workload identity pool + provider present
 - [ ] No `google_service_account_key` anywhere in `backplane/`
 - [ ] `workload_identity_federation` is `nullable = false` — no key fallback, no `default = null`
-- [ ] `attribute_condition` restricts `google.subject` to the configured subjects
+- [ ] The accepted subjects live in their own `workload_identity_subjects` variable, not in that object
+- [ ] `attribute_condition` matches `google.subject` **exactly** against the configured subjects — no `startsWith()`
+- [ ] The subject in `meshstack_integration.tf` ends in `.${meshstack_building_block_definition.<name>.metadata.uuid}`
+- [ ] `credentials_json` reads no attribute of `google_iam_workload_identity_pool_provider` — the audience is assembled from `data.google_project.<x>.number` and the pool identifier
 - [ ] `google_service_account_iam_binding` grants `roles/iam.workloadIdentityUser` on the pool
 - [ ] Workload identity pool identifier is an input, not a hardcoded literal
 - [ ] A `time_sleep` absorbs IAM propagation and the `credentials_json` output `depends_on` it
