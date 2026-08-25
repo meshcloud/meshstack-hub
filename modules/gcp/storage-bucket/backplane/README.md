@@ -60,12 +60,11 @@ module "gcp_storage_bucket_backplane" {
     workload_identity_pool_identifier = "your-pool-identifier"
     audience                          = "your-audience"
     issuer                            = "https://your-oidc-issuer"
-    subjects = [
-      "system:serviceaccount:your-namespace:your-service-account-name",
-      "system:serviceaccount:your-namespace:another-service-account",
-    ]
-    subject_token_file_path = "/path/to/your/token/file"
+    subject_token_file_path           = "/path/to/your/token/file"
   }
+  workload_identity_subjects = [
+    "system:serviceaccount:your-namespace:workspace.your-workspace.buildingblockdefinition.your-bbd-uuid",
+  ]
 }
 ```
 
@@ -97,40 +96,50 @@ the backplane well before any building block runs).
 > fresh identifier per deployment if you need to recreate the backplane, and be aware that
 > soft-deleted pools still count towards the project's workload identity pool limit.
 
-The module grants access to the entire workload identity pool at the IAM level, then uses attribute conditions at the provider level to restrict which identities can actually authenticate.
+### Subject matching is exact
 
-### Subject Matching
-
-The module supports both exact matching and partial matching for subjects:
-
-**Exact matching** - Grant access to specific subjects:
-```hcl
-workload_identity_federation = {
-  issuer = "https://your-oidc-issuer"
-  subjects = [
-    "system:serviceaccount:namespace1:service-account-1",
-    "system:serviceaccount:namespace1:service-account-2",
-  ]
-}
-```
-
-**Partial matching** - Use `startsWith()` to match multiple subjects with a common prefix. Note: The module doesn't use special syntax for this; instead, pass the prefix pattern as-is and it will be matched using CEL's `startsWith()` function:
+The provider's `attribute_condition` compares `google.subject` for **equality** against each entry of
+`workload_identity_subjects`. Pass the complete `sub` claim of the token you want accepted, not a
+prefix:
 
 ```hcl
-workload_identity_federation = {
-  issuer = "https://your-oidc-issuer"
-  subjects = [
-    "system:serviceaccount:namespace1:",  # Matches all service accounts in namespace1
-  ]
-}
+workload_identity_subjects = [
+  "system:serviceaccount:<runner-namespace>:workspace.<workspace-id>.buildingblockdefinition.<bbd-uuid>",
+]
 ```
 
-This configuration will accept any subject that starts with `system:serviceaccount:namespace1:`, allowing all service accounts in that namespace to authenticate without listing each one individually.
+`meshstack_integration.tf` derives exactly this value, so the pool admits the runner of **one**
+building block definition. Prefix matching is deliberately not supported: the building block runner
+names its per-run service account `workspace.<workspace>.buildingblockdefinition.<bbd-uuid>`, so a
+prefix that stopped at `buildingblockdefinition` would let every other building block definition in
+the same workspace federate into this service account.
 
-**How it works:**
-- IAM binding grants access to the entire workload identity pool (`principalSet://iam.googleapis.com/.../pools/POOL_ID/*`)
-- Attribute conditions in the provider filter which tokens are accepted based on the `google.subject` claim
-- Subjects are evaluated as exact matches first, then partial matches via `startsWith()` checking
+The `roles/iam.workloadIdentityUser` binding on the service account is pool-wide
+(`principalSet://iam.googleapis.com/.../workloadIdentityPools/POOL_ID/*`). That is not a wider grant
+than the condition above: the pool holds a single provider, and that provider accepts a single
+subject, so the set has exactly one member. Naming the subject in the binding as well would make the
+binding depend on the building block definition uuid — and `credentials_json` waits on that binding
+for IAM propagation, which would close a dependency cycle.
+
+### Why the subjects are their own variable
+
+The subjects name the building block definition, and that same definition carries `credentials_json`
+as an input. Nothing on the credential path may therefore depend on them. OpenTofu tracks module
+input dependencies **per variable**, not per attribute, so a `subjects` field inside
+`workload_identity_federation` would taint every resource that reads any other field of that object —
+including the pool, the `roles/iam.workloadIdentityUser` binding, and through the propagation wait,
+the credentials themselves. Keeping the subjects in `workload_identity_subjects` confines the
+dependency to the one resource that needs it, the pool provider.
+
+For the same reason `credentials_json` builds its `audience` from the project number and the pool
+identifier
+(`//iam.googleapis.com/projects/<number>/locations/global/workloadIdentityPools/<pool>/providers/<pool>`)
+instead of reading `google_iam_workload_identity_pool_provider.meshstack.name` — reading the
+attribute back would put the pool provider, the one subject-dependent resource, on the credential
+path.
+
+`tofu validate` on this module alone does not surface either cycle. Only a root that wires
+`meshstack_integration.tf` against a local `backplane/` does.
 
 <!-- BEGIN_TF_DOCS -->
 ## Requirements
@@ -156,6 +165,7 @@ No modules.
 | [google_service_account.buildingblock_storage_sa](https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/service_account) | resource |
 | [google_service_account_iam_binding.workload_identity_binding](https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/service_account_iam_binding) | resource |
 | [time_sleep.wait_for_iam](https://registry.terraform.io/providers/hashicorp/time/latest/docs/resources/sleep) | resource |
+| [google_project.this](https://registry.terraform.io/providers/hashicorp/google/latest/docs/data-sources/project) | data source |
 
 ## Inputs
 
@@ -164,7 +174,8 @@ No modules.
 | <a name="input_iam_propagation_delay_seconds"></a> [iam\_propagation\_delay\_seconds](#input\_iam\_propagation\_delay\_seconds) | Seconds to wait after granting the building block's IAM roles before publishing its credentials. GCP IAM is eventually consistent, and Google's guidance is to allow two to seven minutes before retrying a denied impersonation. Set to 0 if the backplane is always provisioned well before any building block run. | `number` | `180` | no |
 | <a name="input_project_id"></a> [project\_id](#input\_project\_id) | The GCP project ID | `string` | n/a | yes |
 | <a name="input_service_account_id"></a> [service\_account\_id](#input\_service\_account\_id) | The ID of the service account to create | `string` | `"buildingblock-storage-sa"` | no |
-| <a name="input_workload_identity_federation"></a> [workload\_identity\_federation](#input\_workload\_identity\_federation) | Configuration for workload identity federation. Supports multiple subjects with exact matching and partial matching using startsWith(). | <pre>object({<br/>    workload_identity_pool_identifier = string       // Identifier for the workload identity pool<br/>    audience                          = string       // Audience for the OIDC tokens<br/>    issuer                            = string       // OIDC issuer URL<br/>    subjects                          = list(string) // Subjects for workload identity federation - can use exact matches or startsWith patterns<br/>    subject_token_file_path           = string       // Path to the file containing the OIDC token<br/>  })</pre> | n/a | yes |
+| <a name="input_workload_identity_federation"></a> [workload\_identity\_federation](#input\_workload\_identity\_federation) | Workload identity federation settings, sourced from data.meshstack\_integrations. The accepted subjects are a separate variable — see workload\_identity\_subjects. | <pre>object({<br/>    workload_identity_pool_identifier = string // Identifier for the workload identity pool<br/>    audience                          = string // Audience for the OIDC tokens<br/>    issuer                            = string // OIDC issuer URL<br/>    subject_token_file_path           = string // Path to the file containing the OIDC token<br/>  })</pre> | n/a | yes |
+| <a name="input_workload_identity_subjects"></a> [workload\_identity\_subjects](#input\_workload\_identity\_subjects) | Full `sub` claims of the OIDC tokens the pool provider accepts, matched exactly. Each must name the building block definition that authenticates with these credentials. | `list(string)` | n/a | yes |
 
 ## Outputs
 

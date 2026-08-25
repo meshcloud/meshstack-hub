@@ -1,3 +1,7 @@
+data "google_project" "this" {
+  project_id = var.project_id
+}
+
 resource "google_iam_workload_identity_pool" "meshstack" {
   # Nothing below references the APIs, so Terraform cannot infer this ordering on its own.
   depends_on = [google_project_service.required]
@@ -24,10 +28,12 @@ resource "google_iam_workload_identity_pool_provider" "meshstack" {
     "google.subject" = "assertion.sub"
   }
 
-  # Restrict token acceptance to configured subjects
+  # Exact match, not a prefix: the subjects carry the building block definition uuid, and a
+  # startsWith() against a prefix would admit every other building block definition whose runner
+  # service account name happens to share it.
   attribute_condition = join(" || ", [
-    for subject in var.workload_identity_federation.subjects :
-    "google.subject.startsWith('${subject}')"
+    for subject in var.workload_identity_subjects :
+    "google.subject == '${subject}'"
   ])
 }
 
@@ -44,6 +50,10 @@ resource "google_service_account_iam_binding" "workload_identity_binding" {
   service_account_id = google_service_account.buildingblock_storage_sa.name
   role               = "roles/iam.workloadIdentityUser"
 
+  # Pool-wide, and that is as narrow as it gets here: the pool holds exactly one provider and that
+  # provider admits exactly one subject, so this set has exactly one member. Naming the subject here
+  # instead would make this binding depend on the building block definition uuid, and the
+  # credentials output waits on this binding — see the comment on the audience in outputs.tf.
   members = ["principalSet://iam.googleapis.com/${google_iam_workload_identity_pool.meshstack.name}/*"]
 }
 
