@@ -99,9 +99,21 @@ function awsBackplanePattern(mod) {
   if (!allTf) return "none";
   const federated =
     /(resource|data)\s+"aws_iam_openid_connect_provider"/.test(allTf) ||
-    /^variable\s+"workload_identity_federation"/m.test(allTf);
+    /^variable\s+"(workload_identity_federation|oidc_provider_arn)"/m.test(allTf);
   if (federated) return "wif";
   return /resource\s+"aws_iam_access_key"/.test(allTf) ? "cross_account" : "none";
+}
+
+// The fixed notice on `oidc_provider_arn` / `aws_oidc_provider_arn`. Deliberately two lines and
+// nothing more, so it can be copied verbatim into every meshstack_integration.tf.
+const AWS_OIDC_PROVIDER_NOTICE = [
+  "ARN of the IAM OIDC provider for the meshStack runner WIF token issuer in this AWS account.",
+  "See .agents/references/aws-backplane.md#the-shared-oidc-provider",
+];
+
+function hasOidcProviderNotice(variableBlock) {
+  const text = variableBlock.replace(/\s+/g, " ");
+  return AWS_OIDC_PROVIDER_NOTICE.every((line) => text.includes(line.replace(/\s+/g, " ")));
 }
 
 const NOT_WIF = { pass: null, detail: "not a workload identity federation backplane" };
@@ -468,16 +480,56 @@ const detectors = [
   // implements before it can judge it. Pattern B mints an `aws_iam_access_key` on purpose, so a
   // blanket "no access key" check would be wrong there — it only applies on the federation path.
   {
-    id: "aws_wif_oidc_provider",
+    id: "aws_wif_external_oidc_provider",
     category: "aws_backplane",
-    name: "Federates via aws_iam_openid_connect_provider",
+    name: "Takes oidc_provider_arn instead of creating a provider",
     emoji: "🔐",
     fn: (mod) => {
       if (awsBackplanePattern(mod) !== "wif") return NOT_WIF;
       const allTf = readAllBackplaneTf(mod);
+      if (/resource\s+"aws_iam_openid_connect_provider"/.test(allTf)) {
+        return {
+          pass: false,
+          detail: "creates its own aws_iam_openid_connect_provider — AWS registers one per issuer URL per account, so it is shared platform infrastructure a backplane must be given, not claim",
+        };
+      }
+      const varsTf = readBackplaneFile(mod, "variables.tf");
+      const arnVar = varsTf ? extractVariableBlocks(varsTf).get("oidc_provider_arn") : null;
+      if (!arnVar) return { pass: false, detail: 'missing variable "oidc_provider_arn"' };
+      if (/^\s*default\s*=/m.test(arnVar))
+        return { pass: false, detail: "oidc_provider_arn has a default — the provider has to be deployed first, so there is nothing sensible to default to" };
+      if (/^variable\s+"create_oidc_provider"/m.test(allTf))
+        return { pass: false, detail: "leftover create_oidc_provider variable — the toggle is gone with the resource" };
       return {
-        pass: /(resource|data)\s+"aws_iam_openid_connect_provider"/.test(allTf),
-        detail: "no aws_iam_openid_connect_provider — the trust policy must reference a managed OIDC provider, not a hardcoded ARN",
+        pass: /nullable\s*=\s*false/.test(arnVar),
+        detail: "oidc_provider_arn is not nullable = false",
+      };
+    },
+  },
+  {
+    id: "aws_oidc_provider_notice",
+    category: "aws_backplane",
+    name: "oidc_provider_arn carries the shared-provider notice",
+    emoji: "📌",
+    fn: (mod) => {
+      if (awsBackplanePattern(mod) !== "wif") return NOT_WIF;
+      // The notice is the only signpost a first-time platform engineer gets: AWS has no plural
+      // OIDC-provider data source, so a missing provider cannot be turned into a friendly
+      // precondition, and terraform-docs renders backplane variables but not integration comments.
+      // It is therefore copied verbatim into both variables and linted here.
+      const varsTf = readBackplaneFile(mod, "variables.tf");
+      const backplaneVar = varsTf ? extractVariableBlocks(varsTf).get("oidc_provider_arn") : null;
+      if (!backplaneVar) return { pass: false, detail: 'missing variable "oidc_provider_arn"' };
+      if (!hasOidcProviderNotice(backplaneVar))
+        return { pass: false, detail: "backplane oidc_provider_arn description is not the fixed notice — see AWS_OIDC_PROVIDER_NOTICE in this file" };
+
+      const integration = readIntegrationTf(mod);
+      if (!integration) return { pass: null, detail: "no integration file" };
+      const integrationVar = extractVariableBlocks(integration).get("aws_oidc_provider_arn");
+      if (!integrationVar) return { pass: false, detail: 'integration is missing variable "aws_oidc_provider_arn"' };
+      return {
+        pass: hasOidcProviderNotice(integrationVar),
+        detail: "integration aws_oidc_provider_arn description is not the fixed notice",
       };
     },
   },
@@ -512,21 +564,6 @@ const detectors = [
         detail: hasDefaultNull
           ? "default = null makes federation optional — the null branch is the access key path"
           : undefined,
-      };
-    },
-  },
-  {
-    id: "aws_wif_create_oidc_provider",
-    category: "aws_backplane",
-    name: "create_oidc_provider variable allows sharing the provider",
-    emoji: "♻️",
-    fn: (mod) => {
-      if (awsBackplanePattern(mod) !== "wif") return NOT_WIF;
-      const varsTf = readBackplaneFile(mod, "variables.tf");
-      if (!varsTf) return { pass: false, detail: "no variables.tf" };
-      return {
-        pass: extractVariableBlocks(varsTf).has("create_oidc_provider"),
-        detail: "missing create_oidc_provider — a second backplane in the same AWS account cannot reuse the meshStack OIDC provider and its apply fails on EntityAlreadyExists",
       };
     },
   },

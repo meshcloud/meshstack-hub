@@ -17,7 +17,52 @@ Use WIF when the building block acts within a single AWS account (the backplane 
 - **OIDC-native**: AWS supports federated OIDC identities via `aws_iam_openid_connect_provider` out of the box.
 - **Shared OIDC provider**: Multiple backplanes can share a single OIDC provider in the same AWS account using `create_oidc_provider = false`.
 
-<!-- scorecard-checks: aws_wif_oidc_provider, aws_wif_subject_condition -->
+<!-- scorecard-checks: aws_wif_external_oidc_provider, aws_oidc_provider_notice -->
+### The shared OIDC provider
+
+**A WIF backplane does not create its OIDC provider. It takes the ARN of one as an input.**
+
+AWS registers one OIDC provider per issuer URL per AWS account. The meshStack runner has one issuer,
+so an account has room for exactly one provider for it no matter how many building block backplanes
+federate through it. A backplane that creates its own is claiming shared infrastructure: the second
+backplane in the account fails with `EntityAlreadyExists`, and destroying whichever one owns it
+breaks every other backplane there.
+
+So it is deployed separately, once per AWS account that hosts backplanes:
+
+```hcl
+module "meshstack_oidc_provider" {
+  source = "github.com/meshcloud/meshstack-hub//modules/aws/oidc-provider?ref=main"
+}
+```
+
+`modules/aws/oidc-provider` takes no inputs — it reads the issuer, audience and thumbprint from
+`data.meshstack_integrations`. Pass its `arn` output to every backplane in that account.
+
+This is where AWS differs from the other providers, and why the repetition is not the same kind of
+repetition: an Azure federated identity credential is a child of its UAMI and a GCP workload
+identity pool is a named per-project resource, so each module can own its own and none of them can
+collide. Only AWS has an account-level singleton keyed by the issuer URL.
+
+#### Migrating an account whose provider lives in a backplane's state
+
+No destroy is needed. Ship a `removed` block in the backplane so the next apply forgets the
+provider instead of deleting it:
+
+```hcl
+removed {
+  from = aws_iam_openid_connect_provider.buildingblock_oidc_provider
+
+  lifecycle {
+    destroy = false
+  }
+}
+```
+
+Then `import` the provider into the root that applies `modules/aws/oidc-provider`, and pass its ARN
+to the backplanes that used to create it.
+
+<!-- scorecard-checks: aws_wif_subject_condition -->
 ### Implementation Pattern (WIF)
 
 ```hcl
@@ -31,25 +76,6 @@ resource "random_string" "suffix" {
   upper   = false
 }
 
-resource "aws_iam_openid_connect_provider" "backplane" {
-  count = var.create_oidc_provider ? 1 : 0
-
-  url            = var.workload_identity_federation.issuer
-  client_id_list = [var.workload_identity_federation.audience]
-}
-
-data "aws_iam_openid_connect_provider" "backplane" {
-  count = var.create_oidc_provider ? 0 : 1
-  url   = var.workload_identity_federation.issuer
-}
-
-locals {
-  oidc_provider_arn = try(
-    aws_iam_openid_connect_provider.backplane[0].arn,
-    data.aws_iam_openid_connect_provider.backplane[0].arn
-  )
-}
-
 data "aws_iam_policy_document" "workload_identity_federation" {
   version = "2012-10-17"
 
@@ -57,7 +83,7 @@ data "aws_iam_policy_document" "workload_identity_federation" {
     effect = "Allow"
     principals {
       type        = "Federated"
-      identifiers = [local.oidc_provider_arn]
+      identifiers = [var.oidc_provider_arn]
     }
     actions = ["sts:AssumeRoleWithWebIdentity"]
 
@@ -83,7 +109,7 @@ resource "aws_iam_role" "backplane" {
 # Attach a service-specific policy to aws_iam_role.backplane
 ```
 
-<!-- scorecard-checks: aws_wif_nonnullable, aws_wif_create_oidc_provider -->
+<!-- scorecard-checks: aws_wif_nonnullable -->
 ### Backplane Variables (WIF)
 
 ```hcl
@@ -97,12 +123,18 @@ variable "workload_identity_federation" {
   description = "WIF issuer, audience, and subjects for federated authentication."
 }
 
-variable "create_oidc_provider" {
-  type        = bool
-  default     = true
-  description = "Set to false if the OIDC provider for the meshStack issuer already exists in this AWS account (e.g., created by another backplane). The existing provider will be looked up by URL instead of created."
+variable "oidc_provider_arn" {
+  type     = string
+  nullable = false
+  description = <<-EOT
+  ARN of the IAM OIDC provider for the meshStack runner WIF token issuer in this AWS account.
+  See .agents/references/aws-backplane.md#the-shared-oidc-provider
+  EOT
 }
 ```
+
+The `oidc_provider_arn` description is a fixed notice, copied verbatim into the matching
+`aws_oidc_provider_arn` variable in `meshstack_integration.tf`. The scorecard enforces both.
 
 <!-- scorecard-checks: aws_wif_role_output -->
 ### Backplane Outputs (WIF)
@@ -307,10 +339,19 @@ the next time you are in it.
 ### WIF pattern
 
 ```hcl
+variable "aws_oidc_provider_arn" {
+  type     = string
+  nullable = false
+  description = <<-EOT
+  ARN of the IAM OIDC provider for the meshStack runner WIF token issuer in this AWS account.
+  See .agents/references/aws-backplane.md#the-shared-oidc-provider
+  EOT
+}
+
 module "backplane" {
   source = "github.com/meshcloud/meshstack-hub//modules/aws/<service>/backplane?ref=${var.hub.git_ref}"
 
-  create_oidc_provider = var.create_oidc_provider
+  oidc_provider_arn = var.aws_oidc_provider_arn
 
   workload_identity_federation = {
     issuer   = data.meshstack_integrations.integrations.workload_identity_federation.replicator.issuer
@@ -365,8 +406,8 @@ role_name = {
 ## Checklist for AWS Backplanes
 
 **WIF pattern (Pattern A):**
-- [ ] Uses `aws_iam_openid_connect_provider` (not a hardcoded ARN)
-- [ ] `create_oidc_provider` variable present to allow sharing across backplanes
+- [ ] Creates no `aws_iam_openid_connect_provider` — takes `oidc_provider_arn` as a required, non-nullable input
+- [ ] `oidc_provider_arn` and the integration's `aws_oidc_provider_arn` carry the fixed notice verbatim
 - [ ] `workload_identity_federation` variable is non-nullable
 - [ ] Trust policy scopes `sub` condition to the specific BBD UUID via meshStack WIF subjects
 - [ ] Role ARN output is named `workload_identity_federation_role`
