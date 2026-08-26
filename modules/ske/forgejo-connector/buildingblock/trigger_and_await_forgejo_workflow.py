@@ -40,14 +40,16 @@ Required environment variables:
 Optional:
   WORKFLOW_NAME      – workflow file name (default: pipeline.yaml)
 
-There is intentionally no in-script timeout: the script polls until the run
-reaches a terminal verdict. The caller bounds the wall-clock time instead — the
-Terraform provisioner wraps this in `timeout 900` (15 minutes).
+There is intentionally no in-script timeout and no retry limit: the script polls
+until the run reaches a terminal verdict, retrying transient API failures on the
+way. The caller bounds the wall-clock time instead — the Terraform provisioner
+wraps this in `timeout 900` (15 minutes).
 """
 
 import datetime as dt
 import os
 import time
+import urllib.error
 import urllib.request
 import json
 
@@ -55,6 +57,12 @@ COINCIDENCE_WINDOW_SECONDS = 5
 TERMINAL_STATUSES = {"success", "failure", "cancelled", "skipped"}
 SUCCESS_STATUSES = {"success", "skipped"}
 POLL_INTERVAL_SECONDS = 10
+REQUEST_TIMEOUT_SECONDS = 30
+RETRY_INITIAL_DELAY_SECONDS = 2
+RETRY_MAX_DELAY_SECONDS = 30
+# Answers that say "not now" rather than "no": everything else is the server's
+# verdict on our request and must fail the run.
+RETRYABLE_HTTP_STATUSES = {429, 500, 502, 503, 504}
 
 
 def as_int(value, default: int = 0) -> int:
@@ -71,7 +79,7 @@ def normalize_host(raw_host: str) -> str:
     return host.rstrip("/")
 
 
-def request_json(host: str, token: str, method: str, path: str, payload: dict | None = None):
+def request_once(host: str, token: str, method: str, path: str, payload: dict | None = None):
     body = None if payload is None else json.dumps(payload).encode("utf-8")
     req = urllib.request.Request(
         f"{host}{path}",
@@ -79,11 +87,34 @@ def request_json(host: str, token: str, method: str, path: str, payload: dict | 
         method=method,
         data=body,
     )
-    with urllib.request.urlopen(req, timeout=30) as resp:
+    with urllib.request.urlopen(req, timeout=REQUEST_TIMEOUT_SECONDS) as resp:
         raw = resp.read().decode("utf-8")
         status = resp.status
     data = json.loads(raw) if raw else {}
     return status, data
+
+
+def request_json(host: str, token: str, method: str, path: str, payload: dict | None = None):
+    """Call the Forgejo API, retrying transient failures with capped backoff.
+
+    We await a pipeline for minutes, so a single slow, dropped or 5xx answer must
+    not abort the wait. Like the poll loop itself, this retries without an
+    attempt limit — the caller's `timeout 900` is the one wall-clock bound.
+    """
+    delay = RETRY_INITIAL_DELAY_SECONDS
+    while True:
+        try:
+            return request_once(host, token, method, path, payload)
+        except urllib.error.HTTPError as err:
+            if err.code not in RETRYABLE_HTTP_STATUSES:
+                raise
+            reason = f"HTTP {err.code}"
+        except OSError as err:
+            # URLError, socket timeout, connection reset — all OSError subclasses.
+            reason = f"{type(err).__name__}: {err}"
+        print(f"  {method} {path} failed ({reason}); retrying in {delay}s")
+        time.sleep(delay)
+        delay = min(delay * 2, RETRY_MAX_DELAY_SECONDS)
 
 
 def parse_timestamp(ts: str | None):
