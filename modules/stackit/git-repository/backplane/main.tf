@@ -4,6 +4,15 @@ data "http" "org_lookup" {
     Authorization = "token ${var.forgejo_token}"
     Accept        = "application/json"
   }
+
+  # Forgejo intermittently leaves requests hanging without an answer. Without a
+  # retry the single attempt takes the whole backplane apply down with it.
+  retry {
+    attempts     = 5
+    min_delay_ms = 1000
+    max_delay_ms = 10000
+  }
+
   lifecycle {
     postcondition {
       condition     = self.status_code == 200
