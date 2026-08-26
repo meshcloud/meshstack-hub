@@ -35,7 +35,13 @@ variable "network" {
     prefix_length_max      = number
   })
   default     = null
-  description = "Spoke networks the starterkit can create. `matching_landing_zones` names the `landing_zone_refs` labels attached to a network area — only there is a network created, and only if the set is non-empty does the definition offer the `network` input at all. `bbd_version_ref` is the STACKIT Network definition version that creates it, and the prefix-length bounds are the ones that definition validates against. Null to offer no networks."
+  description = "Spoke networks the starterkit can create. Null to offer no networks, which is also what stops the definition from offering the `network` input. `matching_landing_zones` names the `landing_zone_refs` labels attached to a network area, and only orders in those get a network. `bbd_version_ref` is the STACKIT Network definition version that creates it, and the prefix-length bounds are the ones that definition validates against."
+
+  validation {
+    # Without this, the definition would still offer the Network input and no order would act on it.
+    condition     = var.network == null || length(var.network.matching_landing_zones) > 0
+    error_message = "network.matching_landing_zones must name at least one landing zone. Set network to null to offer no networks."
+  }
 
   validation {
     condition     = var.network == null || alltrue([for lz in var.network.matching_landing_zones : contains(keys(var.landing_zone_refs), lz)])
@@ -113,9 +119,7 @@ locals {
   # networked order needs no input, not that every deployment picks its own.
   default_network_prefix_length = 25
 
-  # Null `network`, or an object naming no landing zone, both mean the same thing: no order can ever
-  # get a spoke network, so the definition does not offer the input.
-  network_enabled = length(try(var.network.matching_landing_zones, [])) > 0
+  network_enabled = var.network != null
 }
 
 resource "meshstack_building_block_definition" "this" {
@@ -302,14 +306,16 @@ resource "meshstack_building_block_definition" "this" {
         argument        = jsonencode(var.add_random_name_suffix)
       }
       },
-      # Offered only where a network can actually be created. With no networked landing zone the
-      # input would be a field the application team can fill in and that nothing ever reads.
+      # Declared unconditionally, this would be a field the application team fills in and nothing reads.
       local.network_enabled ? {
         network = {
           assignment_type        = "USER_INPUT"
           type                   = "CODE"
           display_name           = "Network"
-          description            = "HCL object for the spoke network created inside the project: `prefix_length` and `ipv4_nameservers`. The network is named after the project. Null for no network."
+          description            = <<-EOT
+          HCL object for the spoke network created inside the project: `prefix_length` and `ipv4_nameservers`.
+          Only relevant for: ${join(", ", var.network.matching_landing_zones)}.
+          EOT
           updateable_by_consumer = true
 
           # Hand-written HCL rather than `jsonencode` of an object, because this is what the
@@ -318,7 +324,7 @@ resource "meshstack_building_block_definition" "this" {
           # string, the same shape `argument` uses for a CODE input.
           default_value = jsonencode(chomp(<<-NETWORK
           {
-            # Subnet size as an IPv4 prefix length (${try(var.network.prefix_length_min, 24)}-${try(var.network.prefix_length_max, 28)}).
+            # Subnet size as an IPv4 prefix length (${var.network.prefix_length_min}-${var.network.prefix_length_max}).
             prefix_length = ${local.default_network_prefix_length}
 
             # Leave empty to inherit the network area's default nameservers.
