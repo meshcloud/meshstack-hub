@@ -41,9 +41,9 @@ Optional:
   WORKFLOW_NAME      – workflow file name (default: pipeline.yaml)
 
 There is intentionally no in-script timeout and no retry limit: the script polls
-until the run reaches a terminal verdict, retrying transient API failures on the
-way. The caller bounds the wall-clock time instead — the Terraform provisioner
-wraps this in `timeout 900` (15 minutes).
+until the run reaches a terminal verdict, retrying transient failures of the GETs
+on the way. The caller bounds the wall-clock time instead — the Terraform
+provisioner wraps this in `timeout 900` (15 minutes).
 """
 
 import datetime as dt
@@ -94,8 +94,13 @@ def request_once(host: str, token: str, method: str, path: str, payload: dict | 
     return status, data
 
 
-def request_json(host: str, token: str, method: str, path: str, payload: dict | None = None):
-    """Call the Forgejo API, retrying transient failures with capped backoff.
+def get_json(host: str, token: str, path: str):
+    """GET a Forgejo endpoint, retrying transient failures with capped backoff.
+
+    Only GETs retry, because only they are safe to repeat. The dispatch POST
+    deliberately does not: a lost answer there may already have started a
+    pipeline run, and dispatching again would leave two runs that the poller —
+    which matches on branch and dispatch time — cannot tell apart.
 
     We await a pipeline for minutes, so a single slow, dropped or 5xx answer must
     not abort the wait. Like the poll loop itself, this retries without an
@@ -104,7 +109,7 @@ def request_json(host: str, token: str, method: str, path: str, payload: dict | 
     delay = RETRY_INITIAL_DELAY_SECONDS
     while True:
         try:
-            return request_once(host, token, method, path, payload)
+            return request_once(host, token, "GET", path)
         except urllib.error.HTTPError as err:
             if err.code not in RETRYABLE_HTTP_STATUSES:
                 raise
@@ -112,7 +117,7 @@ def request_json(host: str, token: str, method: str, path: str, payload: dict | 
         except OSError as err:
             # URLError, socket timeout, connection reset — all OSError subclasses.
             reason = f"{type(err).__name__}: {err}"
-        print(f"  {method} {path} failed ({reason}); retrying in {delay}s")
+        print(f"  GET {path} failed ({reason}); retrying in {delay}s")
         time.sleep(delay)
         delay = min(delay * 2, RETRY_MAX_DELAY_SECONDS)
 
@@ -199,7 +204,7 @@ def main() -> None:
     if not expected_jobs:
         raise SystemExit("EXPECTED_JOBS must list at least one job name")
 
-    _, repo = request_json(host, token, "GET", f"/api/v1/repositories/{repository_id}")
+    _, repo = get_json(host, token, f"/api/v1/repositories/{repository_id}")
     owner = repo["owner"]["username"]
     repo_name = repo["name"]
 
@@ -208,7 +213,7 @@ def main() -> None:
 
     dispatch_at = dt.datetime.now(dt.timezone.utc)
     dispatch_path = f"/api/v1/repos/{owner}/{repo_name}/actions/workflows/{workflow_name}/dispatches"
-    status, _ = request_json(host, token, "POST", dispatch_path, {"ref": branch})
+    status, _ = request_once(host, token, "POST", dispatch_path, {"ref": branch})
     if status not in (200, 201, 202, 204):
         raise SystemExit(f"Workflow dispatch failed with status {status}")
 
@@ -217,7 +222,7 @@ def main() -> None:
 
     seen_job_status: dict[str, str] = {}
     while True:
-        _, payload = request_json(host, token, "GET", tasks_path)
+        _, payload = get_json(host, token, tasks_path)
         tasks = identify_run_tasks(payload.get("workflow_runs", []), branch, dispatch_at)
         if tasks:
             verdict, detail = evaluate_run(tasks, expected_jobs, seen_job_status)
