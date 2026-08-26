@@ -5,7 +5,6 @@
 # alias instead. `endpoint` is left unset so it falls back to the same `MESHSTACK_ENDPOINT` the runner
 # already exports for the default provider.
 provider "meshstack" {
-  alias     = "admin"
   apikey    = var.meshstack_admin_api_key
   apisecret = var.meshstack_admin_api_secret
 }

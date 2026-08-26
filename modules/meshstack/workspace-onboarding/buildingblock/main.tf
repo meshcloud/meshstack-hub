@@ -121,6 +121,8 @@ resource "meshstack_workspace_user_binding" "owner" {
   subject = {
     name = var.workspace_owner_username
   }
+
+  expiry_date = var.workspace_expiry_date
 }
 
 resource "meshstack_project_user_binding" "admin" {
