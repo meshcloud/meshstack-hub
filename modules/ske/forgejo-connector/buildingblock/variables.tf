@@ -46,3 +46,10 @@ variable "harbor_password" {
   description = "The password for the Harbor registry."
   sensitive   = true
 }
+
+variable "hub_git_ref" {
+  type        = string
+  description = "Hub git ref this building block runs from. Pins the shared modules it sources so they stay in lockstep with this module's own checkout."
+  const       = true
+  default     = "main"
+}

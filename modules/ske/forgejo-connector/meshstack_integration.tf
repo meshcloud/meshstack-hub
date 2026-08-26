@@ -251,6 +251,14 @@ resource "meshstack_building_block_definition" "this" {
           }
         }
       }
+
+      hub_git_ref = {
+        display_name    = "hub_git_ref"
+        description     = "Hub git ref this building block runs from."
+        type            = "STRING"
+        assignment_type = "STATIC"
+        argument        = jsonencode(var.hub.git_ref)
+      }
     }
 
     outputs = {

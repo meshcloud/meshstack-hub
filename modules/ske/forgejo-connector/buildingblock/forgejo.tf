@@ -30,7 +30,7 @@ locals {
 }
 
 module "action_secrets_and_variables" {
-  source = "github.com/meshcloud/meshstack-hub//modules/stackit/git-repository/buildingblock/action-variables-and-secrets?ref=75f51a27013a4f5d43de7231fc5cae95e241a079"
+  source = "github.com/meshcloud/meshstack-hub//modules/stackit/git-repository/buildingblock/action-variables-and-secrets?ref=${var.hub_git_ref}"
   providers = {
     restapi.with_returned_object    = restapi.with_returned_object
     restapi.without_returned_object = restapi.without_returned_object
