@@ -1,32 +1,28 @@
-
-
-variable "azure_tenant_id" {
-  type        = string
-  description = "Azure Entra tenant ID where the spoke network and hub live."
-
-}
-
-# variable "azure_subscription_id" {
-#   type        = string
-#   description = "Azure subscription ID of the spoke landing zone where the vnet is created."
-# }
-
 variable "azure_hub_subscription_id" {
   type        = string
   description = "PROVIDER TARGET: hub subscription the azurerm provider reads the hub vnet from and creates the hub-side peering in. Bare GUID (e.g. '92eae5db-...'), NOT a '/subscriptions/...' path. Same sub as azure_hub_scope in a simple setup, but different format/purpose (that one is the RBAC scope)."
-
+  validation {
+    condition     = can(regex("^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$", var.azure_hub_subscription_id))
+    error_message = "Must be a bare subscription GUID (e.g. '92eae5db-f627-4428-827f-9261eab6e7e7'), not a '/subscriptions/<guid>' path."
+  }
 }
 
 variable "azure_scope" {
   type        = string
   description = "RBAC SCOPE: where the spoke deploy role is granted. Full resource path — a management group ('/providers/Microsoft.Management/managementGroups/<id>') or a subscription ('/subscriptions/<guid>'). Typically the parent of all landing zones. Not to be confused with azure_subscription_id (the provider target GUID)."
-
+  validation {
+    condition     = can(regex("^/subscriptions/[0-9a-fA-F-]{36}$|^/providers/Microsoft\\.Management/managementGroups/.+$", var.azure_scope))
+    error_message = "Must be a full resource path: '/subscriptions/<guid>' or '/providers/Microsoft.Management/managementGroups/<id>', not a bare GUID."
+  }
 }
 
 variable "azure_hub_scope" {
   type        = string
   description = "RBAC SCOPE: where the hub peering role is granted. Full resource path — a management group ('/providers/Microsoft.Management/managementGroups/<id>') or a subscription ('/subscriptions/<guid>') containing the hub vnet. Same sub as azure_hub_subscription_id in a simple setup, but this is the full path (RBAC scope), that one is the bare GUID (provider target)."
-
+  validation {
+    condition     = can(regex("^/subscriptions/[0-9a-fA-F-]{36}$|^/providers/Microsoft\\.Management/managementGroups/.+$", var.azure_hub_scope))
+    error_message = "Must be a full resource path: '/subscriptions/<guid>' or '/providers/Microsoft.Management/managementGroups/<id>', not a bare GUID."
+  }
 }
 
 variable "azure_location" {
@@ -38,14 +34,11 @@ variable "azure_location" {
 variable "azure_hub_resource_group_name" {
   type        = string
   description = "Name of the resource group that contains the hub vnet to peer into."
-
 }
 
 variable "azure_hub_vnet_name" {
   type        = string
   description = "Name of the hub vnet to peer the spoke into."
-
-
 }
 
 variable "azure_spoke_resource_group_name" {
@@ -57,7 +50,10 @@ variable "azure_spoke_resource_group_name" {
 variable "azure_backplane_subscription_id" {
   type        = string
   description = "Subscription (bare GUID) where the backplane UAMI + its resource group are created. Typically the hub subscription, so the automation identity lives in a stable, platform-owned place. Deploy once per hub environment (hub-dev, hub-prod) with the respective subscription."
-
+  validation {
+    condition     = can(regex("^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$", var.azure_backplane_subscription_id))
+    error_message = "Must be a bare subscription GUID (e.g. '92eae5db-f627-4428-827f-9261eab6e7e7'), not a '/subscriptions/<guid>' path."
+  }
 }
 
 variable "backplane_name" {
@@ -78,14 +74,6 @@ variable "meshstack" {
     tags                        = optional(map(list(string)), {})
   })
   description = "Shared meshStack context. Tags are optional and propagated to building block definition metadata."
-  default = {
-    owning_workspace_identifier = "flori-land"
-    # tags = {
-    #   confidentiality = ["Internal"]
-    #   environment     = ["dev", "prod"]
-    # }
-  }
-
 }
 
 variable "hub" {
@@ -95,7 +83,7 @@ variable "hub" {
   })
   const = true
   default = {
-    git_ref   = "feature/update-spoke-backplane"
+    git_ref   = "main"
     bbd_draft = true
   }
   description = <<-EOT
