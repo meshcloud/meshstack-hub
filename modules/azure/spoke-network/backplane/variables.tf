@@ -24,6 +24,11 @@ variable "subscription_id" {
   type        = string
   nullable    = false
   description = "Subscription (bare GUID) where the UAMI and its resource group are created. Typically the hub subscription so the identity lives in a stable, platform-owned place. Deploy the backplane once per hub environment (e.g. hub-dev, hub-prod) with the respective subscription."
+
+  validation {
+    condition     = can(regex("^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$", var.subscription_id))
+    error_message = "Must be a bare subscription GUID, not a '/subscriptions/<guid>' path."
+  }
 }
 
 variable "location" {
