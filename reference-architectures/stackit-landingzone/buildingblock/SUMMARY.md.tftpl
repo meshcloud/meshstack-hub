@@ -1,0 +1,31 @@
+# STACKIT Landing Zone: **${platform_identifier}**
+
+%{ if playground_mode ~}
+> **Playground mode.** The platform identifier carries a random suffix so this deployment does not
+> occupy a name for good, and nothing here is protected against deletion. Do not publish this
+> platform or the building block definitions it registered to other workspaces. Redeploy with
+> `playground_mode` set to false for a platform that is actually used.
+
+%{ endif ~}
+## Details
+
+| Property | Value |
+|----------|-------|
+| **Organization** | [Open in STACKIT Portal](${organization_url}) (`${organization_id}`) |
+| **Landing Zone Folder** | [Open in STACKIT Portal](${lz_folder_url}) (`${lz_folder_container_id}`) |
+| **Foundation Project** | [Open in STACKIT Portal](${foundation_project_url}) (`${foundation_project_id}`) |
+| **Foundation Project Service Account** | [Open in STACKIT Portal](${service_account_url}) (`${service_account_email}`) |
+%{ if network_enabled ~}
+| **Hub Network Area** | [Open in STACKIT Portal](${network_area_url}) (`${network_area_id}`) |
+| **Hub Network Area Building Block** | @buildingblock[${network_area_hub_uuid}] |
+| **Networked Landing Zone** | `${networked_landingzone_name}` |
+%{ endif ~}
+
+%{ if network_enabled ~}
+Hub-and-spoke networking is enabled. Application teams can order the **STACKIT Network** building
+block inside their own projects in the `${networked_landingzone_name}` landing zone to get a routed
+spoke network drawn from the hub's address plan.
+%{ else ~}
+Application teams can now request STACKIT projects against the `${platform_identifier}-default`
+landing zone. Provide a `network` object to additionally enable hub-and-spoke networking.
+%{ endif ~}

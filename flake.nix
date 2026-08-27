@@ -31,30 +31,38 @@
         pngquant
       ];
 
-    # Go toolchain for tools/ development
-    go_packages = pkgs:
+    dev_packages = pkgs:
       with pkgs;
       [
+        # Go toolchain for tools/ development
         go
         golangci-lint
         go-task
-      ];
 
-    importNixpkgs = system: import nixpkgs { inherit system; };
+        # cloud shells and secret management
+        pkgs.vault-bin
+        (pkgs.google-cloud-sdk.withExtraComponents [ pkgs.google-cloud-sdk.components.gke-gcloud-auth-plugin ])
+        pkgs.kubectl
+      ];
 
     defaultShellForSystem = system:
       let
-        pkgs = importNixpkgs system;
+        pkgs = import nixpkgs {
+          inherit system;
+          config.allowUnfreePredicate = pkg: builtins.elem (nixpkgs.lib.getName pkg) [
+            "vault-bin"
+          ];
+        };
         unstable_pkgs = import unstable { inherit system; };
       in {
         default = pkgs.mkShell {
           name = "meshstack-hub";
-          packages = (github_actions_preinstalled pkgs) ++ (core_packages pkgs unstable_pkgs) ++ (go_packages pkgs);
+          packages = (github_actions_preinstalled pkgs) ++ (core_packages pkgs unstable_pkgs) ++ (dev_packages pkgs);
         };
 
         website = pkgs.mkShell {
           name = "Website Development Shell";
-          packages = (core_packages pkgs unstable_pkgs) ++ (go_packages pkgs) ++ [
+          packages = (core_packages pkgs unstable_pkgs) ++ (dev_packages pkgs) ++ [
             pkgs.nodejs_20
             pkgs.yarn
           ];
@@ -74,7 +82,7 @@
       x86_64-linux = defaultShellForSystem "x86_64-linux" // {
         github_actions =
           let
-            pkgs = importNixpkgs "x86_64-linux";
+            pkgs = import nixpkgs { system = "x86_64-linux"; };
             unstable_pkgs = import unstable { system = "x86_64-linux"; };
           in
           pkgs.mkShell {

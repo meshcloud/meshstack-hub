@@ -4,6 +4,12 @@ locals {
   identifier = lower(replace(replace(var.name, "/[^a-zA-Z0-9\\s\\-\\_]/", ""), "/[\\s\\-\\_]+/", "-"))
 
   repo_name = "${local.identifier}-${random_id.repo_suffix.hex}"
+
+  # GitHub Actions environment name per stage. Indexed by stage key (fails on an unknown stage).
+  github_environment_names = {
+    dev  = "development"
+    prod = "production"
+  }
 }
 
 # Generate a random suffix for the repository name to ensure uniqueness
@@ -11,30 +17,26 @@ resource "random_id" "repo_suffix" {
   byte_length = 4 // 8 hex characters
 }
 
-resource "meshstack_project" "dev" {
+resource "meshstack_project" "this" {
+  for_each = var.landing_zone_refs
+
   metadata = {
-    name               = "${local.identifier}-dev"
+    name               = "${local.identifier}-${each.key}"
     owned_by_workspace = var.workspace_identifier
   }
   spec = {
-    display_name = "${var.name} Dev"
-    tags         = var.project_tags.dev
+    display_name = "${var.name} ${title(each.key)}"
+    tags = merge(
+      var.project_tags[each.key],
+      var.project_tags.owner_tag_key == null ? {} : {
+        (var.project_tags.owner_tag_key) : [var.creator.displayName]
+      }
+    )
   }
 }
 
-resource "meshstack_project" "prod" {
-  metadata = {
-    name               = "${local.identifier}-prod"
-    owned_by_workspace = var.workspace_identifier
-  }
-  spec = {
-    display_name = "${var.name} Prod"
-    tags         = var.project_tags.prod
-  }
-}
-
-resource "meshstack_project_user_binding" "creator_dev_admin" {
-  count = var.creator.type == "User" && var.creator.username != null ? 1 : 0
+resource "meshstack_project_user_binding" "creator_admin" {
+  for_each = var.creator.type == "User" && var.creator.username != null ? var.landing_zone_refs : {}
 
   metadata = {
     name = uuid()
@@ -46,7 +48,7 @@ resource "meshstack_project_user_binding" "creator_dev_admin" {
 
   target_ref = {
     owned_by_workspace = var.workspace_identifier
-    name               = meshstack_project.dev.metadata.name
+    name               = meshstack_project.this[each.key].metadata.name
   }
 
   subject = {
@@ -54,145 +56,142 @@ resource "meshstack_project_user_binding" "creator_dev_admin" {
   }
 }
 
-resource "meshstack_project_user_binding" "creator_prod_admin" {
-  count = var.creator.type == "User" && var.creator.username != null ? 1 : 0
+resource "meshstack_tenant" "this" {
+  for_each = var.landing_zone_refs
 
   metadata = {
-    name = uuid()
-  }
-
-  role_ref = {
-    name = "Project Admin"
-  }
-
-  target_ref = {
     owned_by_workspace = var.workspace_identifier
-    name               = meshstack_project.prod.metadata.name
-  }
-
-  subject = {
-    name = var.creator.username
-  }
-}
-
-resource "meshstack_tenant_v4" "dev" {
-  metadata = {
-    owned_by_workspace = var.workspace_identifier
-    owned_by_project   = meshstack_project.dev.metadata.name
+    owned_by_project   = meshstack_project.this[each.key].metadata.name
   }
 
   spec = {
-    platform_identifier     = var.full_platform_identifier
-    landing_zone_identifier = var.landing_zone_dev_identifier
+    platform_ref     = var.platform_ref
+    landing_zone_ref = var.landing_zone_refs[each.key]
   }
 
-  depends_on = [meshstack_project_user_binding.creator_dev_admin]
+  # This orders the destroy, not the create. Deleted in parallel, the tenant and the binding are both
+  # the run's first write, so both run the same `INSERT ... ON DUPLICATE KEY UPDATE` on meshStack's
+  # Author table for the run's fresh ephemeral API key. The two deadlock, the loser's transaction is
+  # marked rollback-only, and its delete returns a 500 that fails the whole destroy run. Ordering them
+  # means the first delete creates the Author row and the second one finds it.
+  #
+  # A band-aid: meshStack does not retry on a deadlock. Remove it once meshStack does. This is not the
+  # BD-2288 create-ordering workaround that ddd5dba removed from here — that one is still fixed.
+  depends_on = [meshstack_project_user_binding.creator_admin]
 }
 
-resource "meshstack_tenant_v4" "prod" {
-  metadata = {
-    owned_by_workspace = var.workspace_identifier
-    owned_by_project   = meshstack_project.prod.metadata.name
-  }
-
+resource "meshstack_building_block" "repo" {
   spec = {
-    platform_identifier     = var.full_platform_identifier
-    landing_zone_identifier = var.landing_zone_prod_identifier
-  }
-
-  depends_on = [meshstack_project_user_binding.creator_prod_admin]
-}
-
-resource "meshstack_building_block_v2" "repo" {
-  spec = {
-    building_block_definition_version_ref = {
-      uuid = var.github_repo_definition_version_uuid
-    }
+    building_block_definition_version_ref = var.building_block_definition_version_refs["git-repository"]
 
     display_name = "${var.github_org}/${local.identifier}"
     target_ref = {
-      kind       = "meshWorkspace"
-      identifier = var.workspace_identifier
+      kind = "meshWorkspace"
+      name = var.workspace_identifier
     }
 
     inputs = {
       repo_name = {
-        value_string = local.repo_name
+        value = jsonencode(local.repo_name)
       }
       archive_repo_on_destroy = {
-        value_bool = var.archive_repo_on_destroy
+        value = jsonencode(var.archive_repo_on_destroy)
       }
       repo_owner = {
-        value_string = var.repo_admin != null ? var.repo_admin : "null"
+        value = jsonencode(var.repo_admin != null ? var.repo_admin : "null")
       }
       repo_visibility = {
-        value_string = var.github_repo_input_repo_visibility != null ? var.github_repo_input_repo_visibility : "private"
+        value = jsonencode(var.github_repo_input_repo_visibility != null ? var.github_repo_input_repo_visibility : "private")
       }
       use_template = {
-        value_bool = true
+        value = jsonencode(true)
       }
       template_owner = {
-        value_string = split("/", var.github_template_repo_path)[0]
+        value = jsonencode(split("/", var.github_template_repo_path)[0])
       }
       template_repo = {
-        value_string = split("/", var.github_template_repo_path)[1]
+        value = jsonencode(split("/", var.github_template_repo_path)[1])
       }
     }
   }
 }
 
-resource "meshstack_building_block_v2" "github_actions_dev" {
+resource "meshstack_building_block" "github_actions" {
+  for_each = var.landing_zone_refs
+
   spec = {
-    building_block_definition_version_ref = {
-      uuid = var.github_actions_connector_definition_version_uuid
-    }
+    building_block_definition_version_ref = var.building_block_definition_version_refs["github-actions-connector"]
     target_ref = {
       kind = "meshTenant"
-      uuid = meshstack_tenant_v4.dev.metadata.uuid
+      uuid = meshstack_tenant.this[each.key].metadata.uuid
     }
-    display_name = "GHA Connector Dev"
-    parent_building_blocks = [{
-      buildingblock_uuid = meshstack_building_block_v2.repo.metadata.uuid
-      definition_uuid    = var.github_repo_definition_uuid
-    }]
+    display_name               = "GHA Connector ${title(each.key)}"
+    parent_building_block_refs = [meshstack_building_block.repo.ref]
     inputs = {
       github_environment_name = {
-        value_string = "development"
+        value = jsonencode(local.github_environment_names[each.key])
       }
       additional_environment_variables = {
-        value_code = jsonencode({
-          "DOMAIN_NAME"        = "${local.identifier}-dev"
-          "AKS_NAMESPACE_NAME" = meshstack_tenant_v4.dev.spec.platform_tenant_id
-        })
+        value = jsonencode(jsonencode({
+          "DOMAIN_NAME"        = each.key == "prod" ? local.identifier : "${local.identifier}-${each.key}"
+          "AKS_NAMESPACE_NAME" = meshstack_tenant.this[each.key].spec.platform_tenant_id
+        }))
       }
     }
   }
 }
 
-resource "meshstack_building_block_v2" "github_actions_prod" {
-  spec = {
-    display_name = "GHA Connector Prod"
-    building_block_definition_version_ref = {
-      uuid = var.github_actions_connector_definition_version_uuid
-    }
-    target_ref = {
-      kind = "meshTenant"
-      uuid = meshstack_tenant_v4.prod.metadata.uuid
-    }
-    parent_building_blocks = [{
-      buildingblock_uuid = meshstack_building_block_v2.repo.metadata.uuid
-      definition_uuid    = var.github_repo_definition_uuid
-    }]
-    inputs = {
-      github_environment_name = {
-        value_string = "production"
-      }
-      additional_environment_variables = {
-        value_code = jsonencode({
-          "DOMAIN_NAME"        = local.identifier
-          "AKS_NAMESPACE_NAME" = meshstack_tenant_v4.prod.spec.platform_tenant_id
-        })
-      }
-    }
-  }
+# --- State address migrations (no resource recreation) ---
+# The building block moves are chained: hop 1 is the resource-type migration
+# (meshstack_building_block_v2 -> meshstack_building_block), hop 2 is the dev/prod -> for_each address
+# change. Terraform follows the chain, so a deployed meshstack_building_block_v2.github_actions_dev
+# migrates v2 -> GA -> for_each in sequence without recreation.
+
+# Hop 1 — resource-type migrations.
+moved {
+  from = meshstack_building_block_v2.repo
+  to   = meshstack_building_block.repo
+}
+moved {
+  from = meshstack_building_block_v2.github_actions_dev
+  to   = meshstack_building_block.github_actions_dev
+}
+moved {
+  from = meshstack_building_block_v2.github_actions_prod
+  to   = meshstack_building_block.github_actions_prod
+}
+
+# Hop 2 — spelled-out dev/prod -> for_each keys (this refactor). Projects and bindings have no
+# hop-1 migration, so their move is the only hop.
+moved {
+  from = meshstack_tenant.dev
+  to   = meshstack_tenant.this["dev"]
+}
+moved {
+  from = meshstack_tenant.prod
+  to   = meshstack_tenant.this["prod"]
+}
+moved {
+  from = meshstack_project.dev
+  to   = meshstack_project.this["dev"]
+}
+moved {
+  from = meshstack_project.prod
+  to   = meshstack_project.this["prod"]
+}
+moved {
+  from = meshstack_project_user_binding.creator_dev_admin[0]
+  to   = meshstack_project_user_binding.creator_admin["dev"]
+}
+moved {
+  from = meshstack_project_user_binding.creator_prod_admin[0]
+  to   = meshstack_project_user_binding.creator_admin["prod"]
+}
+moved {
+  from = meshstack_building_block.github_actions_dev
+  to   = meshstack_building_block.github_actions["dev"]
+}
+moved {
+  from = meshstack_building_block.github_actions_prod
+  to   = meshstack_building_block.github_actions["prod"]
 }

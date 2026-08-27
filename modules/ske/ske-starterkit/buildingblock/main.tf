@@ -11,7 +11,7 @@ locals {
   name           = var.add_random_name_suffix ? "${local.sanitized_name}-${random_string.name_suffix.result}" : local.sanitized_name
 
   app_hostnames = {
-    for stage, _ in var.landing_zone_identifiers :
+    for stage, _ in var.landing_zone_refs :
     stage => (
       stage == "prod"
       ? "${local.name}.${var.dns_zone_name}"
@@ -20,27 +20,27 @@ locals {
   }
 }
 
-resource "meshstack_building_block_v2" "git_repository" {
+resource "meshstack_building_block" "git_repository" {
   spec = {
-    building_block_definition_version_ref = var.building_block_definitions["git-repository"].version_ref # provisioned in backplane
+    building_block_definition_version_ref = var.building_block_definition_version_refs["git-repository"] # provisioned in backplane
 
     display_name = "Git Repo ${local.name}"
     target_ref = {
-      kind       = "meshWorkspace"
-      identifier = var.workspace_identifier
+      kind = "meshWorkspace"
+      name = var.workspace_identifier
     }
 
     inputs = {
-      name        = { value_string = local.name }
-      description = { value_string = "Source code for application ${var.name}" }
-      clone_addr  = { value_string = var.repo_clone_addr }
+      name        = { value = jsonencode(local.name) }
+      description = { value = jsonencode("Source code for application ${var.name}") }
+      clone_addr  = { value = jsonencode(var.repo_clone_addr) }
     }
   }
   wait_for_completion = true
 }
 
 resource "meshstack_project" "this" {
-  for_each = tomap(var.landing_zone_identifiers)
+  for_each = var.landing_zone_refs
   metadata = {
     name               = "${local.name}-${each.key}"
     owned_by_workspace = var.workspace_identifier
@@ -56,11 +56,11 @@ resource "meshstack_project" "this" {
 }
 
 resource "random_uuid" "binding" {
-  for_each = var.creator.type == "User" && var.creator.username != null ? tomap(var.landing_zone_identifiers) : {}
+  for_each = var.creator.type == "User" && var.creator.username != null ? var.landing_zone_refs : {}
 }
 
 resource "meshstack_project_user_binding" "creator_to_admin" {
-  for_each = var.creator.type == "User" && var.creator.username != null ? tomap(var.landing_zone_identifiers) : {}
+  for_each = var.creator.type == "User" && var.creator.username != null ? var.landing_zone_refs : {}
 
   metadata = {
     name = random_uuid.binding[each.key].result
@@ -80,8 +80,8 @@ resource "meshstack_project_user_binding" "creator_to_admin" {
   }
 }
 
-resource "meshstack_tenant_v4" "this" {
-  for_each = tomap(var.landing_zone_identifiers)
+resource "meshstack_tenant" "this" {
+  for_each = var.landing_zone_refs
 
   metadata = {
     owned_by_workspace = var.workspace_identifier
@@ -89,19 +89,26 @@ resource "meshstack_tenant_v4" "this" {
   }
 
   spec = {
-    platform_identifier     = var.full_platform_identifier
-    landing_zone_identifier = each.value
+    platform_ref     = var.platform_ref
+    landing_zone_ref = each.value
   }
 
-  # FIXME: remove after BD-2288 is fixed
+  # This orders the destroy, not the create. Deleted in parallel, the tenant and the binding are both
+  # the run's first write, so both run the same `INSERT ... ON DUPLICATE KEY UPDATE` on meshStack's
+  # Author table for the run's fresh ephemeral API key. The two deadlock, the loser's transaction is
+  # marked rollback-only, and its delete returns a 500 that fails the whole destroy run. Ordering them
+  # means the first delete creates the Author row and the second one finds it.
+  #
+  # A band-aid: meshStack does not retry on a deadlock. Remove it once meshStack does. This is not the
+  # BD-2288 create-ordering workaround that ddd5dba removed from here — that one is still fixed.
   depends_on = [meshstack_project_user_binding.creator_to_admin]
 }
 
-resource "meshstack_building_block_v2" "forgejo_connector" {
-  for_each = meshstack_tenant_v4.this
+resource "meshstack_building_block" "forgejo_connector" {
+  for_each = meshstack_tenant.this
 
   spec = {
-    building_block_definition_version_ref = var.building_block_definitions["forgejo-connector"].version_ref
+    building_block_definition_version_ref = var.building_block_definition_version_refs["forgejo-connector"]
 
     display_name = "Forgejo Connector ${title(each.key)}"
     target_ref = {
@@ -109,17 +116,27 @@ resource "meshstack_building_block_v2" "forgejo_connector" {
       uuid = each.value.metadata.uuid
     }
 
-    parent_building_blocks = [{
-      buildingblock_uuid = meshstack_building_block_v2.git_repository.metadata.uuid
-      definition_uuid    = var.building_block_definitions["git-repository"].uuid
-    }]
+    parent_building_block_refs = [meshstack_building_block.git_repository.ref]
 
     inputs = {
-      stage        = { value_string = each.key }
-      app_hostname = { value_string = local.app_hostnames[each.key] }
+      stage        = { value = jsonencode(each.key) }
+      app_hostname = { value = jsonencode(local.app_hostnames[each.key]) }
     }
   }
 
   wait_for_completion = true
+}
+
+# Migrate the app-team-managed child building blocks from the deprecated
+# meshstack_building_block_v2 resource to meshstack_building_block in place —
+# no destroy/recreate of the live blocks.
+moved {
+  from = meshstack_building_block_v2.git_repository
+  to   = meshstack_building_block.git_repository
+}
+
+moved {
+  from = meshstack_building_block_v2.forgejo_connector
+  to   = meshstack_building_block.forgejo_connector
 }
 

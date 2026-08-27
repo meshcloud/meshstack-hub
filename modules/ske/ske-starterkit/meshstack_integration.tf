@@ -1,13 +1,14 @@
-variable "full_platform_identifier" {
-  type        = string
-  description = "Full identifier of the SKE platform (example: `stackit.ske`)."
+variable "platform_ref" {
+  type = object({
+    uuid = string
+    kind = optional(string, "meshPlatform")
+  })
+  description = "Reference (by uuid) to the meshPlatform tenants are created on — e.g. the `.ref` output of the meshstack_platform resource/backplane that owns it. Wired to the building block as a static input; required since the meshTenant v4 API references platforms by ref."
 }
 
-variable "landing_zone_identifiers" {
-  type = object({
-    dev  = string
-    prod = string
-  })
+variable "landing_zone_refs" {
+  type        = map(object({ name = string, kind = optional(string, "meshLandingZone") }))
+  description = "map keys are the stages, usually dev and prod"
 }
 
 variable "project_tags" {
@@ -43,14 +44,11 @@ variable "notification_subscribers" {
   default = []
 }
 
-variable "building_block_definitions" {
+variable "building_block_definition_version_refs" {
   type = map(object({
     uuid = string
-    version_ref = object({
-      content_hash = string # adding the content nicely tracks changes in dependent BBDs (draft mode)
-      uuid         = string
-    })
   }))
+  description = "Building block definition versions the starter kit creates its child building blocks from, keyed by definition name (`git-repository` and `forgejo-connector`)."
 }
 
 variable "meshstack" {
@@ -66,7 +64,11 @@ variable "hub" {
     git_ref   = optional(string, "main")
     bbd_draft = optional(bool, true)
   })
-  default     = {}
+  const = true
+  default = {
+    git_ref   = "main"
+    bbd_draft = true
+  }
   description = <<-EOT
   `git_ref`: Hub reference. Set to a tag (e.g. 'v1.2.3') or branch or commit sha of meshcloud/meshstack-hub repo.<br>
   `bbd_draft`: If true, allows changing the building block definition for upgrading dependent building blocks.
@@ -104,11 +106,9 @@ resource "meshstack_building_block_definition" "this" {
     notification_subscribers = var.notification_subscribers
 
     readme = chomp(<<-EOT
-    ## What is it?
-
     The **SKE Starterkit** provides application teams with a pre-configured Kubernetes environment on STACKIT Kubernetes Engine (SKE) following best practices. It automates the creation of dev and prod projects with dedicated SKE tenants.
 
-    ## When to use it?
+    ## 🎯 When to use it
 
     This building block is ideal for teams that:
 
@@ -153,7 +153,7 @@ resource "meshstack_building_block_definition" "this" {
     implementation = {
       terraform = {
         repository_url                 = "https://github.com/meshcloud/meshstack-hub.git"
-        terraform_version              = "1.11.5"
+        terraform_version              = "1.12.5"
         async                          = false
         ref_name                       = var.hub.git_ref
         repository_path                = "modules/ske/ske-starterkit/buildingblock"
@@ -182,18 +182,19 @@ resource "meshstack_building_block_definition" "this" {
         display_name    = "Workspace Identifier"
         description     = "Workspace where the starter kit will be provisioned."
       }
-      "full_platform_identifier" = {
-        assignment_type = "STATIC"
-        type            = "STRING"
-        display_name    = "Full Platform Identifier"
-        argument        = jsonencode(var.full_platform_identifier)
-      }
-      "landing_zone_identifiers" = {
+      "platform_ref" = {
         assignment_type = "STATIC"
         type            = "CODE"
-        display_name    = "Landing Zone Identifiers for Dev/Prod."
+        display_name    = "Platform Reference"
+        # jsonencode twice is correct for structured inputs, see landing_zone_refs below.
+        argument = jsonencode(jsonencode(var.platform_ref))
+      }
+      "landing_zone_refs" = {
+        assignment_type = "STATIC"
+        type            = "CODE"
+        display_name    = "Landing Zone References for Dev/Prod."
         # jsonencode twice is correct, see https://registry.terraform.io/providers/meshcloud/meshstack/latest/docs/resources/building_block_definition#argument-1
-        argument = jsonencode(jsonencode(var.landing_zone_identifiers))
+        argument = jsonencode(jsonencode(var.landing_zone_refs))
       }
       "project_tags" = {
         assignment_type = "STATIC"
@@ -221,13 +222,13 @@ resource "meshstack_building_block_definition" "this" {
         display_name    = "Add Random Name Suffix"
         argument        = jsonencode(var.add_random_name_suffix)
       }
-      "building_block_definitions" = {
+      "building_block_definition_version_refs" = {
         assignment_type = "STATIC"
         type            = "CODE"
-        description     = "Definitions used to create auxiliary building blocks (composition)."
-        display_name    = "BBDs"
+        description     = "Definition versions the starter kit creates its child building blocks from."
+        display_name    = "BBD Version References"
         # jsonencode twice is correct, see https://registry.terraform.io/providers/meshcloud/meshstack/latest/docs/resources/building_block_definition#argument-1
-        argument = jsonencode(jsonencode(var.building_block_definitions))
+        argument = jsonencode(jsonencode(var.building_block_definition_version_refs))
       },
 
     }
@@ -263,10 +264,12 @@ resource "meshstack_building_block_definition" "this" {
 }
 
 terraform {
+  required_version = ">= 1.12.0"
+
   required_providers {
     meshstack = {
       source  = "meshcloud/meshstack"
-      version = "~> 0.20.0"
+      version = ">= 0.24.0"
     }
   }
 }

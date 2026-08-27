@@ -26,10 +26,13 @@ variable "record_types" {
   description = "List of DNS record types offered in the record type selector. Alias records only support A and AAAA."
 }
 
-variable "create_oidc_provider" {
-  type        = bool
-  default     = true
-  description = "Set to false if the OIDC provider for the meshStack issuer already exists in this AWS account (e.g., created by another backplane). The existing provider will be looked up by URL instead of created."
+variable "aws_oidc_provider_arn" {
+  type        = string
+  nullable    = false
+  description = <<-EOT
+  ARN of the IAM OIDC provider for the meshStack runner WIF token issuer in this AWS account.
+  See .agents/references/aws-backplane.md#the-shared-oidc-provider
+  EOT
 }
 
 variable "meshstack" {
@@ -45,7 +48,11 @@ variable "hub" {
     git_ref   = optional(string, "main")
     bbd_draft = optional(bool, true)
   })
-  default     = {}
+  const = true
+  default = {
+    git_ref   = "main"
+    bbd_draft = true
+  }
   description = <<-EOT
   `git_ref`: Hub release reference. Set to a tag (e.g. 'v1.2.3') or branch or commit sha of the meshstack-hub repo.
   `bbd_draft`: If true, the building block definition version is kept in draft mode.
@@ -63,10 +70,10 @@ output "building_block_definition" {
 data "meshstack_integrations" "integrations" {}
 
 module "backplane" {
-  source = "github.com/meshcloud/meshstack-hub//modules/aws/route53-dns-alias-record/backplane?ref=32698080a28bce13ba224334ad5bfbb2233236ae"
+  source = "github.com/meshcloud/meshstack-hub//modules/aws/route53-dns-alias-record/backplane?ref=${var.hub.git_ref}"
 
-  hosted_zone_ids      = var.hosted_zone_ids
-  create_oidc_provider = var.create_oidc_provider
+  hosted_zone_ids   = var.hosted_zone_ids
+  oidc_provider_arn = var.aws_oidc_provider_arn
 
   workload_identity_federation = {
     issuer   = data.meshstack_integrations.integrations.workload_identity_federation.replicator.issuer
@@ -117,7 +124,7 @@ resource "meshstack_building_block_definition" "this" {
 
     implementation = {
       terraform = {
-        terraform_version = "1.11.5"
+        terraform_version = "1.12.5"
         repository_url    = "https://github.com/meshcloud/meshstack-hub.git"
         repository_path   = "modules/aws/route53-dns-alias-record/buildingblock"
         ref_name          = var.hub.git_ref
@@ -226,16 +233,16 @@ resource "meshstack_building_block_definition" "this" {
 }
 
 terraform {
-  required_version = ">= 1.11.0"
+  required_version = ">= 1.12.0"
 
   required_providers {
     aws = {
       source  = "hashicorp/aws"
-      version = "~> 6.32"
+      version = ">= 6.32"
     }
     meshstack = {
       source  = "meshcloud/meshstack"
-      version = "~> 0.20.0"
+      version = ">= 0.21.0"
     }
   }
 }

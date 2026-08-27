@@ -25,7 +25,11 @@ variable "hub" {
     git_ref   = optional(string, "main")
     bbd_draft = optional(bool, true)
   })
-  default     = {}
+  const = true
+  default = {
+    git_ref   = "main"
+    bbd_draft = true
+  }
   description = <<-EOT
   `git_ref`: Hub release reference. Set to a tag (e.g. 'v1.2.3') or branch or commit sha of the meshstack-hub repo.
   `bbd_draft`: If true, the building block definition version is kept in draft mode.
@@ -46,7 +50,7 @@ output "building_block_definition" {
 data "meshstack_integrations" "integrations" {}
 
 module "backplane" {
-  source = "github.com/meshcloud/meshstack-hub//modules/gcp/storage-bucket/backplane?ref=b9c1f3f2201e7e22b04dbf71a3ceab7a0246a7b3"
+  source = "github.com/meshcloud/meshstack-hub//modules/gcp/storage-bucket/backplane?ref=${var.hub.git_ref}"
 
   project_id = var.gcp_project_id
   workload_identity_federation = {
@@ -67,15 +71,39 @@ resource "meshstack_building_block_definition" "gcp_storage_bucket" {
   }
 
   spec = {
-    display_name      = "GCP Storage Bucket"
-    description       = "Provides a GCP Cloud Storage bucket for object storage."
-    readme            = <<EOT
-# GCP Storage Bucket
+    display_name = "GCP Storage Bucket"
+    description  = "Provides a GCP Cloud Storage bucket for object storage."
+    readme = chomp(<<-EOT
+      This building block provisions a **GCP Cloud Storage bucket** in your GCP project, providing
+      scalable and durable object storage for application data, static assets, and backups.
 
-## Description
+      ## 🎯 When to use it
 
-Provides a GCP Cloud Storage bucket for object storage.
-EOT
+      Use this building block when your application team needs:
+      - A dedicated GCS bucket to store files, blobs, or build artifacts.
+      - Object storage provisioned per workspace without managing GCP infrastructure directly.
+
+      ## 💡 Usage examples
+
+      **Example 1: Storing build artifacts**
+      A CI/CD pipeline uploads compiled artifacts to a per-workspace GCS bucket, keeping
+      build outputs isolated and accessible only to the owning team.
+
+      **Example 2: Static website assets**
+      A frontend team stores images and compiled assets in a GCS bucket and configures
+      their CDN or application to serve them from there.
+
+      ## 📊 Shared Responsibility
+
+      | Responsibility | Platform Team | Application Team |
+      |---|:---:|:---:|
+      | Provision and manage the GCS bucket | ✅ | ❌ |
+      | Configure service account credentials | ✅ | ❌ |
+      | Choose bucket name, region, and labels | ❌ | ✅ |
+      | Manage objects and lifecycle policies | ❌ | ✅ |
+      | Control access to bucket contents | ❌ | ✅ |
+      EOT
+    )
     support_url       = ""
     documentation_url = ""
     target_type       = "WORKSPACE_LEVEL"
@@ -87,7 +115,7 @@ EOT
 
     implementation = {
       terraform = {
-        terraform_version              = "1.9.0"
+        terraform_version              = "1.12.5"
         repository_url                 = "https://github.com/meshcloud/meshstack-hub.git"
         repository_path                = "modules/gcp/storage-bucket/buildingblock"
         ref_name                       = var.hub.git_ref
@@ -156,14 +184,8 @@ EOT
       bucket_url = {
         type            = "STRING"
         assignment_type = "RESOURCE_URL"
-        display_name    = "GCP Bucket URL"
-        description     = "The URL of the created GCP bucket"
-      }
-      bucket_self_link = {
-        type            = "STRING"
-        assignment_type = "RESOURCE_URL"
-        display_name    = "GCP Bucket Self Link"
-        description     = "The self link of the created GCP bucket"
+        display_name    = "GCP Console"
+        description     = "Opens the created bucket in the GCP console"
       }
       summary = {
         type            = "STRING"
@@ -176,14 +198,16 @@ EOT
 }
 
 terraform {
+  required_version = ">= 1.12.0"
+
   required_providers {
     meshstack = {
       source  = "meshcloud/meshstack"
-      version = "~> 0.20.0"
+      version = ">= 0.21.0"
     }
     google = {
       source  = "hashicorp/google"
-      version = "~> 7.0"
+      version = ">= 7.0"
     }
   }
 }

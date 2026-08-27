@@ -43,9 +43,3 @@ resource "azuread_service_principal_password" "starterkit" {
     rotation = time_rotating.key_rotation.id
   }
 }
-
-# grant access to the terraform state
-moved {
-  from = azurerm_role_assignment.tfstates_engineers
-  to   = azurerm_role_assignment.terraform_state
-}

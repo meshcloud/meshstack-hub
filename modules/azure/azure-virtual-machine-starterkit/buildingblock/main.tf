@@ -51,7 +51,7 @@ resource "meshstack_tenant_v4" "vm_tenant" {
   }
 }
 
-resource "meshstack_building_block_v2" "azure_vm" {
+resource "meshstack_building_block" "azure_vm" {
   spec = {
     building_block_definition_version_ref = {
       uuid = var.azure_vm_definition_version_uuid
@@ -61,31 +61,47 @@ resource "meshstack_building_block_v2" "azure_vm" {
       uuid = meshstack_tenant_v4.vm_tenant.metadata.uuid
     }
     display_name = "Azure Virtual Machine"
-    inputs = {
-      vm_name = {
-        value_string = local.identifier
-      }
-      location = {
-        value_string = var.vm_location
-      }
-      os_type = {
-        value_string = var.vm_os_type
-      }
-      vm_size = {
-        value_string = var.vm_size
-      }
-      admin_username = {
-        value_string = var.vm_admin_username
-      }
-      enable_public_ip = {
-        value_bool = var.vm_enable_public_ip
-      }
-      ssh_public_key = {
-        value_string = var.vm_os_type == "Linux" ? var.vm_ssh_public_key : null
-      }
-      admin_password = {
-        value_string = var.vm_os_type == "Windows" ? var.vm_admin_password : null
-      }
-    }
+    inputs = merge(
+      {
+        vm_name = {
+          value = jsonencode(local.identifier)
+        }
+        location = {
+          value = jsonencode(var.vm_location)
+        }
+        os_type = {
+          value = jsonencode(var.vm_os_type)
+        }
+        vm_size = {
+          value = jsonencode(var.vm_size)
+        }
+        admin_username = {
+          value = jsonencode(var.vm_admin_username)
+        }
+        enable_public_ip = {
+          value = jsonencode(var.vm_enable_public_ip)
+        }
+      },
+      # Only send the OS-specific credential input for the matching OS. This mirrors
+      # the pre-v3 behavior where a null `value_string` omitted the input entirely;
+      # under v3 a `jsonencode(... : null)` would instead send an explicit JSON null.
+      var.vm_os_type == "Linux" ? {
+        ssh_public_key = {
+          value = jsonencode(var.vm_ssh_public_key)
+        }
+      } : {},
+      var.vm_os_type == "Windows" ? {
+        admin_password = {
+          value = jsonencode(var.vm_admin_password)
+        }
+      } : {},
+    )
   }
+}
+
+# Migrate the child building block from the deprecated meshstack_building_block_v2
+# resource to meshstack_building_block in place.
+moved {
+  from = meshstack_building_block_v2.azure_vm
+  to   = meshstack_building_block.azure_vm
 }

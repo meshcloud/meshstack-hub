@@ -3,6 +3,12 @@ variable "stackit_project_id" {
   description = "STACKIT project ID where Object Storage buckets will be created."
 }
 
+variable "stackit_service_account_name" {
+  type        = string
+  default     = null
+  description = "Name of the backplane service account. Defaults to 'mesh-storage-bucket'. Override when deploying multiple backplane instances in the same STACKIT project."
+}
+
 variable "meshstack" {
   type = object({
     owning_workspace_identifier = string
@@ -15,7 +21,11 @@ variable "hub" {
     git_ref   = optional(string, "main")
     bbd_draft = optional(bool, true)
   })
-  default     = {}
+  const = true
+  default = {
+    git_ref   = "main"
+    bbd_draft = true
+  }
   description = <<-EOT
   `git_ref`: Hub release reference. Set to a tag (e.g. 'v1.2.3') or branch or commit sha of meshcloud/meshstack-hub repo.
   `bbd_draft`: If true, allows changing the building block definition for upgrading dependent building blocks.
@@ -30,10 +40,20 @@ output "building_block_definition" {
   }
 }
 
-module "backplane" {
-  source = "github.com/meshcloud/meshstack-hub//modules/stackit/storage-bucket/backplane?ref=aeb06b72d8580f0581db36a26569d07d88320858"
+data "meshstack_integrations" "integrations" {}
 
-  project_id = var.stackit_project_id
+module "backplane" {
+  source = "github.com/meshcloud/meshstack-hub//modules/stackit/storage-bucket/backplane?ref=${var.hub.git_ref}"
+
+  project_id           = var.stackit_project_id
+  service_account_name = coalesce(var.stackit_service_account_name, "mesh-storage-bucket")
+
+  workload_identity_federation = {
+    issuer = data.meshstack_integrations.integrations.workload_identity_federation.replicator.issuer
+    subjects = [
+      "${trimsuffix(data.meshstack_integrations.integrations.workload_identity_federation.replicator.subject, ":replicator")}:workspace.${var.meshstack.owning_workspace_identifier}.buildingblockdefinition.${meshstack_building_block_definition.this.metadata.uuid}"
+    ]
+  }
 }
 
 resource "meshstack_building_block_definition" "this" {
@@ -48,6 +68,38 @@ resource "meshstack_building_block_definition" "this" {
     description      = "Provisions an S3-compatible Object Storage bucket on STACKIT with access credentials."
     target_type      = "WORKSPACE_LEVEL"
     run_transparency = true
+    readme = chomp(<<-EOT
+      This building block provisions an **S3-compatible Object Storage bucket on STACKIT** with
+      dedicated access credentials, so your team can store and retrieve files without managing
+      the underlying infrastructure.
+
+      ## 🎯 When to use it
+
+      Use this building block when your application team needs:
+      - A dedicated S3-compatible bucket on STACKIT for application data, backups, or static assets.
+      - Isolated object storage per workspace with separate access credentials.
+
+      ## 💡 Usage examples
+
+      **Example 1: Storing application data**
+      A backend service stores user-uploaded files in a STACKIT Object Storage bucket.
+      The building block provisions the bucket and outputs S3 credentials for the application.
+
+      **Example 2: Build artifact cache**
+      A CI pipeline caches build dependencies in a STACKIT bucket, reducing build times
+      while keeping artifacts isolated per project.
+
+      ## 📊 Shared Responsibility
+
+      | Responsibility | Platform Team | Application Team |
+      |---|:---:|:---:|
+      | Provision the Object Storage bucket | ✅ | ❌ |
+      | Provide S3-compatible access credentials | ✅ | ❌ |
+      | Choose bucket name and STACKIT project | ❌ | ✅ |
+      | Manage objects and data lifecycle | ❌ | ✅ |
+      | Secure and rotate application credentials | ❌ | ✅ |
+      EOT
+    )
   }
 
   version_spec = {
@@ -56,7 +108,7 @@ resource "meshstack_building_block_definition" "this" {
 
     implementation = {
       terraform = {
-        terraform_version              = "1.11.0"
+        terraform_version              = "1.12.5"
         repository_url                 = "https://github.com/meshcloud/meshstack-hub.git"
         repository_path                = "modules/stackit/storage-bucket/buildingblock"
         ref_name                       = var.hub.git_ref
@@ -74,16 +126,30 @@ resource "meshstack_building_block_definition" "this" {
         argument        = jsonencode(module.backplane.project_id)
       }
 
-      service_account_key_json = {
-        display_name    = "Service Account Key JSON"
-        description     = "Service account key JSON for authenticating the STACKIT provider."
+      service_account_email = {
+        display_name    = "Service Account Email"
+        description     = "Email of the STACKIT service account for WIF-based authentication."
         type            = "STRING"
         assignment_type = "STATIC"
-        sensitive = {
-          argument = {
-            secret_value = module.backplane.service_account_key_json
-          }
-        }
+        argument        = jsonencode(module.backplane.service_account_email)
+      }
+
+      STACKIT_USE_OIDC = {
+        display_name    = "STACKIT Use OIDC"
+        description     = "Enables OIDC-based WIF for the STACKIT provider."
+        type            = "STRING"
+        assignment_type = "STATIC"
+        is_environment  = true
+        argument        = jsonencode("1")
+      }
+
+      STACKIT_FEDERATED_TOKEN_FILE = {
+        display_name    = "STACKIT Federated Token File"
+        description     = "Path to the WIF token file injected by meshStack."
+        type            = "STRING"
+        assignment_type = "STATIC"
+        is_environment  = true
+        argument        = jsonencode("/var/run/secrets/workload-identity/azure/token")
       }
 
       admin_s3_access_key = {
@@ -169,10 +235,12 @@ resource "meshstack_building_block_definition" "this" {
 }
 
 terraform {
+  required_version = ">= 1.12.0"
+
   required_providers {
     meshstack = {
       source  = "meshcloud/meshstack"
-      version = "~> 0.20.0"
+      version = ">= 0.21.0"
     }
   }
 }

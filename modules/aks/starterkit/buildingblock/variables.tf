@@ -7,34 +7,25 @@ variable "name" {
   description = "This name will be used for the created projects, app subdomain and GitHub repository."
 }
 
-variable "full_platform_identifier" {
-  type        = string
-  description = "Full platform identifier of the AKS Namespace platform."
+variable "platform_ref" {
+  type = object({
+    uuid = string
+    kind = optional(string, "meshPlatform")
+  })
+  description = "Reference (by uuid) to the meshPlatform the tenants are created on. Wired in as a static building block input from the platform/backplane that owns the meshPlatform (its `.ref` output). Required because the meshTenant v4 API references platforms by ref."
 }
 
-variable "landing_zone_dev_identifier" {
-  type        = string
-  description = "AKS Landing zone identifier for the development tenant."
+variable "landing_zone_refs" {
+  type        = map(object({ name = string, kind = optional(string, "meshLandingZone") }))
+  description = "Landing zone references keyed by stage (usually dev and prod). Wired in as a static building block input from the platform/backplane that owns the meshLandingZones (their `.ref` outputs)."
 }
 
-variable "landing_zone_prod_identifier" {
-  type        = string
-  description = "AKS Landing zone identifier for the production tenant."
-}
-
-variable "github_repo_definition_version_uuid" {
-  type        = string
-  description = "UUID of the GitHub repository building block definition version."
-}
-
-variable "github_actions_connector_definition_version_uuid" {
-  type        = string
-  description = "UUID of the GitHub Actions connector building block definition version."
-}
-
-variable "github_repo_definition_uuid" {
-  type        = string
-  description = "UUID of the GitHub repository building block definition."
+variable "building_block_definition_version_refs" {
+  # The input of the same name in meshstack_integration.tf fills this in; rename both together.
+  type = map(object({
+    uuid = string
+  }))
+  description = "Building block definition versions this starter kit creates its child building blocks from, keyed by definition name (`git-repository` and `github-actions-connector`)."
 }
 
 variable "github_repo_input_repo_visibility" {
@@ -76,11 +67,9 @@ variable "project_tags" {
   type = object({
     dev  = map(list(string))
     prod = map(list(string))
+
+    owner_tag_key = optional(string, null)
   })
-  default = {
-    dev  = {}
-    prod = {}
-  }
   description = "Tags for the created Dev/Prod projects."
 }
 variable "github_template_repo_path" {

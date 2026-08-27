@@ -1,0 +1,36 @@
+name: Diagrams Check
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+    paths:
+      - "**.dot"
+      - "**.svg"
+      - "tools/diagrams/**"
+      - "package.json"
+      - "package-lock.json"
+      - ".github/workflows/diagrams-check.yml"
+
+concurrency:
+  group: diagrams-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  diagrams:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Verify committed SVGs match their .dot sources
+        run: node tools/diagrams/render-diagrams.mjs --check

@@ -3,11 +3,11 @@ terraform {
   required_providers {
     meshstack = {
       source  = "meshcloud/meshstack"
-      version = "~>0.20.0"
+      version = ">= 0.24.4"
     }
     random = {
       source  = "hashicorp/random"
-      version = "3.8.1"
+      version = ">= 3.8.1"
     }
   }
 }

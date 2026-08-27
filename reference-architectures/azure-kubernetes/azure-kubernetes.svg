@@ -1,0 +1,240 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN"
+ "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<svg width="1269pt" height="434pt"
+ viewBox="0.00 0.00 1269.00 434.00" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+<g id="graph0" class="graph" transform="scale(1 1) rotate(0) translate(4 430.36)">
+<title>azure_kubernetes</title>
+<polygon fill="white" stroke="none" points="-4,4 -4,-430.36 1265,-430.36 1265,4 -4,4"/>
+<g id="clust1" class="cluster">
+<title>cluster_azure</title>
+<path fill="white" stroke="#d5dae0" d="M20,-111.24C20,-111.24 396,-111.24 396,-111.24 402,-111.24 408,-117.24 408,-123.24 408,-123.24 408,-403.24 408,-403.24 408,-409.24 402,-415.24 396,-415.24 396,-415.24 20,-415.24 20,-415.24 14,-415.24 8,-409.24 8,-403.24 8,-403.24 8,-123.24 8,-123.24 8,-117.24 14,-111.24 20,-111.24"/>
+<text xml:space="preserve" text-anchor="middle" x="35.01" y="-400.44" font-family="Helvetica,sans-Serif" font-size="12.00" fill="#697180"> &#160;Azure</text>
+</g>
+<g id="clust3" class="cluster">
+<title>cluster_github</title>
+<path fill="white" stroke="#d5dae0" d="M428,-8C428,-8 626,-8 626,-8 632,-8 638,-14 638,-20 638,-20 638,-403.24 638,-403.24 638,-409.24 632,-415.24 626,-415.24 626,-415.24 428,-415.24 428,-415.24 422,-415.24 416,-409.24 416,-403.24 416,-403.24 416,-20 416,-20 416,-14 422,-8 428,-8"/>
+<text xml:space="preserve" text-anchor="middle" x="446.01" y="-400.44" font-family="Helvetica,sans-Serif" font-size="12.00" fill="#697180"> &#160;GitHub</text>
+</g>
+<g id="clust4" class="cluster">
+<title>cluster_mesh</title>
+<path fill="white" stroke="#d5dae0" d="M658,-111.24C658,-111.24 1241,-111.24 1241,-111.24 1247,-111.24 1253,-117.24 1253,-123.24 1253,-123.24 1253,-406.36 1253,-406.36 1253,-412.36 1247,-418.36 1241,-418.36 1241,-418.36 658,-418.36 658,-418.36 652,-418.36 646,-412.36 646,-406.36 646,-406.36 646,-123.24 646,-123.24 646,-117.24 652,-111.24 658,-111.24"/>
+<text xml:space="preserve" text-anchor="middle" x="687.01" y="-403.56" font-family="Helvetica,sans-Serif" font-size="12.00" fill="#697180"> &#160;meshStack</text>
+</g>
+<!-- SUB -->
+<g id="node1" class="node">
+<title>SUB</title>
+<path fill="#ffffff" stroke="#a2abb8" stroke-width="1.1" d="M261.79,-374.84C261.79,-374.84 140.21,-374.84 140.21,-374.84 134.21,-374.84 128.21,-368.84 128.21,-362.84 128.21,-362.84 128.21,-350.84 128.21,-350.84 128.21,-344.84 134.21,-338.84 140.21,-338.84 140.21,-338.84 261.79,-338.84 261.79,-338.84 267.79,-338.84 273.79,-344.84 273.79,-350.84 273.79,-350.84 273.79,-362.84 273.79,-362.84 273.79,-368.84 267.79,-374.84 261.79,-374.84"/>
+<text xml:space="preserve" text-anchor="middle" x="201" y="-353.54" font-family="Helvetica,sans-Serif" font-size="11.00">🗂️ Azure Subscription</text>
+</g>
+<!-- AKS -->
+<g id="node2" class="node">
+<title>AKS</title>
+<path fill="#eef2f6" stroke="#93a7bb" stroke-width="1.1" d="M162.01,-274.72C162.01,-274.72 37.99,-274.72 37.99,-274.72 31.99,-274.72 25.99,-268.72 25.99,-262.72 25.99,-262.72 25.99,-244.48 25.99,-244.48 25.99,-238.48 31.99,-232.48 37.99,-232.48 37.99,-232.48 162.01,-232.48 162.01,-232.48 168.01,-232.48 174.01,-238.48 174.01,-244.48 174.01,-244.48 174.01,-262.72 174.01,-262.72 174.01,-268.72 168.01,-274.72 162.01,-274.72"/>
+<text xml:space="preserve" text-anchor="middle" x="100" y="-256.9" font-family="Helvetica,sans-Serif" font-size="11.00">☸️ AKS cluster</text>
+<text xml:space="preserve" text-anchor="middle" x="100" y="-243.7" font-family="Helvetica,sans-Serif" font-size="11.00">run by the platform team</text>
+</g>
+<!-- SUB&#45;&gt;AKS -->
+<g id="edge2" class="edge">
+<title>SUB&#45;&gt;AKS</title>
+<path fill="none" stroke="#8b95a3" d="M143.48,-338.38C143.48,-338.38 143.48,-283.62 143.48,-283.62"/>
+<polygon fill="#8b95a3" stroke="#8b95a3" points="145.93,-283.62 143.48,-276.62 141.03,-283.62 145.93,-283.62"/>
+</g>
+<!-- ACR -->
+<g id="node3" class="node">
+<title>ACR</title>
+<path fill="#eef2f6" stroke="#93a7bb" stroke-width="1.1" d="M378.07,-271.6C378.07,-271.6 225.93,-271.6 225.93,-271.6 219.93,-271.6 213.93,-265.6 213.93,-259.6 213.93,-259.6 213.93,-247.6 213.93,-247.6 213.93,-241.6 219.93,-235.6 225.93,-235.6 225.93,-235.6 378.07,-235.6 378.07,-235.6 384.07,-235.6 390.07,-241.6 390.07,-247.6 390.07,-247.6 390.07,-259.6 390.07,-259.6 390.07,-265.6 384.07,-271.6 378.07,-271.6"/>
+<text xml:space="preserve" text-anchor="middle" x="302" y="-250.3" font-family="Helvetica,sans-Serif" font-size="11.00">🗄️ Azure Container Registry</text>
+</g>
+<!-- SUB&#45;&gt;ACR -->
+<g id="edge3" class="edge">
+<title>SUB&#45;&gt;ACR</title>
+<path fill="none" stroke="#8b95a3" d="M243.86,-338.38C243.86,-338.38 243.86,-280.41 243.86,-280.41"/>
+<polygon fill="#8b95a3" stroke="#8b95a3" points="246.31,-280.41 243.86,-273.41 241.41,-280.41 246.31,-280.41"/>
+</g>
+<!-- AKS&#45;&gt;ACR -->
+<!-- NS -->
+<g id="node4" class="node">
+<title>NS</title>
+<path fill="#e5f2ea" stroke="#85bfa0" stroke-width="1.1" d="M150.09,-171.48C150.09,-171.48 49.91,-171.48 49.91,-171.48 43.91,-171.48 37.91,-165.48 37.91,-159.48 37.91,-159.48 37.91,-141.24 37.91,-141.24 37.91,-135.24 43.91,-129.24 49.91,-129.24 49.91,-129.24 150.09,-129.24 150.09,-129.24 156.09,-129.24 162.09,-135.24 162.09,-141.24 162.09,-141.24 162.09,-159.48 162.09,-159.48 162.09,-165.48 156.09,-171.48 150.09,-171.48"/>
+<text xml:space="preserve" text-anchor="middle" x="100" y="-153.66" font-family="Helvetica,sans-Serif" font-size="11.00">☸️ Namespace ×2</text>
+<text xml:space="preserve" text-anchor="middle" x="100" y="-140.46" font-family="Helvetica,sans-Serif" font-size="11.00">dev + prod</text>
+</g>
+<!-- AKS&#45;&gt;NS -->
+<g id="edge4" class="edge">
+<title>AKS&#45;&gt;NS</title>
+<path fill="none" stroke="#8b95a3" d="M79.3,-232.21C79.3,-232.21 79.3,-180.24 79.3,-180.24"/>
+<polygon fill="#8b95a3" stroke="#8b95a3" points="81.75,-180.24 79.3,-173.24 76.85,-180.24 81.75,-180.24"/>
+<text xml:space="preserve" text-anchor="middle" x="62.54" y="-208.92" font-family="Helvetica,sans-Serif" font-size="9.00" fill="#697180">contains</text>
+</g>
+<!-- NS&#45;&gt;ACR -->
+<g id="edge5" class="edge">
+<title>NS&#45;&gt;ACR</title>
+<path fill="none" stroke="#8b95a3" stroke-dasharray="5,2" d="M162.33,-157C211.78,-157 272.64,-157 272.64,-157 272.64,-157 272.64,-226.92 272.64,-226.92"/>
+<polygon fill="#8b95a3" stroke="#8b95a3" points="270.19,-226.92 272.64,-233.92 275.09,-226.92 270.19,-226.92"/>
+<text xml:space="preserve" text-anchor="middle" x="227.43" y="-159.7" font-family="Helvetica,sans-Serif" font-size="9.00" fill="#697180">pulls images</text>
+</g>
+<!-- ORG -->
+<g id="node5" class="node">
+<title>ORG</title>
+<path fill="#ffffff" stroke="#a2abb8" stroke-width="1.1" d="M585.65,-374.84C585.65,-374.84 468.35,-374.84 468.35,-374.84 462.35,-374.84 456.35,-368.84 456.35,-362.84 456.35,-362.84 456.35,-350.84 456.35,-350.84 456.35,-344.84 462.35,-338.84 468.35,-338.84 468.35,-338.84 585.65,-338.84 585.65,-338.84 591.65,-338.84 597.65,-344.84 597.65,-350.84 597.65,-350.84 597.65,-362.84 597.65,-362.84 597.65,-368.84 591.65,-374.84 585.65,-374.84"/>
+<text xml:space="preserve" text-anchor="middle" x="527" y="-353.54" font-family="Helvetica,sans-Serif" font-size="11.00">🏢 GitHub organization</text>
+</g>
+<!-- TPL -->
+<g id="node6" class="node">
+<title>TPL</title>
+<path fill="#ffffff" stroke="#a2abb8" stroke-width="1.1" d="M607.97,-274.72C607.97,-274.72 446.03,-274.72 446.03,-274.72 440.03,-274.72 434.03,-268.72 434.03,-262.72 434.03,-262.72 434.03,-244.48 434.03,-244.48 434.03,-238.48 440.03,-232.48 446.03,-232.48 446.03,-232.48 607.97,-232.48 607.97,-232.48 613.97,-232.48 619.97,-238.48 619.97,-244.48 619.97,-244.48 619.97,-262.72 619.97,-262.72 619.97,-268.72 613.97,-274.72 607.97,-274.72"/>
+<text xml:space="preserve" text-anchor="middle" x="527" y="-256.9" font-family="Helvetica,sans-Serif" font-size="11.00">🔀 Template repository</text>
+<text xml:space="preserve" text-anchor="middle" x="527" y="-243.7" font-family="Helvetica,sans-Serif" font-size="11.00">maintained by the platform team</text>
+</g>
+<!-- ORG&#45;&gt;TPL -->
+<g id="edge6" class="edge">
+<title>ORG&#45;&gt;TPL</title>
+<path fill="none" stroke="#8b95a3" d="M527,-338.38C527,-338.38 527,-283.62 527,-283.62"/>
+<polygon fill="#8b95a3" stroke="#8b95a3" points="529.45,-283.62 527,-276.62 524.55,-283.62 529.45,-283.62"/>
+</g>
+<!-- REPO -->
+<g id="node7" class="node">
+<title>REPO</title>
+<path fill="#e5f2ea" stroke="#85bfa0" stroke-width="1.1" d="M580.15,-171.48C580.15,-171.48 473.85,-171.48 473.85,-171.48 467.85,-171.48 461.85,-165.48 461.85,-159.48 461.85,-159.48 461.85,-141.24 461.85,-141.24 461.85,-135.24 467.85,-129.24 473.85,-129.24 473.85,-129.24 580.15,-129.24 580.15,-129.24 586.15,-129.24 592.15,-135.24 592.15,-141.24 592.15,-141.24 592.15,-159.48 592.15,-159.48 592.15,-165.48 586.15,-171.48 580.15,-171.48"/>
+<text xml:space="preserve" text-anchor="middle" x="527" y="-153.66" font-family="Helvetica,sans-Serif" font-size="11.00">🔀 App repository ×1</text>
+<text xml:space="preserve" text-anchor="middle" x="527" y="-140.46" font-family="Helvetica,sans-Serif" font-size="11.00">per application team</text>
+</g>
+<!-- TPL&#45;&gt;REPO -->
+<g id="edge7" class="edge">
+<title>TPL&#45;&gt;REPO</title>
+<path fill="none" stroke="#8b95a3" d="M505.28,-232.21C505.28,-232.21 505.28,-180.24 505.28,-180.24"/>
+<polygon fill="#8b95a3" stroke="#8b95a3" points="507.73,-180.24 505.28,-173.24 502.83,-180.24 507.73,-180.24"/>
+<text xml:space="preserve" text-anchor="middle" x="483.52" y="-208.92" font-family="Helvetica,sans-Serif" font-size="9.00" fill="#697180">cloned into</text>
+</g>
+<!-- GHA -->
+<g id="node8" class="node">
+<title>GHA</title>
+<path fill="#e5f2ea" stroke="#85bfa0" stroke-width="1.1" d="M587.34,-68.24C587.34,-68.24 466.66,-68.24 466.66,-68.24 460.66,-68.24 454.66,-62.24 454.66,-56.24 454.66,-56.24 454.66,-38 454.66,-38 454.66,-32 460.66,-26 466.66,-26 466.66,-26 587.34,-26 587.34,-26 593.34,-26 599.34,-32 599.34,-38 599.34,-38 599.34,-56.24 599.34,-56.24 599.34,-62.24 593.34,-68.24 587.34,-68.24"/>
+<text xml:space="preserve" text-anchor="middle" x="527" y="-50.42" font-family="Helvetica,sans-Serif" font-size="11.00">⚙️ GitHub Actions ×2</text>
+<text xml:space="preserve" text-anchor="middle" x="527" y="-37.22" font-family="Helvetica,sans-Serif" font-size="11.00">dev + prod environment</text>
+</g>
+<!-- REPO&#45;&gt;GHA -->
+<g id="edge8" class="edge">
+<title>REPO&#45;&gt;GHA</title>
+<path fill="none" stroke="#8b95a3" d="M527,-128.97C527,-128.97 527,-77 527,-77"/>
+<polygon fill="#8b95a3" stroke="#8b95a3" points="529.45,-77 527,-70 524.55,-77 529.45,-77"/>
+<text xml:space="preserve" text-anchor="middle" x="499.49" y="-105.68" font-family="Helvetica,sans-Serif" font-size="9.00" fill="#697180">runs workflow</text>
+</g>
+<!-- GHA&#45;&gt;ACR -->
+<g id="edge19" class="edge">
+<title>GHA&#45;&gt;ACR</title>
+<path fill="none" stroke="#8b95a3" stroke-dasharray="1,5" d="M454.15,-47C398.52,-47 331.36,-47 331.36,-47 331.36,-47 331.36,-226.75 331.36,-226.75"/>
+<polygon fill="#8b95a3" stroke="#8b95a3" points="328.91,-226.75 331.36,-233.75 333.81,-226.75 328.91,-226.75"/>
+<text xml:space="preserve" text-anchor="middle" x="301.09" y="-78.18" font-family="Helvetica,sans-Serif" font-size="9.00" fill="#697180">pushes images</text>
+</g>
+<!-- GHA&#45;&gt;NS -->
+<g id="edge20" class="edge">
+<title>GHA&#45;&gt;NS</title>
+<path fill="none" stroke="#8b95a3" stroke-dasharray="1,5" d="M458.26,-68.4C458.26,-96.65 458.26,-143 458.26,-143 458.26,-143 170.92,-143 170.92,-143"/>
+<polygon fill="#8b95a3" stroke="#8b95a3" points="170.92,-140.55 163.92,-143 170.92,-145.45 170.92,-140.55"/>
+<text xml:space="preserve" text-anchor="middle" x="331.37" y="-145.7" font-family="Helvetica,sans-Serif" font-size="9.00" fill="#697180">deploys to</text>
+</g>
+<!-- PLAT -->
+<g id="node9" class="node">
+<title>PLAT</title>
+<path fill="#ecedfb" stroke="#9aa2e6" stroke-width="1.1" d="M833.51,-374.84C833.51,-374.84 676.49,-374.84 676.49,-374.84 670.49,-374.84 664.49,-368.84 664.49,-362.84 664.49,-362.84 664.49,-350.84 664.49,-350.84 664.49,-344.84 670.49,-338.84 676.49,-338.84 676.49,-338.84 833.51,-338.84 833.51,-338.84 839.51,-338.84 845.51,-344.84 845.51,-350.84 845.51,-350.84 845.51,-362.84 845.51,-362.84 845.51,-368.84 839.51,-374.84 833.51,-374.84"/>
+<text xml:space="preserve" text-anchor="middle" x="755" y="-353.54" font-family="Helvetica,sans-Serif" font-size="11.00">🛰️ AKS Namespace Platform</text>
+</g>
+<!-- PLAT&#45;&gt;AKS -->
+<g id="edge15" class="edge">
+<title>PLAT&#45;&gt;AKS</title>
+<path fill="none" stroke="#8b95a3" stroke-dasharray="1,5" d="M706.43,-338.42C706.43,-323.52 706.43,-305 706.43,-305 706.43,-305 158.75,-305 158.75,-305 158.75,-305 158.75,-283.61 158.75,-283.61"/>
+<polygon fill="#8b95a3" stroke="#8b95a3" points="161.2,-283.61 158.75,-276.61 156.3,-283.61 161.2,-283.61"/>
+<text xml:space="preserve" text-anchor="middle" x="410.84" y="-307.7" font-family="Helvetica,sans-Serif" font-size="9.00" fill="#697180">replicates into</text>
+</g>
+<!-- LZ -->
+<g id="node10" class="node">
+<title>LZ</title>
+<path fill="#ecedfb" stroke="#9aa2e6" stroke-width="1.1" d="M778.32,-274.72C778.32,-274.72 675.68,-274.72 675.68,-274.72 669.68,-274.72 663.68,-268.72 663.68,-262.72 663.68,-262.72 663.68,-244.48 663.68,-244.48 663.68,-238.48 669.68,-232.48 675.68,-232.48 675.68,-232.48 778.32,-232.48 778.32,-232.48 784.32,-232.48 790.32,-238.48 790.32,-244.48 790.32,-244.48 790.32,-262.72 790.32,-262.72 790.32,-268.72 784.32,-274.72 778.32,-274.72"/>
+<text xml:space="preserve" text-anchor="middle" x="727" y="-256.9" font-family="Helvetica,sans-Serif" font-size="11.00">🛬 Landing Zone ×2</text>
+<text xml:space="preserve" text-anchor="middle" x="727" y="-243.7" font-family="Helvetica,sans-Serif" font-size="11.00">dev + prod</text>
+</g>
+<!-- PLAT&#45;&gt;LZ -->
+<g id="edge10" class="edge">
+<title>PLAT&#45;&gt;LZ</title>
+<path fill="none" stroke="#8b95a3" d="M748.38,-338.38C748.38,-338.38 748.38,-283.62 748.38,-283.62"/>
+<polygon fill="#8b95a3" stroke="#8b95a3" points="750.83,-283.62 748.38,-276.62 745.93,-283.62 750.83,-283.62"/>
+</g>
+<!-- PROJ -->
+<g id="node11" class="node">
+<title>PROJ</title>
+<path fill="#e5f2ea" stroke="#85bfa0" stroke-width="1.1" d="M766.39,-171.48C766.39,-171.48 687.61,-171.48 687.61,-171.48 681.61,-171.48 675.61,-165.48 675.61,-159.48 675.61,-159.48 675.61,-141.24 675.61,-141.24 675.61,-135.24 681.61,-129.24 687.61,-129.24 687.61,-129.24 766.39,-129.24 766.39,-129.24 772.39,-129.24 778.39,-135.24 778.39,-141.24 778.39,-141.24 778.39,-159.48 778.39,-159.48 778.39,-165.48 772.39,-171.48 766.39,-171.48"/>
+<text xml:space="preserve" text-anchor="middle" x="727" y="-153.66" font-family="Helvetica,sans-Serif" font-size="11.00">🗂️ Project ×2</text>
+<text xml:space="preserve" text-anchor="middle" x="727" y="-140.46" font-family="Helvetica,sans-Serif" font-size="11.00">dev + prod</text>
+</g>
+<!-- LZ&#45;&gt;PROJ -->
+<g id="edge11" class="edge">
+<title>LZ&#45;&gt;PROJ</title>
+<path fill="none" stroke="#8b95a3" d="M744.13,-232.21C744.13,-232.21 744.13,-180.24 744.13,-180.24"/>
+<polygon fill="#8b95a3" stroke="#8b95a3" points="746.58,-180.24 744.13,-173.24 741.68,-180.24 746.58,-180.24"/>
+<text xml:space="preserve" text-anchor="middle" x="724.87" y="-208.92" font-family="Helvetica,sans-Serif" font-size="9.00" fill="#697180">applies to</text>
+</g>
+<!-- PROJ&#45;&gt;NS -->
+<g id="edge16" class="edge">
+<title>PROJ&#45;&gt;NS</title>
+<path fill="none" stroke="#8b95a3" stroke-dasharray="1,5" d="M709.87,-171.92C709.87,-189.69 709.87,-212 709.87,-212 709.87,-212 120.7,-212 120.7,-212 120.7,-212 120.7,-180.43 120.7,-180.43"/>
+<polygon fill="#8b95a3" stroke="#8b95a3" points="123.15,-180.43 120.7,-173.43 118.25,-180.43 123.15,-180.43"/>
+<text xml:space="preserve" text-anchor="middle" x="382.51" y="-214.7" font-family="Helvetica,sans-Serif" font-size="9.00" fill="#697180">tenant namespace</text>
+</g>
+<!-- BBD_S -->
+<g id="node12" class="node">
+<title>BBD_S</title>
+<path fill="#ecedfb" stroke="#9aa2e6" stroke-width="1.1" d="M1118.23,-377.96C1118.23,-377.96 991.77,-377.96 991.77,-377.96 985.77,-377.96 979.77,-371.96 979.77,-365.96 979.77,-365.96 979.77,-347.72 979.77,-347.72 979.77,-341.72 985.77,-335.72 991.77,-335.72 991.77,-335.72 1118.23,-335.72 1118.23,-335.72 1124.23,-335.72 1130.23,-341.72 1130.23,-347.72 1130.23,-347.72 1130.23,-365.96 1130.23,-365.96 1130.23,-371.96 1124.23,-377.96 1118.23,-377.96"/>
+<text xml:space="preserve" text-anchor="middle" x="1055" y="-360.14" font-family="Helvetica,sans-Serif" font-size="11.00">📦 aks/starterkit BBD</text>
+<text xml:space="preserve" text-anchor="middle" x="1055" y="-346.94" font-family="Helvetica,sans-Serif" font-size="11.00">self&#45;service catalog entry</text>
+</g>
+<!-- BBD_S&#45;&gt;PROJ -->
+<g id="edge14" class="edge">
+<title>BBD_S&#45;&gt;PROJ</title>
+<path fill="none" stroke="#8b95a3" stroke-dasharray="1,5" d="M1043.3,-335.48C1043.3,-282.64 1043.3,-150 1043.3,-150 1043.3,-150 787.39,-150 787.39,-150"/>
+<polygon fill="#8b95a3" stroke="#8b95a3" points="787.39,-147.55 780.39,-150 787.39,-152.45 787.39,-147.55"/>
+<text xml:space="preserve" text-anchor="middle" x="993.33" y="-152.7" font-family="Helvetica,sans-Serif" font-size="9.00" fill="#697180">creates</text>
+</g>
+<!-- BBD_R -->
+<g id="node13" class="node">
+<title>BBD_R</title>
+<path fill="#ecedfb" stroke="#9aa2e6" stroke-width="1.1" d="M1011.54,-271.6C1011.54,-271.6 884.46,-271.6 884.46,-271.6 878.46,-271.6 872.46,-265.6 872.46,-259.6 872.46,-259.6 872.46,-247.6 872.46,-247.6 872.46,-241.6 878.46,-235.6 884.46,-235.6 884.46,-235.6 1011.54,-235.6 1011.54,-235.6 1017.54,-235.6 1023.54,-241.6 1023.54,-247.6 1023.54,-247.6 1023.54,-259.6 1023.54,-259.6 1023.54,-265.6 1017.54,-271.6 1011.54,-271.6"/>
+<text xml:space="preserve" text-anchor="middle" x="948" y="-250.3" font-family="Helvetica,sans-Serif" font-size="11.00">📦 github/repository BBD</text>
+</g>
+<!-- BBD_S&#45;&gt;BBD_R -->
+<g id="edge12" class="edge">
+<title>BBD_S&#45;&gt;BBD_R</title>
+<path fill="none" stroke="#8b95a3" d="M1001.65,-335.45C1001.65,-335.45 1001.65,-280.37 1001.65,-280.37"/>
+<polygon fill="#8b95a3" stroke="#8b95a3" points="1004.1,-280.37 1001.65,-273.37 999.2,-280.37 1004.1,-280.37"/>
+<text xml:space="preserve" text-anchor="middle" x="981.15" y="-310.61" font-family="Helvetica,sans-Serif" font-size="9.00" fill="#697180">composes</text>
+</g>
+<!-- BBD_C -->
+<g id="node14" class="node">
+<title>BBD_C</title>
+<path fill="#ecedfb" stroke="#9aa2e6" stroke-width="1.1" d="M1222.93,-271.6C1222.93,-271.6 1075.07,-271.6 1075.07,-271.6 1069.07,-271.6 1063.07,-265.6 1063.07,-259.6 1063.07,-259.6 1063.07,-247.6 1063.07,-247.6 1063.07,-241.6 1069.07,-235.6 1075.07,-235.6 1075.07,-235.6 1222.93,-235.6 1222.93,-235.6 1228.93,-235.6 1234.93,-241.6 1234.93,-247.6 1234.93,-247.6 1234.93,-259.6 1234.93,-259.6 1234.93,-265.6 1228.93,-271.6 1222.93,-271.6"/>
+<text xml:space="preserve" text-anchor="middle" x="1149" y="-250.3" font-family="Helvetica,sans-Serif" font-size="11.00">📦 aks/github&#45;connector BBD</text>
+</g>
+<!-- BBD_S&#45;&gt;BBD_C -->
+<g id="edge13" class="edge">
+<title>BBD_S&#45;&gt;BBD_C</title>
+<path fill="none" stroke="#8b95a3" d="M1096.65,-335.45C1096.65,-335.45 1096.65,-280.37 1096.65,-280.37"/>
+<polygon fill="#8b95a3" stroke="#8b95a3" points="1099.1,-280.37 1096.65,-273.37 1094.2,-280.37 1099.1,-280.37"/>
+</g>
+<!-- BBD_R&#45;&gt;REPO -->
+<g id="edge17" class="edge">
+<title>BBD_R&#45;&gt;REPO</title>
+<path fill="none" stroke="#8b95a3" stroke-dasharray="1,5" d="M948,-235.12C948,-216.97 948,-192 948,-192 948,-192 548.72,-192 548.72,-192 548.72,-192 548.72,-180.18 548.72,-180.18"/>
+<polygon fill="#8b95a3" stroke="#8b95a3" points="551.17,-180.18 548.72,-173.18 546.27,-180.18 551.17,-180.18"/>
+<text xml:space="preserve" text-anchor="middle" x="743.75" y="-194.7" font-family="Helvetica,sans-Serif" font-size="9.00" fill="#697180">provisions</text>
+</g>
+<!-- BBD_R&#45;&gt;BBD_C -->
+<!-- BBD_C&#45;&gt;GHA -->
+<g id="edge18" class="edge">
+<title>BBD_C&#45;&gt;GHA</title>
+<path fill="none" stroke="#8b95a3" stroke-dasharray="1,5" d="M1149,-235.27C1149,-184.7 1149,-47 1149,-47 1149,-47 608.39,-47 608.39,-47"/>
+<polygon fill="#8b95a3" stroke="#8b95a3" points="608.39,-44.55 601.39,-47 608.39,-49.45 608.39,-44.55"/>
+<text xml:space="preserve" text-anchor="middle" x="952.57" y="-49.7" font-family="Helvetica,sans-Serif" font-size="9.00" fill="#697180">provisions</text>
+</g>
+</g>
+</svg>

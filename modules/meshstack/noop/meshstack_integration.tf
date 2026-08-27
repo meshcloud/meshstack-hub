@@ -1,3 +1,12 @@
+variable "runner_ref" {
+  type = object({
+    kind = string
+    uuid = string
+  })
+  default     = null
+  description = "Optional reference to a meshStack building block runner. When set, building block runs are dispatched to this custom runner. Obtain the value from the backplane module's `runner_ref` output."
+}
+
 variable "meshstack" {
   type = object({
     owning_workspace_identifier = string
@@ -11,7 +20,11 @@ variable "hub" {
     git_ref   = optional(string, "main")
     bbd_draft = optional(bool, true)
   })
-  default     = {}
+  const = true
+  default = {
+    git_ref   = "main"
+    bbd_draft = true
+  }
   description = <<-EOT
   `git_ref`: Hub release reference. Set to a tag (e.g. 'v1.2.3') or branch or commit sha of the meshstack-hub repo.
   `bbd_draft`: If true, the building block definition version is kept in draft mode.
@@ -23,6 +36,7 @@ output "building_block_definition" {
   value = {
     uuid        = meshstack_building_block_definition.this.metadata.uuid
     version_ref = var.hub.bbd_draft ? meshstack_building_block_definition.this.version_latest : meshstack_building_block_definition.this.version_latest_release
+    git_ref     = var.hub.git_ref
   }
 }
 
@@ -36,17 +50,49 @@ resource "meshstack_building_block_definition" "this" {
     display_name = "meshStack NoOp Building Block"
     description  = "Reference building block demonstrating meshStack's complete Terraform interface: all input types, file inputs, user permissions injection, and pre-run scripts."
     target_type  = "WORKSPACE_LEVEL"
+    readme = chomp(<<-EOT
+      The **meshStack NoOp Building Block** is a reference implementation that demonstrates meshStack's
+      complete Terraform building block interface without provisioning any real infrastructure. It covers
+      all input types, file inputs, user permissions injection, and pre-run scripts.
+
+      ## 🎯 When to use it
+
+      Use this building block when you want to:
+      - Understand the full range of input types available in meshStack building blocks.
+      - Test the building block framework without side effects.
+      - Use it as a starting point or template for building new building blocks.
+
+      ## 💡 Usage examples
+
+      **Example 1: Exploring input types**
+      Platform engineers can deploy this building block to a test workspace to see how all input
+      types (text, number, select, file, sensitive) are surfaced in the meshStack UI and passed
+      to Terraform.
+
+      **Example 2: Onboarding new module developers**
+      A new platform engineer reviews the NoOp building block to learn the conventions before
+      writing their first real building block module.
+
+      ## 📊 Shared Responsibility
+
+      | Responsibility | Platform Team | Application Team |
+      |---|:---:|:---:|
+      | Maintain the NoOp reference implementation | ✅ | ❌ |
+      | Deploy and test the building block | ❌ | ✅ |
+      EOT
+    )
   }
 
   version_spec = {
     draft         = var.hub.bbd_draft
-    deletion_mode = "PURGE"
+    deletion_mode = "DELETE"
+    runner_ref    = var.runner_ref
     implementation = {
       terraform = {
         ref_name          = var.hub.git_ref
         repository_path   = "modules/meshstack/noop/buildingblock"
         repository_url    = "https://github.com/meshcloud/meshstack-hub.git"
-        terraform_version = "1.11.0"
+        terraform_version = "1.12.5"
         pre_run_script    = file("${path.module}/buildingblock/prerun.sh")
       }
     }
@@ -188,10 +234,12 @@ resource "meshstack_building_block_definition" "this" {
 }
 
 terraform {
+  required_version = ">= 1.12.0"
+
   required_providers {
     meshstack = {
       source  = "meshcloud/meshstack"
-      version = "~> 0.20.0"
+      version = ">= 0.21.0"
     }
   }
 }

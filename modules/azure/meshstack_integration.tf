@@ -24,18 +24,6 @@ variable "azure_subscription_owner_object_ids" {
   description = "Optional explicit subscription owner object IDs. If null, current principal is used."
 }
 
-variable "azure_blueprint_service_principal_client_id" {
-  type        = string
-  default     = "f71766dc-90d9-4b7d-bd9d-4499c4331c3f"
-  description = "Client ID of the Azure Blueprints service principal."
-}
-
-variable "azure_blueprint_location" {
-  type        = string
-  default     = "westeurope"
-  description = "Azure region used for Blueprints."
-}
-
 variable "meshstack" {
   type = object({
     owning_workspace_identifier = string
@@ -49,11 +37,6 @@ data "meshstack_integrations" "integrations" {}
 
 data "azuread_domains" "aad_domains" {
   only_initial = true
-}
-
-data "azuread_service_principal" "blueprints" {
-  # Client ID is known but object id changes
-  client_id = var.azure_blueprint_service_principal_client_id
 }
 
 data "azurerm_client_config" "current" {}
@@ -79,7 +62,7 @@ data "azurerm_management_group" "parent" {
 # Creates required resource in Azure
 module "azure_meshplatform" {
   source  = "meshcloud/meshplatform/azure"
-  version = "~> 0.14.0"
+  version = ">= 0.14.0"
 
   replicator_enabled                = true
   replicator_service_principal_name = "meshstack-replicator"
@@ -146,9 +129,6 @@ resource "meshstack_platform" "azure" {
 
           user_lookup_strategy = "UserByMailLookupStrategy"
 
-          blueprint_service_principal = data.azuread_service_principal.blueprints.object_id
-          blueprint_location          = var.azure_blueprint_location
-
           service_principal = {
             client_id = module.azure_meshplatform.replicator_service_principal.Application_Client_ID
             object_id = module.azure_meshplatform.replicator_service_principal.Enterprise_Application_Object_ID
@@ -181,7 +161,7 @@ resource "meshstack_platform" "azure" {
             {
               azure_role = {
                 alias = "admin"
-                id    = data.azurerm_role_definition.contributor.id
+                id    = basename(data.azurerm_role_definition.contributor.role_definition_id)
               }
               project_role_ref = {
                 name = "admin"
@@ -190,7 +170,7 @@ resource "meshstack_platform" "azure" {
             {
               azure_role = {
                 alias = "user"
-                id    = data.azurerm_role_definition.contributor.id
+                id    = basename(data.azurerm_role_definition.contributor.role_definition_id)
               }
               project_role_ref = {
                 name = "user"
@@ -199,7 +179,7 @@ resource "meshstack_platform" "azure" {
             {
               azure_role = {
                 alias = "reader"
-                id    = data.azurerm_role_definition.reader.id
+                id    = basename(data.azurerm_role_definition.reader.role_definition_id)
               }
               project_role_ref = {
                 name = "reader"
@@ -231,6 +211,10 @@ resource "meshstack_platform" "azure" {
       }
     }
   }
+
+  lifecycle {
+    ignore_changes = [spec.availability]
+  }
 }
 
 resource "meshstack_landingzone" "azure_default" {
@@ -260,18 +244,20 @@ resource "meshstack_landingzone" "azure_default" {
 }
 
 terraform {
+  required_version = ">= 1.12.0"
+
   required_providers {
     meshstack = {
       source  = "meshcloud/meshstack"
-      version = "~> 0.20.0"
+      version = ">= 0.21.0"
     }
     azurerm = {
       source  = "hashicorp/azurerm"
-      version = "~> 4.64"
+      version = ">= 4.64"
     }
     azuread = {
       source  = "hashicorp/azuread"
-      version = "~> 3.8"
+      version = ">= 3.8"
     }
   }
 }

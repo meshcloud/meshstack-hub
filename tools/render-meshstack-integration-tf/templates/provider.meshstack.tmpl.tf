@@ -1,4 +1,7 @@
 provider "meshstack" {
+{{- if .Alias }}
+  alias = "{{.Alias}}"
+{{- end }}
   # Configure using environment variables
   # MESHSTACK_ENDPOINT=https://api.my.meshstack.io
   # and

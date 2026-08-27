@@ -307,8 +307,8 @@ See repository root for license information.
 
 | Name | Version |
 |------|---------|
-| <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) | 4.18.0 |
-| <a name="requirement_random"></a> [random](#requirement\_random) | 3.6.3 |
+| <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) | >= 4.18.0 |
+| <a name="requirement_random"></a> [random](#requirement\_random) | >= 3.6.3 |
 
 ## Modules
 
@@ -318,25 +318,25 @@ No modules.
 
 | Name | Type |
 |------|------|
-| [azurerm_lb.vmss_lb](https://registry.terraform.io/providers/hashicorp/azurerm/4.18.0/docs/resources/lb) | resource |
-| [azurerm_lb_backend_address_pool.vmss_backend_pool](https://registry.terraform.io/providers/hashicorp/azurerm/4.18.0/docs/resources/lb_backend_address_pool) | resource |
-| [azurerm_lb_probe.vmss_health_probe](https://registry.terraform.io/providers/hashicorp/azurerm/4.18.0/docs/resources/lb_probe) | resource |
-| [azurerm_lb_rule.vmss_lb_rule](https://registry.terraform.io/providers/hashicorp/azurerm/4.18.0/docs/resources/lb_rule) | resource |
-| [azurerm_linux_virtual_machine_scale_set.vmss](https://registry.terraform.io/providers/hashicorp/azurerm/4.18.0/docs/resources/linux_virtual_machine_scale_set) | resource |
-| [azurerm_monitor_autoscale_setting.vmss_autoscale](https://registry.terraform.io/providers/hashicorp/azurerm/4.18.0/docs/resources/monitor_autoscale_setting) | resource |
-| [azurerm_network_security_group.vmss_nsg](https://registry.terraform.io/providers/hashicorp/azurerm/4.18.0/docs/resources/network_security_group) | resource |
-| [azurerm_network_security_rule.allow_backend_port](https://registry.terraform.io/providers/hashicorp/azurerm/4.18.0/docs/resources/network_security_rule) | resource |
-| [azurerm_network_security_rule.allow_rdp](https://registry.terraform.io/providers/hashicorp/azurerm/4.18.0/docs/resources/network_security_rule) | resource |
-| [azurerm_network_security_rule.allow_ssh](https://registry.terraform.io/providers/hashicorp/azurerm/4.18.0/docs/resources/network_security_rule) | resource |
-| [azurerm_public_ip.lb_public_ip](https://registry.terraform.io/providers/hashicorp/azurerm/4.18.0/docs/resources/public_ip) | resource |
-| [azurerm_resource_group.vmss_rg](https://registry.terraform.io/providers/hashicorp/azurerm/4.18.0/docs/resources/resource_group) | resource |
-| [azurerm_subnet_network_security_group_association.vmss_nsg_association](https://registry.terraform.io/providers/hashicorp/azurerm/4.18.0/docs/resources/subnet_network_security_group_association) | resource |
-| [azurerm_windows_virtual_machine_scale_set.vmss](https://registry.terraform.io/providers/hashicorp/azurerm/4.18.0/docs/resources/windows_virtual_machine_scale_set) | resource |
-| [random_string.resource_code](https://registry.terraform.io/providers/hashicorp/random/3.6.3/docs/resources/string) | resource |
-| [azurerm_client_config.current](https://registry.terraform.io/providers/hashicorp/azurerm/4.18.0/docs/data-sources/client_config) | data source |
-| [azurerm_subnet.vmss_subnet](https://registry.terraform.io/providers/hashicorp/azurerm/4.18.0/docs/data-sources/subnet) | data source |
-| [azurerm_subscription.current](https://registry.terraform.io/providers/hashicorp/azurerm/4.18.0/docs/data-sources/subscription) | data source |
-| [azurerm_virtual_network.spoke_vnet](https://registry.terraform.io/providers/hashicorp/azurerm/4.18.0/docs/data-sources/virtual_network) | data source |
+| [azurerm_lb.vmss_lb](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/lb) | resource |
+| [azurerm_lb_backend_address_pool.vmss_backend_pool](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/lb_backend_address_pool) | resource |
+| [azurerm_lb_probe.vmss_health_probe](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/lb_probe) | resource |
+| [azurerm_lb_rule.vmss_lb_rule](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/lb_rule) | resource |
+| [azurerm_linux_virtual_machine_scale_set.vmss](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/linux_virtual_machine_scale_set) | resource |
+| [azurerm_monitor_autoscale_setting.vmss_autoscale](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/monitor_autoscale_setting) | resource |
+| [azurerm_network_security_group.vmss_nsg](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/network_security_group) | resource |
+| [azurerm_network_security_rule.allow_backend_port](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/network_security_rule) | resource |
+| [azurerm_network_security_rule.allow_rdp](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/network_security_rule) | resource |
+| [azurerm_network_security_rule.allow_ssh](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/network_security_rule) | resource |
+| [azurerm_public_ip.lb_public_ip](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/public_ip) | resource |
+| [azurerm_resource_group.vmss_rg](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/resource_group) | resource |
+| [azurerm_subnet_network_security_group_association.vmss_nsg_association](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/subnet_network_security_group_association) | resource |
+| [azurerm_windows_virtual_machine_scale_set.vmss](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/windows_virtual_machine_scale_set) | resource |
+| [random_string.resource_code](https://registry.terraform.io/providers/hashicorp/random/latest/docs/resources/string) | resource |
+| [azurerm_client_config.current](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/client_config) | data source |
+| [azurerm_subnet.vmss_subnet](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/subnet) | data source |
+| [azurerm_subscription.current](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/subscription) | data source |
+| [azurerm_virtual_network.spoke_vnet](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/virtual_network) | data source |
 
 ## Inputs
 

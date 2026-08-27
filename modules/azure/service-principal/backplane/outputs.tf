@@ -1,3 +1,12 @@
+output "identity" {
+  description = "UAMI identity attributes consumed by meshstack_integration.tf as static inputs."
+  value = {
+    client_id    = azurerm_user_assigned_identity.buildingblock_deploy.client_id
+    principal_id = azurerm_user_assigned_identity.buildingblock_deploy.principal_id
+    tenant_id    = azurerm_user_assigned_identity.buildingblock_deploy.tenant_id
+  }
+}
+
 output "role_definition_id" {
   value       = azurerm_role_definition.buildingblock_deploy.id
   description = "The ID of the role definition that enables deployment of the building block."
@@ -8,125 +17,12 @@ output "role_definition_name" {
   description = "The name of the role definition that enables deployment of the building block."
 }
 
-output "role_assignment_ids" {
-  value = concat(
-    [for id in azurerm_role_assignment.existing_principals : id.id],
-    var.create_service_principal_name != null ? [azurerm_role_assignment.created_principal[0].id] : []
-  )
-  description = "The IDs of the role assignments for all service principals."
-}
-
-output "role_assignment_principal_ids" {
-  value = concat(
-    [for id in azurerm_role_assignment.existing_principals : id.principal_id],
-    var.create_service_principal_name != null ? [azurerm_role_assignment.created_principal[0].principal_id] : []
-  )
-  description = "The principal IDs of all service principals that have been assigned the role."
-}
-
-output "created_service_principal" {
-  value = var.create_service_principal_name != null ? {
-    object_id    = azuread_service_principal.buildingblock_deploy[0].object_id
-    client_id    = azuread_service_principal.buildingblock_deploy[0].client_id
-    display_name = azuread_service_principal.buildingblock_deploy[0].display_name
-    name         = var.create_service_principal_name
-  } : null
-  description = "Information about the created service principal."
-}
-
-output "created_application" {
-  value = var.create_service_principal_name != null ? {
-    object_id    = azuread_application.buildingblock_deploy[0].object_id
-    client_id    = azuread_application.buildingblock_deploy[0].client_id
-    display_name = azuread_application.buildingblock_deploy[0].display_name
-  } : null
-  description = "Information about the created Azure AD application."
-}
-
-output "workload_identity_federation" {
-  value = var.create_service_principal_name != null && var.workload_identity_federation != null ? {
-    credential_id = azuread_application_federated_identity_credential.buildingblock_deploy[0].credential_id
-    display_name  = azuread_application_federated_identity_credential.buildingblock_deploy[0].display_name
-    issuer        = azuread_application_federated_identity_credential.buildingblock_deploy[0].issuer
-    subject       = azuread_application_federated_identity_credential.buildingblock_deploy[0].subject
-    audiences     = azuread_application_federated_identity_credential.buildingblock_deploy[0].audiences
-  } : null
-  description = "Information about the created workload identity federation credential."
-}
-
-output "application_password" {
-  value = var.create_service_principal_name != null && var.workload_identity_federation == null ? {
-    key_id       = azuread_application_password.buildingblock_deploy[0].key_id
-    display_name = azuread_application_password.buildingblock_deploy[0].display_name
-  } : null
-  description = "Information about the created application password (excludes the actual password value for security)."
-  sensitive   = true
-}
-
-output "application_password_value" {
-  value       = var.create_service_principal_name != null && var.workload_identity_federation == null ? azuread_application_password.buildingblock_deploy[0].value : null
-  description = "The actual password value for the created application password."
-  sensitive   = true
-}
-
 output "scope" {
   value       = var.scope
-  description = "The scope where the role definition and role assignments are applied."
+  description = "The scope where the role definition and role assignment are applied."
 }
 
 output "tenant_id" {
   value       = data.azurerm_subscription.current.tenant_id
   description = "The tenant ID of the Azure subscription."
-}
-
-output "provider_tf" {
-  value = var.create_service_principal_name != null ? (
-    var.workload_identity_federation == null ? <<-EOT
-      provider "azurerm" {
-        features {}
-
-        client_id       = "${azuread_service_principal.buildingblock_deploy[0].client_id}"
-        client_secret   = "${azuread_application_password.buildingblock_deploy[0].value}"
-        subscription_id = "<SUBSCRIPTION_ID>"
-        tenant_id       = "${data.azurerm_subscription.current.tenant_id}"
-      }
-
-      provider "azuread" {
-        client_id       = "${azuread_service_principal.buildingblock_deploy[0].client_id}"
-        client_secret   = "${azuread_application_password.buildingblock_deploy[0].value}"
-        tenant_id       = "${data.azurerm_subscription.current.tenant_id}"
-      }
-    EOT
-    : <<-EOT
-      terraform {
-        required_providers {
-          azurerm = {
-            source  = "hashicorp/azurerm"
-            version = "~> 4.36.0"
-          }
-          azuread = {
-            source  = "hashicorp/azuread"
-            version = "~> 3.6.0"
-          }
-        }
-      }
-
-      provider "azurerm" {
-        features {}
-
-        client_id       = "${azuread_service_principal.buildingblock_deploy[0].client_id}"
-        use_oidc        = true
-        subscription_id = "<SUBSCRIPTION_ID>"
-        tenant_id       = "${data.azurerm_subscription.current.tenant_id}"
-      }
-
-      provider "azuread" {
-        client_id = "${azuread_service_principal.buildingblock_deploy[0].client_id}"
-        use_oidc  = true
-        tenant_id = "${data.azurerm_subscription.current.tenant_id}"
-      }
-    EOT
-  ) : null
-  description = "Ready-to-use provider.tf configuration for buildingblock deployment"
-  sensitive   = true
 }

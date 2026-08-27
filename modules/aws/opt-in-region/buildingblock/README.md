@@ -12,7 +12,7 @@ description: |
 | Name | Version |
 |------|---------|
 | <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.0 |
-| <a name="requirement_aws"></a> [aws](#requirement\_aws) | 5.77.0 |
+| <a name="requirement_aws"></a> [aws](#requirement\_aws) | >= 5.77.0 |
 
 ## Modules
 
@@ -22,7 +22,7 @@ No modules.
 
 | Name | Type |
 |------|------|
-| [aws_account_region.region](https://registry.terraform.io/providers/hashicorp/aws/5.77.0/docs/resources/account_region) | resource |
+| [aws_account_region.region](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/account_region) | resource |
 
 ## Inputs
 

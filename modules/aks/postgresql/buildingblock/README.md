@@ -48,9 +48,9 @@ terraform {
 | Name | Version |
 |------|---------|
 | <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.0 |
-| <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) | 4.4.0 |
-| <a name="requirement_kubernetes"></a> [kubernetes](#requirement\_kubernetes) | 2.35.1 |
-| <a name="requirement_random"></a> [random](#requirement\_random) | 3.6.3 |
+| <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) | >= 4.4.0 |
+| <a name="requirement_kubernetes"></a> [kubernetes](#requirement\_kubernetes) | >= 2.35.1 |
+| <a name="requirement_random"></a> [random](#requirement\_random) | >= 3.6.3 |
 
 ## Modules
 
@@ -60,10 +60,10 @@ No modules.
 
 | Name | Type |
 |------|------|
-| [azurerm_postgresql_flexible_server.db_instance](https://registry.terraform.io/providers/hashicorp/azurerm/4.4.0/docs/resources/postgresql_flexible_server) | resource |
-| [kubernetes_secret.credentials](https://registry.terraform.io/providers/hashicorp/kubernetes/2.35.1/docs/resources/secret) | resource |
-| [random_password.administrator_password](https://registry.terraform.io/providers/hashicorp/random/3.6.3/docs/resources/password) | resource |
-| [azurerm_subscription.current](https://registry.terraform.io/providers/hashicorp/azurerm/4.4.0/docs/data-sources/subscription) | data source |
+| [azurerm_postgresql_flexible_server.db_instance](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/postgresql_flexible_server) | resource |
+| [kubernetes_secret.credentials](https://registry.terraform.io/providers/hashicorp/kubernetes/latest/docs/resources/secret) | resource |
+| [random_password.administrator_password](https://registry.terraform.io/providers/hashicorp/random/latest/docs/resources/password) | resource |
+| [azurerm_subscription.current](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/subscription) | data source |
 
 ## Inputs
 

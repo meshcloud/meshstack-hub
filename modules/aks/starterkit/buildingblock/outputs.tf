@@ -11,7 +11,7 @@ output "prod-link" {
 
 output "github_repo_url" {
   description = "URL of the created GitHub repository"
-  value       = meshstack_building_block_v2.repo.status.outputs.repo_html_url.value_string
+  value       = jsondecode(meshstack_building_block.repo.status.outputs.repo_html_url.value)
 }
 
 output "summary" {
@@ -23,15 +23,15 @@ output "summary" {
 
 This starter kit has set up the following resources in workspace `${var.workspace_identifier}`:
 
-@buildingblock[${meshstack_building_block_v2.repo.metadata.uuid}]
+@buildingblock[${meshstack_building_block.repo.metadata.uuid}]
 
-@project[${meshstack_project.dev.metadata.owned_by_workspace}.${meshstack_project.dev.metadata.name}]\
-&nbsp;&nbsp;&nbsp;&nbsp;@tenant[${meshstack_tenant_v4.dev.metadata.uuid}]\
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;@buildingblock[${meshstack_building_block_v2.github_actions_dev.metadata.uuid}]
+@project[${meshstack_project.this["dev"].metadata.owned_by_workspace}.${meshstack_project.this["dev"].metadata.name}]\
+&nbsp;&nbsp;&nbsp;&nbsp;@tenant[${meshstack_tenant.this["dev"].metadata.uuid}]\
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;@buildingblock[${meshstack_building_block.github_actions["dev"].metadata.uuid}]
 
-@project[${meshstack_project.prod.metadata.owned_by_workspace}.${meshstack_project.prod.metadata.name}]\
-&nbsp;&nbsp;&nbsp;&nbsp;@tenant[${meshstack_tenant_v4.prod.metadata.uuid}]\
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;@buildingblock[${meshstack_building_block_v2.github_actions_prod.metadata.uuid}]
+@project[${meshstack_project.this["prod"].metadata.owned_by_workspace}.${meshstack_project.this["prod"].metadata.name}]\
+&nbsp;&nbsp;&nbsp;&nbsp;@tenant[${meshstack_tenant.this["prod"].metadata.uuid}]\
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;@buildingblock[${meshstack_building_block.github_actions["prod"].metadata.uuid}]
 
 ---
 
@@ -52,7 +52,7 @@ Trigger a deployment by:
 - Pushing to the **main** branch (deploys to **dev**)
 - Merging **main** into **release** via PR (deploys to **prod**)
 
-View deployment status: [GitHub Actions](${meshstack_building_block_v2.repo.status.outputs.repo_html_url.value_string}/actions/workflows/k8s-deploy.yml)
+View deployment status: [GitHub Actions](${jsondecode(meshstack_building_block.repo.status.outputs.repo_html_url.value)}/actions/workflows/k8s-deploy.yml)
 
 - **Dev**: [${local.identifier}-dev.${var.apps_base_domain}](https://${local.identifier}-dev.${var.apps_base_domain})
 - **Prod**: [${local.identifier}.${var.apps_base_domain}](https://${local.identifier}.${var.apps_base_domain})
@@ -66,16 +66,12 @@ View deployment status: [GitHub Actions](${meshstack_building_block_v2.repo.stat
 - Merge PR from **main → release** → deploys to **prod**
 
 ### 2. Monitor
-- Check workflow status in the [Actions tab](<${meshstack_building_block_v2.repo.status.outputs.repo_html_url.value_string}/actions>)
+- Check workflow status in the [Actions tab](<${jsondecode(meshstack_building_block.repo.status.outputs.repo_html_url.value)}/actions>)
 
-### 3. Access AKS Namespaces
-- [Dev Namespace](/#/w/${var.workspace_identifier}/p/${meshstack_project.dev.metadata.name}/i/${meshstack_tenant_v4.dev.spec.platform_identifier}/overview/azure_kubernetes_service)
-- [Prod Namespace](/#/w/${var.workspace_identifier}/p/${meshstack_project.prod.metadata.name}/i/${meshstack_tenant_v4.prod.spec.platform_identifier}/overview/azure_kubernetes_service)
-
-### 4. Manage Access
+### 3. Manage Access
 - Invite team members via meshStack:
-  - [Dev Access](#/w/${var.workspace_identifier}/p/${meshstack_project.dev.metadata.name}/access-management/role-mapping)
-  - [Prod Access](#/w/${var.workspace_identifier}/p/${meshstack_project.prod.metadata.name}/access-management/role-mapping)
+  - [Dev Access](#/w/${var.workspace_identifier}/p/${meshstack_project.this["dev"].metadata.name}/access-management/role-mapping)
+  - [Prod Access](#/w/${var.workspace_identifier}/p/${meshstack_project.this["prod"].metadata.name}/access-management/role-mapping)
 
 ---
 

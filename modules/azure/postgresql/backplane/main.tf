@@ -4,6 +4,9 @@ resource "azurerm_role_definition" "buildingblock_deploy" {
   scope       = var.scope
   permissions {
     actions = [
+      # resource manager
+      "*/register/action",
+      # postgresql
       "Microsoft.DBforPostgreSQL/servers/write",
       "Microsoft.DBforPostgreSQL/servers/read",
       "Microsoft.DBforPostgreSQL/servers/delete",

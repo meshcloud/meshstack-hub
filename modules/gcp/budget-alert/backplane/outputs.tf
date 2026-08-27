@@ -9,9 +9,23 @@ output "service_account_id" {
 }
 
 output "credentials_json" {
-  description = "The JSON credentials for the backplane service account"
-  value       = base64decode(google_service_account_key.backplane.private_key)
+  # A consumer embeds these credentials in a building block definition and can order a building
+  # block seconds later. Waiting here orders that consumer after the wait without it knowing.
+  depends_on = [time_sleep.wait_for_iam]
+
+  description = "External account credentials the building block authenticates with. Points the runner at its own OIDC token file, which it exchanges for a short-lived access token."
   sensitive   = true
+  value = jsonencode({
+    universe_domain                   = "googleapis.com"
+    type                              = "external_account"
+    audience                          = "//iam.googleapis.com/${google_iam_workload_identity_pool_provider.meshstack.name}"
+    subject_token_type                = "urn:ietf:params:oauth:token-type:jwt"
+    token_url                         = "https://sts.googleapis.com/v1/token"
+    service_account_impersonation_url = "https://iamcredentials.googleapis.com/v1/projects/-/serviceAccounts/${google_service_account.backplane.email}:generateAccessToken"
+    credential_source = {
+      file = var.workload_identity_federation.subject_token_file_path
+    }
+  })
 }
 
 output "billing_account_id" {

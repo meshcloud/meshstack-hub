@@ -1,0 +1,83 @@
+/*
+ * Azure Kubernetes reference architecture.
+ * Conventions: .agents/references/diagrams.md — render with: task diagrams
+ */
+digraph azure_kubernetes {
+  rankdir=TB
+  splines=ortho
+  forcelabels=true
+  bgcolor="white"
+  nodesep=0.55
+  ranksep=0.85
+
+  node [shape=box style="rounded,filled" fontname="Helvetica" fontsize=11
+        fillcolor="#ffffff" color="#a2abb8" penwidth=1.1 margin="0.20,0.11"]
+  edge [fontname="Helvetica" fontsize=9 fontcolor="#697180" color="#8b95a3" arrowsize=0.7]
+
+  subgraph cluster_azure {
+    label="  Azure"
+    labeljust=l
+    fontname="Helvetica" fontsize=12 fontcolor="#697180"
+    style="rounded" color="#d5dae0"
+    margin=18
+
+    SUB [label="🗂️ Azure Subscription" fillcolor="#ffffff" color="#a2abb8"]
+    AKS [label="☸️ AKS cluster\nrun by the platform team" fillcolor="#eef2f6" color="#93a7bb"]
+    ACR [label="🗄️ Azure Container Registry" fillcolor="#eef2f6" color="#93a7bb"]
+    NS  [label="☸️ Namespace ×2\ndev + prod" fillcolor="#e5f2ea" color="#85bfa0"]
+
+    { rank=same; AKS -> ACR [style=invis] }
+
+    SUB -> AKS
+    SUB -> ACR
+    AKS -> NS [xlabel="contains"]
+    NS  -> ACR [xlabel="pulls images" style=dashed constraint=false]
+  }
+
+  subgraph cluster_github {
+    label="  GitHub"
+    labeljust=l
+    fontname="Helvetica" fontsize=12 fontcolor="#697180"
+    style="rounded" color="#d5dae0"
+    margin=18
+
+    ORG  [label="🏢 GitHub organization" fillcolor="#ffffff" color="#a2abb8"]
+    TPL  [label="🔀 Template repository\nmaintained by the platform team" fillcolor="#ffffff" color="#a2abb8"]
+    REPO [label="🔀 App repository ×1\nper application team" fillcolor="#e5f2ea" color="#85bfa0"]
+    GHA  [label="⚙️ GitHub Actions ×2\ndev + prod environment" fillcolor="#e5f2ea" color="#85bfa0"]
+
+    ORG  -> TPL
+    TPL  -> REPO [xlabel="cloned into"]
+    REPO -> GHA  [xlabel="runs workflow"]
+  }
+
+  subgraph cluster_mesh {
+    label="  meshStack"
+    labeljust=l
+    fontname="Helvetica" fontsize=12 fontcolor="#697180"
+    style="rounded" color="#d5dae0"
+    margin=18
+
+    PLAT  [label="🛰️ AKS Namespace Platform" fillcolor="#ecedfb" color="#9aa2e6"]
+    LZ    [label="🛬 Landing Zone ×2\ndev + prod" fillcolor="#ecedfb" color="#9aa2e6"]
+    PROJ  [label="🗂️ Project ×2\ndev + prod" fillcolor="#e5f2ea" color="#85bfa0"]
+    BBD_S [label="📦 aks/starterkit BBD\nself-service catalog entry" fillcolor="#ecedfb" color="#9aa2e6"]
+    BBD_R [label="📦 github/repository BBD" fillcolor="#ecedfb" color="#9aa2e6"]
+    BBD_C [label="📦 aks/github-connector BBD" fillcolor="#ecedfb" color="#9aa2e6"]
+
+    { rank=same; BBD_R -> BBD_C [style=invis] }
+
+    PLAT  -> LZ
+    LZ    -> PROJ  [xlabel="applies to"]
+    BBD_S -> BBD_R [xlabel="composes"]
+    BBD_S -> BBD_C
+    BBD_S -> PROJ  [xlabel="creates" style=dotted constraint=false]
+  }
+
+  PLAT  -> AKS [xlabel="replicates into" style=dotted constraint=false]
+  PROJ  -> NS  [xlabel="tenant namespace" style=dotted constraint=false]
+  BBD_R -> REPO [xlabel="provisions" style=dotted constraint=false]
+  BBD_C -> GHA [xlabel="provisions" style=dotted constraint=false]
+  GHA   -> ACR [xlabel="pushes images" style=dotted constraint=false]
+  GHA   -> NS  [xlabel="deploys to" style=dotted constraint=false]
+}

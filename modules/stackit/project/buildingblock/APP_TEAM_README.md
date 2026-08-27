@@ -1,7 +1,7 @@
 # StackIt Project
 
 ## Description
-This building block creates a new StackIt project and manages user access permissions. It provides application teams with a secure, isolated environment for deploying their workloads while ensuring proper access controls.
+This building block creates a new STACKIT project and manages user access permissions with configurable role mapping. It also performs best-effort STACKIT organization onboarding for all assigned users before project permissions are applied. It provides application teams with a secure, isolated environment for deploying their workloads while ensuring proper access controls.
 
 ## Usage Motivation
 This building block is designed for application teams that need to:
@@ -29,7 +29,7 @@ This building block is designed for application teams that need to:
 ## Recommendations for Secure and Efficient Project Usage
 - **Use descriptive project names**: Follow organizational naming conventions for easy identification.
 - **Apply appropriate labels**: Use labels for cost tracking, environment identification, and network area placement.
-- **Grant least privilege access**: Assign users the minimum permissions they need (reader < user < admin).
+- **Grant least privilege access**: Assign users the minimum permissions they need by mapping meshStack roles to appropriate STACKIT project roles.
 - **Regular access reviews**: Periodically review and update user permissions as team composition changes.
 
 - **Network area planning**: Choose appropriate network areas based on compliance and connectivity requirements.
@@ -45,7 +45,8 @@ This building block is designed for application teams that need to:
 - `environment`: Environment type (production, staging, development) to automatically select the appropriate parent container
 - `parent_container_ids`: Map of environment names to their corresponding parent container IDs
 - `labels`: Key-value pairs for project organization and filtering
-- `users`: List of users from the authoritative system with their roles
+- `users`: List of users from the authoritative system with their meshStack roles
+- `role_mapping`: Mapping from meshStack roles to STACKIT project roles
 
 ### User Structure
 Users are provided from the authoritative system with the following structure:
@@ -58,18 +59,39 @@ users = [
     lastName       = "Doe"
     email          = "john.doe@company.com"
     euid           = "john.doe@company.com"
-    roles          = ["admin"]  # Can be ["admin"], ["user"], or ["reader"]
+    roles          = ["admin"]  # MeshStack roles used as keys in role_mapping
   }
 ]
 ```
 
 ### User Roles
-Users can be assigned one or more roles from the authoritative system:
-- **admin**: Full project access (equivalent to StackIt owner role)
-- **user**: Can modify resources (equivalent to StackIt editor role)
-- **reader**: Read-only access (equivalent to StackIt viewer role)
+Users can be assigned one or more meshStack roles from the authoritative system. The building block maps each meshStack role to one or more STACKIT project roles through `role_mapping`.
 
-**Note**: If a user has multiple roles, the highest privilege role takes precedence (admin > user > reader).
+Default mapping:
+- **admin** → `owner`
+- **user** → `editor`
+- **reader** → `reader`
+
+Custom mapping example:
+
+```hcl
+role_mapping = {
+  admin   = ["owner"]
+  user    = ["editor", "network.admin"]
+  reader  = ["reader"]
+  auditor = ["reader", "audit-log.viewer"]
+}
+```
+
+Unknown meshStack roles are ignored. If a user has multiple meshStack roles, all mapped STACKIT roles are assigned once.
+
+### STACKIT Organization Membership
+
+Before applying project-level role assignments, the building block runs a best-effort pre-run step that adds all assigned meshStack users to the STACKIT organization with the organization role configured by the platform team. The default organization role is `organization.viewer`. The platform team can disable this step entirely; in that case, organization membership must be managed outside this building block.
+
+This onboarding step is apply-only and does not remove organization memberships during destroy because organization membership can be shared by multiple projects. If the onboarding request fails, the building block logs a warning and continues; project-level role assignment remains authoritative and may still fail if STACKIT rejects a user that is not an organization member.
+
+The building block summary lists each user with a status: a checkmark if the required organization role is assigned, or details about what went wrong otherwise (e.g. a failed add request or a role that is still missing). If any user's status is not a checkmark, the summary includes remediation guidance for the platform team.
 
 ### Environment-Based Parent Container Selection
 

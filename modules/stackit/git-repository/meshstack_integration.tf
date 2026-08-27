@@ -40,7 +40,11 @@ variable "hub" {
     git_ref   = optional(string, "main")
     bbd_draft = optional(bool, true)
   })
-  default     = {}
+  const = true
+  default = {
+    git_ref   = "main"
+    bbd_draft = true
+  }
   description = <<-EOT
   `git_ref`: Hub release reference. Set to a tag (e.g. 'v1.2.3') or branch or commit sha of meshcloud/meshstack-hub repo.<br>
   `bbd_draft`: If true, allows changing the building block definition for upgrading dependent building blocks.
@@ -56,7 +60,7 @@ output "building_block_definition" {
 }
 
 module "backplane" {
-  source = "github.com/meshcloud/meshstack-hub//modules/stackit/git-repository/backplane?ref=a3843c80c76c4a0298769eea8d93807bb2b271fc"
+  source = "github.com/meshcloud/meshstack-hub//modules/stackit/git-repository/backplane?ref=${var.hub.git_ref}"
 
   forgejo_base_url     = var.forgejo_base_url
   forgejo_token        = var.forgejo_token
@@ -82,12 +86,10 @@ resource "meshstack_building_block_definition" "this" {
     run_transparency = true
 
     readme = chomp(<<-EOT
-    ## What does it do?
-
     The **STACKIT Git Repository** building block creates a Forgejo repository on STACKIT Git and manages
     workspace member access using Forgejo organization teams.
 
-    ## Resources Created
+    ## 📦 Resources Created
 
     - **Forgejo repository** – created under a configurable Forgejo organization. Optionally cloned from an
       existing public Git URL (one-time clone, not an ongoing mirror).
@@ -98,11 +100,21 @@ resource "meshstack_building_block_definition" "this" {
     - **Action secrets & variables** – optional maps of Forgejo Actions secrets and variables managed via the
       REST API (see below).
 
-    ## Forgejo Actions secrets & variables
+    ## ℹ️ Forgejo Actions secrets & variables
 
     The Forgejo Terraform provider currently cannot delete action secrets (only removes them from state) and
     does not support action variables at all. This building block therefore manages them via the generic
     `restapi` provider against the Forgejo API, ensuring proper create/update/delete lifecycle.
+
+    ## 📊 Shared Responsibility
+
+    | Responsibility | Platform Team | Application Team |
+    |---|:---:|:---:|
+    | Provision and manage the Forgejo repository | ✅ | ❌ |
+    | Manage organization teams and access control | ✅ | ❌ |
+    | Develop and maintain code in the repository | ❌ | ✅ |
+    | Configure Forgejo Actions pipelines | ❌ | ✅ |
+    | Manage repository secrets and variables | ❌ | ✅ |
     EOT
     )
   }
@@ -113,7 +125,7 @@ resource "meshstack_building_block_definition" "this" {
 
     implementation = {
       terraform = {
-        terraform_version              = "1.11.5"
+        terraform_version              = "1.12.5"
         repository_url                 = "https://github.com/meshcloud/meshstack-hub.git"
         repository_path                = "modules/stackit/git-repository/buildingblock"
         ref_name                       = var.hub.git_ref
@@ -264,10 +276,12 @@ resource "meshstack_building_block_definition" "this" {
 }
 
 terraform {
+  required_version = ">= 1.12.0"
+
   required_providers {
     meshstack = {
       source  = "meshcloud/meshstack"
-      version = "~> 0.20.0"
+      version = ">= 0.21.0"
     }
   }
 }

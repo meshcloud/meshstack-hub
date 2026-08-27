@@ -33,7 +33,11 @@ variable "hub" {
     git_ref   = optional(string, "main")
     bbd_draft = optional(bool, true)
   })
-  default     = {}
+  const = true
+  default = {
+    git_ref   = "main"
+    bbd_draft = true
+  }
   description = <<-EOT
   `git_ref`: Hub reference. Set to a tag (e.g. 'v1.2.3') or branch or commit sha of meshcloud/meshstack-hub repo.<br>
   `bbd_draft`: If true, allows changing the building block definition for upgrading dependent building blocks.
@@ -67,11 +71,9 @@ resource "meshstack_building_block_definition" "aks_github_connector" {
     supported_platforms      = [{ name = "AZURE_KUBERNETES_SERVICE" }]
 
     readme = chomp(<<EOT
-## What is it?
-
 The **GitHub Actions AKS Connector** integrates a GitHub repository with an Azure Kubernetes Service (AKS) namespace. It sets up the necessary service accounts, secrets, and workflows so that GitHub Actions can build, push, and deploy container images to your AKS namespace automatically.
 
-## When to use it?
+## 🎯 When to use it
 
 This building block is ideal for teams that:
 
@@ -111,7 +113,7 @@ EOT
     implementation = {
       terraform = {
         repository_url                 = "https://github.com/meshcloud/meshstack-hub.git"
-        terraform_version              = "1.9.0"
+        terraform_version              = "1.12.5"
         async                          = false
         ref_name                       = var.hub.git_ref
         repository_path                = "modules/aks/github-connector/buildingblock"
@@ -225,10 +227,12 @@ EOT
 }
 
 terraform {
+  required_version = ">= 1.12.0"
+
   required_providers {
     meshstack = {
       source  = "meshcloud/meshstack"
-      version = "~> 0.20.0"
+      version = ">= 0.21.0"
     }
   }
 }

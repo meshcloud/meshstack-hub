@@ -4,13 +4,13 @@ terraform {
   required_providers {
     azurerm = {
       source                = "hashicorp/azurerm"
-      version               = "~> 4.36.0"
+      version               = ">= 4.36.0"
       configuration_aliases = [azurerm, azurerm.hub]
     }
 
     time = {
       source  = "hashicorp/time"
-      version = "~> 0.11.1"
+      version = ">= 0.11.1"
     }
   }
 }

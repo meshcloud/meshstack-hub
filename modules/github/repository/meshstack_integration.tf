@@ -26,7 +26,11 @@ variable "hub" {
     git_ref   = optional(string, "main")
     bbd_draft = optional(bool, true)
   })
-  default     = {}
+  const = true
+  default = {
+    git_ref   = "main"
+    bbd_draft = true
+  }
   description = <<-EOT
   `git_ref`: Hub reference. Set to a tag (e.g. 'v1.2.3') or branch or commit sha of meshcloud/meshstack-hub repo.<br>
   `bbd_draft`: If true, allows changing the building block definition for upgrading dependent building blocks.
@@ -55,11 +59,9 @@ resource "meshstack_building_block_definition" "github_repo" {
     run_transparency         = true
 
     readme = chomp(<<EOT
-## What is it?
-
 The **GitHub Repository Creation** building block provides an automated way to create and manage GitHub repositories for application teams. It ensures repositories are set up with predefined configurations, including access control, branch protection rules, and compliance settings.
 
-## When to use it?
+## 🎯 When to use it
 
 This building block is ideal for teams that:
 
@@ -97,7 +99,7 @@ EOT
     implementation = {
       terraform = {
         repository_url                 = "https://github.com/meshcloud/meshstack-hub.git"
-        terraform_version              = "1.9.0"
+        terraform_version              = "1.12.5"
         async                          = false
         ref_name                       = var.hub.git_ref
         repository_path                = "modules/github/repository/buildingblock"
@@ -248,10 +250,12 @@ EOT
 }
 
 terraform {
+  required_version = ">= 1.12.0"
+
   required_providers {
     meshstack = {
       source  = "meshcloud/meshstack"
-      version = "~> 0.20.0"
+      version = ">= 0.21.0"
     }
   }
 }

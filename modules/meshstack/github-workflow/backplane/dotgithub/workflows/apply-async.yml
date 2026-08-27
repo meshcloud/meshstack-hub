@@ -1,0 +1,73 @@
+name: ${workflow_name}
+
+on:
+  workflow_dispatch:
+    inputs:
+      buildingBlockRunUrl:
+        description: "URL to fetch the Building Block Run Object from"
+        required: true
+      MESHSTACK_RUN_TOKEN:
+        description: "meshStack run token (ephemeral input)"
+        required: true
+
+permissions:
+  contents: read
+
+jobs:
+  apply:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Setup meshStack auth from run token
+        run: |
+          set -o errexit
+          set -o nounset
+          set -o pipefail
+
+          token_file="$${RUNNER_TEMP:-/tmp}/meshstack_token.json"
+          printf '{"token":"%s"}' "$${{ inputs.MESHSTACK_RUN_TOKEN }}" > "$token_file"
+          echo "Prepared meshStack token file from MESHSTACK_RUN_TOKEN at $token_file"
+
+      - name: Register source
+        id: register-source
+        uses: meshcloud/actions-register-source@v2
+        with:
+          steps: |
+            [
+              { "id": "simulate-apply", "displayName": "Simulate Apply" }
+            ]
+
+      - name: Show extracted building block inputs
+        run: |
+          echo "environment=$${{ steps.register-source.outputs.environment || 'not-provided' }}"
+
+      - name: Update BB Run / simulate-apply / in progress
+        uses: meshcloud/actions-send-status@v2
+        with:
+          step_id: "simulate-apply"
+          step_status: 'IN_PROGRESS'
+
+      - name: Simulate apply steps
+        id: simulate-apply
+        run: |
+          echo "No cloud resources are provisioned by this reference workflow."
+          echo "Use this job to add your real provisioning logic later."
+          echo "## meshStack Workflow Reference - APPLY" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Environment: $${{ steps.register-source.outputs.environment || 'not-provided' }}" >> "$GITHUB_STEP_SUMMARY"
+          echo "- Run: $${{ github.server_url }}/$${{ github.repository }}/actions/runs/$${{ github.run_id }}" >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Update BB Run / simulate-apply / complete
+        if: $${{ always() }}
+        uses: meshcloud/actions-send-status@v2
+        with:
+          step_id: "simulate-apply"
+          step_status: $${{ steps['simulate-apply'].outcome == 'success' && 'SUCCEEDED' || 'FAILED' }}
+          user_message: $${{ steps['simulate-apply'].outcome == 'success' && 'Apply simulation succeeded.' || 'Apply simulation failed.' }}
+          system_message: $${{ steps['simulate-apply'].outcome == 'success' && 'Apply simulation succeeded.' || 'Apply simulation failed. Check the GitHub Actions log for details.' }}
+          outputs_json: >-
+            {"run_url":{"value":"$${{ github.server_url }}/$${{ github.repository }}/actions/runs/$${{ github.run_id }}","type":"STRING"}}
+
+      - name: Update BB Run / complete
+        if: $${{ always() }}
+        uses: meshcloud/actions-send-status@v2
+        with:
+          run_status: $${{ job.status == 'success' && 'SUCCEEDED' || 'FAILED' }}

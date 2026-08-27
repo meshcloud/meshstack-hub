@@ -44,4 +44,10 @@ variable "alert_thresholds_yaml" {
   basis: FORECASTED
 EOT
 
+  # A YAML scalar instead of a list decodes to a string and surfaces far downstream as "Invalid
+  # dynamic for_each value", which says nothing about the input that caused it.
+  validation {
+    condition     = can([for threshold in yamldecode(var.alert_thresholds_yaml) : "${threshold.percent}${threshold.basis}"])
+    error_message = "alert_thresholds_yaml must be a YAML list whose entries each have a 'percent' and a 'basis'."
+  }
 }

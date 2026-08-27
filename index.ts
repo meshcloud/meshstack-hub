@@ -5,8 +5,61 @@ const { execSync } = require("child_process");
 
 const repoRoot = path.resolve(__dirname, "modules");
 const refArchRoot = path.resolve(__dirname, "reference-architectures");
-const assetsDir = path.resolve(__dirname, "website/public/assets/logos");
+const publicDir = path.resolve(__dirname, "website/public");
+const assetsDir = path.join(publicDir, "assets/logos");
+const buildingBlockAssetsDir = path.join(publicDir, "assets/building-block-logos");
+const refArchAssetsDir = path.join(publicDir, "assets/reference-architecture-logos");
+// Images referenced from the markdown bodies we ship (diagrams, screenshots), kept in one tree
+// keyed by the scope that owns them, e.g. `reference-architectures/azure-kubernetes`.
+const markdownImageAssetsDir = path.join(publicDir, "assets/markdown-images");
 const hubRef = getHubRef();
+
+// Copies a repo file into a generated website assets directory and returns the path the website
+// serves it under (relative to `website/public`, which is the asset root).
+function copyToWebsiteAssets(sourcePath: string, destDir: string, destName: string): string {
+  fs.mkdirSync(destDir, { recursive: true });
+  fs.copyFileSync(sourcePath, path.join(destDir, destName));
+
+  return path.join(destDir, destName)
+    .replace(publicDir, "")
+    .replace(/^\/+/g, "");
+}
+
+// Logos are colocated with what they depict and always named `logo.png` or `logo.svg` — for
+// platforms, building blocks and reference architectures alike.
+function findLogoFile(dir: string): string | null {
+  return ["logo.png", "logo.svg"]
+    .map(file => path.join(dir, file))
+    .find(file => fs.existsSync(file)) ?? null;
+}
+
+// Copies images referenced by relative markdown links into the website assets and rewrites the
+// links to the served path. Images are committed next to the markdown so a relative link renders
+// on GitHub, but the website serves this body from its own origin where a repo-relative path
+// resolves to nothing. Serving our own copy — rather than a github.com/raw link pinned to the
+// built commit — also keeps images rendering for commits that are not (yet) pushed, and for files
+// that moved since the last commit.
+function localizeMarkdownImages(body: string, markdownDir: string, scope: string): string {
+  return body.replace(
+    /(!\[[^\]]*\]\()(?!https?:\/\/|\/|#)([^)\s]+)(\))/g,
+    (match, prefix, target, suffix) => {
+      const sourcePath = path.join(markdownDir, target.replace(/^\.\//, ""));
+      if (!fs.existsSync(sourcePath)) {
+        console.warn(`⚠️  ${scope} links a missing image: ${target}`);
+        return match;
+      }
+
+      const fileName = path.basename(sourcePath);
+      const servedPath = copyToWebsiteAssets(
+        sourcePath,
+        path.join(markdownImageAssetsDir, scope),
+        fileName
+      );
+
+      return `${prefix}${servedPath}${suffix}`;
+    }
+  );
+}
 
 function getHubRef() {
   try {
@@ -23,7 +76,10 @@ function getGitHubRemoteUrl() {
     const remoteUrl = execSync("git config --get remote.origin.url")
       .toString()
       .trim()
-      .replace(/https?:\/\/.*?@github\.com\//, "https://github.com/");
+      .replace(/https?:\/\/.*?@github\.com\//, "https://github.com/")
+      // scp-style SSH remotes (git@github.com:owner/repo) would otherwise leak into every
+      // generated link, which breaks local runs of this script in an SSH clone.
+      .replace(/^(?:ssh:\/\/)?git@github\.com[:/]/, "https://github.com/");
     return remoteUrl.replace(/\.git$/, "");
   } catch (error) {
     console.error("Error getting GitHub remote URL:", error.message);
@@ -41,11 +97,18 @@ function getBuildingBlockFolderUrl(filePath) {
   return `${remoteUrl}/tree/${hubRef}/modules${relativePath}`;
 }
 
+// Directories that never contain hub modules but do contain vendored copies of them.
+// `terraform init` mirrors the whole repo into `.terraform/modules/...`, so recursing into
+// these would count every module once per initialized module directory.
+function isIgnoredDir(name: string): boolean {
+  return name.startsWith(".") || name === "node_modules";
+}
+
 function findReadmes(dir){
   return fs.readdirSync(dir, { withFileTypes: true }).flatMap((file) => {
     const fullPath = path.join(dir, file.name);
     if (file.isDirectory()) {
-      return file.name === ".github" ? [] : findReadmes(fullPath);
+      return isIgnoredDir(file.name) ? [] : findReadmes(fullPath);
     }
     return file.name === "README.md" && dir.includes("buildingblock")
       ? [fullPath]
@@ -57,7 +120,7 @@ function findPlatforms(): Platform[] {
   fs.mkdirSync(assetsDir, { recursive: true });
 
   return fs.readdirSync(repoRoot, { withFileTypes: true })
-    .filter((dirent) => dirent.isDirectory() && dirent.name !== ".github")
+    .filter((dirent) => dirent.isDirectory() && !isIgnoredDir(dirent.name))
     .map((dir) => {
       const platformDir: string = path.join(repoRoot, dir.name);
       const platformLogo = getPlatformLogoOrThrow(platformDir, dir.name);
@@ -73,7 +136,7 @@ function findPlatforms(): Platform[] {
         category,
         benefits,
         logo: platformLogo,
-        readme: content,
+        readme: localizeMarkdownImages(content, platformDir, `platforms/${dir.name}`),
         integrationSourceUrl,
         terraformSnippet,
         official
@@ -97,15 +160,12 @@ function getPlatformIntegrationSourceUrl(platformDir: string): string | null {
 
 // Finds the logo, copies it to website assets and returns the path.
 function getPlatformLogoOrThrow(platformDir: string, platformType: string): string {
-  const logoFile = fs.readdirSync(platformDir).find(f => f.endsWith('.png') || f.endsWith('.svg'));
-  if (logoFile) {
-    const sourcePath = path.join(platformDir, logoFile);
-    const destPath = path.join(assetsDir, `${platformType}${path.extname(logoFile)}`);
-    fs.copyFileSync(sourcePath, destPath);
-    return destPath.replace(path.resolve(__dirname, "website/public"), "").replace(/^\/+/g, "");
+  const logoFile = findLogoFile(platformDir);
+  if (!logoFile) {
+    throw new Error(`Logo file not found for platform: ${platformType} in directory: ${platformDir}. Each platform should have a logo.png or logo.svg.`);
   }
 
-  throw new Error(`Logo file not found for platform: ${platformType} in directory: ${platformDir}. Each platform should have a logo.`);
+  return copyToWebsiteAssets(logoFile, assetsDir, `${platformType}${path.extname(logoFile)}`);
 }
 
 function getPlatformReadmeOrThrow(platformDir: string) {
@@ -156,27 +216,12 @@ function getTerraformSnippet(platformDir: string): string | null {
 }
 
 function copyBuildingBlockLogoToAssets(buildingBlockDir) {
-  const assetsDir = path.resolve(
-    __dirname,
-    "website/public/assets/building-block-logos"
-  );
-
-  const logoFile = fs
-    .readdirSync(buildingBlockDir)
-    .find((file) => file.endsWith(".png"));
-
+  const logoFile = findLogoFile(buildingBlockDir);
   if (!logoFile) return null;
 
   const { id } = getIdAndPlatform(buildingBlockDir);
-  const sourcePath = path.join(buildingBlockDir, logoFile);
-  const destinationPath = path.join(assetsDir, `${id}${path.extname(logoFile)}`);
 
-  fs.mkdirSync(assetsDir, { recursive: true });
-  fs.copyFileSync(sourcePath, destinationPath);
-
-  return destinationPath
-    .replace(path.resolve(__dirname, "website/public"), "")
-    .replace(/^\/+/g, "");
+  return copyToWebsiteAssets(logoFile, buildingBlockAssetsDir, `${id}${path.extname(logoFile)}`);
 }
 
 function parseReadme(filePath) {
@@ -185,8 +230,13 @@ function parseReadme(filePath) {
   const { data, content: body } = matter(content);
   const { id, platform } = getIdAndPlatform(buildingBlockDir);
 
-  const extractSection = (regex) =>
-    body.match(regex)?.[1]?.trim() || null;
+  const extractSection = (regex) => {
+    const section = body.match(regex)?.[1]?.trim() || null;
+
+    return section === null
+      ? null
+      : localizeMarkdownImages(section, buildingBlockDir, `building-blocks/${id}`);
+  };
 
   const buildingBlockUrl = getBuildingBlockFolderUrl(filePath);
   const buildingBlockLogoPath = copyBuildingBlockLogoToAssets(buildingBlockDir);
@@ -237,44 +287,86 @@ export interface ReferenceArchitecture {
   cloudProviders: string[];
   buildingBlocks: ReferenceArchitectureBuildingBlock[];
   body: string;
+  // Own logo, when one is committed for this architecture. Null means the website falls back
+  // to the logos of the architecture's cloud providers.
+  logo: string | null;
   sourceUrl: string | null;
+  // Set when the reference architecture ships its own meshstack_integration.tf and can be
+  // imported into meshStack directly, the same way a building block is imported.
+  integrationSourceUrl: string | null;
+  folderUrl: string | null;
+  modulePath: string | null;
+}
+
+function copyReferenceArchitectureLogoToAssets(archDir: string, id: string): string | null {
+  const logoFile = findLogoFile(archDir);
+  if (!logoFile) return null;
+
+  return copyToWebsiteAssets(logoFile, refArchAssetsDir, `${id}${path.extname(logoFile)}`);
+}
+
+// Parses a reference architecture from the `README.md` of its directory. The directory is also
+// checked for a `meshstack_integration.tf` that makes this reference architecture importable,
+// the same way a building block is imported.
+function parseReferenceArchitecture(archDir: string, id: string): ReferenceArchitecture {
+  const filePath = path.join(archDir, "README.md");
+  const raw = fs.readFileSync(filePath, "utf-8");
+  const { data, content } = matter(raw);
+  const body = localizeMarkdownImages(content, archDir, `reference-architectures/${id}`);
+
+  if (!data.name) {
+    throw new Error(`Reference architecture ${id} is missing "name" in front-matter.`);
+  }
+  if (!data.description) {
+    throw new Error(`Reference architecture ${id} is missing "description" in front-matter.`);
+  }
+  if (!data.buildingBlocks || !Array.isArray(data.buildingBlocks)) {
+    throw new Error(`Reference architecture ${id} is missing "buildingBlocks" list in front-matter.`);
+  }
+
+  const remoteUrl = getGitHubRemoteUrl();
+  const relativeFilePath = filePath
+    .replace(path.resolve(__dirname), "")
+    .replace(/\\/g, "/");
+  const sourceUrl = remoteUrl ? `${remoteUrl}/blob/${hubRef}${relativeFilePath}` : null;
+
+  const hasCode = fs.existsSync(path.join(archDir, "meshstack_integration.tf"));
+  const integrationSourceUrl = hasCode && remoteUrl
+    ? `${remoteUrl}/blob/${hubRef}/reference-architectures/${id}/meshstack_integration.tf`
+    : null;
+  const folderUrl = hasCode && remoteUrl
+    ? `${remoteUrl}/tree/${hubRef}/reference-architectures/${id}`
+    : null;
+  const modulePath = hasCode ? `reference-architectures/${id}` : null;
+
+  return {
+    id,
+    name: data.name,
+    description: data.description,
+    cloudProviders: data.cloudProviders || [],
+    buildingBlocks: data.buildingBlocks,
+    body,
+    logo: copyReferenceArchitectureLogoToAssets(archDir, id),
+    sourceUrl,
+    integrationSourceUrl,
+    folderUrl,
+    modulePath,
+  };
 }
 
 function findReferenceArchitectures(): ReferenceArchitecture[] {
   if (!fs.existsSync(refArchRoot)) return [];
 
-  return fs.readdirSync(refArchRoot)
-    .filter((f: string) => f.endsWith(".md") && f !== "README.md")
-    .map((file: string) => {
-      const filePath = path.join(refArchRoot, file);
-      const raw = fs.readFileSync(filePath, "utf-8");
-      const { data, content: body } = matter(raw);
-      const id = file.replace(/\.md$/, "");
+  // Every reference architecture is a directory named after its id, holding a README.md, an
+  // optional logo and diagram, and optional code (meshstack_integration.tf + buildingblock/)
+  // that can be imported into meshStack.
+  return fs.readdirSync(refArchRoot, { withFileTypes: true })
+    .filter(entry => entry.isDirectory() && !isIgnoredDir(entry.name))
+    .flatMap((entry): ReferenceArchitecture[] => {
+      const archDir = path.join(refArchRoot, entry.name);
+      if (!fs.existsSync(path.join(archDir, "README.md"))) return [];
 
-      const remoteUrl = getGitHubRemoteUrl();
-      const sourceUrl = remoteUrl
-        ? `${remoteUrl}/blob/${hubRef}/reference-architectures/${file}`
-        : null;
-
-      if (!data.name) {
-        throw new Error(`Reference architecture ${file} is missing "name" in front-matter.`);
-      }
-      if (!data.description) {
-        throw new Error(`Reference architecture ${file} is missing "description" in front-matter.`);
-      }
-      if (!data.buildingBlocks || !Array.isArray(data.buildingBlocks)) {
-        throw new Error(`Reference architecture ${file} is missing "buildingBlocks" list in front-matter.`);
-      }
-
-      return {
-        id,
-        name: data.name,
-        description: data.description,
-        cloudProviders: data.cloudProviders || [],
-        buildingBlocks: data.buildingBlocks,
-        body,
-        sourceUrl,
-      } as ReferenceArchitecture;
+      return [parseReferenceArchitecture(archDir, entry.name)];
     });
 }
 

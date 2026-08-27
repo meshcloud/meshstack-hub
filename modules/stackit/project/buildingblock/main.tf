@@ -2,10 +2,26 @@ locals {
   # Determine the parent container ID based on environment
   selected_parent_container_id = var.environment != null ? lookup(var.parent_container_ids, var.environment, var.parent_container_id) : var.parent_container_id
 
-  # Group users by their roles
-  admin_users  = { for user in var.users : user.email => user if contains(user.roles, "admin") }
-  user_users   = { for user in var.users : user.email => user if contains(user.roles, "user") && !contains(user.roles, "admin") }
-  reader_users = { for user in var.users : user.email => user if contains(user.roles, "reader") && !contains(user.roles, "admin") && !contains(user.roles, "user") }
+  users_with_stackit_roles = [
+    for user in var.users : {
+      email = user.email
+      roles = distinct(flatten([
+        for meshstack_role in user.roles : lookup(var.role_mapping, meshstack_role, [])
+      ]))
+    }
+  ]
+
+  user_role_assignments = {
+    for assignment in flatten([
+      for user in local.users_with_stackit_roles : [
+        for stackit_role in user.roles : {
+          key          = "${user.email}:${stackit_role}"
+          subject      = user.email
+          stackit_role = stackit_role
+        }
+      ]
+    ]) : assignment.key => assignment
+  }
 }
 
 resource "stackit_resourcemanager_project" "project" {
@@ -18,27 +34,11 @@ resource "stackit_resourcemanager_project" "project" {
 }
 
 # User role assignments (experimental IAM feature)
-resource "stackit_authorization_project_role_assignment" "admin_assignments" {
-  for_each = local.admin_users
+resource "stackit_authorization_project_role_assignment" "role_assignments" {
+  for_each = local.user_role_assignments
 
   resource_id = stackit_resourcemanager_project.project.project_id
-  role        = "owner"
-  subject     = each.value.email
-}
-
-resource "stackit_authorization_project_role_assignment" "user_assignments" {
-  for_each = local.user_users
-
-  resource_id = stackit_resourcemanager_project.project.project_id
-  role        = "editor"
-  subject     = each.value.email
-}
-
-resource "stackit_authorization_project_role_assignment" "reader_assignments" {
-  for_each = local.reader_users
-
-  resource_id = stackit_resourcemanager_project.project.project_id
-  role        = "reader"
-  subject     = each.value.email
+  role        = each.value.stackit_role
+  subject     = each.value.subject
 }
 

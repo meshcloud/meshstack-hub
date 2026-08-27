@@ -11,6 +11,7 @@ description: |
 This building block is a reference implementation demonstrating how meshStack interfaces with OpenTofu building blocks. It exercises every input type, file input, pre-run script capability, and output type — without provisioning any cloud resources.
 
 Use it to:
+
 - Understand how meshStack passes inputs to Terraform
 - Learn how FILE-type inputs are written to the working directory
 - See how `USER_PERMISSIONS` injects project team members into your building block
@@ -48,7 +49,7 @@ output "some_file_yaml" {
 
 | Name | Version |
 |------|---------|
-| <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.0 |
+| <a name="requirement_external"></a> [external](#requirement\_external) | >= 2.3.0 |
 
 ## Modules
 
@@ -59,6 +60,7 @@ No modules.
 | Name | Type |
 |------|------|
 | [terraform_data.noop](https://registry.terraform.io/providers/hashicorp/terraform/latest/docs/resources/data) | resource |
+| [external_external.aws_version](https://registry.terraform.io/providers/hashicorp/external/latest/docs/data-sources/external) | data source |
 
 ## Inputs
 

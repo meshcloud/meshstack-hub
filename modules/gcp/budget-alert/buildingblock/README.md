@@ -18,7 +18,7 @@ Please reference the [backplane implementation](../backplane/) for the required 
 | Name | Version |
 |------|---------|
 | <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.0 |
-| <a name="requirement_google"></a> [google](#requirement\_google) | 6.12.0 |
+| <a name="requirement_google"></a> [google](#requirement\_google) | >= 6.12.0 |
 
 ## Modules
 
@@ -28,8 +28,8 @@ No modules.
 
 | Name | Type |
 |------|------|
-| [google_billing_budget.budget](https://registry.terraform.io/providers/hashicorp/google/6.12.0/docs/resources/billing_budget) | resource |
-| [google_monitoring_notification_channel.notification_channel](https://registry.terraform.io/providers/hashicorp/google/6.12.0/docs/resources/monitoring_notification_channel) | resource |
+| [google_billing_budget.budget](https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/billing_budget) | resource |
+| [google_monitoring_notification_channel.notification_channel](https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/monitoring_notification_channel) | resource |
 
 ## Inputs
 
@@ -49,4 +49,7 @@ No modules.
 | Name | Description |
 |------|-------------|
 | <a name="output_budget_id"></a> [budget\_id](#output\_budget\_id) | The ID of the created budget |
+| <a name="output_budget_url"></a> [budget\_url](#output\_budget\_url) | Link to the budget in the GCP console |
+| <a name="output_notification_channel_id"></a> [notification\_channel\_id](#output\_notification\_channel\_id) | The ID of the Cloud Monitoring notification channel the budget alerts are delivered to |
+| <a name="output_summary"></a> [summary](#output\_summary) | Markdown summary of the created budget |
 <!-- END_TF_DOCS -->

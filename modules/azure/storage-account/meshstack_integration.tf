@@ -44,7 +44,11 @@ variable "hub" {
     git_ref   = optional(string, "main")
     bbd_draft = optional(bool, true)
   })
-  default     = {}
+  const = true
+  default = {
+    git_ref   = "main"
+    bbd_draft = true
+  }
   description = <<-EOT
   `git_ref`: Hub release reference. Set to a tag (e.g. 'v1.2.3') or branch or commit sha of the meshstack-hub repo.
   `bbd_draft`: If true, the building block definition version is kept in draft mode, which allows changing it (useful during development in LCF/ICF).
@@ -62,12 +66,11 @@ output "building_block_definition" {
 data "meshstack_integrations" "integrations" {}
 
 module "backplane" {
-  source = "github.com/meshcloud/meshstack-hub//modules/azure/storage-account/backplane?ref=0a6d313e509e1c9052712f0d9c41c2d0a96f9a39"
+  source = "github.com/meshcloud/meshstack-hub//modules/azure/storage-account/backplane?ref=${var.hub.git_ref}"
 
-  name  = var.backplane_name
-  scope = var.azure_scope
-
-  create_service_principal_name = var.backplane_name
+  name     = var.backplane_name
+  scope    = var.azure_scope
+  location = var.azure_location
 
   workload_identity_federation = {
     issuer = data.meshstack_integrations.integrations.workload_identity_federation.replicator.issuer
@@ -93,11 +96,9 @@ resource "meshstack_building_block_definition" "this" {
     target_type              = "WORKSPACE_LEVEL"
 
     readme = chomp(<<-EOT
-      ## Azure Storage Account
-
       This building block provisions an **Azure Storage Account** in your Azure subscription, providing scalable and durable cloud storage for blobs, files, queues, and tables.
 
-      ## When to use it?
+      ## 🎯 When to use it
 
       Use this building block when you need a managed Azure Storage Account with consistent naming, resource group organisation, and a pre-configured lifecycle policy.
 
@@ -121,7 +122,7 @@ resource "meshstack_building_block_definition" "this" {
 
     implementation = {
       terraform = {
-        terraform_version              = "1.9.0"
+        terraform_version              = "1.12.5"
         repository_url                 = "https://github.com/meshcloud/meshstack-hub.git"
         repository_path                = "modules/azure/storage-account/buildingblock"
         ref_name                       = var.hub.git_ref
@@ -136,7 +137,7 @@ resource "meshstack_building_block_definition" "this" {
         description     = "Client ID of the service principal used to authenticate with Azure."
         assignment_type = "STATIC"
         is_environment  = true
-        argument        = jsonencode(module.backplane.created_service_principal.client_id)
+        argument        = jsonencode(module.backplane.identity.client_id)
       }
       ARM_TENANT_ID = {
         type            = "STRING"
@@ -206,25 +207,27 @@ resource "meshstack_building_block_definition" "this" {
         description     = "The name of the resource group containing the storage account."
         assignment_type = "NONE"
       }
+      storage_account_url = {
+        type            = "STRING"
+        display_name    = "Open Storage Account"
+        description     = "Azure Portal URL to the storage account"
+        assignment_type = "RESOURCE_URL"
+      }
     }
   }
 }
 
 terraform {
-  required_version = ">= 1.11.0"
+  required_version = ">= 1.12.0"
 
   required_providers {
     meshstack = {
       source  = "meshcloud/meshstack"
-      version = "~> 0.20.0"
+      version = ">= 0.21.0"
     }
     azurerm = {
       source  = "hashicorp/azurerm"
-      version = "~> 4.64"
-    }
-    azuread = {
-      source  = "hashicorp/azuread"
-      version = "~> 3.8"
+      version = ">= 4.64"
     }
   }
 }

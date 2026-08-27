@@ -85,7 +85,9 @@ The repository provides a `flake.nix` that includes pre-commit hooks, formatting
 nix develop
 ```
 
-This prepares the environment with `terraform`, `terraform-docs`, `pre-commit`, and any other needed tools automatically.
+This prepares the environment with `opentofu`, `terraform-docs`, `pre-commit`, and any other needed tools automatically.
+
+> **Recommended:** Use [OpenTofu](https://opentofu.org/) (`tofu`) as your IaC runtime. Modules in this repo require OpenTofu ≥ 1.12 (or Terraform ≥ 1.15) for `const` variable support. The Nix development shell provides OpenTofu by default.
 
 ---
 
@@ -155,7 +157,7 @@ CI will rerun all hooks/tests. A maintainer will review and merge or request adj
 2. [ ] `main.tf`, `variables.tf`, `outputs.tf`, `README.md`
 3. [ ] `nix develop` used to enter environment ✅
 4. [ ] `pre-commit run --all-files` passed ✅
-5. [ ] `terraform init`, `validate`, `fmt` passed ✅
+5. [ ] `tofu init`, `validate`, `fmt` passed ✅
 6. [ ] `terraform-docs markdown .` docs generated ✅
 7. [ ] Tests added/updated and passing ✅
 8. [ ] PR includes description & proof that all checks passed ✅

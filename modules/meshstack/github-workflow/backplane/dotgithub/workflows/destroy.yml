@@ -1,0 +1,35 @@
+name: ${workflow_name}
+
+on:
+  workflow_dispatch:
+    inputs:
+      buildingBlockRun:
+        description: "Building Block Run Object"
+        required: true
+
+permissions:
+  contents: read
+
+jobs:
+  simulate-destroy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Show run metadata
+        run: |
+          echo "event_name=$${{ github.event_name }}"
+          echo "repository=$${{ github.repository }}"
+          echo "actor=$${{ github.actor }}"
+          echo "buildingBlockRun provided=$${{ inputs.buildingBlockRun != '' }}"
+
+      - name: Simulate cleanup steps
+        run: |
+          echo "No cloud resources are deleted by this reference workflow."
+          echo "Use this job to add your real cleanup logic later."
+
+      - name: Publish summary
+        run: |
+          {
+            echo "## meshStack GitHub Workflow Reference"
+            echo "- Behavior: DESTROY"
+            echo "- Run URL: $${{ github.server_url }}/$${{ github.repository }}/actions/runs/$${{ github.run_id }}"
+          } >> "$GITHUB_STEP_SUMMARY"

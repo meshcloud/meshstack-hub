@@ -37,9 +37,9 @@ provider "azurerm" {
 
 | Name | Version |
 |------|---------|
-| <a name="requirement_azuread"></a> [azuread](#requirement\_azuread) | ~> 3.8 |
-| <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) | ~> 4.64 |
-| <a name="requirement_random"></a> [random](#requirement\_random) | ~> 3.8 |
+| <a name="requirement_azuread"></a> [azuread](#requirement\_azuread) | >= 3.8 |
+| <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) | >= 4.64 |
+| <a name="requirement_random"></a> [random](#requirement\_random) | >= 3.8 |
 
 ## Modules
 
@@ -69,4 +69,5 @@ No modules.
 | <a name="output_storage_account_id"></a> [storage\_account\_id](#output\_storage\_account\_id) | n/a |
 | <a name="output_storage_account_name"></a> [storage\_account\_name](#output\_storage\_account\_name) | n/a |
 | <a name="output_storage_account_resource_group"></a> [storage\_account\_resource\_group](#output\_storage\_account\_resource\_group) | n/a |
+| <a name="output_storage_account_url"></a> [storage\_account\_url](#output\_storage\_account\_url) | n/a |
 <!-- END_TF_DOCS -->

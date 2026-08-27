@@ -1,26 +1,21 @@
-variable "full_platform_identifier" {
-  type        = string
-  description = "Full identifier of the AKS platform (example: `aks.k8s`)."
+variable "platform_ref" {
+  type = object({
+    uuid = string
+    kind = optional(string, "meshPlatform")
+  })
+  description = "Reference (by uuid) to the meshPlatform tenants are created on — e.g. the `.ref` output of the meshstack_platform resource/backplane that owns it. Wired to the building block as a static input; required since the meshTenant v4 API references platforms by ref."
 }
 
-variable "github_actions_connector_definition_version_uuid" {
-  type        = string
-  description = "Version UUID of the GitHub Actions connector building block definition (example: `11111111-2222-3333-4444-555555555555`)."
+variable "building_block_definition_version_refs" {
+  type = map(object({
+    uuid = string
+  }))
+  description = "Building block definition versions the starter kit creates its child building blocks from, keyed by definition name (`git-repository` and `github-actions-connector`)."
 }
 
 variable "github_org" {
   type        = string
   description = "GitHub organization where repositories are created (example: `acme-platform`)."
-}
-
-variable "github_repo_definition_uuid" {
-  type        = string
-  description = "UUID of the GitHub repository building block definition (example: `aaaaaaaa-bbbb-cccc-dddd-eeeeeeeeeeee`)."
-}
-
-variable "github_repo_definition_version_uuid" {
-  type        = string
-  description = "Version UUID of the GitHub repository building block definition (example: `ffffffff-1111-2222-3333-444444444444`)."
 }
 
 variable "github_template_repo_path" {
@@ -33,12 +28,9 @@ variable "apps_base_domain" {
   description = "Base domain used for app URLs (example: `apps.prod.example.com`)."
 }
 
-variable "landing_zone_identifiers" {
-  type = object({
-    dev  = string
-    prod = string
-  })
-  description = "Identifiers of meshLandingZones for dev and prod (example: `{ dev = \"aks-dev\", prod = \"aks-prod\" }`)."
+variable "landing_zone_refs" {
+  type        = map(object({ name = string, kind = optional(string, "meshLandingZone") }))
+  description = "Landing zone references keyed by stage (usually dev and prod), e.g. the `.ref` outputs of the meshstack_landingzone resources/backplane that owns them."
 }
 
 variable "notification_subscribers" {
@@ -71,7 +63,11 @@ variable "hub" {
     git_ref   = optional(string, "main")
     bbd_draft = optional(bool, true)
   })
-  default     = {}
+  const = true
+  default = {
+    git_ref   = "main"
+    bbd_draft = true
+  }
   description = <<-EOT
   `git_ref`: Hub reference. Set to a tag (e.g. 'v1.2.3') or branch or commit sha of meshcloud/meshstack-hub repo.<br>
   `bbd_draft`: If true, allows changing the building block definition for upgrading dependent building blocks.
@@ -103,11 +99,9 @@ resource "meshstack_building_block_definition" "aks_starterkit" {
     symbol                   = "https://raw.githubusercontent.com/meshcloud/meshstack-hub/${var.hub.git_ref}/modules/aks/starterkit/buildingblock/logo.png"
 
     readme = chomp(<<EOT
-## What is it?
-
 The **AKS Starterkit** provides application teams with a pre-configured Kubernetes environment following best practices. It automates the creation of essential infrastructure, including a Git repository, a CI/CD pipeline using GitHub Actions, and a secure container registry integration.
 
-## When to use it?
+## 🎯 When to use it
 
 This building block is ideal for teams that:
 
@@ -157,7 +151,7 @@ EOT
     implementation = {
       terraform = {
         repository_url                 = "https://github.com/meshcloud/meshstack-hub.git"
-        terraform_version              = "1.9.0"
+        terraform_version              = "1.12.5"
         async                          = false
         ref_name                       = var.hub.git_ref
         repository_path                = "modules/aks/starterkit/buildingblock"
@@ -173,42 +167,38 @@ EOT
         type                   = "CODE"
         updateable_by_consumer = false
       }
-      "full_platform_identifier" = {
-        argument               = jsonencode(var.full_platform_identifier)
+      "platform_ref" = {
+        # jsonencode twice is correct for structured inputs, see the project_tags input below.
+        argument               = jsonencode(jsonencode(var.platform_ref))
         assignment_type        = "STATIC"
-        display_name           = "Full Platform Identifier"
+        display_name           = "Platform Reference"
         is_environment         = false
-        type                   = "STRING"
+        type                   = "CODE"
         updateable_by_consumer = false
       }
-      "github_actions_connector_definition_version_uuid" = {
-        argument               = jsonencode(var.github_actions_connector_definition_version_uuid)
+      "landing_zone_refs" = {
+        # jsonencode twice is correct for structured inputs, see the project_tags input below.
+        argument               = jsonencode(jsonencode(var.landing_zone_refs))
         assignment_type        = "STATIC"
-        display_name           = "Github Actions Connector Definition Version Uuid"
+        display_name           = "Landing Zone References for Dev/Prod."
         is_environment         = false
-        type                   = "STRING"
+        type                   = "CODE"
+        updateable_by_consumer = false
+      }
+      "building_block_definition_version_refs" = {
+        # jsonencode twice is correct for structured inputs, see the project_tags input below.
+        argument               = jsonencode(jsonencode(var.building_block_definition_version_refs))
+        assignment_type        = "STATIC"
+        description            = "Definition versions the starter kit creates its child building blocks from."
+        display_name           = "BBD Version References"
+        is_environment         = false
+        type                   = "CODE"
         updateable_by_consumer = false
       }
       "github_org" = {
         argument               = jsonencode(var.github_org)
         assignment_type        = "STATIC"
         display_name           = "Github Org"
-        is_environment         = false
-        type                   = "STRING"
-        updateable_by_consumer = false
-      }
-      "github_repo_definition_uuid" = {
-        argument               = jsonencode(var.github_repo_definition_uuid)
-        assignment_type        = "STATIC"
-        display_name           = "Github Repo Definition Uuid"
-        is_environment         = false
-        type                   = "STRING"
-        updateable_by_consumer = false
-      }
-      "github_repo_definition_version_uuid" = {
-        argument               = jsonencode(var.github_repo_definition_version_uuid)
-        assignment_type        = "STATIC"
-        display_name           = "Github Repo Definition Version Uuid"
         is_environment         = false
         type                   = "STRING"
         updateable_by_consumer = false
@@ -235,22 +225,6 @@ EOT
         description            = "GitHub handle of the user who will be assigned as the repository admin. Leave as 'null' if not needed."
         display_name           = "Repo Admin"
         default_value          = jsonencode("null")
-        type                   = "STRING"
-        updateable_by_consumer = false
-      }
-      "landing_zone_dev_identifier" = {
-        argument               = jsonencode(var.landing_zone_identifiers.dev)
-        assignment_type        = "STATIC"
-        display_name           = "Landing Zone Dev Identifier"
-        is_environment         = false
-        type                   = "STRING"
-        updateable_by_consumer = false
-      }
-      "landing_zone_prod_identifier" = {
-        argument               = jsonencode(var.landing_zone_identifiers.prod)
-        assignment_type        = "STATIC"
-        display_name           = "Landing Zone Prod Identifier"
-        is_environment         = false
         type                   = "STRING"
         updateable_by_consumer = false
       }
@@ -330,10 +304,12 @@ EOT
 }
 
 terraform {
+  required_version = ">= 1.12.0"
+
   required_providers {
     meshstack = {
       source  = "meshcloud/meshstack"
-      version = "~> 0.20.0"
+      version = ">= 0.24.0"
     }
   }
 }

@@ -19,17 +19,17 @@ variable "workspace_identifier" {
   type = string
 }
 
-variable "full_platform_identifier" {
-  type        = string
-  description = "Full platform identifier of the SKE platform."
+variable "platform_ref" {
+  type = object({
+    uuid = string
+    kind = optional(string, "meshPlatform")
+  })
+  description = "Reference (by uuid) to the meshPlatform the tenants are created on. Wired in as a static building block input from the platform/backplane that owns the meshPlatform (its `.ref` output). Required because the meshTenant v4 API references platforms by ref."
 }
 
-variable "landing_zone_identifiers" {
-  type = object({
-    dev  = string
-    prod = string
-  })
-  description = "SKE Landing zone identifiers for the dev/prod meshTenant."
+variable "landing_zone_refs" {
+  type        = map(object({ name = string, kind = optional(string, "meshLandingZone") }))
+  description = "Landing zone references keyed by stage (usually dev and prod). Wired in as a static building block input from the platform/backplane that owns the meshLandingZones (their `.ref` outputs)."
 }
 
 variable "project_tags" {
@@ -57,11 +57,10 @@ variable "add_random_name_suffix" {
   description = "Whether to append a random suffix to the provided name for shared environments."
 }
 
-variable "building_block_definitions" {
+variable "building_block_definition_version_refs" {
+  # The input of the same name in meshstack_integration.tf fills this in; rename both together.
   type = map(object({
     uuid = string
-    version_ref = object({
-      uuid = string
-    })
   }))
+  description = "Building block definition versions this starter kit creates its child building blocks from, keyed by definition name (`git-repository` and `forgejo-connector`)."
 }

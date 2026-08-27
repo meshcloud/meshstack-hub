@@ -27,6 +27,8 @@ __pycache__/
 website/src/generated/
 website/public/assets/building-block-logos/
 website/public/assets/logos/
+website/public/assets/reference-architecture-logos/
+website/public/assets/markdown-images/
 website/public/assets/*.json
 .worktrees/
 

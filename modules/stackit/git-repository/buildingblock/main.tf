@@ -25,6 +25,13 @@ resource "forgejo_repository" "this" {
   # One-time clone (not an ongoing mirror)
   clone_addr = local.have_clone_addr ? var.clone_addr : null
   mirror     = local.have_clone_addr ? false : null
+
+  # Destroy ordering: deleting a team concurrently with the repository it is
+  # assigned to intermittently fails in Forgejo (DELETE /api/v1/teams/{id}
+  # errors while the repo delete is in flight). depends_on makes the repo a
+  # dependent of the teams, so on destroy the repo is deleted first and team
+  # deletion only starts once the repo is gone.
+  depends_on = [restapi_object.team]
 }
 
 module "action_variables_and_secrets" {

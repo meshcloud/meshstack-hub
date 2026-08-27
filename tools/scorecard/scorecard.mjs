@@ -1,0 +1,1815 @@
+#!/usr/bin/env node
+/**
+ * meshstack-hub Module Scorecard
+ *
+ * Scans every building block module and assesses maturity based on
+ * deterministic criteria derived from the repository conventions.
+ * Checks are organized into categories with conditional applicability:
+ * - Core Structure: applies to all modules
+ * - Integration: applies only to modules with meshstack_integration.tf
+ * - Azure Backplane: applies only to Azure modules with a backplane/
+ * - Testing: applies to all modules (aspirational)
+ *
+ * Usage: node tools/scorecard/scorecard.mjs [--category=<name>] [--provider=<name>]
+ */
+
+import { readFileSync, existsSync, readdirSync, statSync } from "fs";
+import { join, relative } from "path";
+
+const ROOT = new URL("../../", import.meta.url).pathname.replace(/\/$/, "");
+const MODULES_DIR = join(ROOT, "modules");
+
+// A building block definition's terraform_version selects a HashiCorp Terraform binary up to
+// 1.5.5 and an OpenTofu one above it. 1.10.0 is where OpenTofu started short-circuiting && and
+// ||, so anything below it faults on the common `var.x == null || var.x.attr` guard.
+const TERRAFORM_VERSION_FLOOR = "1.12.0";
+
+const compareVersions = (a, b) => {
+  const pa = a.split(".").map(Number);
+  const pb = b.split(".").map(Number);
+  for (let i = 0; i < Math.max(pa.length, pb.length); i++) {
+    const d = (pa[i] ?? 0) - (pb[i] ?? 0);
+    if (d !== 0) return d;
+  }
+  return 0;
+};
+
+// ─── Category definitions ───────────────────────────────────────────────────
+
+const CATEGORIES = {
+  core: {
+    id: "core",
+    name: "Core Structure",
+    description: "Basic module file structure and documentation",
+    appliesTo: () => true,
+  },
+  integration: {
+    id: "integration",
+    name: "Integration",
+    description: "meshstack_integration.tf conventions",
+    appliesTo: (mod) => existsSync(join(mod.path, "meshstack_integration.tf")),
+  },
+  aws_backplane: {
+    id: "aws_backplane",
+    name: "AWS Backplane",
+    description: "AWS automation principal conventions (WIF or cross-account StackSet)",
+    // A backplane/ holding no .tf files of its own declares no automation principal — the
+    // agentic-coding-sandbox composition keeps only a landingzone/ submodule there — so the
+    // category does not apply to it.
+    appliesTo: (mod) => mod.provider === "aws" && readAllBackplaneTf(mod) !== null,
+  },
+  azure_backplane: {
+    id: "azure_backplane",
+    name: "Azure Backplane",
+    description: "Azure UAMI-based automation principal conventions",
+    appliesTo: (mod) =>
+      mod.provider === "azure" && existsSync(join(mod.path, "backplane")),
+  },
+  gcp_backplane: {
+    id: "gcp_backplane",
+    name: "GCP Backplane",
+    description: "GCP workload-identity-federation automation principal conventions",
+    appliesTo: (mod) =>
+      mod.provider === "gcp" && existsSync(join(mod.path, "backplane")),
+  },
+  stackit_backplane: {
+    id: "stackit_backplane",
+    name: "STACKIT Backplane",
+    description: "STACKIT WIF-based automation principal conventions",
+    appliesTo: (mod) =>
+      mod.provider === "stackit" && existsSync(join(mod.path, "backplane")),
+  },
+  testing: {
+    id: "testing",
+    name: "Testing",
+    description: "End-to-end test coverage",
+    appliesTo: () => true,
+  },
+};
+
+// AWS backplanes come in two documented identity patterns, and most checks belong to exactly one:
+//   "wif"           — OIDC provider + IAM role, for a building block acting in a single account
+//   "cross_account" — IAM user + assumable role (usually distributed by a StackSet), for org-wide
+//                     building blocks that must reach every account in an OU
+// A backplane carrying federation machinery is classified "wif" even when it also mints an access
+// key: that hybrid is the optional-WIF-with-key-fallback shape the reference forbids, and
+// aws_wif_no_access_key is what reports it. Everything else that mints a key is cross-account.
+function awsBackplanePattern(mod) {
+  const allTf = readAllBackplaneTf(mod);
+  if (!allTf) return "none";
+  const federated =
+    /(resource|data)\s+"aws_iam_openid_connect_provider"/.test(allTf) ||
+    /^variable\s+"(workload_identity_federation|oidc_provider_arn)"/m.test(allTf);
+  if (federated) return "wif";
+  return /resource\s+"aws_iam_access_key"/.test(allTf) ? "cross_account" : "none";
+}
+
+// The fixed notice on `oidc_provider_arn` / `aws_oidc_provider_arn`. Deliberately two lines and
+// nothing more, so it can be copied verbatim into every meshstack_integration.tf.
+const AWS_OIDC_PROVIDER_NOTICE = [
+  "ARN of the IAM OIDC provider for the meshStack runner WIF token issuer in this AWS account.",
+  "See .agents/references/aws-backplane.md#the-shared-oidc-provider",
+];
+
+function hasOidcProviderNotice(variableBlock) {
+  const text = variableBlock.replace(/\s+/g, " ");
+  return AWS_OIDC_PROVIDER_NOTICE.every((line) => text.includes(line.replace(/\s+/g, " ")));
+}
+
+const NOT_WIF = { pass: null, detail: "not a workload identity federation backplane" };
+const NOT_CROSS_ACCOUNT = { pass: null, detail: "not a cross-account backplane" };
+
+// ─── Detector functions ─────────────────────────────────────────────────────
+// Each detector returns { pass: boolean, detail?: string }
+
+const detectors = [
+  // ─── Core Structure ─────────────────────────────────────────────────────
+  {
+    id: "buildingblock_dir",
+    category: "core",
+    name: "buildingblock/ directory exists",
+    emoji: "📦",
+    fn: (mod) => ({
+      pass: existsSync(join(mod.path, "buildingblock")),
+    }),
+  },
+  {
+    id: "meshstack_integration",
+    category: "core",
+    name: "meshstack_integration.tf present",
+    emoji: "🔗",
+    fn: (mod) => ({
+      pass: existsSync(join(mod.path, "meshstack_integration.tf")),
+    }),
+  },
+  {
+    id: "app_team_readme",
+    category: "core",
+    name: "buildingblock/APP_TEAM_README.md present (no-integration fallback)",
+    emoji: "📋",
+    fn: (mod) => {
+      // Modules with a meshstack_integration.tf carry their readme inline — no fallback file needed.
+      if (existsSync(join(mod.path, "meshstack_integration.tf"))) {
+        return { pass: null, detail: "not applicable — readme is inline in integration file" };
+      }
+      return {
+        pass: existsSync(join(mod.path, "buildingblock", "APP_TEAM_README.md")),
+        detail: "missing — modules without meshstack_integration.tf need buildingblock/APP_TEAM_README.md as user-facing readme fallback",
+      };
+    },
+  },
+  {
+    id: "readme_frontmatter",
+    category: "core",
+    name: "buildingblock/README.md with YAML front-matter",
+    emoji: "📝",
+    fn: (mod) => {
+      const readmePath = join(mod.path, "buildingblock", "README.md");
+      if (!existsSync(readmePath)) return { pass: false, detail: "missing" };
+      const content = readFileSync(readmePath, "utf-8");
+      const hasFrontmatter = content.startsWith("---");
+      const hasName = /^name:/m.test(content);
+      const hasPlatforms = /^supportedPlatforms:/m.test(content);
+      const hasDescription = /^description:/m.test(content);
+      return {
+        pass: hasFrontmatter && hasName && hasPlatforms && hasDescription,
+        detail: !hasFrontmatter ? "no front-matter" : "missing required fields",
+      };
+    },
+  },
+  {
+    id: "logo",
+    category: "core",
+    name: "buildingblock/logo.png included",
+    emoji: "🖼️",
+    fn: (mod) => ({
+      pass: existsSync(join(mod.path, "buildingblock", "logo.png")),
+    }),
+  },
+  {
+    id: "versions_tf",
+    category: "core",
+    name: "buildingblock/versions.tf present",
+    emoji: "📌",
+    fn: (mod) => ({
+      pass: existsSync(join(mod.path, "buildingblock", "versions.tf")),
+    }),
+  },
+  {
+    id: "provider_pinned",
+    category: "core",
+    name: "Provider versions use minimum constraint (>=)",
+    emoji: "🔒",
+    fn: (mod) => {
+      const constraints = collectProviderConstraints(mod);
+      if (constraints.length === 0)
+        return { pass: true, detail: "no provider version constraints" };
+
+      const violations = constraints.filter(
+        (c) => !c.constraint.includes(">=") || c.constraint.includes("~>")
+      );
+      if (violations.length === 0) return { pass: true };
+
+      const shown = violations
+        .slice(0, 4)
+        .map((v) => `${v.file}: ${v.provider} = "${v.constraint}"`)
+        .join(", ");
+      const more = violations.length > 4 ? `, +${violations.length - 4} more` : "";
+      return {
+        pass: false,
+        detail: `use a minimum constraint (>=) instead: ${shown}${more}`,
+      };
+    },
+  },
+
+  // ─── Integration ────────────────────────────────────────────────────────
+  {
+    id: "variable_hub",
+    category: "integration",
+    name: 'variable "hub" in integration',
+    emoji: "🏷️",
+    fn: (mod) => {
+      const content = readIntegrationTf(mod);
+      if (!content) return { pass: false, detail: "no integration file" };
+      return { pass: /variable\s+"hub"/.test(content) };
+    },
+  },
+  {
+    id: "variable_meshstack",
+    category: "integration",
+    name: 'variable "meshstack" in integration',
+    emoji: "🏢",
+    fn: (mod) => {
+      const content = readIntegrationTf(mod);
+      if (!content) return { pass: false, detail: "no integration file" };
+      return { pass: /variable\s+"meshstack"/.test(content) };
+    },
+  },
+  {
+    id: "output_bbd",
+    category: "integration",
+    name: "building_block_definition output exposed",
+    emoji: "📤",
+    fn: (mod) => {
+      const content = readIntegrationTf(mod);
+      if (!content) return { pass: false, detail: "no integration file" };
+      return {
+        pass: /output\s+"building_block_definition"/.test(content),
+      };
+    },
+  },
+  {
+    id: "required_providers_meshstack",
+    category: "integration",
+    name: "meshcloud/meshstack in required_providers",
+    emoji: "🔌",
+    fn: (mod) => {
+      const content = readIntegrationTf(mod);
+      if (!content) return { pass: false, detail: "no integration file" };
+      return {
+        pass: /meshcloud\/meshstack/.test(content),
+      };
+    },
+  },
+  {
+    id: "backplane_source_hub_git_ref",
+    category: "integration",
+    name: "backplane source uses var.hub.git_ref",
+    emoji: "📎",
+    fn: (mod) => {
+      const content = readIntegrationTf(mod);
+      if (!content) return { pass: false, detail: "no integration file" };
+      const hasBackplaneSource = /source\s*=\s*"[^"]*\/backplane[^"]*"/.test(content);
+      if (!hasBackplaneSource) return { pass: true, detail: "no backplane module" };
+      return {
+        pass: /source\s*=\s*"[^"]*\/backplane[^"]*\$\{var\.hub\.git_ref\}[^"]*"/.test(content),
+        detail: "backplane source has hardcoded ref instead of var.hub.git_ref",
+      };
+    },
+  },
+  {
+    id: "ref_name_hub_git_ref",
+    category: "integration",
+    name: "ref_name uses var.hub.git_ref",
+    emoji: "🔀",
+    fn: (mod) => {
+      const content = readIntegrationTf(mod);
+      if (!content) return { pass: false, detail: "no integration file" };
+      const hasRefName = /ref_name\s*=/.test(content);
+      if (!hasRefName) return { pass: false, detail: "no ref_name found" };
+      return { pass: /ref_name\s*=\s*var\.hub\.git_ref/.test(content) };
+    },
+  },
+  {
+    id: "bbd_terraform_version_floor",
+    category: "integration",
+    name: `BBD terraform_version >= ${TERRAFORM_VERSION_FLOOR}`,
+    emoji: "🌱",
+    fn: (mod) => {
+      const content = readIntegrationTf(mod);
+      if (!content) return { pass: false, detail: "no integration file" };
+
+      if (!/^\s*terraform\s*=\s*\{/m.test(content)) {
+        return { pass: null, detail: "not applicable — non-terraform implementation" };
+      }
+
+      const found = [...content.matchAll(/terraform_version\s*=\s*"([^"]+)"/g)].map((m) => m[1]);
+      if (found.length === 0) {
+        return { pass: false, detail: `terraform_version not set — pin "${TERRAFORM_VERSION_FLOOR}" or newer` };
+      }
+
+      const stale = found.filter((v) => compareVersions(v, TERRAFORM_VERSION_FLOOR) < 0);
+      if (stale.length === 0) return { pass: true };
+
+      return {
+        pass: false,
+        detail: `${[...new Set(stale)].join(", ")} predates the hub floor ${TERRAFORM_VERSION_FLOOR}`,
+      };
+    },
+  },
+  {
+    id: "bbd_draft",
+    category: "integration",
+    name: "version_spec.draft uses var.hub.bbd_draft",
+    emoji: "📋",
+    fn: (mod) => {
+      const content = readIntegrationTf(mod);
+      if (!content) return { pass: false, detail: "no integration file" };
+      return { pass: /draft\s*=\s*var\.hub\.bbd_draft/.test(content) };
+    },
+  },
+  {
+    id: "bbd_tags_forwarded",
+    category: "integration",
+    name: "BBD metadata.tags forwards var.meshstack.tags",
+    emoji: "🏷️",
+    fn: (mod) => {
+      const content = readIntegrationTf(mod);
+      if (!content) return { pass: false, detail: "no integration file" };
+      return { pass: /tags\s*=\s*var\.meshstack\.tags/.test(content) };
+    },
+  },
+  {
+    id: "bbd_inputs_explicit_defaults",
+    category: "integration",
+    name: "BBD input argument vars with optional() have explicit defaults",
+    emoji: "🧱",
+    fn: (mod) => {
+      const content = readIntegrationTf(mod);
+      if (!content) return { pass: false, detail: "no integration file" };
+
+      const bbdResources = extractBBDResourceBlocks(content);
+      if (bbdResources.length === 0) {
+        return { pass: null, detail: "no meshstack_building_block_definition resource" };
+      }
+
+      const referencedVars = collectBBDInputArgumentVariableReferences(content);
+      if (referencedVars.size === 0) {
+        return { pass: true, detail: "no var.* references in BBD input arguments" };
+      }
+
+      const variableBlocks = extractVariableBlocks(content);
+      const violations = [];
+
+      for (const varName of referencedVars) {
+        const variableBlock = variableBlocks.get(varName);
+        if (!variableBlock) continue;
+
+        const hasOptional = /optional\s*\(/.test(variableBlock);
+        if (!hasOptional) continue;
+
+        const hasDefault = /^\s*default\s*=/m.test(variableBlock);
+        const hasBareObjectDefault = /default\s*=\s*\{\s*\}/s.test(variableBlock);
+
+        if (!hasDefault || hasBareObjectDefault) {
+          const reason = !hasDefault ? "missing default" : "bare default = {}";
+          violations.push(`${varName} (${reason})`);
+        }
+      }
+
+      if (violations.length === 0) return { pass: true };
+
+      const shown = violations.slice(0, 5).join(", ");
+      const more = violations.length > 5 ? ` (+${violations.length - 5} more)` : "";
+      return {
+        pass: false,
+        detail: `set explicit defaults for vars referenced by BBD input arguments: ${shown}${more}`,
+      };
+    },
+  },
+  {
+    id: "bbd_readme",
+    category: "integration",
+    name: "BBD readme field present",
+    emoji: "📖",
+    fn: (mod) => {
+      const content = readIntegrationTf(mod);
+      if (!content) return { pass: false, detail: "no integration file" };
+      return { pass: /readme\s*=/.test(content) };
+    },
+  },
+  {
+    id: "bbd_readme_no_leading_heading",
+    category: "integration",
+    name: "BBD readme starts with plain-text description (no heading)",
+    emoji: "📝",
+    fn: (mod) => {
+      const content = readIntegrationTf(mod);
+      if (!content) return { pass: false, detail: "no integration file" };
+      const readmeContent = extractBBDReadmeContent(content);
+      if (readmeContent === null) return { pass: false, detail: "readme is not a heredoc — use chomp(<<-EOT)" };
+      if (readmeContent === "") return { pass: false, detail: "readme is empty" };
+      return {
+        pass: !readmeContent.startsWith("#"),
+        detail: "readme starts with a heading — begin with plain-text description instead",
+      };
+    },
+  },
+  {
+    id: "bbd_readme_shared_responsibility",
+    category: "integration",
+    name: "BBD readme has shared responsibility table (✅/❌)",
+    emoji: "📊",
+    fn: (mod) => {
+      const content = readIntegrationTf(mod);
+      if (!content) return { pass: false, detail: "no integration file" };
+      if (!/readme\s*=/.test(content)) return { pass: false, detail: "no readme field" };
+      const hasTableSeparator = /\|[ :]*-+[ :]*\|/.test(content);
+      const hasCheckEmoji = /[✅❌]/.test(content);
+      return {
+        pass: hasTableSeparator && hasCheckEmoji,
+        detail: !hasCheckEmoji
+          ? "no ✅/❌ emojis found — add a shared responsibility table"
+          : "no markdown table separator found — ensure table uses |---|:---:| rows",
+      };
+    },
+  },
+  {
+    id: "no_documentation_md_output",
+    category: "integration",
+    name: "No documentation_md output in backplane",
+    emoji: "🚫",
+    fn: (mod) => {
+      const allTf = readAllBackplaneTf(mod);
+      if (!allTf) return { pass: true, detail: "no backplane" };
+      return {
+        pass: !/output\s+"documentation_md"/.test(allTf),
+        detail: "legacy documentation_md output found — move content to BBD readme and backplane/README.md",
+      };
+    },
+  },
+  {
+    id: "platform_lifecycle_ignore_availability",
+    category: "integration",
+    name: "meshstack_platform has lifecycle ignore_changes = [availability]",
+    emoji: "🔄",
+    fn: (mod) => {
+      const content = readIntegrationTf(mod);
+      if (!content) return { pass: false, detail: "no integration file" };
+      const hasPlatformResource = /resource\s+"meshstack_platform"/.test(content);
+      if (!hasPlatformResource) return { pass: null, detail: "no meshstack_platform resource" };
+      return {
+        pass: /lifecycle\s*\{[\s\S]*?ignore_changes\s*=\s*\[[^\]]*spec\.availability[^\]]*\]/.test(content),
+        detail: "add lifecycle { ignore_changes = [spec.availability] } to meshstack_platform resource",
+      };
+    },
+  },
+
+  // ─── AWS Backplane ──────────────────────────────────────────────────────
+  // AWS documents two legitimate identity patterns, so a check has to know which one a backplane
+  // implements before it can judge it. Pattern B mints an `aws_iam_access_key` on purpose, so a
+  // blanket "no access key" check would be wrong there — it only applies on the federation path.
+  {
+    id: "aws_wif_external_oidc_provider",
+    category: "aws_backplane",
+    name: "Takes oidc_provider_arn instead of creating a provider",
+    emoji: "🔐",
+    fn: (mod) => {
+      if (awsBackplanePattern(mod) !== "wif") return NOT_WIF;
+      const allTf = readAllBackplaneTf(mod);
+      if (/resource\s+"aws_iam_openid_connect_provider"/.test(allTf)) {
+        return {
+          pass: false,
+          detail: "creates its own aws_iam_openid_connect_provider — AWS registers one per issuer URL per account, so it is shared platform infrastructure a backplane must be given, not claim",
+        };
+      }
+      const varsTf = readBackplaneFile(mod, "variables.tf");
+      const arnVar = varsTf ? extractVariableBlocks(varsTf).get("oidc_provider_arn") : null;
+      if (!arnVar) return { pass: false, detail: 'missing variable "oidc_provider_arn"' };
+      if (/^\s*default\s*=/m.test(arnVar))
+        return { pass: false, detail: "oidc_provider_arn has a default — the provider has to be deployed first, so there is nothing sensible to default to" };
+      if (/^variable\s+"create_oidc_provider"/m.test(allTf))
+        return { pass: false, detail: "leftover create_oidc_provider variable — the toggle is gone with the resource" };
+      return {
+        pass: /nullable\s*=\s*false/.test(arnVar),
+        detail: "oidc_provider_arn is not nullable = false",
+      };
+    },
+  },
+  {
+    id: "aws_oidc_provider_notice",
+    category: "aws_backplane",
+    name: "oidc_provider_arn carries the shared-provider notice",
+    emoji: "📌",
+    fn: (mod) => {
+      if (awsBackplanePattern(mod) !== "wif") return NOT_WIF;
+      // The notice is the only signpost a first-time platform engineer gets: AWS has no plural
+      // OIDC-provider data source, so a missing provider cannot be turned into a friendly
+      // precondition, and terraform-docs renders backplane variables but not integration comments.
+      // It is therefore copied verbatim into both variables and linted here.
+      const varsTf = readBackplaneFile(mod, "variables.tf");
+      const backplaneVar = varsTf ? extractVariableBlocks(varsTf).get("oidc_provider_arn") : null;
+      if (!backplaneVar) return { pass: false, detail: 'missing variable "oidc_provider_arn"' };
+      if (!hasOidcProviderNotice(backplaneVar))
+        return { pass: false, detail: "backplane oidc_provider_arn description is not the fixed notice — see AWS_OIDC_PROVIDER_NOTICE in this file" };
+
+      const integration = readIntegrationTf(mod);
+      if (!integration) return { pass: null, detail: "no integration file" };
+      const integrationVar = extractVariableBlocks(integration).get("aws_oidc_provider_arn");
+      if (!integrationVar) return { pass: false, detail: 'integration is missing variable "aws_oidc_provider_arn"' };
+      return {
+        pass: hasOidcProviderNotice(integrationVar),
+        detail: "integration aws_oidc_provider_arn description is not the fixed notice",
+      };
+    },
+  },
+  {
+    id: "aws_wif_no_access_key",
+    category: "aws_backplane",
+    name: "No aws_iam_access_key on the federation path",
+    emoji: "🚫",
+    fn: (mod) => {
+      if (awsBackplanePattern(mod) !== "wif") return NOT_WIF;
+      const allTf = readAllBackplaneTf(mod);
+      return {
+        pass: !/resource\s+"aws_iam_access_key"/.test(allTf),
+        detail: "aws_iam_access_key alongside workload identity federation — a long-lived key fallback is not a supported path for a single-account building block",
+      };
+    },
+  },
+  {
+    id: "aws_wif_nonnullable",
+    category: "aws_backplane",
+    name: "workload_identity_federation is non-nullable",
+    emoji: "⚡",
+    fn: (mod) => {
+      if (awsBackplanePattern(mod) !== "wif") return NOT_WIF;
+      const varsTf = readBackplaneFile(mod, "variables.tf");
+      if (!varsTf) return { pass: false, detail: "no variables.tf" };
+      const wifVar = extractVariableBlocks(varsTf).get("workload_identity_federation");
+      if (!wifVar) return { pass: false, detail: 'variable "workload_identity_federation" not found' };
+      const hasDefaultNull = /default\s*=\s*null/.test(wifVar);
+      return {
+        pass: /nullable\s*=\s*false/.test(wifVar) || !hasDefaultNull,
+        detail: hasDefaultNull
+          ? "default = null makes federation optional — the null branch is the access key path"
+          : undefined,
+      };
+    },
+  },
+  {
+    id: "aws_wif_subject_condition",
+    category: "aws_backplane",
+    name: "Trust policy scopes :sub to the BBD's WIF subjects",
+    emoji: "🛂",
+    fn: (mod) => {
+      if (awsBackplanePattern(mod) !== "wif") return NOT_WIF;
+      const allTf = readAllBackplaneTf(mod);
+      // The condition variable is a template carrying nested quotes —
+      // `"${trimprefix(var....issuer, "https://")}:sub"` — so match to end of line, not to the
+      // next quote.
+      const hasSubCondition = /^\s*variable\s*=.*:sub"/m.test(allTf);
+      const hasSubjects = /var\.workload_identity_federation\.subjects/.test(allTf);
+      return {
+        pass: hasSubCondition && hasSubjects,
+        detail: hasSubCondition
+          ? "the :sub condition does not use var.workload_identity_federation.subjects, so it is not scoped to this building block definition"
+          : "no :sub condition — the role is assumable by every subject the meshStack issuer signs",
+      };
+    },
+  },
+  {
+    id: "aws_wif_role_output",
+    category: "aws_backplane",
+    name: "Outputs workload_identity_federation_role as a constructed ARN",
+    emoji: "📤",
+    fn: (mod) => {
+      if (awsBackplanePattern(mod) !== "wif") return NOT_WIF;
+      const outputsTf = readBackplaneFile(mod, "outputs.tf");
+      if (!outputsTf) return { pass: false, detail: "no outputs.tf" };
+      const blocks = extractOutputBlocks(outputsTf);
+      const roleOutput = blocks.get("workload_identity_federation_role");
+      if (!roleOutput) {
+        const nearMiss = [...blocks.keys()].find((n) => n.startsWith("workload_identity_federation_role"));
+        return {
+          pass: false,
+          detail: nearMiss
+            ? `output is named "${nearMiss}" — the convention is "workload_identity_federation_role"`
+            : 'missing output "workload_identity_federation_role"',
+        };
+      }
+      return {
+        pass: /arn:aws:iam::/.test(roleOutput) && !/aws_iam_role\.[\w-]+(\[\d+\])?\.arn/.test(roleOutput),
+        detail: "ARN is read off aws_iam_role instead of being constructed — that closes a dependency cycle through the BBD UUID in the WIF subjects",
+      };
+    },
+  },
+  {
+    id: "aws_wif_integration_env",
+    category: "aws_backplane",
+    name: "Integration wires AWS_ROLE_ARN and AWS_WEB_IDENTITY_TOKEN_FILE",
+    emoji: "🌐",
+    fn: (mod) => {
+      if (awsBackplanePattern(mod) !== "wif") return NOT_WIF;
+      const content = readIntegrationTf(mod);
+      if (!content) return { pass: false, detail: "no integration file" };
+      const hasRoleArn = /\bAWS_ROLE_ARN\b/.test(content);
+      const hasTokenFile = /\bAWS_WEB_IDENTITY_TOKEN_FILE\b/.test(content);
+      return {
+        pass: hasRoleArn && hasTokenFile,
+        detail: hasRoleArn
+          ? "AWS_WEB_IDENTITY_TOKEN_FILE is not wired — the AWS SDK has no token to exchange"
+          : "AWS_ROLE_ARN is not wired as an environment input",
+      };
+    },
+  },
+  {
+    id: "aws_cross_account_provider_aliases",
+    category: "aws_backplane",
+    name: "Declares aws.management and aws.backplane aliases",
+    emoji: "🧭",
+    fn: (mod) => {
+      if (awsBackplanePattern(mod) !== "cross_account") return NOT_CROSS_ACCOUNT;
+      const allTf = readAllBackplaneTf(mod);
+      // Read the configuration_aliases list itself: a bare `provider = aws.backplane` elsewhere in
+      // the module is a use, not a declaration.
+      const aliases = allTf.match(/configuration_aliases\s*=\s*\[[^\]]*\]/)?.[0];
+      if (!aliases) return { pass: false, detail: "no configuration_aliases — the caller cannot point the backplane at two accounts" };
+      const hasManagement = /aws\.management\b/.test(aliases);
+      const hasBackplane = /aws\.backplane\b/.test(aliases);
+      return {
+        pass: hasManagement && hasBackplane,
+        detail: hasManagement
+          ? "no aws.backplane alias — the IAM user must live in a dedicated automation account"
+          : "no aws.management alias — the org-wide resources must be applied against the management account",
+      };
+    },
+  },
+  {
+    id: "aws_stackset_auto_deployment",
+    category: "aws_backplane",
+    name: "StackSet is SERVICE_MANAGED, auto-deploying, retaining nothing",
+    emoji: "📚",
+    fn: (mod) => {
+      if (awsBackplanePattern(mod) !== "cross_account") return NOT_CROSS_ACCOUNT;
+      const allTf = readAllBackplaneTf(mod);
+      const blocks = extractResourceBlocks(allTf, "aws_cloudformation_stack_set");
+      if (blocks.size === 0) return { pass: null, detail: "no aws_cloudformation_stack_set resources" };
+      const faults = [];
+      for (const [name, body] of blocks) {
+        if (!/permission_model\s*=\s*"SERVICE_MANAGED"/.test(body)) faults.push(`${name}: not SERVICE_MANAGED`);
+        if (!/auto_deployment\s*\{[^}]*enabled\s*=\s*true/.test(body)) faults.push(`${name}: auto_deployment not enabled`);
+        if (!/retain_stacks_on_account_removal\s*=\s*false/.test(body)) faults.push(`${name}: retain_stacks_on_account_removal is not false`);
+        if (!/ignore_changes\s*=\s*\[[^\]]*administration_role_arn/.test(body)) faults.push(`${name}: administration_role_arn not in ignore_changes`);
+      }
+      return { pass: faults.length === 0, detail: faults.join("; ") };
+    },
+  },
+  {
+    id: "aws_cross_account_outputs",
+    category: "aws_backplane",
+    name: "Outputs the access key, a sensitive secret, and the target role name",
+    emoji: "🔑",
+    fn: (mod) => {
+      if (awsBackplanePattern(mod) !== "cross_account") return NOT_CROSS_ACCOUNT;
+      const outputsTf = readBackplaneFile(mod, "outputs.tf");
+      if (!outputsTf) return { pass: false, detail: "no outputs.tf" };
+      const blocks = extractOutputBlocks(outputsTf);
+      if (!blocks.has("aws_access_key_id")) return { pass: false, detail: 'missing output "aws_access_key_id"' };
+      const secret = blocks.get("aws_secret_access_key");
+      if (!secret) return { pass: false, detail: 'missing output "aws_secret_access_key"' };
+      if (!/sensitive\s*=\s*true/.test(secret))
+        return { pass: false, detail: "aws_secret_access_key is not marked sensitive = true" };
+      // role_name names the role a StackSet deploys into the target accounts. A backplane that
+      // reaches a single account through a role it creates itself has no such name to publish, so
+      // only StackSet-based backplanes are held to it.
+      const hasStackSet = extractResourceBlocks(readAllBackplaneTf(mod), "aws_cloudformation_stack_set").size > 0;
+      return {
+        pass: !hasStackSet || blocks.has("role_name"),
+        detail: 'missing output "role_name" — the building block cannot name the role it assumes in the target account',
+      };
+    },
+  },
+
+  // ─── Azure Backplane ────────────────────────────────────────────────────
+  {
+    id: "azure_uses_uami",
+    category: "azure_backplane",
+    name: "Uses azurerm_user_assigned_identity",
+    emoji: "🪪",
+    fn: (mod) => {
+      const mainTf = readBackplaneTf(mod);
+      if (!mainTf) return { pass: false, detail: "no backplane main.tf" };
+      return {
+        pass: /resource\s+"azurerm_user_assigned_identity"/.test(mainTf),
+      };
+    },
+  },
+  {
+    id: "azure_no_azuread_application",
+    category: "azure_backplane",
+    name: "No azuread_application resources",
+    emoji: "🚫",
+    fn: (mod) => {
+      const allTf = readAllBackplaneTf(mod);
+      if (!allTf) return { pass: true, detail: "no backplane tf files" };
+      return {
+        pass: !/resource\s+"azuread_application"/.test(allTf),
+        detail: "azuread_application found — migrate to azurerm_user_assigned_identity",
+      };
+    },
+  },
+  {
+    id: "azure_no_spn",
+    category: "azure_backplane",
+    name: "No azuread_service_principal resources",
+    emoji: "🚫",
+    fn: (mod) => {
+      const allTf = readAllBackplaneTf(mod);
+      if (!allTf) return { pass: true, detail: "no backplane tf files" };
+      return {
+        pass: !/resource\s+"azuread_service_principal"/.test(allTf),
+        detail: "azuread_service_principal found — migrate to UAMI",
+      };
+    },
+  },
+  {
+    id: "azure_no_app_password",
+    category: "azure_backplane",
+    name: "No azuread_application_password resources",
+    emoji: "🔑",
+    fn: (mod) => {
+      const allTf = readAllBackplaneTf(mod);
+      if (!allTf) return { pass: true, detail: "no backplane tf files" };
+      return {
+        pass: !/resource\s+"azuread_application_password"/.test(allTf),
+        detail: "client secret found — UAMIs with WIF need no secrets",
+      };
+    },
+  },
+  {
+    id: "azure_federated_identity_credential",
+    category: "azure_backplane",
+    name: "Uses azurerm_federated_identity_credential",
+    emoji: "🔗",
+    fn: (mod) => {
+      const allTf = readAllBackplaneTf(mod);
+      if (!allTf) return { pass: false, detail: "no backplane tf files" };
+      return {
+        pass: /resource\s+"azurerm_federated_identity_credential"/.test(allTf),
+      };
+    },
+  },
+  {
+    id: "azure_wif_nonnullable",
+    category: "azure_backplane",
+    name: "workload_identity_federation is non-nullable",
+    emoji: "⚡",
+    fn: (mod) => {
+      const varsTf = readBackplaneFile(mod, "variables.tf");
+      if (!varsTf) return { pass: false, detail: "no variables.tf" };
+      const hasWifVar = /variable\s+"workload_identity_federation"/.test(varsTf);
+      if (!hasWifVar) return { pass: false, detail: "variable not found" };
+      const hasNullableFalse = /nullable\s*=\s*false/.test(varsTf);
+      const hasDefaultNull = /variable\s+"workload_identity_federation"[\s\S]*?default\s*=\s*null/.test(varsTf);
+      return {
+        pass: hasNullableFalse || !hasDefaultNull,
+        detail: hasDefaultNull ? "default = null makes WIF optional" : undefined,
+      };
+    },
+  },
+  {
+    id: "azure_no_create_spn_toggle",
+    category: "azure_backplane",
+    name: "No create_service_principal_name toggle",
+    emoji: "🧹",
+    fn: (mod) => {
+      const varsTf = readBackplaneFile(mod, "variables.tf");
+      if (!varsTf) return { pass: true, detail: "no variables.tf" };
+      return {
+        pass: !/variable\s+"create_service_principal_name"/.test(varsTf),
+        detail: "legacy toggle pattern — remove in favour of UAMI",
+      };
+    },
+  },
+  {
+    id: "azure_identity_output",
+    category: "azure_backplane",
+    name: 'Outputs identity (client_id, principal_id, tenant_id)',
+    emoji: "📤",
+    fn: (mod) => {
+      const outputsTf = readBackplaneFile(mod, "outputs.tf");
+      if (!outputsTf) return { pass: false, detail: "no outputs.tf" };
+      return {
+        pass: /output\s+"identity"/.test(outputsTf),
+        detail: 'missing output "identity" block',
+      };
+    },
+  },
+  {
+    id: "azure_integration_rg_location",
+    category: "azure_backplane",
+    name: "Integration has azure_location",
+    emoji: "📍",
+    fn: (mod) => {
+      const content = readIntegrationTf(mod);
+      if (!content) return { pass: false, detail: "no integration file" };
+      const hasLocation = /variable\s+"azure_location"/.test(content);
+      return {
+        pass: hasLocation,
+        detail: "missing azure_location",
+      };
+    },
+  },
+
+  // ─── GCP Backplane ──────────────────────────────────────────────────────
+  {
+    id: "gcp_uses_wif",
+    category: "gcp_backplane",
+    name: "Uses google_iam_workload_identity_pool + _provider",
+    emoji: "🔐",
+    fn: (mod) => {
+      const allTf = readAllBackplaneTf(mod);
+      if (!allTf) return { pass: false, detail: "no backplane tf files" };
+      const hasPool = /resource\s+"google_iam_workload_identity_pool"/.test(allTf);
+      const hasProvider = /resource\s+"google_iam_workload_identity_pool_provider"/.test(allTf);
+      return {
+        pass: hasPool && hasProvider,
+        detail: hasPool ? "pool present without a provider" : "no workload identity pool",
+      };
+    },
+  },
+  {
+    id: "gcp_no_sa_key",
+    category: "gcp_backplane",
+    name: "No google_service_account_key resource",
+    emoji: "🚫",
+    fn: (mod) => {
+      const allTf = readAllBackplaneTf(mod);
+      if (!allTf) return { pass: true, detail: "no backplane tf files" };
+      return {
+        pass: !/resource\s+"google_service_account_key"/.test(allTf),
+        detail: "google_service_account_key found — migrate to workload identity federation",
+      };
+    },
+  },
+  {
+    id: "gcp_wif_nonnullable",
+    category: "gcp_backplane",
+    name: "workload_identity_federation is non-nullable",
+    emoji: "⚡",
+    fn: (mod) => {
+      const varsTf = readBackplaneFile(mod, "variables.tf");
+      if (!varsTf) return { pass: false, detail: "no variables.tf" };
+      const wifVar = extractVariableBlocks(varsTf).get("workload_identity_federation");
+      if (!wifVar) return { pass: false, detail: "variable not found" };
+      const hasDefaultNull = /default\s*=\s*null/.test(wifVar);
+      return {
+        pass: /nullable\s*=\s*false/.test(wifVar) || !hasDefaultNull,
+        detail: hasDefaultNull
+          ? "default = null makes WIF optional — a service account key fallback is not a supported path"
+          : undefined,
+      };
+    },
+  },
+  {
+    id: "gcp_workload_identity_user_binding",
+    category: "gcp_backplane",
+    name: "Grants roles/iam.workloadIdentityUser on the service account",
+    emoji: "🪪",
+    fn: (mod) => {
+      const allTf = readAllBackplaneTf(mod);
+      if (!allTf) return { pass: false, detail: "no backplane tf files" };
+      const hasBinding = /resource\s+"google_service_account_iam_(binding|member)"/.test(allTf);
+      const hasRole = /roles\/iam\.workloadIdentityUser/.test(allTf);
+      return {
+        pass: hasBinding && hasRole,
+        detail: hasBinding
+          ? "service account IAM binding does not grant roles/iam.workloadIdentityUser"
+          : "no google_service_account_iam_binding for the pool",
+      };
+    },
+  },
+  {
+    id: "gcp_wif_attribute_condition",
+    category: "gcp_backplane",
+    name: "Pool provider restricts google.subject via attribute_condition",
+    emoji: "🛂",
+    fn: (mod) => {
+      const allTf = readAllBackplaneTf(mod);
+      if (!allTf) return { pass: false, detail: "no backplane tf files" };
+      const hasCondition = /attribute_condition\s*=/.test(allTf);
+      return {
+        pass: hasCondition && /google\.subject/.test(allTf),
+        detail: hasCondition
+          ? "attribute_condition does not constrain google.subject"
+          : "no attribute_condition — the pool provider accepts every subject the issuer signs",
+      };
+    },
+  },
+  {
+    id: "gcp_credentials_output",
+    category: "gcp_backplane",
+    name: "Outputs credentials_json (sensitive) and service_account_email",
+    emoji: "📤",
+    fn: (mod) => {
+      const outputsTf = readBackplaneFile(mod, "outputs.tf");
+      if (!outputsTf) return { pass: false, detail: "no outputs.tf" };
+      const blocks = extractOutputBlocks(outputsTf);
+      const credentials = blocks.get("credentials_json");
+      const hasEmail = blocks.has("service_account_email");
+      if (!credentials) return { pass: false, detail: 'missing output "credentials_json"' };
+      if (!hasEmail) return { pass: false, detail: 'missing output "service_account_email"' };
+      return {
+        pass: /sensitive\s*=\s*true/.test(credentials),
+        detail: "credentials_json is not marked sensitive = true",
+      };
+    },
+  },
+  {
+    id: "gcp_iam_propagation_wait",
+    category: "gcp_backplane",
+    name: "credentials_json waits on a time_sleep for IAM propagation",
+    emoji: "⏳",
+    fn: (mod) => {
+      const allTf = readAllBackplaneTf(mod);
+      if (!allTf) return { pass: false, detail: "no backplane tf files" };
+      if (!/resource\s+"time_sleep"/.test(allTf))
+        return { pass: false, detail: "no time_sleep — credentials are published before the IAM grants take effect" };
+      const outputsTf = readBackplaneFile(mod, "outputs.tf");
+      const credentials = outputsTf ? extractOutputBlocks(outputsTf).get("credentials_json") : null;
+      if (!credentials) return { pass: false, detail: 'missing output "credentials_json"' };
+      return {
+        pass: /depends_on\s*=\s*\[[^\]]*time_sleep\./.test(credentials),
+        detail: "credentials_json does not depends_on the time_sleep, so consumers do not inherit the wait",
+      };
+    },
+  },
+  {
+    id: "gcp_project_service_disable_on_destroy",
+    category: "gcp_backplane",
+    name: "google_project_service sets disable_on_destroy = false",
+    emoji: "🔌",
+    fn: (mod) => {
+      const allTf = readAllBackplaneTf(mod);
+      if (!allTf) return { pass: false, detail: "no backplane tf files" };
+      const blocks = extractResourceBlocks(allTf, "google_project_service");
+      if (blocks.size === 0)
+        return { pass: null, detail: "no google_project_service resources" };
+      const offenders = [...blocks]
+        .filter(([, body]) => !/disable_on_destroy\s*=\s*false/.test(body))
+        .map(([name]) => name);
+      return {
+        pass: offenders.length === 0,
+        detail: `disable_on_destroy is not false on ${offenders.join(", ")} — a destroy would switch the API off project-wide`,
+      };
+    },
+  },
+  {
+    id: "gcp_no_provider_block",
+    category: "gcp_backplane",
+    name: 'No provider "google" block in backplane/',
+    emoji: "🧹",
+    fn: (mod) => {
+      const allTf = readAllBackplaneTf(mod);
+      if (!allTf) return { pass: true, detail: "no backplane tf files" };
+      return {
+        pass: !/^provider\s+"google"/m.test(allTf),
+        detail: 'provider "google" found — a module with a provider block cannot be wrapped in count/for_each/depends_on',
+      };
+    },
+  },
+
+  // ─── STACKIT Backplane ──────────────────────────────────────────────────
+  {
+    id: "stackit_uses_wif",
+    category: "stackit_backplane",
+    name: "Uses stackit_service_account_federated_identity_provider",
+    emoji: "🔐",
+    fn: (mod) => {
+      const allTf = readAllBackplaneTf(mod);
+      if (!allTf) return { pass: false, detail: "no backplane tf files" };
+      return {
+        pass: /resource\s+"stackit_service_account_federated_identity_provider"/.test(allTf),
+      };
+    },
+  },
+  {
+    id: "stackit_no_sa_key",
+    category: "stackit_backplane",
+    name: "No stackit_service_account_key resource",
+    emoji: "🚫",
+    fn: (mod) => {
+      const allTf = readAllBackplaneTf(mod);
+      if (!allTf) return { pass: true, detail: "no backplane tf files" };
+      return {
+        pass: !/resource\s+"stackit_service_account_key"/.test(allTf),
+        detail: "stackit_service_account_key found — migrate to WIF",
+      };
+    },
+  },
+  {
+    id: "stackit_sa_email_output",
+    category: "stackit_backplane",
+    name: "Outputs service_account_email (not key)",
+    emoji: "📤",
+    fn: (mod) => {
+      const outputsTf = readBackplaneFile(mod, "outputs.tf");
+      if (!outputsTf) return { pass: false, detail: "no outputs.tf" };
+      const hasEmailOutput = /output\s+"service_account_email"/.test(outputsTf);
+      const hasKeyOutput = /output\s+"service_account_key"/.test(outputsTf);
+      return {
+        pass: hasEmailOutput && !hasKeyOutput,
+        detail: !hasEmailOutput
+          ? 'missing output "service_account_email"'
+          : "service_account_key output found — replace with service_account_email",
+      };
+    },
+  },
+  {
+    id: "stackit_provider_oidc",
+    category: "stackit_backplane",
+    name: "Buildingblock provider uses use_oidc = true",
+    emoji: "⚡",
+    fn: (mod) => {
+      const providerTf = join(mod.path, "buildingblock", "provider.tf");
+      if (!existsSync(providerTf)) return { pass: false, detail: "no provider.tf" };
+      const content = readFileSync(providerTf, "utf-8");
+      return {
+        pass: /use_oidc\s*=\s*true/.test(content),
+        detail: "provider.tf does not use use_oidc = true — use WIF instead of service_account_key",
+      };
+    },
+  },
+
+  // ─── Testing ────────────────────────────────────────────────────────────
+  {
+    id: "backplane",
+    category: "testing",
+    name: "backplane/ directory (optional tier)",
+    emoji: "⚙️",
+    fn: (mod) => {
+      // The tier is genuinely optional: building blocks that need no cloud-side setup opt out by
+      // declaring `requiresBackplane: false` in their buildingblock/README.md front-matter, which
+      // makes this check not applicable rather than failing. Keeping the opt-out explicit means an
+      // absent backplane still shows as a gap unless someone deliberately declared otherwise.
+      const readmePath = join(mod.path, "buildingblock", "README.md");
+      if (existsSync(readmePath)) {
+        const frontmatter = readFileSync(readmePath, "utf-8").split(/^---\s*$/m)[1] ?? "";
+        if (/^requiresBackplane:\s*false\s*$/m.test(frontmatter)) {
+          return { pass: null, detail: "module declares requiresBackplane: false" };
+        }
+      }
+      return { pass: existsSync(join(mod.path, "backplane")) };
+    },
+  },
+  {
+    id: "e2e_tests",
+    category: "testing",
+    name: "e2e/ test directory exists",
+    emoji: "🧪",
+    fn: (mod) => ({
+      pass: existsSync(join(mod.path, "e2e")),
+    }),
+  },
+  {
+    id: "no_buildingblock_tftest",
+    category: "testing",
+    name: "no .tftest.hcl outside e2e/",
+    emoji: "🚫",
+    fn: (mod) => {
+      // Nothing in this repo runs `tofu test` outside e2e/, so a *.tftest.hcl under
+      // buildingblock/ is never executed and rots unnoticed. The ones still present predate the
+      // e2e suite and are kept as a record of intent to migrate, not as working tests — this
+      // check is the migration backlog. Fold the coverage into the module's e2e/ suite, then
+      // delete the file. See AGENTS.md, "Where Terraform Tests Live".
+      const bb = join(mod.path, "buildingblock");
+      if (!existsSync(bb)) return { pass: null, detail: "no buildingblock/ directory" };
+      const stray = [];
+      const walk = (dir) => {
+        for (const entry of readdirSync(dir, { withFileTypes: true })) {
+          if (entry.name === ".terraform") continue;
+          const full = join(dir, entry.name);
+          if (entry.isDirectory()) walk(full);
+          else if (entry.name.endsWith(".tftest.hcl")) stray.push(relative(mod.path, full));
+        }
+      };
+      walk(bb);
+      return stray.length
+        ? { pass: false, detail: `${stray.join(", ")} never runs; migrate to e2e/` }
+        : { pass: true };
+    },
+  },
+  {
+    id: "e2e_tftest",
+    category: "testing",
+    name: "e2e/ contains .tftest.hcl files",
+    emoji: "✅",
+    fn: (mod) => {
+      const e2eDir = join(mod.path, "e2e", "tests");
+      if (!existsSync(e2eDir)) return { pass: false };
+      const files = readdirSync(e2eDir);
+      return { pass: files.some((f) => f.endsWith(".tftest.hcl")) };
+    },
+  },
+];
+
+// ─── Helpers ────────────────────────────────────────────────────────────────
+
+function readIntegrationTf(mod) {
+  const p = join(mod.path, "meshstack_integration.tf");
+  if (!existsSync(p)) return null;
+  return readFileSync(p, "utf-8");
+}
+
+function readBackplaneTf(mod) {
+  const p = join(mod.path, "backplane", "main.tf");
+  if (!existsSync(p)) return null;
+  return readFileSync(p, "utf-8");
+}
+
+function readBackplaneFile(mod, filename) {
+  const p = join(mod.path, "backplane", filename);
+  if (!existsSync(p)) return null;
+  return readFileSync(p, "utf-8");
+}
+
+function extractBBDResourceBlocks(content) {
+  return content.match(/^resource\s+"meshstack_building_block_definition"\s+"[^"]+"\s*\{[\s\S]*?^}/gm) || [];
+}
+
+function extractVariableBlocks(content) {
+  return extractNamedBlocks(content, "variable");
+}
+
+function extractOutputBlocks(content) {
+  return extractNamedBlocks(content, "output");
+}
+
+// name → body for every `resource "<type>" "<name>"` block of the given type.
+function extractResourceBlocks(content, type) {
+  return extractNamedBlocks(content, `resource\\s+"${type}"`);
+}
+
+// Brace-matched so a nested `object({...})` or a one-line block cannot swallow the block that
+// follows it — which a lazy `[\s\S]*?^}` regex does.
+function extractNamedBlocks(content, kind) {
+  const blocks = new Map();
+  const re = new RegExp(`^${kind}\\s+"([^"]+)"\\s*\\{`, "gm");
+  for (const m of content.matchAll(re)) {
+    const open = content.indexOf("{", m.index);
+    const close = findMatchingBrace(content, open);
+    if (close > open) blocks.set(m[1], content.slice(m.index, close + 1));
+  }
+  return blocks;
+}
+
+function findMatchingBrace(text, openingBraceIndex) {
+  if (openingBraceIndex < 0 || text[openingBraceIndex] !== "{") return -1;
+
+  let depth = 0;
+  let inString = false;
+  let escaped = false;
+  let inLineComment = false;
+  let inBlockComment = false;
+
+  for (let i = openingBraceIndex; i < text.length; i++) {
+    const ch = text[i];
+    const next = text[i + 1];
+
+    if (inLineComment) {
+      if (ch === "\n") inLineComment = false;
+      continue;
+    }
+
+    if (inBlockComment) {
+      if (ch === "*" && next === "/") {
+        inBlockComment = false;
+        i++;
+      }
+      continue;
+    }
+
+    if (inString) {
+      if (escaped) {
+        escaped = false;
+      } else if (ch === "\\") {
+        escaped = true;
+      } else if (ch === "\"") {
+        inString = false;
+      }
+      continue;
+    }
+
+    if (ch === "#") {
+      inLineComment = true;
+      continue;
+    }
+    if (ch === "/" && next === "/") {
+      inLineComment = true;
+      i++;
+      continue;
+    }
+    if (ch === "/" && next === "*") {
+      inBlockComment = true;
+      i++;
+      continue;
+    }
+    if (ch === "\"") {
+      inString = true;
+      continue;
+    }
+
+    if (ch === "{") {
+      depth++;
+      continue;
+    }
+
+    if (ch === "}") {
+      depth--;
+      if (depth === 0) return i;
+      if (depth < 0) return -1;
+    }
+  }
+
+  return -1;
+}
+
+function findExpressionEnd(text, startIndex) {
+  let inString = false;
+  let escaped = false;
+  let inLineComment = false;
+  let inBlockComment = false;
+  let parenDepth = 0;
+  let bracketDepth = 0;
+  let braceDepth = 0;
+
+  for (let i = startIndex; i < text.length; i++) {
+    const ch = text[i];
+    const next = text[i + 1];
+
+    if (inLineComment) {
+      if (ch === "\n") {
+        inLineComment = false;
+        if (parenDepth === 0 && bracketDepth === 0 && braceDepth === 0) return i;
+      }
+      continue;
+    }
+
+    if (inBlockComment) {
+      if (ch === "*" && next === "/") {
+        inBlockComment = false;
+        i++;
+      }
+      continue;
+    }
+
+    if (inString) {
+      if (escaped) {
+        escaped = false;
+      } else if (ch === "\\") {
+        escaped = true;
+      } else if (ch === "\"") {
+        inString = false;
+      }
+      continue;
+    }
+
+    if (ch === "#") {
+      inLineComment = true;
+      continue;
+    }
+    if (ch === "/" && next === "/") {
+      inLineComment = true;
+      i++;
+      continue;
+    }
+    if (ch === "/" && next === "*") {
+      inBlockComment = true;
+      i++;
+      continue;
+    }
+    if (ch === "\"") {
+      inString = true;
+      continue;
+    }
+
+    if (ch === "(") parenDepth++;
+    if (ch === ")") parenDepth = Math.max(0, parenDepth - 1);
+    if (ch === "[") bracketDepth++;
+    if (ch === "]") bracketDepth = Math.max(0, bracketDepth - 1);
+    if (ch === "{") braceDepth++;
+    if (ch === "}") braceDepth = Math.max(0, braceDepth - 1);
+
+    if (ch === "\n" && parenDepth === 0 && bracketDepth === 0 && braceDepth === 0) {
+      return i;
+    }
+  }
+
+  return text.length;
+}
+
+function collectBBDInputArgumentVariableReferences(content) {
+  const refs = new Set();
+  const resources = extractBBDResourceBlocks(content);
+
+  for (const resourceBlock of resources) {
+    const inputsRe = /inputs\s*=\s*\{/g;
+    for (const m of resourceBlock.matchAll(inputsRe)) {
+      const openingBraceIndex = m.index + m[0].lastIndexOf("{");
+      const closingBraceIndex = findMatchingBrace(resourceBlock, openingBraceIndex);
+      if (closingBraceIndex === -1) continue;
+
+      const inputsBody = resourceBlock.slice(openingBraceIndex + 1, closingBraceIndex);
+      const argumentRe = /\bargument\s*=\s*/g;
+
+      for (const argumentMatch of inputsBody.matchAll(argumentRe)) {
+        let exprStart = argumentMatch.index + argumentMatch[0].length;
+        while (exprStart < inputsBody.length && /\s/.test(inputsBody[exprStart])) exprStart++;
+        if (exprStart >= inputsBody.length) continue;
+
+        let exprEnd;
+        if (inputsBody[exprStart] === "{") {
+          const blockEnd = findMatchingBrace(inputsBody, exprStart);
+          if (blockEnd === -1) continue;
+          exprEnd = blockEnd + 1;
+        } else {
+          exprEnd = findExpressionEnd(inputsBody, exprStart);
+        }
+
+        const expression = inputsBody.slice(exprStart, exprEnd);
+        for (const varMatch of expression.matchAll(/\bvar\.([A-Za-z_][A-Za-z0-9_]*)\b/g)) {
+          refs.add(varMatch[1]);
+        }
+      }
+    }
+  }
+
+  return refs;
+}
+
+function extractBBDReadmeContent(content) {
+  // Match: readme = [chomp(] <<[-]MARKER\n...content...\nMARKER
+  const m = content.match(/readme\s*=\s*(?:chomp\s*\(\s*)?<<-?([A-Za-z_]+)\s*\n([\s\S]*?)\n[ \t]*\1\b/);
+  if (!m) return null;
+  const lines = m[2].split("\n");
+  const nonEmpty = lines.filter((l) => l.trim().length > 0);
+  if (nonEmpty.length === 0) return "";
+  const minIndent = Math.min(...nonEmpty.map((l) => (l.match(/^(\s*)/) || ["", ""])[1].length));
+  return lines.map((l) => l.slice(minIndent)).join("\n").trim();
+}
+
+// Every .tf file under dir, recursively — nested submodules (e.g.
+// buildingblock/pre_role_assignment/) declare their own required_providers and are
+// initialised as part of the parent, so their constraints count too.
+function collectTfFilesRecursive(dir) {
+  if (!existsSync(dir)) return [];
+  const found = [];
+  for (const entry of readdirSync(dir)) {
+    if (entry.startsWith(".")) continue; // .terraform, .terraform.lock.hcl
+    const p = join(dir, entry);
+    if (statSync(p).isDirectory()) found.push(...collectTfFilesRecursive(p));
+    else if (entry.endsWith(".tf")) found.push(p);
+  }
+  return found;
+}
+
+// Heredoc bodies are example Terraform emitted for consumers (several Azure backplanes
+// output a ready-to-paste provider.tf), not constraints this module is initialised with.
+function stripHeredocs(content) {
+  return content.replace(/<<-?\s*([A-Za-z_]\w*)\r?\n[\s\S]*?^\s*\1\s*$/gm, "");
+}
+
+// Every `version` attribute inside a `required_providers` block across BOTH tiers.
+//
+// Both tiers matter because they are consumed together: a hub e2e test module loads the
+// backplane and the buildingblock into one configuration, so their constraints have to
+// intersect on a version that exists. A `~>` or exact pin in either tier caps the whole
+// configuration — that is how modules/meshstack/noop pinned the e2e suite to meshstack
+// v0.21.0 from its backplane while its buildingblock declared only `>=`.
+//
+// Constraints are read from any .tf file, not just versions.tf: `provider.tf` is part of the
+// documented module layout and legitimately carries required_providers.
+function collectProviderConstraints(mod) {
+  const constraints = [];
+
+  for (const tier of ["backplane", "buildingblock"]) {
+    for (const file of collectTfFilesRecursive(join(mod.path, tier))) {
+      const content = stripHeredocs(readFileSync(file, "utf-8"));
+
+      for (const m of content.matchAll(/required_providers\s*\{/g)) {
+        const open = m.index + m[0].length - 1;
+        const close = findMatchingBrace(content, open);
+        if (close < 0) continue;
+        const body = content.slice(open + 1, close);
+
+        // Provider entries hold no nested braces, so a flat `name = { ... }` match is enough.
+        for (const entry of body.matchAll(/([\w-]+)\s*=\s*\{([^{}]*)\}/g)) {
+          const version = entry[2].match(/version\s*=\s*"([^"]+)"/);
+          if (!version) continue;
+          constraints.push({
+            file: relative(mod.path, file),
+            provider: entry[1],
+            constraint: version[1],
+          });
+        }
+      }
+    }
+  }
+
+  return constraints;
+}
+
+function readAllBackplaneTf(mod) {
+  const backplaneDir = join(mod.path, "backplane");
+  if (!existsSync(backplaneDir)) return null;
+  const files = readdirSync(backplaneDir).filter((f) => f.endsWith(".tf"));
+  if (files.length === 0) return null;
+  return files.map((f) => readFileSync(join(backplaneDir, f), "utf-8")).join("\n");
+}
+
+function discoverModules() {
+  const modules = [];
+  const providers = readdirSync(MODULES_DIR).filter((d) =>
+    statSync(join(MODULES_DIR, d)).isDirectory()
+  );
+
+  for (const provider of providers) {
+    const providerDir = join(MODULES_DIR, provider);
+    const services = readdirSync(providerDir).filter(
+      (d) =>
+        statSync(join(providerDir, d)).isDirectory() &&
+        !d.startsWith(".")
+    );
+
+    for (const service of services) {
+      const modulePath = join(providerDir, service);
+      const hasBB = existsSync(join(modulePath, "buildingblock"));
+      const hasIntegration = existsSync(
+        join(modulePath, "meshstack_integration.tf")
+      );
+      if (hasBB || hasIntegration) {
+        modules.push({
+          provider,
+          service,
+          path: modulePath,
+          id: `${provider}/${service}`,
+        });
+      }
+    }
+  }
+
+  return modules.sort((a, b) => a.id.localeCompare(b.id));
+}
+
+// ─── Marker-based ref index ──────────────────────────────────────────────────
+// Check → section mapping is derived from <!-- scorecard-checks: id, ... -->
+// markers in reference docs. Each marker annotates the heading that follows it.
+
+const REF_FILES = [
+  "AGENTS.md",
+  ".agents/references/aws-backplane.md",
+  ".agents/references/azure-backplane.md",
+  ".agents/references/gcp-backplane.md",
+  ".agents/references/stackit-backplane.md",
+  ".agents/references/bbd-readme.md",
+  ".agents/skills/e2e-test/SKILL.md",
+];
+
+function headingToAnchor(heading) {
+  return heading
+    .replace(/^#+\s*/, "")
+    .replace(/`([^`]*)`/g, "$1")
+    .toLowerCase()
+    .replace(/[^\w\s-]/g, "")
+    .replace(/\s+/g, "-");
+}
+
+function buildCheckToRef() {
+  const checkToRef = new Map(); // checkId → {file, section}
+  const errors = [];
+
+  for (const relFile of REF_FILES) {
+    const filePath = join(ROOT, relFile);
+    if (!existsSync(filePath)) continue;
+
+    const lines = readFileSync(filePath, "utf-8").split("\n");
+    let pendingIds = null;
+
+    for (const line of lines) {
+      const m = line.match(/<!--\s*scorecard-checks:\s*([^-]+?)\s*-->/);
+      if (m) {
+        pendingIds = m[1].split(",").map((s) => s.trim()).filter(Boolean);
+        continue;
+      }
+      if (pendingIds && /^#{1,6}\s/.test(line)) {
+        const section = headingToAnchor(line);
+        for (const id of pendingIds) checkToRef.set(id, { file: relFile, section });
+        pendingIds = null;
+      }
+    }
+  }
+
+  const detectorIds = new Set(detectors.map((d) => d.id));
+
+  for (const d of detectors) {
+    if (!checkToRef.has(d.id)) {
+      errors.push(`check "${d.id}" has no <!-- scorecard-checks: ... --> marker in any ref file`);
+    }
+  }
+
+  for (const id of checkToRef.keys()) {
+    if (!detectorIds.has(id)) {
+      errors.push(`marker references unknown check "${id}" — no detector with that id`);
+    }
+  }
+
+  return { checkToRef, errors };
+}
+
+// ─── Fix prompt generator ────────────────────────────────────────────────────
+
+function generateFixPrompt(mod, failingChecks, checkToRef) {
+  const lines = [];
+  lines.push(`# Fix Scorecard Violations for \`${mod.id}\``);
+  lines.push("");
+  lines.push(`Fix the following scorecard violations in \`modules/${mod.id}/\`.`);
+  lines.push("After each fix re-run the scorecard to verify progress:");
+  lines.push("");
+  lines.push("```sh");
+  lines.push(`node tools/scorecard/scorecard.mjs --module=${mod.id}`);
+  lines.push("```");
+  lines.push("");
+  lines.push("## Failing Checks");
+  lines.push("");
+
+  for (const check of failingChecks) {
+    const catName = CATEGORIES[check.category].name;
+    lines.push(`### ❌ \`${check.id}\` — ${check.name} [${catName}]`);
+    if (check.result.detail) lines.push(`> ${check.result.detail}`);
+    lines.push("");
+    const ref = checkToRef.get(check.id);
+    if (ref) {
+      lines.push(`**Fix instructions**: [\`${ref.file}#${ref.section}\`](${ref.file}#${ref.section})`);
+      lines.push("");
+    }
+  }
+
+  lines.push("## Done");
+  lines.push("");
+  lines.push("When all checks pass, commit the changes.");
+  return lines.join("\n");
+}
+
+// ─── Main ───────────────────────────────────────────────────────────────────
+
+function main() {
+  const args = process.argv.slice(2);
+  const filterCategory = args.find((a) => a.startsWith("--category="))?.split("=")[1];
+  const filterProvider = args.find((a) => a.startsWith("--provider="))?.split("=")[1];
+  const filterModules = args.filter((a) => a.startsWith("--module=")).map((a) => a.split("=")[1]);
+  const fixMode = args.includes("--fix");
+
+  const { checkToRef, errors: refErrors } = buildCheckToRef();
+  if (refErrors.length > 0) {
+    process.stderr.write("❌ scorecard-checks marker validation failed:\n");
+    for (const e of refErrors) process.stderr.write(`  • ${e}\n`);
+    process.exit(1);
+  }
+
+  let modules = discoverModules();
+  if (filterProvider) {
+    modules = modules.filter((m) => m.provider === filterProvider);
+  }
+  if (filterModules.length > 0) {
+    const unknown = filterModules.filter((id) => !modules.some((m) => m.id === id));
+    for (const id of unknown) {
+      process.stderr.write(`Warning: module "${id}" not found — skipping.\n`);
+    }
+    modules = modules.filter((m) => filterModules.includes(m.id));
+    if (modules.length === 0) {
+      process.stderr.write(`Error: none of the specified modules were found. Use <provider>/<service> format.\n`);
+      process.exit(1);
+    }
+  }
+
+  const results = [];
+
+  for (const mod of modules) {
+    const categoryResults = {};
+
+    // Always compute all categories so the per-module summary is always complete.
+    // The filterCategory only controls which sections are *rendered*.
+    for (const [catId, cat] of Object.entries(CATEGORIES)) {
+      const applicable = cat.appliesTo(mod);
+      const catDetectors = detectors.filter((d) => d.category === catId);
+      const checks = catDetectors.map((d) => ({
+        ...d,
+        result: applicable ? d.fn(mod) : { pass: null, detail: "not applicable" },
+      }));
+
+      const applicableChecks = checks.filter((c) => c.result.pass !== null);
+      const passed = applicableChecks.filter((c) => c.result.pass).length;
+      const total = applicableChecks.length;
+      const score = total > 0 ? Math.round((passed / total) * 100) : null;
+
+      categoryResults[catId] = { checks, passed, total, score, applicable };
+    }
+
+    // For overall score, only include categories matching the active filter (if any).
+    const allApplicableChecks = Object.entries(categoryResults)
+      .filter(([catId]) => !filterCategory || catId === filterCategory)
+      .flatMap(([, cr]) => cr.checks)
+      .filter((c) => c.result.pass !== null);
+    const totalPassed = allApplicableChecks.filter((c) => c.result.pass).length;
+    const totalChecks = allApplicableChecks.length;
+    const overallScore = totalChecks > 0 ? Math.round((totalPassed / totalChecks) * 100) : null;
+
+    results.push({ mod, categoryResults, passed: totalPassed, total: totalChecks, score: overallScore });
+  }
+
+  // ─── Fix mode ───────────────────────────────────────────────────────────
+  if (fixMode) {
+    for (const r of results) {
+      const failingChecks = Object.values(r.categoryResults)
+        .filter((cr) => cr.applicable)
+        .flatMap((cr) => cr.checks)
+        .filter((c) => c.result.pass === false);
+
+      if (failingChecks.length === 0) {
+        console.log(`✅ \`${r.mod.id}\` has no failing checks.`);
+      } else {
+        console.log(generateFixPrompt(r.mod, failingChecks, checkToRef));
+      }
+    }
+    return;
+  }
+
+  // ─── Render Report ──────────────────────────────────────────────────────
+  const lines = [];
+  lines.push("# 📊 meshstack-hub Module Scorecard");
+  lines.push("");
+  lines.push(
+    `> Generated: ${new Date().toISOString().split("T")[0]} | Modules scanned: **${modules.length}** | Categories: **${Object.keys(CATEGORIES).length}**`
+  );
+  lines.push("");
+
+  const categoriesToRender = filterCategory
+    ? { [filterCategory]: CATEGORIES[filterCategory] }
+    : CATEGORIES;
+
+  // ─── Per-Module Category Summary (omit for single-module mode) ───────────
+  lines.push("## 📋 Per-Module Category Summary");
+  lines.push("");
+  lines.push("Score per category per building block. `n/a` = category does not apply to this module.");
+  lines.push("");
+
+  const summaryCategories = Object.entries(CATEGORIES);
+  const catHeaderCols = summaryCategories.map(([, cat]) => cat.name).join(" | ");
+  lines.push(`| Module | Overall | ${catHeaderCols} |`);
+  lines.push(`|--------|---------|${summaryCategories.map(() => "---").join("|")}|`);
+
+  for (const r of results) {
+    const overallCell = r.total > 0
+      ? `${r.score >= 80 ? "🟢" : r.score >= 50 ? "🟡" : "🔴"} ${r.score}%`
+      : "—";
+
+    const catCells = summaryCategories.map(([catId]) => {
+      const cr = r.categoryResults[catId];
+      if (!cr || !cr.applicable) return "n/a";
+      if (cr.score === null) return "—";
+      const emoji = cr.score >= 80 ? "🟢" : cr.score >= 50 ? "🟡" : "🔴";
+      return `${emoji} ${cr.score}%`;
+    });
+
+    lines.push(`| \`${r.mod.id}\` | ${overallCell} | ${catCells.join(" | ")} |`);
+  }
+  lines.push("");
+
+  // ─── Status Banner ───────────────────────────────────────────────────────
+  const scoredModules = results.filter((r) => r.total > 0);
+  const allPassing = scoredModules.length > 0 && scoredModules.every((r) => r.score === 100);
+  if (allPassing) {
+    lines.push("> ✅ **All checks passing!** This module meets all scorecard criteria.");
+  } else {
+    const failingCount = scoredModules.filter((r) => r.score < 100).length;
+    const noun = failingCount === 1 ? "1 module has" : `${failingCount} modules have`;
+    lines.push(`> ⚠️ **${noun} failing checks** — failing categories are expanded below.`);
+  }
+  lines.push("");
+
+  for (const [catId, cat] of Object.entries(categoriesToRender)) {
+    const catDetectors = detectors.filter((d) => d.category === catId);
+    const applicableModules = results.filter((r) => r.categoryResults[catId]?.applicable);
+
+    const categoryHasFailures = applicableModules.some((r) =>
+      r.categoryResults[catId].checks.some((c) => c.result.pass === false)
+    );
+    const openAttr = applicableModules.length > 0 && categoryHasFailures ? " open" : "";
+    const statusLabel = applicableModules.length === 0
+      ? "not applicable"
+      : categoryHasFailures
+        ? "some checks failing"
+        : "✅ all passing";
+
+    lines.push(`<details${openAttr}>`);
+    lines.push(`<summary><strong>${cat.name}</strong> — ${statusLabel}</summary>`);
+    lines.push("");
+    lines.push(`*${cat.description}* — applies to **${applicableModules.length}** modules`);
+    lines.push("");
+
+    if (applicableModules.length === 0) {
+      lines.push("No applicable modules.");
+      lines.push("");
+      lines.push("</details>");
+      lines.push("");
+      continue;
+    }
+
+    const headerCols = catDetectors.map((d) => d.emoji).join(" | ");
+    lines.push(`| Module | Score | ${headerCols} |`);
+    lines.push(
+      `|--------|-------|${catDetectors.map(() => "---").join("|")}|`
+    );
+
+    for (const r of applicableModules) {
+      const cr = r.categoryResults[catId];
+      const checkMarks = cr.checks
+        .map((c) => (c.result.pass === null ? "➖" : c.result.pass ? "✅" : "❌"))
+        .join(" | ");
+      // A pattern-scoped category can mark every one of its checks not applicable, which leaves
+      // no score to render.
+      const scoreCell = cr.score === null
+        ? "—"
+        : `${cr.score >= 80 ? "🟢" : cr.score >= 50 ? "🟡" : "🔴"} ${cr.score}%`;
+      lines.push(
+        `| \`${r.mod.id}\` | ${scoreCell} | ${checkMarks} |`
+      );
+    }
+    lines.push("");
+
+    lines.push(`#### ${cat.name} — Summary`);
+    lines.push("");
+    lines.push("| Emoji | Criterion | Coverage | Status |");
+    lines.push("|-------|-----------|----------|--------|");
+    for (const d of catDetectors) {
+      const checkApplicable = applicableModules.filter(
+        (r) => r.categoryResults[catId].checks.find((c) => c.id === d.id)?.result.pass !== null
+      );
+      if (checkApplicable.length === 0) {
+        lines.push(`| ${d.emoji} | ${d.name} | n/a | — |`);
+        continue;
+      }
+      const passing = checkApplicable.filter(
+        (r) => r.categoryResults[catId].checks.find((c) => c.id === d.id)?.result.pass === true
+      ).length;
+      const pct = Math.round((passing / checkApplicable.length) * 100);
+      const bar = pct >= 80 ? "🟢" : pct >= 50 ? "🟡" : "🔴";
+      lines.push(
+        `| ${d.emoji} | ${d.name} | **${passing}/${checkApplicable.length}** | ${bar} ${pct}% |`
+      );
+    }
+    lines.push("");
+    lines.push("</details>");
+    lines.push("");
+  }
+
+  // ─── Overall Summary (omit for single-module mode) ──────────────────────
+  const singleModule = modules.length === 1;
+  if (!singleModule) {
+    lines.push("## 📈 Overall Summary");
+    lines.push("");
+
+    const scoredResults = results.filter((r) => r.total > 0);
+    const totalModules = scoredResults.length;
+    const avgScore = totalModules > 0
+      ? Math.round(scoredResults.reduce((s, r) => s + (r.score || 0), 0) / totalModules)
+      : 0;
+    lines.push(`### Overall Average Score: **${avgScore}%**`);
+    lines.push("");
+
+    const high = scoredResults.filter((r) => r.score >= 80).length;
+    const mid = scoredResults.filter((r) => r.score >= 50 && r.score < 80).length;
+    const low = scoredResults.filter((r) => r.score < 50).length;
+    lines.push("### Score Distribution");
+    lines.push("");
+    lines.push(`- 🟢 High maturity (≥80%): **${high}** modules`);
+    lines.push(`- 🟡 Medium maturity (50–79%): **${mid}** modules`);
+    lines.push(`- 🔴 Low maturity (<50%): **${low}** modules`);
+    lines.push("");
+  }
+
+  console.log(lines.join("\n"));
+}
+
+main();

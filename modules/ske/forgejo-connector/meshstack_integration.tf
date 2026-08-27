@@ -55,7 +55,11 @@ variable "hub" {
     git_ref   = optional(string, "main")
     bbd_draft = optional(bool, true)
   })
-  default     = {}
+  const = true
+  default = {
+    git_ref   = "main"
+    bbd_draft = true
+  }
   description = <<-EOT
   `git_ref`: Hub release reference. Set to a tag (e.g. 'v1.2.3') or branch or commit sha of meshcloud/meshstack-hub repo.<br>
   `bbd_draft`: If true, allows changing the building block definition for upgrading dependent building blocks.
@@ -90,12 +94,10 @@ resource "meshstack_building_block_definition" "this" {
     run_transparency    = true
 
     readme = chomp(<<-EOT
-    ## What does it do?
-
     The **SKE Forgejo Connector** wires a Forgejo repository to a Kubernetes namespace on STACKIT SKE so that
     Forgejo Actions workflows can build and deploy applications into the namespace.
 
-    ## Resources Created
+    ## 📦 Resources Created
 
     - **Kubernetes service account & RBAC** – scoped credentials for the Forgejo Actions runner, including
       cluster-issuer read access for cert-manager.
@@ -125,7 +127,7 @@ resource "meshstack_building_block_definition" "this" {
 
     implementation = {
       terraform = {
-        terraform_version              = "1.11.5"
+        terraform_version              = "1.12.5"
         repository_url                 = "https://github.com/meshcloud/meshstack-hub.git"
         repository_path                = "modules/ske/forgejo-connector/buildingblock"
         ref_name                       = var.hub.git_ref
@@ -249,6 +251,14 @@ resource "meshstack_building_block_definition" "this" {
           }
         }
       }
+
+      hub_git_ref = {
+        display_name    = "hub_git_ref"
+        description     = "Hub git ref this building block runs from."
+        type            = "STRING"
+        assignment_type = "STATIC"
+        argument        = jsonencode(var.hub.git_ref)
+      }
     }
 
     outputs = {
@@ -262,10 +272,12 @@ resource "meshstack_building_block_definition" "this" {
 }
 
 terraform {
+  required_version = ">= 1.12.0"
+
   required_providers {
     meshstack = {
       source  = "meshcloud/meshstack"
-      version = "~> 0.20.0"
+      version = ">= 0.21.0"
     }
   }
 }

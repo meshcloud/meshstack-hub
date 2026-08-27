@@ -3,15 +3,25 @@ variable "azure_tenant_id" {
   description = "Azure Entra tenant ID where service principals will be created."
 }
 
+variable "azure_subscription_id" {
+  type        = string
+  description = "Azure subscription ID where the service principal's role assignments will be created."
+}
+
 variable "azure_scope" {
   type        = string
   description = "Azure management group or subscription ID used for backplane role scope."
 }
 
+variable "azure_location" {
+  type        = string
+  description = "Azure region for the backplane resource group and managed identity (e.g. 'westeurope')."
+}
+
 variable "backplane_name" {
   type        = string
   default     = "azure-service-principal"
-  description = "Name for the backplane resources (service principal, role definition). Must match pattern ^[-a-z0-9]+$."
+  description = "Name for the backplane resources (resource group, managed identity, role definition). Must match pattern ^[-a-z0-9]+$."
 }
 
 variable "notification_subscribers" {
@@ -33,7 +43,11 @@ variable "hub" {
     git_ref   = optional(string, "main")
     bbd_draft = optional(bool, true)
   })
-  default     = {}
+  const = true
+  default = {
+    git_ref   = "main"
+    bbd_draft = true
+  }
   description = <<-EOT
   `git_ref`: Hub release reference. Set to a tag (e.g. 'v1.2.3') or branch or commit sha of the meshstack-hub repo.
   `bbd_draft`: If true, the building block definition version is kept in draft mode, which allows changing it (useful during development in LCF/ICF).
@@ -51,15 +65,16 @@ output "building_block_definition" {
 data "meshstack_integrations" "integrations" {}
 
 module "backplane" {
-  source = "github.com/meshcloud/meshstack-hub//modules/azure/service-principal/backplane?ref=ce07c0a83c58ab924fc4ab3e62907dde1a44edf3"
-  name   = var.backplane_name
-  scope  = var.azure_scope
-
-  create_service_principal_name = var.backplane_name
+  source   = "github.com/meshcloud/meshstack-hub//modules/azure/service-principal/backplane?ref=${var.hub.git_ref}"
+  name     = var.backplane_name
+  scope    = var.azure_scope
+  location = var.azure_location
 
   workload_identity_federation = {
-    issuer  = data.meshstack_integrations.integrations.workload_identity_federation.replicator.issuer
-    subject = "${trimsuffix(data.meshstack_integrations.integrations.workload_identity_federation.replicator.subject, ":replicator")}:workspace.${var.meshstack.owning_workspace_identifier}.buildingblockdefinition.${meshstack_building_block_definition.this.metadata.uuid}"
+    issuer = data.meshstack_integrations.integrations.workload_identity_federation.replicator.issuer
+    subjects = [
+      "${trimsuffix(data.meshstack_integrations.integrations.workload_identity_federation.replicator.subject, ":replicator")}:workspace.${var.meshstack.owning_workspace_identifier}.buildingblockdefinition.${meshstack_building_block_definition.this.metadata.uuid}"
+    ]
   }
 }
 
@@ -79,11 +94,9 @@ resource "meshstack_building_block_definition" "this" {
     target_type              = "WORKSPACE_LEVEL"
 
     readme = chomp(<<-EOT
-      ## Azure Service Principal
-
       This building block creates an **Azure AD Application** and **Service Principal** with role assignments on your Azure subscription.
 
-      ## When to use it?
+      ## 🎯 When to use it
 
       Use this building block when your applications need:
       - A service identity for Azure authentication
@@ -119,7 +132,7 @@ resource "meshstack_building_block_definition" "this" {
 
     implementation = {
       terraform = {
-        terraform_version              = "1.9.0"
+        terraform_version              = "1.12.5"
         repository_url                 = "https://github.com/meshcloud/meshstack-hub.git"
         repository_path                = "modules/azure/service-principal/buildingblock"
         ref_name                       = var.hub.git_ref
@@ -134,7 +147,7 @@ resource "meshstack_building_block_definition" "this" {
         description     = "Client ID of the service principal used to authenticate with Azure."
         assignment_type = "STATIC"
         is_environment  = true
-        argument        = jsonencode(module.backplane.created_service_principal.client_id)
+        argument        = jsonencode(module.backplane.identity.client_id)
       }
       ARM_TENANT_ID = {
         type            = "STRING"
@@ -171,34 +184,35 @@ resource "meshstack_building_block_definition" "this" {
         display_name    = "Description"
         description     = "Description for the Azure AD application."
         assignment_type = "USER_INPUT"
-        argument        = jsonencode("Service principal managed by meshStack")
+        default_value   = jsonencode("Service principal managed by meshStack")
       }
       azure_subscription_id = {
         type            = "STRING"
         display_name    = "Azure Subscription ID"
         description     = "The Azure subscription ID where role assignments will be created."
-        assignment_type = "PLATFORM_TENANT_ID"
+        assignment_type = "STATIC"
+        argument        = jsonencode(var.azure_subscription_id)
       }
       azure_role = {
         type            = "STRING"
         display_name    = "Azure Role"
         description     = "Azure RBAC built-in role to assign (e.g., 'Contributor', 'Reader'). Leave empty if using a custom role."
         assignment_type = "USER_INPUT"
-        argument        = jsonencode("Contributor")
+        default_value   = jsonencode("Contributor")
       }
       create_client_secret = {
         type            = "BOOLEAN"
         display_name    = "Create Client Secret"
         description     = "Whether to create a client secret for the service principal."
         assignment_type = "USER_INPUT"
-        argument        = jsonencode(true)
+        default_value   = jsonencode(true)
       }
       secret_rotation_days = {
         type            = "INTEGER"
         display_name    = "Secret Rotation Days"
         description     = "Number of days before the client secret expires (30-730 days)."
         assignment_type = "USER_INPUT"
-        argument        = jsonencode(90)
+        default_value   = jsonencode(90)
       }
     }
 
@@ -240,6 +254,12 @@ resource "meshstack_building_block_definition" "this" {
         description     = "The name of the role assigned to the service principal."
         assignment_type = "NONE"
       }
+      role_assignment_id = {
+        type            = "STRING"
+        display_name    = "Role Assignment ID"
+        description     = "Resource ID of the Azure RBAC role assignment created for the service principal."
+        assignment_type = "NONE"
+      }
       secret_expiration_date = {
         type            = "STRING"
         display_name    = "Secret Expiration Date"
@@ -251,20 +271,20 @@ resource "meshstack_building_block_definition" "this" {
 }
 
 terraform {
-  required_version = ">= 1.11.0"
+  required_version = ">= 1.12.0"
 
   required_providers {
     meshstack = {
       source  = "meshcloud/meshstack"
-      version = "~> 0.20.0"
+      version = ">= 0.21.0"
     }
     azurerm = {
       source  = "hashicorp/azurerm"
-      version = "~> 4.64"
+      version = ">= 4.64"
     }
     azuread = {
       source  = "hashicorp/azuread"
-      version = "~> 3.8"
+      version = ">= 3.8"
     }
   }
 }

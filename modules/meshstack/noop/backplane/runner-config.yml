@@ -1,0 +1,28 @@
+# Unique identifier of this runner, as registered in meshStack.
+runnerUuid: ${RUNNER_UUID}
+
+# Maximum total runtime (in minutes) for a single Building Block run before it is aborted.
+timeoutMins: 60
+
+# Maximum time (in minutes) to wait for a workspace operation (e.g. checkout, sync) to complete.
+wsTimeoutMins: 5
+
+# Maximum time (in minutes) allowed for the runner to initialize before a run starts.
+initTimeoutMins: 3
+
+# Directory inside the container where Terraform working directories are created.
+workingDir: /tmp/runner/wd
+
+# Directory inside the container where Terraform binaries are downloaded and cached.
+tfInstallDir: /tmp/runner/tfbin
+
+# Connection settings for the meshStack API this runner polls for work.
+api:
+  # Base URL of the meshStack federation API.
+  url: ${RUNNER_API_URL}
+  # OAuth2 client ID used by the runner to authenticate against meshStack.
+  clientId: ${RUNNER_API_KEY_CLIENT_ID}
+  # OAuth2 client secret is injected via the RUNNER_API_CLIENT_SECRET environment variable (see docker run command).
+
+# When true, SSH host key verification is skipped for Git operations. Keep false in production.
+insecureHostKeys: false

@@ -3,11 +3,7 @@ output "bucket_name" {
 }
 
 output "bucket_url" {
-  value = google_storage_bucket.main.url
-}
-
-output "bucket_self_link" {
-  value = google_storage_bucket.main.self_link
+  value = "https://console.cloud.google.com/storage/browser/${google_storage_bucket.main.name}?project=${google_storage_bucket.main.project}"
 }
 
 output "summary" {
@@ -22,8 +18,8 @@ Your GCP Storage Bucket was successfully created!
 - **Name**: ${google_storage_bucket.main.name}
 - **Project**: ${google_storage_bucket.main.project}
 - **Location**: ${google_storage_bucket.main.location}
-- **URL**: ${google_storage_bucket.main.url}
-- **Self Link**: ${google_storage_bucket.main.self_link}
+- **gsutil URI**: `${google_storage_bucket.main.url}`
+- [Open in GCP Console](https://console.cloud.google.com/storage/browser/${google_storage_bucket.main.name}?project=${google_storage_bucket.main.project})
 
 EOT
 }

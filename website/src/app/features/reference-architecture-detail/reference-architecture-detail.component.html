@@ -12,13 +12,19 @@
   <div class="bg-gradient-to-br from-primary-50 to-blue-50 border-b border-primary-100">
     <div class="container mx-auto px-4 py-6 md:py-8">
       <div class="flex flex-col md:flex-row items-start gap-6">
-        <!-- Platform logos -->
-        <div class="flex -space-x-2 flex-shrink-0">
-          <div *ngFor="let logo of vm.platformLogos"
-               class="w-16 h-16 flex items-center justify-center rounded-lg bg-white shadow-sm ring-2 ring-white">
-            <img [src]="logo.imageUrl" [alt]="logo.platformType" class="w-10 h-10 object-contain" />
-          </div>
+        <!-- Architecture logo, falling back to platform logos -->
+        <div *ngIf="vm.logo; else platformLogos"
+             class="w-16 h-16 flex-shrink-0 flex items-center justify-center rounded-lg bg-white shadow-sm ring-2 ring-white">
+          <img [src]="vm.logo" [alt]="vm.name" class="w-12 h-12 object-contain" />
         </div>
+        <ng-template #platformLogos>
+          <div class="flex -space-x-2 flex-shrink-0">
+            <div *ngFor="let logo of vm.platformLogos"
+                 class="w-16 h-16 flex items-center justify-center rounded-lg bg-white shadow-sm ring-2 ring-white">
+              <img [src]="logo.imageUrl" [alt]="logo.platformType" class="w-10 h-10 object-contain" />
+            </div>
+          </div>
+        </ng-template>
 
         <div class="flex-1 flex flex-col gap-2">
           <div class="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
@@ -28,12 +34,57 @@
                   <i class="fa-solid fa-layer-group"></i>
                   Reference Architecture
                 </span>
+                <span *ngIf="vm.integrationSourceUrl" class="inline-flex items-center gap-1 px-2 py-0.5 bg-green-100 text-green-700 text-xs font-medium rounded">
+                  <i class="fa-solid fa-code"></i>
+                  Importable
+                </span>
               </div>
               <h1 class="text-2xl lg:text-3xl font-bold text-slate-900">{{ vm.name }}</h1>
               <p class="text-base text-slate-700 mt-2">{{ vm.description }}</p>
+              <a *ngIf="vm.integrationSourceUrl"
+                 [href]="vm.integrationSourceUrl"
+                 target="_blank"
+                 rel="noopener noreferrer"
+                 class="inline-flex items-center gap-2 mt-3 rounded-md border border-slate-300 bg-white/80 px-3 py-1.5 text-sm text-slate-700 hover:border-slate-400 hover:text-slate-900 transition-colors">
+                <img src="assets/logos/github.png" alt="" class="w-4 h-4" />
+                <span>View source on GitHub</span>
+              </a>
             </div>
           </div>
         </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- How to use (only when this reference architecture ships its own Terraform code) -->
+  <div *ngIf="vm.integrationSourceUrl" class="container mx-auto px-4 lg:px-8 pt-6">
+    <div class="bg-white border border-slate-200 rounded-xl divide-y divide-slate-100 sm:divide-y-0 sm:divide-x flex flex-col sm:flex-row">
+      <div class="flex-1 p-4 flex items-center gap-3">
+        <i class="fa-solid fa-window-restore text-primary-600"></i>
+        <div class="flex-1 text-sm">
+          <span class="font-semibold text-slate-900">Import as a Building Block</span>
+          <span class="text-slate-600"> — create it once in meshStack, then provide secrets as inputs when running it.</span>
+        </div>
+        <button
+          type="button"
+          class="btn btn-xs btn-primary whitespace-nowrap"
+          (click)="open(vm)">
+          Add to meshStack
+        </button>
+      </div>
+      <div class="flex-1 p-4 flex items-center gap-3">
+        <i class="fa-solid fa-code text-slate-600"></i>
+        <div class="flex-1 text-sm">
+          <span class="font-semibold text-slate-900">Run it yourself</span>
+          <span class="text-slate-600"> — clone the code and run <span class="font-mono bg-slate-100 px-1 py-0.5 rounded text-xs">tofu apply</span> directly, no building block required.</span>
+        </div>
+        <a *ngIf="vm.folderUrl"
+           [href]="vm.folderUrl"
+           target="_blank"
+           rel="noopener noreferrer"
+           class="btn btn-xs btn-outline-primary whitespace-nowrap">
+          View code
+        </a>
       </div>
     </div>
   </div>
@@ -45,7 +96,7 @@
       <div>
         <mst-card label="Architecture Details" class="w-full">
           <div class="p-6 md:p-8" card-body>
-            <div class="prose prose-slate max-w-none
+            <div class="markdown-body prose prose-slate max-w-none
                         prose-headings:text-slate-900
                         prose-h2:text-xl prose-h2:font-bold prose-h2:mt-8 prose-h2:mb-4
                         prose-h3:text-lg prose-h3:font-semibold prose-h3:mt-6 prose-h3:mb-3
