@@ -3,7 +3,6 @@ name: meshStack Workspace Onboarding
 supportedPlatforms:
   - meshstack
 description: Creates a new meshStack workspace with a self-tracked TTL, a payment method, a project with a tenant, and the initial workspace and project role bindings.
-# Only calls the meshStack API against an already-registered meshPlatform/landing zone; provisions nothing cloud-side of its own.
 requiresBackplane: false
 ---
 
@@ -15,49 +14,18 @@ on any already-registered meshPlatform, and the initial workspace and project ro
 
 ## Admin-scoped API key
 
-Creating a workspace or a payment method requires meshStack `ADM_*` permissions, which meshStack
-only grants to users in the Admin Area — never to the ephemeral, workspace-scoped API token a
-running building block gets. This module works around that by authenticating every resource it
-manages through the `meshstack` provider (see `provider.tf`), configured directly with an
-admin-scoped API key/secret pair injected as `STATIC` sensitive inputs (`meshstack_admin_api_key` /
-`meshstack_admin_api_secret`) in `meshstack_integration.tf`. The platform team supplies that
-credential once, when deploying this definition — it is never exposed to whoever orders the
-building block.
-
-Because the whole block is driven by that admin credential rather than its own ephemeral one, it
-declares no `permissions` in `version_spec`.
+Creating a workspace or a payment method needs meshStack `ADM_*` permissions, which a building
+block's own ephemeral token never has. This module authenticates instead with
+`meshstack_admin_api_key` / `meshstack_admin_api_secret` — an admin credential the platform team
+sets once in `meshstack_integration.tf` — so it declares no `permissions` in `version_spec`.
 
 ## Self-destructs after its TTL
 
-The caller supplies `workspace_ttl_days` — how many days the workspace should live — not a date. The
-building block tracks its own creation date via `time_static.created` in `main.tf` and computes the
-expiry date itself (`local.expiry_date`), so a specific expiry date never has to round-trip through
-`meshstack_integration.tf` or an order form. `time_static.created` pins `plantimestamp()` (not
-`timestamp()`, which is deliberately unknown until apply and unusable here — see below) into
-`rfc3339` on the very first run, via `lifecycle { ignore_changes = [rfc3339] }` so later runs don't
-try to update it to a new "now". It is never gated by `lifecycle.enabled` — it has to keep existing,
-with the same value, for as long as the block does, or the next run would see no created-at record
-and un-expire everything.
-
-Every other resource is gated behind `lifecycle { enabled = !local.expired }`, where `local.expired`
-compares `plantimestamp()` against `time_static.created.rfc3339 + workspace_ttl_days`. The same
-`local.expiry_date` is written to the workspace's expiry tag and to the payment method's own
-`expiration_date` — neither is a separate input, both follow the workspace's TTL. `plantimestamp()`,
-not `timestamp()`, because `lifecycle.enabled` must be known at plan time and `timestamp()` is
-deliberately unknown until apply — including on the very first run, before `time_static.created` even
-exists, which is exactly why its own `rfc3339` has to be pinned from `plantimestamp()` rather than
-left to capture the real creation time (a value that would itself stay unknown until apply). Running
-this building block again once `workspace_ttl_days` have elapsed since creation therefore destroys
-the workspace, payment method, project and tenant it created — bindings and the tenant first, then
-the project and payment method, then the workspace, in the normal destroy order OpenTofu derives from
-the resource references.
-
-This is not a self-purging building block like `stackit-project-starterkit`: the block itself stays
-around after its resources are gone, so an operator can still see what it created and use its
-outputs to work out why the workspace disappeared. `workspace_ttl_days` is intentionally not
-`updateable_by_consumer`: the application team that ordered the workspace cannot push its expiry out
-themselves, only a platform admin can — a new value is measured from the original creation date, not
-from when it is changed.
+You set `workspace_ttl_days`, not a date. The block tracks its own creation time
+(`time_static.created` in `main.tf`) and computes the expiry itself. Once that many days have
+passed, the next run destroys everything it created — workspace, payment method, project, tenant,
+both bindings. The block itself is not self-purging: it stays behind so its outputs still show what
+happened.
 
 <!-- BEGIN_TF_DOCS -->
 ## Requirements
