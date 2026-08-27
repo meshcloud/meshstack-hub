@@ -44,7 +44,7 @@ the meshStack replicator subject(s) passed in `var.workload_identity_federation`
 ## Requirements
 
 | Name | Version |
-| ---- | ------- |
+|------|---------|
 | <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.3.0 |
 | <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) | >= 4.36.0 |
 
@@ -55,7 +55,7 @@ No modules.
 ## Resources
 
 | Name | Type |
-| ---- | ---- |
+|------|------|
 | [azurerm_federated_identity_credential.backplane](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/federated_identity_credential) | resource |
 | [azurerm_resource_group.backplane](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/resource_group) | resource |
 | [azurerm_role_assignment.backplane](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/role_assignment) | resource |
@@ -67,7 +67,7 @@ No modules.
 ## Inputs
 
 | Name | Description | Type | Default | Required |
-| ---- | ----------- | ---- | ------- | :------: |
+|------|-------------|------|---------|:--------:|
 | <a name="input_hub_scope"></a> [hub\_scope](#input\_hub\_scope) | Scope where the hub vnet lives (management group or subscription ID). The identity is granted vnet peering permissions here so it can peer the spoke into the hub. | `string` | n/a | yes |
 | <a name="input_location"></a> [location](#input\_location) | Azure region for the UAMI resource group. | `string` | n/a | yes |
 | <a name="input_name"></a> [name](#input\_name) | Name for the building block identity, resource group and role definitions. | `string` | n/a | yes |
@@ -78,7 +78,7 @@ No modules.
 ## Outputs
 
 | Name | Description |
-| ---- | ----------- |
+|------|-------------|
 | <a name="output_hub_role_definition_id"></a> [hub\_role\_definition\_id](#output\_hub\_role\_definition\_id) | The ID of the role definition that enables peering the spoke into the hub vnet. |
 | <a name="output_hub_role_definition_name"></a> [hub\_role\_definition\_name](#output\_hub\_role\_definition\_name) | The name of the role definition that enables peering the spoke into the hub vnet. |
 | <a name="output_hub_scope"></a> [hub\_scope](#output\_hub\_scope) | The scope where the hub peering role definition and role assignment are applied. |
