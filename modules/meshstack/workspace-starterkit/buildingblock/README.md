@@ -1,12 +1,12 @@
 ---
-name: meshStack Workspace Onboarding
+name: meshStack Workspace Starterkit
 supportedPlatforms:
   - meshstack
 description: Creates a new meshStack workspace with a self-tracked TTL, a payment method, a project with a tenant, and the initial workspace and project role bindings.
 requiresBackplane: false
 ---
 
-# meshStack Workspace Onboarding
+# meshStack Workspace Starterkit
 
 This building block onboards a new meshStack workspace in one order: a workspace tagged with a
 self-computed expiry date (under a configurable tag key), a payment method, a project with a tenant
