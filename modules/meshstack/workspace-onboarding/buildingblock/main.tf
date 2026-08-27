@@ -24,8 +24,6 @@ locals {
 # `summary` output, remain after the resources it managed are gone.
 
 resource "meshstack_workspace" "this" {
-  provider = meshstack.admin
-
   lifecycle {
     enabled = !local.expired
   }
@@ -43,8 +41,6 @@ resource "meshstack_workspace" "this" {
 }
 
 resource "meshstack_payment_method" "this" {
-  provider = meshstack.admin
-
   lifecycle {
     enabled = !local.expired
   }
@@ -63,8 +59,6 @@ resource "meshstack_payment_method" "this" {
 }
 
 resource "meshstack_project" "this" {
-  provider = meshstack.admin
-
   lifecycle {
     enabled = !local.expired
   }
@@ -82,8 +76,6 @@ resource "meshstack_project" "this" {
 }
 
 resource "meshstack_tenant" "this" {
-  provider = meshstack.admin
-
   lifecycle {
     enabled = !local.expired
   }
@@ -100,8 +92,6 @@ resource "meshstack_tenant" "this" {
 }
 
 resource "meshstack_workspace_user_binding" "owner" {
-  provider = meshstack.admin
-
   lifecycle {
     enabled = !local.expired
   }
@@ -126,8 +116,6 @@ resource "meshstack_workspace_user_binding" "owner" {
 }
 
 resource "meshstack_project_user_binding" "admin" {
-  provider = meshstack.admin
-
   lifecycle {
     enabled = !local.expired
   }
