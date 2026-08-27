@@ -2,7 +2,7 @@ variable "meshstack_admin_api_key" {
   type        = string
   sensitive   = true
   nullable    = false
-  description = "Admin-scoped meshStack API key. Creating a workspace and a payment method needs ADM_* permissions meshStack never grants to a building block's own ephemeral run token, so every resource here is managed through an aliased provider authenticated with this key/secret pair instead."
+  description = "Admin-scoped meshStack API key. Creating a workspace and a payment method needs ADM_* permissions meshStack never grants to a building block's own ephemeral run token, so every meshStack resource here is authenticated with this key/secret pair instead."
 }
 
 variable "meshstack_admin_api_secret" {
@@ -27,19 +27,19 @@ variable "workspace_display_name" {
 variable "workspace_expiry_tag_key" {
   type        = string
   nullable    = false
-  description = "Tag key `workspace_expiry_date` is written under on the new workspace."
+  description = "Tag key the computed expiry date is written under on the new workspace."
 }
 
-variable "workspace_expiry_date" {
-  type        = string
+variable "workspace_ttl_days" {
+  type        = number
   nullable    = false
-  description = "Expiry date (YYYY-MM-DD) written to the workspace's `workspace_expiry_tag_key` tag."
+  description = "Number of days after this building block first creates the workspace before it, the payment method, the project and the tenant are destroyed. The module tracks the creation date itself (see time_static.created in main.tf) — this input is a duration, not a date."
 }
 
 variable "workspace_owner_username" {
   type        = string
   nullable    = false
-  description = "Username granted `workspace_role_name` on the new workspace."
+  description = "Username granted `workspace_role_name` on the new workspace and `project_role_name` on the new project — one owner for both."
 }
 
 variable "workspace_role_name" {
@@ -54,12 +54,6 @@ variable "payment_method_amount" {
   description = "Budget amount for the payment method."
 }
 
-variable "payment_method_expiration_date" {
-  type        = string
-  nullable    = false
-  description = "Expiration date (YYYY-MM-DD) of the payment method itself, independent of the workspace's `expiry` tag. Empty string means no expiration."
-}
-
 variable "project_identifier" {
   type        = string
   nullable    = false
@@ -72,16 +66,10 @@ variable "project_display_name" {
   description = "Display name for the project."
 }
 
-variable "project_admin_username" {
-  type        = string
-  nullable    = false
-  description = "Username granted `project_role_name` on the new project."
-}
-
 variable "project_role_name" {
   type        = string
   nullable    = false
-  description = "meshStack project role granted to `project_admin_username`."
+  description = "meshStack project role granted to `workspace_owner_username`."
 }
 
 variable "platform_ref" {
@@ -90,7 +78,7 @@ variable "platform_ref" {
     kind = string
   })
   nullable    = false
-  description = "Reference (by uuid) to the STACKIT meshPlatform the tenant is created on."
+  description = "Reference (by uuid) to the meshPlatform the tenant is created on."
 }
 
 variable "landing_zone_ref" {

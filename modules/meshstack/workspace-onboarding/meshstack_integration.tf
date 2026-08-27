@@ -1,13 +1,13 @@
-variable "stackit_platform_identifier" {
+variable "platform_identifier" {
   type        = string
   nullable    = false
-  description = "Identifier (`<platform-name>.<location-name>`) of the STACKIT platform the tenant is created on. Must already be registered and published to `meshstack.owning_workspace_identifier`."
+  description = "Identifier (`<platform-name>.<location-name>`) of the meshPlatform the tenant is created on. Must already be registered and published to `meshstack.owning_workspace_identifier`."
 }
 
-variable "stackit_landing_zone_name" {
+variable "landing_zone_name" {
   type        = string
   nullable    = false
-  description = "Name of the landing zone on the STACKIT platform the tenant is placed in."
+  description = "Name of the landing zone on that platform the tenant is placed in."
 }
 
 variable "meshstack_admin_api_key" {
@@ -94,14 +94,13 @@ output "building_block_definition" {
 
 locals {
   identifier_regex = "^[a-zA-Z0-9-]{1,63}$"
-  date_regex       = "^\\d{4}-\\d{2}-\\d{2}$"
 }
 
 # Resolved once here, in the context of the deploying (`meshstack.owning_workspace_identifier`)
 # workspace, and passed to the building block as STATIC inputs — the same pattern
 # `stackit-project-starterkit` uses for `platform_ref` / `landing_zone_refs`. This avoids the building
 # block having to look up the platform from inside the brand-new workspace it just created, which may
-# not have the STACKIT platform published to it yet.
+# not have the platform published to it yet.
 data "meshstack_platforms" "available" {
   owned_by_workspace = var.meshstack.owning_workspace_identifier
 }
@@ -112,10 +111,10 @@ data "meshstack_landingzones" "available" {
 
 locals {
   platform = one([
-    for p in data.meshstack_platforms.available.platforms : p if p.identifier == var.stackit_platform_identifier
+    for p in data.meshstack_platforms.available.platforms : p if p.identifier == var.platform_identifier
   ])
   landing_zone = one([
-    for lz in data.meshstack_landingzones.available.landing_zones : lz if lz.metadata.name == var.stackit_landing_zone_name
+    for lz in data.meshstack_landingzones.available.landing_zones : lz if lz.metadata.name == var.landing_zone_name
   ])
 }
 
@@ -126,56 +125,56 @@ resource "meshstack_building_block_definition" "this" {
   }
 
   spec = {
-    display_name = "meshStack Workspace Onboarding"
-    symbol       = "https://raw.githubusercontent.com/meshcloud/meshstack-hub/${var.hub.git_ref}/modules/meshstack/workspace-onboarding/buildingblock/logo.png"
-    description  = "Creates a new meshStack workspace with a configurable expiry tag, a payment method, a project with a STACKIT tenant, and the initial workspace and project role bindings."
-    # No `supported_platforms`: meshStack rejects a workspace-scoped definition that declares any,
-    # with `400 A Workspace scoped Building Block Definition can not have supported platforms`.
+    display_name     = "meshStack Workspace Onboarding"
+    symbol           = "https://raw.githubusercontent.com/meshcloud/meshstack-hub/${var.hub.git_ref}/modules/meshstack/workspace-onboarding/buildingblock/logo.png"
+    description      = "Creates a new meshStack workspace with a self-tracked TTL, a payment method, a project with a tenant of a given platform/landing zone, and the initial workspace and project role bindings."
     target_type      = "WORKSPACE_LEVEL"
     run_transparency = true
 
     readme = chomp(<<-EOT
     Creates a fully onboarded meshStack workspace in one order: a workspace tagged with an expiry
-    date, a payment method, a project with a STACKIT tenant, and the initial workspace and project
-    role bindings.
+    date, a payment method, a project with a tenant on any already-registered platform, and the
+    initial workspace and project role bindings.
 
     ## 🎯 When to use it
 
     Order this building block when you:
     - Need to onboard a new customer or team into meshStack without creating the workspace, payment
-      method, project and STACKIT tenant by hand.
+      method, project and tenant by hand.
     - Want every new workspace to start with an expiry tag so it can be tracked and cleaned up.
-    - Want the workspace owner and project admin assigned from the start, not added as a follow-up
-      step.
+    - Want an owner assigned to the new workspace and project from the start, not added as a
+      follow-up step.
 
     ## 💡 Usage examples
 
     **Example 1: Onboard a new customer workspace**
     A platform admin orders this building block to spin up a workspace for a new customer, complete
-    with a payment method, a STACKIT project and the customer's contact set as workspace owner and
-    project admin.
+    with a payment method, a project+tenant and the customer's contact set as owner of both.
 
     **Example 2: Time-boxed sandbox**
-    A platform admin creates a sandbox workspace for an evaluation, setting the expiry date to the
-    evaluation's end date so it shows up for cleanup once that date passes.
+    A platform admin creates a sandbox workspace for an evaluation, setting a TTL that matches the
+    evaluation's length so it is cleaned up on its own once that many days have passed.
 
-    ## 🗑️ Self-destructs after expiry
+    ## 🗑️ Self-destructs after its TTL
 
-    Every resource this building block creates is destroyed automatically the next time it runs after
-    the workspace's expiry date has passed — the workspace, the payment method, the project and the
-    STACKIT tenant, all in one run. Update the **Workspace Expiry Date** input to push the date out if
-    the workspace should keep living; the block itself is not deleted, only what it created.
+    The building block tracks its own creation date and computes the expiry date itself — you tell it
+    how many days the workspace should live (**Workspace TTL (Days)**), not a specific date. Only a
+    platform admin can change that value after ordering, not the application team. That same computed
+    date is written to the workspace's expiry tag and to the payment method's own expiration date, so
+    nothing outlives the workspace it belongs to. Every resource it creates is destroyed automatically
+    the next time it runs after that many days have passed — the workspace, the payment method, the
+    project and the tenant, all in one run. The block itself is not deleted, only what it created.
 
     ## 📊 Shared Responsibility
 
     | Responsibility | Platform Team | Application Team |
     |---|:---:|:---:|
     | Order this building block and choose the workspace, payment method and project details | ✅ | ❌ |
-    | Provide the STACKIT platform and landing zone the tenant is created on | ✅ | ❌ |
+    | Provide the platform and landing zone the tenant is created on | ✅ | ❌ |
     | Provide the admin-scoped API key/secret this building block authenticates with | ✅ | ❌ |
-    | Assign the initial workspace owner and project admin | ✅ | ❌ |
-    | Extend the expiry date before it passes, if the workspace should keep living | ✅ | ❌ |
-    | Use the workspace, project and STACKIT tenant once created | ❌ | ✅ |
+    | Assign the initial owner of the workspace and project | ✅ | ❌ |
+    | Choose the TTL when ordering, and extend it later if needed | ✅ | ❌ |
+    | Use the workspace, project and tenant once created | ❌ | ✅ |
     | Order further building blocks inside the project | ❌ | ✅ |
     EOT
     )
@@ -231,7 +230,7 @@ resource "meshstack_building_block_definition" "this" {
 
       platform_ref = {
         display_name    = "Platform Reference"
-        description     = "HCL object referencing the STACKIT meshPlatform the tenant is created on."
+        description     = "HCL object referencing the meshPlatform the tenant is created on."
         type            = "CODE"
         assignment_type = "STATIC"
         # jsonencode twice is correct for structured inputs, see
@@ -297,19 +296,17 @@ resource "meshstack_building_block_definition" "this" {
         assignment_type = "USER_INPUT"
       }
 
-      workspace_expiry_date = {
-        display_name                   = "Workspace Expiry Date"
-        description                    = "Written to the workspace's expiry tag (see Workspace Expiry Tag Key), as YYYY-MM-DD. The next run of this building block after this date destroys the workspace and everything it created — update this value to push the date out first if that is not wanted."
-        type                           = "STRING"
-        assignment_type                = "USER_INPUT"
-        updateable_by_consumer         = true
-        value_validation_regex         = local.date_regex
-        validation_regex_error_message = "Must be a date in YYYY-MM-DD format."
+      workspace_ttl_days = {
+        display_name    = "Workspace TTL (Days)"
+        description     = "Number of days after creation before the workspace, payment method, project and tenant are destroyed. The building block tracks its own creation date and computes the expiry date itself — this is a duration, not a date. Not updateable by the application team after ordering; a platform admin can still change it."
+        type            = "INTEGER"
+        assignment_type = "USER_INPUT"
+        default_value   = jsonencode(30)
       }
 
       workspace_owner_username = {
-        display_name    = "Workspace Owner"
-        description     = "Username granted the workspace role above on the new workspace."
+        display_name    = "Owner"
+        description     = "Username granted the workspace role above on the new workspace and the project role above on the new project — one owner for both."
         type            = "STRING"
         assignment_type = "USER_INPUT"
       }
@@ -319,18 +316,7 @@ resource "meshstack_building_block_definition" "this" {
         description     = "Budget amount for the payment method."
         type            = "INTEGER"
         assignment_type = "USER_INPUT"
-        default_value   = jsonencode(0)
-      }
-
-      payment_method_expiration_date = {
-        display_name                   = "Payment Method Expiration Date"
-        description                    = "Optional expiration date of the payment method itself, as YYYY-MM-DD. Independent of the workspace's `expiry` tag; leave empty for no expiration."
-        type                           = "STRING"
-        assignment_type                = "USER_INPUT"
-        updateable_by_consumer         = true
-        default_value                  = jsonencode("")
-        value_validation_regex         = "^$|${local.date_regex}"
-        validation_regex_error_message = "Must be empty or a date in YYYY-MM-DD format."
+        default_value   = jsonencode(100)
       }
 
       project_identifier = {
@@ -349,12 +335,6 @@ resource "meshstack_building_block_definition" "this" {
         assignment_type = "USER_INPUT"
       }
 
-      project_admin_username = {
-        display_name    = "Project Admin"
-        description     = "Username granted the project role above on the new project."
-        type            = "STRING"
-        assignment_type = "USER_INPUT"
-      }
     }
 
     outputs = {
@@ -376,16 +356,10 @@ resource "meshstack_building_block_definition" "this" {
         assignment_type = "NONE"
       }
 
-      stackit_project_url = {
-        display_name    = "Open STACKIT Project"
+      workspace_expiry_date = {
+        display_name    = "Workspace Expiry Date"
         type            = "STRING"
-        assignment_type = "RESOURCE_URL"
-      }
-
-      summary = {
-        display_name    = "Summary"
-        type            = "STRING"
-        assignment_type = "SUMMARY"
+        assignment_type = "NONE"
       }
     }
   }

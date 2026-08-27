@@ -8,5 +8,9 @@ terraform {
       # module writes: `platform_ref` and `landing_zone_ref` instead of the identifier fields.
       version = ">= 0.24.0"
     }
+    time = {
+      source  = "hashicorp/time"
+      version = ">= 0.11.0"
+    }
   }
 }
