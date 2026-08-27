@@ -45,27 +45,17 @@ variable "project_role_name" {
   description = "meshStack project role granted to the project admin on every project this definition creates."
 }
 
-variable "tags" {
-  type = object({
-    workspace      = optional(map(list(string)), {})
-    payment_method = optional(map(list(string)), {})
-    project        = optional(map(list(string)), {})
-  })
-  nullable = false
-  default = {
-    workspace      = {}
-    payment_method = {}
-    project        = {}
-  }
-  description = "Additional tags merged onto the created workspace (alongside the mandatory expiry tag, see workspace_expiry_tag_key), payment method and project."
-}
-
 variable "meshstack" {
   type = object({
     owning_workspace_identifier = string
-    tags                        = optional(map(list(string)), {})
+    tags = object({
+      building_block = map(list(string))
+      workspace      = map(list(string))
+      payment_method = map(list(string))
+      project        = map(list(string))
+    })
   })
-  description = "Shared meshStack context. Tags are optional and propagated to building block definition metadata."
+  description = "Shared meshStack context. `tags.building_block` is forwarded to the building block definition's own metadata; `tags.workspace`, `tags.payment_method` and `tags.project` are passed through as a static input, merged onto the workspace (alongside the mandatory expiry tag, see workspace_expiry_tag_key), the payment method and the project this building block creates."
 }
 
 variable "hub" {
@@ -121,12 +111,12 @@ locals {
 resource "meshstack_building_block_definition" "this" {
   metadata = {
     owned_by_workspace = var.meshstack.owning_workspace_identifier
-    tags               = var.meshstack.tags
+    tags               = var.meshstack.tags.building_block
   }
 
   spec = {
-    display_name     = "meshStack Workspace Onboarding"
-    symbol           = "https://raw.githubusercontent.com/meshcloud/meshstack-hub/${var.hub.git_ref}/modules/meshstack/workspace-onboarding/buildingblock/logo.png"
+    display_name     = "meshStack Workspace Starterkit"
+    symbol           = "https://raw.githubusercontent.com/meshcloud/meshstack-hub/${var.hub.git_ref}/modules/meshstack/workspace-starterkit/buildingblock/logo.png"
     description      = "Creates a new meshStack workspace with a self-tracked TTL, a payment method, a project with a tenant of a given platform/landing zone, and the initial workspace and project role bindings."
     target_type      = "WORKSPACE_LEVEL"
     run_transparency = true
@@ -188,7 +178,7 @@ resource "meshstack_building_block_definition" "this" {
       terraform = {
         terraform_version              = "1.12.5"
         repository_url                 = "https://github.com/meshcloud/meshstack-hub.git"
-        repository_path                = "modules/meshstack/workspace-onboarding/buildingblock"
+        repository_path                = "modules/meshstack/workspace-starterkit/buildingblock"
         ref_name                       = var.hub.git_ref
         async                          = false
         use_mesh_http_backend_fallback = true
@@ -275,7 +265,11 @@ resource "meshstack_building_block_definition" "this" {
         description     = "HCL object of additional tags applied to the workspace, payment method and project."
         type            = "CODE"
         assignment_type = "STATIC"
-        argument        = jsonencode(jsonencode(var.tags))
+        argument = jsonencode(jsonencode({
+          workspace      = var.meshstack.tags.workspace
+          payment_method = var.meshstack.tags.payment_method
+          project        = var.meshstack.tags.project
+        }))
       }
 
       # ── Chosen by whoever orders this building block ──
@@ -287,6 +281,7 @@ resource "meshstack_building_block_definition" "this" {
         assignment_type                = "USER_INPUT"
         value_validation_regex         = local.identifier_regex
         validation_regex_error_message = "Letters, digits and dashes only, at most 63 characters."
+        display_order                  = 1
       }
 
       workspace_display_name = {
@@ -294,6 +289,7 @@ resource "meshstack_building_block_definition" "this" {
         description     = "Display name for the new workspace."
         type            = "STRING"
         assignment_type = "USER_INPUT"
+        display_order   = 2
       }
 
       workspace_ttl_days = {
@@ -302,6 +298,7 @@ resource "meshstack_building_block_definition" "this" {
         type            = "INTEGER"
         assignment_type = "USER_INPUT"
         default_value   = jsonencode(30)
+        display_order   = 3
       }
 
       workspace_owner_username = {
@@ -309,6 +306,7 @@ resource "meshstack_building_block_definition" "this" {
         description     = "Username granted the workspace role above on the new workspace and the project role above on the new project — one owner for both."
         type            = "STRING"
         assignment_type = "USER_INPUT"
+        display_order   = 4
       }
 
       payment_method_amount = {
@@ -317,6 +315,7 @@ resource "meshstack_building_block_definition" "this" {
         type            = "INTEGER"
         assignment_type = "USER_INPUT"
         default_value   = jsonencode(100)
+        display_order   = 5
       }
 
       project_identifier = {
@@ -326,6 +325,7 @@ resource "meshstack_building_block_definition" "this" {
         assignment_type                = "USER_INPUT"
         value_validation_regex         = local.identifier_regex
         validation_regex_error_message = "Letters, digits and dashes only, at most 63 characters."
+        display_order                  = 6
       }
 
       project_display_name = {
@@ -333,6 +333,7 @@ resource "meshstack_building_block_definition" "this" {
         description     = "Display name for the project."
         type            = "STRING"
         assignment_type = "USER_INPUT"
+        display_order   = 7
       }
 
     }
