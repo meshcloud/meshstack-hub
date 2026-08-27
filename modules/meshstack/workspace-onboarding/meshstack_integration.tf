@@ -298,7 +298,7 @@ resource "meshstack_building_block_definition" "this" {
 
       workspace_ttl_days = {
         display_name    = "Workspace TTL (Days)"
-        description     = "Number of days after creation before the workspace, payment method, project and tenant are destroyed. The building block tracks its own creation date and computes the expiry date itself — this is a duration, not a date. Not updateable by the application team after ordering; a platform admin can still change it."
+        description     = "Number of days after creation before the workspace, payment method, project and tenant are destroyed."
         type            = "INTEGER"
         assignment_type = "USER_INPUT"
         default_value   = jsonencode(30)

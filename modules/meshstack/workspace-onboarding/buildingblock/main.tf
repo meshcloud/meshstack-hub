@@ -1,16 +1,5 @@
-# Captures the moment this building block first creates the workspace, so `local.expiry_timestamp`
-# below can be computed as `time_static.created + workspace_ttl_days` on every later run without the
-# caller ever supplying a date. Never gated by `lifecycle.enabled` — it has to keep existing (and keep
-# the same value) for as long as the block does, including after everything else it creates has been
-# destroyed, or the next run would see no created-at record, capture a fresh "now", and un-expire.
-#
-# `rfc3339 = plantimestamp()` rather than leaving it unset: `time_static` would otherwise capture the
-# real creation time via a value that is itself unknown until apply, and `local.expired` below has to
-# be known at *plan* time for `lifecycle.enabled` to accept it — including on the very first run, when
-# the resource does not exist yet. `plantimestamp()` is known immediately, so the resource's own
-# `rfc3339` attribute is too. `ignore_changes` then keeps that first value pinned forever: without it,
-# every later run would recompute `plantimestamp()` to the current time and try to update the resource
-# with it, which defeats the entire point of capturing a stable creation timestamp.
+# Pins "now" once, at plan time (lifecycle.enabled needs a known value, unlike a real creation
+# timestamp). ignore_changes keeps it stable on every later run.
 resource "time_static" "created" {
   rfc3339 = plantimestamp()
 
@@ -23,9 +12,6 @@ locals {
   expiry_timestamp = timeadd(time_static.created.rfc3339, "${var.workspace_ttl_days * 24}h")
   expiry_date      = formatdate("YYYY-MM-DD", local.expiry_timestamp)
 
-  # `timestamp()` is deliberately unknown until apply (so it can't be baked into a stored resource
-  # attribute), which makes it unusable in `lifecycle.enabled` — count/for_each/enabled must be known
-  # at plan time. `plantimestamp()` exists for exactly this: it resolves once, at plan time, to "now".
   expired = timecmp(plantimestamp(), local.expiry_timestamp) > 0
 
   payment_method_identifier = "${var.workspace_identifier}-payment-method"
@@ -130,6 +116,8 @@ resource "meshstack_workspace_user_binding" "owner" {
 }
 
 resource "meshstack_project_user_binding" "admin" {
+  depends_on = [meshstack_workspace_user_binding.owner]
+
   lifecycle {
     enabled = !local.expired
   }
