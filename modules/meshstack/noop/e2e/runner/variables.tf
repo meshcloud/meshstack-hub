@@ -4,22 +4,22 @@ variable "test_context" {
     workspace   = string
     project     = string
     name_suffix = string
+
+    # Base URL of the meshStack API, written into the runner config for API polling.
+    meshstack_endpoint = string
+
+    # Project the runner's Cloud Run service and Secret Manager secrets live in.
+    fixtures = object({
+      gcp = object({
+        project_id = string
+      })
+    })
   })
   nullable = false
-}
-
-variable "gcp_project_id" {
-  type        = string
-  description = "GCP project ID for the runner Cloud Run service and Secret Manager secrets."
 }
 
 variable "gcp_region" {
   type        = string
   default     = "europe-west1"
   description = "GCP region for the Cloud Run service and Secret Manager replicas."
-}
-
-variable "meshstack_endpoint" {
-  type        = string
-  description = "Base URL of the meshStack API. Written into the runner config for API polling."
 }

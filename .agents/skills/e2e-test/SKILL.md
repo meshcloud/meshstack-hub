@@ -99,9 +99,21 @@ Conventions that keep this clean and correct:
   `test_context` forces the variant to be chosen before `tofu test` starts, which pushes a
   test-matrix concern out of the hub and into whatever invokes it.
 
+- **Never read a fixture from the environment.** If `test_context` can carry the value, it carries
+  it — a `TF_VAR_*` has to be wired in the harness repo too (an Actions variable, a workflow line, a
+  `setup-env.sh` line), and nothing checks that those still agree. That is exactly how the
+  `meshstack/noop` runner test broke silently when one of two wiring lines was removed. The harness
+  side of this rule, including where a new fixture value comes from, is the four-branch rule in
+  `meshstack-smoke-test`'s `AGENTS.md`.
+
 ### Provider authentication secrets
 
 Provider authentication secrets should come via standard environment variables expected by these providers, not grab-bag fields in `test_context`.
+
+Secrets are the one exception to the rule above: GitHub masks values only one by one, so a secret
+cannot ride in the `test_context` grab-bag. It arrives as a scalar `TF_VAR_<variable>` and the module
+declares a matching top-level `sensitive` variable (`nullable`, `default = null`, so foundation mode
+can omit it).
 
 ---
 
@@ -464,6 +476,7 @@ source setup-override-provider.sh
 - [ ] `fixtures` is `optional()` with its inner shape fully required (no half-populated fixtures)
 - [ ] Always-shared fields (`workspace`, `name_suffix`, `hub_git_ref`) are required, not `optional()`
 - [ ] Cloud resource IDs sourced from `var.test_context.fixtures.*` (not flat `test_context` fields)
+- [ ] No fixture read from the environment — only secrets arrive as `TF_VAR_*`
 - [ ] Scalar secrets are top-level `nullable` vars with `default = null` (foundation mode omits them)
 - [ ] Module sourced via relative path (not a GitHub URL), gated with `count = var.test_context.bbd_version_ref == null ? 1 : 0`
 - [ ] `hub.git_ref = var.test_context.hub_git_ref` — no hardcoded `"main"`
