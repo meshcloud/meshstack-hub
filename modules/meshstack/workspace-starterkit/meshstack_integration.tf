@@ -1,13 +1,13 @@
-variable "platform_identifier" {
+variable "platform_uuid" {
   type        = string
   nullable    = false
-  description = "Identifier (`<platform-name>.<location-name>`) of the meshPlatform the tenant is created on. Must already be registered and published to `meshstack.owning_workspace_identifier`."
+  description = "UUID of the meshPlatform the tenant is created on — e.g. the `.ref.uuid` output of the meshstack_platform resource/backplane that owns it."
 }
 
 variable "landing_zone_name" {
   type        = string
   nullable    = false
-  description = "Name of the landing zone on that platform the tenant is placed in."
+  description = "Name of the landing zone on that platform the tenant is placed in — e.g. the `.ref.name` output of the meshLandingZone that owns it."
 }
 
 variable "meshstack_admin_api_key" {
@@ -84,28 +84,9 @@ output "building_block_definition" {
 
 locals {
   identifier_regex = "^[a-zA-Z0-9-]{1,63}$"
-}
 
-# Resolved once here, in the context of the deploying (`meshstack.owning_workspace_identifier`)
-# workspace, and passed to the building block as STATIC inputs — the same pattern
-# `stackit-project-starterkit` uses for `platform_ref` / `landing_zone_refs`. This avoids the building
-# block having to look up the platform from inside the brand-new workspace it just created, which may
-# not have the platform published to it yet.
-data "meshstack_platforms" "available" {
-  owned_by_workspace = var.meshstack.owning_workspace_identifier
-}
-
-data "meshstack_landingzones" "available" {
-  platform_uuid = local.platform.metadata.uuid
-}
-
-locals {
-  platform = one([
-    for p in data.meshstack_platforms.available.platforms : p if p.identifier == var.platform_identifier
-  ])
-  landing_zone = one([
-    for lz in data.meshstack_landingzones.available.landing_zones : lz if lz.metadata.name == var.landing_zone_name
-  ])
+  platform_ref     = { uuid = var.platform_uuid, kind = "meshPlatform" }
+  landing_zone_ref = { name = var.landing_zone_name, kind = "meshLandingZone" }
 }
 
 resource "meshstack_building_block_definition" "this" {
@@ -225,7 +206,7 @@ resource "meshstack_building_block_definition" "this" {
         assignment_type = "STATIC"
         # jsonencode twice is correct for structured inputs, see
         # https://registry.terraform.io/providers/meshcloud/meshstack/latest/docs/resources/building_block_definition#argument-1
-        argument = jsonencode(jsonencode(local.platform.ref))
+        argument = jsonencode(jsonencode(local.platform_ref))
       }
 
       landing_zone_ref = {
@@ -233,7 +214,7 @@ resource "meshstack_building_block_definition" "this" {
         description     = "HCL object referencing the landing zone the tenant is placed in."
         type            = "CODE"
         assignment_type = "STATIC"
-        argument        = jsonencode(jsonencode(local.landing_zone.ref))
+        argument        = jsonencode(jsonencode(local.landing_zone_ref))
       }
 
       workspace_expiry_tag_key = {

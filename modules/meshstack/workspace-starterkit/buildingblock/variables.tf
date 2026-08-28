@@ -75,7 +75,7 @@ variable "project_role_name" {
 variable "platform_ref" {
   type = object({
     uuid = string
-    kind = string
+    kind = optional(string, "meshPlatform")
   })
   nullable    = false
   description = "Reference (by uuid) to the meshPlatform the tenant is created on."
@@ -84,7 +84,7 @@ variable "platform_ref" {
 variable "landing_zone_ref" {
   type = object({
     name = string
-    kind = string
+    kind = optional(string, "meshLandingZone")
   })
   nullable    = false
   description = "Reference to the landing zone the tenant is placed in."
