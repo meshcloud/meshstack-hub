@@ -1,3 +1,8 @@
+variable "subscription_id" {
+  type        = string
+  description = "The Azure subscription ID where the virtual machine will be deployed (the target tenant's subscription)."
+}
+
 variable "vm_name" {
   type        = string
   description = "The name of the virtual machine"
@@ -26,16 +31,6 @@ variable "subnet_address_prefix" {
   default     = "10.0.1.0/24"
 }
 
-variable "os_type" {
-  type        = string
-  description = "The operating system type (Linux or Windows)"
-  default     = "Linux"
-  validation {
-    condition     = contains(["Linux", "Windows"], var.os_type)
-    error_message = "os_type must be either 'Linux' or 'Windows'"
-  }
-}
-
 variable "vm_size" {
   type        = string
   description = "The size of the virtual machine"
@@ -48,17 +43,9 @@ variable "admin_username" {
   default     = "azureuser"
 }
 
-variable "admin_password" {
-  type        = string
-  description = "The admin password for Windows VM (required for Windows)"
-  default     = null
-  sensitive   = true
-}
-
 variable "ssh_public_key" {
   type        = string
-  description = "SSH public key for Linux VM authentication (required for Linux)"
-  default     = null
+  description = "SSH public key for the VM's admin user."
 }
 
 variable "enable_public_ip" {

@@ -32,14 +32,14 @@ This starter kit has set up the following resources in workspace `${var.workspac
 
 - **Azure Project**: A dedicated project for your virtual machine resources
 - **Azure Tenant**: An Azure subscription tenant with your chosen landing zone
-- **Virtual Machine**: ${var.vm_os_type} VM (${var.vm_size}) in ${var.vm_location}
+- **Virtual Machine**: Linux VM (${var.vm_size}) in ${var.vm_location}
 
 ---
 
 ## VM Details
 
 - **VM Name**: ${local.identifier}
-- **Operating System**: ${var.vm_os_type}
+- **Operating System**: Linux
 - **Size**: ${var.vm_size}
 - **Region**: ${var.vm_location}
 - **Public IP**: ${var.vm_enable_public_ip ? "Enabled" : "Disabled"}
@@ -50,9 +50,7 @@ This starter kit has set up the following resources in workspace `${var.workspac
 ## Next Steps
 
 ### 1. Access Your VM
-${var.vm_os_type == "Linux" && var.vm_enable_public_ip ? "- Connect via SSH using your provided SSH key" : ""}
-${var.vm_os_type == "Windows" && var.vm_enable_public_ip ? "- Connect via RDP using the admin credentials" : ""}
-${!var.vm_enable_public_ip ? "- Connect through Azure Bastion or VPN (no public IP assigned)" : ""}
+${var.vm_enable_public_ip ? "- Connect via SSH using your provided SSH key" : "- Connect through Azure Bastion or VPN (no public IP assigned)"}
 
 ### 2. View Azure Resources
 - [Access Azure Tenant](/#/w/${var.workspace_identifier}/p/${meshstack_project.vm_project.metadata.name}/i/${var.full_platform_identifier}/overview)
