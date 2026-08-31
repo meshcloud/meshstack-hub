@@ -43,7 +43,7 @@ variable "hub" {
   })
   const = true
   default = {
-    git_ref   = "feature/api-key"
+    git_ref   = "feature/api-keys"
     bbd_draft = true
   }
   description = <<-EOT
