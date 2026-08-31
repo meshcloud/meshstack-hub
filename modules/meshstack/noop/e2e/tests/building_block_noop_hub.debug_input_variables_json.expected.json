@@ -6,6 +6,7 @@
     ],
     "multi_select_json": "[\"multi2\",\"multi1\"]",
     "num": 1,
+    "optional_text":"tf-default-value",
     "sensitive_text":"Hidden value",
     "sensitive_yaml":"some: yaml\nother: value\n",
     "single_select":"single1",

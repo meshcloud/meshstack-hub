@@ -39,6 +39,11 @@ variable "text" {
   type = string
 }
 
+variable "optional_text" {
+  type    = string
+  default = "tf-default-value"
+}
+
 variable "sensitive_text" {
   type      = string
   sensitive = true

@@ -32,9 +32,10 @@ resource "meshstack_building_block" "this" {
     }
 
     inputs = {
-      flag              = { value = jsonencode(true) }
-      num               = { value = jsonencode(1) }
-      text              = { value = jsonencode("Hello, World!") }
+      flag = { value = jsonencode(true) }
+      num  = { value = jsonencode(1) }
+      text = { value = jsonencode("Hello, World!") }
+      # optional_text     = <nothing>  -> We intentionally leave this empty to test we can use optional inputs and they take the variable default value.
       sensitive_text    = { sensitive = { secret_value = "Hidden value" } }
       single_select     = { value = jsonencode("single1") }
       multi_select      = { value = jsonencode(["multi1", "multi2"]) }
