@@ -29,12 +29,46 @@ Use it to:
 | `flag` | `BOOLEAN` | `USER_INPUT` | Boolean flag chosen by the user |
 | `num` | `INTEGER` | `USER_INPUT` | Integer chosen by the user |
 | `text` | `STRING` | `USER_INPUT` | Free-text string from the user |
+| `optional_text` | `STRING` | `USER_INPUT` | Optional string — omitted from the building block's inputs so the Terraform variable's default takes effect, see below |
 | `sensitive_text` | `STRING` (sensitive) | `USER_INPUT` | Sensitive string, masked in UI and logs |
 | `single_select` | `SINGLE_SELECT` | `USER_INPUT` | One value from a predefined list |
 | `multi_select` | `MULTI_SELECT` | `USER_INPUT` | One or more values from a predefined list |
 | `multi_select_json` | `MULTI_SELECT` | `USER_INPUT` | Same as above, as a raw JSON string |
 | `some-file.yaml` | `FILE` | `STATIC` | Written to working directory; read via `file("some-file.yaml")` |
 | `sensitive-file.yaml` | `FILE` | `STATIC` (sensitive) | Like above, encrypted at rest |
+
+### How Optional Inputs Work
+
+A `USER_INPUT` is made optional by giving its Terraform variable a plain `default` and then simply
+**omitting** that key from `meshstack_building_block.spec.inputs` — meshStack sends no value for an
+omitted input, so the Terraform variable's own default takes effect.
+
+Note this is separate from `default_value` on the BBD input itself, which is meant to pre-fill the
+value shown in the meshPanel UI. The `meshcloud/meshstack` Terraform provider does not yet apply
+`default_value` for `USER_INPUT` assignments — see
+[terraform-provider-meshstack#290](https://github.com/meshcloud/terraform-provider-meshstack/pull/290).
+So today a `USER_INPUT` can already be optional to *set* (this section), but not yet pre-filled in
+the *UI* (blocked on #290).
+
+`optional_text` demonstrates the pattern. `e2e/main.tf` deliberately omits the `optional_text` key
+from `inputs` to exercise the fallback to the Terraform variable's default:
+
+```hcl
+# buildingblock/variables.tf
+variable "optional_text" {
+  type    = string
+  default = "tf-default-value"
+}
+```
+
+```hcl
+# meshstack_integration.tf — default_value not yet honored by the provider, see #290 above
+optional_text = {
+  assignment_type = "USER_INPUT"
+  display_name    = "Optional Text"
+  type            = "STRING"
+}
+```
 
 ### How FILE Inputs Work
 
@@ -44,6 +78,7 @@ meshStack writes FILE inputs as files in the Terraform working directory before 
 output "some_file_yaml" {
   value = yamldecode(file("some-file.yaml"))
 }
+```
 <!-- BEGIN_TF_DOCS -->
 ## Requirements
 
@@ -70,6 +105,7 @@ No modules.
 | <a name="input_multi_select"></a> [multi\_select](#input\_multi\_select) | n/a | `list(string)` | n/a | yes |
 | <a name="input_multi_select_json"></a> [multi\_select\_json](#input\_multi\_select\_json) | n/a | `string` | n/a | yes |
 | <a name="input_num"></a> [num](#input\_num) | n/a | `number` | n/a | yes |
+| <a name="input_optional_text"></a> [optional\_text](#input\_optional\_text) | n/a | `string` | `"tf-default-value"` | no |
 | <a name="input_sensitive_text"></a> [sensitive\_text](#input\_sensitive\_text) | n/a | `string` | n/a | yes |
 | <a name="input_sensitive_yaml"></a> [sensitive\_yaml](#input\_sensitive\_yaml) | n/a | `any` | n/a | yes |
 | <a name="input_single_select"></a> [single\_select](#input\_single\_select) | n/a | `string` | n/a | yes |
@@ -89,6 +125,7 @@ No modules.
 | <a name="output_multi_select"></a> [multi\_select](#output\_multi\_select) | n/a |
 | <a name="output_multi_select_json"></a> [multi\_select\_json](#output\_multi\_select\_json) | n/a |
 | <a name="output_num"></a> [num](#output\_num) | n/a |
+| <a name="output_optional_text"></a> [optional\_text](#output\_optional\_text) | n/a |
 | <a name="output_resource_url"></a> [resource\_url](#output\_resource\_url) | n/a |
 | <a name="output_sensitive_file_yaml"></a> [sensitive\_file\_yaml](#output\_sensitive\_file\_yaml) | n/a |
 | <a name="output_sensitive_text"></a> [sensitive\_text](#output\_sensitive\_text) | n/a |

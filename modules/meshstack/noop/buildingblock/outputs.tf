@@ -39,6 +39,10 @@ output "text" {
   value = "${var.text} ${data.external.aws_version.result.version}"
 }
 
+output "optional_text" {
+  value = var.optional_text
+}
+
 output "sensitive_text" {
   value     = var.sensitive_text
   sensitive = true
@@ -101,6 +105,7 @@ output "debug_input_variables_json" {
     flag                  = var.flag
     num                   = var.num
     text                  = var.text
+    optional_text         = var.optional_text
     single_select         = var.single_select
     sensitive_text        = var.sensitive_text
     sensitive_yaml        = var.sensitive_yaml
