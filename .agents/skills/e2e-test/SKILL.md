@@ -99,9 +99,19 @@ Conventions that keep this clean and correct:
   `test_context` forces the variant to be chosen before `tofu test` starts, which pushes a
   test-matrix concern out of the hub and into whatever invokes it.
 
-### Provider authentication secrets
+### Secrets
 
-Provider authentication secrets should come via standard environment variables expected by these providers, not grab-bag fields in `test_context`.
+**No secret is ever a `test_context` field.** The grab-bag is built from state a CI job can read, so
+a secret in it would have to be persisted somewhere it does not belong.
+
+A secret reaches the module one of two ways:
+
+- The provider reads it from **its own standard environment variable** (cloud credentials). The
+  module declares nothing.
+- The module declares a **flat root variable** for it, when the value is also needed as an input to
+  the module under test (e.g. `stackit_git_forgejo_token`, `github_app_private_key`). The smoke-test
+  runner exports every secret it holds as `TF_VAR_<name>`, so declaring the variable is all it takes
+  — name it exactly as the runner does.
 
 ---
 

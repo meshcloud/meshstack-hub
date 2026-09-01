@@ -7,11 +7,8 @@ variable "test_context" {
 
     fixtures = object({
       github = object({
-        owner               = string
-        app_id              = string
-        app_installation_id = string
-        app_private_key     = string
-        repository          = string
+        owner      = string
+        repository = string
 
         # Base branch the per-run ephemeral branch forks from — normally the fixture repository's
         # default branch. Workflow files are NOT committed here; see `github_branch.ephemeral`.
@@ -19,6 +16,25 @@ variable "test_context" {
       })
     })
   })
+  nullable = false
+}
+
+# Credentials of the GitHub App that the module under test commits with and that this module's own
+# provider authenticates as. Root variables rather than `test_context` fields: the runner exports
+# every secret as TF_VAR_<name>, so none of them has to travel through the grab-bag.
+variable "github_app_id" {
+  type     = string
+  nullable = false
+}
+
+variable "github_app_private_key" {
+  type      = string
+  sensitive = true
+  nullable  = false
+}
+
+variable "github_app_installation_id" {
+  type     = string
   nullable = false
 }
 
@@ -60,9 +76,9 @@ module "github_workflow" {
   source = "../"
 
   github_owner               = var.test_context.fixtures.github.owner
-  github_app_id              = var.test_context.fixtures.github.app_id
-  github_app_installation_id = var.test_context.fixtures.github.app_installation_id
-  github_app_private_key     = var.test_context.fixtures.github.app_private_key
+  github_app_id              = var.github_app_id
+  github_app_installation_id = var.github_app_installation_id
+  github_app_private_key     = var.github_app_private_key
   github_repository          = var.test_context.fixtures.github.repository
   github_branch              = github_branch.ephemeral.branch
   github_async               = var.github_async
