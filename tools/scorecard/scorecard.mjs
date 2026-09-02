@@ -196,6 +196,40 @@ const detectors = [
     }),
   },
   {
+    id: "child_bb_run_postcondition",
+    category: "core",
+    name: "Child meshstack_building_block asserts a SUCCEEDED run",
+    emoji: "🚦",
+    fn: (mod) => {
+      const offenders = [];
+      let ordered = 0;
+
+      for (const file of collectTfFilesRecursive(join(mod.path, "buildingblock"))) {
+        const content = readFileSync(file, "utf-8");
+        for (const [name, body] of extractResourceBlocks(content, "meshstack_building_block")) {
+          ordered++;
+          const where = `${relative(mod.path, file)}: ${name}`;
+          const postcondition = findRunStatusPostcondition(body);
+          if (!postcondition) {
+            offenders.push(`${where} — no postcondition on self.status.status`);
+          } else if (!/error_message\s*=[^\n]*self\.status\.status/.test(postcondition)) {
+            offenders.push(`${where} — error_message does not name self.status.status`);
+          }
+          if (postcondition && /wait_for_completion\s*=\s*false/.test(body)) {
+            offenders.push(`${where} — wait_for_completion = false, so the run is still PENDING when the postcondition is checked`);
+          }
+        }
+      }
+
+      if (ordered === 0) return { pass: null, detail: "orders no child building blocks" };
+      if (offenders.length === 0) return { pass: true };
+      return {
+        pass: false,
+        detail: `${offenders.join("; ")} — see AGENTS.md, "Ordering Child Building Blocks"`,
+      };
+    },
+  },
+  {
     id: "provider_pinned",
     category: "core",
     name: "Provider versions use minimum constraint (>=)",
@@ -1356,6 +1390,25 @@ function collectBBDInputArgumentVariableReferences(content) {
   }
 
   return refs;
+}
+
+// The body of the resource's `postcondition` block asserting a SUCCEEDED run, or null.
+//
+// A starterkit ordering a child building block is the only thing left that can fail on a failed
+// child run: from meshstack provider v0.25.2 a failed run on create is a warning, so the parent
+// apply otherwise reports success while the tenant has none of what it ordered. The provider
+// cannot supply the check itself — the plugin protocol has no way to declare a lifecycle
+// condition, and any error it returned from Create would taint the block and have the next apply
+// destroy and recreate it, which is the bug the warning fixed.
+function findRunStatusPostcondition(resourceBody) {
+  for (const m of resourceBody.matchAll(/\bpostcondition\s*\{/g)) {
+    const open = resourceBody.indexOf("{", m.index);
+    const close = findMatchingBrace(resourceBody, open);
+    if (close < 0) continue;
+    const body = resourceBody.slice(open + 1, close);
+    if (/self\.status\.status\s*==\s*"SUCCEEDED"/.test(body)) return body;
+  }
+  return null;
 }
 
 function extractBBDReadmeContent(content) {

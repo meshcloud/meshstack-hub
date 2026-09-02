@@ -213,6 +213,64 @@ The `availability` field controls publication state and access restrictions. mes
 
 ---
 
+<!-- scorecard-checks: child_bb_run_postcondition -->
+## Ordering Child Building Blocks
+
+A starterkit or composition orders `meshstack_building_block` resources on behalf of a tenant.
+Every one of those resources must assert that its run succeeded:
+
+```hcl
+resource "meshstack_building_block" "example" {
+  # ...
+  lifecycle {
+    postcondition {
+      condition     = self.status.status == "SUCCEEDED"
+      error_message = "Building block ${self.metadata.uuid} is ${self.status.status}, not SUCCEEDED. See its run in meshPanel."
+    }
+  }
+}
+```
+
+Copy those four lines verbatim, in every child building block, including the ones in
+`reference-architectures/` — the scorecard only scans `modules/`, so nothing checks them for you.
+Do not write a per-block message: OpenTofu prints the resource address and the file and line of the
+failing postcondition, and `self` supplies the uuid and the status, so the identical message names
+the specific block anyway.
+
+**Why the check has to be in the configuration.** From meshStack provider v0.25.2 on, a run that
+does not succeed never fails the apply — the provider warns, keeps the block, and the next plan
+runs it again ([provider #277](https://github.com/meshcloud/terraform-provider-meshstack/issues/277)).
+That is right for the building block itself — OpenTofu and Terraform taint a resource whose
+creation errors and always replace a tainted resource, so the old behaviour destroyed a building
+block that a single re-run would have repaired. It is wrong for a starterkit, whose own run would
+report `SUCCEEDED` while the tenant is missing what it ordered.
+
+The provider cannot supply the check for you. The plugin protocol has no way to declare a lifecycle
+condition — `precondition` and `postcondition` are core configuration constructs — and even if it
+had one, the only way a provider can fail an apply is an error diagnostic from `Create`, which is
+the tainting that keeping the block was about. A postcondition is evaluated after the resource is
+written to state and after every taint call site, so it fails the parent run and still leaves the
+child block in state for the next apply to repair.
+
+**Keep `wait_for_completion` at its default `true`.** With `false` the create returns while the run
+is still `PENDING` or `IN_PROGRESS`, and the postcondition then fails on a run that had not
+finished.
+
+**What a non-`SUCCEEDED` status does on the next plan** depends on whether the provider plans a
+re-run:
+
+- `FAILED` or `ABORTED` — the provider plans an in-place re-run, which makes `status` unknown in the
+  plan, so the postcondition moves to the apply. If the re-run does not succeed either, the
+  postcondition is what fails that apply: the provider itself only ever warns about a run status.
+- One of the four `WAITING_FOR_*` statuses (`OPERATOR_INPUT`, `USER_INPUT`, `DEPENDENT_INPUT`,
+  `APPROVAL`) — the provider plans no re-run, `status` stays known, and the postcondition **fails
+  the plan**, not just the apply. That is the intended signal: no apply will fix this by itself, so
+  someone has to supply the input or approve the run in meshPanel. A child block that is *meant* to
+  park — one whose definition requires an approval — is the one case for a looser condition, e.g.
+  `contains(["SUCCEEDED", "WAITING_FOR_APPROVAL"], self.status.status)`.
+
+---
+
 <!-- scorecard-checks: provider_pinned -->
 ## Variable Conventions
 
@@ -456,6 +514,7 @@ unnoticed. The  `no_buildingblock_tftest` scorecard check flags each one as migr
 - [ ] `logo.png` included in `buildingblock/`
 - [ ] No `documentation_md` output in `backplane/` — use BBD `readme` field and `backplane/README.md` instead
 - [ ] `meshstack_platform` resources include `lifecycle { ignore_changes = [spec.availability] }`
+- [ ] Every child `meshstack_building_block` carries the run-status `postcondition` — see [Ordering Child Building Blocks](#ordering-child-building-blocks)
 - [ ] No trailing whitespace
 - [ ] **Azure modules**: also follow the [Azure Backplane Checklist](.agents/references/azure-backplane.md#checklist-for-azure-backplanes)
 - [ ] **GCP modules**: also follow the [GCP Backplane Checklist](.agents/references/gcp-backplane.md#checklist-for-gcp-backplanes)
