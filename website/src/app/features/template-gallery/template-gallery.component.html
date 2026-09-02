@@ -118,6 +118,32 @@
       </p>
     </div>
 
+    <!-- Contribute Callout -->
+    <div class="mt-8 p-6 bg-primary-50 border border-primary-100 rounded-xl flex flex-col sm:flex-row items-start sm:items-center gap-4">
+      <div class="flex-shrink-0 w-10 h-10 rounded-full bg-primary-100 flex items-center justify-center">
+        <i class="fa-solid fa-code-branch text-primary-600"></i>
+      </div>
+      <div class="flex-1">
+        <p class="text-slate-800 font-medium mb-1">Didn't find what you're looking for?</p>
+        <p class="text-slate-600 text-sm mb-0">
+          You can create your own building block definition and contribute it to the Hub.
+          Tip: use our
+          <a href="https://github.com/meshcloud/meshstack-hub/blob/main/.agents/skills/module/SKILL.md"
+             target="_blank"
+             rel="noopener noreferrer"
+             class="text-primary-700 hover:text-primary-800 underline font-medium">agent skill files</a>
+          to help build new building block definitions.
+        </p>
+      </div>
+      <a href="https://github.com/meshcloud/meshstack-hub"
+         target="_blank"
+         rel="noopener noreferrer"
+         class="btn btn-primary whitespace-nowrap flex items-center gap-2 flex-shrink-0">
+        <i class="fa-solid fa-arrow-up-right-from-square"></i>
+        Contribute on GitHub
+      </a>
+    </div>
+
     <!-- Template Cards Grid -->
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
       <ng-container *ngIf="templates$ | async as templates">
