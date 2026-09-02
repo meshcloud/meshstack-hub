@@ -1,0 +1,263 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN"
+ "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<svg width="1615pt" height="325pt"
+ viewBox="0.00 0.00 1615.00 325.00" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+<g id="graph0" class="graph" transform="scale(1 1) rotate(0) translate(4 320.88)">
+<title>azure_landingzone</title>
+<polygon fill="white" stroke="none" points="-4,4 -4,-320.88 1611,-320.88 1611,4 -4,4"/>
+<g id="clust1" class="cluster">
+<title>cluster_azure</title>
+<path fill="white" stroke="#d5dae0" d="M20,-8C20,-8 476,-8 476,-8 482,-8 488,-14 488,-20 488,-20 488,-296.88 488,-296.88 488,-302.88 482,-308.88 476,-308.88 476,-308.88 20,-308.88 20,-308.88 14,-308.88 8,-302.88 8,-296.88 8,-296.88 8,-20 8,-20 8,-14 14,-8 20,-8"/>
+<text xml:space="preserve" text-anchor="middle" x="179.4" y="-294.08" font-family="Helvetica,sans-Serif" font-size="12.00" fill="#697180"> &#160;Azure — Enterprise&#45;Scale hierarchy (existing or provisioned)</text>
+</g>
+<g id="clust3" class="cluster">
+<title>cluster_mesh</title>
+<path fill="white" stroke="#d5dae0" d="M508,-11.12C508,-11.12 1587,-11.12 1587,-11.12 1593,-11.12 1599,-17.12 1599,-23.12 1599,-23.12 1599,-296.88 1599,-296.88 1599,-302.88 1593,-308.88 1587,-308.88 1587,-308.88 508,-308.88 508,-308.88 502,-308.88 496,-302.88 496,-296.88 496,-296.88 496,-23.12 496,-23.12 496,-17.12 502,-11.12 508,-11.12"/>
+<text xml:space="preserve" text-anchor="middle" x="537.01" y="-294.08" font-family="Helvetica,sans-Serif" font-size="12.00" fill="#697180"> &#160;meshStack</text>
+</g>
+<!-- MG -->
+<g id="node1" class="node">
+<title>MG</title>
+<path fill="#ffffff" stroke="#a2abb8" stroke-width="1.1" d="M268.01,-268.48C268.01,-268.48 165.99,-268.48 165.99,-268.48 159.99,-268.48 153.99,-262.48 153.99,-256.48 153.99,-256.48 153.99,-238.24 153.99,-238.24 153.99,-232.24 159.99,-226.24 165.99,-226.24 165.99,-226.24 268.01,-226.24 268.01,-226.24 274.01,-226.24 280.01,-232.24 280.01,-238.24 280.01,-238.24 280.01,-256.48 280.01,-256.48 280.01,-262.48 274.01,-268.48 268.01,-268.48"/>
+<text xml:space="preserve" text-anchor="middle" x="217" y="-250.66" font-family="Helvetica,sans-Serif" font-size="11.00">🏛️ Landing Zones</text>
+<text xml:space="preserve" text-anchor="middle" x="217" y="-237.46" font-family="Helvetica,sans-Serif" font-size="11.00">management group</text>
+</g>
+<!-- CORP -->
+<g id="node2" class="node">
+<title>CORP</title>
+<path fill="#eef2f6" stroke="#93a7bb" stroke-width="1.1" d="M111.93,-165.24C111.93,-165.24 38.07,-165.24 38.07,-165.24 32.07,-165.24 26.07,-159.24 26.07,-153.24 26.07,-153.24 26.07,-141.24 26.07,-141.24 26.07,-135.24 32.07,-129.24 38.07,-129.24 38.07,-129.24 111.93,-129.24 111.93,-129.24 117.93,-129.24 123.93,-135.24 123.93,-141.24 123.93,-141.24 123.93,-153.24 123.93,-153.24 123.93,-159.24 117.93,-165.24 111.93,-165.24"/>
+<text xml:space="preserve" text-anchor="middle" x="75" y="-143.94" font-family="Helvetica,sans-Serif" font-size="11.00">🗂️ Corp MG</text>
+</g>
+<!-- MG&#45;&gt;CORP -->
+<g id="edge3" class="edge">
+<title>MG&#45;&gt;CORP</title>
+<path fill="none" stroke="#8b95a3" d="M160.27,-225.95C160.27,-198.11 160.27,-153 160.27,-153 160.27,-153 132.62,-153 132.62,-153"/>
+<polygon fill="#8b95a3" stroke="#8b95a3" points="132.62,-150.55 125.62,-153 132.62,-155.45 132.62,-150.55"/>
+</g>
+<!-- ONL -->
+<g id="node3" class="node">
+<title>ONL</title>
+<path fill="#eef2f6" stroke="#93a7bb" stroke-width="1.1" d="M257.91,-165.24C257.91,-165.24 176.09,-165.24 176.09,-165.24 170.09,-165.24 164.09,-159.24 164.09,-153.24 164.09,-153.24 164.09,-141.24 164.09,-141.24 164.09,-135.24 170.09,-129.24 176.09,-129.24 176.09,-129.24 257.91,-129.24 257.91,-129.24 263.91,-129.24 269.91,-135.24 269.91,-141.24 269.91,-141.24 269.91,-153.24 269.91,-153.24 269.91,-159.24 263.91,-165.24 257.91,-165.24"/>
+<text xml:space="preserve" text-anchor="middle" x="217" y="-143.94" font-family="Helvetica,sans-Serif" font-size="11.00">🗂️ Online MG</text>
+</g>
+<!-- MG&#45;&gt;ONL -->
+<g id="edge4" class="edge">
+<title>MG&#45;&gt;ONL</title>
+<path fill="none" stroke="#8b95a3" d="M190.54,-226.13C190.54,-226.13 190.54,-174.26 190.54,-174.26"/>
+<polygon fill="#8b95a3" stroke="#8b95a3" points="192.99,-174.26 190.54,-167.26 188.09,-174.26 192.99,-174.26"/>
+</g>
+<!-- SBX -->
+<g id="node4" class="node">
+<title>SBX</title>
+<path fill="#eef2f6" stroke="#93a7bb" stroke-width="1.1" d="M415.72,-165.24C415.72,-165.24 322.28,-165.24 322.28,-165.24 316.28,-165.24 310.28,-159.24 310.28,-153.24 310.28,-153.24 310.28,-141.24 310.28,-141.24 310.28,-135.24 316.28,-129.24 322.28,-129.24 322.28,-129.24 415.72,-129.24 415.72,-129.24 421.72,-129.24 427.72,-135.24 427.72,-141.24 427.72,-141.24 427.72,-153.24 427.72,-153.24 427.72,-159.24 421.72,-165.24 415.72,-165.24"/>
+<text xml:space="preserve" text-anchor="middle" x="369" y="-143.94" font-family="Helvetica,sans-Serif" font-size="11.00">🗂️ Sandbox MG</text>
+</g>
+<!-- MG&#45;&gt;SBX -->
+<g id="edge5" class="edge">
+<title>MG&#45;&gt;SBX</title>
+<path fill="none" stroke="#8b95a3" d="M274.96,-225.95C274.96,-198.11 274.96,-153 274.96,-153 274.96,-153 301.46,-153 301.46,-153"/>
+<polygon fill="#8b95a3" stroke="#8b95a3" points="301.46,-155.45 308.46,-153 301.46,-150.55 301.46,-155.45"/>
+</g>
+<!-- CORP&#45;&gt;ONL -->
+<!-- SUB -->
+<g id="node6" class="node">
+<title>SUB</title>
+<path fill="#e5f2ea" stroke="#85bfa0" stroke-width="1.1" d="M144.45,-68.24C144.45,-68.24 37.55,-68.24 37.55,-68.24 31.55,-68.24 25.55,-62.24 25.55,-56.24 25.55,-56.24 25.55,-38 25.55,-38 25.55,-32 31.55,-26 37.55,-26 37.55,-26 144.45,-26 144.45,-26 150.45,-26 156.45,-32 156.45,-38 156.45,-38 156.45,-56.24 156.45,-56.24 156.45,-62.24 150.45,-68.24 144.45,-68.24"/>
+<text xml:space="preserve" text-anchor="middle" x="91" y="-50.42" font-family="Helvetica,sans-Serif" font-size="11.00">🗂️ Subscription ×N</text>
+<text xml:space="preserve" text-anchor="middle" x="91" y="-37.22" font-family="Helvetica,sans-Serif" font-size="11.00">per project</text>
+</g>
+<!-- CORP&#45;&gt;SUB -->
+<g id="edge6" class="edge">
+<title>CORP&#45;&gt;SUB</title>
+<path fill="none" stroke="#8b95a3" d="M58.69,-128.88C58.69,-128.88 58.69,-77.01 58.69,-77.01"/>
+<polygon fill="#8b95a3" stroke="#8b95a3" points="61.14,-77.01 58.69,-70.01 56.24,-77.01 61.14,-77.01"/>
+<text xml:space="preserve" text-anchor="middle" x="41.93" y="-105.64" font-family="Helvetica,sans-Serif" font-size="9.00" fill="#697180">contains</text>
+</g>
+<!-- ONL&#45;&gt;SBX -->
+<!-- HUB -->
+<g id="node5" class="node">
+<title>HUB</title>
+<path fill="#eef2f6" stroke="#93a7bb" stroke-width="1.1" d="M456.41,-268.48C456.41,-268.48 333.59,-268.48 333.59,-268.48 327.59,-268.48 321.59,-262.48 321.59,-256.48 321.59,-256.48 321.59,-238.24 321.59,-238.24 321.59,-232.24 327.59,-226.24 333.59,-226.24 333.59,-226.24 456.41,-226.24 456.41,-226.24 462.41,-226.24 468.41,-232.24 468.41,-238.24 468.41,-238.24 468.41,-256.48 468.41,-256.48 468.41,-262.48 462.41,-268.48 456.41,-268.48"/>
+<text xml:space="preserve" text-anchor="middle" x="395" y="-250.66" font-family="Helvetica,sans-Serif" font-size="11.00">🌐 Hub VNet</text>
+<text xml:space="preserve" text-anchor="middle" x="395" y="-237.46" font-family="Helvetica,sans-Serif" font-size="11.00">provisioned (foundation)</text>
+</g>
+<!-- SUB&#45;&gt;HUB -->
+<g id="edge7" class="edge">
+<title>SUB&#45;&gt;HUB</title>
+<path fill="none" stroke="#8b95a3" stroke-dasharray="5,2" d="M156.65,-56C262.29,-56 458.24,-56 458.24,-56 458.24,-56 458.24,-217.27 458.24,-217.27"/>
+<polygon fill="#8b95a3" stroke="#8b95a3" points="455.79,-217.27 458.24,-224.27 460.69,-217.27 455.79,-217.27"/>
+<text xml:space="preserve" text-anchor="middle" x="346.3" y="-58.7" font-family="Helvetica,sans-Serif" font-size="9.00" fill="#697180">spoke peers into hub</text>
+</g>
+<!-- PLAT -->
+<g id="node7" class="node">
+<title>PLAT</title>
+<path fill="#ecedfb" stroke="#9aa2e6" stroke-width="1.1" d="M690.18,-265.36C690.18,-265.36 525.82,-265.36 525.82,-265.36 519.82,-265.36 513.82,-259.36 513.82,-253.36 513.82,-253.36 513.82,-241.36 513.82,-241.36 513.82,-235.36 519.82,-229.36 525.82,-229.36 525.82,-229.36 690.18,-229.36 690.18,-229.36 696.18,-229.36 702.18,-235.36 702.18,-241.36 702.18,-241.36 702.18,-253.36 702.18,-253.36 702.18,-259.36 696.18,-265.36 690.18,-265.36"/>
+<text xml:space="preserve" text-anchor="middle" x="608" y="-244.06" font-family="Helvetica,sans-Serif" font-size="11.00">🛰️ Azure Subscription platform</text>
+</g>
+<!-- PLAT&#45;&gt;SUB -->
+<g id="edge20" class="edge">
+<title>PLAT&#45;&gt;SUB</title>
+<path fill="none" stroke="#8b95a3" stroke-dasharray="1,5" d="M513.37,-247C500.23,-247 491.11,-247 491.11,-247 491.11,-247 491.11,-47 491.11,-47 491.11,-47 165.14,-47 165.14,-47"/>
+<polygon fill="#8b95a3" stroke="#8b95a3" points="165.14,-44.55 158.14,-47 165.14,-49.45 165.14,-44.55"/>
+<text xml:space="preserve" text-anchor="middle" x="462.64" y="-38.9" font-family="Helvetica,sans-Serif" font-size="9.00" fill="#697180">replicates subscriptions</text>
+</g>
+<!-- LZC -->
+<g id="node8" class="node">
+<title>LZC</title>
+<path fill="#ecedfb" stroke="#9aa2e6" stroke-width="1.1" d="M635.68,-165.24C635.68,-165.24 526.32,-165.24 526.32,-165.24 520.32,-165.24 514.32,-159.24 514.32,-153.24 514.32,-153.24 514.32,-141.24 514.32,-141.24 514.32,-135.24 520.32,-129.24 526.32,-129.24 526.32,-129.24 635.68,-129.24 635.68,-129.24 641.68,-129.24 647.68,-135.24 647.68,-141.24 647.68,-141.24 647.68,-153.24 647.68,-153.24 647.68,-159.24 641.68,-165.24 635.68,-165.24"/>
+<text xml:space="preserve" text-anchor="middle" x="581" y="-143.94" font-family="Helvetica,sans-Serif" font-size="11.00">🛬 Corp landing zone</text>
+</g>
+<!-- PLAT&#45;&gt;LZC -->
+<g id="edge13" class="edge">
+<title>PLAT&#45;&gt;LZC</title>
+<path fill="none" stroke="#8b95a3" d="M581,-229C581,-229 581,-174 581,-174"/>
+<polygon fill="#8b95a3" stroke="#8b95a3" points="583.45,-174 581,-167 578.55,-174 583.45,-174"/>
+</g>
+<!-- LZO -->
+<g id="node9" class="node">
+<title>LZO</title>
+<path fill="#ecedfb" stroke="#9aa2e6" stroke-width="1.1" d="M816.66,-165.24C816.66,-165.24 699.34,-165.24 699.34,-165.24 693.34,-165.24 687.34,-159.24 687.34,-153.24 687.34,-153.24 687.34,-141.24 687.34,-141.24 687.34,-135.24 693.34,-129.24 699.34,-129.24 699.34,-129.24 816.66,-129.24 816.66,-129.24 822.66,-129.24 828.66,-135.24 828.66,-141.24 828.66,-141.24 828.66,-153.24 828.66,-153.24 828.66,-159.24 822.66,-165.24 816.66,-165.24"/>
+<text xml:space="preserve" text-anchor="middle" x="758" y="-143.94" font-family="Helvetica,sans-Serif" font-size="11.00">🛬 Online landing zone</text>
+</g>
+<!-- PLAT&#45;&gt;LZO -->
+<g id="edge14" class="edge">
+<title>PLAT&#45;&gt;LZO</title>
+<path fill="none" stroke="#8b95a3" d="M691.05,-229C691.05,-229 691.05,-174 691.05,-174"/>
+<polygon fill="#8b95a3" stroke="#8b95a3" points="693.5,-174 691.05,-167 688.6,-174 693.5,-174"/>
+</g>
+<!-- LZS -->
+<g id="node10" class="node">
+<title>LZS</title>
+<path fill="#ecedfb" stroke="#9aa2e6" stroke-width="1.1" d="M1009.47,-165.24C1009.47,-165.24 880.53,-165.24 880.53,-165.24 874.53,-165.24 868.53,-159.24 868.53,-153.24 868.53,-153.24 868.53,-141.24 868.53,-141.24 868.53,-135.24 874.53,-129.24 880.53,-129.24 880.53,-129.24 1009.47,-129.24 1009.47,-129.24 1015.47,-129.24 1021.47,-135.24 1021.47,-141.24 1021.47,-141.24 1021.47,-153.24 1021.47,-153.24 1021.47,-159.24 1015.47,-165.24 1009.47,-165.24"/>
+<text xml:space="preserve" text-anchor="middle" x="945" y="-143.94" font-family="Helvetica,sans-Serif" font-size="11.00">🛬 Sandbox landing zone</text>
+</g>
+<!-- PLAT&#45;&gt;LZS -->
+<g id="edge15" class="edge">
+<title>PLAT&#45;&gt;LZS</title>
+<path fill="none" stroke="#8b95a3" d="M694.76,-229.15C694.76,-209.81 694.76,-182 694.76,-182 694.76,-182 898.95,-182 898.95,-182 898.95,-182 898.95,-173.95 898.95,-173.95"/>
+<polygon fill="#8b95a3" stroke="#8b95a3" points="901.4,-173.95 898.95,-166.95 896.5,-173.95 901.4,-173.95"/>
+</g>
+<!-- LZC&#45;&gt;CORP -->
+<g id="edge17" class="edge">
+<title>LZC&#45;&gt;CORP</title>
+<path fill="none" stroke="#8b95a3" stroke-dasharray="1,5" d="M521.51,-128.73C521.51,-115.12 521.51,-99 521.51,-99 521.51,-99 91.31,-99 91.31,-99 91.31,-99 91.31,-120.21 91.31,-120.21"/>
+<polygon fill="#8b95a3" stroke="#8b95a3" points="88.86,-120.21 91.31,-127.21 93.76,-120.21 88.86,-120.21"/>
+<text xml:space="preserve" text-anchor="middle" x="296.91" y="-101.7" font-family="Helvetica,sans-Serif" font-size="9.00" fill="#697180">targets</text>
+</g>
+<!-- LZC&#45;&gt;LZO -->
+<!-- PROJ -->
+<g id="node16" class="node">
+<title>PROJ</title>
+<path fill="#e5f2ea" stroke="#85bfa0" stroke-width="1.1" d="M621.3,-65.12C621.3,-65.12 540.7,-65.12 540.7,-65.12 534.7,-65.12 528.7,-59.12 528.7,-53.12 528.7,-53.12 528.7,-41.12 528.7,-41.12 528.7,-35.12 534.7,-29.12 540.7,-29.12 540.7,-29.12 621.3,-29.12 621.3,-29.12 627.3,-29.12 633.3,-35.12 633.3,-41.12 633.3,-41.12 633.3,-53.12 633.3,-53.12 633.3,-59.12 627.3,-65.12 621.3,-65.12"/>
+<text xml:space="preserve" text-anchor="middle" x="581" y="-43.82" font-family="Helvetica,sans-Serif" font-size="11.00">🗂️ Project ×N</text>
+</g>
+<!-- LZC&#45;&gt;PROJ -->
+<g id="edge16" class="edge">
+<title>LZC&#45;&gt;PROJ</title>
+<path fill="none" stroke="#8b95a3" d="M581,-128.88C581,-128.88 581,-73.88 581,-73.88"/>
+<polygon fill="#8b95a3" stroke="#8b95a3" points="583.45,-73.88 581,-66.88 578.55,-73.88 583.45,-73.88"/>
+<text xml:space="preserve" text-anchor="middle" x="561.74" y="-104.08" font-family="Helvetica,sans-Serif" font-size="9.00" fill="#697180">applies to</text>
+</g>
+<!-- LZO&#45;&gt;ONL -->
+<g id="edge18" class="edge">
+<title>LZO&#45;&gt;ONL</title>
+<path fill="none" stroke="#8b95a3" stroke-dasharray="1,5" d="M698.47,-165.49C698.47,-168.68 698.47,-171 698.47,-171 698.47,-171 243.46,-171 243.46,-171 243.46,-171 243.46,-170.45 243.46,-170.45"/>
+<polygon fill="#8b95a3" stroke="#8b95a3" points="245.91,-174 243.46,-167 241.01,-174 245.91,-174"/>
+</g>
+<!-- LZO&#45;&gt;LZS -->
+<!-- LZS&#45;&gt;SBX -->
+<g id="edge19" class="edge">
+<title>LZS&#45;&gt;SBX</title>
+<path fill="none" stroke="#8b95a3" stroke-dasharray="1,5" d="M885.55,-165.62C885.55,-171.25 885.55,-176 885.55,-176 885.55,-176 392.35,-176 392.35,-176 392.35,-176 392.35,-174.13 392.35,-174.13"/>
+<polygon fill="#8b95a3" stroke="#8b95a3" points="394.8,-174.13 392.35,-167.13 389.9,-174.13 394.8,-174.13"/>
+</g>
+<!-- BBH -->
+<g id="node11" class="node">
+<title>BBH</title>
+<path fill="#ecedfb" stroke="#9aa2e6" stroke-width="1.1" d="M860.14,-265.36C860.14,-265.36 753.86,-265.36 753.86,-265.36 747.86,-265.36 741.86,-259.36 741.86,-253.36 741.86,-253.36 741.86,-241.36 741.86,-241.36 741.86,-235.36 747.86,-229.36 753.86,-229.36 753.86,-229.36 860.14,-229.36 860.14,-229.36 866.14,-229.36 872.14,-235.36 872.14,-241.36 872.14,-241.36 872.14,-253.36 872.14,-253.36 872.14,-259.36 866.14,-265.36 860.14,-265.36"/>
+<text xml:space="preserve" text-anchor="middle" x="807" y="-244.06" font-family="Helvetica,sans-Serif" font-size="11.00">📦 hub&#45;network BBD</text>
+</g>
+<!-- BBH&#45;&gt;HUB -->
+<g id="edge22" class="edge">
+<title>BBH&#45;&gt;HUB</title>
+<path fill="none" stroke="#8b95a3" stroke-dasharray="1,5" d="M785.26,-229.05C785.26,-224.55 785.26,-221 785.26,-221 785.26,-221 448.07,-221 448.07,-221 448.07,-221 448.07,-221.51 448.07,-221.51"/>
+<polygon fill="#8b95a3" stroke="#8b95a3" points="445.62,-217.57 448.07,-224.57 450.52,-217.57 445.62,-217.57"/>
+<text xml:space="preserve" text-anchor="middle" x="591.42" y="-212.9" font-family="Helvetica,sans-Serif" font-size="9.00" fill="#697180">provisions hub</text>
+</g>
+<!-- BBN -->
+<g id="node12" class="node">
+<title>BBN</title>
+<path fill="#ecedfb" stroke="#9aa2e6" stroke-width="1.1" d="M1041.64,-265.36C1041.64,-265.36 924.36,-265.36 924.36,-265.36 918.36,-265.36 912.36,-259.36 912.36,-253.36 912.36,-253.36 912.36,-241.36 912.36,-241.36 912.36,-235.36 918.36,-229.36 924.36,-229.36 924.36,-229.36 1041.64,-229.36 1041.64,-229.36 1047.64,-229.36 1053.64,-235.36 1053.64,-241.36 1053.64,-241.36 1053.64,-253.36 1053.64,-253.36 1053.64,-259.36 1047.64,-265.36 1041.64,-265.36"/>
+<text xml:space="preserve" text-anchor="middle" x="983" y="-244.06" font-family="Helvetica,sans-Serif" font-size="11.00">📦 spoke&#45;network BBD</text>
+</g>
+<!-- BBH&#45;&gt;BBN -->
+<!-- BBN&#45;&gt;HUB -->
+<g id="edge23" class="edge">
+<title>BBN&#45;&gt;HUB</title>
+<path fill="none" stroke="#8b95a3" stroke-dasharray="1,5" d="M966.92,-228.91C966.92,-221.64 966.92,-215 966.92,-215 966.92,-215 437.9,-215 437.9,-215 437.9,-215 437.9,-217.44 437.9,-217.44"/>
+<polygon fill="#8b95a3" stroke="#8b95a3" points="435.45,-217.44 437.9,-224.44 440.35,-217.44 435.45,-217.44"/>
+<text xml:space="preserve" text-anchor="middle" x="666.36" y="-217.7" font-family="Helvetica,sans-Serif" font-size="9.00" fill="#697180">peers spoke into hub</text>
+</g>
+<!-- BBB -->
+<g id="node13" class="node">
+<title>BBB</title>
+<path fill="#ecedfb" stroke="#9aa2e6" stroke-width="1.1" d="M1210.23,-265.36C1210.23,-265.36 1105.77,-265.36 1105.77,-265.36 1099.77,-265.36 1093.77,-259.36 1093.77,-253.36 1093.77,-253.36 1093.77,-241.36 1093.77,-241.36 1093.77,-235.36 1099.77,-229.36 1105.77,-229.36 1105.77,-229.36 1210.23,-229.36 1210.23,-229.36 1216.23,-229.36 1222.23,-235.36 1222.23,-241.36 1222.23,-241.36 1222.23,-253.36 1222.23,-253.36 1222.23,-259.36 1216.23,-265.36 1210.23,-265.36"/>
+<text xml:space="preserve" text-anchor="middle" x="1158" y="-244.06" font-family="Helvetica,sans-Serif" font-size="11.00">📦 budget&#45;alert BBD</text>
+</g>
+<!-- BBN&#45;&gt;BBB -->
+<!-- BBB&#45;&gt;SUB -->
+<g id="edge24" class="edge">
+<title>BBB&#45;&gt;SUB</title>
+<path fill="none" stroke="#8b95a3" stroke-dasharray="1,5" d="M1158,-228.97C1158,-217.15 1158,-204 1158,-204 1158,-204 133.95,-204 133.95,-204 133.95,-204 133.95,-77.12 133.95,-77.12"/>
+<polygon fill="#8b95a3" stroke="#8b95a3" points="136.4,-77.12 133.95,-70.12 131.5,-77.12 136.4,-77.12"/>
+<text xml:space="preserve" text-anchor="middle" x="568.51" y="-195.9" font-family="Helvetica,sans-Serif" font-size="9.00" fill="#697180">provision into</text>
+</g>
+<!-- BBS -->
+<g id="node14" class="node">
+<title>BBS</title>
+<path fill="#ecedfb" stroke="#9aa2e6" stroke-width="1.1" d="M1399.32,-265.36C1399.32,-265.36 1274.68,-265.36 1274.68,-265.36 1268.68,-265.36 1262.68,-259.36 1262.68,-253.36 1262.68,-253.36 1262.68,-241.36 1262.68,-241.36 1262.68,-235.36 1268.68,-229.36 1274.68,-229.36 1274.68,-229.36 1399.32,-229.36 1399.32,-229.36 1405.32,-229.36 1411.32,-235.36 1411.32,-241.36 1411.32,-241.36 1411.32,-253.36 1411.32,-253.36 1411.32,-259.36 1405.32,-265.36 1399.32,-265.36"/>
+<text xml:space="preserve" text-anchor="middle" x="1337" y="-244.06" font-family="Helvetica,sans-Serif" font-size="11.00">📦 storage&#45;account BBD</text>
+</g>
+<!-- BBB&#45;&gt;BBS -->
+<!-- BBS&#45;&gt;SUB -->
+<g id="edge25" class="edge">
+<title>BBS&#45;&gt;SUB</title>
+<path fill="none" stroke="#8b95a3" stroke-dasharray="1,5" d="M1337,-229.08C1337,-215.38 1337,-199 1337,-199 1337,-199 143.97,-199 143.97,-199 143.97,-199 143.97,-77.07 143.97,-77.07"/>
+<polygon fill="#8b95a3" stroke="#8b95a3" points="146.42,-77.07 143.97,-70.07 141.52,-77.07 146.42,-77.07"/>
+</g>
+<!-- POL -->
+<g id="node15" class="node">
+<title>POL</title>
+<path fill="#ecedfb" stroke="#9aa2e6" stroke-width="1.1" d="M1568.55,-268.48C1568.55,-268.48 1463.45,-268.48 1463.45,-268.48 1457.45,-268.48 1451.45,-262.48 1451.45,-256.48 1451.45,-256.48 1451.45,-238.24 1451.45,-238.24 1451.45,-232.24 1457.45,-226.24 1463.45,-226.24 1463.45,-226.24 1568.55,-226.24 1568.55,-226.24 1574.55,-226.24 1580.55,-232.24 1580.55,-238.24 1580.55,-238.24 1580.55,-256.48 1580.55,-256.48 1580.55,-262.48 1574.55,-268.48 1568.55,-268.48"/>
+<text xml:space="preserve" text-anchor="middle" x="1516" y="-250.66" font-family="Helvetica,sans-Serif" font-size="11.00">📜 ES policies</text>
+<text xml:space="preserve" text-anchor="middle" x="1516" y="-237.46" font-family="Helvetica,sans-Serif" font-size="11.00">foundation (optional)</text>
+</g>
+<!-- POL&#45;&gt;CORP -->
+<g id="edge26" class="edge">
+<title>POL&#45;&gt;CORP</title>
+<path fill="none" stroke="#8b95a3" stroke-dasharray="1,5" d="M1483.73,-226.06C1483.73,-217.67 1483.73,-210 1483.73,-210 1483.73,-210 75,-210 75,-210 75,-210 75,-174.24 75,-174.24"/>
+<polygon fill="#8b95a3" stroke="#8b95a3" points="77.45,-174.24 75,-167.24 72.55,-174.24 77.45,-174.24"/>
+<text xml:space="preserve" text-anchor="middle" x="738" y="-201.9" font-family="Helvetica,sans-Serif" font-size="9.00" fill="#697180">assigns policies</text>
+</g>
+<!-- POL&#45;&gt;ONL -->
+<g id="edge27" class="edge">
+<title>POL&#45;&gt;ONL</title>
+<path fill="none" stroke="#8b95a3" stroke-dasharray="1,5" d="M1516,-225.88C1516,-210.68 1516,-193 1516,-193 1516,-193 217,-193 217,-193 217,-193 217,-174.1 217,-174.1"/>
+<polygon fill="#8b95a3" stroke="#8b95a3" points="219.45,-174.1 217,-167.1 214.55,-174.1 219.45,-174.1"/>
+</g>
+<!-- POL&#45;&gt;SBX -->
+<g id="edge28" class="edge">
+<title>POL&#45;&gt;SBX</title>
+<path fill="none" stroke="#8b95a3" stroke-dasharray="1,5" d="M1548.27,-225.91C1548.27,-208.56 1548.27,-187 1548.27,-187 1548.27,-187 356.97,-187 356.97,-187 356.97,-187 356.97,-174.24 356.97,-174.24"/>
+<polygon fill="#8b95a3" stroke="#8b95a3" points="359.42,-174.24 356.97,-167.24 354.52,-174.24 359.42,-174.24"/>
+</g>
+<!-- PROJ&#45;&gt;SUB -->
+<g id="edge21" class="edge">
+<title>PROJ&#45;&gt;SUB</title>
+<path fill="none" stroke="#8b95a3" stroke-dasharray="1,5" d="M528.56,-38C528.56,-38 165.13,-38 165.13,-38"/>
+<polygon fill="#8b95a3" stroke="#8b95a3" points="165.13,-35.55 158.13,-38 165.13,-40.45 165.13,-35.55"/>
+<text xml:space="preserve" text-anchor="middle" x="309.07" y="-40.7" font-family="Helvetica,sans-Serif" font-size="9.00" fill="#697180">tenant subscription</text>
+</g>
+</g>
+</svg>

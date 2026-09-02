@@ -1,0 +1,14 @@
+{
+  "name": "allowed-locations",
+  "properties": {
+    "displayName": "Online: Allowed locations",
+    "description": "Restricts the regions Online resources can be deployed to. Public endpoints are allowed for internet-facing workloads.",
+    "policyDefinitionId": "/providers/Microsoft.Authorization/policyDefinitions/e56962a6-4747-49cd-b67b-bf8b01975c4c",
+    "enforce": true,
+    "parameters": {
+      "listOfAllowedLocations": {
+        "value": ["${default_location}"]
+      }
+    }
+  }
+}
