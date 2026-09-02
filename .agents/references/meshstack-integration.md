@@ -1,5 +1,5 @@
 ---
-description: Conventions for meshstack_integration.tf in meshstack-hub modules — file structure and variable ordering, the shared `hub` and `meshstack` variables, pinning module sources and BBD `ref_name` to `var.hub.git_ref`, the required meshcloud/meshstack provider, the BBD `terraform_version`, and the `building_block_definition` output.
+description: Conventions for meshstack_integration.tf in meshstack-hub modules — file structure and variable ordering, the shared `hub` and `meshstack` variables, pinning module sources and BBD `ref_name` to `var.hub.git_ref`, the required meshcloud/meshstack provider, the BBD `terraform_version`, the `building_block_definition` output, and the 255-character cap on input descriptions.
 ---
 
 <!-- scorecard-checks: meshstack_integration, backplane_source_hub_git_ref, ref_name_hub_git_ref -->
@@ -137,6 +137,19 @@ resource "meshstack_building_block_definition" "this" {
 ```
 
 **If a `meshstack_building_block_definition` input's `argument` field references a variable, that variable must have an explicit default** — do not rely on nested `optional()` defaults (for example via a bare `default = {}`), since some downstream consumers don't evaluate Terraform's object-attribute defaulting and would see unset fields instead. Keep the `optional()` type constraints regardless — they still document intent and protect callers who omit keys.
+
+## Input description length limit
+
+**Every `version_spec.inputs[*].description` must be at most 255 characters.** The provider rejects a
+longer one at apply with `Invalid Attribute Value Length … must be at most 255` — and `tofu
+validate`, `tofu fmt` and the scorecard all miss it, so only a real apply surfaces the error.
+(Historically an over-long description got no client-side check and the server answered with a
+`500 InternalError` on the version update instead.)
+
+The descriptions that blow past 255 are the multi-clause ones documenting each field of a `CODE`
+object input — a `tags` input that spells out `landingzone` / `building_block` / `owner_tag_key`, for
+example. Keep them terse; put the full explanation in the buildingblock variable's own `description`
+(which has no such cap) and the readme. There is no length cap on `spec.readme`.
 
 <!-- scorecard-checks: bbd_catalog_overrides -->
 ## Overridable Catalog Properties

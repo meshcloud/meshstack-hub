@@ -1,0 +1,14 @@
+{
+  "name": "allowed-locations-audit",
+  "properties": {
+    "displayName": "Sandbox: Allowed locations (audit)",
+    "description": "Audits the regions Sandbox resources are deployed to without blocking, keeping experimentation loose.",
+    "policyDefinitionId": "/providers/Microsoft.Authorization/policyDefinitions/e56962a6-4747-49cd-b67b-bf8b01975c4c",
+    "enforce": false,
+    "parameters": {
+      "listOfAllowedLocations": {
+        "value": ["${default_location}"]
+      }
+    }
+  }
+}
