@@ -186,6 +186,11 @@ module "network_integration" {
 resource "meshstack_building_block" "network_area_hub" {
   lifecycle {
     enabled = local.network_enabled
+
+    postcondition {
+      condition     = self.status.status == "SUCCEEDED"
+      error_message = "Building block ${self.metadata.uuid} is ${self.status.status}, not SUCCEEDED. See its run in meshPanel."
+    }
   }
 
   wait_for_completion = true
