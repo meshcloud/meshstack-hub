@@ -100,6 +100,11 @@ resource "meshstack_tenant" "this" {
 resource "meshstack_building_block" "network" {
   lifecycle {
     enabled = local.network_enabled
+
+    postcondition {
+      condition     = self.status.status == "SUCCEEDED"
+      error_message = "Building block ${self.metadata.uuid} is ${self.status.status}, not SUCCEEDED. See its run in meshPanel."
+    }
   }
 
   spec = {

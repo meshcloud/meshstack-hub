@@ -37,6 +37,13 @@ resource "meshstack_building_block" "git_repository" {
     }
   }
   wait_for_completion = true
+
+  lifecycle {
+    postcondition {
+      condition     = self.status.status == "SUCCEEDED"
+      error_message = "Building block ${self.metadata.uuid} is ${self.status.status}, not SUCCEEDED. See its run in meshPanel."
+    }
+  }
 }
 
 resource "meshstack_project" "this" {
@@ -125,6 +132,13 @@ resource "meshstack_building_block" "forgejo_connector" {
   }
 
   wait_for_completion = true
+
+  lifecycle {
+    postcondition {
+      condition     = self.status.status == "SUCCEEDED"
+      error_message = "Building block ${self.metadata.uuid} is ${self.status.status}, not SUCCEEDED. See its run in meshPanel."
+    }
+  }
 }
 
 # Migrate the app-team-managed child building blocks from the deprecated

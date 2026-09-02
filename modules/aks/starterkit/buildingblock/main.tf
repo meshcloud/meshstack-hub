@@ -114,6 +114,13 @@ resource "meshstack_building_block" "repo" {
       }
     }
   }
+
+  lifecycle {
+    postcondition {
+      condition     = self.status.status == "SUCCEEDED"
+      error_message = "Building block ${self.metadata.uuid} is ${self.status.status}, not SUCCEEDED. See its run in meshPanel."
+    }
+  }
 }
 
 resource "meshstack_building_block" "github_actions" {
@@ -137,6 +144,13 @@ resource "meshstack_building_block" "github_actions" {
           "AKS_NAMESPACE_NAME" = meshstack_tenant.this[each.key].spec.platform_tenant_id
         }))
       }
+    }
+  }
+
+  lifecycle {
+    postcondition {
+      condition     = self.status.status == "SUCCEEDED"
+      error_message = "Building block ${self.metadata.uuid} is ${self.status.status}, not SUCCEEDED. See its run in meshPanel."
     }
   }
 }

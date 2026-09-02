@@ -97,6 +97,13 @@ resource "meshstack_building_block" "azure_vm" {
       } : {},
     )
   }
+
+  lifecycle {
+    postcondition {
+      condition     = self.status.status == "SUCCEEDED"
+      error_message = "Building block ${self.metadata.uuid} is ${self.status.status}, not SUCCEEDED. See its run in meshPanel."
+    }
+  }
 }
 
 # Migrate the child building block from the deprecated meshstack_building_block_v2
