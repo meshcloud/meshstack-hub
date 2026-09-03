@@ -60,3 +60,22 @@ variable "multi_select" {
 variable "multi_select_json" {
   type = string
 }
+
+# A TAG input resolves to the tag's values, and to null when the tag holds no value on the object it
+# is read from — an absent key and an empty one both mean unset. Every TAG input is therefore a
+# nullable list, whichever meshObject it reads from.
+
+variable "project_tag" {
+  type    = list(string)
+  default = null
+}
+
+variable "payment_method_tag" {
+  type    = list(string)
+  default = null
+}
+
+variable "landing_zone_tag" {
+  type    = list(string)
+  default = null
+}

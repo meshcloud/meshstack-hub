@@ -347,6 +347,39 @@ external resource (the same workflow files in a fixture repository, say) therefo
 no external locking or concurrency group needed. Verify assumptions like this against the OpenTofu
 version in use rather than trusting them.
 
+### The exception: a test whose subject *is* a change
+
+Some behaviour only exists as a change to something that already exists. A `TAG` input is the
+example: meshStack resolves it from a tag on the workspace, project, payment method or landing zone,
+and re-resolves it when that tag changes or when the object it reads from is reassigned. A fresh
+building block per value proves resolution and nothing else — the follow-the-metadata behaviour needs
+one building block and a tag that moves under it. That takes shared state, so it takes one file.
+
+Neither reason above applies to such a test, and saying why is what keeps the exception narrow:
+
+- It never touches `display_name`, so the rename-without-a-run trap is not in play.
+- It never touches `building_block_definition_version_ref`, so the released-version-only upgrade path
+  is not in play either. The building block's own `spec` identity is fixed for the whole file; only
+  the objects *around* it change.
+
+Two things such a file has to get right, both learned the hard way:
+
+- **Bump an input the provider tracks in every mutating run.** A TAG input is resolved server-side,
+  so nothing in the configuration tells the provider a tag moved — it plans no change and waits for
+  nothing. Bumping a `USER_INPUT` makes it issue an update and await a run, and that run resolves the
+  current tag values. Be explicit in the file about what this does and does not prove: the value a
+  tag holds now reaches the next run; *not* that the tag edit alone triggered a run. The provider
+  surfaces no way to attribute a run to an edit.
+- **Let meshStack's own run get out of the way first.** meshStack triggers a run when a tag a
+  building block reads changes. That run competes with the one the test triggers: `awaitRun` polls
+  the block's aggregate status and stops at the first terminal one, so the wrong run's outputs can
+  land in state, and meshStack rejects an update issued while a run is in flight. A `time_sleep`
+  between the tag writes and the building block, replaced per scenario via `triggers`, is enough —
+  and it belongs in the fixture module, not in a polling script.
+
+`modules/meshstack/noop/e2e/tests/building_block_noop_tag_inputs_hub.tftest.hcl` is the worked
+example. If a test does not clear this bar, use separate files.
+
 ---
 
 ## Running tests
@@ -484,6 +517,7 @@ source setup-override-provider.sh
 - [ ] tftest asserts `status.status == "SUCCEEDED"` and key outputs (references `var.test_context.*` directly — non-null in both modes)
 - [ ] Variant flags (sync/async and similar) are **root variables of the `e2e/` module** with a default, not `test_context` fields
 - [ ] One `.tftest.hcl` file per variant, pinning the flag in a file-level `variables` block — never several `run` blocks sharing one file's state
+- [ ] …unless the subject of the test *is* a change to a live building block's surroundings — then one file with shared state, and see [The exception](#the-exception-a-test-whose-subject-is-a-change) for the two things it must get right
 - [ ] Writes into a long-lived shared fixture go to a per-run ephemeral slice named from `name_suffix`, owned by the `e2e/` module and included in the building block's `depends_on`
 - [ ] State the live apply cannot reach is covered by a mocked `<cloud>_<service>_unit.tftest.hcl` in `e2e/tests/`, targeting `module { source = "../buildingblock" }` — and only where the two bars are cleared (worth testing, unreachable by the apply); anything the apply *can* reach is an assertion on the apply instead
 - [ ] Every mocked run is mutation-checked: break the module, watch the run fail

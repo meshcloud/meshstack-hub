@@ -113,6 +113,9 @@ output "debug_input_variables_json" {
     multi_select_json     = var.multi_select_json
     static                = var.static
     static_code           = var.static_code
+    project_tag           = var.project_tag
+    payment_method_tag    = var.payment_method_tag
+    landing_zone_tag      = var.landing_zone_tag
     user_permissions      = var.user_permissions
     user_permissions_json = var.user_permissions_json
   })
