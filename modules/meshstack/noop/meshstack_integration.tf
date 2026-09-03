@@ -123,8 +123,7 @@ resource "meshstack_building_block_definition" "this" {
         assignment_type = "USER_INPUT"
         display_name    = "Optional Text"
         type            = "STRING"
-        # TODO: we need optional support in TF provider
-        # https://github.com/meshcloud/terraform-provider-meshstack/pull/290
+        is_optional     = true
       }
 
       "sensitive-file.yaml" = {
@@ -209,6 +208,11 @@ resource "meshstack_building_block_definition" "this" {
       text = {
         assignment_type = "NONE"
         display_name    = "Text"
+        type            = "STRING"
+      }
+      optional_text = {
+        assignment_type = "NONE"
+        display_name    = "Optional Text"
         type            = "STRING"
       }
       static_code = {

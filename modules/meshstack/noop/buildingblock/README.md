@@ -19,56 +19,23 @@ Use it to:
 
 ## Input Types
 
-| Input | Type | Assignment | Description |
-|-------|------|-----------|-------------|
-| `user_permissions` | `CODE` | `USER_PERMISSIONS` | Project team members and their roles as a structured list |
-| `user_permissions_json` | `CODE` | `USER_PERMISSIONS` | Same as above, as a raw JSON string |
-| `sensitive_yaml` | `CODE` | `STATIC` (sensitive) | Encrypted YAML/JSON value, decrypted at runtime |
-| `static` | `STRING` | `STATIC` | A platform-engineer-defined string constant |
-| `static_code` | `CODE` | `STATIC` | A platform-engineer-defined map |
-| `flag` | `BOOLEAN` | `USER_INPUT` | Boolean flag chosen by the user |
-| `num` | `INTEGER` | `USER_INPUT` | Integer chosen by the user |
-| `text` | `STRING` | `USER_INPUT` | Free-text string from the user |
-| `optional_text` | `STRING` | `USER_INPUT` | Optional string — omitted from the building block's inputs so the Terraform variable's default takes effect, see below |
-| `sensitive_text` | `STRING` (sensitive) | `USER_INPUT` | Sensitive string, masked in UI and logs |
-| `single_select` | `SINGLE_SELECT` | `USER_INPUT` | One value from a predefined list |
-| `multi_select` | `MULTI_SELECT` | `USER_INPUT` | One or more values from a predefined list |
-| `multi_select_json` | `MULTI_SELECT` | `USER_INPUT` | Same as above, as a raw JSON string |
-| `some-file.yaml` | `FILE` | `STATIC` | Written to working directory; read via `file("some-file.yaml")` |
-| `sensitive-file.yaml` | `FILE` | `STATIC` (sensitive) | Like above, encrypted at rest |
-
-### How Optional Inputs Work
-
-A `USER_INPUT` is made optional by giving its Terraform variable a plain `default` and then simply
-**omitting** that key from `meshstack_building_block.spec.inputs` — meshStack sends no value for an
-omitted input, so the Terraform variable's own default takes effect.
-
-Note this is separate from `default_value` on the BBD input itself, which is meant to pre-fill the
-value shown in the meshPanel UI. The `meshcloud/meshstack` Terraform provider does not yet apply
-`default_value` for `USER_INPUT` assignments — see
-[terraform-provider-meshstack#290](https://github.com/meshcloud/terraform-provider-meshstack/pull/290).
-So today a `USER_INPUT` can already be optional to *set* (this section), but not yet pre-filled in
-the *UI* (blocked on #290).
-
-`optional_text` demonstrates the pattern. `e2e/main.tf` deliberately omits the `optional_text` key
-from `inputs` to exercise the fallback to the Terraform variable's default:
-
-```hcl
-# buildingblock/variables.tf
-variable "optional_text" {
-  type    = string
-  default = "tf-default-value"
-}
-```
-
-```hcl
-# meshstack_integration.tf — default_value not yet honored by the provider, see #290 above
-optional_text = {
-  assignment_type = "USER_INPUT"
-  display_name    = "Optional Text"
-  type            = "STRING"
-}
-```
+| Input                   | Type                 | Assignment           | Description                                                                                                        |
+|-------------------------|----------------------|----------------------|--------------------------------------------------------------------------------------------------------------------|
+| `user_permissions`      | `CODE`               | `USER_PERMISSIONS`   | Project team members and their roles as a structured list                                                          |
+| `user_permissions_json` | `CODE`               | `USER_PERMISSIONS`   | Same as above, as a raw JSON string                                                                                |
+| `sensitive_yaml`        | `CODE`               | `STATIC` (sensitive) | Encrypted YAML/JSON value, decrypted at runtime                                                                    |
+| `static`                | `STRING`             | `STATIC`             | A platform-engineer-defined string constant                                                                        |
+| `static_code`           | `CODE`               | `STATIC`             | A platform-engineer-defined map                                                                                    |
+| `flag`                  | `BOOLEAN`            | `USER_INPUT`         | Boolean flag chosen by the user                                                                                    |
+| `num`                   | `INTEGER`            | `USER_INPUT`         | Integer chosen by the user                                                                                         |
+| `text`                  | `STRING`             | `USER_INPUT`         | Free-text string from the user                                                                                     |
+| `optional_text`         | `STRING`             | `USER_INPUT`         | Optional string — can be omitted from the building block's inputs so the Terraform variable's default takes effect |
+| `sensitive_text`        | `STRING` (sensitive) | `USER_INPUT`         | Sensitive string, masked in UI and logs                                                                            |
+| `single_select`         | `SINGLE_SELECT`      | `USER_INPUT`         | One value from a predefined list                                                                                   |
+| `multi_select`          | `MULTI_SELECT`       | `USER_INPUT`         | One or more values from a predefined list                                                                          |
+| `multi_select_json`     | `MULTI_SELECT`       | `USER_INPUT`         | Same as above, as a raw JSON string                                                                                |
+| `some-file.yaml`        | `FILE`               | `STATIC`             | Written to working directory; read via `file("some-file.yaml")`                                                    |
+| `sensitive-file.yaml`   | `FILE`               | `STATIC` (sensitive) | Like above, encrypted at rest                                                                                      |
 
 ### How FILE Inputs Work
 
