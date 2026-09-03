@@ -7,6 +7,22 @@ variable "runner_ref" {
   description = "Optional reference to a meshStack building block runner. When set, building block runs are dispatched to this custom runner. Obtain the value from the backplane module's `runner_ref` output."
 }
 
+variable "tenant_tag_inputs" {
+  type = object({
+    project_tag_key        = string
+    payment_method_tag_key = string
+    landing_zone_tag_key   = string
+    platform_type_name     = string
+  })
+  default     = null
+  description = <<-EOT
+  When set, a second, tenant-level definition is published whose inputs read these three meshStack
+  tags. Tag keys are named rather than discovered, because a definition stores only the key and
+  meshStack resolves the value per building block. `platform_type_name` names the meshPlatformType
+  the definition supports, which meshStack requires of every tenant-level definition.
+  EOT
+}
+
 variable "meshstack" {
   type = object({
     owning_workspace_identifier = string
@@ -36,6 +52,15 @@ output "building_block_definition" {
   value = {
     uuid        = meshstack_building_block_definition.this.metadata.uuid
     version_ref = var.hub.bbd_draft ? meshstack_building_block_definition.this.version_latest : meshstack_building_block_definition.this.version_latest_release
+    git_ref     = var.hub.git_ref
+  }
+}
+
+output "tenant_building_block_definition" {
+  description = "Tenant-level BBD reading meshStack tags. Null unless `tenant_tag_inputs` is set."
+  value = var.tenant_tag_inputs == null ? null : {
+    uuid        = one(meshstack_building_block_definition.tenant_tag_inputs).metadata.uuid
+    version_ref = var.hub.bbd_draft ? one(meshstack_building_block_definition.tenant_tag_inputs).version_latest : one(meshstack_building_block_definition.tenant_tag_inputs).version_latest_release
     git_ref     = var.hub.git_ref
   }
 }
@@ -252,13 +277,105 @@ resource "meshstack_building_block_definition" "this" {
   }
 }
 
+# Only a tenant-level building block has a project, a payment method and a landing zone to read tags
+# from — a workspace-level one can reach workspace tags and nothing else. So the TAG inputs need a
+# definition of their own. It runs the same building block; the three inputs are the only difference.
+resource "meshstack_building_block_definition" "tenant_tag_inputs" {
+  count = var.tenant_tag_inputs == null ? 0 : 1
+
+  metadata = {
+    owned_by_workspace = var.meshstack.owning_workspace_identifier
+    tags               = var.meshstack.tags
+  }
+
+  spec = {
+    display_name        = "meshStack NoOp Tenant Building Block"
+    description         = "Tenant-level reference building block demonstrating inputs resolved from meshStack tags."
+    target_type         = "TENANT_LEVEL"
+    supported_platforms = [{ name = var.tenant_tag_inputs.platform_type_name }]
+    readme = chomp(<<-EOT
+      The **meshStack NoOp Tenant Building Block** shows how a building block reads metadata meshStack
+      already governs. Three of its inputs are sourced from tags — on your project, on the payment
+      method funding it, and on your tenant's landing zone — so nobody has to type a cost center or an
+      environment classification into a form twice.
+
+      Everything else it does matches the workspace-level NoOp building block: it provisions no real
+      infrastructure and reports every input it received back as an output.
+
+      ## 🎯 When to use it
+
+      Use this building block when you want to:
+      - See which tags a tenant-level building block can read, and what their values look like.
+      - Check that your tag schema reaches your building blocks before you depend on it.
+      - Confirm that editing a tag makes meshStack re-run the building blocks that read it.
+
+      ## 💡 Usage examples
+
+      **Example 1: Checking a cost center reaches your tooling**
+      Set the cost center tag on your project, deploy this building block, and read the resolved value
+      from its outputs — no need to instrument a real building block first.
+
+      **Example 2: Watching a tag change take effect**
+      Change the tag value and watch meshStack start a new run on its own. The outputs then carry the
+      new value, which is what a real building block would act on.
+
+      ## 📊 Shared Responsibility
+
+      | Responsibility | Platform Team | Application Team |
+      |---|:---:|:---:|
+      | Define the tag schema and which tags this building block reads | ✅ | ❌ |
+      | Set the tag values on the workspace, project and payment method | ❌ | ✅ |
+      | Deploy and test the building block | ❌ | ✅ |
+      EOT
+    )
+  }
+
+  version_spec = {
+    draft         = var.hub.bbd_draft
+    deletion_mode = "DELETE"
+    runner_ref    = var.runner_ref
+    implementation = {
+      terraform = {
+        ref_name          = var.hub.git_ref
+        repository_path   = "modules/meshstack/noop/buildingblock"
+        repository_url    = "https://github.com/meshcloud/meshstack-hub.git"
+        terraform_version = "1.12.5"
+        pre_run_script    = file("${path.module}/buildingblock/prerun.sh")
+      }
+    }
+    # A TAG input is always CODE and never sensitive — a tag value is a list of strings, and tags are
+    # visible metadata. The provider rejects both mistakes at plan time.
+    inputs = merge(local.noop_inputs, {
+      project_tag = {
+        assignment_type = "TAG"
+        display_name    = "Project Tag"
+        type            = "CODE"
+        argument        = jsonencode("PROJECT.${var.tenant_tag_inputs.project_tag_key}")
+      }
+      payment_method_tag = {
+        assignment_type = "TAG"
+        display_name    = "Payment Method Tag"
+        type            = "CODE"
+        argument        = jsonencode("PAYMENT_METHOD.${var.tenant_tag_inputs.payment_method_tag_key}")
+      }
+      landing_zone_tag = {
+        assignment_type = "TAG"
+        display_name    = "Landing Zone Tag"
+        type            = "CODE"
+        argument        = jsonencode("LANDING_ZONE.${var.tenant_tag_inputs.landing_zone_tag_key}")
+      }
+    })
+    outputs = local.noop_outputs
+  }
+}
+
 terraform {
   required_version = ">= 1.12.0"
 
   required_providers {
     meshstack = {
       source  = "meshcloud/meshstack"
-      version = ">= 0.21.0"
+      version = ">= 0.25.2"
     }
   }
 }
