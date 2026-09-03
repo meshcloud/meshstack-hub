@@ -1,5 +1,6 @@
 {
     "flag": true,
+    "landing_zone_tag": null,
     "multi_select": [
         "multi1",
         "multi2"
@@ -7,6 +8,8 @@
     "multi_select_json": "[\"multi2\",\"multi1\"]",
     "num": 1,
     "optional_text":"tf-default-value",
+    "payment_method_tag": null,
+    "project_tag": null,
     "sensitive_text":"Hidden value",
     "sensitive_yaml":"some: yaml\nother: value\n",
     "single_select":"single1",

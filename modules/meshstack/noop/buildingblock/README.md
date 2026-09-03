@@ -36,6 +36,13 @@ Use it to:
 | `multi_select_json`     | `MULTI_SELECT`       | `USER_INPUT`         | Same as above, as a raw JSON string                                                                                |
 | `some-file.yaml`        | `FILE`               | `STATIC`             | Written to working directory; read via `file("some-file.yaml")`                                                    |
 | `sensitive-file.yaml`   | `FILE`               | `STATIC` (sensitive) | Like above, encrypted at rest                                                                                      |
+| `project_tag`           | `CODE`               | `TAG`                | Values of a meshProject tag, resolved by meshStack — `null` when the tag holds no value                            |
+| `payment_method_tag`    | `CODE`               | `TAG`                | Values of a meshPaymentMethod tag on the project's payment method                                                  |
+| `landing_zone_tag`      | `CODE`               | `TAG`                | Values of a meshLandingZone tag on the tenant's landing zone                                                       |
+
+The three `TAG` inputs are declared by the **tenant-level** definition only. A `TAG` input can
+read a workspace, project, payment method or landing zone tag, and a workspace-level definition
+has no project — so only a tenant-level one can reach the latter three.
 
 ### How FILE Inputs Work
 
@@ -69,10 +76,13 @@ No modules.
 | Name | Description | Type | Default | Required |
 |------|-------------|------|---------|:--------:|
 | <a name="input_flag"></a> [flag](#input\_flag) | n/a | `bool` | n/a | yes |
+| <a name="input_landing_zone_tag"></a> [landing\_zone\_tag](#input\_landing\_zone\_tag) | n/a | `list(string)` | `null` | no |
 | <a name="input_multi_select"></a> [multi\_select](#input\_multi\_select) | n/a | `list(string)` | n/a | yes |
 | <a name="input_multi_select_json"></a> [multi\_select\_json](#input\_multi\_select\_json) | n/a | `string` | n/a | yes |
 | <a name="input_num"></a> [num](#input\_num) | n/a | `number` | n/a | yes |
 | <a name="input_optional_text"></a> [optional\_text](#input\_optional\_text) | n/a | `string` | `"tf-default-value"` | no |
+| <a name="input_payment_method_tag"></a> [payment\_method\_tag](#input\_payment\_method\_tag) | n/a | `list(string)` | `null` | no |
+| <a name="input_project_tag"></a> [project\_tag](#input\_project\_tag) | n/a | `list(string)` | `null` | no |
 | <a name="input_sensitive_text"></a> [sensitive\_text](#input\_sensitive\_text) | n/a | `string` | n/a | yes |
 | <a name="input_sensitive_yaml"></a> [sensitive\_yaml](#input\_sensitive\_yaml) | n/a | `any` | n/a | yes |
 | <a name="input_single_select"></a> [single\_select](#input\_single\_select) | n/a | `string` | n/a | yes |
