@@ -20,6 +20,13 @@ run "building_block_noop_hub" {
   }
 
   assert {
+    # optional_text is intentionally left out of the building block's inputs (see e2e/main.tf), so
+    # this asserts the Terraform variable's own default ("tf-default-value") flows through as the output.
+    condition     = jsondecode(meshstack_building_block.this.status.outputs["optional_text"].value) == "tf-default-value"
+    error_message = "noop hub building block expected output optional_text to fall back to the Terraform variable default 'tf-default-value', got ${jsondecode(meshstack_building_block.this.status.outputs["optional_text"].value)}"
+  }
+
+  assert {
     condition     = jsondecode(meshstack_building_block.this.status.outputs["resource_url"].value) == "https://hub.meshcloud.io/modules/meshstack/noop"
     error_message = "noop hub building block expected output resource_url to be 'https://hub.meshcloud.io/modules/meshstack/noop', got ${jsondecode(meshstack_building_block.this.status.outputs["resource_url"].value)}"
   }
