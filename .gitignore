@@ -34,3 +34,8 @@ website/public/assets/*.json
 
 # Local terragrunt integration test files — not for committing
 terragrunt.hcl
+
+# Local dev scaffolding for reference architectures (provider blocks with secrets, local tfvars, module overrides) — not for committing
+**/zz_local_dev*
+**/zz_local_dev_override.tf
+**/provider_tmp.tf

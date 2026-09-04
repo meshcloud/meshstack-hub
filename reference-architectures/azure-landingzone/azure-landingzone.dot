@@ -1,0 +1,80 @@
+/*
+ * Azure Landing Zone reference architecture.
+ * Conventions: .agents/references/diagrams.md — render with: task diagrams
+ */
+digraph azure_landingzone {
+  rankdir=TB
+  splines=ortho
+  forcelabels=true
+  bgcolor="white"
+  nodesep=0.55
+  ranksep=0.85
+
+  node [shape=box style="rounded,filled" fontname="Helvetica" fontsize=11
+        fillcolor="#ffffff" color="#a2abb8" penwidth=1.1 margin="0.20,0.11"]
+  edge [fontname="Helvetica" fontsize=9 fontcolor="#697180" color="#8b95a3" arrowsize=0.7]
+
+  subgraph cluster_azure {
+    label="  Azure — Enterprise-Scale hierarchy (existing or provisioned)"
+    labeljust=l
+    fontname="Helvetica" fontsize=12 fontcolor="#697180"
+    style="rounded" color="#d5dae0"
+    margin=18
+
+    MG    [label="🏛️ Landing Zones\nmanagement group" fillcolor="#ffffff" color="#a2abb8"]
+    CORP  [label="🗂️ Corp MG" fillcolor="#eef2f6" color="#93a7bb"]
+    ONL   [label="🗂️ Online MG" fillcolor="#eef2f6" color="#93a7bb"]
+    SBX   [label="🗂️ Sandbox MG" fillcolor="#eef2f6" color="#93a7bb"]
+    HUB   [label="🌐 Hub VNet\nprovisioned (foundation)" fillcolor="#eef2f6" color="#93a7bb"]
+    SUB   [label="🗂️ Subscription ×N\nper project" fillcolor="#e5f2ea" color="#85bfa0"]
+
+    { rank=same; CORP -> ONL -> SBX [style=invis] }
+
+    MG   -> CORP
+    MG   -> ONL
+    MG   -> SBX
+    CORP -> SUB [xlabel="contains"]
+    SUB  -> HUB [xlabel="spoke peers into hub" style=dashed constraint=false]
+  }
+
+  subgraph cluster_mesh {
+    label="  meshStack"
+    labeljust=l
+    fontname="Helvetica" fontsize=12 fontcolor="#697180"
+    style="rounded" color="#d5dae0"
+    margin=18
+
+    PLAT [label="🛰️ Azure Subscription platform" fillcolor="#ecedfb" color="#9aa2e6"]
+    LZC  [label="🛬 Corp landing zone" fillcolor="#ecedfb" color="#9aa2e6"]
+    LZO  [label="🛬 Online landing zone" fillcolor="#ecedfb" color="#9aa2e6"]
+    LZS  [label="🛬 Sandbox landing zone" fillcolor="#ecedfb" color="#9aa2e6"]
+    BBH  [label="📦 hub-network BBD" fillcolor="#ecedfb" color="#9aa2e6"]
+    BBN  [label="📦 spoke-network BBD" fillcolor="#ecedfb" color="#9aa2e6"]
+    BBB  [label="📦 budget-alert BBD" fillcolor="#ecedfb" color="#9aa2e6"]
+    BBS  [label="📦 storage-account BBD" fillcolor="#ecedfb" color="#9aa2e6"]
+    POL  [label="📜 ES policies\nfoundation (optional)" fillcolor="#ecedfb" color="#9aa2e6"]
+    PROJ [label="🗂️ Project ×N" fillcolor="#e5f2ea" color="#85bfa0"]
+
+    { rank=same; LZC -> LZO -> LZS [style=invis] }
+    { rank=same; BBH -> BBN -> BBB -> BBS [style=invis] }
+
+    PLAT -> LZC
+    PLAT -> LZO
+    PLAT -> LZS
+    LZC  -> PROJ [xlabel="applies to"]
+  }
+
+  # Cross-boundary mapping: each meshStack construct onto its Azure counterpart.
+  LZC  -> CORP [xlabel="targets" style=dotted constraint=false]
+  LZO  -> ONL  [style=dotted constraint=false]
+  LZS  -> SBX  [style=dotted constraint=false]
+  PLAT -> SUB  [xlabel="replicates subscriptions" style=dotted constraint=false]
+  PROJ -> SUB  [xlabel="tenant subscription" style=dotted constraint=false]
+  BBH  -> HUB  [xlabel="provisions hub" style=dotted constraint=false]
+  BBN  -> HUB  [xlabel="peers spoke into hub" style=dotted constraint=false]
+  BBB  -> SUB  [xlabel="provision into" style=dotted constraint=false]
+  BBS  -> SUB  [style=dotted constraint=false]
+  POL  -> CORP [xlabel="assigns policies" style=dotted constraint=false]
+  POL  -> ONL  [style=dotted constraint=false]
+  POL  -> SBX  [style=dotted constraint=false]
+}

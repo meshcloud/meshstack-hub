@@ -1,3 +1,8 @@
+variable "azure_tenant_id" {
+  type        = string
+  description = "Azure Entra tenant ID used for the building block's ARM authentication (ARM_TENANT_ID)."
+}
+
 variable "azure_hub_subscription_id" {
   type        = string
   description = "PROVIDER TARGET: hub subscription the azurerm provider reads the hub vnet from and creates the hub-side peering in. Bare GUID (e.g. '92eae5db-...'), NOT a '/subscriptions/...' path. Same sub as azure_hub_scope in a simple setup, but different format/purpose (that one is the RBAC scope)."

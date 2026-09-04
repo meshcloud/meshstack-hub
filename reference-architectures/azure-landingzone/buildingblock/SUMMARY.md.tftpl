@@ -1,0 +1,56 @@
+# Azure Landing Zone: **${platform_identifier}**
+
+%{ if playground_mode ~}
+> **Playground mode.** The platform identifier carries a random suffix so this deployment does not
+> occupy a name for good, and nothing here is protected against deletion. Do not publish this
+> platform or the building block definitions it registered to other workspaces. Redeploy with
+> `playground_mode` set to false for a platform that is actually used.
+
+%{ endif ~}
+## Platform
+
+The **Azure Subscription** platform `${platform_identifier}` is registered in meshStack. Its
+replicator and metering identities are scoped to the `${management_group}` management group.
+
+## Landing Zones
+
+| Archetype | Landing Zone | Management Group |
+|-----------|--------------|------------------|
+| Corp | `${landingzone_names["corp"]}` | `${corp_management_group}` |
+| Online | `${landingzone_names["online"]}` | `${online_mgmt_group}` |
+| Sandbox | `${landingzone_names["sandbox"]}` | `${sandbox_mgmt_group}` |
+
+Application teams request Azure subscriptions through one of these landing zones; each subscription
+is placed in the archetype's management group.
+
+## Building Blocks
+
+The following building blocks are registered and available to order. Each has its own backplane
+identity with a deploy role.
+
+- **Azure Hub Network** — the central hub vnet spoke networks peer into.
+- **Azure Spoke Network** — a spoke vnet peered into the hub vnet `${hub_vnet}`
+  (resource group `${hub_resource_group}`). Best paired with the **Corp** landing zone.
+- **Azure Budget Alert** — consumption budget alerts.
+- **Azure Storage Account** — self-service storage accounts.
+
+Backplane identities for the budget-alert and storage-account building blocks live in subscription
+`${platform_subscription}`; the spoke-network backplane identity lives in `${backplane_subscription}`.
+
+## Foundation
+
+%{ if hub_provisioned ~}
+- **Hub network provisioned** — a hub vnet `${hub_vnet}` (resource group `${hub_resource_group}`) was
+  ordered in the connectivity subscription. Spoke networks peer into it.
+%{ else ~}
+- **Hub network not provisioned** — spoke networks peer into the existing hub configured via the
+  `azure_hub_*` inputs. Set `foundation.hub` to have this architecture provision a hub.
+%{ endif ~}
+%{ if policies_enabled ~}
+- **Enterprise-Scale policies assigned** to the Corp, Online and Sandbox management groups.
+%{ else ~}
+- **Policies not assigned** — set `foundation.policies = true` to assign curated ES policies.
+%{ endif ~}
+%{ if length(foundation_rg_names) > 0 ~}
+- **Platform resource groups created:** ${join(", ", formatlist("`%s`", foundation_rg_names))}.
+%{ endif ~}
