@@ -41,15 +41,18 @@ variable "azure_subscription_owner_object_ids" {
 
 variable "landing_zones" {
   type = map(object({
-    management_group_id = string
-    display_name        = string
-    description         = optional(string, "")
+    management_group_id                       = string
+    display_name                              = string
+    description                               = optional(string, "")
+    mandatory_building_block_definition_uuids = optional(list(string), [])
   }))
   nullable    = false
   description = <<-EOT
   Landing zones to create on the Azure platform, keyed by archetype (e.g. `corp`, `online`, `sandbox`).
   Each entry points a meshStack landing zone at an existing Azure management group via `management_group_id`.
   Landing zones inherit the platform-level role mappings. The landing zone name is `<platform_name>-<key>`.
+  `mandatory_building_block_definition_uuids`: building block definitions every tenant in this landing
+  zone must have — meshStack requires ordering them (e.g. a spoke network on Corp). Defaults to none.
   EOT
 }
 
@@ -327,6 +330,11 @@ resource "meshstack_landingzone" "this" {
     description                   = each.value.description
     automate_deletion_approval    = true
     automate_deletion_replication = true
+
+    # Building blocks every tenant in this landing zone must order (e.g. a spoke network on Corp).
+    mandatory_building_block_refs = [
+      for uuid in each.value.mandatory_building_block_definition_uuids : { uuid = uuid }
+    ]
 
     platform_ref = {
       uuid = meshstack_platform.azure.metadata.uuid

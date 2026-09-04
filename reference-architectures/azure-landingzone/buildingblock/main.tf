@@ -126,17 +126,30 @@ module "azure_platform" {
     corp = {
       management_group_id = local.corp_management_group
       display_name        = "Azure Corp"
-      description         = "Corp-connected landing zone: subscriptions are placed in the Corp management group for internal, hub-connected workloads. Order the Azure Spoke Network building block inside a project for routed connectivity to the hub."
+      description         = "Corp-connected landing zone: subscriptions are placed in the Corp management group for internal, hub-connected workloads. The Azure Spoke Network building block is mandatory here, giving every tenant routed connectivity to the hub."
+      # Corp tenants must have a spoke network (hub connectivity) plus a budget alert.
+      mandatory_building_block_definition_uuids = [
+        module.spoke_network.building_block_definition.uuid,
+        module.budget_alert.building_block_definition.uuid,
+      ]
     }
     online = {
       management_group_id = local.online_management_group
       display_name        = "Azure Online"
       description         = "Internet-facing landing zone: subscriptions are placed in the Online management group for public-facing workloads without a mandatory hub connection."
+      # Online tenants must have a budget alert.
+      mandatory_building_block_definition_uuids = [
+        module.budget_alert.building_block_definition.uuid,
+      ]
     }
     sandbox = {
       management_group_id = local.sandbox_management_group
       display_name        = "Azure Sandbox"
       description         = "Experimentation landing zone: subscriptions are placed in the Sandbox management group with relaxed guardrails for trying things out."
+      # Sandbox tenants must have a budget alert.
+      mandatory_building_block_definition_uuids = [
+        module.budget_alert.building_block_definition.uuid,
+      ]
     }
   }
 
