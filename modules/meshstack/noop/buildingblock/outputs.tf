@@ -27,6 +27,10 @@ output "static_code" {
   value = var.static_code
 }
 
+output "tag_value" {
+  value = var.tag_value
+}
+
 output "flag" {
   value = var.flag
 }
@@ -113,6 +117,7 @@ output "debug_input_variables_json" {
     multi_select_json     = var.multi_select_json
     static                = var.static
     static_code           = var.static_code
+    tag_value             = var.tag_value
     user_permissions      = var.user_permissions
     user_permissions_json = var.user_permissions_json
   })
