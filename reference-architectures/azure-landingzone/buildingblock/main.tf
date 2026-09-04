@@ -31,14 +31,15 @@ locals {
     sandbox = local.sandbox_management_group
   }
 
-  # Spoke networks peer into the hub this architecture provisions (when foundation.hub is set — it
-  # lives in the connectivity subscription/scope), otherwise into an existing hub supplied via the
-  # azure_hub_* variables.
+  # Spoke networks peer into the hub in the connectivity subscription/scope (the Connectivity MG is
+  # always created). The hub vnet/RG names come from foundation.hub when a hub is provisioned, else
+  # the hub-network defaults — the platform team must provision the hub (foundation.hub) before app
+  # teams order spokes.
   spoke_hub = {
-    subscription_id     = local.hub_enabled ? var.azure_connectivity_subscription_id : var.azure_hub_subscription_id
-    scope               = local.hub_enabled ? local.connectivity_scope : var.azure_hub_scope
-    resource_group_name = local.hub_enabled ? var.foundation.hub.hub_resource_group_name : var.azure_hub_resource_group_name
-    vnet_name           = local.hub_enabled ? var.foundation.hub.hub_vnet_name : var.azure_hub_vnet_name
+    subscription_id     = var.azure_connectivity_subscription_id
+    scope               = local.connectivity_scope
+    resource_group_name = try(var.foundation.hub.hub_resource_group_name, "hub-network")
+    vnet_name           = try(var.foundation.hub.hub_vnet_name, "hub-vnet")
   }
 }
 

@@ -112,44 +112,6 @@ variable "azure_connectivity_subscription_id" {
   }
 }
 
-# The azure_hub_* variables describe an EXISTING hub for spoke networks to peer into. Leave them
-# null when you let the architecture provision the hub via var.foundation.hub — the spoke wiring then
-# uses the provisioned hub's coordinates (in the connectivity subscription/scope) instead.
-
-variable "azure_hub_subscription_id" {
-  type        = string
-  default     = null
-  description = "Bare GUID of the subscription hosting an existing central hub vnet that spoke networks peer into. Leave null when foundation.hub creates the hub."
-
-  validation {
-    condition     = var.azure_hub_subscription_id == null || can(regex("^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$", var.azure_hub_subscription_id))
-    error_message = "azure_hub_subscription_id must be a bare subscription GUID, not a '/subscriptions/<guid>' path."
-  }
-}
-
-variable "azure_hub_scope" {
-  type        = string
-  default     = null
-  description = "Full resource path where the spoke-network backplane's hub-peering role is granted: a management group or subscription path containing an existing hub vnet. Leave null when foundation.hub creates the hub."
-
-  validation {
-    condition     = var.azure_hub_scope == null || can(regex("^/subscriptions/[0-9a-fA-F-]{36}$|^/providers/Microsoft\\.Management/managementGroups/.+$", var.azure_hub_scope))
-    error_message = "azure_hub_scope must be a full resource path: '/subscriptions/<guid>' or '/providers/Microsoft.Management/managementGroups/<id>'."
-  }
-}
-
-variable "azure_hub_resource_group_name" {
-  type        = string
-  default     = null
-  description = "Name of the resource group that contains an existing hub vnet spoke networks peer into. Leave null when foundation.hub creates the hub."
-}
-
-variable "azure_hub_vnet_name" {
-  type        = string
-  default     = null
-  description = "Name of an existing hub vnet spoke networks peer into. Leave null when foundation.hub creates the hub."
-}
-
 variable "azure_management_groups" {
   type = object({
     parent_management_group_id = string

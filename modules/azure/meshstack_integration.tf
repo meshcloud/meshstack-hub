@@ -37,22 +37,12 @@ variable "landing_zones" {
     management_group_id = string
     display_name        = string
     description         = optional(string, "")
-    azure_role_mappings = optional(list(object({
-      azure_role = object({
-        alias = string
-        id    = string
-      })
-      project_role_ref = object({
-        name = string
-      })
-    })), [])
   }))
   nullable    = false
   description = <<-EOT
   Landing zones to create on the Azure platform, keyed by archetype (e.g. `corp`, `online`, `sandbox`).
   Each entry points a meshStack landing zone at an existing Azure management group via `management_group_id`.
-  `azure_role_mappings` overrides the platform-level role mappings for that landing zone; leave empty to inherit them.
-  The landing zone name is `<platform_name>-<key>`.
+  Landing zones inherit the platform-level role mappings. The landing zone name is `<platform_name>-<key>`.
   EOT
 }
 
@@ -339,7 +329,8 @@ resource "meshstack_landingzone" "this" {
       azure = {
         azure_management_group_id = each.value.management_group_id
 
-        azure_role_mappings = each.value.azure_role_mappings
+        # Landing zones inherit the platform-level role mappings.
+        azure_role_mappings = []
       }
     }
   }

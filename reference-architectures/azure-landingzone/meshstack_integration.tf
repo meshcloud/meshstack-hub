@@ -356,43 +356,6 @@ resource "meshstack_building_block_definition" "this" {
         validation_regex_error_message = "Connectivity subscription ID must be a bare subscription GUID."
       }
 
-      # ── Spoke network hub — existing hub coordinates ──
-      # Only needed when spokes peer into a pre-existing hub. Leave unset when `foundation.hub`
-      # provisions the hub (spokes then use the connectivity subscription/scope above).
-
-      azure_hub_subscription_id = {
-        display_name                   = "Hub Subscription ID"
-        description                    = "Bare GUID of the subscription holding an **existing** hub vnet that spokes peer into. Leave unset when `foundation.hub` provisions the hub."
-        type                           = "STRING"
-        assignment_type                = "USER_INPUT"
-        value_validation_regex         = "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$"
-        validation_regex_error_message = "Hub subscription ID must be a bare subscription GUID."
-        is_optional                    = true
-      }
-
-      azure_hub_scope = {
-        display_name    = "Hub Scope"
-        description     = "Full path (MG or subscription) of an **existing** hub — the spoke peering RBAC scope. Leave unset when `foundation.hub` provisions the hub."
-        type            = "STRING"
-        assignment_type = "USER_INPUT"
-        is_optional     = true
-      }
-
-      azure_hub_resource_group_name = {
-        display_name    = "Hub Resource Group"
-        description     = "Resource group holding an **existing** hub vnet that spokes peer into. Leave unset when `foundation.hub` provisions the hub (it names the RG itself)."
-        type            = "STRING"
-        assignment_type = "USER_INPUT"
-        is_optional     = true
-      }
-
-      azure_hub_vnet_name = {
-        display_name    = "Hub VNet"
-        description     = "Name of an **existing** hub vnet that spokes peer into. Leave unset when `foundation.hub` provisions the hub."
-        type            = "STRING"
-        assignment_type = "USER_INPUT"
-        is_optional     = true
-      }
     }
 
     outputs = {
