@@ -7,6 +7,18 @@ variable "runner_ref" {
   description = "Optional reference to a meshStack building block runner. When set, building block runs are dispatched to this custom runner. Obtain the value from the backplane module's `runner_ref` output."
 }
 
+variable "tag_object" {
+  type        = string
+  default     = "WORKSPACE"
+  description = "The meshStack object kind the `tag_value` input reads its value from. A WORKSPACE_LEVEL building block definition (like this one) can only read WORKSPACE tags; TENANT_LEVEL definitions can also read PROJECT, PAYMENT_METHOD, or LANDING_ZONE."
+}
+
+variable "tag_key" {
+  type        = string
+  default     = "business-unit"
+  description = "Key of an existing meshStack tag definition (target_kind meshWorkspace) that the `tag_value` input reads its value from. The tag definition must already exist on the target meshStack instance."
+}
+
 variable "meshstack" {
   type = object({
     owning_workspace_identifier = string
@@ -177,6 +189,12 @@ resource "meshstack_building_block_definition" "this" {
         display_name    = "Static Code"
         type            = "CODE"
       }
+      tag_value = {
+        assignment_type = "TAG"
+        argument        = jsonencode("${var.tag_object}.${var.tag_key}")
+        display_name    = "Tag Value"
+        type            = "CODE"
+      }
       text = {
         assignment_type = "USER_INPUT"
         default_value   = jsonencode("")
@@ -220,6 +238,17 @@ resource "meshstack_building_block_definition" "this" {
         display_name    = "Static Code"
         type            = "CODE"
       }
+      # We need to wait for TF provider release to make this work
+      # tag_value = {
+      #   assignment_type = "NONE"
+      #   display_name    = "Tag Value"
+      #   type            = "CODE"
+      # }
+      tag_value = {
+        assignment_type = "NONE"
+        display_name    = "Tag Value"
+        type            = "CODE"
+      }
       resource_url = {
         assignment_type = "RESOURCE_URL"
         display_name    = "Resource URL"
@@ -250,7 +279,7 @@ terraform {
   required_providers {
     meshstack = {
       source  = "meshcloud/meshstack"
-      version = ">= 0.21.0"
+      version = ">= 0.25.2"
     }
   }
 }

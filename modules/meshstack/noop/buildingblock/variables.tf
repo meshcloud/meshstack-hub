@@ -27,6 +27,12 @@ variable "static_code" {
   type = map(string)
 }
 
+variable "tag_value" {
+  # meshStack sends a TAG input as a JSON array of strings; a tag with no value resolves to null.
+  type     = list(string)
+  nullable = true
+}
+
 variable "flag" {
   type = bool
 }

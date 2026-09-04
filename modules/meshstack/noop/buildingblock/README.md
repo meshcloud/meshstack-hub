@@ -26,6 +26,7 @@ Use it to:
 | `sensitive_yaml`        | `CODE`               | `STATIC` (sensitive) | Encrypted YAML/JSON value, decrypted at runtime                                                                    |
 | `static`                | `STRING`             | `STATIC`             | A platform-engineer-defined string constant                                                                        |
 | `static_code`           | `CODE`               | `STATIC`             | A platform-engineer-defined map                                                                                    |
+| `tag_value`             | `CODE`               | `TAG`                | Value of a meshStack tag, read from the target object rather than typed in by a user                               |
 | `flag`                  | `BOOLEAN`            | `USER_INPUT`         | Boolean flag chosen by the user                                                                                    |
 | `num`                   | `INTEGER`            | `USER_INPUT`         | Integer chosen by the user                                                                                         |
 | `text`                  | `STRING`             | `USER_INPUT`         | Free-text string from the user                                                                                     |
@@ -78,6 +79,7 @@ No modules.
 | <a name="input_single_select"></a> [single\_select](#input\_single\_select) | n/a | `string` | n/a | yes |
 | <a name="input_static"></a> [static](#input\_static) | n/a | `string` | n/a | yes |
 | <a name="input_static_code"></a> [static\_code](#input\_static\_code) | n/a | `map(string)` | n/a | yes |
+| <a name="input_tag_value"></a> [tag\_value](#input\_tag\_value) | n/a | `list(string)` | n/a | yes |
 | <a name="input_text"></a> [text](#input\_text) | n/a | `string` | n/a | yes |
 | <a name="input_user_permissions"></a> [user\_permissions](#input\_user\_permissions) | n/a | <pre>list(object({<br/>    meshIdentifier = string<br/>    username       = string<br/>    firstName      = string<br/>    lastName       = string<br/>    email          = string<br/>    euid           = string<br/>    roles          = list(string)<br/>  }))</pre> | n/a | yes |
 | <a name="input_user_permissions_json"></a> [user\_permissions\_json](#input\_user\_permissions\_json) | n/a | `string` | n/a | yes |
@@ -102,6 +104,7 @@ No modules.
 | <a name="output_static"></a> [static](#output\_static) | n/a |
 | <a name="output_static_code"></a> [static\_code](#output\_static\_code) | n/a |
 | <a name="output_summary"></a> [summary](#output\_summary) | n/a |
+| <a name="output_tag_value"></a> [tag\_value](#output\_tag\_value) | n/a |
 | <a name="output_text"></a> [text](#output\_text) | n/a |
 | <a name="output_user_permissions"></a> [user\_permissions](#output\_user\_permissions) | n/a |
 | <a name="output_user_permissions_json"></a> [user\_permissions\_json](#output\_user\_permissions\_json) | n/a |
