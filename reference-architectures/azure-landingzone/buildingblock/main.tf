@@ -118,6 +118,7 @@ module "azure_platform" {
   source = "github.com/meshcloud/meshstack-hub//modules/azure?ref=${var.hub.git_ref}"
 
   azure_management_group              = local.lz_management_group
+  resource_name_prefix                = var.azure_management_groups.name_prefix
   azure_subscription_provisioning     = var.azure_subscription_provisioning
   azure_subscription_owner_object_ids = var.azure_subscription_owner_object_ids
 
@@ -161,6 +162,7 @@ module "budget_alert" {
   azure_subscription_id = var.azure_platform_subscription_id
   azure_scope           = local.landing_zones_scope
   azure_location        = var.azure_location
+  backplane_name        = "${var.azure_management_groups.name_prefix}budget-alert"
 
   meshstack = {
     owning_workspace_identifier = var.workspace
@@ -176,6 +178,7 @@ module "storage_account" {
   azure_subscription_id = var.azure_platform_subscription_id
   azure_scope           = local.landing_zones_scope
   azure_location        = var.azure_location
+  backplane_name        = "${var.azure_management_groups.name_prefix}storage-account"
 
   meshstack = {
     owning_workspace_identifier = var.workspace
@@ -195,6 +198,7 @@ module "spoke_network" {
   azure_hub_resource_group_name   = local.spoke_hub.resource_group_name
   azure_hub_vnet_name             = local.spoke_hub.vnet_name
   azure_backplane_subscription_id = local.backplane_subscription_id
+  backplane_name                  = "${var.azure_management_groups.name_prefix}spoke-network"
 
   meshstack = {
     owning_workspace_identifier = var.workspace
@@ -239,6 +243,7 @@ module "hub_network" {
   azure_connectivity_subscription_id = var.azure_connectivity_subscription_id
   azure_scope                        = local.connectivity_scope
   azure_location                     = var.azure_location
+  backplane_name                     = "${var.azure_management_groups.name_prefix}hub-network"
 
   meshstack = {
     owning_workspace_identifier = var.workspace

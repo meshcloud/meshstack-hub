@@ -3,6 +3,13 @@ variable "azure_management_group" {
   description = "Azure management group used for platform integration."
 }
 
+variable "resource_name_prefix" {
+  type        = string
+  nullable    = false
+  default     = ""
+  description = "Prefix for the created meshStack service principals (replicator/metering/mca) and their custom role definitions, to keep their (tenant-unique) names distinct across deployments. e.g. 'flotest-az-'."
+}
+
 variable "azure_subscription_provisioning" {
   type = object({
     pre_provisioned = optional(object({
@@ -143,14 +150,14 @@ module "azure_meshplatform" {
   version = ">= 0.14.0"
 
   replicator_enabled                = true
-  replicator_service_principal_name = "meshstack-replicator"
+  replicator_service_principal_name = "${var.resource_name_prefix}meshstack-replicator"
   replicator_custom_role_scope      = var.azure_management_group
   replicator_assignment_scopes      = [var.azure_management_group]
 
   can_cancel_subscriptions_in_scopes = ["/providers/Microsoft.Management/managementGroups/${var.azure_management_group}"]
 
   metering_enabled                = true
-  metering_service_principal_name = "meshstack-metering"
+  metering_service_principal_name = "${var.resource_name_prefix}meshstack-metering"
   metering_assignment_scopes      = [var.azure_management_group]
 
   create_passwords = false # Use only workload identity federation
@@ -167,7 +174,7 @@ module "azure_meshplatform" {
     billing_account_name    = local.customer_agreement.billing_account_name
     billing_profile_name    = local.customer_agreement.billing_profile_name
     invoice_section_name    = local.customer_agreement.invoice_section_name
-    service_principal_names = ["meshstack-mca"]
+    service_principal_names = ["${var.resource_name_prefix}meshstack-mca"]
   } : null
 }
 
@@ -233,7 +240,7 @@ resource "meshstack_platform" "azure" {
                 destination_entra_id = module.azure_meshplatform.azure_ad_tenant_id
 
                 source_service_principal = {
-                  client_id = module.azure_meshplatform.mca_service_principal["meshstack-mca"].Application_Client_ID
+                  client_id = module.azure_meshplatform.mca_service_principal["${var.resource_name_prefix}meshstack-mca"].Application_Client_ID
                   auth      = {} # workload identity federation
                 }
                 subscription_creation_error_cooldown_sec = 900

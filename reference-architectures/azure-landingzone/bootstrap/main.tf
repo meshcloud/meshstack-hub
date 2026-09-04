@@ -69,6 +69,15 @@ resource "azuread_app_role_assignment" "graph_directory_read" {
   resource_object_id  = data.azuread_service_principal.msgraph.object_id
 }
 
+# AppRoleAssignment.ReadWrite.All — the meshplatform module grants the replicator service principal
+# its own Graph app roles (directory/group/user read); assigning app roles to another SP requires
+# this permission on the identity performing the run.
+resource "azuread_app_role_assignment" "graph_approleassignment_readwrite" {
+  app_role_id         = data.azuread_service_principal.msgraph.app_role_ids["AppRoleAssignment.ReadWrite.All"]
+  principal_object_id = azurerm_user_assigned_identity.bootstrap.principal_id
+  resource_object_id  = data.azuread_service_principal.msgraph.object_id
+}
+
 # Enterprise-Scale management group hierarchy, created here in the bootstrap phase so the management
 # groups already EXIST when the ordered building block run reaches the meshplatform module (which
 # looks them up via a data source — creating and reading them in the same run is a catch-22). The
