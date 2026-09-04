@@ -15,5 +15,6 @@
     "static_code": {
         "some":"code"
     },
+    "tag_value": ["e2e-tag-value"],
     "text":"Hello, World!"
 }
