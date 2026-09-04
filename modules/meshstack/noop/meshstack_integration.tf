@@ -25,6 +25,18 @@ variable "bbd_readme" {
   description = "Overrides the markdown readme shown in the marketplace before ordering."
 }
 
+variable "tag_object" {
+  type        = string
+  default     = "WORKSPACE"
+  description = "The meshStack object kind the `tag_value` input reads its value from. A WORKSPACE_LEVEL building block definition (like this one) can only read WORKSPACE tags; TENANT_LEVEL definitions can also read PROJECT, PAYMENT_METHOD, or LANDING_ZONE."
+}
+
+variable "tag_key" {
+  type        = string
+  default     = "business-unit"
+  description = "Key of an existing meshStack tag definition (target_kind meshWorkspace) that the `tag_value` input reads its value from. The tag definition must already exist on the target meshStack instance."
+}
+
 variable "meshstack" {
   type = object({
     owning_workspace_identifier = string
@@ -207,6 +219,12 @@ resource "meshstack_building_block_definition" "this" {
         display_name    = "Static Code"
         type            = "CODE"
       }
+      tag_value = {
+        assignment_type = "TAG"
+        argument        = jsonencode("${var.tag_object}.${var.tag_key}")
+        display_name    = "Tag Value"
+        type            = "CODE"
+      }
       text = {
         assignment_type = "USER_INPUT"
         default_value   = jsonencode("")
@@ -270,6 +288,11 @@ resource "meshstack_building_block_definition" "this" {
         assignment_type = "NONE"
         display_name    = "Workspace Identifier"
         type            = "STRING"
+      }
+      tag_value = {
+        assignment_type = "NONE"
+        display_name    = "Tag Value"
+        type            = "CODE"
       }
       resource_url = {
         assignment_type = "RESOURCE_URL"

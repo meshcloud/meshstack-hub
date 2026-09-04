@@ -32,6 +32,13 @@ run "building_block_noop_hub" {
   }
 
   assert {
+    # tag_value is sourced from the meshstack_workspace_tag set up in e2e/main.tf, not from the
+    # building block's own inputs.
+    condition     = jsondecode(meshstack_building_block.this.status.outputs["tag_value"].value) == ["e2e-tag-value"]
+    error_message = "noop hub building block expected output tag_value to be [\"e2e-tag-value\"], got ${jsondecode(meshstack_building_block.this.status.outputs["tag_value"].value)}"
+  }
+
+  assert {
     condition = (
       jsondecode(meshstack_building_block.this.status.outputs["summary"].value)
       ==
