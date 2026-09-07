@@ -107,6 +107,12 @@ locals {
 }
 
 resource "meshstack_project" "this" {
+  # The project references nothing from the module, so without this edge OpenTofu is free to delete
+  # it in parallel with the platform and the building block definition. Deleting the project is what
+  # cascades into deprovisioning the tenant and its mandatory building block, and the platform and
+  # definition cannot go until that block is released.
+  depends_on = [module.stackit_project]
+
   metadata = {
     name               = local.project_identifier
     owned_by_workspace = var.test_context.workspace
