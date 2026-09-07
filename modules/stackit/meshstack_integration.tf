@@ -20,6 +20,9 @@ variable "stackit_organization_onboarding_enabled" {
   description = "Whether the building block adds meshStack project users to the STACKIT organization (with `stackit_organization_member_role`) before applying project-level role assignments. Disable if organization membership is managed outside this building block."
 }
 
+# STACKIT documents that a project's initial `members` must include "a user, and not a client or
+# service account", but the API accepts both a service account and a plain mailbox as sole owner.
+# We rely on that; the doc discrepancy is with STACKIT support as SSD-25050.
 variable "stackit_project_owner_email" {
   type        = string
   nullable    = false

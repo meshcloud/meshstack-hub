@@ -37,9 +37,9 @@ variable "stackit_project_owner_email" {
   type     = string
   nullable = false
 
-  # A meshcloud-controlled shared address, deliberately NOT the backplane service account: naming a
-  # foreign owner is the thing under test. STACKIT applies the owner only at creation, so this
-  # decides who holds `owner` on the project the run creates, and nothing else.
+  # A meshcloud-controlled shared address, deliberately not the backplane service account. Naming a
+  # foreign owner is verified to work: the account creates, reads back and hard-deletes the project,
+  # and assigns project roles on it, all without owning it — its roles sit at organization scope.
   default = "stackit@meshcloud.io"
 
   description = "Owner assigned to every STACKIT project this test creates."
