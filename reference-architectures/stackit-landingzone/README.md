@@ -93,27 +93,18 @@ is reused on every run rather than only the first. The account it creates lives 
 project and is what creates tenant projects; it authenticates through workload identity federation,
 so no key for it is ever stored.
 
-`stackit_owner_email` decides who owns the folder, the foundation project, and every tenant project
-the platform creates. For the folder and the foundation project it is tied to how much privilege you
-gave the account you supplied. `resource-manager.admin` lets an account create a project but not act
-inside one it does not own, and creating the tenant-project account inside the foundation project is
-exactly such an action. With that role, the owner must therefore be the supplied account's own
-address; anything else fails the run with `POST /v2/projects/<id>/service-accounts -> 403`. An
-organization owner has no such limit and can name any address.
+`stackit_owner_email` owns the folder, the foundation project and every tenant project the platform
+creates. STACKIT applies it at creation only, so changing it later means recreating what it owns.
 
-So the choice is between a narrow key whose service account owns the two resources, and an
-organization-owner key that lets a team mailbox own them and show a real owner in the STACKIT
-portal. Prefer the narrow key unless you want the named owner, and note that portal access is not a
-reason to widen it — an organization role already reaches into every folder and project underneath.
-`owner_email` also applies at creation only, so changing it later requires recreating the folder and
-the foundation project.
+The key you supply is expected to be an organization owner, which may name any address — a team
+mailbox, typically. A key holding only `resource-manager.admin` may create a project but not act
+inside one it does not own, so with such a key the owner has to be that account's own address, or
+the run fails with `POST /v2/projects/<id>/service-accounts -> 403`.
 
-Tenant projects carry no such constraint: the tenant-project account holds its roles at organization
-scope, which reach into every project it creates whoever owns them. What that account may *do* there
-is still bounded by the roles themselves, and `stackit_organization_onboarding_enabled` is what
-decides one of them — with it off, the account holds only `resource-manager.admin` and not
-`iam.member-admin`, which is the role that lets it assign project roles to users. Leaving ownership
-with the account was what previously masked that dependency.
+Tenant projects are unaffected either way: the tenant-project account works through its
+organization-scoped roles, not through ownership. One of those roles is conditional — with
+`stackit_organization_onboarding_enabled` off it lacks `iam.member-admin` and cannot assign project
+roles to users.
 
 ## Getting Started
 
@@ -121,7 +112,7 @@ with the account was what previously masked that dependency.
 
 | Requirement          | Description                                                                       |
 |----------------------|-----------------------------------------------------------------------------------|
-| STACKIT organization | With a service account key that has `resource-manager.admin` on the organization. See [Service Accounts](#service-accounts) — that role constrains which `stackit_owner_email` values work. |
+| STACKIT organization | With an organization-owner service account key. `resource-manager.admin` alone also works, but then constrains which `stackit_owner_email` values are valid — see [Service Accounts](#service-accounts). |
 | CIDR plan            | *(Only when enabling networking)* A non-overlapping IPv4 address plan chosen up front for the hub network ranges and transfer network. |
 
 ### Deployment Order
