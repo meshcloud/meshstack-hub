@@ -38,7 +38,6 @@ No modules.
 | <a name="input_network_name"></a> [network\_name](#input\_network\_name) | Name of the STACKIT network. | `string` | n/a | yes |
 | <a name="input_network_prefix_length"></a> [network\_prefix\_length](#input\_network\_prefix\_length) | IPv4 prefix length for the network (24-28). | `number` | n/a | yes |
 | <a name="input_project_id"></a> [project\_id](#input\_project\_id) | STACKIT project ID (existing project) in which the network will be created. | `string` | n/a | yes |
-| <a name="input_service_account_email"></a> [service\_account\_email](#input\_service\_account\_email) | Email of the STACKIT service account for WIF-based authentication. | `string` | n/a | yes |
 
 ## Outputs
 

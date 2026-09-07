@@ -29,7 +29,7 @@ variable "project_name" {
 variable "service_account_email" {
   type        = string
   nullable    = false
-  description = "Email of the STACKIT service account for WIF-based authentication and project ownership."
+  description = "Email of the STACKIT service account that owns the created projects."
 }
 
 variable "labels" {

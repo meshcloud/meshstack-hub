@@ -18,8 +18,9 @@ This Terraform module provisions a STACKIT project with user access control. mes
 ## Providers
 
 Authentication uses Workload Identity Federation (OIDC token exchange) — no long-lived
-service account key. meshStack injects the federated token file and sets `STACKIT_USE_OIDC`
-and `STACKIT_FEDERATED_TOKEN_FILE` in the environment.
+service account key, and no auth arguments in the provider block. meshStack injects the
+federated token file and sets `STACKIT_SERVICE_ACCOUNT_EMAIL`, `STACKIT_USE_OIDC` and
+`STACKIT_FEDERATED_TOKEN_FILE` in the environment.
 
 ```hcl
 terraform {
@@ -32,9 +33,7 @@ terraform {
 }
 
 provider "stackit" {
-  service_account_email = var.service_account_email
-  use_oidc              = true
-  experiments           = ["iam"] # Required for authorization resources
+  experiments = ["iam"] # Required for authorization resources
 }
 ```
 
@@ -68,7 +67,7 @@ No modules.
 | <a name="input_parent_container_ids"></a> [parent\_container\_ids](#input\_parent\_container\_ids) | Parent container IDs for different environments. If environment is set, the corresponding container ID will be used. | <pre>object({<br/>    production  = optional(string)<br/>    staging     = optional(string)<br/>    development = optional(string)<br/>  })</pre> | `{}` | no |
 | <a name="input_project_name"></a> [project\_name](#input\_project\_name) | The name of the StackIt project to create. | `string` | n/a | yes |
 | <a name="input_role_mapping"></a> [role\_mapping](#input\_role\_mapping) | Maps meshStack roles from `users[*].roles` to STACKIT project roles. Values can be built-in STACKIT roles or custom STACKIT role names. Unknown meshStack roles are ignored. | `map(list(string))` | n/a | yes |
-| <a name="input_service_account_email"></a> [service\_account\_email](#input\_service\_account\_email) | Email of the STACKIT service account for WIF-based authentication and project ownership. | `string` | n/a | yes |
+| <a name="input_service_account_email"></a> [service\_account\_email](#input\_service\_account\_email) | Email of the STACKIT service account that owns the created projects. | `string` | n/a | yes |
 | <a name="input_users"></a> [users](#input\_users) | List of users from the authoritative system. Each user's `roles` are meshStack roles that are mapped to STACKIT project roles via `role_mapping`. | <pre>list(object({<br/>    meshIdentifier = string<br/>    username       = string<br/>    firstName      = string<br/>    lastName       = string<br/>    email          = string<br/>    euid           = string<br/>    roles          = list(string)<br/>  }))</pre> | n/a | yes |
 
 ## Outputs

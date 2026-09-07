@@ -305,7 +305,7 @@ resource "meshstack_building_block_definition" "this" {
 
       service_account_email = {
         display_name    = "Service Account Email"
-        description     = "Email of the STACKIT service account for WIF-based authentication."
+        description     = "Email of the STACKIT service account that owns the created projects."
         type            = "STRING"
         assignment_type = "STATIC"
         argument        = jsonencode(module.backplane.service_account_email)
@@ -331,7 +331,7 @@ resource "meshstack_building_block_definition" "this" {
 
       STACKIT_SERVICE_ACCOUNT_EMAIL = {
         display_name    = "STACKIT Service Account Email"
-        description     = "Service account email used by the pre-run script for WIF token exchange."
+        description     = "Email of the STACKIT service account the provider and the pre-run script authenticate as via WIF."
         type            = "STRING"
         assignment_type = "STATIC"
         is_environment  = true
