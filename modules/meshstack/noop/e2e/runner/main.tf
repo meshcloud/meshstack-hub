@@ -2,7 +2,7 @@ module "backplane" {
   source = "../../backplane"
 
   meshstack_workspace_identifier = var.test_context.workspace
-  meshstack_endpoint             = var.meshstack_endpoint
+  meshstack_endpoint             = var.test_context.meshstack_endpoint
   gcp_project_id                 = var.test_context.fixtures.gcp.project_id
   gcp_region                     = var.gcp_region
   gcp_resource_name_prefix       = "noop-runner-${var.test_context.name_suffix}"
