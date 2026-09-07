@@ -26,10 +26,13 @@ variable "project_name" {
   description = "The name of the StackIt project to create."
 }
 
-variable "service_account_email" {
+variable "project_owner_email" {
   type        = string
   nullable    = false
-  description = "Email of the STACKIT service account that owns the created projects."
+  description = <<-EOT
+  Email of the initial owner of the created project. STACKIT applies this only at creation, as a
+  `members` entry with the `owner` role, and ignores any later change.
+  EOT
 }
 
 variable "labels" {

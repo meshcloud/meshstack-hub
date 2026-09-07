@@ -33,6 +33,18 @@ variable "test_context" {
   nullable = false
 }
 
+variable "stackit_project_owner_email" {
+  type     = string
+  nullable = false
+
+  # A meshcloud-controlled shared address, deliberately NOT the backplane service account: naming a
+  # foreign owner is the thing under test. STACKIT applies the owner only at creation, so this
+  # decides who holds `owner` on the project the run creates, and nothing else.
+  default = "stackit@meshcloud.io"
+
+  description = "Owner assigned to every STACKIT project this test creates."
+}
+
 provider "stackit" {
   # Credentials are picked up from the environment: STACKIT_SERVICE_ACCOUNT_KEY_PATH for local
   # development, WIF in CI. Do not set service_account_key here — an explicit null argument
@@ -92,6 +104,7 @@ module "stackit_project" {
   }
 
   stackit_organization_id     = var.test_context.fixtures.stackit.organization_id
+  stackit_project_owner_email = var.stackit_project_owner_email
   stackit_project_id          = var.test_context.fixtures.stackit.project_id
   stackit_parent_container_id = var.test_context.fixtures.stackit.parent_container_id
 
