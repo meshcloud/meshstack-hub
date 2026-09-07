@@ -6,11 +6,6 @@ variable "project_id" {
   description = "STACKIT project ID where the bucket will be created."
 }
 
-variable "service_account_email" {
-  type        = string
-  nullable    = false
-  description = "Email of the STACKIT service account for WIF-based authentication."
-}
 
 variable "admin_s3_access_key" {
   type        = string
