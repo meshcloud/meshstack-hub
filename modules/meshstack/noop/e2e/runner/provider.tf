@@ -1,4 +1,4 @@
 provider "google" {
-  project = var.gcp_project_id
+  project = var.test_context.fixtures.gcp.project_id
   region  = var.gcp_region
 }
