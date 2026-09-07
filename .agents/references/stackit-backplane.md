@@ -191,7 +191,11 @@ STACKIT_FEDERATED_TOKEN_FILE = {
 ## Provider Version
 
 The `stackit_service_account_federated_identity_provider` resource requires provider version
-`>= 0.95.0`. Pin to `~> 0.98.0` or later in backplane `versions.tf`.
+`>= 0.95.0`, so use `>= 0.98.0` in backplane `versions.tf`.
+
+Use a minimum constraint, never `~>` and never an exact pin — see the repo-wide rule in
+[CLAUDE.md](../../CLAUDE.md#variable-conventions). A `~>` here would cap the whole e2e
+configuration, which loads backplane and buildingblock together.
 
 ## What to Avoid
 

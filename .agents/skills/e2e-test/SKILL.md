@@ -351,26 +351,41 @@ version in use rather than trusting them.
 
 ## Running tests
 
-### Running locally
+**Tests run in GitHub Actions only.** There is no local test run: `e2e_run.sh` expects the whole
+Actions environment already in the shell (the `TF_VAR_*` secrets plus `MESHSTACK_*`), and
+`setup-env.sh` deliberately does not provide it — it sets up *operating* the smoke-test stack, not
+running it. Never suggest a local invocation; dispatch the workflow instead.
 
-From `../meshstack-smoke-test` after `source setup-env.sh`:
+The workflow lives in the **`meshcloud/meshstack-smoke-test`** repo (`../meshstack-smoke-test`), not
+in the hub — `.github/workflows/smoke-test.yml`.
 
 ```bash
-task hub:e2e:run MODULE=stackit/storage-bucket
-task hub:e2e:run MODULE=stackit/storage-bucket TF_LOG=debug
-task hub:e2e:run MODULE=azure/resource-group FILTER=tests/azure_resource_group_hub.tftest.hcl
-task hub:e2e   # run all hub e2e tests
+# One case. Always pass the hub branch: the default is `main`, which would test the wrong code.
+gh workflow run smoke-test.yml -f module=stackit/storage-bucket -f meshstack_hub_ref=my-branch \
+  -R meshcloud/meshstack-smoke-test
+
+# A hub PR instead of a branch.
+gh workflow run smoke-test.yml -f module=stackit/storage-bucket -f meshstack_hub_ref=refs/pull/123/head \
+  -R meshcloud/meshstack-smoke-test
+
+# The hourly allowlist, or every discovered case (`tier=all` is the default).
+gh workflow run smoke-test.yml -f tier=hourly -R meshcloud/meshstack-smoke-test
 ```
 
-The runner: applies `modules/test_context` to resolve `hub_git_ref` from the committed SHA, exports
-its output as a temp `.tfvars.json`, then runs `tofu test` in the module's `e2e/` directory.
+`gh workflow run` prints no run id, so resolve it with `gh run list --workflow=smoke-test.yml`, then
+follow it with `gh run watch <id> --exit-status`.
 
-### Running in CI (GitHub Actions)
+**Dispatch one `module` per changed module rather than a whole tier.** A tier fans out across every
+provider and costs real cloud resources; three targeted dispatches are cheaper and their failures
+are attributable. `module` overrides `tier`, and granularity is the whole module — the workflow has
+no input for `e2e_run.sh`'s optional `tofu test -filter`.
 
-The CI workflow lives in the **`meshcloud/meshstack-smoke-test`** repo (`../meshstack-smoke-test`),
-not in the hub — it is `.github/workflows/smoke-test.yml`. It has **a single-module dispatch input** called `module` that's used to verify exactly one module.
+Two commands that *do* work locally, needing no credentials:
 
-Trigger the workflow using gh cli and poll for the result.
+```bash
+./e2e_discover.sh . ../meshstack-hub   # list every e2e case in both repos
+tofu fmt -recursive                    # what the pre-commit hook runs
+```
 
 ---
 
