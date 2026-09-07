@@ -221,7 +221,7 @@ resource "meshstack_building_block_definition" "this" {
 
       stackit_owner_email = {
         display_name    = "STACKIT Owner Email"
-        description     = "Owner of the STACKIT folder and foundation project, applied at creation only. Must be the deployment account's own address unless that account is an organization owner."
+        description     = "Owner of the STACKIT folder, foundation project, and every tenant project. Applied at creation only. Must be the deployment account's own address unless that account is an organization owner."
         type            = "STRING"
         assignment_type = "USER_INPUT"
       }
