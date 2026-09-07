@@ -60,6 +60,18 @@ output "multi_select_json" {
   value = jsondecode(var.multi_select_json)
 }
 
+output "author" {
+  value = var.author
+}
+
+output "operator_text" {
+  value = var.operator_text
+}
+
+output "workspace_identifier" {
+  value = var.workspace_identifier
+}
+
 output "resource_url" {
   value = "https://hub.meshcloud.io/modules/meshstack/noop"
 }
@@ -115,6 +127,9 @@ output "debug_input_variables_json" {
     static_code           = var.static_code
     user_permissions      = var.user_permissions
     user_permissions_json = var.user_permissions_json
+    author                = var.author
+    operator_text         = var.operator_text
+    workspace_identifier  = var.workspace_identifier
   })
 }
 

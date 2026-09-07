@@ -60,3 +60,25 @@ variable "multi_select" {
 variable "multi_select_json" {
   type = string
 }
+
+variable "author" {
+  type = object({
+    type        = string
+    identifier  = string
+    displayName = string
+    username    = optional(string)
+    email       = optional(string)
+    euid        = optional(string)
+  })
+  description = "Principal that ordered this building block, injected by the AUTHOR assignment type."
+}
+
+variable "operator_text" {
+  type        = string
+  description = "Value a platform operator filled in for this block."
+}
+
+variable "workspace_identifier" {
+  type        = string
+  description = "Identifier of the workspace this block belongs to, injected by meshStack."
+}
