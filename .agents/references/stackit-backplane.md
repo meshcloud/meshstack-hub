@@ -110,32 +110,32 @@ variable "organization_id" {
 }
 ```
 
-<!-- scorecard-checks: stackit_provider_oidc -->
+<!-- scorecard-checks: stackit_wif_env_auth -->
 ## Buildingblock Provider Configuration
 
-The buildingblock `provider.tf` must use `use_oidc = true` and `service_account_email`.
-Do **not** use `service_account_key` — it requires a long-lived secret.
+The buildingblock `provider.tf` must carry **no auth arguments at all**. The provider reads the
+whole WIF credential from the environment, which is what the STACKIT provider docs recommend for
+CI/CD, and which matches how every other provider family in the hub wires its automation identity.
 
 ```hcl
 # buildingblock/provider.tf
-provider "stackit" {
-  service_account_email = var.service_account_email
-  use_oidc              = true
-  # Token is read from STACKIT_FEDERATED_TOKEN_FILE env var injected by meshStack
-}
+# Authentication comes entirely from the environment: STACKIT_SERVICE_ACCOUNT_EMAIL,
+# STACKIT_USE_OIDC and STACKIT_FEDERATED_TOKEN_FILE are injected by meshStack.
+provider "stackit" {}
 ```
+
+Keep only non-auth arguments, e.g. `experiments = ["iam"]` where authorization resources are used.
+
+Do **not** set `service_account_email`, `use_oidc` or `service_account_key` here. The first two
+duplicate what the environment already provides; the third requires a long-lived secret.
 
 ## Buildingblock Variable
 
-```hcl
-variable "service_account_email" {
-  type        = string
-  nullable    = false
-  description = "Email of the STACKIT service account for WIF-based authentication."
-}
-```
-
-The service account email is not sensitive. Do **not** use `sensitive = true` here.
+A buildingblock needs **no variable for the service account email** — the provider never sees it as
+a Terraform value. Declare one only when the module uses the email as actual data rather than as a
+credential, e.g. `modules/stackit/project` passes it as `owner_email` on the project it creates. In
+that case describe it as what it is (project owner), not as authentication, and leave it
+non-sensitive.
 
 ## `meshstack_integration.tf` Wiring (STACKIT)
 
@@ -159,12 +159,13 @@ module "backplane" {
   }
 }
 
-# Inside meshstack_building_block_definition version_spec.inputs:
-service_account_email = {
-  display_name    = "Service Account Email"
-  description     = "Email of the STACKIT service account for WIF-based authentication."
+# Inside meshstack_building_block_definition version_spec.inputs — all three are env vars:
+STACKIT_SERVICE_ACCOUNT_EMAIL = {
+  display_name    = "STACKIT Service Account Email"
+  description     = "Email of the STACKIT service account the provider authenticates as via WIF."
   type            = "STRING"
   assignment_type = "STATIC"
+  is_environment  = true
   argument        = jsonencode(module.backplane.service_account_email)
 }
 
@@ -197,6 +198,7 @@ The `stackit_service_account_federated_identity_provider` resource requires prov
 - ❌ `service_account_key` / `stackit_service_account_key` — long-lived secret, no longer needed
 - ❌ `service_account_key_json` output — replace with `service_account_email`
 - ❌ `STACKIT_SERVICE_ACCOUNT_TOKEN` env var — deprecated
+- ❌ `service_account_email` or `use_oidc` in the buildingblock `provider.tf` — the env vars already carry both
 - ❌ Hardcoded `issuer` or `subjects` — always source from `data.meshstack_integrations`
 - ❌ Non-sensitive output for credentials — `service_account_email` is not sensitive, but any key would be
 
@@ -209,8 +211,8 @@ The `stackit_service_account_federated_identity_provider` resource requires prov
 - [ ] `service_account_email` output present (not sensitive, not `service_account_key_json`)
 - [ ] `workload_identity_federation` variable present (`object({ issuer, subjects })`, `nullable = false`)
 - [ ] Backplane `versions.tf` pins STACKIT provider to `~> 0.98.0` or later
-- [ ] Buildingblock `provider.tf` uses `use_oidc = true` + `service_account_email`
-- [ ] Buildingblock `variables.tf` has `service_account_email` (non-sensitive, `nullable = false`)
+- [ ] Buildingblock `provider.tf` carries no auth arguments — no `service_account_email`, `use_oidc` or `service_account_key`
+- [ ] Buildingblock `variables.tf` declares `service_account_email` only if the module uses it as data (e.g. project owner), never for auth
 - [ ] No `service_account_key_json` variable or output anywhere
 - [ ] `meshstack_integration.tf` uses `data.meshstack_integrations.integrations` for issuer/subject
-- [ ] `meshstack_integration.tf` wires `STACKIT_USE_OIDC` and `STACKIT_FEDERATED_TOKEN_FILE` as STATIC env var inputs
+- [ ] `meshstack_integration.tf` wires `STACKIT_SERVICE_ACCOUNT_EMAIL`, `STACKIT_USE_OIDC` and `STACKIT_FEDERATED_TOKEN_FILE` as STATIC env var inputs
