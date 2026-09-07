@@ -150,11 +150,12 @@ resource "meshstack_building_block_definition" "this" {
         assignment_type = "PLATFORM_TENANT_ID"
       }
 
-      service_account_email = {
-        display_name    = "Service Account Email"
-        description     = "Email of the STACKIT service account for WIF-based authentication."
+      STACKIT_SERVICE_ACCOUNT_EMAIL = {
+        display_name    = "STACKIT Service Account Email"
+        description     = "Email of the STACKIT service account the provider authenticates as via WIF."
         type            = "STRING"
         assignment_type = "STATIC"
+        is_environment  = true
         argument        = jsonencode(module.backplane.service_account_email)
       }
 

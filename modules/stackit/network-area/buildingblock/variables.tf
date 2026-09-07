@@ -4,12 +4,6 @@ variable "organization_id" {
   description = "STACKIT organization ID under which the network area will be created."
 }
 
-variable "service_account_email" {
-  type        = string
-  nullable    = false
-  description = "Email of the STACKIT service account for WIF-based authentication."
-}
-
 variable "network_area_name" {
   type        = string
   nullable    = false

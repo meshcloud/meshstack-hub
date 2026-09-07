@@ -42,7 +42,6 @@ No modules.
 | <a name="input_network_area_name"></a> [network\_area\_name](#input\_network\_area\_name) | Name of the STACKIT network area. | `string` | n/a | yes |
 | <a name="input_network_ranges"></a> [network\_ranges](#input\_network\_ranges) | List of IPv4 CIDR ranges available to projects within the network area. | `list(string)` | n/a | yes |
 | <a name="input_organization_id"></a> [organization\_id](#input\_organization\_id) | STACKIT organization ID under which the network area will be created. | `string` | n/a | yes |
-| <a name="input_service_account_email"></a> [service\_account\_email](#input\_service\_account\_email) | Email of the STACKIT service account for WIF-based authentication. | `string` | n/a | yes |
 | <a name="input_transfer_network"></a> [transfer\_network](#input\_transfer\_network) | IPv4 CIDR range used as the transfer network between the network area and connected networks. | `string` | n/a | yes |
 
 ## Outputs
