@@ -119,6 +119,14 @@ function hasOidcProviderNotice(variableBlock) {
 const NOT_WIF = { pass: null, detail: "not a workload identity federation backplane" };
 const NOT_CROSS_ACCOUNT = { pass: null, detail: "not a cross-account backplane" };
 
+// The STACKIT provider derives its whole WIF credential from these, so a buildingblock needs no
+// auth arguments in its provider block. See .agents/references/stackit-backplane.md.
+const STACKIT_WIF_ENV_VARS = [
+  "STACKIT_SERVICE_ACCOUNT_EMAIL",
+  "STACKIT_USE_OIDC",
+  "STACKIT_FEDERATED_TOKEN_FILE",
+];
+
 // ─── Detector functions ─────────────────────────────────────────────────────
 // Each detector returns { pass: boolean, detail?: string }
 
@@ -1071,17 +1079,30 @@ const detectors = [
     },
   },
   {
-    id: "stackit_provider_oidc",
+    id: "stackit_wif_env_auth",
     category: "stackit_backplane",
-    name: "Buildingblock provider uses use_oidc = true",
+    name: "WIF auth via env vars, not provider arguments",
     emoji: "⚡",
     fn: (mod) => {
       const providerTf = join(mod.path, "buildingblock", "provider.tf");
       if (!existsSync(providerTf)) return { pass: false, detail: "no provider.tf" };
-      const content = readFileSync(providerTf, "utf-8");
+      const authArg = readFileSync(providerTf, "utf-8").match(
+        /\b(service_account_email|service_account_key|service_account_token|use_oidc)\s*=/
+      );
+      if (authArg) {
+        return {
+          pass: false,
+          detail: `provider.tf sets ${authArg[1]} — authenticate via the STACKIT_* env var inputs instead`,
+        };
+      }
+      const integration = readIntegrationTf(mod);
+      if (!integration) return { pass: false, detail: "no integration file" };
+      const missing = STACKIT_WIF_ENV_VARS.filter(
+        (v) => !new RegExp(`${v}\\s*=\\s*\\{`).test(integration)
+      );
       return {
-        pass: /use_oidc\s*=\s*true/.test(content),
-        detail: "provider.tf does not use use_oidc = true — use WIF instead of service_account_key",
+        pass: missing.length === 0,
+        detail: `integration is missing env var input(s): ${missing.join(", ")}`,
       };
     },
   },
