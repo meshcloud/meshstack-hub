@@ -92,6 +92,10 @@ Conventions that keep this clean and correct:
   statically evaluated) in both modes.
 - **Cloud resource IDs live under `fixtures`** (e.g. `var.test_context.fixtures.stackit.project_id`),
   never as a flat top-level field.
+- **A non-secret environment fact always arrives in `test_context`, never as a `TF_VAR_*`.** A
+  `TF_VAR_*` fixture must be wired in the harness workflow as well, and nothing checks that the two
+  still agree — that is how the `meshstack/noop` runner test broke silently once. Secrets are the
+  one exception, for the reason below.
 - **`test_context` describes the environment, not the test case.** A flag that selects *which variant
   of the module under test to build* (e.g. a sync vs async implementation) does not belong in
   `test_context` — it belongs in a **root variable of the `e2e/` module**, pinned per test file. See
@@ -489,6 +493,7 @@ source setup-override-provider.sh
 - [ ] `fixtures` is `optional()` with its inner shape fully required (no half-populated fixtures)
 - [ ] Always-shared fields (`workspace`, `name_suffix`, `hub_git_ref`) are required, not `optional()`
 - [ ] Cloud resource IDs sourced from `var.test_context.fixtures.*` (not flat `test_context` fields)
+- [ ] No fixture read from the environment — only secrets arrive as `TF_VAR_*`
 - [ ] Scalar secrets are top-level `nullable` vars with `default = null` (foundation mode omits them)
 - [ ] Module sourced via relative path (not a GitHub URL), gated with `count = var.test_context.bbd_version_ref == null ? 1 : 0`
 - [ ] `hub.git_ref = var.test_context.hub_git_ref` — no hardcoded `"main"`
