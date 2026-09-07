@@ -1,0 +1,11 @@
+version: 2
+updates:
+  # SHA-pinned actions carry no version range, so nothing bumps them but this.
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: monthly
+    groups:
+      github-actions:
+        patterns:
+          - "*"
