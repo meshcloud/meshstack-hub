@@ -107,10 +107,15 @@ locals {
 }
 
 resource "meshstack_project" "this" {
-  # The project references nothing from the module, so without this edge OpenTofu is free to delete
-  # it in parallel with the platform and the building block definition. Deleting the project is what
-  # cascades into deprovisioning the tenant and its mandatory building block, and the platform and
-  # definition cannot go until that block is released.
+  # The project references nothing from the module, so nothing orders the two deletes. The tenant
+  # below depending on both is a fan-in, not a chain: it puts each of them after the tenant and
+  # leaves them unordered against each other (`tofu graph -type=plan-destroy` shows both gated on
+  # the tenant only).
+  #
+  # That only bites once the tenant is gone from state, which the provider does to a created tenant
+  # whose completion poll times out. The project delete is then the last thing that cascades into
+  # deprovisioning the tenant and releasing its mandatory building block, and meshStack answers a
+  # platform or definition delete with 409 while that block still exists.
   depends_on = [module.stackit_project]
 
   metadata = {
