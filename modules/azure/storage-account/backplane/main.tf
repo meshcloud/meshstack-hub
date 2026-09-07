@@ -38,6 +38,8 @@ resource "azurerm_role_definition" "backplane" {
       "Microsoft.Storage/storageAccounts/objectReplicationPolicies/read",
       "Microsoft.Storage/storageAccounts/objectReplicationPolicies/delete",
       "Microsoft.Storage/storageAccounts/listKeys/action",
+      # azurerm >= 5.4.0 reads migration status on every Storage Account encode (including destroy)
+      "Microsoft.Storage/storageAccounts/accountMigrations/read",
 
       # resource groups
       "Microsoft.Resources/subscriptions/resourcegroups/read",
