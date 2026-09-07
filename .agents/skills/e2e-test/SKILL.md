@@ -91,11 +91,8 @@ Conventions that keep this clean and correct:
 - **Always-shared fields are required**: `workspace`, `name_suffix`, and `hub_git_ref` are used (or
   statically evaluated) in both modes.
 - **Cloud resource IDs live under `fixtures`** (e.g. `var.test_context.fixtures.stackit.project_id`),
-  never as a flat top-level field.
-- **A non-secret environment fact always arrives in `test_context`, never as a `TF_VAR_*`.** A
-  `TF_VAR_*` fixture must be wired in the harness workflow as well, and nothing checks that the two
-  still agree — that is how the `meshstack/noop` runner test broke silently once. Secrets are the
-  one exception, for the reason below.
+  never as a flat top-level field. This ensures we have one common union type of fixture inputs reusable
+  across our hub modules.
 - **`test_context` describes the environment, not the test case.** A flag that selects *which variant
   of the module under test to build* (e.g. a sync vs async implementation) does not belong in
   `test_context` — it belongs in a **root variable of the `e2e/` module**, pinned per test file. See
@@ -105,13 +102,13 @@ Conventions that keep this clean and correct:
 
 ### Secrets
 
-**No secret is ever a `test_context` field.** The grab-bag is built from state a CI job can read, so
-a secret in it would have to be persisted somewhere it does not belong.
+**No secret go into the `test_context` field.** The test_context object is built from a tofu state
+read and this must not store secrets.
 
 A secret reaches the module one of two ways:
 
-- The provider reads it from **its own standard environment variable** (cloud credentials). The
-  module declares nothing.
+- The provider reads it from **its own standard environment variable**. The
+  module declares nothing and we rely on the e2e test harness to setup the environment accordingly.
 - The module declares a **flat root variable** for it, when the value is also needed as an input to
   the module under test (e.g. `stackit_git_forgejo_token`, `github_app_private_key`). The smoke-test
   runner exports every secret it holds as `TF_VAR_<name>`, so declaring the variable is all it takes
