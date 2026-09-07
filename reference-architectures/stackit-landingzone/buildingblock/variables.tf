@@ -24,7 +24,7 @@ variable "stackit_org" {
 variable "stackit_owner_email" {
   type        = string
   nullable    = false
-  description = "Owner email assigned to the STACKIT resourcemanager folder and foundation project."
+  description = "Owner email assigned to the STACKIT resourcemanager folder, the foundation project, and every tenant project the platform creates."
 }
 
 variable "stackit_service_account_key" {

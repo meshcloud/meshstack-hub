@@ -132,10 +132,11 @@ duplicate what the environment already provides; the third requires a long-lived
 ## Buildingblock Variable
 
 A buildingblock needs **no variable for the service account email** — the provider never sees it as
-a Terraform value. Declare one only when the module uses the email as actual data rather than as a
-credential, e.g. `modules/stackit/project` passes it as `owner_email` on the project it creates. In
-that case describe it as what it is (project owner), not as authentication, and leave it
-non-sensitive.
+a Terraform value.
+
+If a module needs an email as actual data, give it its own variable named for that purpose and let
+the platform team set it. `modules/stackit/project` does this with `project_owner_email`, the initial
+STACKIT project owner: reusing the automation identity there conflated two unrelated decisions.
 
 ## `meshstack_integration.tf` Wiring (STACKIT)
 

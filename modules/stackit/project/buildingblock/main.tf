@@ -27,7 +27,7 @@ locals {
 resource "stackit_resourcemanager_project" "project" {
   parent_container_id = local.selected_parent_container_id
   name                = var.project_name
-  owner_email         = var.service_account_email
+  owner_email         = var.project_owner_email
 
   # Only set labels if there are actually labels to set
   labels = length(var.labels) > 0 ? var.labels : null

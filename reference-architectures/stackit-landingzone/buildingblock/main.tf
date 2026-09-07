@@ -77,7 +77,7 @@ resource "stackit_resourcemanager_project" "foundation" {
 # The sandbox landing zone called this project `backplane`. Unifying the sandbox and hub-and-spoke
 # architectures renamed it to `foundation`, because it now holds more than the backplane service
 # account. Without this move a deployed landing zone destroys the project, and with it the
-# project-creation service account that every tenant project names as its owner.
+# project-creation service account the platform runs as.
 # `name` carries no RequiresReplace, so the `-backplane` -> `-foundation` rename updates in place.
 moved {
   from = stackit_resourcemanager_project.backplane
@@ -88,6 +88,7 @@ module "stackit_integration" {
   source = "github.com/meshcloud/meshstack-hub//modules/stackit?ref=${var.hub.git_ref}"
 
   stackit_organization_id                 = var.stackit_org
+  stackit_project_owner_email             = var.stackit_owner_email
   stackit_parent_container_id             = stackit_resourcemanager_folder.this.container_id
   stackit_project_id                      = stackit_resourcemanager_project.foundation.project_id
   stackit_service_account_name            = local.service_account_name

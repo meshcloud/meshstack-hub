@@ -20,6 +20,20 @@ variable "stackit_organization_onboarding_enabled" {
   description = "Whether the building block adds meshStack project users to the STACKIT organization (with `stackit_organization_member_role`) before applying project-level role assignments. Disable if organization membership is managed outside this building block."
 }
 
+variable "stackit_project_owner_email" {
+  type        = string
+  nullable    = false
+  description = <<-EOT
+  Email of the initial owner of every STACKIT project this platform creates. Use a platform-team
+  address, not a personal one.
+
+  STACKIT only applies this at project creation and ignores later changes, so it seeds initial IAM
+  and nothing more. It is deliberately not the backplane service account: the account's access to
+  created projects comes from its organization-scoped `resource-manager.admin` role, not from
+  owning them.
+  EOT
+}
+
 variable "stackit_parent_container_id" {
   type        = string
   description = "Default parent container ID (organization or folder) for project creation."
@@ -303,12 +317,12 @@ resource "meshstack_building_block_definition" "this" {
         argument        = jsonencode(var.stackit_parent_container_id)
       }
 
-      service_account_email = {
-        display_name    = "Service Account Email"
-        description     = "Email of the STACKIT service account that owns the created projects."
+      project_owner_email = {
+        display_name    = "Project Owner Email"
+        description     = "Email of the initial owner of the created project. Applied at creation only."
         type            = "STRING"
         assignment_type = "STATIC"
-        argument        = jsonencode(module.backplane.service_account_email)
+        argument        = jsonencode(var.stackit_project_owner_email)
       }
 
       STACKIT_USE_OIDC = {
