@@ -1,7 +1,6 @@
-provider "stackit" {
-  service_account_email = var.service_account_email
-  use_oidc              = true
-}
+# Authentication comes entirely from the environment: STACKIT_SERVICE_ACCOUNT_EMAIL,
+# STACKIT_USE_OIDC and STACKIT_FEDERATED_TOKEN_FILE are injected by meshStack.
+provider "stackit" {}
 
 provider "aws" {
   access_key = var.admin_s3_access_key
