@@ -4,11 +4,11 @@ terraform {
   required_providers {
     tls = {
       source  = "hashicorp/tls"
-      version = "~> 4.0"
+      version = ">= 4.0"
     }
     google = {
       source  = "hashicorp/google"
-      version = "~> 7.0"
+      version = ">= 7.0"
     }
     meshstack = {
       source  = "meshcloud/meshstack"
@@ -16,7 +16,7 @@ terraform {
     }
     time = {
       source  = "hashicorp/time"
-      version = "~> 0.12"
+      version = ">= 0.12"
     }
   }
 }
