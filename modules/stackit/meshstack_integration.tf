@@ -23,6 +23,7 @@ variable "stackit_organization_onboarding_enabled" {
 # STACKIT documents that a project's initial `members` must include "a user, and not a client or
 # service account", but the API accepts both a service account and a plain mailbox as sole owner.
 # We rely on that; the doc discrepancy is with STACKIT support as SSD-25050.
+# We would rather create a project with no initial owner at all, but that needs a change in STACKIT.
 variable "stackit_project_owner_email" {
   type        = string
   nullable    = false

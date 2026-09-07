@@ -194,10 +194,6 @@ STACKIT_FEDERATED_TOKEN_FILE = {
 The `stackit_service_account_federated_identity_provider` resource requires provider version
 `>= 0.95.0`, so use `>= 0.98.0` in backplane `versions.tf`.
 
-Use a minimum constraint, never `~>` and never an exact pin — see the repo-wide rule in
-[CLAUDE.md](../../CLAUDE.md#variable-conventions). A `~>` here would cap the whole e2e
-configuration, which loads backplane and buildingblock together.
-
 ## What to Avoid
 
 - ❌ `service_account_key` / `stackit_service_account_key` — long-lived secret, no longer needed
@@ -215,9 +211,8 @@ configuration, which loads backplane and buildingblock together.
 - [ ] Required role assignments present (`stackit_authorization_project_role_assignment` or `stackit_authorization_organization_role_assignment`)
 - [ ] `service_account_email` output present (not sensitive, not `service_account_key_json`)
 - [ ] `workload_identity_federation` variable present (`object({ issuer, subjects })`, `nullable = false`)
-- [ ] Backplane `versions.tf` pins STACKIT provider to `~> 0.98.0` or later
+- [ ] Backplane `versions.tf` uses `>= 0.98.0` for the STACKIT provider
 - [ ] Buildingblock `provider.tf` carries no auth arguments — no `service_account_email`, `use_oidc` or `service_account_key`
-- [ ] Buildingblock `variables.tf` declares `service_account_email` only if the module uses it as data (e.g. project owner), never for auth
 - [ ] No `service_account_key_json` variable or output anywhere
 - [ ] `meshstack_integration.tf` uses `data.meshstack_integrations.integrations` for issuer/subject
 - [ ] `meshstack_integration.tf` wires `STACKIT_SERVICE_ACCOUNT_EMAIL`, `STACKIT_USE_OIDC` and `STACKIT_FEDERATED_TOKEN_FILE` as STATIC env var inputs
