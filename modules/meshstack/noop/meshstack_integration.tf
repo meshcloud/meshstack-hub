@@ -97,6 +97,12 @@ resource "meshstack_building_block_definition" "this" {
       }
     }
     inputs = {
+      author = {
+        assignment_type = "AUTHOR"
+        display_name    = "Author"
+        description     = "The meshStack principal that ordered this building block. Injected by meshStack, never entered by a user."
+        type            = "CODE"
+      }
       flag = {
         assignment_type = "USER_INPUT"
         display_name    = "Flag"
@@ -118,6 +124,12 @@ resource "meshstack_building_block_definition" "this" {
         assignment_type = "USER_INPUT"
         display_name    = "Num"
         type            = "INTEGER"
+      }
+      operator_text = {
+        assignment_type = "PLATFORM_OPERATOR_MANUAL_INPUT"
+        display_name    = "Operator Text"
+        description     = "Only a platform operator can fill this in. A block whose value is still missing parks in WAITING_FOR_OPERATOR_INPUT."
+        type            = "STRING"
       }
       optional_text = {
         assignment_type = "USER_INPUT"
@@ -193,8 +205,19 @@ resource "meshstack_building_block_definition" "this" {
         display_name    = "User Permissions"
         type            = "CODE"
       }
+      workspace_identifier = {
+        assignment_type = "WORKSPACE_IDENTIFIER"
+        display_name    = "Workspace Identifier"
+        description     = "Identifier of the workspace this building block belongs to. Injected by meshStack."
+        type            = "STRING"
+      }
     }
     outputs = {
+      author = {
+        assignment_type = "NONE"
+        display_name    = "Author"
+        type            = "CODE"
+      }
       flag = {
         assignment_type = "NONE"
         display_name    = "Flag"
@@ -204,6 +227,11 @@ resource "meshstack_building_block_definition" "this" {
         assignment_type = "NONE"
         display_name    = "Num"
         type            = "INTEGER"
+      }
+      operator_text = {
+        assignment_type = "NONE"
+        display_name    = "Operator Text"
+        type            = "STRING"
       }
       text = {
         assignment_type = "NONE"
@@ -219,6 +247,11 @@ resource "meshstack_building_block_definition" "this" {
         assignment_type = "NONE"
         display_name    = "Static Code"
         type            = "CODE"
+      }
+      workspace_identifier = {
+        assignment_type = "NONE"
+        display_name    = "Workspace Identifier"
+        type            = "STRING"
       }
       resource_url = {
         assignment_type = "RESOURCE_URL"
@@ -250,7 +283,7 @@ terraform {
   required_providers {
     meshstack = {
       source  = "meshcloud/meshstack"
-      version = ">= 0.21.0"
+      version = ">= 0.25.2"
     }
   }
 }

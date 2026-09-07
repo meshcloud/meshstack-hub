@@ -41,18 +41,18 @@ run "building_block_noop_hub" {
   }
 
   assert {
-    # we have to exclude the user permissions inputs because several meshis hold role assignments on this workspace
-    # and permissions may change, so we assert those separately below
+    # Inputs meshStack fills in from the instance (workspace members, the ordering principal, the
+    # workspace identifier) differ per meshStack instance, so they are asserted separately below.
     condition = (
       {
         for k, v in jsondecode(jsondecode(meshstack_building_block.this.status.outputs["debug_input_variables_json"].value)) :
         k => v
-        if k != "user_permissions_json" && k != "user_permissions"
+        if !contains(["user_permissions", "user_permissions_json", "author", "workspace_identifier"], k)
       }
       ==
       jsondecode(file("${path.root}/tests/building_block_noop_hub.debug_input_variables_json.expected.json"))
     )
-    error_message = "noop hub building block expected output debug_input_variables_json to match expected (excluding user_permissions_json and user_permissions)"
+    error_message = "noop hub building block expected output debug_input_variables_json to match expected (excluding the instance-dependent inputs)"
   }
 
   # The workspace's members differ per meshStack instance, so these two assertions check that the
@@ -87,5 +87,29 @@ run "building_block_noop_hub" {
       jsondecode(file("${path.root}/tests/building_block_noop_hub.debug_input_files_json.expected.json"))
     )
     error_message = "noop hub building block expected output debug_input_files_json to match expected, got ${jsondecode(meshstack_building_block.this.status.outputs["debug_input_files_json"].value)}"
+  }
+
+  assert {
+    condition     = jsondecode(meshstack_building_block.this.status.outputs["operator_text"].value) == "Set by the platform operator"
+    error_message = "noop hub building block expected output operator_text to be 'Set by the platform operator', got ${jsondecode(meshstack_building_block.this.status.outputs["operator_text"].value)}"
+  }
+
+  # WORKSPACE_IDENTIFIER is injected by meshStack, so this checks it against the workspace the
+  # provider reports for the block rather than pinning one instance's workspace name.
+  assert {
+    condition     = jsondecode(meshstack_building_block.this.status.outputs["workspace_identifier"].value) == meshstack_building_block.this.metadata.owned_by_workspace
+    error_message = "expected output workspace_identifier to be ${meshstack_building_block.this.metadata.owned_by_workspace}, got ${jsondecode(meshstack_building_block.this.status.outputs["workspace_identifier"].value)}"
+  }
+
+  # AUTHOR resolves to whoever ordered the block — the test's own API key here, a real user in
+  # meshPanel — so this asserts the shape and that the principal is identified, not who it is.
+  assert {
+    condition = (
+      toset(keys(jsondecode(jsondecode(meshstack_building_block.this.status.outputs["author"].value)))) ==
+      toset(["displayName", "email", "euid", "identifier", "type", "username"])
+      &&
+      jsondecode(jsondecode(meshstack_building_block.this.status.outputs["author"].value))["identifier"] != ""
+    )
+    error_message = "expected output author to carry an identified principal, got ${jsondecode(meshstack_building_block.this.status.outputs["author"].value)}"
   }
 }

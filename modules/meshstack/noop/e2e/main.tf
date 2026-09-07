@@ -40,6 +40,8 @@ resource "meshstack_building_block" "this" {
       single_select     = { value = jsonencode("single1") }
       multi_select      = { value = jsonencode(["multi1", "multi2"]) }
       multi_select_json = { value = jsonencode(["multi2", "multi1"]) }
+      # Settable here because the test key owns the definition; an app team could not fill this in.
+      operator_text = { value = jsonencode("Set by the platform operator") }
     }
   }
 }
