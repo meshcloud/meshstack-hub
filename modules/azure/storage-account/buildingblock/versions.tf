@@ -10,7 +10,7 @@ terraform {
     }
     random = {
       source  = "hashicorp/random"
-      version = ">= 3.8"
+      version = ">= 3.8, < 4.0.0"
     }
   }
 }

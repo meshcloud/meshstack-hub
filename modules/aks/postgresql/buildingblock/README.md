@@ -50,7 +50,7 @@ terraform {
 | <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.0 |
 | <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) | >= 4.4.0, < 5.0.0 |
 | <a name="requirement_kubernetes"></a> [kubernetes](#requirement\_kubernetes) | >= 2.35.1, < 3.0.0 |
-| <a name="requirement_random"></a> [random](#requirement\_random) | >= 3.6.3 |
+| <a name="requirement_random"></a> [random](#requirement\_random) | >= 3.6.3, < 4.0.0 |
 
 ## Modules
 
