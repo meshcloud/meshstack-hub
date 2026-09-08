@@ -11,7 +11,7 @@ This Terraform module provisions an AWS S3 bucket with basic configurations.
 
 ## Requirements
 - Terraform `>= 1.0`
-- AWS Provider `>= 5.77.0, < 6.0.0`
+- AWS Provider `>= 6.0.0, < 7.0.0`
 
 ## Providers
 
@@ -20,7 +20,7 @@ terraform {
   required_providers {
     aws = {
       source  = "hashicorp/aws"
-      version = ">= 5.77.0, < 6.0.0"
+      version = ">= 6.0.0, < 7.0.0"
     }
   }
 }
@@ -36,7 +36,7 @@ provider "aws" {
 | Name | Version |
 |------|---------|
 | <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.0 |
-| <a name="requirement_aws"></a> [aws](#requirement\_aws) | >= 5.77.0, < 6.0.0 |
+| <a name="requirement_aws"></a> [aws](#requirement\_aws) | >= 6.0.0, < 7.0.0 |
 
 ## Modules
 
