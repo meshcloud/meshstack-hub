@@ -4,7 +4,7 @@
 | Name | Version |
 |------|---------|
 | <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.0 |
-| <a name="requirement_aws"></a> [aws](#requirement\_aws) | 5.77.0 |
+| <a name="requirement_aws"></a> [aws](#requirement\_aws) | >= 5.77.0, < 6.0.0 |
 
 ## Modules
 
@@ -14,14 +14,14 @@ No modules.
 
 | Name | Type |
 |------|------|
-| [aws_iam_access_key.backplane](https://registry.terraform.io/providers/hashicorp/aws/5.77.0/docs/resources/iam_access_key) | resource |
-| [aws_iam_role.backplane](https://registry.terraform.io/providers/hashicorp/aws/5.77.0/docs/resources/iam_role) | resource |
-| [aws_iam_role_policy.backplane](https://registry.terraform.io/providers/hashicorp/aws/5.77.0/docs/resources/iam_role_policy) | resource |
-| [aws_iam_user.backplane](https://registry.terraform.io/providers/hashicorp/aws/5.77.0/docs/resources/iam_user) | resource |
-| [aws_iam_user_policy.assume_roles](https://registry.terraform.io/providers/hashicorp/aws/5.77.0/docs/resources/iam_user_policy) | resource |
-| [aws_iam_policy_document.backplane](https://registry.terraform.io/providers/hashicorp/aws/5.77.0/docs/data-sources/iam_policy_document) | data source |
-| [aws_iam_policy_document.building_block_service](https://registry.terraform.io/providers/hashicorp/aws/5.77.0/docs/data-sources/iam_policy_document) | data source |
-| [aws_iam_policy_document.trust_policy](https://registry.terraform.io/providers/hashicorp/aws/5.77.0/docs/data-sources/iam_policy_document) | data source |
+| [aws_iam_access_key.backplane](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/iam_access_key) | resource |
+| [aws_iam_role.backplane](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/iam_role) | resource |
+| [aws_iam_role_policy.backplane](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/iam_role_policy) | resource |
+| [aws_iam_user.backplane](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/iam_user) | resource |
+| [aws_iam_user_policy.assume_roles](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/iam_user_policy) | resource |
+| [aws_iam_policy_document.backplane](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/iam_policy_document) | data source |
+| [aws_iam_policy_document.building_block_service](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/iam_policy_document) | data source |
+| [aws_iam_policy_document.trust_policy](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/iam_policy_document) | data source |
 
 ## Inputs
 

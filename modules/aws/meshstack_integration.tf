@@ -268,7 +268,7 @@ terraform {
     aws = {
       source                = "hashicorp/aws"
       configuration_aliases = [aws.management, aws.meshcloud, aws.automation]
-      version               = ">= 6.0"
+      version               = ">= 6.0, < 7.0.0"
     }
   }
 }
