@@ -116,6 +116,10 @@ output "version_ref" { value = ... }   # { uuid = string }
 
 `modes/foundation` returns `var.test_context.bbd_version_ref` and builds nothing.
 
+A provider that only one mode needs belongs in that mode module, not in the root — foundation mode
+then never installs it. A module holding a provider block may not take `count`, `for_each` or
+`depends_on`, so keep those off the `module "definition"` block.
+
 `modes/hub` builds the BBD. Source the module under test by **relative path**, never a GitHub URL,
 so tests run against the local branch without a push:
 
