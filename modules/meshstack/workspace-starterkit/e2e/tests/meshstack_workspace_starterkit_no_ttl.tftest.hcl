@@ -17,13 +17,13 @@ run "meshstack_workspace_starterkit_no_ttl" {
   }
 
   assert {
-    condition     = jsondecode(meshstack_building_block.this.status.outputs["workspace_identifier"].value) == output.expected_workspace_identifier
+    condition     = try(jsondecode(meshstack_building_block.this.status.outputs["workspace_identifier"].value), null) == output.expected_workspace_identifier
     error_message = "Reported workspace identifier is not the one that was ordered."
   }
 
   # No TTL means no date to report. The output is still declared, so the run has to produce it.
   assert {
-    condition     = !output.expects_no_expiry || jsondecode(meshstack_building_block.this.status.outputs["workspace_expiry_date"].value) == null
-    error_message = "A workspace ordered without a TTL must report no expiry date, got ${meshstack_building_block.this.status.outputs["workspace_expiry_date"].value}."
+    condition     = !output.expects_no_expiry || try(jsondecode(meshstack_building_block.this.status.outputs["workspace_expiry_date"].value), null) == null
+    error_message = "A workspace ordered without a TTL must report no expiry date, got ${try(meshstack_building_block.this.status.outputs["workspace_expiry_date"].value, "no such output")}."
   }
 }
