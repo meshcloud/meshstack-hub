@@ -1,5 +1,3 @@
-# Foundation mode: the foundation already deployed the building block definition and passes the
-# version ref of the release it deployed. Nothing is built here.
 variable "test_context" {
   type = object({
     bbd_version_ref = object({
@@ -9,9 +7,8 @@ variable "test_context" {
   nullable = false
 }
 
-# Unused. The root pipes one uniform input surface to both modes; a foundation builds no backplane
-# and has none of these.
-variable "secrets" {
+# Unused here: the root pipes one uniform surface to both modes.
+variable "backplane_secrets" {
   type      = any
   sensitive = true
 }

@@ -1,8 +1,5 @@
-# Build-from-source mode: stand up an ephemeral meshPlatform and the two definitions the starter kit
-# creates child building blocks from, then build the starter kit definition itself from hub source.
-#
-# Every field below is required. This module is only ever installed when the root selected `hub`, so
-# nothing here has to tolerate a foundation's inputs.
+# Stands up an ephemeral meshPlatform and the two definitions the starter kit creates child building
+# blocks from, then builds the starter kit definition itself from hub source.
 variable "test_context" {
   type = object({
     hub_git_ref          = string
@@ -15,7 +12,7 @@ variable "test_context" {
   nullable = false
 }
 
-variable "secrets" {
+variable "backplane_secrets" {
   type = object({
     stackit_git_forgejo_token = string
     ske_kubeconfig            = string
@@ -28,9 +25,8 @@ variable "secrets" {
   nullable  = false
 
   validation {
-    # A null here means the runner did not export the matching TF_VAR_. `nullable = false` only
-    # rejects the whole object, so the attributes are checked explicitly.
-    condition     = alltrue([for secret in values(var.secrets) : secret != null])
+    # `nullable = false` rejects only the whole object, so the attributes are checked explicitly.
+    condition     = alltrue([for secret in values(var.backplane_secrets) : secret != null])
     error_message = "Every backplane secret must be set; the test runner exports them as TF_VAR_<name>."
   }
 }
@@ -38,7 +34,7 @@ variable "secrets" {
 locals {
   # yamldecode parses both YAML (the ICF-published Vault value) and JSON (a superset), so it is
   # robust regardless of the format the kubeconfig secret is provided in.
-  ske_kubeconfig = yamldecode(var.secrets.ske_kubeconfig)
+  ske_kubeconfig = yamldecode(var.backplane_secrets.ske_kubeconfig)
 }
 
 resource "random_string" "suffix" {
@@ -68,12 +64,12 @@ module "stackit_git_repository" {
   }
 
   forgejo_base_url     = var.test_context.forgejo_base_url
-  forgejo_token        = var.secrets.stackit_git_forgejo_token
+  forgejo_token        = var.backplane_secrets.stackit_git_forgejo_token
   forgejo_organization = var.test_context.forgejo_organization
 
   action_secrets = {
-    HARBOR_USERNAME = var.secrets.harbor_push_username
-    HARBOR_PASSWORD = var.secrets.harbor_push_password
+    HARBOR_USERNAME = var.backplane_secrets.harbor_push_username
+    HARBOR_PASSWORD = var.backplane_secrets.harbor_push_password
   }
 
   action_variables = {
@@ -96,10 +92,10 @@ module "forgejo_connector" {
 
   kubeconfig                   = local.ske_kubeconfig
   forgejo_host                 = var.test_context.forgejo_base_url
-  forgejo_api_token            = var.secrets.stackit_git_forgejo_token
+  forgejo_api_token            = var.backplane_secrets.stackit_git_forgejo_token
   forgejo_repo_definition_uuid = module.stackit_git_repository.building_block_definition.uuid
-  harbor_username              = var.secrets.harbor_push_username
-  harbor_password              = var.secrets.harbor_push_password
+  harbor_username              = var.backplane_secrets.harbor_push_username
+  harbor_password              = var.backplane_secrets.harbor_push_password
 
   # Smoke tests don't exercise real inference — the app only needs the `stackit-ai`
   # secret to exist so its pods can start (the app chart mounts it via `envFrom`, so a
