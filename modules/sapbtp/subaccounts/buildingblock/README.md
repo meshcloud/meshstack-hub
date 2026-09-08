@@ -17,7 +17,7 @@ terraform {
   required_providers {
     btp = {
       source  = "SAP/btp"
-      version = "~> 1.8.0"
+      version = ">= 1.8.0, < 2.0.0"
     }
   }
 }
@@ -28,7 +28,7 @@ terraform {
 
 | Name | Version |
 |------|---------|
-| <a name="requirement_btp"></a> [btp](#requirement\_btp) | >= 1.8.0 |
+| <a name="requirement_btp"></a> [btp](#requirement\_btp) | >= 1.8.0, < 2.0.0 |
 
 ## Modules
 
