@@ -1,9 +1,5 @@
-# The root is deliberately mode-agnostic: it orders a building block and probes what that block
-# deployed. Where the definition comes from is `module.definition`'s business.
 variable "test_context" {
-  # A pipe, not a contract. Each mode module re-types this strictly, so every field a mode needs is
-  # required *there* — an invalid combination is unrepresentable per mode, and one mode's fields
-  # cannot leak into the other's as `optional()`.
+  # Untyped: each mode module re-types it strictly, so every field it needs stays required.
   type     = any
   nullable = false
 
@@ -13,8 +9,8 @@ variable "test_context" {
   }
 }
 
-# Only the root module reads TF_VAR_*, so the backplane's secrets are declared here and piped down.
-# modes/hub rejects a null among them; foundation mode ignores them.
+# Secrets never travel in `test_context` — it is built from state a CI job can read. They arrive as
+# TF_VAR_*, which only the root module sees, so they are declared here and piped down.
 variable "stackit_git_forgejo_token" {
   type      = string
   sensitive = true
@@ -78,7 +74,7 @@ module "definition" {
 
   test_context = var.test_context
 
-  secrets = {
+  backplane_secrets = {
     stackit_git_forgejo_token = var.stackit_git_forgejo_token
     ske_kubeconfig            = var.ske_kubeconfig
     harbor_push_username      = var.harbor_push_username
@@ -89,9 +85,6 @@ module "definition" {
 }
 
 resource "meshstack_building_block" "this" {
-  # One state holds the building block and everything modes/hub built, so this ordering also holds
-  # on teardown: the delete run finishes before any of it is destroyed, and if the delete run fails
-  # the whole destroy graph aborts and the backplane is left standing in errored_test.tfstate.
   depends_on = [module.definition]
 
   wait_for_completion = true
