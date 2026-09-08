@@ -24,6 +24,10 @@ const MODULES_DIR = join(ROOT, "modules");
 // ||, so anything below it faults on the common `var.x == null || var.x.attr` guard.
 const TERRAFORM_VERSION_FLOOR = "1.12.0";
 
+// Our own provider is still on 0.x, where a minor release is what carries breaking changes, so a
+// `< 1.0.0` bound would buy nothing. It is exempt from the upper-bound rule until it reaches 1.0.
+const MAJOR_UNSTABLE_PROVIDER = "meshcloud/meshstack";
+
 const compareVersions = (a, b) => {
   const pa = a.split(".").map(Number);
   const pb = b.split(".").map(Number);
@@ -240,26 +244,31 @@ const detectors = [
   {
     id: "provider_pinned",
     category: "core",
-    name: "Provider versions use minimum constraint (>=)",
+    name: "Provider versions float within one major (>= X.Y.Z, < N.0.0)",
     emoji: "🔒",
     fn: (mod) => {
       const constraints = collectProviderConstraints(mod);
       if (constraints.length === 0)
         return { pass: true, detail: "no provider version constraints" };
 
-      const violations = constraints.filter(
-        (c) => !c.constraint.includes(">=") || c.constraint.includes("~>")
-      );
+      const violations = [];
+      for (const c of constraints) {
+        if (!c.constraint.includes(">=") || c.constraint.includes("~>")) {
+          violations.push({ ...c, why: "needs a >= floor" });
+        } else if (!c.constraint.includes("<") && c.source !== MAJOR_UNSTABLE_PROVIDER) {
+          violations.push({ ...c, why: "needs a < upper bound on the next major" });
+        }
+      }
       if (violations.length === 0) return { pass: true };
 
       const shown = violations
         .slice(0, 4)
-        .map((v) => `${v.file}: ${v.provider} = "${v.constraint}"`)
+        .map((v) => `${v.file}: ${v.provider} = "${v.constraint}" (${v.why})`)
         .join(", ");
       const more = violations.length > 4 ? `, +${violations.length - 4} more` : "";
       return {
         pass: false,
-        detail: `use a minimum constraint (>=) instead: ${shown}${more}`,
+        detail: `use \`>= X.Y.Z, < N.0.0\`: ${shown}${more}`,
       };
     },
   },
@@ -1472,6 +1481,9 @@ function stripHeredocs(content) {
 // configuration — that is how modules/meshstack/noop pinned the e2e suite to meshstack
 // v0.21.0 from its backplane while its buildingblock declared only `>=`.
 //
+// A bare `>=` is not enough either: it takes the next major on its own, which is how azurerm 5.0
+// reached buildingblock code written for 4.x. Every constraint carries both bounds.
+//
 // Constraints are read from any .tf file, not just versions.tf: `provider.tf` is part of the
 // documented module layout and legitimately carries required_providers.
 function collectProviderConstraints(mod) {
@@ -1491,9 +1503,11 @@ function collectProviderConstraints(mod) {
         for (const entry of body.matchAll(/([\w-]+)\s*=\s*\{([^{}]*)\}/g)) {
           const version = entry[2].match(/version\s*=\s*"([^"]+)"/);
           if (!version) continue;
+          const source = entry[2].match(/source\s*=\s*"([^"]+)"/);
           constraints.push({
             file: relative(mod.path, file),
             provider: entry[1],
+            source: source?.[1] ?? entry[1],
             constraint: version[1],
           });
         }

@@ -72,9 +72,8 @@ A secondary purpose of these files is to serve as a ready-to-use Terraform modul
 ### Required providers
 
 Every `meshstack_integration.tf` must declare the `meshcloud/meshstack` provider in a
-`required_providers` block. Use a minimum version constraint with `>=` (e.g. `>= 0.20.0`).
-Root configurations (ICF/LCF) that source hub modules are responsible for strict version
-pinning via their `.terraform.lock.hcl` files.
+`required_providers` block, with a bare `>=` constraint (e.g. `>= 0.20.0`) — it is the one
+provider exempt from the upper bound under [Variable Conventions](#variable-conventions).
 
 ```hcl
 terraform {
@@ -278,8 +277,9 @@ re-run:
 - **Cloud-provider-specific variables** in `meshstack_integration.tf` must be **flat** (not grouped into a single object) and prefixed with the cloud provider name: `azure_tenant_id`, `aws_region`, `gcp_project_id`, `stackit_project_id`
 - **Cross-cutting concerns** like workload identity federation settings may be grouped into an `object({})` typed variable (e.g. `variable "workload_identity"`) when the fields are logically inseparable
 - Only `variable "meshstack"` and `variable "hub"` use shared `object({})` conventions across all integrations
-- Use minimum version constraints (`>= X.Y.Z`) for all providers — never `~>` and never an exact pin. This applies to **every** `required_providers` block in the module: both tiers (`backplane/` and `buildingblock/`, including nested submodules) and `meshstack_integration.tf`, in whichever file declares them (`versions.tf`, `provider.tf`, …). Strict pinning is the responsibility of root configurations (ICF/LCF) via `.terraform.lock.hcl`.
-  Both tiers matter because they are consumed together: a hub e2e test module loads the backplane and the buildingblock into one configuration, so their constraints must intersect on a version that exists. A `~>` or exact pin in either tier caps the whole configuration — and silently caps the e2e suite.
+- Every provider constraint floats inside one major: `version = ">= 4.65.0, < 5.0.0"`. Never `~>`, never an exact pin. This holds for **every** `required_providers` block in the module — both tiers (`backplane/` and `buildingblock/`, including nested submodules) and `meshstack_integration.tf`, in whichever file declares them (`versions.tf`, `provider.tf`, …).
+  The floor stays loose so a root configuration that combines several hub modules resolves one version for all of them; a pin in either tier caps the whole configuration, which is how `modules/meshstack/noop` capped the e2e suite. The ceiling keeps a bare `>=` from taking the next major on the next `init`, which is how azurerm 5.0 reached buildingblock code written for 4.x. Strict pinning belongs to root configurations (ICF/LCF) via `.terraform.lock.hcl`.
+  `meshcloud/meshstack` is the exception and keeps a bare `>=`: it is still on 0.x, where breaking changes ride on a minor release, so `< 1.0.0` would protect nothing. The scorecard exempts it.
 - Terraform baseline: `>= 1.12.0` to cover OpenTofu v1.12.0 with `const` variable support (requires OpenTofu ≥ 1.12 or Terraform ≥ 1.15)
 
 ---
@@ -496,7 +496,7 @@ unnoticed. The  `no_buildingblock_tftest` scorecard check flags each one as migr
 
 - [ ] `backplane/` (optional) and `buildingblock/` with all required files
 - [ ] `meshstack_integration.tf` present at the module root
-- [ ] Provider versions use minimum constraint (`>=`) in `versions.tf` and `meshstack_integration.tf`
+- [ ] Provider versions float within one major (`>= X.Y.Z, < N.0.0`) in `versions.tf` and `meshstack_integration.tf` — `meshcloud/meshstack` keeps a bare `>=`
 - [ ] Variables in `snake_case` with cloud-provider prefix in `meshstack_integration.tf` (e.g. `azure_tenant_id`)
 - [ ] `buildingblock/README.md` with YAML front-matter
 - [ ] BBD `readme` field uses `chomp(<<-EOT)` inline (no `file()`), starts with plain-text description (no `#` heading), and includes usage motivation, 1–2 examples, and a shared responsibility table with ✅ / ❌ — see [.agents/references/bbd-readme.md](.agents/references/bbd-readme.md)
