@@ -84,7 +84,7 @@ output "some_file_yaml" {
 
 | Name | Version |
 |------|---------|
-| <a name="requirement_external"></a> [external](#requirement\_external) | >= 2.3.0 |
+| <a name="requirement_external"></a> [external](#requirement\_external) | >= 2.3.0, < 3.0.0 |
 
 ## Modules
 
