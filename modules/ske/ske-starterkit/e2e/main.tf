@@ -89,7 +89,13 @@ resource "meshstack_building_block" "this" {
     }
 
     inputs = {
-      name = { value = jsonencode("smoke-test-${var.test_context.name_suffix}") }
+      # Kept short on purpose. This name is the stem of a meshProject identifier
+      # (`<name>-<stage>`), and a foundation may append a random suffix of its own to avoid
+      # collisions on the app hostname and the git repository — both of which are shared across
+      # workspaces. `projectIdentifierLength` is per-instance meshStack config, so the budget left
+      # for the test is whatever the tightest instance allows: "st-" plus the timestamp fits with
+      # room for a foundation's suffix and the stage.
+      name = { value = jsonencode("st-${var.test_context.name_suffix}") }
     }
   }
 }
