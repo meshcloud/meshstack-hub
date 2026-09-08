@@ -61,9 +61,8 @@ variable "description" {
 
 variable "workspace_ttl_days_default" {
   type        = number
-  nullable    = false
   default     = 30
-  description = "Default of the `Workspace TTL (Days)` user input. A flavour handing out long-lived team workspaces needs a far larger default than a time-boxed one."
+  description = "Default of the `Workspace TTL (Days)` user input. A flavour handing out long-lived team workspaces needs a far larger default than a time-boxed one. Set it to `null` to make the input optional instead: whoever orders may then leave it blank, and a workspace ordered without a TTL never expires."
 }
 
 variable "payment_method_amount_default" {
@@ -139,6 +138,10 @@ output "building_block_definition" {
 }
 
 locals {
+  # A default value and an optional input are mutually exclusive — a prefilled value can be changed
+  # but never cleared — so only a deployment that sets no default lets an orderer opt out of expiry.
+  workspace_ttl_optional = var.workspace_ttl_days_default == null
+
   platform_ref     = { uuid = var.platform_uuid, kind = "meshPlatform" }
   landing_zone_ref = { name = var.landing_zone_name, kind = "meshLandingZone" }
 }
@@ -189,6 +192,9 @@ resource "meshstack_building_block_definition" "this" {
     nothing outlives the workspace it belongs to. Every resource it creates is destroyed automatically
     the next time it runs after that many days have passed — the workspace, the payment method, the
     project and the tenant, all in one run. The block itself is not deleted, only what it created.
+
+    If this deployment lets you leave **Workspace TTL (Days)** blank, an order without a TTL creates
+    a workspace that never expires: nothing carries an expiry date and no run destroys anything.
 
     ## 📊 Shared Responsibility
 
@@ -329,10 +335,11 @@ resource "meshstack_building_block_definition" "this" {
 
       workspace_ttl_days = {
         display_name    = "Workspace TTL (Days)"
-        description     = "Number of days after creation before the workspace, payment method, project and tenant are destroyed."
+        description     = "Number of days after creation before the workspace, payment method, project and tenant are destroyed.${local.workspace_ttl_optional ? " Leave it blank for a workspace that never expires." : ""}"
         type            = "INTEGER"
         assignment_type = "USER_INPUT"
-        default_value   = jsonencode(var.workspace_ttl_days_default)
+        default_value   = local.workspace_ttl_optional ? null : jsonencode(var.workspace_ttl_days_default)
+        is_optional     = local.workspace_ttl_optional
         display_order   = 3
       }
 
@@ -406,8 +413,9 @@ terraform {
 
   required_providers {
     meshstack = {
-      source  = "meshcloud/meshstack"
-      version = ">= 0.24.0"
+      source = "meshcloud/meshstack"
+      # 0.25.2 adds `version_spec.inputs.*.is_optional`, which makes the TTL input skippable.
+      version = ">= 0.25.2"
     }
   }
 }

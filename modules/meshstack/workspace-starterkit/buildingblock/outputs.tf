@@ -18,6 +18,6 @@ output "project_identifier" {
 }
 
 output "workspace_expiry_date" {
-  description = "Date (YYYY-MM-DD) this building block computed from its creation date plus workspace_ttl_days — the date the workspace, and everything else this block created, are destroyed on the next run."
+  description = "Date (YYYY-MM-DD) this building block computed from its creation date plus workspace_ttl_days — the date the workspace, and everything else this block created, are destroyed on the next run. Null when workspace_ttl_days is unset and nothing expires."
   value       = local.expiry_date
 }

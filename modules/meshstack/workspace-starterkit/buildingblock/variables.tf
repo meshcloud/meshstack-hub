@@ -32,8 +32,8 @@ variable "workspace_expiry_tag_key" {
 
 variable "workspace_ttl_days" {
   type        = number
-  nullable    = false
-  description = "Number of days after this building block first creates the workspace before it, the payment method, the project and the tenant are destroyed. The module tracks the creation date itself (see time_static.created in main.tf) — this input is a duration, not a date."
+  default     = null
+  description = "Number of days after this building block first creates the workspace before it, the payment method, the project and the tenant are destroyed. The module tracks the creation date itself (see time_static.created in main.tf) — this input is a duration, not a date. Leave it unset to switch expiry tracking off: the workspace, payment method and owner binding then get no expiry date and nothing is ever torn down."
 }
 
 variable "workspace_owner_username" {
@@ -97,5 +97,5 @@ variable "tags" {
     project        = map(list(string))
   })
   nullable    = false
-  description = "Additional tags merged onto the workspace (alongside the mandatory `expiry` tag), the payment method and the project."
+  description = "Additional tags merged onto the workspace (alongside the expiry tag, if `workspace_ttl_days` is set), the payment method and the project."
 }

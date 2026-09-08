@@ -9,10 +9,14 @@ resource "time_static" "created" {
 }
 
 locals {
-  expiry_timestamp = timeadd(time_static.created.rfc3339, "${var.workspace_ttl_days * 24}h")
-  expiry_date      = formatdate("YYYY-MM-DD", local.expiry_timestamp)
+  # A null TTL switches expiry tracking off: no expiry date is computed, so nothing this block
+  # creates carries one and no later run tears any of it down.
+  expiry_timestamp = var.workspace_ttl_days == null ? null : timeadd(time_static.created.rfc3339, "${var.workspace_ttl_days * 24}h")
+  expiry_date      = local.expiry_timestamp == null ? null : formatdate("YYYY-MM-DD", local.expiry_timestamp)
 
-  expired = timecmp(plantimestamp(), local.expiry_timestamp) > 0
+  expired = local.expiry_timestamp != null && timecmp(plantimestamp(), local.expiry_timestamp) > 0
+
+  expiry_tags = local.expiry_date == null ? {} : { (var.workspace_expiry_tag_key) = [local.expiry_date] }
 
   payment_method_identifier = "${var.workspace_identifier}-payment-method"
 }
@@ -28,9 +32,7 @@ resource "meshstack_workspace" "this" {
 
   metadata = {
     name = var.workspace_identifier
-    tags = merge(var.tags.workspace, {
-      (var.workspace_expiry_tag_key) = [local.expiry_date]
-    })
+    tags = merge(var.tags.workspace, local.expiry_tags)
   }
 
   spec = {
