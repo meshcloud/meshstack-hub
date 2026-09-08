@@ -8,7 +8,7 @@ terraform {
     }
     stackit = {
       source  = "stackitcloud/stackit"
-      version = ">= 0.99.0"
+      version = ">= 0.99.0, < 1.0.0"
     }
     random = {
       source  = "hashicorp/random"
