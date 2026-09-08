@@ -5,9 +5,6 @@ terraform {
     meshstack = {
       source = "meshcloud/meshstack"
     }
-    kubernetes = {
-      source = "hashicorp/kubernetes"
-    }
     external = {
       source = "hashicorp/external"
     }

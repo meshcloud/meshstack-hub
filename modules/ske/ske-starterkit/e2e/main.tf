@@ -53,21 +53,8 @@ locals {
   # already deployed the definition and passes its version ref, never even resolves the hub build
   # tree. A wrong or missing test_context fails at init rather than halfway through an apply.
   mode = try(var.test_context.bbd_version_ref, null) == null ? "hub" : "foundation"
-
-  # yamldecode parses both YAML (the ICF-published Vault value) and JSON (a superset), so it is
-  # robust regardless of the format the kubeconfig secret is provided in.
-  ske_kubeconfig = var.ske_kubeconfig != null ? yamldecode(var.ske_kubeconfig) : null
 }
 
-# Declared here rather than in a provider.tf: a foundation e2e unit generates its meshstack provider
-# into `provider.tf`, which would overwrite a file of that name shipped by this module. Foundation
-# mode creates nothing on a cluster, so the null arguments are correct there.
-provider "kubernetes" {
-  host                   = try(local.ske_kubeconfig["clusters"][0]["cluster"]["server"], null)
-  cluster_ca_certificate = try(base64decode(local.ske_kubeconfig["clusters"][0]["cluster"]["certificate-authority-data"]), null)
-  client_certificate     = try(base64decode(local.ske_kubeconfig["users"][0]["user"]["client-certificate-data"]), null)
-  client_key             = try(base64decode(local.ske_kubeconfig["users"][0]["user"]["client-key-data"]), null)
-}
 
 module "definition" {
   source = "./modes/${local.mode}"
