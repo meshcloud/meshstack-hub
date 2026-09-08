@@ -109,6 +109,12 @@ variable "test_context" {
 Add to the validation whatever else the root reads. A tenant-level block also reads
 `fixtures.<cloud>.mesh_tenant_id` for its `target_ref`, in both modes.
 
+Two groups keep `test_context` navigable as it grows: **`fixtures.<cloud>`** for resources living
+inside the instance, and **`meshstack`** for settings of the instance itself — e.g.
+`meshstack.tag_schema`, which a test creating a meshObject has to obey and cannot discover. Neither
+is a place for a loose new top-level key. (`workspace`, `project` and `meshstack_endpoint` predate
+the second group and still sit at the top level.)
+
 ### The mode modules
 
 `e2e/modes/hub/` and `e2e/modes/foundation/` expose the same contract:
