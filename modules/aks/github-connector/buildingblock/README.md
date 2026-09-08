@@ -39,7 +39,7 @@ terraform {
 
 | Name | Version |
 |------|---------|
-| <a name="requirement_github"></a> [github](#requirement\_github) | >= 6.5.0 |
+| <a name="requirement_github"></a> [github](#requirement\_github) | >= 6.5.0, < 7.0.0 |
 | <a name="requirement_kubernetes"></a> [kubernetes](#requirement\_kubernetes) | >= 2.35.1, < 3.0.0 |
 | <a name="requirement_time"></a> [time](#requirement\_time) | >= 0.11.1, < 1.0.0 |
 

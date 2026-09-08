@@ -15,7 +15,7 @@ This documentation is intended as a reference documentation for cloud foundation
 
 | Name | Version |
 |------|---------|
-| <a name="requirement_github"></a> [github](#requirement\_github) | 6.6.0 |
+| <a name="requirement_github"></a> [github](#requirement\_github) | >= 6.6.0, < 7.0.0 |
 
 ## Modules
 
@@ -25,8 +25,8 @@ No modules.
 
 | Name | Type |
 |------|------|
-| [github_repository.repository](https://registry.terraform.io/providers/integrations/github/6.6.0/docs/resources/repository) | resource |
-| [github_repository_collaborator.repo_owner](https://registry.terraform.io/providers/integrations/github/6.6.0/docs/resources/repository_collaborator) | resource |
+| [github_repository.repository](https://registry.terraform.io/providers/integrations/github/latest/docs/resources/repository) | resource |
+| [github_repository_collaborator.repo_owner](https://registry.terraform.io/providers/integrations/github/latest/docs/resources/repository_collaborator) | resource |
 
 ## Inputs
 
