@@ -8,8 +8,8 @@ terraform {
     kubernetes = {
       source = "hashicorp/kubernetes"
     }
-    external = {
-      source = "hashicorp/external"
+    random = {
+      source = "hashicorp/random"
     }
   }
 }
