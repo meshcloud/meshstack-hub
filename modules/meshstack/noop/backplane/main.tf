@@ -45,6 +45,11 @@ resource "google_secret_manager_secret" "runner_private_key" {
 resource "google_secret_manager_secret_version" "runner_private_key" {
   secret         = google_secret_manager_secret.runner_private_key.id
   secret_data_wo = resource.tls_private_key.runner.private_key_pem_pkcs8
+
+  # google 8.x requires this alongside secret_data_wo (7.x accepted it alone). A write-only value
+  # is absent from state, so the provider cannot see it change — bump this counter to push a new
+  # key into the secret.
+  secret_data_wo_version = 1
 }
 
 resource "google_secret_manager_secret" "runner_config" {

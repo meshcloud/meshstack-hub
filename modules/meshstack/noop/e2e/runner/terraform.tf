@@ -6,12 +6,10 @@ terraform {
       source = "meshcloud/meshstack"
     }
     google = {
-      source  = "hashicorp/google"
-      version = "~> 7.0"
+      source = "hashicorp/google"
     }
     tls = {
-      source  = "hashicorp/tls"
-      version = "~> 4.0"
+      source = "hashicorp/tls"
     }
   }
 }
