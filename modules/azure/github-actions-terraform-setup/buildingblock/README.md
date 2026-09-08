@@ -27,7 +27,7 @@ For more information, refer to the backplane documentation of the [Azure GitHub 
 | <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) | >= 4.65.0, < 5.0.0 |
 | <a name="requirement_github"></a> [github](#requirement\_github) | >= 6.3.0 |
 | <a name="requirement_random"></a> [random](#requirement\_random) | >= 3.6.3, < 4.0.0 |
-| <a name="requirement_time"></a> [time](#requirement\_time) | >= 0.11.1 |
+| <a name="requirement_time"></a> [time](#requirement\_time) | >= 0.11.1, < 1.0.0 |
 
 ## Modules
 

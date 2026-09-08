@@ -134,7 +134,7 @@ This building block implements all required network security group rules for Azu
 |------|---------|
 | <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.3.0 |
 | <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) | >= 3.116.0, < 4.0.0 |
-| <a name="requirement_time"></a> [time](#requirement\_time) | >= 0.11.1 |
+| <a name="requirement_time"></a> [time](#requirement\_time) | >= 0.11.1, < 1.0.0 |
 
 ## Modules
 

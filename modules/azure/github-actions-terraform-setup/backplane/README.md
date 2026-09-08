@@ -164,7 +164,7 @@ For advanced use cases, you can of course also want to customize the `buildingbl
 | <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) | >= 4.4.0, < 5.0.0 |
 | <a name="requirement_github"></a> [github](#requirement\_github) | 6.3.0 |
 | <a name="requirement_random"></a> [random](#requirement\_random) | >= 3.6.3, < 4.0.0 |
-| <a name="requirement_time"></a> [time](#requirement\_time) | 0.11.1 |
+| <a name="requirement_time"></a> [time](#requirement\_time) | >= 0.11.1, < 1.0.0 |
 
 ## Modules
 
@@ -181,7 +181,7 @@ No modules.
 | [azurerm_role_assignment.starterkit_access](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/role_assignment) | resource |
 | [azurerm_role_definition.starterkit_access](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/role_definition) | resource |
 | [azurerm_role_definition.starterkit_deploy](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/role_definition) | resource |
-| [time_rotating.key_rotation](https://registry.terraform.io/providers/hashicorp/time/0.11.1/docs/resources/rotating) | resource |
+| [time_rotating.key_rotation](https://registry.terraform.io/providers/hashicorp/time/latest/docs/resources/rotating) | resource |
 | [azuread_application_published_app_ids.well_known](https://registry.terraform.io/providers/hashicorp/azuread/latest/docs/data-sources/application_published_app_ids) | data source |
 | [azuread_group.project_admins](https://registry.terraform.io/providers/hashicorp/azuread/latest/docs/data-sources/group) | data source |
 | [azuread_service_principal.msgraph](https://registry.terraform.io/providers/hashicorp/azuread/latest/docs/data-sources/service_principal) | data source |
