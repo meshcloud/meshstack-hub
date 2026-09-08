@@ -87,7 +87,7 @@ automatically. Set it to 0 when the backplane is always provisioned well ahead o
 
 | Name | Version |
 |------|---------|
-| <a name="requirement_google"></a> [google](#requirement\_google) | >= 6.12.0 |
+| <a name="requirement_google"></a> [google](#requirement\_google) | >= 6.12.0, < 7.0.0 |
 | <a name="requirement_time"></a> [time](#requirement\_time) | >= 0.9 |
 
 ## Modules

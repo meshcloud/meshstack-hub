@@ -138,7 +138,7 @@ This configuration will accept any subject that starts with `system:serviceaccou
 | Name | Version |
 |------|---------|
 | <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.0 |
-| <a name="requirement_google"></a> [google](#requirement\_google) | >= 7.0 |
+| <a name="requirement_google"></a> [google](#requirement\_google) | >= 7.0, < 8.0.0 |
 | <a name="requirement_time"></a> [time](#requirement\_time) | >= 0.9 |
 
 ## Modules
