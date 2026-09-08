@@ -136,12 +136,12 @@ variable "os_disk_size_gb" {
 
 variable "kubernetes_version" {
   type        = string
-  description = "Kubernetes version for the AKS cluster"
-  default     = "1.33.0"
+  description = "Kubernetes version for the AKS cluster. Null lets AKS choose the version it recommends today, 1.34 takes the latest patch in that minor, 1.34.2 pins one. A pinned version needs maintenance: AKS moves a minor to LTS-only when its community support ends, and creating a cluster on it then fails."
+  default     = null
 
   validation {
-    condition     = can(regex("^[0-9]+\\.[0-9]+\\.[0-9]+$", var.kubernetes_version))
-    error_message = "Kubernetes version must be in format X.Y.Z (e.g., 1.29.2)."
+    condition     = var.kubernetes_version == null || can(regex("^[0-9]+\\.[0-9]+(\\.[0-9]+)?$", var.kubernetes_version))
+    error_message = "Kubernetes version must be X.Y or X.Y.Z (e.g. 1.34 or 1.34.2)."
   }
 }
 
