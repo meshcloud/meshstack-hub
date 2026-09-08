@@ -6,7 +6,7 @@ terraform {
     }
     forgejo = {
       source  = "svalabs/forgejo"
-      version = ">= 1.3.0"
+      version = ">= 1.3.0, < 2.0.0"
     }
     restapi = {
       source  = "Mastercard/restapi"
