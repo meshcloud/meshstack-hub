@@ -86,6 +86,11 @@ variable "project_identifier_error_message" {
   description = "Message shown when the project identifier does not match `project_identifier_pattern`."
 }
 
+variable "readme" {
+  type        = string
+  default     = null
+  description = "Replaces the readme the building block definition shows whoever orders it. Unset keeps the module's own, which documents the TTL and the shared responsibilities as this module implements them — so override it to change tone or language, or to add instance-specific guidance, not to describe different behaviour."
+}
 
 variable "api_key_lifetime_days" {
   type        = number
@@ -145,31 +150,11 @@ locals {
 
   platform_ref     = { uuid = var.platform_uuid, kind = "meshPlatform" }
   landing_zone_ref = { name = var.landing_zone_name, kind = "meshLandingZone" }
-}
 
-module "backplane" {
-  source = "github.com/meshcloud/meshstack-hub//modules/meshstack/workspace-starterkit/backplane?ref=${var.hub.git_ref}"
-
-  meshstack_workspace_identifier = var.meshstack.owning_workspace_identifier
-  api_key_display_name           = var.display_name
-  api_key_lifetime_days          = var.api_key_lifetime_days
-  additional_api_key_permissions = var.additional_api_key_permissions
-}
-
-resource "meshstack_building_block_definition" "this" {
-  metadata = {
-    owned_by_workspace = var.meshstack.owning_workspace_identifier
-    tags               = var.meshstack.tags.building_block
-  }
-
-  spec = {
-    display_name     = var.display_name
-    symbol           = "https://raw.githubusercontent.com/meshcloud/meshstack-hub/${var.hub.git_ref}/modules/meshstack/workspace-starterkit/buildingblock/logo.png"
-    description      = var.description
-    target_type      = "WORKSPACE_LEVEL"
-    run_transparency = true
-
-    readme = chomp(<<-EOT
+  # The readme whoever orders this building block reads, unless a deployment replaces the whole
+  # document through var.readme. Inline rather than in a file, so this integration stays
+  # copy-pasteable as one unit.
+  default_readme = chomp(<<-EOT
     Creates a fully onboarded meshStack workspace in one order: a workspace tagged with an expiry
     date, a payment method, a project with a tenant on any already-registered platform, and the
     initial workspace and project role bindings.
@@ -218,7 +203,32 @@ resource "meshstack_building_block_definition" "this" {
     | Use the workspace, project and tenant once created | ❌ | ✅ |
     | Order further building blocks inside the project | ❌ | ✅ |
     EOT
-    )
+  )
+}
+
+module "backplane" {
+  source = "github.com/meshcloud/meshstack-hub//modules/meshstack/workspace-starterkit/backplane?ref=${var.hub.git_ref}"
+
+  meshstack_workspace_identifier = var.meshstack.owning_workspace_identifier
+  api_key_display_name           = var.display_name
+  api_key_lifetime_days          = var.api_key_lifetime_days
+  additional_api_key_permissions = var.additional_api_key_permissions
+}
+
+resource "meshstack_building_block_definition" "this" {
+  metadata = {
+    owned_by_workspace = var.meshstack.owning_workspace_identifier
+    tags               = var.meshstack.tags.building_block
+  }
+
+  spec = {
+    display_name     = var.display_name
+    symbol           = "https://raw.githubusercontent.com/meshcloud/meshstack-hub/${var.hub.git_ref}/modules/meshstack/workspace-starterkit/buildingblock/logo.png"
+    description      = var.description
+    target_type      = "WORKSPACE_LEVEL"
+    run_transparency = true
+
+    readme = coalesce(var.readme, local.default_readme)
   }
 
   version_spec = {
