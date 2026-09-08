@@ -27,6 +27,20 @@ passed, the next run destroys everything it created — workspace, payment metho
 both bindings. The block itself is not self-purging: it stays behind so its outputs still show what
 happened.
 
+## Several flavours from one module
+
+The definition's display name and description, the defaults of the **Workspace TTL (Days)** and
+**Payment Method Amount** inputs, and the two identifier validation regexes are module variables of
+`meshstack_integration.tf`. Deploy the module once per flavour — say a long-lived team workspace
+next to a time-boxed university workspace on a small budget — and give each one its own
+`display_name` and defaults, otherwise the panel shows identically named definitions that differ in
+nothing an orderer can see.
+
+`workspace_identifier_pattern` defaults to the widest form meshStack accepts, 63 characters, while
+meshStack instances cap workspace identifiers at 16. Narrow the pattern, and
+`workspace_identifier_error_message` with it, so an orderer reads the real rule instead of having
+the order rejected later.
+
 <!-- BEGIN_TF_DOCS -->
 ## Requirements
 

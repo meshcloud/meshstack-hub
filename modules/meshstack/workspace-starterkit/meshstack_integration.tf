@@ -45,6 +45,62 @@ variable "project_role_name" {
   description = "meshStack project role granted to the project admin on every project this definition creates."
 }
 
+variable "display_name" {
+  type        = string
+  nullable    = false
+  default     = "meshStack Workspace Starterkit"
+  description = "Display name of the building block definition. One instance can deploy several flavours of this starterkit side by side — e.g. a long-lived team workspace and a time-boxed university workspace — and without distinct names the panel shows them as duplicates."
+}
+
+variable "description" {
+  type        = string
+  nullable    = false
+  default     = "Creates a new meshStack workspace with a self-tracked TTL, a payment method, a project with a tenant of a given platform/landing zone, and the initial workspace and project role bindings."
+  description = "Description of the building block definition, shown next to its display name in the panel."
+}
+
+variable "workspace_ttl_days_default" {
+  type        = number
+  nullable    = false
+  default     = 30
+  description = "Default of the `Workspace TTL (Days)` user input. A flavour handing out long-lived team workspaces needs a far larger default than a time-boxed one."
+}
+
+variable "payment_method_amount_default" {
+  type        = number
+  nullable    = false
+  default     = 100
+  description = "Default of the `Payment Method Amount` user input. Set it per flavour, e.g. a small budget for a university workspace and a generous one for a team workspace."
+}
+
+variable "workspace_identifier_pattern" {
+  type        = string
+  nullable    = false
+  default     = "^[a-zA-Z0-9-]{1,63}$"
+  description = "Regex the workspace identifier must match. The default is the widest form meshStack accepts, but instances cap workspace identifiers at 16 characters, so a deployment usually narrows it to its own rule."
+}
+
+variable "workspace_identifier_error_message" {
+  type        = string
+  nullable    = false
+  default     = "Letters, digits and dashes only, at most 63 characters."
+  description = "Message shown when the workspace identifier does not match `workspace_identifier_pattern`. Change it together with the pattern — it is the only place the rule is spelled out for the orderer."
+}
+
+variable "project_identifier_pattern" {
+  type        = string
+  nullable    = false
+  default     = "^[a-zA-Z0-9-]{1,63}$"
+  description = "Regex the project identifier must match."
+}
+
+variable "project_identifier_error_message" {
+  type        = string
+  nullable    = false
+  default     = "Letters, digits and dashes only, at most 63 characters."
+  description = "Message shown when the project identifier does not match `project_identifier_pattern`."
+}
+
 variable "meshstack" {
   type = object({
     owning_workspace_identifier = string
@@ -83,8 +139,6 @@ output "building_block_definition" {
 }
 
 locals {
-  identifier_regex = "^[a-zA-Z0-9-]{1,63}$"
-
   platform_ref     = { uuid = var.platform_uuid, kind = "meshPlatform" }
   landing_zone_ref = { name = var.landing_zone_name, kind = "meshLandingZone" }
 }
@@ -96,9 +150,9 @@ resource "meshstack_building_block_definition" "this" {
   }
 
   spec = {
-    display_name     = "meshStack Workspace Starterkit"
+    display_name     = var.display_name
     symbol           = "https://raw.githubusercontent.com/meshcloud/meshstack-hub/${var.hub.git_ref}/modules/meshstack/workspace-starterkit/buildingblock/logo.png"
-    description      = "Creates a new meshStack workspace with a self-tracked TTL, a payment method, a project with a tenant of a given platform/landing zone, and the initial workspace and project role bindings."
+    description      = var.description
     target_type      = "WORKSPACE_LEVEL"
     run_transparency = true
 
@@ -260,8 +314,8 @@ resource "meshstack_building_block_definition" "this" {
         description                    = "Identifier for the new workspace."
         type                           = "STRING"
         assignment_type                = "USER_INPUT"
-        value_validation_regex         = local.identifier_regex
-        validation_regex_error_message = "Letters, digits and dashes only, at most 63 characters."
+        value_validation_regex         = var.workspace_identifier_pattern
+        validation_regex_error_message = var.workspace_identifier_error_message
         display_order                  = 1
       }
 
@@ -278,7 +332,7 @@ resource "meshstack_building_block_definition" "this" {
         description     = "Number of days after creation before the workspace, payment method, project and tenant are destroyed."
         type            = "INTEGER"
         assignment_type = "USER_INPUT"
-        default_value   = jsonencode(30)
+        default_value   = jsonencode(var.workspace_ttl_days_default)
         display_order   = 3
       }
 
@@ -295,7 +349,7 @@ resource "meshstack_building_block_definition" "this" {
         description     = "Budget amount for the payment method."
         type            = "INTEGER"
         assignment_type = "USER_INPUT"
-        default_value   = jsonencode(100)
+        default_value   = jsonencode(var.payment_method_amount_default)
         display_order   = 5
       }
 
@@ -304,8 +358,8 @@ resource "meshstack_building_block_definition" "this" {
         description                    = "Identifier for the project created inside the new workspace."
         type                           = "STRING"
         assignment_type                = "USER_INPUT"
-        value_validation_regex         = local.identifier_regex
-        validation_regex_error_message = "Letters, digits and dashes only, at most 63 characters."
+        value_validation_regex         = var.project_identifier_pattern
+        validation_regex_error_message = var.project_identifier_error_message
         display_order                  = 6
       }
 
