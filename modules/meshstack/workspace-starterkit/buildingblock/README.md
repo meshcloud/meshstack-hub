@@ -21,6 +21,20 @@ That key reaches the run as the `MESHSTACK_API_KEY` / `MESHSTACK_API_SECRET` env
 `provider "meshstack"` configures itself and the credential is not a module input at all. Runs
 already have `MESHSTACK_ENDPOINT` in their environment, so the definition does not pass one.
 
+## What the instance has to have first
+
+Two things about the target instance, both of which a building block run reports as a `409
+TagValidation` from the workspace it tried to create:
+
+- **The expiry tag key must exist in the tag schema**, as a tag configured for workspaces.
+  `workspace_expiry_tag_key` defaults to `expiry`, and an instance that has no such tag definition
+  answers `You cannot add the following tags [expiry]`. Point the variable at a key the instance
+  does have, or define one.
+- **Mandatory tags must be supplied.** An instance can require tags on every workspace, project or
+  payment method, and the run has no way to invent them: pass them through
+  `var.meshstack.tags.workspace`, `.project` and `.payment_method`, which are merged onto what this
+  building block creates. A missing one answers `Mandatory tag(s) ... must be provided`.
+
 ## Self-destructs after its TTL
 
 You set `workspace_ttl_days`, not a date. The block tracks its own creation time
