@@ -7,6 +7,11 @@ variable "test_context" {
     condition     = can(var.test_context.workspace) && can(var.test_context.name_suffix)
     error_message = "test_context must provide workspace and name_suffix."
   }
+
+  validation {
+    condition     = contains(["hub", "foundation"], try(var.test_context.mode, "hub"))
+    error_message = "test_context.mode must be \"hub\" (the default) or \"foundation\"."
+  }
 }
 
 # Secrets never travel in `test_context` — it is built from state a CI job can read. They arrive as
@@ -50,9 +55,8 @@ variable "harbor_pull_password" {
 
 locals {
   # Statically evaluated at `tofu init`, before any module is installed — so a foundation, which
-  # already deployed the definition and passes its version ref, never even resolves the hub build
-  # tree. A wrong or missing test_context fails at init rather than halfway through an apply.
-  mode = try(var.test_context.bbd_version_ref, null) == null ? "hub" : "foundation"
+  # already published the definition, never even resolves the hub build tree.
+  mode = try(var.test_context.mode, "hub")
 }
 
 

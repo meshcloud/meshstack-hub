@@ -46,18 +46,21 @@ runner module-agnostic. Its full shape is the `test_context` output of the `test
 
 ### The two modes
 
-`test_context.bbd_version_ref` selects the mode:
+`test_context.mode` selects the mode:
 
-| `bbd_version_ref` | Mode | Who runs it | What happens |
-|---|---|---|---|
-| unset | **hub** | meshstack-smoke-test | Builds the BBD from hub source with an ephemeral backplane, then orders a building block. |
-| set | **foundation** | foundation repos (likvid/internal-cloudfoundation) | The BBD is already deployed. Only orders a building block against it. |
+| `mode` | Who runs it | What happens |
+|---|---|---|
+| unset / `"hub"` | meshstack-smoke-test | Builds the BBD from hub source with an ephemeral backplane, then orders a building block. |
+| `"foundation"` | foundation repos (likvid/trial/internal-cloudfoundation) | The BBD is already published. Looks it up by display name and orders a building block against it. |
+
+Modules still on the older `count` gate instead read the mode off `bbd_version_ref` being set.
+Switch one to `mode` when migrating it to the `modes/` layout.
 
 The mode picks a **module source**, not a `count`:
 
 ```hcl
 locals {
-  mode = try(var.test_context.bbd_version_ref, null) == null ? "hub" : "foundation"
+  mode = try(var.test_context.mode, "hub")
 }
 
 module "definition" {
@@ -114,7 +117,38 @@ Add to the validation whatever else the root reads. A tenant-level block also re
 output "version_ref" { value = ... }   # { uuid = string }
 ```
 
-`modes/foundation` returns `var.test_context.bbd_version_ref` and builds nothing.
+`modes/foundation` builds nothing. It finds the published definition through the meshStack API and
+returns the version ref to order against:
+
+```hcl
+data "meshstack_building_block_definitions" "published" {
+  workspace_identifier = var.test_context.workspace
+}
+
+locals {
+  # Must match `spec.display_name` in ../../meshstack_integration.tf.
+  display_name = "SKE Starterkit"
+
+  # `one` yields null when nothing matches, and fails outright on a duplicate display name.
+  definition = one([for d in data.meshstack_building_block_definitions.published.building_block_definitions
+  : d if d.spec.display_name == local.display_name])
+
+  version = var.test_context.bbd_draft ? try(local.definition.version_latest, null) : try(local.definition.version_latest_release, null)
+}
+```
+
+Look the definition up; do not take its version ref as an input. That is what keeps a foundation
+smoke test down to **one credential, the meshStack API key** — reading it from the deployment's
+terraform state instead would need cloud credentials for the state backend, and that state also
+holds the backplane's own secrets. It also means the test targets what a user of the foundation
+actually sees, and works for a definition published by any means.
+
+Guard both misses with an output `precondition`, so the failure names the cause rather than
+surfacing as a null attribute: no definition under that display name, and a definition whose
+`bbd_draft` does not match what the foundation deployed (a draft has no released version).
+
+`test_context` in this mode is therefore just `{ workspace, bbd_draft }` — all static values a
+foundation can spell out in HCL, no `dependency` on the deployment unit.
 
 A provider that only one mode needs belongs in that mode module, not in the root — foundation mode
 then never installs it. A module holding a provider block may not take `count`, `for_each` or
@@ -391,6 +425,17 @@ input runs exactly one e2e case. The runner applies the `test_context` module to
 `hub_git_ref` from the committed SHA, writes it to a temp `.tfvars.json`, then runs `tofu test` in
 the module's `e2e/` directory.
 
+Foundation mode runs from the foundation repo's own `smoke-test.yml`, dispatched per case with a
+path prefix:
+
+```bash
+gh workflow run smoke-test.yml -f prefix=platforms/ske/starterkit/e2e   # in likvid-cloudfoundation
+```
+
+That job holds one secret, the meshStack API key. If a foundation smoke test needs a cloud
+credential, a state backend or a terragrunt `dependency`, the mode module is taking something it
+should be looking up.
+
 ---
 
 ## Debugging
@@ -489,7 +534,8 @@ source setup-override-provider.sh
 
 - [ ] `e2e/main.tf` holds only the building block and what probes it; both modes live under `e2e/modes/`
 - [ ] `variable "test_context"` is `type = any`, `nullable = false`, with a `validation` for the fields the root itself reads
-- [ ] `local.mode` comes from `try(var.test_context.bbd_version_ref, null)`; `module "definition"` sources `./modes/${local.mode}`
+- [ ] `local.mode` comes from `try(var.test_context.mode, "hub")`; `module "definition"` sources `./modes/${local.mode}`
+- [ ] `modes/foundation` looks the published definition up by display name — it takes no version ref, so the foundation needs no credential but the meshStack API key
 - [ ] Both mode modules expose the same `output "version_ref"`
 - [ ] Each mode module re-types `test_context` as an `object` with every field it needs required — no `optional()`
 - [ ] `modes/hub` sources the module under test by relative path (not a GitHub URL) and passes `hub.git_ref = var.test_context.hub_git_ref`
