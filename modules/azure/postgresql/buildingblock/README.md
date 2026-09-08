@@ -19,7 +19,7 @@ This Terraform project deploys a cost-effective Azure PostgreSQL database with m
 | Name | Version |
 |------|---------|
 | <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.5.0 |
-| <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) | >= 4.22.0 |
+| <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) | >= 4.22.0, < 5.0.0 |
 | <a name="requirement_random"></a> [random](#requirement\_random) | >= 3.7.1 |
 
 ## Modules

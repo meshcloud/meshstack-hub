@@ -28,7 +28,7 @@ This module should therefore be executed as a separate step at the beginning of 
 |------|---------|
 | <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.0 |
 | <a name="requirement_azuread"></a> [azuread](#requirement\_azuread) | 3.0.2 |
-| <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) | 4.4.0 |
+| <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) | >= 4.4.0, < 5.0.0 |
 
 ## Modules
 
@@ -38,9 +38,9 @@ No modules.
 
 | Name | Type |
 |------|------|
-| [azurerm_role_assignment.starterkit_deploy](https://registry.terraform.io/providers/hashicorp/azurerm/4.4.0/docs/resources/role_assignment) | resource |
+| [azurerm_role_assignment.starterkit_deploy](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/role_assignment) | resource |
 | [azuread_client_config.current](https://registry.terraform.io/providers/hashicorp/azuread/3.0.2/docs/data-sources/client_config) | data source |
-| [azurerm_subscription.current](https://registry.terraform.io/providers/hashicorp/azurerm/4.4.0/docs/data-sources/subscription) | data source |
+| [azurerm_subscription.current](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/subscription) | data source |
 
 ## Inputs
 

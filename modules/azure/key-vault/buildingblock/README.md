@@ -22,7 +22,7 @@ This Terraform module provisions an Azure Key Vault with support for both public
 
 ## Requirements
 - Terraform `>= 1.3.0`
-- AzureRM Provider `~> 4.18.0`
+- AzureRM Provider `>= 4.18.0, < 5.0.0`
 
 ## Deployment Scenarios
 
@@ -42,7 +42,7 @@ terraform {
   required_providers {
     azurerm = {
       source  = "hashicorp/azurerm"
-      version = "~> 4.18.0"
+      version = ">= 4.18.0, < 5.0.0"
     }
     random = {
       source  = "hashicorp/random"
@@ -89,7 +89,7 @@ provider "azurerm" {
 | Name | Version |
 |------|---------|
 | <a name="requirement_azuread"></a> [azuread](#requirement\_azuread) | >= 3.1.0 |
-| <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) | >= 4.18.0 |
+| <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) | >= 4.18.0, < 5.0.0 |
 | <a name="requirement_random"></a> [random](#requirement\_random) | >= 3.6.3 |
 
 ## Modules

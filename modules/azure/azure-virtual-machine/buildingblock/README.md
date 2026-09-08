@@ -141,7 +141,7 @@ module "spot_vm" {
 | Name | Version |
 |------|---------|
 | <a name="requirement_azuread"></a> [azuread](#requirement\_azuread) | >=3.6.0 |
-| <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) | >=4.50.0 |
+| <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) | >= 4.50.0, < 5.0.0 |
 | <a name="requirement_random"></a> [random](#requirement\_random) | >=3.7.2 |
 
 ## Modules
