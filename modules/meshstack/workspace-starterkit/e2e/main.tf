@@ -16,6 +16,13 @@ variable "test_context" {
   }
 
   validation {
+    # The instance restricts what a project identifier may look like; a test has to build one that
+    # fits, and cannot read the rule off a regex.
+    condition     = can(var.test_context.meshstack.project_identifier_suffix)
+    error_message = "test_context must provide meshstack.project_identifier_suffix."
+  }
+
+  validation {
     condition     = contains(["hub", "foundation"], try(var.test_context.mode, "hub"))
     error_message = "test_context.mode must be \"hub\" (the default) or \"foundation\"."
   }
@@ -42,7 +49,11 @@ locals {
   run_id = "${var.ttl_optional ? "n" : "t"}-${substr(var.test_context.name_suffix, 2, 12)}"
 
   workspace_identifier = "w${local.run_id}"
-  project_identifier   = "p${local.run_id}"
+
+  # The instance decides what a project identifier may look like — meshcloud-dev requires a
+  # -dev/-prod/-qa suffix — and a regex is not something a test can derive an identifier from, so
+  # the suffix comes from the harness.
+  project_identifier = "p${local.run_id}${var.test_context.meshstack.project_identifier_suffix}"
 
   workspace_ttl_days = 7
 }
@@ -77,11 +88,12 @@ resource "meshstack_building_block" "this" {
     inputs = merge(
       {
         workspace_identifier     = { value = jsonencode(local.workspace_identifier) }
-        workspace_display_name   = { value = jsonencode("Smoke Test Starterkit ${local.run_id}") }
+        workspace_display_name   = { value = jsonencode("Smoke Test ${local.run_id}") }
         workspace_owner_username = { value = jsonencode(var.test_context.owner_username) }
         payment_method_amount    = { value = jsonencode(100) }
         project_identifier       = { value = jsonencode(local.project_identifier) }
-        project_display_name     = { value = jsonencode("Smoke Test Project ${local.run_id}") }
+        # Kept short on purpose: an instance may cap a project name, and meshcloud-dev caps it at 30.
+        project_display_name = { value = jsonencode("Project ${local.run_id}") }
       },
       local.omit_ttl ? {} : {
         workspace_ttl_days = { value = jsonencode(local.workspace_ttl_days) }
