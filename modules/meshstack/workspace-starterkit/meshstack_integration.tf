@@ -10,20 +10,6 @@ variable "landing_zone_name" {
   description = "Name of the landing zone on that platform the tenant is placed in — e.g. the `.ref.name` output of the meshLandingZone that owns it."
 }
 
-variable "meshstack_admin_api_key" {
-  type        = string
-  sensitive   = true
-  nullable    = false
-  description = "Admin-scoped meshStack API key, injected once by the platform team when deploying this definition, paired with meshstack_admin_api_secret. Creating a workspace and a payment method needs `ADM_*` permissions meshStack never grants to a building block's own ephemeral run token, so the building block authenticates every resource it manages through this key/secret pair instead."
-}
-
-variable "meshstack_admin_api_secret" {
-  type        = string
-  sensitive   = true
-  nullable    = false
-  description = "Admin-scoped meshStack API secret, paired with meshstack_admin_api_key."
-}
-
 variable "workspace_expiry_tag_key" {
   type        = string
   nullable    = false
@@ -100,6 +86,21 @@ variable "project_identifier_error_message" {
   description = "Message shown when the project identifier does not match `project_identifier_pattern`."
 }
 
+
+variable "api_key_lifetime_days" {
+  type        = number
+  nullable    = false
+  default     = 90
+  description = "How long the backplane's API key stays valid, in days. meshStack requires an expiry and caps how far out it may sit, so it cannot be turned off. The expiry rolls forward on the first apply past half this many days — see backplane/README.md, an expired key also stops the runs that clean up expired workspaces."
+}
+
+variable "additional_api_key_permissions" {
+  type        = list(string)
+  nullable    = false
+  default     = []
+  description = "Permissions to add to the ones the backplane grants its API key. See backplane/README.md."
+}
+
 variable "meshstack" {
   type = object({
     owning_workspace_identifier = string
@@ -144,6 +145,15 @@ locals {
 
   platform_ref     = { uuid = var.platform_uuid, kind = "meshPlatform" }
   landing_zone_ref = { name = var.landing_zone_name, kind = "meshLandingZone" }
+}
+
+module "backplane" {
+  source = "github.com/meshcloud/meshstack-hub//modules/meshstack/workspace-starterkit/backplane?ref=${var.hub.git_ref}"
+
+  meshstack_workspace_identifier = var.meshstack.owning_workspace_identifier
+  api_key_display_name           = var.display_name
+  api_key_lifetime_days          = var.api_key_lifetime_days
+  additional_api_key_permissions = var.additional_api_key_permissions
 }
 
 resource "meshstack_building_block_definition" "this" {
@@ -202,7 +212,7 @@ resource "meshstack_building_block_definition" "this" {
     |---|:---:|:---:|
     | Order this building block and choose the workspace, payment method and project details | ✅ | ❌ |
     | Provide the platform and landing zone the tenant is created on | ✅ | ❌ |
-    | Provide the admin-scoped API key/secret this building block authenticates with | ✅ | ❌ |
+    | Deploy the backplane that mints the API key this building block authenticates with | ✅ | ❌ |
     | Assign the initial owner of the workspace and project | ✅ | ❌ |
     | Choose the TTL when ordering, and extend it later if needed | ✅ | ❌ |
     | Use the workspace, project and tenant once created | ❌ | ✅ |
@@ -226,33 +236,31 @@ resource "meshstack_building_block_definition" "this" {
       }
     }
 
-    # No `permissions`: every resource is managed through the admin-scoped provider alias
-    # authenticated with `meshstack_admin_api_key` / `meshstack_admin_api_secret`, not this run's
-    # ephemeral token.
+    # No `permissions`: nothing is managed with this run's own ephemeral token, which meshStack
+    # never grants `ADM_*` to. The two environment inputs below authenticate the provider as the
+    # backplane's admin-scoped key instead. `MESHSTACK_ENDPOINT` is not among them — every building
+    # block run already has it in its environment.
 
     inputs = {
-      meshstack_admin_api_key = {
-        display_name    = "meshStack Admin API Key"
-        description     = "Admin-scoped meshStack API key used to create the workspace and payment method, which need permissions this block's own ephemeral run token cannot hold. Paired with meshStack Admin API Secret."
+      MESHSTACK_API_KEY = {
+        display_name    = "MESHSTACK_API_KEY"
+        description     = "Client id of the backplane's admin-scoped API key, which the meshStack provider inside the run reads from its environment."
         type            = "STRING"
         assignment_type = "STATIC"
-        sensitive = {
-          argument = {
-            secret_value   = var.meshstack_admin_api_key
-            secret_version = nonsensitive(sha256(var.meshstack_admin_api_key))
-          }
-        }
+        is_environment  = true
+        argument        = jsonencode(module.backplane.api_key_client_id)
       }
 
-      meshstack_admin_api_secret = {
-        display_name    = "meshStack Admin API Secret"
-        description     = "Admin-scoped meshStack API secret, paired with meshStack Admin API Key."
+      MESHSTACK_API_SECRET = {
+        display_name    = "MESHSTACK_API_SECRET"
+        description     = "Client secret paired with MESHSTACK_API_KEY."
         type            = "STRING"
         assignment_type = "STATIC"
+        is_environment  = true
         sensitive = {
           argument = {
-            secret_value   = var.meshstack_admin_api_secret
-            secret_version = nonsensitive(sha256(var.meshstack_admin_api_secret))
+            secret_value   = module.backplane.api_key_client_secret
+            secret_version = nonsensitive(sha256(module.backplane.api_key_client_secret))
           }
         }
       }

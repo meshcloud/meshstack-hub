@@ -3,7 +3,6 @@ name: meshStack Workspace Starterkit
 supportedPlatforms:
   - meshstack
 description: Creates a new meshStack workspace with a self-tracked TTL, a payment method, a project with a tenant, and the initial workspace and project role bindings.
-requiresBackplane: false
 ---
 
 # meshStack Workspace Starterkit
@@ -15,9 +14,12 @@ on any already-registered meshPlatform, and the initial workspace and project ro
 ## Admin-scoped API key
 
 Creating a workspace or a payment method needs meshStack `ADM_*` permissions, which a building
-block's own ephemeral token never has. This module authenticates instead with
-`meshstack_admin_api_key` / `meshstack_admin_api_secret` — an admin credential the platform team
-sets once in `meshstack_integration.tf` — so it declares no `permissions` in `version_spec`.
+block's own ephemeral token never has — so this module declares no `permissions` in `version_spec`
+and authenticates as the API key [the backplane](../backplane/README.md) mints instead.
+
+That key reaches the run as the `MESHSTACK_API_KEY` / `MESHSTACK_API_SECRET` environment inputs, so
+`provider "meshstack"` configures itself and the credential is not a module input at all. Runs
+already have `MESHSTACK_ENDPOINT` in their environment, so the definition does not pass one.
 
 ## Self-destructs after its TTL
 
@@ -34,17 +36,21 @@ the workspace's real creation date.
 
 ## Several flavours from one module
 
-The definition's display name and description, the defaults of the **Workspace TTL (Days)** and
-**Payment Method Amount** inputs, and the two identifier validation regexes are module variables of
-`meshstack_integration.tf`. Deploy the module once per flavour — say a long-lived team workspace
-next to a time-boxed university workspace on a small budget — and give each one its own
-`display_name` and defaults, otherwise the panel shows identically named definitions that differ in
-nothing an orderer can see.
+The definition's display name, description and readme, the defaults of the **Workspace TTL (Days)**
+and **Payment Method Amount** inputs, and the two identifier validation regexes are module
+variables of `meshstack_integration.tf`. Deploy the module once per flavour — say a long-lived
+team workspace next to a time-boxed university workspace on a small budget — and give each one its
+own `display_name` and defaults, otherwise the panel shows identically named definitions that
+differ in nothing an orderer can see.
 
 `workspace_ttl_days_default` reaches the same switch from the platform side. It is the default the
 panel prefills, and meshStack has no way to express both a default and a skippable input — so set
 it to `null` and the **Workspace TTL (Days)** input becomes optional, letting an orderer choose a
 workspace that never expires. This needs meshStack 2026.36.0 or later.
+
+`readme` replaces the whole document an orderer reads, so it is the knob for a different language
+or for instance-specific guidance — not for describing behaviour this module does not have. Left
+unset it keeps the module's own text.
 
 `workspace_identifier_pattern` defaults to the widest form meshStack accepts, 63 characters, while
 meshStack instances cap workspace identifiers at 16. Narrow the pattern, and
@@ -81,8 +87,6 @@ No modules.
 | Name | Description | Type | Default | Required |
 |------|-------------|------|---------|:--------:|
 | <a name="input_landing_zone_ref"></a> [landing\_zone\_ref](#input\_landing\_zone\_ref) | Reference to the landing zone the tenant is placed in. | <pre>object({<br/>    name = string<br/>    kind = optional(string, "meshLandingZone")<br/>  })</pre> | n/a | yes |
-| <a name="input_meshstack_admin_api_key"></a> [meshstack\_admin\_api\_key](#input\_meshstack\_admin\_api\_key) | Admin-scoped meshStack API key. Creating a workspace and a payment method needs ADM\_* permissions meshStack never grants to a building block's own ephemeral run token, so every meshStack resource here is authenticated with this key/secret pair instead. | `string` | n/a | yes |
-| <a name="input_meshstack_admin_api_secret"></a> [meshstack\_admin\_api\_secret](#input\_meshstack\_admin\_api\_secret) | Admin-scoped meshStack API secret, paired with meshstack\_admin\_api\_key. | `string` | n/a | yes |
 | <a name="input_payment_method_amount"></a> [payment\_method\_amount](#input\_payment\_method\_amount) | Budget amount for the payment method. | `number` | n/a | yes |
 | <a name="input_platform_ref"></a> [platform\_ref](#input\_platform\_ref) | Reference (by uuid) to the meshPlatform the tenant is created on. | <pre>object({<br/>    uuid = string<br/>    kind = optional(string, "meshPlatform")<br/>  })</pre> | n/a | yes |
 | <a name="input_project_display_name"></a> [project\_display\_name](#input\_project\_display\_name) | Display name for the project. | `string` | n/a | yes |

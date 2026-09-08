@@ -1,17 +1,3 @@
-variable "meshstack_admin_api_key" {
-  type        = string
-  sensitive   = true
-  nullable    = false
-  description = "Admin-scoped meshStack API key. Creating a workspace and a payment method needs ADM_* permissions meshStack never grants to a building block's own ephemeral run token, so every meshStack resource here is authenticated with this key/secret pair instead."
-}
-
-variable "meshstack_admin_api_secret" {
-  type        = string
-  sensitive   = true
-  nullable    = false
-  description = "Admin-scoped meshStack API secret, paired with meshstack_admin_api_key."
-}
-
 variable "workspace_identifier" {
   type        = string
   nullable    = false
