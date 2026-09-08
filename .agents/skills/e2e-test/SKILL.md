@@ -27,106 +27,101 @@ To successfully work across these repositories, always read their AGENTS.md file
 ```
 modules/<cloud-provider>/<service-name>/
 └── e2e/
-    ├── main.tf        # Test root module — sources the meshstack_integration.tf and creates a building block instance
+    ├── main.tf        # the building block and what probes it — mode-agnostic
     ├── terraform.tf   # required_providers block (no version pins needed here)
+    ├── modes/
+    │   ├── hub/        # builds the BBD from hub source with an ephemeral backplane
+    │   └── foundation/ # passes through the BBD version the foundation deployed
     └── tests/
-        └── <test-name>.tftest.hcl   # tftest assertions on building block outputs
+        └── <cloud>_<service>.tftest.hcl   # assertions on the building block
 ```
 
 ---
 
 ## Invocation protocol (single source of truth)
 
-`e2e/main.tf` takes a **single `test_context` grab-bag** the smoke-test runner dumps **verbatim** as
-one var-file (keeping the runner module-agnostic). Declare **only the fields your module reads**;
-object-type conversion drops the rest. Its full shape is the `test_context` output in
-[`../meshstack-smoke-test/modules/test_context/main.tf`](../../../../meshstack-smoke-test/modules/test_context/main.tf).
+The smoke-test runner dumps one `test_context` var-file, verbatim, for every module. That keeps the
+runner module-agnostic. Its full shape is the `test_context` output of the `test_context` module in
+`meshstack-smoke-test`.
 
-The mode is selected **solely by the optional `bbd_version_ref` field**:
+### The two modes
 
-| `bbd_version_ref` | Mode | Who runs it | What it does |
+`test_context.bbd_version_ref` selects the mode:
+
+| `bbd_version_ref` | Mode | Who runs it | What happens |
 |---|---|---|---|
-| null (unset) | **build-from-source** | meshstack-smoke-test (hub-e2e) | Builds the BBD from hub source via the relative `../` module + ephemeral backplane, then orders a building block. |
-| set | **foundation** | foundation repos (likvid/internal-cloudfoundation) | The foundation already deployed the BBD; the test only orders a building block against the given version ref. |
+| unset | **hub** | meshstack-smoke-test | Builds the BBD from hub source with an ephemeral backplane, then orders a building block. |
+| set | **foundation** | foundation repos (likvid/internal-cloudfoundation) | The BBD is already deployed. Only orders a building block against it. |
+
+The mode picks a **module source**, not a `count`:
 
 ```hcl
-variable "test_context" {
-  type = object({
-    workspace   = string
-    name_suffix = string
-    hub_git_ref = string
+locals {
+  mode = try(var.test_context.bbd_version_ref, null) == null ? "hub" : "foundation"
+}
 
-    # Mode discriminator: set in foundation mode to order an already-deployed BBD version;
-    # null in build-from-source mode, which builds the BBD from hub source.
-    bbd_version_ref = optional(object({
-      uuid = string
-    }))
+module "definition" {
+  source = "./modes/${local.mode}"
 
-    # Cloud resource IDs. Needed in build-from-source mode (to provision the backplane) and, for
-    # tenant-level building blocks, also in foundation mode (the target_ref tenant id).
-    fixtures = optional(object({
-      stackit = object({
-        project_id     = string
-        mesh_tenant_id = string
-      })
-    }))
-  })
-  nullable = false
+  test_context      = var.test_context
+  backplane_secrets = { ... }
 }
 ```
 
-Conventions that keep this clean and correct:
+OpenTofu evaluates a module `source` statically at `tofu init`, so **only the selected mode is
+installed**. Foundation mode never resolves the hub build tree.
 
-- **The discriminator is `bbd_version_ref` alone — not `fixtures`.** `fixtures` is orthogonal to the
-  mode: tenant-level building blocks need `fixtures.<cloud>.mesh_tenant_id` for `target_ref` in *both*
-  modes, so you cannot key the mode off `fixtures` being present. Declare `fixtures = optional(...)`
-  and let each module decide whether it needs it (workspace-level blocks typically only need it in
-  build-from-source; tenant-level blocks need it in both). Its inner shape stays fully required, so a
-  half-populated `fixtures` is unrepresentable.
-- **`hub_git_ref` is required in both modes.** It is passed into the integration module's `const`
-  `hub.git_ref`, whose backplane `source` (`?ref=${var.hub.git_ref}`) is statically evaluated at
-  **init — regardless of `count`**. It must therefore resolve to a non-null string even in foundation
-  mode (where the module is not built), so it cannot be `optional`. The foundation already knows its
-  deployed ref and passes it through (`dependency.deployment.outputs.e2e.hub.git_ref`).
-- **Always-shared fields are required**: `workspace`, `name_suffix`, and `hub_git_ref` are used (or
-  statically evaluated) in both modes.
-- **Cloud resource IDs live under `fixtures`** (e.g. `var.test_context.fixtures.stackit.project_id`),
-  never as a flat top-level field. This ensures we have one common union type of fixture inputs reusable
-  across our hub modules.
-- **`test_context` describes the environment, not the test case.** A flag that selects *which variant
-  of the module under test to build* (e.g. a sync vs async implementation) does not belong in
-  `test_context` — it belongs in a **root variable of the `e2e/` module**, pinned per test file. See
-  [Covering several variants of one module](#covering-several-variants-of-one-module). Putting it in
-  `test_context` forces the variant to be chosen before `tofu test` starts, which pushes a
-  test-matrix concern out of the hub and into whatever invokes it.
+### Why not `count`
 
-### Secrets
+A `count` gate on each backplane module forces every field that only one mode needs to be
+`optional()`. That set grows with the backplane, and a half-filled `test_context` becomes
+representable with nothing to reject it. One module per mode lets each mode re-type `test_context`
+itself and keep every field required, so a missing field fails at the module boundary:
 
-**No secret go into the `test_context` field.** The test_context object is built from a tofu state
-read and this must not store secrets.
+```
+Error: Invalid value for input variable
+  ... declared at modes/hub/main.tf:6,1-24: attribute "dns_zone_name" is required.
+```
 
-A secret reaches the module one of two ways:
+Most modules still use the older `count` gate. Migrate one when you next touch it. Do not convert
+them all in one change.
 
-- The provider reads it from **its own standard environment variable**. The
-  module declares nothing and we rely on the e2e test harness to setup the environment accordingly.
-- The module declares a **flat root variable** for it, when the value is also needed as an input to
-  the module under test (e.g. `stackit_git_forgejo_token`, `github_app_private_key`). The smoke-test
-  runner exports every secret it holds as `TF_VAR_<name>`, so declaring the variable is all it takes
-  — name it exactly as the runner does.
+### The root module
 
----
-
-## `e2e/main.tf` conventions
-
-- **Source the module under test via a relative path** to the module root (where
-  `meshstack_integration.tf` lives), **not** a GitHub URL — so tests run against the local branch
-  without a push. Gate it on the mode with `count` (build-from-source only), and map the module's
-  flat provider inputs from `fixtures`:
+`e2e/main.tf` holds only what both modes share: the `meshstack_building_block` and anything probing
+what it deployed. `test_context` is an untyped pipe here, because the mode modules own the type:
 
 ```hcl
-module "my_stackit_module" {
-  count  = var.test_context.bbd_version_ref == null ? 1 : 0   # build-from-source mode only
-  source = "../"                                              # relative path to the meshstack_integration.tf root
+variable "test_context" {
+  type     = any
+  nullable = false
+
+  validation {
+    condition     = can(var.test_context.workspace) && can(var.test_context.name_suffix)
+    error_message = "test_context must provide workspace and name_suffix."
+  }
+}
+```
+
+Add to the validation whatever else the root reads. A tenant-level block also reads
+`fixtures.<cloud>.mesh_tenant_id` for its `target_ref`, in both modes.
+
+### The mode modules
+
+`e2e/modes/hub/` and `e2e/modes/foundation/` expose the same contract:
+
+```hcl
+output "version_ref" { value = ... }   # { uuid = string }
+```
+
+`modes/foundation` returns `var.test_context.bbd_version_ref` and builds nothing.
+
+`modes/hub` builds the BBD. Source the module under test by **relative path**, never a GitHub URL,
+so tests run against the local branch without a push:
+
+```hcl
+module "under_test" {
+  source = "../../../" # the directory holding meshstack_integration.tf
   meshstack = {
     owning_workspace_identifier = var.test_context.workspace
     tags                        = {}
@@ -135,40 +130,59 @@ module "my_stackit_module" {
     git_ref   = var.test_context.hub_git_ref
     bbd_draft = true
   }
-  stackit_project_id = var.test_context.fixtures.stackit.project_id
 }
 ```
 
-- When the module under test **depends on other Hub modules** (e.g. a starterkit that composes a
-  git-repository and connector module), also source those dependencies using **relative paths**
-  (e.g. `"../../stackit/git-repository"`, `"../forgejo-connector"`).
+`hub_git_ref` is required in **hub mode only**. It reaches a module `source`
+(`?ref=${var.hub.git_ref}`) inside the integration module, which OpenTofu evaluates statically at
+init. Foundation mode never installs `modes/hub`, so it needs no hub ref.
 
-- **Resolve the version ref in a `local`** — from `bbd_version_ref` in foundation mode, otherwise
-  from the built module:
+When the module under test depends on other hub modules (a starter kit composing a git-repository
+and a connector), source those by relative path too.
+
+### Secrets
+
+**No secret is ever a `test_context` field.** The grab-bag is built from state a CI job can read, so
+a secret in it would have to be persisted somewhere it does not belong.
+
+A secret reaches the module one of two ways:
+
+- The provider reads it from **its own standard environment variable** (cloud credentials). Declare
+  nothing.
+- The root declares a **flat variable** with `default = null`, when the module under test needs the
+  value as an input. The runner exports every secret it holds as `TF_VAR_<name>`, and only a root
+  module reads `TF_VAR_*` — so the root declares them and pipes them down as one object.
+
+`modes/hub` re-types that object with every field required and rejects nulls:
 
 ```hcl
-locals {
-  version_ref = var.test_context.bbd_version_ref != null ? var.test_context.bbd_version_ref : module.my_stackit_module[0].building_block_definition.version_ref
+variable "backplane_secrets" {
+  type      = object({ ... })
+  sensitive = true
+  nullable  = false
+
+  validation {
+    # `nullable = false` rejects only the whole object, so check the attributes.
+    condition     = alltrue([for secret in values(var.backplane_secrets) : secret != null])
+    error_message = "Every backplane secret must be set; the runner exports them as TF_VAR_<name>."
+  }
 }
 ```
 
-- Create a `meshstack_building_block` resource that exercises the building block end-to-end.
-  Reference `test_context` directly (it is non-null in both modes). The provider's
-  `building_block_definition_version_ref` takes `{ uuid }` only — extract it explicitly.
+`modes/foundation` declares the same argument as unused `any`. A module block has one argument list
+for both sources, so both modes must accept it.
 
-- **Always add `depends_on = [module.<integration_module>]`** to `meshstack_building_block.this`.
-  WIF federated identity providers have no Terraform dependents (nothing references their outputs),
-  so OpenTofu schedules their destruction in parallel with the BB delete run. This causes the BB
-  delete run to fail with 401s because the cloud WIF trust is already gone before the delete run
-  can authenticate. The explicit `depends_on` forces the BB resource (including its delete run) to
-  be fully destroyed before any backplane resources are torn down.
+Marking the variable `sensitive` is belt-and-braces: sensitivity travels with the value, so a
+sensitive input stays sensitive even in a variable not declared as such. It never changes the value.
+
+### The building block
 
 ```hcl
 resource "meshstack_building_block" "this" {
-  depends_on          = [module.<integration_module>]   # prevents teardown race with WIF providers
+  depends_on          = [module.definition]
   wait_for_completion = true
   spec = {
-    building_block_definition_version_ref = { uuid = local.version_ref.uuid }
+    building_block_definition_version_ref = { uuid = module.definition.version_ref.uuid }
 
     display_name = "smoke-test-<name>-${var.test_context.name_suffix}"
     target_ref = {
@@ -182,6 +196,14 @@ resource "meshstack_building_block" "this" {
   }
 }
 ```
+
+The provider takes `{ uuid }` only, so extract it explicitly.
+
+`depends_on = [module.definition]` orders teardown as well as create. One state holds the block and
+everything `modes/hub` built, so the delete run finishes before any of it is destroyed. Without it,
+OpenTofu may destroy WIF federated identity providers in parallel with the delete run, which then
+fails with 401s because the cloud trust is already gone. If the delete run fails, the whole destroy
+graph aborts and leaves the backplane in `errored_test.tfstate` for the runner to reclaim.
 
 ### Isolating a shared mutable fixture
 
@@ -243,15 +265,14 @@ target_ref = {
 <!-- scorecard-checks: e2e_tftest -->
 ## `e2e/tests/*.tftest.hcl` conventions
 
-- Name the file `<cloud>_<service>_hub.tftest.hcl` (e.g. `building_block_noop_hub.tftest.hcl`), or
-  `<cloud>_<service>_<variant>_hub.tftest.hcl` when a module has several variants.
+- Name the file `<cloud>_<service>.tftest.hcl`, or `<cloud>_<service>_<variant>.tftest.hcl` when a
+  module has several variants. Older modules carry a `_hub` suffix from when the file was hub-only.
 - Always assert `status.status == "SUCCEEDED"` as the first check.
 - Assert meaningful output values (URLs, strings, booleans) to validate the building block executed
   correctly. Every output `value` is a `jsonencode`d string — read it with
   `jsondecode(<res>.status.outputs["<name>"].value)` (a CODE/JSON output decodes twice).
-- The same test file runs in **both** invocation modes (smoke-test via `tofu test`, foundation via
-  `terragrunt test`). Reference **`output.<name>`**, never `var.test_context.*` — `test_context` is
-  null in foundation mode and would crash the assertion.
+- One file serves both modes. Assert on the **building block only** — that is the one thing both
+  modes produce. The backplane does not exist in foundation mode, so nothing may assert on it.
 - Use `file("${path.root}/tests/<name>.expected.*")` for large expected values (JSON, Markdown) to
   keep assertions readable.
 
@@ -352,41 +373,19 @@ version in use rather than trusting them.
 
 ## Running tests
 
-**Tests run in GitHub Actions only.** There is no local test run: `e2e_run.sh` expects the whole
-Actions environment already in the shell (the `TF_VAR_*` secrets plus `MESHSTACK_*`), and
-`setup-env.sh` deliberately does not provide it — it sets up *operating* the smoke-test stack, not
-running it. Never suggest a local invocation; dispatch the workflow instead.
-
-The workflow lives in the **`meshcloud/meshstack-smoke-test`** repo (`../meshstack-smoke-test`), not
-in the hub — `.github/workflows/smoke-test.yml`.
+Hub e2e tests run in GitHub Actions only. The environment they need exists just as the Actions
+secrets that `meshstack-smoke-test` pushes, so there is no local test run. Push your branch, then
+dispatch the workflow and read the job logs:
 
 ```bash
-# One case. Always pass the hub branch: the default is `main`, which would test the wrong code.
-gh workflow run smoke-test.yml -f module=stackit/storage-bucket -f meshstack_hub_ref=my-branch \
-  -R meshcloud/meshstack-smoke-test
-
-# A hub PR instead of a branch.
-gh workflow run smoke-test.yml -f module=stackit/storage-bucket -f meshstack_hub_ref=refs/pull/123/head \
-  -R meshcloud/meshstack-smoke-test
-
-# The hourly allowlist, or every discovered case (`tier=all` is the default).
-gh workflow run smoke-test.yml -f tier=hourly -R meshcloud/meshstack-smoke-test
+gh workflow run smoke-test.yml -f module=stackit/storage-bucket -f meshstack_hub_ref=refs/pull/<nr>/head
+gh run watch
 ```
 
-`gh workflow run` prints no run id, so resolve it with `gh run list --workflow=smoke-test.yml`, then
-follow it with `gh run watch <id> --exit-status`.
-
-**Dispatch one `module` per changed module rather than a whole tier.** A tier fans out across every
-provider and costs real cloud resources; three targeted dispatches are cheaper and their failures
-are attributable. `module` overrides `tier`, and granularity is the whole module — the workflow has
-no input for `e2e_run.sh`'s optional `tofu test -filter`.
-
-Two commands that *do* work locally, needing no credentials:
-
-```bash
-./e2e_discover.sh . ../meshstack-hub   # list every e2e case in both repos
-tofu fmt -recursive                    # what the pre-commit hook runs
-```
+The workflow is `.github/workflows/smoke-test.yml` in `meshcloud/meshstack-smoke-test`. Its `module`
+input runs exactly one e2e case. The runner applies the `test_context` module to resolve
+`hub_git_ref` from the committed SHA, writes it to a temp `.tfvars.json`, then runs `tofu test` in
+the module's `e2e/` directory.
 
 ---
 
@@ -484,21 +483,16 @@ source setup-override-provider.sh
 
 ## Checklist for New E2E Tests
 
-- [ ] `e2e/` directory exists at the module root
-- [ ] Single `variable "test_context"` grab-bag (`nullable = false`); declares only the fields the module reads
-- [ ] Mode selected **solely** by the optional `bbd_version_ref` (typed `optional(object({ uuid = string }))`); `fixtures` is orthogonal (tenant-level blocks need it in both modes)
-- [ ] `fixtures` is `optional()` with its inner shape fully required (no half-populated fixtures)
-- [ ] Always-shared fields (`workspace`, `name_suffix`, `hub_git_ref`) are required, not `optional()`
-- [ ] Cloud resource IDs sourced from `var.test_context.fixtures.*` (not flat `test_context` fields)
-- [ ] No fixture read from the environment — only secrets arrive as `TF_VAR_*`
-- [ ] Scalar secrets are top-level `nullable` vars with `default = null` (foundation mode omits them)
-- [ ] Module sourced via relative path (not a GitHub URL), gated with `count = var.test_context.bbd_version_ref == null ? 1 : 0`
-- [ ] `hub.git_ref = var.test_context.hub_git_ref` — no hardcoded `"main"`
-- [ ] Version ref resolved in a `local` (`bbd_version_ref` in foundation mode, else the built module)
-- [ ] `building_block_definition_version_ref = { uuid = local.version_ref.uuid }` — provider only accepts `{ uuid }`, extract it explicitly
-- [ ] `meshstack_building_block` has `depends_on = [module.<integration_module>]` to prevent WIF teardown race (delete run must finish before backplane resources are destroyed)
-- [ ] `meshstack_building_block` has `wait_for_completion = true`
-- [ ] tftest asserts `status.status == "SUCCEEDED"` and key outputs (references `var.test_context.*` directly — non-null in both modes)
+- [ ] `e2e/main.tf` holds only the building block and what probes it; both modes live under `e2e/modes/`
+- [ ] `variable "test_context"` is `type = any`, `nullable = false`, with a `validation` for the fields the root itself reads
+- [ ] `local.mode` comes from `try(var.test_context.bbd_version_ref, null)`; `module "definition"` sources `./modes/${local.mode}`
+- [ ] Both mode modules expose the same `output "version_ref"`
+- [ ] Each mode module re-types `test_context` as an `object` with every field it needs required — no `optional()`
+- [ ] `modes/hub` sources the module under test by relative path (not a GitHub URL) and passes `hub.git_ref = var.test_context.hub_git_ref`
+- [ ] Secrets are flat root variables with `default = null`, piped down as one object, re-typed in `modes/hub` with a validation that rejects nulls
+- [ ] `building_block_definition_version_ref = { uuid = module.definition.version_ref.uuid }` — the provider accepts `{ uuid }` only
+- [ ] `meshstack_building_block` has `depends_on = [module.definition]` and `wait_for_completion = true`
+- [ ] One mode-agnostic `.tftest.hcl` file; assertions touch the building block only
 - [ ] Variant flags (sync/async and similar) are **root variables of the `e2e/` module** with a default, not `test_context` fields
 - [ ] One `.tftest.hcl` file per variant, pinning the flag in a file-level `variables` block — never several `run` blocks sharing one file's state
 - [ ] Writes into a long-lived shared fixture go to a per-run ephemeral slice named from `name_suffix`, owned by the `e2e/` module and included in the building block's `depends_on`
