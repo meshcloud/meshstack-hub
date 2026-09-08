@@ -162,7 +162,7 @@ The module automatically:
 | Name | Version |
 |------|---------|
 | <a name="requirement_meshstack"></a> [meshstack](#requirement\_meshstack) | >= 0.21.0 |
-| <a name="requirement_oci"></a> [oci](#requirement\_oci) | 7.32.0 |
+| <a name="requirement_oci"></a> [oci](#requirement\_oci) | >= 7.32.0, < 8.0.0 |
 
 ## Modules
 
@@ -172,16 +172,16 @@ No modules.
 
 | Name | Type |
 |------|------|
-| [oci_identity_compartment.application](https://registry.terraform.io/providers/oracle/oci/7.32.0/docs/resources/identity_compartment) | resource |
-| [oci_identity_group.admins](https://registry.terraform.io/providers/oracle/oci/7.32.0/docs/resources/identity_group) | resource |
-| [oci_identity_group.readers](https://registry.terraform.io/providers/oracle/oci/7.32.0/docs/resources/identity_group) | resource |
-| [oci_identity_group.users](https://registry.terraform.io/providers/oracle/oci/7.32.0/docs/resources/identity_group) | resource |
-| [oci_identity_policy.application](https://registry.terraform.io/providers/oracle/oci/7.32.0/docs/resources/identity_policy) | resource |
-| [oci_identity_user_group_membership.admins](https://registry.terraform.io/providers/oracle/oci/7.32.0/docs/resources/identity_user_group_membership) | resource |
-| [oci_identity_user_group_membership.readers](https://registry.terraform.io/providers/oracle/oci/7.32.0/docs/resources/identity_user_group_membership) | resource |
-| [oci_identity_user_group_membership.users](https://registry.terraform.io/providers/oracle/oci/7.32.0/docs/resources/identity_user_group_membership) | resource |
+| [oci_identity_compartment.application](https://registry.terraform.io/providers/oracle/oci/latest/docs/resources/identity_compartment) | resource |
+| [oci_identity_group.admins](https://registry.terraform.io/providers/oracle/oci/latest/docs/resources/identity_group) | resource |
+| [oci_identity_group.readers](https://registry.terraform.io/providers/oracle/oci/latest/docs/resources/identity_group) | resource |
+| [oci_identity_group.users](https://registry.terraform.io/providers/oracle/oci/latest/docs/resources/identity_group) | resource |
+| [oci_identity_policy.application](https://registry.terraform.io/providers/oracle/oci/latest/docs/resources/identity_policy) | resource |
+| [oci_identity_user_group_membership.admins](https://registry.terraform.io/providers/oracle/oci/latest/docs/resources/identity_user_group_membership) | resource |
+| [oci_identity_user_group_membership.readers](https://registry.terraform.io/providers/oracle/oci/latest/docs/resources/identity_user_group_membership) | resource |
+| [oci_identity_user_group_membership.users](https://registry.terraform.io/providers/oracle/oci/latest/docs/resources/identity_user_group_membership) | resource |
 | [meshstack_project.project](https://registry.terraform.io/providers/meshcloud/meshstack/latest/docs/data-sources/project) | data source |
-| [oci_identity_users.all_users](https://registry.terraform.io/providers/oracle/oci/7.32.0/docs/data-sources/identity_users) | data source |
+| [oci_identity_users.all_users](https://registry.terraform.io/providers/oracle/oci/latest/docs/data-sources/identity_users) | data source |
 
 ## Inputs
 
