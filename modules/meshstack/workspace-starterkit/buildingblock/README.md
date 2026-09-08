@@ -27,6 +27,11 @@ passed, the next run destroys everything it created — workspace, payment metho
 both bindings. The block itself is not self-purging: it stays behind so its outputs still show what
 happened.
 
+`workspace_ttl_days` is optional. Left unset, expiry tracking is off: no expiry tag on the
+workspace, no expiration date on the payment method or the owner binding, and no run that tears
+anything down. `time_static.created` is still recorded, so setting a TTL later still counts from
+the workspace's real creation date.
+
 ## Several flavours from one module
 
 The definition's display name and description, the defaults of the **Workspace TTL (Days)** and
@@ -35,6 +40,11 @@ The definition's display name and description, the defaults of the **Workspace T
 next to a time-boxed university workspace on a small budget — and give each one its own
 `display_name` and defaults, otherwise the panel shows identically named definitions that differ in
 nothing an orderer can see.
+
+`workspace_ttl_days_default` reaches the same switch from the platform side. It is the default the
+panel prefills, and meshStack has no way to express both a default and a skippable input — so set
+it to `null` and the **Workspace TTL (Days)** input becomes optional, letting an orderer choose a
+workspace that never expires. This needs meshStack 2026.36.0 or later.
 
 `workspace_identifier_pattern` defaults to the widest form meshStack accepts, 63 characters, while
 meshStack instances cap workspace identifiers at 16. Narrow the pattern, and
@@ -78,13 +88,13 @@ No modules.
 | <a name="input_project_display_name"></a> [project\_display\_name](#input\_project\_display\_name) | Display name for the project. | `string` | n/a | yes |
 | <a name="input_project_identifier"></a> [project\_identifier](#input\_project\_identifier) | Identifier for the project created inside the new workspace. | `string` | n/a | yes |
 | <a name="input_project_role_name"></a> [project\_role\_name](#input\_project\_role\_name) | meshStack project role granted to `workspace_owner_username`. | `string` | n/a | yes |
-| <a name="input_tags"></a> [tags](#input\_tags) | Additional tags merged onto the workspace (alongside the mandatory `expiry` tag), the payment method and the project. | <pre>object({<br/>    workspace      = map(list(string))<br/>    payment_method = map(list(string))<br/>    project        = map(list(string))<br/>  })</pre> | n/a | yes |
+| <a name="input_tags"></a> [tags](#input\_tags) | Additional tags merged onto the workspace (alongside the expiry tag, if `workspace_ttl_days` is set), the payment method and the project. | <pre>object({<br/>    workspace      = map(list(string))<br/>    payment_method = map(list(string))<br/>    project        = map(list(string))<br/>  })</pre> | n/a | yes |
 | <a name="input_workspace_display_name"></a> [workspace\_display\_name](#input\_workspace\_display\_name) | Display name for the new workspace. | `string` | n/a | yes |
 | <a name="input_workspace_expiry_tag_key"></a> [workspace\_expiry\_tag\_key](#input\_workspace\_expiry\_tag\_key) | Tag key the computed expiry date is written under on the new workspace. | `string` | n/a | yes |
 | <a name="input_workspace_identifier"></a> [workspace\_identifier](#input\_workspace\_identifier) | Identifier for the new meshStack workspace. | `string` | n/a | yes |
 | <a name="input_workspace_owner_username"></a> [workspace\_owner\_username](#input\_workspace\_owner\_username) | Username granted `workspace_role_name` on the new workspace and `project_role_name` on the new project — one owner for both. | `string` | n/a | yes |
 | <a name="input_workspace_role_name"></a> [workspace\_role\_name](#input\_workspace\_role\_name) | meshStack workspace role granted to `workspace_owner_username`. | `string` | n/a | yes |
-| <a name="input_workspace_ttl_days"></a> [workspace\_ttl\_days](#input\_workspace\_ttl\_days) | Number of days after this building block first creates the workspace before it, the payment method, the project and the tenant are destroyed. The module tracks the creation date itself (see time\_static.created in main.tf) — this input is a duration, not a date. | `number` | n/a | yes |
+| <a name="input_workspace_ttl_days"></a> [workspace\_ttl\_days](#input\_workspace\_ttl\_days) | Number of days after this building block first creates the workspace before it, the payment method, the project and the tenant are destroyed. The module tracks the creation date itself (see time\_static.created in main.tf) — this input is a duration, not a date. Leave it unset to switch expiry tracking off: the workspace, payment method and owner binding then get no expiry date and nothing is ever torn down. | `number` | `null` | no |
 
 ## Outputs
 
@@ -92,6 +102,6 @@ No modules.
 |------|-------------|
 | <a name="output_payment_method_identifier"></a> [payment\_method\_identifier](#output\_payment\_method\_identifier) | Identifier of the payment method — of the one that existed, if the run destroyed it because the workspace's expiry date had passed. |
 | <a name="output_project_identifier"></a> [project\_identifier](#output\_project\_identifier) | Identifier of the project — of the one that existed, if the run destroyed it because the workspace's TTL had elapsed. |
-| <a name="output_workspace_expiry_date"></a> [workspace\_expiry\_date](#output\_workspace\_expiry\_date) | Date (YYYY-MM-DD) this building block computed from its creation date plus workspace\_ttl\_days — the date the workspace, and everything else this block created, are destroyed on the next run. |
+| <a name="output_workspace_expiry_date"></a> [workspace\_expiry\_date](#output\_workspace\_expiry\_date) | Date (YYYY-MM-DD) this building block computed from its creation date plus workspace\_ttl\_days — the date the workspace, and everything else this block created, are destroyed on the next run. Null when workspace\_ttl\_days is unset and nothing expires. |
 | <a name="output_workspace_identifier"></a> [workspace\_identifier](#output\_workspace\_identifier) | Identifier of the workspace — of the one that existed, if the run destroyed it because its expiry date had passed. |
 <!-- END_TF_DOCS -->
