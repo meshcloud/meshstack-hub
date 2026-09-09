@@ -28,6 +28,29 @@ const TERRAFORM_VERSION_FLOOR = "1.12.0";
 // `< 1.0.0` bound would buy nothing. It is exempt from the upper-bound rule until it reaches 1.0.
 const MAJOR_UNSTABLE_PROVIDER = "meshcloud/meshstack";
 
+// Every meshStack object that can be pointed at exposes a `ref` output shaped exactly like the
+// attribute that points to it, `kind` included. Rebuilding that object from `metadata.uuid` or
+// `metadata.name` repeats what the provider already knows and usually drops the `kind`, so a
+// reference to the wrong kind of object only surfaces when meshStack rejects the apply.
+// Regenerate with: tofu providers schema -json | jq '.provider_schemas[]
+//   | .resource_schemas | to_entries[] | select(.value.block.attributes.ref) | .key'
+const MESHSTACK_REF_RESOURCES = new Set([
+  "meshstack_building_block",
+  "meshstack_building_block_definition",
+  "meshstack_building_block_runner",
+  "meshstack_integration",
+  "meshstack_landingzone",
+  "meshstack_location",
+  "meshstack_platform",
+  "meshstack_platform_type",
+  "meshstack_tenant",
+  "meshstack_workspace",
+]);
+
+// A building block is ordered against a definition *version*, which `ref` does not identify —
+// these two outputs are the ref-shaped values for that.
+const BBD_VERSION_REF_OUTPUTS = new Set(["version_latest", "version_latest_release"]);
+
 const compareVersions = (a, b) => {
   const pa = a.split(".").map(Number);
   const pb = b.split(".").map(Number);
@@ -239,6 +262,67 @@ const detectors = [
         pass: false,
         detail: `${offenders.join("; ")} — see AGENTS.md, "Ordering Child Building Blocks"`,
       };
+    },
+  },
+  {
+    id: "meshstack_ref_output",
+    category: "core",
+    name: "meshStack `*_ref` attributes use the resource's ref output",
+    emoji: "🎯",
+    fn: (mod) => {
+      const offenders = [];
+      let references = 0;
+
+      // Whole module, not just the two tiers: the integration file and the e2e fixtures write
+      // meshStack resources too, and a fixture is where a hand-built ref hides longest.
+      for (const file of collectTfFilesRecursive(mod.path)) {
+        const content = blankHeredocBodies(readFileSync(file, "utf-8"));
+        for (const [address, body] of extractMeshstackResourceBlocks(content)) {
+          const iterated = body.match(/for_each\s*=\s*(meshstack_[a-z_0-9]+)\./)?.[1];
+
+          for (const [attribute, expression] of extractRefAttributes(body)) {
+            references++;
+            for (const handRolled of handRolledRefs(expression, iterated)) {
+              offenders.push(`${relative(mod.path, file)}: ${address}.${attribute} reads ${handRolled}`);
+            }
+          }
+        }
+      }
+
+      if (references === 0)
+        return { pass: null, detail: "no *_ref attributes on meshStack resources" };
+      if (offenders.length === 0) return { pass: true };
+
+      const shown = offenders.slice(0, 4).join("; ");
+      const more = offenders.length > 4 ? `, +${offenders.length - 4} more` : "";
+      return { pass: false, detail: `point at the resource's \`ref\` output instead: ${shown}${more}` };
+    },
+  },
+  {
+    id: "try_explained",
+    category: "core",
+    name: "Every try() carries a comment saying why",
+    emoji: "🩹",
+    fn: (mod) => {
+      const offenders = [];
+      let guards = 0;
+
+      for (const file of collectTfFilesRecursive(mod.path)) {
+        const lines = blankHeredocBodies(readFileSync(file, "utf-8")).split("\n");
+        lines.forEach((line, index) => {
+          if (isCommentLine(line) || !/\btry\s*\(/.test(line)) return;
+          guards++;
+          if (!hasCommentAbove(lines, index))
+            offenders.push(`${relative(mod.path, file)}:${index + 1}`);
+        });
+      }
+
+      if (guards === 0) return { pass: null, detail: "module uses no try()" };
+      if (offenders.length === 0) return { pass: true };
+
+      const shown = offenders.slice(0, 6).join(", ");
+      const more = offenders.length > 6 ? `, +${offenders.length - 6} more` : "";
+      return { pass: false, detail: `say what each try() swallows and why: ${shown}${more}` };
     },
   },
   {
@@ -1467,10 +1551,77 @@ function collectTfFilesRecursive(dir) {
   return found;
 }
 
-// Heredoc bodies are example Terraform emitted for consumers (several Azure backplanes
-// output a ready-to-paste provider.tf), not constraints this module is initialised with.
-function stripHeredocs(content) {
-  return content.replace(/<<-?\s*([A-Za-z_]\w*)\r?\n[\s\S]*?^\s*\1\s*$/gm, "");
+// Heredoc bodies are documentation and example Terraform emitted for consumers (several Azure
+// backplanes output a ready-to-paste provider.tf), not configuration this module is initialised
+// with. Blanked rather than removed so reported line numbers still match the file.
+function blankHeredocBodies(content) {
+  return content.replace(
+    /<<-?\s*([A-Za-z_]\w*)\r?\n[\s\S]*?^\s*\1\s*$/gm,
+    (heredoc) => heredoc.split("\n").map((line, i) => (i === 0 ? line : "")).join("\n")
+  );
+}
+
+// [address, body] for every `resource "meshstack_*" "<name>"` block, so a finding names the
+// resource the reader has to open. Role and user/group bindings are left out:
+// their `*_ref` attributes name the target by identifier alone, with no `kind`, so a `ref` output
+// does not fit them.
+function extractMeshstackResourceBlocks(content) {
+  const blocks = [];
+  for (const m of content.matchAll(/^resource\s+"(meshstack_[a-z_0-9]+)"\s+"([^"]+)"\s*\{/gm)) {
+    if (/_(user|group)_binding$/.test(m[1])) continue;
+    const open = content.indexOf("{", m.index);
+    const close = findMatchingBrace(content, open);
+    if (close > open) blocks.push([`${m[1]}.${m[2]}`, content.slice(m.index, close + 1)]);
+  }
+  return blocks;
+}
+
+// attribute name → expression for every `<something>_ref` / `<something>_refs` attribute.
+function extractRefAttributes(body) {
+  const attributes = [];
+  for (const m of body.matchAll(/^[ \t]*([a-z_0-9]*_refs?)\s*=[ \t]*/gm)) {
+    const start = m.index + m[0].length;
+    attributes.push([m[1], body.slice(start, findExpressionEnd(body, start))]);
+  }
+  return attributes;
+}
+
+// The traversals inside a *_ref expression that rebuild by hand what a `ref` output carries.
+// `each.value` counts too when the resource iterates over such a resource.
+function handRolledRefs(expression, iteratedType) {
+  const traversals = [
+    ...expression.matchAll(/\b(meshstack_[a-z_0-9]+)\.[A-Za-z_]\w*(?:\[[^\]]*\])?((?:\.[A-Za-z_]\w*)*)/g),
+  ].map((m) => ({ type: m[1], path: m[2], text: m[0] }));
+
+  if (iteratedType) {
+    traversals.push(
+      ...[...expression.matchAll(/\beach\.value((?:\.[A-Za-z_]\w*)*)/g)].map((m) => ({
+        type: iteratedType,
+        path: m[1],
+        text: m[0],
+      }))
+    );
+  }
+
+  return traversals
+    .filter((t) => MESHSTACK_REF_RESOURCES.has(t.type) && !isRefShaped(t))
+    .map((t) => t.text);
+}
+
+const isRefShaped = ({ type, path }) =>
+  path === ".ref" ||
+  (type === "meshstack_building_block_definition" && BBD_VERSION_REF_OUTPUTS.has(path.slice(1)));
+
+const isCommentLine = (line) => /^\s*(#|\/\/)/.test(line);
+
+// A comment anywhere in the paragraph above counts, so one comment can cover a run of related
+// attributes and a try() nested deep in a multi-line expression is still covered by the comment
+// above the attribute that owns it. A blank line ends the paragraph.
+function hasCommentAbove(lines, index) {
+  for (let i = index - 1; i >= 0 && lines[i].trim() !== ""; i--) {
+    if (isCommentLine(lines[i])) return true;
+  }
+  return false;
 }
 
 // Every `version` attribute inside a `required_providers` block across BOTH tiers.
@@ -1491,7 +1642,7 @@ function collectProviderConstraints(mod) {
 
   for (const tier of ["backplane", "buildingblock"]) {
     for (const file of collectTfFilesRecursive(join(mod.path, tier))) {
-      const content = stripHeredocs(readFileSync(file, "utf-8"));
+      const content = blankHeredocBodies(readFileSync(file, "utf-8"));
 
       for (const m of content.matchAll(/required_providers\s*\{/g)) {
         const open = m.index + m[0].length - 1;
