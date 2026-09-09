@@ -127,6 +127,7 @@ module "stackit_project_starterkit" {
   )
 
   default_landing_zone = "sandbox"
+  approval_policies    = var.starterkit_approval_policies
 
   # `hub&spoke` is the only landing zone attached to a network area, so it is the only one where the
   # starterkit creates a spoke network. Null — networking disabled — drops the `Network` input from the

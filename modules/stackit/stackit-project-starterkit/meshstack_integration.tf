@@ -73,6 +73,25 @@ variable "notification_subscribers" {
   description = "meshStack usernames notified about runs of this building block definition."
 }
 
+variable "approval_policies" {
+  type = object({
+    building_block_creation = optional(bool, false)
+    user_input_changes      = optional(bool, false)
+    any_input_changes       = optional(bool, false)
+    manual_triggers         = optional(bool, false)
+    version_upgrade         = optional(bool, false)
+  })
+  nullable = false
+  default = {
+    building_block_creation = false
+    user_input_changes      = false
+    any_input_changes       = false
+    manual_triggers         = false
+    version_upgrade         = false
+  }
+  description = "Run triggers that need an operator's approval before the run is applied. The defaults are the provider's own, and the provider asserts them whenever the definition sets no policies — so a gate switched on in meshPanel is turned off again by the next apply unless it is set here."
+}
+
 variable "meshstack" {
   type = object({
     owning_workspace_identifier = string
@@ -143,6 +162,7 @@ resource "meshstack_building_block_definition" "this" {
     target_type              = "WORKSPACE_LEVEL"
     run_transparency         = true
     notification_subscribers = var.notification_subscribers
+    approval_policies        = var.approval_policies
 
     readme = chomp(<<-EOT
     The **STACKIT Project Starterkit** gives your team a working STACKIT project through a single order. It creates a meshProject, places a STACKIT project tenant in the landing zone you select, and grants you the Project Admin role.
@@ -385,8 +405,9 @@ terraform {
 
   required_providers {
     meshstack = {
-      source  = "meshcloud/meshstack"
-      version = ">= 0.24.0"
+      source = "meshcloud/meshstack"
+      # 0.25.2 is the first release that accepts `spec.approval_policies`.
+      version = ">= 0.25.2"
     }
   }
 }
