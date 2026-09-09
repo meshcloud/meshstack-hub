@@ -33,6 +33,8 @@ data "azuread_users" "members" {
 }
 
 locals {
+  # `try` because the lookup has no instance at all when there is no member to resolve, and
+  # `members[0]` then does not exist.
   lookup_values = {
     for u in try(data.azuread_users.members[0].users, []) :
     lower(coalesce(var.user_lookup_attribute == "email" ? u.mail : u.user_principal_name, "")) => u.object_id

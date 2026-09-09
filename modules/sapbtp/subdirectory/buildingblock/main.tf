@@ -9,6 +9,8 @@ locals {
     if dir.parent_id == var.parent_id
   ]
 
+  # `try` because `one` raises when two directories share the name — a duplicate reads as no match,
+  # same as none found.
   selected_subfolder_id = try(
     one([
       for sf in local.subfolders : sf.id

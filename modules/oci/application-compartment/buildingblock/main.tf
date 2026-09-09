@@ -13,13 +13,18 @@ locals {
   config = yamldecode(var.tag_relations)
 
   project_tags = data.meshstack_project.project.spec.tags
+
+  # `try` because a project need not carry these tags at all. An unset tag reads as empty, which
+  # matches no landing zone below and lands on the default compartment.
   environment  = try(local.project_tags[local.config.tag_names.environment][0], "")
   landing_zone = try(local.project_tags[local.config.tag_names.landing_zone][0], "")
 
+  # `try` because the tag may name a landing zone that `var.tag_relations` does not describe.
   landing_zone_config = try(local.config.landing_zones[local.landing_zone], null)
 
   has_environments = local.landing_zone_config != null ? can(local.landing_zone_config.environments) : false
 
+  # `try` because a landing zone's environments map need not cover the project's environment.
   selected_parent_compartment_id = (
     local.landing_zone_config != null
     ? (
