@@ -110,6 +110,16 @@ data "external" "app_probe" {
   for_each = toset(["dev", "prod"])
   program  = ["python3", "${path.module}/probe_endpoint.py"]
   query = {
-    url = jsondecode(meshstack_building_block.this.status.outputs["app_link_${each.key}"].value)
+    url = try(jsondecode(meshstack_building_block.this.status.outputs["app_link_${each.key}"].value), "")
+  }
+
+  # When the building block above fails to apply, `status.outputs` is an empty map and indexing it
+  # directly raised a bare "Invalid index" — a second, confusing error on top of the real one. Name
+  # the actual cause instead.
+  lifecycle {
+    precondition {
+      condition     = contains(keys(try(meshstack_building_block.this.status.outputs, {})), "app_link_${each.key}")
+      error_message = "meshstack_building_block.this has no 'app_link_${each.key}' output (status: ${try(meshstack_building_block.this.status.status, "unknown")}). It did not complete successfully — see the error above."
+    }
   }
 }
