@@ -270,6 +270,55 @@ re-run:
 
 ---
 
+<!-- scorecard-checks: meshstack_ref_output -->
+## Referencing meshStack Objects
+
+Point every `*_ref` attribute at the target resource's `ref` output. Never build the object by hand:
+
+```hcl
+resource "meshstack_landingzone" "this" {
+  spec = {
+    platform_ref                  = meshstack_platform.this.ref # not { uuid = ...metadata.uuid }
+    mandatory_building_block_refs = [meshstack_building_block_definition.platform_tenant_id.ref]
+  }
+}
+```
+
+`ref` carries the `kind` next to the identifier, in exactly the shape the pointing attribute
+expects. A hand-built object usually omits the `kind`, so a reference to the wrong kind of object is
+caught only when meshStack rejects the apply.
+
+Ten resources expose `ref`: `meshstack_building_block`, `meshstack_building_block_definition`,
+`meshstack_building_block_runner`, `meshstack_integration`, `meshstack_landingzone`,
+`meshstack_location`, `meshstack_platform`, `meshstack_platform_type`, `meshstack_tenant` and
+`meshstack_workspace`. A literal or a variable stays where no `ref` can replace it: an object this
+configuration does not manage, a ref wired in from elsewhere, and the user and group bindings, whose
+`role_ref` and `target_ref` take an identifier with no `kind`. A building block is ordered against a
+definition *version*, which `ref` does not identify — that one takes `version_latest` or
+`version_latest_release`.
+
+---
+
+<!-- scorecard-checks: try_explained -->
+## Guarding Expressions with `try`
+
+`try` swallows every error its expression can raise, including the typo. Each one carries a comment
+saying what it swallows and why that is the right answer:
+
+```hcl
+locals {
+  # `try` so that a run which produced no outputs at all fails on the status assertion, which says
+  # what went wrong, rather than on evaluating this.
+  resolved_tags = try(jsondecode(meshstack_building_block.this.status.outputs["tags"].value), {})
+}
+```
+
+The comment sits directly above the `try`, or above the attribute that owns the expression when the
+`try` is nested inside it. Prefer not needing it: a variable default, `optional()` or an explicit
+`null` check says the same thing without hiding the next error too.
+
+---
+
 <!-- scorecard-checks: provider_pinned -->
 ## Variable Conventions
 
@@ -519,6 +568,8 @@ unnoticed. The  `no_buildingblock_tftest` scorecard check flags each one as migr
 - [ ] No `documentation_md` output in `backplane/` — use BBD `readme` field and `backplane/README.md` instead
 - [ ] `meshstack_platform` resources include `lifecycle { ignore_changes = [spec.availability] }`
 - [ ] Every child `meshstack_building_block` carries the run-status `postcondition` — see [Ordering Child Building Blocks](#ordering-child-building-blocks)
+- [ ] Every `*_ref` on a meshStack resource takes the target's `ref` output — see [Referencing meshStack Objects](#referencing-meshstack-objects)
+- [ ] Every `try` carries a comment saying what it swallows — see [Guarding Expressions with `try`](#guarding-expressions-with-try)
 - [ ] No trailing whitespace
 - [ ] **Azure modules**: also follow the [Azure Backplane Checklist](.agents/references/azure-backplane.md#checklist-for-azure-backplanes)
 - [ ] **GCP modules**: also follow the [GCP Backplane Checklist](.agents/references/gcp-backplane.md#checklist-for-gcp-backplanes)
