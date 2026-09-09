@@ -260,17 +260,13 @@ resource "meshstack_landingzone" "this" {
     automate_deletion_approval    = true
     automate_deletion_replication = true
 
-    platform_ref = {
-      uuid = meshstack_platform.stackit.metadata.uuid
-    }
+    platform_ref = meshstack_platform.stackit.ref
 
     platform_properties = {
       custom = {}
     }
 
-    mandatory_building_block_refs = [
-      { uuid = meshstack_building_block_definition.this[each.key].metadata.uuid }
-    ]
+    mandatory_building_block_refs = [meshstack_building_block_definition.this[each.key].ref]
   }
 }
 

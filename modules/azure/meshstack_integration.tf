@@ -229,9 +229,7 @@ resource "meshstack_landingzone" "azure_default" {
     automate_deletion_approval    = true
     automate_deletion_replication = true
 
-    platform_ref = {
-      uuid = meshstack_platform.azure.metadata.uuid
-    }
+    platform_ref = meshstack_platform.azure.ref
 
     platform_properties = {
       azure = {

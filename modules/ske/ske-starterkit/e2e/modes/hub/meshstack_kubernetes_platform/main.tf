@@ -169,9 +169,7 @@ resource "meshstack_landingzone" "dev" {
     automate_deletion_approval    = true
     automate_deletion_replication = true
     info_link                     = "https://dontcare.com"
-    platform_ref = {
-      uuid = meshstack_platform.this.metadata.uuid
-    }
+    platform_ref                  = meshstack_platform.this.ref
     platform_properties = {
       kubernetes = {
         kubernetes_role_mappings = [
@@ -210,9 +208,7 @@ resource "meshstack_landingzone" "prod" {
     automate_deletion_approval    = true
     automate_deletion_replication = true
     info_link                     = "https://dontcare.com"
-    platform_ref = {
-      uuid = meshstack_platform.this.metadata.uuid
-    }
+    platform_ref                  = meshstack_platform.this.ref
     platform_properties = {
       kubernetes = {
         kubernetes_role_mappings = [
