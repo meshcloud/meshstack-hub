@@ -412,6 +412,26 @@ external resource (the same workflow files in a fixture repository, say) therefo
 no external locking or concurrency group needed. Verify assumptions like this against the OpenTofu
 version in use rather than trusting them.
 
+### The exception: a test whose subject *is* a change
+
+Some behaviour only exists as a change to something that already exists — a `TAG` input, which
+meshStack re-resolves when the tag moves or the object holding it is reassigned. Showing that needs
+one building block and a tag that moves under it, so it needs shared state, so it needs one file.
+
+Neither reason above applies to such a file: it touches neither `display_name` nor
+`building_block_definition_version_ref`. Only the objects *around* the building block change.
+
+Two things it has to get right:
+
+- **Bump an input the provider tracks in every mutating run**, or the provider plans no change and
+  awaits no run.
+- **Let meshStack's own triggered run get out of the way first**, via a `time_sleep` in the fixture
+  module, or its outputs land in state instead.
+
+`modules/meshstack/noop/e2e/tag-inputs/` is the worked example; its `README.md` covers both in full,
+along with what such a test does and does not prove. If a test does not clear this bar, use separate
+files.
+
 ---
 
 ## Running tests
@@ -549,7 +569,7 @@ source setup-override-provider.sh
 - [ ] `meshstack_building_block` has `depends_on = [module.definition]` and `wait_for_completion = true`
 - [ ] One mode-agnostic `.tftest.hcl` file; assertions touch the building block only
 - [ ] Variant flags (sync/async and similar) are **root variables of the `e2e/` module** with a default, not `test_context` fields
-- [ ] One `.tftest.hcl` file per variant, pinning the flag in a file-level `variables` block — never several `run` blocks sharing one file's state
+- [ ] Each `.tftest.hcl` file covers one variant, pinning the flag in a file-level `variables` block; `run` blocks share one file's state only when the subject of the test is a change to a live building block's surroundings — see [The exception](#the-exception-a-test-whose-subject-is-a-change)
 - [ ] Writes into a long-lived shared fixture go to a per-run ephemeral slice named from `name_suffix`, owned by the `e2e/` module and included in the building block's `depends_on`
 - [ ] State the live apply cannot reach is covered by a mocked `<cloud>_<service>_unit.tftest.hcl` in `e2e/tests/`, targeting `module { source = "../buildingblock" }` — and only where the two bars are cleared (worth testing, unreachable by the apply); anything the apply *can* reach is an assertion on the apply instead
 - [ ] Every mocked run is mutation-checked: break the module, watch the run fail
