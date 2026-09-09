@@ -9,6 +9,7 @@ variable "test_context" {
   }
 
   validation {
+    # `try` because `test_context` is untyped, so a hub run need not set `mode` at all.
     condition     = contains(["hub", "foundation"], try(var.test_context.mode, "hub"))
     error_message = "test_context.mode must be \"hub\" (the default) or \"foundation\"."
   }

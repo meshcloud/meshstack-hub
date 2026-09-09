@@ -1,4 +1,7 @@
 locals {
+  # meshStack injects kubeconfig.yaml as a static FILE input at run time. `try` falls back to the
+  # committed mock so the module still validates without it, and the precondition in main.tf is
+  # what stops an apply against the mock.
   kubeconfig = try(
     yamldecode(file("${path.module}/kubeconfig.yaml")),
     yamldecode(file("${path.module}/kubeconfig-mock.yaml"))

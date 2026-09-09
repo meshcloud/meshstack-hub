@@ -18,6 +18,7 @@ variable "test_context" {
   }
 
   validation {
+    # `try` because `test_context` is untyped, so a hub run need not set `mode` at all.
     condition     = contains(["hub", "foundation"], try(var.test_context.mode, "hub"))
     error_message = "test_context.mode must be \"hub\" (the default) or \"foundation\"."
   }
@@ -30,6 +31,7 @@ variable "ttl_optional" {
 }
 
 locals {
+  # `try` because `test_context` is untyped, so a hub run need not set `mode` at all.
   mode = try(var.test_context.mode, "hub")
 
   # A foundation published its definition with whatever TTL default it chose, so only a definition

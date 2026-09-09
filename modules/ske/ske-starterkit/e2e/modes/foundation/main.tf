@@ -35,10 +35,13 @@ locals {
     : definition if definition.spec.display_name == local.display_name
   ])
 
+  # `try` because `definition` is null until the foundation has published it, and reading an
+  # attribute of null faults before the preconditions below can say that in plain words.
   version = var.test_context.bbd_draft ? try(local.definition.version_latest, null) : try(local.definition.version_latest_release, null)
 }
 
 output "version_ref" {
+  # `try` for the same reason: a missing definition or version has to reach its precondition.
   value = { uuid = try(local.version.uuid, "") }
 
   precondition {
