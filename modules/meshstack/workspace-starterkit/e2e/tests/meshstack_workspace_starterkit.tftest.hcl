@@ -1,9 +1,8 @@
-# A TTL is ordered, so the building block computes an expiry date and stamps it on everything it
-# creates.
+# The one case that really orders: a TTL is set, so the building block computes an expiry date and
+# stamps it on everything it creates.
 #
-# Every output is read through `try`: a failed run reports none of them, and an assertion that
-# indexes a missing output errors instead of failing, which buries the status assertion that says
-# what actually went wrong.
+# Outputs are read through `try` because a failed run reports none, and an assertion that indexes a
+# missing output errors instead of failing — which buries the status assertion.
 
 run "meshstack_workspace_starterkit" {
   assert {
@@ -26,8 +25,7 @@ run "meshstack_workspace_starterkit" {
     error_message = "Reported project identifier is not the one that was ordered."
   }
 
-  # The date is the ordered TTL applied to the block's own creation time, which is what makes this
-  # building block self-tracking: nobody passed a date in.
+  # The date is the ordered TTL counted from the block's own creation time — nobody passed a date in.
   assert {
     condition     = contains(output.expected_expiry_dates, try(jsondecode(meshstack_building_block.this.status.outputs["workspace_expiry_date"].value), null))
     error_message = "Expiry date is not the ordered TTL counted from the run: got ${try(meshstack_building_block.this.status.outputs["workspace_expiry_date"].value, "no such output")}, expected one of ${jsonencode(output.expected_expiry_dates)}."

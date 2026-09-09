@@ -5,8 +5,7 @@ terraform {
     meshstack = {
       source = "meshcloud/meshstack"
     }
-    # Not used here: the mocked run in tests/ plans ../buildingblock, which tracks its own creation
-    # time with it.
+    # For the mocked run against ../buildingblock, not for anything here.
     time = {
       source = "hashicorp/time"
     }
