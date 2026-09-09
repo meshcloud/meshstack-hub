@@ -1,17 +1,6 @@
-# The automation principal for this building block: one admin-scoped API key, owned by the
-# workspace that deploys the starterkit.
-#
-# It has to be admin-scoped. The building block creates a workspace, a payment method, a project
-# and a tenant, and meshStack never grants a building block run's own ephemeral token the `ADM_*`
-# permissions those need — the payment method endpoints do not even have a workspace-scoped SAVE.
-# An ephemeral, per-run key is therefore not an option either: the authority has to outlive a
-# single run, so it belongs to the backplane the platform team applies.
-#
-# It cannot outlive the backplane, though. meshStack requires an expiry on every API key and caps
-# how far out it may sit — 90 days on the instance this was written against, and an instance may
-# cap it lower; the 409 it answers with names its own maximum. So the key has to be rolled forward,
-# and time_rotating is what makes any apply past half the lifetime roll it: no diff in between, and
-# a deployment that applies at least that often never lets the key lapse.
+# meshStack requires an expiry on every API key and caps how far out it may sit, so the key cannot
+# simply outlive the backplane. Rotating at half the lifetime means any apply in that window rolls
+# the expiry forward, with no diff in between. See ./README.md.
 resource "time_rotating" "api_key" {
   rotation_days = floor(var.api_key_lifetime_days / 2)
 }
@@ -29,8 +18,7 @@ resource "meshstack_api_key" "automation" {
 }
 
 locals {
-  # One triple per meshObject the building block manages. Grouped rather than sorted so a reader
-  # can check the list against buildingblock/main.tf resource by resource.
+  # Grouped per meshObject, so the list reads against ../buildingblock/main.tf resource by resource.
   permissions = concat([
     "ADM_WORKSPACE_LIST", "ADM_WORKSPACE_SAVE", "ADM_WORKSPACE_DELETE",
     "ADM_PAYMENTMETHOD_LIST", "ADM_PAYMENTMETHOD_SAVE", "ADM_PAYMENTMETHOD_DELETE",

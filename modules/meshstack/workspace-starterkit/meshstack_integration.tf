@@ -144,16 +144,13 @@ output "building_block_definition" {
 }
 
 locals {
-  # A default value and an optional input are mutually exclusive — a prefilled value can be changed
-  # but never cleared — so only a deployment that sets no default lets an orderer opt out of expiry.
+  # A default and an optional input are mutually exclusive: a prefilled value can be changed but
+  # never cleared, so only a deployment that sets no default lets an orderer opt out of expiry.
   workspace_ttl_optional = var.workspace_ttl_days_default == null
 
   platform_ref     = { uuid = var.platform_uuid, kind = "meshPlatform" }
   landing_zone_ref = { name = var.landing_zone_name, kind = "meshLandingZone" }
 
-  # The readme whoever orders this building block reads, unless a deployment replaces the whole
-  # document through var.readme. Inline rather than in a file, so this integration stays
-  # copy-pasteable as one unit.
   default_readme = chomp(<<-EOT
     Creates a fully onboarded meshStack workspace in one order: a workspace tagged with an expiry
     date, a payment method, a project with a tenant on any already-registered platform, and the
@@ -246,10 +243,8 @@ resource "meshstack_building_block_definition" "this" {
       }
     }
 
-    # No `permissions`: nothing is managed with this run's own ephemeral token, which meshStack
-    # never grants `ADM_*` to. The two environment inputs below authenticate the provider as the
-    # backplane's admin-scoped key instead. `MESHSTACK_ENDPOINT` is not among them — every building
-    # block run already has it in its environment.
+    # No `permissions`: the run authenticates as the backplane's key through the environment inputs
+    # below, not with its own token. `MESHSTACK_ENDPOINT` is already in every run's environment.
 
     inputs = {
       MESHSTACK_API_KEY = {
