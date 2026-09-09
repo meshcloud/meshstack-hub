@@ -1,59 +1,46 @@
 # meshStack Workspace Starterkit — Backplane
 
-Creates the automation principal the building block authenticates with: a single admin-scoped
-meshStack API key, owned by the workspace that deploys the starterkit.
+Creates the automation principal the building block authenticates with: one admin-scoped meshStack
+API key, owned by the workspace that deploys the starterkit.
 
 ## Why an admin-scoped key
 
 The building block creates a workspace, a payment method, a project, a tenant and two role
-bindings. Those are `ADM_*` operations — the payment method endpoints have no workspace-scoped
-`SAVE` at all — and meshStack never grants a building block run's own ephemeral token an `ADM_*`
-permission, whatever the definition declares. So the building block cannot act as itself; it acts
-as this key, which the definition hands to every run as `MESHSTACK_API_KEY` and
-`MESHSTACK_API_SECRET`.
+bindings. Those need `ADM_*` permissions — the payment method endpoints have no workspace-scoped
+`SAVE` at all — and meshStack never grants a run's own ephemeral token one, whatever the definition
+declares. So the block acts as this key, which the definition hands to every run as
+`MESHSTACK_API_KEY` and `MESHSTACK_API_SECRET`.
 
-The key has to outlive a single run: a per-run key would be gone before the run that tears an
-expired workspace down, weeks later. See below for how long it can actually live.
+A per-run key would not do: it would be gone before the run that tears an expired workspace down,
+weeks later.
 
-The permission list is in the `permissions` local in [main.tf](main.tf), grouped so it can be read
-against the resources in [../buildingblock/main.tf](../buildingblock/main.tf). If an instance needs
-more than that, add them through `additional_api_key_permissions` rather than waiting on a hub
-release.
+The permission list is the `permissions` local in [main.tf](main.tf). If an instance needs more,
+add them through `additional_api_key_permissions` rather than waiting on a hub release.
 
 ## What the applying identity needs
 
-Whoever applies this backplane authenticates the `meshstack` provider themselves — this module
-configures no provider. That credential needs:
-
-- `ADM_APIKEY_SAVE` — to create the key, and to rotate its secret when `api_key_expires_at` moves.
-- `ADM_APIKEY_DELETE` — to destroy it with the backplane.
-
-A key can only be granted permissions its creator holds, so the applying credential also needs the
-`ADM_*` permissions listed in `main.tf`.
+This module configures no provider, so whoever applies it authenticates `meshstack` themselves.
+That credential needs `ADM_APIKEY_SAVE` and `ADM_APIKEY_DELETE`, plus every permission in
+`main.tf` — a key cannot be granted more than its creator holds.
 
 ## The key expires, and that is not optional
 
 meshStack requires an expiry on every API key and caps how far out it may sit — 90 days on the
-instance this was written against. An instance may cap it lower, and answers an apply that asks for
-more with a 409 naming its own maximum. There is no never-expires option to fall back on.
+instance this was written against, and an instance may cap it lower, answering with a 409 that
+names its maximum. There is no never-expires option.
 
-So this backplane has to be re-applied to stay useful. `api_key_lifetime_days` (90 by default) sets
-the validity, and a `time_rotating` resource rolls the expiry forward on the first apply past half
-that many days — no diff in between, so a deployment that applies at least that often never lets
-the key lapse.
+So this backplane has to be re-applied to stay useful. `api_key_lifetime_days` sets the validity,
+and `time_rotating` rolls the expiry forward on the first apply past half of it. A deployment that
+applies at least that often never lets the key lapse; each roll rotates the client secret, which
+the definition picks up in the same apply.
 
-Past the expiry, every run of this building block fails to authenticate. That includes the runs
-that destroy workspaces whose TTL has elapsed, so expired workspaces quietly stop being cleaned up
-rather than failing loudly.
-
-Each roll rotates the client secret. meshStack returns the new one, and the building block
-definition picks it up on the same apply.
+Past the expiry every run fails to authenticate, including the runs that clean up expired
+workspaces — so they stop happening quietly rather than failing loudly.
 
 ## Destroying it
 
-Destroying this backplane deletes the key, which breaks every building block that still points at
-it. Destroy the building blocks first.
-
+Destroying the backplane deletes the key, which breaks every building block still pointing at it.
+Destroy the building blocks first.
 <!-- BEGIN_TF_DOCS -->
 ## Requirements
 

@@ -13,64 +13,49 @@ on any already-registered meshPlatform, and the initial workspace and project ro
 
 ## Admin-scoped API key
 
-Creating a workspace or a payment method needs meshStack `ADM_*` permissions, which a building
-block's own ephemeral token never has — so this module declares no `permissions` in `version_spec`
-and authenticates as the API key [the backplane](../backplane/README.md) mints instead.
-
-That key reaches the run as the `MESHSTACK_API_KEY` / `MESHSTACK_API_SECRET` environment inputs, so
-`provider "meshstack"` configures itself and the credential is not a module input at all. Runs
-already have `MESHSTACK_ENDPOINT` in their environment, so the definition does not pass one.
+Creating a workspace or a payment method needs `ADM_*` permissions, which a building block's own
+ephemeral token never has — so this module declares no `permissions` and authenticates as the API
+key [the backplane](../backplane/README.md) mints. That key arrives as the `MESHSTACK_API_KEY` /
+`MESHSTACK_API_SECRET` environment inputs, so the provider configures itself and the credential is
+not a module input at all.
 
 ## What the instance has to have first
 
-Two things about the target instance, both of which a building block run reports as a `409
-TagValidation` from the workspace it tried to create:
+Both of these surface as a `409 TagValidation` from the workspace the run tried to create:
 
-- **The expiry tag key must exist in the tag schema**, as a tag configured for workspaces.
-  `workspace_expiry_tag_key` defaults to `expiry`, and an instance that has no such tag definition
-  answers `You cannot add the following tags [expiry]`. Point the variable at a key the instance
-  does have, or define one.
-- **Mandatory tags must be supplied.** An instance can require tags on every workspace, project or
-  payment method, and the run has no way to invent them: pass them through
-  `var.meshstack.tags.workspace`, `.project` and `.payment_method`, which are merged onto what this
-  building block creates. A missing one answers `Mandatory tag(s) ... must be provided`.
+- **The expiry tag key must exist in the tag schema**, configured for workspaces.
+  `workspace_expiry_tag_key` defaults to `expiry`; an instance without that tag definition answers
+  `You cannot add the following tags [expiry]`.
+- **Mandatory tags must be supplied** through `var.meshstack.tags.*`, which are merged onto what
+  this block creates. A missing one answers `Mandatory tag(s) ... must be provided`.
 
 ## Self-destructs after its TTL
 
-You set `workspace_ttl_days`, not a date. The block tracks its own creation time
-(`time_static.created` in `main.tf`) and computes the expiry itself. Once that many days have
-passed, the next run destroys everything it created — workspace, payment method, project, tenant,
-both bindings. The block itself is not self-purging: it stays behind so its outputs still show what
-happened.
+You set `workspace_ttl_days`, not a date. The block tracks its own creation time and computes the
+expiry itself. Once that many days have passed, the next run destroys everything it created. The
+block itself stays behind, so its outputs still show what happened.
 
-`workspace_ttl_days` is optional. Left unset, expiry tracking is off: no expiry tag on the
-workspace, no expiration date on the payment method or the owner binding, and no run that tears
-anything down. `time_static.created` is still recorded, so setting a TTL later still counts from
-the workspace's real creation date.
+Left unset, expiry tracking is off: no expiry tag, no expiration on the payment method or the owner
+binding, and no run that tears anything down. The creation time is still recorded, so setting a TTL
+later still counts from the workspace's real creation date.
 
 ## Several flavours from one module
 
-The definition's display name, description and readme, the defaults of the **Workspace TTL (Days)**
-and **Payment Method Amount** inputs, and the two identifier validation regexes are module
-variables of `meshstack_integration.tf`. Deploy the module once per flavour — say a long-lived
-team workspace next to a time-boxed university workspace on a small budget — and give each one its
-own `display_name` and defaults, otherwise the panel shows identically named definitions that
-differ in nothing an orderer can see.
+The definition's display name, description and readme, the **Workspace TTL (Days)** and **Payment
+Method Amount** defaults, and the identifier validation regexes are variables of
+`meshstack_integration.tf`. Deploy the module once per flavour — a long-lived team workspace next
+to a time-boxed university workspace on a small budget — and give each its own name and defaults,
+or the panel shows definitions an orderer cannot tell apart.
 
-`workspace_ttl_days_default` reaches the same switch from the platform side. It is the default the
-panel prefills, and meshStack has no way to express both a default and a skippable input — so set
-it to `null` and the **Workspace TTL (Days)** input becomes optional, letting an orderer choose a
-workspace that never expires. This needs meshStack 2026.36.0 or later.
+Two of those variables are less obvious:
 
-`readme` replaces the whole document an orderer reads, so it is the knob for a different language
-or for instance-specific guidance — not for describing behaviour this module does not have. Left
-unset it keeps the module's own text.
-
-`workspace_identifier_pattern` defaults to the widest form meshStack accepts, 63 characters, while
-meshStack instances cap workspace identifiers at 16. Narrow the pattern, and
-`workspace_identifier_error_message` with it, so an orderer reads the real rule instead of having
-the order rejected later.
-
+- `workspace_ttl_days_default = null` makes the TTL input optional instead of prefilling it, so an
+  orderer can choose a workspace that never expires. meshStack accepts a default or an optional
+  input, never both. Needs meshStack 2026.36.0 or later.
+- `workspace_identifier_pattern` defaults to the widest form meshStack accepts, 63 characters,
+  while instances cap workspace identifiers at 16. Narrow it together with
+  `workspace_identifier_error_message`, so an orderer reads the real rule instead of having the
+  order rejected after submission.
 <!-- BEGIN_TF_DOCS -->
 ## Requirements
 

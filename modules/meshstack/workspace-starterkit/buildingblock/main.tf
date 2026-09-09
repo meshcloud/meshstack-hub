@@ -9,8 +9,7 @@ resource "time_static" "created" {
 }
 
 locals {
-  # A null TTL switches expiry tracking off: no expiry date is computed, so nothing this block
-  # creates carries one and no later run tears any of it down.
+  # A null TTL switches expiry tracking off: nothing gets a date, and no run tears anything down.
   expiry_timestamp = var.workspace_ttl_days == null ? null : timeadd(time_static.created.rfc3339, "${var.workspace_ttl_days * 24}h")
   expiry_date      = local.expiry_timestamp == null ? null : formatdate("YYYY-MM-DD", local.expiry_timestamp)
 
@@ -21,10 +20,8 @@ locals {
   payment_method_identifier = "${var.workspace_identifier}-payment-method"
 }
 
-# Every resource below (other than time_static.created above) is gated on the same `!local.expired`
-# flag. Running this building block again once workspace_ttl_days have elapsed since creation
-# therefore tears down everything it created — bindings and the tenant first, then the project and
-# payment method, then the workspace itself.
+# Every resource below is gated on the same `!local.expired`, so the first run after the TTL has
+# elapsed tears down everything this block created.
 resource "meshstack_workspace" "this" {
   lifecycle {
     enabled = !local.expired
