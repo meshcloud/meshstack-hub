@@ -1,13 +1,11 @@
-# Builds the definition and its backplane from hub source, so a run exercises the API key this
-# module mints rather than one an instance already had.
 variable "test_context" {
   type = object({
     hub_git_ref = string
     workspace   = string
+    name_suffix = string
 
-    # Tags the instance requires on every meshObject the building block creates, and the workspace
-    # tag key it accepts an expiry date under. Not discoverable: meshStack answers a 409
-    # TagValidation naming what is wrong, so the values come from the harness rather than a guess.
+    # meshStack rejects a meshObject that misses a mandatory tag, or carries a tag key the schema
+    # does not define, so a test cannot guess either.
     meshstack = object({
       tag_schema = object({
         mandatory = object({
@@ -19,8 +17,6 @@ variable "test_context" {
       })
     })
 
-    # The platform and landing zone the tenant is created on. A foundation's definition already
-    # points at its own, which is why this is a hub-mode field.
     fixtures = object({
       stackit = object({
         platform_uuid     = string
@@ -28,11 +24,6 @@ variable "test_context" {
       })
     })
   })
-  nullable = false
-}
-
-variable "run_id" {
-  type     = string
   nullable = false
 }
 
@@ -47,8 +38,6 @@ module "workspace_starterkit" {
   meshstack = {
     owning_workspace_identifier = var.test_context.workspace
 
-    # Not decoration: without the instance's mandatory tags the workspace create fails, and the
-    # run with it.
     tags = {
       building_block = {}
       workspace      = var.test_context.meshstack.tag_schema.mandatory.workspace
@@ -64,16 +53,16 @@ module "workspace_starterkit" {
   platform_uuid     = var.test_context.fixtures.stackit.platform_uuid
   landing_zone_name = var.test_context.fixtures.stackit.landing_zone_name
 
-  # The module defaults to `expiry`, which an instance only accepts if its tag schema defines it.
+  # The module's default `expiry` only works on an instance whose tag schema defines it.
   workspace_expiry_tag_key = var.test_context.meshstack.tag_schema.expiry_key
 
-  # The case under test: a null default is what makes the TTL input optional. The other value is
-  # arbitrary — every order sends its own TTL, so a prefilled default is never exercised.
+  # A null default is what makes the input optional. The other value is never exercised: every
+  # order sends its own TTL.
   workspace_ttl_days_default = var.ttl_optional ? null : 30
 
-  # Names the definition and, through it, the API key the backplane mints — so the two cases do not
-  # share a key in the workspace's key list, and a leaked one says which run left it behind.
-  display_name = "smoke-test-workspace-starterkit-${var.run_id}"
+  # Names the definition and the API key the backplane mints, so a leaked one says which run left
+  # it behind.
+  display_name = "st-${var.test_context.name_suffix}"
 }
 
 output "version_ref" {

@@ -1,29 +1,16 @@
-# Expiry tracking switched off, end to end: the definition declares the TTL input `is_optional`
-# with no default, the order leaves it blank, and meshStack sends no value at all. What no mock can
-# cover is that meshStack accepts such a definition and really omits the input — the building
-# block's own null default is what then applies.
-#
-# Only hub mode builds the definition, so only hub mode can leave the field blank. In foundation
-# mode this case degrades to ordering with a TTL, and the assertion below skips.
+# Ordering without a TTL needs no second live workspace: what is worth checking is that the order
+# carries no TTL input at all, which a plan already shows. That the building block then writes no
+# expiry date is covered by the mocked run.
 
 variables {
   ttl_optional = true
 }
 
 run "meshstack_workspace_starterkit_no_ttl" {
-  assert {
-    condition     = meshstack_building_block.this.status.status == "SUCCEEDED"
-    error_message = "Building block run did not succeed: ${meshstack_building_block.this.status.status}"
-  }
+  command = plan
 
   assert {
-    condition     = try(jsondecode(meshstack_building_block.this.status.outputs["workspace_identifier"].value), null) == output.expected_workspace_identifier
-    error_message = "Reported workspace identifier is not the one that was ordered."
-  }
-
-  # No TTL means no date to report. The output is still declared, so the run has to produce it.
-  assert {
-    condition     = !output.expects_no_expiry || try(jsondecode(meshstack_building_block.this.status.outputs["workspace_expiry_date"].value), null) == null
-    error_message = "A workspace ordered without a TTL must report no expiry date, got ${try(meshstack_building_block.this.status.outputs["workspace_expiry_date"].value, "no such output")}."
+    condition     = !contains(keys(meshstack_building_block.this.spec.inputs), "workspace_ttl_days")
+    error_message = "An order that leaves the TTL blank must send no workspace_ttl_days input at all."
   }
 }

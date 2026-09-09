@@ -1,10 +1,6 @@
-# A mocked plan run over the building block with expiry tracking switched off. It never talks to
-# meshStack and needs no credentials; it lives here because `e2e/` is the only directory in this
-# repo where a `*.tftest.hcl` is executed at all.
-#
-# It covers the two things the live no-TTL case cannot see: the workspace's tags and the payment
-# method's expiration date. Neither is a declared output of the building block, and reading them
-# back would need admin read on a workspace the test's own credential does not own.
+# Expiry tracking switched off, as the building block sees it. Covers what the live case cannot:
+# the workspace's tags and the payment method's expiration date are not declared outputs, and
+# reading them back needs admin read on a workspace the test's credential does not own.
 
 mock_provider "meshstack" {}
 
