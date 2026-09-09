@@ -210,9 +210,7 @@ resource "meshstack_landingzone" "default" {
     automate_deletion_approval    = true
     automate_deletion_replication = true
 
-    platform_ref = {
-      uuid = meshstack_platform.this.metadata.uuid
-    }
+    platform_ref = meshstack_platform.this.ref
 
     platform_properties = {
       gcp = {

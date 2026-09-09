@@ -118,10 +118,7 @@ resource "meshstack_building_block" "forgejo_connector" {
     building_block_definition_version_ref = var.building_block_definition_version_refs["forgejo-connector"]
 
     display_name = "Forgejo Connector ${title(each.key)}"
-    target_ref = {
-      kind = "meshTenant"
-      uuid = each.value.metadata.uuid
-    }
+    target_ref   = each.value.ref
 
     parent_building_block_refs = [meshstack_building_block.git_repository.ref]
 
