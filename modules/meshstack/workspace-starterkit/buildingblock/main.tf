@@ -79,6 +79,11 @@ resource "meshstack_tenant" "this" {
     enabled = !local.expired
   }
 
+  # Already the default, spelled out because the destroy depends on it: deleting the tenant is what
+  # deprovisions the landing zone's own building block, and meshStack refuses the delete while that
+  # block is not in a final state.
+  wait_for_completion = true
+
   metadata = {
     owned_by_workspace = meshstack_workspace.this.metadata.name
     owned_by_project   = meshstack_project.this.metadata.name

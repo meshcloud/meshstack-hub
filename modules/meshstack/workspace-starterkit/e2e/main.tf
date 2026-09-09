@@ -108,3 +108,16 @@ output "expected_expiry_dates" {
     formatdate("YYYY-MM-DD", timeadd(plantimestamp(), "${offset + local.workspace_ttl_days * 24}h"))
   ]
 }
+
+# The landing zone orders its own building block on the tenant this block creates, and that block
+# has to be final before the tenant can be deleted. Read back to find out whether it is, by the
+# time our own run reports SUCCEEDED.
+data "meshstack_building_blocks" "tenant" {
+  depends_on         = [meshstack_building_block.this]
+  project_identifier = local.project_identifier
+}
+
+output "landing_zone_building_blocks" {
+  description = "Statuses of the building blocks the landing zone ordered on the created tenant."
+  value       = [for bb in data.meshstack_building_blocks.tenant.building_blocks : bb.status.status]
+}
