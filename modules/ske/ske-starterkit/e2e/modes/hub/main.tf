@@ -4,7 +4,7 @@ variable "test_context" {
   type = object({
     hub_git_ref          = string
     workspace            = string
-    name_suffix          = string
+    run_id               = string
     forgejo_base_url     = string
     forgejo_organization = string
     dns_zone_name        = string
@@ -37,19 +37,12 @@ locals {
   ske_kubeconfig = yamldecode(var.backplane_secrets.ske_kubeconfig)
 }
 
-resource "random_string" "suffix" {
-  length  = 16
-  special = false
-  upper   = false
-  numeric = false
-}
-
 module "meshstack_kubernetes_platform" {
   source = "./meshstack_kubernetes_platform"
 
-  kube_host   = local.ske_kubeconfig["clusters"][0]["cluster"]["server"]
-  workspace   = var.test_context.workspace
-  test_suffix = random_string.suffix.result
+  kube_host = local.ske_kubeconfig["clusters"][0]["cluster"]["server"]
+  workspace = var.test_context.workspace
+  run_id    = var.test_context.run_id
 }
 
 module "stackit_git_repository" {
@@ -74,8 +67,8 @@ module "stackit_git_repository" {
 
   action_variables = {
     HARBOR_REGISTRY = "registry.onstackit.cloud"
-    HARBOR_PROJECT  = "stackit_kubernetes_platform"               # TODO
-    APP_NAME        = "smoke-test-${random_string.suffix.result}" # TODO
+    HARBOR_PROJECT  = "stackit_kubernetes_platform" # TODO
+    APP_NAME        = var.test_context.run_id       # TODO
   }
 }
 
@@ -121,6 +114,8 @@ module "ske_starterkit" {
     git_ref   = var.test_context.hub_git_ref
     bbd_draft = true
   }
+
+  bbd_display_name = "${var.test_context.run_id} SKE Starterkit"
 
   platform_ref           = module.meshstack_kubernetes_platform.platform_ref
   landing_zone_refs      = module.meshstack_kubernetes_platform.landing_zone_refs
