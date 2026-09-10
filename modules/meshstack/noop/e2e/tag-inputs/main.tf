@@ -136,7 +136,7 @@ resource "meshstack_platform" "this" {
     location_ref = { name = "global" }
 
     availability = {
-      restriction              = "RESTRICTED"
+      restriction              = "PRIVATE"
       publication_state        = "UNPUBLISHED"
       restricted_to_workspaces = [var.test_context.workspace]
     }
