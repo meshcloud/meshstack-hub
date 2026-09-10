@@ -43,6 +43,24 @@ variable "additional_kubernetes_secrets" {
   default     = {}
 }
 
+variable "bbd_display_name" {
+  type        = string
+  default     = null
+  description = "Overrides the name of the marketplace entry application teams see in the catalog."
+}
+
+variable "bbd_description" {
+  type        = string
+  default     = null
+  description = "Overrides the one-line description shown next to the marketplace entry."
+}
+
+variable "bbd_readme" {
+  type        = string
+  default     = null
+  description = "Overrides the markdown readme shown in the marketplace before ordering."
+}
+
 variable "meshstack" {
   type = object({
     owning_workspace_identifier = string
@@ -81,19 +99,19 @@ resource "meshstack_building_block_definition" "this" {
   }
 
   spec = {
-    display_name = "SKE Forgejo Connector"
+    display_name = coalesce(var.bbd_display_name, "SKE Forgejo Connector")
     symbol       = "https://raw.githubusercontent.com/meshcloud/meshstack-hub/${var.hub.git_ref}/modules/ske/forgejo-connector/buildingblock/logo.png"
-    description = chomp(<<-EOT
+    description = coalesce(var.bbd_description, chomp(<<-EOT
       Connects a Forgejo repository with a Kubernetes namespace on STACKIT SKE
       for CI/CD via Forgejo Actions.
     EOT
-    )
+    ))
     support_url         = "https://portal.stackit.cloud/git"
     target_type         = "TENANT_LEVEL"
     supported_platforms = [{ name = "KUBERNETES" }]
     run_transparency    = true
 
-    readme = chomp(<<-EOT
+    readme = coalesce(var.bbd_readme, chomp(<<-EOT
     The **SKE Forgejo Connector** wires a Forgejo repository to a Kubernetes namespace on STACKIT SKE so that
     Forgejo Actions workflows can build and deploy applications into the namespace.
 
@@ -118,7 +136,7 @@ resource "meshstack_building_block_definition" "this" {
     | Manage K8s resources inside namespace                | ❌             | ✅               |
     | Maintain Forgejo Actions pipeline (pipeline.yaml)    | ❌             | ✅               |
     EOT
-    )
+    ))
   }
 
   version_spec = {

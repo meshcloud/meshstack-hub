@@ -1,3 +1,21 @@
+variable "bbd_display_name" {
+  type        = string
+  default     = null
+  description = "Overrides the name of the marketplace entry application teams see in the catalog."
+}
+
+variable "bbd_description" {
+  type        = string
+  default     = null
+  description = "Overrides the one-line description shown next to the marketplace entry."
+}
+
+variable "bbd_readme" {
+  type        = string
+  default     = null
+  description = "Overrides the markdown readme shown in the marketplace before ordering."
+}
+
 variable "meshstack" {
   type = object({
     owning_workspace_identifier = string
@@ -37,10 +55,10 @@ resource "meshstack_building_block_definition" "this" {
   }
 
   spec = {
-    display_name = "meshStack Manual Building Block"
-    description  = "Reference building block demonstrating the MANUAL implementation type: the backend derives one output per input (SINGLE_SELECT is mirrored as STRING), so outputs are computed and must not be configured."
+    display_name = coalesce(var.bbd_display_name, "meshStack Manual Building Block")
+    description  = coalesce(var.bbd_description, "Reference building block demonstrating the MANUAL implementation type: the backend derives one output per input (SINGLE_SELECT is mirrored as STRING), so outputs are computed and must not be configured.")
     target_type  = "WORKSPACE_LEVEL"
-    readme       = <<-EOT
+    readme = coalesce(var.bbd_readme, <<-EOT
     This building block demonstrates meshStack's MANUAL implementation type, where platform operators manually confirm execution and output values are copied directly from inputs.
 
     **Use cases:**
@@ -58,6 +76,7 @@ resource "meshstack_building_block_definition" "this" {
     | Provide `text`, `flag`, `num`, `single_select` inputs | ❌ | ✅ |
     | Monitor completion status | ❌ | ✅ |
     EOT
+    )
   }
 
   version_spec = {

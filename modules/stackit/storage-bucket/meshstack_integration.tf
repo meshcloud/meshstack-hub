@@ -9,6 +9,24 @@ variable "stackit_service_account_name" {
   description = "Name of the backplane service account. Defaults to 'mesh-storage-bucket'. Override when deploying multiple backplane instances in the same STACKIT project."
 }
 
+variable "bbd_display_name" {
+  type        = string
+  default     = null
+  description = "Overrides the name of the marketplace entry application teams see in the catalog."
+}
+
+variable "bbd_description" {
+  type        = string
+  default     = null
+  description = "Overrides the one-line description shown next to the marketplace entry."
+}
+
+variable "bbd_readme" {
+  type        = string
+  default     = null
+  description = "Overrides the markdown readme shown in the marketplace before ordering."
+}
+
 variable "meshstack" {
   type = object({
     owning_workspace_identifier = string
@@ -63,12 +81,12 @@ resource "meshstack_building_block_definition" "this" {
   }
 
   spec = {
-    display_name     = "STACKIT Storage Bucket"
+    display_name     = coalesce(var.bbd_display_name, "STACKIT Storage Bucket")
     symbol           = "https://raw.githubusercontent.com/meshcloud/meshstack-hub/${var.hub.git_ref}/modules/stackit/storage-bucket/buildingblock/logo.png"
-    description      = "Provisions an S3-compatible Object Storage bucket on STACKIT with access credentials."
+    description      = coalesce(var.bbd_description, "Provisions an S3-compatible Object Storage bucket on STACKIT with access credentials.")
     target_type      = "WORKSPACE_LEVEL"
     run_transparency = true
-    readme = chomp(<<-EOT
+    readme = coalesce(var.bbd_readme, chomp(<<-EOT
       This building block provisions an **S3-compatible Object Storage bucket on STACKIT** with
       dedicated access credentials, so your team can store and retrieve files without managing
       the underlying infrastructure.
@@ -99,7 +117,7 @@ resource "meshstack_building_block_definition" "this" {
       | Manage objects and data lifecycle | ❌ | ✅ |
       | Secure and rotate application credentials | ❌ | ✅ |
       EOT
-    )
+    ))
   }
 
   version_spec = {

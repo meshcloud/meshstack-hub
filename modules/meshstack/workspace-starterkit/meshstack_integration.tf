@@ -31,14 +31,14 @@ variable "project_role_name" {
   description = "meshStack project role granted to the project admin on every project this definition creates."
 }
 
-variable "display_name" {
+variable "bbd_display_name" {
   type        = string
   nullable    = false
   default     = "meshStack Workspace Starterkit"
   description = "Display name of the building block definition. One instance can deploy several flavours of this starterkit side by side — e.g. a long-lived team workspace and a time-boxed university workspace — and without distinct names the panel shows them as duplicates."
 }
 
-variable "description" {
+variable "bbd_description" {
   type        = string
   nullable    = false
   default     = "Creates a new meshStack workspace with a self-tracked TTL, a payment method, a project with a tenant of a given platform/landing zone, and the initial workspace and project role bindings."
@@ -86,7 +86,7 @@ variable "project_identifier_error_message" {
   description = "Message shown when the project identifier does not match `project_identifier_pattern`."
 }
 
-variable "readme" {
+variable "bbd_readme" {
   type        = string
   default     = null
   description = "Replaces the readme the building block definition shows whoever orders it. Unset keeps the module's own, which documents the TTL and the shared responsibilities as this module implements them — so override it to change tone or language, or to add instance-specific guidance, not to describe different behaviour."
@@ -207,7 +207,7 @@ module "backplane" {
   source = "github.com/meshcloud/meshstack-hub//modules/meshstack/workspace-starterkit/backplane?ref=${var.hub.git_ref}"
 
   meshstack_workspace_identifier = var.meshstack.owning_workspace_identifier
-  api_key_display_name           = var.display_name
+  api_key_display_name           = var.bbd_display_name
   api_key_lifetime_days          = var.api_key_lifetime_days
   additional_api_key_permissions = var.additional_api_key_permissions
 }
@@ -219,13 +219,13 @@ resource "meshstack_building_block_definition" "this" {
   }
 
   spec = {
-    display_name     = var.display_name
+    display_name     = var.bbd_display_name
     symbol           = "https://raw.githubusercontent.com/meshcloud/meshstack-hub/${var.hub.git_ref}/modules/meshstack/workspace-starterkit/buildingblock/logo.png"
-    description      = var.description
+    description      = var.bbd_description
     target_type      = "WORKSPACE_LEVEL"
     run_transparency = true
 
-    readme = coalesce(var.readme, local.default_readme)
+    readme = coalesce(var.bbd_readme, local.default_readme)
   }
 
   version_spec = {

@@ -31,6 +31,24 @@ variable "notification_subscribers" {
   description = "List of email addresses to notify on building block lifecycle events."
 }
 
+variable "bbd_display_name" {
+  type        = string
+  default     = null
+  description = "Overrides the name of the marketplace entry application teams see in the catalog."
+}
+
+variable "bbd_description" {
+  type        = string
+  default     = null
+  description = "Overrides the one-line description shown next to the marketplace entry."
+}
+
+variable "bbd_readme" {
+  type        = string
+  default     = null
+  description = "Overrides the markdown readme shown in the marketplace before ordering."
+}
+
 variable "meshstack" {
   type = object({
     owning_workspace_identifier = string
@@ -87,15 +105,15 @@ resource "meshstack_building_block_definition" "this" {
   }
 
   spec = {
-    display_name             = "Azure Storage Account"
-    description              = "Provisions an Azure Storage Account as a highly scalable, durable, and secure container in the target Azure subscription."
+    display_name             = coalesce(var.bbd_display_name, "Azure Storage Account")
+    description              = coalesce(var.bbd_description, "Provisions an Azure Storage Account as a highly scalable, durable, and secure container in the target Azure subscription.")
     support_url              = "mailto:support@meshcloud.io"
     documentation_url        = "https://hub.meshcloud.io/platforms/azure/definitions/azure-storage-account"
     notification_subscribers = var.notification_subscribers
     symbol                   = "https://raw.githubusercontent.com/meshcloud/meshstack-hub/main/modules/azure/storage-account/buildingblock/logo.png"
     target_type              = "WORKSPACE_LEVEL"
 
-    readme = chomp(<<-EOT
+    readme = coalesce(var.bbd_readme, chomp(<<-EOT
       This building block provisions an **Azure Storage Account** in your Azure subscription, providing scalable and durable cloud storage for blobs, files, queues, and tables.
 
       ## 🎯 When to use it
@@ -112,7 +130,7 @@ resource "meshstack_building_block_definition" "this" {
       | Manage data stored in the storage account   | ❌            | ✅               |
       | Define access policies for stored data      | ❌            | ✅               |
     EOT
-    )
+    ))
   }
 
   version_spec = {

@@ -35,6 +35,24 @@ variable "aws_oidc_provider_arn" {
   EOT
 }
 
+variable "bbd_display_name" {
+  type        = string
+  default     = null
+  description = "Overrides the name of the marketplace entry application teams see in the catalog."
+}
+
+variable "bbd_description" {
+  type        = string
+  default     = null
+  description = "Overrides the one-line description shown next to the marketplace entry."
+}
+
+variable "bbd_readme" {
+  type        = string
+  default     = null
+  description = "Overrides the markdown readme shown in the marketplace before ordering."
+}
+
 variable "meshstack" {
   type = object({
     owning_workspace_identifier = string
@@ -91,14 +109,14 @@ resource "meshstack_building_block_definition" "this" {
   }
 
   spec = {
-    display_name      = "AWS Route53 DNS Alias Record"
-    description       = "Provides AWS Route53 DNS alias records for routing traffic to AWS resources such as load balancers and CloudFront distributions."
+    display_name      = coalesce(var.bbd_display_name, "AWS Route53 DNS Alias Record")
+    description       = coalesce(var.bbd_description, "Provides AWS Route53 DNS alias records for routing traffic to AWS resources such as load balancers and CloudFront distributions.")
     support_url       = ""
     documentation_url = "https://hub.meshcloud.io/platforms/aws/definitions/route53-dns-alias-record"
     symbol            = "https://raw.githubusercontent.com/meshcloud/meshstack-hub/${var.hub.git_ref}/modules/aws/route53-dns-alias-record/buildingblock/logo.png"
     target_type       = "WORKSPACE_LEVEL"
 
-    readme = chomp(<<-EOT
+    readme = coalesce(var.bbd_readme, chomp(<<-EOT
       This building block creates Route53 alias records, which are AWS-specific DNS records that route traffic to AWS resources (load balancers, CloudFront distributions, S3 websites, etc.).
 
       ## When to use it?
@@ -115,7 +133,7 @@ resource "meshstack_building_block_definition" "this" {
       | Provisioning DNS alias records              | ❌            | ✅               |
       | Managing record names and target resources  | ❌            | ✅               |
     EOT
-    )
+    ))
   }
 
   version_spec = {

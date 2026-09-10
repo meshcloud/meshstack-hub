@@ -26,6 +26,24 @@ variable "stackit_network_max_prefix_length" {
   description = "Maximum allowed IPv4 prefix length for the network's prefix length input."
 }
 
+variable "bbd_display_name" {
+  type        = string
+  default     = null
+  description = "Overrides the name of the marketplace entry application teams see in the catalog."
+}
+
+variable "bbd_description" {
+  type        = string
+  default     = null
+  description = "Overrides the one-line description shown next to the marketplace entry."
+}
+
+variable "bbd_readme" {
+  type        = string
+  default     = null
+  description = "Overrides the markdown readme shown in the marketplace before ordering."
+}
+
 variable "meshstack" {
   type = object({
     owning_workspace_identifier = string
@@ -86,14 +104,14 @@ resource "meshstack_building_block_definition" "this" {
   }
 
   spec = {
-    display_name        = "STACKIT Network"
+    display_name        = coalesce(var.bbd_display_name, "STACKIT Network")
     symbol              = "https://raw.githubusercontent.com/meshcloud/meshstack-hub/${var.hub.git_ref}/modules/stackit/network/buildingblock/logo.png"
-    description         = "Creates a routed STACKIT network inside an existing STACKIT project."
+    description         = coalesce(var.bbd_description, "Creates a routed STACKIT network inside an existing STACKIT project.")
     support_url         = "https://portal.stackit.cloud"
     target_type         = "TENANT_LEVEL"
     run_transparency    = true
     supported_platforms = [{ name = "STACKIT" }]
-    readme = chomp(<<-EOT
+    readme = coalesce(var.bbd_readme, chomp(<<-EOT
       This building block creates a **routed STACKIT network** inside your existing STACKIT
       project, so your application can use a dedicated IPv4 subnet without any manual network
       configuration.
@@ -124,7 +142,7 @@ resource "meshstack_building_block_definition" "this" {
       | Choose the network name and prefix length | ❌ | ✅ |
       | Deploy workloads within the network | ❌ | ✅ |
       EOT
-    )
+    ))
   }
 
   version_spec = {

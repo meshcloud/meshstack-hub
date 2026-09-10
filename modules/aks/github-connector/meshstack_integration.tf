@@ -21,6 +21,24 @@ variable "notification_subscribers" {
   default = []
 }
 
+variable "bbd_display_name" {
+  type        = string
+  default     = null
+  description = "Overrides the name of the marketplace entry application teams see in the catalog."
+}
+
+variable "bbd_description" {
+  type        = string
+  default     = null
+  description = "Overrides the one-line description shown next to the marketplace entry."
+}
+
+variable "bbd_readme" {
+  type        = string
+  default     = null
+  description = "Overrides the markdown readme shown in the marketplace before ordering."
+}
+
 variable "meshstack" {
   type = object({
     owning_workspace_identifier = string
@@ -63,14 +81,14 @@ resource "meshstack_building_block_definition" "aks_github_connector" {
   }
 
   spec = {
-    description              = "CI/CD pipeline using GitHub Actions for secure, scalable AKS deployment. Sets up service accounts, secrets, and workflows for seamless GitHub Actions integration with an AKS namespace."
-    display_name             = "GitHub Actions AKS Connector"
+    description              = coalesce(var.bbd_description, "CI/CD pipeline using GitHub Actions for secure, scalable AKS deployment. Sets up service accounts, secrets, and workflows for seamless GitHub Actions integration with an AKS namespace.")
+    display_name             = coalesce(var.bbd_display_name, "GitHub Actions AKS Connector")
     notification_subscribers = var.notification_subscribers
     symbol                   = "https://raw.githubusercontent.com/meshcloud/meshstack-hub/${var.hub.git_ref}/modules/aks/github-connector/buildingblock/logo.png"
     target_type              = "TENANT_LEVEL"
     supported_platforms      = [{ name = "AZURE_KUBERNETES_SERVICE" }]
 
-    readme = chomp(<<EOT
+    readme = coalesce(var.bbd_readme, chomp(<<EOT
 The **GitHub Actions AKS Connector** integrates a GitHub repository with an Azure Kubernetes Service (AKS) namespace. It sets up the necessary service accounts, secrets, and workflows so that GitHub Actions can build, push, and deploy container images to your AKS namespace automatically.
 
 ## 🎯 When to use it
@@ -104,7 +122,7 @@ This building block is ideal for teams that:
 
 ---
 EOT
-    )
+    ))
     run_transparency = true
   }
 

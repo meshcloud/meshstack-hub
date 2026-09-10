@@ -28,6 +28,24 @@ variable "default_alert_thresholds_yaml" {
   EOT
 }
 
+variable "bbd_display_name" {
+  type        = string
+  default     = null
+  description = "Overrides the name of the marketplace entry application teams see in the catalog."
+}
+
+variable "bbd_description" {
+  type        = string
+  default     = null
+  description = "Overrides the one-line description shown next to the marketplace entry."
+}
+
+variable "bbd_readme" {
+  type        = string
+  default     = null
+  description = "Overrides the markdown readme shown in the marketplace before ordering."
+}
+
 variable "meshstack" {
   type = object({
     owning_workspace_identifier = string
@@ -88,15 +106,15 @@ resource "meshstack_building_block_definition" "this" {
   }
 
   spec = {
-    display_name        = "GCP Budget Alert"
-    description         = "Sends email alerts when a GCP project's spend crosses configurable thresholds of a monthly budget."
+    display_name        = coalesce(var.bbd_display_name, "GCP Budget Alert")
+    description         = coalesce(var.bbd_description, "Sends email alerts when a GCP project's spend crosses configurable thresholds of a monthly budget.")
     support_url         = ""
     documentation_url   = ""
     symbol              = "https://raw.githubusercontent.com/meshcloud/meshstack-hub/main/modules/gcp/budget-alert/buildingblock/logo.png"
     target_type         = "TENANT_LEVEL"
     supported_platforms = [{ name = "GCP" }]
 
-    readme = chomp(<<-EOT
+    readme = coalesce(var.bbd_readme, chomp(<<-EOT
       This building block creates a **GCP billing budget** for your project and an email notification
       channel, so you find out about unexpected spend from an email rather than from the invoice.
 
@@ -145,7 +163,7 @@ resource "meshstack_building_block_definition" "this" {
       | Keep the contact email address current | ❌ | ✅ |
       | Act on an alert — investigating and reducing spend | ❌ | ✅ |
       EOT
-    )
+    ))
   }
 
   version_spec = {

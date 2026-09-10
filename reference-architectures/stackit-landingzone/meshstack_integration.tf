@@ -1,3 +1,21 @@
+variable "bbd_display_name" {
+  type        = string
+  default     = null
+  description = "Overrides the name of the marketplace entry application teams see in the catalog."
+}
+
+variable "bbd_description" {
+  type        = string
+  default     = null
+  description = "Overrides the one-line description shown next to the marketplace entry."
+}
+
+variable "bbd_readme" {
+  type        = string
+  default     = null
+  description = "Overrides the markdown readme shown in the marketplace before ordering."
+}
+
 variable "meshstack" {
   type = object({
     owning_workspace_identifier = string
@@ -47,14 +65,14 @@ resource "meshstack_building_block_definition" "this" {
   }
 
   spec = {
-    display_name     = "STACKIT Landing Zone Reference Architecture"
+    display_name     = coalesce(var.bbd_display_name, "STACKIT Landing Zone Reference Architecture")
     symbol           = "https://raw.githubusercontent.com/meshcloud/meshstack-hub/${var.hub.git_ref}/reference-architectures/stackit-landingzone/buildingblock/logo.png"
-    description      = "Onboards a STACKIT sandbox platform into meshStack: a location, resourcemanager folder and the STACKIT Project platform with its default landing zone. Optionally layers on a hub-and-spoke network topology when a network config is provided."
+    description      = coalesce(var.bbd_description, "Onboards a STACKIT sandbox platform into meshStack: a location, resourcemanager folder and the STACKIT Project platform with its default landing zone. Optionally layers on a hub-and-spoke network topology when a network config is provided.")
     support_url      = "https://portal.stackit.cloud"
     target_type      = "WORKSPACE_LEVEL"
     run_transparency = true
 
-    readme = chomp(<<-EOT
+    readme = coalesce(var.bbd_readme, chomp(<<-EOT
     The **STACKIT Landing Zone** building block bootstraps a complete STACKIT sandbox platform
     integration inside a meshStack workspace. Running it once turns a STACKIT organization into a
     sandbox-ready self-service platform: it registers a meshStack location, carves out a dedicated
@@ -152,7 +170,7 @@ resource "meshstack_building_block_definition" "this" {
     | (Optional) Order spoke networks inside their STACKIT projects | ❌ | ✅ |
     | Manage workloads inside the provisioned STACKIT projects | ❌ | ✅ |
     EOT
-    )
+    ))
   }
 
   version_spec = {
