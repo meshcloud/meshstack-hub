@@ -5,8 +5,8 @@ run "building_block_stackit_network_area_hub" {
   }
 
   assert {
-    condition     = jsondecode(meshstack_building_block.this.status.outputs["network_area_name"].value) == "smoke-test-na-${var.test_context.name_suffix}"
-    error_message = "stackit network-area hub building block expected network_area_name to be 'smoke-test-na-${var.test_context.name_suffix}', got ${jsondecode(meshstack_building_block.this.status.outputs["network_area_name"].value)}"
+    condition     = jsondecode(meshstack_building_block.this.status.outputs["network_area_name"].value) == "${var.test_context.run_id}-na"
+    error_message = "stackit network-area hub building block expected network_area_name to be '${var.test_context.run_id}-na', got ${jsondecode(meshstack_building_block.this.status.outputs["network_area_name"].value)}"
   }
 
   assert {

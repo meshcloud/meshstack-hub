@@ -5,12 +5,12 @@ run "building_block_stackit_storage_bucket_hub" {
   }
 
   assert {
-    condition     = jsondecode(meshstack_building_block.this.status.outputs["bucket_name"].value) == "smoke-test-bucket-${var.test_context.name_suffix}"
-    error_message = "stackit storage-bucket hub building block expected bucket_name to be 'smoke-test-bucket-${var.test_context.name_suffix}', got ${jsondecode(meshstack_building_block.this.status.outputs["bucket_name"].value)}"
+    condition     = jsondecode(meshstack_building_block.this.status.outputs["bucket_name"].value) == "${var.test_context.run_id}-bucket"
+    error_message = "stackit storage-bucket hub building block expected bucket_name to be '${var.test_context.run_id}-bucket', got ${jsondecode(meshstack_building_block.this.status.outputs["bucket_name"].value)}"
   }
 
   assert {
-    condition     = strcontains(jsondecode(meshstack_building_block.this.status.outputs["bucket_url_path_style"].value), "smoke-test-bucket-${var.test_context.name_suffix}")
+    condition     = strcontains(jsondecode(meshstack_building_block.this.status.outputs["bucket_url_path_style"].value), "${var.test_context.run_id}-bucket")
     error_message = "stackit storage-bucket hub building block expected bucket_url_path_style to contain bucket name, got ${jsondecode(meshstack_building_block.this.status.outputs["bucket_url_path_style"].value)}"
   }
 
