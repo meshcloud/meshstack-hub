@@ -7,6 +7,7 @@ variable "test_context" {
       tag_schema = object({
         mandatory = object({
           payment_method = map(list(string))
+          project        = map(list(string))
         })
       })
     })

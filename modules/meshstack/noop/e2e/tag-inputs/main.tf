@@ -8,22 +8,19 @@ locals {
   project_identifier = "${var.test_context.run_id}-noop-tag-dev"
 
   # Tag definitions are instance-global, so every key carries the run id. They must also differ
-  # from the instance's mandatory keys below, or the "landing zone offers every value" rule would
-  # couple the project tag to the landing zone tag and block a change to either on its own.
+  # from the instance's mandatory keys, or the "landing zone offers every value" rule would couple
+  # the project tag to the landing zone tag and block a change to either on its own.
   project_tag_key        = "${var.test_context.run_id}NoopProject"
   payment_method_tag_key = "${var.test_context.run_id}NoopPaymentMethod"
   landing_zone_tag_key   = "${var.test_context.run_id}NoopLandingZone"
 
-  # The test workspace makes these tags mandatory, and a landing zone has to offer every value a
-  # project assigned to it may carry — meshStack rejects both objects otherwise.
+  # This instance makes these mandatory for a landing zone too, and a landing zone has to offer
+  # every value a project assigned to it may carry — meshStack rejects both objects otherwise.
+  # Still hardcoded because `tag_schema.mandatory` has no landing zone entry to read them from;
+  # `modules/stackit`'s `var.meshstack.tags.landingzone` is what that entry would look like.
   landingzone_tags = {
     confidentiality = ["Public", "Internal", "Confidential"]
     environment     = ["dev", "qa", "prod"]
-  }
-
-  project_tags = {
-    confidentiality = ["Public"]
-    environment     = ["dev"]
   }
 
   # Each scenario changes as little as possible against the one before it, so a failed assertion
@@ -262,7 +259,7 @@ resource "meshstack_project" "this" {
   spec = {
     display_name              = "${var.test_context.run_id} NoOp Tag Inputs"
     payment_method_identifier = local.payment_methods[local.scenario.funding]
-    tags = merge(local.project_tags, {
+    tags = merge(var.test_context.meshstack.tag_schema.mandatory.project, {
       (meshstack_tag_definition.project.spec.key) = local.scenario.project_tag_values
     })
   }

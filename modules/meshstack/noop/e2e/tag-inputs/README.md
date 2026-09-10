@@ -20,8 +20,9 @@ retag.
 
 Two consequences worth knowing before the first run: tag definitions and payment methods are
 admin-scoped (`ADM_TAGDEFINITION_SAVE`, `ADM_PAYMENTMETHOD_SAVE`, neither with a workspace-scoped
-variant), and the mandatory `confidentiality`/`environment` tags are copied from the dev instance's
-schema — another instance may require a different set.
+variant), and the tags the instance makes mandatory on the project and the payment methods arrive in
+`test_context.meshstack.tag_schema.mandatory`, the same way `meshstack/workspace-starterkit` takes
+them. The landing zone's are still spelled out here: that schema has no landing zone entry yet.
 
 ## Why the tenant needs a manual building block
 
