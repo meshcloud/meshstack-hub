@@ -50,18 +50,25 @@ run "building_block_noop_hub" {
   assert {
     # deploy_settings is a JSON-type input: meshPanel renders a form from its json_schema, and the
     # form's output reaches the building block as JSON text, exactly like a CODE input.
+    # Compared via jsonencode() on both sides: a raw `==` between a jsondecode()'d value and an HCL
+    # object/list literal can spuriously fail on OpenTofu's tuple/object type unification even when
+    # the values are identical, so canonical JSON strings are compared instead.
     condition = (
-      jsondecode(meshstack_building_block.this.status.outputs["deploy_settings"].value)
+      jsonencode(jsondecode(meshstack_building_block.this.status.outputs["deploy_settings"].value))
       ==
-      { greeting = "Hello from e2e", shout = true }
+      jsonencode({ greeting = "Hello from e2e", shout = true })
     )
     error_message = "noop hub building block expected output deploy_settings to be {greeting = \"Hello from e2e\", shout = true}, got ${jsondecode(meshstack_building_block.this.status.outputs["deploy_settings"].value)}"
   }
 
   assert {
     # tag_value is sourced from the meshstack_workspace_tag set up in e2e/main.tf, not from the
-    # building block's own inputs.
-    condition     = jsondecode(meshstack_building_block.this.status.outputs["tag_value"].value) == ["e2e-tag-value"]
+    # building block's own inputs. Compared via jsonencode(), see the deploy_settings assert above.
+    condition = (
+      jsonencode(jsondecode(meshstack_building_block.this.status.outputs["tag_value"].value))
+      ==
+      jsonencode(["e2e-tag-value"])
+    )
     error_message = "noop hub building block expected output tag_value to be [\"e2e-tag-value\"], got ${jsondecode(meshstack_building_block.this.status.outputs["tag_value"].value)}"
   }
 
