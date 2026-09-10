@@ -26,7 +26,7 @@ run "building_block_stackit_network_hub" {
   }
 
   assert {
-    condition     = strcontains(jsondecode(meshstack_building_block.this.status.outputs["summary"].value), "smoke-test-net-${var.test_context.name_suffix}")
+    condition     = strcontains(jsondecode(meshstack_building_block.this.status.outputs["summary"].value), "${var.test_context.run_id}-net")
     error_message = "stackit network hub building block expected the summary to name the network, got ${jsondecode(meshstack_building_block.this.status.outputs["summary"].value)}"
   }
 }

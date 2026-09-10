@@ -1,7 +1,7 @@
 variable "test_context" {
   type = object({
     workspace   = string
-    name_suffix = string
+    run_id      = string
     hub_git_ref = string
 
     # Mode discriminator: set in foundation mode to order an already-deployed BBD version;
@@ -41,8 +41,10 @@ module "stackit_storage_bucket" {
     bbd_draft = true
   }
 
+  bbd_display_name = "${var.test_context.run_id} STACKIT Storage Bucket"
+
   stackit_project_id           = var.test_context.fixtures.stackit.project_id
-  stackit_service_account_name = "msb-${var.test_context.name_suffix}"
+  stackit_service_account_name = "${var.test_context.run_id}-sb"
 }
 
 locals {
@@ -58,14 +60,14 @@ resource "meshstack_building_block" "this" {
   spec = {
     building_block_definition_version_ref = { uuid = local.version_ref.uuid }
 
-    display_name = "smoke-test-stackit-storage-bucket-${var.test_context.name_suffix}"
+    display_name = "${var.test_context.run_id}-storage-bucket"
     target_ref = {
       kind = "meshWorkspace"
       name = var.test_context.workspace
     }
 
     inputs = {
-      bucket_name = { value = jsonencode("smoke-test-bucket-${var.test_context.name_suffix}") }
+      bucket_name = { value = jsonencode("${var.test_context.run_id}-bucket") }
     }
   }
 }

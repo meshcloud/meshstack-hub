@@ -1,8 +1,12 @@
 variable "test_context" {
   type = object({
     workspace   = string
-    name_suffix = string
+    run_id      = string
     hub_git_ref = string
+
+    meshstack = object({
+      project_identifier_suffix = string
+    })
 
     # Mode discriminator: set in foundation mode to order an already-deployed BBD version;
     # null in build-from-source mode, which builds the BBD from hub source.
@@ -54,17 +58,13 @@ provider "stackit" {
 
 locals {
   # The meshStack project identifier is the STACKIT project name: the definition wires
-  # `project_name` from PROJECT_IDENTIFIER. Carrying the run suffix here is therefore the only way
-  # to make the STACKIT project this test creates traceable to its run.
-  #
-  # Two instance-level constraints shape it: identifiers longer than 30 characters are rejected as
-  # too long, and the test instance additionally requires one to end in a stage suffix
-  # (`-dev`/`-qa`/`-prod`), which is why this is not just a prefix plus the suffix.
-  project_identifier = "smoke-prj-${var.test_context.name_suffix}-dev"
+  # `project_name` from PROJECT_IDENTIFIER. It is capped at 30 characters, and the instance requires
+  # it to end in a stage suffix (`-dev`/`-qa`/`-prod`), which the test context publishes.
+  project_identifier = "${var.test_context.run_id}-prj${var.test_context.meshstack.project_identifier_suffix}"
 
   # A platform identifier can never be reused in meshStack, not even after the platform is deleted,
-  # so it must be unique per run. The `smoke-test-` prefix is what the cleanup tooling sweeps on.
-  platform_identifier = "smoke-test-stk-${var.test_context.name_suffix}"
+  # so it must be unique per run.
+  platform_identifier = "${var.test_context.run_id}-stk"
 
   # Tags the test workspace requires. The landing zone offers every value so it accepts the
   # project's narrower selection.
@@ -103,15 +103,11 @@ module "stackit_project" {
     bbd_draft = false
   }
 
-  stackit_organization_id     = var.test_context.fixtures.stackit.organization_id
-  stackit_project_owner_email = var.stackit_project_owner_email
-  stackit_project_id          = var.test_context.fixtures.stackit.project_id
-  stackit_parent_container_id = var.test_context.fixtures.stackit.parent_container_id
-
-  # Overriding the module default (`mesh-project`) keeps the backplane service account unique per
-  # run, so concurrent or retried runs don't clash and a leaked one is traceable to its run. Short
-  # prefix keeps the name within STACKIT's limits.
-  stackit_service_account_name = "mprj-${var.test_context.name_suffix}"
+  stackit_organization_id      = var.test_context.fixtures.stackit.organization_id
+  stackit_project_owner_email  = var.stackit_project_owner_email
+  stackit_project_id           = var.test_context.fixtures.stackit.project_id
+  stackit_parent_container_id  = var.test_context.fixtures.stackit.parent_container_id
+  stackit_service_account_name = "${var.test_context.run_id}-prj"
 }
 
 locals {
@@ -126,7 +122,7 @@ resource "meshstack_project" "this" {
   }
 
   spec = {
-    display_name = "Smoke Test STACKIT Project ${var.test_context.name_suffix}"
+    display_name = "${var.test_context.run_id} STACKIT Project"
     tags         = local.project_tags
   }
 }
