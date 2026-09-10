@@ -11,14 +11,6 @@
 # email resolves to an existing Forgejo account are added to teams. Members who
 # haven't signed into the Forgejo instance yet are reported in the summary.
 
-resource "random_string" "team_suffix" {
-  length  = 8
-  lower   = true
-  numeric = false
-  upper   = false
-  special = false
-}
-
 # Resolve workspace member emails to Forgejo usernames
 data "external" "resolve_forgejo_users" {
   program = ["python3", "${path.module}/resolve_forgejo_users.py"]
@@ -93,8 +85,10 @@ locals {
     readers = ["repo.code", "repo.issues", "repo.ext_issues", "repo.wiki", "repo.pulls", "repo.releases", "repo.projects", "repo.ext_wiki", "repo.actions", "repo.packages"]
   }
 
+  # The repository name is already unique within the Forgejo organization, so it disambiguates
+  # teams too — no random suffix needed.
   team_names = {
-    for type in keys(local.active_teams) : type => "${var.workspace_identifier}-${type}-${random_string.team_suffix.result}"
+    for type in keys(local.active_teams) : type => "${var.name}-${type}"
   }
 
   # Flat map for resolved member assignments: "type/username" => { team_type, username }
