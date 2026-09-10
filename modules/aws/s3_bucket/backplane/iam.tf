@@ -1,10 +1,5 @@
 data "aws_caller_identity" "current" {}
 
-resource "random_string" "name_suffix" {
-  length  = 4
-  special = false
-}
-
 data "aws_iam_policy_document" "s3_full_access" {
   statement {
     actions = [
@@ -18,7 +13,7 @@ data "aws_iam_policy_document" "s3_full_access" {
 }
 
 resource "aws_iam_policy" "buildingblock_s3_policy" {
-  name        = "S3BuildingBlockFederatedPolicy-${random_string.name_suffix.result}"
+  name        = local.policy_name
   description = "Policy for the S3 Building Block"
   policy      = data.aws_iam_policy_document.s3_full_access.json
 }
@@ -26,7 +21,8 @@ resource "aws_iam_policy" "buildingblock_s3_policy" {
 # Workload Identity Federation
 
 locals {
-  assume_federated_role_name = "BuildingBlockS3IdentityFederation-${random_string.name_suffix.result}"
+  policy_name                = "${var.name}-policy"
+  assume_federated_role_name = "${var.name}-role"
 }
 
 data "aws_iam_policy_document" "workload_identity_federation" {

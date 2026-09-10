@@ -19,3 +19,9 @@ variable "oidc_provider_arn" {
   See .agents/references/aws-backplane.md#the-shared-oidc-provider
   EOT
 }
+
+variable "name" {
+  type        = string
+  nullable    = false
+  description = "Name for the backplane IAM role and policy (suffixed -role and -policy)."
+}

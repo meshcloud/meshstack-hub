@@ -21,6 +21,12 @@ variable "aws_oidc_provider_arn" {
   EOT
 }
 
+variable "backplane_name" {
+  type        = string
+  default     = "aws-s3-bucket"
+  description = "Name for the backplane IAM role and policy."
+}
+
 variable "meshstack" {
   type = object({
     owning_workspace_identifier = string
@@ -56,6 +62,7 @@ output "building_block_definition" {
 module "backplane" {
   source = "github.com/meshcloud/meshstack-hub//modules/aws/s3_bucket/backplane?ref=${var.hub.git_ref}"
 
+  name              = var.backplane_name
   oidc_provider_arn = var.aws_oidc_provider_arn
 
   workload_identity_federation = {
