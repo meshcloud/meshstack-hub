@@ -1,7 +1,7 @@
 variable "test_context" {
   type = object({
     workspace   = string
-    name_suffix = string
+    run_id      = string
     hub_git_ref = string
 
     # Mode discriminator: set in foundation mode to order an already-deployed BBD version;
@@ -44,18 +44,17 @@ module "stackit_network" {
     bbd_draft = true
   }
 
-  stackit_organization_id = var.test_context.fixtures.stackit.organization_id
-  stackit_project_id      = var.test_context.fixtures.stackit.project_id
-  # Overriding the module default (`mesh-network`) keeps the backplane service account unique per
-  # run, so concurrent or retried runs don't clash and a leaked one is traceable to its run. Short
-  # prefix keeps the name within STACKIT's limits.
-  stackit_service_account_name = "mnet-${var.test_context.name_suffix}"
+  bbd_display_name = "${var.test_context.run_id} STACKIT Network"
+
+  stackit_organization_id      = var.test_context.fixtures.stackit.organization_id
+  stackit_project_id           = var.test_context.fixtures.stackit.project_id
+  stackit_service_account_name = "${var.test_context.run_id}-net"
 }
 
 locals {
   version_ref = var.test_context.bbd_version_ref != null ? var.test_context.bbd_version_ref : module.stackit_network[0].building_block_definition.version_ref
 
-  network_name = "smoke-test-net-${var.test_context.name_suffix}"
+  network_name = "${var.test_context.run_id}-net"
   # Smallest prefix the module's default min/max range allows, to keep the address space this test
   # consumes in the target project's network area as small as possible.
   network_prefix_length = 28
@@ -70,7 +69,7 @@ resource "meshstack_building_block" "this" {
   spec = {
     building_block_definition_version_ref = { uuid = local.version_ref.uuid }
 
-    display_name = "smoke-test-stackit-network-${var.test_context.name_suffix}"
+    display_name = "${var.test_context.run_id}-network"
     # The network is created inside the STACKIT project backing this tenant; `project_id` is a
     # PLATFORM_TENANT_ID input meshStack resolves from the target tenant.
     target_ref = {

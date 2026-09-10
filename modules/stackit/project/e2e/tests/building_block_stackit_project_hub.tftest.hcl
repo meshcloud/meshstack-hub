@@ -5,8 +5,8 @@ run "building_block_stackit_project_hub" {
   }
 
   assert {
-    condition     = jsondecode(output.project_building_block.status.outputs["project_name"].value) == "smoke-prj-${var.test_context.name_suffix}-dev"
-    error_message = "stackit project hub building block expected the STACKIT project to be named after the meshStack project identifier 'smoke-prj-${var.test_context.name_suffix}-dev', got ${jsondecode(output.project_building_block.status.outputs["project_name"].value)}"
+    condition     = jsondecode(output.project_building_block.status.outputs["project_name"].value) == "${var.test_context.run_id}-prj${var.test_context.meshstack.project_identifier_suffix}"
+    error_message = "stackit project hub building block expected the STACKIT project to be named after the meshStack project identifier '${var.test_context.run_id}-prj${var.test_context.meshstack.project_identifier_suffix}', got ${jsondecode(output.project_building_block.status.outputs["project_name"].value)}"
   }
 
   # The project id is a PLATFORM_TENANT_ID output, so meshStack writing it back onto the tenant is
@@ -16,9 +16,10 @@ run "building_block_stackit_project_hub" {
     error_message = "stackit project hub building block expected the tenant's platform tenant id to be the created STACKIT project id ${jsondecode(output.project_building_block.status.outputs["project_id"].value)}, got ${output.platform_tenant_id}"
   }
 
-  # STACKIT derives the container id from the project name plus a random discriminator.
+  # STACKIT derives the container id from the project name plus a random discriminator, and
+  # re-segments it with dashes of its own — hence the comparison on the dash-free name.
   assert {
-    condition     = startswith(jsondecode(output.project_building_block.status.outputs["container_id"].value), "smoke-prj")
+    condition     = strcontains(replace(jsondecode(output.project_building_block.status.outputs["container_id"].value), "-", ""), var.test_context.run_id)
     error_message = "stackit project hub building block expected container_id to be derived from the project name, got ${jsondecode(output.project_building_block.status.outputs["container_id"].value)}"
   }
 
