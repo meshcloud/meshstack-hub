@@ -7,7 +7,7 @@ description: Conventions for meshstack_integration.tf in meshstack-hub modules â
 
 These files are examples showing how to integrate building block and platform modules with a meshStack instance.
 They are starting points that should cover the simplest use case.
-A secondary purpose of these files is to serve as a ready-to-use Terraform module root that IaC runtimes can source directly.
+A secondary purpose of these files is to serve as a ready-to-use Terraform module root that a foundation repository can source directly.
 
 - Must use variables for required user inputs.
 - Must include `required_providers` block at the **bottom** of the file.

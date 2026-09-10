@@ -15,7 +15,7 @@ User-facing readmes in meshstack-hub explain what the building block does, when 
 
 **Why two patterns?**
 
-- **Inline (`meshstack_integration.tf` present)**: Platform engineers import building blocks by copying `meshstack_integration.tf` into their IaC runtime. Keeping the readme inline ensures the full building block — resources, variables, and documentation — is in a single file with no missing dependencies.
+- **Inline (`meshstack_integration.tf` present)**: Platform engineers import building blocks by copying `meshstack_integration.tf` into their foundation repository. Keeping the readme inline ensures the full building block — resources, variables, and documentation — is in a single file with no missing dependencies.
 - **`APP_TEAM_README.md` (no integration file)**: Standalone building blocks consumed directly by meshStack need a dedicated file for meshStack to display. Use `APP_TEAM_README.md` in the `buildingblock/` directory.
 
 **Never** use `readme = file("buildingblock/APP_TEAM_README.md")` inside a `meshstack_integration.tf` — that path breaks the copy/paste scenario. If the module has an integration file, the readme must be inline.
