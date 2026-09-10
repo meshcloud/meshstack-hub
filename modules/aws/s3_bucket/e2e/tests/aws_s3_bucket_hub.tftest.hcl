@@ -5,19 +5,19 @@ run "building_block_aws_s3_bucket_hub" {
   }
 
   assert {
-    condition     = jsondecode(meshstack_building_block.this.status.outputs["bucket_name"].value) == "smoke-test-aws-bucket-${var.test_context.name_suffix}"
-    error_message = "aws s3_bucket hub building block expected bucket_name to be 'smoke-test-aws-bucket-${var.test_context.name_suffix}', got ${jsondecode(meshstack_building_block.this.status.outputs["bucket_name"].value)}"
+    condition     = jsondecode(meshstack_building_block.this.status.outputs["bucket_name"].value) == "${var.test_context.run_id}-bucket"
+    error_message = "aws s3_bucket hub building block expected bucket_name to be '${var.test_context.run_id}-bucket', got ${jsondecode(meshstack_building_block.this.status.outputs["bucket_name"].value)}"
   }
 
   # The ARN is what proves the bucket was created by the federated backplane role rather than the
   # bucket name simply being echoed back.
   assert {
-    condition     = jsondecode(meshstack_building_block.this.status.outputs["bucket_arn"].value) == "arn:aws:s3:::smoke-test-aws-bucket-${var.test_context.name_suffix}"
-    error_message = "aws s3_bucket hub building block expected bucket_arn to be 'arn:aws:s3:::smoke-test-aws-bucket-${var.test_context.name_suffix}', got ${jsondecode(meshstack_building_block.this.status.outputs["bucket_arn"].value)}"
+    condition     = jsondecode(meshstack_building_block.this.status.outputs["bucket_arn"].value) == "arn:aws:s3:::${var.test_context.run_id}-bucket"
+    error_message = "aws s3_bucket hub building block expected bucket_arn to be 'arn:aws:s3:::${var.test_context.run_id}-bucket', got ${jsondecode(meshstack_building_block.this.status.outputs["bucket_arn"].value)}"
   }
 
   assert {
-    condition     = jsondecode(meshstack_building_block.this.status.outputs["bucket_uri"].value) == "s3://smoke-test-aws-bucket-${var.test_context.name_suffix}"
+    condition     = jsondecode(meshstack_building_block.this.status.outputs["bucket_uri"].value) == "s3://${var.test_context.run_id}-bucket"
     error_message = "aws s3_bucket hub building block expected bucket_uri to be the s3:// URI, got ${jsondecode(meshstack_building_block.this.status.outputs["bucket_uri"].value)}"
   }
 
