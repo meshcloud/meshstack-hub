@@ -51,7 +51,7 @@ website/                         public/assets/ is generated; never add files th
   [`module` skill](.agents/skills/module/SKILL.md).
 - `*/meshstack_integration.tf` — variable and block order, `variable "hub"` / `variable
   "meshstack"`, module sources and BBD `ref_name` pinned by `var.hub.git_ref`, BBD
-  `terraform_version`, `building_block_definition` output →
+  `terraform_version`, overridable catalog properties (`bbd_*`), `building_block_definition` output →
   [meshstack-integration.md](.agents/references/meshstack-integration.md)
 - Any `.tf` declaring a `meshstack_*` resource — `*_ref` attributes, `meshstack_platform`
   lifecycle, run-status postcondition on every child building block →

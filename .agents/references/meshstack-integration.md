@@ -136,6 +136,50 @@ resource "meshstack_building_block_definition" "this" {
 
 **If a `meshstack_building_block_definition` input's `argument` field references a variable, that variable must have an explicit default** — do not rely on nested `optional()` defaults (for example via a bare `default = {}`), since some downstream consumers don't evaluate Terraform's object-attribute defaulting and would see unset fields instead. Keep the `optional()` type constraints regardless — they still document intent and protect callers who omit keys.
 
+<!-- scorecard-checks: bbd_catalog_overrides -->
+## Overridable Catalog Properties
+
+`display_name`, `description` and `readme` are the catalog properties: everything a consumer sees
+before ordering. A consumer that deploys the module more than once has to tell those deployments
+apart — several flavours of a starterkit side by side, or an automated deployment that marks its
+definitions as its own so nobody mistakes them for the real catalog. So all three are overridable,
+with the module's own text as the default:
+
+```hcl
+variable "bbd_display_name" {
+  type        = string
+  default     = null
+  description = "Overrides the name of the marketplace entry application teams see in the catalog."
+}
+
+variable "bbd_description" {
+  type        = string
+  default     = null
+  description = "Overrides the one-line description shown next to the marketplace entry."
+}
+
+variable "bbd_readme" {
+  type        = string
+  default     = null
+  description = "Overrides the markdown readme shown in the marketplace before ordering."
+}
+
+resource "meshstack_building_block_definition" "this" {
+  spec = {
+    display_name = coalesce(var.bbd_display_name, "STACKIT Storage Bucket")
+    description  = coalesce(var.bbd_description, "Provisions an S3-compatible bucket.")
+    readme = coalesce(var.bbd_readme, chomp(<<-EOT
+      ...
+    EOT
+    ))
+  }
+}
+```
+
+A module that also registers a `meshstack_integration` makes its display name overridable the same
+way, as `integration_display_name`.
+
+
 <!-- scorecard-checks: output_bbd -->
 ## Exposing Building Block Definition References
 
