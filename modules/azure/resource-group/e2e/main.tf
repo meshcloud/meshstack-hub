@@ -2,7 +2,7 @@ variable "test_context" {
   type = object({
     hub_git_ref = string
     workspace   = string
-    name_suffix = string
+    run_id      = string
 
     fixtures = object({
       azure = object({
@@ -20,8 +20,7 @@ locals {
   azure_scope = "/subscriptions/${var.test_context.fixtures.azure.subscription_uuid}"
 
   # project_identifier is used in the resource group name: rg-<workspace>-<project>
-  # Keep it short and valid: only lowercase alphanumeric and dashes.
-  project_identifier = "e2e-${substr(var.test_context.name_suffix, 0, 10)}"
+  project_identifier = var.test_context.run_id
 }
 
 module "resource_group" {
@@ -37,13 +36,14 @@ module "resource_group" {
     bbd_draft = true
   }
 
+  bbd_display_name = "${var.test_context.run_id} Azure Resource Group"
+
   azure_tenant_id       = var.test_context.fixtures.azure.entra_tenant_id
   azure_subscription_id = var.test_context.fixtures.azure.subscription_uuid
   azure_scope           = local.azure_scope
   azure_location        = "westeurope"
 
-  # Unique backplane name per test run so role definitions don't clash across concurrent/retried runs.
-  backplane_name = "hub-e2e-rg-${var.test_context.name_suffix}"
+  backplane_name = "${var.test_context.run_id}-rg-bp"
 }
 
 resource "meshstack_building_block" "this" {
@@ -54,7 +54,7 @@ resource "meshstack_building_block" "this" {
   spec = {
     building_block_definition_version_ref = module.resource_group.building_block_definition.version_ref
 
-    display_name = "smoke-test-resource-group-${var.test_context.name_suffix}"
+    display_name = "${var.test_context.run_id}-resource-group"
     target_ref = {
       kind = "meshTenant"
       uuid = var.test_context.fixtures.azure.mesh_tenant_id

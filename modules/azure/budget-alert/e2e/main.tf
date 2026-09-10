@@ -2,7 +2,7 @@ variable "test_context" {
   type = object({
     hub_git_ref = string
     workspace   = string
-    name_suffix = string
+    run_id      = string
 
     fixtures = object({
       azure = object({
@@ -18,9 +18,7 @@ variable "test_context" {
 locals {
   azure_scope = "/subscriptions/${var.test_context.fixtures.azure.subscription_uuid}"
 
-  # budget_name must be unique per test run to avoid conflicts on retried runs.
-  # name_suffix is "YYYYMMDDhhmmss" (14 digits), prefix keeps the total short.
-  budget_name = "e2e-${substr(var.test_context.name_suffix, 0, 12)}"
+  budget_name = "${var.test_context.run_id}-budget"
 }
 
 module "budget_alert" {
@@ -36,12 +34,13 @@ module "budget_alert" {
     bbd_draft = true
   }
 
+  bbd_display_name = "${var.test_context.run_id} Azure Budget Alert"
+
   azure_tenant_id       = var.test_context.fixtures.azure.entra_tenant_id
   azure_subscription_id = var.test_context.fixtures.azure.subscription_uuid
   azure_scope           = local.azure_scope
 
-  # Unique backplane name per test run so role definitions don't clash across concurrent/retried runs.
-  backplane_name = "hub-e2e-budget-${var.test_context.name_suffix}"
+  backplane_name = "${var.test_context.run_id}-budget-bp"
 }
 
 resource "meshstack_building_block" "this" {
@@ -52,7 +51,7 @@ resource "meshstack_building_block" "this" {
   spec = {
     building_block_definition_version_ref = module.budget_alert.building_block_definition.version_ref
 
-    display_name = "smoke-test-budget-alert-${var.test_context.name_suffix}"
+    display_name = "${var.test_context.run_id}-budget-alert"
     target_ref = {
       kind = "meshWorkspace"
       name = var.test_context.workspace

@@ -2,7 +2,7 @@ variable "test_context" {
   type = object({
     hub_git_ref = string
     workspace   = string
-    name_suffix = string
+    run_id      = string
 
     fixtures = object({
       azure = object({
@@ -17,15 +17,12 @@ variable "test_context" {
 }
 
 locals {
-  # backplane_name must match ^[-a-z0-9]+$ and names both the backplane resource group and the UAMI.
-  # UAMI names are limited to 24 characters, so keep the prefix short: "hub-e2e-eig-" (12) plus the
-  # first 12 digits of the "YYYYMMDDhhmmss" suffix is exactly 24.
-  backplane_name = "hub-e2e-eig-${substr(var.test_context.name_suffix, 0, 12)}"
+  backplane_name = "${var.test_context.run_id}-eig-bp"
 
   # Group display names are "<prefix>.<workspace>.<project>.<role>". The workspace and project come
   # from the meshStack tenant context and are the same on every run, so uniqueness has to come from
   # the prefix — otherwise a leaked group from an earlier run is indistinguishable from this one's.
-  group_prefix = "hub-e2e-${var.test_context.name_suffix}"
+  group_prefix = var.test_context.run_id
 }
 
 module "entra_id_groups" {
@@ -40,6 +37,8 @@ module "entra_id_groups" {
     git_ref   = var.test_context.hub_git_ref
     bbd_draft = true
   }
+
+  bbd_display_name = "${var.test_context.run_id} Azure Entra ID Groups"
 
   azure_tenant_id = var.test_context.fixtures.azure.entra_tenant_id
   azure_location  = "westeurope"
@@ -64,7 +63,7 @@ resource "meshstack_building_block" "this" {
   spec = {
     building_block_definition_version_ref = module.entra_id_groups.building_block_definition.version_ref
 
-    display_name = "smoke-test-entra-id-groups-${var.test_context.name_suffix}"
+    display_name = "${var.test_context.run_id}-entra-id-groups"
     target_ref = {
       kind = "meshTenant"
       uuid = var.test_context.fixtures.azure.mesh_tenant_id

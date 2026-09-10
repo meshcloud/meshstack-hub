@@ -2,7 +2,7 @@ variable "test_context" {
   type = object({
     hub_git_ref = string
     workspace   = string
-    name_suffix = string
+    run_id      = string
 
     fixtures = object({
       azure = object({
@@ -18,15 +18,12 @@ variable "test_context" {
 locals {
   azure_scope = "/subscriptions/${var.test_context.fixtures.azure.subscription_uuid}"
 
-  # backplane_name must match ^[-a-z0-9]+$. It is used verbatim in the Azure custom role definition
-  # name ("<name>-deploy", unique per scope) and in the backplane app registration display name
-  # ("<name>-<name>"), so it must be unique per test run. name_suffix is "YYYYMMDDhhmmss"
-  # (14 digits); "hub-e2e-sp-" + 14 = 25 characters, well inside Azure's limits.
-  backplane_name = "hub-e2e-sp-${var.test_context.name_suffix}"
+  # Reused verbatim in the Azure custom role definition name ("<name>-deploy", unique per scope) and
+  # in the backplane app registration display name ("<name>-<name>").
+  backplane_name = "${var.test_context.run_id}-sp-bp"
 
-  # Display name of the Entra application/service principal the building block creates. Kept
-  # unique per run so concurrent or retried runs don't produce confusing duplicates.
-  application_display_name = "hub-e2e-service-principal-${var.test_context.name_suffix}"
+  # Display name of the Entra application/service principal the building block creates.
+  application_display_name = "${var.test_context.run_id}-service-principal"
 }
 
 module "service_principal" {
@@ -41,6 +38,8 @@ module "service_principal" {
     git_ref   = var.test_context.hub_git_ref
     bbd_draft = true
   }
+
+  bbd_display_name = "${var.test_context.run_id} Azure Service Principal"
 
   azure_tenant_id       = var.test_context.fixtures.azure.entra_tenant_id
   azure_subscription_id = var.test_context.fixtures.azure.subscription_uuid
@@ -61,7 +60,7 @@ resource "meshstack_building_block" "this" {
   spec = {
     building_block_definition_version_ref = module.service_principal.building_block_definition.version_ref
 
-    display_name = "smoke-test-service-principal-${var.test_context.name_suffix}"
+    display_name = "${var.test_context.run_id}-service-principal"
     target_ref = {
       kind = "meshWorkspace"
       name = var.test_context.workspace
