@@ -9,7 +9,13 @@ variable "workload_identity" {
     subject_token_file_path = optional(string, "/var/run/secrets/workload-identity/gcp/token")
   })
   default     = {}
-  description = "Workload identity federation settings for GCP authentication."
+  description = "Workload identity federation settings for GCP authentication. GCP soft-deletes a workload identity pool for ~30 days and refuses to reissue its id in that window, so a backplane that has to be recreated needs a fresh pool_identifier."
+}
+
+variable "backplane_service_account_id" {
+  type        = string
+  default     = "buildingblock-storage-sa"
+  description = "Account id of the backplane service account. Service accounts are scoped to their project, so a project hosting more than one deployment of this backplane needs a distinct id per deployment."
 }
 
 variable "bbd_display_name" {
@@ -70,7 +76,9 @@ data "meshstack_integrations" "integrations" {}
 module "backplane" {
   source = "github.com/meshcloud/meshstack-hub//modules/gcp/storage-bucket/backplane?ref=${var.hub.git_ref}"
 
-  project_id = var.gcp_project_id
+  project_id         = var.gcp_project_id
+  service_account_id = var.backplane_service_account_id
+
   workload_identity_federation = {
     workload_identity_pool_identifier = var.workload_identity.pool_identifier
     audience                          = data.meshstack_integrations.integrations.workload_identity_federation.replicator.gcp.audience

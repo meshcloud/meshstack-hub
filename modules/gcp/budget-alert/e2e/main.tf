@@ -1,7 +1,7 @@
 variable "test_context" {
   type = object({
     workspace   = string
-    name_suffix = string
+    run_id      = string
     hub_git_ref = string
 
     # Set to order an already-deployed BBD version; null to build the BBD from hub source.
@@ -39,20 +39,22 @@ module "gcp_budget_alert" {
     bbd_draft = true
   }
 
+  bbd_display_name = "${var.test_context.run_id} GCP Budget Alert"
+
   gcp_backplane_project_id = var.test_context.fixtures.gcp.project_id
   gcp_billing_account_id   = var.test_context.fixtures.gcp.billing_account_id
 
-  # GCP soft-deletes workload identity pools for ~30 days and refuses to reissue their ids in that
-  # window, so a fixed pool id makes every rerun fail.
+  backplane_service_account_id = "${var.test_context.run_id}-budget-sa"
+
   workload_identity = {
-    pool_identifier = "hub-e2e-budget-${var.test_context.name_suffix}"
+    pool_identifier = "${var.test_context.run_id}-budget-wif"
   }
 }
 
 locals {
   version_ref = var.test_context.bbd_version_ref != null ? var.test_context.bbd_version_ref : module.gcp_budget_alert[0].building_block_definition.version_ref
 
-  budget_name = "smoke-test-gcp-budget-${var.test_context.name_suffix}"
+  budget_name = "${var.test_context.run_id}-budget"
 
   # Deliberately far above what the fixtures project ever spends, so no threshold is crossed and no
   # alert mail is sent while the budget exists.
@@ -73,7 +75,7 @@ resource "meshstack_building_block" "this" {
   spec = {
     building_block_definition_version_ref = { uuid = local.version_ref.uuid }
 
-    display_name = "smoke-test-gcp-budget-alert-${var.test_context.name_suffix}"
+    display_name = "${var.test_context.run_id}-budget-alert"
     target_ref = {
       kind = "meshTenant"
       uuid = var.test_context.fixtures.gcp.mesh_tenant_id

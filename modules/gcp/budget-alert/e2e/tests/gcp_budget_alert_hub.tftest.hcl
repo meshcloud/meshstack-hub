@@ -22,7 +22,7 @@ run "building_block_gcp_budget_alert_hub" {
   }
 
   assert {
-    condition     = strcontains(jsondecode(meshstack_building_block.this.status.outputs["summary"].value), "## Budget Alert: smoke-test-gcp-budget-${var.test_context.name_suffix}")
+    condition     = strcontains(jsondecode(meshstack_building_block.this.status.outputs["summary"].value), "## Budget Alert: ${var.test_context.run_id}-budget")
     error_message = "gcp budget-alert hub building block expected summary to name the requested budget, got ${jsondecode(meshstack_building_block.this.status.outputs["summary"].value)}"
   }
 

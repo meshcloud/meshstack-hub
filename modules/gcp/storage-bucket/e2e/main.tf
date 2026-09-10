@@ -1,7 +1,7 @@
 variable "test_context" {
   type = object({
     workspace   = string
-    name_suffix = string
+    run_id      = string
     hub_git_ref = string
 
     # Set to order an already-deployed BBD version; null to build the BBD from hub source.
@@ -38,21 +38,21 @@ module "gcp_storage_bucket" {
     bbd_draft = true
   }
 
+  bbd_display_name = "${var.test_context.run_id} GCP Storage Bucket"
+
   gcp_project_id = var.test_context.fixtures.gcp.project_id
 
-  # GCP soft-deletes workload identity pools for ~30 days and refuses to reissue their ids in that
-  # window, so a fixed pool id makes every rerun fail.
+  backplane_service_account_id = "${var.test_context.run_id}-storage-sa"
+
   workload_identity = {
-    pool_identifier = "hub-e2e-${var.test_context.name_suffix}"
+    pool_identifier = "${var.test_context.run_id}-wif"
   }
 }
 
 locals {
   version_ref = var.test_context.bbd_version_ref != null ? var.test_context.bbd_version_ref : module.gcp_storage_bucket[0].building_block_definition.version_ref
 
-  # GCS bucket names are globally unique across all of Google Cloud, so the suffix is what keeps
-  # concurrent and repeated runs from colliding.
-  bucket_name = "smoke-test-gcp-bucket-${var.test_context.name_suffix}"
+  bucket_name = "${var.test_context.run_id}-bucket"
   location    = "europe-west1"
 }
 
@@ -65,7 +65,7 @@ resource "meshstack_building_block" "this" {
   spec = {
     building_block_definition_version_ref = { uuid = local.version_ref.uuid }
 
-    display_name = "smoke-test-gcp-storage-bucket-${var.test_context.name_suffix}"
+    display_name = "${var.test_context.run_id}-storage-bucket"
     target_ref = {
       kind = "meshWorkspace"
       name = var.test_context.workspace
