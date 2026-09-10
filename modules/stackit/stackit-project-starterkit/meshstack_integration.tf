@@ -73,6 +73,24 @@ variable "notification_subscribers" {
   description = "meshStack usernames notified about runs of this building block definition."
 }
 
+variable "bbd_display_name" {
+  type        = string
+  default     = null
+  description = "Overrides the name of the marketplace entry application teams see in the catalog."
+}
+
+variable "bbd_description" {
+  type        = string
+  default     = null
+  description = "Overrides the one-line description shown next to the marketplace entry."
+}
+
+variable "bbd_readme" {
+  type        = string
+  default     = null
+  description = "Overrides the markdown readme shown in the marketplace before ordering."
+}
+
 variable "meshstack" {
   type = object({
     owning_workspace_identifier = string
@@ -133,9 +151,9 @@ resource "meshstack_building_block_definition" "this" {
     # created rather than after the catalogue entry. The `(Starterkit)` suffix keeps it apart from the
     # `STACKIT Project` block the landing zone attaches to the tenant, which every starterkit order also
     # produces — without it the two read identically in a project's block list.
-    display_name = "STACKIT Project (Starterkit)"
+    display_name = coalesce(var.bbd_display_name, "STACKIT Project (Starterkit)")
     symbol       = "https://raw.githubusercontent.com/meshcloud/meshstack-hub/${var.hub.git_ref}/modules/stackit/stackit-project-starterkit/buildingblock/logo.png"
-    description  = "Creates a meshProject with a STACKIT project in the selected landing zone, and grants the creator Project Admin."
+    description  = coalesce(var.bbd_description, "Creates a meshProject with a STACKIT project in the selected landing zone, and grants the creator Project Admin.")
     # No `supported_platforms`: meshStack rejects a workspace-scoped definition that declares any, with
     # `400 A Workspace scoped Building Block Definition can not have supported platforms`. The field is
     # for tenant-level definitions, which are bound to a platform. Neither `ske/ske-starterkit` nor
@@ -144,7 +162,7 @@ resource "meshstack_building_block_definition" "this" {
     run_transparency         = true
     notification_subscribers = var.notification_subscribers
 
-    readme = chomp(<<-EOT
+    readme = coalesce(var.bbd_readme, chomp(<<-EOT
     The **STACKIT Project Starterkit** gives your team a working STACKIT project through a single order. It creates a meshProject, places a STACKIT project tenant in the landing zone you select, and grants you the Project Admin role.
 
     ## 🎯 When to use it
@@ -191,7 +209,7 @@ resource "meshstack_building_block_definition" "this" {
     | Order further building blocks in the project | ❌ | ✅ |
     | Decide how many projects the team needs | ❌ | ✅ |
     EOT
-    )
+    ))
   }
 
   version_spec = {

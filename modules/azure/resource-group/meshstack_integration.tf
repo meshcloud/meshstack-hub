@@ -30,6 +30,24 @@ variable "notification_subscribers" {
   description = "List of email addresses to notify on building block lifecycle events."
 }
 
+variable "bbd_display_name" {
+  type        = string
+  default     = null
+  description = "Overrides the name of the marketplace entry application teams see in the catalog."
+}
+
+variable "bbd_description" {
+  type        = string
+  default     = null
+  description = "Overrides the one-line description shown next to the marketplace entry."
+}
+
+variable "bbd_readme" {
+  type        = string
+  default     = null
+  description = "Overrides the markdown readme shown in the marketplace before ordering."
+}
+
 variable "meshstack" {
   type = object({
     owning_workspace_identifier = string
@@ -86,8 +104,8 @@ resource "meshstack_building_block_definition" "this" {
   }
 
   spec = {
-    display_name             = "Azure Resource Group"
-    description              = "Creates an empty Azure Resource Group for a project. The resource group name is automatically generated as 'rg-<workspaceId>-<projectId>'."
+    display_name             = coalesce(var.bbd_display_name, "Azure Resource Group")
+    description              = coalesce(var.bbd_description, "Creates an empty Azure Resource Group for a project. The resource group name is automatically generated as 'rg-<workspaceId>-<projectId>'.")
     support_url              = "mailto:support@meshcloud.io"
     documentation_url        = "https://hub.meshcloud.io/platforms/azure/definitions/azure-resource-group"
     notification_subscribers = var.notification_subscribers
@@ -95,7 +113,7 @@ resource "meshstack_building_block_definition" "this" {
     target_type              = "TENANT_LEVEL"
     supported_platforms      = [{ name = "AZURE" }]
 
-    readme = chomp(<<-EOT
+    readme = coalesce(var.bbd_readme, chomp(<<-EOT
       This building block provisions an empty **Azure Resource Group** in a target subscription.
       The resource group name is automatically derived from the meshStack context following the schema:
 
@@ -117,7 +135,7 @@ resource "meshstack_building_block_definition" "this" {
       | Choose Azure region (location)          | ❌            | ✅               |
       | Deploy resources into the group         | ❌            | ✅               |
     EOT
-    )
+    ))
   }
 
   version_spec = {

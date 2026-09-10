@@ -36,6 +36,24 @@ variable "notification_subscribers" {
   description = "Email addresses notified on building block lifecycle events."
 }
 
+variable "bbd_display_name" {
+  type        = string
+  default     = null
+  description = "Overrides the name of the marketplace entry application teams see in the catalog."
+}
+
+variable "bbd_description" {
+  type        = string
+  default     = null
+  description = "Overrides the one-line description shown next to the marketplace entry."
+}
+
+variable "bbd_readme" {
+  type        = string
+  default     = null
+  description = "Overrides the markdown readme shown in the marketplace before ordering."
+}
+
 variable "meshstack" {
   type = object({
     owning_workspace_identifier = string
@@ -87,8 +105,8 @@ resource "meshstack_building_block_definition" "this" {
   }
 
   spec = {
-    display_name             = "Azure Entra ID Groups"
-    description              = "Creates Entra security groups for meshStack project roles, with optional Administrative Unit membership."
+    display_name             = coalesce(var.bbd_display_name, "Azure Entra ID Groups")
+    description              = coalesce(var.bbd_description, "Creates Entra security groups for meshStack project roles, with optional Administrative Unit membership.")
     support_url              = "mailto:support@meshcloud.io"
     documentation_url        = "https://hub.meshcloud.io/platforms/azure/definitions/azure-entra-id-groups"
     notification_subscribers = var.notification_subscribers
@@ -96,7 +114,7 @@ resource "meshstack_building_block_definition" "this" {
     target_type              = "TENANT_LEVEL"
     supported_platforms      = [{ name = "AZURE" }]
 
-    readme = chomp(<<-EOT
+    readme = coalesce(var.bbd_readme, chomp(<<-EOT
       Automatically provision Entra ID security groups for every role in a meshStack project. Groups are named consistently using the workspace identifier, project identifier, an optional prefix, and the role name as suffix — giving your teams a predictable, auditable group structure in Azure Active Directory.
 
       ## When to use it
@@ -145,7 +163,7 @@ resource "meshstack_building_block_definition" "this" {
       | Manage which users have which project roles | ❌ | ✅ |
       | Use group IDs in downstream RBAC assignments | ❌ | ✅ |
     EOT
-    )
+    ))
   }
 
   version_spec = {

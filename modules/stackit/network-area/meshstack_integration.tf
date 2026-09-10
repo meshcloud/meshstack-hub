@@ -14,6 +14,24 @@ variable "stackit_service_account_name" {
   description = "Name of the backplane service account. Override when deploying multiple backplane instances in the same STACKIT project."
 }
 
+variable "bbd_display_name" {
+  type        = string
+  default     = null
+  description = "Overrides the name of the marketplace entry application teams see in the catalog."
+}
+
+variable "bbd_description" {
+  type        = string
+  default     = null
+  description = "Overrides the one-line description shown next to the marketplace entry."
+}
+
+variable "bbd_readme" {
+  type        = string
+  default     = null
+  description = "Overrides the markdown readme shown in the marketplace before ordering."
+}
+
 variable "meshstack" {
   type = object({
     owning_workspace_identifier = string
@@ -70,13 +88,13 @@ resource "meshstack_building_block_definition" "this" {
   }
 
   spec = {
-    display_name     = "STACKIT Network Area"
+    display_name     = coalesce(var.bbd_display_name, "STACKIT Network Area")
     symbol           = "https://raw.githubusercontent.com/meshcloud/meshstack-hub/${var.hub.git_ref}/modules/stackit/network-area/buildingblock/logo.png"
-    description      = "Creates a STACKIT network area with a configurable IPv4 address plan for network-segmented projects."
+    description      = coalesce(var.bbd_description, "Creates a STACKIT network area with a configurable IPv4 address plan for network-segmented projects.")
     support_url      = "https://portal.stackit.cloud"
     target_type      = "WORKSPACE_LEVEL"
     run_transparency = true
-    readme = chomp(<<-EOT
+    readme = coalesce(var.bbd_readme, chomp(<<-EOT
       This building block provisions a **STACKIT network area** with a configurable IPv4
       address plan, so platform teams can organize STACKIT projects into network-segmented
       address spaces instead of relying on STACKIT's default flat networking.
@@ -109,7 +127,7 @@ resource "meshstack_building_block_definition" "this" {
       | Tag STACKIT Project landing zones with the matching `networkArea` name | ✅ | ❌ |
       | Use projects within the assigned network area | ❌ | ✅ |
       EOT
-    )
+    ))
   }
 
   version_spec = {

@@ -35,6 +35,24 @@ variable "aws_oidc_provider_arn" {
   EOT
 }
 
+variable "bbd_display_name" {
+  type        = string
+  default     = null
+  description = "Overrides the name of the marketplace entry application teams see in the catalog."
+}
+
+variable "bbd_description" {
+  type        = string
+  default     = null
+  description = "Overrides the one-line description shown next to the marketplace entry."
+}
+
+variable "bbd_readme" {
+  type        = string
+  default     = null
+  description = "Overrides the markdown readme shown in the marketplace before ordering."
+}
+
 variable "meshstack" {
   type = object({
     owning_workspace_identifier = string
@@ -91,14 +109,14 @@ resource "meshstack_building_block_definition" "this" {
   }
 
   spec = {
-    display_name      = "AWS Route53 DNS Record"
-    description       = "Provides AWS Route53 DNS records for mapping domain names to IP addresses or other values."
+    display_name      = coalesce(var.bbd_display_name, "AWS Route53 DNS Record")
+    description       = coalesce(var.bbd_description, "Provides AWS Route53 DNS records for mapping domain names to IP addresses or other values.")
     support_url       = ""
     documentation_url = "https://hub.meshcloud.io/platforms/aws/definitions/route53-dns-record"
     symbol            = "https://raw.githubusercontent.com/meshcloud/meshstack-hub/${var.hub.git_ref}/modules/aws/route53-dns-record/buildingblock/logo.png"
     target_type       = "WORKSPACE_LEVEL"
 
-    readme = chomp(<<-EOT
+    readme = coalesce(var.bbd_readme, chomp(<<-EOT
       This building block creates standard DNS records for mapping domain names to IP addresses or other values.
 
       ## When to use it?
@@ -115,7 +133,7 @@ resource "meshstack_building_block_definition" "this" {
       | Provisioning DNS records              | ❌            | ✅               |
       | Managing record values and TTL        | ❌            | ✅               |
     EOT
-    )
+    ))
   }
 
   version_spec = {

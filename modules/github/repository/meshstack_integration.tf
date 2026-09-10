@@ -13,6 +13,24 @@ variable "notification_subscribers" {
   default = []
 }
 
+variable "bbd_display_name" {
+  type        = string
+  default     = null
+  description = "Overrides the name of the marketplace entry application teams see in the catalog."
+}
+
+variable "bbd_description" {
+  type        = string
+  default     = null
+  description = "Overrides the one-line description shown next to the marketplace entry."
+}
+
+variable "bbd_readme" {
+  type        = string
+  default     = null
+  description = "Overrides the markdown readme shown in the marketplace before ordering."
+}
+
 variable "meshstack" {
   type = object({
     owning_workspace_identifier = string
@@ -52,13 +70,13 @@ resource "meshstack_building_block_definition" "github_repo" {
   }
 
   spec = {
-    description              = "Automates GitHub repository setup with predefined configurations and access control."
-    display_name             = "GitHub Repository Creation"
+    description              = coalesce(var.bbd_description, "Automates GitHub repository setup with predefined configurations and access control.")
+    display_name             = coalesce(var.bbd_display_name, "GitHub Repository Creation")
     notification_subscribers = var.notification_subscribers
     symbol                   = "https://raw.githubusercontent.com/meshcloud/meshstack-hub/${var.hub.git_ref}/modules/github/repository/buildingblock/logo.png"
     run_transparency         = true
 
-    readme = chomp(<<EOT
+    readme = coalesce(var.bbd_readme, chomp(<<EOT
 The **GitHub Repository Creation** building block provides an automated way to create and manage GitHub repositories for application teams. It ensures repositories are set up with predefined configurations, including access control, branch protection rules, and compliance settings.
 
 ## 🎯 When to use it
@@ -91,7 +109,7 @@ This building block is ideal for teams that:
 
 ---
 EOT
-    )
+    ))
   }
 
   version_spec = {

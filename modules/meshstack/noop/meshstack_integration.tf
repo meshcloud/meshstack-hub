@@ -7,6 +7,24 @@ variable "runner_ref" {
   description = "Optional reference to a meshStack building block runner. When set, building block runs are dispatched to this custom runner. Obtain the value from the backplane module's `runner_ref` output."
 }
 
+variable "bbd_display_name" {
+  type        = string
+  default     = null
+  description = "Overrides the name of the marketplace entry application teams see in the catalog."
+}
+
+variable "bbd_description" {
+  type        = string
+  default     = null
+  description = "Overrides the one-line description shown next to the marketplace entry."
+}
+
+variable "bbd_readme" {
+  type        = string
+  default     = null
+  description = "Overrides the markdown readme shown in the marketplace before ordering."
+}
+
 variable "meshstack" {
   type = object({
     owning_workspace_identifier = string
@@ -47,10 +65,10 @@ resource "meshstack_building_block_definition" "this" {
   }
 
   spec = {
-    display_name = "meshStack NoOp Building Block"
-    description  = "Reference building block demonstrating meshStack's complete Terraform interface: all input types, file inputs, user permissions injection, and pre-run scripts."
+    display_name = coalesce(var.bbd_display_name, "meshStack NoOp Building Block")
+    description  = coalesce(var.bbd_description, "Reference building block demonstrating meshStack's complete Terraform interface: all input types, file inputs, user permissions injection, and pre-run scripts.")
     target_type  = "WORKSPACE_LEVEL"
-    readme = chomp(<<-EOT
+    readme = coalesce(var.bbd_readme, chomp(<<-EOT
       The **meshStack NoOp Building Block** is a reference implementation that demonstrates meshStack's
       complete Terraform building block interface without provisioning any real infrastructure. It covers
       all input types, file inputs, user permissions injection, and pre-run scripts.
@@ -80,7 +98,7 @@ resource "meshstack_building_block_definition" "this" {
       | Maintain the NoOp reference implementation | ✅ | ❌ |
       | Deploy and test the building block | ❌ | ✅ |
       EOT
-    )
+    ))
   }
 
   version_spec = {

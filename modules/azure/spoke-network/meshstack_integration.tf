@@ -68,6 +68,24 @@ variable "notification_subscribers" {
   description = "List of email addresses to notify on building block lifecycle events."
 }
 
+variable "bbd_display_name" {
+  type        = string
+  default     = null
+  description = "Overrides the name of the marketplace entry application teams see in the catalog."
+}
+
+variable "bbd_description" {
+  type        = string
+  default     = null
+  description = "Overrides the one-line description shown next to the marketplace entry."
+}
+
+variable "bbd_readme" {
+  type        = string
+  default     = null
+  description = "Overrides the markdown readme shown in the marketplace before ordering."
+}
+
 variable "meshstack" {
   type = object({
     owning_workspace_identifier = string
@@ -126,8 +144,8 @@ resource "meshstack_building_block_definition" "this" {
   }
 
   spec = {
-    display_name             = "Azure Spoke Network"
-    description              = "Provisions a spoke VNet in the tenant's Azure subscription and peers it into a central network hub for on-premise connectivity and managed internet egress."
+    display_name             = coalesce(var.bbd_display_name, "Azure Spoke Network")
+    description              = coalesce(var.bbd_description, "Provisions a spoke VNet in the tenant's Azure subscription and peers it into a central network hub for on-premise connectivity and managed internet egress.")
     support_url              = "mailto:support@meshcloud.io"
     documentation_url        = "https://hub.meshcloud.io/platforms/azure/definitions/azure-spoke-network"
     notification_subscribers = var.notification_subscribers
@@ -135,7 +153,7 @@ resource "meshstack_building_block_definition" "this" {
     target_type              = "TENANT_LEVEL"
     supported_platforms      = [{ name = "AZURE" }]
 
-    readme = chomp(<<-EOT
+    readme = coalesce(var.bbd_readme, chomp(<<-EOT
       This building block provisions a managed **spoke VNet** in your Azure subscription and peers it into a central network hub, giving your workloads secure connectivity to on-premise networks and managed internet egress.
 
       ## 🎯 When to use it
@@ -157,7 +175,7 @@ resource "meshstack_building_block_definition" "this" {
       | Deploy workloads into the spoke vnet             | ❌            | ✅               |
       | Be mindful of traffic across the hub connection  | ❌            | ✅               |
     EOT
-    )
+    ))
   }
 
   version_spec = {

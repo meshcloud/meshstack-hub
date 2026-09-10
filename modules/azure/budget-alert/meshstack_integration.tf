@@ -31,6 +31,24 @@ variable "notification_subscribers" {
   description = "List of email addresses to notify on building block lifecycle events."
 }
 
+variable "bbd_display_name" {
+  type        = string
+  default     = null
+  description = "Overrides the name of the marketplace entry application teams see in the catalog."
+}
+
+variable "bbd_description" {
+  type        = string
+  default     = null
+  description = "Overrides the one-line description shown next to the marketplace entry."
+}
+
+variable "bbd_readme" {
+  type        = string
+  default     = null
+  description = "Overrides the markdown readme shown in the marketplace before ordering."
+}
+
 variable "meshstack" {
   type = object({
     owning_workspace_identifier = string
@@ -87,15 +105,15 @@ resource "meshstack_building_block_definition" "this" {
   }
 
   spec = {
-    display_name             = "Azure Budget Alert"
-    description              = "Provisions an Azure consumption budget alert on a subscription to monitor and notify on spending thresholds."
+    display_name             = coalesce(var.bbd_display_name, "Azure Budget Alert")
+    description              = coalesce(var.bbd_description, "Provisions an Azure consumption budget alert on a subscription to monitor and notify on spending thresholds.")
     support_url              = "mailto:support@meshcloud.io"
     documentation_url        = "https://hub.meshcloud.io/platforms/azure/definitions/azure-budget-alert"
     notification_subscribers = var.notification_subscribers
     symbol                   = "https://raw.githubusercontent.com/meshcloud/meshstack-hub/main/modules/azure/budget-alert/buildingblock/logo.png"
     target_type              = "WORKSPACE_LEVEL"
 
-    readme = chomp(<<-EOT
+    readme = coalesce(var.bbd_readme, chomp(<<-EOT
       This building block provisions an **Azure Consumption Budget Alert** on a target subscription, helping teams track spending and receive email notifications when actual or forecasted costs cross defined thresholds.
 
       ## 🎯 When to use it
@@ -112,7 +130,7 @@ resource "meshstack_building_block_definition" "this" {
       | Define alert contact emails             | ❌            | ✅               |
       | Adjust threshold percentages            | ❌            | ✅               |
     EOT
-    )
+    ))
   }
 
   version_spec = {
