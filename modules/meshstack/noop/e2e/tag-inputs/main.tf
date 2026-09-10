@@ -233,9 +233,9 @@ resource "meshstack_payment_method" "primary" {
 
   spec = {
     display_name = "NoOp Tag Inputs Primary ${var.test_context.name_suffix}"
-    tags = {
+    tags = merge(var.test_context.meshstack.tag_schema.mandatory.payment_method, {
       (meshstack_tag_definition.payment_method.spec.key) = local.scenario.primary_pm_tag_values
-    }
+    })
   }
 }
 
@@ -247,9 +247,9 @@ resource "meshstack_payment_method" "substitute" {
 
   spec = {
     display_name = "NoOp Tag Inputs Substitute ${var.test_context.name_suffix}"
-    tags = {
+    tags = merge(var.test_context.meshstack.tag_schema.mandatory.payment_method, {
       (meshstack_tag_definition.payment_method.spec.key) = local.substitute_pm_tag_values
-    }
+    })
   }
 }
 
