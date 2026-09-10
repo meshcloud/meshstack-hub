@@ -19,7 +19,7 @@ conventions, see the reference files in `.agents/references/`.
 
 1. **Determine scope** — identify the cloud provider and service name → module path `modules/<provider>/<service>/`
 
-2. **Create the directory structure** (AGENTS.md § Module Structure):
+2. **Create the directory structure** (`.agents/references/module-layout.md`):
    ```
    modules/<provider>/<service>/
    ├── backplane/          # omit if no cloud-side setup needed
@@ -37,8 +37,8 @@ conventions, see the reference files in `.agents/references/`.
 
 5. **Write the BBD readme** → `.agents/references/bbd-readme.md`
 
-6. **Write `meshstack_integration.tf`** — follow AGENTS.md § `meshstack_integration.tf` Conventions
-   - Always add `lifecycle { ignore_changes = [ availability ] }` to every `meshstack_platform` resource (see AGENTS.md § `meshstack_platform` Lifecycle)
+6. **Write `meshstack_integration.tf`** — follow `.agents/references/meshstack-integration.md`
+   - Always add `lifecycle { ignore_changes = [ availability ] }` to every `meshstack_platform` resource (see `.agents/references/meshstack-resources.md`)
 
 7. **Validate**:
    ```sh
@@ -89,7 +89,9 @@ conventions, see the reference files in `.agents/references/`.
 
 | Topic | Reference |
 |---|---|
-| Module structure & `meshstack_integration.tf` | AGENTS.md |
+| Module layout & documentation | `.agents/references/module-layout.md` |
+| `meshstack_integration.tf` | `.agents/references/meshstack-integration.md` |
+| meshStack provider resources | `.agents/references/meshstack-resources.md` |
 | Terraform/OpenTofu coding conventions | `.agents/references/terraform-conventions.md` |
 | BBD readme | `.agents/references/bbd-readme.md` |
 | AWS backplane identity | `.agents/references/aws-backplane.md` |

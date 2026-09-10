@@ -331,7 +331,7 @@ output "service_account_email" {
 }
 ```
 
-Both existing modules expose these two. Do not add a `documentation_md` output — see CLAUDE.md.
+Both existing modules expose these two. Do not add a `documentation_md` output — see [module-layout.md](module-layout.md#documentation-requirements).
 
 ## What to Avoid
 

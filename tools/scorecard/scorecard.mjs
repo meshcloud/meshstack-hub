@@ -260,7 +260,7 @@ const detectors = [
       if (offenders.length === 0) return { pass: true };
       return {
         pass: false,
-        detail: `${offenders.join("; ")} — see AGENTS.md, "Ordering Child Building Blocks"`,
+        detail: `${offenders.join("; ")} — see .agents/references/meshstack-resources.md, "Ordering Child Building Blocks"`,
       };
     },
   },
@@ -1240,7 +1240,7 @@ const detectors = [
       // buildingblock/ is never executed and rots unnoticed. The ones still present predate the
       // e2e suite and are kept as a record of intent to migrate, not as working tests — this
       // check is the migration backlog. Fold the coverage into the module's e2e/ suite, then
-      // delete the file. See AGENTS.md, "Where Terraform Tests Live".
+      // delete the file. See .agents/skills/e2e-test/SKILL.md, "Where Terraform Tests Live".
       const bb = join(mod.path, "buildingblock");
       if (!existsSync(bb)) return { pass: null, detail: "no buildingblock/ directory" };
       const stray = [];
@@ -1716,7 +1716,10 @@ function discoverModules() {
 // markers in reference docs. Each marker annotates the heading that follows it.
 
 const REF_FILES = [
-  "AGENTS.md",
+  ".agents/references/module-layout.md",
+  ".agents/references/meshstack-integration.md",
+  ".agents/references/meshstack-resources.md",
+  ".agents/references/terraform-conventions.md",
   ".agents/references/aws-backplane.md",
   ".agents/references/azure-backplane.md",
   ".agents/references/gcp-backplane.md",
