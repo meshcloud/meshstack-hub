@@ -135,8 +135,11 @@ resource "meshstack_platform" "this" {
     endpoint     = "https://hub.meshcloud.io/modules/meshstack/noop"
     location_ref = { name = "global" }
 
+    # RESTRICTED requires restricted_to_workspaces to include a workspace other than the owner —
+    # otherwise the API rejects it as pointless. PRIVATE is what every other platform integration in
+    # this repo uses for "visible to the owning workspace only".
     availability = {
-      restriction              = "RESTRICTED"
+      restriction              = "PRIVATE"
       publication_state        = "UNPUBLISHED"
       restricted_to_workspaces = [var.test_context.workspace]
     }
