@@ -3,6 +3,13 @@ variable "test_context" {
     hub_git_ref = string
     workspace   = string
     name_suffix = string
+    meshstack = object({
+      tag_schema = object({
+        mandatory = object({
+          payment_method = map(list(string))
+        })
+      })
+    })
   })
   nullable = false
 
