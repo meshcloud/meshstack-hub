@@ -2,8 +2,18 @@
 
 The canonical registry of OpenTofu building blocks for meshStack — an Artifactory-like catalog with
 a UI at hub.meshcloud.io, and the monorepo for every IaC building block importable into any
-meshStack instance. IaC runtimes (LCF, ICF, customer foundations) consume these modules as shims:
-they reference a module, they never re-implement its logic.
+meshStack instance.
+
+Platform engineers can reference modules from the hub in their own IaC repositories and deploy
+building block definitions, reference architectures and other assets to their own meshStack
+instances. We call these customer repositories **foundation repositories**, because they are
+typically owned by a cloud foundation team. A foundation repository references a module, it never
+re-implements its logic. meshcloud maintains two public ones:
+
+- [likvid-bank/likvid-cloudfoundation](https://github.com/likvid-bank/likvid-cloudfoundation) — the
+  demo foundation of a fictional bank
+- [meshcloud/trial-cloudfoundation](https://github.com/meshcloud/trial-cloudfoundation) — the
+  foundation behind shared meshStack trials
 
 **CI proves almost nothing about a module.** It runs `pre-commit run --all-files` (`terraform-docs`,
 `terraform fmt`, trailing whitespace, `ci/validate_modules.sh`) and the scorecard — never `plan` or
@@ -59,7 +69,7 @@ website/                         public/assets/ is generated; never add files th
   ```sh
   node tools/scorecard/scorecard.mjs --module=<provider>/<service> [--fix]
   ```
-- Prototyping from an IaC runtime may point a `source` at a local path
+- Prototyping from a foundation repository may point a `source` at a local path
   (`../../../meshstack-hub/modules/<provider>/<service>/buildingblock`). Never commit that — switch
   back to the hub GitHub URL first.
 - No trailing whitespace.
