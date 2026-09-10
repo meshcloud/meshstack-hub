@@ -10,6 +10,8 @@ variable "workspace" {
   description = "The meshStack workspace identifier that will own the platform and landing zones."
 }
 
-variable "test_suffix" {
-  type = string
+variable "run_id" {
+  type        = string
+  nullable    = false
+  description = "The smoke-test run id every resource this module creates is named from."
 }
