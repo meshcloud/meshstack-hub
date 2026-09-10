@@ -27,6 +27,24 @@ variable "action_variables" {
   default = {}
 }
 
+variable "bbd_display_name" {
+  type        = string
+  default     = null
+  description = "Overrides the name of the marketplace entry application teams see in the catalog."
+}
+
+variable "bbd_description" {
+  type        = string
+  default     = null
+  description = "Overrides the one-line description shown next to the marketplace entry."
+}
+
+variable "bbd_readme" {
+  type        = string
+  default     = null
+  description = "Overrides the markdown readme shown in the marketplace before ordering."
+}
+
 variable "meshstack" {
   type = object({
     owning_workspace_identifier = string
@@ -74,18 +92,18 @@ resource "meshstack_building_block_definition" "this" {
   }
 
   spec = {
-    display_name = "STACKIT Git Repository"
+    display_name = coalesce(var.bbd_display_name, "STACKIT Git Repository")
     symbol       = "https://raw.githubusercontent.com/meshcloud/meshstack-hub/${var.hub.git_ref}/modules/stackit/git-repository/buildingblock/logo.png"
-    description = chomp(<<-EOT
+    description = coalesce(var.bbd_description, chomp(<<-EOT
       Provisions a Git repository on STACKIT Git (Forgejo) with team-based
       workspace member access management.
     EOT
-    )
+    ))
     support_url      = "https://git-service.git.onstackit.cloud"
     target_type      = "WORKSPACE_LEVEL"
     run_transparency = true
 
-    readme = chomp(<<-EOT
+    readme = coalesce(var.bbd_readme, chomp(<<-EOT
     The **STACKIT Git Repository** building block creates a Forgejo repository on STACKIT Git and manages
     workspace member access using Forgejo organization teams.
 
@@ -116,7 +134,7 @@ resource "meshstack_building_block_definition" "this" {
     | Configure Forgejo Actions pipelines | ❌ | ✅ |
     | Manage repository secrets and variables | ❌ | ✅ |
     EOT
-    )
+    ))
   }
 
   version_spec = {

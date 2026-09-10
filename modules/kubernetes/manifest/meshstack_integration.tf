@@ -41,6 +41,24 @@ variable "helm_default_values_yaml" {
   default     = {}
 }
 
+variable "bbd_display_name" {
+  type        = string
+  default     = null
+  description = "Overrides the name of the marketplace entry application teams see in the catalog."
+}
+
+variable "bbd_description" {
+  type        = string
+  default     = null
+  description = "Overrides the one-line description shown next to the marketplace entry."
+}
+
+variable "bbd_readme" {
+  type        = string
+  default     = null
+  description = "Overrides the markdown readme shown in the marketplace before ordering."
+}
+
 variable "meshstack" {
   type = object({
     owning_workspace_identifier = string
@@ -92,16 +110,16 @@ resource "meshstack_building_block_definition" "this" {
   }
 
   spec = {
-    display_name = "K8s Manifest for ${join(", ", local.cluster_display_names)}"
+    display_name = coalesce(var.bbd_display_name, "K8s Manifest for ${join(", ", local.cluster_display_names)}")
     symbol       = "https://raw.githubusercontent.com/meshcloud/meshstack-hub/${var.hub.git_ref}/modules/kubernetes/manifest/buildingblock/logo.svg"
-    description  = "Deploys arbitrary Kubernetes manifests into a tenant namespace via a local Helm chart, with operator-supplied templates and user-provided values."
+    description  = coalesce(var.bbd_description, "Deploys arbitrary Kubernetes manifests into a tenant namespace via a local Helm chart, with operator-supplied templates and user-provided values.")
     target_type  = "TENANT_LEVEL"
     # TODO Correct would be to depend on the specific SKE cluster deployed (not just platform type),
     # as the kubeconfig.yaml input only works for one specific cluster (representing the meshPlatform here)
     supported_platforms = [{ name = "KUBERNETES" }]
     run_transparency    = true
 
-    readme = chomp(<<-EOT
+    readme = coalesce(var.bbd_readme, chomp(<<-EOT
     Deploy arbitrary Kubernetes resources into your tenant namespace using a Helm chart assembled from operator-supplied template files and your own `values.yaml`.
 
     ## 🚀 When to use it
@@ -117,7 +135,7 @@ resource "meshstack_building_block_definition" "this" {
     | Configure `release_name` and `kubeconfig` | ✅ | ❌ |
     | Supply `values.yaml` to customise the deployment | ❌ | ✅ |
     EOT
-    )
+    ))
   }
 
   version_spec = {

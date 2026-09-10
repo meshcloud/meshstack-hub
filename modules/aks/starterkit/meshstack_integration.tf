@@ -50,6 +50,24 @@ variable "project_tags" {
   description = "Configure project tags of starter kit, for dev and prod."
 }
 
+variable "bbd_display_name" {
+  type        = string
+  default     = null
+  description = "Overrides the name of the marketplace entry application teams see in the catalog."
+}
+
+variable "bbd_description" {
+  type        = string
+  default     = null
+  description = "Overrides the one-line description shown next to the marketplace entry."
+}
+
+variable "bbd_readme" {
+  type        = string
+  default     = null
+  description = "Overrides the markdown readme shown in the marketplace before ordering."
+}
+
 variable "meshstack" {
   type = object({
     owning_workspace_identifier = string
@@ -93,12 +111,12 @@ resource "meshstack_building_block_definition" "aks_starterkit" {
   }
 
   spec = {
-    description              = "The AKS Starterkit provides application teams with a pre-configured Kubernetes environment following best practices. It includes a Git repository, a CI/CD pipeline using GitHub Actions, and a secure container registry integration."
-    display_name             = "AKS Starterkit"
+    description              = coalesce(var.bbd_description, "The AKS Starterkit provides application teams with a pre-configured Kubernetes environment following best practices. It includes a Git repository, a CI/CD pipeline using GitHub Actions, and a secure container registry integration.")
+    display_name             = coalesce(var.bbd_display_name, "AKS Starterkit")
     notification_subscribers = var.notification_subscribers
     symbol                   = "https://raw.githubusercontent.com/meshcloud/meshstack-hub/${var.hub.git_ref}/modules/aks/starterkit/buildingblock/logo.png"
 
-    readme = chomp(<<EOT
+    readme = coalesce(var.bbd_readme, chomp(<<EOT
 The **AKS Starterkit** provides application teams with a pre-configured Kubernetes environment following best practices. It automates the creation of essential infrastructure, including a Git repository, a CI/CD pipeline using GitHub Actions, and a secure container registry integration.
 
 ## 🎯 When to use it
@@ -142,7 +160,7 @@ This building block automates the creation of the following resources:
 
 ---
 EOT
-    )
+    ))
     run_transparency = true
   }
 

@@ -30,6 +30,24 @@ variable "notification_subscribers" {
   description = "List of email addresses to notify on building block lifecycle events."
 }
 
+variable "bbd_display_name" {
+  type        = string
+  default     = null
+  description = "Overrides the name of the marketplace entry application teams see in the catalog."
+}
+
+variable "bbd_description" {
+  type        = string
+  default     = null
+  description = "Overrides the one-line description shown next to the marketplace entry."
+}
+
+variable "bbd_readme" {
+  type        = string
+  default     = null
+  description = "Overrides the markdown readme shown in the marketplace before ordering."
+}
+
 variable "meshstack" {
   type = object({
     owning_workspace_identifier = string
@@ -85,15 +103,15 @@ resource "meshstack_building_block_definition" "this" {
   }
 
   spec = {
-    display_name             = "Azure Service Principal"
-    description              = "Creates an Azure AD application and service principal with configurable role assignments on the target subscription."
+    display_name             = coalesce(var.bbd_display_name, "Azure Service Principal")
+    description              = coalesce(var.bbd_description, "Creates an Azure AD application and service principal with configurable role assignments on the target subscription.")
     support_url              = "mailto:support@meshcloud.io"
     documentation_url        = "https://hub.meshcloud.io/platforms/azure/definitions/azure-service-principal"
     notification_subscribers = var.notification_subscribers
     symbol                   = "https://raw.githubusercontent.com/meshcloud/meshstack-hub/main/modules/azure/service-principal/buildingblock/logo.png"
     target_type              = "WORKSPACE_LEVEL"
 
-    readme = chomp(<<-EOT
+    readme = coalesce(var.bbd_readme, chomp(<<-EOT
       This building block creates an **Azure AD Application** and **Service Principal** with role assignments on your Azure subscription.
 
       ## 🎯 When to use it
@@ -122,7 +140,7 @@ resource "meshstack_building_block_definition" "this" {
       | Manage client secrets securely              | ❌            | ✅               |
       | Configure workload identity federation      | ❌            | ✅               |
     EOT
-    )
+    ))
   }
 
   version_spec = {

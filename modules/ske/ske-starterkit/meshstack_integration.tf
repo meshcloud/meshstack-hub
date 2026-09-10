@@ -51,6 +51,24 @@ variable "building_block_definition_version_refs" {
   description = "Building block definition versions the starter kit creates its child building blocks from, keyed by definition name (`git-repository` and `forgejo-connector`)."
 }
 
+variable "bbd_display_name" {
+  type        = string
+  default     = null
+  description = "Overrides the name of the marketplace entry application teams see in the catalog."
+}
+
+variable "bbd_description" {
+  type        = string
+  default     = null
+  description = "Overrides the one-line description shown next to the marketplace entry."
+}
+
+variable "bbd_readme" {
+  type        = string
+  default     = null
+  description = "Overrides the markdown readme shown in the marketplace before ordering."
+}
+
 variable "meshstack" {
   type = object({
     owning_workspace_identifier = string
@@ -94,18 +112,18 @@ resource "meshstack_building_block_definition" "this" {
   }
 
   spec = {
-    description = chomp(<<-EOT
+    description = coalesce(var.bbd_description, chomp(<<-EOT
       The SKE Starterkit provides application teams with a pre-configured
       Kubernetes environment on STACKIT SKE following best practices. It
       automates the creation of dev and prod projects with dedicated SKE
       tenants.
     EOT
-    )
-    display_name             = "SKE Starterkit"
+    ))
+    display_name             = coalesce(var.bbd_display_name, "SKE Starterkit")
     symbol                   = "https://raw.githubusercontent.com/meshcloud/meshstack-hub/${var.hub.git_ref}/modules/ske/ske-starterkit/buildingblock/logo.png"
     notification_subscribers = var.notification_subscribers
 
-    readme = chomp(<<-EOT
+    readme = coalesce(var.bbd_readme, chomp(<<-EOT
     The **SKE Starterkit** provides application teams with a pre-configured Kubernetes environment on STACKIT Kubernetes Engine (SKE) following best practices. It automates the creation of dev and prod projects with dedicated SKE tenants.
 
     ## 🎯 When to use it
@@ -143,7 +161,7 @@ resource "meshstack_building_block_definition" "this" {
 
     ---
     EOT
-    )
+    ))
     run_transparency = true
   }
 

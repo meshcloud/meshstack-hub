@@ -71,6 +71,30 @@ variable "github_async" {
   description = "If true, uses async GitHub workflow mode with meshStack callback actions."
 }
 
+variable "bbd_display_name" {
+  type        = string
+  default     = null
+  description = "Overrides the name of the marketplace entry application teams see in the catalog."
+}
+
+variable "bbd_description" {
+  type        = string
+  default     = null
+  description = "Overrides the one-line description shown next to the marketplace entry."
+}
+
+variable "bbd_readme" {
+  type        = string
+  default     = null
+  description = "Overrides the markdown readme shown in the marketplace before ordering."
+}
+
+variable "integration_display_name" {
+  type        = string
+  default     = null
+  description = "Overrides the name of the meshStack integration this module registers."
+}
+
 variable "meshstack" {
   type = object({
     owning_workspace_identifier = string
@@ -132,7 +156,7 @@ resource "meshstack_integration" "this" {
   }
 
   spec = {
-    display_name = "GitHub Integration"
+    display_name = coalesce(var.integration_display_name, "GitHub Integration")
     config = {
       github = {
         owner    = var.github_owner
@@ -154,10 +178,10 @@ resource "meshstack_building_block_definition" "this" {
   }
 
   spec = {
-    display_name = "GitHub Workflow Building Block"
-    description  = "Reference building block demonstrating the GITHUB_WORKFLOW implementation type: triggers a GitHub Actions workflow and captures the run URL as output."
+    display_name = coalesce(var.bbd_display_name, "GitHub Workflow Building Block")
+    description  = coalesce(var.bbd_description, "Reference building block demonstrating the GITHUB_WORKFLOW implementation type: triggers a GitHub Actions workflow and captures the run URL as output.")
     target_type  = "WORKSPACE_LEVEL"
-    readme       = <<-EOT
+    readme = coalesce(var.bbd_readme, <<-EOT
     This building block demonstrates meshStack's GITHUB_WORKFLOW implementation type, which triggers a GitHub Actions workflow when a building block is applied.
 
     **Use cases:**
@@ -176,6 +200,7 @@ resource "meshstack_building_block_definition" "this" {
     | Request the building block and provide inputs | ❌ | ✅ |
     | Monitor workflow run status via output URL | ❌ | ✅ |
     EOT
+    )
   }
 
   version_spec = {

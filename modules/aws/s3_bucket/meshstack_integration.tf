@@ -21,6 +21,24 @@ variable "aws_oidc_provider_arn" {
   EOT
 }
 
+variable "bbd_display_name" {
+  type        = string
+  default     = null
+  description = "Overrides the name of the marketplace entry application teams see in the catalog."
+}
+
+variable "bbd_description" {
+  type        = string
+  default     = null
+  description = "Overrides the one-line description shown next to the marketplace entry."
+}
+
+variable "bbd_readme" {
+  type        = string
+  default     = null
+  description = "Overrides the markdown readme shown in the marketplace before ordering."
+}
+
 variable "meshstack" {
   type = object({
     owning_workspace_identifier = string
@@ -72,9 +90,9 @@ resource "meshstack_building_block_definition" "this" {
   }
 
   spec = {
-    display_name = "AWS S3 Bucket"
-    description  = "AWS S3 Bucket"
-    readme = chomp(<<-EOT
+    display_name = coalesce(var.bbd_display_name, "AWS S3 Bucket")
+    description  = coalesce(var.bbd_description, "AWS S3 Bucket")
+    readme = coalesce(var.bbd_readme, chomp(<<-EOT
       This building block provisions an **AWS S3 bucket** in your AWS account with configurable tags.
       It is designed for workspaces that need a dedicated object storage bucket for application data,
       backups, or static assets.
@@ -105,7 +123,7 @@ resource "meshstack_building_block_definition" "this" {
       | Manage objects and lifecycle policies | ❌ | ✅ |
       | Secure access to bucket contents | ❌ | ✅ |
       EOT
-    )
+    ))
     support_url       = "https://support.example.com/building-blocks"
     documentation_url = "https://docs.example.com/building-blocks"
     target_type       = "WORKSPACE_LEVEL"
