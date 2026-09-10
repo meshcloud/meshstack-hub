@@ -60,6 +60,13 @@ POLL_INTERVAL_SECONDS = 10
 REQUEST_TIMEOUT_SECONDS = 30
 RETRY_INITIAL_DELAY_SECONDS = 2
 RETRY_MAX_DELAY_SECONDS = 30
+# While no task matches our dispatch, print a heartbeat at this cadence rather
+# than on every poll — otherwise a run the runner pool never picks up looks
+# identical, from the outside, to one that is legitimately still executing:
+# both print nothing until the caller's `timeout 900` kills the process. That
+# ambiguity cost real time diagnosing the 2026-09-10 trial-cloudfoundation
+# incident (see meshstack-smoke-test's dev-docs/nightly/2026-09-10-*.md).
+NO_TASK_HEARTBEAT_SECONDS = 60
 # Answers that say "not now" rather than "no": everything else is the server's
 # verdict on our request and must fail the run.
 RETRYABLE_HTTP_STATUSES = {429, 500, 502, 503, 504}
@@ -221,6 +228,7 @@ def main() -> None:
     print(f"Polling workflow status via {tasks_path}")
 
     seen_job_status: dict[str, str] = {}
+    last_no_task_heartbeat = dispatch_at
     while True:
         _, payload = get_json(host, token, tasks_path)
         tasks = identify_run_tasks(payload.get("workflow_runs", []), branch, dispatch_at)
@@ -233,6 +241,13 @@ def main() -> None:
                 return
             if verdict == "failure":
                 raise SystemExit(f"Workflow run {run_id} on {branch} failed: {detail}: {url}")
+        else:
+            now = dt.datetime.now(dt.timezone.utc)
+            if (now - last_no_task_heartbeat).total_seconds() >= NO_TASK_HEARTBEAT_SECONDS:
+                elapsed = int((now - dispatch_at).total_seconds())
+                print(f"  Still no task for branch {branch} matching our dispatch ({elapsed}s elapsed) — "
+                      f"no runner may have picked up the job yet")
+                last_no_task_heartbeat = now
 
         time.sleep(POLL_INTERVAL_SECONDS)
 
