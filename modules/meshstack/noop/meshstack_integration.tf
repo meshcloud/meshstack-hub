@@ -33,7 +33,7 @@ variable "tag_object" {
 
 variable "tag_key" {
   type        = string
-  default     = "business-unit"
+  default     = "BusinessUnit"
   description = "Key of an existing meshStack tag definition (target_kind meshWorkspace) that the `tag_value` input reads its value from. The tag definition must already exist on the target meshStack instance."
 }
 
