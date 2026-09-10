@@ -28,8 +28,8 @@ run "azure_entra_id_groups_hub" {
   # The prefix input is what makes the group names unique per run; assert it actually landed in the
   # generated names rather than being dropped somewhere in the input plumbing.
   assert {
-    condition     = can(regex("hub-e2e-", meshstack_building_block.this.status.outputs["group_display_names"].value))
-    error_message = "expected group_display_names to carry the 'hub-e2e-<suffix>' prefix, got ${meshstack_building_block.this.status.outputs["group_display_names"].value}"
+    condition     = strcontains(meshstack_building_block.this.status.outputs["group_display_names"].value, var.test_context.run_id)
+    error_message = "expected group_display_names to carry the '${var.test_context.run_id}' prefix, got ${meshstack_building_block.this.status.outputs["group_display_names"].value}"
   }
 
   # Every member of the fixtures project is a guest in the test tenant, so an "email" lookup must
