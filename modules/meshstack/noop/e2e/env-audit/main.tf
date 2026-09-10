@@ -5,7 +5,7 @@ resource "meshstack_building_block_definition" "env_audit" {
   }
 
   spec = {
-    display_name = "meshStack Environment Variable Audit"
+    display_name = "${var.test_context.run_id} meshStack Environment Variable Audit"
     description  = "Captures environment variable keys at pre-run and apply time so tftest can assert on the runner's environment isolation."
     target_type  = "WORKSPACE_LEVEL"
     readme = chomp(<<-MARKDOWN
@@ -60,7 +60,7 @@ resource "meshstack_building_block" "this" {
   spec = {
     building_block_definition_version_ref = meshstack_building_block_definition.env_audit.version_latest
 
-    display_name = "smoke-test-env-audit-${var.test_context.name_suffix}"
+    display_name = "${var.test_context.run_id}-env-audit"
     target_ref = {
       kind = "meshWorkspace"
       name = var.test_context.workspace

@@ -3,7 +3,7 @@ variable "test_context" {
     hub_git_ref = string
     workspace   = string
     project     = string
-    name_suffix = string
+    run_id      = string
 
     # Base URL of the meshStack API, written into the runner config for API polling.
     meshstack_endpoint = string

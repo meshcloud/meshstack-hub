@@ -2,7 +2,7 @@ variable "test_context" {
   type = object({
     hub_git_ref = string
     workspace   = string
-    name_suffix = string
+    run_id      = string
 
     # meshStack rejects a meshObject that misses a mandatory tag, or carries a tag key the schema
     # does not define, so a test cannot guess either.
@@ -60,9 +60,7 @@ module "workspace_starterkit" {
   # order sends its own TTL.
   workspace_ttl_days_default = var.ttl_optional ? null : 30
 
-  # Names the definition and the API key the backplane mints, so a leaked one says which run left
-  # it behind.
-  display_name = "st-${var.test_context.name_suffix}"
+  bbd_display_name = "${var.test_context.run_id} meshStack Workspace Starterkit"
 }
 
 output "version_ref" {

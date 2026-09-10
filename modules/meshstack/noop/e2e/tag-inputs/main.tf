@@ -1,18 +1,18 @@
 locals {
   # A platform type identifier can never be reused, not even after the type is deleted, so the run
-  # suffix is what keeps repeated and concurrent runs from colliding. Uppercase and dashes only, so
-  # the suffix is upper-cased here rather than trusted to arrive that way.
-  platform_type_name = "NOOP-TAG-${upper(var.test_context.name_suffix)}"
+  # id is what keeps repeated and concurrent runs from colliding. Uppercase and dashes only, so the
+  # id is upper-cased here rather than trusted to arrive that way.
+  platform_type_name = "${upper(var.test_context.run_id)}-NOOP-TAG"
 
   # The test instance caps a project identifier at 30 characters and requires a stage suffix.
-  project_identifier = "noop-tag-${var.test_context.name_suffix}-dev"
+  project_identifier = "${var.test_context.run_id}-noop-tag-dev"
 
-  # Tag definitions are instance-global, so every key carries the run suffix. They must also differ
+  # Tag definitions are instance-global, so every key carries the run id. They must also differ
   # from the instance's mandatory keys below, or the "landing zone offers every value" rule would
   # couple the project tag to the landing zone tag and block a change to either on its own.
-  project_tag_key        = "noopProject${var.test_context.name_suffix}"
-  payment_method_tag_key = "noopPaymentMethod${var.test_context.name_suffix}"
-  landing_zone_tag_key   = "noopLandingZone${var.test_context.name_suffix}"
+  project_tag_key        = "${var.test_context.run_id}NoopProject"
+  payment_method_tag_key = "${var.test_context.run_id}NoopPaymentMethod"
+  landing_zone_tag_key   = "${var.test_context.run_id}NoopLandingZone"
 
   # The test workspace makes these tags mandatory, and a landing zone has to offer every value a
   # project assigned to it may carry — meshStack rejects both objects otherwise.
@@ -74,7 +74,7 @@ resource "meshstack_tag_definition" "project" {
   spec = {
     target_kind  = "meshProject"
     key          = local.project_tag_key
-    display_name = "NoOp Project Tag"
+    display_name = "${var.test_context.run_id} NoOp Project Tag"
     description  = "Smoke test tag read by the tenant-level NoOp building block."
     value_type   = { string = {} }
     mandatory    = false
@@ -87,7 +87,7 @@ resource "meshstack_tag_definition" "payment_method" {
   spec = {
     target_kind  = "meshPaymentMethod"
     key          = local.payment_method_tag_key
-    display_name = "NoOp Payment Method Tag"
+    display_name = "${var.test_context.run_id} NoOp Payment Method Tag"
     description  = "Smoke test tag read by the tenant-level NoOp building block."
     value_type   = { string = {} }
     mandatory    = false
@@ -100,7 +100,7 @@ resource "meshstack_tag_definition" "landing_zone" {
   spec = {
     target_kind  = "meshLandingZone"
     key          = local.landing_zone_tag_key
-    display_name = "NoOp Landing Zone Tag"
+    display_name = "${var.test_context.run_id} NoOp Landing Zone Tag"
     description  = "Smoke test tag read by the tenant-level NoOp building block."
     value_type   = { string = {} }
     mandatory    = false
@@ -118,19 +118,19 @@ resource "meshstack_platform_type" "this" {
   }
 
   spec = {
-    display_name = "NoOp Tag Inputs ${var.test_context.name_suffix}"
+    display_name = "${var.test_context.run_id} NoOp Tag Inputs"
     icon         = "data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciLz4="
   }
 }
 
 resource "meshstack_platform" "this" {
   metadata = {
-    name               = "noop-tag-${var.test_context.name_suffix}"
+    name               = "${var.test_context.run_id}-noop-tag"
     owned_by_workspace = var.test_context.workspace
   }
 
   spec = {
-    display_name = "NoOp Tag Inputs ${var.test_context.name_suffix}"
+    display_name = "${var.test_context.run_id} NoOp Tag Inputs"
     description  = "Smoke test platform for the tenant-level NoOp building block."
     endpoint     = "https://hub.meshcloud.io/modules/meshstack/noop"
     location_ref = { name = "global" }
@@ -163,7 +163,7 @@ resource "meshstack_building_block_definition" "platform_tenant_id" {
   }
 
   spec = {
-    display_name        = "NoOp Tag Inputs Platform Tenant ID ${var.test_context.name_suffix}"
+    display_name        = "${var.test_context.run_id} NoOp Tag Inputs Platform Tenant ID"
     description         = "Supplies a platform tenant ID so tenants on the custom platform replicate."
     target_type         = "TENANT_LEVEL"
     supported_platforms = [meshstack_platform_type.this.ref]
@@ -181,7 +181,7 @@ resource "meshstack_building_block_definition" "platform_tenant_id" {
         display_name    = "Tenant ID"
         type            = "STRING"
         assignment_type = "STATIC"
-        argument        = jsonencode("noop-tag-${var.test_context.name_suffix}")
+        argument        = jsonencode("${var.test_context.run_id}-noop-tag")
       }
     }
 
@@ -197,7 +197,7 @@ resource "meshstack_building_block_definition" "platform_tenant_id" {
 
 resource "meshstack_landingzone" "this" {
   metadata = {
-    name               = "noop-tag-lz-${var.test_context.name_suffix}"
+    name               = "${var.test_context.run_id}-noop-tag-lz"
     owned_by_workspace = var.test_context.workspace
     tags = merge(local.landingzone_tags, {
       (meshstack_tag_definition.landing_zone.spec.key) = local.scenario.landing_zone_tag_values
@@ -205,7 +205,7 @@ resource "meshstack_landingzone" "this" {
   }
 
   spec = {
-    display_name = "NoOp Tag Inputs ${var.test_context.name_suffix}"
+    display_name = "${var.test_context.run_id} NoOp Tag Inputs"
     description  = "Smoke test landing zone for the tenant-level NoOp building block."
 
     # Both automated, so tearing the tenant down needs no operator action.
@@ -227,12 +227,12 @@ resource "meshstack_landingzone" "this" {
 # which one funds the project is the cheapest of meshStack's four tag-source reassignment triggers.
 resource "meshstack_payment_method" "primary" {
   metadata = {
-    name               = "noop-tag-pm-a-${var.test_context.name_suffix}"
+    name               = "${var.test_context.run_id}-noop-tag-pm-a"
     owned_by_workspace = var.test_context.workspace
   }
 
   spec = {
-    display_name = "NoOp Tag Inputs Primary ${var.test_context.name_suffix}"
+    display_name = "${var.test_context.run_id} NoOp Tag Inputs Primary"
     tags = merge(var.test_context.meshstack.tag_schema.mandatory.payment_method, {
       (meshstack_tag_definition.payment_method.spec.key) = local.scenario.primary_pm_tag_values
     })
@@ -241,12 +241,12 @@ resource "meshstack_payment_method" "primary" {
 
 resource "meshstack_payment_method" "substitute" {
   metadata = {
-    name               = "noop-tag-pm-b-${var.test_context.name_suffix}"
+    name               = "${var.test_context.run_id}-noop-tag-pm-b"
     owned_by_workspace = var.test_context.workspace
   }
 
   spec = {
-    display_name = "NoOp Tag Inputs Substitute ${var.test_context.name_suffix}"
+    display_name = "${var.test_context.run_id} NoOp Tag Inputs Substitute"
     tags = merge(var.test_context.meshstack.tag_schema.mandatory.payment_method, {
       (meshstack_tag_definition.payment_method.spec.key) = local.substitute_pm_tag_values
     })
@@ -260,7 +260,7 @@ resource "meshstack_project" "this" {
   }
 
   spec = {
-    display_name              = "NoOp Tag Inputs ${var.test_context.name_suffix}"
+    display_name              = "${var.test_context.run_id} NoOp Tag Inputs"
     payment_method_identifier = local.payment_methods[local.scenario.funding]
     tags = merge(local.project_tags, {
       (meshstack_tag_definition.project.spec.key) = local.scenario.project_tag_values
@@ -294,7 +294,7 @@ resource "meshstack_building_block_definition" "noop_tag_inputs" {
   }
 
   spec = {
-    display_name        = "NoOp Tag Inputs ${var.test_context.name_suffix}"
+    display_name        = "${var.test_context.run_id} NoOp Tag Inputs"
     description         = "Reports the meshStack tags it resolved, so tftest can assert on them."
     target_type         = "TENANT_LEVEL"
     supported_platforms = [meshstack_platform_type.this.ref]
@@ -391,7 +391,7 @@ resource "meshstack_building_block" "this" {
   spec = {
     building_block_definition_version_ref = meshstack_building_block_definition.noop_tag_inputs.version_latest
 
-    display_name = "smoke-test-noop-tag-inputs-${var.test_context.name_suffix}"
+    display_name = "${var.test_context.run_id}-noop-tag-inputs"
     target_ref   = meshstack_tenant.this.ref
 
     inputs = {
