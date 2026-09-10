@@ -24,8 +24,8 @@ modules/<cloud-provider>/<service-name>/
 │   ├── versions.tf
 │   ├── provider.tf
 │   ├── README.md          # YAML front-matter required (see below)
-│   ├── logo.png
-│   └── *.tftest.hcl
+│   └── logo.png
+├── e2e/                # optional — smoke test against a live meshStack (see the e2e-test skill)
 └── meshstack_integration.tf   # Example wiring into a meshStack instance
 ```
 
