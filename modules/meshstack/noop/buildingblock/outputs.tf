@@ -47,6 +47,14 @@ output "optional_text" {
   value = var.optional_text
 }
 
+output "conditional_text" {
+  value = var.conditional_text
+}
+
+output "deploy_settings" {
+  value = jsondecode(var.deploy_settings)
+}
+
 output "sensitive_text" {
   value     = var.sensitive_text
   sensitive = true
@@ -122,6 +130,8 @@ output "debug_input_variables_json" {
     num                   = var.num
     text                  = var.text
     optional_text         = var.optional_text
+    conditional_text      = var.conditional_text
+    deploy_settings       = var.deploy_settings
     single_select         = var.single_select
     sensitive_text        = var.sensitive_text
     sensitive_yaml        = var.sensitive_yaml

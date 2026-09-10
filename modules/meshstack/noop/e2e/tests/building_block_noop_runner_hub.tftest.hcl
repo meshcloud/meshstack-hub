@@ -22,4 +22,18 @@ run "building_block_noop_runner_hub" {
     condition     = jsondecode(meshstack_building_block.this.status.outputs["flag"].value) == true
     error_message = "noop runner building block expected output flag to be true, got ${jsondecode(meshstack_building_block.this.status.outputs["flag"].value)}"
   }
+
+  assert {
+    condition     = jsondecode(meshstack_building_block.this.status.outputs["conditional_text"].value) == "Shown because flag is true"
+    error_message = "noop runner building block expected output conditional_text to be 'Shown because flag is true', got ${jsondecode(meshstack_building_block.this.status.outputs["conditional_text"].value)}"
+  }
+
+  assert {
+    condition = (
+      jsondecode(meshstack_building_block.this.status.outputs["deploy_settings"].value)
+      ==
+      { greeting = "Hello from e2e", shout = true }
+    )
+    error_message = "noop runner building block expected output deploy_settings to be {greeting = \"Hello from e2e\", shout = true}, got ${jsondecode(meshstack_building_block.this.status.outputs["deploy_settings"].value)}"
+  }
 }

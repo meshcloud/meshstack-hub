@@ -38,9 +38,12 @@ resource "meshstack_building_block" "this" {
     }
 
     inputs = {
-      flag              = { value = jsonencode(true) }
-      num               = { value = jsonencode(1) }
-      text              = { value = jsonencode("Hello, World!") }
+      flag = { value = jsonencode(true) }
+      num  = { value = jsonencode(1) }
+      text = { value = jsonencode("Hello, World!") }
+      # conditional_text is asked for because flag is true above; its condition is `input.flag == true`.
+      conditional_text  = { value = jsonencode("Shown because flag is true") }
+      deploy_settings   = { value = jsonencode(jsonencode({ greeting = "Hello from e2e", shout = true })) }
       sensitive_text    = { sensitive = { secret_value = "Hidden value" } }
       single_select     = { value = jsonencode("single1") }
       multi_select      = { value = jsonencode(["multi1", "multi2"]) }
