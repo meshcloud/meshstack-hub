@@ -4,8 +4,8 @@ variable "test_context" {
   nullable = false
 
   validation {
-    condition     = can(var.test_context.workspace) && can(var.test_context.name_suffix)
-    error_message = "test_context must provide workspace and name_suffix."
+    condition     = can(var.test_context.workspace) && can(var.test_context.run_id)
+    error_message = "test_context must provide workspace and run_id."
   }
 
   validation {
@@ -83,20 +83,14 @@ resource "meshstack_building_block" "this" {
   spec = {
     building_block_definition_version_ref = { uuid = module.definition.version_ref.uuid }
 
-    display_name = "smoke-test-ske-starterkit-${var.test_context.name_suffix}"
+    display_name = "${var.test_context.run_id}-ske-starterkit"
     target_ref = {
       kind = "meshWorkspace"
       name = var.test_context.workspace
     }
 
     inputs = {
-      # Kept short on purpose. This name is the stem of a meshProject identifier
-      # (`<name>-<stage>`), and a foundation may append a random suffix of its own to avoid
-      # collisions on the app hostname and the git repository — both of which are shared across
-      # workspaces. `projectIdentifierLength` is per-instance meshStack config, so the budget left
-      # for the test is whatever the tightest instance allows: "st-" plus the timestamp fits with
-      # room for a foundation's suffix and the stage.
-      name = { value = jsonencode("st-${var.test_context.name_suffix}") }
+      name = { value = jsonencode(var.test_context.run_id) }
     }
   }
 }

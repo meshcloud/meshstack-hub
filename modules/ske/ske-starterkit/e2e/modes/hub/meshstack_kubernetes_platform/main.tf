@@ -1,14 +1,14 @@
 # namespace for replication service account
 resource "kubernetes_namespace" "meshcloud" {
   metadata {
-    name = "smoke-test-${var.test_suffix}"
+    name = "${var.run_id}-replicator"
   }
 }
 
 # meshfed_service service account
 resource "kubernetes_service_account" "meshfed_service" {
   metadata {
-    name      = "meshfed-service-${var.test_suffix}"
+    name      = "${var.run_id}-meshfed-service"
     namespace = kubernetes_namespace.meshcloud.metadata[0].name
     annotations = {
       "io.meshcloud/meshstack.replicator-kubernetes.version" = "1.0"
@@ -19,7 +19,7 @@ resource "kubernetes_service_account" "meshfed_service" {
 # meshfed_service secret
 resource "kubernetes_secret" "meshfed_service_secret" {
   metadata {
-    name      = "meshfed-service-${var.test_suffix}"
+    name      = "${var.run_id}-meshfed-service"
     namespace = kubernetes_namespace.meshcloud.metadata[0].name
     annotations = {
       "kubernetes.io/service-account.name" = kubernetes_service_account.meshfed_service.metadata[0].name
@@ -32,7 +32,7 @@ resource "kubernetes_secret" "meshfed_service_secret" {
 resource "kubernetes_cluster_role" "meshfed-service" {
 
   metadata {
-    name = "meshfed-service-${var.test_suffix}"
+    name = "${var.run_id}-meshfed-service"
     annotations = {
       "io.meshcloud/meshstack.replicator-kubernetes.version" = "1.0"
     }
@@ -84,7 +84,7 @@ resource "kubernetes_cluster_role_binding" "meshfed-service" {
     name      = kubernetes_cluster_role.meshfed-service.metadata[0].name
   }
   metadata {
-    name = "meshfed-service-${var.test_suffix}"
+    name = "${var.run_id}-meshfed-service"
     annotations = {
       "io.meshcloud/meshstack.replicator-kubernetes.version" = "1.0"
     }
@@ -95,13 +95,13 @@ resource "kubernetes_cluster_role_binding" "meshfed-service" {
 
 resource "meshstack_platform" "this" {
   metadata = {
-    name               = "smoke-test-ske-platform-${var.test_suffix}"
+    name               = "${var.run_id}-ske"
     owned_by_workspace = var.workspace
   }
 
   spec = {
-    display_name      = "Smoke Test ${var.test_suffix}"
-    description       = "Platform for Smoke Test ${var.test_suffix}"
+    display_name      = "${var.run_id} SKE"
+    description       = "Platform for smoke-test run ${var.run_id}"
     endpoint          = var.kube_host
     documentation_url = "https://kubernetes.io"
 
@@ -156,7 +156,7 @@ resource "meshstack_platform" "this" {
 
 resource "meshstack_landingzone" "dev" {
   metadata = {
-    name               = "smoketest-ske-dev-${var.test_suffix}"
+    name               = "${var.run_id}-ske-dev"
     owned_by_workspace = var.workspace
     tags = {
       "confidentiality" = ["Internal"],
@@ -164,8 +164,8 @@ resource "meshstack_landingzone" "dev" {
     }
   }
   spec = {
-    display_name                  = "Smoke Test Landing Zone ${var.test_suffix}"
-    description                   = "Landing Zone for Smoke Test ${var.test_suffix}"
+    display_name                  = "${var.run_id} SKE Dev"
+    description                   = "Landing Zone for smoke-test run ${var.run_id}"
     automate_deletion_approval    = true
     automate_deletion_replication = true
     info_link                     = "https://dontcare.com"
@@ -195,7 +195,7 @@ resource "meshstack_landingzone" "dev" {
 
 resource "meshstack_landingzone" "prod" {
   metadata = {
-    name               = "smoketest-ske-prod-${var.test_suffix}"
+    name               = "${var.run_id}-ske-prod"
     owned_by_workspace = var.workspace
     tags = {
       "confidentiality" = ["Internal"],
@@ -203,8 +203,8 @@ resource "meshstack_landingzone" "prod" {
     }
   }
   spec = {
-    display_name                  = "Smoke Test Landing Zone ${var.test_suffix}"
-    description                   = "Landing Zone for Smoke Test ${var.test_suffix}"
+    display_name                  = "${var.run_id} SKE Prod"
+    description                   = "Landing Zone for smoke-test run ${var.run_id}"
     automate_deletion_approval    = true
     automate_deletion_replication = true
     info_link                     = "https://dontcare.com"
