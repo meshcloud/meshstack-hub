@@ -53,6 +53,9 @@ runner module-agnostic. Its full shape is the `test_context` output of the `test
 | unset / `"hub"` | meshstack-smoke-test | Builds the BBD from hub source with an ephemeral backplane, then orders a building block. |
 | `"foundation"` | foundation repos (likvid/trial/internal-cloudfoundation) | The BBD is already published. Looks it up by display name and orders a building block against it. |
 
+The foundation repos that build their own `test_context` (`trial-cloudfoundation`,
+`likvid-cloudfoundation`) provide `run_id` the same way the smoke-test runner does.
+
 Modules still on the older `count` gate instead read the mode off `bbd_version_ref` being set.
 Switch one to `mode` when migrating it to the `modes/` layout.
 
@@ -100,14 +103,44 @@ variable "test_context" {
   nullable = false
 
   validation {
-    condition     = can(var.test_context.workspace) && can(var.test_context.name_suffix)
-    error_message = "test_context must provide workspace and name_suffix."
+    condition     = can(var.test_context.workspace) && can(var.test_context.run_id)
+    error_message = "test_context must provide workspace and run_id."
   }
 }
 ```
 
 Add to the validation whatever else the root reads. A tenant-level block also reads
 `fixtures.<cloud>.mesh_tenant_id` for its `target_ref`, in both modes.
+
+### Naming: every resource carries the run id
+
+`test_context.run_id` is the source of every name a test composes. It replaces `name_suffix`.
+
+- **Shape.** `"st" + YYMMDDhhmm (UTC) + 3 random [a-z0-9]`, e.g. `st2609101422k7q`: 15 characters,
+  regex `^st\d{10}[a-z0-9]{3}$`. No hyphen, so it is legal in every cloud name, including Azure
+  storage accounts. The calendar part sorts and lets a cleanup tool read a run's age off the name.
+- **Composition.** Identifiers: `${var.test_context.run_id}-<short discriminator>`, e.g.
+  `${var.test_context.run_id}-bucket`, `${var.test_context.run_id}-budget-wif`, a backplane identity
+  `${var.test_context.run_id}-<module>-bp`. Display names put the id first, space-separated:
+  `"${var.test_context.run_id} Azure Storage Account"`. Set a BBD or integration display name
+  through the module's `bbd_display_name` / `integration_display_name` override variable
+  (see AGENTS.md § `meshstack_integration.tf` Conventions).
+- **Why the prefix.** A cleanup tool finds smoke-test leftovers by name prefix, across meshStack and
+  every cloud. Nothing a human or another automation creates matches the regex, so the prefix alone
+  identifies them.
+- **No other randomness.** `run_id` already separates runs — do not add another random string or
+  timestamp. The one allowed exception is a product-imposed suffix, e.g. the storage-account
+  module's own 5 random characters for global uniqueness.
+- **Known exceptions**, where a platform wraps the id and it lands past position 0: the Kubernetes
+  namespace `smoke-test-<id>-dev` (meshStack's own namespace pattern), `rg-smoke-test-<id>` (the
+  `azure/resource-group` module), `rg-<id>xxxxx` (`azure/storage-account`). Don't add more where you
+  have a choice.
+- **Length budget.** 15 characters leaves room under every constraint in play: Azure storage account
+  24, meshStack project identifier 30 (with the `-dev` suffix the dev instance requires), GCP WIF
+  pool 32, ske-starterkit `name` 24, STACKIT service account name 20 (so `<id>-sb`, not
+  `<id>-bucket-sa`). Keep discriminators short.
+- **Transition.** `name_suffix` stays in `test_context` until every module has moved off it. Write
+  new tests against `run_id` only.
 
 Two groups keep `test_context` navigable: **`fixtures.<cloud>`** for resources inside the instance,
 **`meshstack`** for settings of the instance itself (its tag schema, its identifier rules). Neither
@@ -227,7 +260,7 @@ resource "meshstack_building_block" "this" {
   spec = {
     building_block_definition_version_ref = { uuid = module.definition.version_ref.uuid }
 
-    display_name = "smoke-test-<name>-${var.test_context.name_suffix}"
+    display_name = "${var.test_context.run_id} <name>"
     target_ref = {
       kind = "meshWorkspace"
       name = var.test_context.workspace
@@ -261,7 +294,7 @@ Give each case its **own ephemeral slice of the fixture**, created and destroyed
 ```hcl
 resource "github_branch" "ephemeral" {
   repository    = local.github_repository_name
-  branch        = "e2e/github-workflow-${local.execution_mode}-${var.test_context.name_suffix}"
+  branch        = "${var.test_context.run_id}/github-workflow-${local.execution_mode}"
   source_branch = var.test_context.fixtures.github.branch # base branch to fork from
 }
 ```
@@ -270,9 +303,8 @@ resource "github_branch" "ephemeral" {
   durable branch it chose; ephemerality is a property of the test. Keeping it here also means no new
   fixture inputs — reuse the credentials the module under test already receives — and it works in
   foundation mode too.
-- **Name it from `name_suffix` plus any variant discriminator.** `name_suffix` is a fresh timestamp
-  per run, so a leaked slice can never block a later run, and the name says which run and which case
-  leaked it.
+- **Name it from `run_id` plus any variant discriminator.** `run_id` is unique per run, so a leaked
+  slice can never block a later run, and the name says which run and which case leaked it.
 - **Make teardown ordered.** Add the fixture slice to the building block's `depends_on`: the delete
   run needs the destroy workflow to still be there, and OpenTofu would otherwise be free to delete
   the branch in parallel with the delete run.
@@ -570,6 +602,6 @@ source setup-override-provider.sh
 - [ ] One mode-agnostic `.tftest.hcl` file; assertions touch the building block only
 - [ ] Variant flags (sync/async and similar) are **root variables of the `e2e/` module** with a default, not `test_context` fields
 - [ ] Each `.tftest.hcl` file covers one variant, pinning the flag in a file-level `variables` block; `run` blocks share one file's state only when the subject of the test is a change to a live building block's surroundings — see [The exception](#the-exception-a-test-whose-subject-is-a-change)
-- [ ] Writes into a long-lived shared fixture go to a per-run ephemeral slice named from `name_suffix`, owned by the `e2e/` module and included in the building block's `depends_on`
+- [ ] Writes into a long-lived shared fixture go to a per-run ephemeral slice named from `run_id`, owned by the `e2e/` module and included in the building block's `depends_on`
 - [ ] State the live apply cannot reach is covered by a mocked `<cloud>_<service>_unit.tftest.hcl` in `e2e/tests/`, targeting `module { source = "../buildingblock" }` — and only where the two bars are cleared (worth testing, unreachable by the apply); anything the apply *can* reach is an assertion on the apply instead
 - [ ] Every mocked run is mutation-checked: break the module, watch the run fail
