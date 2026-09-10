@@ -70,11 +70,10 @@ The scorecard enforces a floor of `1.12.0` rather than an exact value, and repor
 <!-- scorecard-checks: variable_hub, variable_meshstack, bbd_draft, bbd_tags_forwarded, bbd_inputs_explicit_defaults -->
 ## Shared Variable Conventions
 
-The following variables must appear in every `meshstack_integration.tf`.
+Two variables must appear in every `meshstack_integration.tf`.
 
-To source modules from the hub, include a hub variable which determines the git reference to use.
-You may extend `variable "hub"` with additional fields as needed (e.g. `base_url`), but `git_ref`
-is always required.
+`variable "hub"` determines the git reference modules are sourced from. You may extend it with
+additional fields as needed (e.g. `base_url`), but `git_ref` is always required.
 
 ```hcl
 # Shared Hub reference — always include this variable
@@ -99,26 +98,8 @@ The `const = true` attribute (OpenTofu ≥ 1.12 / Terraform ≥ 1.15) marks `var
 - Its value must come from a `default`, `.tfvars` file, or `TF_VAR_*` environment variable — **never** from a resource, data source, or dynamic local.
 - It must **not** have `sensitive = true` or `ephemeral = true`.
 
-**If a `meshstack_building_block_definition` input's `argument` field references a variable, that variable must have an explicit default** — do not rely on nested `optional()` defaults (for example via a bare `default = {}`), since some downstream consumers don't evaluate Terraform's object-attribute defaulting and would see unset fields instead. Keep the `optional()` type constraints regardless — they still document intent and protect callers who omit keys.
-
-Always use `var.hub.bbd_draft` for the `draft` field of `version_spec` in `meshstack_building_block_definition` resources.
-
-<!-- scorecard-checks: output_bbd -->
-## Exposing Building Block Definition References
-
-When a `meshstack_integration.tf` exposes building block definition references for compositions, use a single object output named `building_block_definition`:
-
-```hcl
-output "building_block_definition" {
-  description = "BBD is consumed in building block compositions."
-  value = {
-    uuid        = meshstack_building_block_definition.this.metadata.uuid
-    version_ref = var.hub.bbd_draft ? meshstack_building_block_definition.this.version_latest : meshstack_building_block_definition.this.version_latest_release
-  }
-}
-```
-
-Integrating with meshStack requires context, like a workspace where the resource will be managed.
+`variable "meshstack"` carries the context integrating with meshStack requires, like the workspace
+that owns the resources.
 
 ```hcl
 # Shared meshStack context — always include this variable
@@ -131,7 +112,9 @@ variable "meshstack" {
 }
 ```
 
-Use these variables in the implementation block of building block definitions. Always forward `var.meshstack.tags` to the BBD `metadata.tags` field so that workspace-level tags are propagated to the building block definition.
+Use both in the building block definition. Always forward `var.meshstack.tags` to `metadata.tags` so
+workspace-level tags propagate to the definition, and `var.hub.bbd_draft` to the `draft` field of
+`version_spec`.
 
 ```hcl
 resource "meshstack_building_block_definition" "this" {
@@ -151,6 +134,21 @@ resource "meshstack_building_block_definition" "this" {
 }
 ```
 
+**If a `meshstack_building_block_definition` input's `argument` field references a variable, that variable must have an explicit default** — do not rely on nested `optional()` defaults (for example via a bare `default = {}`), since some downstream consumers don't evaluate Terraform's object-attribute defaulting and would see unset fields instead. Keep the `optional()` type constraints regardless — they still document intent and protect callers who omit keys.
+
+<!-- scorecard-checks: output_bbd -->
+## Exposing Building Block Definition References
+
+When a `meshstack_integration.tf` exposes building block definition references for compositions, use a single object output named `building_block_definition`:
+
+```hcl
+output "building_block_definition" {
+  description = "BBD is consumed in building block compositions."
+  value = {
+    uuid        = meshstack_building_block_definition.this.metadata.uuid
+    version_ref = var.hub.bbd_draft ? meshstack_building_block_definition.this.version_latest : meshstack_building_block_definition.this.version_latest_release
+  }
+}
 ```
 
 ---
