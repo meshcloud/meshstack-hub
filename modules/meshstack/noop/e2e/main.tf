@@ -68,6 +68,10 @@ resource "meshstack_building_block" "this" {
       num  = { value = jsonencode(1) }
       text = { value = jsonencode("Hello, World!") }
       # optional_text     = <nothing>  -> We intentionally leave this empty to test we can use optional inputs and they take the variable default value.
+      # conditional_text is asked for because flag is true above; its condition is `input.flag == true`.
+      conditional_text = { value = jsonencode("Shown because flag is true") }
+      # A JSON-type input reaches Terraform as raw JSON text, exactly like a CODE input, so it must be jsonencode'd twice.
+      deploy_settings   = { value = jsonencode(jsonencode({ greeting = "Hello from e2e", shout = true })) }
       sensitive_text    = { sensitive = { secret_value = "Hidden value" } }
       single_select     = { value = jsonencode("single1") }
       multi_select      = { value = jsonencode(["multi1", "multi2"]) }

@@ -32,6 +32,24 @@ run "building_block_noop_hub" {
   }
 
   assert {
+    # conditional_text is only asked for while its `condition` (input.flag == true) holds, which the
+    # building block's inputs in e2e/main.tf satisfy.
+    condition     = jsondecode(meshstack_building_block.this.status.outputs["conditional_text"].value) == "Shown because flag is true"
+    error_message = "noop hub building block expected output conditional_text to be 'Shown because flag is true', got ${jsondecode(meshstack_building_block.this.status.outputs["conditional_text"].value)}"
+  }
+
+  assert {
+    # deploy_settings is a JSON-type input: meshPanel renders a form from its json_schema, and the
+    # form's output reaches the building block as JSON text, exactly like a CODE input.
+    condition = (
+      jsondecode(meshstack_building_block.this.status.outputs["deploy_settings"].value)
+      ==
+      { greeting = "Hello from e2e", shout = true }
+    )
+    error_message = "noop hub building block expected output deploy_settings to be {greeting = \"Hello from e2e\", shout = true}, got ${jsondecode(meshstack_building_block.this.status.outputs["deploy_settings"].value)}"
+  }
+
+  assert {
     # tag_value is sourced from the meshstack_workspace_tag set up in e2e/main.tf, not from the
     # building block's own inputs.
     condition     = jsondecode(meshstack_building_block.this.status.outputs["tag_value"].value) == ["e2e-tag-value"]
