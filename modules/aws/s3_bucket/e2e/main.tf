@@ -1,7 +1,7 @@
 variable "test_context" {
   type = object({
     workspace   = string
-    name_suffix = string
+    run_id      = string
     hub_git_ref = string
 
     # Set to order an already-deployed BBD version; null to build the BBD from hub source.
@@ -56,8 +56,12 @@ module "aws_s3_bucket" {
     bbd_draft = true
   }
 
+  bbd_display_name = "${var.test_context.run_id} AWS S3 Bucket"
+
   aws_region            = var.test_context.fixtures.aws.region
   aws_oidc_provider_arn = var.test_context.fixtures.aws.oidc_provider_arn
+
+  backplane_name = "${var.test_context.run_id}-s3"
 
   workload_identity = {
     issuer                   = local.replicator.issuer
@@ -69,9 +73,7 @@ module "aws_s3_bucket" {
 locals {
   version_ref = var.test_context.bbd_version_ref != null ? var.test_context.bbd_version_ref : module.aws_s3_bucket[0].building_block_definition.version_ref
 
-  # S3 bucket names are globally unique across all of AWS, so the suffix is what keeps concurrent
-  # and repeated runs from colliding.
-  bucket_name = "smoke-test-aws-bucket-${var.test_context.name_suffix}"
+  bucket_name = "${var.test_context.run_id}-bucket"
 }
 
 resource "meshstack_building_block" "this" {
@@ -83,7 +85,7 @@ resource "meshstack_building_block" "this" {
   spec = {
     building_block_definition_version_ref = { uuid = local.version_ref.uuid }
 
-    display_name = "smoke-test-aws-s3-bucket-${var.test_context.name_suffix}"
+    display_name = "${var.test_context.run_id}-s3-bucket"
     target_ref = {
       kind = "meshWorkspace"
       name = var.test_context.workspace
