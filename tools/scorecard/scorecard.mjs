@@ -533,6 +533,37 @@ const detectors = [
     },
   },
   {
+    id: "bbd_catalog_overrides",
+    category: "integration",
+    name: "BBD catalog properties are overridable",
+    emoji: "🏪",
+    fn: (mod) => {
+      const content = readIntegrationTf(mod);
+      if (!content) return { pass: false, detail: "no integration file" };
+
+      const resources = extractBBDResourceBlocks(content);
+      if (resources.length === 0) {
+        return { pass: null, detail: "no meshstack_building_block_definition resource" };
+      }
+
+      const declaredVariables = extractVariableBlocks(content);
+      const hardcoded = new Set();
+
+      for (const resourceBlock of resources) {
+        for (const attribute of ["display_name", "description", "readme"]) {
+          const variable = specOverrideVariable(resourceBlock, attribute);
+          if (variable === null || !declaredVariables.has(variable)) hardcoded.add(attribute);
+        }
+      }
+
+      if (hardcoded.size === 0) return { pass: true };
+      return {
+        pass: false,
+        detail: `wrap in coalesce(var.bbd_<field>, <the module's own text>) so a consumer can override: ${[...hardcoded].join(", ")}`,
+      };
+    },
+  },
+  {
     id: "bbd_readme",
     category: "integration",
     name: "BBD readme field present",
@@ -1525,9 +1556,45 @@ function findRunStatusPostcondition(resourceBody) {
   return null;
 }
 
+// The expression a BBD's `spec` assigns to one attribute, or null. `tofu fmt` indents the
+// resource's own attributes by two spaces and `spec`'s by four, which is what tells a spec
+// attribute apart from an identically named field of an input or output further down the resource.
+function specAttributeExpression(resourceBlock, attribute) {
+  const m = new RegExp(`^ {4}${attribute}[ \\t]*=[ \\t]*`, "m").exec(resourceBlock);
+  return m === null ? null : resourceBlock.slice(m.index + m[0].length);
+}
+
+// The variable a catalog property reads from — `coalesce(var.x, <the module's own text>)` or a
+// bare `var.x` — or null when the property is a literal no consumer can override.
+function specOverrideVariable(resourceBlock, attribute) {
+  const expression = specAttributeExpression(resourceBlock, attribute);
+  if (expression === null) return null;
+  const m = /^(?:coalesce\s*\(\s*)?var\.([A-Za-z0-9_]+)/.exec(expression);
+  return m === null ? null : m[1];
+}
+
+// The BBD readme, dedented, or null when it does not resolve to a heredoc in this file. The
+// readme is either the heredoc itself or, since catalog properties became overridable, a
+// `coalesce(var.bbd_readme, <fallback>)` whose fallback is the heredoc or a `local` holding it.
 function extractBBDReadmeContent(content) {
-  // Match: readme = [chomp(] <<[-]MARKER\n...content...\nMARKER
-  const m = content.match(/readme\s*=\s*(?:chomp\s*\(\s*)?<<-?([A-Za-z_]+)\s*\n([\s\S]*?)\n[ \t]*\1\b/);
+  const resourceBlock = extractBBDResourceBlocks(content)[0];
+  if (resourceBlock === undefined) return null;
+
+  let expression = specAttributeExpression(resourceBlock, "readme");
+  if (expression === null) return null;
+
+  const override = /^coalesce\s*\(\s*var\.[A-Za-z0-9_]+\s*,\s*/.exec(expression);
+  if (override !== null) expression = expression.slice(override[0].length);
+
+  const localReference = /^local\.([A-Za-z0-9_]+)/.exec(expression);
+  if (localReference !== null) {
+    const assignment = new RegExp(`(?<![A-Za-z0-9_])${localReference[1]}[ \\t]*=[ \\t]*`).exec(content);
+    if (assignment === null) return null;
+    expression = content.slice(assignment.index + assignment[0].length);
+  }
+
+  // Match: [chomp(] <<[-]MARKER\n...content...\nMARKER
+  const m = expression.match(/^(?:chomp\s*\(\s*)?<<-?([A-Za-z_]+)\s*\n([\s\S]*?)\n[ \t]*\1\b/);
   if (!m) return null;
   const lines = m[2].split("\n");
   const nonEmpty = lines.filter((l) => l.trim().length > 0);
