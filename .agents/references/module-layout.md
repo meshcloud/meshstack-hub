@@ -95,6 +95,7 @@ The readme (inline or `APP_TEAM_README.md`) must include:
 - [ ] Variables referenced from `meshstack_building_block_definition` input `argument` fields have explicit defaults (never rely on `optional()` defaults via bare `default = {}`)
 - [ ] `ref_name` uses `var.hub.git_ref` — no hardcoded `"main"`
 - [ ] `version_spec.draft` uses `var.hub.bbd_draft`
+- [ ] `spec.display_name`, `spec.description` and `spec.readme` are overridable via `coalesce(var.bbd_*, <the module's own text>)` — see [meshstack-integration.md](meshstack-integration.md)
 - [ ] `terraform_version` is `1.12.5` — never the panel's `1.9.0` prefill, which predates OpenTofu's short-circuiting `&&`/`||`
 - [ ] `metadata.tags = var.meshstack.tags` in `meshstack_building_block_definition` resource
 - [ ] Tags are modeled via `var.meshstack.tags` (no separate top-level `variable "tags"` in integrations)
