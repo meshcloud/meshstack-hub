@@ -21,6 +21,31 @@ To successfully work across these repositories, always read their AGENTS.md file
 
 ---
 
+<!-- scorecard-checks: no_buildingblock_tftest -->
+## Where Terraform Tests Live
+
+**`e2e/` is the only place a `*.tftest.hcl` file runs.** Nothing in this repo runs `tofu test`
+anywhere else: CI runs `pre-commit run --all-files` — `terraform-docs`, `terraform fmt`,
+trailing whitespace and `ci/validate_modules.sh` — and the scorecard's Testing category scores
+`e2e/` coverage exclusively. Our current focus is on improving coverage via end-to-end tests.
+Keep an eye on future need of better "unit test" build infrastructure and clear separation.
+
+**Do not add a `*.tftest.hcl` under `buildingblock/`.** Nothing will execute it, so it rots
+unnoticed. The  `no_buildingblock_tftest` scorecard check flags each one as migration debt.
+
+## Verify Before Merging
+
+CI never applies an `e2e/` test — a merge gate in meshstack-hub only catches
+`tf validate`/`terraform-docs`/scorecard issues, not whether the module actually works against a
+live meshStack instance. A PR that adds or changes an `e2e/`-covered module should therefore
+include a link to an e2e verification run in its description where possible, dispatched against
+the PR's branch — see [Running tests](#running-tests). Posting a private
+link to the `meshstack-smoke-test` repo's own workflow run is fine — GitHub enforces access on it.
+Without that link, the first real run of a new or changed test is the nightly smoke test itself,
+which means any bug surfaces as a production incident instead of PR feedback.
+
+---
+
 <!-- scorecard-checks: e2e_tests -->
 ## Structure
 
@@ -43,6 +68,10 @@ modules/<cloud-provider>/<service-name>/
 The smoke-test runner dumps one `test_context` var-file, verbatim, for every module. That keeps the
 runner module-agnostic. Its full shape is the `test_context` output of the `test_context` module in
 `meshstack-smoke-test`.
+
+Take **every environment fact from `var.test_context`**; only secrets arrive as scalar `TF_VAR_*`.
+A `TF_VAR_*` fixture has to be wired in the harness repo as well, which is a second place for it to
+go missing.
 
 ### The two modes
 
