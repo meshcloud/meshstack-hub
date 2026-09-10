@@ -167,6 +167,27 @@ resource "meshstack_building_block_definition" "this" {
         type            = "STRING"
         is_optional     = true
       }
+      conditional_text = {
+        assignment_type = "USER_INPUT"
+        display_name    = "Conditional Text"
+        description     = "Only asked for while the Flag input is true; meshPanel hides it otherwise and meshStack sends no value for it."
+        type            = "STRING"
+        condition       = "input.flag == true"
+      }
+      deploy_settings = {
+        assignment_type = "USER_INPUT"
+        display_name    = "Deploy Settings"
+        description     = "A small JSON form (greeting text + shout flag) rendered by meshPanel from json_schema below."
+        type            = "JSON"
+        json_schema = jsonencode({
+          type     = "object"
+          required = ["greeting"]
+          properties = {
+            greeting = { type = "string" }
+            shout    = { type = "boolean" }
+          }
+        })
+      }
 
       "sensitive-file.yaml" = {
         assignment_type = "STATIC"
@@ -279,6 +300,16 @@ resource "meshstack_building_block_definition" "this" {
         display_name    = "Optional Text"
         type            = "STRING"
       }
+      conditional_text = {
+        assignment_type = "NONE"
+        display_name    = "Conditional Text"
+        type            = "STRING"
+      }
+      deploy_settings = {
+        assignment_type = "NONE"
+        display_name    = "Deploy Settings"
+        type            = "CODE"
+      }
       static_code = {
         assignment_type = "NONE"
         display_name    = "Static Code"
@@ -324,7 +355,7 @@ terraform {
   required_providers {
     meshstack = {
       source  = "meshcloud/meshstack"
-      version = ">= 0.25.2"
+      version = ">= 0.25.3"
     }
   }
 }

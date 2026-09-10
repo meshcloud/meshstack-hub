@@ -50,6 +50,18 @@ variable "optional_text" {
   default = "tf-default-value"
 }
 
+variable "conditional_text" {
+  # Sent only while its BBD `condition` holds; falls back to this default otherwise, exactly like optional_text.
+  type    = string
+  default = "tf-default-value"
+}
+
+variable "deploy_settings" {
+  # A JSON-type input reaches Terraform as raw JSON text, exactly like a CODE input; the JSON Schema
+  # only shapes the meshPanel form that produces it.
+  type = string
+}
+
 variable "sensitive_text" {
   type      = string
   sensitive = true
