@@ -19,29 +19,30 @@ Use it to:
 
 ## Input Types
 
-| Input                   | Type                 | Assignment                       | Description                                                                                                        |
-|-------------------------|----------------------|----------------------------------|--------------------------------------------------------------------------------------------------------------------|
+| Input                     | Type                 | Assignment                       | Description                                                                                                         |
+|---------------------------|----------------------|----------------------------------|-----------------------------------------------------------------------------------------------------------------------|
 | `author`                | `CODE`               | `AUTHOR`                         | The principal that ordered the block, injected by meshStack                                                        |
-| `user_permissions`      | `CODE`               | `USER_PERMISSIONS`               | Project team members and their roles as a structured list                                                          |
-| `user_permissions_json` | `CODE`               | `USER_PERMISSIONS`               | Same as above, as a raw JSON string                                                                                |
+| `user_permissions`        | `CODE`               | `USER_PERMISSIONS`               | Project team members and their roles as a structured list                                                             |
+| `user_permissions_json`   | `CODE`               | `USER_PERMISSIONS`               | Same as above, as a raw JSON string                                                                                   |
 | `workspace_identifier`  | `STRING`             | `WORKSPACE_IDENTIFIER`           | Identifier of the workspace the block belongs to, injected by meshStack                                            |
-| `sensitive_yaml`        | `CODE`               | `STATIC` (sensitive)             | Encrypted YAML/JSON value, decrypted at runtime                                                                    |
-| `static`                | `STRING`             | `STATIC`                         | A platform-engineer-defined string constant                                                                        |
-| `static_code`           | `CODE`               | `STATIC`                         | A platform-engineer-defined map                                                                                    |
-| `tag_value`             | `CODE`               | `TAG`                | Value of a meshStack tag, read from the target object rather than typed in by a user                               |
-| `flag`                  | `BOOLEAN`            | `USER_INPUT`                     | Boolean flag chosen by the user                                                                                    |
-| `num`                   | `INTEGER`            | `USER_INPUT`                     | Integer chosen by the user                                                                                         |
-| `text`                  | `STRING`             | `USER_INPUT`                     | Free-text string from the user                                                                                     |
-| `optional_text`         | `STRING`             | `USER_INPUT`                     | Optional string — can be omitted from the building block's inputs so the Terraform variable's default takes effect |
-| `conditional_text`      | `STRING`             | `USER_INPUT`         | Only asked for while its `condition` holds (`input.flag == true`); hidden and unset otherwise                      |
-| `deploy_settings`       | `JSON`               | `USER_INPUT`         | Filled in through a meshPanel form declared by `json_schema`, reaches Terraform as JSON text                       |
-| `sensitive_text`        | `STRING` (sensitive) | `USER_INPUT`                     | Sensitive string, masked in UI and logs                                                                            |
-| `single_select`         | `SINGLE_SELECT`      | `USER_INPUT`                     | One value from a predefined list                                                                                   |
-| `multi_select`          | `MULTI_SELECT`       | `USER_INPUT`                     | One or more values from a predefined list                                                                          |
-| `multi_select_json`     | `MULTI_SELECT`       | `USER_INPUT`                     | Same as above, as a raw JSON string                                                                                |
+| `sensitive_yaml`          | `CODE`               | `STATIC` (sensitive)             | Encrypted YAML/JSON value, decrypted at runtime                                                                       |
+| `static`                  | `STRING`             | `STATIC`                         | A platform-engineer-defined string constant                                                                           |
+| `static_code`             | `CODE`               | `STATIC`                         | A platform-engineer-defined map                                                                                       |
+| `tag_value`               | `CODE`               | `TAG`                | Value of a meshStack tag, read from the target object rather than typed in by a user                                  |
+| `flag`                    | `BOOLEAN`            | `USER_INPUT`                     | Boolean flag chosen by the user                                                                                       |
+| `num`                     | `INTEGER`            | `USER_INPUT`                     | Integer chosen by the user                                                                                            |
+| `text`                    | `STRING`             | `USER_INPUT`                     | Free-text string from the user                                                                                        |
+| `optional_text`           | `STRING`             | `USER_INPUT`                     | Optional string — can be omitted from the building block's inputs so the Terraform variable's default takes effect    |
+| `conditional_text`        | `STRING`             | `USER_INPUT`         | Its `condition` (`input.flag == true`) holds, so it is asked for and its value flows through                         |
+| `hidden_conditional_text` | `STRING`             | `USER_INPUT`         | Its `condition` (`input.flag == false`) never holds here, so it stays hidden and can be skipped                       |
+| `deploy_settings`         | `JSON`               | `USER_INPUT`         | Filled in through a meshPanel form declared by `json_schema`, reaches Terraform as JSON text                          |
+| `sensitive_text`          | `STRING` (sensitive) | `USER_INPUT`                     | Sensitive string, masked in UI and logs                                                                               |
+| `single_select`           | `SINGLE_SELECT`      | `USER_INPUT`                     | One value from a predefined list                                                                                      |
+| `multi_select`            | `MULTI_SELECT`       | `USER_INPUT`                     | One or more values from a predefined list                                                                             |
+| `multi_select_json`       | `MULTI_SELECT`       | `USER_INPUT`                     | Same as above, as a raw JSON string                                                                                   |
 | `operator_text`         | `STRING`             | `PLATFORM_OPERATOR_MANUAL_INPUT` | Only a platform operator can fill this in; a block missing it parks in `WAITING_FOR_OPERATOR_INPUT`                |
-| `some-file.yaml`        | `FILE`               | `STATIC`                         | Written to working directory; read via `file("some-file.yaml")`                                                    |
-| `sensitive-file.yaml`   | `FILE`               | `STATIC` (sensitive)             | Like above, encrypted at rest                                                                                      |
+| `some-file.yaml`          | `FILE`               | `STATIC`                         | Written to working directory; read via `file("some-file.yaml")`                                                       |
+| `sensitive-file.yaml`     | `FILE`               | `STATIC` (sensitive)             | Like above, encrypted at rest                                                                                         |
 
 ## Output Assignment Types
 
@@ -108,6 +109,7 @@ No modules.
 | <a name="input_conditional_text"></a> [conditional\_text](#input\_conditional\_text) | n/a | `string` | `"tf-default-value"` | no |
 | <a name="input_deploy_settings"></a> [deploy\_settings](#input\_deploy\_settings) | n/a | `string` | n/a | yes |
 | <a name="input_flag"></a> [flag](#input\_flag) | n/a | `bool` | n/a | yes |
+| <a name="input_hidden_conditional_text"></a> [hidden\_conditional\_text](#input\_hidden\_conditional\_text) | n/a | `string` | `"tf-default-value"` | no |
 | <a name="input_multi_select"></a> [multi\_select](#input\_multi\_select) | n/a | `list(string)` | n/a | yes |
 | <a name="input_multi_select_json"></a> [multi\_select\_json](#input\_multi\_select\_json) | n/a | `string` | n/a | yes |
 | <a name="input_num"></a> [num](#input\_num) | n/a | `number` | n/a | yes |
@@ -134,6 +136,7 @@ No modules.
 | <a name="output_debug_input_variables_json"></a> [debug\_input\_variables\_json](#output\_debug\_input\_variables\_json) | JSON-encoded map of all input variables received, including sensitive values in plaintext. |
 | <a name="output_deploy_settings"></a> [deploy\_settings](#output\_deploy\_settings) | n/a |
 | <a name="output_flag"></a> [flag](#output\_flag) | n/a |
+| <a name="output_hidden_conditional_text"></a> [hidden\_conditional\_text](#output\_hidden\_conditional\_text) | n/a |
 | <a name="output_multi_select"></a> [multi\_select](#output\_multi\_select) | n/a |
 | <a name="output_multi_select_json"></a> [multi\_select\_json](#output\_multi\_select\_json) | n/a |
 | <a name="output_num"></a> [num](#output\_num) | n/a |

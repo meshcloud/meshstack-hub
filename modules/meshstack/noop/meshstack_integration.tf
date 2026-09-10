@@ -174,6 +174,13 @@ resource "meshstack_building_block_definition" "this" {
         type            = "STRING"
         condition       = "input.flag == true"
       }
+      hidden_conditional_text = {
+        assignment_type = "USER_INPUT"
+        display_name    = "Hidden Conditional Text"
+        description     = "Only asked for while the Flag input is false; always hidden in this reference deployment (Flag is always true), demonstrating that a hidden conditional input is safely omitted from the building block's inputs."
+        type            = "STRING"
+        condition       = "input.flag == false"
+      }
       deploy_settings = {
         assignment_type = "USER_INPUT"
         display_name    = "Deploy Settings"
@@ -303,6 +310,11 @@ resource "meshstack_building_block_definition" "this" {
       conditional_text = {
         assignment_type = "NONE"
         display_name    = "Conditional Text"
+        type            = "STRING"
+      }
+      hidden_conditional_text = {
+        assignment_type = "NONE"
+        display_name    = "Hidden Conditional Text"
         type            = "STRING"
       }
       deploy_settings = {

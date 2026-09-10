@@ -2,6 +2,7 @@
     "conditional_text": "Shown because flag is true",
     "deploy_settings": "{\"greeting\":\"Hello from e2e\",\"shout\":true}",
     "flag": true,
+    "hidden_conditional_text":"tf-default-value",
     "multi_select": [
         "multi1",
         "multi2"

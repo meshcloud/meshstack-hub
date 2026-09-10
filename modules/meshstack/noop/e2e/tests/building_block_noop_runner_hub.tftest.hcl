@@ -29,6 +29,13 @@ run "building_block_noop_runner_hub" {
   }
 
   assert {
+    # hidden_conditional_text is intentionally left out of the building block's inputs (see
+    # e2e/runner/main.tf): its condition never holds while flag is true, so it can be skipped.
+    condition     = jsondecode(meshstack_building_block.this.status.outputs["hidden_conditional_text"].value) == "tf-default-value"
+    error_message = "noop runner building block expected output hidden_conditional_text to fall back to the Terraform variable default 'tf-default-value', got ${jsondecode(meshstack_building_block.this.status.outputs["hidden_conditional_text"].value)}"
+  }
+
+  assert {
     condition = (
       jsondecode(meshstack_building_block.this.status.outputs["deploy_settings"].value)
       ==

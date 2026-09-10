@@ -39,6 +39,15 @@ run "building_block_noop_hub" {
   }
 
   assert {
+    # hidden_conditional_text is intentionally left out of the building block's inputs (see
+    # e2e/main.tf): its condition (input.flag == false) never holds while flag is true, so
+    # meshPanel hides it, meshStack sends no value for it, and this asserts the Terraform
+    # variable's own default flows through as the output, exactly like optional_text.
+    condition     = jsondecode(meshstack_building_block.this.status.outputs["hidden_conditional_text"].value) == "tf-default-value"
+    error_message = "noop hub building block expected output hidden_conditional_text to fall back to the Terraform variable default 'tf-default-value', got ${jsondecode(meshstack_building_block.this.status.outputs["hidden_conditional_text"].value)}"
+  }
+
+  assert {
     # deploy_settings is a JSON-type input: meshPanel renders a form from its json_schema, and the
     # form's output reaches the building block as JSON text, exactly like a CODE input.
     condition = (
