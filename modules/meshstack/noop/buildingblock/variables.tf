@@ -56,6 +56,13 @@ variable "conditional_text" {
   default = "tf-default-value"
 }
 
+variable "hidden_conditional_text" {
+  # Its BBD `condition` (`input.flag == false`) never holds in this module's e2e tests, since flag
+  # is always true there, so this default is what every run actually uses.
+  type    = string
+  default = "tf-default-value"
+}
+
 variable "deploy_settings" {
   # A JSON-type input reaches Terraform as raw JSON text, exactly like a CODE input; the JSON Schema
   # only shapes the meshPanel form that produces it.
