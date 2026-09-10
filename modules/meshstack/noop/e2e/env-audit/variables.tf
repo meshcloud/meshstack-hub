@@ -3,7 +3,7 @@ variable "test_context" {
     hub_git_ref = string
     workspace   = string
     project     = string
-    name_suffix = string
+    run_id      = string
   })
   nullable = false
 }

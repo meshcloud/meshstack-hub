@@ -5,12 +5,15 @@ module "backplane" {
   meshstack_endpoint             = var.test_context.meshstack_endpoint
   gcp_project_id                 = var.test_context.fixtures.gcp.project_id
   gcp_region                     = var.gcp_region
-  gcp_resource_name_prefix       = "noop-runner-${var.test_context.name_suffix}"
-  runner_display_name            = "smoke-test-noop-runner-${var.test_context.name_suffix}"
+  gcp_resource_name_prefix       = "${var.test_context.run_id}-noop-runner"
+  runner_display_name            = "${var.test_context.run_id}-noop-runner"
 }
 
 module "noop" {
   source = "../../"
+
+  bbd_display_name = "${var.test_context.run_id} meshStack NoOp Building Block"
+
   meshstack = {
     owning_workspace_identifier = var.test_context.workspace
     tags                        = {}
@@ -28,7 +31,7 @@ resource "meshstack_building_block" "this" {
   spec = {
     building_block_definition_version_ref = module.noop.building_block_definition.version_ref
 
-    display_name = "smoke-test-noop-runner-${var.test_context.name_suffix}"
+    display_name = "${var.test_context.run_id}-noop-runner"
     target_ref = {
       kind = "meshWorkspace"
       name = var.test_context.workspace

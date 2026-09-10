@@ -3,8 +3,8 @@ variable "test_context" {
   nullable = false
 
   validation {
-    condition     = can(var.test_context.workspace) && can(var.test_context.name_suffix)
-    error_message = "test_context must provide workspace and name_suffix."
+    condition     = can(var.test_context.workspace) && can(var.test_context.run_id)
+    error_message = "test_context must provide workspace and run_id."
   }
 
   validation {
@@ -38,11 +38,10 @@ locals {
   # built here can have an optional input to leave blank.
   omit_ttl = local.mode == "hub" && var.ttl_optional
 
-  # One letter of prefix, because meshStack caps workspace identifiers at 16 characters.
-  workspace_identifier = "w${var.test_context.name_suffix}"
+  workspace_identifier = var.test_context.run_id
 
   # The instance decides what a project may be called; nothing can derive a name from its regex.
-  project_identifier = "p${var.test_context.name_suffix}${var.test_context.meshstack.project_identifier_suffix}"
+  project_identifier = "${var.test_context.run_id}${var.test_context.meshstack.project_identifier_suffix}"
 
   workspace_ttl_days = 7
 }
@@ -62,7 +61,7 @@ resource "meshstack_building_block" "this" {
   spec = {
     building_block_definition_version_ref = { uuid = module.definition.version_ref.uuid }
 
-    display_name = "st-${var.test_context.name_suffix}"
+    display_name = "${var.test_context.run_id}-workspace-starterkit"
     target_ref = {
       kind = "meshWorkspace"
       name = var.test_context.workspace
@@ -71,11 +70,11 @@ resource "meshstack_building_block" "this" {
     inputs = merge(
       {
         workspace_identifier     = { value = jsonencode(local.workspace_identifier) }
-        workspace_display_name   = { value = jsonencode("Smoke Test ${var.test_context.name_suffix}") }
+        workspace_display_name   = { value = jsonencode("${var.test_context.run_id} Workspace") }
         workspace_owner_username = { value = jsonencode(var.test_context.owner_username) }
         payment_method_amount    = { value = jsonencode(100) }
         project_identifier       = { value = jsonencode(local.project_identifier) }
-        project_display_name     = { value = jsonencode("Project ${var.test_context.name_suffix}") }
+        project_display_name     = { value = jsonencode("${var.test_context.run_id} Project") }
       },
       # Leaving an is_optional input out is the case under test: meshStack then sends no value.
       local.omit_ttl ? {} : {

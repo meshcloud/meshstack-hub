@@ -3,13 +3,16 @@ variable "test_context" {
     hub_git_ref = string
     workspace   = string
     project     = string
-    name_suffix = string
+    run_id      = string
   })
   nullable = false
 }
 
 module "noop" {
   source = "../"
+
+  bbd_display_name = "${var.test_context.run_id} meshStack NoOp Building Block"
+
   meshstack = {
     owning_workspace_identifier = var.test_context.workspace
     tags                        = {}
@@ -25,7 +28,7 @@ resource "meshstack_building_block" "this" {
   spec = {
     building_block_definition_version_ref = module.noop.building_block_definition.version_ref
 
-    display_name = "smoke-test-noop-hub-${var.test_context.name_suffix}"
+    display_name = "${var.test_context.run_id}-noop"
     target_ref = {
       kind = "meshWorkspace"
       name = var.test_context.workspace

@@ -3,7 +3,7 @@ variable "test_context" {
     hub_git_ref = string
     workspace   = string
     project     = string
-    name_suffix = string
+    run_id      = string
 
     fixtures = object({
       github = object({
@@ -55,7 +55,7 @@ locals {
 
   # The variant is part of the name so a leaked branch is attributable to a run *and* a case, and so
   # a leak can never block the sibling test file later in the same run.
-  ephemeral_branch = "e2e/github-workflow-${local.execution_mode}-${var.test_context.name_suffix}"
+  ephemeral_branch = "${var.test_context.run_id}/github-workflow-${local.execution_mode}"
 }
 
 # Per-run ephemeral branch. The backplane's job is to commit workflow files into the target
@@ -74,6 +74,9 @@ resource "github_branch" "ephemeral" {
 
 module "github_workflow" {
   source = "../"
+
+  bbd_display_name         = "${var.test_context.run_id} GitHub Workflow Building Block"
+  integration_display_name = "${var.test_context.run_id} GitHub Integration"
 
   github_owner               = var.test_context.fixtures.github.owner
   github_app_id              = var.github_app_id
@@ -108,7 +111,7 @@ resource "meshstack_building_block" "this" {
   spec = {
     building_block_definition_version_ref = module.github_workflow.building_block_definition.version_ref
 
-    display_name = "smoke-test-github-workflow-${local.execution_mode}-${var.test_context.name_suffix}"
+    display_name = "${var.test_context.run_id}-github-workflow-${local.execution_mode}"
     target_ref = {
       kind = "meshWorkspace"
       name = var.test_context.workspace

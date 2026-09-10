@@ -2,7 +2,7 @@ variable "test_context" {
   type = object({
     hub_git_ref = string
     workspace   = string
-    name_suffix = string
+    run_id      = string
     meshstack = object({
       tag_schema = object({
         mandatory = object({
