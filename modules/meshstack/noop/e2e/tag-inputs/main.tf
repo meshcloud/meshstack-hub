@@ -1,3 +1,8 @@
+# meshStack rejects an object that omits a mandatory tag, and every instance makes its own tags
+# mandatory — the smoke-test instance requires `paymentMethodType` on a payment method, the dev
+# instance does not. Reading the schema keeps this fixture from hardcoding one it does not own.
+data "meshstack_tag_definitions" "instance" {}
+
 locals {
   # A platform type identifier can never be reused, not even after the type is deleted, so the run
   # suffix is what keeps repeated and concurrent runs from colliding. Uppercase and dashes only, so
@@ -8,23 +13,52 @@ locals {
   project_identifier = "noop-tag-${var.test_context.name_suffix}-dev"
 
   # Tag definitions are instance-global, so every key carries the run suffix. They must also differ
-  # from the instance's mandatory keys below, or the "landing zone offers every value" rule would
-  # couple the project tag to the landing zone tag and block a change to either on its own.
+  # from the instance's mandatory keys, or the "landing zone offers every value" rule would couple
+  # the project tag to the landing zone tag and block a change to either on its own.
   project_tag_key        = "noopProject${var.test_context.name_suffix}"
   payment_method_tag_key = "noopPaymentMethod${var.test_context.name_suffix}"
   landing_zone_tag_key   = "noopLandingZone${var.test_context.name_suffix}"
 
-  # The test workspace makes these tags mandatory, and a landing zone has to offer every value a
-  # project assigned to it may carry — meshStack rejects both objects otherwise.
-  landingzone_tags = {
-    confidentiality = ["Public", "Internal", "Confidential"]
-    environment     = ["dev", "qa", "prod"]
-  }
+  instance_tag_definitions = data.meshstack_tag_definitions.instance.tag_definitions
 
-  project_tags = {
-    confidentiality = ["Public"]
-    environment     = ["dev"]
-  }
+  # One usable value per mandatory tag, per kind of object this fixture creates. A select tag has to
+  # take one of its own options; every other type accepts a marker. `try` because `value_type` holds
+  # exactly one non-null variant, so reading any other faults.
+  # The kinds this fixture creates that a tag definition can target. A tenant, a platform and a
+  # platform type cannot carry tags at all.
+  tag_target_kinds = [
+    "meshLandingZone",
+    "meshProject",
+    "meshPaymentMethod",
+    "meshBuildingBlockDefinition",
+  ]
+
+  mandatory_tags = { for kind in local.tag_target_kinds : kind => {
+    for definition in local.instance_tag_definitions : definition.spec.key => try(
+      [definition.spec.value_type.single_select.options[0]],
+      [definition.spec.value_type.multi_select.options[0]],
+      ["smoke-test"],
+    ) if definition.spec.mandatory && definition.spec.target_kind == kind
+  } }
+
+  landingzone_tag_keys = [
+    for definition in local.instance_tag_definitions :
+    definition.spec.key if definition.spec.target_kind == "meshLandingZone"
+  ]
+
+  project_tags        = local.mandatory_tags["meshProject"]
+  payment_method_tags = local.mandatory_tags["meshPaymentMethod"]
+  definition_tags     = local.mandatory_tags["meshBuildingBlockDefinition"]
+
+  # A landing zone has to offer every value a project assigned to it may carry, so it repeats the
+  # project's tags wherever the instance defines the same key for a landing zone too.
+  landingzone_tags = { for key in setunion(
+    keys(local.mandatory_tags["meshLandingZone"]),
+    setintersection(keys(local.project_tags), toset(local.landingzone_tag_keys)),
+    ) : key => distinct(concat(
+      lookup(local.mandatory_tags["meshLandingZone"], key, []),
+      lookup(local.project_tags, key, []),
+  )) }
 
   # Each scenario changes as little as possible against the one before it, so a failed assertion
   # names one mechanism rather than three. `initial` establishes the values, `changed_values` edits
@@ -160,6 +194,7 @@ resource "meshstack_platform" "this" {
 resource "meshstack_building_block_definition" "platform_tenant_id" {
   metadata = {
     owned_by_workspace = var.test_context.workspace
+    tags               = local.definition_tags
   }
 
   spec = {
@@ -233,9 +268,9 @@ resource "meshstack_payment_method" "primary" {
 
   spec = {
     display_name = "NoOp Tag Inputs Primary ${var.test_context.name_suffix}"
-    tags = {
+    tags = merge(local.payment_method_tags, {
       (meshstack_tag_definition.payment_method.spec.key) = local.scenario.primary_pm_tag_values
-    }
+    })
   }
 }
 
@@ -247,9 +282,9 @@ resource "meshstack_payment_method" "substitute" {
 
   spec = {
     display_name = "NoOp Tag Inputs Substitute ${var.test_context.name_suffix}"
-    tags = {
+    tags = merge(local.payment_method_tags, {
       (meshstack_tag_definition.payment_method.spec.key) = local.substitute_pm_tag_values
-    }
+    })
   }
 }
 
@@ -291,6 +326,7 @@ resource "meshstack_tenant" "this" {
 resource "meshstack_building_block_definition" "noop_tag_inputs" {
   metadata = {
     owned_by_workspace = var.test_context.workspace
+    tags               = local.definition_tags
   }
 
   spec = {

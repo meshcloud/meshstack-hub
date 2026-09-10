@@ -20,8 +20,10 @@ retag.
 
 Two consequences worth knowing before the first run: tag definitions and payment methods are
 admin-scoped (`ADM_TAGDEFINITION_SAVE`, `ADM_PAYMENTMETHOD_SAVE`, neither with a workspace-scoped
-variant), and the mandatory `confidentiality`/`environment` tags are copied from the dev instance's
-schema — another instance may require a different set.
+variant), and the mandatory tags of the objects it creates come from the instance itself.
+`data.meshstack_tag_definitions` supplies them: a select tag takes its first option, every other
+type a marker. A mandatory tag that validates its value — a regex, a number — needs that case
+added to `local.mandatory_tags`.
 
 ## Why the tenant needs a manual building block
 
