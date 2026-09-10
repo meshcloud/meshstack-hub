@@ -147,9 +147,9 @@ output "debug_input_variables_json" {
     tag_value               = var.tag_value
     user_permissions        = var.user_permissions
     user_permissions_json   = var.user_permissions_json
-    author                = var.author
-    operator_text         = var.operator_text
-    workspace_identifier  = var.workspace_identifier
+    author                  = var.author
+    operator_text           = var.operator_text
+    workspace_identifier    = var.workspace_identifier
   })
 }
 

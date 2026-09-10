@@ -130,8 +130,8 @@ No modules.
 
 | Name | Description |
 |------|-------------|
-| <a name="output_conditional_text"></a> [conditional\_text](#output\_conditional\_text) | n/a |
 | <a name="output_author"></a> [author](#output\_author) | n/a |
+| <a name="output_conditional_text"></a> [conditional\_text](#output\_conditional\_text) | n/a |
 | <a name="output_debug_input_files_json"></a> [debug\_input\_files\_json](#output\_debug\_input\_files\_json) | JSON-encoded map of all input files received, including sensitive values in plaintext. |
 | <a name="output_debug_input_variables_json"></a> [debug\_input\_variables\_json](#output\_debug\_input\_variables\_json) | JSON-encoded map of all input variables received, including sensitive values in plaintext. |
 | <a name="output_deploy_settings"></a> [deploy\_settings](#output\_deploy\_settings) | n/a |
