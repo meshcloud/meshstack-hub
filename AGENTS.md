@@ -11,6 +11,16 @@ building blocks** that can be imported into any meshStack instance.
 
 ---
 
+## Code Comments
+
+A comment earns its place by carrying a fact the code itself can't — a reason, a constraint, a
+tradeoff. Don't restate a fact or design decision that's already written down in an agent
+instruction or skill (this file, `.agents/skills/*`, `.agents/references/*`) — link to it instead
+if the connection isn't obvious, and otherwise leave it out. Assume the reader has read the
+instructions.
+
+---
+
 <!-- scorecard-checks: buildingblock_dir, versions_tf, backplane -->
 ## Module Structure
 
@@ -526,6 +536,17 @@ scalar `TF_VAR_*`. A `TF_VAR_*` fixture has to be wired in the harness repo as w
 second place for it to go missing.
 
 See [.agents/skills/e2e-test/SKILL.md](.agents/skills/e2e-test/SKILL.md) (the `e2e-test` skill) for the full e2e testing conventions, including the `e2e/` structure, `test_context` wiring, `e2e/main.tf` and `*.tftest.hcl` conventions, the new-test checklist, and how to run and debug tests via the smoke-test runner.
+
+### Verify Before Merging
+
+CI never applies an `e2e/` test (see the top of this file) — a merge gate here only catches
+`tf validate`/`terraform-docs`/scorecard issues, not whether the module actually works against a
+live meshStack instance. A PR that adds or changes an `e2e/`-covered module should therefore
+include a link to an e2e verification run in its description where possible, dispatched against
+the PR's branch per the smoke-test runner instructions in the `e2e-test` skill. Posting a private
+link to the `meshstack-smoke-test` repo's own workflow run is fine — GitHub enforces access on it.
+Without that link, the first real run of a new or changed test is the nightly smoke test itself,
+which means any bug surfaces as a production incident instead of PR feedback.
 
 <!-- scorecard-checks: no_buildingblock_tftest -->
 ### Where Terraform Tests Live
