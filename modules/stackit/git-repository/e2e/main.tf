@@ -2,7 +2,7 @@ variable "test_context" {
   type = object({
     hub_git_ref          = string
     workspace            = string
-    name_suffix          = string
+    run_id               = string
     forgejo_base_url     = string
     forgejo_organization = string
 
@@ -34,6 +34,8 @@ module "stackit_git_repository" {
     bbd_draft = true
   }
 
+  bbd_display_name = "${var.test_context.run_id} STACKIT Git Repository"
+
   forgejo_base_url     = var.test_context.forgejo_base_url
   forgejo_token        = var.stackit_git_forgejo_token
   forgejo_organization = var.test_context.forgejo_organization
@@ -48,14 +50,14 @@ resource "meshstack_building_block" "this" {
   spec = {
     building_block_definition_version_ref = { uuid = local.version_ref.uuid }
 
-    display_name = "smoke-test-stackit-git-repository-hub-${var.test_context.name_suffix}"
+    display_name = "${var.test_context.run_id}-git-repository"
     target_ref = {
       kind = "meshWorkspace"
       name = var.test_context.workspace
     }
 
     inputs = {
-      name        = { value = jsonencode("smoke-test-repo-${var.test_context.name_suffix}") }
+      name        = { value = jsonencode("${var.test_context.run_id}-repo") }
       description = { value = jsonencode("Smoke test repository") }
       private     = { value = jsonencode(true) }
       clone_addr  = { value = jsonencode("https://github.com/likvid-bank/starterkit-template-stackit-ai-summarizer.git") }
