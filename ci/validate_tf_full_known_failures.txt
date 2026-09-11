@@ -1,0 +1,17 @@
+# Modules that do not load today. Every line is a bug, not an exemption:
+# ci/validate_tf_full.sh reports a line that has started to pass so it can go.
+# Nothing new may be added without fixing the module instead.
+#
+# dir                                                 why it fails today
+modules/aks/github-connector/buildingblock           # local.acr never declared; provider "github" app_auth has no arguments
+modules/aks/postgresql/buildingblock                 # local.resource_group_name, .location, .subnet_id, .private_dns_zone_id never declared
+modules/aws/agentic-coding-sandbox/buildingblock     # attribute value of the wrong type
+modules/azure/aks/buildingblock                      # resources point at a provider configuration the module does not declare
+modules/azure/azure-virtual-machine-starterkit/buildingblock # resource type the provider does not have
+modules/azure/container-registry/buildingblock       # resources point at a provider configuration the module does not declare
+modules/azure/github-actions-terraform-setup/buildingblock # required arguments missing
+modules/azure/spoke-network                          # var.azure_tenant_id never declared
+modules/gcp                                          # terraform-gcp-meshplatform has no tag 0.3.0
+modules/github/repository/buildingblock              # required arguments missing
+modules/ionos/dcd/backplane                          # required arguments missing, plus arguments the provider rejects
+modules/meshstack/noop/buildingblock                 # invalid function argument
