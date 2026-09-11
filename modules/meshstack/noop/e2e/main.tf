@@ -16,7 +16,7 @@ variable "test_context" {
 resource "meshstack_tag_definition" "noop_e2e" {
   spec = {
     target_kind  = "meshWorkspace"
-    key          = "noop-e2e-tag-${var.test_context.name_suffix}"
+    key          = "noop-e2e-tag-${var.test_context.run_id}"
     display_name = "NoOp E2E Tag"
     value_type   = { string = {} }
   }
