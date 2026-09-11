@@ -1,7 +1,8 @@
 locals {
-  # The identifier is unique across the whole meshStack instance and lands in the platform, location
-  # and landing zone names, so a playground deployment suffixes it instead of occupying the plain name.
-  platform_identifier = var.playground_mode ? "${var.platform_identifier}-${random_string.playground_suffix.result}" : var.platform_identifier
+  # The identifier lands in the platform, location, hosting project and landing zone names and must be
+  # unique across the whole meshStack instance. Nobody needs a meaningful value, so it is generated
+  # from a random suffix. The random_string lives in state, so it stays stable across the two-phase run.
+  platform_identifier = "ske-platform-${random_string.identifier_suffix.result}"
 
   location_name = var.use_global_location ? "global" : meshstack_location.this[0].metadata.name
 
@@ -9,6 +10,19 @@ locals {
   # token can be created. Until the token is provided, the organization and the starterkit definitions
   # that need it are gated off; the git instance and the rest of the platform still deploy.
   forgejo_enabled = var.forgejo_token != null
+
+  # The starterkit additionally needs the Harbor credentials (CI push + cluster pull). It is only
+  # registered once the Forgejo token AND all Harbor inputs are present, so they can all be supplied
+  # together on the run that turns on self-service.
+  starterkit_enabled = local.forgejo_enabled && alltrue([
+    for v in [
+      var.stackit_harbor_project,
+      var.stackit_harbor_push_robot_user,
+      var.stackit_harbor_push_robot_password,
+      var.stackit_harbor_pull_robot_user,
+      var.stackit_harbor_pull_robot_password,
+    ] : v != null
+  ])
 
   # Null on the first run, while the starterkit definition is still gated off. try() turns the
   # null-attribute access on the disabled module into a null instead of an error.
@@ -32,12 +46,8 @@ locals {
   metering_token   = jsondecode(meshstack_building_block.platform_services.status.outputs["metering_token"].value)
 }
 
-resource "random_string" "playground_suffix" {
-  lifecycle {
-    enabled = var.playground_mode
-  }
-
-  length  = 6
+resource "random_string" "identifier_suffix" {
+  length  = 8
   special = false
   upper   = false
 }

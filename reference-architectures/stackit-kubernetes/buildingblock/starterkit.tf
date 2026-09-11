@@ -27,7 +27,7 @@ module "git_repository" {
   # The whole starterkit composition needs the Forgejo bot token, so all three definitions are gated
   # on it together and only get registered once the token is provided on a later run.
   lifecycle {
-    enabled = local.forgejo_enabled
+    enabled = local.starterkit_enabled
   }
 
   meshstack = { owning_workspace_identifier = var.workspace, tags = var.tags.building_block }
@@ -55,7 +55,7 @@ module "forgejo_connector" {
   source = "github.com/meshcloud/meshstack-hub//modules/ske/forgejo-connector?ref=${var.hub.git_ref}"
 
   lifecycle {
-    enabled = local.forgejo_enabled
+    enabled = local.starterkit_enabled
   }
 
   meshstack = { owning_workspace_identifier = var.workspace, tags = var.tags.building_block }
@@ -78,7 +78,7 @@ module "ske_starterkit" {
   source = "github.com/meshcloud/meshstack-hub//modules/ske/ske-starterkit?ref=${var.hub.git_ref}"
 
   lifecycle {
-    enabled = local.forgejo_enabled
+    enabled = local.starterkit_enabled
   }
 
   meshstack = { owning_workspace_identifier = var.workspace, tags = var.tags.building_block }

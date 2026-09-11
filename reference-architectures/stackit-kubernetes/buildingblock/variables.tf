@@ -6,17 +6,6 @@ variable "workspace" {
   description = "Identifier of the meshStack workspace that owns the platform, location, landing zones, hosting project and the building block definitions this architecture registers."
 }
 
-variable "platform_identifier" {
-  type        = string
-  nullable    = false
-  description = "Identifier for the SKE platform created in meshStack (letters, digits and dashes only). Also names the location and the hosting project."
-
-  validation {
-    condition     = can(regex("^[a-zA-Z0-9-]+$", var.platform_identifier))
-    error_message = "platform_identifier must only contain letters, digits, and dashes."
-  }
-}
-
 variable "use_global_location" {
   type        = bool
   nullable    = false
@@ -129,38 +118,43 @@ variable "forgejo_token" {
 # accounts cannot be provisioned from Terraform — they are supplied here as inputs. See the ske/
 # platform README on mirroring base images.
 
+# All Harbor inputs are only consumed by the starterkit, which is gated on them together with the
+# Forgejo token (see local.starterkit_enabled), so they are optional on the first (bootstrap) run and
+# supplied on the run that enables the starterkit. The robot secrets are shown only once at creation
+# time in the Harbor UI, which is why they are inputs rather than provisioned.
+
 variable "stackit_harbor_project" {
   type        = string
-  nullable    = false
-  description = "Harbor project name in the global STACKIT registry that application images are pushed to and pulled from."
+  default     = null
+  description = "Harbor project name in the global STACKIT registry that application images are pushed to and pulled from. Required only for the starterkit."
 }
 
 variable "stackit_harbor_push_robot_user" {
   type        = string
   sensitive   = true
-  nullable    = false
-  description = "Harbor robot account username with push access (used by CI to publish images)."
+  default     = null
+  description = "Harbor robot account username with push access (used by CI to publish images). Required only for the starterkit."
 }
 
 variable "stackit_harbor_push_robot_password" {
   type        = string
   sensitive   = true
-  nullable    = false
-  description = "Harbor robot account secret with push access."
+  default     = null
+  description = "Harbor robot account secret with push access. Required only for the starterkit."
 }
 
 variable "stackit_harbor_pull_robot_user" {
   type        = string
   sensitive   = true
-  nullable    = false
-  description = "Harbor robot account username with pull access (used by the cluster to pull images)."
+  default     = null
+  description = "Harbor robot account username with pull access (used by the cluster to pull images). Required only for the starterkit."
 }
 
 variable "stackit_harbor_pull_robot_password" {
   type        = string
   sensitive   = true
-  nullable    = false
-  description = "Harbor robot account secret with pull access."
+  default     = null
+  description = "Harbor robot account secret with pull access. Required only for the starterkit."
 }
 
 # ── DNS ──

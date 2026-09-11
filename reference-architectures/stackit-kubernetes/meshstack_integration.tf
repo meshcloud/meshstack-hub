@@ -177,15 +177,6 @@ resource "meshstack_building_block_definition" "this" {
         assignment_type = "WORKSPACE_IDENTIFIER"
       }
 
-      platform_identifier = {
-        display_name                   = "Platform Identifier"
-        description                    = "Identifier for the SKE platform created in meshStack (letters, digits and dashes only)."
-        type                           = "STRING"
-        assignment_type                = "USER_INPUT"
-        value_validation_regex         = "^[a-zA-Z0-9-]+$"
-        validation_regex_error_message = "platform_identifier must only contain letters, digits, and dashes."
-      }
-
       use_global_location = {
         display_name    = "Use Global Location"
         description     = "If true, use the global meshStack location instead of creating a dedicated one."
@@ -270,42 +261,50 @@ resource "meshstack_building_block_definition" "this" {
       }
 
       # ── Harbor ──
+      # Robot accounts are created manually in the STACKIT Harbor project (their secret is shown only
+      # once), so they are inputs, not provisioned. Only the starterkit uses them, so they are optional
+      # on the first run and supplied together with the Forgejo token on the run that enables it.
       stackit_harbor_project = {
         display_name    = "Harbor Project"
-        description     = "Harbor project name in the global STACKIT registry for application images."
+        description     = "Harbor project name in the global STACKIT registry for application images. Required only for the starterkit."
         type            = "STRING"
         assignment_type = "USER_INPUT"
+        is_optional     = true
       }
 
       stackit_harbor_push_robot_user = {
         display_name    = "Harbor Push Robot User"
-        description     = "Harbor robot username with push access."
+        description     = "Harbor robot username with push access. Required only for the starterkit."
         type            = "STRING"
         assignment_type = "USER_INPUT"
+        is_optional     = true
         sensitive       = {}
       }
 
       stackit_harbor_push_robot_password = {
         display_name    = "Harbor Push Robot Password"
-        description     = "Harbor robot secret with push access."
+        description     = "Harbor robot secret with push access. Required only for the starterkit."
         type            = "STRING"
         assignment_type = "USER_INPUT"
+        is_optional     = true
         sensitive       = {}
       }
 
       stackit_harbor_pull_robot_user = {
         display_name    = "Harbor Pull Robot User"
-        description     = "Harbor robot username with pull access."
+        description     = "Harbor robot username with pull access. Required only for the starterkit."
         type            = "STRING"
         assignment_type = "USER_INPUT"
+        is_optional     = true
         sensitive       = {}
       }
 
       stackit_harbor_pull_robot_password = {
         display_name    = "Harbor Pull Robot Password"
-        description     = "Harbor robot secret with pull access."
+        description     = "Harbor robot secret with pull access. Required only for the starterkit."
         type            = "STRING"
         assignment_type = "USER_INPUT"
+        is_optional     = true
         sensitive       = {}
       }
 
