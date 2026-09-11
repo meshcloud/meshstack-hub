@@ -8,6 +8,10 @@ description: >
 cloudProviders:
   - stackit
 buildingBlocks:
+  - path: ske/cluster
+    role: Provisions the STACKIT Kubernetes Engine (SKE) cluster and mints the admin kubeconfig the rest of the platform is built on.
+  - path: ske/platform-services
+    role: Installs HAProxy ingress, cert-manager, and the meshStack replication/metering service accounts on the cluster.
   - path: ske/ske-starterkit
     role: Orchestrates the full developer onboarding by composing dev/prod projects, SKE tenants, Git repos, and connectors into one self-service offering.
   - path: stackit/git-repository
