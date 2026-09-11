@@ -19,6 +19,14 @@ repos:
       - id: trailing-whitespace
   - repo: local
     hooks:
+      - id: validate-tf-config
+        name: Validate Terraform configuration
+        entry: bash ci/validate_tf_config.sh
+        language: system
+        files: \.tf$
+        # The renderer's templates and testdata are deliberately not loadable
+        # configurations - they are inputs to a Go tool, not modules.
+        exclude: ^tools/render-meshstack-integration-tf/(templates|testdata)/
       - id: validate-modules
         name: Validate modules
         entry: sh -c 'bash ci/validate_modules.sh --fix'
