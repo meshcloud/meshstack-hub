@@ -11,6 +11,3 @@ modules/azure/container-registry/buildingblock       # resources point at a prov
 modules/azure/spoke-network                          # var.azure_tenant_id never declared
 modules/gcp                                          # terraform-gcp-meshplatform has no tag 0.3.0
 modules/ionos/dcd/backplane                          # required arguments missing, plus arguments the provider rejects
-
-# Not bugs: these load only inside a meshStack run, so the gate cannot judge them.
-modules/meshstack/noop/buildingblock                 # outputs read file() inputs the runner writes into the working directory
