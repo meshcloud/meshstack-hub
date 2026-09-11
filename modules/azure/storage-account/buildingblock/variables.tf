@@ -36,8 +36,11 @@ variable "business_unit" {
 }
 
 variable "network_rules" {
-  # A JSON-type input reaches Terraform as raw JSON text; the JSON Schema only shapes the meshPanel
-  # form that produces it.
-  type        = string
+  type = object({
+    default_action             = string
+    bypass                     = optional(list(string), ["AzureServices"])
+    ip_rules                   = optional(list(string), [])
+    virtual_network_subnet_ids = optional(list(string), [])
+  })
   description = "Network access restrictions for the storage account, filled in through a meshPanel form."
 }

@@ -237,7 +237,7 @@ resource "meshstack_building_block_definition" "this" {
       network_rules = {
         type            = "JSON"
         display_name    = "Network Rules"
-        description     = "Restricts network access to the storage account, filled in through a meshPanel form rendered from the JSON Schema below."
+        description     = "Restricts network access to the storage account, filled in through a meshPanel form rendered from the JSON Schema below and passed to Terraform as a typed object."
         assignment_type = "USER_INPUT"
         json_schema = jsonencode({
           type     = "object"

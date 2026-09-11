@@ -40,7 +40,7 @@ provider "azurerm" {
 | `account_replication_type`          | `SINGLE_SELECT` | `USER_INPUT`  | Replication strategy; its `condition` (`input.account_tier == "Standard"`) hides it for Premium, which always uses LRS |
 | `blob_soft_delete_retention_days`   | `INTEGER`       | `USER_INPUT`  | Optional — can be omitted to use the module's 7-day default retention                                                  |
 | `business_unit`                     | `CODE`          | `TAG`         | Value of the workspace's `BusinessUnit` tag, read by meshStack rather than typed in by a user                          |
-| `network_rules`                     | `JSON`          | `USER_INPUT`  | Filled in through a meshPanel form declared by `json_schema`, reaches Terraform as JSON text                          |
+| `network_rules`                     | `JSON`          | `USER_INPUT`  | Filled in through a meshPanel form declared by `json_schema`, reaches Terraform as a typed object                     |
 
 <!-- BEGIN_TF_DOCS -->
 ## Requirements
@@ -74,7 +74,7 @@ No modules.
 | <a name="input_blob_soft_delete_retention_days"></a> [blob\_soft\_delete\_retention\_days](#input\_blob\_soft\_delete\_retention\_days) | Number of days to retain deleted blobs. Optional: when omitted, this default applies. | `number` | `7` | no |
 | <a name="input_business_unit"></a> [business\_unit](#input\_business\_unit) | Value of the workspace's BusinessUnit tag, read by meshStack rather than typed in by a user. | `list(string)` | n/a | yes |
 | <a name="input_location"></a> [location](#input\_location) | The location/region where the storage account is created. | `string` | n/a | yes |
-| <a name="input_network_rules"></a> [network\_rules](#input\_network\_rules) | Network access restrictions for the storage account, filled in through a meshPanel form. | `string` | n/a | yes |
+| <a name="input_network_rules"></a> [network\_rules](#input\_network\_rules) | Network access restrictions for the storage account, filled in through a meshPanel form. | <pre>object({<br/>    default_action             = string<br/>    bypass                     = optional(list(string), ["AzureServices"])<br/>    ip_rules                   = optional(list(string), [])<br/>    virtual_network_subnet_ids = optional(list(string), [])<br/>  })</pre> | n/a | yes |
 | <a name="input_storage_account_name"></a> [storage\_account\_name](#input\_storage\_account\_name) | The name of the storage account. Must be unique across entire Azure Region, not just within a Subscription. | `string` | n/a | yes |
 
 ## Outputs

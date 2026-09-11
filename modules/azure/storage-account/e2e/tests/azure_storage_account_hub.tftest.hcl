@@ -36,8 +36,8 @@ run "azure_storage_account_hub" {
     error_message = "expected blob_soft_delete_retention_days to default to 7, got ${jsondecode(meshstack_building_block.this.status.outputs["blob_soft_delete_retention_days"].value)}"
   }
 
-  # JSON-Schema-driven input: network_rules arrives as JSON text and is decoded into the resource's
-  # native network_rules block.
+  # JSON-Schema-driven input: network_rules arrives as a typed object and maps directly onto the
+  # resource's native network_rules block.
   assert {
     condition     = jsondecode(meshstack_building_block.this.status.outputs["network_default_action"].value) == "Deny"
     error_message = "expected network_default_action to be 'Deny', got ${jsondecode(meshstack_building_block.this.status.outputs["network_default_action"].value)}"

@@ -17,8 +17,6 @@ locals {
   # Premium storage only supports LRS/ZRS replication in Azure, so the BBD hides the replication
   # choice for Premium (see meshstack_integration.tf) and this is the value that applies instead.
   effective_replication_type = var.account_tier == "Premium" ? "LRS" : var.account_replication_type
-
-  network_rules = jsondecode(var.network_rules)
 }
 
 resource "azurerm_storage_account" "storage_account" {
@@ -37,13 +35,9 @@ resource "azurerm_storage_account" "storage_account" {
   }
 
   network_rules {
-    default_action = local.network_rules.default_action
-
-    # `try` so that a Network Rules value which only sets default_action (bypass/ip_rules/
-    # virtual_network_subnet_ids are optional in the json_schema) falls back to Azure's own
-    # defaults instead of failing on a missing key.
-    bypass                     = try(local.network_rules.bypass, ["AzureServices"])
-    ip_rules                   = try(local.network_rules.ip_rules, [])
-    virtual_network_subnet_ids = try(local.network_rules.virtual_network_subnet_ids, [])
+    default_action             = var.network_rules.default_action
+    bypass                     = var.network_rules.bypass
+    ip_rules                   = var.network_rules.ip_rules
+    virtual_network_subnet_ids = var.network_rules.virtual_network_subnet_ids
   }
 }

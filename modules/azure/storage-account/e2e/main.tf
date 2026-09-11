@@ -71,8 +71,10 @@ resource "meshstack_building_block" "this" {
       # through. It can't default to null: meshStack's output validation fails a run that reports
       # null for a declared output.
 
-      # A JSON-type input's value is the JSON text a meshPanel form would produce, so it's encoded
-      # twice: once to build that JSON text, once more because `value` itself is JSON-encoded.
+      # meshStack's API always stores a JSON-type input's value as JSON text, so it's encoded twice
+      # here: once to build that JSON text, once more because `value` itself is JSON-encoded. The
+      # building block runner still passes the underlying JSON text through as TF_VAR_network_rules,
+      # which OpenTofu decodes into the object type declared in variables.tf.
       network_rules = {
         value = jsonencode(jsonencode({
           default_action = "Deny"
