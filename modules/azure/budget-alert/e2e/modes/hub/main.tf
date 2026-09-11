@@ -4,7 +4,7 @@ variable "test_context" {
   type = object({
     hub_git_ref = string
     workspace   = string
-    name_suffix = string
+    run_id      = string
 
     fixtures = object({
       azure = object({
@@ -38,8 +38,7 @@ module "budget_alert" {
   azure_subscription_id = var.test_context.fixtures.azure.subscription_uuid
   azure_scope           = local.azure_scope
 
-  # Unique backplane name per test run so role definitions don't clash across concurrent/retried runs.
-  backplane_name = "hub-e2e-budget-${var.test_context.name_suffix}"
+  backplane_name = "${var.test_context.run_id}-budget-bp"
 }
 
 output "version_ref" {

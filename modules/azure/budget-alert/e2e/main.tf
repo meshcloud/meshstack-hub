@@ -4,8 +4,8 @@ variable "test_context" {
   nullable = false
 
   validation {
-    condition     = can(var.test_context.workspace) && can(var.test_context.name_suffix)
-    error_message = "test_context must provide workspace and name_suffix."
+    condition     = can(var.test_context.workspace) && can(var.test_context.run_id)
+    error_message = "test_context must provide workspace and run_id."
   }
 
   validation {
@@ -20,9 +20,7 @@ locals {
   # already published the definition, never even resolves the hub build tree.
   mode = try(var.test_context.mode, "hub")
 
-  # budget_name must be unique per test run to avoid conflicts on retried runs.
-  # name_suffix is "YYYYMMDDhhmmss" (14 digits), prefix keeps the total short.
-  budget_name = "e2e-${substr(var.test_context.name_suffix, 0, 12)}"
+  budget_name = "${var.test_context.run_id}-budget"
 }
 
 module "definition" {
@@ -39,7 +37,7 @@ resource "meshstack_building_block" "this" {
   spec = {
     building_block_definition_version_ref = { uuid = module.definition.version_ref.uuid }
 
-    display_name = "smoke-test-budget-alert-${var.test_context.name_suffix}"
+    display_name = "${var.test_context.run_id}-budget-alert"
     target_ref = {
       kind = "meshWorkspace"
       name = var.test_context.workspace
