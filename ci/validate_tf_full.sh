@@ -1,8 +1,9 @@
 #!/usr/bin/env bash
 # Loads every module against real provider schemas: `tofu init -backend=false`
-# followed by `tofu validate`. This catches what a schema-less check cannot -
-# unknown resource attributes, references to undeclared variables and locals,
-# resource types a provider does not have, missing provider configurations.
+# followed by `tofu validate`. This is what catches an unknown resource
+# attribute, a reference to an undeclared variable or local, a resource type a
+# provider does not have, a missing provider configuration - and also the plain
+# duplicate declaration that a parser alone would find.
 #
 # Three things keep it inside a two-minute CI job:
 #   * one plugin cache for the whole run, so each provider version is fetched
@@ -29,29 +30,28 @@ export TF_PLUGIN_CACHE_DIR="${TF_PLUGIN_CACHE_DIR:-$workdir/plugins}"
 export TF_PLUGIN_CACHE_MAY_BREAK_DEPENDENCY_LOCK_FILE=1
 mkdir -p "$TF_PLUGIN_CACHE_DIR"
 
+# The github provider declares its app_auth arguments required but reads them
+# from these variables, so a module authenticating as a GitHub App does not load
+# without them. No request is made: `validate` only decodes provider blocks.
+export GITHUB_APP_ID=0 GITHUB_APP_INSTALLATION_ID=0 GITHUB_APP_PEM_FILE=validation-only
+
+# Named roots rather than exclusions: every other .tf in the repo belongs to the
+# renderer, to an agent worktree or to the website, and is not a module.
 # e2e roots take their child module's git ref from a test variable, so their
-# module tree cannot be resolved without running the test. The renderer's
-# templates and testdata are inputs to a Go tool, not modules. Both stay on the
-# schema-less check in .pre-commit-config.yaml, which needs neither.
-dirs=$(find . -name '*.tf' \
-	-not -path './.git/*' \
+# module tree cannot be resolved without running the test.
+dirs=$(find modules infra reference-architectures -name '*.tf' \
 	-not -path '*/.terraform/*' \
-	-not -path './.claude/*' \
-	-not -path './node_modules/*' \
-	-not -path './website/*' \
-	-not -path './tools/render-meshstack-integration-tf/templates/*' \
-	-not -path './tools/render-meshstack-integration-tf/testdata/*' \
 	-not -path '*/e2e/*' \
 	-print0 | xargs -0 -n1 dirname | sort -u)
 
 validate_dir() {
-	local dir="$1" log="$workdir/$(tr '/' '_' <<< "${1#./}").log"
+	local dir="$1" log="$workdir/$(tr '/' '_' <<< "$1").log"
 	# The provider registry occasionally resets a connection under this many
 	# parallel inits. One retry costs a second and removes the flake.
 	(cd "$dir" && { tofu init -backend=false -input=false -no-color ||
 		tofu init -backend=false -input=false -no-color; } &&
 		tofu validate -no-color) > "$log" 2>&1 ||
-		echo "${dir#./}" >> "$workdir/failed"
+		echo "$dir" >> "$workdir/failed"
 }
 export -f validate_dir
 export workdir
