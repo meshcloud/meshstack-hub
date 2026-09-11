@@ -114,6 +114,9 @@ data "meshstack_platforms" "host" {
 module "cluster_integration" {
   source = "github.com/meshcloud/meshstack-hub//modules/ske/cluster?ref=${var.hub.git_ref}"
 
+  stackit_backplane_project_id = var.stackit_backplane_project_id
+  stackit_organization_id      = var.stackit_organization_id
+
   meshstack = { owning_workspace_identifier = var.workspace, tags = var.tags.building_block }
   hub       = var.hub
 }
@@ -137,9 +140,9 @@ resource "meshstack_building_block" "cluster" {
     target_ref   = { kind = "meshWorkspace", name = var.workspace }
 
     inputs = {
-      STACKIT_SERVICE_ACCOUNT_KEY = { value = jsonencode(var.stackit_service_account_key) }
-      stackit_project_id          = { value = jsonencode(local.stackit_project_id) }
-      cluster_name                = { value = jsonencode(var.cluster_name) }
+      # The cluster authenticates via its own WIF backplane; only the target project and name are set.
+      stackit_project_id = { value = jsonencode(local.stackit_project_id) }
+      cluster_name       = { value = jsonencode(var.cluster_name) }
     }
   }
 }

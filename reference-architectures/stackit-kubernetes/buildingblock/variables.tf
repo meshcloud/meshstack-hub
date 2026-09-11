@@ -44,11 +44,16 @@ variable "playground_mode" {
 
 # ── STACKIT authentication and self-hosting ──
 
-variable "stackit_service_account_key" {
+variable "stackit_backplane_project_id" {
   type        = string
-  sensitive   = true
   nullable    = false
-  description = "STACKIT service account key JSON. Used by this run to create git/DNS/model-serving resources, and passed down to the SKE Cluster building block to manage the cluster. Needs SKE, STACKIT Git, DNS and Model Serving permissions in the hosting project."
+  description = "Existing STACKIT project the automation service accounts (this architecture's and the SKE cluster's) are created in — e.g. a foundation project. Not the hosting project, which is provisioned at order time."
+}
+
+variable "stackit_organization_id" {
+  type        = string
+  nullable    = false
+  description = "STACKIT organization the automation service accounts are granted roles on, so the grants are inherited by the hosting project created at order time."
 }
 
 variable "host_platform_identifier" {

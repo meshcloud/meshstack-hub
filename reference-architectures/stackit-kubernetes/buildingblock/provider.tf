@@ -1,9 +1,13 @@
 # The meshstack provider is configured by the meshStack runtime at order time (mesh http backend), so
 # it is intentionally not declared here.
 
+# Authentication comes entirely from the environment via Workload Identity Federation:
+# STACKIT_SERVICE_ACCOUNT_EMAIL, STACKIT_USE_OIDC and STACKIT_FEDERATED_TOKEN_FILE are injected by
+# meshStack. The architecture's backplane (registered with the definition) provisions the identity.
 provider "stackit" {
-  default_region      = var.stackit_region
-  service_account_key = var.stackit_service_account_key
+  default_region = var.stackit_region
+  # Required for the authorization role assignments the nested SKE Cluster backplane creates.
+  experiments = ["iam"]
 }
 
 # Forgejo organization management on the STACKIT Git instance.

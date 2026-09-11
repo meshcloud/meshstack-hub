@@ -16,6 +16,25 @@ variable "bbd_readme" {
   description = "Overrides the markdown readme shown in the marketplace before ordering."
 }
 
+variable "stackit_backplane_project_id" {
+  type        = string
+  nullable    = false
+  description = "Existing STACKIT project the automation service accounts (this architecture's and the SKE cluster's) are created in — e.g. a foundation project. Applying this file creates a service account here."
+}
+
+variable "stackit_organization_id" {
+  type        = string
+  nullable    = false
+  description = "STACKIT organization the automation service accounts are granted roles on, so the grants are inherited by the hosting project created at order time."
+}
+
+variable "stackit_backplane_roles" {
+  type        = list(string)
+  nullable    = false
+  default     = ["resource-manager.admin", "iam.member-admin", "ske.admin", "dns.admin", "git.admin", "model-serving.admin"]
+  description = "Organization-level roles granted to this architecture's automation service account. It provisions the SKE cluster's backplane (needs resource-manager/iam admin) and creates git/DNS/model-serving resources in the hosting project. Adjust to the exact STACKIT role names your organization uses."
+}
+
 variable "meshstack" {
   type = object({
     owning_workspace_identifier = string
@@ -58,6 +77,34 @@ output "building_block_definition" {
   value = {
     uuid        = meshstack_building_block_definition.this.metadata.uuid
     version_ref = var.hub.bbd_draft ? meshstack_building_block_definition.this.version_latest : meshstack_building_block_definition.this.version_latest_release
+  }
+}
+
+# Applying this file creates the backplane service account below, so it authenticates to STACKIT with
+# the applying engineer's credentials (from the environment). experiments=["iam"] enables the
+# authorization role assignments the backplane makes.
+provider "stackit" {
+  experiments = ["iam"]
+}
+
+# Automation identity for this architecture's own run (git/DNS/model-serving in the hosting project,
+# and provisioning the SKE cluster's backplane). Created when this file is applied, so registration
+# needs org-admin STACKIT credentials.
+data "meshstack_integrations" "integrations" {}
+
+module "backplane" {
+  source = "github.com/meshcloud/meshstack-hub//modules/ske/cluster/backplane?ref=${var.hub.git_ref}"
+
+  project_id           = var.stackit_backplane_project_id
+  organization_id      = var.stackit_organization_id
+  roles                = var.stackit_backplane_roles
+  service_account_name = "mesh-ske-platform"
+
+  workload_identity_federation = {
+    issuer = data.meshstack_integrations.integrations.workload_identity_federation.replicator.issuer
+    subjects = [
+      "${trimsuffix(data.meshstack_integrations.integrations.workload_identity_federation.replicator.subject, ":replicator")}:workspace.${var.meshstack.owning_workspace_identifier}.buildingblockdefinition.${meshstack_building_block_definition.this.metadata.uuid}"
+    ]
   }
 }
 
@@ -151,14 +198,49 @@ resource "meshstack_building_block_definition" "this" {
     }
 
     inputs = {
-      # ── STACKIT authentication ──
-      stackit_service_account_key = {
-        display_name           = "STACKIT Service Account Key"
-        description            = "Service account key JSON, reused on every run. Needs SKE, Git, DNS and Model Serving permissions in the hosting project."
-        type                   = "CODE"
-        assignment_type        = "USER_INPUT"
-        updateable_by_consumer = true
-        sensitive              = {}
+      # ── STACKIT authentication (Workload Identity Federation, no key) ──
+      STACKIT_SERVICE_ACCOUNT_EMAIL = {
+        display_name    = "STACKIT Service Account Email"
+        description     = "Email of the STACKIT service account this architecture authenticates as via WIF."
+        type            = "STRING"
+        assignment_type = "STATIC"
+        is_environment  = true
+        argument        = jsonencode(module.backplane.service_account_email)
+      }
+
+      STACKIT_USE_OIDC = {
+        display_name    = "STACKIT Use OIDC"
+        description     = "Enables OIDC-based WIF for the STACKIT provider."
+        type            = "STRING"
+        assignment_type = "STATIC"
+        is_environment  = true
+        argument        = jsonencode("1")
+      }
+
+      STACKIT_FEDERATED_TOKEN_FILE = {
+        display_name    = "STACKIT Federated Token File"
+        description     = "Path to the WIF token file injected by meshStack."
+        type            = "STRING"
+        assignment_type = "STATIC"
+        is_environment  = true
+        argument        = jsonencode("/var/run/secrets/workload-identity/azure/token")
+      }
+
+      # Passed through to the nested SKE Cluster integration, which provisions its own backplane.
+      stackit_backplane_project_id = {
+        display_name    = "STACKIT Backplane Project ID"
+        description     = "Existing STACKIT project the cluster's automation service account is created in."
+        type            = "STRING"
+        assignment_type = "STATIC"
+        argument        = jsonencode(var.stackit_backplane_project_id)
+      }
+
+      stackit_organization_id = {
+        display_name    = "STACKIT Organization ID"
+        description     = "STACKIT organization the automation service accounts are granted roles on."
+        type            = "STRING"
+        assignment_type = "STATIC"
+        argument        = jsonencode(var.stackit_organization_id)
       }
 
       hub = {
@@ -441,6 +523,10 @@ terraform {
       source = "meshcloud/meshstack"
       # 0.25 added the `is_optional` input attribute the Forgejo token relies on.
       version = ">= 0.25.0"
+    }
+    stackit = {
+      source  = "stackitcloud/stackit"
+      version = ">= 0.98.0, < 1.0.0"
     }
   }
 }

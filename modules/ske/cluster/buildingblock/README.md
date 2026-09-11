@@ -2,9 +2,6 @@
 name: STACKIT SKE Cluster
 supportedPlatforms:
   - stackit
-# No cloud-side setup: the module authenticates with a STACKIT service account key passed as a static
-# environment input, so there is no backplane to deploy.
-requiresBackplane: false
 description: Provisions a STACKIT Kubernetes Engine (SKE) cluster with a node pool and mints an admin kubeconfig.
 ---
 

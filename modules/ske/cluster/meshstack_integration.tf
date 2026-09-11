@@ -1,3 +1,15 @@
+variable "stackit_backplane_project_id" {
+  type        = string
+  nullable    = false
+  description = "Existing STACKIT project the backplane creates the automation service account in (e.g. a foundation project). Not the cluster's own project, which is provisioned at order time and supplied as the buildingblock's `stackit_project_id` input."
+}
+
+variable "stackit_organization_id" {
+  type        = string
+  nullable    = false
+  description = "STACKIT organization the automation service account is granted SKE roles on, so the grant is inherited by the cluster project created at order time."
+}
+
 variable "bbd_display_name" {
   type        = string
   default     = null
@@ -44,6 +56,22 @@ output "building_block_definition" {
   value = {
     uuid        = meshstack_building_block_definition.this.metadata.uuid
     version_ref = var.hub.bbd_draft ? meshstack_building_block_definition.this.version_latest : meshstack_building_block_definition.this.version_latest_release
+  }
+}
+
+data "meshstack_integrations" "integrations" {}
+
+module "backplane" {
+  source = "github.com/meshcloud/meshstack-hub//modules/ske/cluster/backplane?ref=${var.hub.git_ref}"
+
+  project_id      = var.stackit_backplane_project_id
+  organization_id = var.stackit_organization_id
+
+  workload_identity_federation = {
+    issuer = data.meshstack_integrations.integrations.workload_identity_federation.replicator.issuer
+    subjects = [
+      "${trimsuffix(data.meshstack_integrations.integrations.workload_identity_federation.replicator.subject, ":replicator")}:workspace.${var.meshstack.owning_workspace_identifier}.buildingblockdefinition.${meshstack_building_block_definition.this.metadata.uuid}"
+    ]
   }
 }
 
@@ -112,15 +140,32 @@ resource "meshstack_building_block_definition" "this" {
     }
 
     inputs = {
-      # ── STACKIT authentication ──
-      # A composing architecture passes its own service account key down when it orders this cluster.
-      STACKIT_SERVICE_ACCOUNT_KEY = {
-        display_name    = "STACKIT Service Account Key"
-        description     = "Service account key JSON used to authenticate the STACKIT provider. Needs permission to manage SKE in the target project."
-        type            = "CODE"
-        assignment_type = "USER_INPUT"
+      # ── STACKIT authentication (Workload Identity Federation, no key) ──
+      STACKIT_SERVICE_ACCOUNT_EMAIL = {
+        display_name    = "STACKIT Service Account Email"
+        description     = "Email of the STACKIT service account the provider authenticates as via WIF."
+        type            = "STRING"
+        assignment_type = "STATIC"
         is_environment  = true
-        sensitive       = {}
+        argument        = jsonencode(module.backplane.service_account_email)
+      }
+
+      STACKIT_USE_OIDC = {
+        display_name    = "STACKIT Use OIDC"
+        description     = "Enables OIDC-based WIF for the STACKIT provider."
+        type            = "STRING"
+        assignment_type = "STATIC"
+        is_environment  = true
+        argument        = jsonencode("1")
+      }
+
+      STACKIT_FEDERATED_TOKEN_FILE = {
+        display_name    = "STACKIT Federated Token File"
+        description     = "Path to the WIF token file injected by meshStack."
+        type            = "STRING"
+        assignment_type = "STATIC"
+        is_environment  = true
+        argument        = jsonencode("/var/run/secrets/workload-identity/azure/token")
       }
 
       # ── Cluster placement and identity ──
