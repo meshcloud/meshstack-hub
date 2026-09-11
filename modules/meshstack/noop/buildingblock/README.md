@@ -69,8 +69,7 @@ meshStack's remaining input and output kinds cannot be exercised here, for two r
   only thing it feeds is a tenant's console link and a workspace has no tenant. A test that reads
   the output back still passes, so declaring one here would look like coverage and prove nothing.
 - **Needs setup beyond this module.** `BUILDING_BLOCK_OUTPUT` needs a second definition to read an
-  output from, and `TAG` needs a tag definition in the instance's tag schema plus a tag value on the
-  workspace.
+  output from.
 
 `LIST` is deprecated in favour of `CODE`, so it is deliberately absent.
 
