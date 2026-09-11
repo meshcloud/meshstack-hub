@@ -62,6 +62,22 @@ resource "meshstack_building_block" "this" {
 
     inputs = {
       storage_account_name = { value = jsonencode(local.storage_account_name_prefix) }
+
+      account_tier             = { value = jsonencode("Standard") }
+      account_replication_type = { value = jsonencode("GRS") }
+
+      # blob_soft_delete_retention_days is intentionally left out of the building block's inputs
+      # (it's an optional input) to test that the Terraform variable's own default (null, meaning
+      # "leave soft-delete disabled") flows through.
+
+      # A JSON-type input's value is the JSON text a meshPanel form would produce, so it's encoded
+      # twice: once to build that JSON text, once more because `value` itself is JSON-encoded.
+      network_rules = {
+        value = jsonencode(jsonencode({
+          default_action = "Deny"
+          ip_rules       = ["203.0.113.0/24"]
+        }))
+      }
     }
   }
 }
