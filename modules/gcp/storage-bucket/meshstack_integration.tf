@@ -36,24 +36,6 @@ variable "bbd_readme" {
   description = "Overrides the markdown readme shown in the marketplace before ordering."
 }
 
-variable "bbd_display_name" {
-  type        = string
-  default     = null
-  description = "Overrides the name of the marketplace entry application teams see in the catalog."
-}
-
-variable "bbd_description" {
-  type        = string
-  default     = null
-  description = "Overrides the one-line description shown next to the marketplace entry."
-}
-
-variable "bbd_readme" {
-  type        = string
-  default     = null
-  description = "Overrides the markdown readme shown in the marketplace before ordering."
-}
-
 variable "meshstack" {
   type = object({
     owning_workspace_identifier = string
