@@ -41,10 +41,10 @@ export TF_VAR_test_context
 TF_VAR_test_context=$(jq -c --arg ref "$(git rev-parse HEAD)" \
 	'del(._comment) | .hub_git_ref = $ref' ci/validate_tf_full_mock_context.json) || exit 1
 
-# That ref exists only here - a pull_request build sits on a merge commit no
-# branch points at - so the hub resolves to this working copy. A clone from a
-# local path copies every object, so the commit is found and nothing is fetched
-# over the network. Only e2e roots get this: everything else pins a real ref.
+# That ref is the commit under test, and on a pull_request build it is a merge commit
+# no branch points at - an https clone copies only refs/heads/*, so it could not fetch
+# it. This working copy already has it, and a clone from a local path copies every
+# object, so pointing the hub at it resolves the ref without a second checkout.
 hub_worktree=$PWD
 
 # Named roots rather than exclusions: every other .tf in the repo belongs to the
@@ -56,6 +56,8 @@ dirs=$(find modules infra reference-architectures -name '*.tf' \
 validate_dir() {
 	local dir="$1" log="$workdir/$(tr '/' '_' <<< "$1").log"
 	if [[ $dir == */e2e || $dir == */e2e/* ]]; then
+		# Send the hub's clone url to the working copy, for e2e roots only:
+		# everything else pins a real ref a normal clone can reach.
 		export GIT_CONFIG_COUNT=1
 		export GIT_CONFIG_KEY_0="url.$hub_worktree/.insteadOf"
 		export GIT_CONFIG_VALUE_0=https://github.com/meshcloud/meshstack-hub.git
