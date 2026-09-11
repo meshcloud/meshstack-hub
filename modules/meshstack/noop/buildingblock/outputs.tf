@@ -56,7 +56,7 @@ output "hidden_conditional_text" {
 }
 
 output "deploy_settings" {
-  value = jsondecode(var.deploy_settings)
+  value = var.deploy_settings
 }
 
 output "sensitive_text" {

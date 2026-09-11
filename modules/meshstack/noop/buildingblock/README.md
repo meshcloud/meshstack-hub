@@ -35,7 +35,7 @@ Use it to:
 | `optional_text`           | `STRING`             | `USER_INPUT`                     | Optional string — can be omitted from the building block's inputs so the Terraform variable's default takes effect    |
 | `conditional_text`        | `STRING`             | `USER_INPUT`         | Its `condition` (`input.flag == true`) holds, so it is asked for and its value flows through                         |
 | `hidden_conditional_text` | `STRING`             | `USER_INPUT`         | Its `condition` (`input.flag == false`) never holds here, so it stays hidden and can be skipped                       |
-| `deploy_settings`         | `JSON`               | `USER_INPUT`         | Filled in through a meshPanel form declared by `json_schema`, reaches Terraform as JSON text                          |
+| `deploy_settings`         | `JSON`               | `USER_INPUT`         | Filled in through a meshPanel form declared by `json_schema`, decoded into the Terraform variable's declared object type |
 | `sensitive_text`          | `STRING` (sensitive) | `USER_INPUT`                     | Sensitive string, masked in UI and logs                                                                               |
 | `single_select`           | `SINGLE_SELECT`      | `USER_INPUT`                     | One value from a predefined list                                                                                      |
 | `multi_select`            | `MULTI_SELECT`       | `USER_INPUT`                     | One or more values from a predefined list                                                                             |
@@ -107,7 +107,7 @@ No modules.
 |------|-------------|------|---------|:--------:|
 | <a name="input_author"></a> [author](#input\_author) | Principal that ordered this building block, injected by the AUTHOR assignment type. | <pre>object({<br/>    type        = string<br/>    identifier  = string<br/>    displayName = string<br/>    username    = optional(string)<br/>    email       = optional(string)<br/>    euid        = optional(string)<br/>  })</pre> | n/a | yes |
 | <a name="input_conditional_text"></a> [conditional\_text](#input\_conditional\_text) | n/a | `string` | `"tf-default-value"` | no |
-| <a name="input_deploy_settings"></a> [deploy\_settings](#input\_deploy\_settings) | n/a | `string` | n/a | yes |
+| <a name="input_deploy_settings"></a> [deploy\_settings](#input\_deploy\_settings) | n/a | <pre>object({<br/>    greeting = string<br/>    shout    = optional(bool)<br/>  })</pre> | n/a | yes |
 | <a name="input_flag"></a> [flag](#input\_flag) | n/a | `bool` | n/a | yes |
 | <a name="input_hidden_conditional_text"></a> [hidden\_conditional\_text](#input\_hidden\_conditional\_text) | n/a | `string` | `"tf-default-value"` | no |
 | <a name="input_multi_select"></a> [multi\_select](#input\_multi\_select) | n/a | `list(string)` | n/a | yes |

@@ -72,8 +72,9 @@ resource "meshstack_building_block" "this" {
       conditional_text = { value = jsonencode("Shown because flag is true") }
       # hidden_conditional_text = <nothing>  -> Its condition (`input.flag == false`) never holds while flag is true,
       # so meshPanel hides it and it can be safely skipped here, exactly like optional_text.
-      # A JSON-type input reaches Terraform as raw JSON text, exactly like a CODE input, so it must be jsonencode'd twice.
-      deploy_settings   = { value = jsonencode(jsonencode({ greeting = "Hello from e2e", shout = true })) }
+      # A JSON-type input decodes into the variable's declared type (see buildingblock/variables.tf),
+      # so it only needs one jsonencode() here, same as any other non-string-typed input.
+      deploy_settings   = { value = jsonencode({ greeting = "Hello from e2e", shout = true }) }
       sensitive_text    = { sensitive = { secret_value = "Hidden value" } }
       single_select     = { value = jsonencode("single1") }
       multi_select      = { value = jsonencode(["multi1", "multi2"]) }

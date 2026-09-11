@@ -64,9 +64,13 @@ variable "hidden_conditional_text" {
 }
 
 variable "deploy_settings" {
-  # A JSON-type input reaches Terraform as raw JSON text, exactly like a CODE input; the JSON Schema
-  # only shapes the meshPanel form that produces it.
-  type = string
+  # meshStack decodes a JSON-type input into the Terraform variable's declared type, matching the
+  # shape of the json_schema below — same as a CODE input decodes into whatever type its variable
+  # declares (see tag_value, static_code).
+  type = object({
+    greeting = string
+    shout    = optional(bool)
+  })
 }
 
 variable "sensitive_text" {
