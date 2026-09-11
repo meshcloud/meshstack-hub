@@ -21,4 +21,26 @@ run "azure_storage_account_hub" {
     condition     = startswith(jsondecode(meshstack_building_block.this.status.outputs["storage_account_resource_group"].value), "rg-st")
     error_message = "expected storage_account_resource_group to start with 'rg-st', got ${jsondecode(meshstack_building_block.this.status.outputs["storage_account_resource_group"].value)}"
   }
+
+  # Optional input: blob_soft_delete_retention_days is left out of the building block's inputs (see
+  # e2e/main.tf), so this asserts the Terraform variable's own default (7 days) flows through.
+  assert {
+    condition     = jsondecode(meshstack_building_block.this.status.outputs["blob_soft_delete_retention_days"].value) == 7
+    error_message = "expected blob_soft_delete_retention_days to default to 7, got ${jsondecode(meshstack_building_block.this.status.outputs["blob_soft_delete_retention_days"].value)}"
+  }
+
+  # Gated input: restrict_network_access is true, so network_rules is asked for and its JSON
+  # Schema-driven value (ip_rules) applies against a default_action of "Deny", implied by the flag.
+  assert {
+    condition     = jsondecode(meshstack_building_block.this.status.outputs["network_default_action"].value) == "Deny"
+    error_message = "expected network_default_action to be 'Deny', got ${jsondecode(meshstack_building_block.this.status.outputs["network_default_action"].value)}"
+  }
+
+  # Tag-backed input: the shared test workspace carries a BusinessUnit tag set to "M25", so
+  # business_unit resolves to that value and a matching tag is applied to the storage account.
+  # tags is a CODE-type output, hence the double decode (same as author/static_code in meshstack/noop).
+  assert {
+    condition     = jsondecode(jsondecode(meshstack_building_block.this.status.outputs["tags"].value)) == { BusinessUnit = "M25" }
+    error_message = "expected tags to contain the resolved BusinessUnit tag, got ${jsondecode(meshstack_building_block.this.status.outputs["tags"].value)}"
+  }
 }
