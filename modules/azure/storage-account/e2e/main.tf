@@ -43,6 +43,10 @@ module "storage_account" {
 
   # Unique backplane name per test run so role definitions don't clash across concurrent/retried runs.
   backplane_name = "hub-e2e-stg-${var.test_context.name_suffix}"
+
+  # The module defaults to copying no tag; this test opts into BusinessUnit explicitly. The shared
+  # test workspace carries a BusinessUnit tag set to "M25".
+  workspace_tag_to_copy = "BusinessUnit"
 }
 
 resource "meshstack_building_block" "this" {
@@ -62,6 +66,23 @@ resource "meshstack_building_block" "this" {
 
     inputs = {
       storage_account_name = { value = jsonencode(local.storage_account_name_prefix) }
+
+      # blob_soft_delete_retention_days is intentionally left out of the building block's inputs
+      # (it's an optional input) to test that the Terraform variable's own default (7 days) flows
+      # through. It can't default to null: meshStack's output validation fails a run that reports
+      # null for a declared output.
+
+      restrict_network_access = { value = jsonencode(true) }
+
+      # meshStack's API always stores a JSON-type input's value as JSON text, so it's encoded twice
+      # here: once to build that JSON text, once more because `value` itself is JSON-encoded. The
+      # building block runner still passes the underlying JSON text through as TF_VAR_network_rules,
+      # which OpenTofu decodes into the object type declared in variables.tf.
+      network_rules = {
+        value = jsonencode(jsonencode({
+          ip_rules = ["203.0.113.0/24"]
+        }))
+      }
     }
   }
 }
