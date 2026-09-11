@@ -13,3 +13,19 @@ output "storage_account_resource_group" {
 output "storage_account_url" {
   value = "https://portal.azure.com/#@${data.azurerm_client_config.current.tenant_id}/resource${azurerm_storage_account.storage_account.id}/overview"
 }
+
+output "account_replication_type" {
+  value = azurerm_storage_account.storage_account.account_replication_type
+}
+
+output "tags" {
+  value = azurerm_storage_account.storage_account.tags
+}
+
+output "network_default_action" {
+  value = azurerm_storage_account.storage_account.network_rules[0].default_action
+}
+
+output "blob_soft_delete_retention_days" {
+  value = azurerm_storage_account.storage_account.blob_properties[0].delete_retention_policy[0].days
+}

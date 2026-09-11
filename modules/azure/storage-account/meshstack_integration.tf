@@ -204,6 +204,67 @@ resource "meshstack_building_block_definition" "this" {
         assignment_type = "STATIC"
         argument        = jsonencode(var.azure_location)
       }
+      account_tier = {
+        type              = "SINGLE_SELECT"
+        display_name      = "Account Tier"
+        description       = "Performance tier of the storage account. Premium only supports LRS/ZRS replication, so the Replication Type input is hidden and fixed to LRS when Premium is selected."
+        assignment_type   = "USER_INPUT"
+        selectable_values = ["Standard", "Premium"]
+        default_value     = jsonencode("Standard")
+      }
+      account_replication_type = {
+        type              = "SINGLE_SELECT"
+        display_name      = "Replication Type"
+        description       = "Only asked for while Account Tier is Standard; meshPanel hides it and meshStack sends no value for it when Premium is selected."
+        assignment_type   = "USER_INPUT"
+        selectable_values = ["LRS", "GRS", "RAGRS", "ZRS"]
+        condition         = "input.account_tier == \"Standard\""
+      }
+      blob_soft_delete_retention_days = {
+        type            = "INTEGER"
+        display_name    = "Blob Soft-Delete Retention (Days)"
+        description     = "Optional: leave blank to use the default 7-day blob soft-delete retention, or set your own retention period in days."
+        assignment_type = "USER_INPUT"
+        is_optional     = true
+      }
+      business_unit = {
+        type            = "CODE"
+        display_name    = "Business Unit"
+        description     = "Value of the workspace's BusinessUnit tag, applied automatically as a tag on the storage account rather than typed in by a user."
+        assignment_type = "TAG"
+        argument        = jsonencode("WORKSPACE.BusinessUnit")
+      }
+      network_rules = {
+        type            = "JSON"
+        display_name    = "Network Rules"
+        description     = "Restricts network access to the storage account, filled in through a meshPanel form rendered from the JSON Schema below and passed to Terraform as a typed object."
+        assignment_type = "USER_INPUT"
+        json_schema = jsonencode({
+          type     = "object"
+          required = ["default_action"]
+          properties = {
+            default_action = {
+              type = "string"
+              enum = ["Allow", "Deny"]
+            }
+            bypass = {
+              type = "array"
+              items = {
+                type = "string"
+                enum = ["AzureServices", "Logging", "Metrics", "None"]
+              }
+            }
+            ip_rules = {
+              type  = "array"
+              items = { type = "string" }
+            }
+            virtual_network_subnet_ids = {
+              type  = "array"
+              items = { type = "string" }
+            }
+          }
+        })
+      }
     }
 
     outputs = {
@@ -231,6 +292,30 @@ resource "meshstack_building_block_definition" "this" {
         description     = "Azure Portal URL to the storage account"
         assignment_type = "RESOURCE_URL"
       }
+      account_replication_type = {
+        type            = "STRING"
+        display_name    = "Replication Type"
+        description     = "The replication type actually applied to the storage account."
+        assignment_type = "NONE"
+      }
+      tags = {
+        type            = "CODE"
+        display_name    = "Tags"
+        description     = "Tags actually applied to the storage account, including the resolved Cost Center tag."
+        assignment_type = "NONE"
+      }
+      network_default_action = {
+        type            = "STRING"
+        display_name    = "Network Default Action"
+        description     = "The default network action (Allow/Deny) actually applied to the storage account."
+        assignment_type = "NONE"
+      }
+      blob_soft_delete_retention_days = {
+        type            = "INTEGER"
+        display_name    = "Blob Soft-Delete Retention (Days)"
+        description     = "The blob soft-delete retention period actually applied, or null if left disabled."
+        assignment_type = "NONE"
+      }
     }
   }
 }
@@ -241,7 +326,7 @@ terraform {
   required_providers {
     meshstack = {
       source  = "meshcloud/meshstack"
-      version = ">= 0.21.0"
+      version = ">= 0.25.3"
     }
     azurerm = {
       source  = "hashicorp/azurerm"
