@@ -19,3 +19,8 @@ provider "aws" {
   region              = var.test_context.fixtures.aws.region
   allowed_account_ids = [var.test_context.fixtures.aws.account_id]
 }
+
+# Self-configuring from the MESHSTACK_* environment. Naming a provider in a child module's
+# `providers` map needs a configuration declared here — an inherited default does not qualify — and
+# the map has to list every provider the child gets, `aws.management` included.
+provider "meshstack" {}
