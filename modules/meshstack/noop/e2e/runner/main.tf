@@ -1,3 +1,25 @@
+# A tag input reads its value from an existing meshStack tag, so the e2e test provisions its own
+# tag definition and sets it on the test workspace — see ../main.tf for why referencing its
+# `spec.key` from the module's `tag_key` input gets destroy order right on its own.
+resource "meshstack_tag_definition" "noop_e2e" {
+  spec = {
+    target_kind  = "meshWorkspace"
+    key          = "noop-e2e-runner-tag-${var.test_context.run_id}"
+    display_name = "NoOp E2E Runner Tag"
+    value_type   = { string = {} }
+  }
+}
+
+resource "meshstack_workspace_tag" "noop_e2e" {
+  metadata = {
+    workspace_identifier = var.test_context.workspace
+    key                  = meshstack_tag_definition.noop_e2e.spec.key
+  }
+  spec = {
+    values = ["e2e-tag-value"]
+  }
+}
+
 module "backplane" {
   source = "../../backplane"
 
@@ -22,11 +44,17 @@ module "noop" {
     git_ref   = var.test_context.hub_git_ref
     bbd_draft = true
   }
+  tag_object = "WORKSPACE"
+  tag_key    = meshstack_tag_definition.noop_e2e.spec.key
+
   runner_ref = module.backplane.runner_ref
   depends_on = [module.backplane] # Without the backplane there is no runner and no place to run the BB.
 }
 
 resource "meshstack_building_block" "this" {
+  # ensures the tag has a value before the building block run reads it
+  depends_on = [module.noop, meshstack_workspace_tag.noop_e2e] # Destroy the instance before the definition to avoid reference errors.
+
   wait_for_completion = true
   spec = {
     building_block_definition_version_ref = module.noop.building_block_definition.version_ref
@@ -54,6 +82,4 @@ resource "meshstack_building_block" "this" {
       operator_text = { value = jsonencode("Set by the platform operator") }
     }
   }
-
-  depends_on = [module.noop] # Destroy the instance before the definition to avoid reference errors.
 }
