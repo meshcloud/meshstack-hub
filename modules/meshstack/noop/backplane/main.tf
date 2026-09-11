@@ -113,12 +113,26 @@ resource "google_cloud_run_v2_service" "runner" {
   deletion_protection = false
 
   template {
+    # The runner claims work by polling the meshStack API from a background goroutine, so no
+    # request ever reaches this service. Cloud Run's defaults assume the opposite: it reclaims an
+    # instance that serves no requests, which silently stops the runner and parks every dispatched
+    # run in PENDING.
+    scaling {
+      min_instance_count = 1
+      # One instance per runner registration: a second one would poll for the same runnerUuid.
+      max_instance_count = 1
+    }
+
     service_account = local.cloud_run_service_account
 
     containers {
       image = var.gcp_runner_image
 
       resources {
+        # Same reason as `scaling` above: with CPU allocated only during requests, the poll loop is
+        # throttled between health probes instead of running.
+        cpu_idle = false
+
         limits = {
           cpu = "2"
           # 512MiB did crash for the noop BB at pre-run script level, so did 1024:
