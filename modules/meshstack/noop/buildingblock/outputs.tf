@@ -27,6 +27,10 @@ output "static_code" {
   value = var.static_code
 }
 
+output "tag_value" {
+  value = var.tag_value
+}
+
 output "flag" {
   value = var.flag
 }
@@ -41,6 +45,18 @@ output "text" {
 
 output "optional_text" {
   value = var.optional_text
+}
+
+output "conditional_text" {
+  value = var.conditional_text
+}
+
+output "hidden_conditional_text" {
+  value = var.hidden_conditional_text
+}
+
+output "deploy_settings" {
+  value = var.deploy_settings
 }
 
 output "sensitive_text" {
@@ -114,22 +130,26 @@ output "debug_input_variables_json" {
   description = "JSON-encoded map of all input variables received, including sensitive values in plaintext."
   sensitive   = true # For test only. Do not do this in production code.
   value = jsonencode({
-    flag                  = var.flag
-    num                   = var.num
-    text                  = var.text
-    optional_text         = var.optional_text
-    single_select         = var.single_select
-    sensitive_text        = var.sensitive_text
-    sensitive_yaml        = var.sensitive_yaml
-    multi_select          = var.multi_select
-    multi_select_json     = var.multi_select_json
-    static                = var.static
-    static_code           = var.static_code
-    user_permissions      = var.user_permissions
-    user_permissions_json = var.user_permissions_json
-    author                = var.author
-    operator_text         = var.operator_text
-    workspace_identifier  = var.workspace_identifier
+    flag                    = var.flag
+    num                     = var.num
+    text                    = var.text
+    optional_text           = var.optional_text
+    conditional_text        = var.conditional_text
+    hidden_conditional_text = var.hidden_conditional_text
+    deploy_settings         = var.deploy_settings
+    single_select           = var.single_select
+    sensitive_text          = var.sensitive_text
+    sensitive_yaml          = var.sensitive_yaml
+    multi_select            = var.multi_select
+    multi_select_json       = var.multi_select_json
+    static                  = var.static
+    static_code             = var.static_code
+    tag_value               = var.tag_value
+    user_permissions        = var.user_permissions
+    user_permissions_json   = var.user_permissions_json
+    author                  = var.author
+    operator_text           = var.operator_text
+    workspace_identifier    = var.workspace_identifier
   })
 }
 
