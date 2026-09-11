@@ -36,13 +36,13 @@ run "building_block_noop_runner_hub" {
   }
 
   assert {
-    # Compared via jsonencode() on both sides — see the equivalent assert in
-    # building_block_noop_hub.tftest.hcl for why a raw `==` is unsafe here.
+    # deploy_settings is a CODE-type output, so it needs a double jsondecode() — see the equivalent
+    # assert in building_block_noop_hub.tftest.hcl for why.
     condition = (
-      jsonencode(jsondecode(meshstack_building_block.this.status.outputs["deploy_settings"].value))
+      jsonencode(jsondecode(jsondecode(meshstack_building_block.this.status.outputs["deploy_settings"].value)))
       ==
       jsonencode({ greeting = "Hello from e2e", shout = true })
     )
-    error_message = "noop runner building block expected output deploy_settings to be {greeting = \"Hello from e2e\", shout = true}, got ${jsondecode(meshstack_building_block.this.status.outputs["deploy_settings"].value)}"
+    error_message = "noop runner building block expected output deploy_settings to be {greeting = \"Hello from e2e\", shout = true}, got ${jsonencode(jsondecode(jsondecode(meshstack_building_block.this.status.outputs["deploy_settings"].value)))}"
   }
 }
