@@ -84,6 +84,12 @@ resource "meshstack_tenant" "this" {
   # block is not in a final state.
   wait_for_completion = true
 
+  # Destroy runs this edge backwards, which is the point: the tenant goes before the bindings.
+  # A project user binding is a tenant-determined input of the landing zone's building block, so
+  # removing one marks that block as awaiting a run — and a tenant delete racing that marker is
+  # rejected. Creating the binding first also spares the block one reconcile run.
+  depends_on = [meshstack_project_user_binding.admin]
+
   metadata = {
     owned_by_workspace = meshstack_workspace.this.metadata.name
     owned_by_project   = meshstack_project.this.metadata.name
