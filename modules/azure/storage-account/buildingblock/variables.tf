@@ -24,9 +24,8 @@ variable "account_replication_type" {
 
 variable "blob_soft_delete_retention_days" {
   type        = number
-  default     = null
-  nullable    = true
-  description = "Number of days to retain deleted blobs. Optional: when omitted, blob soft-delete stays disabled."
+  default     = 7
+  description = "Number of days to retain deleted blobs. Optional: when omitted, this default applies."
 }
 
 variable "business_unit" {

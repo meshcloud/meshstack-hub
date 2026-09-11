@@ -67,8 +67,9 @@ resource "meshstack_building_block" "this" {
       account_replication_type = { value = jsonencode("GRS") }
 
       # blob_soft_delete_retention_days is intentionally left out of the building block's inputs
-      # (it's an optional input) to test that the Terraform variable's own default (null, meaning
-      # "leave soft-delete disabled") flows through.
+      # (it's an optional input) to test that the Terraform variable's own default (7 days) flows
+      # through. It can't default to null: meshStack's output validation fails a run that reports
+      # null for a declared output.
 
       # A JSON-type input's value is the JSON text a meshPanel form would produce, so it's encoded
       # twice: once to build that JSON text, once more because `value` itself is JSON-encoded.

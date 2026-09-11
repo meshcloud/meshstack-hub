@@ -38,7 +38,7 @@ provider "azurerm" {
 |-------------------------------------|-----------------|---------------|------------------------------------------------------------------------------------------------------------------------|
 | `account_tier`                      | `SINGLE_SELECT` | `USER_INPUT`  | `Standard` or `Premium` performance tier                                                                               |
 | `account_replication_type`          | `SINGLE_SELECT` | `USER_INPUT`  | Replication strategy; its `condition` (`input.account_tier == "Standard"`) hides it for Premium, which always uses LRS |
-| `blob_soft_delete_retention_days`   | `INTEGER`       | `USER_INPUT`  | Optional — can be omitted so blob soft-delete stays disabled                                                           |
+| `blob_soft_delete_retention_days`   | `INTEGER`       | `USER_INPUT`  | Optional — can be omitted to use the module's 7-day default retention                                                  |
 | `business_unit`                     | `CODE`          | `TAG`         | Value of the workspace's `BusinessUnit` tag, read by meshStack rather than typed in by a user                          |
 | `network_rules`                     | `JSON`          | `USER_INPUT`  | Filled in through a meshPanel form declared by `json_schema`, reaches Terraform as JSON text                          |
 
@@ -71,7 +71,7 @@ No modules.
 |------|-------------|------|---------|:--------:|
 | <a name="input_account_replication_type"></a> [account\_replication\_type](#input\_account\_replication\_type) | Replication strategy for the storage account. Only asked for while Account Tier is Standard; Premium storage always uses LRS, so this default is what a Premium deployment actually uses. | `string` | `"LRS"` | no |
 | <a name="input_account_tier"></a> [account\_tier](#input\_account\_tier) | Performance tier of the storage account. | `string` | `"Standard"` | no |
-| <a name="input_blob_soft_delete_retention_days"></a> [blob\_soft\_delete\_retention\_days](#input\_blob\_soft\_delete\_retention\_days) | Number of days to retain deleted blobs. Optional: when omitted, blob soft-delete stays disabled. | `number` | `null` | no |
+| <a name="input_blob_soft_delete_retention_days"></a> [blob\_soft\_delete\_retention\_days](#input\_blob\_soft\_delete\_retention\_days) | Number of days to retain deleted blobs. Optional: when omitted, this default applies. | `number` | `7` | no |
 | <a name="input_business_unit"></a> [business\_unit](#input\_business\_unit) | Value of the workspace's BusinessUnit tag, read by meshStack rather than typed in by a user. | `list(string)` | n/a | yes |
 | <a name="input_location"></a> [location](#input\_location) | The location/region where the storage account is created. | `string` | n/a | yes |
 | <a name="input_network_rules"></a> [network\_rules](#input\_network\_rules) | Network access restrictions for the storage account, filled in through a meshPanel form. | `string` | n/a | yes |

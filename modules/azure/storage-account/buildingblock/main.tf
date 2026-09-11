@@ -30,12 +30,9 @@ resource "azurerm_storage_account" "storage_account" {
 
   tags = var.business_unit != null ? { BusinessUnit = join(",", var.business_unit) } : {}
 
-  dynamic "blob_properties" {
-    for_each = var.blob_soft_delete_retention_days != null ? [1] : []
-    content {
-      delete_retention_policy {
-        days = var.blob_soft_delete_retention_days
-      }
+  blob_properties {
+    delete_retention_policy {
+      days = var.blob_soft_delete_retention_days
     }
   }
 

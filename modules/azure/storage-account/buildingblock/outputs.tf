@@ -27,7 +27,5 @@ output "network_default_action" {
 }
 
 output "blob_soft_delete_retention_days" {
-  # `try` so that a storage account created without a blob_properties.delete_retention_policy block
-  # (blob_soft_delete_retention_days left unset) reports null instead of failing on the missing index.
-  value = try(azurerm_storage_account.storage_account.blob_properties[0].delete_retention_policy[0].days, null)
+  value = azurerm_storage_account.storage_account.blob_properties[0].delete_retention_policy[0].days
 }

@@ -223,7 +223,7 @@ resource "meshstack_building_block_definition" "this" {
       blob_soft_delete_retention_days = {
         type            = "INTEGER"
         display_name    = "Blob Soft-Delete Retention (Days)"
-        description     = "Optional: leave blank to keep blob soft-delete disabled, or set a retention period in days to enable it."
+        description     = "Optional: leave blank to use the default 7-day blob soft-delete retention, or set your own retention period in days."
         assignment_type = "USER_INPUT"
         is_optional     = true
       }
