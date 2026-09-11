@@ -1,56 +1,43 @@
 variable "test_context" {
-  type = object({
-    hub_git_ref = string
-    workspace   = string
-    name_suffix = string
-
-    fixtures = object({
-      azure = object({
-        subscription_uuid = string
-        entra_tenant_id   = string
-      })
-    })
-  })
-
+  # Untyped: each mode module re-types it strictly, so every field it needs stays required.
+  type     = any
   nullable = false
+
+  validation {
+    condition     = can(var.test_context.workspace) && can(var.test_context.name_suffix)
+    error_message = "test_context must provide workspace and name_suffix."
+  }
+
+  validation {
+    # `try` because `test_context` is untyped, so a hub run need not set `mode` at all.
+    condition     = contains(["hub", "foundation"], try(var.test_context.mode, "hub"))
+    error_message = "test_context.mode must be \"hub\" (the default) or \"foundation\"."
+  }
 }
 
 locals {
-  azure_scope = "/subscriptions/${var.test_context.fixtures.azure.subscription_uuid}"
+  # Statically evaluated at `tofu init`, before any module is installed — so a foundation, which
+  # already published the definition, never even resolves the hub build tree.
+  mode = try(var.test_context.mode, "hub")
 
   # budget_name must be unique per test run to avoid conflicts on retried runs.
   # name_suffix is "YYYYMMDDhhmmss" (14 digits), prefix keeps the total short.
   budget_name = "e2e-${substr(var.test_context.name_suffix, 0, 12)}"
 }
 
-module "budget_alert" {
-  source = "../"
+module "definition" {
+  source = "./modes/${local.mode}"
 
-  meshstack = {
-    owning_workspace_identifier = var.test_context.workspace
-    tags                        = {}
-  }
-
-  hub = {
-    git_ref   = var.test_context.hub_git_ref
-    bbd_draft = true
-  }
-
-  azure_tenant_id       = var.test_context.fixtures.azure.entra_tenant_id
-  azure_subscription_id = var.test_context.fixtures.azure.subscription_uuid
-  azure_scope           = local.azure_scope
-
-  # Unique backplane name per test run so role definitions don't clash across concurrent/retried runs.
-  backplane_name = "hub-e2e-budget-${var.test_context.name_suffix}"
+  test_context = var.test_context
 }
 
 resource "meshstack_building_block" "this" {
-  depends_on = [module.budget_alert]
+  depends_on = [module.definition]
 
   wait_for_completion = true
 
   spec = {
-    building_block_definition_version_ref = module.budget_alert.building_block_definition.version_ref
+    building_block_definition_version_ref = { uuid = module.definition.version_ref.uuid }
 
     display_name = "smoke-test-budget-alert-${var.test_context.name_suffix}"
     target_ref = {
