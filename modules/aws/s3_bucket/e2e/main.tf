@@ -33,16 +33,6 @@ provider "aws" {
   allowed_account_ids = var.test_context.fixtures != null ? [var.test_context.fixtures.aws.account_id] : null
 }
 
-data "meshstack_integrations" "this" {}
-
-locals {
-  replicator = data.meshstack_integrations.this.workload_identity_federation.replicator
-
-  # The integration composes subjects as `system:serviceaccount:<prefix>:workspace.…`, so strip the
-  # replicator's own subject down to the namespace part it shares with every building block run.
-  subject_namespace_prefix = trimsuffix(trimprefix(local.replicator.subject, "system:serviceaccount:"), ":replicator")
-}
-
 module "aws_s3_bucket" {
   count  = var.test_context.bbd_version_ref == null ? 1 : 0
   source = "../"
@@ -62,12 +52,6 @@ module "aws_s3_bucket" {
   aws_oidc_provider_arn = var.test_context.fixtures.aws.oidc_provider_arn
 
   backplane_name = "${var.test_context.run_id}-s3"
-
-  workload_identity = {
-    issuer                   = local.replicator.issuer
-    audience                 = local.replicator.aws.audience
-    subject_namespace_prefix = local.subject_namespace_prefix
-  }
 }
 
 locals {
