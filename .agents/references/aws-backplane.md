@@ -15,7 +15,7 @@ Use WIF when the building block acts within a single AWS account (the backplane 
 - **No secrets rotation**: WIF tokens are short-lived JWTs issued by meshStack; no access keys to manage.
 - **BBD-scoped trust**: The IAM role trust policy is scoped to the specific building block definition UUID, preventing cross-BBD token reuse.
 - **OIDC-native**: AWS supports federated OIDC identities via `aws_iam_openid_connect_provider` out of the box.
-- **Shared OIDC provider**: Multiple backplanes can share a single OIDC provider in the same AWS account using `create_oidc_provider = false`.
+- **Shared OIDC provider**: every backplane in an account trusts the one provider `modules/aws/oidc-provider` registers, passed in as `oidc_provider_arn`.
 
 <!-- scorecard-checks: aws_wif_external_oidc_provider, aws_oidc_provider_notice -->
 ### The shared OIDC provider
@@ -331,9 +331,9 @@ two patterns, not between federation and a key inside Pattern A. Pattern B's acc
 different thing: it is the only credential that pattern has, and it authenticates a principal whose
 sole permission is `sts:AssumeRole`.
 
-`modules/aws/s3_bucket`, `modules/aws/route53-dns-record` and `modules/aws/route53-dns-alias-record`
-still carry the fallback shape. They are the remaining exceptions, not a pattern to copy — fix one
-the next time you are in it.
+No AWS backplane carries the fallback shape any more. `modules/aws/s3_bucket`,
+`modules/aws/route53-dns-record` and `modules/aws/route53-dns-alias-record` were the last three, and
+`aws_wif_no_access_key` keeps it that way.
 
 ---
 
