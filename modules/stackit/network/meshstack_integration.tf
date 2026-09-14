@@ -44,6 +44,12 @@ variable "bbd_readme" {
   description = "Overrides the markdown readme shown in the marketplace before ordering."
 }
 
+variable "building_block_runner_uuid" {
+  type        = string
+  default     = null
+  description = "Runs this building block on the given meshStack building block runner instead of the shared one meshStack hosts."
+}
+
 variable "meshstack" {
   type = object({
     owning_workspace_identifier = string
@@ -76,8 +82,6 @@ output "building_block_definition" {
   }
 }
 
-data "meshstack_integrations" "integrations" {}
-
 locals {
   network_allowed_prefix_lengths = [for i in range(var.stackit_network_min_prefix_length, var.stackit_network_max_prefix_length + 1) : i]
 }
@@ -90,10 +94,8 @@ module "backplane" {
   service_account_name = coalesce(var.stackit_service_account_name, "mesh-network")
 
   workload_identity_federation = {
-    issuer = data.meshstack_integrations.integrations.workload_identity_federation.replicator.issuer
-    subjects = [
-      "${trimsuffix(data.meshstack_integrations.integrations.workload_identity_federation.replicator.subject, ":replicator")}:workspace.${var.meshstack.owning_workspace_identifier}.buildingblockdefinition.${meshstack_building_block_definition.this.metadata.uuid}"
-    ]
+    issuer   = meshstack_building_block_definition.this.version_latest.workload_identity_federation.issuer
+    subjects = [meshstack_building_block_definition.this.version_latest.workload_identity_federation.subject]
   }
 }
 
@@ -148,6 +150,10 @@ resource "meshstack_building_block_definition" "this" {
   version_spec = {
     draft         = var.hub.bbd_draft
     deletion_mode = "DELETE"
+    runner_ref = var.building_block_runner_uuid == null ? null : {
+      kind = "meshBuildingBlockRunner"
+      uuid = var.building_block_runner_uuid
+    }
 
     implementation = {
       terraform = {
@@ -255,7 +261,7 @@ terraform {
   required_providers {
     meshstack = {
       source  = "meshcloud/meshstack"
-      version = ">= 0.21.0"
+      version = ">= 0.26.2"
     }
     stackit = {
       source  = "stackitcloud/stackit"
