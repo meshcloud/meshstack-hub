@@ -36,6 +36,12 @@ variable "bbd_readme" {
   description = "Overrides the markdown readme shown in the marketplace before ordering."
 }
 
+variable "building_block_runner_uuid" {
+  type        = string
+  default     = null
+  description = "Runs this building block on the given meshStack building block runner instead of the shared one meshStack hosts."
+}
+
 variable "meshstack" {
   type = object({
     owning_workspace_identifier = string
@@ -68,10 +74,11 @@ output "building_block_definition" {
   }
 }
 
-# Retrieve the workload identity federation configuration from meshStack.
-# The building block runners share the same OIDC issuer and audience as meshStack integrations,
-# so we reuse this data source to avoid hardcoding those values.
-data "meshstack_integrations" "integrations" {}
+data "meshstack_building_block_runner" "this" {
+  metadata = {
+    uuid = var.building_block_runner_uuid
+  }
+}
 
 module "backplane" {
   source = "github.com/meshcloud/meshstack-hub//modules/gcp/storage-bucket/backplane?ref=${var.hub.git_ref}"
@@ -81,13 +88,12 @@ module "backplane" {
 
   workload_identity_federation = {
     workload_identity_pool_identifier = var.workload_identity.pool_identifier
-    audience                          = data.meshstack_integrations.integrations.workload_identity_federation.replicator.gcp.audience
-    issuer                            = data.meshstack_integrations.integrations.workload_identity_federation.replicator.issuer
-    subjects = [
-      "${trimsuffix(data.meshstack_integrations.integrations.workload_identity_federation.replicator.subject, ":replicator")}:workspace.${var.meshstack.owning_workspace_identifier}.buildingblockdefinition"
-    ]
-    subject_token_file_path = var.workload_identity.subject_token_file_path
+    audience                          = data.meshstack_building_block_runner.this.spec.workload_identity_federation.gcp.audience
+    issuer                            = data.meshstack_building_block_runner.this.spec.workload_identity_federation.issuer
+    subject_token_file_path           = var.workload_identity.subject_token_file_path
   }
+
+  workload_identity_federation_subjects = [meshstack_building_block_definition.gcp_storage_bucket.status.workload_identity_federation.subject]
 }
 
 resource "meshstack_building_block_definition" "gcp_storage_bucket" {
@@ -138,6 +144,10 @@ resource "meshstack_building_block_definition" "gcp_storage_bucket" {
   version_spec = {
     draft         = var.hub.bbd_draft
     deletion_mode = "DELETE"
+    runner_ref = var.building_block_runner_uuid == null ? null : {
+      kind = "meshBuildingBlockRunner"
+      uuid = var.building_block_runner_uuid
+    }
 
     implementation = {
       terraform = {
@@ -229,7 +239,7 @@ terraform {
   required_providers {
     meshstack = {
       source  = "meshcloud/meshstack"
-      version = ">= 0.21.0"
+      version = ">= 0.26.0"
     }
     google = {
       source  = "hashicorp/google"
