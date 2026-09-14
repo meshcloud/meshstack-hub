@@ -58,8 +58,8 @@ resource "google_iam_workload_identity_pool_provider" "meshstack" {
 
   # Restrict token acceptance to the configured subjects.
   attribute_condition = join(" || ", [
-    for subject in var.workload_identity_federation.subjects :
-    "google.subject.startsWith('${subject}')"
+    for subject in var.workload_identity_federation_subjects :
+    "google.subject == '${subject}'"
   ])
 }
 
@@ -81,60 +81,39 @@ resource "google_project_iam_member" "buildingblock" {
 }
 ```
 
-`issuer`, `audience` and `subjects` must always come from `data.meshstack_integrations` in
-`meshstack_integration.tf` — never hardcoded. See the AWS and Azure references for the shared
-subject-derivation idiom.
+`issuer` and `audience` come from the runner data source and each subject from a definition's
+resolved status, never hardcoded. See
+[meshstack-integration.md § Runner identity](meshstack-integration.md#runner-identity).
 
 The backplane's `credentials_json` output is then an
 [external account](https://cloud.google.com/iam/docs/workload-identity-federation) credential
 document (`type = "external_account"`) pointing at the runner's token file, passed to the building
 block as a `FILE` input with `GOOGLE_APPLICATION_CREDENTIALS` set to its path.
 
-### Why GCP WIF subjects stop at the workspace
+### Keeping the subject out of the credentials
 
-`modules/azure/`, `modules/aws/` and `modules/stackit/` append the building block definition uuid to
-the subject; GCP deliberately does not because this creates a dependency cycle of the following form
+A GCP backplane pins its `attribute_condition` to the definition's resolved subject, exactly like
+every other cloud. Two things have to stay out of the way of the resulting dependency, because the
+definition consumes `credentials_json`:
 
-```hcl
-# --- backplane module ---
-resource "google_iam_workload_identity_pool_provider" "meshstack" {
-  # trust condition wants to name the specific BBD so that only a single BBD can assume the role
-  attribute_condition = "google.subject.startsWith('...buildingblockdefinition.${var.bbd_uuid}')"
-  ...
-}
+1. **The audience is built, not read.** `//iam.googleapis.com/${google_iam_workload_identity_pool_provider.meshstack.name}`
+   would make the credentials depend on the provider whose condition names the definition. The
+   provider's resource name is deterministic, so build it instead:
 
-output "credentials_json" {
-  # audience must reference *this* pool provider's resource name
-  value = jsonencode({
-    audience = "//iam.googleapis.com/${google_iam_workload_identity_pool_provider.meshstack.name}"
-    ...
-  })
-}
+   ```hcl
+   audience = "//iam.googleapis.com/projects/${data.google_project.this.number}/locations/global/workloadIdentityPools/${var.workload_identity_federation.workload_identity_pool_identifier}/providers/${var.workload_identity_federation.workload_identity_pool_identifier}"
+   ```
 
-# --- root module ---
-resource "meshstack_building_block_definition" "gcp_storage_bucket" {
-  # the BBD needs the backplane's credentials as a static input...
-  spec = {
-    inputs = {
-      secret_value = "data:application/json;base64,${base64encode(module.backplane.credentials_json)}"
-    }
-  }
-}
+2. **The subjects live in their own variable.** Terraform tracks a dependency on a whole variable,
+   not on the attribute actually read, so a subject inside `workload_identity_federation` would put
+   the pool, the `roles/iam.workloadIdentityUser` binding and `credentials_json` behind the
+   definition. Hence `variable "workload_identity_federation_subjects"`, read by nothing but the
+   `attribute_condition`.
 
-module "backplane" {
-  source = "./backplane"
-  # ...but the backplane needs the BBD's uuid to scope the trust condition, we now have a dependency cycle
-  bbd_uuid = meshstack_building_block_definition.gcp_storage_bucket.id
-}
-```
-
-The current workaround for this problem is to use an `attribute_condition` that does not pin the BBD uuid.
-A `startsWith` admits any building block definition owned by the same platform team workspace, so all of
-them share the backplane's federated identity — but authoring a definition in that workspace is
-already a privileged action, and in practice it coincides with being able to change the backplane
-itself. The residual cost is audit attribution: Cloud Audit Logs cannot tell which definition acted.
-Monitor https://feedback.meshcloud.io/feature-requests/p/introduce-building-block-definition-version-spec-resource-in-meshstack-terraform
-for progress on this matter.
+For the same reason the binding grants `roles/iam.workloadIdentityUser` on the whole pool
+(`principalSet://.../*`) rather than per subject: `time_sleep.wait_for_iam` waits on the binding and
+`credentials_json` waits on the sleep, so a per-subject member would close the cycle again. The
+`attribute_condition` is what does the narrowing.
 
 <!-- scorecard-checks: gcp_project_service_disable_on_destroy -->
 ## Project API enablement
@@ -308,11 +287,16 @@ variable "workload_identity_federation" {
     workload_identity_pool_identifier = string
     audience                          = string
     issuer                            = string
-    subjects                          = list(string)
     subject_token_file_path           = string
   })
   nullable    = false # required: there is no service account key fallback
-  description = "Workload identity federation settings sourced from data.meshstack_integrations."
+  description = "Workload identity federation settings describing the building block runner."
+}
+
+variable "workload_identity_federation_subjects" {
+  type        = list(string)
+  nullable    = false
+  description = "Subject claims the pool provider accepts, each matched exactly."
 }
 ```
 
@@ -341,7 +325,9 @@ Both existing modules expose these two. Do not add a `documentation_md` output �
 - ❌ `google_service_account_key` — use workload identity federation
 - ❌ Conditional WIF-vs-key logic: a nullable `workload_identity_federation` and a `count` on every
   federation resource
-- ❌ Hardcoded `issuer`, `audience` or `subjects` — source them from `data.meshstack_integrations`
+- ❌ Hardcoded `issuer`, `audience` or `subjects`
+- ❌ `google.subject.startsWith(...)` in the `attribute_condition`, the resolved subject is exact
+- ❌ Reading the credentials audience off `google_iam_workload_identity_pool_provider.meshstack.name`
 - ❌ Hardcoded workload identity pool identifier — soft-delete makes it unreusable for ~30 days
 - ❌ Granting the building block's service account `roles/serviceusage.serviceUsageAdmin` when the
   building block does not enable services
@@ -356,11 +342,11 @@ Both existing modules expose these two. Do not add a `documentation_md` output �
 - [ ] Workload identity pool + provider present
 - [ ] No `google_service_account_key` anywhere in `backplane/`
 - [ ] `workload_identity_federation` is `nullable = false` — no key fallback, no `default = null`
-- [ ] `attribute_condition` restricts `google.subject` to the configured subjects
+- [ ] `attribute_condition` matches `google.subject` exactly against each configured subject
 - [ ] `google_service_account_iam_binding` grants `roles/iam.workloadIdentityUser` on the pool
 - [ ] Workload identity pool identifier is an input, not a hardcoded literal
 - [ ] A `time_sleep` absorbs IAM propagation and the `credentials_json` output `depends_on` it
 - [ ] `credentials_json` (sensitive) and `service_account_email` outputs present
 - [ ] `backplane/README.md` documents the four required roles for the applying identity, the APIs
       enabled, and the pool soft-delete constraint
-- [ ] `meshstack_integration.tf` sources issuer/audience/subject from `data.meshstack_integrations`
+- [ ] `meshstack_integration.tf` follows [meshstack-integration.md § Runner identity](meshstack-integration.md#runner-identity)
