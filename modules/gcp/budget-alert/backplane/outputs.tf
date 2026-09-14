@@ -16,9 +16,11 @@ output "credentials_json" {
   description = "External account credentials the building block authenticates with. Points the runner at its own OIDC token file, which it exchanges for a short-lived access token."
   sensitive   = true
   value = jsonencode({
-    universe_domain                   = "googleapis.com"
-    type                              = "external_account"
-    audience                          = "//iam.googleapis.com/${google_iam_workload_identity_pool_provider.meshstack.name}"
+    universe_domain = "googleapis.com"
+    type            = "external_account"
+    # Built rather than read off google_iam_workload_identity_pool_provider.meshstack, whose
+    # attribute_condition names the definition that consumes this output. The name is deterministic.
+    audience                          = "//iam.googleapis.com/projects/${data.google_project.backplane.number}/locations/global/workloadIdentityPools/${var.workload_identity_federation.workload_identity_pool_identifier}/providers/${var.workload_identity_federation.workload_identity_pool_identifier}"
     subject_token_type                = "urn:ietf:params:oauth:token-type:jwt"
     token_url                         = "https://sts.googleapis.com/v1/token"
     service_account_impersonation_url = "https://iamcredentials.googleapis.com/v1/projects/-/serviceAccounts/${google_service_account.backplane.email}:generateAccessToken"

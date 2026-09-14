@@ -27,8 +27,8 @@ resource "google_iam_workload_identity_pool_provider" "meshstack" {
   description = "OIDC identity provider for meshStack building blocks"
 
   oidc {
-    issuer_uri        = var.workload_identity_federation.issuer
-    allowed_audiences = [var.workload_identity_federation.audience]
+    issuer_uri        = var.workload_identity_federation_trust.issuer
+    allowed_audiences = [var.workload_identity_federation_trust.audience]
   }
 
   attribute_mapping = {
@@ -36,8 +36,8 @@ resource "google_iam_workload_identity_pool_provider" "meshstack" {
   }
 
   attribute_condition = join(" || ", [
-    for subject in var.workload_identity_federation.subjects :
-    "google.subject.startsWith('${subject}')"
+    for subject in var.workload_identity_federation_trust.subjects :
+    "google.subject == '${subject}'"
   ])
 }
 
