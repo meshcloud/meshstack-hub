@@ -36,8 +36,8 @@ resource "google_iam_workload_identity_pool_provider" "meshstack" {
   }
 
   attribute_condition = join(" || ", [
-    for subject in var.workload_identity_federation.subjects :
-    "google.subject.startsWith('${subject}')"
+    for subject in var.workload_identity_federation_subjects :
+    "google.subject == '${subject}'"
   ])
 }
 

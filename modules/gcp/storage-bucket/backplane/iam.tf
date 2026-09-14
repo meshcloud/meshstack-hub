@@ -1,3 +1,7 @@
+data "google_project" "this" {
+  project_id = var.project_id
+}
+
 resource "google_iam_workload_identity_pool" "meshstack" {
   # Nothing below references the APIs, so Terraform cannot infer this ordering on its own.
   depends_on = [google_project_service.required]
@@ -26,8 +30,8 @@ resource "google_iam_workload_identity_pool_provider" "meshstack" {
 
   # Restrict token acceptance to configured subjects
   attribute_condition = join(" || ", [
-    for subject in var.workload_identity_federation.subjects :
-    "google.subject.startsWith('${subject}')"
+    for subject in var.workload_identity_federation_subjects :
+    "google.subject == '${subject}'"
   ])
 }
 

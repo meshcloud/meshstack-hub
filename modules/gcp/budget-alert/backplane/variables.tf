@@ -19,11 +19,19 @@ variable "workload_identity_federation" {
     workload_identity_pool_identifier = string
     audience                          = string
     issuer                            = string
-    subjects                          = list(string)
     subject_token_file_path           = string
   })
   nullable    = false
-  description = "Workload identity federation settings, sourced from data.meshstack_integrations."
+  description = "Workload identity federation settings describing the building block runner."
+}
+
+# Apart, because Terraform depends on a whole variable rather than the attribute read: a subject
+# naming the building block definition would put `credentials_json` behind the definition that
+# consumes it.
+variable "workload_identity_federation_subjects" {
+  type        = list(string)
+  nullable    = false
+  description = "Subject claims the pool provider accepts, each matched exactly. Take them from the resolved status of the building block definitions that run here."
 }
 
 variable "iam_propagation_delay_seconds" {
