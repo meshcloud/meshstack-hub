@@ -36,8 +36,12 @@ module "meshstack_oidc_provider" {
 }
 ```
 
-`modules/aws/oidc-provider` takes no inputs — it reads the issuer, audience and thumbprint from
-`data.meshstack_integrations`. Pass its `arn` output to every backplane in that account.
+`modules/aws/oidc-provider` takes the runner's `issuer` and `audience` as its one input, copied
+from `status.workload_identity_federation` of any definition that runs on that runner, and reads the
+thumbprint from the issuer's own TLS chain, so the issuer URL has to be reachable from wherever it
+runs. Pass its `arn` output to every backplane in that account. To register a self-hosted runner's
+issuer pass that runner's values, and then pass its uuid as `building_block_runner_uuid` to every
+building block module running on it.
 
 This is where AWS differs from the other providers, and why the repetition is not the same kind of
 repetition: an Azure federated identity credential is a child of its UAMI and a GCP workload
@@ -354,11 +358,9 @@ module "backplane" {
   oidc_provider_arn = var.aws_oidc_provider_arn
 
   workload_identity_federation = {
-    issuer   = data.meshstack_integrations.integrations.workload_identity_federation.replicator.issuer
-    audience = data.meshstack_integrations.integrations.workload_identity_federation.replicator.aws.audience
-    subjects = [
-      "${trimsuffix(data.meshstack_integrations.integrations.workload_identity_federation.replicator.subject, ":replicator")}:workspace.${var.meshstack.owning_workspace_identifier}.buildingblockdefinition.${meshstack_building_block_definition.this.metadata.uuid}"
-    ]
+    issuer   = meshstack_building_block_definition.this.status.workload_identity_federation.issuer
+    audience = meshstack_building_block_definition.this.status.workload_identity_federation.aws.audience
+    subjects = [meshstack_building_block_definition.this.status.workload_identity_federation.subject]
   }
 }
 
@@ -376,6 +378,13 @@ AWS_WEB_IDENTITY_TOKEN_FILE = {
   argument        = jsonencode("/var/run/secrets/workload-identity/aws/token")
 }
 ```
+
+**Known limitation.** The role trusts the subject of the version the Terraform resource manages.
+A building block keeps running on the version it was created with, so moving the definition to a
+different runner breaks the blocks that still run on the old version until they upgrade.
+
+The status read and the `building_block_runner_uuid` behind it are the same in every cloud, see
+[meshstack-integration.md § Runner identity](meshstack-integration.md#runner-identity).
 
 ### Cross-account (StackSet) pattern
 
