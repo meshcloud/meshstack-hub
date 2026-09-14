@@ -36,8 +36,11 @@ module "meshstack_oidc_provider" {
 }
 ```
 
-`modules/aws/oidc-provider` takes no inputs — it reads the issuer, audience and thumbprint from
-`data.meshstack_integrations`. Pass its `arn` output to every backplane in that account.
+`modules/aws/oidc-provider` needs no inputs. It reads issuer and audience from
+`data.meshstack_building_block_runner` and the thumbprint from the issuer's own TLS chain, so the
+issuer URL has to be reachable from wherever it runs. Pass its `arn` output to every backplane in
+that account. Set its `building_block_runner_uuid` only to register a self-hosted runner's issuer,
+and then pass that same uuid to every building block module running on it.
 
 This is where AWS differs from the other providers, and why the repetition is not the same kind of
 repetition: an Azure federated identity credential is a child of its UAMI and a GCP workload
@@ -354,11 +357,9 @@ module "backplane" {
   oidc_provider_arn = var.aws_oidc_provider_arn
 
   workload_identity_federation = {
-    issuer   = data.meshstack_integrations.integrations.workload_identity_federation.replicator.issuer
-    audience = data.meshstack_integrations.integrations.workload_identity_federation.replicator.aws.audience
-    subjects = [
-      "${trimsuffix(data.meshstack_integrations.integrations.workload_identity_federation.replicator.subject, ":replicator")}:workspace.${var.meshstack.owning_workspace_identifier}.buildingblockdefinition.${meshstack_building_block_definition.this.metadata.uuid}"
-    ]
+    issuer   = data.meshstack_building_block_runner.this.spec.workload_identity_federation.issuer
+    audience = data.meshstack_building_block_runner.this.spec.workload_identity_federation.aws.audience
+    subjects = [meshstack_building_block_definition.this.status.workload_identity_federation.subject]
   }
 }
 
@@ -376,6 +377,9 @@ AWS_WEB_IDENTITY_TOKEN_FILE = {
   argument        = jsonencode("/var/run/secrets/workload-identity/aws/token")
 }
 ```
+
+The data source and the `building_block_runner_uuid` that feeds it are the same in every cloud, see
+[meshstack-integration.md § Runner identity](meshstack-integration.md#runner-identity).
 
 ### Cross-account (StackSet) pattern
 
