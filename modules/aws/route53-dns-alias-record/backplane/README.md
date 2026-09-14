@@ -6,21 +6,20 @@ records in the hosted zones you list.
 ## Authentication
 
 The building block authenticates by **workload identity federation** — the only credential path this
-backplane offers, so `workload_identity_federation` is required. The backplane registers the
-meshStack issuer as an OIDC provider, creates an IAM role whose trust policy accepts only the
-subjects of this building block definition, and exports the role ARN as
-`workload_identity_federation_role`. No long-lived credential exists anywhere in the module.
+backplane offers, so `workload_identity_federation` is required. The backplane creates an IAM role
+whose trust policy accepts only the subjects of this building block definition and exports the role
+ARN as `workload_identity_federation_role`. No long-lived credential exists anywhere in the module.
 
-AWS allows **one OIDC provider per issuer URL per account**. A second backplane in the same account
-must therefore set `create_oidc_provider = false` and reuse the existing one — otherwise its apply
-fails with `EntityAlreadyExists`.
+AWS allows **one OIDC provider per issuer URL per account**, so this backplane does not create one.
+Apply [`modules/aws/oidc-provider`](../../oidc-provider) once per account and pass its `arn` output
+as `oidc_provider_arn`. See
+[the shared OIDC provider](../../../../.agents/references/aws-backplane.md#the-shared-oidc-provider).
 
 ## Required permissions
 
-The platform engineer or CI principal applying this module needs `iam:*` on the OIDC provider, the
-role and the policy it manages (`CreateOpenIDConnectProvider`, `CreateRole`, `CreatePolicy`,
-`AttachRolePolicy` and their `Get`/`Delete` counterparts). `arn:aws:iam::aws:policy/IAMFullAccess`
-covers it.
+The platform engineer or CI principal applying this module needs `iam:*` on the role and the policy
+it manages (`CreateRole`, `CreatePolicy`, `AttachRolePolicy` and their `Get`/`Delete` counterparts).
+`arn:aws:iam::aws:policy/IAMFullAccess` covers it.
 
 ## Usage
 
@@ -38,17 +37,16 @@ module "aws_route53_dns_alias_record_backplane" {
     "<hosted_zone_id_2>"
   ]
 
+  # ARN of the account's shared meshStack OIDC provider, from modules/aws/oidc-provider.
+  oidc_provider_arn = module.meshstack_oidc_provider.arn
+
+  # meshStack resolves the subject per building block definition; see
+  # .agents/references/meshstack-integration.md#runner-identity for how the integration wires this.
   workload_identity_federation = {
     issuer   = "https://your-oidc-issuer"
     audience = "your-audience"
-    subjects = [
-      "system:serviceaccount:your-namespace:your-service-account-name", # Exact match
-      "system:serviceaccount:your-namespace:*",                         # Wildcard match
-    ]
+    subjects = ["system:serviceaccount:your-namespace:your-service-account-name"]
   }
-
-  # Set to false when another backplane already created the meshStack OIDC provider in this account.
-  create_oidc_provider = true
 }
 ```
 
