@@ -14,7 +14,7 @@ Authentication uses WIF (OIDC token exchange) — no long-lived service account 
 - A STACKIT project where the service account will be created.
 - A STACKIT service account with permissions to manage service accounts and organization-level role assignments.
 - The STACKIT organization ID under which network areas will be created.
-- meshStack WIF issuer and subject from `data.meshstack_integrations.integrations`.
+- The WIF issuer and subject meshStack resolves for the building block definition, read from `meshstack_building_block_definition.<name>.version_latest.workload_identity_federation`.
 
 ## Usage
 
@@ -26,8 +26,8 @@ module "network_area_backplane" {
   organization_id = "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
 
   workload_identity_federation = {
-    issuer   = data.meshstack_integrations.integrations.workload_identity_federation.replicator.issuer
-    subjects = ["<meshstack-wif-subject>"]
+    issuer   = meshstack_building_block_definition.this.version_latest.workload_identity_federation.issuer
+    subjects = [meshstack_building_block_definition.this.version_latest.workload_identity_federation.subject]
   }
 }
 ```
