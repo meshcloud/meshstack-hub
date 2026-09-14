@@ -55,6 +55,12 @@ variable "workspace_tag_to_copy" {
   description = "Name of a single workspace tag to copy onto the storage account as an Azure tag, resolved per order from the ordering workspace. Leave null to copy no tag."
 }
 
+variable "building_block_runner_uuid" {
+  type        = string
+  default     = null
+  description = "Runs this building block on the given meshStack building block runner instead of the shared one meshStack hosts."
+}
+
 variable "meshstack" {
   type = object({
     owning_workspace_identifier = string
@@ -87,8 +93,6 @@ output "building_block_definition" {
   }
 }
 
-data "meshstack_integrations" "integrations" {}
-
 module "backplane" {
   source = "github.com/meshcloud/meshstack-hub//modules/azure/storage-account/backplane?ref=${var.hub.git_ref}"
 
@@ -97,10 +101,8 @@ module "backplane" {
   location = var.azure_location
 
   workload_identity_federation = {
-    issuer = data.meshstack_integrations.integrations.workload_identity_federation.replicator.issuer
-    subjects = [
-      "${trimsuffix(data.meshstack_integrations.integrations.workload_identity_federation.replicator.subject, ":replicator")}:workspace.${var.meshstack.owning_workspace_identifier}.buildingblockdefinition.${meshstack_building_block_definition.this.metadata.uuid}"
-    ]
+    issuer   = meshstack_building_block_definition.this.version_latest.workload_identity_federation.issuer
+    subjects = [meshstack_building_block_definition.this.version_latest.workload_identity_federation.subject]
   }
 }
 
@@ -143,6 +145,10 @@ resource "meshstack_building_block_definition" "this" {
     draft = var.hub.bbd_draft
 
     deletion_mode = "DELETE"
+    runner_ref = var.building_block_runner_uuid == null ? null : {
+      kind = "meshBuildingBlockRunner"
+      uuid = var.building_block_runner_uuid
+    }
 
     implementation = {
       terraform = {
@@ -339,7 +345,7 @@ terraform {
   required_providers {
     meshstack = {
       source  = "meshcloud/meshstack"
-      version = ">= 0.25.3"
+      version = ">= 0.26.2"
     }
     azurerm = {
       source  = "hashicorp/azurerm"
