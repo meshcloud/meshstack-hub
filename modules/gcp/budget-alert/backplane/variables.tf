@@ -17,13 +17,23 @@ variable "backplane_service_account_name" {
 variable "workload_identity_federation" {
   type = object({
     workload_identity_pool_identifier = string
-    audience                          = string
-    issuer                            = string
-    subjects                          = list(string)
     subject_token_file_path           = string
   })
   nullable    = false
-  description = "Workload identity federation settings, sourced from data.meshstack_integrations."
+  description = "Workload identity federation settings describing the building block runner."
+}
+
+# Apart, because Terraform depends on a whole variable rather than the attribute read: these come
+# from the building block definition's `version_latest`, and reading them next to the pool identifier would
+# put `credentials_json` behind the definition that consumes it.
+variable "workload_identity_federation_trust" {
+  type = object({
+    issuer   = string
+    audience = string
+    subjects = list(string)
+  })
+  nullable    = false
+  description = "What the pool provider trusts: the runner's OIDC issuer and audience, and the subject claims it accepts, each matched exactly. Take them from `version_latest.workload_identity_federation` of the building block definitions that run here."
 }
 
 variable "iam_propagation_delay_seconds" {
