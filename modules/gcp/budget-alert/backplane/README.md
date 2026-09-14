@@ -8,8 +8,8 @@ The building block authenticates by **workload identity federation**; `workload_
 is required. The backplane creates a workload identity pool and provider alongside the service
 account, grants the pool `roles/iam.workloadIdentityUser` on it, and exports `credentials_json` as an
 [external account](https://cloud.google.com/iam/docs/workload-identity-federation) document.
-`issuer`, `audience` and `subjects` must come from `data.meshstack_integrations` — see
-`meshstack_integration.tf`.
+`issuer`, `audience` and each subject come from the resolved status of a building block
+definition — see `meshstack_integration.tf`.
 
 GCP **soft-deletes** workload identity pools and providers for ~30 days and will not reissue their
 identifiers in that window. `workload_identity_pool_identifier` is an input for exactly that reason:
@@ -86,7 +86,7 @@ automatically. Set it to 0 when the backplane is always provisioned well ahead o
 ## Requirements
 
 | Name | Version |
-|------|---------|
+| ---- | ------- |
 | <a name="requirement_google"></a> [google](#requirement\_google) | >= 6.12.0, < 7.0.0 |
 | <a name="requirement_time"></a> [time](#requirement\_time) | >= 0.9, < 1.0.0 |
 
@@ -97,7 +97,7 @@ No modules.
 ## Resources
 
 | Name | Type |
-|------|------|
+| ---- | ---- |
 | [google_billing_account_iam_member.billing_viewer](https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/billing_account_iam_member) | resource |
 | [google_billing_account_iam_member.budget_admin](https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/billing_account_iam_member) | resource |
 | [google_iam_workload_identity_pool.meshstack](https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/iam_workload_identity_pool) | resource |
@@ -112,17 +112,18 @@ No modules.
 ## Inputs
 
 | Name | Description | Type | Default | Required |
-|------|-------------|------|---------|:--------:|
+| ---- | ----------- | ---- | ------- | :------: |
 | <a name="input_backplane_project_id"></a> [backplane\_project\_id](#input\_backplane\_project\_id) | The project hosting the building block backplane resources | `string` | n/a | yes |
 | <a name="input_backplane_service_account_name"></a> [backplane\_service\_account\_name](#input\_backplane\_service\_account\_name) | The name of the service account to be created for the backplane | `string` | `"building-block-budget-alert"` | no |
 | <a name="input_billing_account_id"></a> [billing\_account\_id](#input\_billing\_account\_id) | The billing account ID where budget permissions will be granted | `string` | n/a | yes |
 | <a name="input_iam_propagation_delay_seconds"></a> [iam\_propagation\_delay\_seconds](#input\_iam\_propagation\_delay\_seconds) | Seconds to wait after granting the building block's IAM roles before publishing its credentials. GCP IAM is eventually consistent, and billing-account grants are among the slower ones. Set to 0 if the backplane is always provisioned well before any building block run. | `number` | `180` | no |
-| <a name="input_workload_identity_federation"></a> [workload\_identity\_federation](#input\_workload\_identity\_federation) | Workload identity federation settings, sourced from data.meshstack\_integrations. | <pre>object({<br/>    workload_identity_pool_identifier = string<br/>    audience                          = string<br/>    issuer                            = string<br/>    subjects                          = list(string)<br/>    subject_token_file_path           = string<br/>  })</pre> | n/a | yes |
+| <a name="input_workload_identity_federation"></a> [workload\_identity\_federation](#input\_workload\_identity\_federation) | Workload identity federation settings describing the building block runner. | <pre>object({<br/>    workload_identity_pool_identifier = string<br/>    subject_token_file_path           = string<br/>  })</pre> | n/a | yes |
+| <a name="input_workload_identity_federation_trust"></a> [workload\_identity\_federation\_trust](#input\_workload\_identity\_federation\_trust) | What the pool provider trusts: the runner's OIDC issuer and audience, and the subject claims it accepts, each matched exactly. Take them from the resolved status of the building block definitions that run here. | <pre>object({<br/>    issuer   = string<br/>    audience = string<br/>    subjects = list(string)<br/>  })</pre> | n/a | yes |
 
 ## Outputs
 
 | Name | Description |
-|------|-------------|
+| ---- | ----------- |
 | <a name="output_backplane_project_id"></a> [backplane\_project\_id](#output\_backplane\_project\_id) | The project hosting the building block backplane resources |
 | <a name="output_billing_account_id"></a> [billing\_account\_id](#output\_billing\_account\_id) | The billing account ID where budget permissions were granted |
 | <a name="output_credentials_json"></a> [credentials\_json](#output\_credentials\_json) | External account credentials the building block authenticates with. Points the runner at its own OIDC token file, which it exchanges for a short-lived access token. |

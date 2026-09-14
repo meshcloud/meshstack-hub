@@ -101,42 +101,30 @@ The module grants access to the entire workload identity pool at the IAM level, 
 
 ### Subject Matching
 
-The module supports both exact matching and partial matching for subjects:
+Each entry of `subjects` is trusted as an **exact match** on the token's `sub` claim:
 
-**Exact matching** - Grant access to specific subjects:
 ```hcl
-workload_identity_federation = {
-  issuer = "https://your-oidc-issuer"
-  subjects = [
-    "system:serviceaccount:namespace1:service-account-1",
-    "system:serviceaccount:namespace1:service-account-2",
-  ]
+workload_identity_federation_trust = {
+  issuer   = meshstack_building_block_definition.this.status.workload_identity_federation.issuer
+  audience = meshstack_building_block_definition.this.status.workload_identity_federation.gcp.audience
+  subjects = [meshstack_building_block_definition.this.status.workload_identity_federation.subject]
 }
 ```
 
-**Partial matching** - Use `startsWith()` to match multiple subjects with a common prefix. Note: The module doesn't use special syntax for this; instead, pass the prefix pattern as-is and it will be matched using CEL's `startsWith()` function:
-
-```hcl
-workload_identity_federation = {
-  issuer = "https://your-oidc-issuer"
-  subjects = [
-    "system:serviceaccount:namespace1:",  # Matches all service accounts in namespace1
-  ]
-}
-```
-
-This configuration will accept any subject that starts with `system:serviceaccount:namespace1:`, allowing all service accounts in that namespace to authenticate without listing each one individually.
+meshStack resolves that subject per building block definition, so a definition gets the pool's
+federated identity and no other definition in the workspace does.
 
 **How it works:**
-- IAM binding grants access to the entire workload identity pool (`principalSet://iam.googleapis.com/.../pools/POOL_ID/*`)
-- Attribute conditions in the provider filter which tokens are accepted based on the `google.subject` claim
-- Subjects are evaluated as exact matches first, then partial matches via `startsWith()` checking
+- The IAM binding grants `roles/iam.workloadIdentityUser` to the whole pool
+  (`principalSet://iam.googleapis.com/.../pools/POOL_ID/*`)
+- The provider's `attribute_condition` is what narrows that down, comparing `google.subject`
+  against each configured subject
 
 <!-- BEGIN_TF_DOCS -->
 ## Requirements
 
 | Name | Version |
-|------|---------|
+| ---- | ------- |
 | <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.0 |
 | <a name="requirement_google"></a> [google](#requirement\_google) | >= 7.0, < 8.0.0 |
 | <a name="requirement_time"></a> [time](#requirement\_time) | >= 0.9, < 1.0.0 |
@@ -148,7 +136,7 @@ No modules.
 ## Resources
 
 | Name | Type |
-|------|------|
+| ---- | ---- |
 | [google_iam_workload_identity_pool.meshstack](https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/iam_workload_identity_pool) | resource |
 | [google_iam_workload_identity_pool_provider.meshstack](https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/iam_workload_identity_pool_provider) | resource |
 | [google_project_iam_member.storage_admin](https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/project_iam_member) | resource |
@@ -156,20 +144,22 @@ No modules.
 | [google_service_account.buildingblock_storage_sa](https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/service_account) | resource |
 | [google_service_account_iam_binding.workload_identity_binding](https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/service_account_iam_binding) | resource |
 | [time_sleep.wait_for_iam](https://registry.terraform.io/providers/hashicorp/time/latest/docs/resources/sleep) | resource |
+| [google_project.this](https://registry.terraform.io/providers/hashicorp/google/latest/docs/data-sources/project) | data source |
 
 ## Inputs
 
 | Name | Description | Type | Default | Required |
-|------|-------------|------|---------|:--------:|
+| ---- | ----------- | ---- | ------- | :------: |
 | <a name="input_iam_propagation_delay_seconds"></a> [iam\_propagation\_delay\_seconds](#input\_iam\_propagation\_delay\_seconds) | Seconds to wait after granting the building block's IAM roles before publishing its credentials. GCP IAM is eventually consistent, and Google's guidance is to allow two to seven minutes before retrying a denied impersonation. Set to 0 if the backplane is always provisioned well before any building block run. | `number` | `180` | no |
 | <a name="input_project_id"></a> [project\_id](#input\_project\_id) | The GCP project ID | `string` | n/a | yes |
 | <a name="input_service_account_id"></a> [service\_account\_id](#input\_service\_account\_id) | The ID of the service account to create | `string` | `"buildingblock-storage-sa"` | no |
-| <a name="input_workload_identity_federation"></a> [workload\_identity\_federation](#input\_workload\_identity\_federation) | Configuration for workload identity federation. Supports multiple subjects with exact matching and partial matching using startsWith(). | <pre>object({<br/>    workload_identity_pool_identifier = string       // Identifier for the workload identity pool<br/>    audience                          = string       // Audience for the OIDC tokens<br/>    issuer                            = string       // OIDC issuer URL<br/>    subjects                          = list(string) // Subjects for workload identity federation - can use exact matches or startsWith patterns<br/>    subject_token_file_path           = string       // Path to the file containing the OIDC token<br/>  })</pre> | n/a | yes |
+| <a name="input_workload_identity_federation"></a> [workload\_identity\_federation](#input\_workload\_identity\_federation) | Workload identity federation settings describing the building block runner. | <pre>object({<br/>    workload_identity_pool_identifier = string // Identifier for the workload identity pool<br/>    subject_token_file_path           = string // Path to the file containing the OIDC token<br/>  })</pre> | n/a | yes |
+| <a name="input_workload_identity_federation_trust"></a> [workload\_identity\_federation\_trust](#input\_workload\_identity\_federation\_trust) | What the pool provider trusts: the runner's OIDC issuer and audience, and the subject claims it accepts, each matched exactly. Take them from the resolved status of the building block definitions that run here. | <pre>object({<br/>    issuer   = string<br/>    audience = string<br/>    subjects = list(string)<br/>  })</pre> | n/a | yes |
 
 ## Outputs
 
 | Name | Description |
-|------|-------------|
+| ---- | ----------- |
 | <a name="output_credentials_json"></a> [credentials\_json](#output\_credentials\_json) | External account credentials for the building block's service account. Points the runner at its own OIDC token file, which it exchanges for a short-lived access token. |
 | <a name="output_service_account_email"></a> [service\_account\_email](#output\_service\_account\_email) | Email of the service account |
 | <a name="output_workload_identity_pool_name"></a> [workload\_identity\_pool\_name](#output\_workload\_identity\_pool\_name) | Name of the workload identity pool |
