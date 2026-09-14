@@ -136,7 +136,7 @@ resource "meshstack_building_block_definition" "this" {
 
 **If a `meshstack_building_block_definition` input's `argument` field references a variable, that variable must have an explicit default** — do not rely on nested `optional()` defaults (for example via a bare `default = {}`), since some downstream consumers don't evaluate Terraform's object-attribute defaulting and would see unset fields instead. Keep the `optional()` type constraints regardless — they still document intent and protect callers who omit keys.
 
-<!-- scorecard-checks: wif_no_replicator, aws_wif_integration_env, gcp_wif_attribute_condition -->
+<!-- scorecard-checks: wif_no_replicator -->
 ## Runner identity
 
 A building block run presents an identity a cloud backplane has to trust. The runner declares the
