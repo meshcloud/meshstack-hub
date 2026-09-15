@@ -25,6 +25,18 @@ variable "bbd_readme" {
   description = "Overrides the markdown readme shown in the marketplace before ordering."
 }
 
+variable "tag_object" {
+  type        = string
+  default     = "WORKSPACE"
+  description = "The meshStack object kind the `tag_value` input reads its value from. A WORKSPACE_LEVEL building block definition (like this one) can only read WORKSPACE tags; TENANT_LEVEL definitions can also read PROJECT, PAYMENT_METHOD, or LANDING_ZONE."
+}
+
+variable "tag_key" {
+  type        = string
+  default     = "BusinessUnit"
+  description = "Key of an existing meshStack tag definition (target_kind meshWorkspace) that the `tag_value` input reads its value from. The tag definition must already exist on the target meshStack instance."
+}
+
 variable "meshstack" {
   type = object({
     owning_workspace_identifier = string
@@ -155,6 +167,34 @@ resource "meshstack_building_block_definition" "this" {
         type            = "STRING"
         is_optional     = true
       }
+      conditional_text = {
+        assignment_type = "USER_INPUT"
+        display_name    = "Conditional Text"
+        description     = "Only asked for while the Flag input is true; meshPanel hides it otherwise and meshStack sends no value for it."
+        type            = "STRING"
+        condition       = "input.flag == true"
+      }
+      hidden_conditional_text = {
+        assignment_type = "USER_INPUT"
+        display_name    = "Hidden Conditional Text"
+        description     = "Only asked for while the Flag input is false; always hidden in this reference deployment (Flag is always true), demonstrating that a hidden conditional input is safely omitted from the building block's inputs."
+        type            = "STRING"
+        condition       = "input.flag == false"
+      }
+      deploy_settings = {
+        assignment_type = "USER_INPUT"
+        display_name    = "Deploy Settings"
+        description     = "A small JSON form (greeting text + shout flag) rendered by meshPanel from json_schema below."
+        type            = "JSON"
+        json_schema = jsonencode({
+          type     = "object"
+          required = ["greeting"]
+          properties = {
+            greeting = { type = "string" }
+            shout    = { type = "boolean" }
+          }
+        })
+      }
 
       "sensitive-file.yaml" = {
         assignment_type = "STATIC"
@@ -205,6 +245,12 @@ resource "meshstack_building_block_definition" "this" {
         argument        = jsonencode(jsonencode({ some : "code" }))
         assignment_type = "STATIC"
         display_name    = "Static Code"
+        type            = "CODE"
+      }
+      tag_value = {
+        assignment_type = "TAG"
+        argument        = jsonencode("${var.tag_object}.${var.tag_key}")
+        display_name    = "Tag Value"
         type            = "CODE"
       }
       text = {
@@ -261,6 +307,21 @@ resource "meshstack_building_block_definition" "this" {
         display_name    = "Optional Text"
         type            = "STRING"
       }
+      conditional_text = {
+        assignment_type = "NONE"
+        display_name    = "Conditional Text"
+        type            = "STRING"
+      }
+      hidden_conditional_text = {
+        assignment_type = "NONE"
+        display_name    = "Hidden Conditional Text"
+        type            = "STRING"
+      }
+      deploy_settings = {
+        assignment_type = "NONE"
+        display_name    = "Deploy Settings"
+        type            = "CODE"
+      }
       static_code = {
         assignment_type = "NONE"
         display_name    = "Static Code"
@@ -270,6 +331,11 @@ resource "meshstack_building_block_definition" "this" {
         assignment_type = "NONE"
         display_name    = "Workspace Identifier"
         type            = "STRING"
+      }
+      tag_value = {
+        assignment_type = "NONE"
+        display_name    = "Tag Value"
+        type            = "CODE"
       }
       resource_url = {
         assignment_type = "RESOURCE_URL"
@@ -301,7 +367,7 @@ terraform {
   required_providers {
     meshstack = {
       source  = "meshcloud/meshstack"
-      version = ">= 0.25.2"
+      version = ">= 0.25.3"
     }
   }
 }

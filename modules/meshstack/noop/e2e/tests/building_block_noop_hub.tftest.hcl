@@ -32,6 +32,49 @@ run "building_block_noop_hub" {
   }
 
   assert {
+    # conditional_text is only asked for while its `condition` (input.flag == true) holds, which the
+    # building block's inputs in e2e/main.tf satisfy.
+    condition     = jsondecode(meshstack_building_block.this.status.outputs["conditional_text"].value) == "Shown because flag is true"
+    error_message = "noop hub building block expected output conditional_text to be 'Shown because flag is true', got ${jsondecode(meshstack_building_block.this.status.outputs["conditional_text"].value)}"
+  }
+
+  assert {
+    # hidden_conditional_text is intentionally left out of the building block's inputs (see
+    # e2e/main.tf): its condition (input.flag == false) never holds while flag is true, so
+    # meshPanel hides it, meshStack sends no value for it, and this asserts the Terraform
+    # variable's own default flows through as the output, exactly like optional_text.
+    condition     = jsondecode(meshstack_building_block.this.status.outputs["hidden_conditional_text"].value) == "tf-default-value"
+    error_message = "noop hub building block expected output hidden_conditional_text to fall back to the Terraform variable default 'tf-default-value', got ${jsondecode(meshstack_building_block.this.status.outputs["hidden_conditional_text"].value)}"
+  }
+
+  assert {
+    # deploy_settings is a CODE-type output (see meshstack_integration.tf), so it round-trips
+    # through meshStack as JSON text just like debug_input_variables_json below: one jsondecode()
+    # unwraps the provider's own value encoding, a second unwraps the CODE text into the object.
+    # Compared via jsonencode() on both sides: a raw `==` between a jsondecode()'d value and an HCL
+    # object/list literal can spuriously fail on OpenTofu's tuple/object type unification even when
+    # the values are identical, so canonical JSON strings are compared instead.
+    condition = (
+      jsonencode(jsondecode(jsondecode(meshstack_building_block.this.status.outputs["deploy_settings"].value)))
+      ==
+      jsonencode({ greeting = "Hello from e2e", shout = true })
+    )
+    error_message = "noop hub building block expected output deploy_settings to be {greeting = \"Hello from e2e\", shout = true}, got ${jsonencode(jsondecode(jsondecode(meshstack_building_block.this.status.outputs["deploy_settings"].value)))}"
+  }
+
+  assert {
+    # tag_value is sourced from the meshstack_workspace_tag set up in e2e/main.tf, not from the
+    # building block's own inputs. It's a CODE-type output too, so it needs the same double
+    # jsondecode() as deploy_settings above.
+    condition = (
+      jsonencode(jsondecode(jsondecode(meshstack_building_block.this.status.outputs["tag_value"].value)))
+      ==
+      jsonencode(["e2e-tag-value"])
+    )
+    error_message = "noop hub building block expected output tag_value to be [\"e2e-tag-value\"], got ${jsonencode(jsondecode(jsondecode(meshstack_building_block.this.status.outputs["tag_value"].value)))}"
+  }
+
+  assert {
     condition = (
       jsondecode(meshstack_building_block.this.status.outputs["summary"].value)
       ==
