@@ -11,3 +11,10 @@ modules/azure/container-registry/buildingblock       # resources point at a prov
 modules/azure/spoke-network                          # var.azure_tenant_id never declared
 modules/gcp                                          # terraform-gcp-meshplatform has no tag 0.3.0
 modules/ionos/dcd/backplane                          # required arguments missing, plus arguments the provider rejects
+
+# Not yet on main. These reference modules this PR introduces at ?ref=main
+# (the default hub git_ref), which a clone of main cannot resolve until the PR
+# merges. The script prints a ::notice:: to drop each line once it loads, so
+# remove both after this branch lands on main.
+modules/ske/cluster                                  # sources //modules/ske/cluster/backplane?ref=main, added by this PR
+reference-architectures/stackit-kubernetes/buildingblock # sources the ske/* modules this PR adds, at ?ref=main
