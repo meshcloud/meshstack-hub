@@ -125,6 +125,15 @@ resource "meshstack_workspace_user_binding" "owner" {
   expiry_date = local.expiry_date
 }
 
+# A project user binding is named meshStack-wide, but project_identifier is only unique within its
+# owning workspace (two orders can pick the same one), so "${project_identifier}-admin" collides
+# across orders. Generate a stable random id instead, same fix as stackit-project-starterkit.
+resource "random_uuid" "project_admin_binding" {
+  lifecycle {
+    enabled = !local.expired
+  }
+}
+
 resource "meshstack_project_user_binding" "admin" {
   depends_on = [meshstack_workspace_user_binding.owner]
 
@@ -133,7 +142,7 @@ resource "meshstack_project_user_binding" "admin" {
   }
 
   metadata = {
-    name = "${var.project_identifier}-admin"
+    name = random_uuid.project_admin_binding.result
   }
 
   role_ref = {

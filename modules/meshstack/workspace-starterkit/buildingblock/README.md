@@ -63,6 +63,7 @@ Two of those variables are less obvious:
 |------|---------|
 | <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.12.0 |
 | <a name="requirement_meshstack"></a> [meshstack](#requirement\_meshstack) | >= 0.24.0 |
+| <a name="requirement_random"></a> [random](#requirement\_random) | >= 3.6.0, < 4.0.0 |
 | <a name="requirement_time"></a> [time](#requirement\_time) | >= 0.11.0, < 1.0.0 |
 
 ## Modules
@@ -79,6 +80,7 @@ No modules.
 | [meshstack_tenant.this](https://registry.terraform.io/providers/meshcloud/meshstack/latest/docs/resources/tenant) | resource |
 | [meshstack_workspace.this](https://registry.terraform.io/providers/meshcloud/meshstack/latest/docs/resources/workspace) | resource |
 | [meshstack_workspace_user_binding.owner](https://registry.terraform.io/providers/meshcloud/meshstack/latest/docs/resources/workspace_user_binding) | resource |
+| [random_uuid.project_admin_binding](https://registry.terraform.io/providers/hashicorp/random/latest/docs/resources/uuid) | resource |
 | [time_static.created](https://registry.terraform.io/providers/hashicorp/time/latest/docs/resources/static) | resource |
 
 ## Inputs
