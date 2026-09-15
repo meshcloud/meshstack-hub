@@ -64,8 +64,10 @@ selectable — meshStack applies no allow-list and has no default (the field is 
 The meshStack panel prefills `1.9.0` when you create a definition through the UI. Do not carry that
 value into a hub module.
 
-The scorecard enforces a floor of `1.12.0` rather than an exact value, and reports `➖` for the
-`manual` and `github_workflows` implementation types, where the field does not exist.
+The scorecard enforces a floor of `1.12.0` rather than an exact value, and reports `➖` for every
+implementation type that has no such field: `manual`, `github_workflows`, `gitlab_pipeline` and
+`azure_devops_pipeline`. The `ref_name` check is skipped for the same types — a pipeline
+implementation's `ref_name` is a branch in the customer's own repository, not a hub release.
 
 <!-- scorecard-checks: variable_hub, variable_meshstack, bbd_draft, bbd_tags_forwarded, bbd_inputs_explicit_defaults -->
 ## Shared Variable Conventions

@@ -1,0 +1,239 @@
+# Reference pipeline for meshStack's GitLab pipeline implementation type. It provisions nothing: it
+# reports every input it received back to meshStack as an output, so a test can pin the wire format.
+#
+# COPY THIS FILE to `.gitlab-ci.yml` in the GitLab project your building block definition points at.
+# Nothing deploys it for you — see ./README.md for why this module has no backplane.
+#
+# meshStack triggers this pipeline and then walks away — the run stays IN_PROGRESS until the
+# pipeline reports a terminal status itself. A pipeline that never calls back leaves the building
+# block hanging forever, which is why the failure path below is a job of its own.
+#
+# Inputs reach a pipeline through two different channels. An input declared `is_environment = true`
+# arrives as a CI variable of the same name; every other input arrives as a GitLab pipeline input and
+# must therefore be declared in `spec:inputs` below, or GitLab rejects the whole pipeline.
+
+spec:
+  inputs:
+    text:
+      type: string
+      default: ""
+    num:
+      type: number
+      default: 0
+    flag:
+      type: boolean
+      default: false
+---
+
+variables:
+  MESHSTACK_MEDIA_TYPE: application/vnd.meshcloud.api.meshbuildingblockrun.v1.hal+json
+  MESHSTACK_STEP_ID: echo-inputs
+
+  # The name this pipeline registers itself under as a run source. meshStack substitutes it into the
+  # update-status URL, so it must not change while a run is in flight.
+  MESHSTACK_SOURCE_ID: gitlab
+
+default:
+  image: alpine:3.22
+  before_script:
+    - apk add --no-cache curl jq > /dev/null
+
+stages:
+  - noop
+
+echo-inputs:
+  stage: noop
+  variables:
+    # The three inputs travelling the pipeline-input channel. They are not environment variables, so
+    # they have to be bound here before any script can read them.
+    INPUT_TEXT: $[[ inputs.text ]]
+    INPUT_NUM: $[[ inputs.num ]]
+    INPUT_FLAG: $[[ inputs.flag ]]
+  script:
+    - |
+      set -eu
+
+      # Started by hand rather than by meshStack — a push, a click in the UI, or a bare trigger
+      # token. There is no run to report to, so report the environment instead: this is what proves
+      # the project has a working runner before a building block ever points at it.
+      if [ -z "${MESHSTACK_RUN-}" ]; then
+        echo "No MESHSTACK_RUN in the environment — this pipeline was not started by meshStack."
+        echo "source=$CI_PIPELINE_SOURCE ref=$CI_COMMIT_REF_NAME pipeline=$CI_PIPELINE_URL"
+        echo "inputs: text='$INPUT_TEXT' num='$INPUT_NUM' flag='$INPUT_FLAG'"
+        for name in MESHSTACK_BEHAVIOR MESHSTACK_BASE_URL MESHSTACK_SELF_URL \
+                    MESHSTACK_REGISTER_SOURCE_URL MESHSTACK_UPDATE_SOURCE_URL; do
+          printf '%s=%s\n' "$name" "$(printenv "$name" || echo '<not set>')"
+        done
+        exit 0
+      fi
+
+      # The run token is the only credential a pipeline gets, and it arrives inside the run object
+      # rather than as a variable of its own.
+      RUN_TOKEN=$(printf '%s' "$MESHSTACK_RUN" | jq -r '.spec.runToken')
+      UPDATE_URL=$(printf '%s' "$MESHSTACK_UPDATE_SOURCE_URL" | sed "s|{sourceId}|$MESHSTACK_SOURCE_ID|")
+
+      meshstack_patch() {
+        curl -sS --fail-with-body -X PATCH "$1" \
+          -H "Authorization: Bearer $RUN_TOKEN" \
+          -H "Content-Type: $MESHSTACK_MEDIA_TYPE" \
+          -H "Accept: $MESHSTACK_MEDIA_TYPE" \
+          --data-binary @"$2" > /dev/null
+      }
+
+      jq -n \
+        --arg id "$MESHSTACK_SOURCE_ID" \
+        --arg step "$MESHSTACK_STEP_ID" \
+        --arg run_id "$CI_PIPELINE_ID" \
+        --arg run_url "$CI_PIPELINE_URL" \
+        '{source: {id: $id, externalRunId: $run_id, externalRunUrl: $run_url},
+          steps: [{id: $step, displayName: "Echo meshStack Inputs"}]}' > register.json
+
+      curl -sS --fail-with-body -X POST "$MESHSTACK_REGISTER_SOURCE_URL" \
+        -H "Authorization: Bearer $RUN_TOKEN" \
+        -H "Content-Type: $MESHSTACK_MEDIA_TYPE" \
+        -H "Accept: $MESHSTACK_MEDIA_TYPE" \
+        --data-binary @register.json > /dev/null
+
+      if [ "$MESHSTACK_BEHAVIOR" = "DESTROY" ]; then
+        jq -n --arg step "$MESHSTACK_STEP_ID" \
+          '{status: "SUCCEEDED",
+            steps: [{id: $step, status: "SUCCEEDED", userMessage: "Nothing to destroy."}]}' > update.json
+        meshstack_patch "$UPDATE_URL" update.json
+        exit 0
+      fi
+
+      # The canonical input values. The trigger payload carries them too, but a CI variable caps at
+      # 10,000 characters and renders lists and objects in a Kotlin-specific format, so anything
+      # large or structured is only trustworthy here.
+      curl -sS --fail-with-body "$MESHSTACK_SELF_URL" \
+        -H "Authorization: Bearer $RUN_TOKEN" \
+        -H "Accept: $MESHSTACK_MEDIA_TYPE" > run.json
+
+      jq -S -c '
+        .spec.buildingBlock.spec.inputs
+        | map({key: .key, value: {
+            value: (if .isSensitive then "<sensitive>" else .value end),
+            type: .type,
+            isSensitive: .isSensitive,
+            isEnvironment: .isEnvironment}})
+        | from_entries' run.json > from_run_object.json
+
+      # What the two trigger channels actually delivered, so the test can pin the difference. An
+      # optional input that was left blank and a conditional input whose condition did not hold are
+      # both simply absent here.
+      ENV_INPUT_KEYS="author code_json conditional_text file_yaml json_form multi_select operator_text optional_text sensitive_text single_select static_text user_permissions workspace_identifier"
+
+      echo '{}' > from_trigger.json
+      for key in $ENV_INPUT_KEYS; do
+        if printenv "$key" > /dev/null 2>&1; then
+          if [ "$key" = "sensitive_text" ]; then
+            value="<sensitive>"
+          else
+            value=$(printenv "$key")
+          fi
+          jq -S --arg k "$key" --arg v "$value" '. + {($k): $v}' from_trigger.json > tmp.json
+          mv tmp.json from_trigger.json
+        fi
+      done
+      jq -S --arg text "$INPUT_TEXT" --arg num "$INPUT_NUM" --arg flag "$INPUT_FLAG" \
+        '. + {text: $text, num: $num, flag: $flag}' from_trigger.json > tmp.json
+      mv tmp.json from_trigger.json
+
+      # meshStack hands sensitive values to a runner encrypted and the runner decrypts them before
+      # building the trigger payload. A pipeline has no runner key, so this says whether the API
+      # nonetheless served the value in the clear.
+      RUN_SENSITIVE=$(jq -r '[.spec.buildingBlock.spec.inputs[] | select(.key == "sensitive_text") | .value][0] // ""' run.json)
+      if [ "$RUN_SENSITIVE" = "${sensitive_text-}" ]; then
+        SENSITIVE_PLAINTEXT=true
+      else
+        SENSITIVE_PLAINTEXT=false
+      fi
+
+      SUMMARY=$(printf '%s\n' \
+        "## meshStack GitLab Pipeline NoOp" \
+        "" \
+        "| Fact | Value |" \
+        "| --- | --- |" \
+        "| Behavior | $MESHSTACK_BEHAVIOR |" \
+        "| Inputs from the run object | $(jq 'length' from_run_object.json) |" \
+        "| Inputs from the trigger | $(jq 'length' from_trigger.json) |" \
+        "| Sensitive value readable from the API | $SENSITIVE_PLAINTEXT |")
+
+      jq -n \
+        --arg step "$MESHSTACK_STEP_ID" \
+        --slurpfile from_run from_run_object.json \
+        --slurpfile from_trigger from_trigger.json \
+        --arg text "$INPUT_TEXT" \
+        --argjson num "$INPUT_NUM" \
+        --argjson flag "$INPUT_FLAG" \
+        --argjson sensitive_plaintext "$SENSITIVE_PLAINTEXT" \
+        --arg behavior "$MESHSTACK_BEHAVIOR" \
+        --arg pipeline_url "$CI_PIPELINE_URL" \
+        --arg summary "$SUMMARY" \
+        '{status: "SUCCEEDED",
+          steps: [{
+            id: $step,
+            status: "SUCCEEDED",
+            userMessage: "Echoed every meshStack input back as an output.",
+            outputs: {
+              received_from_run_object_json: {value: ($from_run[0] | tojson), type: "CODE", isSensitive: false},
+              received_from_trigger_json: {value: ($from_trigger[0] | tojson), type: "CODE", isSensitive: false},
+              sensitive_in_run_object_is_plaintext: {value: $sensitive_plaintext, type: "BOOLEAN", isSensitive: false},
+              text: {value: $text, type: "STRING", isSensitive: false},
+              num: {value: $num, type: "INTEGER", isSensitive: false},
+              flag: {value: $flag, type: "BOOLEAN", isSensitive: false},
+              behavior: {value: $behavior, type: "STRING", isSensitive: false},
+              pipeline_url: {value: $pipeline_url, type: "STRING", isSensitive: false},
+              summary: {value: $summary, type: "STRING", isSensitive: false}
+            }}]}' > update.json
+
+      meshstack_patch "$UPDATE_URL" update.json
+
+# Without this the building block would stay IN_PROGRESS forever whenever the job above dies before
+# it can report — a failed script, but also a cancelled job or an evicted runner.
+report-failure:
+  stage: .post
+  when: on_failure
+  script:
+    - |
+      set -eu
+
+      # A hand-started pipeline has no run to report against, so a failure there is just a failure.
+      [ -n "${MESHSTACK_RUN-}" ] || exit 0
+
+      RUN_TOKEN=$(printf '%s' "$MESHSTACK_RUN" | jq -r '.spec.runToken')
+      UPDATE_URL=$(printf '%s' "$MESHSTACK_UPDATE_SOURCE_URL" | sed "s|{sourceId}|$MESHSTACK_SOURCE_ID|")
+
+      jq -n \
+        --arg id "$MESHSTACK_SOURCE_ID" \
+        --arg step "$MESHSTACK_STEP_ID" \
+        --arg run_id "$CI_PIPELINE_ID" \
+        --arg run_url "$CI_PIPELINE_URL" \
+        '{source: {id: $id, externalRunId: $run_id, externalRunUrl: $run_url},
+          steps: [{id: $step, displayName: "Echo meshStack Inputs"}]}' > register.json
+
+      # The source may or may not be registered already, depending on how far the job above got.
+      # A second registration answers 409, which is success for our purpose.
+      code=$(curl -sS -o /dev/null -w '%{http_code}' -X POST "$MESHSTACK_REGISTER_SOURCE_URL" \
+        -H "Authorization: Bearer $RUN_TOKEN" \
+        -H "Content-Type: $MESHSTACK_MEDIA_TYPE" \
+        -H "Accept: $MESHSTACK_MEDIA_TYPE" \
+        --data-binary @register.json)
+      case "$code" in
+        200 | 409) ;;
+        *) echo "registering the run source failed with HTTP $code" >&2; exit 1 ;;
+      esac
+
+      jq -n --arg step "$MESHSTACK_STEP_ID" --arg run_url "$CI_PIPELINE_URL" \
+        '{status: "FAILED",
+          steps: [{
+            id: $step,
+            status: "FAILED",
+            userMessage: "The GitLab pipeline did not complete.",
+            systemMessage: ("See the pipeline log at " + $run_url + ".")}]}' > update.json
+
+      curl -sS --fail-with-body -X PATCH "$UPDATE_URL" \
+        -H "Authorization: Bearer $RUN_TOKEN" \
+        -H "Content-Type: $MESHSTACK_MEDIA_TYPE" \
+        -H "Accept: $MESHSTACK_MEDIA_TYPE" \
+        --data-binary @update.json > /dev/null
