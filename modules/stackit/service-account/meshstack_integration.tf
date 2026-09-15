@@ -189,9 +189,13 @@ resource "meshstack_building_block_definition" "this" {
 
       service_account_name = {
         display_name    = "Service Account Name"
-        description     = "Name of the STACKIT service account to create. Must be unique within the project."
+        description     = "Name of the STACKIT service account to create. Must be unique within the project. Lowercase letters, numbers and dashes; must start with a letter and not start/end with a dash or contain consecutive dashes."
         type            = "STRING"
         assignment_type = "USER_INPUT"
+        # STACKIT rejects any other shape at create time; validate at order time so the app team gets
+        # the error before a run starts. Anchored, no lookahead: a dash only sits between alphanumerics.
+        value_validation_regex         = "^[a-z][a-z0-9]*(-[a-z0-9]+)*$"
+        validation_regex_error_message = "Name must start with a lowercase letter and contain only lowercase letters, numbers and single dashes (no leading, trailing or consecutive dashes)."
       }
 
       roles = {
