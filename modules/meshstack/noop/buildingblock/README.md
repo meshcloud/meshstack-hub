@@ -79,6 +79,9 @@ output "some_file_yaml" {
   value = yamldecode(file("some-file.yaml"))
 }
 ```
+
+This module wraps that read in a `fileexists()` guard so the hub's static validation can load it
+outside a run. Your own module does not need the guard.
 <!-- BEGIN_TF_DOCS -->
 ## Requirements
 

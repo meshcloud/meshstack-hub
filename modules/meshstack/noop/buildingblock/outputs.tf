@@ -1,9 +1,12 @@
 output "some_file_yaml" {
-  value = yamldecode(file("some-file.yaml"))
+  # A FILE input exists only inside a meshStack run, which writes it into the working
+  # directory before Terraform starts. `tofu validate` evaluates file() on a constant
+  # path, so without this guard the module cannot even be loaded outside a run.
+  value = fileexists("some-file.yaml") ? yamldecode(file("some-file.yaml")) : null
 }
 
 output "sensitive_file_yaml" {
-  value = yamldecode(file("sensitive-file.yaml"))
+  value = fileexists("sensitive-file.yaml") ? yamldecode(file("sensitive-file.yaml")) : null
 }
 
 output "user_permissions" {
@@ -136,8 +139,10 @@ output "debug_input_variables_json" {
 output "debug_input_files_json" {
   description = "JSON-encoded map of all input files received, including sensitive values in plaintext."
   sensitive   = true # For test only. Do not do this in production code.
+  # Guarded like the file outputs above. A run that fails to deliver an input yields
+  # null here, which the e2e test catches by comparing this output to the input it sent.
   value = jsonencode({
-    "some-file.yaml"      = file("some-file.yaml")
-    "sensitive-file.yaml" = file("sensitive-file.yaml")
+    "some-file.yaml"      = fileexists("some-file.yaml") ? file("some-file.yaml") : null
+    "sensitive-file.yaml" = fileexists("sensitive-file.yaml") ? file("sensitive-file.yaml") : null
   })
 }

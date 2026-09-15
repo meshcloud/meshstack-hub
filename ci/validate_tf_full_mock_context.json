@@ -1,0 +1,56 @@
+{
+  "_comment": "Validation fixture, not test input. ci/validate_tf_full.sh feeds this to the e2e roots as var.test_context so that `tofu init` can resolve their module tree. Nothing here reaches meshStack or a cloud, and `hub_git_ref` is replaced with the commit under validation. It is the union of the fields the e2e roots declare, so a new field in an e2e root belongs here too.",
+
+  "hub_git_ref": "replaced by ci/validate_tf_full.sh",
+  "workspace": "validation-only",
+  "project": "validation-only",
+  "run_id": "st0000000000val",
+  "name_suffix": "0000000000",
+  "mode": "hub",
+  "bbd_draft": true,
+  "bbd_version_ref": null,
+  "owner_username": "validation-only@example.invalid",
+  "meshstack_endpoint": "https://validation-only.example.invalid",
+  "forgejo_base_url": "https://validation-only.example.invalid",
+  "forgejo_organization": "validation-only",
+  "dns_zone_name": "validation-only.example.invalid",
+
+  "meshstack": {
+    "project_identifier_suffix": "val",
+    "tag_schema": {
+      "expiry_key": "validation-only",
+      "mandatory": { "workspace": {}, "project": {}, "payment_method": {} }
+    }
+  },
+
+  "fixtures": {
+    "aws": {
+      "account_id": "000000000000",
+      "region": "eu-central-1",
+      "oidc_provider_arn": "arn:aws:iam::000000000000:oidc-provider/validation-only.example.invalid"
+    },
+    "azure": {
+      "subscription_uuid": "00000000-0000-0000-0000-000000000000",
+      "entra_tenant_id": "00000000-0000-0000-0000-000000000000",
+      "mesh_tenant_id": "validation-only"
+    },
+    "gcp": {
+      "project_id": "validation-only",
+      "mesh_tenant_id": "validation-only",
+      "billing_account_id": "000000-000000-000000"
+    },
+    "stackit": {
+      "organization_id": "00000000-0000-0000-0000-000000000000",
+      "project_id": "00000000-0000-0000-0000-000000000000",
+      "parent_container_id": "00000000-0000-0000-0000-000000000000",
+      "platform_uuid": "00000000-0000-0000-0000-000000000000",
+      "landing_zone_name": "validation-only",
+      "mesh_tenant_id": "validation-only"
+    },
+    "github": {
+      "owner": "meshcloud",
+      "repository": "validation-only",
+      "branch": "main"
+    }
+  }
+}

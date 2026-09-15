@@ -1,0 +1,22 @@
+name: tofu-validate
+on:
+  pull_request:
+    branches: [main]
+  merge_group:
+
+# A rebase can combine two green PRs into a broken tree, so this looks at the
+# whole repo, never at a diff.
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      # Not the nix shell the other jobs use: entering it costs 42s, half this
+      # job's budget. Keep the version in step with flake.nix.
+      - uses: opentofu/setup-opentofu@a1320f892987e89d278cc92dc5adc984fb93aca4 # v2.0.2
+        with:
+          tofu_version: 1.12.1
+          tofu_wrapper: false
+
+      - run: bash ci/validate_tf_full.sh
