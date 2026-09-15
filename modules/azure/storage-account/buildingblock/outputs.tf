@@ -13,3 +13,17 @@ output "storage_account_resource_group" {
 output "storage_account_url" {
   value = "https://portal.azure.com/#@${data.azurerm_client_config.current.tenant_id}/resource${azurerm_storage_account.storage_account.id}/overview"
 }
+
+output "tags" {
+  value = azurerm_storage_account.storage_account.tags
+}
+
+output "network_default_action" {
+  # `try` because the network_rules block only exists when restrict_network_access is true; Azure's
+  # own default applies otherwise.
+  value = try(azurerm_storage_account.storage_account.network_rules[0].default_action, "Allow")
+}
+
+output "blob_soft_delete_retention_days" {
+  value = azurerm_storage_account.storage_account.blob_properties[0].delete_retention_policy[0].days
+}

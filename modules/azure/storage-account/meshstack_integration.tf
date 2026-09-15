@@ -49,6 +49,12 @@ variable "bbd_readme" {
   description = "Overrides the markdown readme shown in the marketplace before ordering."
 }
 
+variable "workspace_tag_to_copy" {
+  type        = string
+  default     = null
+  description = "Name of a single workspace tag to copy onto the storage account as an Azure tag, resolved per order from the ordering workspace. Leave null to copy no tag."
+}
+
 variable "meshstack" {
   type = object({
     owning_workspace_identifier = string
@@ -148,7 +154,7 @@ resource "meshstack_building_block_definition" "this" {
       }
     }
 
-    inputs = {
+    inputs = merge({
       ARM_CLIENT_ID = {
         type            = "STRING"
         display_name    = "ARM Client ID"
@@ -189,14 +195,6 @@ resource "meshstack_building_block_definition" "this" {
         is_environment  = true
         argument        = jsonencode("/var/run/secrets/workload-identity/azure/token")
       }
-      storage_account_name = {
-        type                           = "STRING"
-        display_name                   = "Storage Account Name"
-        description                    = "A name prefix for the storage account. A random 5-character suffix will be appended to ensure uniqueness (e.g. 'myapp' becomes 'myappx7k2q'). Only lowercase letters and numbers, 3–19 characters."
-        assignment_type                = "USER_INPUT"
-        value_validation_regex         = "^[a-z0-9]{3,19}$"
-        validation_regex_error_message = "Only lowercase letters and numbers are allowed, between 3 and 19 characters (a 5-character suffix will be appended, keeping the final name within Azure's 24-character limit)."
-      }
       location = {
         type            = "STRING"
         display_name    = "Location"
@@ -204,7 +202,89 @@ resource "meshstack_building_block_definition" "this" {
         assignment_type = "STATIC"
         argument        = jsonencode(var.azure_location)
       }
-    }
+      storage_account_name = {
+        type                           = "STRING"
+        display_name                   = "Storage Account Name"
+        description                    = "A name prefix for the storage account. A random 5-character suffix will be appended to ensure uniqueness (e.g. 'myapp' becomes 'myappx7k2q'). Only lowercase letters and numbers, 3–19 characters."
+        assignment_type                = "USER_INPUT"
+        value_validation_regex         = "^[a-z0-9]{3,19}$"
+        validation_regex_error_message = "Only lowercase letters and numbers are allowed, between 3 and 19 characters (a 5-character suffix will be appended, keeping the final name within Azure's 24-character limit)."
+        display_order                  = 1
+      }
+      blob_soft_delete_retention_days = {
+        type            = "INTEGER"
+        display_name    = "Blob Soft-Delete Retention (Days)"
+        description     = "Optional: how many days a deleted file can still be restored before it's gone for good. Leave blank to use 7 days."
+        assignment_type = "USER_INPUT"
+        is_optional     = true
+        display_order   = 2
+      }
+      restrict_network_access = {
+        type            = "BOOLEAN"
+        display_name    = "Restrict Network Access"
+        description     = "Turn this on to limit which networks and IP addresses can reach the storage account. Leave it off to allow access from anywhere."
+        assignment_type = "USER_INPUT"
+        default_value   = jsonencode(false)
+        display_order   = 3
+      }
+      network_rules = {
+        type            = "JSON"
+        display_name    = "Network Rules"
+        description     = "Choose which networks, IP addresses and services are allowed to reach the storage account."
+        assignment_type = "USER_INPUT"
+        condition       = "input.restrict_network_access == true"
+        is_optional     = true
+        display_order   = 4
+        json_schema = jsonencode({
+          type = "object"
+          properties = {
+            bypass = {
+              type        = "array"
+              title       = "Allow Azure services"
+              description = "Let trusted Microsoft services, like backups and monitoring, reach the storage account even though other access is restricted. Most people can leave this as is."
+              items = {
+                type = "string"
+                enum = ["AzureServices", "Logging", "Metrics", "None"]
+              }
+            }
+            ip_rules = {
+              type        = "array"
+              title       = "Allowed IP addresses"
+              description = "The internet addresses allowed to reach the storage account. Add one per line, e.g. 203.0.113.7 for a single address or 203.0.113.0/24 for a range. Ask your platform team if you're not sure what to enter."
+              items = {
+                type    = "string"
+                pattern = "^([0-9]{1,3}\\.){3}[0-9]{1,3}(/([0-9]|[12][0-9]|3[0-2]))?$"
+              }
+            }
+            virtual_network_subnet_ids = {
+              type        = "array"
+              title       = "Allowed virtual networks"
+              description = "The Azure virtual networks allowed to reach the storage account. Ask your platform team for the right value if you're not sure."
+              items       = { type = "string" }
+            }
+          }
+        })
+      }
+      },
+      # Only declared when configured: tag_name tells the buildingblock which Azure tag key to
+      # apply, tag_value is meshStack's per-order resolution of that same workspace tag.
+      var.workspace_tag_to_copy != null ? {
+        tag_name = {
+          type            = "CODE"
+          display_name    = "Tag Name"
+          description     = "Internal: the workspace tag name that tag_value resolves, and the Azure tag key it's applied under."
+          assignment_type = "STATIC"
+          argument        = jsonencode(var.workspace_tag_to_copy)
+        }
+        tag_value = {
+          type            = "CODE"
+          display_name    = "${var.workspace_tag_to_copy} Tag"
+          description     = "Value of the workspace's ${var.workspace_tag_to_copy} tag, applied automatically as a tag on the storage account rather than typed in by a user."
+          assignment_type = "TAG"
+          argument        = jsonencode("WORKSPACE.${var.workspace_tag_to_copy}")
+        }
+      } : {}
+    )
 
     outputs = {
       storage_account_id = {
@@ -231,6 +311,24 @@ resource "meshstack_building_block_definition" "this" {
         description     = "Azure Portal URL to the storage account"
         assignment_type = "RESOURCE_URL"
       }
+      tags = {
+        type            = "CODE"
+        display_name    = "Tags"
+        description     = "Tags actually applied to the storage account, including the resolved Cost Center tag."
+        assignment_type = "NONE"
+      }
+      network_default_action = {
+        type            = "STRING"
+        display_name    = "Network Default Action"
+        description     = "The default network action (Allow/Deny) actually applied to the storage account."
+        assignment_type = "NONE"
+      }
+      blob_soft_delete_retention_days = {
+        type            = "INTEGER"
+        display_name    = "Blob Soft-Delete Retention (Days)"
+        description     = "The blob soft-delete retention period actually applied, or null if left disabled."
+        assignment_type = "NONE"
+      }
     }
   }
 }
@@ -241,7 +339,7 @@ terraform {
   required_providers {
     meshstack = {
       source  = "meshcloud/meshstack"
-      version = ">= 0.21.0"
+      version = ">= 0.25.3"
     }
     azurerm = {
       source  = "hashicorp/azurerm"
