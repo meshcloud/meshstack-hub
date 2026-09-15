@@ -226,9 +226,10 @@ const detectors = [
     category: "core",
     name: "buildingblock/versions.tf present",
     emoji: "📌",
-    fn: (mod) => ({
-      pass: existsSync(join(mod.path, "buildingblock", "versions.tf")),
-    }),
+    fn: (mod) => {
+      if (!runsTerraform(mod)) return { pass: null, detail: "not applicable — non-terraform implementation" };
+      return { pass: existsSync(join(mod.path, "buildingblock", "versions.tf")) };
+    },
   },
   {
     id: "child_bb_run_postcondition",
@@ -430,6 +431,11 @@ const detectors = [
     fn: (mod) => {
       const content = readIntegrationTf(mod);
       if (!content) return { pass: false, detail: "no integration file" };
+
+      // A pipeline implementation points ref_name at a branch in the customer's own repository, so
+      // pinning it to the hub release would be wrong.
+      if (!runsTerraform(mod)) return { pass: null, detail: "not applicable — non-terraform implementation" };
+
       const hasRefName = /ref_name\s*=/.test(content);
       if (!hasRefName) return { pass: false, detail: "no ref_name found" };
       return { pass: /ref_name\s*=\s*var\.hub\.git_ref/.test(content) };
@@ -444,9 +450,7 @@ const detectors = [
       const content = readIntegrationTf(mod);
       if (!content) return { pass: false, detail: "no integration file" };
 
-      if (!/^\s*terraform\s*=\s*\{/m.test(content)) {
-        return { pass: null, detail: "not applicable — non-terraform implementation" };
-      }
+      if (!runsTerraform(mod)) return { pass: null, detail: "not applicable — non-terraform implementation" };
 
       const found = [...content.matchAll(/terraform_version\s*=\s*"([^"]+)"/g)].map((m) => m[1]);
       if (found.length === 0) {
@@ -1309,6 +1313,16 @@ function readIntegrationTf(mod) {
   const p = join(mod.path, "meshstack_integration.tf");
   if (!existsSync(p)) return null;
   return readFileSync(p, "utf-8");
+}
+
+// A manual or pipeline implementation runs no tofu of its own: its automation lives in meshStack or
+// in the customer's CI system, so buildingblock/ carries documentation only and the fields a
+// terraform implementation has do not exist. Checks that only make sense for terraform then report
+// "not applicable" rather than failing.
+function runsTerraform(mod) {
+  const content = readIntegrationTf(mod);
+  if (!content) return true;
+  return /^\s*terraform\s*=\s*\{/m.test(content);
 }
 
 function readBackplaneTf(mod) {
