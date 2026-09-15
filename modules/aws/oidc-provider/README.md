@@ -35,9 +35,13 @@ module "s3_bucket" {
 }
 ```
 
-The issuer, audience and thumbprint are read from `data.meshstack_integrations`, so this module
-takes no inputs — it needs an `aws` provider pointed at the account and a configured `meshstack`
-provider.
+Issuer and audience are read from `data.meshstack_building_block_runner`, and the thumbprint from
+the issuer's own TLS chain, so this module needs no inputs — an `aws` provider pointed at the
+account and a configured `meshstack` provider are enough. Set `building_block_runner_uuid` to
+register a self-hosted runner's issuer instead of the shared one, and pass the same uuid to every
+building block module that runs on it.
+
+The issuer URL has to be reachable from wherever this runs, because the thumbprint is read from it.
 
 ## Required permissions
 

@@ -134,13 +134,14 @@ module "backplane" {
   location = var.azure_location
 
   workload_identity_federation = {
-    issuer = data.meshstack_integrations.integrations.workload_identity_federation.replicator.issuer
-    subjects = [
-      "${trimsuffix(data.meshstack_integrations.integrations.workload_identity_federation.replicator.subject, ":replicator")}:workspace.${var.meshstack.owning_workspace_identifier}.buildingblockdefinition.${meshstack_building_block_definition.this.metadata.uuid}"
-    ]
+    issuer   = data.meshstack_building_block_runner.this.spec.workload_identity_federation.issuer
+    subjects = [meshstack_building_block_definition.this.status.workload_identity_federation.subject]
   }
 }
 ```
+
+The data source and the `building_block_runner_uuid` that feeds it are the same in every cloud, see
+[meshstack-integration.md § Runner identity](meshstack-integration.md#runner-identity).
 
 The `meshstack_integration.tf` must include `azure_location` variable (flat, provider-prefixed) for all resource placement.
 The resource group is derived from and managed by the backplane using `var.name`.

@@ -3,15 +3,6 @@ variable "aws_region" {
   description = "AWS region where the S3 bucket will be created (e.g. 'eu-central-1')."
 }
 
-variable "workload_identity" {
-  type = object({
-    issuer                   = string
-    audience                 = string
-    subject_namespace_prefix = string
-  })
-  description = "Workload identity federation configuration for AWS authentication."
-}
-
 variable "aws_oidc_provider_arn" {
   type        = string
   nullable    = false
@@ -43,6 +34,12 @@ variable "bbd_readme" {
   type        = string
   default     = null
   description = "Overrides the markdown readme shown in the marketplace before ordering."
+}
+
+variable "building_block_runner_uuid" {
+  type        = string
+  default     = null
+  description = "Runs this building block on the given meshStack building block runner instead of the shared one meshStack hosts."
 }
 
 variable "meshstack" {
@@ -77,6 +74,12 @@ output "building_block_definition" {
   }
 }
 
+data "meshstack_building_block_runner" "this" {
+  metadata = {
+    uuid = var.building_block_runner_uuid
+  }
+}
+
 module "backplane" {
   source = "github.com/meshcloud/meshstack-hub//modules/aws/s3_bucket/backplane?ref=${var.hub.git_ref}"
 
@@ -84,9 +87,9 @@ module "backplane" {
   oidc_provider_arn = var.aws_oidc_provider_arn
 
   workload_identity_federation = {
-    issuer   = var.workload_identity.issuer
-    audience = var.workload_identity.audience
-    subjects = ["system:serviceaccount:${var.workload_identity.subject_namespace_prefix}:workspace.${var.meshstack.owning_workspace_identifier}.buildingblockdefinition.${meshstack_building_block_definition.this.metadata.uuid}"]
+    issuer   = data.meshstack_building_block_runner.this.spec.workload_identity_federation.issuer
+    audience = data.meshstack_building_block_runner.this.spec.workload_identity_federation.aws.audience
+    subjects = [meshstack_building_block_definition.this.status.workload_identity_federation.subject]
   }
 }
 
@@ -139,6 +142,10 @@ resource "meshstack_building_block_definition" "this" {
   version_spec = {
     draft         = var.hub.bbd_draft
     deletion_mode = "DELETE"
+    runner_ref = var.building_block_runner_uuid == null ? null : {
+      kind = "meshBuildingBlockRunner"
+      uuid = var.building_block_runner_uuid
+    }
 
     implementation = {
       terraform = {
@@ -227,7 +234,7 @@ terraform {
     }
     meshstack = {
       source  = "meshcloud/meshstack"
-      version = ">= 0.21.0"
+      version = ">= 0.26.0"
     }
   }
 }

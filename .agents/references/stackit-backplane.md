@@ -140,23 +140,19 @@ STACKIT project owner: reusing the automation identity there conflated two unrel
 
 ## `meshstack_integration.tf` Wiring (STACKIT)
 
-Retrieve the meshStack WIF issuer and subject via the `meshstack_integrations` data source,
-then pass them to the backplane. Register the WIF env vars as STATIC environment inputs so
+Take the issuer from the runner data source and the subject from the definition's resolved status,
+then pass both to the backplane. Register the WIF env vars as STATIC environment inputs so
 the buildingblock runtime can exchange the token automatically.
 
 ```hcl
-data "meshstack_integrations" "integrations" {}
-
 module "backplane" {
   source = "github.com/meshcloud/meshstack-hub//modules/stackit/<service>/backplane?ref=${var.hub.git_ref}"
 
   project_id = var.stackit_project_id
 
   workload_identity_federation = {
-    issuer = data.meshstack_integrations.integrations.workload_identity_federation.replicator.issuer
-    subjects = [
-      "${trimsuffix(data.meshstack_integrations.integrations.workload_identity_federation.replicator.subject, ":replicator")}:workspace.${var.meshstack.owning_workspace_identifier}.buildingblockdefinition.${meshstack_building_block_definition.this.metadata.uuid}"
-    ]
+    issuer   = data.meshstack_building_block_runner.this.spec.workload_identity_federation.issuer
+    subjects = [meshstack_building_block_definition.this.status.workload_identity_federation.subject]
   }
 }
 
@@ -200,7 +196,7 @@ The `stackit_service_account_federated_identity_provider` resource requires prov
 - ❌ `service_account_key_json` output — replace with `service_account_email`
 - ❌ `STACKIT_SERVICE_ACCOUNT_TOKEN` env var — deprecated
 - ❌ `service_account_email` or `use_oidc` in the buildingblock `provider.tf` — the env vars already carry both
-- ❌ Hardcoded `issuer` or `subjects` — always source from `data.meshstack_integrations`
+- ❌ A hardcoded or string-built `issuer` or `subject`: the runner declares the one, meshStack resolves the other
 - ❌ Non-sensitive output for credentials — `service_account_email` is not sensitive, but any key would be
 
 ## Checklist for STACKIT Backplanes
@@ -214,5 +210,5 @@ The `stackit_service_account_federated_identity_provider` resource requires prov
 - [ ] Backplane `versions.tf` uses `>= 0.98.0` for the STACKIT provider
 - [ ] Buildingblock `provider.tf` carries no auth arguments — no `service_account_email`, `use_oidc` or `service_account_key`
 - [ ] No `service_account_key_json` variable or output anywhere
-- [ ] `meshstack_integration.tf` uses `data.meshstack_integrations.integrations` for issuer/subject
+- [ ] `meshstack_integration.tf` follows [meshstack-integration.md § Runner identity](meshstack-integration.md#runner-identity) for issuer and subject
 - [ ] `meshstack_integration.tf` wires `STACKIT_SERVICE_ACCOUNT_EMAIL`, `STACKIT_USE_OIDC` and `STACKIT_FEDERATED_TOKEN_FILE` as STATIC env var inputs
