@@ -151,9 +151,11 @@ check_png_minimization() {
 check_terraform_files() {
 	local buildingblock_path="$1"
 
-	# Skip terraform checks for manual and github-workflow building blocks.
-	# These are intentionally non-Terraform building blocks that are defined via meshstack_integration.tf.
-	if [[ "$buildingblock_path" == *"/meshstack/manual/buildingblock" || "$buildingblock_path" == *"/meshstack/github-workflow/buildingblock" ]]; then
+	# A building block whose definition names a manual or pipeline implementation has no tofu module
+	# to run: its automation lives in meshStack or in the customer's CI system, and buildingblock/
+	# carries documentation only.
+	local integration_file="${buildingblock_path%/buildingblock}/meshstack_integration.tf"
+	if [[ -f "$integration_file" ]] && ! grep -qE '^[[:space:]]*terraform[[:space:]]*=[[:space:]]*\{' "$integration_file"; then
 		return 0
 	fi
 
