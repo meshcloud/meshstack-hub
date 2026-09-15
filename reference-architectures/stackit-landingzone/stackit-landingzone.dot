@@ -26,6 +26,7 @@ digraph stackit_landingzone {
     FOLDER [label="📁 Resourcemanager Folder\ntenant projects are created here" fillcolor="#ffffff" color="#a2abb8"]
     NA     [label="🌐 Network Area ×1\nshared IPv4 address plan · hub" fillcolor="#e5f2ea" color="#85bfa0"]
     PRJ    [label="🗂️ STACKIT Project ×N" fillcolor="#e5f2ea" color="#85bfa0"]
+    SA     [label="🤖 Service Account ×N\nproject roles · WIF" fillcolor="#e5f2ea" color="#85bfa0"]
     SPOKE  [label="🔌 Routed Network ×N\nspoke subnet" fillcolor="#e5f2ea" color="#85bfa0"]
 
     { rank=same; FOUND -> FOLDER -> NA [style=invis] }
@@ -34,6 +35,7 @@ digraph stackit_landingzone {
     ORG    -> FOLDER
     ORG    -> NA
     FOLDER -> PRJ   [xlabel="holds"]
+    PRJ    -> SA    [xlabel="contains"]
     PRJ    -> SPOKE [xlabel="contains"]
     NA     -> SPOKE [xlabel="assigns CIDR to" style=dashed constraint=false]
   }
@@ -49,20 +51,23 @@ digraph stackit_landingzone {
     DEFLZ    [label="🛬 Default Landing Zone" fillcolor="#ecedfb" color="#9aa2e6"]
     NETLZ    [label="🛬 Networked Landing Zone\noptional · with network config" fillcolor="#ecedfb" color="#9aa2e6"]
     PRJBBD   [label="📦 stackit/project BBD" fillcolor="#ecedfb" color="#9aa2e6"]
+    SABBD    [label="📦 stackit/service-account BBD\ntenant-level self-service" fillcolor="#ecedfb" color="#9aa2e6"]
     NABBD    [label="📦 stackit/network-area BBD\noptional · platform team orders it once" fillcolor="#ecedfb" color="#9aa2e6"]
     SPOKEBBD [label="📦 stackit/network BBD\noptional · tenant-level self-service" fillcolor="#ecedfb" color="#9aa2e6"]
 
     { rank=same; DEFLZ -> NETLZ [style=invis] }
-    { rank=same; PRJBBD -> SPOKEBBD -> NABBD [style=invis] }
+    { rank=same; PRJBBD -> SABBD -> SPOKEBBD -> NABBD [style=invis] }
 
     PLAT  -> DEFLZ
     PLAT  -> NETLZ
     DEFLZ -> PRJBBD   [xlabel="requests"]
+    PLAT  -> SABBD    [xlabel="offers to tenants"]
     NETLZ -> SPOKEBBD [xlabel="offers to tenants"]
   }
 
   FOUND    -> PLAT  [xlabel="authenticates" style=dotted constraint=false]
   PRJBBD   -> PRJ   [xlabel="provisions" style=dotted constraint=false]
+  SABBD    -> SA    [xlabel="provisions" style=dotted constraint=false]
   NABBD    -> NA    [xlabel="provisions" style=dotted constraint=false]
   SPOKEBBD -> SPOKE [xlabel="provisions" style=dotted constraint=false]
   NETLZ    -> NA    [xlabel="tagged with area id" style=dotted constraint=false]

@@ -11,6 +11,8 @@ cloudProviders:
 buildingBlocks:
   - path: stackit/project
     role: Provisions a STACKIT Project with role assignments.
+  - path: stackit/service-account
+    role: Lets application teams self-service create a STACKIT service account with project roles and workload identity federation inside their projects.
   - path: stackit/network-area
     role: (Optional) Provisions the hub network area with the shared IPv4 address plan.
   - path: stackit/network
@@ -71,16 +73,19 @@ Running this reference architecture always:
 3. Sources the [`modules/stackit`](../../modules/stackit) platform integration to register the
    **STACKIT Project** platform and its default landing zone in meshStack, wired to the foundation
    service account.
+4. Registers the [`stackit/service-account`](../../modules/stackit/service-account) building block
+   definition (`TENANT_LEVEL`) so application teams can self-service create a STACKIT service account
+   — with project roles and optional workload identity federation — inside their own projects.
 
 When a **network** configuration is provided, it additionally:
 
-4. Registers the [`stackit/network-area`](../../modules/stackit/network-area) building block
+5. Registers the [`stackit/network-area`](../../modules/stackit/network-area) building block
    definition and immediately orders **one instance** of it in the platform team's own workspace —
    this is the hub's IPv4 address plan.
-5. Registers the [`stackit/network`](../../modules/stackit/network) building block definition
+6. Registers the [`stackit/network`](../../modules/stackit/network) building block definition
    (`TENANT_LEVEL`) so application teams can self-service order routed networks (spokes) inside
    their STACKIT projects, drawing from the hub's address plan.
-6. Provisions an additional **networked project definition and landing zone**. The networked
+7. Provisions an additional **networked project definition and landing zone**. The networked
    `STACKIT Project` building block definition carries the hub's network area ID as a static
    `networkArea` label, so new STACKIT projects created against that landing zone are placed in the
    hub's network area.
@@ -157,8 +162,10 @@ consumer cannot turn a real platform into a playground one, or the reverse. Chan
 | Responsibility                                                                | Platform Team | Application Team |
 |-------------------------------------------------------------------------------|:---:|:---:|
 | Provision the STACKIT platform and default landing zone                       | ✅ | ❌ |
+| Register the self-service `stackit/service-account` building block            | ✅ | ❌ |
 | *(Optional)* Provision the hub network area and choose its address plan       | ✅ | ❌ |
 | *(Optional)* Register the spoke `stackit/network` building block              | ✅ | ❌ |
 | Request STACKIT projects through the landing zone                             | ❌ | ✅ |
+| Create service accounts inside their STACKIT projects                         | ❌ | ✅ |
 | *(Optional)* Order spoke networks inside their STACKIT projects               | ❌ | ✅ |
 | Use the assigned subnet and manage workloads inside their projects            | ❌ | ✅ |
