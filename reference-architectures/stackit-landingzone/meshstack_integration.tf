@@ -32,7 +32,7 @@ variable "hub" {
   const = true
 
   default = {
-    git_ref   = "feature/dynamo-db-entry"
+    git_ref   = "feature/stackit-lz"
     bbd_draft = true
   }
 
@@ -132,6 +132,9 @@ resource "meshstack_building_block_definition" "this" {
       project-creation service account and other landing-zone core assets.
     - **STACKIT Project platform** – the `STACKIT Project` building block definition, platform and default landing zone,
       including the project-creation service account provisioned in the foundation project.
+    - **STACKIT Service Account building block** – the `STACKIT Service Account` building block
+      definition (`TENANT_LEVEL`), so application teams can self-service create a service account
+      with project roles and optional workload identity federation inside their own projects.
     - **Hub network area + spoke network building block + networked project definition and landing
       zone** *(only when a network configuration is provided)* – the shared hub address plan, the
       self-service `STACKIT Network` building block, and a second `STACKIT Networked Project`
@@ -164,9 +167,11 @@ resource "meshstack_building_block_definition" "this" {
     |---|:---:|:---:|
     | Provide the STACKIT service account key, organization details, tags and role mapping | ✅ | ❌ |
     | Provision the location, folder and STACKIT Project platform | ✅ | ❌ |
+    | Register the self-service `STACKIT Service Account` building block | ✅ | ❌ |
     | (Optional) Provide the network CIDR plan and provision the hub network area | ✅ | ❌ |
     | (Optional) Register the spoke `STACKIT Network` building block for self-service | ✅ | ❌ |
     | Request STACKIT projects through the landing zone | ❌ | ✅ |
+    | Create service accounts inside their STACKIT projects | ❌ | ✅ |
     | (Optional) Order spoke networks inside their STACKIT projects | ❌ | ✅ |
     | Manage workloads inside the provisioned STACKIT projects | ❌ | ✅ |
     EOT

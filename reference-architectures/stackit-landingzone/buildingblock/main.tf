@@ -152,6 +152,24 @@ module "stackit_project_starterkit" {
   hub = var.hub
 }
 
+# ── Self-service service account building block (always deployed) ──
+
+# Registers the TENANT_LEVEL `STACKIT Service Account` building block so application teams can
+# self-service create a service account with project roles and workload identity federation inside
+# their own STACKIT projects. Registered unconditionally like the starterkit; its draft state follows
+# var.hub.bbd_draft, so a draft deployment registers it without publishing it outside the workspace.
+# The backplane automation identity is created in the foundation project and granted its roles at
+# organization scope, exactly like the network integrations below.
+module "service_account_integration" {
+  source = "github.com/meshcloud/meshstack-hub//modules/stackit/service-account?ref=${var.hub.git_ref}"
+
+  stackit_organization_id = var.stackit_org
+  stackit_project_id      = stackit_resourcemanager_project.foundation.project_id
+
+  meshstack = { owning_workspace_identifier = var.workspace, tags = var.tags.building_block }
+  hub       = var.hub
+}
+
 # ── Hub-and-spoke network topology (optional — deployed only when var.network is set) ──
 
 module "network_area_integration" {
