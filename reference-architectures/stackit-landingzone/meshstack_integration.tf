@@ -32,7 +32,7 @@ variable "hub" {
   const = true
 
   default = {
-    git_ref   = "main"
+    git_ref   = "feature/dynamo-db-entry"
     bbd_draft = true
   }
 
