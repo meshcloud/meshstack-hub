@@ -19,7 +19,13 @@ variable "bbd_readme" {
 variable "stackit_backplane_project_id" {
   type        = string
   nullable    = false
-  description = "Existing STACKIT project the automation service accounts (this architecture's and the SKE cluster's) are created in — e.g. a foundation project. Applying this file creates a service account here."
+  description = "Existing STACKIT project this architecture's own automation service account is created in — e.g. a foundation project. Applying this file creates a service account here. The cluster no longer creates a backplane here; it deploys as the service account minted on the hosting project (see service_account_bbd_version_ref)."
+}
+
+variable "service_account_bbd_version_ref" {
+  type        = string
+  nullable    = false
+  description = "Version uuid of the STACKIT Service Account building block definition registered by the STACKIT Landing Zone (its `service_account_bbd_version_uuid` output). The platform orders it on the hosting project to mint the identity the cluster deploys as. Wire this from the landing zone in the foundation repo."
 }
 
 variable "stackit_organization_id" {
@@ -226,21 +232,16 @@ resource "meshstack_building_block_definition" "this" {
         argument        = jsonencode("/var/run/secrets/workload-identity/azure/token")
       }
 
-      # Passed through to the nested SKE Cluster integration, which provisions its own backplane.
-      stackit_backplane_project_id = {
-        display_name    = "STACKIT Backplane Project ID"
-        description     = "Existing STACKIT project the cluster's automation service account is created in."
+      # Version uuid of the STACKIT Service Account definition the landing zone registered. The
+      # building block orders it on the hosting project to mint the identity the cluster deploys as,
+      # so the cluster no longer provisions its own backplane. Set by the deployer (e.g. the likvid
+      # foundation wiring `landingzone.service_account_bbd_version_uuid`).
+      service_account_bbd_version_ref = {
+        display_name    = "Service Account BBD Version Ref"
+        description     = "Version uuid of the STACKIT Service Account building block definition (from the STACKIT Landing Zone) the platform orders to mint its automation identity."
         type            = "STRING"
         assignment_type = "STATIC"
-        argument        = jsonencode(var.stackit_backplane_project_id)
-      }
-
-      stackit_organization_id = {
-        display_name    = "STACKIT Organization ID"
-        description     = "STACKIT organization the automation service accounts are granted roles on."
-        type            = "STRING"
-        assignment_type = "STATIC"
-        argument        = jsonencode(var.stackit_organization_id)
+        argument        = jsonencode(var.service_account_bbd_version_ref)
       }
 
       hub = {

@@ -44,18 +44,6 @@ variable "playground_mode" {
 
 # ── STACKIT authentication and self-hosting ──
 
-variable "stackit_backplane_project_id" {
-  type        = string
-  nullable    = false
-  description = "Existing STACKIT project the automation service accounts (this architecture's and the SKE cluster's) are created in — e.g. a foundation project. Not the hosting project, which is provisioned at order time."
-}
-
-variable "stackit_organization_id" {
-  type        = string
-  nullable    = false
-  description = "STACKIT organization the automation service accounts are granted roles on, so the grants are inherited by the hosting project created at order time."
-}
-
 variable "host_platform_identifier" {
   type        = string
   nullable    = false
@@ -66,6 +54,12 @@ variable "host_landing_zone_name" {
   type        = string
   nullable    = false
   description = "Name of the landing zone on the host STACKIT platform that the hosting tenant is placed in."
+}
+
+variable "service_account_bbd_version_ref" {
+  type        = string
+  nullable    = false
+  description = "Version uuid of the STACKIT Service Account building block definition (registered by the STACKIT Landing Zone, exposed as its `service_account_bbd_version_uuid` output). Ordered on the hosting project to mint the automation identity the cluster deploys as."
 }
 
 variable "stackit_region" {

@@ -371,6 +371,14 @@ resource "meshstack_building_block_definition" "this" {
         assignment_type = "NONE"
       }
 
+      # Consumed by a composing architecture (e.g. the STACKIT Kubernetes Platform) to order the
+      # STACKIT Service Account building block this landing zone registered.
+      service_account_bbd_version_uuid = {
+        display_name    = "Service Account BBD Version UUID"
+        type            = "STRING"
+        assignment_type = "NONE"
+      }
+
       summary = {
         display_name    = "Summary"
         type            = "STRING"

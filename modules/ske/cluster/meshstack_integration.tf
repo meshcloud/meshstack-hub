@@ -1,13 +1,33 @@
+variable "external_service_account" {
+  type        = bool
+  nullable    = false
+  default     = false
+  description = <<-EOT
+  When true, the cluster does not create its own backplane service account. Instead the composing
+  architecture supplies the automation identity as the order-time `STACKIT_SERVICE_ACCOUNT_EMAIL`
+  input — e.g. a service account minted by the STACKIT Service Account building block that already
+  holds SKE permissions on the target project and trusts this definition's WIF subject. Default
+  false keeps the standalone behaviour: the module's own backplane creates and pins the identity.
+  EOT
+
+  validation {
+    condition     = var.external_service_account || (var.stackit_backplane_project_id != null && var.stackit_organization_id != null)
+    error_message = "stackit_backplane_project_id and stackit_organization_id are required unless external_service_account is true."
+  }
+}
+
 variable "stackit_backplane_project_id" {
   type        = string
-  nullable    = false
-  description = "Existing STACKIT project the backplane creates the automation service account in (e.g. a foundation project). Not the cluster's own project, which is provisioned at order time and supplied as the buildingblock's `stackit_project_id` input."
+  nullable    = true
+  default     = null
+  description = "Existing STACKIT project the backplane creates the automation service account in (e.g. a foundation project). Not the cluster's own project, which is provisioned at order time and supplied as the buildingblock's `stackit_project_id` input. Unused (leave null) when external_service_account is true."
 }
 
 variable "stackit_organization_id" {
   type        = string
-  nullable    = false
-  description = "STACKIT organization the automation service account is granted SKE roles on, so the grant is inherited by the cluster project created at order time."
+  nullable    = true
+  default     = null
+  description = "STACKIT organization the automation service account is granted SKE roles on, so the grant is inherited by the cluster project created at order time. Unused (leave null) when external_service_account is true."
 }
 
 variable "bbd_display_name" {
@@ -63,6 +83,11 @@ data "meshstack_integrations" "integrations" {}
 
 module "backplane" {
   source = "github.com/meshcloud/meshstack-hub//modules/ske/cluster/backplane?ref=${var.hub.git_ref}"
+
+  # Skipped in external-service-account mode: the composing architecture provides the identity instead.
+  # The module stays instantiated (no module-level count) to preserve the BBD/backplane reference
+  # structure OpenTofu resolves today; it just creates no service account or role grants when disabled.
+  enabled = !var.external_service_account
 
   project_id      = var.stackit_backplane_project_id
   organization_id = var.stackit_organization_id
@@ -141,13 +166,16 @@ resource "meshstack_building_block_definition" "this" {
 
     inputs = {
       # ── STACKIT authentication (Workload Identity Federation, no key) ──
+      # In external-service-account mode the composing architecture supplies the identity as an
+      # order-time USER_INPUT; otherwise it is STATIC from the module's own backplane. `argument` is
+      # null (i.e. unset) for USER_INPUT.
       STACKIT_SERVICE_ACCOUNT_EMAIL = {
         display_name    = "STACKIT Service Account Email"
         description     = "Email of the STACKIT service account the provider authenticates as via WIF."
         type            = "STRING"
-        assignment_type = "STATIC"
+        assignment_type = var.external_service_account ? "USER_INPUT" : "STATIC"
         is_environment  = true
-        argument        = jsonencode(module.backplane.service_account_email)
+        argument        = var.external_service_account ? null : jsonencode(module.backplane.service_account_email)
       }
 
       STACKIT_USE_OIDC = {

@@ -18,6 +18,11 @@ output "starterkit_bbd_version_uuid" {
   description = "Version uuid of the STACKIT Project Starterkit definition this architecture registered. The definition is created inside this run, so it cannot be reached through a module output. Do not use it to order starterkit instances as code: the starterkit deletes itself at the end of its run, so an as-code order never converges and creates another project on every apply."
 }
 
+output "service_account_bbd_version_uuid" {
+  value       = module.service_account_integration.building_block_definition.version_ref.uuid
+  description = "Version uuid of the STACKIT Service Account building block definition this landing zone registered. A composing architecture (e.g. the STACKIT Kubernetes Platform) orders this definition to mint a service account — with project roles and WIF — on a target project, then deploys as that account."
+}
+
 output "summary" {
   description = "Summary of the meshStack resources created by this reference architecture."
   value = templatefile("${path.module}/SUMMARY.md.tftpl", {
