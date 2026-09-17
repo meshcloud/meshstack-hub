@@ -316,6 +316,16 @@ resource "meshstack_building_block_definition" "this" {
         assignment_type = "WORKSPACE_IDENTIFIER"
       }
 
+      # meshStack injects this instance's own uuid (the enum is named TENANT_* but also fills for a
+      # WORKSPACE_LEVEL block). Printed in the summary so the STACKIT Kubernetes Platform can be wired
+      # to this landing zone with this single value.
+      building_block_uuid = {
+        display_name    = "Building Block UUID"
+        description     = "UUID of this building block instance, injected by meshStack."
+        type            = "STRING"
+        assignment_type = "TENANT_BUILDING_BLOCK_UUID"
+      }
+
       platform_identifier = {
         display_name                   = "Platform Identifier"
         description                    = "Identifier for the STACKIT sandbox platform created in meshStack (letters, digits and dashes only)."

@@ -28,6 +28,7 @@ output "summary" {
   value = templatefile("${path.module}/SUMMARY.md.tftpl", {
     platform_identifier    = local.platform_identifier
     playground_mode        = var.playground_mode
+    building_block_uuid    = var.building_block_uuid
     organization_id        = var.stackit_org
     organization_url       = "https://portal.stackit.cloud/dashboard?organization=${var.stackit_org}"
     lz_folder_container_id = stackit_resourcemanager_folder.this.container_id

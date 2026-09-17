@@ -16,22 +16,10 @@ variable "bbd_readme" {
   description = "Overrides the markdown readme shown in the marketplace before ordering."
 }
 
-variable "stackit_backplane_project_id" {
+variable "landingzone_building_block_uuid" {
   type        = string
   nullable    = false
-  description = "Existing STACKIT project this architecture's own automation service account is created in — e.g. a foundation project. Applying this file creates a service account here. The cluster no longer creates a backplane here; it deploys as the service account minted on the hosting project (see service_account_bbd_version_ref)."
-}
-
-variable "service_account_bbd_version_ref" {
-  type        = string
-  nullable    = false
-  description = "Version uuid of the STACKIT Service Account building block definition registered by the STACKIT Landing Zone (its `service_account_bbd_version_uuid` output). The platform orders it on the hosting project to mint the identity the cluster deploys as. Wire this from the landing zone in the foundation repo."
-}
-
-variable "stackit_organization_id" {
-  type        = string
-  nullable    = false
-  description = "STACKIT organization the automation service accounts are granted roles on, so the grants are inherited by the hosting project created at order time."
+  description = "UUID of the deployed STACKIT Landing Zone building block this architecture builds on top of. Applying this file reads that building block for the STACKIT organization, foundation project and service-account building block definition — so the deployer wires this one value instead of copying each by hand. Find it in the landing zone's summary or in meshPanel."
 }
 
 variable "stackit_backplane_roles" {
@@ -98,11 +86,27 @@ provider "stackit" {
 # needs org-admin STACKIT credentials.
 data "meshstack_integrations" "integrations" {}
 
+# The deployed STACKIT Landing Zone building block carries everything this architecture needs to build
+# on top of it, so the deployer wires a single UUID instead of copying the organization, foundation
+# project and service-account definition by hand. Its inputs and outputs are JSON-encoded, so each is
+# decoded once.
+data "meshstack_building_block" "landingzone" {
+  metadata = {
+    uuid = var.landingzone_building_block_uuid
+  }
+}
+
+locals {
+  landingzone_organization_id     = jsondecode(data.meshstack_building_block.landingzone.all_inputs["stackit_org"].value)
+  landingzone_foundation_project  = jsondecode(data.meshstack_building_block.landingzone.status.outputs["foundation_project_id"].value)
+  landingzone_service_account_bbd = jsondecode(data.meshstack_building_block.landingzone.status.outputs["service_account_bbd_version_uuid"].value)
+}
+
 module "backplane" {
   source = "github.com/meshcloud/meshstack-hub//modules/ske/cluster/backplane?ref=${var.hub.git_ref}"
 
-  project_id           = var.stackit_backplane_project_id
-  organization_id      = var.stackit_organization_id
+  project_id           = local.landingzone_foundation_project
+  organization_id      = local.landingzone_organization_id
   roles                = var.stackit_backplane_roles
   service_account_name = "mesh-ske-platform"
 
@@ -241,7 +245,7 @@ resource "meshstack_building_block_definition" "this" {
         description     = "Version uuid of the STACKIT Service Account building block definition (from the STACKIT Landing Zone) the platform orders to mint its automation identity."
         type            = "STRING"
         assignment_type = "STATIC"
-        argument        = jsonencode(var.service_account_bbd_version_ref)
+        argument        = jsonencode(local.landingzone_service_account_bbd)
       }
 
       hub = {
