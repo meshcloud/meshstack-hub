@@ -1,6 +1,3 @@
-# TEMP (erstmal): disabled — first run creates only project + SA + cluster. Re-enable once the
-# platform-services outputs (replication/metering tokens, cluster endpoint) are available again.
-/*
 # ── meshStack SKE platform ──
 # Wired to the cluster via its API endpoint and the replication/metering tokens the platform-services
 # building block created in-cluster.
@@ -196,4 +193,3 @@ resource "meshstack_landingzone" "this" {
     quotas = each.value.quotas
   }
 }
-*/

@@ -6,27 +6,6 @@ locals {
 
   location_name = var.use_global_location ? "global" : meshstack_location.this[0].metadata.name
 
-  # The Forgejo bot token cannot be supplied on the first run — the git instance must exist before its
-  # token can be created. Until the token is provided, the organization and the starterkit definitions
-  # that need it are gated off; the git instance and the rest of the platform still deploy.
-  forgejo_enabled = var.forgejo_token != null
-
-  # The starterkit additionally needs the Harbor credentials (CI push + cluster pull). It is only
-  # registered once the Forgejo token AND all Harbor inputs are present, so they can all be supplied
-  # together on the run that turns on self-service.
-  starterkit_enabled = local.forgejo_enabled && alltrue([
-    for v in [
-      var.stackit_harbor_project,
-      var.stackit_harbor_push_robot_user,
-      var.stackit_harbor_push_robot_password,
-      var.stackit_harbor_pull_robot_user,
-      var.stackit_harbor_pull_robot_password,
-    ] : v != null
-  ])
-
-  # TEMP (erstmal): starterkit module is disabled, so this local is too.
-  # starterkit_bbd_uuid = try(module.ske_starterkit.building_block_definition.uuid, null)
-
   # Resolved once the host STACKIT platform is looked up. `one()` fails loudly if the identifier ever
   # stops matching exactly one platform.
   host_platform_ref = one(data.meshstack_platforms.host.platforms).ref
@@ -50,10 +29,10 @@ locals {
   cluster_kubeconfig = jsondecode(meshstack_building_block.cluster.status.outputs["kubeconfig"].value)
   cluster_kube_host  = jsondecode(meshstack_building_block.cluster.status.outputs["kube_host"].value)
 
-  # TEMP (erstmal): platform-services is disabled, so its outputs are not read.
-  # haproxy_lb_ip    = jsondecode(meshstack_building_block.platform_services.status.outputs["haproxy_lb_ip"].value)
-  # replicator_token = jsondecode(meshstack_building_block.platform_services.status.outputs["replicator_token"].value)
-  # metering_token   = jsondecode(meshstack_building_block.platform_services.status.outputs["metering_token"].value)
+  # Replication and metering tokens the platform-services building block created in-cluster; consumed
+  # by the meshStack platform. Stored JSON-encoded, so decoded once.
+  replicator_token = jsondecode(meshstack_building_block.platform_services.status.outputs["replicator_token"].value)
+  metering_token   = jsondecode(meshstack_building_block.platform_services.status.outputs["metering_token"].value)
 }
 
 resource "random_string" "identifier_suffix" {
@@ -196,8 +175,6 @@ resource "meshstack_building_block" "cluster" {
   }
 }
 
-# TEMP (erstmal): platform-services disabled — first run stops after the cluster.
-/*
 # ── In-cluster platform services (child building block; configures its providers from the kubeconfig) ──
 
 module "platform_services_integration" {
@@ -231,4 +208,3 @@ resource "meshstack_building_block" "platform_services" {
     }
   }
 }
-*/

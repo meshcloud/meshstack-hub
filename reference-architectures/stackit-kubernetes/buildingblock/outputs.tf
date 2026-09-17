@@ -13,26 +13,9 @@ output "cluster_building_block_uuid" {
   value       = meshstack_building_block.cluster.metadata.uuid
 }
 
-# TEMP (erstmal): git/dns/model-serving, the meshStack platform and the starterkit are disabled for
-# the first run (project + SA + cluster only), so these outputs return null until re-enabled.
-output "forgejo_url" {
-  description = "URL of the STACKIT Git (Forgejo) instance hosting the application repositories."
-  value       = null
-}
-
-output "dns_zone_name" {
-  description = "DNS zone created for application ingress hostnames."
-  value       = null
-}
-
-# output "platform_ref" {
-#   description = "Reference to the meshStack SKE platform this architecture registered."
-#   value       = meshstack_platform.ske.ref
-# }
-
-output "starterkit_bbd_uuid" {
-  description = "UUID of the SKE Starterkit definition this architecture registered. Null until the Forgejo token is provided and the starterkit is registered on a later run."
-  value       = null
+output "platform_ref" {
+  description = "Reference to the meshStack SKE platform this architecture registered."
+  value       = meshstack_platform.ske.ref
 }
 
 output "summary" {
@@ -47,15 +30,19 @@ output "summary" {
     > `playground_mode` set to false for a platform that is actually used.
     %{~endif}
 
-    > **First-run scope.** This run creates only the hosting project, the service account and the SKE
-    > cluster. Platform services, Git, DNS, the meshStack platform and the starterkit are temporarily
-    > disabled.
-
     ## Details
 
     | Property | Value |
     |----------|-------|
     | **Hosting Project** | [Open in STACKIT Portal](https://portal.stackit.cloud/projects/${local.stackit_project_id}) (`${local.stackit_project_id}`) |
     | **SKE Cluster** | `${var.cluster_name}` — @buildingblock[${meshstack_building_block.cluster.metadata.uuid}] |
+    | **Platform Services** | @buildingblock[${meshstack_building_block.platform_services.metadata.uuid}] |
+    | **meshStack Platform** | `${local.platform_identifier}` |
+
+    ## What application teams get
+
+    The **${local.platform_identifier}** platform is published with a **dev** and a **prod** landing
+    zone. Application teams request a Kubernetes namespace on SKE by ordering a tenant in either
+    landing zone from the self-service catalog.
   EOT
 }

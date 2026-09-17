@@ -19,14 +19,7 @@ variable "bbd_readme" {
 variable "landingzone_building_block_uuid" {
   type        = string
   nullable    = false
-  description = "UUID of the deployed STACKIT Landing Zone building block this architecture builds on top of. Applying this file reads that building block for the STACKIT organization, foundation project and service-account building block definition — so the deployer wires this one value instead of copying each by hand. Find it in the landing zone's summary or in meshPanel."
-}
-
-variable "stackit_backplane_roles" {
-  type        = list(string)
-  nullable    = false
-  default     = ["resource-manager.admin", "iam.member-admin", "ske.admin", "dns.admin", "git.admin", "model-serving.admin"]
-  description = "Organization-level roles granted to this architecture's automation service account. It provisions the SKE cluster's backplane (needs resource-manager/iam admin) and creates git/DNS/model-serving resources in the hosting project. Adjust to the exact STACKIT role names your organization uses."
+  description = "UUID of the deployed STACKIT Landing Zone building block this architecture builds on top of. Applying this file reads that building block for the service-account building block definition it registered — so the deployer wires this one value instead of copying it by hand. Find it in the landing zone's summary or in meshPanel."
 }
 
 variable "meshstack" {
@@ -74,22 +67,9 @@ output "building_block_definition" {
   }
 }
 
-# Applying this file creates the backplane service account below, so it authenticates to STACKIT with
-# the applying engineer's credentials (from the environment). experiments=["iam"] enables the
-# authorization role assignments the backplane makes.
-# provider "stackit" {
-#   experiments = ["iam"]
-# }
-
-# Automation identity for this architecture's own run (git/DNS/model-serving in the hosting project,
-# and provisioning the SKE cluster's backplane). Created when this file is applied, so registration
-# needs org-admin STACKIT credentials.
-data "meshstack_integrations" "integrations" {}
-
-# The deployed STACKIT Landing Zone building block carries everything this architecture needs to build
-# on top of it, so the deployer wires a single UUID instead of copying the organization, foundation
-# project and service-account definition by hand. Its inputs and outputs are JSON-encoded, so each is
-# decoded once.
+# The architecture builds on an existing STACKIT Landing Zone. It only reads that landing zone's
+# building block to pick up the STACKIT Service Account definition it registered, which the platform
+# orders at runtime to mint the identity the cluster deploys as. Its outputs are JSON-encoded.
 data "meshstack_building_block" "landingzone" {
   metadata = {
     uuid = var.landingzone_building_block_uuid
@@ -97,26 +77,8 @@ data "meshstack_building_block" "landingzone" {
 }
 
 locals {
-  landingzone_organization_id     = jsondecode(data.meshstack_building_block.landingzone.all_inputs["stackit_org"].value)
-  landingzone_foundation_project  = jsondecode(data.meshstack_building_block.landingzone.status.outputs["foundation_project_id"].value)
   landingzone_service_account_bbd = jsondecode(data.meshstack_building_block.landingzone.status.outputs["service_account_bbd_version_uuid"].value)
 }
-
-# module "backplane" {
-#   source = "github.com/meshcloud/meshstack-hub//modules/ske/cluster/backplane?ref=${var.hub.git_ref}"
-
-#   project_id           = local.landingzone_foundation_project
-#   organization_id      = local.landingzone_organization_id
-#   roles                = var.stackit_backplane_roles
-#   service_account_name = "mesh-ske-platform"
-
-#   workload_identity_federation = {
-#     issuer = data.meshstack_integrations.integrations.workload_identity_federation.replicator.issuer
-#     subjects = [
-#       "${trimsuffix(data.meshstack_integrations.integrations.workload_identity_federation.replicator.subject, ":replicator")}:workspace.${var.meshstack.owning_workspace_identifier}.buildingblockdefinition.${meshstack_building_block_definition.this.metadata.uuid}"
-#     ]
-#   }
-# }
 
 resource "meshstack_building_block_definition" "this" {
   metadata = {
@@ -127,43 +89,43 @@ resource "meshstack_building_block_definition" "this" {
   spec = {
     display_name     = coalesce(var.bbd_display_name, "STACKIT Kubernetes Platform Reference Architecture")
     symbol           = "https://raw.githubusercontent.com/meshcloud/meshstack-hub/${var.hub.git_ref}/reference-architectures/stackit-kubernetes/buildingblock/logo.png"
-    description      = coalesce(var.bbd_description, "One-click bootstrap of a sovereign Kubernetes platform on STACKIT: SKE cluster, ingress, Git, DNS, the meshStack SKE platform and a self-service starterkit.")
+    description      = coalesce(var.bbd_description, "One-click bootstrap of a sovereign Kubernetes platform on STACKIT on top of a STACKIT Landing Zone: SKE cluster, in-cluster platform services and the meshStack SKE platform with dev/prod landing zones.")
     support_url      = "https://portal.stackit.cloud/ske"
     target_type      = "WORKSPACE_LEVEL"
     run_transparency = true
 
     readme = coalesce(var.bbd_readme, chomp(<<-EOT
-    The **STACKIT Kubernetes Platform** building block bootstraps a complete, sovereign-cloud
-    Kubernetes platform on STACKIT from a single order. Running it once turns a STACKIT organization
-    into a self-service developer platform.
+    The **STACKIT Kubernetes Platform** building block bootstraps a sovereign-cloud Kubernetes
+    platform on STACKIT from a single order, on top of an existing STACKIT Landing Zone. Running it
+    once turns a STACKIT organization into a meshStack platform that application teams request
+    Kubernetes namespaces from.
 
     ## 📦 Resources created
 
-    - **Hosting project** – a STACKIT project (self-hosted as a meshStack tenant) that the cluster and
-      its assets run in.
+    - **Hosting project** – a STACKIT project (self-hosted as a meshStack tenant) that the cluster
+      runs in.
+    - **Automation service account** – minted on the hosting project via the STACKIT Service Account
+      building block the landing zone registered; the cluster deploys as this identity.
     - **SKE cluster** – a managed STACKIT Kubernetes Engine cluster with an admin kubeconfig.
     - **Platform services** – HAProxy ingress, cert-manager with a Let's Encrypt ClusterIssuer, and
       the meshStack replication/metering service accounts.
-    - **STACKIT Git + DNS** – a Forgejo instance and organization for application repositories, and a
-      DNS zone with a wildcard record pointing at the ingress load balancer.
-    - **meshStack SKE platform** – a Kubernetes platform with dev and prod landing zones.
-    - **SKE Starterkit** – a self-service definition that gives application teams dev/prod namespaces,
-      a Git repository, a CI/CD pipeline and access to STACKIT Model Serving.
+    - **meshStack SKE platform** – a Kubernetes platform with a dev and a prod landing zone that
+      application teams order Kubernetes namespaces from.
 
     ## 🔑 Authentication
 
-    You provide a STACKIT service account key, the existing STACKIT platform to host the cluster
-    project on, a Forgejo bot token and Harbor robot credentials. The building block authenticates to
-    STACKIT with the service account key.
+    You wire the STACKIT Landing Zone building block (one UUID) and the host STACKIT platform. The
+    architecture mints its automation identity through the landing zone's STACKIT Service Account
+    building block — no STACKIT key is pasted here.
 
     ## 📊 Shared responsibility
 
     | Responsibility | Platform Team | Application Team |
     |---|:---:|:---:|
-    | Provide credentials, host platform, Harbor and DNS inputs | ✅ | ❌ |
-    | Provision the cluster, platform services, Git, DNS and meshStack platform | ✅ | ❌ |
-    | Order the starterkit from the self-service catalog | ❌ | ✅ |
-    | Develop applications and manage workloads in their namespaces | ❌ | ✅ |
+    | Provide the landing zone reference and host platform inputs | ✅ | ❌ |
+    | Provision the hosting project, cluster, platform services and meshStack platform | ✅ | ❌ |
+    | Order a Kubernetes namespace from the platform's landing zones | ❌ | ✅ |
+    | Manage workloads in their namespaces | ❌ | ✅ |
     EOT
     ))
   }
@@ -208,44 +170,9 @@ resource "meshstack_building_block_definition" "this" {
     }
 
     inputs = {
-      # TEMP (erstmal): the backplane (SA-BP) is removed, and the first run creates only project + SA
-      # + cluster — the parent no longer runs any STACKIT resources directly, so it needs no STACKIT
-      # WIF auth of its own. Re-enable these three env inputs once git/dns/model-serving move to a
-      # child BB (and decide where the parent's identity comes from).
-      /*
-      # ── STACKIT authentication (Workload Identity Federation, no key) ──
-      STACKIT_SERVICE_ACCOUNT_EMAIL = {
-        display_name    = "STACKIT Service Account Email"
-        description     = "Email of the STACKIT service account this architecture authenticates as via WIF."
-        type            = "STRING"
-        assignment_type = "STATIC"
-        is_environment  = true
-        argument        = jsonencode(module.backplane.service_account_email)
-      }
-
-      STACKIT_USE_OIDC = {
-        display_name    = "STACKIT Use OIDC"
-        description     = "Enables OIDC-based WIF for the STACKIT provider."
-        type            = "STRING"
-        assignment_type = "STATIC"
-        is_environment  = true
-        argument        = jsonencode("1")
-      }
-
-      STACKIT_FEDERATED_TOKEN_FILE = {
-        display_name    = "STACKIT Federated Token File"
-        description     = "Path to the WIF token file injected by meshStack."
-        type            = "STRING"
-        assignment_type = "STATIC"
-        is_environment  = true
-        argument        = jsonencode("/var/run/secrets/workload-identity/azure/token")
-      }
-      */
-
       # Version uuid of the STACKIT Service Account definition the landing zone registered. The
       # building block orders it on the hosting project to mint the identity the cluster deploys as,
-      # so the cluster no longer provisions its own backplane. Set by the deployer (e.g. the likvid
-      # foundation wiring `landingzone.service_account_bbd_version_uuid`).
+      # so the cluster no longer provisions its own backplane. Read from the wired landing zone.
       service_account_bbd_version_ref = {
         display_name    = "Service Account BBD Version Ref"
         description     = "Version uuid of the STACKIT Service Account building block definition (from the STACKIT Landing Zone) the platform orders to mint its automation identity."
@@ -280,7 +207,7 @@ resource "meshstack_building_block_definition" "this" {
 
       payment_method_identifier = {
         display_name    = "Payment Method Identifier"
-        description     = "Payment method assigned to the hosting project and the starterkit's dev/prod projects."
+        description     = "Payment method assigned to the hosting meshProject."
         type            = "STRING"
         assignment_type = "USER_INPUT"
       }
@@ -298,14 +225,6 @@ resource "meshstack_building_block_definition" "this" {
         description     = "Landing zone on the host STACKIT platform the hosting tenant is placed in."
         type            = "STRING"
         assignment_type = "USER_INPUT"
-      }
-
-      stackit_region = {
-        display_name    = "STACKIT Region"
-        description     = "STACKIT region for the git instance, DNS zone and model serving token."
-        type            = "STRING"
-        assignment_type = "STATIC"
-        argument        = jsonencode("eu01")
       }
 
       # ── SKE cluster ──
@@ -327,153 +246,16 @@ resource "meshstack_building_block_definition" "this" {
         default_value   = jsonencode("ske@meshcloud.io")
       }
 
-      # ── Git / Forgejo ──
-      git_instance_name = {
-        display_name    = "Git Instance Name"
-        description     = "Name of the STACKIT Git (Forgejo) instance. Globally unique; forms `https://<name>.git.onstackit.cloud`."
-        type            = "STRING"
-        assignment_type = "USER_INPUT"
-      }
-
-      forgejo_organization = {
-        display_name    = "Forgejo Organization"
-        description     = "Forgejo organization created on the git instance for application repositories."
-        type            = "STRING"
-        assignment_type = "USER_INPUT"
-      }
-
-      # Optional: on the first run the git instance is created without it. You then create the bot
-      # token on that instance, enter it here, and run again to provision the org and the starterkit.
-      forgejo_token = {
-        display_name    = "Forgejo Bot Token"
-        description     = "Personal access token of a Forgejo bot account used to manage the organization and repositories. Leave empty on the first run, then create it on the git instance and provide it on a later run."
-        type            = "STRING"
-        assignment_type = "USER_INPUT"
-        is_optional     = true
-        sensitive       = {}
-      }
-
-      # ── Harbor ──
-      # Robot accounts are created manually in the STACKIT Harbor project (their secret is shown only
-      # once), so they are inputs, not provisioned. Only the starterkit uses them, so they are optional
-      # on the first run and supplied together with the Forgejo token on the run that enables it.
-      stackit_harbor_project = {
-        display_name    = "Harbor Project"
-        description     = "Harbor project name in the global STACKIT registry for application images. Required only for the starterkit."
-        type            = "STRING"
-        assignment_type = "USER_INPUT"
-        is_optional     = true
-      }
-
-      stackit_harbor_push_robot_user = {
-        display_name    = "Harbor Push Robot User"
-        description     = "Harbor robot username with push access. Required only for the starterkit."
-        type            = "STRING"
-        assignment_type = "USER_INPUT"
-        is_optional     = true
-        sensitive       = {}
-      }
-
-      stackit_harbor_push_robot_password = {
-        display_name    = "Harbor Push Robot Password"
-        description     = "Harbor robot secret with push access. Required only for the starterkit."
-        type            = "STRING"
-        assignment_type = "USER_INPUT"
-        is_optional     = true
-        sensitive       = {}
-      }
-
-      stackit_harbor_pull_robot_user = {
-        display_name    = "Harbor Pull Robot User"
-        description     = "Harbor robot username with pull access. Required only for the starterkit."
-        type            = "STRING"
-        assignment_type = "USER_INPUT"
-        is_optional     = true
-        sensitive       = {}
-      }
-
-      stackit_harbor_pull_robot_password = {
-        display_name    = "Harbor Pull Robot Password"
-        description     = "Harbor robot secret with pull access. Required only for the starterkit."
-        type            = "STRING"
-        assignment_type = "USER_INPUT"
-        is_optional     = true
-        sensitive       = {}
-      }
-
-      # ── DNS ──
-      dns_name = {
-        display_name    = "DNS Name"
-        description     = "Subdomain label under stackit.run for ingress. Creates zone `<dns_name>.stackit.run` and a wildcard A record."
-        type            = "STRING"
-        assignment_type = "USER_INPUT"
-      }
-
-      dns_contact_email = {
-        display_name    = "DNS Contact Email"
-        description     = "Contact email registered on the STACKIT DNS zone."
-        type            = "STRING"
-        assignment_type = "USER_INPUT"
-        default_value   = jsonencode("support@meshcloud.io")
-      }
-
-      # ── Starterkit ──
-      template_name = {
-        display_name    = "Template Name"
-        description     = "Name of the sample application; names the model serving token and CI APP_NAME."
-        type            = "STRING"
-        assignment_type = "USER_INPUT"
-        default_value   = jsonencode("ai-summarizer")
-      }
-
-      template_repo_clone_url = {
-        display_name    = "Template Repository URL"
-        description     = "Template repository new application repositories are cloned from."
-        type            = "STRING"
-        assignment_type = "USER_INPUT"
-        default_value   = jsonencode("https://github.com/likvid-bank/starterkit-template-stackit-ai-summarizer.git")
-      }
-
-      ai_model = {
-        display_name    = "Model Serving Model"
-        description     = "STACKIT Model Serving model id provisioned into the starterkit namespaces."
-        type            = "STRING"
-        assignment_type = "USER_INPUT"
-        default_value   = jsonencode("openai/gpt-oss-120b")
-      }
-
-      add_random_name_suffix = {
-        display_name    = "Add Random Name Suffix"
-        description     = "Whether the starterkit appends a random suffix to the names it creates."
-        type            = "BOOLEAN"
-        assignment_type = "USER_INPUT"
-        default_value   = jsonencode(false)
-      }
-
       tags = {
         display_name           = "Tags"
-        description            = "HCL object of tag maps forwarded to the nested integrations: `landingzone`, `building_block`, `project`, and `project_owner_tag_key`."
+        description            = "HCL object of tag maps forwarded to the nested integrations: `landingzone`, `building_block` and `project`."
         type                   = "CODE"
         assignment_type        = "USER_INPUT"
         updateable_by_consumer = true
         default_value = jsonencode(jsonencode({
-          landingzone           = {}
-          building_block        = {}
-          project               = {}
-          project_owner_tag_key = ""
-        }))
-      }
-
-      project_tags = {
-        display_name           = "Project Tags"
-        description            = "HCL object with `dev` and `prod` tag maps (and optional `owner_tag_key`) applied to the meshProjects the starterkit creates."
-        type                   = "CODE"
-        assignment_type        = "USER_INPUT"
-        updateable_by_consumer = true
-        default_value = jsonencode(jsonencode({
-          dev           = {}
-          prod          = {}
-          owner_tag_key = null
+          landingzone    = {}
+          building_block = {}
+          project        = {}
         }))
       }
 
@@ -499,24 +281,6 @@ resource "meshstack_building_block_definition" "this" {
         assignment_type = "RESOURCE_URL"
       }
 
-      forgejo_url = {
-        display_name    = "Open Git"
-        type            = "STRING"
-        assignment_type = "RESOURCE_URL"
-      }
-
-      dns_zone_name = {
-        display_name    = "DNS Zone"
-        type            = "STRING"
-        assignment_type = "NONE"
-      }
-
-      starterkit_bbd_uuid = {
-        display_name    = "Starterkit BBD UUID"
-        type            = "STRING"
-        assignment_type = "NONE"
-      }
-
       summary = {
         display_name    = "Summary"
         type            = "STRING"
@@ -531,13 +295,8 @@ terraform {
 
   required_providers {
     meshstack = {
-      source = "meshcloud/meshstack"
-      # 0.25 added the `is_optional` input attribute the Forgejo token relies on.
-      version = ">= 0.25.0"
+      source  = "meshcloud/meshstack"
+      version = ">= 0.24.4"
     }
-    # stackit = {
-    #   source  = "stackitcloud/stackit"
-    #   version = ">= 0.98.0, < 1.0.0"
-    # }
   }
 }
