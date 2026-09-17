@@ -11,8 +11,8 @@ variable "external_service_account" {
   EOT
 
   validation {
-    condition     = var.external_service_account || (var.stackit_backplane_project_id != null && var.stackit_organization_id != null)
-    error_message = "stackit_backplane_project_id and stackit_organization_id are required unless external_service_account is true."
+    condition     = var.external_service_account || (var.stackit_backplane_project_id != null && var.stackit_backplane_folder_id != null)
+    error_message = "stackit_backplane_project_id and stackit_backplane_folder_id are required unless external_service_account is true."
   }
 }
 
@@ -23,11 +23,22 @@ variable "stackit_backplane_project_id" {
   description = "Existing STACKIT project the backplane creates the automation service account in (e.g. a foundation project). Not the cluster's own project, which is provisioned at order time and supplied as the buildingblock's `stackit_project_id` input. Unused (leave null) when external_service_account is true."
 }
 
-variable "stackit_organization_id" {
+variable "stackit_backplane_folder_id" {
   type        = string
   nullable    = true
   default     = null
-  description = "STACKIT organization the automation service account is granted SKE roles on, so the grant is inherited by the cluster project created at order time. Unused (leave null) when external_service_account is true."
+  description = "STACKIT resource-manager folder the automation service account is granted SKE roles on, so the grant is inherited by the cluster project created at order time inside that folder. This is the folder's `folder_id`. Unused (leave null) when external_service_account is true."
+}
+
+variable "roles" {
+  type        = list(string)
+  nullable    = false
+  default     = ["ske.admin"]
+  description = <<-EOT
+  Roles granted to the backplane service account on the folder, inherited by the project the cluster is
+  created in. Assigned at folder scope, where STACKIT service roles like `ske.admin` are valid (they are
+  rejected at organization scope). Unused when external_service_account is true.
+  EOT
 }
 
 variable "bbd_display_name" {
@@ -89,8 +100,9 @@ module "backplane" {
   # structure OpenTofu resolves today; it just creates no service account or role grants when disabled.
   enabled = !var.external_service_account
 
-  project_id      = var.stackit_backplane_project_id
-  organization_id = var.stackit_organization_id
+  project_id = var.stackit_backplane_project_id
+  folder_id  = var.stackit_backplane_folder_id
+  roles      = var.roles
 
   workload_identity_federation = {
     issuer = data.meshstack_integrations.integrations.workload_identity_federation.replicator.issuer
@@ -107,12 +119,13 @@ resource "meshstack_building_block_definition" "this" {
   }
 
   spec = {
-    display_name     = coalesce(var.bbd_display_name, "STACKIT SKE Cluster")
-    symbol           = "https://raw.githubusercontent.com/meshcloud/meshstack-hub/${var.hub.git_ref}/modules/ske/cluster/buildingblock/logo.png"
-    description      = coalesce(var.bbd_description, "Provisions a STACKIT Kubernetes Engine (SKE) cluster with a node pool and mints an admin kubeconfig.")
-    support_url      = "https://portal.stackit.cloud/ske"
-    target_type      = "WORKSPACE_LEVEL"
-    run_transparency = true
+    display_name        = coalesce(var.bbd_display_name, "STACKIT SKE Cluster")
+    symbol              = "https://raw.githubusercontent.com/meshcloud/meshstack-hub/${var.hub.git_ref}/modules/ske/cluster/buildingblock/logo.png"
+    description         = coalesce(var.bbd_description, "Provisions a STACKIT Kubernetes Engine (SKE) cluster with a node pool and mints an admin kubeconfig.")
+    support_url         = "https://portal.stackit.cloud/ske"
+    target_type         = "TENANT_LEVEL"
+    run_transparency    = true
+    supported_platforms = [{ name = "STACKIT" }]
 
     readme = coalesce(var.bbd_readme, chomp(<<-EOT
       Provisions a **STACKIT Kubernetes Engine (SKE)** cluster with a single node pool and a nightly
@@ -198,12 +211,10 @@ resource "meshstack_building_block_definition" "this" {
 
       # ── Cluster placement and identity ──
       stackit_project_id = {
-        display_name                   = "STACKIT Project ID"
-        description                    = "STACKIT project UUID the SKE cluster is created in."
-        type                           = "STRING"
-        assignment_type                = "USER_INPUT"
-        value_validation_regex         = "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$"
-        validation_regex_error_message = "STACKIT Project ID must be a valid UUID."
+        display_name    = "STACKIT Project ID"
+        description     = "STACKIT project the SKE cluster is created in — the platform-native tenant id of the tenant this building block is added to."
+        type            = "STRING"
+        assignment_type = "PLATFORM_TENANT_ID"
       }
 
       cluster_name = {
@@ -224,12 +235,14 @@ resource "meshstack_building_block_definition" "this" {
         argument        = jsonencode("eu01")
       }
 
+      # Must be a currently-available STACKIT SKE minor (they retire old ones — 1.31 is already gone).
+      # Maintenance patches it upward automatically; bump this when STACKIT drops the pinned minor.
       kubernetes_version_min = {
         display_name    = "Minimum Kubernetes Version"
         description     = "Minimum Kubernetes minor version to run. Empty lets STACKIT pick the current default."
         type            = "STRING"
         assignment_type = "STATIC"
-        argument        = jsonencode("1.31")
+        argument        = jsonencode("1.34")
       }
 
       node_pool = {

@@ -4,12 +4,6 @@ variable "kubeconfig" {
   description = "Raw kubeconfig (YAML) of the SKE cluster this runs against — the `kubeconfig` output of the STACKIT SKE Cluster building block. The kubernetes and helm providers are configured from it, so it must be a concrete value at plan time (i.e. supplied by a preceding building block, not created in this run)."
 }
 
-variable "cluster_issuer_email" {
-  type        = string
-  default     = "ske@meshcloud.io"
-  description = "Contact email registered with Let's Encrypt for the ACME ClusterIssuer."
-}
-
 variable "cert_manager_version" {
   type        = string
   default     = "v1.20.0"

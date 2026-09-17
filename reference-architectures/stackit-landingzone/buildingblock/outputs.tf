@@ -23,20 +23,39 @@ output "service_account_bbd_version_uuid" {
   description = "Version uuid of the STACKIT Service Account building block definition this landing zone registered. A composing architecture (e.g. the STACKIT Kubernetes Platform) orders this definition to mint a service account — with project roles and WIF — on a target project, then deploys as that account."
 }
 
+output "cluster_bbd_version_uuid" {
+  value       = module.cluster_integration.building_block_definition.version_ref.uuid
+  description = "Version uuid of the STACKIT SKE Cluster building block definition this landing zone registered. A composing architecture (e.g. the STACKIT Kubernetes Platform) orders it on a tenant to provision a managed Kubernetes cluster in that project."
+}
+
+output "landingzone_identifier" {
+  value = module.stackit_integration.landingzone_names["default"]
+}
+
+output "host_platfrom_identifier" {
+  value       = "${local.platform_identifier}.${var.use_global_location ? "global" : local.platform_identifier}"
+  description = "Name of the platfrom identifier"
+}
+
 output "summary" {
   description = "Summary of the meshStack resources created by this reference architecture."
   value = templatefile("${path.module}/SUMMARY.md.tftpl", {
-    platform_identifier    = local.platform_identifier
-    playground_mode        = var.playground_mode
-    building_block_uuid    = var.building_block_uuid
-    organization_id        = var.stackit_org
-    organization_url       = "https://portal.stackit.cloud/dashboard?organization=${var.stackit_org}"
-    lz_folder_container_id = stackit_resourcemanager_folder.this.container_id
-    lz_folder_url          = "https://portal.stackit.cloud/dashboard?organization=${var.stackit_org}&folder=${stackit_resourcemanager_folder.this.folder_id}"
-    foundation_project_id  = stackit_resourcemanager_project.foundation.project_id
-    foundation_project_url = "https://portal.stackit.cloud/projects/${stackit_resourcemanager_project.foundation.project_id}"
-    service_account_email  = module.stackit_integration.service_account_email
-    service_account_url    = "https://portal.stackit.cloud/service-accounts/${module.stackit_integration.service_account_email}/overview?project=${stackit_resourcemanager_project.foundation.project_id}"
+    platform_identifier = local.platform_identifier
+    playground_mode     = var.playground_mode
+    building_block_uuid = var.building_block_uuid
+
+    # Values a composing architecture (the STACKIT Kubernetes Platform) needs to place its tenant on
+    # this landing zone. Printed in the summary so they can be copied into that building block.
+    host_platform_identifier  = "${local.platform_identifier}.${var.use_global_location ? "global" : local.platform_identifier}"
+    default_landing_zone_name = module.stackit_integration.landingzone_names["default"]
+    organization_id           = var.stackit_org
+    organization_url          = "https://portal.stackit.cloud/dashboard?organization=${var.stackit_org}"
+    lz_folder_container_id    = stackit_resourcemanager_folder.this.container_id
+    lz_folder_url             = "https://portal.stackit.cloud/dashboard?organization=${var.stackit_org}&folder=${stackit_resourcemanager_folder.this.folder_id}"
+    foundation_project_id     = stackit_resourcemanager_project.foundation.project_id
+    foundation_project_url    = "https://portal.stackit.cloud/projects/${stackit_resourcemanager_project.foundation.project_id}"
+    service_account_email     = module.stackit_integration.service_account_email
+    service_account_url       = "https://portal.stackit.cloud/service-accounts/${module.stackit_integration.service_account_email}/overview?project=${stackit_resourcemanager_project.foundation.project_id}"
 
     network_enabled            = local.network_enabled
     networked_landingzone_name = local.network_enabled ? module.stackit_integration.landingzone_names["networked"] : ""

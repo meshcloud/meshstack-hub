@@ -21,9 +21,10 @@ variable "payment_method_identifier" {
 
 variable "tags" {
   type = object({
-    landingzone    = map(list(string))
-    building_block = map(list(string))
-    project        = map(list(string))
+    landingzone           = map(list(string))
+    building_block        = map(list(string))
+    project               = map(list(string))
+    project_owner_tag_key = optional(string, "")
   })
   nullable    = false
   description = <<-EOT
@@ -31,7 +32,21 @@ variable "tags" {
   `landingzone` tags are applied to the created SKE landing zones.
   `building_block` tags are applied to the nested building block definitions.
   `project` tags are applied to the hosting meshProject.
+  `project_owner_tag_key` names the tag that receives the creator's display name on the hosting project (empty to set none). Set it to the mandatory owner tag your meshStack enforces (e.g. `projectOwner`).
   EOT
+}
+
+variable "creator" {
+  type = object({
+    type        = string
+    identifier  = string
+    displayName = string
+    username    = optional(string)
+    email       = optional(string)
+    euid        = optional(string)
+  })
+  nullable    = false
+  description = "Creator of the platform, injected by meshStack. Their display name is written to the hosting project's owner tag (see `tags.project_owner_tag_key`)."
 }
 
 variable "playground_mode" {
@@ -54,10 +69,10 @@ variable "host_landing_zone_name" {
   description = "Name of the landing zone on the host STACKIT platform that the hosting tenant is placed in."
 }
 
-variable "service_account_bbd_version_ref" {
+variable "cluster_bbd_version_ref" {
   type        = string
   nullable    = false
-  description = "Version uuid of the STACKIT Service Account building block definition (registered by the STACKIT Landing Zone, exposed as its `service_account_bbd_version_uuid` output). Ordered on the hosting project to mint the automation identity the cluster deploys as."
+  description = "Version uuid of the STACKIT SKE Cluster building block definition (registered by the STACKIT Landing Zone, exposed as its `cluster_bbd_version_uuid` output). Ordered on the hosting tenant to provision the cluster."
 }
 
 # ── SKE cluster ──

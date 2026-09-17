@@ -6,6 +6,10 @@ locals {
 
   location_name = var.use_global_location ? "global" : meshstack_location.this[0].metadata.name
 
+  # meshStack may enforce a mandatory owner tag on projects; write the creator's display name into it.
+  # Empty project_owner_tag_key sets none.
+  owner_tags = var.tags.project_owner_tag_key == "" ? {} : { (var.tags.project_owner_tag_key) = [var.creator.displayName] }
+
   # Resolved once the host STACKIT platform is looked up. `one()` fails loudly if the identifier ever
   # stops matching exactly one platform.
   host_platform_ref = one(data.meshstack_platforms.host.platforms).ref
@@ -14,16 +18,6 @@ locals {
   # STACKIT platform. `wait_for_completion` on the tenant guarantees the project exists and its id is
   # populated before anything downstream reads it.
   stackit_project_id = meshstack_tenant.hosting.spec.platform_tenant_id
-
-  # WIF subject the SKE cluster definition's runtime token carries. The service-account building block
-  # trusts exactly this subject so the cluster authenticates as the account it mints, rather than the
-  # cluster creating its own backplane identity. Same shape every STACKIT backplane pins (see
-  # .agents/references/stackit-backplane.md): replicator base + workspace + cluster BBD uuid.
-  cluster_bbd_subject = "${trimsuffix(data.meshstack_integrations.integrations.workload_identity_federation.replicator.subject, ":replicator")}:workspace.${var.workspace}.buildingblockdefinition.${module.cluster_integration.building_block_definition.uuid}"
-
-  # Email of the service account the service-account building block minted on the hosting project;
-  # fed to the cluster as its automation identity. Outputs are JSON-encoded, so decode once.
-  service_account_email = jsondecode(meshstack_building_block.service_account.status.outputs["service_account_email"].value)
 
   # Child building block outputs are stored JSON-encoded, so each is decoded once here.
   cluster_kubeconfig = jsondecode(meshstack_building_block.cluster.status.outputs["kubeconfig"].value)
@@ -68,7 +62,7 @@ resource "meshstack_project" "hosting" {
   spec = {
     display_name              = "STACKIT Kubernetes Platform: ${local.platform_identifier}"
     payment_method_identifier = var.payment_method_identifier
-    tags                      = var.tags.project
+    tags                      = merge(var.tags.project, local.owner_tags)
   }
 }
 
@@ -98,17 +92,13 @@ data "meshstack_platforms" "host" {
   identifier = var.host_platform_identifier
 }
 
-data "meshstack_integrations" "integrations" {}
-
-# ── Automation identity (service account minted on the hosting project by the STACKIT Service Account
-# building block the landing zone registered) ──
-
-# Ordered before the cluster so the account — with SKE permissions on the hosting project and trust
-# for the cluster definition's WIF subject — exists when the cluster runs. The cluster then deploys as
-# this account instead of creating its own backplane identity.
-resource "meshstack_building_block" "service_account" {
+# ── SKE cluster ──
+# The STACKIT SKE Cluster building block the landing zone registered, ordered on the hosting tenant.
+# It is TENANT_LEVEL, so its STACKIT project id is injected from the tenant (PLATFORM_TENANT_ID) and it
+# deploys as its own folder-scoped backplane identity — the platform supplies neither here.
+resource "meshstack_building_block" "cluster" {
   wait_for_completion = true
-  depends_on          = [meshstack_tenant.hosting, module.cluster_integration]
+  depends_on          = [meshstack_tenant.hosting]
 
   lifecycle {
     postcondition {
@@ -118,59 +108,12 @@ resource "meshstack_building_block" "service_account" {
   }
 
   spec = {
-    building_block_definition_version_ref = { uuid = var.service_account_bbd_version_ref }
-    display_name                          = "SKE Platform Service Account"
+    building_block_definition_version_ref = { uuid = var.cluster_bbd_version_ref }
+    display_name                          = "SKE Cluster"
     target_ref                            = { kind = "meshTenant", uuid = meshstack_tenant.hosting.metadata.uuid }
 
     inputs = {
-      service_account_name = { value = jsonencode("mesh-ske-platform") }
-      # CODE inputs carry HCL source as a string, hence the double encoding.
-      roles = { value = jsonencode(jsonencode(["ske.admin"])) }
-      federated_identities = { value = jsonencode(jsonencode([{
-        issuer   = data.meshstack_integrations.integrations.workload_identity_federation.replicator.issuer
-        subject  = local.cluster_bbd_subject
-        audience = "api://AzureADTokenExchange"
-      }])) }
-    }
-  }
-}
-
-# ── SKE cluster (child building block, so its kubeconfig is available to later applies) ──
-
-module "cluster_integration" {
-  source = "github.com/meshcloud/meshstack-hub//modules/ske/cluster?ref=${var.hub.git_ref}"
-
-  # The cluster authenticates as the externally-minted service account (above), not its own backplane.
-  external_service_account = true
-
-  meshstack = { owning_workspace_identifier = var.workspace, tags = var.tags.building_block }
-  hub       = var.hub
-}
-
-resource "meshstack_building_block" "cluster" {
-  wait_for_completion = true
-  depends_on          = [module.cluster_integration, meshstack_building_block.service_account]
-
-  lifecycle {
-    postcondition {
-      condition     = self.status.status == "SUCCEEDED"
-      error_message = "Building block ${self.metadata.uuid} is ${self.status.status}, not SUCCEEDED. See its run in meshPanel."
-    }
-  }
-
-  spec = {
-    building_block_definition_version_ref = {
-      uuid = module.cluster_integration.building_block_definition.version_ref.uuid
-    }
-    display_name = "SKE Cluster"
-    target_ref   = { kind = "meshWorkspace", name = var.workspace }
-
-    inputs = {
-      # The cluster authenticates as the service account minted above (external-service-account mode),
-      # so its identity is supplied here rather than created by its own backplane.
-      STACKIT_SERVICE_ACCOUNT_EMAIL = { value = jsonencode(local.service_account_email) }
-      stackit_project_id            = { value = jsonencode(local.stackit_project_id) }
-      cluster_name                  = { value = jsonencode(var.cluster_name) }
+      cluster_name = { value = jsonencode(var.cluster_name) }
     }
   }
 }
@@ -203,8 +146,50 @@ resource "meshstack_building_block" "platform_services" {
     target_ref   = { kind = "meshWorkspace", name = var.workspace }
 
     inputs = {
-      kubeconfig           = { value = jsonencode(local.cluster_kubeconfig) }
-      cluster_issuer_email = { value = jsonencode(var.cluster_issuer_email) }
+      # kubeconfig is a sensitive input, so it must be passed via the sensitive form (secret_value),
+      # not as a plain `value`. secret_value takes the raw string, not a jsonencode()'d one.
+      kubeconfig = { sensitive = { secret_value = local.cluster_kubeconfig } }
+    }
+  }
+}
+
+# ── Let's Encrypt ClusterIssuer (separate child building block) ──
+# Ordered AFTER platform-services so cert-manager (and its CRDs) already exist on the cluster. A
+# ClusterIssuer is a cert-manager custom resource whose CRD kubernetes_manifest validates at plan time,
+# which cannot work in the same run that installs cert-manager — hence its own building block.
+module "cluster_issuer_integration" {
+  source = "github.com/meshcloud/meshstack-hub//modules/ske/cluster-issuer?ref=${var.hub.git_ref}"
+
+  cluster_issuer_email = var.cluster_issuer_email
+
+  meshstack = { owning_workspace_identifier = var.workspace, tags = var.tags.building_block }
+  hub       = var.hub
+}
+
+resource "meshstack_building_block" "cluster_issuer" {
+  wait_for_completion = true
+  depends_on          = [module.cluster_issuer_integration, meshstack_building_block.platform_services]
+
+  lifecycle {
+    postcondition {
+      condition     = self.status.status == "SUCCEEDED"
+      error_message = "Building block ${self.metadata.uuid} is ${self.status.status}, not SUCCEEDED. See its run in meshPanel."
+    }
+  }
+
+  spec = {
+    building_block_definition_version_ref = {
+      uuid = module.cluster_issuer_integration.building_block_definition.version_ref.uuid
+    }
+    display_name = "SKE Cluster Issuer"
+    target_ref   = { kind = "meshWorkspace", name = var.workspace }
+
+    # Only the sensitive kubeconfig here — do NOT add a plain `value` input alongside it. The meshstack
+    # provider throws "inconsistent values for sensitive attribute" when a single building block's
+    # inputs map mixes a `sensitive` and a `value` input. cluster_issuer_email is a STATIC input on the
+    # definition (set via module.cluster_issuer_integration), so it must not be passed at order time.
+    inputs = {
+      kubeconfig = { sensitive = { secret_value = local.cluster_kubeconfig } }
     }
   }
 }

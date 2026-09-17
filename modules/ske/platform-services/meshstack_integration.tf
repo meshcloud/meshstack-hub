@@ -63,9 +63,10 @@ resource "meshstack_building_block_definition" "this" {
 
     readme = coalesce(var.bbd_readme, chomp(<<-EOT
       Installs the in-cluster services that turn an existing **STACKIT Kubernetes Engine (SKE)**
-      cluster into a meshStack platform: HAProxy ingress behind a STACKIT LoadBalancer, cert-manager
-      with a Let's Encrypt `ClusterIssuer`, and the meshStack replication and metering service
-      accounts.
+      cluster into a meshStack platform: HAProxy ingress behind a STACKIT LoadBalancer, cert-manager,
+      and the meshStack replication and metering service accounts. The Let's Encrypt `ClusterIssuer`
+      itself is installed by the separate **SKE Cluster Issuer** block afterwards (its CRD must exist
+      first).
 
       ## 🎯 When to use it
 
@@ -76,7 +77,8 @@ resource "meshstack_building_block_definition" "this" {
       ## 📦 Resources created
 
       - **HAProxy ingress** – exposes an external LoadBalancer IP for application DNS.
-      - **cert-manager + Let's Encrypt ClusterIssuer** – automatic TLS for ingress hosts.
+      - **cert-manager** – TLS certificate management (the Let's Encrypt ClusterIssuer is installed by
+        the separate SKE Cluster Issuer block).
       - **meshStack replication/metering service accounts** – their tokens are handed back to the
         composing architecture to wire up the meshStack platform.
 
@@ -116,14 +118,6 @@ resource "meshstack_building_block_definition" "this" {
         type            = "CODE"
         assignment_type = "USER_INPUT"
         sensitive       = {}
-      }
-
-      cluster_issuer_email = {
-        display_name    = "ClusterIssuer Email"
-        description     = "Contact email registered with Let's Encrypt for the ACME ClusterIssuer."
-        type            = "STRING"
-        assignment_type = "STATIC"
-        argument        = jsonencode("ske@meshcloud.io")
       }
 
       cert_manager_version = {

@@ -67,9 +67,9 @@ output "building_block_definition" {
   }
 }
 
-# The architecture builds on an existing STACKIT Landing Zone. It only reads that landing zone's
-# building block to pick up the STACKIT Service Account definition it registered, which the platform
-# orders at runtime to mint the identity the cluster deploys as. Its outputs are JSON-encoded.
+# The architecture builds on an existing STACKIT Landing Zone. It reads that landing zone's building
+# block to pick up the STACKIT SKE Cluster definition it registered, which the platform orders on the
+# hosting tenant to provision the cluster. Its outputs are JSON-encoded.
 data "meshstack_building_block" "landingzone" {
   metadata = {
     uuid = var.landingzone_building_block_uuid
@@ -77,7 +77,9 @@ data "meshstack_building_block" "landingzone" {
 }
 
 locals {
-  landingzone_service_account_bbd = jsondecode(data.meshstack_building_block.landingzone.status.outputs["service_account_bbd_version_uuid"].value)
+  landingzone_cluster_bbd = jsondecode(data.meshstack_building_block.landingzone.status.outputs["cluster_bbd_version_uuid"].value)
+  landingzone_identifier  = jsondecode(data.meshstack_building_block.landingzone.status.outputs["landingzone_identifier"].value)
+  platfrom_identifier     = jsondecode(data.meshstack_building_block.landingzone.status.outputs["host_platfrom_identifier"].value)
 }
 
 resource "meshstack_building_block_definition" "this" {
@@ -104,9 +106,9 @@ resource "meshstack_building_block_definition" "this" {
 
     - **Hosting project** – a STACKIT project (self-hosted as a meshStack tenant) that the cluster
       runs in.
-    - **Automation service account** – minted on the hosting project via the STACKIT Service Account
-      building block the landing zone registered; the cluster deploys as this identity.
-    - **SKE cluster** – a managed STACKIT Kubernetes Engine cluster with an admin kubeconfig.
+    - **SKE cluster** – a managed STACKIT Kubernetes Engine cluster with an admin kubeconfig, ordered
+      from the STACKIT SKE Cluster building block the landing zone registered (it deploys as its own
+      folder-scoped backplane identity).
     - **Platform services** – HAProxy ingress, cert-manager with a Let's Encrypt ClusterIssuer, and
       the meshStack replication/metering service accounts.
     - **meshStack SKE platform** – a Kubernetes platform with a dev and a prod landing zone that
@@ -115,8 +117,8 @@ resource "meshstack_building_block_definition" "this" {
     ## 🔑 Authentication
 
     You wire the STACKIT Landing Zone building block (one UUID) and the host STACKIT platform. The
-    architecture mints its automation identity through the landing zone's STACKIT Service Account
-    building block — no STACKIT key is pasted here.
+    cluster is provisioned by the landing zone's STACKIT SKE Cluster building block, which deploys as
+    its own folder-scoped backplane identity — no STACKIT key is pasted here.
 
     ## 📊 Shared responsibility
 
@@ -170,15 +172,14 @@ resource "meshstack_building_block_definition" "this" {
     }
 
     inputs = {
-      # Version uuid of the STACKIT Service Account definition the landing zone registered. The
-      # building block orders it on the hosting project to mint the identity the cluster deploys as,
-      # so the cluster no longer provisions its own backplane. Read from the wired landing zone.
-      service_account_bbd_version_ref = {
-        display_name    = "Service Account BBD Version Ref"
-        description     = "Version uuid of the STACKIT Service Account building block definition (from the STACKIT Landing Zone) the platform orders to mint its automation identity."
+      # Version uuid of the STACKIT SKE Cluster definition the landing zone registered. The building
+      # block orders it on the hosting tenant to provision the cluster. Read from the wired landing zone.
+      cluster_bbd_version_ref = {
+        display_name    = "Cluster BBD Version Ref"
+        description     = "Version uuid of the STACKIT SKE Cluster building block definition (from the STACKIT Landing Zone) the platform orders on the hosting tenant."
         type            = "STRING"
         assignment_type = "STATIC"
-        argument        = jsonencode(local.landingzone_service_account_bbd)
+        argument        = jsonencode(local.landingzone_cluster_bbd)
       }
 
       hub = {
@@ -195,6 +196,14 @@ resource "meshstack_building_block_definition" "this" {
         description     = "Workspace that will own the created platform, location, landing zones and hosting project."
         type            = "STRING"
         assignment_type = "WORKSPACE_IDENTIFIER"
+      }
+
+      # Injected by meshStack; the creator's display name is written to the hosting project's owner tag.
+      creator = {
+        display_name    = "Creator"
+        description     = "Creator of the platform, injected by meshStack."
+        type            = "CODE"
+        assignment_type = "AUTHOR"
       }
 
       use_global_location = {
@@ -218,6 +227,7 @@ resource "meshstack_building_block_definition" "this" {
         description     = "Full `<platform>.<location>` identifier of the existing STACKIT Project platform the cluster's hosting project is provisioned on."
         type            = "STRING"
         assignment_type = "USER_INPUT"
+        default_value   = jsonencode(local.platfrom_identifier)
       }
 
       host_landing_zone_name = {
@@ -225,6 +235,7 @@ resource "meshstack_building_block_definition" "this" {
         description     = "Landing zone on the host STACKIT platform the hosting tenant is placed in."
         type            = "STRING"
         assignment_type = "USER_INPUT"
+        default_value   = jsonencode(local.landingzone_identifier)
       }
 
       # ── SKE cluster ──
@@ -248,14 +259,15 @@ resource "meshstack_building_block_definition" "this" {
 
       tags = {
         display_name           = "Tags"
-        description            = "HCL object of tag maps forwarded to the nested integrations: `landingzone`, `building_block` and `project`."
+        description            = "HCL object of tag maps forwarded to the nested integrations: `landingzone`, `building_block`, `project`, and `project_owner_tag_key` (the mandatory owner tag key your meshStack enforces on projects, e.g. `projectOwner`)."
         type                   = "CODE"
         assignment_type        = "USER_INPUT"
         updateable_by_consumer = true
         default_value = jsonencode(jsonencode({
-          landingzone    = {}
-          building_block = {}
-          project        = {}
+          landingzone           = {}
+          building_block        = {}
+          project               = {}
+          project_owner_tag_key = ""
         }))
       }
 

@@ -389,6 +389,26 @@ resource "meshstack_building_block_definition" "this" {
         assignment_type = "NONE"
       }
 
+      cluster_bbd_version_uuid = {
+        display_name    = "Cluster BBD Version UUID"
+        type            = "STRING"
+        assignment_type = "NONE"
+      }
+
+      # Consumed by a composing architecture (e.g. the STACKIT Kubernetes Platform) to place a
+      # meshTenant on this landing zone's platform and default landing zone.
+      landingzone_identifier = {
+        display_name    = "Landing Zone Identifier"
+        type            = "STRING"
+        assignment_type = "NONE"
+      }
+
+      host_platfrom_identifier = {
+        display_name    = "Host Platform Identifier"
+        type            = "STRING"
+        assignment_type = "NONE"
+      }
+
       summary = {
         display_name    = "Summary"
         type            = "STRING"

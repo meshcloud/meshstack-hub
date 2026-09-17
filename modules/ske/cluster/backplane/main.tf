@@ -27,12 +27,14 @@ resource "stackit_service_account_federated_identity_provider" "building_block" 
   ]
 }
 
-# Assigned at the organization, not the project: the SKE cluster's project is provisioned at order
-# time and does not exist when this backplane is applied, so the grant has to be inherited down to it.
-resource "stackit_authorization_organization_role_assignment" "this" {
+# Assigned on the landing-zone folder, not the project: the SKE cluster's project is provisioned at
+# order time inside this folder, so a folder-scoped grant is inherited down to it. Folder scope also
+# means the platform team only needs rights on their folder, not the whole organization — and unlike
+# organization scope, STACKIT service roles such as `ske.admin` are valid here.
+resource "stackit_authorization_folder_role_assignment" "this" {
   for_each = var.enabled ? toset(var.roles) : toset([])
 
-  resource_id = var.organization_id
+  resource_id = var.folder_id
   role        = each.value
   subject     = one(stackit_service_account.building_block[*].email)
 }

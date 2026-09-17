@@ -80,35 +80,9 @@ resource "helm_release" "cert_manager" {
   })]
 }
 
-# Separate from the Helm release: the manifest needs the ClusterIssuer CRD that cert-manager installs
-# first. HTTP-01 solves challenges through the HAProxy ingress class.
-resource "kubernetes_manifest" "clusterissuer_letsencrypt_prod" {
-  manifest = {
-    apiVersion = "cert-manager.io/v1"
-    kind       = "ClusterIssuer"
-    metadata = {
-      name = "letsencrypt-prod"
-    }
-    spec = {
-      acme = {
-        email  = var.cluster_issuer_email
-        server = "https://acme-v02.api.letsencrypt.org/directory"
-        privateKeySecretRef = {
-          name = "letsencrypt-prod-account-key"
-        }
-        solvers = [{
-          http01 = {
-            ingress = {
-              ingressClassName = "haproxy"
-            }
-          }
-        }]
-      }
-    }
-  }
-
-  depends_on = [helm_release.cert_manager]
-}
+# The Let's Encrypt ClusterIssuer is NOT created here: it is a cert-manager custom resource, and
+# kubernetes_manifest validates its CRD at plan time — which cannot work in the same run that installs
+# cert-manager. It lives in the separate `ske/cluster-issuer` building block, ordered after this one.
 
 # ── meshStack replication + metering service accounts ──
 # Creates the in-cluster service accounts and tokens meshStack uses to replicate namespaces and read
