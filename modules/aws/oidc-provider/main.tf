@@ -6,20 +6,27 @@
 # Apply this once per AWS account that hosts building block backplanes and pass its `arn` output to
 # every backplane in that account.
 
-data "meshstack_integrations" "this" {}
+variable "workload_identity_federation" {
+  type = object({
+    issuer   = string
+    audience = string
+  })
+  nullable    = false
+  description = "OIDC issuer URL and AWS audience of the meshStack building block runner. Take `issuer` and `aws.audience` from `status.workload_identity_federation` of any building block definition that runs on it."
+}
 
-locals {
-  # The replicator's entry is what Terraform can read. The authority for what a building block run
-  # presents is the runner's own registration, and the two agree as long as the runner shares the
-  # replicator's cluster and namespace — the assumption every hub module already makes.
-  replicator = data.meshstack_integrations.this.workload_identity_federation.replicator
+data "tls_certificate" "issuer" {
+  url = var.workload_identity_federation.issuer
 }
 
 resource "aws_iam_openid_connect_provider" "meshstack" {
-  url            = local.replicator.issuer
-  client_id_list = [local.replicator.aws.audience]
+  url            = var.workload_identity_federation.issuer
+  client_id_list = [var.workload_identity_federation.audience]
 
   # This issuer is not in the AWS trust store, unlike the well-known providers, so the thumbprint
-  # is required.
-  thumbprint_list = [local.replicator.aws.thumbprint]
+  # is required. AWS documents taking it from the root of the issuer's TLS chain, which the
+  # `tls_certificate` data source returns last.
+  thumbprint_list = [
+    data.tls_certificate.issuer.certificates[length(data.tls_certificate.issuer.certificates) - 1].sha1_fingerprint
+  ]
 }

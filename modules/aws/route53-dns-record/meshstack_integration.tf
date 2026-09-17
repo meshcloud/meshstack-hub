@@ -53,6 +53,12 @@ variable "bbd_readme" {
   description = "Overrides the markdown readme shown in the marketplace before ordering."
 }
 
+variable "building_block_runner_uuid" {
+  type        = string
+  default     = null
+  description = "Runs this building block on the given meshStack building block runner instead of the shared one meshStack hosts."
+}
+
 variable "meshstack" {
   type = object({
     owning_workspace_identifier = string
@@ -85,8 +91,6 @@ output "building_block_definition" {
   }
 }
 
-data "meshstack_integrations" "integrations" {}
-
 module "backplane" {
   source = "github.com/meshcloud/meshstack-hub//modules/aws/route53-dns-record/backplane?ref=${var.hub.git_ref}"
 
@@ -94,11 +98,9 @@ module "backplane" {
   oidc_provider_arn = var.aws_oidc_provider_arn
 
   workload_identity_federation = {
-    issuer   = data.meshstack_integrations.integrations.workload_identity_federation.replicator.issuer
-    audience = data.meshstack_integrations.integrations.workload_identity_federation.replicator.aws.audience
-    subjects = [
-      "${trimsuffix(data.meshstack_integrations.integrations.workload_identity_federation.replicator.subject, ":replicator")}:workspace.${var.meshstack.owning_workspace_identifier}.buildingblockdefinition.${meshstack_building_block_definition.this.metadata.uuid}"
-    ]
+    issuer   = meshstack_building_block_definition.this.status.workload_identity_federation.issuer
+    audience = meshstack_building_block_definition.this.status.workload_identity_federation.aws.audience
+    subjects = [meshstack_building_block_definition.this.status.workload_identity_federation.subject]
   }
 }
 
@@ -139,6 +141,10 @@ resource "meshstack_building_block_definition" "this" {
   version_spec = {
     draft         = var.hub.bbd_draft
     deletion_mode = "DELETE"
+    runner_ref = var.building_block_runner_uuid == null ? null : {
+      kind = "meshBuildingBlockRunner"
+      uuid = var.building_block_runner_uuid
+    }
 
     implementation = {
       terraform = {
@@ -254,7 +260,7 @@ terraform {
     }
     meshstack = {
       source  = "meshcloud/meshstack"
-      version = ">= 0.21.0"
+      version = ">= 0.26.0"
     }
   }
 }

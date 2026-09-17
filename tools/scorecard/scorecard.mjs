@@ -640,6 +640,31 @@ const detectors = [
       };
     },
   },
+  {
+    id: "wif_no_replicator",
+    category: "integration",
+    name: "Trusts the runner's identity, not the replicator's",
+    emoji: "🪪",
+    // Only a building block module is scanned here. The platform-level
+    // modules/<cloud>/meshstack_integration.tf files are not modules in this sense and keep
+    // reading the replicator entry, which is what they exist to configure.
+    fn: (mod) => {
+      const content = readIntegrationTf(mod);
+      if (!content) return { pass: false, detail: "no integration file" };
+      if (/workload_identity_federation\.replicator/.test(content))
+        return {
+          pass: false,
+          detail: "derives the runner's trust from data.meshstack_integrations…replicator — that entry is the replicator's own identity and only ever matched because the runner shares its namespace",
+        };
+      if (!/workload_identity_federation\s*=/.test(content)) return { pass: null, detail: "module does not federate" };
+      if (!/status\.workload_identity_federation\.issuer/.test(content))
+        return { pass: false, detail: "issuer is not taken from meshstack_building_block_definition.<name>.status.workload_identity_federation.issuer, which follows the runner the definition runs on" };
+      return {
+        pass: /status\.workload_identity_federation\.subject/.test(content),
+        detail: "subjects are not taken from meshstack_building_block_definition.<name>.status.workload_identity_federation.subject, so the backplane may trust something the runner never presents",
+      };
+    },
+  },
 
   // ─── AWS Backplane ──────────────────────────────────────────────────────
   // AWS documents two legitimate identity patterns, so a check has to know which one a backplane
@@ -746,11 +771,16 @@ const detectors = [
       // next quote.
       const hasSubCondition = /^\s*variable\s*=.*:sub"/m.test(allTf);
       const hasSubjects = /var\.workload_identity_federation\.subjects/.test(allTf);
+      if (!hasSubCondition)
+        return { pass: false, detail: "no :sub condition — the role is assumable by every subject the meshStack issuer signs" };
+      if (!hasSubjects)
+        return { pass: false, detail: "the :sub condition does not use var.workload_identity_federation.subjects, so it is not scoped to this building block definition" };
+      // A subject list the integration built from strings scopes nothing the runner guarantees.
+      const integration = readIntegrationTf(mod);
+      if (!integration) return { pass: true };
       return {
-        pass: hasSubCondition && hasSubjects,
-        detail: hasSubCondition
-          ? "the :sub condition does not use var.workload_identity_federation.subjects, so it is not scoped to this building block definition"
-          : "no :sub condition — the role is assumable by every subject the meshStack issuer signs",
+        pass: /subjects\s*=\s*\[[^\]]*status\.workload_identity_federation\.subject/.test(integration),
+        detail: "the integration does not pass the definition's resolved subject — see .agents/references/meshstack-integration.md#runner-identity",
       };
     },
   },
@@ -791,11 +821,18 @@ const detectors = [
       if (!content) return { pass: false, detail: "no integration file" };
       const hasRoleArn = /\bAWS_ROLE_ARN\b/.test(content);
       const hasTokenFile = /\bAWS_WEB_IDENTITY_TOKEN_FILE\b/.test(content);
+      if (!hasRoleArn) return { pass: false, detail: "AWS_ROLE_ARN is not wired as an environment input" };
+      if (!hasTokenFile)
+        return { pass: false, detail: "AWS_WEB_IDENTITY_TOKEN_FILE is not wired — the AWS SDK has no token to exchange" };
+      // The AWS audience is namespace-specific and differs per self-hosted runner, so it is read
+      // from the definition's status, which follows its runner, rather than hardcoded or borrowed
+      // from another integration.
+      const runnerWif = "meshstack_building_block_definition\\.[\\w-]+\\.status\\.workload_identity_federation";
       return {
-        pass: hasRoleArn && hasTokenFile,
-        detail: hasRoleArn
-          ? "AWS_WEB_IDENTITY_TOKEN_FILE is not wired — the AWS SDK has no token to exchange"
-          : "AWS_ROLE_ARN is not wired as an environment input",
+        pass:
+          new RegExp(runnerWif + "\\.issuer").test(content) &&
+          new RegExp(runnerWif + "\\.aws\\.audience").test(content),
+        detail: "issuer and aws.audience do not come from meshstack_building_block_definition.<name>.status.workload_identity_federation",
       };
     },
   },
@@ -1075,11 +1112,18 @@ const detectors = [
       const allTf = readAllBackplaneTf(mod);
       if (!allTf) return { pass: false, detail: "no backplane tf files" };
       const hasCondition = /attribute_condition\s*=/.test(allTf);
+      if (!hasCondition)
+        return { pass: false, detail: "no attribute_condition — the pool provider accepts every subject the issuer signs" };
+      if (!/google\.subject/.test(allTf))
+        return { pass: false, detail: "attribute_condition does not constrain google.subject" };
+      if (/google\.subject\.startsWith\(/.test(allTf))
+        return {
+          pass: false,
+          detail: "google.subject.startsWith(...) admits every definition sharing the prefix — meshStack resolves a subject per definition, so match it exactly",
+        };
       return {
-        pass: hasCondition && /google\.subject/.test(allTf),
-        detail: hasCondition
-          ? "attribute_condition does not constrain google.subject"
-          : "no attribute_condition — the pool provider accepts every subject the issuer signs",
+        pass: /google\.subject\s*==/.test(allTf) && /var\.workload_identity_federation_trust\.subjects/.test(allTf),
+        detail: "attribute_condition does not compare google.subject to each var.workload_identity_federation_trust.subjects entry",
       };
     },
   },
@@ -1096,9 +1140,16 @@ const detectors = [
       const hasEmail = blocks.has("service_account_email");
       if (!credentials) return { pass: false, detail: 'missing output "credentials_json"' };
       if (!hasEmail) return { pass: false, detail: 'missing output "service_account_email"' };
+      if (!/sensitive\s*=\s*true/.test(credentials))
+        return { pass: false, detail: "credentials_json is not marked sensitive = true" };
+      if (/google_iam_workload_identity_pool_provider\.[\w-]+\.name/.test(credentials))
+        return {
+          pass: false,
+          detail: "the audience is read off the pool provider, whose attribute_condition names the definition that consumes this output — build it from data.google_project and the pool identifier",
+        };
       return {
-        pass: /sensitive\s*=\s*true/.test(credentials),
-        detail: "credentials_json is not marked sensitive = true",
+        pass: /\/\/iam\.googleapis\.com\/projects\//.test(credentials),
+        detail: "the audience is not the //iam.googleapis.com/projects/<number>/locations/global/workloadIdentityPools/<pool>/providers/<provider> form",
       };
     },
   },

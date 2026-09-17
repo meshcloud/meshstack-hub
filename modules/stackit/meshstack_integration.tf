@@ -78,6 +78,12 @@ variable "stackit_network_area_id" {
   description = "STACKIT network area ID applied as the `networkArea` label to projects created through the `networked` landing zone. Only used when `stackit_networked_projects_enabled` is true."
 }
 
+variable "building_block_runner_uuid" {
+  type        = string
+  default     = null
+  description = "Runs this building block on the given meshStack building block runner instead of the shared one meshStack hosts."
+}
+
 variable "meshstack" {
   type = object({
     owning_workspace_identifier = string
@@ -122,15 +128,11 @@ module "backplane" {
   organization_onboarding_enabled = var.stackit_organization_onboarding_enabled
 
   workload_identity_federation = {
-    issuer = data.meshstack_integrations.integrations.workload_identity_federation.replicator.issuer
-    subjects = [
-      for bbd in meshstack_building_block_definition.this :
-      "${trimsuffix(data.meshstack_integrations.integrations.workload_identity_federation.replicator.subject, ":replicator")}:workspace.${var.meshstack.owning_workspace_identifier}.buildingblockdefinition.${bbd.metadata.uuid}"
-    ]
+    # Every variant runs on the same runner, so any one of them reports the issuer.
+    issuer   = meshstack_building_block_definition.this["default"].status.workload_identity_federation.issuer
+    subjects = [for bbd in meshstack_building_block_definition.this : bbd.status.workload_identity_federation.subject]
   }
 }
-
-data "meshstack_integrations" "integrations" {}
 
 output "building_block_definition" {
   description = "BBD is consumed in building block compositions."
@@ -292,6 +294,10 @@ resource "meshstack_building_block_definition" "this" {
   version_spec = {
     draft         = var.hub.bbd_draft
     deletion_mode = "DELETE"
+    runner_ref = var.building_block_runner_uuid == null ? null : {
+      kind = "meshBuildingBlockRunner"
+      uuid = var.building_block_runner_uuid
+    }
 
     implementation = {
       terraform = {
@@ -458,7 +464,7 @@ terraform {
   required_providers {
     meshstack = {
       source  = "meshcloud/meshstack"
-      version = ">= 0.23.0"
+      version = ">= 0.26.0"
     }
     stackit = {
       source  = "stackitcloud/stackit"

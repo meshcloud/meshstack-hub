@@ -134,13 +134,19 @@ module "backplane" {
   location = var.azure_location
 
   workload_identity_federation = {
-    issuer = data.meshstack_integrations.integrations.workload_identity_federation.replicator.issuer
-    subjects = [
-      "${trimsuffix(data.meshstack_integrations.integrations.workload_identity_federation.replicator.subject, ":replicator")}:workspace.${var.meshstack.owning_workspace_identifier}.buildingblockdefinition.${meshstack_building_block_definition.this.metadata.uuid}"
-    ]
+    issuer   = meshstack_building_block_definition.this.status.workload_identity_federation.issuer
+    subjects = [meshstack_building_block_definition.this.status.workload_identity_federation.subject]
   }
 }
 ```
+
+The status read and the `building_block_runner_uuid` behind it are the same in every cloud, see
+[meshstack-integration.md § Runner identity](meshstack-integration.md#runner-identity).
+
+**Known limitation.** The federated credential trusts the subject of the version the Terraform
+resource manages. A building block keeps running on the version it was created with, so moving
+the definition to a different runner breaks the blocks that still run on the old version until
+they upgrade.
 
 The `meshstack_integration.tf` must include `azure_location` variable (flat, provider-prefixed) for all resource placement.
 The resource group is derived from and managed by the backplane using `var.name`.
