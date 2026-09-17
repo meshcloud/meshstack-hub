@@ -1,9 +1,15 @@
 # The meshstack provider is configured by the meshStack runtime at order time (mesh http backend), so
 # it is intentionally not declared here.
 
+# TEMP (erstmal): the first run only orders meshStack building blocks (project, service account,
+# cluster). It creates no STACKIT resources directly, so the parent needs no stackit/restapi provider
+# of its own — the real STACKIT work runs in child BBs that authenticate as the runtime SA (SA-RUN)
+# the service-account BB mints. Re-enable these once git/dns/model-serving move to such a child BB.
+#
 # Authentication comes entirely from the environment via Workload Identity Federation:
 # STACKIT_SERVICE_ACCOUNT_EMAIL, STACKIT_USE_OIDC and STACKIT_FEDERATED_TOKEN_FILE are injected by
 # meshStack. The architecture's backplane (registered with the definition) provisions the identity.
+/*
 provider "stackit" {
   default_region = var.stackit_region
   # Required for the authorization role assignments the nested SKE Cluster backplane creates.
@@ -28,3 +34,4 @@ provider "restapi" {
     Content-Type  = "application/json"
   }
 }
+*/

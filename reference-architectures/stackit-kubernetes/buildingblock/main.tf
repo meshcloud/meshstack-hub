@@ -24,9 +24,8 @@ locals {
     ] : v != null
   ])
 
-  # Null on the first run, while the starterkit definition is still gated off. try() turns the
-  # null-attribute access on the disabled module into a null instead of an error.
-  starterkit_bbd_uuid = try(module.ske_starterkit.building_block_definition.uuid, null)
+  # TEMP (erstmal): starterkit module is disabled, so this local is too.
+  # starterkit_bbd_uuid = try(module.ske_starterkit.building_block_definition.uuid, null)
 
   # Resolved once the host STACKIT platform is looked up. `one()` fails loudly if the identifier ever
   # stops matching exactly one platform.
@@ -51,9 +50,10 @@ locals {
   cluster_kubeconfig = jsondecode(meshstack_building_block.cluster.status.outputs["kubeconfig"].value)
   cluster_kube_host  = jsondecode(meshstack_building_block.cluster.status.outputs["kube_host"].value)
 
-  haproxy_lb_ip    = jsondecode(meshstack_building_block.platform_services.status.outputs["haproxy_lb_ip"].value)
-  replicator_token = jsondecode(meshstack_building_block.platform_services.status.outputs["replicator_token"].value)
-  metering_token   = jsondecode(meshstack_building_block.platform_services.status.outputs["metering_token"].value)
+  # TEMP (erstmal): platform-services is disabled, so its outputs are not read.
+  # haproxy_lb_ip    = jsondecode(meshstack_building_block.platform_services.status.outputs["haproxy_lb_ip"].value)
+  # replicator_token = jsondecode(meshstack_building_block.platform_services.status.outputs["replicator_token"].value)
+  # metering_token   = jsondecode(meshstack_building_block.platform_services.status.outputs["metering_token"].value)
 }
 
 resource "random_string" "identifier_suffix" {
@@ -196,6 +196,8 @@ resource "meshstack_building_block" "cluster" {
   }
 }
 
+# TEMP (erstmal): platform-services disabled — first run stops after the cluster.
+/*
 # ── In-cluster platform services (child building block; configures its providers from the kubeconfig) ──
 
 module "platform_services_integration" {
@@ -229,3 +231,4 @@ resource "meshstack_building_block" "platform_services" {
     }
   }
 }
+*/

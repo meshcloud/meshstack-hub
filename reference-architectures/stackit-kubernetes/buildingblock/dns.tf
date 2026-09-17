@@ -1,3 +1,6 @@
+# TEMP (erstmal): disabled — first run creates only project + SA + cluster. Re-enable once
+# git/dns/model-serving move to a child BB that runs as the runtime SA (SA-RUN).
+/*
 resource "stackit_dns_zone" "this" {
   project_id    = local.stackit_project_id
   name          = "${var.dns_name}-ske-starterkit"
@@ -16,3 +19,4 @@ resource "stackit_dns_record_set" "wildcard_a" {
   records    = [local.haproxy_lb_ip]
   comment    = "Wildcard app routing to HAProxy ingress load balancer"
 }
+*/

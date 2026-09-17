@@ -1,3 +1,6 @@
+# TEMP (erstmal): disabled — first run creates only project + SA + cluster. Re-enable once
+# git/dns/model-serving move to a child BB that runs as the runtime SA (SA-RUN).
+/*
 # ── STACKIT Model Serving token (sovereign LLM API for the sample application) ──
 resource "stackit_modelserving_token" "this" {
   project_id  = local.stackit_project_id
@@ -101,3 +104,4 @@ module "ske_starterkit" {
   dns_zone_name          = stackit_dns_zone.this.dns_name
   add_random_name_suffix = var.add_random_name_suffix
 }
+*/

@@ -1,3 +1,6 @@
+# TEMP (erstmal): disabled — first run creates only project + SA + cluster. Re-enable once
+# git/dns/model-serving move to a child BB that runs as the runtime SA (SA-RUN).
+/*
 # STACKIT Git (Forgejo) instance hosting the application repositories.
 resource "stackit_git" "this" {
   project_id = local.stackit_project_id
@@ -34,3 +37,4 @@ locals {
   # URL instead — see provider.tf for why.)
   forgejo_base_url = stackit_git.this.url
 }
+*/

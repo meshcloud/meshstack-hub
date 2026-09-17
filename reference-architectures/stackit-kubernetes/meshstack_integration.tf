@@ -77,9 +77,9 @@ output "building_block_definition" {
 # Applying this file creates the backplane service account below, so it authenticates to STACKIT with
 # the applying engineer's credentials (from the environment). experiments=["iam"] enables the
 # authorization role assignments the backplane makes.
-provider "stackit" {
-  experiments = ["iam"]
-}
+# provider "stackit" {
+#   experiments = ["iam"]
+# }
 
 # Automation identity for this architecture's own run (git/DNS/model-serving in the hosting project,
 # and provisioning the SKE cluster's backplane). Created when this file is applied, so registration
@@ -102,21 +102,21 @@ locals {
   landingzone_service_account_bbd = jsondecode(data.meshstack_building_block.landingzone.status.outputs["service_account_bbd_version_uuid"].value)
 }
 
-module "backplane" {
-  source = "github.com/meshcloud/meshstack-hub//modules/ske/cluster/backplane?ref=${var.hub.git_ref}"
+# module "backplane" {
+#   source = "github.com/meshcloud/meshstack-hub//modules/ske/cluster/backplane?ref=${var.hub.git_ref}"
 
-  project_id           = local.landingzone_foundation_project
-  organization_id      = local.landingzone_organization_id
-  roles                = var.stackit_backplane_roles
-  service_account_name = "mesh-ske-platform"
+#   project_id           = local.landingzone_foundation_project
+#   organization_id      = local.landingzone_organization_id
+#   roles                = var.stackit_backplane_roles
+#   service_account_name = "mesh-ske-platform"
 
-  workload_identity_federation = {
-    issuer = data.meshstack_integrations.integrations.workload_identity_federation.replicator.issuer
-    subjects = [
-      "${trimsuffix(data.meshstack_integrations.integrations.workload_identity_federation.replicator.subject, ":replicator")}:workspace.${var.meshstack.owning_workspace_identifier}.buildingblockdefinition.${meshstack_building_block_definition.this.metadata.uuid}"
-    ]
-  }
-}
+#   workload_identity_federation = {
+#     issuer = data.meshstack_integrations.integrations.workload_identity_federation.replicator.issuer
+#     subjects = [
+#       "${trimsuffix(data.meshstack_integrations.integrations.workload_identity_federation.replicator.subject, ":replicator")}:workspace.${var.meshstack.owning_workspace_identifier}.buildingblockdefinition.${meshstack_building_block_definition.this.metadata.uuid}"
+#     ]
+#   }
+# }
 
 resource "meshstack_building_block_definition" "this" {
   metadata = {
@@ -208,6 +208,11 @@ resource "meshstack_building_block_definition" "this" {
     }
 
     inputs = {
+      # TEMP (erstmal): the backplane (SA-BP) is removed, and the first run creates only project + SA
+      # + cluster — the parent no longer runs any STACKIT resources directly, so it needs no STACKIT
+      # WIF auth of its own. Re-enable these three env inputs once git/dns/model-serving move to a
+      # child BB (and decide where the parent's identity comes from).
+      /*
       # ── STACKIT authentication (Workload Identity Federation, no key) ──
       STACKIT_SERVICE_ACCOUNT_EMAIL = {
         display_name    = "STACKIT Service Account Email"
@@ -235,6 +240,7 @@ resource "meshstack_building_block_definition" "this" {
         is_environment  = true
         argument        = jsonencode("/var/run/secrets/workload-identity/azure/token")
       }
+      */
 
       # Version uuid of the STACKIT Service Account definition the landing zone registered. The
       # building block orders it on the hosting project to mint the identity the cluster deploys as,
@@ -529,9 +535,9 @@ terraform {
       # 0.25 added the `is_optional` input attribute the Forgejo token relies on.
       version = ">= 0.25.0"
     }
-    stackit = {
-      source  = "stackitcloud/stackit"
-      version = ">= 0.98.0, < 1.0.0"
-    }
+    # stackit = {
+    #   source  = "stackitcloud/stackit"
+    #   version = ">= 0.98.0, < 1.0.0"
+    # }
   }
 }
