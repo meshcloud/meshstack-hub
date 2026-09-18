@@ -94,41 +94,7 @@ module "meshplatform" {
   metering_enabled   = true
 }
 
-# Kubernetes populates a `kubernetes.io/service-account-token` secret's `data.token` field
-# ASYNCHRONOUSLY after the secret is created, so the meshplatform module reads it empty on the creating
-# apply — which is how meshStack ends up with a blank token and replication/metering get 401
-# Unauthorized. A fixed sleep is only a guess at the propagation delay. Instead each data source below
-# carries a postcondition that fails while its token is still empty, and the BBD's pre_run_script (see
-# meshstack_integration.tf) polls these data sources (`tofu apply -target`) until both postconditions
-# pass — so by the time the main apply reads them the tokens are guaranteed present, and a blank token
-# can never reach meshStack. Secret names/namespace are the meshplatform module's fixed defaults for our
-# usage (no name_suffix; namespace "meshcloud").
-data "kubernetes_secret" "replicator" {
-  metadata {
-    name      = "meshfed-service"
-    namespace = "meshcloud"
-  }
-  depends_on = [module.meshplatform]
-
-  lifecycle {
-    postcondition {
-      condition     = self.data["token"] != ""
-      error_message = "Kubernetes has not populated the meshfed-service service-account-token yet."
-    }
-  }
-}
-
-data "kubernetes_secret" "metering" {
-  metadata {
-    name      = "meshfed-metering"
-    namespace = "meshcloud"
-  }
-  depends_on = [module.meshplatform]
-
-  lifecycle {
-    postcondition {
-      condition     = self.data["token"] != ""
-      error_message = "Kubernetes has not populated the meshfed-metering service-account-token yet."
-    }
-  }
-}
+# The module's token secrets set `wait_for_service_account_token = true`, so the kubernetes provider
+# blocks until Kubernetes has populated `data.token` before the secret finishes creating. That makes
+# `module.meshplatform.replicator_token` / `.metering_token` reliably non-empty on the creating apply —
+# no separate data source, sleep or pre-run poll is needed (see outputs.tf).

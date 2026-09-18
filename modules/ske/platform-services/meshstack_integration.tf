@@ -105,41 +105,6 @@ resource "meshstack_building_block_definition" "this" {
         ref_name                       = var.hub.git_ref
         async                          = false
         use_mesh_http_backend_fallback = true
-
-        # Runs after `tofu init`, before the main plan/apply. Kubernetes populates a
-        # `kubernetes.io/service-account-token` secret's `data.token` field ASYNCHRONOUSLY after the
-        # secret is created, so reading it in the same apply that creates it yields an empty token —
-        # which meshStack would then store as the platform's replication/metering credential, causing
-        # 401s. This polls the token-secret data sources (`tofu apply -target`), whose postconditions
-        # only pass once Kubernetes has populated both tokens; the first iteration also creates the
-        # service accounts (module.meshplatform, a dependency of the data sources). The main run then
-        # reads guaranteed-populated tokens.
-        # https://docs.meshcloud.io/concepts/building-block/#pre-run-script-opentofu
-        pre_run_script = chomp(<<-SH
-          run_mode="$1"
-
-          # Only pre-provision on APPLY. DESTROY and DETECT are handled by the main run.
-          if [ "$run_mode" != "APPLY" ]; then
-            echo "Run mode '$run_mode': nothing to pre-apply, skipping."
-            exit 0
-          fi
-
-          echo "Provisioning the service accounts and waiting for Kubernetes to populate their tokens..."
-          i=0
-          while [ "$i" -lt 30 ]; do
-            i=$((i + 1))
-            if tofu apply -input=false -auto-approve -target=data.kubernetes_secret.replicator -target=data.kubernetes_secret.metering; then
-              echo "Service-account tokens populated; the main run will now read them."
-              exit 0
-            fi
-            echo "Tokens not populated yet, retrying ($i/30)..."
-            sleep 5
-          done
-
-          echo "Service-account tokens were not populated within the timeout." >&2
-          exit 1
-        SH
-        )
       }
     }
 
