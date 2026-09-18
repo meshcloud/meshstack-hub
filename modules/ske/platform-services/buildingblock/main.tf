@@ -93,3 +93,30 @@ module "meshplatform" {
   replicator_enabled = true
   metering_enabled   = true
 }
+
+# The module creates `kubernetes.io/service-account-token` secrets, but Kubernetes populates their
+# `data.token` field ASYNCHRONOUSLY after creation. The module reads `.data["token"]` on the creating
+# apply, when it can still be empty — which is exactly how meshStack ends up with a blank token and the
+# replicator/metering calls get 401 Unauthorized. So we wait, then re-read the now-populated tokens via
+# data sources and export those (see outputs.tf). Secret names/namespace are the meshplatform module's
+# fixed defaults for our usage (no name_suffix; namespace "meshcloud").
+resource "time_sleep" "wait_for_sa_tokens" {
+  depends_on      = [module.meshplatform]
+  create_duration = "60s"
+}
+
+data "kubernetes_secret" "replicator" {
+  metadata {
+    name      = "meshfed-service"
+    namespace = "meshcloud"
+  }
+  depends_on = [time_sleep.wait_for_sa_tokens]
+}
+
+data "kubernetes_secret" "metering" {
+  metadata {
+    name      = "meshfed-metering"
+    namespace = "meshcloud"
+  }
+  depends_on = [time_sleep.wait_for_sa_tokens]
+}
