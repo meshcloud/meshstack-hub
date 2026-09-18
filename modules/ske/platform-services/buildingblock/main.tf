@@ -94,23 +94,28 @@ module "meshplatform" {
   metering_enabled   = true
 }
 
-# The module creates `kubernetes.io/service-account-token` secrets, but Kubernetes populates their
-# `data.token` field ASYNCHRONOUSLY after creation. The module reads `.data["token"]` on the creating
-# apply, when it can still be empty — which is exactly how meshStack ends up with a blank token and the
-# replicator/metering calls get 401 Unauthorized. So we wait, then re-read the now-populated tokens via
-# data sources and export those (see outputs.tf). Secret names/namespace are the meshplatform module's
-# fixed defaults for our usage (no name_suffix; namespace "meshcloud").
-resource "time_sleep" "wait_for_sa_tokens" {
-  depends_on      = [module.meshplatform]
-  create_duration = "60s"
-}
-
+# Kubernetes populates a `kubernetes.io/service-account-token` secret's `data.token` field
+# ASYNCHRONOUSLY after the secret is created, so the meshplatform module reads it empty on the creating
+# apply — which is how meshStack ends up with a blank token and replication/metering get 401
+# Unauthorized. A fixed sleep is only a guess at the propagation delay. Instead each data source below
+# carries a postcondition that fails while its token is still empty, and the BBD's pre_run_script (see
+# meshstack_integration.tf) polls these data sources (`tofu apply -target`) until both postconditions
+# pass — so by the time the main apply reads them the tokens are guaranteed present, and a blank token
+# can never reach meshStack. Secret names/namespace are the meshplatform module's fixed defaults for our
+# usage (no name_suffix; namespace "meshcloud").
 data "kubernetes_secret" "replicator" {
   metadata {
     name      = "meshfed-service"
     namespace = "meshcloud"
   }
-  depends_on = [time_sleep.wait_for_sa_tokens]
+  depends_on = [module.meshplatform]
+
+  lifecycle {
+    postcondition {
+      condition     = self.data["token"] != ""
+      error_message = "Kubernetes has not populated the meshfed-service service-account-token yet."
+    }
+  }
 }
 
 data "kubernetes_secret" "metering" {
@@ -118,5 +123,12 @@ data "kubernetes_secret" "metering" {
     name      = "meshfed-metering"
     namespace = "meshcloud"
   }
-  depends_on = [time_sleep.wait_for_sa_tokens]
+  depends_on = [module.meshplatform]
+
+  lifecycle {
+    postcondition {
+      condition     = self.data["token"] != ""
+      error_message = "Kubernetes has not populated the meshfed-metering service-account-token yet."
+    }
+  }
 }
