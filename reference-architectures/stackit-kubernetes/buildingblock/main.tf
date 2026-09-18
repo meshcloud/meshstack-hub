@@ -139,6 +139,7 @@ resource "meshstack_building_block" "platform_services" {
   }
 
   spec = {
+    parent_building_block_refs = [meshstack_building_block.cluster.ref]
     building_block_definition_version_ref = {
       uuid = module.platform_services_integration.building_block_definition.version_ref.uuid
     }
@@ -178,11 +179,12 @@ resource "meshstack_building_block" "cluster_issuer" {
   }
 
   spec = {
+    parent_building_block_refs = [meshstack_building_block.cluster.ref]
     building_block_definition_version_ref = {
       uuid = module.cluster_issuer_integration.building_block_definition.version_ref.uuid
     }
     display_name = "SKE Cluster Issuer"
-    target_ref   = { kind = "meshWorkspace", name = var.workspace }
+    target_ref   = { kind = "meshTenant", uuid = meshstack_tenant.hosting.metadata.uuid }
 
     # Only the sensitive kubeconfig here — do NOT add a plain `value` input alongside it. The meshstack
     # provider throws "inconsistent values for sensitive attribute" when a single building block's

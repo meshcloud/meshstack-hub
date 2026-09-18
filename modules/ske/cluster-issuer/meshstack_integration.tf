@@ -61,12 +61,13 @@ resource "meshstack_building_block_definition" "this" {
   }
 
   spec = {
-    display_name     = coalesce(var.bbd_display_name, "STACKIT SKE Cluster Issuer")
-    symbol           = "https://raw.githubusercontent.com/meshcloud/meshstack-hub/${var.hub.git_ref}/modules/ske/cluster-issuer/buildingblock/logo.png"
-    description      = coalesce(var.bbd_description, "Installs a Let's Encrypt ClusterIssuer (cert-manager) on an SKE cluster for automatic TLS.")
-    support_url      = "https://portal.stackit.cloud/ske"
-    target_type      = "WORKSPACE_LEVEL"
-    run_transparency = true
+    display_name        = coalesce(var.bbd_display_name, "STACKIT SKE Cluster Issuer")
+    symbol              = "https://raw.githubusercontent.com/meshcloud/meshstack-hub/${var.hub.git_ref}/modules/ske/cluster-issuer/buildingblock/logo.png"
+    description         = coalesce(var.bbd_description, "Installs a Let's Encrypt ClusterIssuer (cert-manager) on an SKE cluster for automatic TLS.")
+    support_url         = "https://portal.stackit.cloud/ske"
+    target_type         = "TENANT_LEVEL"
+    run_transparency    = true
+    supported_platforms = [{ name = "STACKIT" }]
 
     readme = coalesce(var.bbd_readme, chomp(<<-EOT
       Installs a Let's Encrypt **ClusterIssuer** (cert-manager) on an existing **STACKIT Kubernetes

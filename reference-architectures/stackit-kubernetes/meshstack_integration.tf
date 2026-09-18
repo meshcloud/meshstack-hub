@@ -77,9 +77,9 @@ data "meshstack_building_block" "landingzone" {
 }
 
 locals {
-  landingzone_cluster_bbd = jsondecode(data.meshstack_building_block.landingzone.status.outputs["cluster_bbd_version_uuid"].value)
-  landingzone_identifier  = jsondecode(data.meshstack_building_block.landingzone.status.outputs["landingzone_identifier"].value)
-  platfrom_identifier     = jsondecode(data.meshstack_building_block.landingzone.status.outputs["host_platfrom_identifier"].value)
+  cluster_bbd            = jsondecode(data.meshstack_building_block.landingzone.status.outputs["cluster_bbd_version_uuid"].value)
+  landingzone_identifier = jsondecode(data.meshstack_building_block.landingzone.status.outputs["landingzone_identifier"].value)
+  platfrom_identifier    = jsondecode(data.meshstack_building_block.landingzone.status.outputs["host_platfrom_identifier"].value)
 }
 
 resource "meshstack_building_block_definition" "this" {
@@ -179,7 +179,7 @@ resource "meshstack_building_block_definition" "this" {
         description     = "Version uuid of the STACKIT SKE Cluster building block definition (from the STACKIT Landing Zone) the platform orders on the hosting tenant."
         type            = "STRING"
         assignment_type = "STATIC"
-        argument        = jsonencode(local.landingzone_cluster_bbd)
+        argument        = jsonencode(local.cluster_bbd)
       }
 
       hub = {
