@@ -70,6 +70,13 @@ output "building_block_definition" {
   }
 }
 
+locals {
+  # STACKIT role names may contain dots — `ske.admin` is the first one that does. The roles are
+  # joined into the catalog's `roles` validation alternation, where an unescaped dot matches any
+  # character, so `skeXadmin` would pass validation for a role nobody granted.
+  assignable_roles_pattern = join("|", [for role in var.stackit_assignable_roles : replace(role, ".", "\\.")])
+}
+
 data "meshstack_integrations" "integrations" {}
 
 module "backplane" {
@@ -204,7 +211,7 @@ resource "meshstack_building_block_definition" "this" {
         type                           = "CODE"
         assignment_type                = "USER_INPUT"
         default_value                  = jsonencode(jsonencode(["reader"]))
-        value_validation_regex         = "^\\[\\s*(\"(${join("|", var.stackit_assignable_roles)})\"\\s*,?\\s*)+\\]$"
+        value_validation_regex         = "^\\[\\s*(\"(${local.assignable_roles_pattern})\"\\s*,?\\s*)+\\]$"
         validation_regex_error_message = "roles must be an HCL list containing only: ${join(", ", var.stackit_assignable_roles)}."
       }
 
