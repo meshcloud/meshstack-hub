@@ -22,3 +22,4 @@ modules/stackit/service-account-federation           # sources //modules/stackit
 reference-architectures/stackit-landingzone/buildingblock # sources //modules/stackit/service-account?ref=main
 modules/stackit/secrets-manager                      # sources //modules/stackit/secrets-manager/backplane?ref=main
 modules/stackit/git-repository                       # sources //modules/stackit/git-repository/backplane?ref=main, where the input is still forgejo_token
+modules/meshstack/azure-devops-pipeline              # sources //modules/meshstack/azure-devops-pipeline/backplane?ref=main, added by this PR

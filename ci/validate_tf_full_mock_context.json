@@ -55,6 +55,13 @@
     "gitlab": {
       "project_id": "0",
       "branch": "main"
+    },
+    "azuredevops": {
+      "organization": "validation-only",
+      "project": "validation-only",
+      "repository_id": "00000000-0000-0000-0000-000000000000",
+      "pipeline_id": "0",
+      "branch": "refs/heads/main"
     }
   }
 }

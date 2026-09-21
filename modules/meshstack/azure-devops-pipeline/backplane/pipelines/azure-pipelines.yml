@@ -1,0 +1,73 @@
+# Reference pipeline for meshStack's Azure DevOps pipeline implementation type. It provisions
+# nothing: it checks that everything meshStack sent actually arrived, and fails the run if it did
+# not. The building block reports no outputs in this mode (see ../README.md), so the pipeline
+# carrying its own assertions is the only way a run can report that the wiring is wrong.
+#
+trigger: none
+pr: none
+
+parameters:
+  # Added by the Azure DevOps block runner to every run: APPLY, DESTROY or DETECT. One pipeline
+  # serves every behaviour, because the implementation names a single pipeline id.
+  - name: MESHSTACK_BEHAVIOR
+    type: string
+    default: ''
+  - name: MESHSTACK_ENDPOINT
+    type: string
+    default: ''
+  - name: environment
+    type: string
+    default: ''
+
+pool:
+  vmImage: ubuntu-latest
+
+stages:
+  - stage: validate_input
+    displayName: Validate meshStack input
+    jobs:
+      - job: validate
+        steps:
+          - checkout: none
+          - script: |
+              set -o errexit
+              set -o nounset
+
+              fail=0
+              check() {
+                if [ -z "$2" ]; then
+                  echo "##vso[task.logissue type=error]$1 arrived empty"
+                  fail=1
+                else
+                  echo "$1=$2"
+                fi
+              }
+
+              check MESHSTACK_BEHAVIOR "${MESHSTACK_BEHAVIOR-}"
+              check environment "${PARAM_ENVIRONMENT-}"
+
+              echo "MESHSTACK_ENDPOINT=${MESHSTACK_ENDPOINT-}"
+
+              exit "$fail"
+            env:
+              MESHSTACK_BEHAVIOR: ${{ parameters.MESHSTACK_BEHAVIOR }}
+              MESHSTACK_ENDPOINT: ${{ parameters.MESHSTACK_ENDPOINT }}
+              # Not INPUT_*: the agent owns that namespace for the running task's own inputs,
+              # and an entry of ours there is dropped before the script sees it.
+              PARAM_ENVIRONMENT: ${{ parameters.environment }}
+            displayName: Every template parameter arrived non-empty
+
+  - stage: simulate_apply
+    displayName: Simulate provisioning
+    dependsOn: validate_input
+    jobs:
+      - job: simulate
+        steps:
+          - checkout: none
+          - script: |
+              echo "No resources are provisioned by this reference pipeline."
+              echo "Use this stage to add your real provisioning logic later."
+              echo "Behavior for this run: $MESHSTACK_BEHAVIOR"
+            env:
+              MESHSTACK_BEHAVIOR: ${{ parameters.MESHSTACK_BEHAVIOR }}
+            displayName: Simulate automation steps
