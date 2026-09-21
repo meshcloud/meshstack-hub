@@ -2,17 +2,17 @@
 name: STACKIT Kubernetes Platform
 description: >
   A sovereign-cloud Kubernetes platform on STACKIT, built on top of a STACKIT Landing Zone:
-  an SKE cluster, in-cluster platform services, and the meshStack SKE platform with dev/prod
+  an SKE cluster, cloud-agnostic in-cluster ingress and meshStack identities, and the meshStack SKE platform with dev/prod
   landing zones that application teams order self-service Kubernetes namespaces from.
 cloudProviders:
   - stackit
 buildingBlocks:
   - path: ske/cluster
     role: Provisions the STACKIT Kubernetes Engine (SKE) cluster and mints the admin kubeconfig the rest of the platform is built on.
-  - path: ske/platform-services
-    role: Installs HAProxy ingress, cert-manager, and the meshStack replication/metering service accounts on the cluster.
-  - path: ske/cluster-issuer
-    role: Installs the Let's Encrypt ACME ClusterIssuer once cert-manager and its CRDs are on the cluster.
+  - path: kubernetes/ingress
+    role: Installs cert-manager, the HAProxy ingress controller and the Let's Encrypt ClusterIssuer on the cluster.
+  - path: kubernetes/meshstack-agent
+    role: Creates the in-cluster replicator and metering identities meshStack authenticates with, and returns their tokens.
   - path: stackit/git
     role: Provisions the STACKIT Git (Forgejo) instance the platform's CI/CD runs on, and the organization application repositories live in.
   - path: stackit/git-repository
@@ -145,8 +145,11 @@ The run provisions everything that needs no Forgejo credential:
 - the hosting STACKIT project (a self-hosted meshStack tenant),
 - the **SKE Cluster** and **STACKIT Git Instance** building block definitions, registered for this
   platform, each with its own federated backplane identity,
-- the SKE cluster and the in-cluster platform services,
-- the Let's Encrypt ClusterIssuer,
+- the SKE cluster,
+- **ingress** (`kubernetes/ingress`) — cert-manager, the HAProxy ingress controller and the Let's
+  Encrypt ClusterIssuer, in a single building block,
+- the **meshStack agent identities** (`kubernetes/meshstack-agent`), whose replicator and metering
+  tokens the meshStack platform below is wired with,
 - the **STACKIT Git instance** (`stackit/git`) — named after the generated platform identifier,
   because `<name>.git.onstackit.cloud` is globally unique across all of STACKIT, and
 - the meshStack SKE platform with its dev and prod landing zones.

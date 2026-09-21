@@ -138,7 +138,7 @@ variable "hub" {
   default = { git_ref = "main", bbd_draft = true }
 
   description = <<-EOT
-  `git_ref`: meshstack-hub reference used to source the nested cluster and platform-services modules. `const` so it can be interpolated into the module source at init time.
+  `git_ref`: meshstack-hub reference used to source the nested cluster, git, ingress and meshStack-agent modules. `const` so it can be interpolated into the module source at init time.
   `bbd_draft`: Forwarded to those nested integrations' `hub.bbd_draft`, so their building block definition draft state tracks this architecture's own release state.
   EOT
 }

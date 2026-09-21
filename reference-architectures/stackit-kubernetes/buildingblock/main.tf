@@ -36,10 +36,10 @@ locals {
   cluster_kubeconfig = jsondecode(meshstack_building_block.cluster.status.outputs["kubeconfig"].value)
   cluster_kube_host  = jsondecode(meshstack_building_block.cluster.status.outputs["kube_host"].value)
 
-  # Replication and metering tokens the platform-services building block created in-cluster; consumed
+  # Replication and metering tokens the meshStack agent building block created in-cluster; consumed
   # by the meshStack platform. Stored JSON-encoded, so decoded once.
-  replicator_token = jsondecode(meshstack_building_block.platform_services.status.outputs["replicator_token"].value)
-  metering_token   = jsondecode(meshstack_building_block.platform_services.status.outputs["metering_token"].value)
+  replicator_token = jsondecode(meshstack_building_block.meshstack_agent.status.outputs["replicator_token"].value)
+  metering_token   = jsondecode(meshstack_building_block.meshstack_agent.status.outputs["metering_token"].value)
 
   # ── Two-phase bootstrap: the one place this architecture decides whether it has a Forgejo token ──
   #
@@ -204,18 +204,19 @@ resource "meshstack_building_block" "cluster" {
   }
 }
 
-# ── In-cluster platform services (child building block; configures its providers from the kubeconfig) ──
-
-module "platform_services_integration" {
-  source = "github.com/meshcloud/meshstack-hub//modules/ske/platform-services?ref=${var.hub.git_ref}"
+# ── meshStack in-cluster identities (child building block; configures its provider from the kubeconfig) ──
+# The replicator and metering service accounts, whose tokens platform.tf wires into the meshStack
+# platform. Cloud-agnostic: the module knows nothing about SKE.
+module "meshstack_agent_integration" {
+  source = "github.com/meshcloud/meshstack-hub//modules/kubernetes/meshstack-agent?ref=${var.hub.git_ref}"
 
   meshstack = { owning_workspace_identifier = var.workspace, tags = var.tags.building_block }
   hub       = var.hub
 }
 
-resource "meshstack_building_block" "platform_services" {
+resource "meshstack_building_block" "meshstack_agent" {
   wait_for_completion = true
-  depends_on          = [module.platform_services_integration, meshstack_building_block.cluster]
+  depends_on          = [module.meshstack_agent_integration, meshstack_building_block.cluster]
 
   lifecycle {
     postcondition {
@@ -227,9 +228,9 @@ resource "meshstack_building_block" "platform_services" {
   spec = {
     parent_building_block_refs = [meshstack_building_block.cluster.ref]
     building_block_definition_version_ref = {
-      uuid = module.platform_services_integration.building_block_definition.version_ref.uuid
+      uuid = module.meshstack_agent_integration.building_block_definition.version_ref.uuid
     }
-    display_name = "SKE Platform Services"
+    display_name = "meshStack Agent Identities"
     target_ref   = { kind = "meshWorkspace", name = var.workspace }
 
     inputs = {
@@ -240,22 +241,29 @@ resource "meshstack_building_block" "platform_services" {
   }
 }
 
-# ── Let's Encrypt ClusterIssuer (separate child building block) ──
-# Ordered AFTER platform-services so cert-manager (and its CRDs) already exist on the cluster. A
-# ClusterIssuer is a cert-manager custom resource whose CRD kubernetes_manifest validates at plan time,
-# which cannot work in the same run that installs cert-manager — hence its own building block.
-module "cluster_issuer_integration" {
-  source = "github.com/meshcloud/meshstack-hub//modules/ske/cluster-issuer?ref=${var.hub.git_ref}"
+# ── Ingress: cert-manager, HAProxy and the Let's Encrypt ClusterIssuer (one child building block) ──
+# This used to be two blocks, because a ClusterIssuer is a cert-manager custom resource and
+# `kubernetes_manifest` looks its CRD up at plan time — impossible in the run that installs
+# cert-manager. The module renders the ClusterIssuer through an inline Helm chart instead, which
+# needs no plan-time schema lookup, so the split is gone and the ordering constraint with it.
+#
+# `dns01` is left at its null default: it would issue a wildcard certificate, but that needs a DNS
+# zone and a credential for it and no hub module on this branch produces either yet. Certificates
+# are issued per hostname over HTTP-01 until then.
+module "ingress_integration" {
+  source = "github.com/meshcloud/meshstack-hub//modules/kubernetes/ingress?ref=${var.hub.git_ref}"
 
-  cluster_issuer_email = var.cluster_issuer_email
+  # STATIC on the definition rather than an order-time input, so the building block below passes
+  # only the sensitive kubeconfig — see that module's integration for why the two must not mix.
+  acme_email = var.cluster_issuer_email
 
   meshstack = { owning_workspace_identifier = var.workspace, tags = var.tags.building_block }
   hub       = var.hub
 }
 
-resource "meshstack_building_block" "cluster_issuer" {
+resource "meshstack_building_block" "ingress" {
   wait_for_completion = true
-  depends_on          = [module.cluster_issuer_integration, meshstack_building_block.platform_services]
+  depends_on          = [module.ingress_integration, meshstack_building_block.cluster]
 
   lifecycle {
     postcondition {
@@ -267,15 +275,11 @@ resource "meshstack_building_block" "cluster_issuer" {
   spec = {
     parent_building_block_refs = [meshstack_building_block.cluster.ref]
     building_block_definition_version_ref = {
-      uuid = module.cluster_issuer_integration.building_block_definition.version_ref.uuid
+      uuid = module.ingress_integration.building_block_definition.version_ref.uuid
     }
-    display_name = "SKE Cluster Issuer"
-    target_ref   = { kind = "meshTenant", uuid = meshstack_tenant.hosting.metadata.uuid }
+    display_name = "Kubernetes Ingress"
+    target_ref   = { kind = "meshWorkspace", name = var.workspace }
 
-    # Only the sensitive kubeconfig here — do NOT add a plain `value` input alongside it. The meshstack
-    # provider throws "inconsistent values for sensitive attribute" when a single building block's
-    # inputs map mixes a `sensitive` and a `value` input. cluster_issuer_email is a STATIC input on the
-    # definition (set via module.cluster_issuer_integration), so it must not be passed at order time.
     inputs = {
       kubeconfig = { sensitive = { secret_value = local.cluster_kubeconfig } }
     }
@@ -307,10 +311,11 @@ resource "meshstack_building_block" "git" {
     # `is_optional` lets meshStack send no value at all.
     #
     # This is the one building block here that mixes a plain `value` with a `sensitive` input. The
-    # cluster-issuer block above documents the meshstack provider throwing "inconsistent values for
-    # sensitive attribute" on such a mix; there the mix was avoidable, here it is not — the instance
-    # name is per-order, so it cannot move onto the definition. If phase 2 hits that error, the fix
-    # is to declare `instance_name` sensitive on the definition too, not to drop it.
+    # meshstack provider throws "inconsistent values for sensitive attribute" on such a mix, which
+    # is why every other block above passes only its sensitive kubeconfig and keeps the rest STATIC
+    # on the definition. Here the mix is not avoidable — the instance name is per-order, so it
+    # cannot move onto the definition. If phase 2 hits that error, the fix is to declare
+    # `instance_name` sensitive on the definition too, not to drop it.
     inputs = merge(
       {
         instance_name = { value = jsonencode(local.platform_identifier) }

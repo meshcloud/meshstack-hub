@@ -13,7 +13,8 @@
 |----------|-------|
 | **Hosting Project** | [Open in STACKIT Portal](https://portal.stackit.cloud/projects/${stackit_project_id}) (`${stackit_project_id}`) |
 | **SKE Cluster** | `${cluster_name}` — @buildingblock[${cluster_bb_uuid}] |
-| **Platform Services** | @buildingblock[${platform_services_bb_uuid}] |
+| **Ingress & Certificates** | @buildingblock[${ingress_bb_uuid}] |
+| **meshStack Agent Identities** | @buildingblock[${meshstack_agent_bb_uuid}] |
 | **STACKIT Git** | %{ if forgejo_instance_url != null }[${forgejo_instance_url}](${forgejo_instance_url})%{ else }_provisioning_%{ endif } — @buildingblock[${git_bb_uuid}] |
 | **meshStack Platform** | `${platform_identifier}` |
 

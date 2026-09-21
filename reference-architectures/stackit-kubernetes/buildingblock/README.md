@@ -2,13 +2,16 @@
 
 Terraform for the importable **STACKIT Kubernetes Platform** reference architecture. Ordered on top
 of a deployed STACKIT Landing Zone, it bootstraps the whole platform: a self-hosted STACKIT project,
-an SKE cluster, in-cluster platform services (ingress, cert-manager, meshStack
-replication/metering), a STACKIT Git instance, and the meshStack SKE platform with dev/prod landing
-zones.
+an SKE cluster, in-cluster ingress (cert-manager, HAProxy and a Let's Encrypt ClusterIssuer), the
+meshStack replicator and metering identities, a STACKIT Git instance, and the meshStack SKE platform
+with dev/prod landing zones.
 
-It also **registers building block definitions of its own** — `ske/cluster` and `stackit/git` on
-every run, and `stackit/git-repository` plus `ske/forgejo-connector` once a Forgejo token is
-supplied. Their backplanes are deployed as the landing zone's bootstrap identity, read from the
+Only the cluster and the Git instance are STACKIT-specific. Ingress and the meshStack identities
+come from `modules/kubernetes/*` and know nothing about SKE.
+
+It also **registers building block definitions of its own** — `ske/cluster`, `stackit/git`,
+`kubernetes/ingress` and `kubernetes/meshstack-agent` on every run, and `stackit/git-repository`
+plus `ske/forgejo-connector` once a Forgejo token is supplied. Their backplanes are deployed as the landing zone's bootstrap identity, read from the
 landing zone building block named by `landingzone_building_block_uuid`.
 
 The architecture itself (overview, diagram, the two-phase order, shared responsibilities) lives in
@@ -30,20 +33,20 @@ the [reference architecture README](../README.md). Registration into meshStack i
 | Name | Source | Version |
 | ---- | ------ | ------- |
 | <a name="module_cluster_integration"></a> [cluster\_integration](#module\_cluster\_integration) | github.com/meshcloud/meshstack-hub//modules/ske/cluster | main |
-| <a name="module_cluster_issuer_integration"></a> [cluster\_issuer\_integration](#module\_cluster\_issuer\_integration) | github.com/meshcloud/meshstack-hub//modules/ske/cluster-issuer | main |
 | <a name="module_forgejo_connector_integration"></a> [forgejo\_connector\_integration](#module\_forgejo\_connector\_integration) | github.com/meshcloud/meshstack-hub//modules/ske/forgejo-connector | main |
 | <a name="module_git_integration"></a> [git\_integration](#module\_git\_integration) | github.com/meshcloud/meshstack-hub//modules/stackit/git | main |
 | <a name="module_git_repository_integration"></a> [git\_repository\_integration](#module\_git\_repository\_integration) | github.com/meshcloud/meshstack-hub//modules/stackit/git-repository | main |
-| <a name="module_platform_services_integration"></a> [platform\_services\_integration](#module\_platform\_services\_integration) | github.com/meshcloud/meshstack-hub//modules/ske/platform-services | main |
+| <a name="module_ingress_integration"></a> [ingress\_integration](#module\_ingress\_integration) | github.com/meshcloud/meshstack-hub//modules/kubernetes/ingress | main |
+| <a name="module_meshstack_agent_integration"></a> [meshstack\_agent\_integration](#module\_meshstack\_agent\_integration) | github.com/meshcloud/meshstack-hub//modules/kubernetes/meshstack-agent | main |
 
 ## Resources
 
 | Name | Type |
 | ---- | ---- |
 | [meshstack_building_block.cluster](https://registry.terraform.io/providers/meshcloud/meshstack/latest/docs/resources/building_block) | resource |
-| [meshstack_building_block.cluster_issuer](https://registry.terraform.io/providers/meshcloud/meshstack/latest/docs/resources/building_block) | resource |
 | [meshstack_building_block.git](https://registry.terraform.io/providers/meshcloud/meshstack/latest/docs/resources/building_block) | resource |
-| [meshstack_building_block.platform_services](https://registry.terraform.io/providers/meshcloud/meshstack/latest/docs/resources/building_block) | resource |
+| [meshstack_building_block.ingress](https://registry.terraform.io/providers/meshcloud/meshstack/latest/docs/resources/building_block) | resource |
+| [meshstack_building_block.meshstack_agent](https://registry.terraform.io/providers/meshcloud/meshstack/latest/docs/resources/building_block) | resource |
 | [meshstack_landingzone.this](https://registry.terraform.io/providers/meshcloud/meshstack/latest/docs/resources/landingzone) | resource |
 | [meshstack_location.this](https://registry.terraform.io/providers/meshcloud/meshstack/latest/docs/resources/location) | resource |
 | [meshstack_platform.ske](https://registry.terraform.io/providers/meshcloud/meshstack/latest/docs/resources/platform) | resource |
@@ -65,7 +68,7 @@ the [reference architecture README](../README.md). Registration into meshStack i
 | <a name="input_harbor_username"></a> [harbor\_username](#input\_harbor\_username) | Username of a STACKIT Harbor pull robot account, handed to the Forgejo connector so application pods can pull private images. Optional: the Harbor project is shared across STACKIT customers and we hold robot credentials for it rather than admin rights, so nothing here creates them. Without them the connector still works for public images. | `string` | `null` | no |
 | <a name="input_host_landing_zone_name"></a> [host\_landing\_zone\_name](#input\_host\_landing\_zone\_name) | Name of the landing zone on the host STACKIT platform that the hosting tenant is placed in. | `string` | n/a | yes |
 | <a name="input_host_platform_identifier"></a> [host\_platform\_identifier](#input\_host\_platform\_identifier) | Full `<platform>.<location>` identifier of the existing STACKIT Project platform (e.g. from the STACKIT Landing Zone) on which the cluster's hosting project is provisioned as a meshStack tenant. | `string` | n/a | yes |
-| <a name="input_hub"></a> [hub](#input\_hub) | `git_ref`: meshstack-hub reference used to source the nested cluster and platform-services modules. `const` so it can be interpolated into the module source at init time.<br/>`bbd_draft`: Forwarded to those nested integrations' `hub.bbd_draft`, so their building block definition draft state tracks this architecture's own release state. | <pre>object({<br/>    git_ref   = optional(string, "main")<br/>    bbd_draft = optional(bool, true)<br/>  })</pre> | <pre>{<br/>  "bbd_draft": true,<br/>  "git_ref": "main"<br/>}</pre> | no |
+| <a name="input_hub"></a> [hub](#input\_hub) | `git_ref`: meshstack-hub reference used to source the nested cluster, git, ingress and meshStack-agent modules. `const` so it can be interpolated into the module source at init time.<br/>`bbd_draft`: Forwarded to those nested integrations' `hub.bbd_draft`, so their building block definition draft state tracks this architecture's own release state. | <pre>object({<br/>    git_ref   = optional(string, "main")<br/>    bbd_draft = optional(bool, true)<br/>  })</pre> | <pre>{<br/>  "bbd_draft": true,<br/>  "git_ref": "main"<br/>}</pre> | no |
 | <a name="input_landingzone_building_block_uuid"></a> [landingzone\_building\_block\_uuid](#input\_landingzone\_building\_block\_uuid) | UUID of the deployed STACKIT Landing Zone building block this platform is built on. Read at order time for the foundation project and landing-zone folder the registered definitions' backplanes deploy into, and for the bootstrap service account credential this run applies as. | `string` | n/a | yes |
 | <a name="input_payment_method_identifier"></a> [payment\_method\_identifier](#input\_payment\_method\_identifier) | Payment method identifier assigned to the hosting meshProject. | `string` | n/a | yes |
 | <a name="input_playground_mode"></a> [playground\_mode](#input\_playground\_mode) | Deploy a throwaway platform: the platform identifier gets a random suffix so it does not occupy a name for good, and the hosting project and tenant are left destroyable. Set to false for a platform that is actually used. | `bool` | n/a | yes |

@@ -1,6 +1,7 @@
 # ── meshStack SKE platform ──
-# Wired to the cluster via its API endpoint and the replication/metering tokens the platform-services
-# building block created in-cluster.
+# Wired to the cluster via its API endpoint and the replication/metering tokens the meshStack agent
+# building block created in-cluster. Registering the platform lives here rather than in that module:
+# the module makes credentials, this architecture decides that a cluster becomes a platform.
 resource "meshstack_platform" "ske" {
   metadata = {
     name               = local.platform_identifier

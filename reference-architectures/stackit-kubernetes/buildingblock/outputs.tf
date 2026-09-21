@@ -34,11 +34,12 @@ output "summary" {
     platform_identifier = local.platform_identifier
     playground_mode     = var.playground_mode
 
-    stackit_project_id        = local.stackit_project_id
-    cluster_name              = var.cluster_name
-    cluster_bb_uuid           = meshstack_building_block.cluster.metadata.uuid
-    platform_services_bb_uuid = meshstack_building_block.platform_services.metadata.uuid
-    git_bb_uuid               = meshstack_building_block.git.metadata.uuid
+    stackit_project_id      = local.stackit_project_id
+    cluster_name            = var.cluster_name
+    cluster_bb_uuid         = meshstack_building_block.cluster.metadata.uuid
+    meshstack_agent_bb_uuid = meshstack_building_block.meshstack_agent.metadata.uuid
+    ingress_bb_uuid         = meshstack_building_block.ingress.metadata.uuid
+    git_bb_uuid             = meshstack_building_block.git.metadata.uuid
 
     # Phase 1 prints the instance URL in the instructions, so it needs a printable placeholder for
     # the window in which the Git building block has not reported it yet.
