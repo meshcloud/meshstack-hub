@@ -23,6 +23,7 @@ digraph stackit_landingzone {
 
     ORG    [label="🏢 STACKIT Organization" fillcolor="#ffffff" color="#a2abb8"]
     FOUND  [label="🔑 Foundation Project\nhosts the project-creation service account" fillcolor="#ffffff" color="#a2abb8"]
+    BOOT   [label="🔓 Platform Bootstrap Account\ncredential published for composing architectures" fillcolor="#ffffff" color="#a2abb8"]
     FOLDER [label="📁 Resourcemanager Folder\ntenant projects are created here" fillcolor="#ffffff" color="#a2abb8"]
     NA     [label="🌐 Network Area ×1\nshared IPv4 address plan · hub" fillcolor="#e5f2ea" color="#85bfa0"]
     PRJ    [label="🗂️ STACKIT Project ×N" fillcolor="#e5f2ea" color="#85bfa0"]
@@ -34,6 +35,8 @@ digraph stackit_landingzone {
     ORG    -> FOUND
     ORG    -> FOLDER
     ORG    -> NA
+    FOUND  -> BOOT  [xlabel="hosts"]
+    BOOT   -> FOLDER [xlabel="may assign roles in" style=dashed constraint=false]
     FOLDER -> PRJ   [xlabel="holds"]
     PRJ    -> SA    [xlabel="contains"]
     PRJ    -> SPOKE [xlabel="contains"]

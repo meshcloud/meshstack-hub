@@ -92,11 +92,37 @@ When a **network** configuration is provided, it additionally:
 
 ## Service Accounts
 
-You supply one account, as `stackit_service_account_key`, and the architecture creates another. The
+You supply one account, as `stackit_service_account_key`, and the architecture creates two. The
 account you supply creates the folder, the foundation project and the meshStack objects, and its key
-is reused on every run rather than only the first. The account it creates lives in the foundation
-project and is what creates tenant projects; it authenticates through workload identity federation,
-so no key for it is ever stored.
+is reused on every run rather than only the first. The first account it creates lives in the
+foundation project and is what creates tenant projects; it authenticates through workload identity
+federation, so no key for it is ever stored.
+
+### The platform bootstrap account, and its unencrypted credential
+
+The second account is `mesh-platform-boot`, and it exists for **composing architectures**. The
+[STACKIT Kubernetes Platform](https://hub.meshcloud.io/reference-architectures/stackit-kubernetes)
+registers its own building block definitions when it is ordered, and deploying those definitions'
+backplanes means creating service accounts in this landing zone's foundation project and granting
+them roles on its folder. That run needs a STACKIT identity, and it cannot use workload identity
+federation for it: a WIF subject is bound to a building block definition uuid, and the definition
+doing the asking does not exist until it registers itself.
+
+So this landing zone mints a credential for that account and publishes it as the
+**non-sensitive** output `platform_bootstrap_service_account_key`. That is a deliberate, temporary
+tradeoff for a work-in-progress demo, and it contradicts
+[`stackit-backplane.md`](../../.agents/references/stackit-backplane.md), which says to use
+federation and never a long-lived credential:
+
+- A long-lived STACKIT credential is stored in this building block's outputs and is visible in the
+  meshStack UI to everyone who can see the building block.
+- It is **not** organization ownership. The account holds exactly two grants —
+  `iam.service-account-admin` on the foundation project and `iam.member-admin` on the landing-zone
+  folder — so its blast radius is service accounts in that one project and role assignments inside
+  that one folder. Both roles are assignable at those scopes; that was read from the live
+  authorization API (`GET https://authorization.api.stackit.cloud/v2/folder/<folder_id>/roles`),
+  not assumed from the public docs, which list `iam.member-admin` as project-only.
+- Replace it with a federated credential before this ships. Nothing else consumes it.
 
 `stackit_owner_email` owns the folder, the foundation project and every tenant project the platform
 creates. STACKIT applies it at creation only, so changing it later means recreating what it owns.
@@ -169,6 +195,7 @@ definition it registers. Both default to no gate at all.
 |-------------------------------------------------------------------------------|:---:|:---:|
 | Provision the STACKIT platform and default landing zone                       | ✅ | ❌ |
 | Register the self-service `stackit/service-account` building block            | ✅ | ❌ |
+| Rotate or replace the published platform bootstrap credential                 | ✅ | ❌ |
 | *(Optional)* Provision the hub network area and choose its address plan       | ✅ | ❌ |
 | *(Optional)* Register the spoke `stackit/network` building block              | ✅ | ❌ |
 | Request STACKIT projects through the landing zone                             | ❌ | ✅ |
