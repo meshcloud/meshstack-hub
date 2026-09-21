@@ -42,6 +42,48 @@ variable "hub" {
   EOT
 }
 
+variable "approval_policies" {
+  type = object({
+    building_block_creation = optional(bool, false)
+    user_input_changes      = optional(bool, false)
+    any_input_changes       = optional(bool, false)
+    manual_triggers         = optional(bool, false)
+    version_upgrade         = optional(bool, false)
+  })
+  nullable = false
+  default = {
+    building_block_creation = false
+    user_input_changes      = false
+    any_input_changes       = false
+    manual_triggers         = false
+    version_upgrade         = false
+  }
+  description = "Run triggers that need an operator's approval before a run of this architecture is applied. The defaults are the provider's own, and the provider asserts them whenever the definition sets no policies — so a gate switched on in meshPanel is turned off again by the next apply unless it is set here."
+}
+
+variable "starterkit_approval_policies" {
+  type = object({
+    building_block_creation = optional(bool, false)
+    user_input_changes      = optional(bool, false)
+    any_input_changes       = optional(bool, false)
+    manual_triggers         = optional(bool, false)
+    version_upgrade         = optional(bool, false)
+  })
+  nullable = false
+
+  # Spelled out rather than left to the `optional()` defaults: this variable feeds a definition
+  # input's `argument`, and a consumer that does not evaluate object-attribute defaulting would
+  # see unset fields. See .agents/references/meshstack-integration.md.
+  default = {
+    building_block_creation = false
+    user_input_changes      = false
+    any_input_changes       = false
+    manual_triggers         = false
+    version_upgrade         = false
+  }
+  description = "The same, for the project starterkit definition this architecture registers. Set `building_block_creation` to have an operator approve every project an application team orders."
+}
+
 variable "playground_mode" {
   type     = bool
   nullable = false
@@ -65,12 +107,13 @@ resource "meshstack_building_block_definition" "this" {
   }
 
   spec = {
-    display_name     = coalesce(var.bbd_display_name, "STACKIT Landing Zone Reference Architecture")
-    symbol           = "https://raw.githubusercontent.com/meshcloud/meshstack-hub/${var.hub.git_ref}/reference-architectures/stackit-landingzone/buildingblock/logo.png"
-    description      = coalesce(var.bbd_description, "Onboards a STACKIT sandbox platform into meshStack: a location, resourcemanager folder and the STACKIT Project platform with its default landing zone. Optionally layers on a hub-and-spoke network topology when a network config is provided.")
-    support_url      = "https://portal.stackit.cloud"
-    target_type      = "WORKSPACE_LEVEL"
-    run_transparency = true
+    display_name      = coalesce(var.bbd_display_name, "STACKIT Landing Zone Reference Architecture")
+    symbol            = "https://raw.githubusercontent.com/meshcloud/meshstack-hub/${var.hub.git_ref}/reference-architectures/stackit-landingzone/buildingblock/logo.png"
+    description       = coalesce(var.bbd_description, "Onboards a STACKIT sandbox platform into meshStack: a location, resourcemanager folder and the STACKIT Project platform with its default landing zone. Optionally layers on a hub-and-spoke network topology when a network config is provided.")
+    support_url       = "https://portal.stackit.cloud"
+    target_type       = "WORKSPACE_LEVEL"
+    run_transparency  = true
+    approval_policies = var.approval_policies
 
     readme = coalesce(var.bbd_readme, chomp(<<-EOT
     The **STACKIT Landing Zone** building block bootstraps a complete STACKIT sandbox platform
@@ -333,6 +376,14 @@ resource "meshstack_building_block_definition" "this" {
         default_value   = jsonencode(false)
       }
 
+      starterkit_approval_policies = {
+        display_name    = "Starterkit Approval Policies"
+        description     = "HCL object of approval gates applied to the project starterkit definition this registers. Fixed by whoever deployed this definition."
+        type            = "CODE"
+        assignment_type = "STATIC"
+        argument        = jsonencode(jsonencode(var.starterkit_approval_policies))
+      }
+
       playground_mode = {
         display_name    = "Playground Mode"
         description     = "Throwaway deployment: the identifier gets a random suffix and nothing is protected against deletion. Do not publish such a platform or its definitions to other workspaces. Set false for real use."
@@ -386,7 +437,7 @@ terraform {
   required_providers {
     meshstack = {
       source  = "meshcloud/meshstack"
-      version = ">= 0.24.0"
+      version = ">= 0.25.2"
     }
   }
 }

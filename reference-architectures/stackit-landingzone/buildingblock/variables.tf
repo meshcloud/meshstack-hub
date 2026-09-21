@@ -90,6 +90,18 @@ variable "network" {
   description = "Optional hub-and-spoke network topology. Leave unset (null) to deploy only the sandbox landing zone. When set, additionally provisions a shared hub network area with the given address plan (`hub_*` fields), registers the self-service spoke `STACKIT Network` building block (`tenant_network_*` prefix bounds), and adds a dedicated `networked` STACKIT Project building block definition and landing zone whose projects are placed in the hub network area."
 }
 
+variable "starterkit_approval_policies" {
+  type = object({
+    building_block_creation = bool
+    user_input_changes      = bool
+    any_input_changes       = bool
+    manual_triggers         = bool
+    version_upgrade         = bool
+  })
+  nullable    = false
+  description = "Run triggers that need an operator's approval before a run of the project starterkit is applied. The defaults are the provider's own, and the provider asserts them whenever the definition sets no policies — so a gate switched on in meshPanel is turned off again by the next run unless it is set here."
+}
+
 variable "playground_mode" {
   type        = bool
   nullable    = false

@@ -157,6 +157,12 @@ building block as a `STATIC` input, so it does not appear as a choice in the ord
 consumer cannot turn a real platform into a playground one, or the reverse. Change it by setting
 `playground_mode` on the reference architecture module and deploying a new definition version.
 
+### Approval Gates
+
+`approval_policies` sets which run triggers need an operator's approval before a run of this
+architecture is applied; `starterkit_approval_policies` does the same for the project starterkit
+definition it registers. Both default to no gate at all.
+
 ## Shared Responsibilities
 
 | Responsibility                                                                | Platform Team | Application Team |
