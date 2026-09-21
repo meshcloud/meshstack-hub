@@ -17,5 +17,6 @@ modules/ionos/dcd/backplane                          # required arguments missin
 # until that work lands on main. The script prints a ::notice:: to drop each
 # line once it loads, so remove each entry after the module it names is on main.
 modules/ske/cluster                                  # sources //modules/ske/cluster/backplane?ref=main
+modules/stackit/git                                  # sources //modules/stackit/git/backplane?ref=main
 modules/stackit/service-account                      # sources //modules/stackit/service-account/backplane?ref=main
 reference-architectures/stackit-landingzone/buildingblock # sources //modules/stackit/service-account?ref=main
