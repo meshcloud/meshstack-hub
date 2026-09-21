@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN"
  "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
-<svg width="1428pt" height="434pt"
- viewBox="0.00 0.00 1428.00 434.00" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+<svg width="1840pt" height="434pt"
+ viewBox="0.00 0.00 1840.00 434.00" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
 <g id="graph0" class="graph" transform="scale(1 1) rotate(0) translate(4 430.36)">
 <title>stackit_kubernetes</title>
-<polygon fill="white" stroke="none" points="-4,4 -4,-430.36 1424,-430.36 1424,4 -4,4"/>
+<polygon fill="white" stroke="none" points="-4,4 -4,-430.36 1836,-430.36 1836,4 -4,4"/>
 <g id="clust1" class="cluster">
 <title>cluster_stackit</title>
 <path fill="white" stroke="#d5dae0" d="M20,-8C20,-8 764,-8 764,-8 770,-8 776,-14 776,-20 776,-20 776,-403.24 776,-403.24 776,-409.24 770,-415.24 764,-415.24 764,-415.24 20,-415.24 20,-415.24 14,-415.24 8,-409.24 8,-403.24 8,-403.24 8,-20 8,-20 8,-14 14,-8 20,-8"/>
@@ -13,7 +13,7 @@
 </g>
 <g id="clust3" class="cluster">
 <title>cluster_mesh</title>
-<path fill="white" stroke="#d5dae0" d="M796,-111.24C796,-111.24 1400,-111.24 1400,-111.24 1406,-111.24 1412,-117.24 1412,-123.24 1412,-123.24 1412,-406.36 1412,-406.36 1412,-412.36 1406,-418.36 1400,-418.36 1400,-418.36 796,-418.36 796,-418.36 790,-418.36 784,-412.36 784,-406.36 784,-406.36 784,-123.24 784,-123.24 784,-117.24 790,-111.24 796,-111.24"/>
+<path fill="white" stroke="#d5dae0" d="M796,-111.24C796,-111.24 1812,-111.24 1812,-111.24 1818,-111.24 1824,-117.24 1824,-123.24 1824,-123.24 1824,-406.36 1824,-406.36 1824,-412.36 1818,-418.36 1812,-418.36 1812,-418.36 796,-418.36 796,-418.36 790,-418.36 784,-412.36 784,-406.36 784,-406.36 784,-123.24 784,-123.24 784,-117.24 790,-111.24 796,-111.24"/>
 <text xml:space="preserve" text-anchor="middle" x="825.01" y="-403.56" font-family="Helvetica,sans-Serif" font-size="12.00" fill="#697180"> &#160;meshStack</text>
 </g>
 <!-- ORG -->
@@ -32,8 +32,8 @@
 <!-- ORG&#45;&gt;SKE -->
 <g id="edge4" class="edge">
 <title>ORG&#45;&gt;SKE</title>
-<path fill="none" stroke="#8b95a3" d="M130.02,-338.38C130.02,-338.38 130.02,-283.62 130.02,-283.62"/>
-<polygon fill="#8b95a3" stroke="#8b95a3" points="132.47,-283.62 130.02,-276.62 127.57,-283.62 132.47,-283.62"/>
+<path fill="none" stroke="#8b95a3" d="M124.52,-338.38C124.52,-338.38 124.52,-283.62 124.52,-283.62"/>
+<polygon fill="#8b95a3" stroke="#8b95a3" points="126.97,-283.62 124.52,-276.62 122.07,-283.62 126.97,-283.62"/>
 </g>
 <!-- GIT -->
 <g id="node3" class="node">
@@ -135,106 +135,158 @@
 <polygon fill="#8b95a3" stroke="#8b95a3" points="118.25,-120.43 120.7,-127.43 123.15,-120.43 118.25,-120.43"/>
 <text xml:space="preserve" text-anchor="middle" x="102.06" y="-49.7" font-family="Helvetica,sans-Serif" font-size="9.00" fill="#697180">deploys to</text>
 </g>
-<!-- PLAT -->
+<!-- LZBB -->
 <g id="node9" class="node">
+<title>LZBB</title>
+<path fill="#ffffff" stroke="#a2abb8" stroke-width="1.1" d="M1077,-377.96C1077,-377.96 849,-377.96 849,-377.96 843,-377.96 837,-371.96 837,-365.96 837,-365.96 837,-347.72 837,-347.72 837,-341.72 843,-335.72 849,-335.72 849,-335.72 1077,-335.72 1077,-335.72 1083,-335.72 1089,-341.72 1089,-347.72 1089,-347.72 1089,-365.96 1089,-365.96 1089,-371.96 1083,-377.96 1077,-377.96"/>
+<text xml:space="preserve" text-anchor="middle" x="963" y="-360.14" font-family="Helvetica,sans-Serif" font-size="11.00">🧱 STACKIT Landing Zone BB</text>
+<text xml:space="preserve" text-anchor="middle" x="963" y="-346.94" font-family="Helvetica,sans-Serif" font-size="11.00">foundation project · folder · bootstrap identity</text>
+</g>
+<!-- BBD_K -->
+<g id="node13" class="node">
+<title>BBD_K</title>
+<path fill="#ecedfb" stroke="#9aa2e6" stroke-width="1.1" d="M929.73,-274.72C929.73,-274.72 814.27,-274.72 814.27,-274.72 808.27,-274.72 802.27,-268.72 802.27,-262.72 802.27,-262.72 802.27,-244.48 802.27,-244.48 802.27,-238.48 808.27,-232.48 814.27,-232.48 814.27,-232.48 929.73,-232.48 929.73,-232.48 935.73,-232.48 941.73,-238.48 941.73,-244.48 941.73,-244.48 941.73,-262.72 941.73,-262.72 941.73,-268.72 935.73,-274.72 929.73,-274.72"/>
+<text xml:space="preserve" text-anchor="middle" x="872" y="-256.9" font-family="Helvetica,sans-Serif" font-size="11.00">📦 ske/cluster BBD</text>
+<text xml:space="preserve" text-anchor="middle" x="872" y="-243.7" font-family="Helvetica,sans-Serif" font-size="11.00">registered per platform</text>
+</g>
+<!-- LZBB&#45;&gt;BBD_K -->
+<g id="edge15" class="edge">
+<title>LZBB&#45;&gt;BBD_K</title>
+<path fill="none" stroke="#8b95a3" d="M889.37,-335.45C889.37,-335.45 889.37,-283.48 889.37,-283.48"/>
+<polygon fill="#8b95a3" stroke="#8b95a3" points="891.82,-283.48 889.37,-276.48 886.92,-283.48 891.82,-283.48"/>
+<text xml:space="preserve" text-anchor="middle" x="845.96" y="-322.96" font-family="Helvetica,sans-Serif" font-size="9.00" fill="#697180">backplane target</text>
+<text xml:space="preserve" text-anchor="middle" x="845.96" y="-312.16" font-family="Helvetica,sans-Serif" font-size="9.00" fill="#697180">+ bootstrap credential</text>
+</g>
+<!-- BBD_G -->
+<g id="node14" class="node">
+<title>BBD_G</title>
+<path fill="#ecedfb" stroke="#9aa2e6" stroke-width="1.1" d="M1108.73,-274.72C1108.73,-274.72 993.27,-274.72 993.27,-274.72 987.27,-274.72 981.27,-268.72 981.27,-262.72 981.27,-262.72 981.27,-244.48 981.27,-244.48 981.27,-238.48 987.27,-232.48 993.27,-232.48 993.27,-232.48 1108.73,-232.48 1108.73,-232.48 1114.73,-232.48 1120.73,-238.48 1120.73,-244.48 1120.73,-244.48 1120.73,-262.72 1120.73,-262.72 1120.73,-268.72 1114.73,-274.72 1108.73,-274.72"/>
+<text xml:space="preserve" text-anchor="middle" x="1051" y="-256.9" font-family="Helvetica,sans-Serif" font-size="11.00">📦 stackit/git BBD</text>
+<text xml:space="preserve" text-anchor="middle" x="1051" y="-243.7" font-family="Helvetica,sans-Serif" font-size="11.00">registered per platform</text>
+</g>
+<!-- LZBB&#45;&gt;BBD_G -->
+<g id="edge16" class="edge">
+<title>LZBB&#45;&gt;BBD_G</title>
+<path fill="none" stroke="#8b95a3" d="M1053.09,-335.45C1053.09,-335.45 1053.09,-283.48 1053.09,-283.48"/>
+<polygon fill="#8b95a3" stroke="#8b95a3" points="1055.54,-283.48 1053.09,-276.48 1050.64,-283.48 1055.54,-283.48"/>
+</g>
+<!-- PLAT -->
+<g id="node10" class="node">
 <title>PLAT</title>
-<path fill="#ecedfb" stroke="#9aa2e6" stroke-width="1.1" d="M912.64,-374.84C912.64,-374.84 817.36,-374.84 817.36,-374.84 811.36,-374.84 805.36,-368.84 805.36,-362.84 805.36,-362.84 805.36,-350.84 805.36,-350.84 805.36,-344.84 811.36,-338.84 817.36,-338.84 817.36,-338.84 912.64,-338.84 912.64,-338.84 918.64,-338.84 924.64,-344.84 924.64,-350.84 924.64,-350.84 924.64,-362.84 924.64,-362.84 924.64,-368.84 918.64,-374.84 912.64,-374.84"/>
-<text xml:space="preserve" text-anchor="middle" x="865" y="-353.54" font-family="Helvetica,sans-Serif" font-size="11.00">🛰️ SKE Platform</text>
+<path fill="#ecedfb" stroke="#9aa2e6" stroke-width="1.1" d="M1271.64,-374.84C1271.64,-374.84 1176.36,-374.84 1176.36,-374.84 1170.36,-374.84 1164.36,-368.84 1164.36,-362.84 1164.36,-362.84 1164.36,-350.84 1164.36,-350.84 1164.36,-344.84 1170.36,-338.84 1176.36,-338.84 1176.36,-338.84 1271.64,-338.84 1271.64,-338.84 1277.64,-338.84 1283.64,-344.84 1283.64,-350.84 1283.64,-350.84 1283.64,-362.84 1283.64,-362.84 1283.64,-368.84 1277.64,-374.84 1271.64,-374.84"/>
+<text xml:space="preserve" text-anchor="middle" x="1224" y="-353.54" font-family="Helvetica,sans-Serif" font-size="11.00">🛰️ SKE Platform</text>
 </g>
 <!-- PLAT&#45;&gt;SKE -->
-<g id="edge19" class="edge">
+<g id="edge22" class="edge">
 <title>PLAT&#45;&gt;SKE</title>
-<path fill="none" stroke="#8b95a3" stroke-dasharray="1,5" d="M845.12,-338.42C845.12,-323.52 845.12,-305 845.12,-305 845.12,-305 152.01,-305 152.01,-305 152.01,-305 152.01,-283.61 152.01,-283.61"/>
-<polygon fill="#8b95a3" stroke="#8b95a3" points="154.46,-283.61 152.01,-276.61 149.56,-283.61 154.46,-283.61"/>
-<text xml:space="preserve" text-anchor="middle" x="476.82" y="-307.7" font-family="Helvetica,sans-Serif" font-size="9.00" fill="#697180">replicates into</text>
+<path fill="none" stroke="#8b95a3" stroke-dasharray="1,5" d="M1204.12,-338.42C1204.12,-329.21 1204.12,-320 1204.12,-320 1204.12,-320 141.02,-320 141.02,-320 141.02,-320 141.02,-283.49 141.02,-283.49"/>
+<polygon fill="#8b95a3" stroke="#8b95a3" points="143.47,-283.49 141.02,-276.49 138.57,-283.49 143.47,-283.49"/>
+<text xml:space="preserve" text-anchor="middle" x="635.76" y="-322.7" font-family="Helvetica,sans-Serif" font-size="9.00" fill="#697180">replicates into</text>
 </g>
 <!-- LZ -->
-<g id="node10" class="node">
+<g id="node11" class="node">
 <title>LZ</title>
-<path fill="#ecedfb" stroke="#9aa2e6" stroke-width="1.1" d="M916.32,-274.72C916.32,-274.72 813.68,-274.72 813.68,-274.72 807.68,-274.72 801.68,-268.72 801.68,-262.72 801.68,-262.72 801.68,-244.48 801.68,-244.48 801.68,-238.48 807.68,-232.48 813.68,-232.48 813.68,-232.48 916.32,-232.48 916.32,-232.48 922.32,-232.48 928.32,-238.48 928.32,-244.48 928.32,-244.48 928.32,-262.72 928.32,-262.72 928.32,-268.72 922.32,-274.72 916.32,-274.72"/>
-<text xml:space="preserve" text-anchor="middle" x="865" y="-256.9" font-family="Helvetica,sans-Serif" font-size="11.00">🛬 Landing Zone ×2</text>
-<text xml:space="preserve" text-anchor="middle" x="865" y="-243.7" font-family="Helvetica,sans-Serif" font-size="11.00">dev + prod</text>
+<path fill="#ecedfb" stroke="#9aa2e6" stroke-width="1.1" d="M1275.32,-274.72C1275.32,-274.72 1172.68,-274.72 1172.68,-274.72 1166.68,-274.72 1160.68,-268.72 1160.68,-262.72 1160.68,-262.72 1160.68,-244.48 1160.68,-244.48 1160.68,-238.48 1166.68,-232.48 1172.68,-232.48 1172.68,-232.48 1275.32,-232.48 1275.32,-232.48 1281.32,-232.48 1287.32,-238.48 1287.32,-244.48 1287.32,-244.48 1287.32,-262.72 1287.32,-262.72 1287.32,-268.72 1281.32,-274.72 1275.32,-274.72"/>
+<text xml:space="preserve" text-anchor="middle" x="1224" y="-256.9" font-family="Helvetica,sans-Serif" font-size="11.00">🛬 Landing Zone ×2</text>
+<text xml:space="preserve" text-anchor="middle" x="1224" y="-243.7" font-family="Helvetica,sans-Serif" font-size="11.00">dev + prod</text>
 </g>
 <!-- PLAT&#45;&gt;LZ -->
-<g id="edge14" class="edge">
+<g id="edge17" class="edge">
 <title>PLAT&#45;&gt;LZ</title>
-<path fill="none" stroke="#8b95a3" d="M884.88,-338.38C884.88,-338.38 884.88,-283.62 884.88,-283.62"/>
-<polygon fill="#8b95a3" stroke="#8b95a3" points="887.33,-283.62 884.88,-276.62 882.43,-283.62 887.33,-283.62"/>
+<path fill="none" stroke="#8b95a3" d="M1243.88,-338.38C1243.88,-338.38 1243.88,-283.62 1243.88,-283.62"/>
+<polygon fill="#8b95a3" stroke="#8b95a3" points="1246.33,-283.62 1243.88,-276.62 1241.43,-283.62 1246.33,-283.62"/>
 </g>
 <!-- PROJ -->
-<g id="node11" class="node">
+<g id="node12" class="node">
 <title>PROJ</title>
-<path fill="#e5f2ea" stroke="#85bfa0" stroke-width="1.1" d="M904.39,-171.48C904.39,-171.48 825.61,-171.48 825.61,-171.48 819.61,-171.48 813.61,-165.48 813.61,-159.48 813.61,-159.48 813.61,-141.24 813.61,-141.24 813.61,-135.24 819.61,-129.24 825.61,-129.24 825.61,-129.24 904.39,-129.24 904.39,-129.24 910.39,-129.24 916.39,-135.24 916.39,-141.24 916.39,-141.24 916.39,-159.48 916.39,-159.48 916.39,-165.48 910.39,-171.48 904.39,-171.48"/>
-<text xml:space="preserve" text-anchor="middle" x="865" y="-153.66" font-family="Helvetica,sans-Serif" font-size="11.00">🗂️ Project ×2</text>
-<text xml:space="preserve" text-anchor="middle" x="865" y="-140.46" font-family="Helvetica,sans-Serif" font-size="11.00">dev + prod</text>
+<path fill="#e5f2ea" stroke="#85bfa0" stroke-width="1.1" d="M1263.39,-171.48C1263.39,-171.48 1184.61,-171.48 1184.61,-171.48 1178.61,-171.48 1172.61,-165.48 1172.61,-159.48 1172.61,-159.48 1172.61,-141.24 1172.61,-141.24 1172.61,-135.24 1178.61,-129.24 1184.61,-129.24 1184.61,-129.24 1263.39,-129.24 1263.39,-129.24 1269.39,-129.24 1275.39,-135.24 1275.39,-141.24 1275.39,-141.24 1275.39,-159.48 1275.39,-159.48 1275.39,-165.48 1269.39,-171.48 1263.39,-171.48"/>
+<text xml:space="preserve" text-anchor="middle" x="1224" y="-153.66" font-family="Helvetica,sans-Serif" font-size="11.00">🗂️ Project ×2</text>
+<text xml:space="preserve" text-anchor="middle" x="1224" y="-140.46" font-family="Helvetica,sans-Serif" font-size="11.00">dev + prod</text>
 </g>
 <!-- LZ&#45;&gt;PROJ -->
-<g id="edge15" class="edge">
+<g id="edge18" class="edge">
 <title>LZ&#45;&gt;PROJ</title>
-<path fill="none" stroke="#8b95a3" d="M865,-232.21C865,-232.21 865,-180.24 865,-180.24"/>
-<polygon fill="#8b95a3" stroke="#8b95a3" points="867.45,-180.24 865,-173.24 862.55,-180.24 867.45,-180.24"/>
-<text xml:space="preserve" text-anchor="middle" x="845.74" y="-208.92" font-family="Helvetica,sans-Serif" font-size="9.00" fill="#697180">applies to</text>
+<path fill="none" stroke="#8b95a3" d="M1224,-232.21C1224,-232.21 1224,-180.24 1224,-180.24"/>
+<polygon fill="#8b95a3" stroke="#8b95a3" points="1226.45,-180.24 1224,-173.24 1221.55,-180.24 1226.45,-180.24"/>
+<text xml:space="preserve" text-anchor="middle" x="1204.74" y="-208.92" font-family="Helvetica,sans-Serif" font-size="9.00" fill="#697180">applies to</text>
 </g>
 <!-- PROJ&#45;&gt;NS -->
-<g id="edge20" class="edge">
+<g id="edge23" class="edge">
 <title>PROJ&#45;&gt;NS</title>
-<path fill="none" stroke="#8b95a3" stroke-dasharray="1,5" d="M865,-128.88C865,-114.8 865,-99 865,-99 865,-99 79.3,-99 79.3,-99 79.3,-99 79.3,-120.36 79.3,-120.36"/>
+<path fill="none" stroke="#8b95a3" stroke-dasharray="1,5" d="M1224,-128.88C1224,-114.8 1224,-99 1224,-99 1224,-99 79.3,-99 79.3,-99 79.3,-99 79.3,-120.36 79.3,-120.36"/>
 <polygon fill="#8b95a3" stroke="#8b95a3" points="76.85,-120.36 79.3,-127.36 81.75,-120.36 76.85,-120.36"/>
-<text xml:space="preserve" text-anchor="middle" x="439.38" y="-101.7" font-family="Helvetica,sans-Serif" font-size="9.00" fill="#697180">tenant namespace</text>
+<text xml:space="preserve" text-anchor="middle" x="618.88" y="-101.7" font-family="Helvetica,sans-Serif" font-size="9.00" fill="#697180">tenant namespace</text>
+</g>
+<!-- BBD_K&#45;&gt;SKE -->
+<g id="edge24" class="edge">
+<title>BBD_K&#45;&gt;SKE</title>
+<path fill="none" stroke="#8b95a3" stroke-dasharray="1,5" d="M819.64,-275.19C819.64,-283.03 819.64,-290 819.64,-290 819.64,-290 157.51,-290 157.51,-290 157.51,-290 157.51,-283.71 157.51,-283.71"/>
+<polygon fill="#8b95a3" stroke="#8b95a3" points="159.96,-283.71 157.51,-276.71 155.06,-283.71 159.96,-283.71"/>
+<text xml:space="preserve" text-anchor="middle" x="472.57" y="-292.7" font-family="Helvetica,sans-Serif" font-size="9.00" fill="#697180">provisions</text>
+</g>
+<!-- BBD_K&#45;&gt;BBD_G -->
+<!-- BBD_G&#45;&gt;GIT -->
+<g id="edge25" class="edge">
+<title>BBD_G&#45;&gt;GIT</title>
+<path fill="none" stroke="#8b95a3" stroke-dasharray="1,5" d="M1017.18,-275.1C1017.18,-289.19 1017.18,-305 1017.18,-305 1017.18,-305 294.02,-305 294.02,-305 294.02,-305 294.02,-283.61 294.02,-283.61"/>
+<polygon fill="#8b95a3" stroke="#8b95a3" points="296.47,-283.61 294.02,-276.61 291.57,-283.61 296.47,-283.61"/>
+<text xml:space="preserve" text-anchor="middle" x="639.6" y="-307.7" font-family="Helvetica,sans-Serif" font-size="9.00" fill="#697180">provisions</text>
 </g>
 <!-- BBD_S -->
-<g id="node12" class="node">
+<g id="node15" class="node">
 <title>BBD_S</title>
-<path fill="#ecedfb" stroke="#9aa2e6" stroke-width="1.1" d="M1264.44,-377.96C1264.44,-377.96 1135.56,-377.96 1135.56,-377.96 1129.56,-377.96 1123.56,-371.96 1123.56,-365.96 1123.56,-365.96 1123.56,-347.72 1123.56,-347.72 1123.56,-341.72 1129.56,-335.72 1135.56,-335.72 1135.56,-335.72 1264.44,-335.72 1264.44,-335.72 1270.44,-335.72 1276.44,-341.72 1276.44,-347.72 1276.44,-347.72 1276.44,-365.96 1276.44,-365.96 1276.44,-371.96 1270.44,-377.96 1264.44,-377.96"/>
-<text xml:space="preserve" text-anchor="middle" x="1200" y="-360.14" font-family="Helvetica,sans-Serif" font-size="11.00">📦 ske/ske&#45;starterkit BBD</text>
-<text xml:space="preserve" text-anchor="middle" x="1200" y="-346.94" font-family="Helvetica,sans-Serif" font-size="11.00">self&#45;service catalog entry</text>
+<path fill="#ecedfb" stroke="#9aa2e6" stroke-width="1.1" d="M1651.44,-377.96C1651.44,-377.96 1522.56,-377.96 1522.56,-377.96 1516.56,-377.96 1510.56,-371.96 1510.56,-365.96 1510.56,-365.96 1510.56,-347.72 1510.56,-347.72 1510.56,-341.72 1516.56,-335.72 1522.56,-335.72 1522.56,-335.72 1651.44,-335.72 1651.44,-335.72 1657.44,-335.72 1663.44,-341.72 1663.44,-347.72 1663.44,-347.72 1663.44,-365.96 1663.44,-365.96 1663.44,-371.96 1657.44,-377.96 1651.44,-377.96"/>
+<text xml:space="preserve" text-anchor="middle" x="1587" y="-360.14" font-family="Helvetica,sans-Serif" font-size="11.00">📦 ske/ske&#45;starterkit BBD</text>
+<text xml:space="preserve" text-anchor="middle" x="1587" y="-346.94" font-family="Helvetica,sans-Serif" font-size="11.00">self&#45;service catalog entry</text>
 </g>
 <!-- BBD_S&#45;&gt;PROJ -->
-<g id="edge18" class="edge">
+<g id="edge21" class="edge">
 <title>BBD_S&#45;&gt;PROJ</title>
-<path fill="none" stroke="#8b95a3" stroke-dasharray="1,5" d="M1198.01,-335.48C1198.01,-282.64 1198.01,-150 1198.01,-150 1198.01,-150 925.18,-150 925.18,-150"/>
-<polygon fill="#8b95a3" stroke="#8b95a3" points="925.18,-147.55 918.18,-150 925.18,-152.45 925.18,-147.55"/>
-<text xml:space="preserve" text-anchor="middle" x="1139.58" y="-152.7" font-family="Helvetica,sans-Serif" font-size="9.00" fill="#697180">creates</text>
+<path fill="none" stroke="#8b95a3" stroke-dasharray="1,5" d="M1587.5,-335.48C1587.5,-282.64 1587.5,-150 1587.5,-150 1587.5,-150 1284.21,-150 1284.21,-150"/>
+<polygon fill="#8b95a3" stroke="#8b95a3" points="1284.21,-147.55 1277.21,-150 1284.21,-152.45 1284.21,-147.55"/>
+<text xml:space="preserve" text-anchor="middle" x="1513.84" y="-152.7" font-family="Helvetica,sans-Serif" font-size="9.00" fill="#697180">creates</text>
 </g>
 <!-- BBD_R -->
-<g id="node13" class="node">
+<g id="node16" class="node">
 <title>BBD_R</title>
-<path fill="#ecedfb" stroke="#9aa2e6" stroke-width="1.1" d="M1165.78,-271.6C1165.78,-271.6 1022.22,-271.6 1022.22,-271.6 1016.22,-271.6 1010.22,-265.6 1010.22,-259.6 1010.22,-259.6 1010.22,-247.6 1010.22,-247.6 1010.22,-241.6 1016.22,-235.6 1022.22,-235.6 1022.22,-235.6 1165.78,-235.6 1165.78,-235.6 1171.78,-235.6 1177.78,-241.6 1177.78,-247.6 1177.78,-247.6 1177.78,-259.6 1177.78,-259.6 1177.78,-265.6 1171.78,-271.6 1165.78,-271.6"/>
-<text xml:space="preserve" text-anchor="middle" x="1094" y="-250.3" font-family="Helvetica,sans-Serif" font-size="11.00">📦 stackit/git&#45;repository BBD</text>
+<path fill="#ecedfb" stroke="#9aa2e6" stroke-width="1.1" d="M1555.4,-274.72C1555.4,-274.72 1380.6,-274.72 1380.6,-274.72 1374.6,-274.72 1368.6,-268.72 1368.6,-262.72 1368.6,-262.72 1368.6,-244.48 1368.6,-244.48 1368.6,-238.48 1374.6,-232.48 1380.6,-232.48 1380.6,-232.48 1555.4,-232.48 1555.4,-232.48 1561.4,-232.48 1567.4,-238.48 1567.4,-244.48 1567.4,-244.48 1567.4,-262.72 1567.4,-262.72 1567.4,-268.72 1561.4,-274.72 1555.4,-274.72"/>
+<text xml:space="preserve" text-anchor="middle" x="1468" y="-256.9" font-family="Helvetica,sans-Serif" font-size="11.00">📦 stackit/git&#45;repository BBD</text>
+<text xml:space="preserve" text-anchor="middle" x="1468" y="-243.7" font-family="Helvetica,sans-Serif" font-size="11.00">phase 2 · needs the Forgejo token</text>
 </g>
 <!-- BBD_S&#45;&gt;BBD_R -->
-<g id="edge16" class="edge">
+<g id="edge19" class="edge">
 <title>BBD_S&#45;&gt;BBD_R</title>
-<path fill="none" stroke="#8b95a3" d="M1150.67,-335.45C1150.67,-335.45 1150.67,-280.37 1150.67,-280.37"/>
-<polygon fill="#8b95a3" stroke="#8b95a3" points="1153.12,-280.37 1150.67,-273.37 1148.22,-280.37 1153.12,-280.37"/>
-<text xml:space="preserve" text-anchor="middle" x="1130.16" y="-310.61" font-family="Helvetica,sans-Serif" font-size="9.00" fill="#697180">composes</text>
+<path fill="none" stroke="#8b95a3" d="M1538.98,-335.45C1538.98,-335.45 1538.98,-283.48 1538.98,-283.48"/>
+<polygon fill="#8b95a3" stroke="#8b95a3" points="1541.43,-283.48 1538.98,-276.48 1536.53,-283.48 1541.43,-283.48"/>
+<text xml:space="preserve" text-anchor="middle" x="1518.47" y="-312.16" font-family="Helvetica,sans-Serif" font-size="9.00" fill="#697180">composes</text>
 </g>
 <!-- BBD_C -->
-<g id="node14" class="node">
+<g id="node17" class="node">
 <title>BBD_C</title>
-<path fill="#ecedfb" stroke="#9aa2e6" stroke-width="1.1" d="M1381.77,-271.6C1381.77,-271.6 1230.23,-271.6 1230.23,-271.6 1224.23,-271.6 1218.23,-265.6 1218.23,-259.6 1218.23,-259.6 1218.23,-247.6 1218.23,-247.6 1218.23,-241.6 1224.23,-235.6 1230.23,-235.6 1230.23,-235.6 1381.77,-235.6 1381.77,-235.6 1387.77,-235.6 1393.77,-241.6 1393.77,-247.6 1393.77,-247.6 1393.77,-259.6 1393.77,-259.6 1393.77,-265.6 1387.77,-271.6 1381.77,-271.6"/>
-<text xml:space="preserve" text-anchor="middle" x="1306" y="-250.3" font-family="Helvetica,sans-Serif" font-size="11.00">📦 ske/forgejo&#45;connector BBD</text>
+<path fill="#ecedfb" stroke="#9aa2e6" stroke-width="1.1" d="M1794.4,-274.72C1794.4,-274.72 1619.6,-274.72 1619.6,-274.72 1613.6,-274.72 1607.6,-268.72 1607.6,-262.72 1607.6,-262.72 1607.6,-244.48 1607.6,-244.48 1607.6,-238.48 1613.6,-232.48 1619.6,-232.48 1619.6,-232.48 1794.4,-232.48 1794.4,-232.48 1800.4,-232.48 1806.4,-238.48 1806.4,-244.48 1806.4,-244.48 1806.4,-262.72 1806.4,-262.72 1806.4,-268.72 1800.4,-274.72 1794.4,-274.72"/>
+<text xml:space="preserve" text-anchor="middle" x="1707" y="-256.9" font-family="Helvetica,sans-Serif" font-size="11.00">📦 ske/forgejo&#45;connector BBD</text>
+<text xml:space="preserve" text-anchor="middle" x="1707" y="-243.7" font-family="Helvetica,sans-Serif" font-size="11.00">phase 2 · needs the Forgejo token</text>
 </g>
 <!-- BBD_S&#45;&gt;BBD_C -->
-<g id="edge17" class="edge">
+<g id="edge20" class="edge">
 <title>BBD_S&#45;&gt;BBD_C</title>
-<path fill="none" stroke="#8b95a3" d="M1247.34,-335.45C1247.34,-335.45 1247.34,-280.37 1247.34,-280.37"/>
-<polygon fill="#8b95a3" stroke="#8b95a3" points="1249.79,-280.37 1247.34,-273.37 1244.89,-280.37 1249.79,-280.37"/>
+<path fill="none" stroke="#8b95a3" d="M1635.52,-335.45C1635.52,-335.45 1635.52,-283.48 1635.52,-283.48"/>
+<polygon fill="#8b95a3" stroke="#8b95a3" points="1637.97,-283.48 1635.52,-276.48 1633.07,-283.48 1637.97,-283.48"/>
 </g>
 <!-- BBD_R&#45;&gt;REPO -->
-<g id="edge21" class="edge">
+<g id="edge26" class="edge">
 <title>BBD_R&#45;&gt;REPO</title>
-<path fill="none" stroke="#8b95a3" stroke-dasharray="1,5" d="M1094,-235.4C1094,-215.68 1094,-187 1094,-187 1094,-187 329.1,-187 329.1,-187 329.1,-187 329.1,-180.19 329.1,-180.19"/>
+<path fill="none" stroke="#8b95a3" stroke-dasharray="1,5" d="M1468,-232.16C1468,-212.69 1468,-187 1468,-187 1468,-187 329.1,-187 329.1,-187 329.1,-187 329.1,-180.19 329.1,-180.19"/>
 <polygon fill="#8b95a3" stroke="#8b95a3" points="331.55,-180.19 329.1,-173.19 326.65,-180.19 331.55,-180.19"/>
-<text xml:space="preserve" text-anchor="middle" x="712.09" y="-189.7" font-family="Helvetica,sans-Serif" font-size="9.00" fill="#697180">provisions</text>
+<text xml:space="preserve" text-anchor="middle" x="897.47" y="-189.7" font-family="Helvetica,sans-Serif" font-size="9.00" fill="#697180">provisions</text>
 </g>
 <!-- BBD_R&#45;&gt;BBD_C -->
 <!-- BBD_C&#45;&gt;ACT -->
-<g id="edge22" class="edge">
+<g id="edge27" class="edge">
 <title>BBD_C&#45;&gt;ACT</title>
-<path fill="none" stroke="#8b95a3" stroke-dasharray="1,5" d="M1306,-235.39C1306,-183.73 1306,-40 1306,-40 1306,-40 348.79,-40 348.79,-40"/>
-<polygon fill="#8b95a3" stroke="#8b95a3" points="348.79,-37.55 341.79,-40 348.79,-42.45 348.79,-37.55"/>
-<text xml:space="preserve" text-anchor="middle" x="904.83" y="-42.7" font-family="Helvetica,sans-Serif" font-size="9.00" fill="#697180">provisions</text>
+<path fill="none" stroke="#8b95a3" stroke-dasharray="1,5" d="M1707,-231.94C1707,-177.64 1707,-40 1707,-40 1707,-40 348.82,-40 348.82,-40"/>
+<polygon fill="#8b95a3" stroke="#8b95a3" points="348.82,-37.55 341.82,-40 348.82,-42.45 348.82,-37.55"/>
+<text xml:space="preserve" text-anchor="middle" x="1103.63" y="-42.7" font-family="Helvetica,sans-Serif" font-size="9.00" fill="#697180">provisions</text>
 </g>
 </g>
 </svg>

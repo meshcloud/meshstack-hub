@@ -1,0 +1,73 @@
+# STACKIT Kubernetes Platform: **${platform_identifier}**
+
+%{ if playground_mode ~}
+> **Playground mode.** The platform identifier carries a random suffix so this deployment does not
+> occupy a name for good, and the hosting project and tenant are left destroyable. Do not publish
+> this platform or the building block definitions it registered to other workspaces. Redeploy with
+> `playground_mode` set to false for a platform that is actually used.
+
+%{ endif ~}
+## Details
+
+| Property | Value |
+|----------|-------|
+| **Hosting Project** | [Open in STACKIT Portal](https://portal.stackit.cloud/projects/${stackit_project_id}) (`${stackit_project_id}`) |
+| **SKE Cluster** | `${cluster_name}` — @buildingblock[${cluster_bb_uuid}] |
+| **Platform Services** | @buildingblock[${platform_services_bb_uuid}] |
+| **STACKIT Git** | %{ if forgejo_instance_url != null }[${forgejo_instance_url}](${forgejo_instance_url})%{ else }_provisioning_%{ endif } — @buildingblock[${git_bb_uuid}] |
+| **meshStack Platform** | `${platform_identifier}` |
+
+%{ if !forgejo_token_provided ~}
+> [!WARNING]
+> ## One step left: put a Forgejo token in
+
+The platform is running, but the Git side of it is not wired up yet: the fresh Forgejo instance
+carries no credential, and this building block does not mint one for itself yet (it could — see the
+architecture README). Do this once, then update this building block:
+
+1. Open the Forgejo instance at **${forgejo_instance_url_display}** and sign in with your STACKIT
+   account.
+2. Create the platform's **bot account** (or open the existing one). This account owns the
+   organization and every repository application teams get, so use a shared platform-engineering
+   identity, not a personal one.
+3. As that bot account, go to **Settings → Applications → Access Tokens** and generate a token with
+   these scopes:
+
+   | Scope | Needed for |
+   |---|---|
+   | `write:organization` | creating the organization and the per-workspace teams inside it |
+   | `write:repository` | creating repositories, their Actions secrets and variables, and dispatching the Actions workflow |
+   | `read:user` | looking up workspace members by email to invite them to teams |
+
+4. Copy the token — Forgejo shows it exactly once.
+5. **Update this building block** and paste the token into the optional **Forgejo API Token**
+   input. Optionally fill in the **Harbor** robot credentials at the same time, so application pods
+   can pull private images from the shared STACKIT Harbor registry.
+
+The next run creates the Forgejo organization and registers the building block definitions
+application teams order. Nothing already provisioned is touched.
+
+%{ else ~}
+> [!TIP]
+> ## Forgejo is wired up
+
+The token was accepted, so the second phase ran. It created:
+
+| What | Value |
+|---|---|
+| **Forgejo organization** | %{ if forgejo_organization != null }`${forgejo_organization}` in [${forgejo_instance_url}](${forgejo_instance_url})%{ else }_see the STACKIT Git building block_%{ endif } |
+| **STACKIT Git Repository** definition | application teams can order a repository in that organization |
+| **SKE Forgejo Connector** definition | wires a repository to a namespace on this cluster for Forgejo Actions CI/CD |
+%{ if !harbor_configured ~}
+
+> No Harbor robot credentials were supplied, so the connector creates an empty image-pull secret.
+> Application pods can pull public images; add `harbor_username` and `harbor_password` to this
+> building block to pull private ones from the shared STACKIT Harbor registry.
+%{ endif ~}
+
+%{ endif ~}
+## What application teams get
+
+The **${platform_identifier}** platform is published with a **dev** and a **prod** landing
+zone. Application teams request a Kubernetes namespace on SKE by ordering a tenant in either
+landing zone from the self-service catalog.

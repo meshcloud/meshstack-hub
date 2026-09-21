@@ -1,19 +1,24 @@
 ---
 name: STACKIT Kubernetes Platform
 description: >
-  A sovereign-cloud Kubernetes platform on STACKIT that provides application teams
-  with self-service SKE namespaces, Forgejo Git repositories, CI/CD via Forgejo Actions,
-  and a container registry backed by Harbor — all composed into a single starterkit
-  building block.
+  A sovereign-cloud Kubernetes platform on STACKIT, built on top of a STACKIT Landing Zone:
+  an SKE cluster, in-cluster platform services, and the meshStack SKE platform with dev/prod
+  landing zones that application teams order self-service Kubernetes namespaces from.
 cloudProviders:
   - stackit
 buildingBlocks:
-  - path: ske/ske-starterkit
-    role: Orchestrates the full developer onboarding by composing dev/prod projects, SKE tenants, Git repos, and connectors into one self-service offering.
+  - path: ske/cluster
+    role: Provisions the STACKIT Kubernetes Engine (SKE) cluster and mints the admin kubeconfig the rest of the platform is built on.
+  - path: ske/platform-services
+    role: Installs HAProxy ingress, cert-manager, and the meshStack replication/metering service accounts on the cluster.
+  - path: ske/cluster-issuer
+    role: Installs the Let's Encrypt ACME ClusterIssuer once cert-manager and its CRDs are on the cluster.
+  - path: stackit/git
+    role: Provisions the STACKIT Git (Forgejo) instance the platform's CI/CD runs on, and the organization application repositories live in.
   - path: stackit/git-repository
-    role: Provisions Forgejo Git repositories on STACKIT Git with team-based access management and CI/CD secret wiring.
+    role: Registered for application teams so they can order a Git repository in that organization.
   - path: ske/forgejo-connector
-    role: Connects a Forgejo repository to an SKE namespace for automated build and deploy via Forgejo Actions.
+    role: Registered for application teams so they can wire a repository to their namespace for Forgejo Actions CI/CD.
 ---
 
 # STACKIT Kubernetes Platform
@@ -104,6 +109,86 @@ The connector building block creates per-stage resources:
 - **Pipeline trigger** — after provisioning, the connector triggers the Forgejo
   Actions workflow and waits for it to complete.
 
+## What It Builds On: One Landing Zone UUID
+
+This architecture sits on top of a deployed
+[STACKIT Landing Zone](https://hub.meshcloud.io/reference-architectures/stackit-landingzone). That
+landing zone provides the STACKIT organization structure, the foundation project and the platform
+this architecture's hosting project is created on — and nothing Kubernetes- or Git-specific. It does
+not register the SKE cluster or STACKIT Git definitions; **this architecture registers those itself,
+once per ordered platform**, so every platform owns its own definitions and its own backplane
+identities.
+
+Wiring is a single value: the landing zone building block's UUID. The building block reads that
+object at order time for
+
+- `foundation_project_id` — where the definitions' backplane service accounts are created,
+- `lz_folder_id` — the landing-zone folder their role grants land on, so the hosting project created
+  at order time inherits them, and
+- `platform_bootstrap_service_account_key` — the STACKIT credential the run applies as.
+
+That credential is published by the landing zone as a **non-sensitive** output, which is a
+deliberate work-in-progress tradeoff: it is visible in the meshStack UI to anyone who can see the
+landing zone building block. It is bounded to creating service accounts in the foundation project
+and assigning roles inside the landing-zone folder — it is not organization ownership. See the
+landing zone README for the full rationale and what has to replace it.
+
+## Ordering It: One Order, One Manual Step, One Update
+
+The architecture is **ordered once and updated once**. It is not two building blocks — the same
+building block runs twice, with one more input the second time.
+
+### Phase 1 — order it with the token input empty
+
+The run provisions everything that needs no Forgejo credential:
+
+- the hosting STACKIT project (a self-hosted meshStack tenant),
+- the **SKE Cluster** and **STACKIT Git Instance** building block definitions, registered for this
+  platform, each with its own federated backplane identity,
+- the SKE cluster and the in-cluster platform services,
+- the Let's Encrypt ClusterIssuer,
+- the **STACKIT Git instance** (`stackit/git`) — named after the generated platform identifier,
+  because `<name>.git.onstackit.cloud` is globally unique across all of STACKIT, and
+- the meshStack SKE platform with its dev and prod landing zones.
+
+No Forgejo organization is created, and the application-team definitions are **not** registered.
+The building block's summary then shows a warning block with the instance URL and the exact token
+scopes to mint.
+
+### Phase 2 — update the same building block with the token
+
+Paste the PAT into the optional **Forgejo API Token** input (and, if you have them, the Harbor
+robot credentials). The run then additionally:
+
+- creates the **Forgejo organization** inside the instance, and
+- registers the **STACKIT Git Repository** and **SKE Forgejo Connector** building block
+  definitions, so application teams can order a repository wired to a namespace on this cluster.
+
+The summary flips from the warning to a confirmation listing what phase 2 created. Everything from
+phase 1 is left untouched.
+
+### The manual step is a gap, not a requirement
+
+Nothing about STACKIT Git forces a human into the middle. The Git API (`v1beta`,
+`https://git.api.stackit.cloud`,
+[spec](https://docs.api.eu01.stackit.cloud/oas/git/version/v1beta)) can create a local/technical
+user in an instance —
+`POST /v1beta/projects/{projectId}/instances/{instanceId}/users` with
+`{name, username, email, password, force_send_reset_password}`, permission
+`git.instance.users.create`, plus
+`PATCH /v1beta/projects/{projectId}/instances/{instanceId}` to flip
+`feature_toggle.enable_local_login`. That user's password then mints a PAT through Forgejo's own
+`POST {instance_url}/api/v1/users/{username}/tokens`, which returns it once in the `sha1` field and
+accepts **HTTP Basic auth only** (an existing token cannot mint another).
+
+None of this is in the STACKIT Terraform provider or the Go SDK yet, and `stackit_git` has neither
+update support nor a `feature_toggle` attribute, so it would have to go out of band. The flow is
+verified against the published spec, **not** against a live instance, and it is not implemented.
+The code is shaped for it: both `modules/stackit/git/buildingblock/main.tf` and this architecture's
+`buildingblock/main.tf` resolve the token into a single local and branch on that, so an automatic
+mint only has to feed that one expression. The optional input then stays as the override and the
+fallback.
+
 ## Getting Started
 
 ### Prerequisites
@@ -111,12 +196,27 @@ The connector building block creates per-stage resources:
 | Requirement          | Description                                                                                                                                       |
 |----------------------|---------------------------------------------------------------------------------------------------------------------------------------------------|
 | meshStack instance   | With Terraform/OpenTofu IaC runtime configured.                                                                                                   |
+| STACKIT Landing Zone | A deployed STACKIT Landing Zone building block. Its UUID is the only value wired into this architecture — see above.                             |
 | STACKIT account      | With access to SKE, STACKIT Git, and the global STACKIT Harbor registry.                                                                          |
-| SKE cluster          | A running STACKIT Kubernetes Engine cluster with kubeconfig.                                                                                      |
-| Forgejo organization | On STACKIT Git, with an API token for the Terraform provider.                                                                                     |
+| Forgejo bot account  | Created in the STACKIT Git instance this architecture provisions, for the phase-2 token (see above). Not needed before the first order.           |
 | Harbor credentials   | Robot account credentials (username and secret) for push/pull access to the STACKIT global Harbor registry; shared across all STACKIT customers. |
 | Model Serving API    | STACKIT Model Serving endpoint and API key for the platform team to provide to the connector.                                                     |
 | DNS zone             | A DNS zone provided by STACKIT for application ingress hostnames (e.g. `apps.example.com`).                                                      |
+
+### The Harbor credentials are still a manual prerequisite
+
+Unlike the Forgejo instance, the Harbor project and its robot accounts are not created here. What
+it would take is recorded so nobody has to rediscover it — three roles, none a subset of another,
+all read from the live authorization and service-enablement APIs:
+
+| Role | Needed for |
+|---|---|
+| `editor`, `owner` or a `folder.*` role | `service-enablement.service-state.edit`. `cloud.stackit.container-registry` is **disabled by default** on every project checked, so the service has to be switched on first. |
+| `container-registry.admin` | `container-registry.project.create` |
+| `container-registry.artifactory.admin` | `container-registry.project.permission.administer` — the Harbor project-admin permission that mints robot accounts. Neither `editor` nor `owner` carries it. |
+
+Today the platform team supplies the robot credentials as the two optional inputs, exactly like the
+Forgejo token.
 
 ## Shared Responsibilities
 
