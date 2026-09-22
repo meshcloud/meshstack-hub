@@ -1,45 +1,40 @@
 locals {
-  # The identifier lands in the platform, location, hosting project and landing zone names and must be
-  # unique across the whole meshStack instance. Nobody needs a meaningful value, so it is generated
-  # from a random suffix. The random_string lives in state, so it stays stable across the two-phase run.
   platform_identifier = "ske-platform-${random_string.identifier_suffix.result}"
 
-  location_name = var.use_global_location ? "global" : meshstack_location.this[0].metadata.name
+  location_name = var.use_global_location ? "global" : meshstack_location.this.metadata.name
 
   # meshStack may enforce a mandatory owner tag on projects; write the creator's display name into it.
   # Empty project_owner_tag_key sets none.
   owner_tags = var.tags.project_owner_tag_key == "" ? {} : { (var.tags.project_owner_tag_key) = [var.creator.displayName] }
 
-  # Resolved once the host STACKIT platform is looked up. `one()` fails loudly if the identifier ever
-  # stops matching exactly one platform.
-  host_platform_ref = one(data.meshstack_platforms.host.platforms).ref
+  landingzone_outputs = data.meshstack_building_block.stackit_lz_ref_arch.status.outputs
 
-  # ── What this run inherits from the landing zone ──
-  # Building block outputs are stored JSON-encoded, so each is decoded once. These three drive the
-  # backplanes this architecture deploys: the service accounts are created in the foundation project,
-  # their role grants land on the landing-zone folder (inherited by the hosting project created
-  # below), and the whole STACKIT apply authenticates as the landing zone's bootstrap identity.
-  landingzone_foundation_project_id = jsondecode(data.meshstack_building_block.landingzone.status.outputs["foundation_project_id"].value)
-  landingzone_folder_id             = jsondecode(data.meshstack_building_block.landingzone.status.outputs["lz_folder_id"].value)
+  host_platform_ref               = jsondecode(local.landingzone_outputs["platform_ref"].value)
+  host_landingzone_ref            = jsondecode(local.landingzone_outputs["landingzone_refs"].value)[var.landingzone_variant]
+  service_account_bbd_version_ref = jsondecode(local.landingzone_outputs["service_account_bbd_version_ref"].value)
 
-  # Long-lived STACKIT credential, published unencrypted by the landing zone on purpose — see that
-  # output's comment. It is read here rather than passed in so nobody has to copy a credential
-  # between two building blocks by hand.
-  landingzone_service_account_key = jsondecode(data.meshstack_building_block.landingzone.status.outputs["platform_bootstrap_service_account_key"].value)
+  wif_issuer         = data.meshstack_integrations.this.workload_identity_federation.replicator.issuer
+  wif_subject_prefix = trimsuffix(data.meshstack_integrations.this.workload_identity_federation.replicator.subject, ":replicator")
+  wif_audience       = "api://AzureADTokenExchange"
 
-  # The STACKIT project the whole platform runs in is self-hosted as a meshStack tenant on the host
-  # STACKIT platform. `wait_for_completion` on the tenant guarantees the project exists and its id is
-  # populated before anything downstream reads it.
+  platform_service_account_email = jsondecode(meshstack_building_block.platform_service_account.status.outputs["service_account_email"].value)
+
+  cluster_name = coalesce(var.cluster_name, format(
+    "%s-%s",
+    replace(substr(local.platform_identifier, 0, 6), "/-+$/", ""),
+    substr(sha256(local.platform_identifier), 0, 4)
+  ))
+  # It's fine that by default, Let's Encrypt Expiry notifications go nowhere.
+  cluster_issuer_email = coalesce(var.cluster_issuer_email, local.platform_service_account_email)
+
   stackit_project_id = meshstack_tenant.hosting.spec.platform_tenant_id
 
   # Child building block outputs are stored JSON-encoded, so each is decoded once here.
   cluster_kubeconfig = jsondecode(meshstack_building_block.cluster.status.outputs["kubeconfig"].value)
   cluster_kube_host  = jsondecode(meshstack_building_block.cluster.status.outputs["kube_host"].value)
 
-  # Replication and metering tokens the meshStack agent building block created in-cluster; consumed
-  # by the meshStack platform. Stored JSON-encoded, so decoded once.
-  replicator_token = jsondecode(meshstack_building_block.meshstack_agent.status.outputs["replicator_token"].value)
-  metering_token   = jsondecode(meshstack_building_block.meshstack_agent.status.outputs["metering_token"].value)
+  replicator_token = jsondecode(meshstack_building_block.kubernetes_platform.status.outputs["replicator_token"].value)
+  metering_token   = jsondecode(meshstack_building_block.kubernetes_platform.status.outputs["metering_token"].value)
 
   # ── Two-phase bootstrap: the one place this architecture decides whether it has a Forgejo token ──
   #
@@ -79,7 +74,9 @@ resource "random_string" "identifier_suffix" {
 # ── meshStack location ──
 
 resource "meshstack_location" "this" {
-  count = var.use_global_location ? 0 : 1
+  lifecycle {
+    enabled = !var.use_global_location
+  }
 
   metadata = {
     name               = local.platform_identifier
@@ -119,7 +116,7 @@ resource "meshstack_tenant" "hosting" {
 
   spec = {
     platform_ref     = local.host_platform_ref
-    landing_zone_ref = { name = var.host_landing_zone_name }
+    landing_zone_ref = local.host_landingzone_ref
   }
 
   # Destroying this tenant deletes the STACKIT project the whole platform runs in. Guard a real
@@ -129,37 +126,12 @@ resource "meshstack_tenant" "hosting" {
   }
 }
 
-data "meshstack_platforms" "host" {
-  identifier = var.host_platform_identifier
-}
-
-# The STACKIT Landing Zone this platform is built on. Read at order time for the STACKIT coordinates
-# and the bootstrap credential the definitions registered below need — see the locals at the top.
-data "meshstack_building_block" "landingzone" {
-  metadata = {
-    uuid = var.landingzone_building_block_uuid
-  }
-}
-
-# ── Definitions this platform registers for itself ──
-# Both are registered per ordered platform rather than once per landing zone, so each platform owns
-# its own definitions and its own backplane identities. Their backplanes create a service account in
-# the landing zone's foundation project and grant it roles on the landing-zone folder, which the
-# hosting project created above inherits.
+data "meshstack_integrations" "this" {}
 
 module "cluster_integration" {
   source = "github.com/meshcloud/meshstack-hub//modules/ske/cluster?ref=${var.hub.git_ref}"
 
-  stackit_backplane_project_id = local.landingzone_foundation_project_id
-  stackit_backplane_folder_id  = local.landingzone_folder_id
-
-  # Every ordered platform registers its own definition, so its backplane account needs its own name
-  # — the module's fixed default would collide on the second order into the same foundation project.
-  # STACKIT caps the name at 20 characters, which the 8-character suffix leaves room for.
-  stackit_service_account_name = "mesh-ske-${random_string.identifier_suffix.result}"
-
-  # `roles` stays at the module default (`editor`), the narrowest folder role that both manages SKE
-  # and can enable the service on a freshly created project — see that variable for the reasoning.
+  external_service_account = true
 
   meshstack = { owning_workspace_identifier = var.workspace, tags = var.tags.building_block }
   hub       = var.hub
@@ -168,23 +140,49 @@ module "cluster_integration" {
 module "git_integration" {
   source = "github.com/meshcloud/meshstack-hub//modules/stackit/git?ref=${var.hub.git_ref}"
 
-  stackit_backplane_project_id = local.landingzone_foundation_project_id
-  stackit_backplane_folder_id  = local.landingzone_folder_id
-
-  # Per-platform name, for the same reason as the cluster backplane above.
-  stackit_service_account_name = "mesh-git-${random_string.identifier_suffix.result}"
+  external_service_account = true
 
   meshstack = { owning_workspace_identifier = var.workspace, tags = var.tags.building_block }
   hub       = var.hub
 }
 
+resource "meshstack_building_block" "platform_service_account" {
+  wait_for_completion = true
+
+  lifecycle {
+    postcondition {
+      condition     = self.status.status == "SUCCEEDED"
+      error_message = "Building block ${self.metadata.uuid} is ${self.status.status}, not SUCCEEDED. See its run in meshPanel."
+    }
+  }
+
+  spec = {
+    building_block_definition_version_ref = { uuid = local.service_account_bbd_version_ref.uuid }
+    display_name                          = "Platform Automation Identity"
+    target_ref                            = { kind = "meshTenant", uuid = meshstack_tenant.hosting.metadata.uuid }
+
+    inputs = {
+      service_account_name = { value = jsonencode("mesh-plat-${random_string.identifier_suffix.result}") }
+      roles                = { value = jsonencode(jsonencode(["editor", "ske.admin", "git.admin"])) }
+      federated_identities = {
+        value = jsonencode(jsonencode([
+          for uuid in [
+            module.cluster_integration.building_block_definition.uuid,
+            module.git_integration.building_block_definition.uuid,
+            ] : {
+            issuer   = local.wif_issuer
+            subject  = "${local.wif_subject_prefix}:workspace.${var.workspace}.buildingblockdefinition.${uuid}"
+            audience = local.wif_audience
+          }
+        ]))
+      }
+    }
+  }
+}
+
 # ── SKE cluster ──
-# The STACKIT SKE Cluster building block registered above, ordered on the hosting tenant. It is
-# TENANT_LEVEL, so its STACKIT project id is injected from the tenant (PLATFORM_TENANT_ID) and it
-# deploys as its own folder-scoped backplane identity — the platform supplies neither here.
 resource "meshstack_building_block" "cluster" {
   wait_for_completion = true
-  depends_on          = [module.cluster_integration, meshstack_tenant.hosting]
 
   lifecycle {
     postcondition {
@@ -199,24 +197,33 @@ resource "meshstack_building_block" "cluster" {
     target_ref                            = { kind = "meshTenant", uuid = meshstack_tenant.hosting.metadata.uuid }
 
     inputs = {
-      cluster_name = { value = jsonencode(var.cluster_name) }
+      cluster_name                  = { value = jsonencode(local.cluster_name) }
+      STACKIT_SERVICE_ACCOUNT_EMAIL = { value = jsonencode(local.platform_service_account_email) }
     }
   }
 }
 
-# ── meshStack in-cluster identities (child building block; configures its provider from the kubeconfig) ──
-# The replicator and metering service accounts, whose tokens platform.tf wires into the meshStack
-# platform. Cloud-agnostic: the module knows nothing about SKE.
-module "meshstack_agent_integration" {
-  source = "github.com/meshcloud/meshstack-hub//modules/kubernetes/meshstack-agent?ref=${var.hub.git_ref}"
+module "kubernetes_integration" {
+  source = "github.com/meshcloud/meshstack-hub//modules/kubernetes?ref=${var.hub.git_ref}"
 
-  meshstack = { owning_workspace_identifier = var.workspace, tags = var.tags.building_block }
-  hub       = var.hub
+  kube_host        = local.cluster_kube_host
+  replicator_token = local.replicator_token
+  metering_token   = local.metering_token
+
+  meshstack = {
+    owning_workspace_identifier = var.workspace
+    location_name               = local.location_name
+    platform_identifier         = local.platform_identifier
+    tags = {
+      landingzone    = var.tags.landingzone
+      building_block = var.tags.building_block
+    }
+  }
+  hub = var.hub
 }
 
-resource "meshstack_building_block" "meshstack_agent" {
+resource "meshstack_building_block" "kubernetes_platform" {
   wait_for_completion = true
-  depends_on          = [module.meshstack_agent_integration, meshstack_building_block.cluster]
 
   lifecycle {
     postcondition {
@@ -228,14 +235,12 @@ resource "meshstack_building_block" "meshstack_agent" {
   spec = {
     parent_building_block_refs = [meshstack_building_block.cluster.ref]
     building_block_definition_version_ref = {
-      uuid = module.meshstack_agent_integration.building_block_definition.version_ref.uuid
+      uuid = module.kubernetes_integration.building_block_definition.version_ref.uuid
     }
-    display_name = "meshStack Agent Identities"
+    display_name = "Kubernetes meshPlatform Credentials"
     target_ref   = { kind = "meshWorkspace", name = var.workspace }
 
     inputs = {
-      # kubeconfig is a sensitive input, so it must be passed via the sensitive form (secret_value),
-      # not as a plain `value`. secret_value takes the raw string, not a jsonencode()'d one.
       kubeconfig = { sensitive = { secret_value = local.cluster_kubeconfig } }
     }
   }
@@ -255,7 +260,7 @@ module "ingress_integration" {
 
   # STATIC on the definition rather than an order-time input, so the building block below passes
   # only the sensitive kubeconfig — see that module's integration for why the two must not mix.
-  acme_email = var.cluster_issuer_email
+  acme_email = local.cluster_issuer_email
 
   meshstack = { owning_workspace_identifier = var.workspace, tags = var.tags.building_block }
   hub       = var.hub
@@ -263,7 +268,6 @@ module "ingress_integration" {
 
 resource "meshstack_building_block" "ingress" {
   wait_for_completion = true
-  depends_on          = [module.ingress_integration, meshstack_building_block.cluster]
 
   lifecycle {
     postcondition {
@@ -292,7 +296,6 @@ resource "meshstack_building_block" "ingress" {
 # instance, phase 2 hands it the token so it can create the organization.
 resource "meshstack_building_block" "git" {
   wait_for_completion = true
-  depends_on          = [module.git_integration, meshstack_tenant.hosting]
 
   lifecycle {
     postcondition {
@@ -318,7 +321,8 @@ resource "meshstack_building_block" "git" {
     # `instance_name` sensitive on the definition too, not to drop it.
     inputs = merge(
       {
-        instance_name = { value = jsonencode(local.platform_identifier) }
+        instance_name                 = { value = jsonencode(local.platform_identifier) }
+        STACKIT_SERVICE_ACCOUNT_EMAIL = { value = jsonencode(local.platform_service_account_email) }
       },
       local.forgejo_token_provided ? {
         forgejo_token = { sensitive = { secret_value = local.forgejo_api_token } }
@@ -378,8 +382,10 @@ module "forgejo_connector_integration" {
   #     `container-registry.project.permission.administer`, the Harbor project-admin permission that
   #     mints robot accounts. Neither `editor` nor `owner` includes it.
   # Nothing Harbor-related is implemented; this is recorded so the next person does not rediscover it.
-  harbor_username = var.harbor_username == null ? "" : var.harbor_username
-  harbor_password = var.harbor_password == null ? "" : var.harbor_password
+  # The order-time Harbor inputs are gone for now — see the phase-2 Harbor TODO in
+  # meshstack_integration.tf — so the connector always starts without pull credentials.
+  harbor_username = ""
+  harbor_password = ""
 
   meshstack = { owning_workspace_identifier = var.workspace, tags = var.tags.building_block }
   hub       = var.hub

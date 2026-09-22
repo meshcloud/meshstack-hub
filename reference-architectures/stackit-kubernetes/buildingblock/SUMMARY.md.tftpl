@@ -14,7 +14,7 @@
 | **Hosting Project** | [Open in STACKIT Portal](https://portal.stackit.cloud/projects/${stackit_project_id}) (`${stackit_project_id}`) |
 | **SKE Cluster** | `${cluster_name}` — @buildingblock[${cluster_bb_uuid}] |
 | **Ingress & Certificates** | @buildingblock[${ingress_bb_uuid}] |
-| **meshStack Agent Identities** | @buildingblock[${meshstack_agent_bb_uuid}] |
+| **Kubernetes meshPlatform Credentials** | @buildingblock[${kubernetes_platform_bb_uuid}] |
 | **STACKIT Git** | %{ if forgejo_instance_url != null }[${forgejo_instance_url}](${forgejo_instance_url})%{ else }_provisioning_%{ endif } — @buildingblock[${git_bb_uuid}] |
 | **meshStack Platform** | `${platform_identifier}` |
 
@@ -42,8 +42,7 @@ architecture README). Do this once, then update this building block:
 
 4. Copy the token — Forgejo shows it exactly once.
 5. **Update this building block** and paste the token into the optional **Forgejo API Token**
-   input. Optionally fill in the **Harbor** robot credentials at the same time, so application pods
-   can pull private images from the shared STACKIT Harbor registry.
+   input.
 
 The next run creates the Forgejo organization and registers the building block definitions
 application teams order. Nothing already provisioned is touched.
@@ -59,14 +58,26 @@ The token was accepted, so the second phase ran. It created:
 | **Forgejo organization** | %{ if forgejo_organization != null }`${forgejo_organization}` in [${forgejo_instance_url}](${forgejo_instance_url})%{ else }_see the STACKIT Git building block_%{ endif } |
 | **STACKIT Git Repository** definition | application teams can order a repository in that organization |
 | **SKE Forgejo Connector** definition | wires a repository to a namespace on this cluster for Forgejo Actions CI/CD |
-%{ if !harbor_configured ~}
-
-> No Harbor robot credentials were supplied, so the connector creates an empty image-pull secret.
-> Application pods can pull public images; add `harbor_username` and `harbor_password` to this
-> building block to pull private ones from the shared STACKIT Harbor registry.
-%{ endif ~}
 
 %{ endif ~}
+## Container registry: not wired up yet
+
+This architecture creates no container registry, and it registers the **SKE Forgejo Connector**
+definition with an empty image-pull secret. Application pods can pull public images from day one.
+Private images need the steps below, done by hand once.
+
+1. In the STACKIT portal, open the hosting project and enable the **Container Registry** service —
+   it is disabled on a fresh project.
+2. Create a registry (Harbor project) in it. The **STACKIT Container Registry** building block does
+   exactly this, if you prefer to order it rather than click it.
+3. In the registry, create a robot account with **push**, **pull** and **robot account management**
+   permissions, and link it to the STACKIT service account this platform deploys as. Only the portal
+   can create that first link; every later robot can then go through the Harbor API.
+4. Store the robot's username and password wherever your foundation keeps secrets, and pass them to
+   the **SKE Forgejo Connector** definition as `harbor_username` and `harbor_password`.
+
+Step 4 is not an input on this building block. Nothing here mints or holds a Harbor credential.
+
 ## What application teams get
 
 The **${platform_identifier}** platform is published with a **dev** and a **prod** landing

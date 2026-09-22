@@ -1,3 +1,27 @@
+variable "landingzone_building_block_uuid" {
+  type        = string
+  nullable    = false
+  description = "UUID of the STACKIT Landing Zone building block this platform is built on."
+}
+
+variable "landingzone_variant" {
+  type        = string
+  nullable    = false
+  default     = "default"
+  description = "Key into the landing zone's `landingzone_refs` output. `networked` requires hub-and-spoke networking enabled there."
+
+  validation {
+    condition     = contains(["default", "networked"], var.landingzone_variant)
+    error_message = "landingzone_variant must be either default or networked."
+  }
+}
+
+data "meshstack_building_block" "stackit_lz_ref_arch" {
+  metadata = {
+    uuid = var.landingzone_building_block_uuid
+  }
+}
+
 # ── meshStack context ──
 
 variable "workspace" {
@@ -55,76 +79,36 @@ variable "playground_mode" {
   description = "Deploy a throwaway platform: the platform identifier gets a random suffix so it does not occupy a name for good, and the hosting project and tenant are left destroyable. Set to false for a platform that is actually used."
 }
 
-# ── STACKIT self-hosting ──
-
-variable "host_platform_identifier" {
-  type        = string
-  nullable    = false
-  description = "Full `<platform>.<location>` identifier of the existing STACKIT Project platform (e.g. from the STACKIT Landing Zone) on which the cluster's hosting project is provisioned as a meshStack tenant."
-}
-
-variable "host_landing_zone_name" {
-  type        = string
-  nullable    = false
-  description = "Name of the landing zone on the host STACKIT platform that the hosting tenant is placed in."
-}
-
-variable "landingzone_building_block_uuid" {
-  type        = string
-  nullable    = false
-  description = "UUID of the deployed STACKIT Landing Zone building block this platform is built on. Read at order time for the foundation project and landing-zone folder the registered definitions' backplanes deploy into, and for the bootstrap service account credential this run applies as."
-}
-
-# ── Forgejo bootstrap (phase 2) ──
-
-variable "forgejo_api_token" {
-  type      = string
-  nullable  = true
-  default   = null
-  sensitive = true
-
-  # The instance has to exist before a token can be created in it, so this cannot be filled in on
-  # the first order. Leaving it null is phase 1; the summary then prints where to go and what to
-  # mint. An automatic mint through the STACKIT Git API would feed the same code path — see the
-  # TODO in main.tf — so this input stays as the override and the fallback either way.
-  description = "Personal Access Token of a bot account in the Forgejo instance this architecture creates, with `write:organization`, `write:repository` and `read:user` scopes. Leave empty on the first order and fill it in afterwards — see this building block's summary."
-}
-
-variable "harbor_username" {
-  type        = string
-  nullable    = true
-  default     = null
-  sensitive   = true
-  description = "Username of a STACKIT Harbor pull robot account, handed to the Forgejo connector so application pods can pull private images. Optional: the Harbor project is shared across STACKIT customers and we hold robot credentials for it rather than admin rights, so nothing here creates them. Without them the connector still works for public images."
-}
-
-variable "harbor_password" {
-  type        = string
-  nullable    = true
-  default     = null
-  sensitive   = true
-  description = "Secret of the STACKIT Harbor pull robot account named in `harbor_username`."
-}
-
 # ── SKE cluster ──
 
 variable "cluster_name" {
   type        = string
-  nullable    = false
-  default     = "starterkit"
-  description = "Name of the SKE cluster (2-11 chars, lowercase alphanumeric or dashes, no leading/trailing dash)."
+  nullable    = true
+  default     = null
+  description = "Overrides the generated SKE cluster name. 2-11 chars, lowercase alphanumeric or dashes."
 
   validation {
-    condition     = can(regex("^[a-z0-9][a-z0-9-]{0,9}[a-z0-9]$", var.cluster_name))
+    condition     = var.cluster_name == null || var.cluster_name == "" || can(regex("^[a-z0-9][a-z0-9-]{0,9}[a-z0-9]$", var.cluster_name))
     error_message = "cluster_name must be 2-11 characters, lowercase alphanumeric or dashes, and not start or end with a dash."
   }
 }
 
 variable "cluster_issuer_email" {
   type        = string
-  nullable    = false
-  default     = "ske@meshcloud.io"
-  description = "Contact email registered with Let's Encrypt for the ACME ClusterIssuer installed on the cluster."
+  nullable    = true
+  default     = null
+  description = "Overrides the Let's Encrypt contact email registered for the ACME ClusterIssuer."
+}
+
+# ── Forgejo bootstrap (phase 2) ──
+
+# TODO
+variable "forgejo_api_token" {
+  type        = string
+  nullable    = true
+  default     = null
+  sensitive   = true
+  description = "Personal Access Token of a bot account in the Forgejo instance this architecture creates, with `write:organization`, `write:repository` and `read:user` scopes. Leave empty on the first order and fill it in afterwards — see this building block's summary."
 }
 
 # ── Hub ──
@@ -138,7 +122,7 @@ variable "hub" {
   default = { git_ref = "main", bbd_draft = true }
 
   description = <<-EOT
-  `git_ref`: meshstack-hub reference used to source the nested cluster, git, ingress and meshStack-agent modules. `const` so it can be interpolated into the module source at init time.
+  `git_ref`: meshstack-hub reference used to source the nested cluster, git, ingress and kubernetes modules. `const` so it can be interpolated into the module source at init time.
   `bbd_draft`: Forwarded to those nested integrations' `hub.bbd_draft`, so their building block definition draft state tracks this architecture's own release state.
   EOT
 }

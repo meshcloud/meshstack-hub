@@ -1,27 +1,3 @@
-variable "bbd_display_name" {
-  type        = string
-  default     = null
-  description = "Overrides the name of the marketplace entry shown in the catalog."
-}
-
-variable "bbd_description" {
-  type        = string
-  default     = null
-  description = "Overrides the one-line description shown next to the marketplace entry."
-}
-
-variable "bbd_readme" {
-  type        = string
-  default     = null
-  description = "Overrides the markdown readme shown in the marketplace before ordering."
-}
-
-variable "landingzone_building_block_uuid" {
-  type        = string
-  nullable    = false
-  description = "UUID of the deployed STACKIT Landing Zone building block this architecture builds on top of. Applying this file reads that building block to prefill the host platform and landing zone; the building block itself reads it again at order time for the STACKIT coordinates and the bootstrap credential its backplanes need. Find it in the landing zone's summary or in meshPanel."
-}
-
 variable "meshstack" {
   type = object({
     owning_workspace_identifier = string
@@ -38,10 +14,9 @@ variable "hub" {
     git_ref   = optional(string, "main")
     bbd_draft = optional(bool, true)
   })
-  const = true
 
   default = {
-    git_ref   = "feature/stackit-lz"
+    git_ref   = "feature/demo-meshcon-2026"
     bbd_draft = true
   }
 
@@ -63,23 +38,8 @@ output "building_block_definition" {
   description = "BBD is consumed in building block compositions."
   value = {
     uuid        = meshstack_building_block_definition.this.metadata.uuid
-    version_ref = var.hub.bbd_draft ? meshstack_building_block_definition.this.version_latest : meshstack_building_block_definition.this.version_latest_release
+    version_ref = meshstack_building_block_definition.this.version_latest
   }
-}
-
-# The architecture builds on an existing STACKIT Landing Zone. It reads that landing zone's building
-# block here to prefill the host platform identifier and landing zone name on the order form. The
-# building block reads the same object again at run time, for the STACKIT coordinates and the
-# bootstrap credential its own backplanes need. Its outputs are JSON-encoded.
-data "meshstack_building_block" "landingzone" {
-  metadata = {
-    uuid = var.landingzone_building_block_uuid
-  }
-}
-
-locals {
-  landingzone_identifier = jsondecode(data.meshstack_building_block.landingzone.status.outputs["landingzone_identifier"].value)
-  platfrom_identifier    = jsondecode(data.meshstack_building_block.landingzone.status.outputs["host_platfrom_identifier"].value)
 }
 
 resource "meshstack_building_block_definition" "this" {
@@ -89,14 +49,14 @@ resource "meshstack_building_block_definition" "this" {
   }
 
   spec = {
-    display_name     = coalesce(var.bbd_display_name, "STACKIT Kubernetes Platform Reference Architecture")
+    display_name     = "STACKIT Kubernetes Platform Reference Architecture"
     symbol           = "https://raw.githubusercontent.com/meshcloud/meshstack-hub/${var.hub.git_ref}/reference-architectures/stackit-kubernetes/buildingblock/logo.png"
-    description      = coalesce(var.bbd_description, "One-click bootstrap of a sovereign Kubernetes platform on STACKIT on top of a STACKIT Landing Zone: SKE cluster, in-cluster platform services and the meshStack SKE platform with dev/prod landing zones.")
+    description      = "One-click bootstrap of a sovereign Kubernetes platform on STACKIT on top of a STACKIT Landing Zone: SKE cluster, in-cluster platform services and the meshStack SKE platform with dev/prod landing zones."
     support_url      = "https://portal.stackit.cloud/ske"
     target_type      = "WORKSPACE_LEVEL"
     run_transparency = true
 
-    readme = coalesce(var.bbd_readme, chomp(<<-EOT
+    readme = chomp(<<-EOT
     The **STACKIT Kubernetes Platform** building block bootstraps a sovereign-cloud Kubernetes
     platform on STACKIT from a single order, on top of an existing STACKIT Landing Zone. Running it
     once turns a STACKIT organization into a meshStack platform that application teams request
@@ -146,7 +106,7 @@ resource "meshstack_building_block_definition" "this" {
     | Order a Kubernetes namespace from the platform's landing zones | ❌ | ✅ |
     | Manage workloads in their namespaces | ❌ | ✅ |
     EOT
-    ))
+    )
   }
 
   version_spec = {
@@ -189,17 +149,47 @@ resource "meshstack_building_block_definition" "this" {
     }
 
     inputs = {
-      # The landing zone this platform is built on. STATIC, not USER_INPUT: the definition is
-      # registered against one landing zone — the same one this file reads its prefilled defaults
-      # from — so letting whoever orders it point at a different one would only produce a platform
-      # whose backplanes deploy into someone else's foundation project. The building block reads
-      # this landing zone's outputs at run time for its STACKIT coordinates and credential.
       landingzone_building_block_uuid = {
         display_name    = "Landing Zone Building Block UUID"
-        description     = "UUID of the STACKIT Landing Zone building block this platform is built on."
+        description     = "UUID of the STACKIT Landing Zone building block this platform is built on. See summary of STACKIT LZ Ref arch Building Block."
         type            = "STRING"
-        assignment_type = "STATIC"
-        argument        = jsonencode(var.landingzone_building_block_uuid)
+        assignment_type = "USER_INPUT"
+      }
+
+      landingzone_variant = {
+        type            = "SINGLE_SELECT"
+        assignment_type = "USER_INPUT"
+        # TODO only include 'networked' if enabled in stackit lz ref arch (add 'network_enabled' variable here, default false?)
+        selectable_values = ["default", "networked"]
+        default_value     = "default"
+      }
+
+      cluster_name = {
+        display_name                   = "Cluster Name"
+        description                    = "Overrides the generated SKE cluster name. 2-11 chars, lowercase alphanumeric or dashes."
+        type                           = "STRING"
+        assignment_type                = "USER_INPUT"
+        is_optional                    = true
+        value_validation_regex         = "^$|^[a-z0-9][a-z0-9-]{0,9}[a-z0-9]$"
+        validation_regex_error_message = "Cluster name must be 2-11 characters, lowercase alphanumeric or dashes, and not start or end with a dash."
+      }
+
+      cluster_issuer_email = {
+        display_name    = "ClusterIssuer Email"
+        description     = "Overrides the Let's Encrypt contact email registered for the ACME ClusterIssuer."
+        type            = "STRING"
+        assignment_type = "USER_INPUT"
+        is_optional     = true
+      }
+
+      # TODO also probably add a "phase 2" harbor
+      forgejo_api_token = {
+        display_name    = "Forgejo API Token"
+        description     = "PAT of a bot account in the Forgejo instance this platform creates (scopes write:organization, write:repository, read:user). Leave empty on the first order — the summary says what to do next."
+        type            = "STRING"
+        assignment_type = "USER_INPUT"
+        is_optional     = true
+        sensitive       = {}
       }
 
       hub = {
@@ -226,86 +216,11 @@ resource "meshstack_building_block_definition" "this" {
         assignment_type = "AUTHOR"
       }
 
-      use_global_location = {
-        display_name    = "Use Global Location"
-        description     = "If true, use the global meshStack location instead of creating a dedicated one."
-        type            = "BOOLEAN"
-        assignment_type = "USER_INPUT"
-        default_value   = jsonencode(false)
-      }
-
       payment_method_identifier = {
         display_name    = "Payment Method Identifier"
         description     = "Payment method assigned to the hosting meshProject."
         type            = "STRING"
         assignment_type = "USER_INPUT"
-      }
-
-      # ── STACKIT self-hosting ──
-      host_platform_identifier = {
-        display_name    = "Host STACKIT Platform Identifier"
-        description     = "Full `<platform>.<location>` identifier of the existing STACKIT Project platform the cluster's hosting project is provisioned on."
-        type            = "STRING"
-        assignment_type = "USER_INPUT"
-        default_value   = jsonencode(local.platfrom_identifier)
-      }
-
-      host_landing_zone_name = {
-        display_name    = "Host Landing Zone Name"
-        description     = "Landing zone on the host STACKIT platform the hosting tenant is placed in."
-        type            = "STRING"
-        assignment_type = "USER_INPUT"
-        default_value   = jsonencode(local.landingzone_identifier)
-      }
-
-      # ── SKE cluster ──
-      cluster_name = {
-        display_name                   = "Cluster Name"
-        description                    = "Name of the SKE cluster (2-11 chars, lowercase alphanumeric or dashes)."
-        type                           = "STRING"
-        assignment_type                = "USER_INPUT"
-        value_validation_regex         = "^[a-z0-9][a-z0-9-]{0,9}[a-z0-9]$"
-        validation_regex_error_message = "Cluster name must be 2-11 characters, lowercase alphanumeric or dashes, and not start or end with a dash."
-        default_value                  = jsonencode("starterkit")
-      }
-
-      cluster_issuer_email = {
-        display_name    = "ClusterIssuer Email"
-        description     = "Contact email registered with Let's Encrypt for the ACME ClusterIssuer."
-        type            = "STRING"
-        assignment_type = "USER_INPUT"
-        default_value   = jsonencode("ske@meshcloud.io")
-      }
-
-      # ── Forgejo bootstrap (phase 2) ──
-      # Optional so the first order succeeds without it: the Forgejo instance has to exist before a
-      # token can be minted in it. Adding the token later updates this building block and re-runs
-      # it, which is what creates the organization and registers the app-team definitions.
-      forgejo_api_token = {
-        display_name    = "Forgejo API Token"
-        description     = "PAT of a bot account in the Forgejo instance this platform creates (scopes write:organization, write:repository, read:user). Leave empty on the first order — the summary says what to do next."
-        type            = "STRING"
-        assignment_type = "USER_INPUT"
-        is_optional     = true
-        sensitive       = {}
-      }
-
-      harbor_username = {
-        display_name    = "Harbor Robot Username"
-        description     = "Username of a STACKIT Harbor pull robot account, so application pods can pull private images. Optional."
-        type            = "STRING"
-        assignment_type = "USER_INPUT"
-        is_optional     = true
-        sensitive       = {}
-      }
-
-      harbor_password = {
-        display_name    = "Harbor Robot Secret"
-        description     = "Secret of the STACKIT Harbor pull robot account. Optional."
-        type            = "STRING"
-        assignment_type = "USER_INPUT"
-        is_optional     = true
-        sensitive       = {}
       }
 
       tags = {
@@ -322,9 +237,17 @@ resource "meshstack_building_block_definition" "this" {
         }))
       }
 
+      use_global_location = {
+        display_name    = "Use Global Location"
+        description     = "If true, use the existing global meshStack location instead of creating a dedicated location for this platform."
+        type            = "BOOLEAN"
+        assignment_type = "USER_INPUT"
+        default_value   = jsonencode(false)
+      }
+
       playground_mode = {
         display_name    = "Playground Mode"
-        description     = "Throwaway deployment: the identifier gets a random suffix and nothing is protected against deletion. Set false for real use."
+        description     = "Throwaway deployment: the identifier gets a random suffix and nothing is protected against deletion. Do not publish such a platform or its definitions to other workspaces. Set false for real use."
         type            = "BOOLEAN"
         assignment_type = "STATIC"
         argument        = jsonencode(var.playground_mode)
@@ -332,28 +255,10 @@ resource "meshstack_building_block_definition" "this" {
     }
 
     outputs = {
-      hosting_project_id = {
-        display_name    = "Hosting Project ID"
-        type            = "STRING"
-        assignment_type = "NONE"
-      }
-
-      hosting_project_url = {
+      ske_project_url = {
         display_name    = "Open Hosting Project"
         type            = "STRING"
         assignment_type = "RESOURCE_URL"
-      }
-
-      forgejo_instance_url = {
-        display_name    = "Forgejo Instance URL"
-        type            = "STRING"
-        assignment_type = "NONE"
-      }
-
-      forgejo_organization = {
-        display_name    = "Forgejo Organization"
-        type            = "STRING"
-        assignment_type = "NONE"
       }
 
       summary = {
