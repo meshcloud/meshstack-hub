@@ -122,16 +122,21 @@ identities.
 Wiring is a single value: the landing zone building block's UUID. The building block reads that
 object at order time for
 
-- `foundation_project_id` — where the definitions' backplane service accounts are created,
-- `lz_folder_id` — the landing-zone folder their role grants land on, so the hosting project created
-  at order time inherits them, and
-- `platform_bootstrap_service_account_key` — the STACKIT credential the run applies as.
+- `platform_ref` and `landingzone_refs` — the meshPlatform and landing zone the hosting project is
+  created on, and
+- `service_account_bbd_version_ref` — the **STACKIT Service Account** definition this architecture
+  orders to mint its own identity.
 
-That credential is published by the landing zone as a **non-sensitive** output, which is a
-deliberate work-in-progress tradeoff: it is visible in the meshStack UI to anyone who can see the
-landing zone building block. It is bounded to creating service accounts in the foundation project
-and assigning roles inside the landing-zone folder — it is not organization ownership. See the
-landing zone README for the full rationale and what has to replace it.
+**No STACKIT credential crosses that boundary, and this architecture holds none.** Its own apply
+declares no `stackit` provider at all. It orders the service account definition on the hosting tenant
+it just created, granting the account `editor`, `ske.admin` and `git.admin` and federating the SKE
+Cluster and STACKIT Git definition subjects into it. Both definitions then run in
+`external_service_account = true` mode, so every STACKIT resource here is created by a child building
+block authenticating through workload identity federation.
+
+Adding a STACKIT capability to this architecture — Harbor, DNS — means adding its role to the landing
+zone's `stackit_assignable_roles` and its definition's subject to the `federated_identities` list. It
+never means adding a credential.
 
 ## Ordering It: One Order, One Manual Step, One Update
 

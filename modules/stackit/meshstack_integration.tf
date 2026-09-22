@@ -243,7 +243,7 @@ resource "meshstack_landingzone" "this" {
     automate_deletion_approval    = true
     automate_deletion_replication = true
 
-    platform_ref = meshstack_platform.stackit.ref
+    platform_ref = meshstack_platform.this.ref
 
     platform_properties = {
       custom = {}

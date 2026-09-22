@@ -92,37 +92,29 @@ When a **network** configuration is provided, it additionally:
 
 ## Service Accounts
 
-You supply one account, as `stackit_service_account_key`, and the architecture creates two. The
+You supply one account, as `stackit_service_account_key`, and the architecture creates one. The
 account you supply creates the folder, the foundation project and the meshStack objects, and its key
-is reused on every run rather than only the first. The first account it creates lives in the
+is reused on every run rather than only the first. The account it creates lives in the
 foundation project and is what creates tenant projects; it authenticates through workload identity
 federation, so no key for it is ever stored.
 
-### The platform bootstrap account, and its unencrypted credential
+### How composing architectures get an identity
 
-The second account is `mesh-platform-boot`, and it exists for **composing architectures**. The
-[STACKIT Kubernetes Platform](https://hub.meshcloud.io/reference-architectures/stackit-kubernetes)
-registers its own building block definitions when it is ordered, and deploying those definitions'
-backplanes means creating service accounts in this landing zone's foundation project and granting
-them roles on its folder. That run needs a STACKIT identity, and it cannot use workload identity
-federation for it: a WIF subject is bound to a building block definition uuid, and the definition
-doing the asking does not exist until it registers itself.
+The [STACKIT Kubernetes Platform](https://hub.meshcloud.io/reference-architectures/stackit-kubernetes)
+registers its own building block definitions when it is ordered, and those definitions need a STACKIT
+identity to deploy as. This landing zone publishes no credential for that. It publishes
+`service_account_bbd_version_ref` instead — the version ref of the **STACKIT Service Account**
+definition it registered.
 
-So this landing zone mints a credential for that account and publishes it as the
-**non-sensitive** output `platform_bootstrap_service_account_key`. That is a deliberate, temporary
-tradeoff for a work-in-progress demo, and it contradicts
-[`stackit-backplane.md`](../../.agents/references/stackit-backplane.md), which says to use
-federation and never a long-lived credential:
+A composing architecture orders that definition on a tenant it just created, listing the roles it
+needs and the WIF subjects of its own definitions as federated identities. Those definitions then run
+in `external_service_account = true` mode and authenticate as that account. Nothing long-lived
+crosses the boundary, so
+[`stackit-backplane.md`](../../.agents/references/stackit-backplane.md) holds throughout.
 
-- A long-lived STACKIT credential is stored in this building block's outputs and is visible in the
-  meshStack UI to everyone who can see the building block.
-- It is **not** organization ownership. The account holds exactly two grants —
-  `iam.service-account-admin` on the foundation project and `iam.member-admin` on the landing-zone
-  folder — so its blast radius is service accounts in that one project and role assignments inside
-  that one folder. Both roles are assignable at those scopes; that was read from the live
-  authorization API (`GET https://authorization.api.stackit.cloud/v2/folder/<folder_id>/roles`),
-  not assumed from the public docs, which list `iam.member-admin` as project-only.
-- Replace it with a federated credential before this ships. Nothing else consumes it.
+A new STACKIT capability added to a composing architecture therefore needs its role added to
+`stackit_assignable_roles` and its definition's subject added to the `federated_identities` list —
+not a new credential.
 
 `stackit_owner_email` owns the folder, the foundation project and every tenant project the platform
 creates. STACKIT applies it at creation only, so changing it later means recreating what it owns.
