@@ -75,9 +75,6 @@ website/                         public/assets/ is generated; never add files th
 
 ## Always
 
-- A comment carries what the code can't — a reason, a constraint, a tradeoff. Never restate a rule
-  from these instruction files; link to it when the connection isn't obvious. Assume the reader has
-  read them.
 - Check a module you touched, and fix the module rather than the check:
   ```sh
   node tools/scorecard/scorecard.mjs --module=<provider>/<service> [--fix]
