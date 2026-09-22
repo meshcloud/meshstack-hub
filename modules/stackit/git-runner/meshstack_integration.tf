@@ -28,27 +28,27 @@ variable "machine_type" {
 
 variable "runner_labels" {
   type        = list(string)
-  description = "Forgejo Actions runner labels, each <label>:host or <label>:docker://<image>. Referenced by workflows via runs-on."
+  description = "STACKIT Git Actions runner labels, each <label>:host or <label>:docker://<image>. Referenced by workflows via runs-on."
   default = [
     "self-hosted:host",
     "stackit-docker:docker://code.forgejo.org/oci/node:20-bookworm",
   ]
 }
 
-variable "forgejo_base_url" {
+variable "git_base_url" {
   type        = string
-  description = "Base URL of the STACKIT Git (Forgejo) instance, e.g. https://<name>.git.onstackit.cloud."
+  description = "Base URL of the STACKIT Git instance, e.g. https://<name>.git.onstackit.cloud."
 }
 
-variable "forgejo_organization" {
+variable "git_organization" {
   type        = string
-  description = "Forgejo organization the runner is registered for."
+  description = "STACKIT Git organization the runner is registered for."
 }
 
-variable "forgejo_token" {
+variable "git_token" {
   type        = string
   sensitive   = true
-  description = "Forgejo PAT with org-admin rights on var.forgejo_organization — mints the runner registration token."
+  description = "STACKIT Git PAT with org-admin rights on var.git_organization — mints the runner registration token."
 }
 
 variable "bbd_display_name" {
@@ -104,7 +104,7 @@ output "building_block_definition" {
 data "meshstack_integrations" "integrations" {}
 
 module "backplane" {
-  source = "github.com/meshcloud/meshstack-hub//modules/stackit/forgejo-runner/backplane?ref=${var.hub.git_ref}"
+  source = "github.com/meshcloud/meshstack-hub//modules/stackit/git-runner/backplane?ref=${var.hub.git_ref}"
 
   project_id = var.stackit_project_id
 
@@ -123,31 +123,31 @@ resource "meshstack_building_block_definition" "this" {
   }
 
   spec = {
-    display_name = coalesce(var.bbd_display_name, "STACKIT Forgejo Runner")
-    symbol       = "https://raw.githubusercontent.com/meshcloud/meshstack-hub/${var.hub.git_ref}/modules/stackit/forgejo-runner/buildingblock/logo.png"
+    display_name = coalesce(var.bbd_display_name, "STACKIT Git Runner")
+    symbol       = "https://raw.githubusercontent.com/meshcloud/meshstack-hub/${var.hub.git_ref}/modules/stackit/git-runner/buildingblock/logo.png"
     description = coalesce(var.bbd_description, chomp(<<-EOT
-      Deploys a STACKIT VM running forgejo-runner, registered as a self-hosted Forgejo
-      Actions runner at organization scope.
+      Deploys a STACKIT VM running a self-hosted STACKIT Git Actions runner at organization scope.
     EOT
     ))
-    support_url      = var.forgejo_base_url
+    support_url      = var.git_base_url
     target_type      = "WORKSPACE_LEVEL"
     run_transparency = true
 
     readme = coalesce(var.bbd_readme, chomp(<<-EOT
-    The **STACKIT Forgejo Runner** building block deploys a self-hosted CI runner for STACKIT Git
-    (Forgejo) on a STACKIT VM, so pipelines in an organization's repositories can run immediately
-    instead of waiting on STACKIT's order-based managed runners.
+    The **STACKIT Git Runner** building block deploys a self-hosted CI runner for STACKIT Git on a
+    STACKIT VM, so pipelines in an organization's repositories can run immediately instead of waiting
+    on STACKIT's order-based managed runners.
 
     ## 📦 What it provisions
 
-    - A **STACKIT VM** (server, network, network interface, public IP, SSH key pair) provisioned via
-      cloud-init on first boot.
-    - **forgejo-runner** installed and run as a systemd daemon, registered at **organization scope** —
-      one runner serves every repository in the organization.
+    - A **STACKIT VM** (server, network, network interface, SSH key pair) provisioned via cloud-init
+      on first boot. The VM has **no inbound public IP** — it reaches the Git instance through the
+      network router's outbound NAT.
+    - A **STACKIT Git Actions runner** installed and run as a systemd daemon, registered at
+      **organization scope** — one runner serves every repository in the organization.
 
-    The registration token is minted at run time via the Forgejo API using an org-admin PAT and never
-    stored on the VM. **Prerequisite:** Actions must be enabled on the STACKIT Git instance.
+    The registration token is minted at run time via the STACKIT Git API using an org-admin PAT and
+    never stored on the VM. **Prerequisite:** Actions must be enabled on the STACKIT Git instance.
 
     ## 🏷️ Using it in workflows
 
@@ -158,7 +158,7 @@ resource "meshstack_building_block_definition" "this" {
     | Responsibility | Platform Team | Application Team |
     |---|:---:|:---:|
     | Provision and operate the runner VM | ✅ | ❌ |
-    | Register the runner with Forgejo | ✅ | ❌ |
+    | Register the runner with STACKIT Git | ✅ | ❌ |
     | Enable Actions on the Git instance | ✅ | ❌ |
     | Author CI workflows that use the runner | ❌ | ✅ |
     EOT
@@ -173,7 +173,7 @@ resource "meshstack_building_block_definition" "this" {
       terraform = {
         terraform_version              = "1.12.5"
         repository_url                 = "https://github.com/meshcloud/meshstack-hub.git"
-        repository_path                = "modules/stackit/forgejo-runner/buildingblock"
+        repository_path                = "modules/stackit/git-runner/buildingblock"
         ref_name                       = var.hub.git_ref
         async                          = false
         use_mesh_http_backend_fallback = true
@@ -241,36 +241,36 @@ resource "meshstack_building_block_definition" "this" {
 
       runner_labels = {
         display_name    = "Runner Labels"
-        description     = "Forgejo Actions runner labels referenced by workflows via runs-on."
+        description     = "STACKIT Git Actions runner labels referenced by workflows via runs-on."
         type            = "CODE"
         assignment_type = "STATIC"
         argument        = jsonencode(jsonencode(var.runner_labels))
       }
 
-      forgejo_base_url = {
-        display_name    = "Forgejo Base URL"
-        description     = "Base URL of the STACKIT Git (Forgejo) instance."
+      git_base_url = {
+        display_name    = "STACKIT Git Base URL"
+        description     = "Base URL of the STACKIT Git instance."
         type            = "STRING"
         assignment_type = "STATIC"
-        argument        = jsonencode(var.forgejo_base_url)
+        argument        = jsonencode(var.git_base_url)
       }
 
-      forgejo_organization = {
-        display_name    = "Forgejo Organization"
+      git_organization = {
+        display_name    = "STACKIT Git Organization"
         description     = "Organization the runner is registered for."
         type            = "STRING"
         assignment_type = "STATIC"
-        argument        = jsonencode(var.forgejo_organization)
+        argument        = jsonencode(var.git_organization)
       }
 
-      forgejo_token = {
-        display_name    = "Forgejo PAT"
+      git_token = {
+        display_name    = "STACKIT Git PAT"
         description     = "Org-admin PAT used to mint the runner registration token."
         type            = "STRING"
         assignment_type = "STATIC"
         sensitive = {
           argument = {
-            secret_value = var.forgejo_token
+            secret_value = var.git_token
           }
         }
       }
@@ -280,7 +280,7 @@ resource "meshstack_building_block_definition" "this" {
         description                    = "Name for the runner and its VM (alphanumeric, dashes, dots, underscores)."
         type                           = "STRING"
         assignment_type                = "USER_INPUT"
-        default_value                  = jsonencode("forgejo-runner")
+        default_value                  = jsonencode("git-runner")
         value_validation_regex         = "^[a-zA-Z0-9._-]+$"
         validation_regex_error_message = "Only alphanumeric characters, dots, dashes, and underscores are allowed."
       }
@@ -301,8 +301,8 @@ resource "meshstack_building_block_definition" "this" {
         assignment_type = "NONE"
       }
 
-      public_ip = {
-        display_name    = "Runner Public IP"
+      egress_ip = {
+        display_name    = "Runner Egress IP"
         type            = "STRING"
         assignment_type = "NONE"
       }

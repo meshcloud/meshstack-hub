@@ -6,10 +6,10 @@ locals {
 }
 
 data "http" "registration_token" {
-  url    = "${var.forgejo_base_url}/api/v1/orgs/${var.forgejo_organization}/actions/runners/registration-token"
+  url    = "${var.git_base_url}/api/v1/orgs/${var.git_organization}/actions/runners/registration-token"
   method = "GET"
   request_headers = {
-    Authorization = "token ${var.forgejo_token}"
+    Authorization = "token ${var.git_token}"
     Accept        = "application/json"
   }
 
@@ -22,7 +22,7 @@ data "http" "registration_token" {
   lifecycle {
     postcondition {
       condition     = self.status_code == 200
-      error_message = "Could not mint a registration token for org '${var.forgejo_organization}' (HTTP ${self.status_code}). Check the PAT has org-admin rights and that Actions is enabled on the Git instance."
+      error_message = "Could not mint a registration token for org '${var.git_organization}' (HTTP ${self.status_code}). Check the PAT has org-admin rights and that Actions is enabled on the Git instance."
     }
   }
 }
@@ -51,11 +51,6 @@ resource "stackit_network_interface" "this" {
   name       = var.name
 }
 
-resource "stackit_public_ip" "this" {
-  project_id           = var.stackit_project_id
-  network_interface_id = stackit_network_interface.this.network_interface_id
-}
-
 resource "stackit_server" "this" {
   project_id        = var.stackit_project_id
   name              = var.name
@@ -73,10 +68,10 @@ resource "stackit_server" "this" {
   network_interfaces = [stackit_network_interface.this.network_interface_id]
 
   user_data = templatefile("${path.module}/cloud-init.yaml.tftpl", {
-    forgejo_url            = var.forgejo_base_url
-    registration_token     = local.registration_token
-    runner_name            = var.name
-    runner_labels          = join(",", var.runner_labels)
-    forgejo_runner_version = var.forgejo_runner_version
+    git_url            = var.git_base_url
+    registration_token = local.registration_token
+    runner_name        = var.name
+    runner_labels      = join(",", var.runner_labels)
+    runner_version     = var.runner_version
   })
 }

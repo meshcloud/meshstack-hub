@@ -23,8 +23,8 @@ variable "network_id" {
 
 variable "name" {
   type        = string
-  description = "Name of the runner (used for the VM name and the Forgejo runner registration)."
-  default     = "forgejo-runner"
+  description = "Name of the runner (used for the VM name and the runner registration)."
+  default     = "git-runner"
 
   validation {
     condition     = can(regex("^[a-zA-Z0-9._-]+$", var.name))
@@ -49,33 +49,33 @@ variable "disk_size_gb" {
   default     = 50
 }
 
-variable "forgejo_runner_version" {
+variable "runner_version" {
   type        = string
-  description = "Version of forgejo-runner to install on the VM. Pin explicitly so a re-provision is reproducible."
+  description = "Version of the STACKIT Git Actions runner agent to install on the VM. Pin explicitly so a re-provision is reproducible."
   default     = "6.3.1"
 }
 
 variable "runner_labels" {
   type        = list(string)
-  description = "Forgejo Actions runner labels. Each is either <label>:host (run on the VM) or <label>:docker://<image> (run in that container). Referenced by workflows via runs-on."
+  description = "STACKIT Git Actions runner labels. Each is either <label>:host (run on the VM) or <label>:docker://<image> (run in that container). Referenced by workflows via runs-on."
   default = [
     "self-hosted:host",
     "stackit-docker:docker://code.forgejo.org/oci/node:20-bookworm",
   ]
 }
 
-variable "forgejo_base_url" {
+variable "git_base_url" {
   type        = string
-  description = "Base URL of the STACKIT Git (Forgejo) instance, e.g. https://<name>.git.onstackit.cloud."
+  description = "Base URL of the STACKIT Git instance, e.g. https://<name>.git.onstackit.cloud."
 }
 
-variable "forgejo_organization" {
+variable "git_organization" {
   type        = string
-  description = "Forgejo organization the runner is registered for. It serves all repositories in this org."
+  description = "STACKIT Git organization the runner is registered for. It serves all repositories in this org."
 }
 
-variable "forgejo_token" {
+variable "git_token" {
   type        = string
   sensitive   = true
-  description = "Forgejo PAT with organization-admin rights on var.forgejo_organization — used to mint the runner registration token. Not placed on the VM."
+  description = "STACKIT Git PAT with organization-admin rights on var.git_organization — used to mint the runner registration token. Not placed on the VM."
 }
