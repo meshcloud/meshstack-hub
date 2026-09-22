@@ -1,5 +1,5 @@
 ---
-name: meshStack Agent Identities
+name: Kubernetes meshPlatform Credentials
 supportedPlatforms:
   - kubernetes
 description: Creates the in-cluster replicator and metering service accounts meshStack authenticates with, and returns their tokens.
@@ -8,7 +8,7 @@ description: Creates the in-cluster replicator and metering service accounts mes
 requiresBackplane: false
 ---
 
-# meshStack Agent Identities Building Block
+# Kubernetes meshPlatform Credentials Building Block
 
 Creates the two in-cluster identities meshStack uses to drive a Kubernetes cluster, and hands their
 tokens back:
@@ -47,7 +47,7 @@ non-empty on the first run, with no sleep, poll or second apply.
 ## Requirements
 
 | Name | Version |
-| ---- | ------- |
+|------|---------|
 | <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.12.0 |
 | <a name="requirement_kubernetes"></a> [kubernetes](#requirement\_kubernetes) | >= 3.0.0, < 4.0.0 |
 
@@ -58,7 +58,7 @@ No modules.
 ## Resources
 
 | Name | Type |
-| ---- | ---- |
+|------|------|
 | [kubernetes_cluster_role_binding_v1.metering](https://registry.terraform.io/providers/hashicorp/kubernetes/latest/docs/resources/cluster_role_binding_v1) | resource |
 | [kubernetes_cluster_role_binding_v1.replicator](https://registry.terraform.io/providers/hashicorp/kubernetes/latest/docs/resources/cluster_role_binding_v1) | resource |
 | [kubernetes_cluster_role_v1.metering](https://registry.terraform.io/providers/hashicorp/kubernetes/latest/docs/resources/cluster_role_v1) | resource |
@@ -72,7 +72,7 @@ No modules.
 ## Inputs
 
 | Name | Description | Type | Default | Required |
-| ---- | ----------- | ---- | ------- | :------: |
+|------|-------------|------|---------|:--------:|
 | <a name="input_kubeconfig"></a> [kubeconfig](#input\_kubeconfig) | Raw kubeconfig (YAML) of the cluster the identities are created in — for example the `kubeconfig` output of the STACKIT SKE Cluster building block. The kubernetes provider is configured from it, so it must be a concrete value at plan time (i.e. supplied by a preceding building block, not created in this run). | `string` | n/a | yes |
 | <a name="input_metering_additional_rules"></a> [metering\_additional\_rules](#input\_metering\_additional\_rules) | Extra RBAC rules added to the metering cluster role. | <pre>list(object({<br/>    api_groups        = list(string)<br/>    resources         = list(string)<br/>    verbs             = list(string)<br/>    resource_names    = optional(list(string))<br/>    non_resource_urls = optional(list(string))<br/>  }))</pre> | `[]` | no |
 | <a name="input_metering_enabled"></a> [metering\_enabled](#input\_metering\_enabled) | Create the metering service account. Turn this off when meshStack should not collect usage data from the cluster; `metering_token` is then null. | `bool` | `true` | no |
@@ -82,7 +82,7 @@ No modules.
 ## Outputs
 
 | Name | Description |
-| ---- | ----------- |
+|------|-------------|
 | <a name="output_metering_service_account_name"></a> [metering\_service\_account\_name](#output\_metering\_service\_account\_name) | Name of the metering ServiceAccount and its companion resources. Null when metering\_enabled is false. |
 | <a name="output_metering_token"></a> [metering\_token](#output\_metering\_token) | Service account token meshStack uses to read metering data from the cluster. Null when metering\_enabled is false. |
 | <a name="output_replicator_service_account_name"></a> [replicator\_service\_account\_name](#output\_replicator\_service\_account\_name) | Name of the replicator ServiceAccount, its token Secret, its ClusterRole and its ClusterRoleBinding — all four share it. |
