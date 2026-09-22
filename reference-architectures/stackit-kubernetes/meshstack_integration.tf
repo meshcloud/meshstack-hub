@@ -239,6 +239,16 @@ resource "meshstack_building_block_definition" "this" {
         }))
       }
 
+      platform_identifier = {
+        display_name                   = "Platform Identifier"
+        description                    = "Identifier of the Kubernetes platform created in meshStack (letters, digits and dashes only). In playground mode a random suffix is appended to it."
+        type                           = "STRING"
+        assignment_type                = "USER_INPUT"
+        default_value                  = jsonencode("ske-platform")
+        value_validation_regex         = "^[a-zA-Z0-9-]+$"
+        validation_regex_error_message = "platform_identifier must only contain letters, digits, and dashes."
+      }
+
       use_global_location = {
         display_name    = "Use Global Location"
         description     = "If true, use the existing global meshStack location instead of creating a dedicated location for this platform."

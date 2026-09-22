@@ -1,5 +1,18 @@
 locals {
-  platform_identifier = "ske-platform-${random_string.identifier_suffix.result}"
+  # The identifier is unique across the whole meshStack instance and lands in the platform name, the
+  # location and the hosting project, so a playground deployment suffixes it instead of occupying the
+  # plain name.
+  platform_identifier = var.playground_mode ? "${var.platform_identifier}-${random_string.playground_suffix.result}" : var.platform_identifier
+
+  # STACKIT caps a service account name at 20 characters and rejects one ending in a dash, so cutting
+  # the identifier to length can produce an invalid name. Cut shorter instead, drop whatever dashes
+  # the cut exposed, and end with a hash of the full identifier so two names sharing a prefix stay
+  # apart. A name that already fits passes through untouched.
+  platform_service_account_name = length(local.platform_identifier) <= 20 ? local.platform_identifier : format(
+    "%s-%s",
+    replace(substr(local.platform_identifier, 0, 15), "/-+$/", ""),
+    substr(sha256(local.platform_identifier), 0, 4)
+  )
 
   location_name = var.use_global_location ? "global" : meshstack_location.this.metadata.name
 
@@ -65,8 +78,12 @@ locals {
   forgejo_organization = try(jsondecode(meshstack_building_block.git.status.outputs["forgejo_organization"].value), null)
 }
 
-resource "random_string" "identifier_suffix" {
-  length  = 8
+resource "random_string" "playground_suffix" {
+  lifecycle {
+    enabled = var.playground_mode
+  }
+
+  length  = 6
   special = false
   upper   = false
 }
@@ -162,7 +179,7 @@ resource "meshstack_building_block" "platform_service_account" {
     target_ref                            = { kind = "meshTenant", uuid = meshstack_tenant.hosting.metadata.uuid }
 
     inputs = {
-      service_account_name = { value = jsonencode("mesh-plat-${random_string.identifier_suffix.result}") }
+      service_account_name = { value = jsonencode(local.platform_service_account_name) }
       roles                = { value = jsonencode(jsonencode(["editor", "ske.admin", "git.admin"])) }
       federated_identities = {
         value = jsonencode(jsonencode([

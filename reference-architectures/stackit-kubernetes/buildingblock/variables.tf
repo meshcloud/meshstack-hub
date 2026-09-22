@@ -30,6 +30,18 @@ variable "workspace" {
   description = "Identifier of the meshStack workspace that owns the platform, location, landing zones, hosting project and the building block definitions this architecture registers."
 }
 
+variable "platform_identifier" {
+  type        = string
+  nullable    = false
+  default     = "ske-platform"
+  description = "Identifier of the Kubernetes platform created in meshStack (letters, digits and dashes only). In playground mode a random suffix is appended to it."
+
+  validation {
+    condition     = can(regex("^[a-zA-Z0-9-]+$", var.platform_identifier))
+    error_message = "platform_identifier must only contain letters, digits, and dashes."
+  }
+}
+
 variable "use_global_location" {
   type        = bool
   nullable    = false

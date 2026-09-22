@@ -155,8 +155,9 @@ The run provisions everything that needs no Forgejo credential:
   Encrypt ClusterIssuer, in a single building block,
 - the **meshStack Kubernetes integration** (`kubernetes`), which creates the replicator and metering
   identities and registers the meshStack platform they are wired into,
-- the **STACKIT Git instance** (`stackit/git`) — named after the generated platform identifier,
-  because `<name>.git.onstackit.cloud` is globally unique across all of STACKIT, and
+- the **STACKIT Git instance** (`stackit/git`) — named after the platform identifier, because
+  `<name>.git.onstackit.cloud` is globally unique across all of STACKIT, which is why a playground
+  deployment suffixes that identifier, and
 - the meshStack SKE platform with its dev and prod landing zones.
 
 No Forgejo organization is created, and the application-team definitions are **not** registered.
