@@ -149,8 +149,8 @@ resource "meshstack_tenant" "this" {
   }
 
   spec = {
-    platform_ref     = { uuid = local.integration.platform.uuid }
-    landing_zone_ref = { name = local.integration.landingzone_names["default"] }
+    platform_ref     = local.integration.platform_ref
+    landing_zone_ref = local.integration.landingzone_refs["default"]
   }
 }
 

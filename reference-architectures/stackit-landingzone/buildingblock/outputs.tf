@@ -50,7 +50,7 @@ output "summary" {
     service_account_url    = "https://portal.stackit.cloud/service-accounts/${module.stackit_integration.service_account_email}/overview?project=${stackit_resourcemanager_project.foundation.project_id}"
 
     network_enabled            = local.network_enabled
-    networked_landingzone_name = local.network_enabled ? module.stackit_integration.landingzone_names["networked"] : ""
+    networked_landingzone_name = local.network_enabled ? module.stackit_integration.landingzone_refs["networked"].name : ""
     network_area_hub_uuid      = local.network_enabled ? meshstack_building_block.network_area_hub.metadata.uuid : ""
     network_area_id            = local.network_enabled ? local.network_area_id : ""
     network_area_url           = local.network_enabled ? "https://portal.stackit.cloud/network-area/network-areas/${local.network_area_id}/overview?organization=${var.stackit_org}" : ""
