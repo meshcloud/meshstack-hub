@@ -167,6 +167,34 @@ module "service_account_integration" {
   stackit_organization_id = var.stackit_org
   stackit_project_id      = stackit_resourcemanager_project.foundation.project_id
 
+  # `ske.admin` is allowed so a composing architecture (the STACKIT Kubernetes Platform) can order
+  # this definition to mint the identity its cluster deploys as. Note: this widens what application
+  # teams can self-service grant through the same catalog entry — revisit with a separate,
+  # platform-scoped service-account definition if that becomes a concern.
+  stackit_assignable_roles = ["reader", "editor", "ske.admin"]
+
+  meshstack = { owning_workspace_identifier = var.workspace, tags = var.tags.building_block }
+  hub       = var.hub
+}
+
+# ── Self-service SKE cluster building block (always deployed) ──
+
+# Registers the STACKIT SKE Cluster building block so teams can provision a managed Kubernetes cluster
+# in a STACKIT project, exactly like the service account building block above. Registered
+# unconditionally; its draft state follows var.hub.bbd_draft. The cluster's own backplane creates its
+# automation identity in the foundation project and grants it ske.admin at organization scope, so the
+# grant is inherited by whichever project the cluster is created in.
+module "cluster_integration" {
+  source = "github.com/meshcloud/meshstack-hub//modules/ske/cluster?ref=${var.hub.git_ref}"
+
+  stackit_backplane_project_id = stackit_resourcemanager_project.foundation.project_id
+  stackit_backplane_folder_id  = stackit_resourcemanager_folder.this.folder_id
+
+  # `owner` (not just `ske.admin`): creating an SKE cluster first ENABLES the SKE service on the target
+  # project, which is a project-admin/owner action `ske.admin` does not cover (STACKIT returns 403
+  # "enable SKE ... Unauthorized"). Narrow this once the minimal service-enablement role is known.
+  roles = ["owner"]
+
   meshstack = { owning_workspace_identifier = var.workspace, tags = var.tags.building_block }
   hub       = var.hub
 }

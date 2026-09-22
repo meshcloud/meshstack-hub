@@ -32,7 +32,7 @@ variable "hub" {
   const = true
 
   default = {
-    git_ref   = "main"
+    git_ref   = "feature/stackit-lz"
     bbd_draft = true
   }
 
@@ -359,6 +359,16 @@ resource "meshstack_building_block_definition" "this" {
         assignment_type = "WORKSPACE_IDENTIFIER"
       }
 
+      # meshStack injects this instance's own uuid (the enum is named TENANT_* but also fills for a
+      # WORKSPACE_LEVEL block). Printed in the summary so the STACKIT Kubernetes Platform can be wired
+      # to this landing zone with this single value.
+      building_block_uuid = {
+        display_name    = "Building Block UUID"
+        description     = "UUID of this building block instance, injected by meshStack."
+        type            = "STRING"
+        assignment_type = "TENANT_BUILDING_BLOCK_UUID"
+      }
+
       platform_identifier = {
         display_name                   = "Platform Identifier"
         description                    = "Identifier for the STACKIT sandbox platform created in meshStack (letters, digits and dashes only)."
@@ -418,6 +428,34 @@ resource "meshstack_building_block_definition" "this" {
       # apply instead of converging. See the starterkit's readme.
       starterkit_bbd_version_uuid = {
         display_name    = "Starterkit BBD Version UUID"
+        type            = "STRING"
+        assignment_type = "NONE"
+      }
+
+      # Consumed by a composing architecture (e.g. the STACKIT Kubernetes Platform) to order the
+      # STACKIT Service Account building block this landing zone registered.
+      service_account_bbd_version_uuid = {
+        display_name    = "Service Account BBD Version UUID"
+        type            = "STRING"
+        assignment_type = "NONE"
+      }
+
+      cluster_bbd_version_uuid = {
+        display_name    = "Cluster BBD Version UUID"
+        type            = "STRING"
+        assignment_type = "NONE"
+      }
+
+      # Consumed by a composing architecture (e.g. the STACKIT Kubernetes Platform) to place a
+      # meshTenant on this landing zone's platform and default landing zone.
+      landingzone_identifier = {
+        display_name    = "Landing Zone Identifier"
+        type            = "STRING"
+        assignment_type = "NONE"
+      }
+
+      host_platfrom_identifier = {
+        display_name    = "Host Platform Identifier"
         type            = "STRING"
         assignment_type = "NONE"
       }

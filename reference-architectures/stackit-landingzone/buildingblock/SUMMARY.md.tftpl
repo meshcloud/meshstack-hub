@@ -29,3 +29,20 @@ spoke network drawn from the hub's address plan.
 Application teams can now request STACKIT projects against the `${platform_identifier}-default`
 landing zone. Provide a `network` object to additionally enable hub-and-spoke networking.
 %{ endif ~}
+
+> [!TIP]
+> ## Build a Kubernetes platform on top
+
+The [STACKIT Kubernetes Platform](https://hub.meshcloud.io/reference-architectures/stackit-kubernetes)
+reference architecture runs a full SKE developer platform on top of this landing zone. Use these
+values from this landing zone to set it up:
+
+| Field | Value |
+|-------|-------|
+| **Landing Zone Building Block UUID** | %{ if building_block_uuid != null && building_block_uuid != "" }`${building_block_uuid}`%{ else }_see this building block in meshPanel_%{ endif } |
+| **Host STACKIT Platform Identifier** | `${host_platform_identifier}` |
+| **Host Landing Zone Name** | `${default_landing_zone_name}` |
+
+Wire the **UUID** into the Kubernetes Platform's registration (it reads the organization, foundation
+project and service-account definition from it), and use the **platform identifier** and **landing
+zone name** when ordering it.

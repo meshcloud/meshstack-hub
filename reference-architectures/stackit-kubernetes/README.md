@@ -1,19 +1,16 @@
 ---
 name: STACKIT Kubernetes Platform
 description: >
-  A sovereign-cloud Kubernetes platform on STACKIT that provides application teams
-  with self-service SKE namespaces, Forgejo Git repositories, CI/CD via Forgejo Actions,
-  and a container registry backed by Harbor — all composed into a single starterkit
-  building block.
+  A sovereign-cloud Kubernetes platform on STACKIT, built on top of a STACKIT Landing Zone:
+  an SKE cluster, in-cluster platform services, and the meshStack SKE platform with dev/prod
+  landing zones that application teams order self-service Kubernetes namespaces from.
 cloudProviders:
   - stackit
 buildingBlocks:
-  - path: ske/ske-starterkit
-    role: Orchestrates the full developer onboarding by composing dev/prod projects, SKE tenants, Git repos, and connectors into one self-service offering.
-  - path: stackit/git-repository
-    role: Provisions Forgejo Git repositories on STACKIT Git with team-based access management and CI/CD secret wiring.
-  - path: ske/forgejo-connector
-    role: Connects a Forgejo repository to an SKE namespace for automated build and deploy via Forgejo Actions.
+  - path: ske/cluster
+    role: Provisions the STACKIT Kubernetes Engine (SKE) cluster and mints the admin kubeconfig the rest of the platform is built on.
+  - path: ske/platform-services
+    role: Installs HAProxy ingress, cert-manager, and the meshStack replication/metering service accounts on the cluster.
 ---
 
 # STACKIT Kubernetes Platform
