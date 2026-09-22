@@ -80,7 +80,7 @@ the TODO next to the instance resource in `main.tf`.
 ## Requirements
 
 | Name | Version |
-| ---- | ------- |
+|------|---------|
 | <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.12.0 |
 | <a name="requirement_restapi"></a> [restapi](#requirement\_restapi) | >= 3.0.0, < 4.0.0 |
 | <a name="requirement_stackit"></a> [stackit](#requirement\_stackit) | >= 0.83.0, < 1.0.0 |
@@ -92,14 +92,14 @@ No modules.
 ## Resources
 
 | Name | Type |
-| ---- | ---- |
+|------|------|
 | [restapi_object.forgejo_organization](https://registry.terraform.io/providers/Mastercard/restapi/latest/docs/resources/object) | resource |
 | [stackit_git.this](https://registry.terraform.io/providers/stackitcloud/stackit/latest/docs/resources/git) | resource |
 
 ## Inputs
 
 | Name | Description | Type | Default | Required |
-| ---- | ----------- | ---- | ------- | :------: |
+|------|-------------|------|---------|:--------:|
 | <a name="input_forgejo_organization"></a> [forgejo\_organization](#input\_forgejo\_organization) | Forgejo organization to create inside the instance. Created only when `forgejo_token` is also set; leave null to provision the bare instance (phase 1 of the bootstrap, see README). | `string` | `null` | no |
 | <a name="input_forgejo_token"></a> [forgejo\_token](#input\_forgejo\_token) | Personal Access Token of a bot account in this Forgejo instance, with `write:organization` scope. Leave null on the first run: the instance has to exist before a token can be minted in it. | `string` | `null` | no |
 | <a name="input_instance_name"></a> [instance\_name](#input\_instance\_name) | Name of the STACKIT Git instance. It becomes the first label of the instance hostname `<name>.git.onstackit.cloud`, so it is globally unique across all of STACKIT — derive it from something already unique, e.g. a platform identifier carrying a random suffix. | `string` | n/a | yes |
@@ -109,7 +109,7 @@ No modules.
 ## Outputs
 
 | Name | Description |
-| ---- | ----------- |
+|------|-------------|
 | <a name="output_forgejo_organization"></a> [forgejo\_organization](#output\_forgejo\_organization) | Name of the Forgejo organization created in the instance, or null while no token has been supplied. |
 | <a name="output_forgejo_token_provided"></a> [forgejo\_token\_provided](#output\_forgejo\_token\_provided) | Whether a Forgejo Personal Access Token is available, i.e. whether this instance is past the token bootstrap step. |
 | <a name="output_instance_id"></a> [instance\_id](#output\_instance\_id) | STACKIT Git instance id. |

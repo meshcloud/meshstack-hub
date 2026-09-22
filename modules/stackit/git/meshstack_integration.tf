@@ -1,13 +1,27 @@
+variable "external_service_account" {
+  type        = bool
+  nullable    = false
+  default     = false
+  description = "When true, skip the backplane and take the automation identity as the order-time `STACKIT_SERVICE_ACCOUNT_EMAIL` input."
+
+  validation {
+    condition     = var.external_service_account || (var.stackit_backplane_project_id != null && var.stackit_backplane_folder_id != null)
+    error_message = "stackit_backplane_project_id and stackit_backplane_folder_id are required unless external_service_account is true."
+  }
+}
+
 variable "stackit_backplane_project_id" {
   type        = string
-  nullable    = false
-  description = "Existing STACKIT project the backplane creates the automation service account in (e.g. a foundation project). Not the project the Git instance ends up in, which is provisioned at order time and supplied as the buildingblock's `stackit_project_id` input."
+  nullable    = true
+  default     = null
+  description = "Existing STACKIT project the backplane creates the automation service account in. Null when external_service_account is true."
 }
 
 variable "stackit_backplane_folder_id" {
   type        = string
-  nullable    = false
-  description = "STACKIT resource-manager folder the automation service account is granted roles on, so the grant is inherited by the project created at order time inside that folder. This is the folder's `folder_id`."
+  nullable    = true
+  default     = null
+  description = "STACKIT resource-manager folder (`folder_id`, not container_id) the automation service account is granted roles on. Null when external_service_account is true."
 }
 
 variable "stackit_region" {
@@ -85,6 +99,8 @@ data "meshstack_integrations" "integrations" {}
 
 module "backplane" {
   source = "github.com/meshcloud/meshstack-hub//modules/stackit/git/backplane?ref=${var.hub.git_ref}"
+
+  enabled = !var.external_service_account
 
   project_id           = var.stackit_backplane_project_id
   folder_id            = var.stackit_backplane_folder_id
@@ -173,9 +189,9 @@ resource "meshstack_building_block_definition" "this" {
         display_name    = "STACKIT Service Account Email"
         description     = "Email of the STACKIT service account the provider authenticates as via WIF."
         type            = "STRING"
-        assignment_type = "STATIC"
+        assignment_type = var.external_service_account ? "USER_INPUT" : "STATIC"
         is_environment  = true
-        argument        = jsonencode(module.backplane.service_account_email)
+        argument        = var.external_service_account ? null : jsonencode(module.backplane.service_account_email)
       }
 
       STACKIT_USE_OIDC = {

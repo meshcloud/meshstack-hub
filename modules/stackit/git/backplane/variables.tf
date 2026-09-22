@@ -1,13 +1,27 @@
+variable "enabled" {
+  type        = bool
+  nullable    = false
+  default     = true
+  description = "When false, create no service account, federated identity or role grant."
+
+  validation {
+    condition     = !var.enabled || (var.project_id != null && var.folder_id != null)
+    error_message = "project_id and folder_id are required when enabled is true."
+  }
+}
+
 variable "project_id" {
   type        = string
-  nullable    = false
-  description = "STACKIT project the automation service account is created in. This is an existing project (e.g. a foundation project) — NOT the project the Git instance ends up in, which may not exist yet when the backplane is applied."
+  nullable    = true
+  default     = null
+  description = "Existing STACKIT project the automation service account is created in, not the project the Git instance ends up in. Null when enabled is false."
 }
 
 variable "folder_id" {
   type        = string
-  nullable    = false
-  description = "STACKIT resource-manager folder the service account is granted roles on. Roles are assigned on the folder so they are inherited by every project inside it (the Git instance's project is provisioned at order time inside that folder). This is the folder's `folder_id`, not its container_id."
+  nullable    = true
+  default     = null
+  description = "STACKIT resource-manager folder (`folder_id`, not container_id) the service account is granted roles on, inherited by every project inside it. Null when enabled is false."
 }
 
 variable "roles" {
