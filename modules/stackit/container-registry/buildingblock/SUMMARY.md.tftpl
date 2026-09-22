@@ -1,0 +1,22 @@
+# Container Registry `${registry_name}`
+
+A STACKIT container registry is ready in project `${stackit_project_id}`.
+
+| Field | Value |
+|-------|-------|
+| **Registry** | `${registry_url}` |
+| **Host** | `${registry_host}` |
+| **Pull path** | `${registry_host}/${registry_name}/<image>:<tag>` |
+
+## One manual step, once per registry
+
+STACKIT grants no IAM role that opens the Harbor API to an identity Harbor does not know. Access
+comes from linking a robot account to a STACKIT service account, and only the portal can create
+that first link.
+
+1. Open the registry in the STACKIT portal.
+2. Create a robot account with **push**, **pull** and **robot account management** permissions.
+3. Link it to the STACKIT service account the platform deploys as.
+
+From then on that service account's access token authenticates as the robot, so every later robot
+can be created through the Harbor API without touching the portal again.
