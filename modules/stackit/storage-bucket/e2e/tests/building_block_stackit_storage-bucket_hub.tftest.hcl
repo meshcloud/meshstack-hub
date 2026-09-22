@@ -23,4 +23,10 @@ run "building_block_stackit_storage_bucket_hub" {
     condition     = length(jsondecode(meshstack_building_block.this.status.outputs["s3_access_key"].value)) > 0
     error_message = "stackit storage-bucket hub building block expected non-empty s3_access_key"
   }
+
+  # A denied write already fails the apply with AccessDenied. This names the intent in the report.
+  assert {
+    condition     = aws_s3_object.upload_probe.etag != ""
+    error_message = "stackit storage-bucket expected the bucket's own credentials to upload an object"
+  }
 }
