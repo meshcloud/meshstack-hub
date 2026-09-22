@@ -32,7 +32,7 @@ The user-facing readme is maintained inline in the `readme` field of the
 ## Requirements
 
 | Name | Version |
-| ---- | ------- |
+|------|---------|
 | <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.12.0 |
 | <a name="requirement_meshstack"></a> [meshstack](#requirement\_meshstack) | >= 0.24.0 |
 | <a name="requirement_random"></a> [random](#requirement\_random) | >= 3.6.0, < 4.0.0 |
@@ -41,7 +41,7 @@ The user-facing readme is maintained inline in the `readme` field of the
 ## Modules
 
 | Name | Source | Version |
-| ---- | ------ | ------- |
+|------|--------|---------|
 | <a name="module_network_area_integration"></a> [network\_area\_integration](#module\_network\_area\_integration) | github.com/meshcloud/meshstack-hub//modules/stackit/network-area | main |
 | <a name="module_network_integration"></a> [network\_integration](#module\_network\_integration) | github.com/meshcloud/meshstack-hub//modules/stackit/network | main |
 | <a name="module_service_account_integration"></a> [service\_account\_integration](#module\_service\_account\_integration) | github.com/meshcloud/meshstack-hub//modules/stackit/service-account | main |
@@ -51,23 +51,19 @@ The user-facing readme is maintained inline in the `readme` field of the
 ## Resources
 
 | Name | Type |
-| ---- | ---- |
+|------|------|
 | [meshstack_building_block.network_area_hub](https://registry.terraform.io/providers/meshcloud/meshstack/latest/docs/resources/building_block) | resource |
 | [meshstack_location.this](https://registry.terraform.io/providers/meshcloud/meshstack/latest/docs/resources/location) | resource |
 | [random_string.playground_suffix](https://registry.terraform.io/providers/hashicorp/random/latest/docs/resources/string) | resource |
-| [stackit_authorization_folder_role_assignment.platform_bootstrap_member_admin](https://registry.terraform.io/providers/stackitcloud/stackit/latest/docs/resources/authorization_folder_role_assignment) | resource |
-| [stackit_authorization_project_role_assignment.platform_bootstrap_service_account_admin](https://registry.terraform.io/providers/stackitcloud/stackit/latest/docs/resources/authorization_project_role_assignment) | resource |
 | [stackit_resourcemanager_folder.this](https://registry.terraform.io/providers/stackitcloud/stackit/latest/docs/resources/resourcemanager_folder) | resource |
 | [stackit_resourcemanager_project.foundation](https://registry.terraform.io/providers/stackitcloud/stackit/latest/docs/resources/resourcemanager_project) | resource |
-| [stackit_service_account.platform_bootstrap](https://registry.terraform.io/providers/stackitcloud/stackit/latest/docs/resources/service_account) | resource |
-| [stackit_service_account_key.platform_bootstrap](https://registry.terraform.io/providers/stackitcloud/stackit/latest/docs/resources/service_account_key) | resource |
 
 ## Inputs
 
 | Name | Description | Type | Default | Required |
-| ---- | ----------- | ---- | ------- | :------: |
-| <a name="input_building_block_uuid"></a> [building\_block\_uuid](#input\_building\_block\_uuid) | UUID of this building block instance, injected by meshStack (TENANT\_BUILDING\_BLOCK\_UUID). Printed in the summary so the STACKIT Kubernetes Platform can be wired to this landing zone with a single value. Null when the module runs outside meshStack (e.g. a local plan). | `string` | `null` | no |
+|------|-------------|------|---------|:--------:|
 | <a name="input_hub"></a> [hub](#input\_hub) | `git_ref`: meshstack-hub reference used to source the nested foundation, network-area, and network integration modules. `const` so it can be interpolated into the module source at init time.<br/>`bbd_draft`: Forwarded as-is to those nested integrations' own `hub.bbd_draft`, so their building block definition draft state tracks this building block's own release state. | <pre>object({<br/>    git_ref   = optional(string, "main")<br/>    bbd_draft = optional(bool, true)<br/>  })</pre> | <pre>{<br/>  "bbd_draft": true,<br/>  "git_ref": "main"<br/>}</pre> | no |
+| <a name="input_meshstack_building_block_id"></a> [meshstack\_building\_block\_id](#input\_meshstack\_building\_block\_id) | this variable is injected by the tf-block-runner when run inside meshstack | `string` | n/a | yes |
 | <a name="input_network"></a> [network](#input\_network) | Optional hub-and-spoke network topology. Leave unset (null) to deploy only the sandbox landing zone. When set, additionally provisions a shared hub network area with the given address plan (`hub_*` fields), registers the self-service spoke `STACKIT Network` building block (`tenant_network_*` prefix bounds), and adds a dedicated `networked` STACKIT Project building block definition and landing zone whose projects are placed in the hub network area. | <pre>object({<br/>    hub_network_area_name            = optional(string, "hub")<br/>    hub_network_ranges               = optional(list(string), ["10.0.0.0/16"])<br/>    hub_transfer_network             = optional(string, "10.1.255.0/24")<br/>    hub_min_prefix_length            = optional(number, 24)<br/>    hub_max_prefix_length            = optional(number, 28)<br/>    hub_default_prefix_length        = optional(number, 28)<br/>    hub_default_nameservers          = optional(list(string), [])<br/>    tenant_network_min_prefix_length = optional(number, 24)<br/>    tenant_network_max_prefix_length = optional(number, 28)<br/>  })</pre> | `null` | no |
 | <a name="input_platform_identifier"></a> [platform\_identifier](#input\_platform\_identifier) | Identifier for the STACKIT sandbox platform created in meshStack (letters, digits and dashes only). | `string` | n/a | yes |
 | <a name="input_playground_mode"></a> [playground\_mode](#input\_playground\_mode) | Deploy a throwaway platform: the platform identifier gets a random suffix so it does not occupy a name for good, and the landing-zone folder and foundation project are left destroyable. Set to false for a platform that is actually used. A playground platform and the building block definitions it registers are not meant to be published to other workspaces. | `bool` | n/a | yes |
@@ -84,16 +80,13 @@ The user-facing readme is maintained inline in the `readme` field of the
 ## Outputs
 
 | Name | Description |
-| ---- | ----------- |
+|------|-------------|
 | <a name="output_foundation_project_id"></a> [foundation\_project\_id](#output\_foundation\_project\_id) | Project ID of the STACKIT foundation project that hosts the landing-zone core assets (the service account used for tenant project creation). |
 | <a name="output_foundation_project_url"></a> [foundation\_project\_url](#output\_foundation\_project\_url) | Deep link to the foundation project in the STACKIT portal. |
-| <a name="output_host_platfrom_identifier"></a> [host\_platfrom\_identifier](#output\_host\_platfrom\_identifier) | Name of the platfrom identifier |
-| <a name="output_landingzone_identifier"></a> [landingzone\_identifier](#output\_landingzone\_identifier) | n/a |
+| <a name="output_landingzone_refs"></a> [landingzone\_refs](#output\_landingzone\_refs) | Landing zone refs of the platform, used to build other platforms on top |
 | <a name="output_lz_folder_container_id"></a> [lz\_folder\_container\_id](#output\_lz\_folder\_container\_id) | Container ID of the STACKIT resourcemanager folder created for the landing zone. Tenant projects are created inside this folder. |
-| <a name="output_lz_folder_id"></a> [lz\_folder\_id](#output\_lz\_folder\_id) | Folder ID (not container ID) of the STACKIT resourcemanager folder created for the landing zone. This is what `stackit_authorization_folder_role_assignment` takes, so a composing architecture feeds it to the backplanes it deploys. |
-| <a name="output_platform_bootstrap_service_account_email"></a> [platform\_bootstrap\_service\_account\_email](#output\_platform\_bootstrap\_service\_account\_email) | Email of the STACKIT service account a composing architecture (e.g. the STACKIT Kubernetes Platform) applies as. It can create service accounts in the foundation project and assign roles on the landing-zone folder — nothing else. |
-| <a name="output_platform_bootstrap_service_account_key"></a> [platform\_bootstrap\_service\_account\_key](#output\_platform\_bootstrap\_service\_account\_key) | STACKIT service account credential (JSON) a composing architecture applies as. Published unencrypted — see the comment above this output and the landing zone README. |
-| <a name="output_service_account_bbd_version_uuid"></a> [service\_account\_bbd\_version\_uuid](#output\_service\_account\_bbd\_version\_uuid) | Version uuid of the STACKIT Service Account building block definition this landing zone registered. A composing architecture (e.g. the STACKIT Kubernetes Platform) orders this definition to mint a service account — with project roles and WIF — on a target project, then deploys as that account. |
-| <a name="output_starterkit_bbd_version_uuid"></a> [starterkit\_bbd\_version\_uuid](#output\_starterkit\_bbd\_version\_uuid) | Version uuid of the STACKIT Project Starterkit definition this architecture registered. The definition is created inside this run, so it cannot be reached through a module output. Do not use it to order starterkit instances as code: the starterkit deletes itself at the end of its run, so an as-code order never converges and creates another project on every apply. |
+| <a name="output_platform_ref"></a> [platform\_ref](#output\_platform\_ref) | Platform ref, used to build other platforms on top |
+| <a name="output_service_account_bbd_version_ref"></a> [service\_account\_bbd\_version\_ref](#output\_service\_account\_bbd\_version\_ref) | Version ref of the STACKIT Service Account building block definition this landing zone registered. A composing architecture (e.g. the STACKIT Kubernetes Platform) orders this definition to mint a service account — with project roles and WIF — on a target project, then deploys as that account. |
+| <a name="output_starterkit_bbd_version_ref"></a> [starterkit\_bbd\_version\_ref](#output\_starterkit\_bbd\_version\_ref) | Version ref of the STACKIT Project Starterkit definition this architecture registered. The definition is created inside this run, so it cannot be reached through a module output. |
 | <a name="output_summary"></a> [summary](#output\_summary) | Summary of the meshStack resources created by this reference architecture. |
 <!-- END_TF_DOCS -->

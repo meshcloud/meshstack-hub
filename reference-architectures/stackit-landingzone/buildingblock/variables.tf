@@ -1,14 +1,13 @@
+# this variable is injected by the tf-block-runner when run inside meshstack
+variable "meshstack_building_block_id" {
+  type     = string
+  nullable = false
+}
+
 variable "workspace" {
   type        = string
   nullable    = false
   description = "Identifier of the meshStack workspace that will own the created platform, location, landing zones, and (when networking is enabled) the hub network-area instance."
-}
-
-variable "building_block_uuid" {
-  type        = string
-  nullable    = true
-  default     = null
-  description = "UUID of this building block instance, injected by meshStack (TENANT_BUILDING_BLOCK_UUID). Printed in the summary so the STACKIT Kubernetes Platform can be wired to this landing zone with a single value. Null when the module runs outside meshStack (e.g. a local plan)."
 }
 
 variable "use_global_location" {

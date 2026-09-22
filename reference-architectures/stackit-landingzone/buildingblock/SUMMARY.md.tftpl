@@ -35,19 +35,8 @@ landing zone. Provide a `network` object to additionally enable hub-and-spoke ne
 
 The [STACKIT Kubernetes Platform](https://hub.meshcloud.io/reference-architectures/stackit-kubernetes)
 reference architecture runs a full SKE developer platform on top of this landing zone. Use these
-values from this landing zone to set it up:
+values from this landing zone as input to set it up:
 
-| Field | Value |
-|-------|-------|
-| **Landing Zone Building Block UUID** | %{ if building_block_uuid != null && building_block_uuid != "" }`${building_block_uuid}`%{ else }_see this building block in meshPanel_%{ endif } |
-| **Host STACKIT Platform Identifier** | `${host_platform_identifier}` |
-| **Host Landing Zone Name** | `${default_landing_zone_name}` |
+**Landing Zone Building Block UUID**: `${building_block_uuid}`
 
-Wire the **UUID** into the Kubernetes Platform's registration and it reads the rest from this
-building block on every run: the foundation project and landing-zone folder its backplanes deploy
-into, and the bootstrap service account it applies as. The **platform identifier** and **landing
-zone name** are prefilled from the same place and are what the Kubernetes Platform's own order form
-asks for.
-
-> This landing zone registers no Kubernetes or Git building block definitions. The Kubernetes
-> Platform registers those itself when it is ordered, so each platform owns its own definitions.
+<!-- TODO add remark to pick `networked` instead of `default` from landing_zone_refs if you chose to have your SKE inside Hub&Spoke architecture -->

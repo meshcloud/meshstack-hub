@@ -3,11 +3,6 @@ output "lz_folder_container_id" {
   description = "Container ID of the STACKIT resourcemanager folder created for the landing zone. Tenant projects are created inside this folder."
 }
 
-output "lz_folder_id" {
-  value       = stackit_resourcemanager_folder.this.folder_id
-  description = "Folder ID (not container ID) of the STACKIT resourcemanager folder created for the landing zone. This is what `stackit_authorization_folder_role_assignment` takes, so a composing architecture feeds it to the backplanes it deploys."
-}
-
 output "foundation_project_id" {
   value       = stackit_resourcemanager_project.foundation.project_id
   description = "Project ID of the STACKIT foundation project that hosts the landing-zone core assets (the service account used for tenant project creation)."
@@ -18,43 +13,24 @@ output "foundation_project_url" {
   description = "Deep link to the foundation project in the STACKIT portal."
 }
 
-output "starterkit_bbd_version_uuid" {
-  value       = module.stackit_project_starterkit.building_block_definition.version_ref.uuid
-  description = "Version uuid of the STACKIT Project Starterkit definition this architecture registered. The definition is created inside this run, so it cannot be reached through a module output. Do not use it to order starterkit instances as code: the starterkit deletes itself at the end of its run, so an as-code order never converges and creates another project on every apply."
+output "starterkit_bbd_version_ref" {
+  value       = module.stackit_project_starterkit.building_block_definition.version_ref
+  description = "Version ref of the STACKIT Project Starterkit definition this architecture registered. The definition is created inside this run, so it cannot be reached through a module output."
 }
 
-output "service_account_bbd_version_uuid" {
-  value       = module.service_account_integration.building_block_definition.version_ref.uuid
-  description = "Version uuid of the STACKIT Service Account building block definition this landing zone registered. A composing architecture (e.g. the STACKIT Kubernetes Platform) orders this definition to mint a service account — with project roles and WIF — on a target project, then deploys as that account."
+output "service_account_bbd_version_ref" {
+  value       = module.service_account_integration.building_block_definition.version_ref
+  description = "Version ref of the STACKIT Service Account building block definition this landing zone registered. A composing architecture (e.g. the STACKIT Kubernetes Platform) orders this definition to mint a service account — with project roles and WIF — on a target project, then deploys as that account."
 }
 
-output "platform_bootstrap_service_account_email" {
-  value       = stackit_service_account.platform_bootstrap.email
-  description = "Email of the STACKIT service account a composing architecture (e.g. the STACKIT Kubernetes Platform) applies as. It can create service accounts in the foundation project and assign roles on the landing-zone folder — nothing else."
+output "platform_ref" {
+  value       = module.stackit_integration.platform_ref
+  description = "Platform ref, used to build other platforms on top"
 }
 
-# NOT sensitive, on purpose and against every convention in the repo. A composing architecture reads
-# this through the meshStack building block data source to configure its own STACKIT provider, and a
-# sensitive output would not be readable there. The consequence is that a long-lived STACKIT
-# credential is stored in this building block's outputs and shown in the meshStack UI to anyone who
-# can see the building block.
-#
-# Accepted deliberately for this work-in-progress demo. It is bounded by the two role assignments in
-# main.tf, so it is not organization ownership — but it can still create service accounts in the
-# foundation project and grant roles on the landing-zone folder. Replace it with a federated
-# credential before this ships.
-output "platform_bootstrap_service_account_key" {
-  value       = nonsensitive(stackit_service_account_key.platform_bootstrap.json)
-  description = "STACKIT service account credential (JSON) a composing architecture applies as. Published unencrypted — see the comment above this output and the landing zone README."
-}
-
-output "landingzone_identifier" {
-  value = module.stackit_integration.landingzone_names["default"]
-}
-
-output "host_platfrom_identifier" {
-  value       = "${local.platform_identifier}.${var.use_global_location ? "global" : local.platform_identifier}"
-  description = "Name of the platfrom identifier"
+output "landingzone_refs" {
+  value       = module.stackit_integration.landingzone_refs
+  description = "Landing zone refs of the platform, used to build other platforms on top"
 }
 
 output "summary" {
@@ -62,20 +38,16 @@ output "summary" {
   value = templatefile("${path.module}/SUMMARY.md.tftpl", {
     platform_identifier = local.platform_identifier
     playground_mode     = var.playground_mode
-    building_block_uuid = var.building_block_uuid
+    building_block_uuid = var.meshstack_building_block_id
 
-    # Values a composing architecture (the STACKIT Kubernetes Platform) needs to place its tenant on
-    # this landing zone. Printed in the summary so they can be copied into that building block.
-    host_platform_identifier  = "${local.platform_identifier}.${var.use_global_location ? "global" : local.platform_identifier}"
-    default_landing_zone_name = module.stackit_integration.landingzone_names["default"]
-    organization_id           = var.stackit_org
-    organization_url          = "https://portal.stackit.cloud/dashboard?organization=${var.stackit_org}"
-    lz_folder_container_id    = stackit_resourcemanager_folder.this.container_id
-    lz_folder_url             = "https://portal.stackit.cloud/dashboard?organization=${var.stackit_org}&folder=${stackit_resourcemanager_folder.this.folder_id}"
-    foundation_project_id     = stackit_resourcemanager_project.foundation.project_id
-    foundation_project_url    = "https://portal.stackit.cloud/projects/${stackit_resourcemanager_project.foundation.project_id}"
-    service_account_email     = module.stackit_integration.service_account_email
-    service_account_url       = "https://portal.stackit.cloud/service-accounts/${module.stackit_integration.service_account_email}/overview?project=${stackit_resourcemanager_project.foundation.project_id}"
+    organization_id        = var.stackit_org
+    organization_url       = "https://portal.stackit.cloud/dashboard?organization=${var.stackit_org}"
+    lz_folder_container_id = stackit_resourcemanager_folder.this.container_id
+    lz_folder_url          = "https://portal.stackit.cloud/dashboard?organization=${var.stackit_org}&folder=${stackit_resourcemanager_folder.this.folder_id}"
+    foundation_project_id  = stackit_resourcemanager_project.foundation.project_id
+    foundation_project_url = "https://portal.stackit.cloud/projects/${stackit_resourcemanager_project.foundation.project_id}"
+    service_account_email  = module.stackit_integration.service_account_email
+    service_account_url    = "https://portal.stackit.cloud/service-accounts/${module.stackit_integration.service_account_email}/overview?project=${stackit_resourcemanager_project.foundation.project_id}"
 
     network_enabled            = local.network_enabled
     networked_landingzone_name = local.network_enabled ? module.stackit_integration.landingzone_names["networked"] : ""

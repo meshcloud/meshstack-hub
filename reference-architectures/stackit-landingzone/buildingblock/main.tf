@@ -110,6 +110,27 @@ module "stackit_integration" {
   }
 }
 
+# ── Self-service service account building block (always deployed) ──
+
+# Registers the TENANT_LEVEL `STACKIT Service Account` building block so application teams can
+# self-service create a service account with project roles and workload identity federation inside
+# their own STACKIT projects. Registered unconditionally like the starterkit; its draft state follows
+# var.hub.bbd_draft, so a draft deployment registers it without publishing it outside the workspace.
+# The backplane automation identity is created in the foundation project and granted its roles at
+# organization scope, exactly like the network integrations below.
+module "service_account_integration" {
+  source = "github.com/meshcloud/meshstack-hub//modules/stackit/service-account?ref=${var.hub.git_ref}"
+
+  stackit_organization_id = var.stackit_org
+  stackit_project_id      = stackit_resourcemanager_project.foundation.project_id
+
+
+  stackit_assignable_roles = ["reader", "editor", "ske.admin", "git.admin", "container-registry.admin"]
+
+  meshstack = { owning_workspace_identifier = var.workspace, tags = var.tags.building_block }
+  hub       = var.hub
+}
+
 # ── Self-service project starterkit (always deployed) ──
 
 # Registered unconditionally, with no option to turn it off: its draft state follows var.hub.bbd_draft
@@ -153,81 +174,7 @@ module "stackit_project_starterkit" {
   hub = var.hub
 }
 
-# ── Self-service service account building block (always deployed) ──
 
-# Registers the TENANT_LEVEL `STACKIT Service Account` building block so application teams can
-# self-service create a service account with project roles and workload identity federation inside
-# their own STACKIT projects. Registered unconditionally like the starterkit; its draft state follows
-# var.hub.bbd_draft, so a draft deployment registers it without publishing it outside the workspace.
-# The backplane automation identity is created in the foundation project and granted its roles at
-# organization scope, exactly like the network integrations below.
-module "service_account_integration" {
-  source = "github.com/meshcloud/meshstack-hub//modules/stackit/service-account?ref=${var.hub.git_ref}"
-
-  stackit_organization_id = var.stackit_org
-  stackit_project_id      = stackit_resourcemanager_project.foundation.project_id
-
-  # `ske.admin` is allowed so a composing architecture (the STACKIT Kubernetes Platform) can order
-  # this definition to mint the identity its cluster deploys as. Note: this widens what application
-  # teams can self-service grant through the same catalog entry — revisit with a separate,
-  # platform-scoped service-account definition if that becomes a concern.
-  stackit_assignable_roles = ["reader", "editor", "ske.admin"]
-
-  meshstack = { owning_workspace_identifier = var.workspace, tags = var.tags.building_block }
-  hub       = var.hub
-}
-
-# ── Platform bootstrap identity (consumed by composing architectures) ──
-
-# A composing architecture — the STACKIT Kubernetes Platform — registers its own building block
-# definitions and their backplanes at order time. Those backplanes create service accounts in the
-# foundation project and grant them roles on the landing-zone folder, so the composing run needs a
-# STACKIT identity of its own. This landing zone mints it and publishes its credential.
-#
-# This deliberately goes against stackit-backplane.md, which says to use Workload Identity
-# Federation and never a long-lived credential: the consumer here is another building block's own
-# apply, not a runtime this landing zone controls, and a WIF subject is bound to a building block
-# definition uuid — which does not exist until the composing architecture registers itself. Revisit
-# once a definition can federate against a landing zone rather than the other way round.
-resource "stackit_service_account" "platform_bootstrap" {
-  project_id = stackit_resourcemanager_project.foundation.project_id
-  name       = "mesh-platform-boot"
-}
-
-# Project scope on the foundation project: the composing backplanes create their own service
-# accounts and federated identity providers in there, and the foundation project sits directly
-# under the organization rather than inside the landing-zone folder, so a folder grant would not
-# reach it. (`iam.service-account-admin` is assignable at folder scope too — it is project-scoped
-# here because that is where the accounts are made, not because it has to be.)
-resource "stackit_authorization_project_role_assignment" "platform_bootstrap_service_account_admin" {
-  resource_id = stackit_resourcemanager_project.foundation.project_id
-  role        = "iam.service-account-admin"
-  subject     = stackit_service_account.platform_bootstrap.email
-}
-
-# Folder scope: those same backplanes grant their service accounts roles on the landing-zone folder,
-# so the grant is inherited by the projects the composing architecture creates at order time.
-#
-# `iam.member-admin` is assignable at folder scope — read from the live authorization API
-# (`GET https://authorization.api.stackit.cloud/v2/folder/<folder_id>/roles`), which contradicts the
-# public docs listing it as project-only. So is every role the composing backplanes then assign
-# (`git.admin`, `ske.admin`), which is why none of this has to go to organization scope.
-resource "stackit_authorization_folder_role_assignment" "platform_bootstrap_member_admin" {
-  resource_id = stackit_resourcemanager_folder.this.folder_id
-  role        = "iam.member-admin"
-  subject     = stackit_service_account.platform_bootstrap.email
-}
-
-# Published as a NON-SENSITIVE output on purpose — see the output in outputs.tf for the tradeoff.
-resource "stackit_service_account_key" "platform_bootstrap" {
-  project_id            = stackit_resourcemanager_project.foundation.project_id
-  service_account_email = stackit_service_account.platform_bootstrap.email
-
-  depends_on = [
-    stackit_authorization_project_role_assignment.platform_bootstrap_service_account_admin,
-    stackit_authorization_folder_role_assignment.platform_bootstrap_member_admin,
-  ]
-}
 
 # ── Hub-and-spoke network topology (optional — deployed only when var.network is set) ──
 
@@ -272,7 +219,6 @@ resource "meshstack_building_block" "network_area_hub" {
   }
 
   wait_for_completion = true
-  depends_on          = [module.network_area_integration]
 
   spec = {
     building_block_definition_version_ref = {

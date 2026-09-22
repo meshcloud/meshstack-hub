@@ -29,10 +29,9 @@ variable "hub" {
     git_ref   = optional(string, "main")
     bbd_draft = optional(bool, true)
   })
-  const = true
 
   default = {
-    git_ref   = "feature/stackit-lz"
+    git_ref   = "main"
     bbd_draft = true
   }
 
@@ -266,14 +265,6 @@ resource "meshstack_building_block_definition" "this" {
         sensitive              = {}
       }
 
-      hub = {
-        display_name    = "Hub"
-        description     = "HCL object with `git_ref` (meshstack-hub reference used to source the nested STACKIT integration modules) and `bbd_draft` (forwarded to those nested integrations' own building block definition draft state)."
-        type            = "CODE"
-        assignment_type = "STATIC"
-        argument        = jsonencode(jsonencode(var.hub))
-      }
-
       # ── Platform configuration (set by the platform team) ──
 
       stackit_org = {
@@ -352,21 +343,19 @@ resource "meshstack_building_block_definition" "this" {
 
       # ── meshStack context ──
 
+      hub = {
+        display_name    = "Hub"
+        description     = "HCL object with `git_ref` (meshstack-hub reference used to source the nested STACKIT integration modules) and `bbd_draft` (forwarded to those nested integrations' own building block definition draft state)."
+        type            = "CODE"
+        assignment_type = "STATIC"
+        argument        = jsonencode(jsonencode(var.hub))
+      }
+
       workspace = {
         display_name    = "Workspace Identifier"
         description     = "Workspace that will own the created platform, location and landing zones."
         type            = "STRING"
         assignment_type = "WORKSPACE_IDENTIFIER"
-      }
-
-      # meshStack injects this instance's own uuid (the enum is named TENANT_* but also fills for a
-      # WORKSPACE_LEVEL block). Printed in the summary so the STACKIT Kubernetes Platform can be wired
-      # to this landing zone with this single value.
-      building_block_uuid = {
-        display_name    = "Building Block UUID"
-        description     = "UUID of this building block instance, injected by meshStack."
-        type            = "STRING"
-        assignment_type = "TENANT_BUILDING_BLOCK_UUID"
       }
 
       platform_identifier = {
@@ -378,20 +367,20 @@ resource "meshstack_building_block_definition" "this" {
         validation_regex_error_message = "platform_identifier must only contain letters, digits, and dashes."
       }
 
-      use_global_location = {
-        display_name    = "Use Global Location"
-        description     = "If true, use the existing global meshStack location instead of creating a dedicated location for this platform."
-        type            = "BOOLEAN"
-        assignment_type = "USER_INPUT"
-        default_value   = jsonencode(false)
-      }
-
       starterkit_approval_policies = {
         display_name    = "Starterkit Approval Policies"
         description     = "HCL object of approval gates applied to the project starterkit definition this registers. Fixed by whoever deployed this definition."
         type            = "CODE"
         assignment_type = "STATIC"
         argument        = jsonencode(jsonencode(var.starterkit_approval_policies))
+      }
+
+      use_global_location = {
+        display_name    = "Use Global Location"
+        description     = "If true, use the existing global meshStack location instead of creating a dedicated location for this platform."
+        type            = "BOOLEAN"
+        assignment_type = "USER_INPUT"
+        default_value   = jsonencode(false)
       }
 
       playground_mode = {
@@ -422,56 +411,27 @@ resource "meshstack_building_block_definition" "this" {
         assignment_type = "RESOURCE_URL"
       }
 
-      # Exposed because the definition is created inside this building block's run, so there is no
-      # module output to read it from. Not for ordering starterkit instances as code — the starterkit
-      # deletes itself at the end of its run, so an as-code order creates another project on every
-      # apply instead of converging. See the starterkit's readme.
-      starterkit_bbd_version_uuid = {
-        display_name    = "Starterkit BBD Version UUID"
-        type            = "STRING"
+      starterkit_bbd_version_ref = {
+        display_name    = "Starterkit BBD Latest Version Ref"
+        type            = "CODE"
         assignment_type = "NONE"
       }
 
-      # Consumed by a composing architecture (e.g. the STACKIT Kubernetes Platform) to order the
-      # STACKIT Service Account building block this landing zone registered.
-      service_account_bbd_version_uuid = {
+      service_account_bbd_version_ref = {
         display_name    = "Service Account BBD Version UUID"
-        type            = "STRING"
+        type            = "CODE"
         assignment_type = "NONE"
       }
 
-      lz_folder_id = {
-        display_name    = "LZ Folder ID"
-        type            = "STRING"
+      platform_ref = {
+        display_name    = "Platform Ref"
+        type            = "CODE"
         assignment_type = "NONE"
       }
 
-      # Both consumed by a composing architecture, which applies as this identity to deploy the
-      # backplanes of the definitions it registers. The credential is published unencrypted — see
-      # the output in buildingblock/outputs.tf for why, and what it is bounded to.
-      platform_bootstrap_service_account_email = {
-        display_name    = "Platform Bootstrap Service Account"
-        type            = "STRING"
-        assignment_type = "NONE"
-      }
-
-      platform_bootstrap_service_account_key = {
-        display_name    = "Platform Bootstrap Service Account Key"
-        type            = "STRING"
-        assignment_type = "NONE"
-      }
-
-      # Consumed by a composing architecture (e.g. the STACKIT Kubernetes Platform) to place a
-      # meshTenant on this landing zone's platform and default landing zone.
-      landingzone_identifier = {
-        display_name    = "Landing Zone Identifier"
-        type            = "STRING"
-        assignment_type = "NONE"
-      }
-
-      host_platfrom_identifier = {
-        display_name    = "Host Platform Identifier"
-        type            = "STRING"
+      landingzone_refs = {
+        display_name    = "Landing Zone Refs"
+        type            = "CODE"
         assignment_type = "NONE"
       }
 
