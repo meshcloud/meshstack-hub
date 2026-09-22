@@ -1,0 +1,56 @@
+#cloud-config
+# Provisions a self-hosted STACKIT Git Actions runner on first boot: installs Docker and the
+# runner agent, registers against the STACKIT Git instance using the org-scoped registration
+# token, and runs the daemon under systemd so it survives reboots.
+package_update: true
+packages:
+  - docker.io
+  - curl
+  - ca-certificates
+
+write_files:
+  - path: /etc/git-runner/config.yml
+    permissions: "0644"
+    content: |
+      log:
+        level: info
+      runner:
+        file: /var/lib/git-runner/.runner
+        # One concurrent job on a single persistent VM. Raise once the pool grows.
+        capacity: 1
+        timeout: 3h
+        # Labels live in the .runner file produced at registration below.
+        labels: []
+      container:
+        network: bridge
+        privileged: false
+
+  - path: /etc/systemd/system/git-runner.service
+    permissions: "0644"
+    content: |
+      [Unit]
+      Description=STACKIT Git Actions Runner
+      After=docker.service network-online.target
+      Requires=docker.service
+      Wants=network-online.target
+
+      [Service]
+      User=git-runner
+      WorkingDirectory=/var/lib/git-runner
+      ExecStart=/usr/local/bin/git-runner daemon --config /etc/git-runner/config.yml
+      Restart=always
+      RestartSec=5
+
+      [Install]
+      WantedBy=multi-user.target
+
+runcmd:
+  - systemctl enable --now docker
+  - useradd --system --create-home --home-dir /var/lib/git-runner --shell /usr/sbin/nologin git-runner || true
+  - usermod -aG docker git-runner
+  # forgejo-runner is the upstream agent STACKIT Git uses; installed here under a neutral name.
+  - curl -fsSL "https://code.forgejo.org/forgejo/runner/releases/download/v${runner_version}/forgejo-runner-${runner_version}-linux-amd64" -o /usr/local/bin/git-runner
+  - chmod +x /usr/local/bin/git-runner
+  # Register once; writes /var/lib/git-runner/.runner with the long-lived runner token.
+  - su -s /bin/sh git-runner -c 'cd /var/lib/git-runner && /usr/local/bin/git-runner register --no-interactive --instance "${git_url}" --token "${registration_token}" --name "${runner_name}" --labels "${runner_labels}"'
+  - systemctl enable --now git-runner

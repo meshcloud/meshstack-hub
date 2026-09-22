@@ -1,6 +1,6 @@
 output "runner_name" {
   value       = var.name
-  description = "Name the runner registered under in Forgejo — also the value workflows target via runs-on labels."
+  description = "Name the runner registered under in STACKIT Git — also the value workflows target via runs-on labels."
 }
 
 output "server_id" {
@@ -8,9 +8,9 @@ output "server_id" {
   description = "ID of the STACKIT server hosting the runner."
 }
 
-output "public_ip" {
-  value       = stackit_public_ip.this.ip
-  description = "Public IP of the runner VM."
+output "egress_ip" {
+  value       = local.create_network ? stackit_network.this[0].public_ip : null
+  description = "Public egress (SNAT) IP of the runner's network router. The VM itself has no inbound public IP. Use this to allowlist the runner on the Git instance. Null when attaching to an existing network."
 }
 
 output "ssh_private_key" {

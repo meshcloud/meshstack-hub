@@ -15,7 +15,7 @@ variable "workload_identity_federation" {
 
 variable "service_account_name" {
   type        = string
-  default     = "mesh-forgejo-runner"
+  default     = "mesh-git-runner"
   nullable    = false
   description = "Name of the backplane service account created in the STACKIT project. Override when deploying multiple backplane instances in the same project."
 }
