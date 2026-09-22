@@ -23,7 +23,7 @@ toggle) — otherwise the token endpoint returns 404.
 ## Requirements
 
 | Name | Version |
-| ---- | ------- |
+|------|---------|
 | <a name="requirement_http"></a> [http](#requirement\_http) | >= 3.4.0, < 4.0.0 |
 | <a name="requirement_stackit"></a> [stackit](#requirement\_stackit) | >= 0.98.0, < 1.0.0 |
 | <a name="requirement_tls"></a> [tls](#requirement\_tls) | >= 4.0.0, < 5.0.0 |
@@ -35,7 +35,7 @@ No modules.
 ## Resources
 
 | Name | Type |
-| ---- | ---- |
+|------|------|
 | [stackit_key_pair.this](https://registry.terraform.io/providers/stackitcloud/stackit/latest/docs/resources/key_pair) | resource |
 | [stackit_network.this](https://registry.terraform.io/providers/stackitcloud/stackit/latest/docs/resources/network) | resource |
 | [stackit_network_interface.this](https://registry.terraform.io/providers/stackitcloud/stackit/latest/docs/resources/network_interface) | resource |
@@ -47,7 +47,7 @@ No modules.
 ## Inputs
 
 | Name | Description | Type | Default | Required |
-| ---- | ----------- | ---- | ------- | :------: |
+|------|-------------|------|---------|:--------:|
 | <a name="input_availability_zone"></a> [availability\_zone](#input\_availability\_zone) | STACKIT availability zone for the VM and its boot volume. | `string` | `"eu01-1"` | no |
 | <a name="input_disk_size_gb"></a> [disk\_size\_gb](#input\_disk\_size\_gb) | Size of the runner VM boot volume in GB. | `number` | `50` | no |
 | <a name="input_forgejo_base_url"></a> [forgejo\_base\_url](#input\_forgejo\_base\_url) | Base URL of the STACKIT Git (Forgejo) instance, e.g. https://<name>.git.onstackit.cloud. | `string` | n/a | yes |
@@ -65,7 +65,7 @@ No modules.
 ## Outputs
 
 | Name | Description |
-| ---- | ----------- |
+|------|-------------|
 | <a name="output_public_ip"></a> [public\_ip](#output\_public\_ip) | Public IP of the runner VM. |
 | <a name="output_runner_name"></a> [runner\_name](#output\_runner\_name) | Name the runner registered under in Forgejo — also the value workflows target via runs-on labels. |
 | <a name="output_server_id"></a> [server\_id](#output\_server\_id) | ID of the STACKIT server hosting the runner. |

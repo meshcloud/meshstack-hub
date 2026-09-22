@@ -48,7 +48,7 @@ folder-level roles on `folder_id` (folder owner / `resource-manager.admin` + `ia
 ## Requirements
 
 | Name | Version |
-| ---- | ------- |
+|------|---------|
 | <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.12.0 |
 | <a name="requirement_stackit"></a> [stackit](#requirement\_stackit) | >= 0.98.0, < 1.0.0 |
 
@@ -59,7 +59,7 @@ No modules.
 ## Resources
 
 | Name | Type |
-| ---- | ---- |
+|------|------|
 | [stackit_authorization_folder_role_assignment.this](https://registry.terraform.io/providers/stackitcloud/stackit/latest/docs/resources/authorization_folder_role_assignment) | resource |
 | [stackit_service_account.building_block](https://registry.terraform.io/providers/stackitcloud/stackit/latest/docs/resources/service_account) | resource |
 | [stackit_service_account_federated_identity_provider.building_block](https://registry.terraform.io/providers/stackitcloud/stackit/latest/docs/resources/service_account_federated_identity_provider) | resource |
@@ -67,7 +67,7 @@ No modules.
 ## Inputs
 
 | Name | Description | Type | Default | Required |
-| ---- | ----------- | ---- | ------- | :------: |
+|------|-------------|------|---------|:--------:|
 | <a name="input_enabled"></a> [enabled](#input\_enabled) | When false, create no service account, federated identity or role grant. | `bool` | `true` | no |
 | <a name="input_folder_id"></a> [folder\_id](#input\_folder\_id) | STACKIT resource-manager folder (`folder_id`, not container\_id) the service account is granted roles on, inherited by every project inside it. Null when enabled is false. | `string` | `null` | no |
 | <a name="input_project_id"></a> [project\_id](#input\_project\_id) | Existing STACKIT project the automation service account is created in, not the project the Git instance ends up in. Null when enabled is false. | `string` | `null` | no |
@@ -78,6 +78,6 @@ No modules.
 ## Outputs
 
 | Name | Description |
-| ---- | ----------- |
+|------|-------------|
 | <a name="output_service_account_email"></a> [service\_account\_email](#output\_service\_account\_email) | Email of the STACKIT service account the buildingblock provider authenticates as via WIF. Null when the backplane is disabled (external-service-account mode). |
 <!-- END_TF_DOCS -->
