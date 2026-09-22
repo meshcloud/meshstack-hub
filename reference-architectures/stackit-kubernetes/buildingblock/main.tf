@@ -22,9 +22,12 @@ locals {
 
   landingzone_outputs = data.meshstack_building_block.stackit_lz_ref_arch.status.outputs
 
-  host_platform_ref               = jsondecode(local.landingzone_outputs["platform_ref"].value)
-  host_landingzone_ref            = jsondecode(local.landingzone_outputs["landingzone_refs"].value)[var.landingzone_variant]
-  service_account_bbd_version_ref = jsondecode(local.landingzone_outputs["service_account_bbd_version_ref"].value)
+  # Decoded twice: meshStack stores every output JSON-encoded, and a CODE output's stored value is
+  # itself a JSON document, so one decode yields JSON text rather than the object. A STRING output
+  # takes a single decode — every child block output read further down is one of those.
+  host_platform_ref               = jsondecode(jsondecode(local.landingzone_outputs["platform_ref"].value))
+  host_landingzone_ref            = jsondecode(jsondecode(local.landingzone_outputs["landingzone_refs"].value))[var.landingzone_variant]
+  service_account_bbd_version_ref = jsondecode(jsondecode(local.landingzone_outputs["service_account_bbd_version_ref"].value))
 
   wif_issuer         = data.meshstack_integrations.this.workload_identity_federation.replicator.issuer
   wif_subject_prefix = trimsuffix(data.meshstack_integrations.this.workload_identity_federation.replicator.subject, ":replicator")
