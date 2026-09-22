@@ -29,6 +29,7 @@ resource "aws_s3_bucket_policy" "this" {
         Effect = "Deny"
         NotPrincipal = {
           AWS = [
+            stackit_objectstorage_credentials_group.this.urn,
             var.admin_credentials_group_urn,
           ]
         }
