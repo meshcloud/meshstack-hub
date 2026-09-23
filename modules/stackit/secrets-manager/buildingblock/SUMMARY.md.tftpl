@@ -1,0 +1,16 @@
+# Secrets Manager: **${instance_name}**
+
+| Property | Value |
+|----------|-------|
+| **API URL** | ${api_url} |
+| **KV Mount** | `${kv_mount}` |
+
+Create users for this instance in the STACKIT portal.
+Then log in with the Vault CLI:
+
+```sh
+export VAULT_ADDR=${api_url}
+vault login -method=userpass username=<username>
+vault kv put -mount=${kv_mount} my-app/db password=...
+vault kv get -mount=${kv_mount} my-app/db
+```
