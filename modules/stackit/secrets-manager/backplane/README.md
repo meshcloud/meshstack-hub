@@ -4,8 +4,9 @@ This module sets up the shared backplane for the STACKIT Secrets Manager buildin
 It creates a dedicated service account in a STACKIT project of the platform team and registers a Workload
 Identity Federation (WIF) provider, so meshStack can authenticate without long-lived keys:
 
-- **`secrets-manager.admin`** on the organization — allows managing Secrets Manager instances in
-  every project of the organization. Each building block creates its instance in the STACKIT project
+- **A custom organization role** with the `secrets-manager.instance.*` permissions — allows managing
+  Secrets Manager instances in every project of the organization. The built-in `secrets-manager.admin`
+  role cannot be assigned at organization scope. Each building block creates its instance in the STACKIT project
   of the tenant it is ordered for.
 
 ## Prerequisites
@@ -46,6 +47,7 @@ No modules.
 
 | Name | Type |
 |------|------|
+| [stackit_authorization_organization_custom_role.secrets_manager](https://registry.terraform.io/providers/stackitcloud/stackit/latest/docs/resources/authorization_organization_custom_role) | resource |
 | [stackit_authorization_organization_role_assignment.secrets_manager](https://registry.terraform.io/providers/stackitcloud/stackit/latest/docs/resources/authorization_organization_role_assignment) | resource |
 | [stackit_service_account.building_block](https://registry.terraform.io/providers/stackitcloud/stackit/latest/docs/resources/service_account) | resource |
 | [stackit_service_account_federated_identity_provider.building_block](https://registry.terraform.io/providers/stackitcloud/stackit/latest/docs/resources/service_account_federated_identity_provider) | resource |
