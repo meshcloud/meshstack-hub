@@ -80,8 +80,11 @@ locals {
 }
 
 module "stackit_project" {
-  count  = var.test_context.bbd_version_ref == null ? 1 : 0
   source = "../"
+
+  lifecycle {
+    enabled = var.test_context.bbd_version_ref == null
+  }
 
   meshstack = {
     owning_workspace_identifier = var.test_context.workspace
@@ -112,7 +115,7 @@ module "stackit_project" {
 
 locals {
   # Build-from-source only — see the `bbd_version_ref` comment above.
-  integration = one(module.stackit_project)
+  integration = module.stackit_project
 }
 
 resource "meshstack_project" "this" {
@@ -149,8 +152,8 @@ resource "meshstack_tenant" "this" {
   }
 
   spec = {
-    platform_ref     = { uuid = local.integration.platform.uuid }
-    landing_zone_ref = { name = local.integration.landingzone_names["default"] }
+    platform_ref     = local.integration.platform_ref
+    landing_zone_ref = local.integration.landingzone_refs["default"]
   }
 }
 
