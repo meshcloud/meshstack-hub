@@ -36,6 +36,12 @@ module "secrets_manager" {
   stackit_organization_id      = var.test_context.fixtures.stackit.organization_id
   stackit_project_id           = var.test_context.fixtures.stackit.project_id
   stackit_service_account_name = "${var.test_context.run_id}-sm"
+  stackit_custom_role_name     = "${local.run_id_letters}-sm"
+}
+
+locals {
+  # STACKIT custom role names allow no digits, so spell each digit of the run id as a letter.
+  run_id_letters = join("", [for c in split("", var.test_context.run_id) : can(tonumber(c)) ? substr("abcdefghij", tonumber(c), 1) : c])
 }
 
 output "version_ref" {

@@ -30,8 +30,7 @@ resource "stackit_service_account_federated_identity_provider" "building_block" 
 # secrets-manager.admin role exists only at project scope, so we define an equivalent custom role.
 resource "stackit_authorization_organization_custom_role" "secrets_manager" {
   resource_id = var.organization_id
-  # Custom role names are unique per organization, like the service account name per backplane.
-  name        = var.service_account_name
+  name        = var.custom_role_name
   description = "Lets meshStack manage STACKIT Secrets Manager instances in all projects."
   permissions = [
     "secrets-manager.instance.create",
