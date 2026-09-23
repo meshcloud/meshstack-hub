@@ -1,0 +1,40 @@
+apiVersion: cert-manager.io/v1
+kind: ClusterIssuer
+metadata:
+  name: {{ .Values.clusterIssuer.name }}
+spec:
+  acme:
+    email: {{ .Values.clusterIssuer.email | quote }}
+    server: {{ .Values.clusterIssuer.server | quote }}
+    privateKeySecretRef:
+      name: {{ .Values.clusterIssuer.privateKeySecretName }}
+    solvers:
+      {{- with .Values.dns01.stackit }}
+      # Only DNS-01 can validate a wildcard certificate.
+      - dns01:
+          webhook:
+            solverName: stackit
+            groupName: acme.stackit.de
+            config:
+              projectId: {{ .projectId | quote }}
+        selector:
+          dnsZones:
+            - {{ $.Values.dns01.zoneName | quote }}
+      {{- end }}
+      {{- with .Values.dns01.route53 }}
+      - dns01:
+          route53:
+            region: {{ .region | quote }}
+            hostedZoneID: {{ .hostedZoneID | quote }}
+            accessKeyID: {{ .accessKeyID | quote }}
+            secretAccessKeySecretRef:
+              name: {{ .secretAccessKeySecretName }}
+              key: {{ .secretAccessKeySecretKey }}
+        selector:
+          dnsZones:
+            - {{ $.Values.dns01.zoneName | quote }}
+      {{- end }}
+      # Fallback for hostnames outside the DNS-01 zone; the more specific dnsZones selector wins.
+      - http01:
+          ingress:
+            ingressClassName: {{ .Values.ingressClassName }}

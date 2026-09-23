@@ -1,0 +1,25 @@
+# The module directory is the chart directory, so everything that is not part of the chart has
+# to be excluded here. Helm stores the packaged chart in a Kubernetes Secret — keeping it small
+# is critical.
+
+# Terraform files and state
+*.tf
+*.tfstate
+*.tfstate.backup
+*.tfplan
+.terraform/
+.terraform.lock.hcl
+
+# Terraform test files
+*.tftest.hcl
+
+# Kubernetes credentials — never bundle into the chart
+kubeconfig.yaml
+kubeconfig-mock.yaml
+
+# Misc
+.DS_Store
+*.png
+*.svg
+README.md
+APP_TEAM_README.md

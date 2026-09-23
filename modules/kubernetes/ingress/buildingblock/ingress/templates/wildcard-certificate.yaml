@@ -1,0 +1,16 @@
+{{- if .Values.wildcardCertificate.enabled }}
+# Lives in the HAProxy namespace so tearing down an application never takes the certificate with it.
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: {{ .Values.wildcardCertificate.name }}
+  namespace: {{ .Values.wildcardCertificate.namespace }}
+spec:
+  secretName: {{ .Values.wildcardCertificate.secretName }}
+  dnsNames:
+    - {{ printf "*.%s" .Values.wildcardCertificate.domain | quote }}
+  issuerRef:
+    name: {{ .Values.clusterIssuer.name }}
+    kind: ClusterIssuer
+    group: cert-manager.io
+{{- end }}
