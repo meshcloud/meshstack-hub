@@ -1,0 +1,84 @@
+/*
+ * STACKIT Kubernetes (SKE) reference architecture — application-team view.
+ * Self-service on the platform the platform team bootstrapped (stackit-kubernetes.dot): one
+ * starterkit order, and the runtime data flow of the resulting app across the shared STACKIT
+ * services.
+ * Conventions: .agents/references/diagrams.md — render with: task diagrams
+ */
+digraph stackit_kubernetes_app_team {
+  rankdir=TB
+  splines=ortho
+  forcelabels=true
+  bgcolor="white"
+  nodesep=0.85
+  ranksep=1.0
+
+  node [shape=box style="rounded,filled" fontname="Helvetica" fontsize=11
+        fillcolor="#ffffff" color="#a2abb8" penwidth=1.1 margin="0.20,0.11"]
+  edge [fontname="Helvetica" fontsize=9 fontcolor="#697180" color="#8b95a3" arrowsize=0.7]
+
+  subgraph cluster_catalog {
+    label="  meshStack — self-service order"
+    labeljust=l
+    fontname="Helvetica" fontsize=12 fontcolor="#697180"
+    style="rounded" color="#d5dae0"
+    margin=18
+
+    BBD_S [label="📦 ske/ske-starterkit BBD\nsingle catalog entry" fillcolor="#ecedfb" color="#9aa2e6"]
+    BBD_R [label="📦 stackit/git-repository BBD" fillcolor="#ecedfb" color="#9aa2e6"]
+    BBD_C [label="📦 ske/forgejo-connector BBD" fillcolor="#ecedfb" color="#9aa2e6"]
+
+    { rank=same; BBD_R -> BBD_C [style=invis] }
+    BBD_S -> BBD_R [xlabel="composes"]
+    BBD_S -> BBD_C
+  }
+
+  subgraph cluster_team {
+    label="  Per Application Team"
+    labeljust=l
+    fontname="Helvetica" fontsize=12 fontcolor="#697180"
+    style="rounded" color="#d5dae0"
+    margin=18
+
+    REPO [label="🔀 App repository ×1\ncloned from the template" fillcolor="#e5f2ea" color="#85bfa0"]
+    PROJ [label="🗂️ Project ×N\none per stage" fillcolor="#e5f2ea" color="#85bfa0"]
+    ACT  [label="⚙️ Forgejo Actions ×N\none pipeline per stage" fillcolor="#e5f2ea" color="#85bfa0"]
+    NS   [label="☸️ Namespace ×N\none per stage" fillcolor="#e5f2ea" color="#85bfa0"]
+
+    { rank=same; REPO -> PROJ [style=invis] }
+    { rank=same; ACT -> NS [style=invis] }
+
+    REPO -> ACT [xlabel="runs pipeline"]
+    PROJ -> NS  [xlabel="tenant namespace"]
+  }
+
+  subgraph cluster_shared {
+    label="  STACKIT platform — shared services"
+    labeljust=l
+    fontname="Helvetica" fontsize=12 fontcolor="#697180"
+    style="rounded" color="#d5dae0"
+    margin=18
+
+    HARBOR [label="🗄️ Container Registry\nHarbor project per platform" fillcolor="#eef2f6" color="#93a7bb"]
+    MODEL  [label="🧠 Model Serving\nsovereign LLM API" fillcolor="#eef2f6" color="#93a7bb"]
+    ING    [label="🔐 Ingress + cert-manager\nHAProxy LoadBalancer" fillcolor="#eef2f6" color="#93a7bb"]
+    DNS    [label="🧭 DNS zone\nwildcard hostname" fillcolor="#eef2f6" color="#93a7bb"]
+
+    { rank=same; HARBOR -> MODEL -> ING -> DNS [style=invis] }
+  }
+
+  // Ordering the starterkit is what creates the team's resources. BBD_R -> REPO keeps its ranking
+  // constraint so the team cluster stacks below the catalog instead of beside it. Only this edge is
+  // labelled — the other two are the same "provisions" relationship (diagrams.md: label one).
+  BBD_R -> REPO [xlabel="provisions" style=dotted]
+  BBD_S -> PROJ [style=dotted constraint=false]
+  BBD_C -> ACT  [style=dotted constraint=false]
+
+  // Runtime data flow of the deployed application. NS -> HARBOR keeps its constraint so the shared
+  // services stack below the team; the rest are cross-cutting and must not distort the layout.
+  NS  -> HARBOR [xlabel="pulls images" style=dashed]
+  ACT -> HARBOR [xlabel="pushes images" style=dashed constraint=false]
+  ACT -> NS     [xlabel="deploys to" style=dashed constraint=false]
+  NS  -> MODEL  [xlabel="calls with injected key" style=dashed constraint=false]
+  NS  -> ING    [xlabel="exposed via" style=dashed constraint=false]
+}
