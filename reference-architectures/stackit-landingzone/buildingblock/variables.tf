@@ -46,15 +46,17 @@ variable "platform_identifier" {
 }
 
 variable "tags" {
+  # The meshPanel Tags form lets the operator build each map from scratch, so each tag map arrives as
+  # a list of {key, values} entries rather than a map — main.tf folds them into a map(list(string)).
   type = object({
-    landingzone           = map(list(string))
-    building_block        = map(list(string))
-    project               = map(list(string))
+    landingzone           = list(object({ key = string, values = list(string) }))
+    building_block        = list(object({ key = string, values = list(string) }))
+    project               = list(object({ key = string, values = list(string) }))
     project_owner_tag_key = string
   })
   nullable    = false
   description = <<-EOT
-  Tags forwarded to the nested STACKIT integrations.
+  Tags forwarded to the nested STACKIT integrations, each map built in the meshPanel form as a list of {key, values} entries.
   `landingzone` tags are applied to the created landing zones.
   `building_block` tags are applied to the nested building block definitions.
   `project` tags are applied to the meshProjects the starterkit creates.
@@ -72,6 +74,18 @@ variable "stackit_organization_onboarding_enabled" {
   type        = bool
   nullable    = false
   description = "Whether the nested STACKIT Project integration adds meshStack project users to the STACKIT organization before applying project-level role assignments. Disable if organization membership is managed outside this landing zone."
+}
+
+variable "topology" {
+  type        = list(string)
+  nullable    = false
+  default     = ["sandbox"]
+  description = "Landing zone labels to deploy and offer application teams. `sandbox` deploys the sandbox landing zone; `hub&spoke` also provisions the hub-and-spoke networking. One selected label is passed as the starterkit's single default_landing_zone."
+
+  validation {
+    condition     = length(var.topology) > 0 && alltrue([for t in var.topology : contains(["sandbox", "hub&spoke"], t)])
+    error_message = "topology must be a non-empty subset of [\"sandbox\", \"hub&spoke\"]."
+  }
 }
 
 variable "network" {

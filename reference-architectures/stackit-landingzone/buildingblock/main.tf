@@ -16,11 +16,22 @@ locals {
     substr(sha256(local.platform_identifier), 0, 4)
   )
 
-  # Hub-and-spoke networking is deployed only when the operator supplies a `network` object.
-  network_enabled = var.network != null
+  # Selecting `hub&spoke` deploys hub-and-spoke networking. The `network` input is hidden (and so
+  # unset) unless it is selected, so the topology — not the presence of a network object — gates it.
+  network_enabled = contains(var.topology, "hub&spoke")
 
   # Only resolvable once the hub network area building block has completed.
   network_area_id = local.network_enabled ? jsondecode(meshstack_building_block.network_area_hub.status.outputs["network_area_id"].value) : null
+
+  # The Tags input is a form the operator fills freely, so each tag map arrives as a list of
+  # {key, values} entries (see variables.tf); fold them into the map(list(string)) the nested
+  # integrations take.
+  tags = {
+    landingzone           = { for e in var.tags.landingzone : e.key => e.values }
+    building_block        = { for e in var.tags.building_block : e.key => e.values }
+    project               = { for e in var.tags.project : e.key => e.values }
+    project_owner_tag_key = var.tags.project_owner_tag_key
+  }
 }
 
 # ── Sandbox landing zone foundation (always deployed) ──
@@ -106,7 +117,7 @@ module "stackit_integration" {
     owning_workspace_identifier = var.workspace
     location_name               = var.use_global_location ? "global" : meshstack_location.this.metadata.name
     platform_identifier         = local.platform_identifier
-    tags                        = var.tags
+    tags                        = local.tags
   }
 }
 
@@ -122,11 +133,13 @@ module "stackit_project_starterkit" {
 
   platform_ref = module.stackit_integration.platform_ref
   landing_zone_refs = merge(
-    { "sandbox" = module.stackit_integration.landingzone_refs["default"] },
+    contains(var.topology, "sandbox") ? { "sandbox" = module.stackit_integration.landingzone_refs["default"] } : {},
     local.network_enabled ? { "hub&spoke" = module.stackit_integration.landingzone_refs["networked"] } : {}
   )
 
-  default_landing_zone = "sandbox"
+  # The starterkit's default_landing_zone is a single label, so reduce the selected set to one: prefer
+  # `sandbox` when offered, else the first selected. Both are keys of landing_zone_refs by construction.
+  default_landing_zone = contains(var.topology, "sandbox") ? "sandbox" : var.topology[0]
   approval_policies    = var.starterkit_approval_policies
 
   # `hub&spoke` is the only landing zone attached to a network area, so it is the only one where the
@@ -145,9 +158,9 @@ module "stackit_project_starterkit" {
   meshstack = {
     owning_workspace_identifier = var.workspace
     tags = {
-      building_block        = var.tags.building_block
-      project               = var.tags.project
-      project_owner_tag_key = var.tags.project_owner_tag_key
+      building_block        = local.tags.building_block
+      project               = local.tags.project
+      project_owner_tag_key = local.tags.project_owner_tag_key
     }
   }
   hub = var.hub
@@ -167,7 +180,7 @@ module "service_account_integration" {
   stackit_organization_id = var.stackit_org
   stackit_project_id      = stackit_resourcemanager_project.foundation.project_id
 
-  meshstack = { owning_workspace_identifier = var.workspace, tags = var.tags.building_block }
+  meshstack = { owning_workspace_identifier = var.workspace, tags = local.tags.building_block }
   hub       = var.hub
 }
 
@@ -183,7 +196,7 @@ module "network_area_integration" {
   stackit_organization_id = var.stackit_org
   stackit_project_id      = stackit_resourcemanager_project.foundation.project_id
 
-  meshstack = { owning_workspace_identifier = var.workspace, tags = var.tags.building_block }
+  meshstack = { owning_workspace_identifier = var.workspace, tags = local.tags.building_block }
   hub       = var.hub
 }
 
@@ -199,7 +212,7 @@ module "network_integration" {
   stackit_network_min_prefix_length = var.network.tenant_network_min_prefix_length
   stackit_network_max_prefix_length = var.network.tenant_network_max_prefix_length
 
-  meshstack = { owning_workspace_identifier = var.workspace, tags = var.tags.building_block }
+  meshstack = { owning_workspace_identifier = var.workspace, tags = local.tags.building_block }
   hub       = var.hub
 }
 
