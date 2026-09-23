@@ -198,10 +198,10 @@ resource "meshstack_building_block_definition" "this" {
 
     - A **meshProject** in your workspace, tagged as your platform team configured.
     - A **STACKIT project** in that meshProject, created by the landing zone's mandatory `STACKIT Project` building block.
-    - A **routed network** inside the project, in landing zones attached to a network area, named after the project. The **Network** input controls its prefix length and nameservers; leaving it as it comes gives you a `/25`. Set it to `null` if you would rather have no network.
+    - A **routed network** inside the project, in landing zones attached to a network area, named after the project. The **Network** input controls its prefix length and nameservers; leaving it as it comes gives you a `/${local.default_network_prefix_length}`.
     - The **Project Admin** role for you, if you ordered this as a user rather than through an API key.
 
-    You only see the **Network** input where at least one landing zone is attached to a network area. Picking a landing zone that is not attached to one gives you a project with no network, whatever the input says.
+    You only see the **Network** input when you pick a landing zone attached to a network area.
 
     One order creates one project. If you want separate development and production environments, order the starterkit twice.
 
@@ -342,28 +342,34 @@ resource "meshstack_building_block_definition" "this" {
       local.network_enabled ? {
         network = {
           assignment_type        = "USER_INPUT"
-          type                   = "CODE"
+          type                   = "JSON"
           display_name           = "Network"
-          description            = <<-EOT
-          HCL object for the spoke network created inside the project: `prefix_length` and `ipv4_nameservers`.
-          Only relevant for: ${join(", ", var.network.matching_landing_zones)}.
-          EOT
+          description            = "Spoke network created inside the project."
           updateable_by_consumer = true
+          condition              = "input.landing_zone in ${jsonencode(tolist(var.network.matching_landing_zones))}"
 
-          # Hand-written HCL rather than `jsonencode` of an object, because this is what the
-          # application team is shown in the order form: a formatted block with one field per line is
-          # editable, a single-line JSON string is not. The outer `jsonencode` wraps the document as a
-          # string, the same shape `argument` uses for a CODE input.
-          default_value = jsonencode(chomp(<<-NETWORK
-          {
-            # Subnet size as an IPv4 prefix length (${var.network.prefix_length_min}-${var.network.prefix_length_max}).
-            prefix_length = ${local.default_network_prefix_length}
-
-            # Leave empty to inherit the network area's default nameservers.
-            ipv4_nameservers = []
-          }
-          NETWORK
-          ))
+          json_schema = jsonencode({
+            "$schema" = "http://json-schema.org/draft-07/schema#"
+            type      = "object"
+            required  = ["prefix_length", "ipv4_nameservers"]
+            properties = {
+              prefix_length = {
+                type        = "integer"
+                title       = "Prefix Length"
+                description = "Subnet size as an IPv4 prefix length."
+                minimum     = var.network.prefix_length_min
+                maximum     = var.network.prefix_length_max
+                default     = local.default_network_prefix_length
+              }
+              ipv4_nameservers = {
+                type        = "array"
+                title       = "IPv4 Nameservers"
+                description = "Leave empty to inherit the network area's default nameservers."
+                items       = { type = "string", format = "ipv4" }
+                default     = []
+              }
+            }
+          })
         }
     } : {})
 

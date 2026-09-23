@@ -47,8 +47,8 @@ variable "landing_zone_refs" {
   nullable = false
 }
 
-# The only variable here that keeps a default. The definition declares this input only where a spoke
-# network can be created, so with networking off no value arrives at all.
+# The only variable here that keeps a default. The definition hides this input unless the selected
+# landing zone gets a spoke network, and a hidden input is not sent.
 variable "network" {
   type = object({
     prefix_length    = number
