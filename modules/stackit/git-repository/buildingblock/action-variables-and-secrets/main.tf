@@ -11,8 +11,10 @@ locals {
   repository_name  = data.external.repository_context.result.name
 }
 
+# Only the names are unwrapped, and they have to be: they are the resource instance keys. A caller
+# whose map is derived from a sensitive input makes the whole map sensitive, values and keys alike.
 resource "restapi_object" "action_secret" {
-  for_each = var.action_secrets
+  for_each = nonsensitive(toset(keys(var.action_secrets)))
 
   provider = restapi.without_returned_object
 
@@ -35,7 +37,7 @@ resource "restapi_object" "action_secret" {
   }
 
   data = jsonencode({
-    data = each.value
+    data = var.action_secrets[each.key]
   })
 
   ignore_server_additions = true
