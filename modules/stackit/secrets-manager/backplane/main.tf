@@ -25,8 +25,10 @@ resource "stackit_service_account_federated_identity_provider" "building_block" 
   ]
 }
 
-resource "stackit_authorization_project_role_assignment" "secrets_manager" {
-  resource_id = var.project_id
+# Granted at organization scope: the backplane is deployed before any target project is known, and
+# STACKIT cascades organization-level assignments to every project below it.
+resource "stackit_authorization_organization_role_assignment" "secrets_manager" {
+  resource_id = var.organization_id
   role        = "secrets-manager.admin"
   subject     = stackit_service_account.building_block.email
 }

@@ -33,7 +33,7 @@ No modules.
 | Name | Description | Type | Default | Required |
 |------|-------------|------|---------|:--------:|
 | <a name="input_instance_name"></a> [instance\_name](#input\_instance\_name) | Name of the Secrets Manager instance. | `string` | n/a | yes |
-| <a name="input_project_id"></a> [project\_id](#input\_project\_id) | STACKIT project ID where the Secrets Manager instance will be created. | `string` | n/a | yes |
+| <a name="input_project_id"></a> [project\_id](#input\_project\_id) | STACKIT project ID of the tenant the Secrets Manager instance is created in. | `string` | n/a | yes |
 
 ## Outputs
 

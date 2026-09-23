@@ -1,9 +1,9 @@
-# ── Backplane inputs (static, set once per building block definition) ──────────
+# ── Platform inputs (resolved by meshStack from the target tenant) ────────────
 
 variable "project_id" {
   type        = string
   nullable    = false
-  description = "STACKIT project ID where the Secrets Manager instance will be created."
+  description = "STACKIT project ID of the tenant the Secrets Manager instance is created in."
 }
 
 # ── User inputs (set per building block instance) ─────────────────────────────

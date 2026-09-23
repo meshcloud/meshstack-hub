@@ -6,7 +6,8 @@ variable "test_context" {
 
     fixtures = object({
       stackit = object({
-        project_id = string
+        organization_id = string
+        project_id      = string
       })
     })
   })
@@ -32,6 +33,7 @@ module "secrets_manager" {
 
   bbd_display_name = "${var.test_context.run_id} STACKIT Secrets Manager"
 
+  stackit_organization_id      = var.test_context.fixtures.stackit.organization_id
   stackit_project_id           = var.test_context.fixtures.stackit.project_id
   stackit_service_account_name = "${var.test_context.run_id}-sm"
 }

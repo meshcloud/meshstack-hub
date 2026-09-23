@@ -1,6 +1,11 @@
+variable "stackit_organization_id" {
+  type        = string
+  description = "STACKIT organization ID under which target projects live."
+}
+
 variable "stackit_project_id" {
   type        = string
-  description = "STACKIT project ID where Secrets Manager instances will be created."
+  description = "STACKIT project ID where the backplane service account will be created."
 }
 
 variable "stackit_service_account_name" {
@@ -64,6 +69,7 @@ module "backplane" {
   source = "github.com/meshcloud/meshstack-hub//modules/stackit/secrets-manager/backplane?ref=${var.hub.git_ref}"
 
   project_id           = var.stackit_project_id
+  organization_id      = var.stackit_organization_id
   service_account_name = coalesce(var.stackit_service_account_name, "mesh-secrets-manager")
 
   workload_identity_federation = {
@@ -81,14 +87,15 @@ resource "meshstack_building_block_definition" "this" {
   }
 
   spec = {
-    display_name     = coalesce(var.bbd_display_name, "STACKIT Secrets Manager")
-    symbol           = "https://raw.githubusercontent.com/meshcloud/meshstack-hub/${var.hub.git_ref}/modules/stackit/secrets-manager/buildingblock/logo.png"
-    description      = coalesce(var.bbd_description, "Provisions a STACKIT Secrets Manager instance.")
-    target_type      = "WORKSPACE_LEVEL"
-    run_transparency = true
+    display_name        = coalesce(var.bbd_display_name, "STACKIT Secrets Manager")
+    symbol              = "https://raw.githubusercontent.com/meshcloud/meshstack-hub/${var.hub.git_ref}/modules/stackit/secrets-manager/buildingblock/logo.png"
+    description         = coalesce(var.bbd_description, "Provisions a STACKIT Secrets Manager instance.")
+    target_type         = "TENANT_LEVEL"
+    run_transparency    = true
+    supported_platforms = [{ name = "STACKIT" }]
     readme = coalesce(var.bbd_readme, chomp(<<-EOT
-      This building block provisions a **STACKIT Secrets Manager** instance for your team. It is a
-      Vault-compatible key-value store for passwords, API keys and certificates.
+      This building block provisions a **STACKIT Secrets Manager** instance in your STACKIT project.
+      It is a Vault-compatible key-value store for passwords, API keys and certificates.
 
       ## 🎯 When to use it
 
@@ -136,10 +143,9 @@ resource "meshstack_building_block_definition" "this" {
     inputs = {
       project_id = {
         display_name    = "STACKIT Project ID"
-        description     = "STACKIT project ID where the Secrets Manager instance will be created."
+        description     = "STACKIT project ID of the tenant the Secrets Manager instance is created in."
         type            = "STRING"
-        assignment_type = "STATIC"
-        argument        = jsonencode(module.backplane.project_id)
+        assignment_type = "PLATFORM_TENANT_ID"
       }
 
       STACKIT_SERVICE_ACCOUNT_EMAIL = {
