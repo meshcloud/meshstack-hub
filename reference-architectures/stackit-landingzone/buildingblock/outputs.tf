@@ -36,7 +36,7 @@ output "summary" {
 
     platform_ref                                = module.stackit_integration.platform_ref
     landingzone_refs                            = module.stackit_integration.landingzone_refs
-    service_account_bbd_version_uuid            = module.service_account_integration.building_block_definition.version_ref.uuid
-    service_account_federation_bbd_version_uuid = module.service_account_federation_integration.building_block_definition.version_ref.uuid
+    service_account_bbd_version_uuid            = try(module.service_account_integration.building_block_definition.version_ref_release.uuid, "")
+    service_account_federation_bbd_version_uuid = try(module.service_account_federation_integration.building_block_definition.version_ref_release.uuid, "")
   })
 }

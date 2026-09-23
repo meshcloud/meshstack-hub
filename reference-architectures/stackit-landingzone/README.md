@@ -111,6 +111,11 @@ landing zone refs, and the version refs of two definitions:
 - the **STACKIT Service Account** definition, and
 - the **STACKIT Service Account Federation** definition.
 
+Both are the latest **released** versions, because another workspace may only order a released
+version that is published to the marketplace. Release and publish both definitions in meshPanel
+first. A new release gets a new version uuid, so copy the block again after you release a new
+version.
+
 A composing architecture orders the service account on a tenant it just created, with the roles it
 needs. It then orders the federation as a child of the service account, with the uuids of its own
 definitions in `federated_building_block_definitions`, and orders the blocks that act as the account
