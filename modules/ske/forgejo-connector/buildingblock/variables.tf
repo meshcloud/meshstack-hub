@@ -26,25 +26,21 @@ variable "app_hostname" {
 variable "additional_kubernetes_secrets" {
   type        = map(map(string))
   description = "Additional Kubernetes secrets to create in the tenant namespace. Map keys are secret names, values are secret data maps."
-  default     = {}
 }
 
 variable "harbor_host" {
   type        = string
   description = "The URL of the Harbor registry."
-  default     = "https://registry.onstackit.cloud"
 }
 
-variable "harbor_username" {
-  type        = string
-  description = "The username for the Harbor registry."
+variable "container_registry_access_credentials" {
+  type = object({
+    push = object({ user = string, password = string })
+    pull = object({ user = string, password = string })
+  })
+  description = "Registry robot credentials. Null wires no registry, so pods pull public images only."
   sensitive   = true
-}
-
-variable "harbor_password" {
-  type        = string
-  description = "The password for the Harbor registry."
-  sensitive   = true
+  default     = null
 }
 
 variable "hub_git_ref" {

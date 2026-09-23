@@ -3,11 +3,21 @@ provider "forgejo" {
 }
 
 locals {
+  registry_wired = var.container_registry_access_credentials != null
+
+  # An empty credential still produces a usable dockerconfigjson, so pods start and pull public
+  # images rather than failing on a missing secret.
+  registry_pull = local.registry_wired ? var.container_registry_access_credentials.pull : { user = "", password = "" }
+
   action_variables = {
     "K8S_NAMESPACE_${upper(var.stage)}" = var.namespace
     "APP_HOSTNAME_${upper(var.stage)}"  = var.app_hostname
   }
-  action_secrets = {
+
+  action_secrets = merge(local.registry_wired ? {
+    HARBOR_USERNAME = var.container_registry_access_credentials.push.user
+    HARBOR_PASSWORD = var.container_registry_access_credentials.push.password
+    } : {}, {
     "KUBECONFIG_${upper(var.stage)}" = yamlencode(merge(local.kubeconfig, {
       current-context = local.kubeconfig_cluster_name
       # Note: Overwriting the users is crucial here to avoid passing down the admin user to the tenant-sliced K8s slices.
@@ -26,7 +36,7 @@ locals {
         }
       }]
     }))
-  }
+  })
 }
 
 module "action_secrets_and_variables" {

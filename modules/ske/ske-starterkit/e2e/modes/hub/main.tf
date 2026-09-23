@@ -87,8 +87,10 @@ module "forgejo_connector" {
   forgejo_host                 = var.test_context.forgejo_base_url
   forgejo_api_token            = var.backplane_secrets.stackit_git_forgejo_api_token
   forgejo_repo_definition_uuid = module.stackit_git_repository.building_block_definition.uuid
-  harbor_username              = var.backplane_secrets.harbor_push_username
-  harbor_password              = var.backplane_secrets.harbor_push_password
+  container_registry_access_credentials = {
+    push = { user = var.backplane_secrets.harbor_push_username, password = var.backplane_secrets.harbor_push_password }
+    pull = { user = var.backplane_secrets.harbor_pull_username, password = var.backplane_secrets.harbor_pull_password }
+  }
 
   # Smoke tests don't exercise real inference — the app only needs the `stackit-ai`
   # secret to exist so its pods can start (the app chart mounts it via `envFrom`, so a

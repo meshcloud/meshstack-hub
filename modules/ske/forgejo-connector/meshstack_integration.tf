@@ -24,16 +24,14 @@ variable "harbor_host" {
   default     = "https://registry.onstackit.cloud"
 }
 
-variable "harbor_username" {
-  type        = string
-  description = "The username for the Harbor registry."
+variable "container_registry_access_credentials" {
+  type = object({
+    push = object({ user = string, password = string })
+    pull = object({ user = string, password = string })
+  })
+  description = "Registry robot credentials, as the container registry building block reports them. Null until a bootstrap robot is linked in the Harbor UI."
   sensitive   = true
-}
-
-variable "harbor_password" {
-  type        = string
-  description = "The password for the Harbor registry."
-  sensitive   = true
+  default     = null
 }
 
 variable "additional_kubernetes_secrets" {
@@ -156,7 +154,7 @@ resource "meshstack_building_block_definition" "this" {
 
     dependency_refs = [{ uuid = var.forgejo_repo_definition_uuid }]
 
-    inputs = {
+    inputs = merge({
       namespace = {
         display_name    = "K8S Namespace"
         description     = "Provided namespace in Kubernetes cluster."
@@ -244,32 +242,6 @@ resource "meshstack_building_block_definition" "this" {
         argument        = jsonencode(var.harbor_host)
       }
 
-      harbor_username = {
-        display_name    = "harbor_username"
-        description     = "The username for the Harbor registry."
-        type            = "STRING"
-        assignment_type = "STATIC"
-        sensitive = {
-          argument = {
-            secret_value   = var.harbor_username
-            secret_version = nonsensitive(sha256(var.harbor_username))
-          }
-        }
-      }
-
-      harbor_password = {
-        display_name    = "harbor_password"
-        description     = "The password for the Harbor registry."
-        type            = "STRING"
-        assignment_type = "STATIC"
-        sensitive = {
-          argument = {
-            secret_value   = var.harbor_password
-            secret_version = nonsensitive(sha256(var.harbor_password))
-          }
-        }
-      }
-
       hub_git_ref = {
         display_name    = "hub_git_ref"
         description     = "Hub git ref this building block runs from."
@@ -277,7 +249,24 @@ resource "meshstack_building_block_definition" "this" {
         assignment_type = "STATIC"
         argument        = jsonencode(var.hub.git_ref)
       }
-    }
+      # The registry robots only exist once a bootstrap robot is linked in the Harbor UI (a
+      # post-provisioning step), and the provider rejects an empty sensitive value — so this input
+      # joins the definition only when real credentials are supplied. Until then the connector wires
+      # no push secret and application pods pull public images only.
+      }, var.container_registry_access_credentials != null ? {
+      container_registry_access_credentials = {
+        display_name    = "container_registry_access_credentials"
+        description     = "Registry robot credentials: `push` for the pipeline, `pull` for the namespace."
+        type            = "CODE"
+        assignment_type = "STATIC"
+        sensitive = {
+          argument = {
+            secret_value   = jsonencode(var.container_registry_access_credentials)
+            secret_version = nonsensitive(sha256(jsonencode(var.container_registry_access_credentials)))
+          }
+        }
+      }
+    } : {})
 
     outputs = {
       "app_link" = {
