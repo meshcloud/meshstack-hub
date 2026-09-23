@@ -6,7 +6,6 @@ resource "random_string" "name_suffix" {
 }
 
 locals {
-  # Sanitize and lowercase the name for K8s namespace compatibility (similar to AKS starterkit)
   sanitized_name = lower(replace(replace(var.name, "/[^a-zA-Z0-9\\s\\-]/", ""), "/[\\s]+/", "-"))
   name           = var.add_random_name_suffix ? "${local.sanitized_name}-${random_string.name_suffix.result}" : local.sanitized_name
 
@@ -22,7 +21,7 @@ locals {
 
 resource "meshstack_building_block" "git_repository" {
   spec = {
-    building_block_definition_version_ref = var.building_block_definition_version_refs["git-repository"] # provisioned in backplane
+    building_block_definition_version_ref = var.building_block_definition_version_refs["git-repository"]
 
     display_name = "Git Repo ${local.name}"
     target_ref = {
@@ -34,6 +33,8 @@ resource "meshstack_building_block" "git_repository" {
       name        = { value = jsonencode(local.name) }
       description = { value = jsonencode("Source code for application ${var.name}") }
       clone_addr  = { value = jsonencode(var.repo_clone_addr) }
+
+      extra_action_variables = { value = jsonencode(jsonencode({ APP_NAME = var.app_name })) }
     }
   }
   wait_for_completion = true
@@ -55,7 +56,7 @@ resource "meshstack_project" "this" {
   spec = {
     display_name = "${var.name} ${title(each.key)}"
     tags = merge(
-      var.project_tags[each.key],
+      lookup(var.project_tags.stages, each.key, {}),
       var.project_tags.owner_tag_key == null ? {} : {
         (var.project_tags.owner_tag_key) : [var.creator.displayName]
     })
@@ -138,9 +139,6 @@ resource "meshstack_building_block" "forgejo_connector" {
   }
 }
 
-# Migrate the app-team-managed child building blocks from the deprecated
-# meshstack_building_block_v2 resource to meshstack_building_block in place —
-# no destroy/recreate of the live blocks.
 moved {
   from = meshstack_building_block_v2.git_repository
   to   = meshstack_building_block.git_repository

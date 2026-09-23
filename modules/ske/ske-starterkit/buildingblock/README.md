@@ -2,12 +2,14 @@
 name: SKE Starter Kit
 supportedPlatforms:
   - stackit
-description: Provisions a paired dev/prod project setup with SKE tenants and optional Project Admin bindings on the STACKIT Kubernetes Engine platform.
+description: Provisions one project with an SKE tenant per stage the platform offers, a Forgejo repository wired to each of them, and optional Project Admin bindings on the STACKIT Kubernetes Engine platform.
 ---
 
 # SKE Starter Kit
 
-This building block creates a dev and prod meshStack project pair, each with a dedicated SKE tenant assigned to the appropriate landing zone. If the creator is a user identity, they are granted the Project Admin role on both projects.
+This building block creates one meshStack project per stage the platform offers, each with a dedicated SKE tenant in that stage's landing zone, and one Forgejo repository that an SKE Forgejo Connector wires to every stage's namespace. The keys of `landing_zone_refs` decide the stages. The repository gets the application's image name as the `APP_NAME` Actions variable. If the creator is a user identity, they are granted the Project Admin role on every project.
+
+`prerun.sh` writes one `app_link_<stage>` output per stage before the run, because an `output` block cannot be declared per key of a map.
 
 <!-- BEGIN_TF_DOCS -->
 ## Requirements
@@ -38,20 +40,18 @@ No modules.
 | Name | Description | Type | Default | Required |
 |------|-------------|------|---------|:--------:|
 | <a name="input_add_random_name_suffix"></a> [add\_random\_name\_suffix](#input\_add\_random\_name\_suffix) | Whether to append a random suffix to the provided name for shared environments. | `bool` | n/a | yes |
+| <a name="input_app_name"></a> [app\_name](#input\_app\_name) | Image name the pipeline builds under, set on the repository as APP\_NAME. | `string` | n/a | yes |
 | <a name="input_building_block_definition_version_refs"></a> [building\_block\_definition\_version\_refs](#input\_building\_block\_definition\_version\_refs) | Building block definition versions this starter kit creates its child building blocks from, keyed by definition name (`git-repository` and `forgejo-connector`). | <pre>map(object({<br/>    uuid = string<br/>  }))</pre> | n/a | yes |
 | <a name="input_creator"></a> [creator](#input\_creator) | Information about the creator of the resources who will be assigned Project Admin role | <pre>object({<br/>    type        = string<br/>    identifier  = string<br/>    displayName = string<br/>    username    = optional(string)<br/>    email       = optional(string)<br/>    euid        = optional(string)<br/>  })</pre> | n/a | yes |
 | <a name="input_dns_zone_name"></a> [dns\_zone\_name](#input\_dns\_zone\_name) | DNS zone name used for application ingress hostnames. | `string` | n/a | yes |
-| <a name="input_landing_zone_refs"></a> [landing\_zone\_refs](#input\_landing\_zone\_refs) | Landing zone references keyed by stage (usually dev and prod). Wired in as a static building block input from the platform/backplane that owns the meshLandingZones (their `.ref` outputs). | `map(object({ name = string, kind = optional(string, "meshLandingZone") }))` | n/a | yes |
+| <a name="input_landing_zone_refs"></a> [landing\_zone\_refs](#input\_landing\_zone\_refs) | Landing zone references keyed by stage. The keys decide which stages this starter kit creates. Wired in as a static building block input from the platform/backplane that owns the meshLandingZones (their `.ref` outputs). | `map(object({ name = string, kind = optional(string, "meshLandingZone") }))` | n/a | yes |
 | <a name="input_name"></a> [name](#input\_name) | This name will be used for the created projects. | `string` | n/a | yes |
 | <a name="input_platform_ref"></a> [platform\_ref](#input\_platform\_ref) | Reference (by uuid) to the meshPlatform the tenants are created on. Wired in as a static building block input from the platform/backplane that owns the meshPlatform (its `.ref` output). Required because the meshTenant v4 API references platforms by ref. | <pre>object({<br/>    uuid = string<br/>    kind = optional(string, "meshPlatform")<br/>  })</pre> | n/a | yes |
-| <a name="input_project_tags"></a> [project\_tags](#input\_project\_tags) | Tags for dev/prod meshProject. | <pre>object({<br/>    dev : map(list(string))<br/>    prod : map(list(string))<br/><br/>    owner_tag_key = optional(string, null)<br/>  })</pre> | n/a | yes |
+| <a name="input_project_tags"></a> [project\_tags](#input\_project\_tags) | Tags for the created meshProjects. `stages` is keyed as `landing_zone_refs`; `owner_tag_key` names the tag that receives the creator's display name. | <pre>object({<br/>    stages        = map(map(list(string)))<br/>    owner_tag_key = optional(string, null)<br/>  })</pre> | n/a | yes |
 | <a name="input_repo_clone_addr"></a> [repo\_clone\_addr](#input\_repo\_clone\_addr) | URL to clone into the starterkit git repository. | `string` | n/a | yes |
 | <a name="input_workspace_identifier"></a> [workspace\_identifier](#input\_workspace\_identifier) | n/a | `string` | n/a | yes |
 
 ## Outputs
 
-| Name | Description |
-|------|-------------|
-| <a name="output_app_link_dev"></a> [app\_link\_dev](#output\_app\_link\_dev) | Public URL for the dev stage application. |
-| <a name="output_app_link_prod"></a> [app\_link\_prod](#output\_app\_link\_prod) | Public URL for the prod stage application. |
+No outputs.
 <!-- END_TF_DOCS -->

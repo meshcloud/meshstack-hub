@@ -121,6 +121,7 @@ module "ske_starterkit" {
 
   platform_ref           = module.meshstack_kubernetes_platform.platform_ref
   landing_zone_refs      = module.meshstack_kubernetes_platform.landing_zone_refs
+  app_name               = "ai-summarizer"
   repo_clone_addr        = "https://github.com/likvid-bank/starterkit-template-stackit-ai-summarizer.git"
   dns_zone_name          = var.test_context.dns_zone_name
   add_random_name_suffix = false
@@ -131,13 +132,15 @@ module "ske_starterkit" {
   }
 
   project_tags = {
-    dev = {
-      "confidentiality" = ["Internal"]
-      "environment"     = ["dev"]
-    }
-    prod = {
-      "confidentiality" = ["Internal"]
-      "environment"     = ["prod"]
+    stages = {
+      dev = {
+        "confidentiality" = ["Internal"]
+        "environment"     = ["dev"]
+      }
+      prod = {
+        "confidentiality" = ["Internal"]
+        "environment"     = ["prod"]
+      }
     }
   }
 }

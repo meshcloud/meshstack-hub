@@ -29,17 +29,21 @@ variable "platform_ref" {
 
 variable "landing_zone_refs" {
   type        = map(object({ name = string, kind = optional(string, "meshLandingZone") }))
-  description = "Landing zone references keyed by stage (usually dev and prod). Wired in as a static building block input from the platform/backplane that owns the meshLandingZones (their `.ref` outputs)."
+  description = "Landing zone references keyed by stage. The keys decide which stages this starter kit creates. Wired in as a static building block input from the platform/backplane that owns the meshLandingZones (their `.ref` outputs)."
 }
 
 variable "project_tags" {
   type = object({
-    dev : map(list(string))
-    prod : map(list(string))
-
+    stages        = map(map(list(string)))
     owner_tag_key = optional(string, null)
   })
-  description = "Tags for dev/prod meshProject."
+  description = "Tags for the created meshProjects. `stages` is keyed as `landing_zone_refs`; `owner_tag_key` names the tag that receives the creator's display name."
+}
+
+variable "app_name" {
+  type        = string
+  nullable    = false
+  description = "Image name the pipeline builds under, set on the repository as APP_NAME."
 }
 
 variable "repo_clone_addr" {
@@ -58,7 +62,6 @@ variable "add_random_name_suffix" {
 }
 
 variable "building_block_definition_version_refs" {
-  # The input of the same name in meshstack_integration.tf fills this in; rename both together.
   type = map(object({
     uuid = string
   }))

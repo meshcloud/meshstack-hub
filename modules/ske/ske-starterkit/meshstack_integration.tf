@@ -1,27 +1,29 @@
 variable "platform_ref" {
   type = object({
     uuid = string
-    kind = optional(string, "meshPlatform")
+    kind = string
   })
-  description = "Reference (by uuid) to the meshPlatform tenants are created on — e.g. the `.ref` output of the meshstack_platform resource/backplane that owns it. Wired to the building block as a static input; required since the meshTenant v4 API references platforms by ref."
+  description = "The `.ref` of the meshPlatform the tenants are created on."
 }
 
 variable "landing_zone_refs" {
-  type        = map(object({ name = string, kind = optional(string, "meshLandingZone") }))
-  description = "map keys are the stages, usually dev and prod"
+  type        = map(object({ name = string, kind = string }))
+  description = "Landing zone references keyed by stage. The keys decide which stages the starter kit creates, and the definition declares one app link output per key."
 }
 
 variable "project_tags" {
   type = object({
-    dev  = map(list(string))
-    prod = map(list(string))
-
+    stages        = map(map(list(string)))
     owner_tag_key = optional(string, null)
   })
-  default = {
-    dev  = {}
-    prod = {}
-  }
+  default     = { stages = {}, owner_tag_key = null }
+  description = "Tags for the meshProjects the starter kit creates. `stages` is keyed as `landing_zone_refs`; `owner_tag_key` names the tag that receives the creator's display name."
+}
+
+variable "app_name" {
+  type        = string
+  nullable    = false
+  description = "Image name every application from this platform builds under, passed to its pipeline as APP_NAME."
 }
 
 variable "repo_clone_addr" {
@@ -103,6 +105,9 @@ output "building_block_definition" {
 
 locals {
   name_regex = "^[a-zA-Z0-9-]{0,24}$" # underscore and dots not allowed because of K8s namespace, max length of 25 because of project character limit and suffixes added by the building block
+
+  stages     = sort(keys(var.landing_zone_refs))
+  stage_list = join(", ", [for stage in local.stages : "`${stage}`"])
 }
 
 resource "meshstack_building_block_definition" "this" {
@@ -115,8 +120,7 @@ resource "meshstack_building_block_definition" "this" {
     description = coalesce(var.bbd_description, chomp(<<-EOT
       The SKE Starterkit provides application teams with a pre-configured
       Kubernetes environment on STACKIT SKE following best practices. It
-      automates the creation of dev and prod projects with dedicated SKE
-      tenants.
+      creates one project with a dedicated SKE tenant per stage: ${local.stage_list}.
     EOT
     ))
     display_name             = coalesce(var.bbd_display_name, "SKE Starterkit")
@@ -124,7 +128,7 @@ resource "meshstack_building_block_definition" "this" {
     notification_subscribers = var.notification_subscribers
 
     readme = coalesce(var.bbd_readme, chomp(<<-EOT
-    The **SKE Starterkit** provides application teams with a pre-configured Kubernetes environment on STACKIT Kubernetes Engine (SKE) following best practices. It automates the creation of dev and prod projects with dedicated SKE tenants.
+    The **SKE Starterkit** provides application teams with a pre-configured Kubernetes environment on STACKIT Kubernetes Engine (SKE) following best practices. It creates one project with a dedicated SKE tenant per stage this platform offers: ${local.stage_list}.
 
     ## 🎯 When to use it
 
@@ -132,28 +136,25 @@ resource "meshstack_building_block_definition" "this" {
 
     -   Want to deploy applications on Kubernetes without worrying about setting up infrastructure from scratch.
     -   Need a secure, best-practice-aligned environment for developing and deploying workloads on STACKIT.
-    -   Prefer a streamlined setup with separate dev and prod environments.
+    -   Prefer a streamlined setup with one environment per stage.
 
     ## Resources Created
 
     This building block automates the creation of the following resources:
 
     - **STACKIT Git Forgejo Repository**: Code repository for application development and deployment.
-    - **Development Project**
-      - **SKE Tenant**: A dedicated Kubernetes namespace for development.
-      - **SKE Forgejo Connector**: Provisions stage-specific namespace/repository wiring and outputs stage user permissions.
-    - **Production Project**: You, as the creator, will have access to this project and SKE tenant.
-      - **SKE Tenant**: A dedicated Kubernetes namespace for production.
+    - **One project per stage** (${local.stage_list}), each with:
+      - **SKE Tenant**: A dedicated Kubernetes namespace for that stage.
       - **SKE Forgejo Connector**: Provisions stage-specific namespace/repository wiring and outputs stage user permissions.
 
-    You, as the creator, will have access to the the Git repository, the projects and associated Kubernetes namespaces.
+    You, as the creator, will have access to the Git repository, the projects and associated Kubernetes namespaces.
 
     ## Shared Responsibilities
 
     | Responsibility                               | Platform Team | Application Team |
     | -------------------------------------------- | ------------- | ---------------- |
     | Provision and manage SKE cluster             | ✅            | ❌                |
-    | Create Kubernetes namespaces (dev/prod)      | ✅            | ❌                |
+    | Create one Kubernetes namespace per stage    | ✅            | ❌                |
     | Create Forgejo Git repository                | ✅            | ❌                |
     | Manage K8s resources inside namespace        | ❌             | ✅               |
     | Develop and maintain application source code | ❌             | ✅               |
@@ -176,6 +177,7 @@ resource "meshstack_building_block_definition" "this" {
         ref_name                       = var.hub.git_ref
         repository_path                = "modules/ske/ske-starterkit/buildingblock"
         use_mesh_http_backend_fallback = true
+        pre_run_script                 = file("${path.module}/buildingblock/prerun.sh")
       }
     }
 
@@ -204,23 +206,27 @@ resource "meshstack_building_block_definition" "this" {
         assignment_type = "STATIC"
         type            = "CODE"
         display_name    = "Platform Reference"
-        # jsonencode twice is correct for structured inputs, see landing_zone_refs below.
-        argument = jsonencode(jsonencode(var.platform_ref))
+        argument        = jsonencode(jsonencode(var.platform_ref))
       }
       "landing_zone_refs" = {
         assignment_type = "STATIC"
         type            = "CODE"
-        display_name    = "Landing Zone References for Dev/Prod."
-        # jsonencode twice is correct, see https://registry.terraform.io/providers/meshcloud/meshstack/latest/docs/resources/building_block_definition#argument-1
-        argument = jsonencode(jsonencode(var.landing_zone_refs))
+        display_name    = "Landing Zone References per Stage"
+        argument        = jsonencode(jsonencode(var.landing_zone_refs))
       }
       "project_tags" = {
         assignment_type = "STATIC"
         type            = "CODE"
         display_name    = "Project Tags"
-        description     = "Tags for the created Dev/Prod projects."
-        # jsonencode twice is correct, see https://registry.terraform.io/providers/meshcloud/meshstack/latest/docs/resources/building_block_definition#argument-1
-        argument = jsonencode(jsonencode(var.project_tags))
+        description     = "Tags for the created projects, per stage."
+        argument        = jsonencode(jsonencode(var.project_tags))
+      }
+      "app_name" = {
+        assignment_type = "STATIC"
+        type            = "STRING"
+        display_name    = "Application Image Name"
+        description     = "Image name the pipeline builds under."
+        argument        = jsonencode(var.app_name)
       }
       "repo_clone_addr" = {
         assignment_type = "STATIC"
@@ -245,21 +251,14 @@ resource "meshstack_building_block_definition" "this" {
         type            = "CODE"
         description     = "Definition versions the starter kit creates its child building blocks from."
         display_name    = "BBD Version References"
-        # jsonencode twice is correct, see https://registry.terraform.io/providers/meshcloud/meshstack/latest/docs/resources/building_block_definition#argument-1
-        argument = jsonencode(jsonencode(var.building_block_definition_version_refs))
-      },
-
+        argument        = jsonencode(jsonencode(var.building_block_definition_version_refs))
+      }
     }
 
     outputs = {
-      "app_link_dev" = {
+      for stage in keys(var.landing_zone_refs) : "app_link_${stage}" => {
         assignment_type = "RESOURCE_URL"
-        display_name    = "Open App Dev"
-        type            = "STRING"
-      }
-      "app_link_prod" = {
-        assignment_type = "RESOURCE_URL"
-        display_name    = "Open App Prod"
+        display_name    = "Open App ${title(stage)}"
         type            = "STRING"
       }
     }
