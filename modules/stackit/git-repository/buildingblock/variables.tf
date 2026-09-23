@@ -3,7 +3,7 @@ variable "workspace_identifier" {
 }
 
 variable "workspace_members" {
-  description = "Workspace members used for team-based access management with username resolution."
+  description = "Workspace members used for team-based access management."
   type = list(object({
     meshIdentifier = string
     username       = string
@@ -13,7 +13,7 @@ variable "workspace_members" {
     euid           = string
     roles          = list(string)
   }))
-  default = []
+  nullable = false
 }
 
 variable "forgejo_organization" {
@@ -33,44 +33,48 @@ variable "name" {
 
 variable "description" {
   type        = string
-  description = "Short description of the repository"
-  default     = ""
+  nullable    = false
+  description = "Short description of the repository."
 }
 
 variable "private" {
   type        = bool
-  description = "Whether the repository should be private"
-  default     = true
+  nullable    = false
+  description = "Whether the repository should be private."
 }
 
 variable "default_branch" {
   type        = string
-  description = "Default branch name"
-  default     = "main"
+  nullable    = false
+  description = "Default branch of an empty repository; a clone keeps the source's."
 }
 
 variable "clone_addr" {
   type        = string
-  description = "Optional URL to clone into this repository, e.g. 'https://github.com/owner/repo.git'. Leave empty or `null` to create an empty repository."
-  default     = "null" # supporting the null string is a workaround for the Panel UI which does not support empty string as default for optional value
+  nullable    = false
+  description = "Public Git URL cloned once into the repository. Empty or `null` creates an empty repository."
 }
 
 variable "action_variables" {
   type        = map(string)
+  nullable    = false
   description = "Map of Forgejo Actions variables to create in the repository."
-  default     = {}
+}
+
+variable "extra_action_variables" {
+  type        = map(string)
+  nullable    = false
+  description = "Forgejo Actions variables for this repository only, merged over `action_variables`."
 }
 
 variable "action_secrets" {
   type        = map(string)
   description = "Map of Forgejo Actions secrets to create in the repository."
+  nullable    = false
   sensitive   = false # the whole map is not sensitive, but map values are!
-  default     = {}
 
   validation {
     condition     = alltrue([for key in keys(var.action_secrets) : (length(key) <= 30)])
     error_message = "Forgejo Actions secret names must be 30 characters or less."
   }
 }
-
-

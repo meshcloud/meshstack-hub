@@ -22,7 +22,6 @@ resource "forgejo_repository" "this" {
   default_branch = local.have_clone_addr ? data.external.resolve_default_branch.result["default_branch"] : var.default_branch
   auto_init      = !local.have_clone_addr
 
-  # One-time clone (not an ongoing mirror)
   clone_addr = local.have_clone_addr ? var.clone_addr : null
   mirror     = local.have_clone_addr ? false : null
 
@@ -42,6 +41,6 @@ module "action_variables_and_secrets" {
   }
 
   repository_id    = forgejo_repository.this.id
-  action_variables = var.action_variables
+  action_variables = merge(var.action_variables, var.extra_action_variables)
   action_secrets   = var.action_secrets
 }

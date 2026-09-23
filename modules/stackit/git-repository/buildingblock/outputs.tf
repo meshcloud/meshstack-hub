@@ -36,7 +36,6 @@ output "summary" {
 
     team_names = local.team_names
 
-    # Per-member info for the summary table
     members = [
       for member in var.workspace_members : {
         email         = member.email

@@ -44,16 +44,17 @@ support action variables at all. See the sub-module README for details.
 
 | Name | Description | Type | Default | Required |
 |------|-------------|------|---------|:--------:|
-| <a name="input_action_secrets"></a> [action\_secrets](#input\_action\_secrets) | Map of Forgejo Actions secrets to create in the repository. | `map(string)` | `{}` | no |
-| <a name="input_action_variables"></a> [action\_variables](#input\_action\_variables) | Map of Forgejo Actions variables to create in the repository. | `map(string)` | `{}` | no |
-| <a name="input_clone_addr"></a> [clone\_addr](#input\_clone\_addr) | Optional URL to clone into this repository, e.g. 'https://github.com/owner/repo.git'. Leave empty or `null` to create an empty repository. | `string` | `"null"` | no |
-| <a name="input_default_branch"></a> [default\_branch](#input\_default\_branch) | Default branch name | `string` | `"main"` | no |
-| <a name="input_description"></a> [description](#input\_description) | Short description of the repository | `string` | `""` | no |
+| <a name="input_action_secrets"></a> [action\_secrets](#input\_action\_secrets) | Map of Forgejo Actions secrets to create in the repository. | `map(string)` | n/a | yes |
+| <a name="input_action_variables"></a> [action\_variables](#input\_action\_variables) | Map of Forgejo Actions variables to create in the repository. | `map(string)` | n/a | yes |
+| <a name="input_clone_addr"></a> [clone\_addr](#input\_clone\_addr) | Public Git URL cloned once into the repository. Empty or `null` creates an empty repository. | `string` | n/a | yes |
+| <a name="input_default_branch"></a> [default\_branch](#input\_default\_branch) | Default branch of an empty repository; a clone keeps the source's. | `string` | n/a | yes |
+| <a name="input_description"></a> [description](#input\_description) | Short description of the repository. | `string` | n/a | yes |
+| <a name="input_extra_action_variables"></a> [extra\_action\_variables](#input\_extra\_action\_variables) | Forgejo Actions variables for this repository only, merged over `action_variables`. | `map(string)` | n/a | yes |
 | <a name="input_forgejo_organization"></a> [forgejo\_organization](#input\_forgejo\_organization) | STACKIT Git organization where the repository will be created | `string` | n/a | yes |
 | <a name="input_name"></a> [name](#input\_name) | Name of the Git repository to create | `string` | n/a | yes |
-| <a name="input_private"></a> [private](#input\_private) | Whether the repository should be private | `bool` | `true` | no |
+| <a name="input_private"></a> [private](#input\_private) | Whether the repository should be private. | `bool` | n/a | yes |
 | <a name="input_workspace_identifier"></a> [workspace\_identifier](#input\_workspace\_identifier) | n/a | `string` | n/a | yes |
-| <a name="input_workspace_members"></a> [workspace\_members](#input\_workspace\_members) | Workspace members used for team-based access management with username resolution. | <pre>list(object({<br/>    meshIdentifier = string<br/>    username       = string<br/>    firstName      = string<br/>    lastName       = string<br/>    email          = string<br/>    euid           = string<br/>    roles          = list(string)<br/>  }))</pre> | `[]` | no |
+| <a name="input_workspace_members"></a> [workspace\_members](#input\_workspace\_members) | Workspace members used for team-based access management. | <pre>list(object({<br/>    meshIdentifier = string<br/>    username       = string<br/>    firstName      = string<br/>    lastName       = string<br/>    email          = string<br/>    euid           = string<br/>    roles          = list(string)<br/>  }))</pre> | n/a | yes |
 
 ## Outputs
 

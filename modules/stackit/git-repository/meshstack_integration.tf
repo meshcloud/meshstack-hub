@@ -70,11 +70,11 @@ variable "hub" {
 }
 
 output "building_block_definition" {
+  description = "BBD is consumed in building block compositions."
   value = {
     uuid        = meshstack_building_block_definition.this.metadata.uuid
-    version_ref = var.hub.bbd_draft ? meshstack_building_block_definition.this.version_latest : meshstack_building_block_definition.this.version_latest_release
+    version_ref = meshstack_building_block_definition.this.version_latest
   }
-  description = "BBD is consumed in Building Block compositions, for example in the backplane of starter kits."
 }
 
 module "backplane" {
@@ -153,8 +153,6 @@ resource "meshstack_building_block_definition" "this" {
     }
 
     inputs = {
-      # ── Static inputs from backplane ──────────────────────────────────────
-
       FORGEJO_HOST = {
         display_name    = "FORGEJO_HOST"
         description     = "The Host of the Forgejo instance to connect to."
@@ -199,8 +197,6 @@ resource "meshstack_building_block_definition" "this" {
         assignment_type = "USER_PERMISSIONS"
       }
 
-      # ── User inputs ────────────────────────────────────────────────────────
-
       name = {
         display_name                   = "Repository Name / Identifier"
         description                    = "Name of the Git repository (alphanumeric, dashes, dots, underscores)"
@@ -233,7 +229,16 @@ resource "meshstack_building_block_definition" "this" {
         description     = "Optional URL to clone into this repository, e.g. 'https://github.com/owner/repo.git'. Leave `null` to create an empty repository."
         type            = "STRING"
         assignment_type = "USER_INPUT"
-        default_value   = jsonencode("null")
+        # The Panel UI does not support an empty string as the default of an optional value.
+        default_value = jsonencode("null")
+      }
+
+      default_branch = {
+        display_name    = "Default Branch"
+        description     = "Default branch of an empty repository; a clone keeps the source's."
+        type            = "STRING"
+        assignment_type = "STATIC"
+        argument        = jsonencode("main")
       }
 
       action_variables = {
@@ -241,8 +246,16 @@ resource "meshstack_building_block_definition" "this" {
         description     = "Static non-sensitive map of Forgejo Actions variables created in each provisioned repository."
         type            = "CODE"
         assignment_type = "STATIC"
-        # jsonencode twice is correct, see https://registry.terraform.io/providers/meshcloud/meshstack/latest/docs/resources/building_block_definition#argument-1
-        argument = jsonencode(jsonencode(var.action_variables))
+        argument        = jsonencode(jsonencode(var.action_variables))
+      }
+
+      extra_action_variables = {
+        display_name           = "Extra Action Variables"
+        description            = "HCL map of Forgejo Actions variables for this repository only, merged over the platform-wide ones."
+        type                   = "CODE"
+        assignment_type        = "USER_INPUT"
+        default_value          = jsonencode(jsonencode({}))
+        updateable_by_consumer = true
       }
 
       action_secrets = {

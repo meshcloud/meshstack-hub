@@ -1,17 +1,8 @@
-# ── Team-based access management ─────────────────────────────────────────────
+# restapi_object rather than forgejo_team, because the svalabs team resource requires Forgejo
+# site-admin privileges (it calls /api/v1/admin/orgs). The org-level API only needs org-owner rights.
 #
-# Workspace members are organized into Forgejo organization teams
-# (admins / writers / readers) with appropriate permissions.
-#
-# We use restapi_object for team CRUD because the forgejo_team resource in the
-# svalabs provider requires Forgejo site-admin privileges (calls /api/v1/admin/orgs).
-# The org-level API POST /api/v1/orgs/{org}/teams only needs org-owner rights.
-#
-# Members are looked up by email via the Forgejo search API. Only members whose
-# email resolves to an existing Forgejo account are added to teams. Members who
+# Only members whose email resolves to an existing Forgejo account are added to teams. Members who
 # haven't signed into the Forgejo instance yet are reported in the summary.
-
-# Resolve workspace member emails to Forgejo usernames
 data "external" "resolve_forgejo_users" {
   program = ["python3", "${path.module}/resolve_forgejo_users.py"]
 
@@ -21,10 +12,8 @@ data "external" "resolve_forgejo_users" {
 }
 
 locals {
-  # email → forgejo username (empty string if not found)
   _resolved_users = data.external.resolve_forgejo_users.result
 
-  # Map each workspace member to a team type based on their roles (keyed by meshStack username)
   member_team_type = {
     for member in var.workspace_members : member.username => (
       contains(member.roles, "Workspace Owner") ? "admins" : (
@@ -33,7 +22,6 @@ locals {
     )
   }
 
-  # Map email → team type
   _member_email_team = {
     for member in var.workspace_members : member.email => (
       contains(member.roles, "Workspace Owner") ? "admins" : (
@@ -42,7 +30,6 @@ locals {
     )
   }
 
-  # Members with resolved Forgejo accounts: email → { team_type, username }
   _resolved_members = {
     for email, username in local._resolved_users : email => {
       team_type = local._member_email_team[email]
@@ -50,35 +37,30 @@ locals {
     } if username != "" && !startswith(email, "error:")
   }
 
-  # Members without Forgejo accounts (for summary reporting)
   _unresolved_members = {
     for email, username in local._resolved_users : email => {
       team_type = local._member_email_team[email]
     } if username == "" && !startswith(email, "error:")
   }
 
-  # Group members by team type (using resolved emails)
   team_members = {
     for type in ["admins", "writers", "readers"] : type => [
       for email, info in local._resolved_members : email if info.team_type == type
     ]
   }
 
-  # All team types that have at least one workspace member assigned (resolved or not)
   active_teams = {
     for type in ["admins", "writers", "readers"] : type => [
       for email, team_type in local._member_email_team : email if team_type == type
     ] if length([for email, team_type in local._member_email_team : email if team_type == type]) > 0
   }
 
-  # Map team types to Forgejo permissions
   team_permissions = {
     admins  = "admin"
     writers = "write"
     readers = "read"
   }
 
-  # Units to grant per team type
   team_units = {
     admins  = ["repo.code", "repo.issues", "repo.ext_issues", "repo.wiki", "repo.pulls", "repo.releases", "repo.projects", "repo.ext_wiki", "repo.actions", "repo.packages"]
     writers = ["repo.code", "repo.issues", "repo.wiki", "repo.pulls", "repo.releases", "repo.projects", "repo.actions", "repo.packages"]
@@ -91,7 +73,6 @@ locals {
     for type in keys(local.active_teams) : type => "${var.name}-${type}"
   }
 
-  # Flat map for resolved member assignments: "type/username" => { team_type, username }
   member_assignments = merge([
     for email, info in local._resolved_members : {
       "${info.team_type}/${info.username}" = {
@@ -102,7 +83,6 @@ locals {
   ]...)
 }
 
-# Create teams via the org-level API (POST returns JSON, does not require site-admin).
 # Forgejo returns extra fields (organization, units_map, etc.) and rewrites the
 # permission value for owner teams to "none", so we must ignore server additions.
 resource "restapi_object" "team" {
@@ -130,14 +110,12 @@ resource "restapi_object" "team" {
 }
 
 locals {
-  # Extract numeric team IDs from restapi response for use in dependent resources
   _team_ids = {
     for type, team in restapi_object.team : type => team.id
   }
 }
 
-# Assign each team to the repository.
-# Uses terraform_data + local-exec because PUT /teams/{id}/repos/{org}/{repo}
+# terraform_data + local-exec because PUT /teams/{id}/repos/{org}/{repo}
 # returns 204 No Content which restapi_object cannot handle for state tracking.
 resource "terraform_data" "team_repo" {
   for_each = local.active_teams
@@ -148,7 +126,7 @@ resource "terraform_data" "team_repo" {
     org       = var.forgejo_organization
   }
 
-  # Retry loop: concurrent team-repo assignments for the same repo can race in Forgejo's database
+  # Concurrent team-repo assignments for the same repo can race in Forgejo's database.
   provisioner "local-exec" {
     command = <<-EOT
       for i in 1 2 3 4 5 6; do
@@ -174,8 +152,7 @@ resource "terraform_data" "team_repo" {
   }
 }
 
-# Add resolved members to their respective team by Forgejo username.
-# Uses terraform_data + local-exec because PUT /teams/{id}/members/{username}
+# terraform_data + local-exec because PUT /teams/{id}/members/{username}
 # returns 204 No Content which restapi_object cannot handle for state tracking.
 resource "terraform_data" "team_member" {
   for_each = local.member_assignments

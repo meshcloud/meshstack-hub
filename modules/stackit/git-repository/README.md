@@ -14,8 +14,8 @@ It combines:
 
 - workspace-level target type
 - static inputs from backplane (`FORGEJO_HOST`, `FORGEJO_API_TOKEN`, `forgejo_organization`)
-- optional static sensitive action secrets (`action_secrets`)
-- user inputs (`name`, `description`, `private`, `clone_addr`)
+- static inputs `default_branch`, `action_variables` and the sensitive `action_secrets`
+- user inputs (`name`, `description`, `private`, `clone_addr`, `extra_action_variables`)
 - outputs exposed to users (`repository_id`, `repository_html_url`, `repository_clone_url`, `repository_ssh_url`, `summary`)
 
 This allows platform teams to publish a reusable self-service Git repository building block for tenants.
