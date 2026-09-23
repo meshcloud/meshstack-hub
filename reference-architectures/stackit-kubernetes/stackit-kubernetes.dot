@@ -1,8 +1,11 @@
 /*
- * STACKIT Kubernetes (SKE) reference architecture.
+ * STACKIT Kubernetes (SKE) reference architecture — platform-team view.
+ * The one-time bootstrap: what a platform engineer orders once, and the STACKIT infrastructure it
+ * provisions. The per-application-team view is stackit-kubernetes-app-team.dot; the internal
+ * building-block/federation wiring is stackit-kubernetes-building-blocks.dot.
  * Conventions: .agents/references/diagrams.md — render with: task diagrams
  */
-digraph stackit_kubernetes {
+digraph stackit_kubernetes_platform {
   rankdir=TB
   splines=ortho
   forcelabels=true
@@ -14,89 +17,60 @@ digraph stackit_kubernetes {
         fillcolor="#ffffff" color="#a2abb8" penwidth=1.1 margin="0.20,0.11"]
   edge [fontname="Helvetica" fontsize=9 fontcolor="#697180" color="#8b95a3" arrowsize=0.7]
 
-  subgraph cluster_stackit {
-    label="  STACKIT"
-    labeljust=l
-    fontname="Helvetica" fontsize=12 fontcolor="#697180"
-    style="rounded" color="#d5dae0"
-    margin=18
-
-    ORG    [label="🏢 STACKIT Organization" fillcolor="#ffffff" color="#a2abb8"]
-    SKE    [label="☸️ SKE cluster\nrun by the platform team" fillcolor="#eef2f6" color="#93a7bb"]
-    GIT    [label="🔀 STACKIT Git\nForgejo instance" fillcolor="#eef2f6" color="#93a7bb"]
-    HARBOR [label="🗄️ STACKIT Container Registry\nHarbor project per platform" fillcolor="#eef2f6" color="#93a7bb"]
-    MODEL  [label="🧠 STACKIT Model Serving\nsovereign LLM API" fillcolor="#eef2f6" color="#93a7bb"]
-    DNS    [label="🧭 STACKIT DNS zone\nwildcard to the load balancer" fillcolor="#eef2f6" color="#93a7bb"]
-    ING    [label="🔐 Ingress + cert-manager\nHAProxy LoadBalancer · Let's Encrypt" fillcolor="#eef2f6" color="#93a7bb"]
-    AGENT  [label="🔑 meshStack identities\nreplicator + metering" fillcolor="#eef2f6" color="#93a7bb"]
-    NS     [label="☸️ Namespace ×N\none per stage" fillcolor="#e5f2ea" color="#85bfa0"]
-    REPO   [label="🔀 App repository ×1\nper application team" fillcolor="#e5f2ea" color="#85bfa0"]
-    ACT    [label="⚙️ Forgejo Actions ×N\none pipeline per stage" fillcolor="#e5f2ea" color="#85bfa0"]
-
-    { rank=same; SKE -> GIT -> HARBOR -> MODEL [style=invis] }
-
-    ORG -> SKE
-    ORG -> GIT
-    ORG -> DNS
-    SKE -> ING   [xlabel="runs"]
-    SKE -> AGENT [xlabel="runs"]
-    SKE -> NS   [xlabel="contains"]
-    GIT -> REPO [xlabel="hosts"]
-
-    REPO -> ACT [xlabel="runs pipeline"]
-    ACT  -> HARBOR [xlabel="pushes images" style=dashed constraint=false]
-    ACT  -> NS     [xlabel="deploys to" style=dashed constraint=false]
-    NS   -> HARBOR [xlabel="pulls images" style=dashed constraint=false]
-    NS   -> MODEL  [xlabel="calls with injected key" style=dashed constraint=false]
-    DNS  -> ING    [xlabel="resolves to" style=dashed constraint=false]
-  }
+  // What it builds on — a whole reference architecture of its own, shown only for context.
+  LZBB [label="🧱 STACKIT Landing Zone\nsee the STACKIT Landing Zone ref-arch"
+        style="rounded,filled,dashed" fillcolor="#f0f1f3" color="#cdd2d8" fontcolor="#99a1ac"]
 
   subgraph cluster_mesh {
-    label="  meshStack"
+    label="  meshStack — registered once per platform"
     labeljust=l
     fontname="Helvetica" fontsize=12 fontcolor="#697180"
     style="rounded" color="#d5dae0"
     margin=18
 
-    LZBB  [label="🧱 STACKIT Landing Zone BB\nhosting project platform · service account + federation BBDs" fillcolor="#ffffff" color="#a2abb8"]
     PLAT  [label="🛰️ SKE Platform" fillcolor="#ecedfb" color="#9aa2e6"]
     LZ    [label="🛬 Landing Zone ×N\none per stage" fillcolor="#ecedfb" color="#9aa2e6"]
-    PROJ  [label="🗂️ Project ×N\none per stage" fillcolor="#e5f2ea" color="#85bfa0"]
-    BBD_K [label="📦 ske/cluster BBD\nregistered per platform" fillcolor="#ecedfb" color="#9aa2e6"]
-    BBD_G [label="📦 stackit/git BBD\nregistered per platform" fillcolor="#ecedfb" color="#9aa2e6"]
-    BBD_I [label="📦 kubernetes/ingress BBD\ncert-manager · HAProxy · ClusterIssuer" fillcolor="#ecedfb" color="#9aa2e6"]
+
     BBD_A [label="📦 kubernetes BBD\nreplicator + metering identities" fillcolor="#ecedfb" color="#9aa2e6"]
+    BBD_K [label="📦 ske/cluster BBD" fillcolor="#ecedfb" color="#9aa2e6"]
+    BBD_I [label="📦 kubernetes/ingress BBD\ncert-manager · HAProxy · ClusterIssuer" fillcolor="#ecedfb" color="#9aa2e6"]
+    BBD_G [label="📦 stackit/git BBD" fillcolor="#ecedfb" color="#9aa2e6"]
     BBD_H [label="📦 stackit/container-registry BBD\nregistry · base image mirror · robots" fillcolor="#ecedfb" color="#9aa2e6"]
-    BBD_D [label="📦 stackit/dns BBD\nzone for application hostnames" fillcolor="#ecedfb" color="#9aa2e6"]
-    BBD_M [label="📦 stackit/ai-llm BBD\nmodel serving token" fillcolor="#ecedfb" color="#9aa2e6"]
-    BBD_S [label="📦 ske/ske-starterkit BBD\nphase 2 · self-service catalog entry" fillcolor="#ecedfb" color="#9aa2e6"]
-    BBD_R [label="📦 stackit/git-repository BBD\nphase 2 · needs the Harbor robot" fillcolor="#ecedfb" color="#9aa2e6"]
-    BBD_C [label="📦 ske/forgejo-connector BBD\nphase 2 · needs the Harbor robot" fillcolor="#ecedfb" color="#9aa2e6"]
+    BBD_D [label="📦 stackit/dns BBD" fillcolor="#ecedfb" color="#9aa2e6"]
+    BBD_M [label="📦 stackit/ai-llm BBD" fillcolor="#ecedfb" color="#9aa2e6"]
 
-    { rank=same; BBD_K -> BBD_G -> BBD_I -> BBD_A [style=invis] }
-    { rank=same; BBD_H -> BBD_D -> BBD_M [style=invis] }
-    { rank=same; BBD_R -> BBD_C [style=invis] }
+    { rank=same; PLAT -> LZ [style=invis] }
+    { rank=same; BBD_A -> BBD_K -> BBD_I -> BBD_G -> BBD_H -> BBD_D -> BBD_M [style=invis] }
 
-    LZBB  -> PLAT  [style=invis]
-    LZBB  -> BBD_K [style=invis]
-    BBD_K -> BBD_H [style=invis]
-    PLAT  -> LZ
-    LZ    -> PROJ  [xlabel="applies to"]
-    BBD_S -> BBD_R [xlabel="composes"]
-    BBD_S -> BBD_C
-    BBD_S -> PROJ  [xlabel="creates" style=dotted constraint=false]
+    PLAT -> BBD_A [style=invis]
   }
 
-  PLAT  -> SKE  [xlabel="replicates into" style=dotted constraint=false]
-  PROJ  -> NS   [xlabel="tenant namespace" style=dotted constraint=false]
-  BBD_K -> SKE  [xlabel="provisions" style=dotted constraint=false]
-  BBD_G -> GIT  [xlabel="provisions" style=dotted constraint=false]
-  BBD_I -> ING  [xlabel="provisions" style=dotted constraint=false]
-  BBD_A -> AGENT [xlabel="provisions" style=dotted constraint=false]
-  BBD_H -> HARBOR [xlabel="provisions" style=dotted constraint=false]
-  BBD_D -> DNS  [xlabel="provisions" style=dotted constraint=false]
-  BBD_M -> MODEL [xlabel="provisions" style=dotted constraint=false]
-  PLAT  -> AGENT [xlabel="authenticates with" style=dotted constraint=false]
-  BBD_R -> REPO [xlabel="provisions" style=dotted constraint=false]
-  BBD_C -> ACT  [xlabel="provisions" style=dotted constraint=false]
+  subgraph cluster_stackit {
+    label="  STACKIT — provisioned infrastructure"
+    labeljust=l
+    fontname="Helvetica" fontsize=12 fontcolor="#697180"
+    style="rounded" color="#d5dae0"
+    margin=18
+
+    AGENT  [label="🔑 meshStack identities\nreplicator + metering" fillcolor="#eef2f6" color="#93a7bb"]
+    SKE    [label="☸️ SKE cluster\nrun by the platform team" fillcolor="#eef2f6" color="#93a7bb"]
+    ING    [label="🔐 Ingress + cert-manager\nHAProxy LoadBalancer · Let's Encrypt" fillcolor="#eef2f6" color="#93a7bb"]
+    GIT    [label="🔀 STACKIT Git\nForgejo instance" fillcolor="#eef2f6" color="#93a7bb"]
+    HARBOR [label="🗄️ STACKIT Container Registry\nHarbor project per platform" fillcolor="#eef2f6" color="#93a7bb"]
+    DNS    [label="🧭 STACKIT DNS zone\nwildcard to the load balancer" fillcolor="#eef2f6" color="#93a7bb"]
+    MODEL  [label="🧠 STACKIT Model Serving\nsovereign LLM API" fillcolor="#eef2f6" color="#93a7bb"]
+
+    { rank=same; AGENT -> SKE -> ING -> GIT -> HARBOR -> DNS -> MODEL [style=invis] }
+  }
+
+  LZBB -> PLAT [xlabel="hosts platform" style=dotted]
+
+  // Each definition sits directly above the resource it provisions, so these read as short columns.
+  BBD_A -> AGENT  [xlabel="provisions"]
+  BBD_K -> SKE
+  BBD_I -> ING
+  BBD_G -> GIT
+  BBD_H -> HARBOR
+  BBD_D -> DNS
+  BBD_M -> MODEL
 }

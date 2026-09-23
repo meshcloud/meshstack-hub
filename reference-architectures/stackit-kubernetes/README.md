@@ -47,9 +47,28 @@ a sovereign LLM API, ensuring even AI capabilities remain under full data contro
 - **Application teams** who need a fast, secure path to Kubernetes with built-in CI/CD
   in a sovereign cloud environment.
 
-## Architecture Diagram
+## Architecture
 
-![STACKIT Kubernetes reference architecture](stackit-kubernetes.svg)
+A platform engineer bootstraps the platform once; application teams then self-serve on it. The two
+views split along that line.
+
+### Platform team — one-time bootstrap
+
+Ordered once on top of a deployed
+[STACKIT Landing Zone](https://hub.meshcloud.io/reference-architectures/stackit-landingzone) (see
+[What It Builds On](#what-it-builds-on-one-landing-zone-block)), it registers the SKE platform and
+its building block definitions and provisions the STACKIT infrastructure. Each definition sits
+directly above the resource it provisions.
+
+![STACKIT Kubernetes — platform-team bootstrap](stackit-kubernetes.svg)
+
+### Per application team — self-service and runtime
+
+An application team orders one starterkit and receives a repository, a project and namespace per
+stage, and a CI/CD pipeline. The dashed edges are the running application's data flow across the
+platform's shared STACKIT services.
+
+![STACKIT Kubernetes — application-team self-service and runtime](stackit-kubernetes-app-team.svg)
 
 ## How It Works
 
