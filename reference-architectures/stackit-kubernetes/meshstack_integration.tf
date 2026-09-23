@@ -45,12 +45,13 @@ resource "meshstack_building_block_definition" "this" {
   }
 
   spec = {
-    display_name     = "STACKIT Kubernetes Platform Reference Architecture"
-    symbol           = "https://raw.githubusercontent.com/meshcloud/meshstack-hub/${var.hub.git_ref}/reference-architectures/stackit-kubernetes/buildingblock/logo.png"
-    description      = "One-click bootstrap of a sovereign Kubernetes platform on STACKIT on top of a STACKIT Landing Zone: SKE cluster, in-cluster platform services and the meshStack SKE platform with one landing zone per stage."
-    support_url      = "https://portal.stackit.cloud/ske"
-    target_type      = "WORKSPACE_LEVEL"
-    run_transparency = true
+    display_name          = "STACKIT Kubernetes Platform Reference Architecture"
+    display_name_template = "STACKIT Kubernetes Platform"
+    symbol                = "https://raw.githubusercontent.com/meshcloud/meshstack-hub/${var.hub.git_ref}/reference-architectures/stackit-kubernetes/buildingblock/logo.png"
+    description           = "One-click bootstrap of a sovereign Kubernetes platform on STACKIT on top of a STACKIT Landing Zone: SKE cluster, in-cluster platform services and the meshStack SKE platform with one landing zone per stage."
+    support_url           = "https://portal.stackit.cloud/ske"
+    target_type           = "WORKSPACE_LEVEL"
+    run_transparency      = true
 
     readme = chomp(<<-EOT
     The **STACKIT Kubernetes Platform** building block bootstraps a sovereign-cloud Kubernetes
