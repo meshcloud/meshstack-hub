@@ -323,7 +323,9 @@ module "ingress_integration" {
 
   # STATIC on the definition rather than an order-time input, so the building block below passes
   # only the sensitive kubeconfig — see that module's integration for why the two must not mix.
-  acme_email = local.cluster_issuer_email
+  # Not the service account email: the DNS definition waits for this one so that it is deleted
+  # first, and the service account needs the DNS definition's uuid. Null takes the module default.
+  acme_email = var.cluster_issuer_email
 
   meshstack = { owning_workspace_identifier = var.workspace, tags = var.tags.building_block }
   hub       = var.hub
