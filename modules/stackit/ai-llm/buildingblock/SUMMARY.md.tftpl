@@ -1,0 +1,15 @@
+# Inference: **${model}**
+
+| Property | Value |
+|----------|-------|
+| **Endpoint** | `${base_url}` |
+| **Default model** | `${model}` |
+| **Token** | `${token_name}` |
+| **Region** | `${region}` |
+
+The endpoint speaks the OpenAI API, so any OpenAI client works against it by pointing its base URL
+here. List what else is served with:
+
+```sh
+curl -sS -H "Authorization: Bearer $STACKIT_AI_API_KEY" "${base_url}/models" | jq -r '.data[].id'
+```
