@@ -505,36 +505,6 @@ resource "meshstack_building_block_definition" "this" {
         assignment_type = "RESOURCE_URL"
       }
 
-      starterkit_bbd_version_ref = {
-        display_name    = "Starterkit BBD Latest Version Ref"
-        type            = "CODE"
-        assignment_type = "NONE"
-      }
-
-      service_account_bbd_version_ref = {
-        display_name    = "Service Account BBD Version Ref"
-        type            = "CODE"
-        assignment_type = "NONE"
-      }
-
-      service_account_federation_bbd_version_ref = {
-        display_name    = "Service Account Federation BBD Version Ref"
-        type            = "CODE"
-        assignment_type = "NONE"
-      }
-
-      platform_ref = {
-        display_name    = "Platform Ref"
-        type            = "CODE"
-        assignment_type = "NONE"
-      }
-
-      landingzone_refs = {
-        display_name    = "Landing Zone Refs"
-        type            = "CODE"
-        assignment_type = "NONE"
-      }
-
       summary = {
         display_name    = "Summary"
         type            = "STRING"

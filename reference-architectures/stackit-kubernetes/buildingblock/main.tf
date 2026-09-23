@@ -28,8 +28,6 @@ locals {
     for stage, cfg in var.stages : stage => merge(var.tags.project, { environment = [stage] }, cfg.project)
   }
 
-  landingzone_outputs = data.meshstack_building_block.stackit_lz_ref_arch.status.outputs
-
   platform_service_account_email = jsondecode(meshstack_building_block.platform_service_account.status.outputs["service_account_email"].value)
   platform_service_account_id    = jsondecode(meshstack_building_block.platform_service_account.status.outputs["service_account_id"].value)
 
@@ -172,8 +170,8 @@ resource "meshstack_tenant" "stackit_project" {
   }
 
   spec = {
-    platform_ref     = jsondecode(jsondecode(local.landingzone_outputs["platform_ref"].value))
-    landing_zone_ref = jsondecode(jsondecode(local.landingzone_outputs["landingzone_refs"].value))[var.landingzone_variant]
+    platform_ref     = var.landingzone.platform_ref
+    landing_zone_ref = var.landingzone.landingzone_refs[var.landingzone_variant]
   }
 
   # Destroying this tenant deletes the STACKIT project the whole platform runs in. Guard a real
@@ -215,7 +213,7 @@ resource "meshstack_building_block" "platform_service_account" {
   }
 
   spec = {
-    building_block_definition_version_ref = jsondecode(jsondecode(local.landingzone_outputs["service_account_bbd_version_ref"].value))
+    building_block_definition_version_ref = var.landingzone.service_account_bbd_version_ref
     display_name                          = "Automation Identity"
     target_ref                            = meshstack_tenant.stackit_project.ref
 
@@ -248,7 +246,7 @@ resource "meshstack_building_block" "platform_federation" {
 
   spec = {
     parent_building_block_refs            = [meshstack_building_block.platform_service_account.ref]
-    building_block_definition_version_ref = jsondecode(jsondecode(local.landingzone_outputs["service_account_federation_bbd_version_ref"].value))
+    building_block_definition_version_ref = var.landingzone.service_account_federation_bbd_version_ref
     display_name                          = "Automation Identity Federation"
     target_ref                            = meshstack_tenant.stackit_project.ref
 

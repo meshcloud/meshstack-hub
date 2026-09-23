@@ -1,9 +1,3 @@
-variable "meshstack_building_block_id" {
-  type        = string
-  nullable    = false
-  description = "Injected by the building block runner."
-}
-
 variable "workspace" {
   type        = string
   nullable    = false

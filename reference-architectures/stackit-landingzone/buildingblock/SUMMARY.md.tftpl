@@ -35,9 +35,20 @@ landing zone. Provide a `network` object to additionally enable hub-and-spoke ne
 
 The [STACKIT Kubernetes Platform](https://hub.meshcloud.io/reference-architectures/stackit-kubernetes)
 reference architecture runs a full SKE developer platform on top of this landing zone. It takes one
-value from this landing zone:
+value from this landing zone. Paste this block into its **STACKIT Landing Zone** input:
 
-**Landing Zone Building Block UUID**: `${building_block_uuid}`
+```hcl
+{
+  platform_ref = { uuid = "${platform_ref.uuid}", kind = "${platform_ref.kind}" }
+  landingzone_refs = {
+%{ for key, ref in landingzone_refs ~}
+    ${key} = { name = "${ref.name}", kind = "${ref.kind}" }
+%{ endfor ~}
+  }
+  service_account_bbd_version_ref            = { uuid = "${service_account_bbd_version_uuid}" }
+  service_account_federation_bbd_version_ref = { uuid = "${service_account_federation_bbd_version_uuid}" }
+}
+```
 %{ if network_enabled ~}
 
 Set its **Landing Zone Variant** to `networked` to run the cluster inside the hub-and-spoke network.

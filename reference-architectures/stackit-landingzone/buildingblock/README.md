@@ -23,9 +23,9 @@ the sandbox landing zone.
 It always registers [`modules/stackit/stackit-project-starterkit`](../../../modules/stackit/stackit-project-starterkit),
 [`modules/stackit/service-account`](../../../modules/stackit/service-account) and
 [`modules/stackit/service-account-federation`](../../../modules/stackit/service-account-federation).
-The version refs of the two service account definitions, the platform ref and the landing zone refs
-are outputs, so a composing architecture such as the STACKIT Kubernetes Platform can build on this
-one.
+The summary shows the platform ref, the landing zone refs and the version refs of the two service
+account definitions as a code block. You paste it into a composing architecture such as the STACKIT
+Kubernetes Platform, so that architecture can build on this one without reading this building block.
 
 It authenticates to STACKIT with a service account key you paste as a secret input. You also
 provide the STACKIT organization UUID, owner email, nested integration tags and default role mapping
@@ -52,6 +52,7 @@ The user-facing readme is maintained inline in the `readme` field of the
 |------|--------|---------|
 | <a name="module_network_area_integration"></a> [network\_area\_integration](#module\_network\_area\_integration) | github.com/meshcloud/meshstack-hub//modules/stackit/network-area | main |
 | <a name="module_network_integration"></a> [network\_integration](#module\_network\_integration) | github.com/meshcloud/meshstack-hub//modules/stackit/network | main |
+| <a name="module_service_account_federation_integration"></a> [service\_account\_federation\_integration](#module\_service\_account\_federation\_integration) | github.com/meshcloud/meshstack-hub//modules/stackit/service-account-federation | main |
 | <a name="module_service_account_integration"></a> [service\_account\_integration](#module\_service\_account\_integration) | github.com/meshcloud/meshstack-hub//modules/stackit/service-account | main |
 | <a name="module_stackit_integration"></a> [stackit\_integration](#module\_stackit\_integration) | github.com/meshcloud/meshstack-hub//modules/stackit | main |
 | <a name="module_stackit_project_starterkit"></a> [stackit\_project\_starterkit](#module\_stackit\_project\_starterkit) | github.com/meshcloud/meshstack-hub//modules/stackit/stackit-project-starterkit | main |
@@ -71,7 +72,6 @@ The user-facing readme is maintained inline in the `readme` field of the
 | Name | Description | Type | Default | Required |
 |------|-------------|------|---------|:--------:|
 | <a name="input_hub"></a> [hub](#input\_hub) | `git_ref`: meshstack-hub reference used to source the nested foundation, network-area, and network integration modules. `const` so it can be interpolated into the module source at init time.<br/>`bbd_draft`: Forwarded as-is to those nested integrations' own `hub.bbd_draft`, so their building block definition draft state tracks this building block's own release state. | <pre>object({<br/>    git_ref   = optional(string, "main")<br/>    bbd_draft = optional(bool, true)<br/>  })</pre> | <pre>{<br/>  "bbd_draft": true,<br/>  "git_ref": "main"<br/>}</pre> | no |
-| <a name="input_meshstack_building_block_id"></a> [meshstack\_building\_block\_id](#input\_meshstack\_building\_block\_id) | Injected by the building block runner. | `string` | n/a | yes |
 | <a name="input_network"></a> [network](#input\_network) | Hub-and-spoke address plan, read only when `topology` includes `hub&spoke`. The input is hidden, and so not sent, otherwise. | <pre>object({<br/>    hub_network_area_name            = optional(string, "hub")<br/>    hub_network_ranges               = optional(list(string), ["10.0.0.0/16"])<br/>    hub_transfer_network             = optional(string, "10.1.255.0/24")<br/>    hub_min_prefix_length            = optional(number, 24)<br/>    hub_max_prefix_length            = optional(number, 28)<br/>    hub_default_prefix_length        = optional(number, 28)<br/>    hub_default_nameservers          = optional(list(string), [])<br/>    tenant_network_min_prefix_length = optional(number, 24)<br/>    tenant_network_max_prefix_length = optional(number, 28)<br/>  })</pre> | `null` | no |
 | <a name="input_platform_identifier"></a> [platform\_identifier](#input\_platform\_identifier) | Identifier for the STACKIT sandbox platform created in meshStack (letters, digits and dashes only). | `string` | n/a | yes |
 | <a name="input_playground_mode"></a> [playground\_mode](#input\_playground\_mode) | Deploy a throwaway platform: the platform identifier gets a random suffix so it does not occupy a name for good, and the landing-zone folder and foundation project are left destroyable. Set to false for a platform that is actually used. A playground platform and the building block definitions it registers are not meant to be published to other workspaces. | `bool` | n/a | yes |
@@ -92,10 +92,6 @@ The user-facing readme is maintained inline in the `readme` field of the
 |------|-------------|
 | <a name="output_foundation_project_id"></a> [foundation\_project\_id](#output\_foundation\_project\_id) | Project ID of the STACKIT foundation project that hosts the landing-zone core assets (the service account used for tenant project creation). |
 | <a name="output_foundation_project_url"></a> [foundation\_project\_url](#output\_foundation\_project\_url) | Deep link to the foundation project in the STACKIT portal. |
-| <a name="output_landingzone_refs"></a> [landingzone\_refs](#output\_landingzone\_refs) | Landing zone refs of the platform, used to build other platforms on top |
 | <a name="output_lz_folder_container_id"></a> [lz\_folder\_container\_id](#output\_lz\_folder\_container\_id) | Container ID of the STACKIT resourcemanager folder created for the landing zone. Tenant projects are created inside this folder. |
-| <a name="output_platform_ref"></a> [platform\_ref](#output\_platform\_ref) | Platform ref, used to build other platforms on top |
-| <a name="output_service_account_bbd_version_ref"></a> [service\_account\_bbd\_version\_ref](#output\_service\_account\_bbd\_version\_ref) | Version ref of the STACKIT Service Account building block definition this landing zone registered. A composing architecture (e.g. the STACKIT Kubernetes Platform) orders this definition to mint a service account — with project roles and WIF — on a target project, then deploys as that account. |
-| <a name="output_starterkit_bbd_version_ref"></a> [starterkit\_bbd\_version\_ref](#output\_starterkit\_bbd\_version\_ref) | Version ref of the STACKIT Project Starterkit definition this architecture registered. The definition is created inside this run, so it cannot be reached through a module output. |
 | <a name="output_summary"></a> [summary](#output\_summary) | Summary of the meshStack resources created by this reference architecture. |
 <!-- END_TF_DOCS -->

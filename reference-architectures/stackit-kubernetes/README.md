@@ -112,7 +112,7 @@ The connector building block creates per-stage resources:
 - **Pipeline trigger** — after provisioning, the connector triggers the Forgejo
   Actions workflow and waits for it to complete.
 
-## What It Builds On: One Landing Zone UUID
+## What It Builds On: One Landing Zone Block
 
 This architecture sits on top of a deployed
 [STACKIT Landing Zone](https://hub.meshcloud.io/reference-architectures/stackit-landingzone). That
@@ -122,8 +122,8 @@ not register the SKE cluster or STACKIT Git definitions; **this architecture reg
 once per ordered platform**, so every platform owns its own definitions and its own service
 account.
 
-Wiring is a single value: the landing zone building block's UUID. The building block reads that
-object at order time for
+Wiring is a single input, **STACKIT Landing Zone**. You copy its value from the summary of the landing
+zone building block, which shows it as a code block. It holds
 
 - `platform_ref` and `landingzone_refs` — the meshPlatform and landing zone the hosting project is
   created on, and
@@ -218,7 +218,7 @@ Forgejo Connector definitions. See
 | Requirement          | Description                                                                                                          |
 |----------------------|----------------------------------------------------------------------------------------------------------------------|
 | meshStack instance   | With Terraform/OpenTofu IaC runtime configured.                                                                      |
-| STACKIT Landing Zone | A deployed STACKIT Landing Zone building block. Its UUID is the only value wired into this architecture — see above. |
+| STACKIT Landing Zone | A deployed STACKIT Landing Zone building block. The code block in its summary is the only value wired into this architecture — see above. |
 | STACKIT portal       | Access to the platform's Harbor project, to create its one bootstrap robot account.                                 |
 
 ### The Harbor bootstrap robot is still a manual step

@@ -103,12 +103,13 @@ so no key for it is ever stored.
 
 The [STACKIT Kubernetes Platform](https://hub.meshcloud.io/reference-architectures/stackit-kubernetes)
 registers its own building block definitions when it is ordered, and those definitions need a STACKIT
-identity to deploy as. This landing zone publishes no credential for that. It publishes two version
-refs instead:
+identity to deploy as. This landing zone publishes no credential for that, and it has no outputs a
+composing architecture reads. Its summary shows a code block instead, which you paste into the
+composing architecture's **STACKIT Landing Zone** input. The block holds the platform ref, the
+landing zone refs, and the version refs of two definitions:
 
-- `service_account_bbd_version_ref`, for the **STACKIT Service Account** definition, and
-- `service_account_federation_bbd_version_ref`, for the **STACKIT Service Account Federation**
-  definition.
+- the **STACKIT Service Account** definition, and
+- the **STACKIT Service Account Federation** definition.
 
 A composing architecture orders the service account on a tenant it just created, with the roles it
 needs. It then orders the federation as a child of the service account, with the uuids of its own

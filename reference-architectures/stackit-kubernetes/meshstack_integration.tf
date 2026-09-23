@@ -153,10 +153,10 @@ resource "meshstack_building_block_definition" "this" {
     }
 
     inputs = {
-      landingzone_building_block_uuid = {
-        display_name    = "Landing Zone Building Block UUID"
-        description     = "UUID of the STACKIT Landing Zone building block this platform is built on. See summary of STACKIT LZ Ref arch Building Block."
-        type            = "STRING"
+      landingzone = {
+        display_name    = "STACKIT Landing Zone"
+        description     = "HCL object of refs this platform is built on. Copy it from the summary of the STACKIT Landing Zone building block."
+        type            = "CODE"
         assignment_type = "USER_INPUT"
       }
 

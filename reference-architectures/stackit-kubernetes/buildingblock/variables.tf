@@ -1,23 +1,22 @@
-variable "landingzone_building_block_uuid" {
-  type        = string
+variable "landingzone" {
+  type = object({
+    platform_ref                               = object({ uuid = string, kind = string })
+    landingzone_refs                           = map(object({ name = string, kind = string }))
+    service_account_bbd_version_ref            = object({ uuid = string })
+    service_account_federation_bbd_version_ref = object({ uuid = string })
+  })
   nullable    = false
-  description = "UUID of the STACKIT Landing Zone building block this platform is built on."
+  description = "Refs from the summary of the STACKIT Landing Zone building block this platform is built on."
 }
 
 variable "landingzone_variant" {
   type        = string
   nullable    = false
-  description = "Key into the landing zone's `landingzone_refs` output. `networked` requires hub-and-spoke networking enabled there."
+  description = "Key into `landingzone.landingzone_refs`. `networked` requires hub-and-spoke networking enabled on the landing zone."
 
   validation {
     condition     = contains(["default", "networked"], var.landingzone_variant)
     error_message = "landingzone_variant must be either default or networked."
-  }
-}
-
-data "meshstack_building_block" "stackit_lz_ref_arch" {
-  metadata = {
-    uuid = var.landingzone_building_block_uuid
   }
 }
 

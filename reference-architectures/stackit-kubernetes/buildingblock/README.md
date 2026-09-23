@@ -13,8 +13,7 @@ It also **registers building block definitions of its own** — `ske/cluster`, `
 `stackit/container-registry`, `stackit/dns`, `stackit/ai-llm`, `kubernetes/ingress` and `kubernetes`
 on every run, and `stackit/git-repository`, `ske/forgejo-connector` and `ske/ske-starterkit` once
 `harbor_username` names the Harbor bootstrap robot. It orders the landing zone's STACKIT Service
-Account definition, read from the landing zone building block named by
-`landingzone_building_block_uuid`, and then the landing zone's STACKIT Service Account Federation
+Account definition, named in the `landingzone` input, and then the landing zone's STACKIT Service Account Federation
 definition as its child, listing its STACKIT definitions in `federated_building_block_definitions`.
 Their runs act as that account through workload identity federation.
 
@@ -57,13 +56,13 @@ lives in the [reference architecture README](../README.md). Registration into me
 | [meshstack_building_block.git](https://registry.terraform.io/providers/meshcloud/meshstack/latest/docs/resources/building_block) | resource |
 | [meshstack_building_block.ingress](https://registry.terraform.io/providers/meshcloud/meshstack/latest/docs/resources/building_block) | resource |
 | [meshstack_building_block.kubernetes_platform](https://registry.terraform.io/providers/meshcloud/meshstack/latest/docs/resources/building_block) | resource |
+| [meshstack_building_block.platform_federation](https://registry.terraform.io/providers/meshcloud/meshstack/latest/docs/resources/building_block) | resource |
 | [meshstack_building_block.platform_service_account](https://registry.terraform.io/providers/meshcloud/meshstack/latest/docs/resources/building_block) | resource |
 | [meshstack_location.this](https://registry.terraform.io/providers/meshcloud/meshstack/latest/docs/resources/location) | resource |
 | [meshstack_project.platform](https://registry.terraform.io/providers/meshcloud/meshstack/latest/docs/resources/project) | resource |
 | [meshstack_project_user_binding.admin](https://registry.terraform.io/providers/meshcloud/meshstack/latest/docs/resources/project_user_binding) | resource |
 | [meshstack_tenant.stackit_project](https://registry.terraform.io/providers/meshcloud/meshstack/latest/docs/resources/tenant) | resource |
 | [random_string.playground_suffix](https://registry.terraform.io/providers/hashicorp/random/latest/docs/resources/string) | resource |
-| [meshstack_building_block.stackit_lz_ref_arch](https://registry.terraform.io/providers/meshcloud/meshstack/latest/docs/data-sources/building_block) | data source |
 
 ## Inputs
 
@@ -77,8 +76,8 @@ lives in the [reference architecture README](../README.md). Registration into me
 | <a name="input_dns_subdomain"></a> [dns\_subdomain](#input\_dns\_subdomain) | Label the platform's DNS zone occupies under `dns_parent_domain`. Empty uses the platform identifier. Set it to adopt a zone that already carries a different name. | `string` | `null` | no |
 | <a name="input_harbor_username"></a> [harbor\_username](#input\_harbor\_username) | Name of the Harbor robot linked to this platform's STACKIT service account, empty until it exists. | `string` | `null` | no |
 | <a name="input_hub"></a> [hub](#input\_hub) | `git_ref`: meshstack-hub reference the nested integrations are sourced from.<br/>`bbd_draft`: Forwarded to the nested integrations' `hub.bbd_draft`. | <pre>object({<br/>    git_ref   = optional(string, "main")<br/>    bbd_draft = optional(bool, true)<br/>  })</pre> | <pre>{<br/>  "bbd_draft": true,<br/>  "git_ref": "main"<br/>}</pre> | no |
-| <a name="input_landingzone_building_block_uuid"></a> [landingzone\_building\_block\_uuid](#input\_landingzone\_building\_block\_uuid) | UUID of the STACKIT Landing Zone building block this platform is built on. | `string` | n/a | yes |
-| <a name="input_landingzone_variant"></a> [landingzone\_variant](#input\_landingzone\_variant) | Key into the landing zone's `landingzone_refs` output. `networked` requires hub-and-spoke networking enabled there. | `string` | n/a | yes |
+| <a name="input_landingzone"></a> [landingzone](#input\_landingzone) | Refs from the summary of the STACKIT Landing Zone building block this platform is built on. | <pre>object({<br/>    platform_ref                               = object({ uuid = string, kind = string })<br/>    landingzone_refs                           = map(object({ name = string, kind = string }))<br/>    service_account_bbd_version_ref            = object({ uuid = string })<br/>    service_account_federation_bbd_version_ref = object({ uuid = string })<br/>  })</pre> | n/a | yes |
+| <a name="input_landingzone_variant"></a> [landingzone\_variant](#input\_landingzone\_variant) | Key into `landingzone.landingzone_refs`. `networked` requires hub-and-spoke networking enabled on the landing zone. | `string` | n/a | yes |
 | <a name="input_payment_method_identifier"></a> [payment\_method\_identifier](#input\_payment\_method\_identifier) | Payment method identifier assigned to the platform's meshProject. | `string` | n/a | yes |
 | <a name="input_platform_identifier"></a> [platform\_identifier](#input\_platform\_identifier) | Identifier of the Kubernetes platform created in meshStack (letters, digits and dashes only). In playground mode a random suffix is appended to it. | `string` | n/a | yes |
 | <a name="input_playground_mode"></a> [playground\_mode](#input\_playground\_mode) | Deploy a throwaway platform that gets a random identifier suffix and stays destroyable. | `bool` | n/a | yes |
