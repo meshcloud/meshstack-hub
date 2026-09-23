@@ -205,7 +205,7 @@ resource "meshstack_building_block_definition" "this" {
         sensitive = {
           argument = {
             secret_value   = "data:application/json;base64,${base64encode(module.backplane.credentials_json)}"
-            secret_version = null
+            secret_version = nonsensitive(sha256("data:application/json;base64,${base64encode(module.backplane.credentials_json)}"))
           }
         }
       }

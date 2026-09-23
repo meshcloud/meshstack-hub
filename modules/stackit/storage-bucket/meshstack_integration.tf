@@ -178,7 +178,8 @@ resource "meshstack_building_block_definition" "this" {
         assignment_type = "STATIC"
         sensitive = {
           argument = {
-            secret_value = module.backplane.admin_s3_access_key
+            secret_value   = module.backplane.admin_s3_access_key
+            secret_version = nonsensitive(sha256(module.backplane.admin_s3_access_key))
           }
         }
       }
@@ -190,7 +191,8 @@ resource "meshstack_building_block_definition" "this" {
         assignment_type = "STATIC"
         sensitive = {
           argument = {
-            secret_value = module.backplane.admin_s3_secret_access_key
+            secret_value   = module.backplane.admin_s3_secret_access_key
+            secret_version = nonsensitive(sha256(module.backplane.admin_s3_secret_access_key))
           }
         }
       }

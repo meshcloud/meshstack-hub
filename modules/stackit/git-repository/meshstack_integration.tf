@@ -172,7 +172,8 @@ resource "meshstack_building_block_definition" "this" {
         is_environment  = true
         sensitive = {
           argument = {
-            secret_value = var.forgejo_api_token
+            secret_value   = var.forgejo_api_token
+            secret_version = nonsensitive(sha256(var.forgejo_api_token))
           }
         }
       }

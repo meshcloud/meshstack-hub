@@ -50,6 +50,38 @@ resource "meshstack_platform" "this" {
 
 The `availability` field controls publication state and access restrictions. meshStack operators modify this after initial deployment (e.g. to publish a platform to users) — Terraform must not reset it on subsequent applies.
 
+## Secrets
+
+Never write a `{ secret_value = ... }` object by hand. `secret_value` is write-only: it is null in
+every plan and in state, so without a `secret_version` the provider has nothing that says the value
+changed. It then sends the secret once on create and never again — a rotated credential stays
+stale, and an input added to an existing resource arrives empty, which pauses a building block run
+in `WAITING_FOR_DEPENDENT_INPUT`.
+
+Always write both fields, keying the version to the value's hash:
+
+```hcl
+access_token = {
+  secret_value   = var.replicator_token
+  secret_version = nonsensitive(sha256(var.replicator_token))
+}
+```
+
+Wrap the hash in `nonsensitive(...)` when the value is sensitive, so `secret_version` stays readable
+in the plan — that hash is the visible rotation trigger. Leave the wrap off when the value is not
+sensitive; `nonsensitive` on a plain value is an error.
+
+Do not use `provider::meshstack::non_ephemeral_secret` yet, even though its documentation offers it
+as the one-call form of exactly this. Terraform skips a provider-defined function whose argument is
+unknown and takes the whole result as unknown, and it cannot descend into an unknown object to null
+the write-only `secret_value`. A secret that another resource in the same apply produces is unknown
+while planning, so the plan fails with *"returned a value for the write-only attribute … during
+planning"*. Written out by hand the object itself is known and only its attributes are unknown,
+which plans fine. The fix is in the provider; switch over once a release carries it.
+
+Prefer storing no secret at all: use workload identity federation where meshStack supports it, or
+feed `secret_value` from an `ephemeral` resource.
+
 <!-- scorecard-checks: child_bb_run_postcondition -->
 ## Ordering Child Building Blocks
 
