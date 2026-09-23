@@ -1,0 +1,17 @@
+# DNS Zone: **${zone_name}**
+
+| Property | Value |
+|----------|-------|
+| **Zone** | [Open in STACKIT Portal](${zone_url}) |
+| **Domain** | `${zone_name}` |
+| **Default TTL** | `${default_ttl}` seconds |
+%{ if wildcard_target_ip != null ~}
+| **Wildcard record** | `*.${zone_name}` → `${wildcard_target_ip}` |
+%{ endif ~}
+
+%{ if wildcard_target_ip != null ~}
+Every hostname under `${zone_name}` resolves to `${wildcard_target_ip}`, so an application picks its
+own hostname and it works without anyone provisioning a record for it.
+%{ else ~}
+The zone is empty. Records are created by whoever needs them.
+%{ endif ~}
