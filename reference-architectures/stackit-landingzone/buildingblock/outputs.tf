@@ -20,7 +20,12 @@ output "starterkit_bbd_version_ref" {
 
 output "service_account_bbd_version_ref" {
   value       = module.service_account_integration.building_block_definition.version_ref
-  description = "Version ref of the STACKIT Service Account building block definition this landing zone registered. A composing architecture (e.g. the STACKIT Kubernetes Platform) orders this definition to mint a service account — with project roles and WIF — on a target project, then deploys as that account."
+  description = "Version ref of the STACKIT Service Account building block definition this landing zone registered. A composing architecture (e.g. the STACKIT Kubernetes Platform) orders this definition to mint a service account with project roles on a target project, then federates its own definitions into it."
+}
+
+output "service_account_federation_bbd_version_ref" {
+  value       = module.service_account_federation_integration.building_block_definition.version_ref
+  description = "Version ref of the STACKIT Service Account Federation definition. A composing architecture orders it as a child of its service account, with the uuids of the definitions that act as that account."
 }
 
 output "platform_ref" {

@@ -19,7 +19,6 @@ output "summary" {
     service_account_name  = stackit_service_account.this.name
     service_account_email = stackit_service_account.this.email
     roles                 = var.roles
-    federation_count      = length(var.federated_building_block_definitions)
     project_id            = var.project_id
   })
 }

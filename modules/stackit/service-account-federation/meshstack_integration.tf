@@ -11,13 +11,7 @@ variable "stackit_project_id" {
 variable "stackit_service_account_name" {
   type        = string
   default     = null
-  description = "Name of the backplane service account. Defaults to 'mesh-service-account'. Override when deploying multiple backplane instances in the same STACKIT project."
-}
-
-variable "stackit_assignable_roles" {
-  type        = list(string)
-  default     = ["reader", "editor"]
-  description = "STACKIT project roles application teams may grant the service account. Constrains the `roles` input offered in the catalog."
+  description = "Name of the backplane service account. Defaults to 'mesh-sa-federation'."
 }
 
 variable "bbd_display_name" {
@@ -70,21 +64,14 @@ output "building_block_definition" {
   }
 }
 
-locals {
-  # STACKIT role names may contain dots — `ske.admin` is the first one that does. The roles are
-  # joined into the catalog's `roles` validation alternation, where an unescaped dot matches any
-  # character, so `skeXadmin` would pass validation for a role nobody granted.
-  assignable_roles_pattern = join("|", [for role in var.stackit_assignable_roles : replace(role, ".", "\\.")])
-}
-
 data "meshstack_integrations" "integrations" {}
 
 module "backplane" {
-  source = "github.com/meshcloud/meshstack-hub//modules/stackit/service-account/backplane?ref=${var.hub.git_ref}"
+  source = "github.com/meshcloud/meshstack-hub//modules/stackit/service-account-federation/backplane?ref=${var.hub.git_ref}"
 
   project_id           = var.stackit_project_id
   organization_id      = var.stackit_organization_id
-  service_account_name = coalesce(var.stackit_service_account_name, "mesh-service-account")
+  service_account_name = coalesce(var.stackit_service_account_name, "mesh-sa-federation")
 
   workload_identity_federation = {
     issuer = data.meshstack_integrations.integrations.workload_identity_federation.replicator.issuer
@@ -101,43 +88,38 @@ resource "meshstack_building_block_definition" "this" {
   }
 
   spec = {
-    display_name        = coalesce(var.bbd_display_name, "STACKIT Service Account")
-    symbol              = "https://raw.githubusercontent.com/meshcloud/meshstack-hub/${var.hub.git_ref}/modules/stackit/service-account/buildingblock/logo.png"
-    description         = coalesce(var.bbd_description, "Creates a STACKIT service account with project roles.")
+    display_name        = coalesce(var.bbd_display_name, "STACKIT Service Account Federation")
+    symbol              = "https://raw.githubusercontent.com/meshcloud/meshstack-hub/${var.hub.git_ref}/modules/stackit/service-account-federation/buildingblock/logo.png"
+    description         = coalesce(var.bbd_description, "Lets runs of your workspace's building block definitions act as an existing STACKIT service account via workload identity federation.")
     support_url         = "https://portal.stackit.cloud"
     target_type         = "TENANT_LEVEL"
     run_transparency    = true
     supported_platforms = [{ name = "STACKIT" }]
     readme = coalesce(var.bbd_readme, chomp(<<-EOT
-      This building block creates a **STACKIT service account** inside your existing STACKIT project,
-      and grants it the project roles you choose. To let runs of your workspace's own building block
-      definitions act as it, order a **STACKIT Service Account Federation** building block as its
-      child.
+      This building block lets runs of your workspace's own building block definitions act as an
+      existing **STACKIT service account** through Workload Identity Federation, so those runs get a
+      machine identity against STACKIT without anyone managing a long-lived key.
 
       ## 🎯 When to use it
 
       Use this building block when you:
-      - Need a machine identity in your STACKIT project for building blocks that act against STACKIT.
-      - Want to grant that identity a defined set of project roles rather than reusing a personal account.
+      - Created a service account with the **STACKIT Service Account** building block and want building blocks to deploy as it.
+      - Register building block definitions after the service account exists, and so only know their uuids later.
 
       ## 💡 Usage examples
 
       **Example 1: Identity for a composed platform**
-      A composition orders this block with the `editor` role, then a STACKIT Service Account
-      Federation block as its child, so the runs of its own definitions act as the new account.
-
-      **Example 2: Reader identity**
-      A team creates a service account with the `reader` role and uses it as the principal for
-      STACKIT role assignments elsewhere.
+      A composition orders a service account, registers its definitions, and then orders this block as
+      a child of the service account with their uuids. It orders the blocks that act as the account as
+      children of this block.
 
       ## 📊 Shared Responsibility
 
       | Responsibility | Platform Team | Application Team |
       |---|:---:|:---:|
-      | Provide the backplane identity used to create service accounts | ✅ | ❌ |
-      | Define which project roles may be granted | ✅ | ❌ |
-      | Choose the service account name and roles within the allowed set | ❌ | ✅ |
-      | Rotate and manage any credentials derived from the service account | ❌ | ✅ |
+      | Provide the backplane identity used to create federations | ✅ | ❌ |
+      | Choose the service account to federate | ❌ | ✅ |
+      | Choose which building block definitions may act as the service account | ❌ | ✅ |
       EOT
     ))
   }
@@ -146,11 +128,16 @@ resource "meshstack_building_block_definition" "this" {
     draft         = var.hub.bbd_draft
     deletion_mode = "DELETE"
 
+    # The run resolves the WIF issuer itself, so the caller passes plain definition uuids.
+    permissions = [
+      "INTEGRATION_LIST",
+    ]
+
     implementation = {
       terraform = {
         terraform_version              = "1.12.5"
         repository_url                 = "https://github.com/meshcloud/meshstack-hub.git"
-        repository_path                = "modules/stackit/service-account/buildingblock"
+        repository_path                = "modules/stackit/service-account-federation/buildingblock"
         ref_name                       = var.hub.git_ref
         async                          = false
         use_mesh_http_backend_fallback = true
@@ -160,7 +147,7 @@ resource "meshstack_building_block_definition" "this" {
     inputs = {
       project_id = {
         display_name    = "STACKIT Project ID"
-        description     = "STACKIT project ID of the existing project the service account will be created in."
+        description     = "STACKIT project the service account lives in."
         type            = "STRING"
         assignment_type = "PLATFORM_TENANT_ID"
       }
@@ -192,47 +179,42 @@ resource "meshstack_building_block_definition" "this" {
         argument        = jsonencode("/var/run/secrets/workload-identity/azure/token")
       }
 
-      service_account_name = {
-        display_name    = "Service Account Name"
-        description     = "Name of the STACKIT service account to create. Must be unique within the project. Lowercase letters, numbers and dashes; must start with a letter and not start/end with a dash or contain consecutive dashes."
+      automation_service_account_email = {
+        display_name    = "Automation Service Account Email"
+        description     = "Backplane identity the run acts as, as a regular input the configuration can read."
         type            = "STRING"
-        assignment_type = "USER_INPUT"
-        # STACKIT rejects any other shape at create time; validate at order time so the app team gets
-        # the error before a run starts. Anchored, no lookahead: a dash only sits between alphanumerics.
-        value_validation_regex         = "^[a-z][a-z0-9]*(-[a-z0-9]+)*$"
-        validation_regex_error_message = "Name must start with a lowercase letter and contain only lowercase letters, numbers and single dashes (no leading, trailing or consecutive dashes)."
+        assignment_type = "STATIC"
+        argument        = jsonencode(module.backplane.service_account_email)
       }
 
-      roles = {
-        display_name                   = "Project Roles"
-        description                    = "HCL list of STACKIT project roles to grant the service account. Allowed: ${join(", ", var.stackit_assignable_roles)}."
-        type                           = "CODE"
-        assignment_type                = "USER_INPUT"
-        default_value                  = jsonencode(jsonencode(["reader"]))
-        value_validation_regex         = "^\\[\\s*(\"(${local.assignable_roles_pattern})\"\\s*,?\\s*)+\\]$"
-        validation_regex_error_message = "roles must be an HCL list containing only: ${join(", ", var.stackit_assignable_roles)}."
+      workspace_identifier = {
+        display_name    = "Workspace Identifier"
+        description     = "Workspace that owns the federated building block definitions."
+        type            = "STRING"
+        assignment_type = "WORKSPACE_IDENTIFIER"
+      }
 
-        # A composing architecture grows this list as the blocks it orders need more STACKIT
-        # permissions, so the block must accept the input changing after it was first ordered.
+      service_account_email = {
+        display_name    = "Service Account Email"
+        description     = "Email of the STACKIT service account to federate, in the tenant's project."
+        type            = "STRING"
+        assignment_type = "USER_INPUT"
+      }
+
+      federated_building_block_definitions = {
+        display_name    = "Federated Building Block Definitions"
+        description     = "HCL list of building block definition UUIDs whose runs may act as the service account. They must be owned by the ordering workspace."
+        type            = "CODE"
+        assignment_type = "USER_INPUT"
+        default_value   = jsonencode(jsonencode([]))
+        # A composing architecture grows this list as it registers more definitions.
         updateable_by_consumer = true
       }
     }
 
     outputs = {
-      service_account_url = {
-        display_name    = "Service Account URL"
-        type            = "STRING"
-        assignment_type = "RESOURCE_URL"
-      }
-
       service_account_email = {
         display_name    = "Service Account Email"
-        type            = "STRING"
-        assignment_type = "NONE"
-      }
-
-      service_account_id = {
-        display_name    = "Service Account ID"
         type            = "STRING"
         assignment_type = "NONE"
       }

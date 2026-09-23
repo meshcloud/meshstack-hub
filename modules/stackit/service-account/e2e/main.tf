@@ -79,9 +79,8 @@ resource "meshstack_building_block" "this" {
     }
 
     inputs = {
-      service_account_name                 = { value = jsonencode("${var.test_context.run_id}-sa") }
-      roles                                = { value = jsonencode(jsonencode(["reader"])) }
-      federated_building_block_definitions = { value = jsonencode(jsonencode([])) }
+      service_account_name = { value = jsonencode("${var.test_context.run_id}-sa") }
+      roles                = { value = jsonencode(jsonencode(["reader"])) }
     }
   }
 }

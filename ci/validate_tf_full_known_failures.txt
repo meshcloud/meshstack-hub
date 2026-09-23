@@ -18,6 +18,7 @@ modules/ionos/dcd/backplane                          # required arguments missin
 # line once it loads, so remove each entry after the module it names is on main.
 reference-architectures/stackit-kubernetes/buildingblock # sources ske/cluster, stackit/git and the kubernetes/* modules at ?ref=main
 modules/stackit/service-account                      # sources //modules/stackit/service-account/backplane?ref=main
+modules/stackit/service-account-federation           # sources //modules/stackit/service-account-federation/backplane?ref=main
 reference-architectures/stackit-landingzone/buildingblock # sources //modules/stackit/service-account?ref=main
 modules/stackit/secrets-manager                      # sources //modules/stackit/secrets-manager/backplane?ref=main
 modules/stackit/git-repository                       # sources //modules/stackit/git-repository/backplane?ref=main, where the input is still forgejo_token

@@ -127,26 +127,57 @@ object at order time for
 
 - `platform_ref` and `landingzone_refs` — the meshPlatform and landing zone the hosting project is
   created on, and
-- `service_account_bbd_version_ref` — the **STACKIT Service Account** definition this architecture
-  orders to mint its own identity.
+- `service_account_bbd_version_ref` and `service_account_federation_bbd_version_ref` — the
+  **STACKIT Service Account** and **STACKIT Service Account Federation** definitions this
+  architecture orders to mint its own identity and to federate its definitions into it.
 
 **No STACKIT credential crosses that boundary, and this architecture holds none.** Its own apply
 declares no `stackit` provider at all. It orders the service account definition on the hosting tenant
-it just created, granting the account `editor` and `iam.member-admin`, and lists the uuids of the SKE
-Cluster, STACKIT Git, Container Registry, DNS and AI Model Serving definitions it registered in
-`federated_building_block_definitions`. Each of those building blocks names the account in its
+it just created, granting the account `editor` and `iam.member-admin`. As a child of that, it orders
+the federation definition with the uuids of the SKE Cluster, STACKIT Git, Container Registry, DNS and
+AI Model Serving definitions it registered, in `federated_building_block_definitions`. Each of those
+building blocks is a child of the federation and names the account in its
 `STACKIT_SERVICE_ACCOUNT_EMAIL` input, so every STACKIT resource here is created by a child building
 block authenticating through workload identity federation.
 
+The federation is a building block of its own because the service account must not depend on the
+definitions it federates. See [the building block tree](#building-block-tree) for why.
+
 Adding a STACKIT capability to this architecture means adding its role to the landing zone's
-`stackit_assignable_roles` and its definition's uuid to `federated_building_block_definitions`. It
-never means adding a credential.
+`stackit_assignable_roles`, its definition's uuid to `federated_building_block_definitions`, and the
+federation to its building block's parents. It never means adding a credential.
+
+## Building Block Tree
+
+![STACKIT Kubernetes building block tree](stackit-kubernetes-building-blocks.svg)
+
+Every building block below the platform names its parents in `parent_building_block_refs`, so
+meshPanel shows this tree and meshStack runs a child only after its parents:
+
+- **Automation Identity** is the root. It creates the service account and depends on no definition
+  of this architecture.
+- **Automation Identity Federation** is its child. It needs the uuids of the five definitions whose
+  runs act as the account, so it can only be ordered after they are registered.
+- The five blocks that act as the account are children of the federation. The Kubernetes meshPlatform
+  Credentials and the Ingress are also children of the cluster, because they take its kubeconfig. The
+  DNS zone is also a child of the Ingress, because it takes the load balancer IP.
+
+Two rules keep this tree deletable:
+
+- **Delete a child's definition before its parent's.** meshStack deletes a definition's building
+  blocks with it, and fails with a `fk_tbb_Parent` foreign key error if one of them is still the
+  parent of another block. So `dns_integration` depends on `ingress_integration`, and
+  `ingress_integration` on `cluster_integration`.
+- **The service account depends on no definition it federates.** If it did, a parent definition
+  that reads the account's email and its child definition would depend on each other, and OpenTofu
+  would report a cycle. That is why the federation is a building block of its own.
 
 ## Ordering It: One Order, One Update
 
 One run provisions everything:
 
-- the hosting STACKIT project (a self-hosted meshStack tenant) and the platform's service account,
+- the hosting STACKIT project (a self-hosted meshStack tenant), the platform's service account and
+  its federation,
 - the **SKE Cluster**, **STACKIT Git Instance**, **Container Registry**, **DNS Zone** and **AI Model
   Serving** building block definitions, registered for this platform and federated into that
   service account,

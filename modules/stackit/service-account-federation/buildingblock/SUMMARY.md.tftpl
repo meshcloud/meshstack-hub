@@ -1,0 +1,12 @@
+# Federation of `${service_account_email}`
+
+Runs of these building block definitions act as the service account through workload identity federation:
+
+%{ for uuid in definitions ~}
+- `${uuid}`
+%{ endfor ~}
+%{ if length(definitions) == 0 ~}
+_None._
+%{ endif ~}
+
+[Open service accounts](https://portal.stackit.cloud/projects/${project_id}/service-accounts)

@@ -517,6 +517,12 @@ resource "meshstack_building_block_definition" "this" {
         assignment_type = "NONE"
       }
 
+      service_account_federation_bbd_version_ref = {
+        display_name    = "Service Account Federation BBD Version Ref"
+        type            = "CODE"
+        assignment_type = "NONE"
+      }
+
       platform_ref = {
         display_name    = "Platform Ref"
         type            = "CODE"

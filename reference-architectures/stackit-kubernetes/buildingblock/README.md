@@ -14,9 +14,9 @@ It also **registers building block definitions of its own** — `ske/cluster`, `
 on every run, and `stackit/git-repository`, `ske/forgejo-connector` and `ske/ske-starterkit` once
 `harbor_username` names the Harbor bootstrap robot. It orders the landing zone's STACKIT Service
 Account definition, read from the landing zone building block named by
-`landingzone_building_block_uuid`, and lists its STACKIT definitions in
-`federated_building_block_definitions`, so their runs act as that account through workload identity
-federation.
+`landingzone_building_block_uuid`, and then the landing zone's STACKIT Service Account Federation
+definition as its child, listing its STACKIT definitions in `federated_building_block_definitions`.
+Their runs act as that account through workload identity federation.
 
 The architecture itself (overview, diagram, the order and its one update, shared responsibilities)
 lives in the [reference architecture README](../README.md). Registration into meshStack is in

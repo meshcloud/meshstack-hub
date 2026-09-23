@@ -73,9 +73,10 @@ Running this reference architecture always:
 3. Sources the [`modules/stackit`](../../modules/stackit) platform integration to register the
    **STACKIT Project** platform and its default landing zone in meshStack, wired to the foundation
    service account.
-4. Registers the [`stackit/service-account`](../../modules/stackit/service-account) building block
-   definition (`TENANT_LEVEL`) so application teams can self-service create a STACKIT service account
-   — with project roles and optional workload identity federation — inside their own projects.
+4. Registers the [`stackit/service-account`](../../modules/stackit/service-account) and
+   [`stackit/service-account-federation`](../../modules/stackit/service-account-federation) building
+   block definitions (`TENANT_LEVEL`), so application teams can self-service create a STACKIT service
+   account with project roles inside their own projects, and let their own definitions act as it.
 
 When a **network** configuration is provided, it additionally:
 
@@ -102,14 +103,23 @@ so no key for it is ever stored.
 
 The [STACKIT Kubernetes Platform](https://hub.meshcloud.io/reference-architectures/stackit-kubernetes)
 registers its own building block definitions when it is ordered, and those definitions need a STACKIT
-identity to deploy as. This landing zone publishes no credential for that. It publishes
-`service_account_bbd_version_ref` instead — the version ref of the **STACKIT Service Account**
-definition it registered.
+identity to deploy as. This landing zone publishes no credential for that. It publishes two version
+refs instead:
 
-A composing architecture orders that definition on a tenant it just created, listing the roles it
-needs and the uuids of its own definitions in `federated_building_block_definitions`. Every run of
-those definitions may then act as that account through workload identity federation; each building
-block names the account in its `STACKIT_SERVICE_ACCOUNT_EMAIL` input. Nothing long-lived crosses the
+- `service_account_bbd_version_ref`, for the **STACKIT Service Account** definition, and
+- `service_account_federation_bbd_version_ref`, for the **STACKIT Service Account Federation**
+  definition.
+
+A composing architecture orders the service account on a tenant it just created, with the roles it
+needs. It then orders the federation as a child of the service account, with the uuids of its own
+definitions in `federated_building_block_definitions`, and orders the blocks that act as the account
+as children of the federation. Every run of those definitions may then act as that account through
+workload identity federation; each building block names the account in its
+`STACKIT_SERVICE_ACCOUNT_EMAIL` input.
+
+The two are separate so that the service account does not depend on the definitions it federates.
+Otherwise no definition could read the account's email, and the account could not be the parent of
+the blocks that act as it. Nothing long-lived crosses the
 boundary, so [`stackit-backplane.md`](../../.agents/references/stackit-backplane.md) holds
 throughout.
 

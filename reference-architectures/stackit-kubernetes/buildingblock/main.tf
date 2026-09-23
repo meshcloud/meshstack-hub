@@ -230,6 +230,30 @@ resource "meshstack_building_block" "platform_service_account" {
         "editor",
         "iam.member-admin",
       ])) }
+    }
+  }
+}
+
+# Separate from the service account, so that the account depends on no definition below. Every block
+# that acts as the account is a child of this one.
+resource "meshstack_building_block" "platform_federation" {
+  wait_for_completion = true
+
+  lifecycle {
+    postcondition {
+      condition     = self.status.status == "SUCCEEDED"
+      error_message = "Building block ${self.metadata.uuid} is ${self.status.status}, not SUCCEEDED. See its run in meshPanel."
+    }
+  }
+
+  spec = {
+    parent_building_block_refs            = [meshstack_building_block.platform_service_account.ref]
+    building_block_definition_version_ref = jsondecode(jsondecode(local.landingzone_outputs["service_account_federation_bbd_version_ref"].value))
+    display_name                          = "Automation Identity Federation"
+    target_ref                            = meshstack_tenant.stackit_project.ref
+
+    inputs = {
+      service_account_email = { value = jsonencode(local.platform_service_account_email) }
       federated_building_block_definitions = {
         value = jsonencode(jsonencode([
           module.cluster_integration.building_block_definition.uuid,
@@ -254,6 +278,7 @@ resource "meshstack_building_block" "cluster" {
   }
 
   spec = {
+    parent_building_block_refs            = [meshstack_building_block.platform_federation.ref]
     building_block_definition_version_ref = module.cluster_integration.building_block_definition.version_ref
     display_name                          = "SKE Cluster"
     target_ref                            = meshstack_tenant.stackit_project.ref
@@ -323,9 +348,7 @@ module "ingress_integration" {
 
   # STATIC on the definition rather than an order-time input, so the building block below passes
   # only the sensitive kubeconfig — see that module's integration for why the two must not mix.
-  # Not the service account email: the DNS definition waits for this one so that it is deleted
-  # first, and the service account needs the DNS definition's uuid. Null takes the module default.
-  acme_email = var.cluster_issuer_email
+  acme_email = local.cluster_issuer_email
 
   meshstack = { owning_workspace_identifier = var.workspace, tags = var.tags.building_block }
   hub       = var.hub
@@ -378,6 +401,7 @@ resource "meshstack_building_block" "ai_llm" {
   }
 
   spec = {
+    parent_building_block_refs            = [meshstack_building_block.platform_federation.ref]
     building_block_definition_version_ref = module.ai_llm_integration.building_block_definition.version_ref
     display_name                          = "AI Model Serving"
     target_ref                            = meshstack_tenant.stackit_project.ref
@@ -411,7 +435,7 @@ resource "meshstack_building_block" "dns" {
   }
 
   spec = {
-    parent_building_block_refs            = [meshstack_building_block.ingress.ref]
+    parent_building_block_refs            = [meshstack_building_block.ingress.ref, meshstack_building_block.platform_federation.ref]
     building_block_definition_version_ref = module.dns_integration.building_block_definition.version_ref
     display_name                          = "DNS Zone"
     target_ref                            = meshstack_tenant.stackit_project.ref
@@ -436,6 +460,7 @@ resource "meshstack_building_block" "git" {
   }
 
   spec = {
+    parent_building_block_refs            = [meshstack_building_block.platform_federation.ref]
     building_block_definition_version_ref = module.git_integration.building_block_definition.version_ref
     display_name                          = "STACKIT Git Instance"
     target_ref                            = meshstack_tenant.stackit_project.ref
@@ -466,6 +491,7 @@ resource "meshstack_building_block" "container_registry" {
   }
 
   spec = {
+    parent_building_block_refs            = [meshstack_building_block.platform_federation.ref]
     building_block_definition_version_ref = module.container_registry_integration.building_block_definition.version_ref
     display_name                          = "STACKIT Container Registry"
     target_ref                            = meshstack_tenant.stackit_project.ref

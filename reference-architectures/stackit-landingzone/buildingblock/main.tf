@@ -164,6 +164,20 @@ module "service_account_integration" {
   hub       = var.hub
 }
 
+module "service_account_federation_integration" {
+  source = "github.com/meshcloud/meshstack-hub//modules/stackit/service-account-federation?ref=${var.hub.git_ref}"
+
+  # A federation block is a child of a service account block. Deleting the parent's definition first
+  # fails on meshStack's `fk_tbb_Parent` constraint.
+  depends_on = [module.service_account_integration]
+
+  stackit_organization_id = var.stackit_org
+  stackit_project_id      = stackit_resourcemanager_project.foundation.project_id
+
+  meshstack = { owning_workspace_identifier = var.workspace, tags = local.tags.building_block }
+  hub       = var.hub
+}
+
 module "network_area_integration" {
   lifecycle {
     enabled = local.network_enabled

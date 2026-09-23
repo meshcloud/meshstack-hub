@@ -6,8 +6,8 @@ identity provider and the permissions required to create service accounts and as
 in any project under a given organization:
 
 - **`iam.service-account-admin`** — create and delete service accounts in projects of the
-  organization. It does not cover their federated identity providers; the building block grants
-  itself `editor` on the target project for those.
+  organization. Federating them is the job of
+  [`stackit/service-account-federation`](../../service-account-federation).
 - **`iam.member-admin`** — assign STACKIT project roles to the created service accounts.
 
 Both roles are granted at organization scope and cascade to every project under the organization,

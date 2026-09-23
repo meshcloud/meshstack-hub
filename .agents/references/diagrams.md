@@ -89,6 +89,9 @@ in one diagram to a box in another without reading the label.
 | 📁 | folder / resource group |
 | 🗂️ | project / subscription |
 | 🔑 | service account, credentials |
+| 🤝 | workload identity federation |
+| 🔐 | ingress, TLS certificates |
+| 🧭 | DNS zone |
 | 🌐 | network area, address plan |
 | 🔌 | network, subnet |
 | ☸️ | Kubernetes cluster |

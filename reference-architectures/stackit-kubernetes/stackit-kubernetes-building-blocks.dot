@@ -1,0 +1,63 @@
+/*
+ * Building block tree of the STACKIT Kubernetes Platform building block.
+ * Conventions: .agents/references/diagrams.md — render with: task diagrams
+ */
+digraph stackit_kubernetes_building_blocks {
+  rankdir=TB
+  splines=ortho
+  forcelabels=true
+  bgcolor="white"
+  nodesep=0.55
+  ranksep=0.85
+
+  node [shape=box style="rounded,filled" fontname="Helvetica" fontsize=11
+        fillcolor="#ffffff" color="#a2abb8" penwidth=1.1 margin="0.20,0.11"]
+  edge [fontname="Helvetica" fontsize=9 fontcolor="#697180" color="#8b95a3" arrowsize=0.7]
+
+  subgraph cluster_lz {
+    label="  STACKIT Landing Zone building block"
+    labeljust=l
+    fontname="Helvetica" fontsize=12 fontcolor="#697180"
+    style="rounded" color="#d5dae0"
+    margin=18
+
+    BBD_SA  [label="📦 stackit/service-account BBD" fillcolor="#ecedfb" color="#9aa2e6"]
+    BBD_FED [label="📦 stackit/service-account-federation BBD" fillcolor="#ecedfb" color="#9aa2e6"]
+
+    { rank=same; BBD_SA -> BBD_FED [style=invis] }
+  }
+
+  subgraph cluster_platform {
+    label="  STACKIT Kubernetes Platform building block"
+    labeljust=l
+    fontname="Helvetica" fontsize=12 fontcolor="#697180"
+    style="rounded" color="#d5dae0"
+    margin=18
+
+    SA      [label="🔑 Automation Identity\nservice account · editor, iam.member-admin" fillcolor="#e5f2ea" color="#85bfa0"]
+    FED     [label="🤝 Automation Identity Federation\ntrusts the five definitions below" fillcolor="#e5f2ea" color="#85bfa0"]
+    CLUSTER [label="☸️ SKE Cluster\nske/cluster" fillcolor="#e5f2ea" color="#85bfa0"]
+    GIT     [label="🔀 STACKIT Git Instance\nstackit/git" fillcolor="#e5f2ea" color="#85bfa0"]
+    REG     [label="🗄️ STACKIT Container Registry\nstackit/container-registry" fillcolor="#e5f2ea" color="#85bfa0"]
+    AI      [label="🧠 AI Model Serving\nstackit/ai-llm" fillcolor="#e5f2ea" color="#85bfa0"]
+    CREDS   [label="🔑 Kubernetes meshPlatform Credentials\nkubernetes" fillcolor="#e5f2ea" color="#85bfa0"]
+    ING     [label="🔐 Kubernetes Ingress\nkubernetes/ingress" fillcolor="#e5f2ea" color="#85bfa0"]
+    DNS     [label="🧭 DNS Zone\nstackit/dns" fillcolor="#e5f2ea" color="#85bfa0"]
+
+    { rank=same; CLUSTER -> GIT -> REG -> AI [style=invis] }
+    { rank=same; CREDS -> ING [style=invis] }
+
+    SA      -> FED     [xlabel="parent of"]
+    FED     -> CLUSTER
+    FED     -> GIT
+    FED     -> REG
+    FED     -> AI
+    CLUSTER -> CREDS   [xlabel="kubeconfig"]
+    CLUSTER -> ING
+    ING     -> DNS     [xlabel="load balancer IP"]
+    FED     -> DNS     [constraint=false]
+  }
+
+  BBD_SA  -> SA  [xlabel="ordered from" style=dotted]
+  BBD_FED -> FED [style=dotted]
+}

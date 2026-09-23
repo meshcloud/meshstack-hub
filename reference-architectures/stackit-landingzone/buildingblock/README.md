@@ -20,10 +20,12 @@ the hub's network area through an additional `networked` project definition and 
 set the network area as a static label on the project. Leaving `network` unset (`null`) deploys only
 the sandbox landing zone.
 
-It always registers [`modules/stackit/stackit-project-starterkit`](../../../modules/stackit/stackit-project-starterkit)
-and [`modules/stackit/service-account`](../../../modules/stackit/service-account). The service
-account definition's version ref, the platform ref and the landing zone refs are outputs, so a
-composing architecture such as the STACKIT Kubernetes Platform can build on this one.
+It always registers [`modules/stackit/stackit-project-starterkit`](../../../modules/stackit/stackit-project-starterkit),
+[`modules/stackit/service-account`](../../../modules/stackit/service-account) and
+[`modules/stackit/service-account-federation`](../../../modules/stackit/service-account-federation).
+The version refs of the two service account definitions, the platform ref and the landing zone refs
+are outputs, so a composing architecture such as the STACKIT Kubernetes Platform can build on this
+one.
 
 It authenticates to STACKIT with a service account key you paste as a secret input. You also
 provide the STACKIT organization UUID, owner email, nested integration tags and default role mapping
