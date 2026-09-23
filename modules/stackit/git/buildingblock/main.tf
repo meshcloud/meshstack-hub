@@ -124,9 +124,13 @@ resource "restapi_object" "forgejo_organization" {
 
   ignore_server_additions = true
 
-  # The instance has to answer before an organization can be created in it. The dependency is not
-  # visible to OpenTofu otherwise, because the provider is configured from the derived URL.
-  depends_on = [stackit_git.this]
+  # Created over the Forgejo API as the technical user via basic auth, so that user must exist and
+  # local login must be enabled first — otherwise the create races ahead on a combined run and
+  # Forgejo answers 401 `user does not exist [name: meshstack-bot]`. Depending on the user covers the
+  # whole chain: it already depends on `terraform_data.local_login`, which depends on the instance.
+  # None of this is visible to OpenTofu otherwise, because the provider is configured from the
+  # derived URL rather than from a resource attribute.
+  depends_on = [restapi_object.local_user]
 }
 
 resource "restapi_object" "shared_runner" {
