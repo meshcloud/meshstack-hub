@@ -14,12 +14,12 @@ variable "test_context" {
 
 variable "backplane_secrets" {
   type = object({
-    stackit_git_forgejo_token = string
-    ske_kubeconfig            = string
-    harbor_push_username      = string
-    harbor_push_password      = string
-    harbor_pull_username      = string
-    harbor_pull_password      = string
+    stackit_git_forgejo_api_token = string
+    ske_kubeconfig                = string
+    harbor_push_username          = string
+    harbor_push_password          = string
+    harbor_pull_username          = string
+    harbor_pull_password          = string
   })
   sensitive = true
   nullable  = false
@@ -57,7 +57,7 @@ module "stackit_git_repository" {
   }
 
   forgejo_base_url     = var.test_context.forgejo_base_url
-  forgejo_token        = var.backplane_secrets.stackit_git_forgejo_token
+  forgejo_api_token    = var.backplane_secrets.stackit_git_forgejo_api_token
   forgejo_organization = var.test_context.forgejo_organization
 
   action_secrets = {
@@ -85,7 +85,7 @@ module "forgejo_connector" {
 
   kubeconfig                   = local.ske_kubeconfig
   forgejo_host                 = var.test_context.forgejo_base_url
-  forgejo_api_token            = var.backplane_secrets.stackit_git_forgejo_token
+  forgejo_api_token            = var.backplane_secrets.stackit_git_forgejo_api_token
   forgejo_repo_definition_uuid = module.stackit_git_repository.building_block_definition.uuid
   harbor_username              = var.backplane_secrets.harbor_push_username
   harbor_password              = var.backplane_secrets.harbor_push_password

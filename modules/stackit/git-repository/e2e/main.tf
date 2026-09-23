@@ -15,7 +15,7 @@ variable "test_context" {
   nullable = false
 }
 
-variable "stackit_git_forgejo_token" {
+variable "stackit_git_forgejo_api_token" {
   type      = string
   nullable  = true
   sensitive = true
@@ -23,8 +23,11 @@ variable "stackit_git_forgejo_token" {
 }
 
 module "stackit_git_repository" {
-  count  = var.test_context.bbd_version_ref == null ? 1 : 0
   source = "../"
+
+  lifecycle {
+    enabled = var.test_context.bbd_version_ref == null
+  }
   meshstack = {
     owning_workspace_identifier = var.test_context.workspace
     tags                        = {}
@@ -35,12 +38,12 @@ module "stackit_git_repository" {
   }
 
   forgejo_base_url     = var.test_context.forgejo_base_url
-  forgejo_token        = var.stackit_git_forgejo_token
+  forgejo_api_token    = var.stackit_git_forgejo_api_token
   forgejo_organization = var.test_context.forgejo_organization
 }
 
 locals {
-  version_ref = var.test_context.bbd_version_ref != null ? var.test_context.bbd_version_ref : module.stackit_git_repository[0].building_block_definition.version_ref
+  version_ref = var.test_context.bbd_version_ref != null ? var.test_context.bbd_version_ref : module.stackit_git_repository.building_block_definition.version_ref
 }
 
 resource "meshstack_building_block" "this" {

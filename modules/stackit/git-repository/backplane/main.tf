@@ -1,7 +1,7 @@
 data "http" "org_lookup" {
   url = "${var.forgejo_base_url}/api/v1/orgs/${var.forgejo_organization}"
   request_headers = {
-    Authorization = "token ${var.forgejo_token}"
+    Authorization = "token ${var.forgejo_api_token}"
     Accept        = "application/json"
   }
 

@@ -64,9 +64,9 @@ No modules.
 
 | Name | Description | Type | Default | Required |
 |------|-------------|------|---------|:--------:|
+| <a name="input_forgejo_api_token"></a> [forgejo\_api\_token](#input\_forgejo\_api\_token) | STACKIT Git Personal Access Token with write:repository and write:organization scopes | `string` | n/a | yes |
 | <a name="input_forgejo_base_url"></a> [forgejo\_base\_url](#input\_forgejo\_base\_url) | STACKIT Git base URL | `string` | `"https://git-service.git.onstackit.cloud"` | no |
 | <a name="input_forgejo_organization"></a> [forgejo\_organization](#input\_forgejo\_organization) | Default STACKIT Git organization where repositories will be created | `string` | n/a | yes |
-| <a name="input_forgejo_token"></a> [forgejo\_token](#input\_forgejo\_token) | STACKIT Git Personal Access Token with write:repository and write:organization scopes | `string` | n/a | yes |
 
 ## Outputs
 

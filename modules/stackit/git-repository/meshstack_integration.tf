@@ -1,4 +1,4 @@
-variable "forgejo_token" {
+variable "forgejo_api_token" {
   type      = string
   sensitive = true
 }
@@ -81,7 +81,7 @@ module "backplane" {
   source = "github.com/meshcloud/meshstack-hub//modules/stackit/git-repository/backplane?ref=${var.hub.git_ref}"
 
   forgejo_base_url     = var.forgejo_base_url
-  forgejo_token        = var.forgejo_token
+  forgejo_api_token    = var.forgejo_api_token
   forgejo_organization = var.forgejo_organization
 }
 
@@ -172,7 +172,7 @@ resource "meshstack_building_block_definition" "this" {
         is_environment  = true
         sensitive = {
           argument = {
-            secret_value = var.forgejo_token
+            secret_value = var.forgejo_api_token
           }
         }
       }
