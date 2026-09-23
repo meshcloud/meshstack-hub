@@ -56,6 +56,7 @@ No modules.
 
 | Name | Description | Type | Default | Required |
 |------|-------------|------|---------|:--------:|
+| <a name="input_custom_role_name"></a> [custom\_role\_name](#input\_custom\_role\_name) | Name of the custom organization role granting Secrets Manager rights. Must be unique in the organization. Override when deploying multiple backplane instances. | `string` | `"mesh-secrets-manager"` | no |
 | <a name="input_organization_id"></a> [organization\_id](#input\_organization\_id) | STACKIT organization ID whose projects the building block may create Secrets Manager instances in. | `string` | n/a | yes |
 | <a name="input_project_id"></a> [project\_id](#input\_project\_id) | STACKIT project ID where the backplane service account will be created. | `string` | n/a | yes |
 | <a name="input_service_account_name"></a> [service\_account\_name](#input\_service\_account\_name) | Name of the service account created in the STACKIT project. Override when deploying multiple backplane instances in the same project. | `string` | `"mesh-secrets-manager"` | no |

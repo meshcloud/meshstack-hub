@@ -14,6 +14,12 @@ variable "stackit_service_account_name" {
   description = "Name of the backplane service account. Defaults to 'mesh-secrets-manager'. Override when deploying multiple backplane instances in the same STACKIT project."
 }
 
+variable "stackit_custom_role_name" {
+  type        = string
+  default     = null
+  description = "Name of the backplane custom organization role. Defaults to 'mesh-secrets-manager'. Override when deploying multiple backplane instances in the same STACKIT organization."
+}
+
 variable "bbd_display_name" {
   type        = string
   default     = null
@@ -71,6 +77,7 @@ module "backplane" {
   project_id           = var.stackit_project_id
   organization_id      = var.stackit_organization_id
   service_account_name = coalesce(var.stackit_service_account_name, "mesh-secrets-manager")
+  custom_role_name     = coalesce(var.stackit_custom_role_name, "mesh-secrets-manager")
 
   workload_identity_federation = {
     issuer = data.meshstack_integrations.integrations.workload_identity_federation.replicator.issuer
