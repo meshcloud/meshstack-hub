@@ -1,0 +1,81 @@
+# STACKIT Kubernetes Platform: **${platform_identifier}**
+
+%{ if playground_mode ~}
+> **Playground mode.** The platform identifier carries a random suffix so this deployment does not
+> occupy a name for good, and the STACKIT project and its tenant are left destroyable. Do not publish
+> this platform or the building block definitions it registered to other workspaces. Redeploy with
+> `playground_mode` set to false for a platform that is actually used.
+
+%{ endif ~}
+## Details
+
+| Property | Value |
+|----------|-------|
+| **STACKIT Project** | [Open in STACKIT Portal](https://portal.stackit.cloud/projects/${stackit_project_id}) (`${stackit_project_id}`) |
+| **SKE Cluster** | `${cluster_name}` — @buildingblock[${cluster_bb_uuid}] |
+| **Ingress & Certificates** | @buildingblock[${ingress_bb_uuid}] |
+| **meshPlatform Credentials** | @buildingblock[${kubernetes_platform_bb_uuid}] |
+| **STACKIT Git** | [${forgejo_instance_url}](${forgejo_instance_url}) — @buildingblock[${git_bb_uuid}] |
+| **Forgejo Organization** | [`${forgejo_organization}`](${forgejo_instance_url}/${forgejo_organization}) |
+| **Container Registry** | [${registry_host}/${registry_name}](${registry_url}) — @buildingblock[${container_registry_bb_uuid}] |
+| **DNS Zone** | `${dns_zone_name}` — @buildingblock[${dns_bb_uuid}] |
+| **AI Model Serving** | `${ai_model}` — @buildingblock[${ai_bb_uuid}] |
+| **meshStack Platform** | `${platform_identifier}` |
+
+%{ if !phase2_completed ~}
+> [!WARNING]
+> ## One step left: create the Harbor robot account
+
+The registry `${registry_name}` exists and every member of this project can open it, but it has no
+robot account yet. Until it has one, none of the three definitions application teams order is
+registered: their pipelines push an image and their workloads pull it, so without credentials they
+would be orderable and what they produce could not start.
+
+Only the portal can create the first robot. Do this once, then update this building block.
+
+1. Open the registry's [Robot Accounts](${registry_robot_url}) and sign in with your STACKIT
+   account.
+2. Choose **New Robot Account**, name it `bootstrap`, and give it **robot account management**
+   permissions. This one robot exists only to create the others; the registry mints a push robot and
+   a pull robot from it, and those are what pipelines and workloads use.
+3. Link it to this platform's STACKIT service account, entering exactly:
+
+   | Field | Value |
+   |---|---|
+   | Service account email | `${platform_service_account_email}` |
+   | Service account ID | `${platform_service_account_id}` |
+
+4. **Update this building block**, putting the robot's name in the **Harbor Bootstrap Robot Name**
+   input. You do not need its password: the link you just made is what authenticates, using the
+   service account's own token. Harbor ignores the robot's secret entirely.
+
+The next run mints a push and a pull robot from the bootstrap one and registers the three
+definitions. Nothing already provisioned is touched.
+%{ else ~}
+> [!TIP]
+> ## Image pull is wired up
+
+The Harbor robot for `${registry_name}` is linked, so the **SKE Forgejo Connector** definition is
+registered and application pipelines can push and pull private images.
+%{ endif ~}
+
+## What application teams get
+
+The **${platform_identifier}** platform is published with one landing zone per stage: ${stage_names}.
+Application teams request a Kubernetes namespace on SKE by ordering a tenant in one of them from the
+self-service catalog.
+
+| Definition | What a team gets |
+|---|---|
+| **SKE Starter Kit** | a project, an application repository and a running namespace per stage, from one order |
+| **STACKIT Git Repository** | a repository in the `${forgejo_organization}` organization, on its own |
+
+The starter kit is the one to point teams at. It orders the repository for them and wires it to their
+namespaces through the **SKE Forgejo Connector**, a third definition that carries the CI/CD plumbing.
+Nobody orders the connector directly.
+
+%{ if phase2_completed ~}
+Application hostnames are built under `${dns_zone_name}`.
+%{ else ~}
+Neither is registered yet — both wait for the Harbor robot above.
+%{ endif ~}
