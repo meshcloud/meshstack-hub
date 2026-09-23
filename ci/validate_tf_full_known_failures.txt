@@ -18,3 +18,4 @@ modules/ionos/dcd/backplane                          # required arguments missin
 # each line once it loads, so remove both after this branch lands on main.
 modules/stackit/service-account                      # sources //modules/stackit/service-account/backplane?ref=main, added by this PR
 reference-architectures/stackit-landingzone/buildingblock # sources //modules/stackit/service-account?ref=main, added by this PR
+modules/stackit/secrets-manager                      # sources //modules/stackit/secrets-manager/backplane?ref=main, added by this PR
