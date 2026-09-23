@@ -70,6 +70,13 @@ output "building_block_definition" {
   }
 }
 
+locals {
+  # STACKIT role names may contain dots — `ske.admin` is the first one that does. The roles are
+  # joined into the catalog's `roles` validation alternation, where an unescaped dot matches any
+  # character, so `skeXadmin` would pass validation for a role nobody granted.
+  assignable_roles_pattern = join("|", [for role in var.stackit_assignable_roles : replace(role, ".", "\\.")])
+}
+
 data "meshstack_integrations" "integrations" {}
 
 module "backplane" {
@@ -103,26 +110,26 @@ resource "meshstack_building_block_definition" "this" {
     supported_platforms = [{ name = "STACKIT" }]
     readme = coalesce(var.bbd_readme, chomp(<<-EOT
       This building block creates a **STACKIT service account** inside your existing STACKIT project,
-      grants it the project roles you choose, and optionally lets external workloads assume it via
-      Workload Identity Federation — so you get a machine identity for automation without managing a
-      long-lived key.
+      grants it the project roles you choose, and optionally lets runs of your workspace's own
+      building block definitions act as it via Workload Identity Federation — so those runs get a
+      machine identity against STACKIT without anyone managing a long-lived key.
 
       ## 🎯 When to use it
 
       Use this building block when you:
-      - Need a machine identity in your STACKIT project for CI/CD, scripts or another cloud to act against STACKIT.
+      - Need a machine identity in your STACKIT project for building blocks that act against STACKIT.
       - Want to grant that identity a defined set of project roles rather than reusing a personal account.
-      - Want an external system (e.g. GitHub Actions) to authenticate as the service account via OIDC, without a static key.
+      - Want building block definitions owned by your workspace to authenticate as the service account via OIDC, without a static key.
 
       ## 💡 Usage examples
 
-      **Example 1: CI pipeline identity with reader access**
-      An application team creates a service account with the `reader` role so their GitHub Actions
-      pipeline can query STACKIT resources, federating the pipeline's OIDC token into the account.
+      **Example 1: Identity for a composed building block**
+      A composition orders this block with the `editor` role and lists the uuid of the building
+      block definition that deploys into the project, so that block's runs act as the new account.
 
-      **Example 2: Automation identity that manages project resources**
-      A team provisions a service account with the `editor` role to run scheduled infrastructure
-      changes against their project from an external automation platform.
+      **Example 2: Reader identity without federation**
+      A team creates a service account with the `reader` role and no federated definitions, and
+      uses it as the principal for STACKIT role assignments elsewhere.
 
       ## 📊 Shared Responsibility
 
@@ -131,7 +138,7 @@ resource "meshstack_building_block_definition" "this" {
       | Provide the backplane identity used to create service accounts | ✅ | ❌ |
       | Define which project roles may be granted | ✅ | ❌ |
       | Choose the service account name and roles within the allowed set | ❌ | ✅ |
-      | Configure and secure the external workload identity federation | ❌ | ✅ |
+      | Choose which building block definitions may act as the service account | ❌ | ✅ |
       | Rotate and manage any credentials derived from the service account | ❌ | ✅ |
       EOT
     ))
@@ -140,6 +147,12 @@ resource "meshstack_building_block_definition" "this" {
   version_spec = {
     draft         = var.hub.bbd_draft
     deletion_mode = "DELETE"
+
+    # The run resolves the WIF issuer itself, so the caller passes plain definition uuids rather than
+    # hand-built subject strings.
+    permissions = [
+      "INTEGRATION_LIST",
+    ]
 
     implementation = {
       terraform = {
@@ -204,16 +217,39 @@ resource "meshstack_building_block_definition" "this" {
         type                           = "CODE"
         assignment_type                = "USER_INPUT"
         default_value                  = jsonencode(jsonencode(["reader"]))
-        value_validation_regex         = "^\\[\\s*(\"(${join("|", var.stackit_assignable_roles)})\"\\s*,?\\s*)+\\]$"
+        value_validation_regex         = "^\\[\\s*(\"(${local.assignable_roles_pattern})\"\\s*,?\\s*)+\\]$"
         validation_regex_error_message = "roles must be an HCL list containing only: ${join(", ", var.stackit_assignable_roles)}."
+
+        # A composing architecture grows this list as the blocks it orders need more STACKIT
+        # permissions, so the block must accept the input changing after it was first ordered.
+        updateable_by_consumer = true
       }
 
-      federated_identities = {
-        display_name    = "Federated Identities"
-        description     = "HCL list of workload identity federation providers to configure on the service account. Each entry is an object with issuer, subject and audience. Leave empty to create the service account without external federation."
+      workspace_identifier = {
+        display_name    = "Workspace Identifier"
+        description     = "Workspace that owns the federated building block definitions."
+        type            = "STRING"
+        assignment_type = "WORKSPACE_IDENTIFIER"
+      }
+
+      automation_service_account_email = {
+        display_name    = "Automation Service Account Email"
+        description     = "Backplane identity the run acts as. Same value as STACKIT_SERVICE_ACCOUNT_EMAIL, as a regular input the configuration can read."
+        type            = "STRING"
+        assignment_type = "STATIC"
+        argument        = jsonencode(module.backplane.service_account_email)
+      }
+
+      federated_building_block_definitions = {
+        display_name    = "Federated Building Block Definitions"
+        description     = "HCL list of building block definition UUIDs whose runs may act as this service account via workload identity federation. They must be owned by the ordering workspace. Leave empty to create the service account without federation."
         type            = "CODE"
         assignment_type = "USER_INPUT"
         default_value   = jsonencode(jsonencode([]))
+        # A composing architecture grows this list as it registers more definitions (e.g. phase 2 adds
+        # the runner), so the block must accept the input changing after it was first ordered. Without
+        # this, meshStack rejects the update with "insufficient permissions to edit input".
+        updateable_by_consumer = true
       }
     }
 
@@ -226,6 +262,12 @@ resource "meshstack_building_block_definition" "this" {
 
       service_account_email = {
         display_name    = "Service Account Email"
+        type            = "STRING"
+        assignment_type = "NONE"
+      }
+
+      service_account_id = {
+        display_name    = "Service Account ID"
         type            = "STRING"
         assignment_type = "NONE"
       }

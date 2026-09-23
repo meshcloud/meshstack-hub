@@ -32,7 +32,11 @@ resource "stackit_service_account_federated_identity_provider" "building_block" 
 # under the organization.
 
 # iam.service-account-admin lets the automation identity create and delete the
-# application team's service accounts and their federated identity providers.
+# application team's service accounts. It does NOT cover their federated identity
+# providers: it carries iam.service-account.{create,delete,get,list} and nothing
+# else, and no organization-scope role below `organization.admin` carries
+# iam.service-account-federation.create. The building block grants itself the
+# project role it needs for that; see its main.tf.
 resource "stackit_authorization_organization_role_assignment" "service_account_admin" {
   resource_id = var.organization_id
   role        = "iam.service-account-admin"

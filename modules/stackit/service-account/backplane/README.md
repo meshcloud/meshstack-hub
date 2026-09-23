@@ -5,8 +5,9 @@ block. It creates a dedicated automation service account with a Workload Identit
 identity provider and the permissions required to create service accounts and assign project roles
 in any project under a given organization:
 
-- **`iam.service-account-admin`** — create and delete service accounts (and their federated
-  identity providers) in projects of the organization.
+- **`iam.service-account-admin`** — create and delete service accounts in projects of the
+  organization. It does not cover their federated identity providers; the building block grants
+  itself `editor` on the target project for those.
 - **`iam.member-admin`** — assign STACKIT project roles to the created service accounts.
 
 Both roles are granted at organization scope and cascade to every project under the organization,

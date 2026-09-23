@@ -3,6 +3,11 @@ output "service_account_email" {
   description = "Email of the created STACKIT service account. Use it as the principal in external federation configs and STACKIT role assignments."
 }
 
+output "service_account_id" {
+  value       = stackit_service_account.this.service_account_id
+  description = "Id of the created STACKIT service account. Forms asking for a service account often want this next to the email, e.g. linking a Harbor robot."
+}
+
 output "service_account_url" {
   value       = "https://portal.stackit.cloud/projects/${var.project_id}/service-accounts"
   description = "Deep link to the service accounts overview of the project in the STACKIT portal."
@@ -14,7 +19,7 @@ output "summary" {
     service_account_name  = stackit_service_account.this.name
     service_account_email = stackit_service_account.this.email
     roles                 = var.roles
-    federation_count      = length(var.federated_identities)
+    federation_count      = length(var.federated_building_block_definitions)
     project_id            = var.project_id
   })
 }

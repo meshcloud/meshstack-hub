@@ -33,8 +33,11 @@ provider "stackit" {
 }
 
 module "stackit_service_account" {
-  count  = var.test_context.bbd_version_ref == null ? 1 : 0
   source = "../"
+
+  lifecycle {
+    enabled = var.test_context.bbd_version_ref == null
+  }
   meshstack = {
     owning_workspace_identifier = var.test_context.workspace
     tags                        = {}
@@ -55,7 +58,7 @@ module "stackit_service_account" {
 }
 
 locals {
-  version_ref = var.test_context.bbd_version_ref != null ? var.test_context.bbd_version_ref : module.stackit_service_account[0].building_block_definition.version_ref
+  version_ref = var.test_context.bbd_version_ref != null ? var.test_context.bbd_version_ref : module.stackit_service_account.building_block_definition.version_ref
 }
 
 resource "meshstack_building_block" "this" {
@@ -76,10 +79,9 @@ resource "meshstack_building_block" "this" {
     }
 
     inputs = {
-      service_account_name = { value = jsonencode("${var.test_context.run_id}-sa") }
-      # CODE inputs carry HCL source as a string, hence the double encoding.
-      roles                = { value = jsonencode(jsonencode(["reader"])) }
-      federated_identities = { value = jsonencode(jsonencode([])) }
+      service_account_name                 = { value = jsonencode("${var.test_context.run_id}-sa") }
+      roles                                = { value = jsonencode(jsonencode(["reader"])) }
+      federated_building_block_definitions = { value = jsonencode(jsonencode([])) }
     }
   }
 }

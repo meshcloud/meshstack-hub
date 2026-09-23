@@ -13,24 +13,23 @@ variable "service_account_name" {
 variable "roles" {
   type        = list(string)
   nullable    = false
-  default     = ["reader"]
   description = "STACKIT project roles to grant the service account within the project (e.g. \"reader\", \"editor\")."
 }
 
-variable "federated_identities" {
-  type = list(object({
-    issuer   = string
-    subject  = string
-    audience = string
-  }))
+variable "automation_service_account_email" {
+  type        = string
   nullable    = false
-  default     = []
-  description = <<-EOT
-  Workload Identity Federation providers to configure on the service account, so external workloads
-  (e.g. GitHub Actions, another cloud) can assume it without a static key. Each entry federates one
-  external issuer/subject and pins the token audience:
-  - `issuer`: OIDC issuer URL of the external identity provider.
-  - `subject`: the exact `sub` claim value the external token must carry.
-  - `audience`: the exact `aud` claim value the external token must carry.
-  EOT
+  description = "Email of the service account this run acts as. It grants itself `editor` on the project to create federations."
+}
+
+variable "workspace_identifier" {
+  type        = string
+  nullable    = false
+  description = "Workspace that owns the federated building block definitions."
+}
+
+variable "federated_building_block_definitions" {
+  type        = list(string)
+  nullable    = false
+  description = "UUIDs of building block definitions whose runs may act as this service account via WIF."
 }
