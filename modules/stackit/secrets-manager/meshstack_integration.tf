@@ -95,7 +95,7 @@ resource "meshstack_building_block_definition" "this" {
 
   spec = {
     display_name        = coalesce(var.bbd_display_name, "STACKIT Secrets Manager")
-    symbol              = "https://raw.githubusercontent.com/meshcloud/meshstack-hub/${var.hub.git_ref}/modules/stackit/secrets-manager/buildingblock/logo.png"
+    symbol              = "https://raw.githubusercontent.com/meshcloud/meshstack-hub/${var.hub.git_ref}/modules/stackit/secrets-manager/buildingblock/logo.svg"
     description         = coalesce(var.bbd_description, "Provisions a STACKIT Secrets Manager instance.")
     target_type         = "TENANT_LEVEL"
     run_transparency    = true
