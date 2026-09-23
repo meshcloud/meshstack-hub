@@ -3,11 +3,18 @@ locals {
   # endpoint and mounts each instance's KV engine at its instance ID.
   api_url  = "https://prod.sm.eu01.stackit.cloud"
   kv_mount = stackit_secretsmanager_instance.this.instance_id
+
+  portal_url = "https://portal.stackit.cloud/projects/${var.project_id}/secrets-manager/instances/${stackit_secretsmanager_instance.this.instance_id}"
 }
 
 output "instance_id" {
   value       = stackit_secretsmanager_instance.this.instance_id
   description = "ID of the Secrets Manager instance."
+}
+
+output "instance_url" {
+  value       = "${local.portal_url}/overview"
+  description = "STACKIT portal link to the Secrets Manager instance."
 }
 
 output "api_url" {
@@ -24,6 +31,7 @@ output "summary" {
   description = "Summary with connection details."
   value = templatefile("${path.module}/SUMMARY.md.tftpl", {
     instance_name = stackit_secretsmanager_instance.this.name
+    portal_url    = local.portal_url
     api_url       = local.api_url
     kv_mount      = local.kv_mount
   })
