@@ -18,7 +18,7 @@ run "stackit_secrets_manager" {
   }
 
   assert {
-    condition     = endswith(try(jsondecode(meshstack_building_block.this.status.outputs["instance_url"].value), ""), "/secrets-manager/instances/${try(jsondecode(meshstack_building_block.this.status.outputs["instance_id"].value), "")}/overview")
+    condition     = can(regex("^https://portal\\.stackit\\.cloud/secrets-manager/instances/${try(jsondecode(meshstack_building_block.this.status.outputs["instance_id"].value), "")}/overview\\?project=[0-9a-f-]{36}$", try(jsondecode(meshstack_building_block.this.status.outputs["instance_url"].value), "")))
     error_message = "Expected instance_url to deeplink the instance, got ${try(meshstack_building_block.this.status.outputs["instance_url"].value, "no such output")}."
   }
 
