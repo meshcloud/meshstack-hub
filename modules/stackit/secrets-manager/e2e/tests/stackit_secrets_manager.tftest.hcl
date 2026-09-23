@@ -18,6 +18,11 @@ run "stackit_secrets_manager" {
   }
 
   assert {
+    condition     = endswith(try(jsondecode(meshstack_building_block.this.status.outputs["instance_url"].value), ""), "/secrets-manager/instances/${try(jsondecode(meshstack_building_block.this.status.outputs["instance_id"].value), "")}/overview")
+    error_message = "Expected instance_url to deeplink the instance, got ${try(meshstack_building_block.this.status.outputs["instance_url"].value, "no such output")}."
+  }
+
+  assert {
     condition     = try(jsondecode(meshstack_building_block.this.status.outputs["api_url"].value), null) == "https://prod.sm.eu01.stackit.cloud"
     error_message = "Unexpected api_url: ${try(meshstack_building_block.this.status.outputs["api_url"].value, "no such output")}."
   }

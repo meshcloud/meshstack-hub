@@ -41,6 +41,7 @@ No modules.
 |------|-------------|
 | <a name="output_api_url"></a> [api\_url](#output\_api\_url) | Vault-compatible API endpoint of the Secrets Manager. |
 | <a name="output_instance_id"></a> [instance\_id](#output\_instance\_id) | ID of the Secrets Manager instance. |
+| <a name="output_instance_url"></a> [instance\_url](#output\_instance\_url) | STACKIT portal link to the Secrets Manager instance. |
 | <a name="output_kv_mount"></a> [kv\_mount](#output\_kv\_mount) | Mount path of the instance's KV v2 secrets engine. |
 | <a name="output_summary"></a> [summary](#output\_summary) | Summary with connection details. |
 <!-- END_TF_DOCS -->

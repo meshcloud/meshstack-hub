@@ -178,6 +178,12 @@ resource "meshstack_building_block_definition" "this" {
     }
 
     outputs = {
+      instance_url = {
+        display_name    = "Open Secrets Manager"
+        type            = "STRING"
+        assignment_type = "RESOURCE_URL"
+      }
+
       instance_id = {
         display_name    = "Instance ID"
         type            = "STRING"
