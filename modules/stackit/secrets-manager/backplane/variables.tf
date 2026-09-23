@@ -1,7 +1,13 @@
 variable "project_id" {
   type        = string
   nullable    = false
-  description = "STACKIT project ID where Secrets Manager instances will be created."
+  description = "STACKIT project ID where the backplane service account will be created."
+}
+
+variable "organization_id" {
+  type        = string
+  nullable    = false
+  description = "STACKIT organization ID whose projects the building block may create Secrets Manager instances in."
 }
 
 variable "service_account_name" {

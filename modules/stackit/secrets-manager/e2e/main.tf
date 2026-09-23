@@ -8,6 +8,11 @@ variable "test_context" {
   }
 
   validation {
+    condition     = can(var.test_context.fixtures.stackit.mesh_tenant_id)
+    error_message = "test_context must provide fixtures.stackit.mesh_tenant_id, the tenant to order the building block for."
+  }
+
+  validation {
     # `try` because `test_context` is untyped, so a hub run need not set `mode` at all.
     condition     = contains(["hub", "foundation"], try(var.test_context.mode, "hub"))
     error_message = "test_context.mode must be \"hub\" (the default) or \"foundation\"."
@@ -35,9 +40,10 @@ resource "meshstack_building_block" "this" {
     building_block_definition_version_ref = { uuid = module.definition.version_ref.uuid }
 
     display_name = "${var.test_context.run_id}-secrets-manager"
+    # `project_id` is a PLATFORM_TENANT_ID input, which meshStack resolves from this tenant.
     target_ref = {
-      kind = "meshWorkspace"
-      name = var.test_context.workspace
+      kind = "meshTenant"
+      uuid = var.test_context.fixtures.stackit.mesh_tenant_id
     }
 
     inputs = {
