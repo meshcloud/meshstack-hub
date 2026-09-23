@@ -70,10 +70,6 @@ variable "starterkit_approval_policies" {
     version_upgrade         = optional(bool, false)
   })
   nullable = false
-
-  # Spelled out rather than left to the `optional()` defaults: this variable feeds a definition
-  # input's `argument`, and a consumer that does not evaluate object-attribute defaulting would
-  # see unset fields. See .agents/references/meshstack-integration.md.
   default = {
     building_block_creation = false
     user_input_changes      = false
@@ -293,8 +289,6 @@ resource "meshstack_building_block_definition" "this" {
     draft         = var.hub.bbd_draft
     deletion_mode = "DELETE"
 
-    # Ephemeral API key permissions for meshStack resources created by this building block and its
-    # nested foundation/network-area/network integrations (all part of the same Terraform run).
     permissions = [
       "INTEGRATION_LIST",
       "BUILDINGBLOCKDEFINITION_LIST",
@@ -323,8 +317,6 @@ resource "meshstack_building_block_definition" "this" {
     }
 
     inputs = {
-      # ── STACKIT authentication (service account key supplied by the operator) ──
-
       stackit_service_account_key = {
         display_name           = "STACKIT Service Account Key"
         description            = "Full key JSON of the deployment service account, reused on every run. Needs `resource-manager.admin` on the organization, or organization owner to allow a different `stackit_owner_email`."
@@ -343,8 +335,6 @@ resource "meshstack_building_block_definition" "this" {
         argument        = jsonencode(jsonencode(var.hub))
         display_order   = 120
       }
-
-      # ── Platform configuration (set by the platform team) ──
 
       stackit_org = {
         display_name                   = "STACKIT Organization UUID"
@@ -412,15 +402,9 @@ resource "meshstack_building_block_definition" "this" {
         display_order          = 90
       }
 
-      # ── Networking topology ──
-      # `topology` is the SET of landing-zone labels the operator deploys and offers app teams. The
-      # selectable values ARE the landing_zone_refs keys (`sandbox`, `hub&spoke`) — no translation —
-      # so the buildingblock offers exactly the selected zones and picks one as the default. Selecting
-      # `hub&spoke` also reveals the `network` form and provisions the networked landing zone.
-
       topology = {
         display_name      = "Topology"
-        description       = "Landing zones to deploy and offer application teams: `sandbox` and/or `hub&spoke` (the latter also provisions hub-and-spoke networking and reveals the Network form). One selected zone becomes the ordering default."
+        description       = "Landing zones to deploy and offer application teams: `sandbox` and/or `hub&spoke` (the latter also provisions hub-and-spoke networking and reveals the Network form). The starterkit defaults to `sandbox` when selected, else `hub&spoke`."
         type              = "MULTI_SELECT"
         assignment_type   = "USER_INPUT"
         selectable_values = ["sandbox", "hub&spoke"]
@@ -455,8 +439,6 @@ resource "meshstack_building_block_definition" "this" {
           }
         })
       }
-
-      # ── meshStack context ──
 
       workspace = {
         display_name    = "Workspace Identifier"
@@ -523,13 +505,27 @@ resource "meshstack_building_block_definition" "this" {
         assignment_type = "RESOURCE_URL"
       }
 
-      # Exposed because the definition is created inside this building block's run, so there is no
-      # module output to read it from. Not for ordering starterkit instances as code — the starterkit
-      # deletes itself at the end of its run, so an as-code order creates another project on every
-      # apply instead of converging. See the starterkit's readme.
-      starterkit_bbd_version_uuid = {
-        display_name    = "Starterkit BBD Version UUID"
-        type            = "STRING"
+      starterkit_bbd_version_ref = {
+        display_name    = "Starterkit BBD Latest Version Ref"
+        type            = "CODE"
+        assignment_type = "NONE"
+      }
+
+      service_account_bbd_version_ref = {
+        display_name    = "Service Account BBD Version Ref"
+        type            = "CODE"
+        assignment_type = "NONE"
+      }
+
+      platform_ref = {
+        display_name    = "Platform Ref"
+        type            = "CODE"
+        assignment_type = "NONE"
+      }
+
+      landingzone_refs = {
+        display_name    = "Landing Zone Refs"
+        type            = "CODE"
         assignment_type = "NONE"
       }
 

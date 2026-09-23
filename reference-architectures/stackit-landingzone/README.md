@@ -92,11 +92,30 @@ When a **network** configuration is provided, it additionally:
 
 ## Service Accounts
 
-You supply one account, as `stackit_service_account_key`, and the architecture creates another. The
+You supply one account, as `stackit_service_account_key`, and the architecture creates one. The
 account you supply creates the folder, the foundation project and the meshStack objects, and its key
 is reused on every run rather than only the first. The account it creates lives in the foundation
 project and is what creates tenant projects; it authenticates through workload identity federation,
 so no key for it is ever stored.
+
+### How composing architectures get an identity
+
+The [STACKIT Kubernetes Platform](https://hub.meshcloud.io/reference-architectures/stackit-kubernetes)
+registers its own building block definitions when it is ordered, and those definitions need a STACKIT
+identity to deploy as. This landing zone publishes no credential for that. It publishes
+`service_account_bbd_version_ref` instead — the version ref of the **STACKIT Service Account**
+definition it registered.
+
+A composing architecture orders that definition on a tenant it just created, listing the roles it
+needs and the uuids of its own definitions in `federated_building_block_definitions`. Every run of
+those definitions may then act as that account through workload identity federation; each building
+block names the account in its `STACKIT_SERVICE_ACCOUNT_EMAIL` input. Nothing long-lived crosses the
+boundary, so [`stackit-backplane.md`](../../.agents/references/stackit-backplane.md) holds
+throughout.
+
+A new STACKIT capability added to a composing architecture therefore needs its role in
+`stackit_assignable_roles` and its definition's uuid in `federated_building_block_definitions` —
+not a new credential.
 
 `stackit_owner_email` owns the folder, the foundation project and every tenant project the platform
 creates. STACKIT applies it at creation only, so changing it later means recreating what it owns.

@@ -1,5 +1,5 @@
 terraform {
-  required_version = ">= 1.12.0" # const variables require OpenTofu >= 1.12 / Terraform >= 1.15
+  required_version = ">= 1.12.0"
 
   required_providers {
     meshstack = {

@@ -13,16 +13,33 @@ output "foundation_project_url" {
   description = "Deep link to the foundation project in the STACKIT portal."
 }
 
-output "starterkit_bbd_version_uuid" {
-  value       = module.stackit_project_starterkit.building_block_definition.version_ref.uuid
-  description = "Version uuid of the STACKIT Project Starterkit definition this architecture registered. The definition is created inside this run, so it cannot be reached through a module output. Do not use it to order starterkit instances as code: the starterkit deletes itself at the end of its run, so an as-code order never converges and creates another project on every apply."
+output "starterkit_bbd_version_ref" {
+  value       = module.stackit_project_starterkit.building_block_definition.version_ref
+  description = "Version ref of the STACKIT Project Starterkit definition this architecture registered. The definition is created inside this run, so it cannot be reached through a module output."
+}
+
+output "service_account_bbd_version_ref" {
+  value       = module.service_account_integration.building_block_definition.version_ref
+  description = "Version ref of the STACKIT Service Account building block definition this landing zone registered. A composing architecture (e.g. the STACKIT Kubernetes Platform) orders this definition to mint a service account — with project roles and WIF — on a target project, then deploys as that account."
+}
+
+output "platform_ref" {
+  value       = module.stackit_integration.platform_ref
+  description = "Platform ref, used to build other platforms on top"
+}
+
+output "landingzone_refs" {
+  value       = module.stackit_integration.landingzone_refs
+  description = "Landing zone refs of the platform, used to build other platforms on top"
 }
 
 output "summary" {
   description = "Summary of the meshStack resources created by this reference architecture."
   value = templatefile("${path.module}/SUMMARY.md.tftpl", {
-    platform_identifier    = local.platform_identifier
-    playground_mode        = var.playground_mode
+    platform_identifier = local.platform_identifier
+    playground_mode     = var.playground_mode
+    building_block_uuid = var.meshstack_building_block_id
+
     organization_id        = var.stackit_org
     organization_url       = "https://portal.stackit.cloud/dashboard?organization=${var.stackit_org}"
     lz_folder_container_id = stackit_resourcemanager_folder.this.container_id
@@ -33,7 +50,7 @@ output "summary" {
     service_account_url    = "https://portal.stackit.cloud/service-accounts/${module.stackit_integration.service_account_email}/overview?project=${stackit_resourcemanager_project.foundation.project_id}"
 
     network_enabled            = local.network_enabled
-    networked_landingzone_name = local.network_enabled ? module.stackit_integration.landingzone_names["networked"] : ""
+    networked_landingzone_name = local.network_enabled ? module.stackit_integration.landingzone_refs["networked"].name : ""
     network_area_hub_uuid      = local.network_enabled ? meshstack_building_block.network_area_hub.metadata.uuid : ""
     network_area_id            = local.network_enabled ? local.network_area_id : ""
     network_area_url           = local.network_enabled ? "https://portal.stackit.cloud/network-area/network-areas/${local.network_area_id}/overview?organization=${var.stackit_org}" : ""

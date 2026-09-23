@@ -1,3 +1,9 @@
+variable "meshstack_building_block_id" {
+  type        = string
+  nullable    = false
+  description = "Injected by the building block runner."
+}
+
 variable "workspace" {
   type        = string
   nullable    = false
@@ -46,8 +52,6 @@ variable "platform_identifier" {
 }
 
 variable "tags" {
-  # The meshPanel Tags form lets the operator build each map from scratch, so each tag map arrives as
-  # a list of {key, values} entries rather than a map — main.tf folds them into a map(list(string)).
   type = object({
     landingzone           = list(object({ key = string, values = list(string) }))
     building_block        = list(object({ key = string, values = list(string) }))
@@ -79,8 +83,7 @@ variable "stackit_organization_onboarding_enabled" {
 variable "topology" {
   type        = list(string)
   nullable    = false
-  default     = ["sandbox"]
-  description = "Landing zone labels to deploy and offer application teams. `sandbox` deploys the sandbox landing zone; `hub&spoke` also provisions the hub-and-spoke networking. One selected label is passed as the starterkit's single default_landing_zone."
+  description = "Landing zone labels to deploy and offer application teams. `sandbox` deploys the sandbox landing zone; `hub&spoke` also provisions the hub-and-spoke networking. The starterkit defaults to `sandbox` when selected, else `hub&spoke`."
 
   validation {
     condition     = length(var.topology) > 0 && alltrue([for t in var.topology : contains(["sandbox", "hub&spoke"], t)])
@@ -101,7 +104,7 @@ variable "network" {
     tenant_network_max_prefix_length = optional(number, 28)
   })
   default     = null
-  description = "Optional hub-and-spoke network topology. Leave unset (null) to deploy only the sandbox landing zone. When set, additionally provisions a shared hub network area with the given address plan (`hub_*` fields), registers the self-service spoke `STACKIT Network` building block (`tenant_network_*` prefix bounds), and adds a dedicated `networked` STACKIT Project building block definition and landing zone whose projects are placed in the hub network area."
+  description = "Hub-and-spoke address plan, read only when `topology` includes `hub&spoke`. The input is hidden, and so not sent, otherwise."
 }
 
 variable "starterkit_approval_policies" {

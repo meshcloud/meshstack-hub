@@ -4,9 +4,9 @@ locals {
   platform_identifier = var.playground_mode ? "${var.platform_identifier}-${random_string.playground_suffix.result}" : var.platform_identifier
 
   # STACKIT caps a service account name at 20 characters and rejects one ending in a dash, so cutting
-  # the identifier to length can produce an invalid name — a playground deployment gave
-  # `likvid-stackit-test-`. Cut shorter instead, drop whatever dashes the cut exposed, and end with a
-  # hash of the full identifier so two names sharing a prefix stay apart.
+  # the identifier to length can produce an invalid name. Cut shorter instead, drop whatever dashes
+  # the cut exposed, and end with a hash of the full identifier so two names sharing a prefix stay
+  # apart.
   #
   # Only when it does not fit: a name that already fits passes through untouched, because changing it
   # replaces the service account every tenant project names as its owner.
@@ -23,9 +23,7 @@ locals {
   # Only resolvable once the hub network area building block has completed.
   network_area_id = local.network_enabled ? jsondecode(meshstack_building_block.network_area_hub.status.outputs["network_area_id"].value) : null
 
-  # The Tags input is a form the operator fills freely, so each tag map arrives as a list of
-  # {key, values} entries (see variables.tf); fold them into the map(list(string)) the nested
-  # integrations take.
+  # The meshPanel Tags form sends each tag map as a list of {key, values} entries.
   tags = {
     landingzone           = { for e in var.tags.landingzone : e.key => e.values }
     building_block        = { for e in var.tags.building_block : e.key => e.values }
@@ -33,8 +31,6 @@ locals {
     project_owner_tag_key = var.tags.project_owner_tag_key
   }
 }
-
-# ── Sandbox landing zone foundation (always deployed) ──
 
 resource "random_string" "playground_suffix" {
   lifecycle {
@@ -72,8 +68,6 @@ resource "stackit_resourcemanager_folder" "this" {
   }
 }
 
-# Foundation project hosting the landing-zone core assets (the project-creation service account).
-# Created directly under the organization (not the landing-zone folder).
 resource "stackit_resourcemanager_project" "foundation" {
   name                = "${local.platform_identifier}-foundation"
   owner_email         = var.stackit_owner_email
@@ -84,7 +78,6 @@ resource "stackit_resourcemanager_project" "foundation" {
   }
 }
 
-# --- State address migration (no resource recreation) ---
 # The sandbox landing zone called this project `backplane`. Unifying the sandbox and hub-and-spoke
 # architectures renamed it to `foundation`, because it now holds more than the backplane service
 # account. Without this move a deployed landing zone destroys the project, and with it the
@@ -121,13 +114,8 @@ module "stackit_integration" {
   }
 }
 
-# ── Self-service project starterkit (always deployed) ──
-
-# Registered unconditionally, with no option to turn it off: its draft state follows var.hub.bbd_draft
-# like every other definition here, so a deployment running the architecture in draft registers it
-# without releasing it and nobody outside the owning workspace can order it. The select the application
-# team sees is built from the landing zones that actually exist, so no configuration is needed to keep
-# the two in step.
+# The select the application team sees is built from the landing zones that actually exist, so no
+# configuration is needed to keep the two in step.
 module "stackit_project_starterkit" {
   source = "github.com/meshcloud/meshstack-hub//modules/stackit/stackit-project-starterkit?ref=${var.hub.git_ref}"
 
@@ -137,9 +125,7 @@ module "stackit_project_starterkit" {
     local.network_enabled ? { "hub&spoke" = module.stackit_integration.landingzone_refs["networked"] } : {}
   )
 
-  # The starterkit's default_landing_zone is a single label, so reduce the selected set to one: prefer
-  # `sandbox` when offered, else the first selected. Both are keys of landing_zone_refs by construction.
-  default_landing_zone = contains(var.topology, "sandbox") ? "sandbox" : var.topology[0]
+  default_landing_zone = contains(var.topology, "sandbox") ? "sandbox" : "hub&spoke"
   approval_policies    = var.starterkit_approval_policies
 
   # `hub&spoke` is the only landing zone attached to a network area, so it is the only one where the
@@ -166,25 +152,17 @@ module "stackit_project_starterkit" {
   hub = var.hub
 }
 
-# ── Self-service service account building block (always deployed) ──
-
-# Registers the TENANT_LEVEL `STACKIT Service Account` building block so application teams can
-# self-service create a service account with project roles and workload identity federation inside
-# their own STACKIT projects. Registered unconditionally like the starterkit; its draft state follows
-# var.hub.bbd_draft, so a draft deployment registers it without publishing it outside the workspace.
-# The backplane automation identity is created in the foundation project and granted its roles at
-# organization scope, exactly like the network integrations below.
 module "service_account_integration" {
   source = "github.com/meshcloud/meshstack-hub//modules/stackit/service-account?ref=${var.hub.git_ref}"
 
   stackit_organization_id = var.stackit_org
   stackit_project_id      = stackit_resourcemanager_project.foundation.project_id
 
+  stackit_assignable_roles = ["reader", "editor", "iam.member-admin", "ske.admin", "git.admin", "container-registry.admin", "dns.admin"]
+
   meshstack = { owning_workspace_identifier = var.workspace, tags = local.tags.building_block }
   hub       = var.hub
 }
-
-# ── Hub-and-spoke network topology (optional — deployed only when var.network is set) ──
 
 module "network_area_integration" {
   lifecycle {
@@ -227,7 +205,6 @@ resource "meshstack_building_block" "network_area_hub" {
   }
 
   wait_for_completion = true
-  depends_on          = [module.network_area_integration]
 
   spec = {
     building_block_definition_version_ref = {
