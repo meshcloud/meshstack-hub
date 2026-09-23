@@ -4,7 +4,9 @@ locals {
   api_url  = "https://prod.sm.eu01.stackit.cloud"
   kv_mount = stackit_secretsmanager_instance.this.instance_id
 
-  portal_url = "https://portal.stackit.cloud/projects/${var.project_id}/secrets-manager/instances/${stackit_secretsmanager_instance.this.instance_id}"
+  portal_instance_path = "https://portal.stackit.cloud/secrets-manager/instances/${stackit_secretsmanager_instance.this.instance_id}"
+  instance_url         = "${local.portal_instance_path}/overview?project=${var.project_id}"
+  users_url            = "${local.portal_instance_path}/users?project=${var.project_id}"
 }
 
 output "instance_id" {
@@ -13,7 +15,7 @@ output "instance_id" {
 }
 
 output "instance_url" {
-  value       = "${local.portal_url}/overview"
+  value       = local.instance_url
   description = "STACKIT portal link to the Secrets Manager instance."
 }
 
@@ -31,7 +33,8 @@ output "summary" {
   description = "Summary with connection details."
   value = templatefile("${path.module}/SUMMARY.md.tftpl", {
     instance_name = stackit_secretsmanager_instance.this.name
-    portal_url    = local.portal_url
+    instance_url  = local.instance_url
+    users_url     = local.users_url
     api_url       = local.api_url
     kv_mount      = local.kv_mount
   })
