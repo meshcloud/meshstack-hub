@@ -365,7 +365,7 @@ resource "meshstack_building_block_definition" "this" {
                 type        = "array"
                 title       = "IPv4 Nameservers"
                 description = "Leave empty to inherit the network area's default nameservers."
-                items       = { type = "string", format = "ipv4" }
+                items       = { type = "string" }
                 default     = []
               }
             }

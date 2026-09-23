@@ -71,6 +71,12 @@ variable "network" {
     condition     = var.network == null || var.network.prefix_length > 0
     error_message = "network.prefix_length must be a positive IPv4 prefix length."
   }
+
+  validation {
+    # meshStack rejects `format` in the input's json_schema, so the form cannot check this.
+    condition     = var.network == null || alltrue([for ns in var.network.ipv4_nameservers : can(cidrnetmask("${ns}/32"))])
+    error_message = "network.ipv4_nameservers must only contain IPv4 addresses."
+  }
 }
 
 variable "network_static" {
