@@ -16,6 +16,11 @@ run "ske_starterkit" {
     error_message = "ske-starterkit building block expected app_link_prod to be a URL, got ${jsondecode(meshstack_building_block.this.status.outputs["app_link_prod"].value)}"
   }
 
+  assert {
+    condition     = can(regex("^# SKE Starter Kit", jsondecode(meshstack_building_block.this.status.outputs["summary"].value)))
+    error_message = "ske-starterkit building block expected a summary output starting with '# SKE Starter Kit'"
+  }
+
   # The app must actually serve traffic over a valid (cert-manager-issued) TLS certificate.
   assert {
     condition     = data.external.app_probe["dev"].result.status == "200"
