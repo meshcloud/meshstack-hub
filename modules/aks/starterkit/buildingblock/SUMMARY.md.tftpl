@@ -1,0 +1,59 @@
+# AKS Starter Kit
+
+✅ **Your environment is ready!**
+
+This starter kit has set up the following resources in workspace `${workspace_identifier}`:
+
+@buildingblock[${repo_uuid}]
+
+@project[${stages.dev.project_workspace}.${stages.dev.project_name}]\
+&nbsp;&nbsp;&nbsp;&nbsp;@tenant[${stages.dev.tenant_uuid}]\
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;@buildingblock[${stages.dev.github_actions_uuid}]
+
+@project[${stages.prod.project_workspace}.${stages.prod.project_name}]\
+&nbsp;&nbsp;&nbsp;&nbsp;@tenant[${stages.prod.tenant_uuid}]\
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;@buildingblock[${stages.prod.github_actions_uuid}]
+
+---
+
+## What's Included
+
+Your GitHub repository contains:
+
+- Angular frontend & Node.js backend
+- Dockerfiles for both apps
+- Kubernetes deployment files
+- GitHub Actions CI/CD workflows for AKS
+
+---
+
+## Deployments
+
+Trigger a deployment by:
+- Pushing to the **main** branch (deploys to **dev**)
+- Merging **main** into **release** via PR (deploys to **prod**)
+
+View deployment status: [GitHub Actions](${repo_html_url}/actions/workflows/k8s-deploy.yml)
+
+- **Dev**: [${identifier}-dev.${apps_base_domain}](https://${identifier}-dev.${apps_base_domain})
+- **Prod**: [${identifier}.${apps_base_domain}](https://${identifier}.${apps_base_domain})
+
+---
+
+## Next Steps
+
+### 1. Develop
+- Push changes to **main** → deploys to **dev**
+- Merge PR from **main → release** → deploys to **prod**
+
+### 2. Monitor
+- Check workflow status in the [Actions tab](<${repo_html_url}/actions>)
+
+### 3. Manage Access
+- Invite team members via meshStack:
+  - [Dev Access](#/w/${workspace_identifier}/p/${stages.dev.project_name}/access-management/role-mapping)
+  - [Prod Access](#/w/${workspace_identifier}/p/${stages.prod.project_name}/access-management/role-mapping)
+
+---
+
+🎉 Happy coding!

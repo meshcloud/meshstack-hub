@@ -14,7 +14,7 @@ This documentation is intended as a reference documentation for cloud foundation
 ## Requirements
 
 | Name | Version |
-|------|---------|
+| ---- | ------- |
 | <a name="requirement_meshstack"></a> [meshstack](#requirement\_meshstack) | >= 0.24.4 |
 
 ## Modules
@@ -24,7 +24,7 @@ No modules.
 ## Resources
 
 | Name | Type |
-|------|------|
+| ---- | ---- |
 | [meshstack_building_block.github_actions](https://registry.terraform.io/providers/meshcloud/meshstack/latest/docs/resources/building_block) | resource |
 | [meshstack_building_block.repo](https://registry.terraform.io/providers/meshcloud/meshstack/latest/docs/resources/building_block) | resource |
 | [meshstack_project.this](https://registry.terraform.io/providers/meshcloud/meshstack/latest/docs/resources/project) | resource |
@@ -35,7 +35,7 @@ No modules.
 ## Inputs
 
 | Name | Description | Type | Default | Required |
-|------|-------------|------|---------|:--------:|
+| ---- | ----------- | ---- | ------- | :------: |
 | <a name="input_apps_base_domain"></a> [apps\_base\_domain](#input\_apps\_base\_domain) | Base domain used for application URLs (e.g. 'likvid-k8s.msh.host'). The app subdomain will be prefixed to this value. | `string` | `"likvid-k8s.msh.host"` | no |
 | <a name="input_archive_repo_on_destroy"></a> [archive\_repo\_on\_destroy](#input\_archive\_repo\_on\_destroy) | Whether to archive github repository when destroying the terraform resource, or delete it. Defaults to true (archive). | `bool` | `true` | no |
 | <a name="input_building_block_definition_version_refs"></a> [building\_block\_definition\_version\_refs](#input\_building\_block\_definition\_version\_refs) | Building block definition versions this starter kit creates its child building blocks from, keyed by definition name (`git-repository` and `github-actions-connector`). | <pre>map(object({<br/>    uuid = string<br/>  }))</pre> | n/a | yes |
@@ -53,7 +53,7 @@ No modules.
 ## Outputs
 
 | Name | Description |
-|------|-------------|
+| ---- | ----------- |
 | <a name="output_dev-link"></a> [dev-link](#output\_dev-link) | Link to the dev environment Angular app |
 | <a name="output_github_repo_url"></a> [github\_repo\_url](#output\_github\_repo\_url) | URL of the created GitHub repository |
 | <a name="output_prod-link"></a> [prod-link](#output\_prod-link) | Link to the prod environment Angular app |
