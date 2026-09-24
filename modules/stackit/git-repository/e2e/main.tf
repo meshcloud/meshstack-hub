@@ -6,6 +6,10 @@ variable "test_context" {
     forgejo_base_url     = string
     forgejo_organization = string
 
+    stackit_service_account_email = string
+    stackit_project_id            = string
+    stackit_git_instance_id       = string
+
     # Mode discriminator: set in foundation mode to order an already-deployed BBD version;
     # null in build-from-source mode, which builds the BBD from hub source.
     bbd_version_ref = optional(object({
@@ -40,6 +44,10 @@ module "stackit_git_repository" {
   forgejo_base_url     = var.test_context.forgejo_base_url
   forgejo_api_token    = var.stackit_git_forgejo_api_token
   forgejo_organization = var.test_context.forgejo_organization
+
+  stackit_service_account_email = var.test_context.stackit_service_account_email
+  stackit_project_id            = var.test_context.stackit_project_id
+  stackit_git_instance_id       = var.test_context.stackit_git_instance_id
 }
 
 locals {

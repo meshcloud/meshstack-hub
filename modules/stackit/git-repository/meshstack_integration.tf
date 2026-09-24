@@ -27,6 +27,21 @@ variable "action_variables" {
   default = {}
 }
 
+variable "stackit_service_account_email" {
+  type        = string
+  description = "Service account the runs act as via WIF to list STACKIT Git users. It must federate this definition."
+}
+
+variable "stackit_project_id" {
+  type        = string
+  description = "STACKIT project of the Git instance."
+}
+
+variable "stackit_git_instance_id" {
+  type        = string
+  description = "STACKIT Git instance whose users are matched to workspace members by email."
+}
+
 variable "bbd_display_name" {
   type        = string
   default     = null
@@ -114,7 +129,8 @@ resource "meshstack_building_block_definition" "this" {
     - **Forgejo teams** – workspace members are organized into organization teams by role
       (Owner → admins/admin, Manager → writers/write, others → readers/read).
       Teams are assigned to the repository with appropriate permissions.
-    - **Team member invitations** – workspace members are invited to teams by email.
+    - **Team members** – workspace members who have signed in to the STACKIT Git instance once are added
+      to their team, matched by email through the STACKIT Git API.
     - **Action secrets & variables** – optional maps of Forgejo Actions secrets and variables managed via the
       REST API (see below).
 
@@ -153,6 +169,48 @@ resource "meshstack_building_block_definition" "this" {
     }
 
     inputs = {
+      STACKIT_SERVICE_ACCOUNT_EMAIL = {
+        display_name    = "STACKIT Service Account Email"
+        description     = "Email of the STACKIT service account the run authenticates as via WIF to list STACKIT Git users."
+        type            = "STRING"
+        assignment_type = "STATIC"
+        is_environment  = true
+        argument        = jsonencode(var.stackit_service_account_email)
+      }
+
+      STACKIT_FEDERATED_TOKEN_FILE = {
+        display_name    = "STACKIT Federated Token File"
+        description     = "Path to the WIF token file injected by meshStack."
+        type            = "STRING"
+        assignment_type = "STATIC"
+        is_environment  = true
+        argument        = jsonencode("/var/run/secrets/workload-identity/azure/token")
+      }
+
+      stackit_project_id = {
+        display_name    = "STACKIT Project ID"
+        description     = "STACKIT project of the Git instance."
+        type            = "STRING"
+        assignment_type = "STATIC"
+        argument        = jsonencode(var.stackit_project_id)
+      }
+
+      stackit_git_instance_id = {
+        display_name    = "STACKIT Git Instance ID"
+        description     = "STACKIT Git instance whose users are matched to workspace members by email."
+        type            = "STRING"
+        assignment_type = "STATIC"
+        argument        = jsonencode(var.stackit_git_instance_id)
+      }
+
+      hub_git_ref = {
+        display_name    = "hub_git_ref"
+        description     = "Hub git ref this building block runs from."
+        type            = "STRING"
+        assignment_type = "STATIC"
+        argument        = jsonencode(var.hub.git_ref)
+      }
+
       FORGEJO_HOST = {
         display_name    = "FORGEJO_HOST"
         description     = "The Host of the Forgejo instance to connect to."
