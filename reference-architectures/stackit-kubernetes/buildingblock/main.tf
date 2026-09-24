@@ -71,6 +71,7 @@ locals {
   forgejo_api_token = sensitive(jsondecode(meshstack_building_block.git.status.outputs["forgejo_api_token"].value))
 
   forgejo_instance_url = jsondecode(meshstack_building_block.git.status.outputs["instance_url"].value)
+  forgejo_instance_id  = jsondecode(meshstack_building_block.git.status.outputs["instance_id"].value)
   forgejo_organization = jsondecode(meshstack_building_block.git.status.outputs["forgejo_organization"].value)
 
   platform_admins = toset([
@@ -450,6 +451,10 @@ resource "meshstack_building_block" "dns" {
 resource "meshstack_building_block" "git" {
   wait_for_completion = true
 
+  # meshStack fills the block's USER_PERMISSIONS input from the project's members when the run
+  # starts, so the creator has to be a member before the run, not after it.
+  depends_on = [meshstack_project_user_binding.admin]
+
   lifecycle {
     postcondition {
       condition     = self.status.status == "SUCCEEDED"
@@ -515,6 +520,12 @@ module "git_repository_integration" {
   forgejo_api_token    = local.forgejo_api_token
   forgejo_organization = local.forgejo_organization
 
+  # The token's technical user is restricted in Forgejo and cannot look up other users, so members
+  # are resolved through the STACKIT Git API instead.
+  stackit_service_account_email = local.platform_service_account_email
+  stackit_project_id            = local.stackit_project_id
+  stackit_git_instance_id       = local.forgejo_instance_id
+
   # Read by the workflow the template repository ships. Only the platform-wide constants are set
   # here; the starter kit sets APP_NAME and the connector the push robot per repository.
   action_variables = {
@@ -524,6 +535,35 @@ module "git_repository_integration" {
 
   meshstack = { owning_workspace_identifier = var.workspace, tags = var.tags.building_block }
   hub       = var.hub
+}
+
+# Federates the definitions the starter kit orders. A federation of its own, because the Git
+# repository definition needs the token of the Git block, which is a child of the platform federation.
+resource "meshstack_building_block" "starterkit_federation" {
+  wait_for_completion = true
+
+  lifecycle {
+    enabled = local.phase2_completed
+
+    postcondition {
+      condition     = self.status.status == "SUCCEEDED"
+      error_message = "Building block ${self.metadata.uuid} is ${self.status.status}, not SUCCEEDED. See its run in meshPanel."
+    }
+  }
+
+  spec = {
+    parent_building_block_refs            = [meshstack_building_block.platform_service_account.ref]
+    building_block_definition_version_ref = var.landingzone.service_account_federation_bbd_version_ref
+    display_name                          = "Starter Kit Identity Federation"
+    target_ref                            = meshstack_tenant.stackit_project.ref
+
+    inputs = {
+      service_account_email = { value = jsonencode(local.platform_service_account_email) }
+      federated_building_block_definitions = {
+        value = jsonencode(jsonencode([module.git_repository_integration.building_block_definition.uuid]))
+      }
+    }
+  }
 }
 
 # Not registered until the Harbor robot exists. The connector's whole job is wiring a repository to a
@@ -575,6 +615,9 @@ module "ske_starterkit_integration" {
   lifecycle {
     enabled = local.phase2_completed
   }
+
+  # Its repositories resolve members as the platform service account, so the federation must exist first.
+  depends_on = [meshstack_building_block.starterkit_federation]
 
   source = "github.com/meshcloud/meshstack-hub//modules/ske/ske-starterkit?ref=${var.hub.git_ref}"
 

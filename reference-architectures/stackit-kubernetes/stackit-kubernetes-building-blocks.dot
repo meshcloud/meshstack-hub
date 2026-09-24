@@ -36,6 +36,7 @@ digraph stackit_kubernetes_building_blocks {
 
     SA      [label="🔑 Automation Identity\nservice account · editor, iam.member-admin" fillcolor="#e5f2ea" color="#85bfa0"]
     FED     [label="🤝 Automation Identity Federation\ntrusts the five definitions below" fillcolor="#e5f2ea" color="#85bfa0"]
+    SKFED   [label="🤝 Starter Kit Identity Federation\ntrusts stackit/git-repository" fillcolor="#e5f2ea" color="#85bfa0"]
     CLUSTER [label="☸️ SKE Cluster\nske/cluster" fillcolor="#e5f2ea" color="#85bfa0"]
     GIT     [label="🔀 STACKIT Git Instance\nstackit/git" fillcolor="#e5f2ea" color="#85bfa0"]
     REG     [label="🗄️ STACKIT Container Registry\nstackit/container-registry" fillcolor="#e5f2ea" color="#85bfa0"]
@@ -48,6 +49,8 @@ digraph stackit_kubernetes_building_blocks {
     { rank=same; CREDS -> ING [style=invis] }
 
     SA      -> FED     [xlabel="parent of"]
+    SA      -> SKFED
+    GIT     -> SKFED   [xlabel="Forgejo token" style=dashed constraint=false]
     FED     -> CLUSTER
     FED     -> GIT
     FED     -> REG
@@ -60,4 +63,5 @@ digraph stackit_kubernetes_building_blocks {
 
   BBD_SA  -> SA  [xlabel="ordered from" style=dotted]
   BBD_FED -> FED [style=dotted]
+  BBD_FED -> SKFED [style=dotted]
 }

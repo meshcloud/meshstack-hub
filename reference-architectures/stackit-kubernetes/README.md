@@ -162,6 +162,13 @@ block authenticating through workload identity federation.
 The federation is a building block of its own because the service account must not depend on the
 definitions it federates. See [the building block tree](#building-block-tree) for why.
 
+The definitions the starter kit orders are federated by a second one, **Starter Kit Identity
+Federation**. Today that is the **STACKIT Git Repository** definition: its runs list the instance's
+users through the STACKIT Git API to match workspace members by email, because the Forgejo token's
+technical user is restricted and cannot see them. The definition takes that token from the STACKIT
+Git Instance block, which is a child of the first federation, so listing it there would be a cycle.
+The starter kit is registered only after this second federation.
+
 Adding a STACKIT capability to this architecture means adding its role to the landing zone's
 `stackit_assignable_roles`, its definition's uuid to `federated_building_block_definitions`, and the
 federation to its building block's parents. It never means adding a credential.
@@ -177,6 +184,8 @@ meshPanel shows this tree and meshStack runs a child only after its parents:
   of this architecture.
 - **Automation Identity Federation** is its child. It needs the uuids of the five definitions whose
   runs act as the account, so it can only be ordered after they are registered.
+- **Starter Kit Identity Federation** is also its child. It needs the uuid of the Git repository
+  definition, which needs the Git instance's token, so it runs after the STACKIT Git Instance.
 - The five blocks that act as the account are children of the federation. The Kubernetes meshPlatform
   Credentials and the Ingress are also children of the cluster, because they take its kubeconfig. The
   DNS zone is also a child of the Ingress, because it takes the load balancer IP.
