@@ -63,3 +63,28 @@ variable "shared_runner_labels" {
   nullable    = false
   description = "Labels of the STACKIT-hosted shared runner to order. Leave empty to order none."
 }
+
+variable "users" {
+  description = "meshStack project members. Each user's `roles` are mapped to a Forgejo organization role via `role_mapping`."
+  type = list(object({
+    meshIdentifier = string
+    username       = string
+    firstName      = string
+    lastName       = string
+    email          = string
+    euid           = string
+    roles          = list(string)
+  }))
+  nullable = false
+}
+
+variable "role_mapping" {
+  type        = map(list(string))
+  nullable    = false
+  description = "Maps meshStack roles from `users[*].roles` to Forgejo organization roles: `owner`, `writer` or `reader`. The highest one wins; unknown meshStack roles are ignored."
+
+  validation {
+    condition     = alltrue([for role in flatten(values(var.role_mapping)) : contains(["owner", "writer", "reader"], role)])
+    error_message = "role_mapping values must be `owner`, `writer` or `reader`."
+  }
+}

@@ -5,6 +5,17 @@ variable "stackit_region" {
   description = "STACKIT region the Git instance is placed in."
 }
 
+variable "role_mapping" {
+  type        = map(list(string))
+  description = "Maps meshStack project roles to Forgejo organization roles (`owner`, `writer` or `reader`). The highest one wins."
+
+  default = {
+    admin  = ["owner"]
+    user   = ["reader"]
+    reader = ["reader"]
+  }
+}
+
 variable "bbd_display_name" {
   type        = string
   default     = null
@@ -183,6 +194,21 @@ resource "meshstack_building_block_definition" "this" {
         updateable_by_consumer         = true
         value_validation_regex         = "^[a-zA-Z0-9]([a-zA-Z0-9._-]{0,38}[a-zA-Z0-9])?$"
         validation_regex_error_message = "Organization name must be 1-40 characters of letters, digits, dots, dashes or underscores, and not start or end with a separator."
+      }
+
+      users = {
+        display_name    = "Users"
+        description     = "Project members, added to the Forgejo organization once they signed in to the instance."
+        type            = "CODE"
+        assignment_type = "USER_PERMISSIONS"
+      }
+
+      role_mapping = {
+        display_name    = "Role Mapping"
+        description     = "HCL object mapping meshStack project roles to Forgejo organization roles."
+        type            = "CODE"
+        assignment_type = "STATIC"
+        argument        = jsonencode(jsonencode(var.role_mapping))
       }
 
       shared_runner_labels = {
