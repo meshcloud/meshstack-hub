@@ -1,13 +1,5 @@
 #!/usr/bin/env python3
-"""Resolve the default branch of a remote Git repository.
-
-Called as a Terraform external data source.
-Input (via stdin JSON):  { "clone_addr": "https://github.com/owner/repo.git" }
-Output (via stdout JSON): { "default_branch": "main" }
-
-Uses `git ls-remote` to find the HEAD symref without cloning the repository.
-Falls back to "main" if the default branch cannot be determined.
-"""
+"""Resolves the default branch of a remote Git repository for a Terraform external data source. Falls back to "main"."""
 
 import json
 import subprocess
@@ -15,7 +7,6 @@ import sys
 
 
 def resolve_default_branch(clone_addr: str) -> str:
-    """Resolve the default branch from a remote repository URL."""
     try:
         result = subprocess.run(
             ["git", "ls-remote", "--symref", clone_addr, "HEAD"],
@@ -23,7 +14,6 @@ def resolve_default_branch(clone_addr: str) -> str:
             text=True,
             timeout=30,
         )
-        # Output format: "ref: refs/heads/main\tHEAD\n..."
         for line in result.stdout.splitlines():
             if line.startswith("ref: refs/heads/"):
                 return line.split("ref: refs/heads/")[1].split("\t")[0]
