@@ -31,7 +31,6 @@ No modules.
 |------|------|
 | [aws_budgets_budget.account_budget](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/budgets_budget) | resource |
 | [time_static.start_date](https://registry.terraform.io/providers/hashicorp/time/latest/docs/resources/static) | resource |
-| [aws_caller_identity.current](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/caller_identity) | data source |
 
 ## Inputs
 
