@@ -1,0 +1,5 @@
+// The meshStack backend build reads this file to verify that every meshstack_integration.tf still imports
+// into meshStack. Nothing in this repository uses it.
+plugins {
+  id 'io.meshcloud.meshstack.hub-satellite'
+}
