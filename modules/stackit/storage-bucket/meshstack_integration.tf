@@ -27,6 +27,19 @@ variable "bbd_readme" {
   description = "Overrides the markdown readme shown in the marketplace before ordering."
 }
 
+variable "approval_policies" {
+  type = object({
+    building_block_creation = optional(bool, false)
+    user_input_changes      = optional(bool, false)
+    any_input_changes       = optional(bool, false)
+    manual_triggers         = optional(bool, false)
+    version_upgrade         = optional(bool, false)
+  })
+  nullable    = false
+  default     = {}
+  description = "Run triggers that need an operator's approval before the run is applied. The defaults are the provider's own, and the provider asserts them whenever the definition sets no policies — so a gate switched on in meshPanel is turned off again by the next apply unless it is set here."
+}
+
 variable "meshstack" {
   type = object({
     owning_workspace_identifier = string
@@ -81,11 +94,12 @@ resource "meshstack_building_block_definition" "this" {
   }
 
   spec = {
-    display_name     = coalesce(var.bbd_display_name, "STACKIT Storage Bucket")
-    symbol           = "https://raw.githubusercontent.com/meshcloud/meshstack-hub/${var.hub.git_ref}/modules/stackit/storage-bucket/buildingblock/logo.png"
-    description      = coalesce(var.bbd_description, "Provisions an S3-compatible Object Storage bucket on STACKIT with access credentials.")
-    target_type      = "WORKSPACE_LEVEL"
-    run_transparency = true
+    display_name      = coalesce(var.bbd_display_name, "STACKIT Storage Bucket")
+    symbol            = "https://raw.githubusercontent.com/meshcloud/meshstack-hub/${var.hub.git_ref}/modules/stackit/storage-bucket/buildingblock/logo.png"
+    description       = coalesce(var.bbd_description, "Provisions an S3-compatible Object Storage bucket on STACKIT with access credentials.")
+    target_type       = "WORKSPACE_LEVEL"
+    run_transparency  = true
+    approval_policies = var.approval_policies
     readme = coalesce(var.bbd_readme, chomp(<<-EOT
       This building block provisions an **S3-compatible Object Storage bucket on STACKIT** with
       dedicated access credentials, so your team can store and retrieve files without managing
@@ -260,8 +274,9 @@ terraform {
 
   required_providers {
     meshstack = {
-      source  = "meshcloud/meshstack"
-      version = ">= 0.21.0"
+      source = "meshcloud/meshstack"
+      # 0.25.2 is the first release that accepts `spec.approval_policies`.
+      version = ">= 0.25.2"
     }
   }
 }
