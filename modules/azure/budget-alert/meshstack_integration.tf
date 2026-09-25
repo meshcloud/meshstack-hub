@@ -110,7 +110,7 @@ resource "meshstack_building_block_definition" "this" {
     support_url              = "mailto:support@meshcloud.io"
     documentation_url        = "https://hub.meshcloud.io/platforms/azure/definitions/azure-budget-alert"
     notification_subscribers = var.notification_subscribers
-    symbol                   = "https://raw.githubusercontent.com/meshcloud/meshstack-hub/main/modules/azure/budget-alert/buildingblock/logo.png"
+    symbol                   = "https://raw.githubusercontent.com/meshcloud/meshstack-hub/${var.hub.git_ref}/modules/azure/budget-alert/buildingblock/logo.png"
     target_type              = "WORKSPACE_LEVEL"
 
     readme = coalesce(var.bbd_readme, chomp(<<-EOT

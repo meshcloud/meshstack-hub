@@ -5,5 +5,8 @@ terraform {
     meshstack = {
       source = "meshcloud/meshstack"
     }
+    azurerm = {
+      source = "hashicorp/azurerm"
+    }
   }
 }
