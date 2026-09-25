@@ -36,8 +36,8 @@ unnoticed. The  `no_buildingblock_tftest` scorecard check flags each one as migr
 ## Verify Before Merging
 
 CI never applies an `e2e/` test — a merge gate in meshstack-hub only catches
-`tf validate`/`terraform-docs`/scorecard issues, not whether the module actually works against a
-live meshStack instance. A PR that adds or changes an `e2e/`-covered module should therefore
+`tf validate`/`terraform-docs`/scorecard/meshStack import issues, not whether the module actually
+works against a live meshStack instance. A PR that adds or changes an `e2e/`-covered module should therefore
 include a link to an e2e verification run in its description where possible, dispatched against
 the PR's branch — see [Running tests](#running-tests). Posting a private
 link to the `meshstack-smoke-test` repo's own workflow run is fine — GitHub enforces access on it.
