@@ -117,7 +117,7 @@ resource "meshstack_building_block_definition" "this" {
     description         = coalesce(var.bbd_description, "Sends email alerts when a GCP project's spend crosses configurable thresholds of a monthly budget.")
     support_url         = ""
     documentation_url   = ""
-    symbol              = "https://raw.githubusercontent.com/meshcloud/meshstack-hub/main/modules/gcp/budget-alert/buildingblock/logo.png"
+    symbol              = "https://raw.githubusercontent.com/meshcloud/meshstack-hub/${var.hub.git_ref}/modules/gcp/budget-alert/buildingblock/logo.png"
     target_type         = "TENANT_LEVEL"
     supported_platforms = [{ name = "GCP" }]
 

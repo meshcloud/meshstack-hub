@@ -5,5 +5,9 @@ terraform {
     meshstack = {
       source = "meshcloud/meshstack"
     }
+    google = {
+      source  = "hashicorp/google"
+      version = ">= 6.12.0, < 7.0.0"
+    }
   }
 }
