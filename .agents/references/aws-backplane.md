@@ -15,7 +15,7 @@ Use WIF when the building block acts within a single AWS account (the backplane 
 - **No secrets rotation**: WIF tokens are short-lived JWTs issued by meshStack; no access keys to manage.
 - **BBD-scoped trust**: The IAM role trust policy is scoped to the specific building block definition UUID, preventing cross-BBD token reuse.
 - **OIDC-native**: AWS supports federated OIDC identities via `aws_iam_openid_connect_provider` out of the box.
-- **Shared OIDC provider**: Multiple backplanes can share a single OIDC provider in the same AWS account using `create_oidc_provider = false`.
+- **Shared OIDC provider**: every backplane in an account trusts the one provider `modules/aws/oidc-provider` registers, passed in as `oidc_provider_arn`.
 
 <!-- scorecard-checks: aws_wif_external_oidc_provider, aws_oidc_provider_notice -->
 ### The shared OIDC provider
@@ -36,8 +36,12 @@ module "meshstack_oidc_provider" {
 }
 ```
 
-`modules/aws/oidc-provider` takes no inputs — it reads the issuer, audience and thumbprint from
-`data.meshstack_integrations`. Pass its `arn` output to every backplane in that account.
+`modules/aws/oidc-provider` takes the runners' `issuer` and their `audiences` as its one input, copied
+from `version_latest.workload_identity_federation` of any definition that runs on that runner, and reads the
+thumbprint from the issuer's own TLS chain, so the issuer URL has to be reachable from wherever it
+runs. Pass its `arn` output to every backplane in that account. To register a self-hosted runner's
+issuer pass that runner's values, and then pass its uuid as `building_block_runner_uuid` to every
+building block module running on it.
 
 This is where AWS differs from the other providers, and why the repetition is not the same kind of
 repetition: an Azure federated identity credential is a child of its UAMI and a GCP workload
@@ -327,9 +331,9 @@ two patterns, not between federation and a key inside Pattern A. Pattern B's acc
 different thing: it is the only credential that pattern has, and it authenticates a principal whose
 sole permission is `sts:AssumeRole`.
 
-`modules/aws/s3_bucket`, `modules/aws/route53-dns-record` and `modules/aws/route53-dns-alias-record`
-still carry the fallback shape. They are the remaining exceptions, not a pattern to copy — fix one
-the next time you are in it.
+No AWS backplane carries the fallback shape any more. `modules/aws/s3_bucket`,
+`modules/aws/route53-dns-record` and `modules/aws/route53-dns-alias-record` were the last three, and
+`aws_wif_no_access_key` keeps it that way.
 
 ---
 
@@ -354,11 +358,9 @@ module "backplane" {
   oidc_provider_arn = var.aws_oidc_provider_arn
 
   workload_identity_federation = {
-    issuer   = data.meshstack_integrations.integrations.workload_identity_federation.replicator.issuer
-    audience = data.meshstack_integrations.integrations.workload_identity_federation.replicator.aws.audience
-    subjects = [
-      "${trimsuffix(data.meshstack_integrations.integrations.workload_identity_federation.replicator.subject, ":replicator")}:workspace.${var.meshstack.owning_workspace_identifier}.buildingblockdefinition.${meshstack_building_block_definition.this.metadata.uuid}"
-    ]
+    issuer   = meshstack_building_block_definition.this.version_latest.workload_identity_federation.issuer
+    audience = meshstack_building_block_definition.this.version_latest.workload_identity_federation.aws.audience
+    subjects = [meshstack_building_block_definition.this.version_latest.workload_identity_federation.subject]
   }
 }
 
@@ -376,6 +378,13 @@ AWS_WEB_IDENTITY_TOKEN_FILE = {
   argument        = jsonencode("/var/run/secrets/workload-identity/aws/token")
 }
 ```
+
+**Known limitation.** The role trusts the subject of the version the Terraform resource manages.
+A building block keeps running on the version it was created with, so moving the definition to a
+different runner breaks the blocks that still run on the old version until they upgrade.
+
+The status read and the `building_block_runner_uuid` behind it are the same in every cloud, see
+[meshstack-integration.md § Runner identity](meshstack-integration.md#runner-identity).
 
 ### Cross-account (StackSet) pattern
 

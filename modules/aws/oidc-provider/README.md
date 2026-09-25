@@ -20,10 +20,13 @@ provider "aws" {
   region = "eu-central-1"
 }
 
-provider "meshstack" {}
-
 module "meshstack_oidc_provider" {
   source = "github.com/meshcloud/meshstack-hub//modules/aws/oidc-provider?ref=main"
+
+  workload_identity_federation = {
+    issuer    = "https://<the runners' issuer>"
+    audiences = ["<the AWS audience of each runner behind that issuer>"]
+  }
 }
 
 # Then, per building block definition:
@@ -35,9 +38,16 @@ module "s3_bucket" {
 }
 ```
 
-The issuer, audience and thumbprint are read from `data.meshstack_integrations`, so this module
-takes no inputs — it needs an `aws` provider pointed at the account and a configured `meshstack`
-provider.
+`issuer` and `audiences` describe the runners. Every building block definition that runs on a
+runner reports them as `version_latest.workload_identity_federation.issuer` and
+`version_latest.workload_identity_federation.aws.audience`, so take them from a definition already deployed
+on each runner, in whichever cloud. AWS allows one provider per issuer and account, and each runner
+has its own audience, so runners that share an issuer, for example two run-controllers in one
+cluster, are all listed in `audiences`. For a self-hosted runner pass its values, and pass its uuid
+as `building_block_runner_uuid` to every building block module that runs on it. The thumbprint
+comes from the issuer's own TLS chain, so no other input is needed.
+
+The issuer URL has to be reachable from wherever this runs, because the thumbprint is read from it.
 
 ## Required permissions
 

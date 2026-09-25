@@ -138,6 +138,65 @@ resource "meshstack_building_block_definition" "this" {
 
 **If a `meshstack_building_block_definition` input's `argument` field references a variable, that variable must have an explicit default** — do not rely on nested `optional()` defaults (for example via a bare `default = {}`), since some downstream consumers don't evaluate Terraform's object-attribute defaulting and would see unset fields instead. Keep the `optional()` type constraints regardless — they still document intent and protect callers who omit keys.
 
+<!-- scorecard-checks: wif_no_replicator -->
+## Runner identity
+
+A building block run presents an identity a cloud backplane has to trust. The runner declares the
+scheme once, meshStack resolves it per definition, and the module reads the result from the
+definition's `version_latest`. It never builds a subject from strings.
+
+```hcl
+variable "building_block_runner_uuid" {
+  type        = string
+  default     = null
+  description = "Runs this building block on the given meshStack building block runner instead of the shared one meshStack hosts."
+}
+
+resource "meshstack_building_block_definition" "this" {
+  version_spec = {
+    runner_ref = var.building_block_runner_uuid == null ? null : {
+      kind = "meshBuildingBlockRunner"
+      uuid = var.building_block_runner_uuid
+    }
+    # ...
+  }
+}
+
+module "backplane" {
+  # ...
+  workload_identity_federation = {
+    issuer   = meshstack_building_block_definition.this.version_latest.workload_identity_federation.issuer
+    subjects = [meshstack_building_block_definition.this.version_latest.workload_identity_federation.subject]
+  }
+}
+```
+
+- `version_latest.workload_identity_federation.subject` is the runner's subject template with every
+  placeholder filled in for this definition. It is the only place a subject comes from, and it is
+  known after apply, exactly as `metadata.uuid` already was.
+- `issuer` and the per-cloud `audience` describe the runner, and the definition reports them for the
+  runner its latest version runs on. AWS reads `.aws.audience`, GCP `.gcp.audience`;
+  Azure and STACKIT need none. A self-hosted runner declares its own values, so never hardcode them.
+- `building_block_runner_uuid` feeds `version_spec.runner_ref`, and the status follows it, so the
+  backplane always trusts the runner the definition actually runs on. Omit it and the definition
+  runs on the shared runner meshStack hosts.
+- The whole status is known after apply. Where the definition consumes a backplane output that
+  depends on the same input, split the input; GCP does, see
+  [gcp-backplane.md](gcp-backplane.md#keeping-the-subject-out-of-the-credentials).
+
+`data.meshstack_integrations.….workload_identity_federation.replicator` is **not** a substitute.
+That entry describes the replicator's own identity, and using it here only ever worked because the
+runner happens to share the replicator's cluster and namespace. Platform-level
+`modules/<cloud>/meshstack_integration.tf` still reads it, because it configures the replicator.
+
+`modules/aws/oidc-provider` owns no definition, because it registers the issuer per AWS account
+before any definition exists, so it takes `issuer` and the `audiences` of every runner behind it as an input instead.
+
+**Known limitation.** The backplane trusts the identity of the version the Terraform resource
+manages, which is the newest one. A building block keeps running on the version it was created
+with, so moving a definition to a different runner breaks the blocks that still run on the old
+version until they upgrade.
+
 <!-- scorecard-checks: bbd_catalog_overrides -->
 ## Overridable Catalog Properties
 
