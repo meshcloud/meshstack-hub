@@ -14,7 +14,7 @@
 #     covers this machine's platform; we throw those away.
 #   * the directories are independent, so they run in parallel.
 set -uo pipefail
-cd "$(dirname "$0")/.."
+cd "$(dirname "$0")/.." || exit 1
 
 command -v tofu > /dev/null || {
 	echo "tofu is not on PATH"
@@ -60,8 +60,10 @@ dirs=$(find modules infra reference-architectures -name '*.tf' \
 	-not -path '*/.terraform/*' \
 	-print0 | xargs -0 -n1 dirname | sort -u)
 
+# shellcheck disable=SC2329 # invoked through xargs below
 validate_dir() {
-	local dir="$1" log="$workdir/$(tr '/' '_' <<< "$1").log"
+	local dir="$1" log
+	log="$workdir/$(tr '/' '_' <<< "$1").log"
 	# The provider registry occasionally resets a connection under this many
 	# parallel inits. One retry costs a second and removes the flake.
 	(cd "$dir" && { tofu init -backend=false -input=false -no-color ||
