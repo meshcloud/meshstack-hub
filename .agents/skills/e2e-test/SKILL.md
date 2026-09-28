@@ -287,7 +287,7 @@ resource "meshstack_building_block" "this" {
   depends_on          = [module.definition]
   wait_for_completion = true
   spec = {
-    building_block_definition_version_ref = { uuid = module.definition.version_ref.uuid }
+    building_block_definition_version_ref = module.definition.version_ref
 
     display_name = "${var.test_context.run_id} <name>"
     target_ref = {
@@ -626,7 +626,7 @@ source setup-override-provider.sh
 - [ ] Each mode module re-types `test_context` as an `object` with every field it needs required — no `optional()`
 - [ ] `modes/hub` sources the module under test by relative path (not a GitHub URL) and passes `hub.git_ref = var.test_context.hub_git_ref`
 - [ ] Secrets are flat root variables with `default = null`, piped down as one object, re-typed in `modes/hub` with a validation that rejects nulls
-- [ ] `building_block_definition_version_ref = { uuid = module.definition.version_ref.uuid }` — the provider accepts `{ uuid }` only
+- [ ] `building_block_definition_version_ref = module.definition.version_ref` — a ref is passed as the object it is, never rebuilt from its uuid. A conditional between the test context's `{ uuid }` and a module's version object needs both sides typed the same, so the module side becomes `{ uuid = ...version_ref.uuid }` inside the conditional, and the resource still takes the object.
 - [ ] `meshstack_building_block` has `depends_on = [module.definition]` and `wait_for_completion = true`
 - [ ] One mode-agnostic `.tftest.hcl` file; assertions touch the building block only
 - [ ] Variant flags (sync/async and similar) are **root variables of the `e2e/` module** with a default, not `test_context` fields

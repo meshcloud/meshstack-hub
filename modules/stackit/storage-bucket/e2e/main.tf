@@ -48,7 +48,7 @@ module "stackit_storage_bucket" {
 }
 
 locals {
-  version_ref = var.test_context.bbd_version_ref != null ? var.test_context.bbd_version_ref : module.stackit_storage_bucket[0].building_block_definition.version_ref
+  version_ref = var.test_context.bbd_version_ref != null ? var.test_context.bbd_version_ref : { uuid = module.stackit_storage_bucket[0].building_block_definition.version_ref.uuid }
 }
 
 resource "meshstack_building_block" "this" {
@@ -58,7 +58,7 @@ resource "meshstack_building_block" "this" {
   depends_on          = [module.stackit_storage_bucket]
   wait_for_completion = true
   spec = {
-    building_block_definition_version_ref = { uuid = local.version_ref.uuid }
+    building_block_definition_version_ref = local.version_ref
 
     display_name = "${var.test_context.run_id}-storage-bucket"
     target_ref = {

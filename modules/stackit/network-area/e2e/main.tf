@@ -50,7 +50,7 @@ module "stackit_network_area" {
 }
 
 locals {
-  version_ref = var.test_context.bbd_version_ref != null ? var.test_context.bbd_version_ref : module.stackit_network_area[0].building_block_definition.version_ref
+  version_ref = var.test_context.bbd_version_ref != null ? var.test_context.bbd_version_ref : { uuid = module.stackit_network_area[0].building_block_definition.version_ref.uuid }
 
   network_area_name = "${var.test_context.run_id}-na"
   # Ranges are picked from a block that is not used by any other network area in the test
@@ -66,7 +66,7 @@ resource "meshstack_building_block" "this" {
   depends_on          = [module.stackit_network_area]
   wait_for_completion = true
   spec = {
-    building_block_definition_version_ref = { uuid = local.version_ref.uuid }
+    building_block_definition_version_ref = local.version_ref
 
     display_name = "${var.test_context.run_id}-network-area"
     target_ref = {

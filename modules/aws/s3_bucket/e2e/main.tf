@@ -55,7 +55,7 @@ module "aws_s3_bucket" {
 }
 
 locals {
-  version_ref = var.test_context.bbd_version_ref != null ? var.test_context.bbd_version_ref : module.aws_s3_bucket[0].building_block_definition.version_ref
+  version_ref = var.test_context.bbd_version_ref != null ? var.test_context.bbd_version_ref : { uuid = module.aws_s3_bucket[0].building_block_definition.version_ref.uuid }
 
   bucket_name = "${var.test_context.run_id}-bucket"
 }
@@ -67,7 +67,7 @@ resource "meshstack_building_block" "this" {
   wait_for_completion = true
 
   spec = {
-    building_block_definition_version_ref = { uuid = local.version_ref.uuid }
+    building_block_definition_version_ref = local.version_ref
 
     display_name = "${var.test_context.run_id}-s3-bucket"
     target_ref = {
