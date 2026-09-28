@@ -59,7 +59,7 @@ resource "meshstack_building_block" "this" {
   wait_for_completion = true
 
   spec = {
-    building_block_definition_version_ref = { uuid = module.definition.version_ref.uuid }
+    building_block_definition_version_ref = module.definition.version_ref
 
     display_name = "${var.test_context.run_id}-workspace-starterkit"
     target_ref = {

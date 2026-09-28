@@ -52,7 +52,7 @@ module "stackit_network" {
 }
 
 locals {
-  version_ref = var.test_context.bbd_version_ref != null ? var.test_context.bbd_version_ref : module.stackit_network[0].building_block_definition.version_ref
+  version_ref = var.test_context.bbd_version_ref != null ? var.test_context.bbd_version_ref : { uuid = module.stackit_network[0].building_block_definition.version_ref.uuid }
 
   network_name = "${var.test_context.run_id}-net"
   # Smallest prefix the module's default min/max range allows, to keep the address space this test
@@ -67,7 +67,7 @@ resource "meshstack_building_block" "this" {
   depends_on          = [module.stackit_network]
   wait_for_completion = true
   spec = {
-    building_block_definition_version_ref = { uuid = local.version_ref.uuid }
+    building_block_definition_version_ref = local.version_ref
 
     display_name = "${var.test_context.run_id}-network"
     # The network is created inside the STACKIT project backing this tenant; `project_id` is a
