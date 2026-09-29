@@ -17,10 +17,7 @@ modules/ionos/dcd/backplane                          # required arguments missin
 # until that work lands on main. The script prints a ::notice:: to drop each
 # line once it loads, so remove each entry after the module it names is on main.
 reference-architectures/stackit-kubernetes/buildingblock # sources ske/cluster, stackit/git and the kubernetes/* modules at ?ref=main
-modules/stackit/service-account                      # sources //modules/stackit/service-account/backplane?ref=main
 modules/stackit/service-account-federation           # sources //modules/stackit/service-account-federation/backplane?ref=main
 modules/gcp/budget-alert                             # sources //modules/gcp/budget-alert/backplane?ref=main, which has no workload_identity_federation_trust input yet
 modules/gcp/storage-bucket                           # sources //modules/gcp/storage-bucket/backplane?ref=main, which has no workload_identity_federation_trust input yet
 reference-architectures/stackit-landingzone/buildingblock # sources //modules/stackit/service-account?ref=main
-modules/stackit/secrets-manager                      # sources //modules/stackit/secrets-manager/backplane?ref=main
-modules/stackit/git-repository                       # sources //modules/stackit/git-repository/backplane?ref=main, where the input is still forgejo_token
