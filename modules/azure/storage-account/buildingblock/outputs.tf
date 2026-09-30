@@ -11,7 +11,7 @@ output "storage_account_resource_group" {
 }
 
 output "storage_account_url" {
-  value = "https://portal.azure.com/#@${data.azurerm_client_config.current.tenant_id}/resource${azurerm_storage_account.storage_account.id}/overview"
+  value = local.portal_url
 }
 
 output "tags" {
@@ -25,5 +25,27 @@ output "network_default_action" {
 }
 
 output "blob_soft_delete_retention_days" {
-  value = azurerm_storage_account.storage_account.blob_properties[0].delete_retention_policy[0].days
+  description = "The blob soft-delete retention applied, in days. 0 when soft delete is disabled."
+  # meshStack's output validation fails a run that reports null for a declared output, so
+  # "disabled" (null input) is reported as 0 instead.
+  value = coalesce(var.blob_soft_delete_retention_days, 0)
+}
+
+output "summary" {
+  description = "Markdown summary output of the building block"
+  value       = <<-EOT
+    # Azure Storage Account
+
+    Your Azure Storage Account was successfully created!
+
+    ## Details
+
+    - **Name**: ${azurerm_storage_account.storage_account.name}
+    - **Resource group**: ${azurerm_resource_group.storage_account_rg.name}
+    - **Location**: ${azurerm_storage_account.storage_account.location}
+    - **Primary blob endpoint**: `${azurerm_storage_account.storage_account.primary_blob_endpoint}`
+    - **Blob soft delete retention**: ${var.blob_soft_delete_retention_days != null ? "${var.blob_soft_delete_retention_days} days" : "Disabled"}
+    - **Network access**: ${try(azurerm_storage_account.storage_account.network_rules[0].default_action, "Allow") == "Deny" ? "Restricted" : "Allowed from any network"}
+    - [Open in Azure Portal](${local.portal_url})
+  EOT
 }

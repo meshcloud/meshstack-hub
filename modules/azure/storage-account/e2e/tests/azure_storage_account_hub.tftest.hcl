@@ -23,10 +23,10 @@ run "azure_storage_account_hub" {
   }
 
   # Optional input: blob_soft_delete_retention_days is left out of the building block's inputs (see
-  # e2e/main.tf), so this asserts the Terraform variable's own default (7 days) flows through.
+  # e2e/main.tf), so soft delete is disabled and the output reports the 0 placeholder.
   assert {
-    condition     = jsondecode(meshstack_building_block.this.status.outputs["blob_soft_delete_retention_days"].value) == 7
-    error_message = "expected blob_soft_delete_retention_days to default to 7, got ${jsondecode(meshstack_building_block.this.status.outputs["blob_soft_delete_retention_days"].value)}"
+    condition     = jsondecode(meshstack_building_block.this.status.outputs["blob_soft_delete_retention_days"].value) == 0
+    error_message = "expected blob_soft_delete_retention_days to be 0 (disabled), got ${jsondecode(meshstack_building_block.this.status.outputs["blob_soft_delete_retention_days"].value)}"
   }
 
   # Gated input: restrict_network_access is true, so network_rules is asked for and its JSON

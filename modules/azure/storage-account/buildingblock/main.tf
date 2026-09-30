@@ -15,6 +15,7 @@ resource "azurerm_resource_group" "storage_account_rg" {
 
 locals {
   copied_tags = var.tag_name != null && var.tag_value != null ? { (var.tag_name) = join(",", var.tag_value) } : {}
+  portal_url  = "https://portal.azure.com/#@${data.azurerm_client_config.current.tenant_id}/resource${azurerm_storage_account.storage_account.id}/overview"
 }
 
 resource "azurerm_storage_account" "storage_account" {
@@ -28,18 +29,20 @@ resource "azurerm_storage_account" "storage_account" {
   tags = local.copied_tags
 
   blob_properties {
-    delete_retention_policy {
-      days = var.blob_soft_delete_retention_days
+    dynamic "delete_retention_policy" {
+      for_each = var.blob_soft_delete_retention_days != null ? [var.blob_soft_delete_retention_days] : []
+      content {
+        days = delete_retention_policy.value
+      }
     }
   }
 
   dynamic "network_rules" {
     for_each = var.restrict_network_access ? [var.network_rules] : []
     content {
-      default_action             = "Deny"
-      bypass                     = network_rules.value.bypass
-      ip_rules                   = network_rules.value.ip_rules
-      virtual_network_subnet_ids = network_rules.value.virtual_network_subnet_ids
+      default_action = "Deny"
+      bypass         = network_rules.value.bypass
+      ip_rules       = network_rules.value.ip_rules
     }
   }
 }

@@ -68,9 +68,9 @@ resource "meshstack_building_block" "this" {
       storage_account_name = { value = jsonencode(local.storage_account_name_prefix) }
 
       # blob_soft_delete_retention_days is intentionally left out of the building block's inputs
-      # (it's an optional input) to test that the Terraform variable's own default (7 days) flows
-      # through. It can't default to null: meshStack's output validation fails a run that reports
-      # null for a declared output.
+      # (it's an optional input) to test that leaving it unset disables blob soft delete, which the
+      # blob_soft_delete_retention_days output reports as 0 (it can't report null, see
+      # buildingblock/outputs.tf).
 
       restrict_network_access = { value = jsonencode(true) }
 

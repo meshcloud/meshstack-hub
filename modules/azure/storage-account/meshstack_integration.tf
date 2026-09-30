@@ -220,7 +220,7 @@ resource "meshstack_building_block_definition" "this" {
       blob_soft_delete_retention_days = {
         type            = "INTEGER"
         display_name    = "Blob Soft-Delete Retention (Days)"
-        description     = "Optional: how many days a deleted file can still be restored before it's gone for good. Leave blank to use 7 days."
+        description     = "Optional: how many days a deleted file can still be restored before it's gone for good. Leave blank to disable blob soft delete."
         assignment_type = "USER_INPUT"
         is_optional     = true
         display_order   = 2
@@ -236,7 +236,7 @@ resource "meshstack_building_block_definition" "this" {
       network_rules = {
         type            = "JSON"
         display_name    = "Network Rules"
-        description     = "Choose which networks, IP addresses and services are allowed to reach the storage account."
+        description     = "Choose which IP addresses and services are allowed to reach the storage account."
         assignment_type = "USER_INPUT"
         condition       = "input.restrict_network_access == true"
         is_optional     = true
@@ -261,12 +261,6 @@ resource "meshstack_building_block_definition" "this" {
                 type    = "string"
                 pattern = "^([0-9]{1,3}\\.){3}[0-9]{1,3}(/([0-9]|[12][0-9]|3[0-2]))?$"
               }
-            }
-            virtual_network_subnet_ids = {
-              type        = "array"
-              title       = "Allowed virtual networks"
-              description = "The Azure virtual networks allowed to reach the storage account. Ask your platform team for the right value if you're not sure."
-              items       = { type = "string" }
             }
           }
         })
@@ -332,8 +326,14 @@ resource "meshstack_building_block_definition" "this" {
       blob_soft_delete_retention_days = {
         type            = "INTEGER"
         display_name    = "Blob Soft-Delete Retention (Days)"
-        description     = "The blob soft-delete retention period actually applied, or null if left disabled."
+        description     = "The blob soft-delete retention period actually applied in days, 0 if blob soft delete is disabled."
         assignment_type = "NONE"
+      }
+      summary = {
+        type            = "STRING"
+        display_name    = "Summary"
+        description     = "A markdown summary of the created storage account."
+        assignment_type = "SUMMARY"
       }
     }
   }
