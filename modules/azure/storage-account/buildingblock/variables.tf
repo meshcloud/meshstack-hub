@@ -11,8 +11,8 @@ variable "location" {
 
 variable "blob_soft_delete_retention_days" {
   type        = number
-  default     = 7
-  description = "Number of days to retain deleted blobs. Optional: when omitted, this default applies."
+  default     = null
+  description = "Number of days to retain deleted blobs. Null disables blob soft delete entirely."
 }
 
 variable "tag_name" {
@@ -37,9 +37,8 @@ variable "network_rules" {
   # default_action isn't part of this input: it's implied by restrict_network_access (Deny when
   # set, Allow otherwise).
   type = object({
-    bypass                     = optional(list(string), ["AzureServices"])
-    ip_rules                   = optional(list(string), [])
-    virtual_network_subnet_ids = optional(list(string), [])
+    bypass   = optional(list(string), ["AzureServices"])
+    ip_rules = optional(list(string), [])
   })
   default     = {}
   description = "Network access restrictions applied when restrict_network_access is true, filled in through a meshPanel form."
