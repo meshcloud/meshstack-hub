@@ -162,6 +162,10 @@ locals {
       project_owner_tag_key = { type = "string", title = "Project Owner Tag Key", default = var.default_tags.project_owner_tag_key }
     }
   }
+
+  # Named once: the definition carries it, and the building block is given it so a bootstrap run can
+  # find this definition and read the WIF identity meshStack resolved for it.
+  bbd_display_name = coalesce(var.bbd_display_name, "STACKIT Landing Zone Reference Architecture")
 }
 
 resource "meshstack_building_block_definition" "this" {
@@ -171,7 +175,7 @@ resource "meshstack_building_block_definition" "this" {
   }
 
   spec = {
-    display_name      = coalesce(var.bbd_display_name, "STACKIT Landing Zone Reference Architecture")
+    display_name      = local.bbd_display_name
     symbol            = "https://raw.githubusercontent.com/meshcloud/meshstack-hub/${var.hub.git_ref}/reference-architectures/stackit-landingzone/buildingblock/logo.png"
     description       = coalesce(var.bbd_description, "Onboards a STACKIT sandbox platform into meshStack: a location, resourcemanager folder and the STACKIT Project platform with its default landing zone. Optionally layers on a hub-and-spoke network topology when a network config is provided.")
     support_url       = "https://portal.stackit.cloud"
@@ -265,14 +269,14 @@ resource "meshstack_building_block_definition" "this" {
 
     ## 🔑 Authentication
 
-    You provide the STACKIT organization UUID, owner email, tags, default role mapping and a service account key as inputs.
-    The building block authenticates to STACKIT with the service account key, which needs `resource-manager.admin` on the organization.
+    Order this twice. With **Stage** set to `bootstrap` the run creates nothing and reports the workload identity claims to trust: issuer, audience and subject.
+    Register those on a STACKIT service account holding `resource-manager.admin` on your organization, then set **Stage** to `deploy` and name that account. No key is ever stored.
 
     ## 📊 Shared responsibility
 
     | Responsibility | Platform Team | Application Team |
     |---|:---:|:---:|
-    | Provide the STACKIT service account key, organization details, tags and role mapping | ✅ | ❌ |
+    | Trust the reported claims on a service account, and provide organization details, tags and role mapping | ✅ | ❌ |
     | Provision the location, folder and STACKIT Project platform | ✅ | ❌ |
     | Register the self-service `STACKIT Service Account` building block | ✅ | ❌ |
     | (Optional) Provide the network CIDR plan and provision the hub network area | ✅ | ❌ |
@@ -317,14 +321,55 @@ resource "meshstack_building_block_definition" "this" {
     }
 
     inputs = {
-      stackit_service_account_key = {
-        display_name           = "STACKIT Service Account Key"
-        description            = "Full key JSON of the deployment service account, reused on every run. Needs `resource-manager.admin` on the organization, or organization owner to allow a different `stackit_owner_email`."
-        type                   = "CODE"
-        assignment_type        = "USER_INPUT"
-        updateable_by_consumer = true
-        sensitive              = {}
-        display_order          = 60
+      stage = {
+        display_name      = "Stage"
+        description       = "Bootstrap reports the WIF claims to trust and creates nothing. Deploy builds the landing zone as the service account you trusted them on."
+        type              = "SINGLE_SELECT"
+        assignment_type   = "USER_INPUT"
+        selectable_values = ["bootstrap", "deploy"]
+        default_value     = jsonencode("bootstrap")
+        display_order     = 10
+      }
+
+      # A USER_INPUT rather than a STATIC: the account is chosen in meshPanel between the two runs,
+      # which is what keeps this architecture orderable without a foundation repository.
+      STACKIT_SERVICE_ACCOUNT_EMAIL = {
+        display_name    = "STACKIT Service Account Email"
+        description     = "Email of the STACKIT service account the provider authenticates as via WIF. Trust the claims the bootstrap run reported on it first."
+        type            = "STRING"
+        assignment_type = "USER_INPUT"
+        is_environment  = true
+        is_optional     = true
+        condition       = "input.stage == 'deploy'"
+        display_order   = 20
+      }
+
+      # The building block finds its own definition by this name to resolve the WIF subject it must
+      # report. A definition cannot reference its own resolved identity, so it cannot be passed in.
+      bbd_display_name = {
+        display_name    = "Definition Display Name"
+        description     = "Display name of this building block definition, used by the bootstrap run to find its own WIF identity."
+        type            = "STRING"
+        assignment_type = "STATIC"
+        argument        = jsonencode(local.bbd_display_name)
+      }
+
+      STACKIT_USE_OIDC = {
+        display_name    = "STACKIT Use OIDC"
+        description     = "Enables OIDC-based WIF for the STACKIT provider."
+        type            = "STRING"
+        assignment_type = "STATIC"
+        is_environment  = true
+        argument        = jsonencode("1")
+      }
+
+      STACKIT_FEDERATED_TOKEN_FILE = {
+        display_name    = "STACKIT Federated Token File"
+        description     = "Path to the WIF token file injected by meshStack."
+        type            = "STRING"
+        assignment_type = "STATIC"
+        is_environment  = true
+        argument        = jsonencode("/var/run/secrets/workload-identity/azure/token")
       }
 
       hub = {
