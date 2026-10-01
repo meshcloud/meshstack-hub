@@ -181,9 +181,10 @@ locals {
     how many days the workspace should live (**Workspace TTL (Days)**), not a specific date. Only a
     platform admin can change that value after ordering, not the application team. That same computed
     date is written to the workspace's expiry tag and to the payment method's own expiration date, so
-    nothing outlives the workspace it belongs to. Every resource it creates is destroyed automatically
-    the next time it runs after that many days have passed — the workspace, the payment method, the
-    project and the tenant, all in one run. The block itself is not deleted, only what it created.
+    nothing outlives the workspace it belongs to. The block runs once a day, and every resource it
+    creates is destroyed automatically in the first run after that many days have passed — the
+    workspace, the payment method, the project and the tenant, all in one run. The block itself is
+    not deleted, only what it created.
 
     If this deployment lets you leave **Workspace TTL (Days)** blank, an order without a TTL creates
     a workspace that never expires: nothing carries an expiry date and no run destroys anything.
@@ -224,6 +225,13 @@ resource "meshstack_building_block_definition" "this" {
     description      = var.bbd_description
     target_type      = "WORKSPACE_LEVEL"
     run_transparency = true
+
+    # Run daily so resources are actually destroyed when they expire
+    schedule = {
+      mode               = "DRIFT_RECONCILIATION"
+      frequency          = "DAILY"
+      automatic_approval = true
+    }
 
     readme = coalesce(var.bbd_readme, local.default_readme)
   }
