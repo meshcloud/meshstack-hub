@@ -241,29 +241,7 @@ resource "meshstack_building_block_definition" "this" {
         condition       = "input.restrict_network_access == true"
         is_optional     = true
         display_order   = 4
-        json_schema = jsonencode({
-          type = "object"
-          properties = {
-            bypass = {
-              type        = "array"
-              title       = "Allow Azure services"
-              description = "Let trusted Microsoft services, like backups and monitoring, reach the storage account even though other access is restricted. Most people can leave this as is."
-              items = {
-                type = "string"
-                enum = ["AzureServices", "Logging", "Metrics", "None"]
-              }
-            }
-            ip_rules = {
-              type        = "array"
-              title       = "Allowed IP addresses"
-              description = "The internet addresses allowed to reach the storage account. Add one per line, e.g. 203.0.113.7 for a single address or 203.0.113.0/24 for a range. Ask your platform team if you're not sure what to enter."
-              items = {
-                type    = "string"
-                pattern = "^([0-9]{1,3}\\.){3}[0-9]{1,3}(/([0-9]|[12][0-9]|3[0-2]))?$"
-              }
-            }
-          }
-        })
+        json_schema     = file("${path.module}/network_rules.schema.json")
       }
       },
       # Only declared when configured: tag_name tells the buildingblock which Azure tag key to
