@@ -215,10 +215,10 @@ const detectors = [
   {
     id: "logo",
     category: "core",
-    name: "buildingblock/logo.png included",
+    name: "buildingblock/logo.png or logo.svg included",
     emoji: "🖼️",
     fn: (mod) => ({
-      pass: existsSync(join(mod.path, "buildingblock", "logo.png")),
+      pass: ["logo.png", "logo.svg"].some((logo) => existsSync(join(mod.path, "buildingblock", logo))),
     }),
   },
   {

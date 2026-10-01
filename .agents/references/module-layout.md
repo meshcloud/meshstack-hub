@@ -103,7 +103,7 @@ The readme (inline or `APP_TEAM_README.md`) must include:
 - [ ] `locals` blocks (if used) appear below variables and outputs
 - [ ] `terraform { required_providers { ... } }` block is at the **bottom** of `meshstack_integration.tf`
 - [ ] `meshstack` and `hub` variables are at the end of the variable section
-- [ ] `logo.png` included in `buildingblock/`
+- [ ] `logo.png` or `logo.svg` included in `buildingblock/`
 - [ ] No `documentation_md` output in `backplane/` — use BBD `readme` field and `backplane/README.md` instead
 - [ ] `meshstack_platform` resources include `lifecycle { ignore_changes = [spec.availability] }`
 - [ ] Every child `meshstack_building_block` carries the run-status `postcondition` — see [Ordering Child Building Blocks](meshstack-resources.md#ordering-child-building-blocks)
