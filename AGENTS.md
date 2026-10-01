@@ -15,10 +15,10 @@ re-implements its logic. meshcloud maintains two public ones:
 - [meshcloud/trial-cloudfoundation](https://github.com/meshcloud/trial-cloudfoundation) — the
   foundation behind shared meshStack trials
 
-**CI in this repo is linting only.** It runs `pre-commit run --all-files` (`terraform-docs`,
-`terraform fmt`, trailing whitespace, `ci/validate_modules.sh`) and the scorecard — never `plan` or
-`apply`. Only an [e2e run](.agents/skills/e2e-test/SKILL.md#verify-before-merging) shows a module
-works.
+**CI in this repo never runs `plan` or `apply`.** It runs `pre-commit run --all-files`
+(`terraform-docs`, `terraform fmt`, trailing whitespace, `ci/validate_modules.sh`), the scorecard
+and the [`meshStack import` check](.agents/references/meshstack-integration.md#the-meshstack-import-check).
+Only an [e2e run](.agents/skills/e2e-test/SKILL.md#verify-before-merging) shows a module works.
 
 ## Domain concepts
 

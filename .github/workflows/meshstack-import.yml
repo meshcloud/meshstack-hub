@@ -1,0 +1,160 @@
+# Ask the private meshStack mono repo to check that meshStack still imports every module, and have it
+# report the result as the "meshStack import" check. meshStack parses each meshstack_integration.tf
+# with its own HCL parser, which does not accept everything OpenTofu does, so only a meshStack backend
+# can answer this; this workflow only asks for it.
+name: meshStack import
+
+# The push trigger reports a change that reached main without a pull request.
+on:
+  pull_request_target:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+jobs:
+  request:
+    # A fork of this repository holds neither the app secrets nor a branch anyone gates on.
+    if: github.repository == 'meshcloud/meshstack-hub'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: read
+      checks: write
+    env:
+      # Must match the name meshfed-release's ci-satellite.yml posts, because branch protection
+      # requires this one name from any source.
+      CHECK_NAME: meshStack import
+      HEAD_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
+      SATELLITE_REF: ${{ github.event_name == 'pull_request_target' && github.event.pull_request.head.ref || github.ref_name }}
+
+      # On a pull request the head branch has to live in this repository, which means its author has
+      # write access here: the code under test is then code we already trust.
+      TRUSTED_HEAD: ${{ github.event_name == 'push' || github.event.pull_request.head.repo.full_name == github.repository }}
+
+    # This workflow MUST NOT check out the pull request, and has no `actions/checkout` for that
+    # reason. `pull_request_target` runs in the base repo's context with its secrets, so checking out
+    # contributor code here would be the classic "pwn request" hole. Reading `github.event` and
+    # calling an API is passive use of that context and safe.
+    steps:
+      # A backend run takes a whole meshStack build, so it runs only when a file meshStack reads
+      # changed. The pull request's file list is the whole pull request and not the last push, so a
+      # later commit that touches only a readme still gets the run an earlier commit needed.
+      # meshstack-satellite.gradle counts because a broken one breaks the backend build.
+      #
+      # This workflow file does not count. `pull_request_target` runs the version on main, so a
+      # backend run on a pull request that changes it would not exercise the change.
+      #
+      # Both APIs cap the file list: a pull request at 3000 files, a comparison at 300. A list that
+      # may be cut off is taken to contain an imported file, so the cap can only cost a run.
+      - name: Decide whether meshStack has to check the import
+        id: decide
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          PR_CHANGED_FILES: ${{ github.event.pull_request.changed_files }}
+          PUSH_BEFORE: ${{ github.event.before }}
+          PUSH_AFTER: ${{ github.event.after }}
+        run: |
+          set -euo pipefail
+          if [[ "$GITHUB_EVENT_NAME" == pull_request_target ]]; then
+            files=$(gh api --paginate "repos/$GITHUB_REPOSITORY/pulls/$PR_NUMBER/files?per_page=100" \
+              --jq '.[] | .filename, (.previous_filename // empty)')
+            truncated=$(( PR_CHANGED_FILES >= 3000 ))
+          else
+            files=$(gh api "repos/$GITHUB_REPOSITORY/compare/$PUSH_BEFORE...$PUSH_AFTER" \
+              --jq '.files[] | .filename, (.previous_filename // empty)')
+            truncated=$(( $(grep -c . <<<"$files" || true) >= 300 ))
+          fi
+
+          if (( truncated )) || grep -qE '(^|/)meshstack_integration\.tf$|^meshstack-satellite\.gradle$' <<<"$files"; then
+            if [[ "$TRUSTED_HEAD" == true ]]; then
+              echo "next=dispatch" >>"$GITHUB_OUTPUT"
+            else
+              echo "next=adopt" >>"$GITHUB_OUTPUT"
+            fi
+          else
+            echo "next=pass" >>"$GITHUB_OUTPUT"
+          fi
+
+      # The check is required, so it has to report even when there is nothing to check.
+      - name: Report that nothing meshStack imports changed
+        if: steps.decide.outputs.next == 'pass'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: >-
+          gh api --method POST "repos/$GITHUB_REPOSITORY/check-runs"
+          -f name="$CHECK_NAME"
+          -f head_sha="$HEAD_SHA"
+          -f status=completed
+          -f conclusion=success
+          -f 'output[title]=No meshstack_integration.tf changed'
+          -f 'output[summary]=This change touches no file meshStack reads when it imports a module, so meshStack was not asked to check it.'
+          >/dev/null
+
+      # A fork pull request gets no backend run, for the reason TRUSTED_HEAD states. Its check is left
+      # unreported rather than posted as neutral, because branch protection counts neutral as passing
+      # and the pull request could then merge unchecked. A maintainer who pushes the branch here and
+      # opens a pull request from it gets the run, and its check lands on the same commit.
+      - name: Explain a skipped fork pull request
+        if: steps.decide.outputs.next == 'adopt'
+        env:
+          BASE_REPO: ${{ github.repository }}
+        run: |
+          message="meshStack does not check the import of a fork pull request. A maintainer has to push the branch to $BASE_REPO and open a pull request from it before the \"$CHECK_NAME\" check can report."
+          echo "::notice::$message"
+          echo "$message" >>"$GITHUB_STEP_SUMMARY"
+
+      # Downscoped to `actions: write` at mint time even though the installation carries nothing
+      # else, so a later widening of the app cannot leak into this workflow.
+      - name: Mint a token for the dispatch
+        id: token
+        if: steps.decide.outputs.next == 'dispatch'
+        uses: actions/create-github-app-token@bcd2ba49218906704ab6c1aa796996da409d3eb1 # v3.2.0
+        with:
+          # The secret holds the numeric app id, not a client id, and that is fine: the action reads
+          # `client-id` or the deprecated `app-id` into one value, and GitHub takes either as the JWT
+          # issuer. The name stays because it is an organization secret every satellite reads.
+          client-id: ${{ secrets.SATELLITE_GH_APP_ID }}
+          private-key: ${{ secrets.SATELLITE_GH_APP_PRIVATE_KEY }}
+          owner: meshcloud
+          repositories: meshfed-release
+          permission-actions: write
+
+      # meshfed-release pairs a satellite branch with a same-named branch of its own, and the dispatch
+      # names that branch rather than always `develop`. A `workflow_dispatch` reads both the workflow
+      # file and the checkout it makes from the ref it is given, so dispatching to `develop` would run
+      # the orchestration that is already merged and never the change to it that a paired branch
+      # carries. This token may dispatch workflows in meshfed-release and read nothing there, so a
+      # dispatch rejected with "No ref found" is the only branch lookup available here.
+      #
+      # `$SATELLITE_REF` reaches the script through the environment, and never as a `${{ }}` expression
+      # that GitHub would substitute into the script text before bash reads it. A branch named `$(id)`
+      # would otherwise run as a command.
+      - name: Request the import check
+        if: steps.decide.outputs.next == 'dispatch'
+        env:
+          GH_TOKEN: ${{ steps.token.outputs.token }}
+        run: |
+          set -euo pipefail
+          request() {
+            gh workflow run ci-satellite.yml \
+              --repo meshcloud/meshfed-release \
+              --ref "$1" \
+              -f repo=meshstack-hub \
+              -f branch_name="$SATELLITE_REF"
+          }
+          if output=$(request "$SATELLITE_REF" 2>&1); then
+            orchestrated_from="$SATELLITE_REF"
+          elif grep -qi 'No ref found' <<<"$output"; then
+            echo "::notice::meshfed-release has no branch $SATELLITE_REF to dispatch, so develop orchestrates this run."
+            request develop
+            orchestrated_from=develop
+          else
+            echo "$output" >&2
+            echo "::error::meshfed-release rejected the dispatch on its branch $SATELLITE_REF for a reason other than a missing branch."
+            exit 1
+          fi
+          echo "::notice::Requested an import check for $SATELLITE_REF, orchestrated from meshfed-release $orchestrated_from. The result arrives as the \"$CHECK_NAME\" check."

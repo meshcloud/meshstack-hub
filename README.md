@@ -149,6 +149,11 @@ In your PR description include:
 
 CI will rerun all hooks/tests. A maintainer will review and merge or request adjustments.
 
+A pull request that changes a `meshstack_integration.tf` also needs the `meshStack import` check,
+which verifies that meshStack can still import the module. It does not run on a pull request from
+a fork until a maintainer pushes the branch to this repository and opens a pull request from it.
+See [the meshStack import check](.agents/references/meshstack-integration.md#the-meshstack-import-check).
+
 ---
 
 ## ✅ Summary Checklist
