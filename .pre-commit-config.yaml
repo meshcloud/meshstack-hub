@@ -8,10 +8,6 @@ repos:
         # Only run terraform_docs on the 'backplane' and 'buildingblock' folders of hub modules. The
         # readmes of reference architectures are maintained by hand.
         files: ^modules/[^/]+/[^/]+/(backplane|buildingblock)/.+\.tf$
-        # terraform-docs cannot parse a variable inside a module `source`, which this
-        # building block needs to keep the shared module in lockstep with its own git ref.
-        # https://github.com/terraform-docs/terraform-docs/issues/793
-        exclude: ^modules/ske/forgejo-connector/buildingblock/
       - id: terraform_fmt
         exclude: ^tools/render-meshstack-integration-tf/templates/provider
   - repo: https://github.com/pre-commit/pre-commit-hooks
