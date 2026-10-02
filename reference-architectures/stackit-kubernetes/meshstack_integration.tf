@@ -5,6 +5,32 @@ variable "playground_mode" {
   description = "Deploy a throwaway platform that gets a random identifier suffix and stays destroyable."
 }
 
+variable "approval_policies" {
+  type = object({
+    building_block_creation = optional(bool, false)
+    user_input_changes      = optional(bool, false)
+    any_input_changes       = optional(bool, false)
+    manual_triggers         = optional(bool, false)
+    version_upgrade         = optional(bool, false)
+  })
+  nullable    = false
+  default     = {}
+  description = "Run triggers that need an operator's approval before a run of this architecture, or of a platform definition it registers, is applied. A gate switched on in meshPanel is reset on the next apply unless it is set here."
+}
+
+variable "starterkit_approval_policies" {
+  type = object({
+    building_block_creation = optional(bool, false)
+    user_input_changes      = optional(bool, false)
+    any_input_changes       = optional(bool, false)
+    manual_triggers         = optional(bool, false)
+    version_upgrade         = optional(bool, false)
+  })
+  nullable    = false
+  default     = {}
+  description = "Run triggers that need an operator's approval before a run of the Git repository, Forgejo connector or SKE starterkit definition this architecture registers is applied."
+}
+
 variable "meshstack" {
   type = object({
     owning_workspace_identifier = string
@@ -52,6 +78,7 @@ resource "meshstack_building_block_definition" "this" {
     support_url           = "https://portal.stackit.cloud/ske"
     target_type           = "WORKSPACE_LEVEL"
     run_transparency      = true
+    approval_policies     = var.approval_policies
 
     readme = chomp(<<-EOT
     The **STACKIT Kubernetes Platform** building block bootstraps a sovereign-cloud Kubernetes
@@ -322,6 +349,22 @@ resource "meshstack_building_block_definition" "this" {
         assignment_type        = "USER_INPUT"
         default_value          = jsonencode("https://github.com/likvid-bank/starterkit-template-stackit-ai-summarizer.git")
         updateable_by_consumer = true
+      }
+
+      approval_policies = {
+        display_name    = "Approval Policies"
+        description     = "HCL object of approval gates applied to the platform definitions this registers. Fixed by whoever deployed this definition."
+        type            = "CODE"
+        assignment_type = "STATIC"
+        argument        = jsonencode(jsonencode(var.approval_policies))
+      }
+
+      starterkit_approval_policies = {
+        display_name    = "Starterkit Approval Policies"
+        description     = "HCL object of approval gates applied to the application team definitions this registers. Fixed by whoever deployed this definition."
+        type            = "CODE"
+        assignment_type = "STATIC"
+        argument        = jsonencode(jsonencode(var.starterkit_approval_policies))
       }
 
       playground_mode = {
