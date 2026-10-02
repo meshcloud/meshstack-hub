@@ -189,7 +189,7 @@ returns the version ref to order against:
 
 ```hcl
 data "meshstack_building_block_definitions" "published" {
-  workspace_identifier = var.test_context.workspace
+  workspace_identifier = coalesce(var.test_context.definition_workspace, var.test_context.workspace)
 }
 
 locals {
@@ -214,8 +214,10 @@ Guard both misses with an output `precondition`, so the failure names the cause 
 surfacing as a null attribute: no definition under that display name, and a definition whose
 `bbd_draft` does not match what the foundation deployed (a draft has no released version).
 
-`test_context` in this mode is therefore just `{ workspace, bbd_draft }` — all static values a
-foundation can spell out in HCL, no `dependency` on the deployment unit.
+`test_context` in this mode is therefore just `{ workspace, bbd_draft }`, plus `definition_workspace`
+when the test orders from a workspace other than the one that owns the definition. A draft is
+visible to its owner alone, so such a test must set `bbd_draft = false`. All are static values a
+foundation can spell out in HCL, with no `dependency` on the deployment unit.
 
 A provider that only one mode needs belongs in that mode module, not in the root — foundation mode
 then never installs it. A module holding a provider block may not take `count`, `for_each` or

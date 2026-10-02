@@ -1,6 +1,11 @@
 variable "test_context" {
   type = object({
+    # Receives the ordered building block.
     workspace = string
+
+    # Owns the definition, when that is not `workspace`. Only a released version can be ordered
+    # from another workspace: a draft is visible to its owner alone.
+    definition_workspace = optional(string)
 
     # Must match the `hub.bbd_draft` the definition was deployed with: a draft has no released
     # version to order against.
@@ -10,7 +15,7 @@ variable "test_context" {
 }
 
 data "meshstack_building_block_definitions" "published" {
-  workspace_identifier = var.test_context.workspace
+  workspace_identifier = coalesce(var.test_context.definition_workspace, var.test_context.workspace)
 }
 
 locals {
@@ -34,7 +39,7 @@ output "version_ref" {
 
   precondition {
     condition     = local.definition != null
-    error_message = "No building block definition named '${local.display_name}' in workspace '${var.test_context.workspace}'. Deploy it before smoke testing it."
+    error_message = "No building block definition named '${local.display_name}' owned by workspace '${data.meshstack_building_block_definitions.published.workspace_identifier}'. Deploy it before smoke testing it."
   }
 
   precondition {
