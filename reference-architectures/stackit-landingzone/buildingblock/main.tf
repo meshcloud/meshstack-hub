@@ -1,7 +1,11 @@
 locals {
+  # A bootstrap run reports the WIF claims and creates nothing, so every resource below is gated on
+  # this. See the `stage` variable.
+  deploy = var.stage == "deploy"
+
   # The identifier is unique across the whole meshStack instance and lands in every landing zone
   # name, so a playground deployment suffixes it instead of occupying the plain name.
-  platform_identifier = var.playground_mode ? "${var.platform_identifier}-${random_string.playground_suffix.result}" : var.platform_identifier
+  platform_identifier = local.deploy && var.playground_mode ? "${var.platform_identifier}-${random_string.playground_suffix.result}" : var.platform_identifier
 
   # STACKIT caps a service account name at 20 characters and rejects one ending in a dash, so cutting
   # the identifier to length can produce an invalid name. Cut shorter instead, drop whatever dashes
@@ -18,7 +22,7 @@ locals {
 
   # Selecting `hub&spoke` deploys hub-and-spoke networking. The `network` input is hidden (and so
   # unset) unless it is selected, so the topology — not the presence of a network object — gates it.
-  network_enabled = contains(var.topology, "hub&spoke")
+  network_enabled = local.deploy && contains(var.topology, "hub&spoke")
 
   # Only resolvable once the hub network area building block has completed.
   network_area_id = local.network_enabled ? jsondecode(meshstack_building_block.network_area_hub.status.outputs["network_area_id"].value) : null
@@ -34,7 +38,7 @@ locals {
 
 resource "random_string" "playground_suffix" {
   lifecycle {
-    enabled = var.playground_mode
+    enabled = local.deploy && var.playground_mode
   }
 
   length  = 6
@@ -44,7 +48,7 @@ resource "random_string" "playground_suffix" {
 
 resource "meshstack_location" "this" {
   lifecycle {
-    enabled = !var.use_global_location
+    enabled = local.deploy && !var.use_global_location
   }
 
   metadata = {
@@ -64,6 +68,7 @@ resource "stackit_resourcemanager_folder" "this" {
   parent_container_id = var.stackit_org
 
   lifecycle {
+    enabled         = local.deploy
     prevent_destroy = !var.playground_mode
   }
 }
@@ -74,6 +79,7 @@ resource "stackit_resourcemanager_project" "foundation" {
   parent_container_id = var.stackit_org
 
   lifecycle {
+    enabled         = local.deploy
     prevent_destroy = !var.playground_mode
   }
 }
@@ -89,6 +95,10 @@ moved {
 }
 
 module "stackit_integration" {
+  lifecycle {
+    enabled = local.deploy
+  }
+
   source = "github.com/meshcloud/meshstack-hub//modules/stackit?ref=${var.hub.git_ref}"
 
   stackit_organization_id                 = var.stackit_org
@@ -117,6 +127,10 @@ module "stackit_integration" {
 # The select the application team sees is built from the landing zones that actually exist, so no
 # configuration is needed to keep the two in step.
 module "stackit_project_starterkit" {
+  lifecycle {
+    enabled = local.deploy
+  }
+
   source = "github.com/meshcloud/meshstack-hub//modules/stackit/stackit-project-starterkit?ref=${var.hub.git_ref}"
 
   platform_ref = module.stackit_integration.platform_ref
@@ -153,6 +167,10 @@ module "stackit_project_starterkit" {
 }
 
 module "service_account_integration" {
+  lifecycle {
+    enabled = local.deploy
+  }
+
   source = "github.com/meshcloud/meshstack-hub//modules/stackit/service-account?ref=${var.hub.git_ref}"
 
   stackit_organization_id = var.stackit_org
@@ -165,6 +183,10 @@ module "service_account_integration" {
 }
 
 module "service_account_federation_integration" {
+  lifecycle {
+    enabled = local.deploy
+  }
+
   source = "github.com/meshcloud/meshstack-hub//modules/stackit/service-account-federation?ref=${var.hub.git_ref}"
 
   # A federation block is a child of a service account block. Deleting the parent's definition first
