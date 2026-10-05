@@ -14,8 +14,7 @@ locals {
   # Empty ssh_public_key means the module generates the key pair; otherwise the caller brought their
   # own. Referencing a disabled resource (lifecycle.enabled = false) yields null, so guard the
   # dereference with a null check rather than reading the attribute directly.
-  public_key  = tls_private_key.this != null ? tls_private_key.this.public_key_openssh : var.ssh_public_key
-  private_key = tls_private_key.this != null ? tls_private_key.this.private_key_openssh : null
+  public_key = tls_private_key.this != null ? tls_private_key.this.public_key_openssh : var.ssh_public_key
 }
 
 # Generated only when the caller did not bring their own public key.
