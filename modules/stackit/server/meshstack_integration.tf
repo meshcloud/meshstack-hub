@@ -22,7 +22,7 @@ variable "network_id" {
 variable "machine_type" {
   type        = string
   nullable    = false
-  default     = "g1.1"
+  default     = "g1a.1d"
   description = "STACKIT machine flavor for the VM."
 }
 
@@ -243,7 +243,7 @@ resource "meshstack_building_block_definition" "this" {
 
       machine_type = {
         display_name    = "Machine Type"
-        description     = "STACKIT machine flavor for the VM, e.g. g1.1 or c1.2."
+        description     = "STACKIT machine flavor for the VM, e.g. g1a.1d or c1a.2d."
         type            = "STRING"
         assignment_type = "USER_INPUT"
         default_value   = jsonencode(var.machine_type)

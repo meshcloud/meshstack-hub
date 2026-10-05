@@ -35,7 +35,7 @@ variable "name" {
 variable "machine_type" {
   type        = string
   nullable    = false
-  description = "STACKIT machine flavor for the VM, e.g. g1.1 or c1.2."
+  description = "STACKIT machine flavor for the VM, e.g. g1a.1d or c1a.2d."
 }
 
 variable "image_name_regex" {

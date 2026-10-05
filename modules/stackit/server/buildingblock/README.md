@@ -64,7 +64,7 @@ No modules.
 | <a name="input_disk_size_gb"></a> [disk\_size\_gb](#input\_disk\_size\_gb) | Size of the VM boot volume in GB. | `number` | n/a | yes |
 | <a name="input_enable_public_ip"></a> [enable\_public\_ip](#input\_enable\_public\_ip) | Attaches a public IP and opens inbound SSH, so the VM is reachable directly after creation. Disable to keep it private (reachable only from inside the network). | `bool` | n/a | yes |
 | <a name="input_image_name_regex"></a> [image\_name\_regex](#input\_image\_name\_regex) | Anchored regex matching the STACKIT image name the VM boots from, so it skips the ARM64 variant. | `string` | n/a | yes |
-| <a name="input_machine_type"></a> [machine\_type](#input\_machine\_type) | STACKIT machine flavor for the VM, e.g. g1.1 or c1.2. | `string` | n/a | yes |
+| <a name="input_machine_type"></a> [machine\_type](#input\_machine\_type) | STACKIT machine flavor for the VM, e.g. g1a.1d or c1a.2d. | `string` | n/a | yes |
 | <a name="input_name"></a> [name](#input\_name) | Name of the VM, also used to name its network resources and SSH key pair. | `string` | n/a | yes |
 | <a name="input_network_id"></a> [network\_id](#input\_network\_id) | Existing STACKIT network to attach the VM to. Empty creates a dedicated one. | `string` | n/a | yes |
 | <a name="input_ssh_allowed_cidr"></a> [ssh\_allowed\_cidr](#input\_ssh\_allowed\_cidr) | CIDR allowed to reach SSH (port 22) when a public IP is attached. Has no effect without a public IP. | `string` | n/a | yes |
