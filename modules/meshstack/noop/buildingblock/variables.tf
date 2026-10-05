@@ -111,3 +111,11 @@ variable "workspace_identifier" {
   type        = string
   description = "Identifier of the workspace this block belongs to, injected by meshStack."
 }
+
+variable "payment_method" {
+  type = object({
+    kind = string
+    name = string
+  })
+  description = "Reference to the Payment Method chosen when ordering this block, injected by the PAYMENT_METHOD assignment type."
+}

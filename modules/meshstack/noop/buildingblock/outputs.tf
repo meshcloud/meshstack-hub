@@ -91,6 +91,10 @@ output "workspace_identifier" {
   value = var.workspace_identifier
 }
 
+output "payment_method" {
+  value = var.payment_method
+}
+
 output "resource_url" {
   value = "https://hub.meshcloud.io/modules/meshstack/noop"
 }
@@ -153,6 +157,7 @@ output "debug_input_variables_json" {
     author                  = var.author
     operator_text           = var.operator_text
     workspace_identifier    = var.workspace_identifier
+    payment_method          = var.payment_method
   })
 }
 

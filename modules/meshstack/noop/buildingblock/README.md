@@ -25,6 +25,7 @@ Use it to:
 | `user_permissions`        | `CODE`               | `USER_PERMISSIONS`               | Project team members and their roles as a structured list                                                             |
 | `user_permissions_json`   | `CODE`               | `USER_PERMISSIONS`               | Same as above, as a raw JSON string                                                                                   |
 | `workspace_identifier`  | `STRING`             | `WORKSPACE_IDENTIFIER`           | Identifier of the workspace the block belongs to, injected by meshStack                                            |
+| `payment_method`          | `CODE`               | `PAYMENT_METHOD`                 | One of the ordering workspace's Payment Methods, chosen when ordering                                                 |
 | `sensitive_yaml`          | `CODE`               | `STATIC` (sensitive)             | Encrypted YAML/JSON value, decrypted at runtime                                                                       |
 | `static`                  | `STRING`             | `STATIC`                         | A platform-engineer-defined string constant                                                                           |
 | `static_code`             | `CODE`               | `STATIC`                         | A platform-engineer-defined map                                                                                       |
@@ -117,6 +118,7 @@ No modules.
 | <a name="input_num"></a> [num](#input\_num) | n/a | `number` | n/a | yes |
 | <a name="input_operator_text"></a> [operator\_text](#input\_operator\_text) | Value a platform operator filled in for this block. | `string` | n/a | yes |
 | <a name="input_optional_text"></a> [optional\_text](#input\_optional\_text) | n/a | `string` | `"tf-default-value"` | no |
+| <a name="input_payment_method"></a> [payment\_method](#input\_payment\_method) | Reference to the Payment Method chosen when ordering this block, injected by the PAYMENT\_METHOD assignment type. | <pre>object({<br/>    kind = string<br/>    name = string<br/>  })</pre> | n/a | yes |
 | <a name="input_sensitive_text"></a> [sensitive\_text](#input\_sensitive\_text) | n/a | `string` | n/a | yes |
 | <a name="input_sensitive_yaml"></a> [sensitive\_yaml](#input\_sensitive\_yaml) | n/a | `any` | n/a | yes |
 | <a name="input_single_select"></a> [single\_select](#input\_single\_select) | n/a | `string` | n/a | yes |
@@ -144,6 +146,7 @@ No modules.
 | <a name="output_num"></a> [num](#output\_num) | n/a |
 | <a name="output_operator_text"></a> [operator\_text](#output\_operator\_text) | n/a |
 | <a name="output_optional_text"></a> [optional\_text](#output\_optional\_text) | n/a |
+| <a name="output_payment_method"></a> [payment\_method](#output\_payment\_method) | n/a |
 | <a name="output_resource_url"></a> [resource\_url](#output\_resource\_url) | n/a |
 | <a name="output_sensitive_file_yaml"></a> [sensitive\_file\_yaml](#output\_sensitive\_file\_yaml) | n/a |
 | <a name="output_sensitive_text"></a> [sensitive\_text](#output\_sensitive\_text) | n/a |

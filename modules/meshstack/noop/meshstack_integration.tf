@@ -275,6 +275,14 @@ resource "meshstack_building_block_definition" "this" {
         description     = "Identifier of the workspace this building block belongs to. Injected by meshStack."
         type            = "STRING"
       }
+      payment_method = {
+        assignment_type = "PAYMENT_METHOD"
+        display_name    = "Payment Method"
+        description     = "One of the ordering workspace's Payment Methods, chosen by whoever orders this building block."
+        type            = "CODE"
+        # meshStack rejects a new version that adds an input the consumer cannot set on blocks that already exist.
+        updateable_by_consumer = true
+      }
     }
     outputs = {
       author = {
@@ -332,6 +340,11 @@ resource "meshstack_building_block_definition" "this" {
         display_name    = "Workspace Identifier"
         type            = "STRING"
       }
+      payment_method = {
+        assignment_type = "NONE"
+        display_name    = "Payment Method"
+        type            = "CODE"
+      }
       tag_value = {
         assignment_type = "NONE"
         display_name    = "Tag Value"
@@ -367,7 +380,7 @@ terraform {
   required_providers {
     meshstack = {
       source  = "meshcloud/meshstack"
-      version = ">= 0.25.3"
+      version = ">= 0.26.5"
     }
   }
 }
