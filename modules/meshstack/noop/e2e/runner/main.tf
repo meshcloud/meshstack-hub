@@ -20,6 +20,18 @@ resource "meshstack_workspace_tag" "noop_e2e" {
   }
 }
 
+# The PAYMENT_METHOD input needs a Payment Method of the ordering workspace, see ../main.tf.
+resource "meshstack_payment_method" "noop_e2e" {
+  metadata = {
+    name               = "${var.test_context.run_id}-noop-runner-pm"
+    owned_by_workspace = var.test_context.workspace
+  }
+  spec = {
+    display_name = "${var.test_context.run_id} NoOp Runner Payment Method"
+    tags         = var.test_context.meshstack.tag_schema.mandatory.payment_method
+  }
+}
+
 module "backplane" {
   source = "../../backplane"
 
@@ -81,6 +93,7 @@ resource "meshstack_building_block" "this" {
       single_select     = { value = jsonencode("single1") }
       multi_select      = { value = jsonencode(["multi1", "multi2"]) }
       multi_select_json = { value = jsonencode(["multi2", "multi1"]) }
+      payment_method    = { value = jsonencode(meshstack_payment_method.noop_e2e.ref) }
       # Settable here because the test key owns the definition; an app team could not fill this in.
       operator_text = { value = jsonencode("Set by the platform operator") }
     }

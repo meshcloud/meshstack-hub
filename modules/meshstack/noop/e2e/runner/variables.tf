@@ -14,6 +14,14 @@ variable "test_context" {
         project_id = string
       })
     })
+
+    meshstack = object({
+      tag_schema = object({
+        mandatory = object({
+          payment_method = map(list(string))
+        })
+      })
+    })
   })
   nullable = false
 }
