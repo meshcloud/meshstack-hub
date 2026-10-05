@@ -4,6 +4,13 @@ variable "test_context" {
     workspace   = string
     project     = string
     run_id      = string
+    meshstack = object({
+      tag_schema = object({
+        mandatory = object({
+          payment_method = map(list(string))
+        })
+      })
+    })
   })
   nullable = false
 }
@@ -29,6 +36,19 @@ resource "meshstack_workspace_tag" "noop_e2e" {
   }
   spec = {
     values = ["e2e-tag-value"]
+  }
+}
+
+# A PAYMENT_METHOD input takes one of the ordering workspace's own Payment Methods, so the test
+# brings one rather than depending on whatever the workspace happens to have.
+resource "meshstack_payment_method" "noop_e2e" {
+  metadata = {
+    name               = "${var.test_context.run_id}-noop-pm"
+    owned_by_workspace = var.test_context.workspace
+  }
+  spec = {
+    display_name = "${var.test_context.run_id} NoOp Payment Method"
+    tags         = var.test_context.meshstack.tag_schema.mandatory.payment_method
   }
 }
 
@@ -80,6 +100,7 @@ resource "meshstack_building_block" "this" {
       single_select     = { value = jsonencode("single1") }
       multi_select      = { value = jsonencode(["multi1", "multi2"]) }
       multi_select_json = { value = jsonencode(["multi2", "multi1"]) }
+      payment_method    = { value = jsonencode(meshstack_payment_method.noop_e2e.ref) }
       # tag_value       = <nothing>  -> TAG-assigned inputs are read by meshStack from the workspace tag, not supplied here.
       # Settable here because the test key owns the definition; an app team could not fill this in.
       operator_text = { value = jsonencode("Set by the platform operator") }
