@@ -118,8 +118,8 @@ resource "meshstack_building_block_definition" "this" {
       login, creates a technical user through the STACKIT Git API, and exchanges that user's password
       for a Personal Access Token. Ordering it takes one run and no manual step.
 
-      The token is reported as an output, so building blocks that manage repositories, runners or
-      organization members take it from here.
+      The token is written to the Vault KV v2 secret given as `output_to_vault`, where building
+      blocks that manage repositories, runners or organization members read it.
 
       ## 📊 Shared responsibility
 
@@ -269,6 +269,16 @@ resource "meshstack_building_block_definition" "this" {
           "write:user",
         ]))
       }
+
+      output_to_vault = {
+        display_name           = "Output to Vault"
+        description            = "HCL object `{address, mount, username, password, path}` of the Vault KV v2 secret the Forgejo API token is written to, under the key `forgejo_api_token`. Leave empty to write it nowhere."
+        type                   = "CODE"
+        assignment_type        = "USER_INPUT"
+        sensitive              = {}
+        is_optional            = true
+        updateable_by_consumer = true
+      }
     }
 
     outputs = {
@@ -298,12 +308,6 @@ resource "meshstack_building_block_definition" "this" {
 
       forgejo_organization = {
         display_name    = "Forgejo Organization"
-        type            = "STRING"
-        assignment_type = "NONE"
-      }
-
-      forgejo_api_token = {
-        display_name    = "Forgejo API Token"
         type            = "STRING"
         assignment_type = "NONE"
       }
