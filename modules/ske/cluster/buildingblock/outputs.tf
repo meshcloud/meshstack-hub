@@ -1,6 +1,6 @@
 output "cluster_name" {
   description = "Name of the SKE cluster."
-  value       = stackit_ske_cluster.this.name
+  value       = module.cluster.cluster.name
 }
 
 output "cluster_url" {
