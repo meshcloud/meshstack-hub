@@ -48,6 +48,25 @@ provider "restapi" {
   }
 }
 
+# Authenticates with the token of an owner of an adopted organization.
+provider "restapi" {
+  alias = "existing"
+
+  uri                  = local.forgejo_base_url
+  write_returns_object = false
+
+  headers = {
+    Authorization = var.imports == null ? "" : "token ${ephemeral.vault_kv_secret_v2.existing_forgejo_api_token.data.forgejo_api_token}"
+    Content-Type  = "application/json"
+  }
+
+  retries {
+    max_retries = 5
+    min_wait    = 1
+    max_wait    = 10
+  }
+}
+
 # The STACKIT Git API, which is where the technical user is created. The provider mints a token from
 # Workload Identity Federation but exposes no way to read it back, so stackit-access-token.sh
 # repeats the exchange.

@@ -104,10 +104,21 @@ variable "output_to_vault" {
 
 variable "imports" {
   type = object({
-    instance_id = string
+    instance_id                     = string
+    existing_forgejo_api_token_path = string
   })
   default     = null
-  description = "Existing STACKIT Git instance this building block takes over instead of creating one. Its name must equal `instance_name`. The technical user then gets a random suffix, and no shared runner is ordered. Null creates a new instance."
+  description = "Existing STACKIT Git instance and its Forgejo organization `forgejo_organization` this building block takes over instead of creating them. The instance's name must equal `instance_name`. `existing_forgejo_api_token_path` names the secret in the Vault of `output_to_vault` whose key `forgejo_api_token` holds a token of an owner of the organization. The technical user and the writer and reader teams then get a random suffix, no shared runner is ordered, and the organization is left in place on destroy. Null creates a new instance and organization."
+
+  validation {
+    condition     = var.imports == null || nonsensitive(var.output_to_vault != null)
+    error_message = "imports needs output_to_vault, whose Vault holds the existing Forgejo API token."
+  }
+
+  validation {
+    condition     = var.imports == null || coalesce(var.forgejo_organization, "") != ""
+    error_message = "imports needs forgejo_organization, the organization it takes over."
+  }
 }
 
 variable "release_on_destroy" {

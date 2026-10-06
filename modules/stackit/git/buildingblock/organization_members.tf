@@ -30,6 +30,9 @@ locals {
   } : {}
 
   team_permissions = { owner = "owner", writer = "write", reader = "read" }
+
+  # An adopted organization may already have teams of these names.
+  team_name_suffix = var.imports == null ? "" : "-${random_string.import_suffix.result}"
 }
 
 module "organization_teams" {
@@ -39,13 +42,13 @@ module "organization_teams" {
     restapi.without_returned_object = restapi.without_returned_object
   }
 
-  depends_on = [restapi_object.forgejo_organization]
+  depends_on = [restapi_object.forgejo_organization, restapi_object.adopted_forgejo_organization]
 
   organization = coalesce(var.forgejo_organization, "unused")
 
   teams = {
     for role, permission in local.team_permissions : role => {
-      name                      = role == "owner" ? "Owners" : "${role}s"
+      name                      = role == "owner" ? "Owners" : "${role}s${local.team_name_suffix}"
       description               = "meshStack project members with ${permission} access to all repositories"
       permission                = permission
       includes_all_repositories = true

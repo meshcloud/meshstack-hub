@@ -68,6 +68,21 @@ named `local_user_username` plus a random suffix, because the instance's existin
 this building block does not know. It orders no shared runner, because STACKIT allows one per
 instance.
 
+It also takes over the Forgejo organization `forgejo_organization` without changing its settings:
+
+1. It reads an existing token of an owner of the organization from `existing_forgejo_api_token_path`
+   in the Vault of `output_to_vault`, under the key `forgejo_api_token`. The token stays out of the
+   state: it is read with an ephemeral resource and only reaches a provider configuration.
+2. With that token, it adds its technical user to the organization's `Owners` team, which only an
+   owner can do.
+3. As the technical user, it sends an empty `PATCH /api/v1/orgs/{org}`, which changes nothing. It
+   does the same on destroy, so the organization is left in place.
+4. Its `writers` and `readers` teams carry the same random suffix as the technical user, because the
+   organization may already have teams of these names.
+
+On destroy, the existing token removes the technical user from `Owners` again before STACKIT deletes
+the user: STACKIT refuses to delete a user who is still a member of an organization.
+
 With `release_on_destroy` set, destroying the building block leaves the instance in place.
 `release_on_destroy` cannot change once the instance is managed.
 
@@ -81,7 +96,7 @@ With `release_on_destroy` set, destroying the building block leaves the instance
   with gitea, creating the organization works but refreshing the plan fails with a 403 against
   STACKIT Git, so every subsequent run breaks.
 - An organization that already exists (for example one created by hand before this building block
-  took over) has to be imported — the create call returns 422 otherwise.
+  took over) has to be adopted through `imports` — the create call returns 422 otherwise.
 
 <!-- BEGIN_TF_DOCS -->
 ## Requirements
@@ -107,7 +122,9 @@ With `release_on_destroy` set, destroying the building block leaves the instance
 | Name | Type |
 | ---- | ---- |
 | [random_password.local_user](https://registry.terraform.io/providers/hashicorp/random/latest/docs/resources/password) | resource |
-| [random_string.local_user_suffix](https://registry.terraform.io/providers/hashicorp/random/latest/docs/resources/string) | resource |
+| [random_string.import_suffix](https://registry.terraform.io/providers/hashicorp/random/latest/docs/resources/string) | resource |
+| [restapi_object.adopted_forgejo_organization](https://registry.terraform.io/providers/Mastercard/restapi/latest/docs/resources/object) | resource |
+| [restapi_object.existing_organization_owner](https://registry.terraform.io/providers/Mastercard/restapi/latest/docs/resources/object) | resource |
 | [restapi_object.forgejo_organization](https://registry.terraform.io/providers/Mastercard/restapi/latest/docs/resources/object) | resource |
 | [restapi_object.local_user](https://registry.terraform.io/providers/Mastercard/restapi/latest/docs/resources/object) | resource |
 | [restapi_object.local_user_token](https://registry.terraform.io/providers/Mastercard/restapi/latest/docs/resources/object) | resource |
@@ -115,13 +132,14 @@ With `release_on_destroy` set, destroying the building block leaves the instance
 | [vault_kv_secret_v2.this](https://registry.terraform.io/providers/hashicorp/vault/latest/docs/resources/kv_secret_v2) | resource |
 | [external_external.instance_users](https://registry.terraform.io/providers/hashicorp/external/latest/docs/data-sources/external) | data source |
 | [external_external.stackit_access_token](https://registry.terraform.io/providers/hashicorp/external/latest/docs/data-sources/external) | data source |
+| [restapi_object.existing_owners_team](https://registry.terraform.io/providers/Mastercard/restapi/latest/docs/data-sources/object) | data source |
 
 ## Inputs
 
 | Name | Description | Type | Default | Required |
 | ---- | ----------- | ---- | ------- | :------: |
 | <a name="input_forgejo_organization"></a> [forgejo\_organization](#input\_forgejo\_organization) | Forgejo organization to create inside the instance. Empty provisions the bare instance. | `string` | n/a | yes |
-| <a name="input_imports"></a> [imports](#input\_imports) | Existing STACKIT Git instance this building block takes over instead of creating one. Its name must equal `instance_name`. The technical user then gets a random suffix, and no shared runner is ordered. Null creates a new instance. | <pre>object({<br/>    instance_id = string<br/>  })</pre> | `null` | no |
+| <a name="input_imports"></a> [imports](#input\_imports) | Existing STACKIT Git instance and its Forgejo organization `forgejo_organization` this building block takes over instead of creating them. The instance's name must equal `instance_name`. `existing_forgejo_api_token_path` names the secret in the Vault of `output_to_vault` whose key `forgejo_api_token` holds a token of an owner of the organization. The technical user and the writer and reader teams then get a random suffix, no shared runner is ordered, and the organization is left in place on destroy. Null creates a new instance and organization. | <pre>object({<br/>    instance_id                     = string<br/>    existing_forgejo_api_token_path = string<br/>  })</pre> | `null` | no |
 | <a name="input_instance_name"></a> [instance\_name](#input\_instance\_name) | First label of the instance hostname `<name>.git.onstackit.cloud`, globally unique across all of STACKIT. | `string` | n/a | yes |
 | <a name="input_local_user_email"></a> [local\_user\_email](#input\_local\_user\_email) | Email of the technical user. Leave empty to derive one from the instance hostname. | `string` | n/a | yes |
 | <a name="input_local_user_token_name"></a> [local\_user\_token\_name](#input\_local\_user\_token\_name) | Name of the Personal Access Token the module mints. | `string` | n/a | yes |

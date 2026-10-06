@@ -282,7 +282,7 @@ resource "meshstack_building_block_definition" "this" {
 
       imports = {
         display_name    = "Imports"
-        description     = "HCL object `{instance_id}` of an existing STACKIT Git instance named Instance Name, which this building block takes over instead of creating one. Leave empty to create a new instance."
+        description     = "HCL object `{instance_id, existing_forgejo_api_token_path}` of an instance named Instance Name to take over, with its organization Forgejo Organization. The path names a secret in Output to Vault with an owner's `forgejo_api_token`."
         type            = "CODE"
         assignment_type = "USER_INPUT"
         is_optional     = true
