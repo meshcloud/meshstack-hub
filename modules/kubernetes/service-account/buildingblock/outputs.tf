@@ -12,8 +12,8 @@ locals {
 
     clusters = [{
       cluster = {
-        certificate-authority-data = var.cluster_ca_certificate
-        server                     = "https://${var.cluster_endpoint}"
+        certificate-authority-data = local.kubeconfig_cluster["certificate-authority-data"]
+        server                     = local.kubeconfig_cluster.server
       }
       name = var.cluster_name
       }
@@ -38,7 +38,7 @@ output "instructions" {
 }
 
 output "kubeconfig" {
-  description = "Kubeconfig file content for authenticating with the Kubernetes cluster"
+  description = "Kubeconfig file content for authenticating with the Kubernetes cluster. Empty when `output_to_vault` is set."
   sensitive   = true
-  value       = yamlencode(local.kubeconfig)
+  value       = local.write_to_vault ? "" : yamlencode(local.kubeconfig)
 }
