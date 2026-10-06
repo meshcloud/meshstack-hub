@@ -15,15 +15,10 @@ later creates application repositories in.
 
 A fresh instance carries no credential, so the building block makes one instead of asking for it:
 
-1. **Switch on local login.** A new instance accepts the STACKIT IdP only, and an OIDC session
-   cannot be driven non-interactively. `enable-local-login.sh` sends the instance's current feature
-   toggles back with `enable_local_login` flipped on (`PATCH
-   /v1beta/projects/{projectId}/instances/{instanceId}`), then waits for the instance to report the
-   change — the PATCH answers 202 and reconciles afterwards.
-2. **Create a technical user.** `POST /v1beta/projects/{projectId}/instances/{instanceId}/users`
+1. **Create a technical user.** `POST /v1beta/projects/{projectId}/instances/{instanceId}/users`
    with `{name, username, email, password, force_send_reset_password}`, the password from
    `random_password`.
-3. **Exchange that password for a token.** Forgejo's `POST
+2. **Exchange that password for a token.** Forgejo's `POST
    {instance_url}/api/v1/users/{username}/tokens` returns the PAT in its `sha1` field. That route
    takes HTTP Basic auth only — a caller holding an API token cannot mint another — which is exactly
    why the local user exists.
@@ -57,7 +52,6 @@ identity alone:
 
 | Step | Result |
 |---|---|
-| `PATCH` `feature_toggle.enable_local_login` | applied, instance reconciled in ~50s |
 | `POST .../users` | `201`, user created |
 | `POST /api/v1/users/{u}/tokens` over basic auth | `201` with a `sha1` |
 | `POST /api/v1/orgs` with that token | `201` — a plain user may create an organization |
@@ -65,11 +59,6 @@ identity alone:
 
 The last two are the reason this works without site-admin rights: the technical user owns the
 organization it creates, so the same token administers it afterwards.
-
-A PATCH puts the instance back into state **`Creating`**, not `Updating`, which is why
-`enable-local-login.sh` waits on `Ready` plus the flag rather than on a state name that never
-appears. It also waits for `Ready` before the PATCH, because an instance that is still coming up
-rejects one.
 
 ## Adopting an existing instance
 
@@ -123,7 +112,6 @@ With `release_on_destroy` set, destroying the building block leaves the instance
 | [restapi_object.local_user](https://registry.terraform.io/providers/Mastercard/restapi/latest/docs/resources/object) | resource |
 | [restapi_object.local_user_token](https://registry.terraform.io/providers/Mastercard/restapi/latest/docs/resources/object) | resource |
 | [restapi_object.shared_runner](https://registry.terraform.io/providers/Mastercard/restapi/latest/docs/resources/object) | resource |
-| [terraform_data.local_login](https://registry.terraform.io/providers/hashicorp/terraform/latest/docs/resources/data) | resource |
 | [vault_kv_secret_v2.this](https://registry.terraform.io/providers/hashicorp/vault/latest/docs/resources/kv_secret_v2) | resource |
 | [external_external.instance_users](https://registry.terraform.io/providers/hashicorp/external/latest/docs/data-sources/external) | data source |
 | [external_external.stackit_access_token](https://registry.terraform.io/providers/hashicorp/external/latest/docs/data-sources/external) | data source |
