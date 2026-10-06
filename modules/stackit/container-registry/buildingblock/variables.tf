@@ -56,3 +56,16 @@ variable "mirrored_base_images" {
   nullable    = false
   description = "Fully qualified upstream images to mirror into the registry as `<registry>/<name>:<tag>`."
 }
+
+variable "output_to_vault" {
+  type = object({
+    address  = string
+    mount    = string
+    username = string
+    password = string
+    path     = string
+  })
+  default     = null
+  sensitive   = true
+  description = "Vault KV v2 secret this building block writes its secrets to: the server `address`, the engine `mount`, a userpass `username` and `password`, and the secret `path`. Null writes none. The push and pull robots go to `<path>/push` and `<path>/pull`."
+}

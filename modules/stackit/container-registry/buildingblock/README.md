@@ -79,6 +79,10 @@ The linked robot needs only **robot account management**. It cannot read the pro
 repositories — `GET /api/v2.0/projects/{id}` answers `403` — and does not need to, because minting
 the push and pull robots is a `POST /api/v2.0/robots`.
 
+With `output_to_vault` set, the push and pull robots are written to the Vault KV v2 secrets
+`<path>/push` and `<path>/pull`, each under the keys `username` and `password`. They are no
+building block output, because meshStack shows outputs in the clear.
+
 ## Mirrored base images
 
 `mirrored_base_images` lists fully qualified upstream images, for example

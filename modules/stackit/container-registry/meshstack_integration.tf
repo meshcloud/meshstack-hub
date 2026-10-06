@@ -125,7 +125,9 @@ resource "meshstack_building_block_definition" "this" {
       portal can create that first link. The building block's summary says exactly what to click.
 
       Once linked, that service account's token authenticates as the robot, so every later robot
-      can be created through the Harbor API without touching the portal again.
+      can be created through the Harbor API without touching the portal again. The building block
+      then mints a push and a pull robot and writes them to the Vault KV v2 secrets given as
+      `output_to_vault`.
 
       ## 📊 Shared responsibility
 
@@ -241,6 +243,16 @@ resource "meshstack_building_block_definition" "this" {
         default_value          = jsonencode(jsonencode([]))
         updateable_by_consumer = true
       }
+
+      output_to_vault = {
+        display_name           = "Output to Vault"
+        description            = "HCL object `{address, mount, username, password, path}` of the Vault KV v2 secrets the push and pull robots are written to, as `<path>/push` and `<path>/pull` under the keys `username` and `password`. Leave empty to write them nowhere."
+        type                   = "CODE"
+        assignment_type        = "USER_INPUT"
+        sensitive              = {}
+        is_optional            = true
+        updateable_by_consumer = true
+      }
     }
 
     outputs = {
@@ -265,12 +277,6 @@ resource "meshstack_building_block_definition" "this" {
       registry_robot_url = {
         display_name    = "Registry Robot URL"
         type            = "STRING"
-        assignment_type = "NONE"
-      }
-
-      access_credentials = {
-        display_name    = "Access Credentials"
-        type            = "CODE"
         assignment_type = "NONE"
       }
 
