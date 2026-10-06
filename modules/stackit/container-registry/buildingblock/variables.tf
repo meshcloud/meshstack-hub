@@ -24,13 +24,6 @@ variable "registry_name" {
   }
 }
 
-variable "bootstrap_robot_username" {
-  type        = string
-  nullable    = false
-  default     = ""
-  description = "Harbor robot linked to this run's STACKIT service account. Empty mints no robots."
-}
-
 variable "users" {
   type = list(object({
     meshIdentifier = string
@@ -49,6 +42,13 @@ variable "role_mapping" {
   type        = map(list(string))
   nullable    = false
   description = "Maps meshStack project roles to STACKIT container registry roles. Unknown roles are ignored."
+}
+
+variable "require_robot_link" {
+  type        = bool
+  nullable    = false
+  default     = false
+  description = "Fail the run while no robot is linked to the service account, instead of minting no robots."
 }
 
 variable "mirrored_base_images" {

@@ -72,8 +72,20 @@ access token as the password**. Harbor resolves that pair to the linked robot an
 robot: the robot's own secret (a request carrying it is answered exactly as an unauthenticated one),
 a bearer header holding the same access token, and the robot name as the basic-auth user.
 
-So this block asks only for the robot's **name**, never its password: the name is how an operator
-says the link exists, which nothing in the API reports.
+No API reports the link, so every run probes for it while planning. `read-harbor-link.sh` finds the
+registry by its base name through `GET /v1/projects/{p}/regions/{r}/artifactories` — the suffixed
+name is not known yet on the first plan — and asks Harbor for its project with the service account
+pair:
+
+| Harbor answers | Meaning |
+|---|---|
+| `401` | No robot is linked. The run mints no robots, and the summary says how to link one. With `require_robot_link` set, the run fails instead. |
+| `200` or `403` | A robot is linked. The run mints the push and pull robots. |
+| anything else | The run fails, rather than reading an outage as "not linked". |
+
+After linking a robot, run the building block again with a manual trigger, or set
+`require_robot_link`, which starts a run because an input changes. The script fetches the access token itself and returns only `{"linked": "true"|"false"}`, because an
+`external` data source's query and result are stored in state.
 
 The linked robot needs only **robot account management**. It cannot read the project or its
 repositories — `GET /api/v2.0/projects/{id}` answers `403` — and does not need to, because minting
@@ -96,6 +108,6 @@ No Terraform provider copies images between registries with enough trust behind 
 checks it against a pinned SHA-256 before anything runs it. To update `crane`, change the version and
 the checksum together, and take the checksum from the release's `checksums.txt`.
 
-The copy pushes as the push robot, so it starts only once the bootstrap robot is set. An image is
+The copy pushes as the push robot, so it starts only once a robot is linked. An image is
 copied again when its reference or the registry name changes. Removing an image from the list leaves
 it in the registry. The default is an empty list, which mirrors nothing.

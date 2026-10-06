@@ -28,7 +28,8 @@ locals {
   # Harbor has provisioned the project, which is what read-artifactory.sh waits for.
   registry_url = data.external.artifactory.result.url
 
-  # Same Harbor project, its Robot Accounts tab — where the bootstrap robot is created by hand.
+  # Same Harbor project, its Robot Accounts tab — where the robot linked to the service account is
+  # created by hand.
   registry_robot_url = replace(local.registry_url, "/repositories", "/robot-account")
 
   service_enablement_path = "/v2/projects/${var.stackit_project_id}/regions/${var.stackit_region}/services"
