@@ -208,12 +208,20 @@ resource "meshstack_building_block_definition" "this" {
         }
       }
 
-      repository_id = {
-        display_name    = "repository_id"
-        description     = "ID of the parent Forgejo repository where action secrets are created."
-        type            = "INTEGER"
+      repository_owner = {
+        display_name    = "repository_owner"
+        description     = "Owner of the parent Forgejo repository where action secrets are created."
+        type            = "STRING"
         assignment_type = "BUILDING_BLOCK_OUTPUT"
-        argument        = jsonencode("${var.forgejo_repo_definition_uuid}.repository_id")
+        argument        = jsonencode("${var.forgejo_repo_definition_uuid}.repository_owner")
+      }
+
+      repository_name = {
+        display_name    = "repository_name"
+        description     = "Name of the parent Forgejo repository where action secrets are created."
+        type            = "STRING"
+        assignment_type = "BUILDING_BLOCK_OUTPUT"
+        argument        = jsonencode("${var.forgejo_repo_definition_uuid}.repository_name")
       }
 
       stage = {

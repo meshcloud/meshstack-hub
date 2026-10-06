@@ -28,15 +28,14 @@ support action variables at all. See the sub-module README for details.
 | Name | Source | Version |
 | ---- | ------ | ------- |
 | <a name="module_action_variables_and_secrets"></a> [action\_variables\_and\_secrets](#module\_action\_variables\_and\_secrets) | ./action-variables-and-secrets | n/a |
+| <a name="module_teams"></a> [teams](#module\_teams) | github.com/meshcloud/meshstack-hub//modules/stackit/git/buildingblock/forgejo-teams | n/a |
 
 ## Resources
 
 | Name | Type |
 | ---- | ---- |
 | [forgejo_repository.this](https://registry.terraform.io/providers/svalabs/forgejo/latest/docs/resources/repository) | resource |
-| [restapi_object.team](https://registry.terraform.io/providers/Mastercard/restapi/latest/docs/resources/object) | resource |
-| [terraform_data.team_member](https://registry.terraform.io/providers/hashicorp/terraform/latest/docs/resources/data) | resource |
-| [terraform_data.team_repo](https://registry.terraform.io/providers/hashicorp/terraform/latest/docs/resources/data) | resource |
+| [restapi_object.team_repo](https://registry.terraform.io/providers/Mastercard/restapi/latest/docs/resources/object) | resource |
 | [external_external.env](https://registry.terraform.io/providers/hashicorp/external/latest/docs/data-sources/external) | data source |
 | [external_external.resolve_default_branch](https://registry.terraform.io/providers/hashicorp/external/latest/docs/data-sources/external) | data source |
 | [external_external.resolve_forgejo_users](https://registry.terraform.io/providers/hashicorp/external/latest/docs/data-sources/external) | data source |
@@ -69,6 +68,7 @@ support action variables at all. See the sub-module README for details.
 | <a name="output_repository_html_url"></a> [repository\_html\_url](#output\_repository\_html\_url) | Web URL of the repository |
 | <a name="output_repository_id"></a> [repository\_id](#output\_repository\_id) | The ID of the created repository |
 | <a name="output_repository_name"></a> [repository\_name](#output\_repository\_name) | Name of the created repository |
+| <a name="output_repository_owner"></a> [repository\_owner](#output\_repository\_owner) | Organization that owns the created repository |
 | <a name="output_repository_ssh_url"></a> [repository\_ssh\_url](#output\_repository\_ssh\_url) | SSH clone URL |
 | <a name="output_summary"></a> [summary](#output\_summary) | Summary with next steps and links for the created repository |
 <!-- END_TF_DOCS -->

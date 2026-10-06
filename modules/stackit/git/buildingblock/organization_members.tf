@@ -1,5 +1,7 @@
 # The technical user is restricted in Forgejo and cannot look up other users, so usernames come from
-# the STACKIT Git API. Only users who signed in to the instance once are listed there.
+# the STACKIT Git API. Only users who signed in to the instance once are listed there. The lookup
+# goes by instance name, so the usernames, which decide the memberships, are known while planning the
+# run that creates the instance.
 data "external" "instance_users" {
   lifecycle {
     enabled = local.create_forgejo_organization
@@ -8,9 +10,9 @@ data "external" "instance_users" {
   program = ["bash", "${path.module}/list-instance-users.sh"]
 
   query = {
-    access_token = local.stackit_access_token
-    project_id   = var.stackit_project_id
-    instance_id  = stackit_git.this.instance_id
+    access_token  = local.stackit_access_token
+    project_id    = var.stackit_project_id
+    instance_name = var.instance_name
   }
 }
 
@@ -32,12 +34,14 @@ locals {
 
 module "organization_teams" {
   source = "./forgejo-teams"
+  providers = {
+    restapi                         = restapi
+    restapi.without_returned_object = restapi.without_returned_object
+  }
 
   depends_on = [restapi_object.forgejo_organization]
 
-  forgejo_host      = local.forgejo_base_url
-  forgejo_api_token = local.forgejo_api_token
-  organization      = coalesce(var.forgejo_organization, "unused")
+  organization = coalesce(var.forgejo_organization, "unused")
 
   teams = {
     for role, permission in local.team_permissions : role => {

@@ -29,6 +29,25 @@ provider "restapi" {
   }
 }
 
+provider "restapi" {
+  alias = "without_returned_object"
+
+  uri                  = local.forgejo_base_url
+  username             = var.local_user_username
+  password             = random_password.local_user.result
+  write_returns_object = false
+
+  headers = {
+    Content-Type = "application/json"
+  }
+
+  retries {
+    max_retries = 5
+    min_wait    = 1
+    max_wait    = 10
+  }
+}
+
 # The STACKIT Git API, which is where the technical user is created. The provider mints a token from
 # Workload Identity Federation but exposes no way to read it back, so stackit-access-token.sh
 # repeats the exchange.

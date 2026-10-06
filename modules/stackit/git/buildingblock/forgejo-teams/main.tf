@@ -1,14 +1,10 @@
-data "http" "teams" {
+data "restapi_object" "owners_team" {
   for_each = { for key, team in var.teams : key => team if team.permission == "owner" }
 
-  url             = "${trimsuffix(var.forgejo_host, "/")}/api/v1/orgs/${var.organization}/teams?limit=50"
-  request_headers = { Authorization = "token ${var.forgejo_api_token}" }
-
-  retry {
-    attempts     = 5
-    min_delay_ms = 1000
-    max_delay_ms = 10000
-  }
+  path         = "/api/v1/orgs/${var.organization}/teams"
+  query_string = "limit=50"
+  search_key   = "name"
+  search_value = "Owners"
 }
 
 # Not forgejo_team, which needs site admin (/api/v1/admin/orgs).
@@ -36,37 +32,36 @@ resource "restapi_object" "team" {
 
 locals {
   team_ids = merge(
-    { for key, teams in data.http.teams : key => one([for team in jsondecode(teams.response_body) : tostring(team.id) if team.name == "Owners"]) },
+    { for key, team in data.restapi_object.owners_team : key => team.id },
     { for key, team in restapi_object.team : key => team.id },
   )
 
   members = merge([
     for team_key, team in var.teams : {
       for key, username in team.members : "${team_key}/${key}" => { team = team_key, username = username }
+      if username != ""
     }
   ]...)
 }
 
-# PUT answers 204 No Content, which restapi_object cannot track. Without a username the URL ends in
-# `/members/` and nothing is sent until a later run knows it.
-resource "terraform_data" "member" {
+resource "restapi_object" "member" {
   for_each = local.members
 
-  triggers_replace = {
-    url = "${trimsuffix(var.forgejo_host, "/")}/api/v1/teams/${local.team_ids[each.value.team]}/members/${each.value.username}"
-  }
+  provider = restapi.without_returned_object
 
-  # A destroy provisioner can only read `self`, so the token travels in `input`.
-  input = { token = var.forgejo_api_token }
+  path           = "/api/v1/teams/${local.team_ids[each.value.team]}/members/{id}"
+  object_id      = each.value.username
+  create_method  = "PUT"
+  destroy_method = "DELETE"
+  data           = jsonencode({})
 
-  provisioner "local-exec" {
-    command     = "case \"${self.triggers_replace.url}\" in */members/) exit 0 ;; esac; curl -s --fail-with-body --retry 5 --retry-all-errors -X PUT -H \"Authorization: token $FORGEJO_API_TOKEN\" \"${self.triggers_replace.url}\""
-    environment = { FORGEJO_API_TOKEN = self.input.token }
-  }
+  ignore_server_additions = true
+}
 
-  provisioner "local-exec" {
-    when        = destroy
-    command     = "case \"${self.triggers_replace.url}\" in */members/) exit 0 ;; esac; curl -s -X DELETE -H \"Authorization: token $FORGEJO_API_TOKEN\" \"${self.triggers_replace.url}\" || true"
-    environment = { FORGEJO_API_TOKEN = self.input.token }
+removed {
+  from = terraform_data.member
+
+  lifecycle {
+    destroy = false
   }
 }

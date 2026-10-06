@@ -12,3 +12,7 @@ description: |
 Creates Forgejo organization teams and adds members to them by username. A team with permission
 `owner` uses the organization's built-in Owners team. Assigning a team to a repository is left to
 the caller, because a repository usually has to be deleted before its teams.
+
+The caller passes two `restapi` providers for the Forgejo API: the default one with
+`write_returns_object = true`, and `restapi.without_returned_object` with
+`write_returns_object = false`.

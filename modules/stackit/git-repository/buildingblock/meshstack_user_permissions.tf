@@ -67,12 +67,13 @@ locals {
 }
 
 module "teams" {
-  source    = "github.com/meshcloud/meshstack-hub//modules/stackit/git/buildingblock/forgejo-teams?ref=${var.hub_git_ref}"
-  providers = { restapi = restapi.with_returned_object }
+  source = "github.com/meshcloud/meshstack-hub//modules/stackit/git/buildingblock/forgejo-teams?ref=${var.hub_git_ref}"
+  providers = {
+    restapi                         = restapi.with_returned_object
+    restapi.without_returned_object = restapi.without_returned_object
+  }
 
-  forgejo_host      = data.external.env.result["FORGEJO_HOST"]
-  forgejo_api_token = local.forgejo_api_token
-  organization      = var.forgejo_organization
+  organization = var.forgejo_organization
 
   teams = {
     for type in keys(local.active_teams) : type => {
@@ -90,51 +91,36 @@ moved {
   to   = module.teams.restapi_object.team
 }
 
-moved {
-  from = terraform_data.team_member
-  to   = module.teams.terraform_data.member
-}
-
 locals {
   _team_ids = module.teams.team_ids
 }
 
-# PUT answers 204 No Content, which restapi_object cannot track.
-resource "terraform_data" "team_repo" {
+resource "restapi_object" "team_repo" {
   for_each = local.active_teams
 
-  triggers_replace = {
-    team_id   = local._team_ids[each.key]
-    repo_name = forgejo_repository.this.name
-    org       = var.forgejo_organization
+  provider = restapi.without_returned_object
+
+  path           = "/api/v1/teams/${local._team_ids[each.key]}/repos/${var.forgejo_organization}/{id}"
+  object_id      = forgejo_repository.this.name
+  create_method  = "PUT"
+  destroy_method = "DELETE"
+  data           = jsonencode({})
+
+  ignore_server_additions = true
+}
+
+removed {
+  from = terraform_data.team_member
+
+  lifecycle {
+    destroy = false
   }
+}
 
-  # A destroy provisioner can only read `self`, so the token travels in `input`.
-  input = { token = local.forgejo_api_token }
+removed {
+  from = terraform_data.team_repo
 
-  provisioner "local-exec" {
-    environment = { FORGEJO_API_TOKEN = self.input.token }
-    command     = <<-EOT
-      for i in 1 2 3 4 5 6; do
-        curl -s --fail-with-body -X PUT \
-          -H "Authorization: token $FORGEJO_API_TOKEN" \
-          "$FORGEJO_HOST/api/v1/teams/${local._team_ids[each.key]}/repos/${var.forgejo_organization}/${forgejo_repository.this.name}" \
-          && exit 0
-        echo "Attempt $i failed, retrying in 2s..." >&2
-        sleep 2
-      done
-      exit 1
-    EOT
-  }
-
-  provisioner "local-exec" {
-    when        = destroy
-    environment = { FORGEJO_API_TOKEN = self.input.token }
-    command     = <<-EOT
-      curl -s --fail-with-body -X DELETE \
-        -H "Authorization: token $FORGEJO_API_TOKEN" \
-        "$FORGEJO_HOST/api/v1/teams/${self.triggers_replace.team_id}/repos/${self.triggers_replace.org}/${self.triggers_replace.repo_name}" \
-        || true
-    EOT
+  lifecycle {
+    destroy = false
   }
 }

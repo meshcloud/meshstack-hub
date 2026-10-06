@@ -38,10 +38,10 @@ module "action_secrets_and_variables" {
     restapi.without_returned_object = restapi.without_returned_object
   }
 
-  forgejo_api_token = local.forgejo_api_token
-  repository_id     = var.repository_id
-  action_variables  = local.action_variables
-  action_secrets    = local.action_secrets
+  repository_owner = var.repository_owner
+  repository_name  = var.repository_name
+  action_variables = local.action_variables
+  action_secrets   = local.action_secrets
 }
 
 resource "terraform_data" "await_pipeline_workflow" {
@@ -63,7 +63,8 @@ resource "terraform_data" "await_pipeline_workflow" {
     command = "timeout 900 ${path.module}/trigger_and_await_forgejo_workflow.py"
     environment = {
       FORGEJO_API_TOKEN = local.forgejo_api_token
-      REPOSITORY_ID     = tostring(var.repository_id)
+      REPOSITORY_OWNER  = var.repository_owner
+      REPOSITORY_NAME   = var.repository_name
       WORKFLOW_NAME     = "pipeline.yaml"
       BRANCH            = var.stage
       # Jobs (as named in /actions/tasks) that must all succeed for the run to

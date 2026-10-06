@@ -1,15 +1,5 @@
-data "external" "repository_context" {
-  program = ["python3", "${path.module}/get_forgejo_repository_context.py"]
-
-  query = {
-    FORGEJO_REPOSITORY_ID = tostring(var.repository_id)
-    FORGEJO_API_TOKEN     = var.forgejo_api_token
-  }
-}
-
 locals {
-  repository_owner = data.external.repository_context.result.owner
-  repository_name  = data.external.repository_context.result.name
+  repository_path = "/api/v1/repos/${var.repository_owner}/${var.repository_name}"
 }
 
 # Only the names are unwrapped, and they have to be: they are the resource instance keys. A caller
@@ -19,11 +9,11 @@ resource "restapi_object" "action_secret" {
 
   provider = restapi.without_returned_object
 
-  path         = "/api/v1/repos/${local.repository_owner}/${local.repository_name}/actions/secrets/${each.key}"
-  create_path  = "/api/v1/repos/${local.repository_owner}/${local.repository_name}/actions/secrets/${each.key}"
-  update_path  = "/api/v1/repos/${local.repository_owner}/${local.repository_name}/actions/secrets/${each.key}"
-  destroy_path = "/api/v1/repos/${local.repository_owner}/${local.repository_name}/actions/secrets/${each.key}"
-  read_path    = "/api/v1/repos/${local.repository_owner}/${local.repository_name}/actions/secrets"
+  path         = "${local.repository_path}/actions/secrets/${each.key}"
+  create_path  = "${local.repository_path}/actions/secrets/${each.key}"
+  update_path  = "${local.repository_path}/actions/secrets/${each.key}"
+  destroy_path = "${local.repository_path}/actions/secrets/${each.key}"
+  read_path    = "${local.repository_path}/actions/secrets"
   id_attribute = "name"
   object_id    = each.key
 
@@ -49,11 +39,11 @@ resource "restapi_object" "action_variable" {
 
   provider = restapi.with_returned_object
 
-  path         = "/api/v1/repos/${local.repository_owner}/${local.repository_name}/actions/variables/${each.key}"
-  create_path  = "/api/v1/repos/${local.repository_owner}/${local.repository_name}/actions/variables/${each.key}"
-  update_path  = "/api/v1/repos/${local.repository_owner}/${local.repository_name}/actions/variables/${each.key}"
-  destroy_path = "/api/v1/repos/${local.repository_owner}/${local.repository_name}/actions/variables/${each.key}"
-  read_path    = "/api/v1/repos/${local.repository_owner}/${local.repository_name}/actions/variables/${each.key}"
+  path         = "${local.repository_path}/actions/variables/${each.key}"
+  create_path  = "${local.repository_path}/actions/variables/${each.key}"
+  update_path  = "${local.repository_path}/actions/variables/${each.key}"
+  destroy_path = "${local.repository_path}/actions/variables/${each.key}"
+  read_path    = "${local.repository_path}/actions/variables/${each.key}"
   id_attribute = "name"
   object_id    = each.key
 

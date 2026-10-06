@@ -16,7 +16,7 @@ It combines:
 - the sensitive static input `vault_reader` and the Vault paths `forgejo_api_token_path` and, if
   set, `registry_push_path`
 - user inputs (`name`, `description`, `private`, `clone_addr`, `extra_action_variables`)
-- outputs exposed to users (`repository_id`, `repository_html_url`, `repository_clone_url`, `repository_ssh_url`, `summary`)
+- outputs exposed to users (`repository_id`, `repository_owner`, `repository_name`, `repository_html_url`, `repository_clone_url`, `repository_ssh_url`, `summary`)
 
 This allows platform teams to publish a reusable self-service Git repository building block for tenants.
 

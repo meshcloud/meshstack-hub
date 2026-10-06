@@ -34,13 +34,12 @@ perform real CRUD operations against the Forgejo API, including proper deletion.
 The module expects **two aliased `restapi` provider configurations** passed from
 the caller:
 
-| Alias                     | `write_returns_object` | Reason |
-|---------------------------|------------------------|--------|
-| `restapi.action_variable` | `true`                 | Variables can be read back after write. |
-| `restapi.action_secret`   | `false`                | Secrets cannot be read back (Forgejo returns empty). |
+| Alias                             | `write_returns_object` | Reason |
+|-----------------------------------|------------------------|--------|
+| `restapi.with_returned_object`    | `true`                 | Variables can be read back after write. |
+| `restapi.without_returned_object` | `false`                | Secrets cannot be read back (Forgejo returns empty). |
 
-Both providers must point at the Forgejo host with an appropriate API token. The
-module takes the same token as `forgejo_api_token` to look up the repository.
+Both providers must point at the Forgejo host with an appropriate API token.
 
 ## Usage
 
@@ -48,13 +47,13 @@ module takes the same token as `forgejo_api_token` to look up the repository.
 module "action_variables_and_secrets" {
   source = "./action-variables-and-secrets"
   providers = {
-    restapi.action_variable = restapi.action_variable
-    restapi.action_secret   = restapi.action_secret
+    restapi.with_returned_object    = restapi.with_returned_object
+    restapi.without_returned_object = restapi.without_returned_object
   }
 
-  forgejo_api_token = local.forgejo_api_token
-  repository_id     = forgejo_repository.this.id
-  action_variables  = var.action_variables
-  action_secrets    = var.action_secrets
+  repository_owner = var.forgejo_organization
+  repository_name  = forgejo_repository.this.name
+  action_variables = var.action_variables
+  action_secrets   = var.action_secrets
 }
 ```
