@@ -13,16 +13,6 @@ variable "cluster_name" {
   description = "Name of the k8s cluster hosting this service account"
 }
 
-variable "cluster_endpoint" {
-  type        = string
-  description = "IP address of the cluster control plane"
-}
-
-variable "cluster_ca_certificate" {
-  type        = string
-  description = "Cluster CA certificate, base64 encoded"
-}
-
 variable "context" {
   type        = string
   description = "Defines which cluster to interact with. Can be any name"
@@ -33,8 +23,22 @@ variable "cluster_role" {
   description = "ClusterRole to bind the service account with. e.g. admin, edit, view (or any custom cluster role)"
 }
 
-variable "token" {
-  type        = string
+variable "bind_cluster_wide" {
+  type        = bool
+  nullable    = false
+  default     = false
+  description = "Grant `cluster_role` in every namespace through a ClusterRoleBinding, instead of in `namespace` only through a RoleBinding."
+}
+
+variable "output_to_vault" {
+  type = object({
+    address  = string
+    mount    = string
+    username = string
+    password = string
+    path     = string
+  })
+  default     = null
   sensitive   = true
-  description = "Token for the service account executing this module (not this service account)"
+  description = "Vault KV v2 secret this building block writes its secrets to instead of returning them as outputs: the server `address`, the engine `mount`, a userpass `username` and `password`, and the secret `path`. Null returns them as outputs."
 }

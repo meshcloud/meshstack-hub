@@ -107,7 +107,7 @@ deploy:
 
 ### Namespace Isolation
 
-- The role binding is **namespace-scoped**
+- The role binding is **namespace-scoped**, unless the platform team binds the role cluster-wide
 - The service account cannot access resources in other namespaces
 - Cross-namespace access requires additional configuration
 
