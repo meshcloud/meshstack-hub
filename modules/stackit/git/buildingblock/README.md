@@ -71,6 +71,17 @@ A PATCH puts the instance back into state **`Creating`**, not `Updating`, which 
 appears. It also waits for `Ready` before the PATCH, because an instance that is still coming up
 rejects one.
 
+## Adopting an existing instance
+
+With `imports` set, the building block takes over the existing instance with that `instance_id`
+instead of creating one; its name must equal `instance_name`. It creates its own technical user,
+named `local_user_username` plus a random suffix, because the instance's existing user has a password
+this building block does not know. It orders no shared runner, because STACKIT allows one per
+instance.
+
+With `release_on_destroy` set, destroying the building block leaves the instance in place.
+`release_on_destroy` cannot change once the instance is managed.
+
 ## Notes
 
 - `<name>.git.onstackit.cloud` is **globally unique across all of STACKIT**, so `instance_name` must
@@ -99,6 +110,7 @@ rejects one.
 
 | Name | Source | Version |
 | ---- | ------ | ------- |
+| <a name="module_instance"></a> [instance](#module\_instance) | ./modules/git-instance | n/a |
 | <a name="module_organization_teams"></a> [organization\_teams](#module\_organization\_teams) | ./forgejo-teams | n/a |
 
 ## Resources
@@ -106,11 +118,11 @@ rejects one.
 | Name | Type |
 | ---- | ---- |
 | [random_password.local_user](https://registry.terraform.io/providers/hashicorp/random/latest/docs/resources/password) | resource |
+| [random_string.local_user_suffix](https://registry.terraform.io/providers/hashicorp/random/latest/docs/resources/string) | resource |
 | [restapi_object.forgejo_organization](https://registry.terraform.io/providers/Mastercard/restapi/latest/docs/resources/object) | resource |
 | [restapi_object.local_user](https://registry.terraform.io/providers/Mastercard/restapi/latest/docs/resources/object) | resource |
 | [restapi_object.local_user_token](https://registry.terraform.io/providers/Mastercard/restapi/latest/docs/resources/object) | resource |
 | [restapi_object.shared_runner](https://registry.terraform.io/providers/Mastercard/restapi/latest/docs/resources/object) | resource |
-| [stackit_git.this](https://registry.terraform.io/providers/stackitcloud/stackit/latest/docs/resources/git) | resource |
 | [terraform_data.local_login](https://registry.terraform.io/providers/hashicorp/terraform/latest/docs/resources/data) | resource |
 | [vault_kv_secret_v2.this](https://registry.terraform.io/providers/hashicorp/vault/latest/docs/resources/kv_secret_v2) | resource |
 | [external_external.instance_users](https://registry.terraform.io/providers/hashicorp/external/latest/docs/data-sources/external) | data source |
@@ -121,12 +133,14 @@ rejects one.
 | Name | Description | Type | Default | Required |
 | ---- | ----------- | ---- | ------- | :------: |
 | <a name="input_forgejo_organization"></a> [forgejo\_organization](#input\_forgejo\_organization) | Forgejo organization to create inside the instance. Empty provisions the bare instance. | `string` | n/a | yes |
+| <a name="input_imports"></a> [imports](#input\_imports) | Existing STACKIT Git instance this building block takes over instead of creating one. Its name must equal `instance_name`. The technical user then gets a random suffix, and no shared runner is ordered. Null creates a new instance. | <pre>object({<br/>    instance_id = string<br/>  })</pre> | `null` | no |
 | <a name="input_instance_name"></a> [instance\_name](#input\_instance\_name) | First label of the instance hostname `<name>.git.onstackit.cloud`, globally unique across all of STACKIT. | `string` | n/a | yes |
 | <a name="input_local_user_email"></a> [local\_user\_email](#input\_local\_user\_email) | Email of the technical user. Leave empty to derive one from the instance hostname. | `string` | n/a | yes |
 | <a name="input_local_user_token_name"></a> [local\_user\_token\_name](#input\_local\_user\_token\_name) | Name of the Personal Access Token the module mints. | `string` | n/a | yes |
 | <a name="input_local_user_token_scopes"></a> [local\_user\_token\_scopes](#input\_local\_user\_token\_scopes) | Forgejo scopes of the minted token. | `list(string)` | n/a | yes |
 | <a name="input_local_user_username"></a> [local\_user\_username](#input\_local\_user\_username) | Username of the technical user the module mints its token on. | `string` | n/a | yes |
 | <a name="input_output_to_vault"></a> [output\_to\_vault](#input\_output\_to\_vault) | Vault KV v2 secret this building block writes its secrets to: the server `address`, the engine `mount`, a userpass `username` and `password`, and the secret `path`. Null writes none. | <pre>object({<br/>    address  = string<br/>    mount    = string<br/>    username = string<br/>    password = string<br/>    path     = string<br/>  })</pre> | `null` | no |
+| <a name="input_release_on_destroy"></a> [release\_on\_destroy](#input\_release\_on\_destroy) | Leave the instance in place when this building block is destroyed. Cannot change once the instance is managed. | `bool` | `false` | no |
 | <a name="input_role_mapping"></a> [role\_mapping](#input\_role\_mapping) | Maps meshStack roles from `users[*].roles` to Forgejo organization roles: `owner`, `writer` or `reader`. The highest one wins; unknown meshStack roles are ignored. | `map(list(string))` | n/a | yes |
 | <a name="input_shared_runner_labels"></a> [shared\_runner\_labels](#input\_shared\_runner\_labels) | Labels of the STACKIT-hosted shared runner to order. Leave empty to order none. | `list(string)` | n/a | yes |
 | <a name="input_stackit_project_id"></a> [stackit\_project\_id](#input\_stackit\_project\_id) | STACKIT project the Git instance is created in. | `string` | n/a | yes |

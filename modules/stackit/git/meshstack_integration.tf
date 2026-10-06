@@ -279,6 +279,22 @@ resource "meshstack_building_block_definition" "this" {
         is_optional            = true
         updateable_by_consumer = true
       }
+
+      imports = {
+        display_name    = "Imports"
+        description     = "HCL object `{instance_id}` of an existing STACKIT Git instance named Instance Name, which this building block takes over instead of creating one. Leave empty to create a new instance."
+        type            = "CODE"
+        assignment_type = "USER_INPUT"
+        is_optional     = true
+      }
+
+      release_on_destroy = {
+        display_name    = "Release on Destroy"
+        description     = "Leave the instance in place when this building block is deleted. Cannot change once the instance is managed."
+        type            = "BOOLEAN"
+        assignment_type = "USER_INPUT"
+        default_value   = jsonencode(false)
+      }
     }
 
     outputs = {

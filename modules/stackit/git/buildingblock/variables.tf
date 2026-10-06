@@ -101,3 +101,18 @@ variable "output_to_vault" {
   sensitive   = true
   description = "Vault KV v2 secret this building block writes its secrets to: the server `address`, the engine `mount`, a userpass `username` and `password`, and the secret `path`. Null writes none."
 }
+
+variable "imports" {
+  type = object({
+    instance_id = string
+  })
+  default     = null
+  description = "Existing STACKIT Git instance this building block takes over instead of creating one. Its name must equal `instance_name`. The technical user then gets a random suffix, and no shared runner is ordered. Null creates a new instance."
+}
+
+variable "release_on_destroy" {
+  type        = bool
+  nullable    = false
+  default     = false
+  description = "Leave the instance in place when this building block is destroyed. Cannot change once the instance is managed."
+}

@@ -3,13 +3,17 @@ locals {
   stackit_access_token = sensitive(data.external.stackit_access_token.result.access_token)
 
   # `<name>.git.onstackit.cloud` — STACKIT derives the instance URL from the instance name. The
-  # restapi provider is configured from this rather than from `stackit_git.this.url`, because a
+  # restapi provider is configured from this rather than from the instance `url`, because a
   # provider configuration cannot depend on a resource created in the same apply: on a run that
   # creates the instance and the organization at once, that attribute is still unknown at plan time.
   forgejo_base_url = "https://${var.instance_name}.git.onstackit.cloud"
 
+  # An adopted instance already has a technical user of that name, whose password this state does
+  # not hold.
+  local_user_username = var.imports == null ? var.local_user_username : "${var.local_user_username}-${random_string.local_user_suffix.result}"
+
   local_user_email = coalesce(
-    var.local_user_email, "${var.local_user_username}@${var.instance_name}.git.onstackit.cloud"
+    var.local_user_email, "${local.local_user_username}@${var.instance_name}.git.onstackit.cloud"
   )
 
   forgejo_api_token = sensitive(jsondecode(restapi_object.local_user_token.create_response).sha1)
@@ -21,13 +25,43 @@ data "external" "stackit_access_token" {
   program = ["bash", "${path.module}/stackit-access-token.sh"]
 }
 
-resource "stackit_git" "this" {
-  project_id = var.stackit_project_id
-  name       = var.instance_name
+module "instance" {
+  source = "./modules/git-instance"
+
+  release_on_destroy = var.release_on_destroy
+  project_id         = var.stackit_project_id
+  name               = var.instance_name
+}
+
+moved {
+  from = stackit_git.this
+  to   = module.instance.stackit_git.this
+}
+
+import {
+  for_each = var.imports != null && !var.release_on_destroy ? toset([var.imports.instance_id]) : toset([])
+  to       = module.instance.stackit_git.this
+  id       = "${var.stackit_project_id},${each.value}"
+}
+
+import {
+  for_each = var.imports != null && var.release_on_destroy ? toset([var.imports.instance_id]) : toset([])
+  to       = module.instance.stackit_git.released
+  id       = "${var.stackit_project_id},${each.value}"
+}
+
+resource "random_string" "local_user_suffix" {
+  lifecycle {
+    enabled = var.imports != null
+  }
+
+  length  = 6
+  special = false
+  upper   = false
 }
 
 resource "terraform_data" "local_login" {
-  triggers_replace = [stackit_git.this.instance_id]
+  triggers_replace = [module.instance.instance.instance_id]
 
   provisioner "local-exec" {
     command = "${path.module}/enable-local-login.sh"
@@ -35,7 +69,7 @@ resource "terraform_data" "local_login" {
     environment = {
       ACCESS_TOKEN = local.stackit_access_token
       PROJECT_ID   = var.stackit_project_id
-      INSTANCE_ID  = stackit_git.this.instance_id
+      INSTANCE_ID  = module.instance.instance.instance_id
     }
   }
 }
@@ -53,24 +87,24 @@ resource "restapi_object" "local_user" {
 
   depends_on = [terraform_data.local_login]
 
-  path         = "/v1beta/projects/${var.stackit_project_id}/instances/${stackit_git.this.instance_id}/users"
+  path         = "/v1beta/projects/${var.stackit_project_id}/instances/${module.instance.instance.instance_id}/users"
   id_attribute = "username"
 
   # Reading one user answers `302` with the user in the body, which the provider reports as an error.
   # The collection answers `200`, so the read picks this user out of it by username.
-  read_path = "/v1beta/projects/${var.stackit_project_id}/instances/${stackit_git.this.instance_id}/users"
+  read_path = "/v1beta/projects/${var.stackit_project_id}/instances/${module.instance.instance.instance_id}/users"
   read_search = {
     results_key  = "users"
     search_key   = "username"
-    search_value = var.local_user_username
+    search_value = local.local_user_username
   }
 
   # The API has no way to change a username or an email, so either means a different user.
   force_new = ["username", "email"]
 
   data = jsonencode({
-    name                      = var.local_user_username
-    username                  = var.local_user_username
+    name                      = local.local_user_username
+    username                  = local.local_user_username
     email                     = local.local_user_email
     password                  = random_password.local_user.result
     force_send_reset_password = false
@@ -85,10 +119,10 @@ resource "restapi_object" "local_user" {
 resource "restapi_object" "local_user_token" {
   depends_on = [restapi_object.local_user]
 
-  path         = "/api/v1/users/${var.local_user_username}/tokens"
+  path         = "/api/v1/users/${local.local_user_username}/tokens"
   id_attribute = "id"
 
-  read_path = "/api/v1/users/${var.local_user_username}/tokens"
+  read_path = "/api/v1/users/${local.local_user_username}/tokens"
   read_search = {
     search_key   = "name"
     search_value = var.local_user_token_name
@@ -136,15 +170,16 @@ resource "restapi_object" "forgejo_organization" {
 resource "restapi_object" "shared_runner" {
   provider = restapi.stackit_git
 
+  # STACKIT allows one runner per instance, and an adopted instance keeps the one it has.
   lifecycle {
-    enabled = length(var.shared_runner_labels) > 0
+    enabled = length(var.shared_runner_labels) > 0 && var.imports == null
   }
 
   depends_on = [terraform_data.local_login]
 
-  path         = "/v1beta/projects/${var.stackit_project_id}/instances/${stackit_git.this.instance_id}/runner"
-  read_path    = "/v1beta/projects/${var.stackit_project_id}/instances/${stackit_git.this.instance_id}/runner"
-  destroy_path = "/v1beta/projects/${var.stackit_project_id}/instances/${stackit_git.this.instance_id}/runner"
+  path         = "/v1beta/projects/${var.stackit_project_id}/instances/${module.instance.instance.instance_id}/runner"
+  read_path    = "/v1beta/projects/${var.stackit_project_id}/instances/${module.instance.instance.instance_id}/runner"
+  destroy_path = "/v1beta/projects/${var.stackit_project_id}/instances/${module.instance.instance.instance_id}/runner"
   id_attribute = "id"
 
   force_new = ["labels"]

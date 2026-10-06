@@ -12,7 +12,7 @@ provider "stackit" {
 # still is at plan time. Username and password are plain string attributes, which do accept one.
 provider "restapi" {
   uri                  = local.forgejo_base_url
-  username             = var.local_user_username
+  username             = local.local_user_username
   password             = random_password.local_user.result
   write_returns_object = true
 
@@ -33,7 +33,7 @@ provider "restapi" {
   alias = "without_returned_object"
 
   uri                  = local.forgejo_base_url
-  username             = var.local_user_username
+  username             = local.local_user_username
   password             = random_password.local_user.result
   write_returns_object = false
 
