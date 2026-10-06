@@ -5,7 +5,7 @@ output "replicator_token" {
 }
 
 output "metering_token" {
-  description = "Service account token meshStack uses to read metering data from the cluster. Null when metering_enabled is false."
+  description = "Service account token meshStack uses to read metering data from the cluster. Empty when metering_enabled is false."
   value       = local.metering_token
   sensitive   = true
 }

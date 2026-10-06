@@ -13,7 +13,7 @@ variable "service_account_namespace" {
 variable "metering_enabled" {
   type        = bool
   nullable    = false
-  description = "Create the metering service account; `metering_token` is null without it."
+  description = "Create the metering service account; `metering_token` is empty without it."
 }
 
 variable "replicator_additional_rules" {

@@ -216,7 +216,8 @@ locals {
   metering_name   = "meshfed-metering"
 
   replicator_token = kubernetes_secret_v1.replicator.data["token"]
-  metering_token   = var.metering_enabled ? kubernetes_secret_v1.metering.data["token"] : null
+  # meshStack fails a building block whose declared output is null.
+  metering_token = var.metering_enabled ? kubernetes_secret_v1.metering.data["token"] : ""
 }
 
 moved {
