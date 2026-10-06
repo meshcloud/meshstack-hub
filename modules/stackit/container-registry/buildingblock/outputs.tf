@@ -18,19 +18,6 @@ output "registry_robot_url" {
   value       = local.registry_robot_url
 }
 
-# One object rather than four strings, so a consumer wires the registry with a single input. Null
-# until a bootstrap robot is supplied, which is what tells a consumer there is nothing to wire yet.
-#
-# meshStack has no sensitive building block output, so this travels in the clear, as the Forgejo
-# token already does.
-output "access_credentials" {
-  description = "Robot credentials for this registry: `push` for pipelines, `pull` for workloads. Null until a bootstrap robot is supplied."
-  value = local.mint_robots ? jsonencode({
-    push = { user = local.push_robot_username, password = local.push_robot_password }
-    pull = { user = local.pull_robot_username, password = local.pull_robot_password }
-  }) : jsonencode(null)
-}
-
 output "summary" {
   description = "Summary of the created registry and the one manual step it still needs."
   value = templatefile("${path.module}/SUMMARY.md.tftpl", {
