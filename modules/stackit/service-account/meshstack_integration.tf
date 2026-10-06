@@ -20,6 +20,12 @@ variable "stackit_assignable_roles" {
   description = "STACKIT project roles application teams may grant the service account. Constrains the `roles` input offered in the catalog."
 }
 
+variable "stackit_federation_backplane_email" {
+  type        = string
+  nullable    = false
+  description = "Email of the backplane service account of the STACKIT Service Account Federation definition, the `backplane_service_account_email` output of its integration. Every service account ordered from this definition grants it `editor` on its project, so it can be federated."
+}
+
 variable "bbd_display_name" {
   type        = string
   default     = null
@@ -72,6 +78,7 @@ output "building_block_definition" {
   description = "BBD is consumed in building block compositions."
   value = {
     uuid        = meshstack_building_block_definition.this.metadata.uuid
+    ref         = meshstack_building_block_definition.this.ref
     version_ref = meshstack_building_block_definition.this.version_latest
     # Other workspaces may only order a released version. Null until the first release.
     version_ref_release = meshstack_building_block_definition.this.version_latest_release
@@ -223,6 +230,14 @@ resource "meshstack_building_block_definition" "this" {
         # A composing architecture grows this list as the blocks it orders need more STACKIT
         # permissions, so the block must accept the input changing after it was first ordered.
         updateable_by_consumer = true
+      }
+
+      federation_backplane_email = {
+        display_name    = "Federation Backplane Email"
+        description     = "Backplane service account of the STACKIT Service Account Federation definition."
+        type            = "STRING"
+        assignment_type = "STATIC"
+        argument        = jsonencode(var.stackit_federation_backplane_email)
       }
     }
 

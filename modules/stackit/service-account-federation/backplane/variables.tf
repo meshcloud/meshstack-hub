@@ -4,12 +4,6 @@ variable "project_id" {
   description = "STACKIT project the backplane service account is created in."
 }
 
-variable "organization_id" {
-  type        = string
-  nullable    = false
-  description = "STACKIT organization the backplane service account gets `iam.member-admin` in."
-}
-
 variable "workload_identity_federation" {
   type = object({
     issuer   = string
