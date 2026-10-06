@@ -1,9 +1,3 @@
-variable "kubeconfig" {
-  type        = string
-  sensitive   = true
-  description = "Raw kubeconfig (YAML) of the target cluster, from a preceding building block so it is known at plan time."
-}
-
 variable "cert_manager_version" {
   type        = string
   nullable    = false
