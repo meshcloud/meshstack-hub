@@ -2,9 +2,7 @@ provider "meshstack" {
 {{- if .Alias }}
   alias = "{{.Alias}}"
 {{- end }}
-  # Configure using environment variables
-  # MESHSTACK_ENDPOINT=https://api.my.meshstack.io
-  # and
-  # MESHSTACK_API_KEY and MESHSTACK_API_SECRET
-  # See also https://docs.meshcloud.io/api/authentication/api-keys/
+  # Run `meshstack login` (https://github.com/meshcloud/meshstack-cli) to configure this provider.
+  # Alternatively, authenticate with an API key via MESHSTACK_ENDPOINT, MESHSTACK_API_KEY and
+  # MESHSTACK_API_SECRET environment variables, see https://docs.meshcloud.io/api/authentication/api-keys/
 }
