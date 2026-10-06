@@ -23,7 +23,7 @@ resource "meshstack_building_block" "cluster" {
     display_name                          = "SKE Cluster"
     target_ref                            = local.tenant_ref
 
-    inputs = {
+    inputs = merge({
       cluster_name                  = { value = jsonencode(var.cluster_name) }
       STACKIT_SERVICE_ACCOUNT_EMAIL = { value = jsonencode(local.service_account_email) }
       output_to_vault = {
@@ -32,7 +32,10 @@ resource "meshstack_building_block" "cluster" {
           secret_version = nonsensitive(sha256(local.output_to_vault.cluster_kubeconfig))
         }
       }
-    }
+      }, var.imports.ske == null ? {} : {
+      imports            = { value = jsonencode(jsonencode(var.imports.ske)) }
+      release_on_destroy = { value = jsonencode(var.playground_mode) }
+    })
   }
 }
 
@@ -191,9 +194,10 @@ module "ingress_integration" {
 
   depends_on = [module.service_account_integration]
 
-  kubeconfig         = ephemeral.vault_kv_secret_v2.service_account_kubeconfig.data.kubeconfig
-  kubeconfig_version = tostring(local.service_account_vault_secret.secret_hash)
-  acme_email         = var.cluster_issuer_email
+  kubeconfig            = ephemeral.vault_kv_secret_v2.service_account_kubeconfig.data.kubeconfig
+  kubeconfig_version    = tostring(local.service_account_vault_secret.secret_hash)
+  acme_email            = var.cluster_issuer_email
+  haproxy_replica_count = var.playground_mode ? 1 : 2
 
   approval_policies = var.approval_policies
 
@@ -217,6 +221,13 @@ resource "meshstack_building_block" "ingress" {
     display_name                          = "Kubernetes Ingress"
     target_ref                            = local.tenant_ref
 
-    inputs = {}
+    inputs = var.imports.ingress == null ? {} : {
+      imports            = { value = jsonencode(jsonencode(var.imports.ingress)) }
+      release_on_destroy = { value = jsonencode(var.playground_mode) }
+    }
   }
+}
+
+locals {
+  ingress_load_balancer_ip = jsondecode(meshstack_building_block.ingress.status.outputs["haproxy_lb_ip"].value)
 }

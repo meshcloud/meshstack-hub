@@ -16,6 +16,9 @@ This outer run holds no STACKIT credential and declares no `stackit` provider. I
   [`../platform/buildingblock`](../platform/buildingblock/README.md) and creates everything else,
   the platform's Secrets Manager included.
 
+With `imports.project` set, it takes over the existing meshProject `project_identifier` and its
+tenant instead of creating them. See *Adopting Existing Resources* in the [reference architecture README](../README.md).
+
 Its summary is the summary of the Platform Services building block.
 
 The architecture itself (overview, diagrams, the order and its one update, shared responsibilities)

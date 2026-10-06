@@ -25,12 +25,15 @@ resource "meshstack_building_block" "dns" {
     display_name                          = "DNS Zone"
     target_ref                            = local.tenant_ref
 
-    inputs = {
+    inputs = merge({
       subdomain                     = { value = jsonencode(var.dns_subdomain) }
-      wildcard_target_ip            = { value = jsonencode(jsondecode(meshstack_building_block.ingress.status.outputs["haproxy_lb_ip"].value)) }
+      wildcard_target_ip            = { value = jsonencode(local.ingress_load_balancer_ip) }
       contact_email                 = { value = jsonencode(var.cluster_issuer_email) }
       STACKIT_SERVICE_ACCOUNT_EMAIL = { value = jsonencode(local.service_account_email) }
-    }
+      }, var.imports.dns == null ? {} : {
+      imports            = { value = jsonencode(jsonencode(var.imports.dns)) }
+      release_on_destroy = { value = jsonencode(var.playground_mode) }
+    })
   }
 }
 
@@ -86,6 +89,9 @@ module "git_integration" {
 resource "meshstack_building_block" "git" {
   wait_for_completion = true
 
+  # An adopted organization's existing token is read on every run, the delete run included.
+  depends_on = [vault_kv_secret_v2.import]
+
   lifecycle {
     postcondition {
       condition     = self.status.status == "SUCCEEDED"
@@ -99,11 +105,9 @@ resource "meshstack_building_block" "git" {
     display_name                          = "STACKIT Git Instance"
     target_ref                            = local.tenant_ref
 
-    inputs = {
-      instance_name = { value = jsonencode(var.platform_identifier) }
-      # One organization per instance, sharing its name. The Git block would take any name here;
-      # this architecture is what ties the two together.
-      forgejo_organization          = { value = jsonencode(var.platform_identifier) }
+    inputs = merge({
+      instance_name                 = { value = jsonencode(var.imports.git != null ? var.imports.git.instance_name : var.platform_identifier) }
+      forgejo_organization          = { value = jsonencode(var.imports.git != null ? var.imports.git.forgejo_organization : var.platform_identifier) }
       shared_runner_labels          = { value = jsonencode(jsonencode(["stackit-ubuntu-22"])) }
       STACKIT_SERVICE_ACCOUNT_EMAIL = { value = jsonencode(local.service_account_email) }
       output_to_vault = {
@@ -112,7 +116,13 @@ resource "meshstack_building_block" "git" {
           secret_version = nonsensitive(sha256(local.output_to_vault.git))
         }
       }
-    }
+      }, var.imports.git == null ? {} : {
+      imports = { value = jsonencode(jsonencode({
+        instance_id                     = var.imports.git.instance_id
+        existing_forgejo_api_token_path = var.imports.git.existing_forgejo_api_token_path
+      })) }
+      release_on_destroy = { value = jsonencode(var.playground_mode) }
+    })
   }
 }
 

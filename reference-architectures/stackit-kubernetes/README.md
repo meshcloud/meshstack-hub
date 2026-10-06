@@ -264,8 +264,8 @@ One run provisions everything:
   service account,
 - the SKE cluster, and the cluster-admin service account (`kubernetes/service-account`) the blocks
   working inside it use,
-- **ingress** (`kubernetes/ingress`) — cert-manager, the HAProxy ingress controller and the Let's
-  Encrypt ClusterIssuer, in a single building block,
+- **ingress** (`kubernetes/ingress`) — cert-manager, the HAProxy ingress controller (two replicas,
+  one in playground mode) and the Let's Encrypt ClusterIssuer, in a single building block,
 - the **meshStack Kubernetes integration** (`kubernetes`), which creates the replicator and metering
   identities and registers the meshStack platform they are wired into, with one landing zone per
   stage,
@@ -288,11 +288,56 @@ to their namespaces.
 
 ### Where the Forgejo token comes from
 
-No human mints it. The Git building block switches on local login, creates a technical user through
-the STACKIT Git API, and exchanges that user's password for a Personal Access Token, which it
-writes to the Secrets Manager at `git/forgejo-api-token`, where the Git Repository and Forgejo
-Connector runs read it. See
-`modules/stackit/git/buildingblock/README.md` for the three calls involved.
+No human mints it. The Git building block creates a technical user through the STACKIT Git API
+and exchanges that user's password for a Personal Access Token, which it writes to the Secrets
+Manager at `git/forgejo-api-token`, where the Git Repository and Forgejo Connector runs read it. See
+`modules/stackit/git/buildingblock/README.md` for the two calls involved.
+
+## Adopting Existing Resources
+
+The optional **Imports** input lets the platform take over resources that already exist, for
+example a platform built before this architecture, instead of creating them:
+
+| Key | Takes over | Taken over by |
+|---|---|---|
+| `project = {display_name, admin_bindings}` | the meshProject **Project Identifier** and its tenant on the landing zone platform; with the optional `display_name`, the project keeps that display name; the optional `admin_bindings` maps a username to the name of its existing Project Admin binding on the project, which meshStack allows only once per user | the outer run |
+| `ske = {}` | the SKE cluster **Cluster Name** in that tenant's STACKIT project | the SKE Cluster building block |
+| `git = {instance_id, instance_name, forgejo_organization, existing_forgejo_api_token_path}` | the STACKIT Git instance in that project and its Forgejo organization | the STACKIT Git Instance building block |
+| `dns = {zone_id, record_set_id}` | the DNS zone **DNS Subdomain**.**DNS Parent Domain** in that project and its wildcard record set | the DNS Zone building block |
+| `ingress = {}` | the namespaces `cert-manager` and `haproxy-ingress` in the cluster, the Helm releases `cert-manager` and `haproxy` in them, and the ClusterIssuer `letsencrypt-prod` | the Kubernetes Ingress building block |
+
+Every key but `project` needs `project`, because what it names lives in that tenant's STACKIT
+project, and `ingress` needs `ske`. Everything else is created new, also when it is adopted: the
+service account and its federations, the Secrets Manager, the kubeconfig and the meshStack
+platform. The Git building block creates its own technical user with a random suffix, because the
+instance's existing user has a password it does not know, and it orders no shared runner, because
+STACKIT allows one per instance.
+
+To take over the organization, the Git building block needs a token of one of its owners: it makes
+its own technical user an owner with it, and removes that user again on deletion. It reads the token
+from `existing_forgejo_api_token_path` in the platform's Secrets Manager, under the key
+`forgejo_api_token`. The Secrets Manager is created by the platform, so hand the token over in the
+sensitive **Import Secrets** input, a map of Secrets Manager paths to secrets, which the nested run
+writes before it orders the Git building block:
+
+```hcl
+{
+  "imports/git/forgejo-api-token" = { forgejo_api_token = "<token>" }
+}
+```
+
+The organization keeps its settings and is never deleted. Its new `writers` and `readers` teams carry
+the technical user's suffix, because the organization may already have teams of these names.
+
+What happens on deletion depends on **Playground Mode**:
+
+- **Playground**: deleting the platform leaves what it took over in place, and only drops it from
+  the state.
+- **Production**: the platform manages what it took over, so deleting the platform deletes it.
+
+An adopted resource gets the settings this architecture gives it, so the first run may change it.
+To review that run before it applies, switch on the `building_block_creation` and
+`any_input_changes` gates in `approval_policies` for the adoption, and switch them off afterwards.
 
 ## Getting Started
 

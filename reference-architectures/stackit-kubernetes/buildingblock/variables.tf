@@ -214,3 +214,44 @@ variable "hub" {
   `bbd_draft`: Forwarded to the nested integrations' `hub.bbd_draft`.
   EOT
 }
+
+variable "imports" {
+  type = object({
+    project = optional(object({
+      display_name   = optional(string)
+      admin_bindings = optional(map(string), {})
+    }))
+    ske = optional(object({}))
+    git = optional(object({
+      instance_id                     = string
+      instance_name                   = string
+      forgejo_organization            = string
+      existing_forgejo_api_token_path = string
+    }))
+    dns = optional(object({
+      zone_id       = string
+      record_set_id = string
+    }))
+    ingress = optional(object({}))
+  })
+  default     = null
+  description = "Existing resources the platform takes over instead of creating them: the meshProject `project_identifier` and its tenant on the landing zone platform (`project`, optionally keeping its `display_name` and taking over its existing Project Admin bindings in `admin_bindings`, a map of username to binding name), the SKE cluster `cluster_name` (`ske`), the STACKIT Git instance with its Forgejo organization (`git`) and the DNS zone `<dns_subdomain>.<dns_parent_domain>` with its wildcard record set (`dns`) in that tenant's STACKIT project, and the ingress installation in the cluster (`ingress`). `git.existing_forgejo_api_token_path` names a secret in the platform's Secrets Manager, usually one written through `import_secrets`, whose key `forgejo_api_token` holds a token of an owner of the organization. Null creates everything new."
+
+  validation {
+    condition     = var.imports == null || var.imports.project != null || alltrue([for key in ["ske", "git", "dns", "ingress"] : var.imports[key] == null])
+    error_message = "imports.ske, .git, .dns and .ingress need imports.project, because they live in that project."
+  }
+
+  validation {
+    condition     = var.imports == null || var.imports.ingress == null || var.imports.ske != null
+    error_message = "imports.ingress needs imports.ske, because the ingress runs in that cluster."
+  }
+}
+
+variable "import_secrets" {
+  type        = map(map(string))
+  nullable    = false
+  default     = {}
+  sensitive   = true
+  description = "Secrets written to the platform's Secrets Manager before anything is adopted, by path, for example the existing Forgejo API token that `imports.git` needs."
+}

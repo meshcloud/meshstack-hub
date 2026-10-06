@@ -11,6 +11,7 @@ output "summary" {
     service_account_bb_uuid     = meshstack_building_block.service_account.metadata.uuid
     kubernetes_platform_bb_uuid = meshstack_building_block.kubernetes_platform.metadata.uuid
     ingress_bb_uuid             = meshstack_building_block.ingress.metadata.uuid
+    ingress_load_balancer_ip    = local.ingress_load_balancer_ip
     git_bb_uuid                 = meshstack_building_block.git.metadata.uuid
 
     container_registry_bb_uuid = meshstack_building_block.container_registry.metadata.uuid
