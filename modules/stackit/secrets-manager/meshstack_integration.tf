@@ -1,11 +1,18 @@
 variable "stackit_organization_id" {
   type        = string
-  description = "STACKIT organization ID under which target projects live."
+  default     = null
+  description = "STACKIT organization ID under which target projects live. Null creates no backplane: each building block then names a service account that federates this definition in its `STACKIT_SERVICE_ACCOUNT_EMAIL` input."
 }
 
 variable "stackit_project_id" {
   type        = string
-  description = "STACKIT project ID where the backplane service account will be created."
+  default     = null
+  description = "STACKIT project ID where the backplane service account will be created. Required with `stackit_organization_id`."
+
+  validation {
+    condition     = var.stackit_organization_id == null || var.stackit_project_id != null
+    error_message = "stackit_project_id must be set when stackit_organization_id is."
+  }
 }
 
 variable "stackit_service_account_name" {
@@ -36,6 +43,19 @@ variable "bbd_readme" {
   type        = string
   default     = null
   description = "Overrides the markdown readme shown in the marketplace before ordering."
+}
+
+variable "approval_policies" {
+  type = object({
+    building_block_creation = optional(bool, false)
+    user_input_changes      = optional(bool, false)
+    any_input_changes       = optional(bool, false)
+    manual_triggers         = optional(bool, false)
+    version_upgrade         = optional(bool, false)
+  })
+  nullable    = false
+  default     = {}
+  description = "Run triggers that need an operator's approval before a run of this definition is applied. A gate switched on in meshPanel is reset on the next apply unless it is set here."
 }
 
 variable "building_block_runner_uuid" {
@@ -75,8 +95,16 @@ output "building_block_definition" {
   }
 }
 
+locals {
+  create_backplane = var.stackit_organization_id != null
+}
+
 module "backplane" {
   source = "github.com/meshcloud/meshstack-hub//modules/stackit/secrets-manager/backplane?ref=${var.hub.git_ref}"
+
+  lifecycle {
+    enabled = local.create_backplane
+  }
 
   project_id           = var.stackit_project_id
   organization_id      = var.stackit_organization_id
@@ -101,6 +129,7 @@ resource "meshstack_building_block_definition" "this" {
     description         = coalesce(var.bbd_description, "Provisions a STACKIT Secrets Manager instance.")
     target_type         = "TENANT_LEVEL"
     run_transparency    = true
+    approval_policies   = var.approval_policies
     supported_platforms = [{ name = "STACKIT" }]
     readme = coalesce(var.bbd_readme, chomp(<<-EOT
       This building block provisions a **STACKIT Secrets Manager** instance in your STACKIT project.
@@ -162,12 +191,13 @@ resource "meshstack_building_block_definition" "this" {
       }
 
       STACKIT_SERVICE_ACCOUNT_EMAIL = {
-        display_name    = "STACKIT Service Account Email"
-        description     = "Email of the STACKIT service account the provider authenticates as via WIF."
-        type            = "STRING"
-        assignment_type = "STATIC"
-        is_environment  = true
-        argument        = jsonencode(module.backplane.service_account_email)
+        display_name           = "STACKIT Service Account Email"
+        description            = "Email of the STACKIT service account the provider authenticates as via WIF."
+        type                   = "STRING"
+        assignment_type        = local.create_backplane ? "STATIC" : "USER_INPUT"
+        is_environment         = true
+        argument               = local.create_backplane ? jsonencode(module.backplane.service_account_email) : null
+        updateable_by_consumer = !local.create_backplane
       }
 
       STACKIT_USE_OIDC = {
