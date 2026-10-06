@@ -38,9 +38,11 @@ digraph stackit_kubernetes_platform {
     BBD_H [label="📦 stackit/container-registry BBD\nregistry · base image mirror · robots" fillcolor="#ecedfb" color="#9aa2e6"]
     BBD_D [label="📦 stackit/dns BBD" fillcolor="#ecedfb" color="#9aa2e6"]
     BBD_M [label="📦 stackit/ai-llm BBD" fillcolor="#ecedfb" color="#9aa2e6"]
+    BBD_S [label="📦 stackit/secrets-manager BBD" fillcolor="#ecedfb" color="#9aa2e6"]
+    BBD_SA [label="📦 kubernetes/service-account BBD" fillcolor="#ecedfb" color="#9aa2e6"]
 
     { rank=same; PLAT -> LZ [style=invis] }
-    { rank=same; BBD_A -> BBD_K -> BBD_I -> BBD_G -> BBD_H -> BBD_D -> BBD_M [style=invis] }
+    { rank=same; BBD_S -> BBD_A -> BBD_K -> BBD_SA -> BBD_I -> BBD_G -> BBD_H -> BBD_D -> BBD_M [style=invis] }
 
     PLAT -> BBD_A [style=invis]
   }
@@ -59,8 +61,10 @@ digraph stackit_kubernetes_platform {
     HARBOR [label="🗄️ STACKIT Container Registry\nHarbor project per platform" fillcolor="#eef2f6" color="#93a7bb"]
     DNS    [label="🧭 STACKIT DNS zone\nwildcard to the load balancer" fillcolor="#eef2f6" color="#93a7bb"]
     MODEL  [label="🧠 STACKIT Model Serving\nsovereign LLM API" fillcolor="#eef2f6" color="#93a7bb"]
+    SM     [label="🔒 STACKIT Secrets Manager\nevery platform credential" fillcolor="#eef2f6" color="#93a7bb"]
+    KSA    [label="🔑 Cluster admin\nservice account" fillcolor="#eef2f6" color="#93a7bb"]
 
-    { rank=same; AGENT -> SKE -> ING -> GIT -> HARBOR -> DNS -> MODEL [style=invis] }
+    { rank=same; SM -> AGENT -> SKE -> KSA -> ING -> GIT -> HARBOR -> DNS -> MODEL [style=invis] }
   }
 
   LZBB -> PLAT [xlabel="hosts platform" style=dotted]
@@ -73,4 +77,6 @@ digraph stackit_kubernetes_platform {
   BBD_H -> HARBOR
   BBD_D -> DNS
   BBD_M -> MODEL
+  BBD_S -> SM
+  BBD_SA -> KSA
 }

@@ -12,7 +12,9 @@
 | Property | Value |
 |----------|-------|
 | **STACKIT Project** | [Open in STACKIT Portal](https://portal.stackit.cloud/projects/${stackit_project_id}) (`${stackit_project_id}`) |
+| **Secrets Manager** | [Open in STACKIT Portal](https://portal.stackit.cloud/secrets-manager/instances/${secrets_manager_instance_id}/overview?project=${stackit_project_id}) |
 | **SKE Cluster** | `${cluster_name}` — @buildingblock[${cluster_bb_uuid}] |
+| **Cluster Admin Service Account** | @buildingblock[${service_account_bb_uuid}] |
 | **Ingress & Certificates** | @buildingblock[${ingress_bb_uuid}] |
 | **meshPlatform Credentials** | @buildingblock[${kubernetes_platform_bb_uuid}] |
 | **STACKIT Git** | [${forgejo_instance_url}](${forgejo_instance_url}) — @buildingblock[${git_bb_uuid}] |
@@ -22,7 +24,7 @@
 | **AI Model Serving** | `${ai_model}` — @buildingblock[${ai_bb_uuid}] |
 | **meshStack Platform** | `${platform_identifier}` |
 
-%{ if !phase2_completed ~}
+%{ if !harbor_robot_linked ~}
 > [!WARNING]
 > ## One step left: create the Harbor robot account
 
@@ -45,18 +47,19 @@ Only the portal can create the first robot. Do this once, then update this build
    | Service account email | `${platform_service_account_email}` |
    | Service account ID | `${platform_service_account_id}` |
 
-4. **Update this building block**, putting the robot's name in the **Harbor Bootstrap Robot Name**
-   input. You do not need its password: the link you just made is what authenticates, using the
-   service account's own token. Harbor ignores the robot's secret entirely.
+4. **Update the STACKIT Kubernetes Platform building block**, putting the robot's name in the
+   **Harbor Bootstrap Robot Name** input. You do not need its password: the link you just made is
+   what authenticates, using the service account's own token. Harbor ignores the robot's secret
+   entirely.
 
 The next run mints a push and a pull robot from the bootstrap one and registers the three
 definitions. Nothing already provisioned is touched.
 %{ else ~}
 > [!TIP]
-> ## Image pull is wired up
+> ## Image push and pull are wired up
 
-The Harbor robot for `${registry_name}` is linked, so the **SKE Forgejo Connector** definition is
-registered and application pipelines can push and pull private images.
+The Harbor robot for `${registry_name}` is linked, so the three definitions application teams order
+are registered, and their pipelines push and their workloads pull private images.
 %{ endif ~}
 
 ## What application teams get
@@ -74,8 +77,8 @@ The starter kit is the one to point teams at. It orders the repository for them 
 namespaces through the **SKE Forgejo Connector**, a third definition that carries the CI/CD plumbing.
 Nobody orders the connector directly.
 
-%{ if phase2_completed ~}
+%{ if harbor_robot_linked ~}
 Application hostnames are built under `${dns_zone_name}`.
 %{ else ~}
-Neither is registered yet — both wait for the Harbor robot above.
+Neither is registered yet.
 %{ endif ~}

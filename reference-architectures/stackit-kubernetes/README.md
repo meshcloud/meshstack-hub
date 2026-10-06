@@ -9,6 +9,10 @@ cloudProviders:
 buildingBlocks:
   - path: ske/cluster
     role: Provisions the STACKIT Kubernetes Engine (SKE) cluster and mints the admin kubeconfig the rest of the platform is built on.
+  - path: stackit/secrets-manager
+    role: Creates the platform's Secrets Manager instance, which holds every credential the platform's building blocks create.
+  - path: kubernetes/service-account
+    role: Creates the cluster-admin service account whose kubeconfig the blocks working inside the cluster use.
   - path: kubernetes/ingress
     role: Installs cert-manager, the HAProxy ingress controller and the Let's Encrypt ClusterIssuer on the cluster.
   - path: kubernetes
@@ -106,8 +110,9 @@ Each application team's repository includes:
 
 - **Team-based access** managed via Forgejo organization teams, synced from meshStack
   workspace membership.
-- **Forgejo Actions secrets** — `KUBECONFIG_<STAGE>` per stage and the Harbor push
-  robot as `HARBOR_USERNAME` / `HARBOR_PASSWORD`, injected by the connector.
+- **Forgejo Actions secrets** — the Harbor push robot as `HARBOR_USERNAME` /
+  `HARBOR_PASSWORD`, read from the platform's Secrets Manager, and `KUBECONFIG_<STAGE>`
+  per stage from the connector.
 - **Forgejo Actions variables** — `HARBOR_REGISTRY` and `HARBOR_PROJECT` for the whole
   platform, `APP_NAME` from the starterkit, and `K8S_NAMESPACE_<STAGE>` and
   `APP_HOSTNAME_<STAGE>` per stage from the connector, so stage-aware deployments need
@@ -150,24 +155,18 @@ zone building block, which shows it as a code block. It holds
   **STACKIT Service Account** and **STACKIT Service Account Federation** definitions this
   architecture orders to mint its own identity and to federate its definitions into it.
 
-**No STACKIT credential crosses that boundary, and this architecture holds none.** Its own apply
-declares no `stackit` provider at all. It orders the service account definition on the hosting tenant
-it just created, granting the account `editor` and `iam.member-admin`. As a child of that, it orders
-the federation definition with the uuids of the SKE Cluster, STACKIT Git, Container Registry, DNS and
-AI Model Serving definitions it registered, in `federated_building_block_definitions`. Each of those
-building blocks is a child of the federation and names the account in its
-`STACKIT_SERVICE_ACCOUNT_EMAIL` input, so every STACKIT resource here is created by a child building
-block authenticating through workload identity federation.
+**No STACKIT credential crosses that boundary, and this architecture holds none.** It orders the
+service account definition on the hosting tenant it just created, granting the account `editor` and
+`iam.member-admin`, and federates every definition whose runs create STACKIT resources into that
+account. Each of those building blocks names the account in its `STACKIT_SERVICE_ACCOUNT_EMAIL`
+input, so every STACKIT resource here is created by a building block authenticating through
+workload identity federation. How the order is split so that this works in one apply is in
+[The Outer Layer](#the-outer-layer).
 
-The federation is a building block of its own because the service account must not depend on the
-definitions it federates. See [the building block tree](#building-block-tree) for why.
-
-The definitions the starter kit orders are federated by a second one, **Starter Kit Identity
-Federation**. Today that is the **STACKIT Git Repository** definition: its runs list the instance's
-users through the STACKIT Git API to match workspace members by email, because the Forgejo token's
-technical user is restricted and cannot see them. The definition takes that token from the STACKIT
-Git Instance block, which is a child of the first federation, so listing it there would be a cycle.
-The starter kit is registered only after this second federation.
+The definitions the starter kit orders are federated by a federation of their own, **Starter Kit
+Identity Federation**. Today that is the **STACKIT Git Repository** definition: its runs list the
+instance's users through the STACKIT Git API to match workspace members by email, because the
+Forgejo token's technical user is restricted and cannot see them.
 
 Adding a STACKIT capability to this architecture means adding its role to the landing zone's
 `stackit_assignable_roles`, its definition's uuid to `federated_building_block_definitions`, and the
@@ -177,39 +176,94 @@ federation to its building block's parents. It never means adding a credential.
 
 ![STACKIT Kubernetes building block tree](stackit-kubernetes-building-blocks.svg)
 
-Every building block below the platform names its parents in `parent_building_block_refs`, so
-meshPanel shows this tree and meshStack runs a child only after its parents:
+The tree hangs below one nested building block, **Platform Services**, which the outer layer
+orders. Every building block in it names its parents in `parent_building_block_refs`, so meshPanel
+shows this tree and meshStack runs a child only after its parents:
 
-- **Automation Identity** is the root. It creates the service account and depends on no definition
-  of this architecture.
-- **Automation Identity Federation** is its child. It needs the uuids of the five definitions whose
-  runs act as the account, so it can only be ordered after they are registered.
+- **Automation Identity Federation** is a child of the Automation Identity, across the nesting. It
+  needs the uuids of the six definitions whose runs act as the account, so it can only be ordered
+  after they are registered.
 - **Starter Kit Identity Federation** is also its child. It needs the uuid of the Git repository
-  definition, which needs the Git instance's token, so it runs after the STACKIT Git Instance.
-- The five blocks that act as the account are children of the federation. The Kubernetes meshPlatform
-  Credentials and the Ingress are also children of the cluster, because they take its kubeconfig. The
-  DNS zone is also a child of the Ingress, because it takes the load balancer IP.
+  definition, so it belongs to phase 2.
+- The six blocks that act as the account are children of the federation. The **Kubernetes
+  Platform Admin** service account is also a child of the cluster, because it takes the cluster's
+  kubeconfig. The Kubernetes meshPlatform Credentials and the Ingress are children of the service
+  account, because they take its kubeconfig. The DNS zone is also a child of the Ingress, because it
+  takes the load balancer IP.
 
-Two rules keep this tree deletable:
+Three rules keep this tree deletable:
 
 - **Delete a child's definition before its parent's.** meshStack deletes a definition's building
   blocks with it, and fails with a `fk_tbb_Parent` foreign key error if one of them is still the
-  parent of another block. So `dns_integration` depends on `ingress_integration`, and
-  `ingress_integration` on `cluster_integration`.
+  parent of another block. So the service account definition depends on the cluster definition,
+  and the platform credentials and ingress definitions on the service account definition.
+- **The Secrets Manager goes last.** Its two users and every block that writes to it take its
+  instance id, so OpenTofu deletes them before the instance.
 - **The service account depends on no definition it federates.** If it did, a parent definition
   that reads the account's email and its child definition would depend on each other, and OpenTofu
   would report a cycle. That is why the federation is a building block of its own.
+
+### Secrets
+
+No building block in the tree outputs a secret. The nested run orders the platform's Secrets
+Manager and creates a writer and a reader user in it. Each block that creates a credential gets the writer login and a
+path in its `output_to_vault` input and writes the credential there. The nested run reads what a
+definition it registers needs with the reader login, as an ephemeral value, and hands it on as a
+write-only input:
+
+| Path | Written by | Read for |
+|---|---|---|
+| `cluster/ske` | SKE Cluster | the Kubernetes Platform Admin definition |
+| `cluster/serviceaccount` | Kubernetes Platform Admin | the meshPlatform Credentials and Ingress definitions |
+| `kubernetes/platform` | Kubernetes meshPlatform Credentials | the meshStack SKE platform |
+| `git/forgejo-api-token` | STACKIT Git Instance | the Git Repository and Forgejo Connector runs |
+| `registry/push` | STACKIT Container Registry | the Git Repository runs |
+| `registry/pull` | STACKIT Container Registry | the Forgejo Connector runs |
+| `ai/model-serving` | AI Model Serving | the Forgejo Connector runs, for the `stackit-ai` secret |
+
+The Forgejo Connector definition also gets `cluster/serviceaccount` as its kubeconfig. The phase 2
+definitions get the reader login and the paths instead of the values, and each of their runs reads
+the secrets it needs. The Git Repository runs keep the push robot in their state, because the
+restapi provider has no write-only attributes. The Forgejo Connector runs keep nothing they read.
+
+An ephemeral value has no version meshStack could compare. Each block that writes a secret reports
+the secret's path and a hash of its content in its `vault_secret` output, and the nested run uses
+that hash as the version of the kubeconfigs and meshPlatform tokens it hands on. A changed secret,
+for example after the SKE credentials were rotated, therefore reaches the definitions on the next
+nested run. The Forgejo Connector gets one hash of the pull robot and the AI secret as its
+`secrets_revision`, so its runs write the Kubernetes secrets again when either changes.
+
+## The Outer Layer
+
+A platform engineer orders one building block, **STACKIT Kubernetes Platform**. Its run has no
+STACKIT identity, because the stackit provider rejects a
+service account email that is unknown while planning, so a run cannot act as an account it creates
+itself. It therefore only bootstraps, in one apply:
+
+1. the meshProject and the hosting tenant, which is the platform's STACKIT project,
+2. the **Automation Identity**, the one service account of the platform,
+3. the **Bootstrap Identity Federation**, a child of the Automation Identity that trusts only the
+   one definition this run registers, the nested **STACKIT Kubernetes Platform Services**
+   definition,
+4. one **Platform Services** building block, ordered from the nested definition with the service
+   account's email as a known input. It acts as the account from its first run and orders the tree
+   above, the platform's Secrets Manager included.
+
+The outer run waits for the nested building block and shows its summary as its own. Every input of
+the outer building block that the tree needs reaches it through the nested building block's
+inputs, so updating the outer building block is the only way to change the platform.
 
 ## Ordering It: One Order, One Update
 
 One run provisions everything:
 
-- the hosting STACKIT project (a self-hosted meshStack tenant), the platform's service account and
-  its federation,
+- the hosting STACKIT project (a self-hosted meshStack tenant), the platform's service account, its
+  federations and its Secrets Manager,
 - the **SKE Cluster**, **STACKIT Git Instance**, **Container Registry**, **DNS Zone** and **AI Model
   Serving** building block definitions, registered for this platform and federated into that
   service account,
-- the SKE cluster,
+- the SKE cluster, and the cluster-admin service account (`kubernetes/service-account`) the blocks
+  working inside it use,
 - **ingress** (`kubernetes/ingress`) — cert-manager, the HAProxy ingress controller and the Let's
   Encrypt ClusterIssuer, in a single building block,
 - the **meshStack Kubernetes integration** (`kubernetes`), which creates the replicator and metering
@@ -228,15 +282,16 @@ One run provisions everything:
 
 The one step left is the Harbor bootstrap robot, which only the STACKIT portal can create. The
 summary says how. Updating the building block with its name in **Harbor Bootstrap Robot Name**
-registers the **STACKIT Git Repository**, **SKE Forgejo Connector** and **SKE Starterkit**
-definitions, so application teams can order a repository wired to their namespaces.
+mints the push and pull robots and registers the **STACKIT Git Repository**, **SKE Forgejo
+Connector** and **SKE Starterkit** definitions, so application teams can order a repository wired
+to their namespaces.
 
 ### Where the Forgejo token comes from
 
 No human mints it. The Git building block switches on local login, creates a technical user through
 the STACKIT Git API, and exchanges that user's password for a Personal Access Token, which it
-reports as an output. This architecture reads that output and passes it to the Git Repository and
-Forgejo Connector definitions. See
+writes to the Secrets Manager at `git/forgejo-api-token`, where the Git Repository and Forgejo
+Connector runs read it. See
 `modules/stackit/git/buildingblock/README.md` for the three calls involved.
 
 ## Getting Started
@@ -259,8 +314,9 @@ is the one optional input the architecture waits for; its password is never need
 ### Approval Gates
 
 `approval_policies` sets which run triggers need an operator's approval before a run of this
-architecture is applied, and the same gates apply to the platform definitions it registers: SKE
-cluster, STACKIT Git, container registry, DNS, AI LLM, Kubernetes and ingress.
+architecture is applied, and the same gates apply to the definitions it registers for the platform:
+Secrets Manager, Platform Services, SKE cluster, Kubernetes service account, STACKIT Git, container
+registry, DNS, AI LLM, Kubernetes and ingress.
 `starterkit_approval_policies` does the same for the definitions application teams order: Git
 repository, Forgejo connector and SKE starterkit. Both default to no gate at all.
 
