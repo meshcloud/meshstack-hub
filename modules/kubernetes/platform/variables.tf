@@ -1,9 +1,3 @@
-variable "kubeconfig" {
-  type        = string
-  sensitive   = true
-  description = "Raw kubeconfig (YAML) of the target cluster, from a preceding building block so it is known at plan time."
-}
-
 variable "service_account_namespace" {
   type        = string
   nullable    = false
@@ -38,4 +32,17 @@ variable "metering_additional_rules" {
   }))
   nullable    = false
   description = "Extra RBAC rules added to the metering cluster role."
+}
+
+variable "output_to_vault" {
+  type = object({
+    address  = string
+    mount    = string
+    username = string
+    password = string
+    path     = string
+  })
+  default     = null
+  sensitive   = true
+  description = "Vault KV v2 secret this building block writes its secrets to instead of returning them as outputs: the server `address`, the engine `mount`, a userpass `username` and `password`, and the secret `path`. Null returns them as outputs."
 }

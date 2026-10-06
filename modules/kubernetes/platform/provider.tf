@@ -1,6 +1,9 @@
+locals {
+  # meshStack writes kubeconfig.yaml from a static FILE input at run time. The committed mock lets
+  # the module validate without it, and a precondition stops an apply against the mock.
+  kubeconfig_path = fileexists("${path.module}/kubeconfig.yaml") ? "${path.module}/kubeconfig.yaml" : "${path.module}/kubeconfig-mock.yaml"
+}
+
 provider "kubernetes" {
-  host                   = local.kube.host
-  cluster_ca_certificate = local.kube.cluster_ca_certificate
-  client_certificate     = local.kube.client_certificate
-  client_key             = local.kube.client_key
+  config_path = local.kubeconfig_path
 }

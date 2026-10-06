@@ -1,15 +1,3 @@
-locals {
-  kubeconfig   = yamldecode(var.kubeconfig)
-  kube_cluster = one(local.kubeconfig.clusters).cluster
-  kube_user    = one(local.kubeconfig.users).user
-  kube = {
-    host                   = local.kube_cluster.server
-    cluster_ca_certificate = base64decode(local.kube_cluster["certificate-authority-data"])
-    client_certificate     = base64decode(local.kube_user["client-certificate-data"])
-    client_key             = base64decode(local.kube_user["client-key-data"])
-  }
-}
-
 # The names below are cluster-global: `meshfed-service` and `meshfed-metering` are ClusterRoles, and
 # two of these deployed to one cluster would collide. That is fine here — each platform ordered from
 # the STACKIT Kubernetes Platform reference architecture gets a cluster of its own — and it is why
@@ -19,6 +7,13 @@ locals {
 resource "kubernetes_namespace_v1" "meshcloud" {
   metadata {
     name = var.service_account_namespace
+  }
+
+  lifecycle {
+    precondition {
+      condition     = fileexists("${path.module}/kubeconfig.yaml")
+      error_message = "kubeconfig.yaml is missing. meshStack writes it from the static FILE input of the building block definition."
+    }
   }
 }
 

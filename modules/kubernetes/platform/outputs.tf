@@ -1,12 +1,12 @@
 output "replicator_token" {
-  description = "Service account token meshStack uses to replicate namespaces onto the cluster."
-  value       = local.replicator_token
+  description = "Service account token meshStack uses to replicate namespaces onto the cluster. Empty when `output_to_vault` is set."
+  value       = local.write_to_vault ? "" : local.replicator_token
   sensitive   = true
 }
 
 output "metering_token" {
-  description = "Service account token meshStack uses to read metering data from the cluster. Empty when metering_enabled is false."
-  value       = local.metering_token
+  description = "Service account token meshStack uses to read metering data from the cluster. Empty when metering_enabled is false or `output_to_vault` is set."
+  value       = local.write_to_vault ? "" : local.metering_token
   sensitive   = true
 }
 
