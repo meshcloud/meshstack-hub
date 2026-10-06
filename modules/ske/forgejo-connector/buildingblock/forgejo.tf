@@ -1,8 +1,3 @@
-provider "forgejo" {
-  host      = data.external.env.result["FORGEJO_HOST"]
-  api_token = local.forgejo_api_token
-}
-
 locals {
   action_variables = {
     "K8S_NAMESPACE_${upper(var.stage)}" = var.namespace

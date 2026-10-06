@@ -9,17 +9,17 @@ provider "vault" {
   }
 }
 
-data "vault_kv_secret_v2" "forgejo_api_token" {
+ephemeral "vault_kv_secret_v2" "forgejo_api_token" {
   mount = var.vault_reader.mount
   name  = var.forgejo_api_token_path
 }
 
-data "vault_kv_secret_v2" "registry_pull" {
+ephemeral "vault_kv_secret_v2" "registry_pull" {
   mount = var.vault_reader.mount
   name  = var.registry_pull_path
 }
 
-data "vault_kv_secret_v2" "additional" {
+ephemeral "vault_kv_secret_v2" "additional" {
   for_each = var.additional_kubernetes_secrets
 
   mount = var.vault_reader.mount
@@ -27,6 +27,6 @@ data "vault_kv_secret_v2" "additional" {
 }
 
 locals {
-  forgejo_api_token = data.vault_kv_secret_v2.forgejo_api_token.data["forgejo_api_token"]
-  registry_pull     = data.vault_kv_secret_v2.registry_pull.data
+  forgejo_api_token = ephemeral.vault_kv_secret_v2.forgejo_api_token.data["forgejo_api_token"]
+  registry_pull     = ephemeral.vault_kv_secret_v2.registry_pull.data
 }

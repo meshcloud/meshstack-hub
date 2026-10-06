@@ -102,8 +102,9 @@ resource "kubernetes_secret" "image_pull" {
     namespace = var.namespace
   }
 
-  type = "kubernetes.io/dockerconfigjson"
-  data = {
+  type             = "kubernetes.io/dockerconfigjson"
+  data_wo_revision = var.secrets_revision
+  data_wo = {
     ".dockerconfigjson" = jsonencode({
       auths = {
         (var.harbor_host) = {
@@ -124,8 +125,9 @@ resource "kubernetes_secret" "additional" {
     namespace = var.namespace
   }
 
-  type = "Opaque"
-  data = data.vault_kv_secret_v2.additional[each.key].data
+  type             = "Opaque"
+  data_wo          = ephemeral.vault_kv_secret_v2.additional[each.key].data
+  data_wo_revision = var.secrets_revision
 }
 
 resource "kubernetes_default_service_account" "this" {

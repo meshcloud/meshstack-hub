@@ -58,6 +58,18 @@ variable "additional_kubernetes_secrets" {
   description = "Opaque Kubernetes secrets the connector creates in each tenant namespace, by name, each from the Vault KV v2 secret at the given path. Every key of that secret becomes a key of the Kubernetes secret."
 }
 
+variable "secrets_revision" {
+  type        = number
+  nullable    = false
+  default     = 1
+  description = "Revision of the Kubernetes secrets the connector fills from Vault. Increase it to push changed values to the tenant namespaces."
+
+  validation {
+    condition     = var.secrets_revision >= 1
+    error_message = "secrets_revision must be at least 1, or the kubernetes provider writes the secrets empty."
+  }
+}
+
 variable "bbd_display_name" {
   type        = string
   default     = null
@@ -283,6 +295,15 @@ resource "meshstack_building_block_definition" "this" {
         type            = "STRING"
         assignment_type = "STATIC"
         argument        = jsonencode(var.registry_pull_path)
+      }
+
+      # STRING, because meshStack takes only 32-bit numbers for an INTEGER input.
+      secrets_revision = {
+        display_name    = "Secrets Revision"
+        description     = "Revision of the Kubernetes secrets filled from Vault."
+        type            = "STRING"
+        assignment_type = "STATIC"
+        argument        = jsonencode(tostring(var.secrets_revision))
       }
 
       harbor_host = {

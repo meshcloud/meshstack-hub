@@ -65,6 +65,18 @@ variable "registry_pull_path" {
   description = "Vault KV v2 secret holding the registry pull robot under the keys `username` and `password`."
 }
 
+variable "secrets_revision" {
+  type        = number
+  nullable    = false
+  default     = 1
+  description = "Revision of the Kubernetes secrets filled from Vault. Increase it to write changed values to them."
+
+  validation {
+    condition     = var.secrets_revision >= 1
+    error_message = "secrets_revision must be at least 1, or the kubernetes provider writes the secrets empty."
+  }
+}
+
 variable "hub_git_ref" {
   type        = string
   description = "Hub git ref this building block runs from. Pins the shared modules it sources so they stay in lockstep with this module's own checkout."
