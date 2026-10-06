@@ -17,24 +17,29 @@ a provider config cannot depend on a cluster created in the same apply.
 With `output_to_vault` set, the kubeconfig is written to that Vault KV v2 secret under the key
 `kubeconfig` instead, the `kubeconfig` output is empty and the `provider_config` output is null.
 
+With `imports = {}`, the building block takes over the existing cluster named `cluster_name`
+instead of creating one. With `release_on_destroy` set, destroying the building block leaves the cluster in
+place. `release_on_destroy` cannot change once the cluster is managed.
+
 <!-- BEGIN_TF_DOCS -->
 ## Requirements
 
 | Name | Version |
 |------|---------|
-| <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.11.0 |
+| <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.12.0 |
 | <a name="requirement_stackit"></a> [stackit](#requirement\_stackit) | >= 0.83.0, < 1.0.0 |
 | <a name="requirement_vault"></a> [vault](#requirement\_vault) | >= 5.12.0, < 6.0.0 |
 
 ## Modules
 
-No modules.
+| Name | Source | Version |
+|------|--------|---------|
+| <a name="module_cluster"></a> [cluster](#module\_cluster) | ./modules/ske-cluster | n/a |
 
 ## Resources
 
 | Name | Type |
 |------|------|
-| [stackit_ske_cluster.this](https://registry.terraform.io/providers/stackitcloud/stackit/latest/docs/resources/ske_cluster) | resource |
 | [stackit_ske_kubeconfig.this](https://registry.terraform.io/providers/stackitcloud/stackit/latest/docs/resources/ske_kubeconfig) | resource |
 | [vault_kv_secret_v2.this](https://registry.terraform.io/providers/hashicorp/vault/latest/docs/resources/kv_secret_v2) | resource |
 
@@ -43,10 +48,12 @@ No modules.
 | Name | Description | Type | Default | Required |
 |------|-------------|------|---------|:--------:|
 | <a name="input_cluster_name"></a> [cluster\_name](#input\_cluster\_name) | Name of the SKE cluster. | `string` | n/a | yes |
+| <a name="input_imports"></a> [imports](#input\_imports) | Set to `{}` to take over the existing SKE cluster named `cluster_name` instead of creating one. Null creates a new cluster. | `object({})` | `null` | no |
 | <a name="input_kubernetes_version_min"></a> [kubernetes\_version\_min](#input\_kubernetes\_version\_min) | Minimum Kubernetes minor version to run. Null lets STACKIT pick the current default. | `string` | n/a | yes |
 | <a name="input_maintenance"></a> [maintenance](#input\_maintenance) | SKE maintenance window. | <pre>object({<br/>    enable_kubernetes_version_updates    = optional(bool, true)<br/>    enable_machine_image_version_updates = optional(bool, true)<br/>    start                                = optional(string, "01:00:00Z")<br/>    end                                  = optional(string, "02:00:00Z")<br/>  })</pre> | n/a | yes |
 | <a name="input_node_pool"></a> [node\_pool](#input\_node\_pool) | Single node pool the cluster starts with. | <pre>object({<br/>    name               = optional(string, "pool-1")<br/>    machine_type       = optional(string, "g2i.2")<br/>    minimum            = optional(number, 1)<br/>    maximum            = optional(number, 3)<br/>    availability_zones = optional(list(string), ["eu01-1"])<br/>    max_surge          = optional(number, 1)<br/>  })</pre> | n/a | yes |
 | <a name="input_output_to_vault"></a> [output\_to\_vault](#input\_output\_to\_vault) | Vault KV v2 secret this building block writes its secrets to instead of returning them as outputs: the server `address`, the engine `mount`, a userpass `username` and `password`, and the secret `path`. Null returns them as outputs. | <pre>object({<br/>    address  = string<br/>    mount    = string<br/>    username = string<br/>    password = string<br/>    path     = string<br/>  })</pre> | `null` | no |
+| <a name="input_release_on_destroy"></a> [release\_on\_destroy](#input\_release\_on\_destroy) | Leave the cluster in place when this building block is destroyed. Cannot change once the cluster is managed. | `bool` | `false` | no |
 | <a name="input_stackit_project_id"></a> [stackit\_project\_id](#input\_stackit\_project\_id) | STACKIT project UUID the SKE cluster is created in. | `string` | n/a | yes |
 | <a name="input_stackit_region"></a> [stackit\_region](#input\_stackit\_region) | STACKIT region the cluster and its node pool are placed in. | `string` | n/a | yes |
 

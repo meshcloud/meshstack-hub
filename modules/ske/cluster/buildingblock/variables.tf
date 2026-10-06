@@ -64,3 +64,16 @@ variable "output_to_vault" {
   sensitive   = true
   description = "Vault KV v2 secret this building block writes its secrets to instead of returning them as outputs: the server `address`, the engine `mount`, a userpass `username` and `password`, and the secret `path`. Null returns them as outputs."
 }
+
+variable "imports" {
+  type        = object({})
+  default     = null
+  description = "Set to `{}` to take over the existing SKE cluster named `cluster_name` instead of creating one. Null creates a new cluster."
+}
+
+variable "release_on_destroy" {
+  type        = bool
+  nullable    = false
+  default     = false
+  description = "Leave the cluster in place when this building block is destroyed. Cannot change once the cluster is managed."
+}
