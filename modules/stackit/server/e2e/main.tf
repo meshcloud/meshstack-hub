@@ -50,7 +50,10 @@ resource "meshstack_building_block" "this" {
       name         = { value = jsonencode("${var.test_context.run_id}-srv") }
       machine_type = { value = jsonencode("g1.2") }
       # A minimal personal cloud-init, so the apply exercises the user_data path end to end.
-      cloud_init = { value = jsonencode("#cloud-config\nruncmd:\n  - [ sh, -c, \"echo e2e-ok > /tmp/e2e-ok\" ]\n") }
+      # Written with write_files rather than a shell redirect: the meshStack provider HTML-escapes
+      # `>`/`<`/`&` in a CODE value and then reports an inconsistent result after apply, so the test
+      # value must avoid them (the building block itself handles any cloud-init fine).
+      cloud_init = { value = jsonencode("#cloud-config\nwrite_files:\n  - path: /tmp/e2e-ok\n    content: ok\n") }
     }
   }
 }
