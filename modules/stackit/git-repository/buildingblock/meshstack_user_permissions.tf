@@ -1,13 +1,10 @@
-# restapi_object rather than forgejo_team, because the svalabs team resource requires Forgejo
-# site-admin privileges (it calls /api/v1/admin/orgs). The org-level API only needs org-owner rights.
-#
-# Only members whose email resolves to an existing Forgejo account are added to teams. Members who
-# haven't signed into the Forgejo instance yet are reported in the summary.
 data "external" "resolve_forgejo_users" {
   program = ["python3", "${path.module}/resolve_forgejo_users.py"]
 
   query = {
-    emails = join(",", [for m in var.workspace_members : m.email])
+    emails                  = join(",", [for m in var.workspace_members : m.email])
+    stackit_project_id      = var.stackit_project_id
+    stackit_git_instance_id = var.stackit_git_instance_id
   }
 }
 
@@ -37,18 +34,6 @@ locals {
     } if username != "" && !startswith(email, "error:")
   }
 
-  _unresolved_members = {
-    for email, username in local._resolved_users : email => {
-      team_type = local._member_email_team[email]
-    } if username == "" && !startswith(email, "error:")
-  }
-
-  team_members = {
-    for type in ["admins", "writers", "readers"] : type => [
-      for email, info in local._resolved_members : email if info.team_type == type
-    ]
-  }
-
   active_teams = {
     for type in ["admins", "writers", "readers"] : type => [
       for email, team_type in local._member_email_team : email if team_type == type
@@ -67,8 +52,6 @@ locals {
     readers = ["repo.code", "repo.issues", "repo.ext_issues", "repo.wiki", "repo.pulls", "repo.releases", "repo.projects", "repo.ext_wiki", "repo.actions", "repo.packages"]
   }
 
-  # The repository name is already unique within the Forgejo organization, so it disambiguates
-  # teams too — no random suffix needed.
   team_names = {
     for type in keys(local.active_teams) : type => "${var.name}-${type}"
   }
@@ -83,40 +66,40 @@ locals {
   ]...)
 }
 
-# Forgejo returns extra fields (organization, units_map, etc.) and rewrites the
-# permission value for owner teams to "none", so we must ignore server additions.
-resource "restapi_object" "team" {
-  for_each = local.active_teams
-  provider = restapi.with_returned_object
+module "teams" {
+  source    = "github.com/meshcloud/meshstack-hub//modules/stackit/git/buildingblock/forgejo-teams?ref=${var.hub_git_ref}"
+  providers = { restapi = restapi.with_returned_object }
 
-  path           = "/api/v1/orgs/${var.forgejo_organization}/teams"
-  create_path    = "/api/v1/orgs/${var.forgejo_organization}/teams"
-  destroy_path   = "/api/v1/teams/{id}"
-  read_path      = "/api/v1/teams/{id}"
-  update_path    = "/api/v1/teams/{id}"
-  create_method  = "POST"
-  update_method  = "PATCH"
-  destroy_method = "DELETE"
+  forgejo_host      = data.external.env.result["FORGEJO_HOST"]
+  forgejo_api_token = sensitive(data.external.env.result["FORGEJO_API_TOKEN"])
+  organization      = var.forgejo_organization
 
-  id_attribute            = "id"
-  ignore_server_additions = true
-
-  data = jsonencode({
-    name        = local.team_names[each.key]
-    description = "Team for workspace ${var.workspace_identifier} ${each.key}"
-    permission  = local.team_permissions[each.key]
-    units       = local.team_units[each.key]
-  })
-}
-
-locals {
-  _team_ids = {
-    for type, team in restapi_object.team : type => team.id
+  teams = {
+    for type in keys(local.active_teams) : type => {
+      name        = local.team_names[type]
+      description = "Team for workspace ${var.workspace_identifier} ${type}"
+      permission  = local.team_permissions[type]
+      units       = local.team_units[type]
+      members     = { for member in values(local.member_assignments) : member.username => member.username if member.team_type == type }
+    }
   }
 }
 
-# terraform_data + local-exec because PUT /teams/{id}/repos/{org}/{repo}
-# returns 204 No Content which restapi_object cannot handle for state tracking.
+moved {
+  from = restapi_object.team
+  to   = module.teams.restapi_object.team
+}
+
+moved {
+  from = terraform_data.team_member
+  to   = module.teams.terraform_data.member
+}
+
+locals {
+  _team_ids = module.teams.team_ids
+}
+
+# PUT answers 204 No Content, which restapi_object cannot track.
 resource "terraform_data" "team_repo" {
   for_each = local.active_teams
 
@@ -126,7 +109,6 @@ resource "terraform_data" "team_repo" {
     org       = var.forgejo_organization
   }
 
-  # Concurrent team-repo assignments for the same repo can race in Forgejo's database.
   provisioner "local-exec" {
     command = <<-EOT
       for i in 1 2 3 4 5 6; do
@@ -147,41 +129,6 @@ resource "terraform_data" "team_repo" {
       curl -s --fail-with-body -X DELETE \
         -H "Authorization: token $FORGEJO_API_TOKEN" \
         "$FORGEJO_HOST/api/v1/teams/${self.triggers_replace.team_id}/repos/${self.triggers_replace.org}/${self.triggers_replace.repo_name}" \
-        || true
-    EOT
-  }
-}
-
-# terraform_data + local-exec because PUT /teams/{id}/members/{username}
-# returns 204 No Content which restapi_object cannot handle for state tracking.
-resource "terraform_data" "team_member" {
-  for_each = local.member_assignments
-
-  triggers_replace = {
-    team_id  = local._team_ids[each.value.team_type]
-    username = each.value.username
-  }
-
-  provisioner "local-exec" {
-    command = <<-EOT
-      for i in 1 2 3 4 5 6; do
-        curl -s --fail-with-body -X PUT \
-          -H "Authorization: token $FORGEJO_API_TOKEN" \
-          "$FORGEJO_HOST/api/v1/teams/${local._team_ids[each.value.team_type]}/members/${each.value.username}" \
-          && exit 0
-        echo "Attempt $i failed, retrying in 2s..." >&2
-        sleep 2
-      done
-      exit 1
-    EOT
-  }
-
-  provisioner "local-exec" {
-    when    = destroy
-    command = <<-EOT
-      curl -s --fail-with-body -X DELETE \
-        -H "Authorization: token $FORGEJO_API_TOKEN" \
-        "$FORGEJO_HOST/api/v1/teams/${self.triggers_replace.team_id}/members/${self.triggers_replace.username}" \
         || true
     EOT
   }

@@ -17,7 +17,7 @@ support action variables at all. See the sub-module README for details.
 ## Requirements
 
 | Name | Version |
-|------|---------|
+| ---- | ------- |
 | <a name="requirement_external"></a> [external](#requirement\_external) | >= 2.3.0, < 3.0.0 |
 | <a name="requirement_forgejo"></a> [forgejo](#requirement\_forgejo) | >= 1.3.0, < 2.0.0 |
 | <a name="requirement_restapi"></a> [restapi](#requirement\_restapi) | >= 3.0.0, < 4.0.0 |
@@ -25,13 +25,13 @@ support action variables at all. See the sub-module README for details.
 ## Modules
 
 | Name | Source | Version |
-|------|--------|---------|
+| ---- | ------ | ------- |
 | <a name="module_action_variables_and_secrets"></a> [action\_variables\_and\_secrets](#module\_action\_variables\_and\_secrets) | ./action-variables-and-secrets | n/a |
 
 ## Resources
 
 | Name | Type |
-|------|------|
+| ---- | ---- |
 | [forgejo_repository.this](https://registry.terraform.io/providers/svalabs/forgejo/latest/docs/resources/repository) | resource |
 | [restapi_object.team](https://registry.terraform.io/providers/Mastercard/restapi/latest/docs/resources/object) | resource |
 | [terraform_data.team_member](https://registry.terraform.io/providers/hashicorp/terraform/latest/docs/resources/data) | resource |
@@ -43,7 +43,7 @@ support action variables at all. See the sub-module README for details.
 ## Inputs
 
 | Name | Description | Type | Default | Required |
-|------|-------------|------|---------|:--------:|
+| ---- | ----------- | ---- | ------- | :------: |
 | <a name="input_action_secrets"></a> [action\_secrets](#input\_action\_secrets) | Map of Forgejo Actions secrets to create in the repository. | `map(string)` | n/a | yes |
 | <a name="input_action_variables"></a> [action\_variables](#input\_action\_variables) | Map of Forgejo Actions variables to create in the repository. | `map(string)` | n/a | yes |
 | <a name="input_clone_addr"></a> [clone\_addr](#input\_clone\_addr) | Public Git URL cloned once into the repository. Empty or `null` creates an empty repository. | `string` | n/a | yes |
@@ -53,13 +53,15 @@ support action variables at all. See the sub-module README for details.
 | <a name="input_forgejo_organization"></a> [forgejo\_organization](#input\_forgejo\_organization) | STACKIT Git organization where the repository will be created | `string` | n/a | yes |
 | <a name="input_name"></a> [name](#input\_name) | Name of the Git repository to create | `string` | n/a | yes |
 | <a name="input_private"></a> [private](#input\_private) | Whether the repository should be private. | `bool` | n/a | yes |
+| <a name="input_stackit_git_instance_id"></a> [stackit\_git\_instance\_id](#input\_stackit\_git\_instance\_id) | STACKIT Git instance whose users are matched to workspace members by email. | `string` | n/a | yes |
+| <a name="input_stackit_project_id"></a> [stackit\_project\_id](#input\_stackit\_project\_id) | STACKIT project of the Git instance. | `string` | n/a | yes |
 | <a name="input_workspace_identifier"></a> [workspace\_identifier](#input\_workspace\_identifier) | n/a | `string` | n/a | yes |
 | <a name="input_workspace_members"></a> [workspace\_members](#input\_workspace\_members) | Workspace members used for team-based access management. | <pre>list(object({<br/>    meshIdentifier = string<br/>    username       = string<br/>    firstName      = string<br/>    lastName       = string<br/>    email          = string<br/>    euid           = string<br/>    roles          = list(string)<br/>  }))</pre> | n/a | yes |
 
 ## Outputs
 
 | Name | Description |
-|------|-------------|
+| ---- | ----------- |
 | <a name="output_repository_clone_url"></a> [repository\_clone\_url](#output\_repository\_clone\_url) | HTTPS clone URL |
 | <a name="output_repository_html_url"></a> [repository\_html\_url](#output\_repository\_html\_url) | Web URL of the repository |
 | <a name="output_repository_id"></a> [repository\_id](#output\_repository\_id) | The ID of the created repository |
