@@ -7,5 +7,9 @@ terraform {
       # 0.83 is the first release carrying the SKE cluster + kubeconfig resources this module needs.
       version = ">= 0.83.0, < 1.0.0"
     }
+    vault = {
+      source  = "hashicorp/vault"
+      version = ">= 5.12.0, < 6.0.0"
+    }
   }
 }
