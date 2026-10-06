@@ -56,8 +56,7 @@ input of a cluster-admin service account on the SKE cluster.
 | Name | Version |
 |------|---------|
 | <a name="requirement_external"></a> [external](#requirement\_external) | >= 2.3.0 |
-| <a name="requirement_forgejo"></a> [forgejo](#requirement\_forgejo) | >= 1.3.0 |
-| <a name="requirement_kubernetes"></a> [kubernetes](#requirement\_kubernetes) | >= 2.35.1 |
+| <a name="requirement_kubernetes"></a> [kubernetes](#requirement\_kubernetes) | >= 2.36.0 |
 | <a name="requirement_random"></a> [random](#requirement\_random) | >= 3.8.0 |
 | <a name="requirement_restapi"></a> [restapi](#requirement\_restapi) | >= 3.0.0 |
 | <a name="requirement_vault"></a> [vault](#requirement\_vault) | >= 5.12.0 |
@@ -83,9 +82,9 @@ input of a cluster-admin service account on the SKE cluster.
 | [random_string.suffix](https://registry.terraform.io/providers/hashicorp/random/latest/docs/resources/string) | resource |
 | [terraform_data.await_pipeline_workflow](https://registry.terraform.io/providers/hashicorp/terraform/latest/docs/resources/data) | resource |
 | [external_external.env](https://registry.terraform.io/providers/hashicorp/external/latest/docs/data-sources/external) | data source |
-| [vault_kv_secret_v2.additional](https://registry.terraform.io/providers/hashicorp/vault/latest/docs/data-sources/kv_secret_v2) | data source |
-| [vault_kv_secret_v2.forgejo_api_token](https://registry.terraform.io/providers/hashicorp/vault/latest/docs/data-sources/kv_secret_v2) | data source |
-| [vault_kv_secret_v2.registry_pull](https://registry.terraform.io/providers/hashicorp/vault/latest/docs/data-sources/kv_secret_v2) | data source |
+| [vault_kv_secret_v2.additional](https://registry.terraform.io/providers/hashicorp/vault/latest/docs/ephemeral-resources/kv_secret_v2) | ephemeral resource |
+| [vault_kv_secret_v2.forgejo_api_token](https://registry.terraform.io/providers/hashicorp/vault/latest/docs/ephemeral-resources/kv_secret_v2) | ephemeral resource |
+| [vault_kv_secret_v2.registry_pull](https://registry.terraform.io/providers/hashicorp/vault/latest/docs/ephemeral-resources/kv_secret_v2) | ephemeral resource |
 
 ## Inputs
 
@@ -100,6 +99,7 @@ input of a cluster-admin service account on the SKE cluster.
 | <a name="input_registry_pull_path"></a> [registry\_pull\_path](#input\_registry\_pull\_path) | Vault KV v2 secret holding the registry pull robot under the keys `username` and `password`. | `string` | n/a | yes |
 | <a name="input_repository_name"></a> [repository\_name](#input\_repository\_name) | Name of the Forgejo repository. | `string` | n/a | yes |
 | <a name="input_repository_owner"></a> [repository\_owner](#input\_repository\_owner) | Owner of the Forgejo repository. | `string` | n/a | yes |
+| <a name="input_secrets_revision"></a> [secrets\_revision](#input\_secrets\_revision) | Revision of the Kubernetes secrets filled from Vault. Increase it to write changed values to them. | `number` | `1` | no |
 | <a name="input_stage"></a> [stage](#input\_stage) | Deployment stage used for Forgejo workflow dispatch and action secret naming. | `string` | n/a | yes |
 | <a name="input_vault_reader"></a> [vault\_reader](#input\_vault\_reader) | Vault KV v2 login this building block reads its secrets with: the server `address`, the engine `mount` and a userpass `username` and `password`. | <pre>object({<br/>    address  = string<br/>    mount    = string<br/>    username = string<br/>    password = string<br/>  })</pre> | n/a | yes |
 
