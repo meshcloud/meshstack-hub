@@ -114,9 +114,9 @@ resource "meshstack_building_block_definition" "this" {
 
       ## 🔑 The token mints itself
 
-      A fresh instance carries no credential, so the building block makes one: it switches on local
-      login, creates a technical user through the STACKIT Git API, and exchanges that user's password
-      for a Personal Access Token. Ordering it takes one run and no manual step.
+      A fresh instance carries no credential, so the building block makes one: it creates a technical
+      user through the STACKIT Git API and exchanges that user's password for a Personal Access
+      Token. Ordering it takes one run and no manual step.
 
       The token is written to the Vault KV v2 secret given as `output_to_vault`, where building
       blocks that manage repositories, runners or organization members read it.

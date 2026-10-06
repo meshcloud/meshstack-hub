@@ -60,20 +60,6 @@ resource "random_string" "local_user_suffix" {
   upper   = false
 }
 
-resource "terraform_data" "local_login" {
-  triggers_replace = [module.instance.instance.instance_id]
-
-  provisioner "local-exec" {
-    command = "${path.module}/enable-local-login.sh"
-
-    environment = {
-      ACCESS_TOKEN = local.stackit_access_token
-      PROJECT_ID   = var.stackit_project_id
-      INSTANCE_ID  = module.instance.instance.instance_id
-    }
-  }
-}
-
 resource "random_password" "local_user" {
   length = 32
 
@@ -84,8 +70,6 @@ resource "random_password" "local_user" {
 
 resource "restapi_object" "local_user" {
   provider = restapi.stackit_git
-
-  depends_on = [terraform_data.local_login]
 
   path         = "/v1beta/projects/${var.stackit_project_id}/instances/${module.instance.instance.instance_id}/users"
   id_attribute = "username"
@@ -158,12 +142,9 @@ resource "restapi_object" "forgejo_organization" {
 
   ignore_server_additions = true
 
-  # Created over the Forgejo API as the technical user via basic auth, so that user must exist and
-  # local login must be enabled first — otherwise the create races ahead on a combined run and
-  # Forgejo answers 401 `user does not exist [name: meshstack-bot]`. Depending on the user covers the
-  # whole chain: it already depends on `terraform_data.local_login`, which depends on the instance.
-  # None of this is visible to OpenTofu otherwise, because the provider is configured from the
-  # derived URL rather than from a resource attribute.
+  # The provider is configured from the derived URL, so OpenTofu sees no dependency on the technical
+  # user it authenticates as. The organization is created after that user exists, and deleted before
+  # it, because STACKIT refuses to delete a user who is still a member of an organization.
   depends_on = [restapi_object.local_user]
 }
 
@@ -174,8 +155,6 @@ resource "restapi_object" "shared_runner" {
   lifecycle {
     enabled = length(var.shared_runner_labels) > 0 && var.imports == null
   }
-
-  depends_on = [terraform_data.local_login]
 
   path         = "/v1beta/projects/${var.stackit_project_id}/instances/${module.instance.instance.instance_id}/runner"
   read_path    = "/v1beta/projects/${var.stackit_project_id}/instances/${module.instance.instance.instance_id}/runner"
