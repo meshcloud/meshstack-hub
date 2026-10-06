@@ -88,3 +88,16 @@ variable "role_mapping" {
     error_message = "role_mapping values must be `owner`, `writer` or `reader`."
   }
 }
+
+variable "output_to_vault" {
+  type = object({
+    address  = string
+    mount    = string
+    username = string
+    password = string
+    path     = string
+  })
+  default     = null
+  sensitive   = true
+  description = "Vault KV v2 secret this building block writes its secrets to: the server `address`, the engine `mount`, a userpass `username` and `password`, and the secret `path`. Null writes none."
+}

@@ -28,8 +28,9 @@ A fresh instance carries no credential, so the building block makes one instead 
    takes HTTP Basic auth only — a caller holding an API token cannot mint another — which is exactly
    why the local user exists.
 
-The token is a module output, so the building blocks that manage repositories, runners and
-organization members take it from here. There is no token input.
+With `output_to_vault` set, the token is written to that Vault KV v2 secret under the key
+`forgejo_api_token`, where the building blocks that manage repositories, runners and organization
+members read it. There is no token input and no token output.
 
 Forgejo never returns a token's secret again, so the value is read from the `create_response` of the
 `restapi_object`, which keeps the create body in state. A read addresses the list endpoint and picks
@@ -43,17 +44,11 @@ those labels. An instance has at most one runner, and the API cannot change its 
 of labels replaces the runner. The definition defaults the labels to empty, and then no runner is
 ordered.
 
-### The token is a plain output in meshStack
+### The token is not an output
 
-`meshstack_building_block_definition` takes `sensitive` on an **input** but has no such field on an
-output. The OpenTofu output is `sensitive = true`, so it is redacted in the plan and in the run log,
-but meshStack stores and shows it as an ordinary string on this building block.
-
-Whoever can view this building block can therefore read the token. That is the platform's own
-project, not an application team's — the reference architecture orders this block into the project
-it creates for the platform, and hands the token onward as a `sensitive` **input** on the repository
-definitions, where the field does exist. Anyone publishing this definition somewhere with
-a wider audience should know the token travels in the clear on the way out.
+meshStack shows a building block's outputs in the clear to everyone who can view the block, even
+an output OpenTofu marks `sensitive`. The token therefore goes to the Vault KV v2 secret only, and
+consumers receive it as a `sensitive` input, which meshStack does protect.
 
 ### Verified against a live instance
 
@@ -98,6 +93,7 @@ rejects one.
 | <a name="requirement_random"></a> [random](#requirement\_random) | >= 3.5.0, < 4.0.0 |
 | <a name="requirement_restapi"></a> [restapi](#requirement\_restapi) | >= 3.0.0, < 4.0.0 |
 | <a name="requirement_stackit"></a> [stackit](#requirement\_stackit) | >= 0.83.0, < 1.0.0 |
+| <a name="requirement_vault"></a> [vault](#requirement\_vault) | >= 5.12.0, < 6.0.0 |
 
 ## Modules
 
@@ -116,6 +112,7 @@ rejects one.
 | [restapi_object.shared_runner](https://registry.terraform.io/providers/Mastercard/restapi/latest/docs/resources/object) | resource |
 | [stackit_git.this](https://registry.terraform.io/providers/stackitcloud/stackit/latest/docs/resources/git) | resource |
 | [terraform_data.local_login](https://registry.terraform.io/providers/hashicorp/terraform/latest/docs/resources/data) | resource |
+| [vault_kv_secret_v2.this](https://registry.terraform.io/providers/hashicorp/vault/latest/docs/resources/kv_secret_v2) | resource |
 | [external_external.instance_users](https://registry.terraform.io/providers/hashicorp/external/latest/docs/data-sources/external) | data source |
 | [external_external.stackit_access_token](https://registry.terraform.io/providers/hashicorp/external/latest/docs/data-sources/external) | data source |
 
@@ -129,6 +126,7 @@ rejects one.
 | <a name="input_local_user_token_name"></a> [local\_user\_token\_name](#input\_local\_user\_token\_name) | Name of the Personal Access Token the module mints. | `string` | n/a | yes |
 | <a name="input_local_user_token_scopes"></a> [local\_user\_token\_scopes](#input\_local\_user\_token\_scopes) | Forgejo scopes of the minted token. | `list(string)` | n/a | yes |
 | <a name="input_local_user_username"></a> [local\_user\_username](#input\_local\_user\_username) | Username of the technical user the module mints its token on. | `string` | n/a | yes |
+| <a name="input_output_to_vault"></a> [output\_to\_vault](#input\_output\_to\_vault) | Vault KV v2 secret this building block writes its secrets to: the server `address`, the engine `mount`, a userpass `username` and `password`, and the secret `path`. Null writes none. | <pre>object({<br/>    address  = string<br/>    mount    = string<br/>    username = string<br/>    password = string<br/>    path     = string<br/>  })</pre> | `null` | no |
 | <a name="input_role_mapping"></a> [role\_mapping](#input\_role\_mapping) | Maps meshStack roles from `users[*].roles` to Forgejo organization roles: `owner`, `writer` or `reader`. The highest one wins; unknown meshStack roles are ignored. | `map(list(string))` | n/a | yes |
 | <a name="input_shared_runner_labels"></a> [shared\_runner\_labels](#input\_shared\_runner\_labels) | Labels of the STACKIT-hosted shared runner to order. Leave empty to order none. | `list(string)` | n/a | yes |
 | <a name="input_stackit_project_id"></a> [stackit\_project\_id](#input\_stackit\_project\_id) | STACKIT project the Git instance is created in. | `string` | n/a | yes |
@@ -139,7 +137,6 @@ rejects one.
 
 | Name | Description |
 | ---- | ----------- |
-| <a name="output_forgejo_api_token"></a> [forgejo\_api\_token](#output\_forgejo\_api\_token) | Personal Access Token for this instance, for building blocks that manage repositories, runners or organization members. |
 | <a name="output_forgejo_organization"></a> [forgejo\_organization](#output\_forgejo\_organization) | Name of the Forgejo organization for this instance. Empty when none was asked for. |
 | <a name="output_instance_id"></a> [instance\_id](#output\_instance\_id) | STACKIT Git instance id. |
 | <a name="output_instance_name"></a> [instance\_name](#output\_instance\_name) | Name of the STACKIT Git instance. |

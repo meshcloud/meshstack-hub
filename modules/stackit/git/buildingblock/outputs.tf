@@ -28,12 +28,6 @@ output "forgejo_organization" {
   value = coalesce(var.forgejo_organization, "")
 }
 
-output "forgejo_api_token" {
-  description = "Personal Access Token for this instance, for building blocks that manage repositories, runners or organization members."
-  value       = local.forgejo_api_token
-  sensitive   = true
-}
-
 output "local_user_username" {
   description = "Username of the technical user the token belongs to."
   value       = var.local_user_username
