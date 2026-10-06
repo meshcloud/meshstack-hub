@@ -15,12 +15,12 @@
 | **Secrets Manager** | [Open in STACKIT Portal](https://portal.stackit.cloud/secrets-manager/instances/${secrets_manager_instance_id}/overview?project=${stackit_project_id}) |
 | **SKE Cluster** | `${cluster_name}` — @buildingblock[${cluster_bb_uuid}] |
 | **Cluster Admin Service Account** | @buildingblock[${service_account_bb_uuid}] |
-| **Ingress & Certificates** | @buildingblock[${ingress_bb_uuid}] |
+| **Ingress & Certificates** | `${ingress_load_balancer_ip}`%{ if ingress_bb_uuid != "" } — @buildingblock[${ingress_bb_uuid}]%{ endif } |
 | **meshPlatform Credentials** | @buildingblock[${kubernetes_platform_bb_uuid}] |
 | **STACKIT Git** | [${forgejo_instance_url}](${forgejo_instance_url}) — @buildingblock[${git_bb_uuid}] |
 | **Forgejo Organization** | [`${forgejo_organization}`](${forgejo_instance_url}/${forgejo_organization}) |
 | **Container Registry** | [${registry_host}/${registry_name}](${registry_url}) — @buildingblock[${container_registry_bb_uuid}] |
-| **DNS Zone** | `${dns_zone_name}` — @buildingblock[${dns_bb_uuid}] |
+| **DNS Zone** | `${dns_zone_name}`%{ if dns_bb_uuid != "" } — @buildingblock[${dns_bb_uuid}]%{ endif } |
 | **AI Model Serving** | `${ai_model}` — @buildingblock[${ai_bb_uuid}] |
 | **meshStack Platform** | `${platform_identifier}` |
 

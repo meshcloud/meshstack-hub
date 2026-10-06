@@ -10,7 +10,8 @@ output "summary" {
     cluster_bb_uuid             = meshstack_building_block.cluster.metadata.uuid
     service_account_bb_uuid     = meshstack_building_block.service_account.metadata.uuid
     kubernetes_platform_bb_uuid = meshstack_building_block.kubernetes_platform.metadata.uuid
-    ingress_bb_uuid             = meshstack_building_block.ingress.metadata.uuid
+    ingress_bb_uuid             = var.existing == null ? meshstack_building_block.ingress.metadata.uuid : ""
+    ingress_load_balancer_ip    = local.ingress_load_balancer_ip
     git_bb_uuid                 = meshstack_building_block.git.metadata.uuid
 
     container_registry_bb_uuid = meshstack_building_block.container_registry.metadata.uuid
@@ -24,7 +25,7 @@ output "summary" {
 
     stage_names                    = join(", ", [for stage in sort(keys(var.stages)) : "**${stage}**"])
     dns_zone_name                  = local.dns_zone_name
-    dns_bb_uuid                    = meshstack_building_block.dns.metadata.uuid
+    dns_bb_uuid                    = var.existing == null ? meshstack_building_block.dns.metadata.uuid : ""
     ai_bb_uuid                     = meshstack_building_block.ai_llm.metadata.uuid
     ai_model                       = var.ai_model
     harbor_robot_linked            = local.harbor_robot_linked

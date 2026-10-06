@@ -383,6 +383,32 @@ resource "meshstack_building_block_definition" "this" {
         argument        = jsonencode(jsonencode(var.starterkit_approval_policies))
       }
 
+      imports = {
+        display_name    = "Imports"
+        description     = "HCL object of what to take over: `project = {display_name?}` (Project Identifier), `ske = {}` (Cluster Name), `git = {instance_id, instance_name, forgejo_organization, existing_forgejo_api_token_path}`. `ske` and `git` need `project`. `?` marks optional."
+        type            = "CODE"
+        assignment_type = "USER_INPUT"
+        is_optional     = true
+      }
+
+      existing = {
+        display_name    = "Existing Ingress and DNS Zone"
+        description     = "HCL object `{ingress_load_balancer_ip, dns = {zone_name}}` of an ingress and a DNS zone, with a wildcard record to it, that the platform uses instead of creating its own. It does not manage them."
+        type            = "CODE"
+        assignment_type = "USER_INPUT"
+        is_optional     = true
+      }
+
+      import_secrets = {
+        display_name           = "Import Secrets"
+        description            = "HCL map of secrets to write to the platform's Secrets Manager, by path, each a map of keys to values. Use it to hand over the existing Forgejo API token that `imports.git` needs. Leave empty to write none."
+        type                   = "CODE"
+        assignment_type        = "USER_INPUT"
+        sensitive              = {}
+        is_optional            = true
+        updateable_by_consumer = true
+      }
+
       playground_mode = {
         display_name    = "Playground Mode"
         description     = "Throwaway deployment: the identifier gets a random suffix and nothing is protected against deletion. Do not publish such a platform or its definitions to other workspaces. Set false for real use."

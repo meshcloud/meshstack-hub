@@ -288,11 +288,64 @@ to their namespaces.
 
 ### Where the Forgejo token comes from
 
-No human mints it. The Git building block switches on local login, creates a technical user through
-the STACKIT Git API, and exchanges that user's password for a Personal Access Token, which it
-writes to the Secrets Manager at `git/forgejo-api-token`, where the Git Repository and Forgejo
-Connector runs read it. See
-`modules/stackit/git/buildingblock/README.md` for the three calls involved.
+No human mints it. The Git building block creates a technical user through the STACKIT Git API
+and exchanges that user's password for a Personal Access Token, which it writes to the Secrets
+Manager at `git/forgejo-api-token`, where the Git Repository and Forgejo Connector runs read it. See
+`modules/stackit/git/buildingblock/README.md` for the two calls involved.
+
+## Adopting Existing Resources
+
+The optional **Imports** input lets the platform take over resources that already exist, for
+example a platform built before this architecture, instead of creating them:
+
+| Key | Takes over | Taken over by |
+|---|---|---|
+| `project = {display_name}` | the meshProject **Project Identifier** and its tenant on the landing zone platform; with the optional `display_name`, the project keeps that display name | the outer run |
+| `ske = {}` | the SKE cluster **Cluster Name** in that tenant's STACKIT project | the SKE Cluster building block |
+| `git = {instance_id, instance_name, forgejo_organization, existing_forgejo_api_token_path}` | the STACKIT Git instance in that project and its Forgejo organization | the STACKIT Git Instance building block |
+
+`ske` and `git` need `project`, because the cluster and the instance live in its STACKIT project.
+Everything else is created new, also when it is adopted: the service account and its federations,
+the Secrets Manager, the kubeconfig, the DNS zone, the ingress and the meshStack platform. The Git
+building block creates its own technical user with a random suffix, because the instance's existing
+user has a password it does not know, and it orders no shared runner, because STACKIT allows one
+per instance.
+
+To take over the organization, the Git building block needs a token of one of its owners: it makes
+its own technical user an owner with it, and removes that user again on deletion. It reads the token
+from `existing_forgejo_api_token_path` in the platform's Secrets Manager, under the key
+`forgejo_api_token`. The Secrets Manager is created by the platform, so hand the token over in the
+sensitive **Import Secrets** input, a map of Secrets Manager paths to secrets, which the nested run
+writes before it orders the Git building block:
+
+```hcl
+{
+  "imports/git/forgejo-api-token" = { forgejo_api_token = "<token>" }
+}
+```
+
+The organization keeps its settings and is never deleted. Its new `writers` and `readers` teams carry
+the technical user's suffix, because the organization may already have teams of these names.
+
+What happens on deletion depends on **Playground Mode**:
+
+- **Playground**: deleting the platform leaves what it took over in place, and only drops it from
+  the state.
+- **Production**: the platform manages what it took over, so deleting the platform deletes it.
+
+An adopted resource gets the settings this architecture gives it, so the first run may change it.
+To review that run before it applies, switch on the `building_block_creation` and
+`any_input_changes` gates in `approval_policies` for the adoption, and switch them off afterwards.
+
+The ingress installs cluster-wide objects (cert-manager CRDs, the IngressClass, the ClusterIssuer).
+An adopted cluster that already runs an ingress from another building block collides with it. Use
+that ingress instead through the optional **Existing Ingress and DNS Zone** input,
+`{ingress_load_balancer_ip, dns = {zone_name}}`: the platform then orders neither an
+ingress nor a DNS zone, and builds application hostnames under the given zone, whose wildcard record
+must already point at the load balancer. Unlike **Imports**, it takes over nothing: deleting the
+platform leaves the ingress and the zone alone. Nothing passes the IngressClass and ClusterIssuer
+names on to applications, so the existing ingress should serve the ones the platform's own would:
+`haproxy` and `letsencrypt-prod`.
 
 ## Getting Started
 

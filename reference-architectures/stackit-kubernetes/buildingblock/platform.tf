@@ -42,9 +42,9 @@ resource "meshstack_building_block" "platform" {
     parent_building_block_refs            = [meshstack_building_block.bootstrap_federation.ref]
     building_block_definition_version_ref = module.platform_integration.building_block_definition.version_ref
     display_name                          = "Platform Services"
-    target_ref                            = meshstack_tenant.stackit_project.ref
+    target_ref                            = module.tenant.tenant.ref
 
-    inputs = {
+    inputs = merge({
       STACKIT_SERVICE_ACCOUNT_EMAIL = { value = jsonencode(local.platform_service_account_email) }
       automation_identity = { value = jsonencode(jsonencode({
         building_block_ref    = meshstack_building_block.platform_service_account.ref
@@ -73,6 +73,17 @@ resource "meshstack_building_block" "platform" {
         project_owner_tag_key = var.tags.project_owner_tag_key
       })) }
       stages = { value = jsonencode(jsonencode(var.stages)) }
-    }
+      }, local.imports.ske == null && local.imports.git == null ? {} : {
+      imports = { value = jsonencode(jsonencode({ ske = local.imports.ske, git = local.imports.git })) }
+      }, var.existing == null ? {} : {
+      existing = { value = jsonencode(jsonencode(var.existing)) }
+      }, nonsensitive(length(var.import_secrets)) == 0 ? {} : {
+      import_secrets = {
+        sensitive = {
+          secret_value   = jsonencode(var.import_secrets)
+          secret_version = nonsensitive(sha256(jsonencode(var.import_secrets)))
+        }
+      }
+    })
   }
 }

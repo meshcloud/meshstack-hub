@@ -16,7 +16,7 @@ resource "meshstack_building_block" "platform_service_account" {
   spec = {
     building_block_definition_version_ref = var.landingzone.service_account_bbd_version_ref
     display_name                          = "Automation Identity"
-    target_ref                            = meshstack_tenant.stackit_project.ref
+    target_ref                            = module.tenant.tenant.ref
 
     inputs = {
       service_account_name = { value = jsonencode(local.platform_service_account_name) }
@@ -49,7 +49,7 @@ resource "meshstack_building_block" "bootstrap_federation" {
     parent_building_block_refs            = [meshstack_building_block.platform_service_account.ref]
     building_block_definition_version_ref = var.landingzone.service_account_federation_bbd_version_ref
     display_name                          = "Bootstrap Identity Federation"
-    target_ref                            = meshstack_tenant.stackit_project.ref
+    target_ref                            = module.tenant.tenant.ref
 
     inputs = {
       service_account_email = { value = jsonencode(local.platform_service_account_email) }

@@ -12,7 +12,7 @@ locals {
   forgejo_instance_id  = jsondecode(meshstack_building_block.git.status.outputs["instance_id"].value)
   forgejo_organization = jsondecode(meshstack_building_block.git.status.outputs["forgejo_organization"].value)
 
-  dns_zone_name = "${var.dns_subdomain}.${var.dns_parent_domain}"
+  dns_zone_name = var.existing != null ? var.existing.dns.zone_name : "${var.dns_subdomain}.${var.dns_parent_domain}"
 
   ai_llm_vault_secret             = jsondecode(jsondecode(meshstack_building_block.ai_llm.status.outputs["vault_secret"].value))
   container_registry_vault_secret = jsondecode(jsondecode(meshstack_building_block.container_registry.status.outputs["vault_secret"].value))

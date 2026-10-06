@@ -44,6 +44,40 @@ variable "playground_mode" {
   description = "Whether the ordering STACKIT Kubernetes Platform is a throwaway deployment."
 }
 
+variable "imports" {
+  type = object({
+    ske = optional(object({}))
+    git = optional(object({
+      instance_id                     = string
+      instance_name                   = string
+      forgejo_organization            = string
+      existing_forgejo_api_token_path = string
+    }))
+  })
+  nullable    = false
+  default     = {}
+  description = "Existing SKE cluster `cluster_name`, and STACKIT Git instance with its Forgejo organization, in the platform's STACKIT project that the cluster and Git building blocks take over instead of creating them. In playground mode, deleting those building blocks leaves them in place."
+}
+
+variable "existing" {
+  type = object({
+    ingress_load_balancer_ip = string
+    dns = object({
+      zone_name = string
+    })
+  })
+  default     = null
+  description = "Ingress and DNS zone this run uses instead of ordering its own, without managing them. The zone's wildcard record already points at the ingress load balancer."
+}
+
+variable "import_secrets" {
+  type        = map(map(string))
+  nullable    = false
+  default     = {}
+  sensitive   = true
+  description = "Secrets this run writes to the platform's Secrets Manager, by path, before it orders the blocks that read them."
+}
+
 variable "use_global_location" {
   type        = bool
   nullable    = false

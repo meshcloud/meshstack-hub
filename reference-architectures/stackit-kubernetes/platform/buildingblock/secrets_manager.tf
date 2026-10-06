@@ -49,3 +49,14 @@ resource "stackit_secretsmanager_user" "reader" {
   description   = "${var.platform_identifier} reader"
   write_enabled = false
 }
+
+resource "vault_kv_secret_v2" "import" {
+  provider = vault.writer
+  for_each = nonsensitive(toset(keys(var.import_secrets)))
+
+  mount        = local.secrets_manager_instance_id
+  name         = each.key
+  data_json_wo = jsonencode(var.import_secrets[each.key])
+  # The version must be a number, so the first 48 bits of the hash stand in for it.
+  data_json_wo_version = parseint(substr(nonsensitive(sha256(jsonencode(var.import_secrets[each.key]))), 0, 12), 16)
+}

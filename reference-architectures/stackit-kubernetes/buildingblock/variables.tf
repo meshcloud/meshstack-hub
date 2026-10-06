@@ -214,3 +214,44 @@ variable "hub" {
   `bbd_draft`: Forwarded to the nested integrations' `hub.bbd_draft`.
   EOT
 }
+
+variable "imports" {
+  type = object({
+    project = optional(object({
+      display_name = optional(string)
+    }))
+    ske = optional(object({}))
+    git = optional(object({
+      instance_id                     = string
+      instance_name                   = string
+      forgejo_organization            = string
+      existing_forgejo_api_token_path = string
+    }))
+  })
+  default     = null
+  description = "Existing resources the platform takes over instead of creating them: the meshProject `project_identifier` and its tenant on the landing zone platform (`project`, optionally keeping its `display_name`), the SKE cluster `cluster_name` (`ske`), and the STACKIT Git instance with its Forgejo organization (`git`) in that tenant's STACKIT project. `git.existing_forgejo_api_token_path` names a secret in the platform's Secrets Manager, usually one written through `import_secrets`, whose key `forgejo_api_token` holds a token of an owner of the organization. Null creates everything new."
+
+  validation {
+    condition     = var.imports == null || ((var.imports.ske == null && var.imports.git == null) || var.imports.project != null)
+    error_message = "imports.ske and imports.git need imports.project, because the cluster and the Git instance live in that project."
+  }
+}
+
+variable "existing" {
+  type = object({
+    ingress_load_balancer_ip = string
+    dns = object({
+      zone_name = string
+    })
+  })
+  default     = null
+  description = "Ingress and DNS zone the platform uses instead of creating its own, and does not manage: the ingress's load balancer IP, and the zone whose wildcard record already points at it. Unlike `imports`, nothing here is taken over. Null creates both."
+}
+
+variable "import_secrets" {
+  type        = map(map(string))
+  nullable    = false
+  default     = {}
+  sensitive   = true
+  description = "Secrets written to the platform's Secrets Manager before anything is adopted, by path, for example the existing Forgejo API token that `imports.git` needs."
+}

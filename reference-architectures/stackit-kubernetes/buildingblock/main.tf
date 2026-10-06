@@ -16,6 +16,15 @@ locals {
 
   project_identifier = coalesce(var.project_identifier, "${local.platform_identifier}-ske")
 
+  project_display_name = coalesce(
+    local.imports.project == null ? null : local.imports.project.display_name,
+    "STACKIT Kubernetes Platform: ${local.platform_identifier}"
+  )
+
+  # Deleting a playground leaves what it adopted in place. A production platform deletes it like
+  # anything it created.
+  release_imports_on_destroy = var.playground_mode && local.imports.project != null
+
   owner_tags = var.tags.project_owner_tag_key == "" ? {} : { (var.tags.project_owner_tag_key) = [var.creator.displayName] }
 
   platform_admins = toset([
@@ -23,7 +32,7 @@ locals {
     if contains(member.roles, "Workspace Owner") || contains(member.roles, "Workspace Manager")
   ])
 
-  stackit_project_id = meshstack_tenant.stackit_project.spec.platform_tenant_id
+  stackit_project_id = module.tenant.tenant.spec.platform_tenant_id
 }
 
 resource "random_string" "playground_suffix" {
@@ -36,17 +45,26 @@ resource "random_string" "playground_suffix" {
   upper   = false
 }
 
-resource "meshstack_project" "platform" {
+module "project" {
+  source = "./modules/project"
+
+  release_on_destroy = local.release_imports_on_destroy
+
   metadata = {
     name               = local.project_identifier
     owned_by_workspace = var.workspace
   }
 
   spec = {
-    display_name              = "STACKIT Kubernetes Platform: ${local.platform_identifier}"
+    display_name              = local.project_display_name
     payment_method_identifier = var.payment_method_identifier
     tags                      = merge(var.tags.project, local.owner_tags)
   }
+}
+
+moved {
+  from = meshstack_project.platform
+  to   = module.project.meshstack_project.this
 }
 
 # Without these the platform's own project has no human members, and everything the architecture
@@ -77,7 +95,7 @@ resource "meshstack_project_user_binding" "admin" {
 
   target_ref = {
     owned_by_workspace = var.workspace
-    name               = meshstack_project.platform.metadata.name
+    name               = module.project.project.metadata.name
   }
 
   subject = {
@@ -87,22 +105,29 @@ resource "meshstack_project_user_binding" "admin" {
 
 # Provisions the STACKIT project through the landing zone platform's replication. wait_for_completion makes
 # the run block until the project exists, so spec.platform_tenant_id (the STACKIT project id) is set.
-resource "meshstack_tenant" "stackit_project" {
+module "tenant" {
+  source = "./modules/tenant"
+
+  release_on_destroy = local.release_imports_on_destroy
+
+  # Destroying this tenant deletes the STACKIT project the whole platform runs in. Guard a real
+  # deployment against an accidental replacement; a playground stays destroyable.
+  prevent_destroy = !var.playground_mode
+
   wait_for_completion = true
 
   metadata = {
     owned_by_workspace = var.workspace
-    owned_by_project   = meshstack_project.platform.metadata.name
+    owned_by_project   = module.project.project.metadata.name
   }
 
   spec = {
     platform_ref     = var.landingzone.platform_ref
     landing_zone_ref = var.landingzone.landingzone_refs[var.landingzone_variant]
   }
+}
 
-  # Destroying this tenant deletes the STACKIT project the whole platform runs in. Guard a real
-  # deployment against an accidental replacement; a playground stays destroyable.
-  lifecycle {
-    prevent_destroy = !var.playground_mode
-  }
+moved {
+  from = meshstack_tenant.stackit_project
+  to   = module.tenant.meshstack_tenant.this
 }

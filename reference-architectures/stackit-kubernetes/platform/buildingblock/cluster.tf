@@ -23,7 +23,7 @@ resource "meshstack_building_block" "cluster" {
     display_name                          = "SKE Cluster"
     target_ref                            = local.tenant_ref
 
-    inputs = {
+    inputs = merge({
       cluster_name                  = { value = jsonencode(var.cluster_name) }
       STACKIT_SERVICE_ACCOUNT_EMAIL = { value = jsonencode(local.service_account_email) }
       output_to_vault = {
@@ -32,7 +32,10 @@ resource "meshstack_building_block" "cluster" {
           secret_version = nonsensitive(sha256(local.output_to_vault.cluster_kubeconfig))
         }
       }
-    }
+      }, var.imports.ske == null ? {} : {
+      imports            = { value = jsonencode(jsonencode(var.imports.ske)) }
+      release_on_destroy = { value = jsonencode(var.playground_mode) }
+    })
   }
 }
 
@@ -189,6 +192,10 @@ ephemeral "vault_kv_secret_v2" "kubernetes_platform" {
 module "ingress_integration" {
   source = "github.com/meshcloud/meshstack-hub//modules/kubernetes/ingress?ref=${var.hub.git_ref}"
 
+  lifecycle {
+    enabled = var.existing == null
+  }
+
   depends_on = [module.service_account_integration]
 
   kubeconfig         = ephemeral.vault_kv_secret_v2.service_account_kubeconfig.data.kubeconfig
@@ -205,6 +212,8 @@ resource "meshstack_building_block" "ingress" {
   wait_for_completion = true
 
   lifecycle {
+    enabled = var.existing == null
+
     postcondition {
       condition     = self.status.status == "SUCCEEDED"
       error_message = "Building block ${self.metadata.uuid} is ${self.status.status}, not SUCCEEDED. See its run in meshPanel."
@@ -219,4 +228,8 @@ resource "meshstack_building_block" "ingress" {
 
     inputs = {}
   }
+}
+
+locals {
+  ingress_load_balancer_ip = var.existing != null ? var.existing.ingress_load_balancer_ip : jsondecode(meshstack_building_block.ingress.status.outputs["haproxy_lb_ip"].value)
 }

@@ -86,14 +86,13 @@ resource "meshstack_building_block" "platform_federation" {
     inputs = {
       service_account_email = { value = jsonencode(local.service_account_email) }
       federated_building_block_definitions = {
-        value = jsonencode(jsonencode([
+        value = jsonencode(jsonencode(concat([
           module.cluster_integration.building_block_definition.uuid,
           module.git_integration.building_block_definition.uuid,
           module.container_registry_integration.building_block_definition.uuid,
-          module.dns_integration.building_block_definition.uuid,
           module.ai_llm_integration.building_block_definition.uuid,
           module.secrets_manager_integration.building_block_definition.uuid,
-        ]))
+        ], var.existing == null ? [module.dns_integration.building_block_definition.uuid] : [])))
       }
     }
   }

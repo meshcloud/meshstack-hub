@@ -218,6 +218,32 @@ resource "meshstack_building_block_definition" "this" {
         updateable_by_consumer = true
       }
 
+      imports = {
+        display_name    = "Imports"
+        description     = "HCL object `{ske = {}, git = {instance_id, instance_name, forgejo_organization, existing_forgejo_api_token_path}}` the cluster and Git building blocks take over; `ske = {}` takes over the cluster Cluster Name. Both keys are optional."
+        type            = "CODE"
+        assignment_type = "USER_INPUT"
+        is_optional     = true
+      }
+
+      existing = {
+        display_name    = "Existing"
+        description     = "HCL object `{ingress_load_balancer_ip, dns = {zone_name}}` of an ingress and a DNS zone this run uses instead of ordering its own, without managing them."
+        type            = "CODE"
+        assignment_type = "USER_INPUT"
+        is_optional     = true
+      }
+
+      import_secrets = {
+        display_name           = "Import Secrets"
+        description            = "HCL map of secrets this run writes to the platform's Secrets Manager, by path, each a map of keys to values."
+        type                   = "CODE"
+        assignment_type        = "USER_INPUT"
+        sensitive              = {}
+        is_optional            = true
+        updateable_by_consumer = true
+      }
+
       use_global_location = {
         display_name           = "Use Global Location"
         description            = "Use the global meshStack location instead of creating a dedicated one for the platform."
