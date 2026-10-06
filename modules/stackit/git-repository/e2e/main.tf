@@ -15,13 +15,6 @@ variable "test_context" {
   }
 }
 
-# Secrets never travel in `test_context`. They arrive as TF_VAR_*, which only the root module sees.
-variable "stackit_git_forgejo_api_token" {
-  type      = string
-  sensitive = true
-  default   = null
-}
-
 locals {
   # `try` because `test_context` is untyped, so a hub run need not set `mode` at all.
   mode = try(var.test_context.mode, "hub")
@@ -31,14 +24,10 @@ module "definition" {
   source = "./modes/${local.mode}"
 
   test_context = var.test_context
-
-  backplane_secrets = {
-    stackit_git_forgejo_api_token = var.stackit_git_forgejo_api_token
-  }
 }
 
 resource "meshstack_building_block" "this" {
-  # Also orders teardown: the delete run still reads the secrets the hub mode writes.
+  # Also orders teardown: the delete run still reads secrets with the user the hub mode creates.
   depends_on = [module.definition]
 
   wait_for_completion = true

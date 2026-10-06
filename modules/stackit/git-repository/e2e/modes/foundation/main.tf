@@ -13,12 +13,6 @@ variable "test_context" {
   nullable = false
 }
 
-# Unused here: the root pipes one uniform surface to both modes.
-variable "backplane_secrets" {
-  type      = any
-  sensitive = true
-}
-
 data "meshstack_building_block_definitions" "published" {
   workspace_identifier = coalesce(var.test_context.definition_workspace, var.test_context.workspace)
 }

@@ -25,3 +25,15 @@ provider "vault" {
     password = stackit_secretsmanager_user.writer.password
   }
 }
+
+provider "vault" {
+  alias = "reader"
+
+  address          = local.secrets_manager_address
+  skip_child_token = true
+
+  auth_login_userpass {
+    username = stackit_secretsmanager_user.reader.username
+    password = stackit_secretsmanager_user.reader.password
+  }
+}
