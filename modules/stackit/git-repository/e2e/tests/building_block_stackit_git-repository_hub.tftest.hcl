@@ -10,7 +10,7 @@ run "building_block_stackit_git_repository_hub" {
   }
 
   assert {
-    condition     = can(regex("^${var.test_context.forgejo_base_url}/${var.test_context.forgejo_organization}/smoke-test-repo-\\d+\\.git$", jsondecode(meshstack_building_block.this.status.outputs["repository_clone_url"].value)))
+    condition     = can(regex("^${var.test_context.forgejo_base_url}/${var.test_context.forgejo_organization}/${var.test_context.run_id}-repo\\.git$", jsondecode(meshstack_building_block.this.status.outputs["repository_clone_url"].value)))
     error_message = "stackit git-repository hub building block expected repository_clone_url to match pattern, got ${jsondecode(meshstack_building_block.this.status.outputs["repository_clone_url"].value)}"
   }
 }
