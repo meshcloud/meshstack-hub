@@ -1,5 +1,7 @@
-# Configured from FORGEJO_HOST and FORGEJO_API_TOKEN.
-provider "forgejo" {}
+provider "forgejo" {
+  host      = data.external.env.result["FORGEJO_HOST"]
+  api_token = local.forgejo_api_token
+}
 
 locals {
   have_clone_addr = trimspace(var.clone_addr) != "" && var.clone_addr != "null"
@@ -35,7 +37,8 @@ module "action_variables_and_secrets" {
     restapi.without_returned_object = restapi.without_returned_object
   }
 
-  repository_id    = forgejo_repository.this.id
-  action_variables = merge(var.action_variables, var.extra_action_variables)
-  action_secrets   = var.action_secrets
+  forgejo_api_token = local.forgejo_api_token
+  repository_id     = forgejo_repository.this.id
+  action_variables  = merge(var.action_variables, var.extra_action_variables)
+  action_secrets    = local.registry_push_action_secrets
 }

@@ -46,9 +46,10 @@ module "action_secrets_and_variables" {
     restapi.without_returned_object = restapi.without_returned_object
   }
 
-  repository_id    = var.repository_id
-  action_variables = local.action_variables
-  action_secrets   = local.action_secrets
+  forgejo_api_token = data.external.env.result["FORGEJO_API_TOKEN"]
+  repository_id     = var.repository_id
+  action_variables  = local.action_variables
+  action_secrets    = local.action_secrets
 }
 
 resource "terraform_data" "await_pipeline_workflow" {

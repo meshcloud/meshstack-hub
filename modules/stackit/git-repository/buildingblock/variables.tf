@@ -67,16 +67,28 @@ variable "extra_action_variables" {
   description = "Forgejo Actions variables for this repository only, merged over `action_variables`."
 }
 
-variable "action_secrets" {
-  type        = map(string)
-  description = "Map of Forgejo Actions secrets to create in the repository."
+variable "vault_reader" {
+  type = object({
+    address  = string
+    mount    = string
+    username = string
+    password = string
+  })
   nullable    = false
-  sensitive   = false # the whole map is not sensitive, but map values are!
+  sensitive   = true
+  description = "Vault KV v2 login this building block reads its secrets with: the server `address`, the engine `mount` and a userpass `username` and `password`."
+}
 
-  validation {
-    condition     = alltrue([for key in keys(var.action_secrets) : (length(key) <= 30)])
-    error_message = "Forgejo Actions secret names must be 30 characters or less."
-  }
+variable "forgejo_api_token_path" {
+  type        = string
+  nullable    = false
+  description = "Vault KV v2 secret holding the Forgejo API token under the key `forgejo_api_token`."
+}
+
+variable "registry_push_path" {
+  type        = string
+  default     = null
+  description = "Vault KV v2 secret holding a container registry push robot under the keys `username` and `password`, set as the Actions secrets `HARBOR_USERNAME` and `HARBOR_PASSWORD`. Null sets neither."
 }
 
 variable "stackit_project_id" {

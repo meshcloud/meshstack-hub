@@ -71,7 +71,7 @@ module "teams" {
   providers = { restapi = restapi.with_returned_object }
 
   forgejo_host      = data.external.env.result["FORGEJO_HOST"]
-  forgejo_api_token = sensitive(data.external.env.result["FORGEJO_API_TOKEN"])
+  forgejo_api_token = local.forgejo_api_token
   organization      = var.forgejo_organization
 
   teams = {
@@ -109,8 +109,12 @@ resource "terraform_data" "team_repo" {
     org       = var.forgejo_organization
   }
 
+  # A destroy provisioner can only read `self`, so the token travels in `input`.
+  input = { token = local.forgejo_api_token }
+
   provisioner "local-exec" {
-    command = <<-EOT
+    environment = { FORGEJO_API_TOKEN = self.input.token }
+    command     = <<-EOT
       for i in 1 2 3 4 5 6; do
         curl -s --fail-with-body -X PUT \
           -H "Authorization: token $FORGEJO_API_TOKEN" \
@@ -124,8 +128,9 @@ resource "terraform_data" "team_repo" {
   }
 
   provisioner "local-exec" {
-    when    = destroy
-    command = <<-EOT
+    when        = destroy
+    environment = { FORGEJO_API_TOKEN = self.input.token }
+    command     = <<-EOT
       curl -s --fail-with-body -X DELETE \
         -H "Authorization: token $FORGEJO_API_TOKEN" \
         "$FORGEJO_HOST/api/v1/teams/${self.triggers_replace.team_id}/repos/${self.triggers_replace.org}/${self.triggers_replace.repo_name}" \

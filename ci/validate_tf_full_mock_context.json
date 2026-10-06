@@ -48,7 +48,8 @@
       "parent_container_id": "00000000-0000-0000-0000-000000000000",
       "platform_uuid": "00000000-0000-0000-0000-000000000000",
       "landing_zone_name": "validation-only",
-      "mesh_tenant_id": "validation-only"
+      "mesh_tenant_id": "validation-only",
+      "secrets_manager_instance_id": "00000000-0000-0000-0000-000000000000"
     },
     "github": {
       "owner": "meshcloud",

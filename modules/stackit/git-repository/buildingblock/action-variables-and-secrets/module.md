@@ -39,7 +39,8 @@ the caller:
 | `restapi.action_variable` | `true`                 | Variables can be read back after write. |
 | `restapi.action_secret`   | `false`                | Secrets cannot be read back (Forgejo returns empty). |
 
-Both providers must point at the Forgejo host with an appropriate API token.
+Both providers must point at the Forgejo host with an appropriate API token. The
+module takes the same token as `forgejo_api_token` to look up the repository.
 
 ## Usage
 
@@ -51,8 +52,9 @@ module "action_variables_and_secrets" {
     restapi.action_secret   = restapi.action_secret
   }
 
-  repository_id    = forgejo_repository.this.id
-  action_variables = var.action_variables
-  action_secrets   = var.action_secrets
+  forgejo_api_token = local.forgejo_api_token
+  repository_id     = forgejo_repository.this.id
+  action_variables  = var.action_variables
+  action_secrets    = var.action_secrets
 }
 ```

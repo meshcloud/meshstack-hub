@@ -10,7 +10,7 @@ data "external" "env" {
 
 locals {
   restapi_provider_headers = {
-    Authorization = "token ${data.external.env.result["FORGEJO_API_TOKEN"]}"
+    Authorization = "token ${local.forgejo_api_token}"
     Content-Type  = "application/json"
   }
 }

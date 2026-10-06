@@ -2,6 +2,13 @@ variable "repository_id" {
   type = number
 }
 
+variable "forgejo_api_token" {
+  type        = string
+  nullable    = false
+  sensitive   = true
+  description = "Forgejo API token the repository lookup authenticates with."
+}
+
 variable "action_variables" {
   type        = map(string)
   description = "Map of Forgejo Actions variables to create in the repository."
