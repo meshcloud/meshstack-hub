@@ -54,6 +54,8 @@ locals {
   vault_paths = {
     forgejo_api_token = "${var.test_context.run_id}/git/forgejo-api-token"
     registry_push     = "${var.test_context.run_id}/registry/push"
+    registry_pull     = "${var.test_context.run_id}/registry/pull"
+    ai                = "${var.test_context.run_id}/ai/model-serving"
   }
 }
 
@@ -83,6 +85,85 @@ resource "vault_kv_secret_v2" "registry_push" {
   name                 = local.vault_paths.registry_push
   data_json_wo         = jsonencode({ username = var.backplane_secrets.harbor_push_username, password = var.backplane_secrets.harbor_push_password })
   data_json_wo_version = 1
+}
+
+resource "vault_kv_secret_v2" "registry_pull" {
+  mount                = local.secrets_manager_instance_id
+  name                 = local.vault_paths.registry_pull
+  data_json_wo         = jsonencode({ username = var.backplane_secrets.harbor_pull_username, password = var.backplane_secrets.harbor_pull_password })
+  data_json_wo_version = 1
+}
+
+# Smoke tests don't exercise real inference. The app only needs the `stackit-ai` secret to exist so
+# its pods can start: the app chart mounts it via `envFrom`, and `helm --wait --atomic` rolls the
+# deploy back while a pod waits for a missing secret.
+resource "vault_kv_secret_v2" "ai" {
+  mount = local.secrets_manager_instance_id
+  name  = local.vault_paths.ai
+  data_json_wo = jsonencode({
+    STACKIT_AI_BASE_URL = "https://ai.invalid/v1"
+    STACKIT_AI_API_KEY  = "dummy-smoke-test"
+    STACKIT_AI_MODEL    = "dummy-model"
+  })
+  data_json_wo_version = 1
+}
+
+# The connector takes the token kubeconfig of a cluster-admin service account, as the STACKIT
+# Kubernetes reference architecture gives it.
+resource "kubernetes_service_account_v1" "connector" {
+  metadata {
+    name      = "${var.test_context.run_id}-connector"
+    namespace = "kube-system"
+  }
+}
+
+resource "kubernetes_secret_v1" "connector_token" {
+  metadata {
+    name      = "${var.test_context.run_id}-connector"
+    namespace = "kube-system"
+    annotations = {
+      "kubernetes.io/service-account.name" = kubernetes_service_account_v1.connector.metadata[0].name
+    }
+  }
+
+  type                           = "kubernetes.io/service-account-token"
+  wait_for_service_account_token = true
+}
+
+resource "kubernetes_cluster_role_binding_v1" "connector" {
+  metadata {
+    name = "${var.test_context.run_id}-connector"
+  }
+  role_ref {
+    api_group = "rbac.authorization.k8s.io"
+    kind      = "ClusterRole"
+    name      = "cluster-admin"
+  }
+  subject {
+    kind      = "ServiceAccount"
+    name      = kubernetes_service_account_v1.connector.metadata[0].name
+    namespace = "kube-system"
+  }
+}
+
+locals {
+  connector_kubeconfig = yamlencode({
+    apiVersion      = "v1"
+    kind            = "Config"
+    current-context = "connector"
+    clusters = [{
+      name    = local.ske_kubeconfig["clusters"][0]["name"]
+      cluster = local.ske_kubeconfig["clusters"][0]["cluster"]
+    }]
+    users = [{
+      name = "connector"
+      user = { token = kubernetes_secret_v1.connector_token.data["token"] }
+    }]
+    contexts = [{
+      name    = "connector"
+      context = { cluster = local.ske_kubeconfig["clusters"][0]["name"], user = "connector" }
+    }]
+  })
 }
 
 module "meshstack_kubernetes_platform" {
@@ -159,26 +240,21 @@ module "forgejo_connector" {
     bbd_draft = true
   }
 
-  kubeconfig                   = local.ske_kubeconfig
+  kubeconfig                   = local.connector_kubeconfig
   forgejo_host                 = var.test_context.forgejo_base_url
-  forgejo_api_token            = var.backplane_secrets.stackit_git_forgejo_api_token
   forgejo_repo_definition_uuid = module.stackit_git_repository.building_block_definition.uuid
-  container_registry_access_credentials = {
-    push = { user = var.backplane_secrets.harbor_push_username, password = var.backplane_secrets.harbor_push_password }
-    pull = { user = var.backplane_secrets.harbor_pull_username, password = var.backplane_secrets.harbor_pull_password }
-  }
 
-  # Smoke tests don't exercise real inference — the app only needs the `stackit-ai`
-  # secret to exist so its pods can start (the app chart mounts it via `envFrom`, so a
-  # missing secret leaves pods in CreateContainerConfigError and `helm --wait --atomic`
-  # rolls the deploy back). Static foundations (e.g. trial) inject a real STACKIT
-  # model-serving token here via their own `ai.tf`; the smoke test uses dummy values.
+  vault_reader = {
+    address  = local.secrets_manager_address
+    mount    = local.secrets_manager_instance_id
+    username = stackit_secretsmanager_user.reader.username
+    password = stackit_secretsmanager_user.reader.password
+  }
+  forgejo_api_token_path = vault_kv_secret_v2.forgejo_api_token.name
+  registry_pull_path     = vault_kv_secret_v2.registry_pull.name
+
   additional_kubernetes_secrets = {
-    "stackit-ai" = {
-      STACKIT_AI_BASE_URL = "https://ai.invalid/v1"
-      STACKIT_AI_API_KEY  = "dummy-smoke-test"
-      STACKIT_AI_MODEL    = "dummy-model"
-    }
+    "stackit-ai" = vault_kv_secret_v2.ai.name
   }
 }
 
