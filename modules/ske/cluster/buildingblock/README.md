@@ -14,6 +14,9 @@ It exists so a composing architecture can create the cluster in its own apply an
 read the kubeconfig back to configure `kubernetes`/`helm` providers and downstream building blocks —
 a provider config cannot depend on a cluster created in the same apply.
 
+With `output_to_vault` set, the kubeconfig is written to that Vault KV v2 secret under the key
+`kubeconfig` instead, the `kubeconfig` output is empty and the `provider_config` output is null.
+
 <!-- BEGIN_TF_DOCS -->
 ## Requirements
 
@@ -21,6 +24,7 @@ a provider config cannot depend on a cluster created in the same apply.
 |------|---------|
 | <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.11.0 |
 | <a name="requirement_stackit"></a> [stackit](#requirement\_stackit) | >= 0.83.0, < 1.0.0 |
+| <a name="requirement_vault"></a> [vault](#requirement\_vault) | >= 5.12.0, < 6.0.0 |
 
 ## Modules
 
@@ -32,6 +36,7 @@ No modules.
 |------|------|
 | [stackit_ske_cluster.this](https://registry.terraform.io/providers/stackitcloud/stackit/latest/docs/resources/ske_cluster) | resource |
 | [stackit_ske_kubeconfig.this](https://registry.terraform.io/providers/stackitcloud/stackit/latest/docs/resources/ske_kubeconfig) | resource |
+| [vault_kv_secret_v2.this](https://registry.terraform.io/providers/hashicorp/vault/latest/docs/resources/kv_secret_v2) | resource |
 
 ## Inputs
 
@@ -41,6 +46,7 @@ No modules.
 | <a name="input_kubernetes_version_min"></a> [kubernetes\_version\_min](#input\_kubernetes\_version\_min) | Minimum Kubernetes minor version to run. Null lets STACKIT pick the current default. | `string` | n/a | yes |
 | <a name="input_maintenance"></a> [maintenance](#input\_maintenance) | SKE maintenance window. | <pre>object({<br/>    enable_kubernetes_version_updates    = optional(bool, true)<br/>    enable_machine_image_version_updates = optional(bool, true)<br/>    start                                = optional(string, "01:00:00Z")<br/>    end                                  = optional(string, "02:00:00Z")<br/>  })</pre> | n/a | yes |
 | <a name="input_node_pool"></a> [node\_pool](#input\_node\_pool) | Single node pool the cluster starts with. | <pre>object({<br/>    name               = optional(string, "pool-1")<br/>    machine_type       = optional(string, "g2i.2")<br/>    minimum            = optional(number, 1)<br/>    maximum            = optional(number, 3)<br/>    availability_zones = optional(list(string), ["eu01-1"])<br/>    max_surge          = optional(number, 1)<br/>  })</pre> | n/a | yes |
+| <a name="input_output_to_vault"></a> [output\_to\_vault](#input\_output\_to\_vault) | Vault KV v2 secret this building block writes its secrets to instead of returning them as outputs: the server `address`, the engine `mount`, a userpass `username` and `password`, and the secret `path`. Null returns them as outputs. | <pre>object({<br/>    address  = string<br/>    mount    = string<br/>    username = string<br/>    password = string<br/>    path     = string<br/>  })</pre> | `null` | no |
 | <a name="input_stackit_project_id"></a> [stackit\_project\_id](#input\_stackit\_project\_id) | STACKIT project UUID the SKE cluster is created in. | `string` | n/a | yes |
 | <a name="input_stackit_region"></a> [stackit\_region](#input\_stackit\_region) | STACKIT region the cluster and its node pool are placed in. | `string` | n/a | yes |
 
@@ -51,6 +57,6 @@ No modules.
 | <a name="output_cluster_name"></a> [cluster\_name](#output\_cluster\_name) | Name of the SKE cluster. |
 | <a name="output_cluster_url"></a> [cluster\_url](#output\_cluster\_url) | Deep link to the STACKIT project the cluster lives in, in the STACKIT portal. |
 | <a name="output_kube_host"></a> [kube\_host](#output\_kube\_host) | Kubernetes API server URL of the cluster. |
-| <a name="output_kubeconfig"></a> [kubeconfig](#output\_kubeconfig) | Raw kubeconfig content for cluster access. |
-| <a name="output_provider_config"></a> [provider\_config](#output\_provider\_config) | Decoded kubeconfig values for wiring a kubernetes/helm provider without re-parsing the raw kubeconfig. |
+| <a name="output_kubeconfig"></a> [kubeconfig](#output\_kubeconfig) | Raw kubeconfig content for cluster access. Empty when `output_to_vault` is set. |
+| <a name="output_provider_config"></a> [provider\_config](#output\_provider\_config) | Decoded kubeconfig values for wiring a kubernetes/helm provider without re-parsing the raw kubeconfig. Null when `output_to_vault` is set. |
 <!-- END_TF_DOCS -->

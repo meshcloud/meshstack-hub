@@ -19,14 +19,14 @@ output "kube_host" {
 # to hand cluster access to downstream building blocks (e.g. the Forgejo connector). It carries
 # cluster-admin credentials, so it is sensitive; a composition passes it on rather than displaying it.
 output "kubeconfig" {
-  description = "Raw kubeconfig content for cluster access."
-  value       = stackit_ske_kubeconfig.this.kube_config
+  description = "Raw kubeconfig content for cluster access. Empty when `output_to_vault` is set."
+  value       = local.write_to_vault ? "" : stackit_ske_kubeconfig.this.kube_config
   sensitive   = true
 }
 
 output "provider_config" {
-  description = "Decoded kubeconfig values for wiring a kubernetes/helm provider without re-parsing the raw kubeconfig."
-  value = {
+  description = "Decoded kubeconfig values for wiring a kubernetes/helm provider without re-parsing the raw kubeconfig. Null when `output_to_vault` is set."
+  value = local.write_to_vault ? null : {
     host                   = local.kubeconfig_cluster.server
     cluster_ca_certificate = base64decode(local.kubeconfig_cluster["certificate-authority-data"])
     client_certificate     = base64decode(local.kubeconfig_admin_user["client-certificate-data"])
