@@ -3,6 +3,7 @@ data "external" "repository_context" {
 
   query = {
     FORGEJO_REPOSITORY_ID = tostring(var.repository_id)
+    FORGEJO_API_TOKEN     = var.forgejo_api_token
   }
 }
 

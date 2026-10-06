@@ -9,3 +9,19 @@ provider "kubernetes" {
   client_certificate     = base64decode(local.ske_kubeconfig["users"][0]["user"]["client-certificate-data"])
   client_key             = base64decode(local.ske_kubeconfig["users"][0]["user"]["client-key-data"])
 }
+
+provider "stackit" {
+  # Credentials come from the environment, WIF in CI.
+  default_region = "eu01"
+}
+
+provider "vault" {
+  address = local.secrets_manager_address
+  # A Secrets Manager user may not create the child token the provider asks for by default.
+  skip_child_token = true
+
+  auth_login_userpass {
+    username = stackit_secretsmanager_user.writer.username
+    password = stackit_secretsmanager_user.writer.password
+  }
+}

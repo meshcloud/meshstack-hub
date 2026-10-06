@@ -59,7 +59,7 @@ def main() -> None:
     query = json.loads(sys.stdin.read())
 
     forgejo_host = normalize_host(os.environ["FORGEJO_HOST"])
-    forgejo_api_token = os.environ["FORGEJO_API_TOKEN"]
+    forgejo_api_token = query["FORGEJO_API_TOKEN"]
     repository_id = query["FORGEJO_REPOSITORY_ID"]
 
     payload = get_json(f"{forgejo_host}/api/v1/repositories/{repository_id}", forgejo_api_token)
@@ -67,8 +67,6 @@ def main() -> None:
     print(
         json.dumps(
             {
-                "forgejo_host": forgejo_host,
-                "forgejo_api_token": forgejo_api_token,
                 "owner": payload["owner"]["username"],
                 "name": payload["name"],
                 "default_branch": payload.get("default_branch", "main"),
