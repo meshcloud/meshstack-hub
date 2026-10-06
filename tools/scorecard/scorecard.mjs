@@ -1297,12 +1297,8 @@ const detectors = [
       // declaring `requiresBackplane: false` in their buildingblock/README.md front-matter, which
       // makes this check not applicable rather than failing. Keeping the opt-out explicit means an
       // absent backplane still shows as a gap unless someone deliberately declared otherwise.
-      const readmePath = join(mod.path, "buildingblock", "README.md");
-      if (existsSync(readmePath)) {
-        const frontmatter = readFileSync(readmePath, "utf-8").split(/^---\s*$/m)[1] ?? "";
-        if (/^requiresBackplane:\s*false\s*$/m.test(frontmatter)) {
-          return { pass: null, detail: "module declares requiresBackplane: false" };
-        }
+      if (/^requiresBackplane:\s*false\s*$/m.test(readFrontmatter(mod))) {
+        return { pass: null, detail: "module declares requiresBackplane: false" };
       }
       return { pass: existsSync(join(mod.path, "backplane")) };
     },
@@ -1312,9 +1308,7 @@ const detectors = [
     category: "testing",
     name: "e2e/ test directory exists",
     emoji: "🧪",
-    fn: (mod) => ({
-      pass: existsSync(join(mod.path, "e2e")),
-    }),
+    fn: (mod) => e2eCoveredBy(mod) ?? { pass: existsSync(join(mod.path, "e2e")) },
   },
   {
     id: "no_buildingblock_tftest",
@@ -1350,6 +1344,8 @@ const detectors = [
     name: "e2e/ contains .tftest.hcl files",
     emoji: "✅",
     fn: (mod) => {
+      const covered = e2eCoveredBy(mod);
+      if (covered) return covered;
       const e2eDir = join(mod.path, "e2e", "tests");
       if (!existsSync(e2eDir)) return { pass: false };
       const files = readdirSync(e2eDir);
@@ -1359,6 +1355,22 @@ const detectors = [
 ];
 
 // ─── Helpers ────────────────────────────────────────────────────────────────
+
+function readFrontmatter(mod) {
+  const readmePath = join(mod.path, "buildingblock", "README.md");
+  if (!existsSync(readmePath)) return "";
+  return readFileSync(readmePath, "utf-8").split(/^---\s*$/m)[1] ?? "";
+}
+
+// `e2eCoveredBy: <provider>/<service>` names the module whose e2e suite also tests this one.
+function e2eCoveredBy(mod) {
+  const target = readFrontmatter(mod).match(/^e2eCoveredBy:\s*(\S+)\s*$/m)?.[1];
+  if (!target) return null;
+  if (!existsSync(join(MODULES_DIR, target, "e2e", "tests"))) {
+    return { pass: false, detail: `e2eCoveredBy: modules/${target}/e2e/tests does not exist` };
+  }
+  return { pass: null, detail: `covered by modules/${target}/e2e` };
+}
 
 function readIntegrationTf(mod) {
   const p = join(mod.path, "meshstack_integration.tf");

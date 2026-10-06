@@ -4,14 +4,9 @@ terraform {
       source  = "hashicorp/external"
       version = ">= 2.3.0, < 3.0.0"
     }
-    forgejo = {
-      source  = "svalabs/forgejo"
-      version = ">= 1.3.0, < 2.0.0"
-    }
-
     kubernetes = {
       source  = "hashicorp/kubernetes"
-      version = ">= 2.35.1, < 3.0.0"
+      version = ">= 2.36.0, < 3.0.0"
     }
 
     random = {
@@ -22,6 +17,11 @@ terraform {
     restapi = {
       source  = "Mastercard/restapi"
       version = ">= 3.0.0, < 4.0.0"
+    }
+
+    vault = {
+      source  = "hashicorp/vault"
+      version = ">= 5.12.0, < 6.0.0"
     }
   }
 }

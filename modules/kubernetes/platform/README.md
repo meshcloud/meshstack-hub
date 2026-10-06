@@ -26,7 +26,14 @@ ClusterRoleBinding. Nothing cloud-specific is involved, so this runs on any conf
 It does **not** register a meshPlatform. Deciding that a cluster becomes a meshStack platform — its
 identifier, location, landing zones and quota definitions — belongs to the composition that owns
 the cluster, and the **STACKIT Kubernetes Platform** reference architecture does it in its own
-`platform.tf` using the two tokens this block outputs.
+`platform.tf` using the two tokens this block outputs. With `output_to_vault` set, it writes them to
+that Vault KV v2 secret under the keys `replicator_token` and `metering_token` instead, and both
+outputs are empty.
+
+## The kubeconfig is part of the definition
+
+The block reaches the cluster through `kubeconfig.yaml`, a static FILE input of its building block
+definition, so one definition serves one cluster.
 
 ## One set of identities per cluster
 
@@ -50,6 +57,7 @@ non-empty on the first run, with no sleep, poll or second apply.
 |------|---------|
 | <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.12.0 |
 | <a name="requirement_kubernetes"></a> [kubernetes](#requirement\_kubernetes) | >= 3.0.0, < 4.0.0 |
+| <a name="requirement_vault"></a> [vault](#requirement\_vault) | >= 5.12.0, < 6.0.0 |
 
 ## Modules
 
@@ -68,14 +76,15 @@ No modules.
 | [kubernetes_secret_v1.replicator](https://registry.terraform.io/providers/hashicorp/kubernetes/latest/docs/resources/secret_v1) | resource |
 | [kubernetes_service_account_v1.metering](https://registry.terraform.io/providers/hashicorp/kubernetes/latest/docs/resources/service_account_v1) | resource |
 | [kubernetes_service_account_v1.replicator](https://registry.terraform.io/providers/hashicorp/kubernetes/latest/docs/resources/service_account_v1) | resource |
+| [vault_kv_secret_v2.this](https://registry.terraform.io/providers/hashicorp/vault/latest/docs/resources/kv_secret_v2) | resource |
 
 ## Inputs
 
 | Name | Description | Type | Default | Required |
 |------|-------------|------|---------|:--------:|
-| <a name="input_kubeconfig"></a> [kubeconfig](#input\_kubeconfig) | Raw kubeconfig (YAML) of the target cluster, from a preceding building block so it is known at plan time. | `string` | n/a | yes |
 | <a name="input_metering_additional_rules"></a> [metering\_additional\_rules](#input\_metering\_additional\_rules) | Extra RBAC rules added to the metering cluster role. | <pre>list(object({<br/>    api_groups        = list(string)<br/>    resources         = list(string)<br/>    verbs             = list(string)<br/>    resource_names    = optional(list(string))<br/>    non_resource_urls = optional(list(string))<br/>  }))</pre> | n/a | yes |
-| <a name="input_metering_enabled"></a> [metering\_enabled](#input\_metering\_enabled) | Create the metering service account; `metering_token` is null without it. | `bool` | n/a | yes |
+| <a name="input_metering_enabled"></a> [metering\_enabled](#input\_metering\_enabled) | Create the metering service account; `metering_token` is empty without it. | `bool` | n/a | yes |
+| <a name="input_output_to_vault"></a> [output\_to\_vault](#input\_output\_to\_vault) | Vault KV v2 secret this building block writes its secrets to instead of returning them as outputs: the server `address`, the engine `mount`, a userpass `username` and `password`, and the secret `path`. Null returns them as outputs. | <pre>object({<br/>    address  = string<br/>    mount    = string<br/>    username = string<br/>    password = string<br/>    path     = string<br/>  })</pre> | `null` | no |
 | <a name="input_replicator_additional_rules"></a> [replicator\_additional\_rules](#input\_replicator\_additional\_rules) | Extra RBAC rules added to the replicator cluster role. | <pre>list(object({<br/>    api_groups        = list(string)<br/>    resources         = list(string)<br/>    verbs             = list(string)<br/>    resource_names    = optional(list(string))<br/>    non_resource_urls = optional(list(string))<br/>  }))</pre> | n/a | yes |
 | <a name="input_service_account_namespace"></a> [service\_account\_namespace](#input\_service\_account\_namespace) | Namespace that holds the replicator and metering service accounts. | `string` | n/a | yes |
 
@@ -84,8 +93,9 @@ No modules.
 | Name | Description |
 |------|-------------|
 | <a name="output_metering_service_account_name"></a> [metering\_service\_account\_name](#output\_metering\_service\_account\_name) | Name of the metering ServiceAccount and its companion resources. Null when metering\_enabled is false. |
-| <a name="output_metering_token"></a> [metering\_token](#output\_metering\_token) | Service account token meshStack uses to read metering data from the cluster. Null when metering\_enabled is false. |
+| <a name="output_metering_token"></a> [metering\_token](#output\_metering\_token) | Service account token meshStack uses to read metering data from the cluster. Empty when metering\_enabled is false or `output_to_vault` is set. |
 | <a name="output_replicator_service_account_name"></a> [replicator\_service\_account\_name](#output\_replicator\_service\_account\_name) | Name of the replicator ServiceAccount, its token Secret, its ClusterRole and its ClusterRoleBinding — all four share it. |
-| <a name="output_replicator_token"></a> [replicator\_token](#output\_replicator\_token) | Service account token meshStack uses to replicate namespaces onto the cluster. |
+| <a name="output_replicator_token"></a> [replicator\_token](#output\_replicator\_token) | Service account token meshStack uses to replicate namespaces onto the cluster. Empty when `output_to_vault` is set. |
 | <a name="output_service_account_namespace"></a> [service\_account\_namespace](#output\_service\_account\_namespace) | Namespace holding the replicator and metering service accounts. |
+| <a name="output_vault_secret"></a> [vault\_secret](#output\_vault\_secret) | `{path, secret_hash}` of the secret written to `output_to_vault`, or `{}` when that is not set. `secret_hash` is the secret's KV version and changes with its content. |
 <!-- END_TF_DOCS -->

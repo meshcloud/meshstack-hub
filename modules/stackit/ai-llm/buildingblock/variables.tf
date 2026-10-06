@@ -27,3 +27,16 @@ variable "model" {
   nullable    = false
   description = "Model applications default to. Must be one the `/v1/models` endpoint serves."
 }
+
+variable "output_to_vault" {
+  type = object({
+    address  = string
+    mount    = string
+    username = string
+    password = string
+    path     = string
+  })
+  nullable    = false
+  sensitive   = true
+  description = "Vault KV v2 secret this building block writes its secrets to: the server `address`, the engine `mount`, a userpass `username` and `password`, and the secret `path`."
+}

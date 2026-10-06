@@ -48,7 +48,8 @@ check_readme_format() {
 
 check_png_naming() {
 	local png_path="$1"
-	local png_name=$(basename "$png_path")
+	local png_name
+	png_name=$(basename "$png_path")
 	if [[ "$png_name" != "logo.png" ]]; then
 		errors+=("Warning: PNG file '$png_name' should be named 'logo.png' to be importable in meshStack")
 	fi
@@ -170,7 +171,7 @@ check_terraform_files() {
 }
 
 # Ensure it is called from the repo root
-cd "$(dirname "$0")/.."
+cd "$(dirname "$0")/.." || exit 1
 modules_path="modules"
 
 if [[ ! -d "$modules_path" ]]; then
@@ -178,11 +179,11 @@ if [[ ! -d "$modules_path" ]]; then
 	exit 1
 fi
 
-modules_glob="$modules_path/*/*/buildingblock"
+buildingblock_dirs=("$modules_path"/*/*/buildingblock)
 
-for readme_file in $(find $modules_glob -name 'README.md' -not -path '*/.terraform/*'); do
+while IFS= read -r -d '' readme_file; do
 	check_readme_format "$readme_file"
-done
+done < <(find "${buildingblock_dirs[@]}" -name 'README.md' -not -path '*/.terraform/*' -print0)
 
 # pngquant is required for the minimization check. Failing loudly here matters:
 # the check used to swallow a missing binary and silently pass every PNG.
@@ -190,17 +191,17 @@ if ! command -v pngquant > /dev/null 2>&1; then
 	errors+=("pngquant is not installed, so PNG minimization cannot be validated")
 fi
 
-for png_file in $(find $modules_glob -name '*.png' -not -path '*/.terraform/*'); do
+while IFS= read -r -d '' png_file; do
 	check_png_naming "$png_file"
 	# Dimensions first: resizing in fix mode changes the encoding, so the
 	# minimization check below must run against the already-resized file.
 	check_png_dimensions "$png_file"
 	check_png_minimization "$png_file"
-done
+done < <(find "${buildingblock_dirs[@]}" -name '*.png' -not -path '*/.terraform/*' -print0)
 
-for buildingblock_dir in $(find $modules_glob -type d -name 'buildingblock' -not -path '*/.terraform/*'); do
+while IFS= read -r -d '' buildingblock_dir; do
 	check_terraform_files "$buildingblock_dir"
-done
+done < <(find "${buildingblock_dirs[@]}" -type d -name 'buildingblock' -not -path '*/.terraform/*' -print0)
 
 echo "Number of errors: ${#errors[@]}"
 if [[ ${#errors[@]} -gt 0 ]]; then

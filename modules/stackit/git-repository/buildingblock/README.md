@@ -17,25 +17,25 @@ support action variables at all. See the sub-module README for details.
 ## Requirements
 
 | Name | Version |
-|------|---------|
+| ---- | ------- |
 | <a name="requirement_external"></a> [external](#requirement\_external) | >= 2.3.0, < 3.0.0 |
 | <a name="requirement_forgejo"></a> [forgejo](#requirement\_forgejo) | >= 1.3.0, < 2.0.0 |
 | <a name="requirement_restapi"></a> [restapi](#requirement\_restapi) | >= 3.0.0, < 4.0.0 |
+| <a name="requirement_vault"></a> [vault](#requirement\_vault) | >= 5.12.0, < 6.0.0 |
 
 ## Modules
 
 | Name | Source | Version |
-|------|--------|---------|
+| ---- | ------ | ------- |
 | <a name="module_action_variables_and_secrets"></a> [action\_variables\_and\_secrets](#module\_action\_variables\_and\_secrets) | ./action-variables-and-secrets | n/a |
+| <a name="module_teams"></a> [teams](#module\_teams) | github.com/meshcloud/meshstack-hub//modules/stackit/git/buildingblock/forgejo-teams | n/a |
 
 ## Resources
 
 | Name | Type |
-|------|------|
+| ---- | ---- |
 | [forgejo_repository.this](https://registry.terraform.io/providers/svalabs/forgejo/latest/docs/resources/repository) | resource |
-| [restapi_object.team](https://registry.terraform.io/providers/Mastercard/restapi/latest/docs/resources/object) | resource |
-| [terraform_data.team_member](https://registry.terraform.io/providers/hashicorp/terraform/latest/docs/resources/data) | resource |
-| [terraform_data.team_repo](https://registry.terraform.io/providers/hashicorp/terraform/latest/docs/resources/data) | resource |
+| [restapi_object.team_repo](https://registry.terraform.io/providers/Mastercard/restapi/latest/docs/resources/object) | resource |
 | [external_external.env](https://registry.terraform.io/providers/hashicorp/external/latest/docs/data-sources/external) | data source |
 | [external_external.resolve_default_branch](https://registry.terraform.io/providers/hashicorp/external/latest/docs/data-sources/external) | data source |
 | [external_external.resolve_forgejo_users](https://registry.terraform.io/providers/hashicorp/external/latest/docs/data-sources/external) | data source |
@@ -43,27 +43,32 @@ support action variables at all. See the sub-module README for details.
 ## Inputs
 
 | Name | Description | Type | Default | Required |
-|------|-------------|------|---------|:--------:|
-| <a name="input_action_secrets"></a> [action\_secrets](#input\_action\_secrets) | Map of Forgejo Actions secrets to create in the repository. | `map(string)` | n/a | yes |
+| ---- | ----------- | ---- | ------- | :------: |
 | <a name="input_action_variables"></a> [action\_variables](#input\_action\_variables) | Map of Forgejo Actions variables to create in the repository. | `map(string)` | n/a | yes |
 | <a name="input_clone_addr"></a> [clone\_addr](#input\_clone\_addr) | Public Git URL cloned once into the repository. Empty or `null` creates an empty repository. | `string` | n/a | yes |
 | <a name="input_default_branch"></a> [default\_branch](#input\_default\_branch) | Default branch of an empty repository; a clone keeps the source's. | `string` | n/a | yes |
 | <a name="input_description"></a> [description](#input\_description) | Short description of the repository. | `string` | n/a | yes |
 | <a name="input_extra_action_variables"></a> [extra\_action\_variables](#input\_extra\_action\_variables) | Forgejo Actions variables for this repository only, merged over `action_variables`. | `map(string)` | n/a | yes |
+| <a name="input_forgejo_api_token_path"></a> [forgejo\_api\_token\_path](#input\_forgejo\_api\_token\_path) | Vault KV v2 secret holding the Forgejo API token under the key `forgejo_api_token`. | `string` | n/a | yes |
 | <a name="input_forgejo_organization"></a> [forgejo\_organization](#input\_forgejo\_organization) | STACKIT Git organization where the repository will be created | `string` | n/a | yes |
 | <a name="input_name"></a> [name](#input\_name) | Name of the Git repository to create | `string` | n/a | yes |
 | <a name="input_private"></a> [private](#input\_private) | Whether the repository should be private. | `bool` | n/a | yes |
+| <a name="input_registry_push_path"></a> [registry\_push\_path](#input\_registry\_push\_path) | Vault KV v2 secret holding a container registry push robot under the keys `username` and `password`, set as the Actions secrets `HARBOR_USERNAME` and `HARBOR_PASSWORD`. Null sets neither. | `string` | `null` | no |
+| <a name="input_stackit_git_instance_id"></a> [stackit\_git\_instance\_id](#input\_stackit\_git\_instance\_id) | STACKIT Git instance whose users are matched to workspace members by email. | `string` | n/a | yes |
+| <a name="input_stackit_project_id"></a> [stackit\_project\_id](#input\_stackit\_project\_id) | STACKIT project of the Git instance. | `string` | n/a | yes |
+| <a name="input_vault_reader"></a> [vault\_reader](#input\_vault\_reader) | Vault KV v2 login this building block reads its secrets with: the server `address`, the engine `mount` and a userpass `username` and `password`. | <pre>object({<br/>    address  = string<br/>    mount    = string<br/>    username = string<br/>    password = string<br/>  })</pre> | n/a | yes |
 | <a name="input_workspace_identifier"></a> [workspace\_identifier](#input\_workspace\_identifier) | n/a | `string` | n/a | yes |
 | <a name="input_workspace_members"></a> [workspace\_members](#input\_workspace\_members) | Workspace members used for team-based access management. | <pre>list(object({<br/>    meshIdentifier = string<br/>    username       = string<br/>    firstName      = string<br/>    lastName       = string<br/>    email          = string<br/>    euid           = string<br/>    roles          = list(string)<br/>  }))</pre> | n/a | yes |
 
 ## Outputs
 
 | Name | Description |
-|------|-------------|
+| ---- | ----------- |
 | <a name="output_repository_clone_url"></a> [repository\_clone\_url](#output\_repository\_clone\_url) | HTTPS clone URL |
 | <a name="output_repository_html_url"></a> [repository\_html\_url](#output\_repository\_html\_url) | Web URL of the repository |
 | <a name="output_repository_id"></a> [repository\_id](#output\_repository\_id) | The ID of the created repository |
 | <a name="output_repository_name"></a> [repository\_name](#output\_repository\_name) | Name of the created repository |
+| <a name="output_repository_owner"></a> [repository\_owner](#output\_repository\_owner) | Organization that owns the created repository |
 | <a name="output_repository_ssh_url"></a> [repository\_ssh\_url](#output\_repository\_ssh\_url) | SSH clone URL |
 | <a name="output_summary"></a> [summary](#output\_summary) | Summary with next steps and links for the created repository |
 <!-- END_TF_DOCS -->

@@ -55,6 +55,34 @@ module "stackit_service_account" {
   # build-from-source run whose target tenant resolves to fixtures.project_id does not collide on
   # two service accounts of the same name in one project.
   stackit_service_account_name = "${var.test_context.run_id}-sabp"
+
+  stackit_federation_backplane_email = module.stackit_service_account_federation.backplane_service_account_email
+}
+
+# Every service account grants this definition's backplane `editor`, so the test needs one, although
+# it orders no federation.
+module "stackit_service_account_federation" {
+  source = "../../service-account-federation"
+
+  lifecycle {
+    enabled = var.test_context.bbd_version_ref == null
+  }
+
+  service_account_definition_ref = module.stackit_service_account.building_block_definition.ref
+
+  meshstack = {
+    owning_workspace_identifier = var.test_context.workspace
+    tags                        = {}
+  }
+  hub = {
+    git_ref   = var.test_context.hub_git_ref
+    bbd_draft = true
+  }
+
+  bbd_display_name = "${var.test_context.run_id} STACKIT Service Account Federation"
+
+  stackit_project_id           = var.test_context.fixtures.stackit.project_id
+  stackit_service_account_name = "${var.test_context.run_id}-safb"
 }
 
 locals {

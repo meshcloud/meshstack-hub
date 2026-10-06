@@ -17,19 +17,6 @@ variable "test_context" {
 
 # Secrets never travel in `test_context` — it is built from state a CI job can read. They arrive as
 # TF_VAR_*, which only the root module sees, so they are declared here and piped down.
-variable "stackit_git_forgejo_api_token" {
-  type      = string
-  sensitive = true
-  default   = null
-}
-
-variable "ske_kubeconfig" {
-  type        = string
-  sensitive   = true
-  default     = null
-  description = "Kubeconfig for the SKE cluster (YAML or JSON), used by the Forgejo Connector building block."
-}
-
 variable "harbor_push_username" {
   type      = string
   sensitive = true
@@ -67,12 +54,10 @@ module "definition" {
   test_context = var.test_context
 
   backplane_secrets = {
-    stackit_git_forgejo_api_token = var.stackit_git_forgejo_api_token
-    ske_kubeconfig                = var.ske_kubeconfig
-    harbor_push_username          = var.harbor_push_username
-    harbor_push_password          = var.harbor_push_password
-    harbor_pull_username          = var.harbor_pull_username
-    harbor_pull_password          = var.harbor_pull_password
+    harbor_push_username = var.harbor_push_username
+    harbor_push_password = var.harbor_push_password
+    harbor_pull_username = var.harbor_pull_username
+    harbor_pull_password = var.harbor_pull_password
   }
 }
 

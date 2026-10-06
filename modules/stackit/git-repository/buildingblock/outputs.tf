@@ -3,6 +3,11 @@ output "repository_id" {
   description = "The ID of the created repository"
 }
 
+output "repository_owner" {
+  value       = var.forgejo_organization
+  description = "Organization that owns the created repository"
+}
+
 output "repository_name" {
   value       = var.name
   description = "Name of the created repository"
@@ -30,7 +35,7 @@ output "summary" {
     owner          = var.forgejo_organization
     repo_html_url  = forgejo_repository.this.html_url
     repo_clone_url = forgejo_repository.this.clone_url
-    clone_addr     = var.clone_addr
+    clone_addr     = local.have_clone_addr ? var.clone_addr : ""
     default_branch = var.default_branch
     forgejo_host   = data.external.env.result["FORGEJO_HOST"]
 

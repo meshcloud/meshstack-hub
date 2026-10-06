@@ -5,6 +5,17 @@ variable "stackit_region" {
   description = "STACKIT region the Git instance is placed in."
 }
 
+variable "role_mapping" {
+  type        = map(list(string))
+  description = "Maps meshStack project roles to Forgejo organization roles (`owner`, `writer` or `reader`). The highest one wins."
+
+  default = {
+    admin  = ["owner"]
+    user   = ["reader"]
+    reader = ["reader"]
+  }
+}
+
 variable "bbd_display_name" {
   type        = string
   default     = null
@@ -21,6 +32,19 @@ variable "bbd_readme" {
   type        = string
   default     = null
   description = "Overrides the markdown readme shown in the marketplace before ordering."
+}
+
+variable "approval_policies" {
+  type = object({
+    building_block_creation = optional(bool, false)
+    user_input_changes      = optional(bool, false)
+    any_input_changes       = optional(bool, false)
+    manual_triggers         = optional(bool, false)
+    version_upgrade         = optional(bool, false)
+  })
+  nullable    = false
+  default     = {}
+  description = "Run triggers that need an operator's approval before a run of this definition is applied. A gate switched on in meshPanel is reset on the next apply unless it is set here."
 }
 
 variable "meshstack" {
@@ -68,6 +92,7 @@ resource "meshstack_building_block_definition" "this" {
     support_url         = "https://portal.stackit.cloud/git"
     target_type         = "TENANT_LEVEL"
     run_transparency    = true
+    approval_policies   = var.approval_policies
     supported_platforms = [{ name = "STACKIT" }]
 
     readme = coalesce(var.bbd_readme, chomp(<<-EOT
@@ -89,12 +114,12 @@ resource "meshstack_building_block_definition" "this" {
 
       ## 🔑 The token mints itself
 
-      A fresh instance carries no credential, so the building block makes one: it switches on local
-      login, creates a technical user through the STACKIT Git API, and exchanges that user's password
-      for a Personal Access Token. Ordering it takes one run and no manual step.
+      A fresh instance carries no credential, so the building block makes one: it creates a technical
+      user through the STACKIT Git API and exchanges that user's password for a Personal Access
+      Token. Ordering it takes one run and no manual step.
 
-      The token is reported as an output, so building blocks that manage repositories, runners or
-      organization members take it from here.
+      The token is written to the Vault KV v2 secret given as `output_to_vault`, where building
+      blocks that manage repositories, runners or organization members read it.
 
       ## 📊 Shared responsibility
 
@@ -185,6 +210,21 @@ resource "meshstack_building_block_definition" "this" {
         validation_regex_error_message = "Organization name must be 1-40 characters of letters, digits, dots, dashes or underscores, and not start or end with a separator."
       }
 
+      users = {
+        display_name    = "Users"
+        description     = "Project members, added to the Forgejo organization once they signed in to the instance."
+        type            = "CODE"
+        assignment_type = "USER_PERMISSIONS"
+      }
+
+      role_mapping = {
+        display_name    = "Role Mapping"
+        description     = "HCL object mapping meshStack project roles to Forgejo organization roles."
+        type            = "CODE"
+        assignment_type = "STATIC"
+        argument        = jsonencode(jsonencode(var.role_mapping))
+      }
+
       shared_runner_labels = {
         display_name           = "Shared Runner Labels"
         description            = "HCL list of labels of the STACKIT-hosted shared runner to order. Leave empty to order none."
@@ -229,11 +269,50 @@ resource "meshstack_building_block_definition" "this" {
           "write:user",
         ]))
       }
+
+      output_to_vault = {
+        display_name           = "Output to Vault"
+        description            = "HCL object `{address, mount, username, password, path}` of the Vault KV v2 secret the Forgejo API token is written to, under the key `forgejo_api_token`. Leave empty to write it nowhere."
+        type                   = "CODE"
+        assignment_type        = "USER_INPUT"
+        sensitive              = {}
+        is_optional            = true
+        updateable_by_consumer = true
+      }
+
+      imports = {
+        display_name    = "Imports"
+        description     = "HCL object `{instance_id, existing_forgejo_api_token_path}` of an instance named Instance Name to take over, with its organization Forgejo Organization. The path names a secret in Output to Vault with an owner's `forgejo_api_token`."
+        type            = "CODE"
+        assignment_type = "USER_INPUT"
+        is_optional     = true
+      }
+
+      release_on_destroy = {
+        display_name    = "Release on Destroy"
+        description     = "Leave the instance in place when this building block is deleted. Cannot change once the instance is managed."
+        type            = "BOOLEAN"
+        assignment_type = "USER_INPUT"
+        default_value   = jsonencode(false)
+      }
     }
 
     outputs = {
+      vault_secret = {
+        display_name    = "Vault Secret"
+        description     = "JSON object `{path, secret_hash}` of the secret in Vault, or `{}` when `output_to_vault` is not set. `secret_hash` changes with the secret's content."
+        type            = "CODE"
+        assignment_type = "NONE"
+      }
+
       instance_name = {
         display_name    = "Instance Name"
+        type            = "STRING"
+        assignment_type = "NONE"
+      }
+
+      instance_id = {
+        display_name    = "Instance ID"
         type            = "STRING"
         assignment_type = "NONE"
       }
@@ -252,12 +331,6 @@ resource "meshstack_building_block_definition" "this" {
 
       forgejo_organization = {
         display_name    = "Forgejo Organization"
-        type            = "STRING"
-        assignment_type = "NONE"
-      }
-
-      forgejo_api_token = {
-        display_name    = "Forgejo API Token"
         type            = "STRING"
         assignment_type = "NONE"
       }

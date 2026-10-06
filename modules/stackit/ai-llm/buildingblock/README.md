@@ -12,12 +12,14 @@ inside it.
 
 ## What a consumer gets
 
-One `access_credentials` output holding the endpoint, the token and the default model. The endpoint
-speaks the OpenAI API, so any OpenAI client works against it by pointing its base URL there.
+The endpoint, the token and the default model, written to the Vault KV v2 secret given as
+`output_to_vault` under the keys `STACKIT_AI_BASE_URL`, `STACKIT_AI_API_KEY` and
+`STACKIT_AI_MODEL`. The endpoint speaks the OpenAI API, so any OpenAI client works against it by
+pointing its base URL there.
 
 In the STACKIT Kubernetes Platform reference architecture these three values become a Kubernetes
-secret named `stackit-ai` in every application namespace, with the keys `STACKIT_AI_BASE_URL`,
-`STACKIT_AI_API_KEY` and `STACKIT_AI_MODEL`. The demo application reads them by that convention.
+secret named `stackit-ai` in every application namespace, with the same keys. The demo application
+reads them by that convention.
 
 ## Why the service is enabled first
 
@@ -25,10 +27,11 @@ secret named `stackit-ai` in every application namespace, with the keys `STACKIT
 asynchronous. The block switches it on and then polls until the service reports `ENABLED`, because
 minting a token against a service still reconciling fails.
 
-## The token is not sensitive on the way out
+## The token is not an output
 
-meshStack building block outputs cannot be marked sensitive, so the token travels in the clear,
-as the container registry credentials already do.
+meshStack shows building block outputs in the clear, so the token goes to the Vault KV v2 secret
+only. There is no mode without one: the token is the whole point of this block. The only output left
+is the summary.
 
 ## Permissions
 
@@ -45,6 +48,7 @@ carries both; `model-serving.admin` carries the first but not the second.
 | <a name="requirement_external"></a> [external](#requirement\_external) | >= 2.3.0, < 3.0.0 |
 | <a name="requirement_restapi"></a> [restapi](#requirement\_restapi) | >= 3.0.0, < 4.0.0 |
 | <a name="requirement_stackit"></a> [stackit](#requirement\_stackit) | >= 0.98.0, < 1.0.0 |
+| <a name="requirement_vault"></a> [vault](#requirement\_vault) | >= 5.12.0, < 6.0.0 |
 
 ## Modules
 
@@ -57,6 +61,7 @@ No modules.
 | [restapi_object.service_enablement](https://registry.terraform.io/providers/Mastercard/restapi/latest/docs/resources/object) | resource |
 | [stackit_modelserving_token.this](https://registry.terraform.io/providers/stackitcloud/stackit/latest/docs/resources/modelserving_token) | resource |
 | [terraform_data.service_enabled](https://registry.terraform.io/providers/hashicorp/terraform/latest/docs/resources/data) | resource |
+| [vault_kv_secret_v2.this](https://registry.terraform.io/providers/hashicorp/vault/latest/docs/resources/kv_secret_v2) | resource |
 | [external_external.stackit_access_token](https://registry.terraform.io/providers/hashicorp/external/latest/docs/data-sources/external) | data source |
 
 ## Inputs
@@ -64,6 +69,7 @@ No modules.
 | Name | Description | Type | Default | Required |
 |------|-------------|------|---------|:--------:|
 | <a name="input_model"></a> [model](#input\_model) | Model applications default to. Must be one the `/v1/models` endpoint serves. | `string` | n/a | yes |
+| <a name="input_output_to_vault"></a> [output\_to\_vault](#input\_output\_to\_vault) | Vault KV v2 secret this building block writes its secrets to: the server `address`, the engine `mount`, a userpass `username` and `password`, and the secret `path`. | <pre>object({<br/>    address  = string<br/>    mount    = string<br/>    username = string<br/>    password = string<br/>    path     = string<br/>  })</pre> | n/a | yes |
 | <a name="input_stackit_project_id"></a> [stackit\_project\_id](#input\_stackit\_project\_id) | STACKIT project the model serving token is created in. | `string` | n/a | yes |
 | <a name="input_stackit_region"></a> [stackit\_region](#input\_stackit\_region) | STACKIT region the token and the inference endpoint live in. | `string` | n/a | yes |
 | <a name="input_token_description"></a> [token\_description](#input\_token\_description) | Description of the model serving token. | `string` | n/a | yes |
@@ -73,8 +79,6 @@ No modules.
 
 | Name | Description |
 |------|-------------|
-| <a name="output_access_credentials"></a> [access\_credentials](#output\_access\_credentials) | Inference credentials: the endpoint, the token and the default model. |
-| <a name="output_base_url"></a> [base\_url](#output\_base\_url) | OpenAI-compatible inference endpoint. |
-| <a name="output_model"></a> [model](#output\_model) | Model applications default to. |
 | <a name="output_summary"></a> [summary](#output\_summary) | Markdown summary shown on the building block. |
+| <a name="output_vault_secret"></a> [vault\_secret](#output\_vault\_secret) | `{path, secret_hash}` of the secret written to `output_to_vault`. `secret_hash` is the secret's KV version and changes with its content. |
 <!-- END_TF_DOCS -->

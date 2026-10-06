@@ -13,9 +13,14 @@
   "meshstack_endpoint": "https://validation-only.example.invalid",
   "forgejo_base_url": "https://validation-only.example.invalid",
   "forgejo_organization": "validation-only",
+  "stackit_service_account_email": "validation-only@sa.stackit.cloud",
+  "stackit_project_id": "00000000-0000-0000-0000-000000000000",
+  "stackit_git_instance_id": "00000000-0000-0000-0000-000000000000",
   "dns_zone_name": "validation-only.example.invalid",
 
   "meshstack": {
+    "project_display_name": "validation-only",
+    "project_tags": { "environment": ["dev"] },
     "project_identifier_suffix": "val",
     "tag_schema": {
       "expiry_key": "validation-only",
@@ -45,7 +50,29 @@
       "parent_container_id": "00000000-0000-0000-0000-000000000000",
       "platform_uuid": "00000000-0000-0000-0000-000000000000",
       "landing_zone_name": "validation-only",
-      "mesh_tenant_id": "validation-only"
+      "mesh_tenant_id": "validation-only",
+      "secrets_manager_instance_id": "00000000-0000-0000-0000-000000000000",
+      "ske_platform": {
+        "building_block_uuid": "00000000-0000-0000-0000-000000000000",
+        "cluster_name": "validation",
+        "kube_host": "https://validation-only.example.invalid",
+        "kubeconfig_path": "validation-only/kubeconfig",
+        "ingress_load_balancer_ip": "192.0.2.1",
+        "ingress_class_name": "haproxy",
+        "cluster_issuer_name": "letsencrypt-prod"
+      },
+      "git": {
+        "building_block_uuid": "00000000-0000-0000-0000-000000000000",
+        "instance_id": "00000000-0000-0000-0000-000000000000",
+        "instance_name": "validation-only",
+        "base_url": "https://validation-only.example.invalid",
+        "organization": "validation-only",
+        "forgejo_api_token_path": "validation-only/forgejo-api-token"
+      },
+      "dns": {
+        "building_block_uuid": "00000000-0000-0000-0000-000000000000",
+        "zone_name": "validation-only.example.invalid"
+      }
     },
     "github": {
       "owner": "meshcloud",

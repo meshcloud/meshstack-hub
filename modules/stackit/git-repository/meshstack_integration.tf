@@ -1,8 +1,3 @@
-variable "forgejo_api_token" {
-  type      = string
-  sensitive = true
-}
-
 variable "forgejo_organization" {
   type = string
 }
@@ -11,20 +6,48 @@ variable "forgejo_base_url" {
   type = string
 }
 
-variable "action_secrets" {
-  type      = map(string)
-  default   = {}
-  sensitive = true
+variable "vault_reader" {
+  type = object({
+    address  = string
+    mount    = string
+    username = string
+    password = string
+  })
+  nullable    = false
+  sensitive   = true
+  description = "Vault KV v2 login the building blocks read their secrets with: the server `address`, the engine `mount` and a userpass `username` and `password`."
+}
 
-  validation {
-    condition     = alltrue([for key in keys(nonsensitive(var.action_secrets)) : (length(key) <= 30)])
-    error_message = "Forgejo Actions secret names must be 30 characters or less."
-  }
+variable "forgejo_api_token_path" {
+  type        = string
+  nullable    = false
+  description = "Vault KV v2 secret holding the Forgejo API token under the key `forgejo_api_token`. The token needs the write:repository and write:organization scopes."
+}
+
+variable "registry_push_path" {
+  type        = string
+  default     = null
+  description = "Vault KV v2 secret holding a container registry push robot under the keys `username` and `password`, set on every repository as the Actions secrets `HARBOR_USERNAME` and `HARBOR_PASSWORD`. Null sets neither."
 }
 
 variable "action_variables" {
   type    = map(string)
   default = {}
+}
+
+variable "stackit_service_account_email" {
+  type        = string
+  description = "Service account the runs act as via WIF to list STACKIT Git users. It must federate this definition."
+}
+
+variable "stackit_project_id" {
+  type        = string
+  description = "STACKIT project of the Git instance."
+}
+
+variable "stackit_git_instance_id" {
+  type        = string
+  description = "STACKIT Git instance whose users are matched to workspace members by email."
 }
 
 variable "bbd_display_name" {
@@ -43,6 +66,19 @@ variable "bbd_readme" {
   type        = string
   default     = null
   description = "Overrides the markdown readme shown in the marketplace before ordering."
+}
+
+variable "approval_policies" {
+  type = object({
+    building_block_creation = optional(bool, false)
+    user_input_changes      = optional(bool, false)
+    any_input_changes       = optional(bool, false)
+    manual_triggers         = optional(bool, false)
+    version_upgrade         = optional(bool, false)
+  })
+  nullable    = false
+  default     = {}
+  description = "Run triggers that need an operator's approval before a run of this definition is applied. A gate switched on in meshPanel is reset on the next apply unless it is set here."
 }
 
 variable "meshstack" {
@@ -77,14 +113,6 @@ output "building_block_definition" {
   }
 }
 
-module "backplane" {
-  source = "github.com/meshcloud/meshstack-hub//modules/stackit/git-repository/backplane?ref=${var.hub.git_ref}"
-
-  forgejo_base_url     = var.forgejo_base_url
-  forgejo_api_token    = var.forgejo_api_token
-  forgejo_organization = var.forgejo_organization
-}
-
 resource "meshstack_building_block_definition" "this" {
   metadata = {
     owned_by_workspace = var.meshstack.owning_workspace_identifier
@@ -99,9 +127,10 @@ resource "meshstack_building_block_definition" "this" {
       workspace member access management.
     EOT
     ))
-    support_url      = "https://git-service.git.onstackit.cloud"
-    target_type      = "WORKSPACE_LEVEL"
-    run_transparency = true
+    support_url       = "https://git-service.git.onstackit.cloud"
+    target_type       = "WORKSPACE_LEVEL"
+    run_transparency  = true
+    approval_policies = var.approval_policies
 
     readme = coalesce(var.bbd_readme, chomp(<<-EOT
     The **STACKIT Git Repository** building block creates a Forgejo repository on STACKIT Git and manages
@@ -114,9 +143,11 @@ resource "meshstack_building_block_definition" "this" {
     - **Forgejo teams** – workspace members are organized into organization teams by role
       (Owner → admins/admin, Manager → writers/write, others → readers/read).
       Teams are assigned to the repository with appropriate permissions.
-    - **Team member invitations** – workspace members are invited to teams by email.
-    - **Action secrets & variables** – optional maps of Forgejo Actions secrets and variables managed via the
-      REST API (see below).
+    - **Team members** – workspace members who have signed in to the STACKIT Git instance once are added
+      to their team, matched by email through the STACKIT Git API.
+    - **Action secrets & variables** – Forgejo Actions variables set by the platform and by you, and the
+      container registry push robot as the secrets `HARBOR_USERNAME` and `HARBOR_PASSWORD` where the
+      platform offers one, managed via the REST API (see below).
 
     ## ℹ️ Forgejo Actions secrets & variables
 
@@ -132,7 +163,8 @@ resource "meshstack_building_block_definition" "this" {
     | Manage organization teams and access control | ✅ | ❌ |
     | Develop and maintain code in the repository | ❌ | ✅ |
     | Configure Forgejo Actions pipelines | ❌ | ✅ |
-    | Manage repository secrets and variables | ❌ | ✅ |
+    | Provide the Forgejo API token and the registry push robot | ✅ | ❌ |
+    | Manage further repository secrets and variables | ❌ | ✅ |
     EOT
     ))
   }
@@ -152,7 +184,49 @@ resource "meshstack_building_block_definition" "this" {
       }
     }
 
-    inputs = {
+    inputs = merge({
+      STACKIT_SERVICE_ACCOUNT_EMAIL = {
+        display_name    = "STACKIT Service Account Email"
+        description     = "Email of the STACKIT service account the run authenticates as via WIF to list STACKIT Git users."
+        type            = "STRING"
+        assignment_type = "STATIC"
+        is_environment  = true
+        argument        = jsonencode(var.stackit_service_account_email)
+      }
+
+      STACKIT_FEDERATED_TOKEN_FILE = {
+        display_name    = "STACKIT Federated Token File"
+        description     = "Path to the WIF token file injected by meshStack."
+        type            = "STRING"
+        assignment_type = "STATIC"
+        is_environment  = true
+        argument        = jsonencode("/var/run/secrets/workload-identity/azure/token")
+      }
+
+      stackit_project_id = {
+        display_name    = "STACKIT Project ID"
+        description     = "STACKIT project of the Git instance."
+        type            = "STRING"
+        assignment_type = "STATIC"
+        argument        = jsonencode(var.stackit_project_id)
+      }
+
+      stackit_git_instance_id = {
+        display_name    = "STACKIT Git Instance ID"
+        description     = "STACKIT Git instance whose users are matched to workspace members by email."
+        type            = "STRING"
+        assignment_type = "STATIC"
+        argument        = jsonencode(var.stackit_git_instance_id)
+      }
+
+      hub_git_ref = {
+        display_name    = "hub_git_ref"
+        description     = "Hub git ref this building block runs from."
+        type            = "STRING"
+        assignment_type = "STATIC"
+        argument        = jsonencode(var.hub.git_ref)
+      }
+
       FORGEJO_HOST = {
         display_name    = "FORGEJO_HOST"
         description     = "The Host of the Forgejo instance to connect to."
@@ -162,18 +236,25 @@ resource "meshstack_building_block_definition" "this" {
         argument        = jsonencode(var.forgejo_base_url)
       }
 
-      FORGEJO_API_TOKEN = {
-        display_name    = "FORGEJO_API_TOKEN"
-        description     = "The API token for authenticating with the Forgejo instance."
-        type            = "STRING"
+      vault_reader = {
+        display_name    = "Vault Reader"
+        description     = "HCL object `{address, mount, username, password}` of the Vault KV v2 login the run reads its secrets with."
+        type            = "CODE"
         assignment_type = "STATIC"
-        is_environment  = true
         sensitive = {
           argument = {
-            secret_value   = var.forgejo_api_token
-            secret_version = nonsensitive(sha256(var.forgejo_api_token))
+            secret_value   = jsonencode(var.vault_reader)
+            secret_version = nonsensitive(sha256(jsonencode(var.vault_reader)))
           }
         }
+      }
+
+      forgejo_api_token_path = {
+        display_name    = "Forgejo API Token Path"
+        description     = "Vault KV v2 secret holding the Forgejo API token under the key `forgejo_api_token`."
+        type            = "STRING"
+        assignment_type = "STATIC"
+        argument        = jsonencode(var.forgejo_api_token_path)
       }
 
       forgejo_organization = {
@@ -181,7 +262,7 @@ resource "meshstack_building_block_definition" "this" {
         description     = "Organization under which repositories will be created in Forgejo"
         type            = "STRING"
         assignment_type = "STATIC"
-        argument        = jsonencode(module.backplane.forgejo_organization)
+        argument        = jsonencode(var.forgejo_organization)
       }
 
       workspace_identifier = {
@@ -257,20 +338,15 @@ resource "meshstack_building_block_definition" "this" {
         default_value          = jsonencode(jsonencode({}))
         updateable_by_consumer = true
       }
-
-      action_secrets = {
-        display_name    = "Repository Action Secrets"
-        description     = "Static sensitive map of Forgejo Actions secrets created in each provisioned repository."
-        type            = "CODE"
+      }, var.registry_push_path == null ? {} : {
+      registry_push_path = {
+        display_name    = "Registry Push Robot Path"
+        description     = "Vault KV v2 secret holding the push robot set as the Actions secrets `HARBOR_USERNAME` and `HARBOR_PASSWORD`."
+        type            = "STRING"
         assignment_type = "STATIC"
-        sensitive = {
-          argument = {
-            secret_value   = jsonencode(var.action_secrets)
-            secret_version = nonsensitive(sha256(jsonencode(var.action_secrets)))
-          }
-        }
+        argument        = jsonencode(var.registry_push_path)
       }
-    }
+    })
 
     outputs = {
       repository_id = {
@@ -278,6 +354,20 @@ resource "meshstack_building_block_definition" "this" {
         type            = "INTEGER"
         assignment_type = "NONE"
         description     = "Numeric Forgejo repository ID, primarily intended for wiring dependent building blocks."
+      }
+
+      repository_owner = {
+        display_name    = "Repository Owner"
+        type            = "STRING"
+        assignment_type = "NONE"
+        description     = "Forgejo organization that owns the repository."
+      }
+
+      repository_name = {
+        display_name    = "Repository Name"
+        type            = "STRING"
+        assignment_type = "NONE"
+        description     = "Name of the repository."
       }
 
       repository_html_url = {
@@ -312,8 +402,9 @@ terraform {
 
   required_providers {
     meshstack = {
-      source  = "meshcloud/meshstack"
-      version = ">= 0.21.0"
+      source = "meshcloud/meshstack"
+      # 0.25.2 is the first release that accepts `spec.approval_policies`.
+      version = ">= 0.25.2"
     }
   }
 }

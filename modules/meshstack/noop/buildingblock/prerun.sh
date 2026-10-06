@@ -1,3 +1,4 @@
+#!/usr/bin/env bash
 echo "=== meshStack Building Block Pre-Run Script ==="
 echo "Running after 'tofu init', before 'tofu apply'"
 echo ""

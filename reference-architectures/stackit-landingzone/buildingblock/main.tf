@@ -160,6 +160,8 @@ module "service_account_integration" {
 
   stackit_assignable_roles = ["reader", "editor", "iam.member-admin", "ske.admin", "git.admin", "container-registry.admin", "dns.admin"]
 
+  stackit_federation_backplane_email = module.service_account_federation_integration.backplane_service_account_email
+
   meshstack = { owning_workspace_identifier = var.workspace, tags = local.tags.building_block }
   hub       = var.hub
 }
@@ -167,12 +169,11 @@ module "service_account_integration" {
 module "service_account_federation_integration" {
   source = "github.com/meshcloud/meshstack-hub//modules/stackit/service-account-federation?ref=${var.hub.git_ref}"
 
-  # A federation block is a child of a service account block. Deleting the parent's definition first
-  # fails on meshStack's `fk_tbb_Parent` constraint.
-  depends_on = [module.service_account_integration]
+  # Also deletes this definition before its parent's, which meshStack's `fk_tbb_Parent` constraint
+  # requires.
+  service_account_definition_ref = module.service_account_integration.building_block_definition.ref
 
-  stackit_organization_id = var.stackit_org
-  stackit_project_id      = stackit_resourcemanager_project.foundation.project_id
+  stackit_project_id = stackit_resourcemanager_project.foundation.project_id
 
   meshstack = { owning_workspace_identifier = var.workspace, tags = local.tags.building_block }
   hub       = var.hub

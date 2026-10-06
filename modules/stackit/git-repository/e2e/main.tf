@@ -1,64 +1,47 @@
 variable "test_context" {
-  type = object({
-    hub_git_ref          = string
-    workspace            = string
-    name_suffix          = string
-    forgejo_base_url     = string
-    forgejo_organization = string
-
-    # Mode discriminator: set in foundation mode to order an already-deployed BBD version;
-    # null in build-from-source mode, which builds the BBD from hub source.
-    bbd_version_ref = optional(object({
-      uuid = string
-    }))
-  })
+  # Untyped: each mode module re-types it strictly, so every field it needs stays required.
+  type     = any
   nullable = false
-}
 
-variable "stackit_git_forgejo_api_token" {
-  type      = string
-  nullable  = true
-  sensitive = true
-  default   = null
-}
-
-module "stackit_git_repository" {
-  source = "../"
-
-  lifecycle {
-    enabled = var.test_context.bbd_version_ref == null
-  }
-  meshstack = {
-    owning_workspace_identifier = var.test_context.workspace
-    tags                        = {}
-  }
-  hub = {
-    git_ref   = var.test_context.hub_git_ref
-    bbd_draft = true
+  validation {
+    condition     = can(var.test_context.workspace) && can(var.test_context.run_id)
+    error_message = "test_context must provide workspace and run_id."
   }
 
-  forgejo_base_url     = var.test_context.forgejo_base_url
-  forgejo_api_token    = var.stackit_git_forgejo_api_token
-  forgejo_organization = var.test_context.forgejo_organization
+  validation {
+    # `try` because `test_context` is untyped, so a hub run need not set `mode` at all.
+    condition     = contains(["hub", "foundation"], try(var.test_context.mode, "hub"))
+    error_message = "test_context.mode must be \"hub\" (the default) or \"foundation\"."
+  }
 }
 
 locals {
-  version_ref = var.test_context.bbd_version_ref != null ? var.test_context.bbd_version_ref : { uuid = module.stackit_git_repository.building_block_definition.version_ref.uuid }
+  # `try` because `test_context` is untyped, so a hub run need not set `mode` at all.
+  mode = try(var.test_context.mode, "hub")
+}
+
+module "definition" {
+  source = "./modes/${local.mode}"
+
+  test_context = var.test_context
 }
 
 resource "meshstack_building_block" "this" {
+  # Also orders teardown: the delete run still reads secrets with the user the hub mode creates.
+  depends_on = [module.definition]
+
   wait_for_completion = true
   spec = {
-    building_block_definition_version_ref = local.version_ref
+    building_block_definition_version_ref = module.definition.version_ref
 
-    display_name = "smoke-test-stackit-git-repository-hub-${var.test_context.name_suffix}"
+    display_name = "${var.test_context.run_id}-git-repository"
     target_ref = {
       kind = "meshWorkspace"
       name = var.test_context.workspace
     }
 
     inputs = {
-      name        = { value = jsonencode("smoke-test-repo-${var.test_context.name_suffix}") }
+      name        = { value = jsonencode("${var.test_context.run_id}-repo") }
       description = { value = jsonencode("Smoke test repository") }
       private     = { value = jsonencode(true) }
       clone_addr  = { value = jsonencode("https://github.com/likvid-bank/starterkit-template-stackit-ai-summarizer.git") }

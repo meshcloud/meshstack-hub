@@ -14,7 +14,7 @@
 #     covers this machine's platform; we throw those away.
 #   * the directories are independent, so they run in parallel.
 set -uo pipefail
-cd "$(dirname "$0")/.."
+cd "$(dirname "$0")/.." || exit 1
 
 command -v tofu > /dev/null || {
 	echo "tofu is not on PATH"
@@ -35,17 +35,24 @@ mkdir -p "$TF_PLUGIN_CACHE_DIR"
 # without them. No request is made: `validate` only decodes provider blocks.
 export GITHUB_APP_ID=0 GITHUB_APP_INSTALLATION_ID=0 GITHUB_APP_PEM_FILE=validation-only
 
-# An e2e root pins its child modules at var.test_context.hub_git_ref, and a
-# module source must resolve statically, so it does not load without a context.
+# A root pins the hub modules it sources at var.hub.git_ref, var.hub_git_ref or, in
+# e2e, var.test_context.hub_git_ref, and a module source must resolve statically.
+# Pinning all of them to the commit under test validates the tree as it would load
+# from this commit, not from main.
+head=$(git rev-parse HEAD) || exit 1
+export TF_VAR_hub_git_ref=$head
+export TF_VAR_hub="{git_ref = \"$head\", bbd_draft = true}"
 export TF_VAR_test_context
-TF_VAR_test_context=$(jq -c --arg ref "$(git rev-parse HEAD)" \
+TF_VAR_test_context=$(jq -c --arg ref "$head" \
 	'del(._comment) | .hub_git_ref = $ref' ci/validate_tf_full_mock_context.json) || exit 1
 
-# That ref is the commit under test, and on a pull_request build it is a merge commit
-# no branch points at - an https clone copies only refs/heads/*, so it could not fetch
-# it. This working copy already has it, and a clone from a local path copies every
-# object, so pointing the hub at it resolves the ref without a second checkout.
-hub_worktree=$PWD
+# On a pull_request build that commit is a merge commit no branch points at - an
+# https clone copies only refs/heads/*, so it could not fetch it. This working copy
+# already has it, and a clone from a local path copies every object, so pointing the
+# hub at it resolves the ref without a second checkout.
+export GIT_CONFIG_COUNT=1
+export GIT_CONFIG_KEY_0="url.$PWD/.insteadOf"
+export GIT_CONFIG_VALUE_0=https://github.com/meshcloud/meshstack-hub.git
 
 # Named roots rather than exclusions: every other .tf in the repo belongs to the
 # renderer, to an agent worktree or to the website, and is not a module.
@@ -53,15 +60,10 @@ dirs=$(find modules infra reference-architectures -name '*.tf' \
 	-not -path '*/.terraform/*' \
 	-print0 | xargs -0 -n1 dirname | sort -u)
 
+# shellcheck disable=SC2329 # invoked through xargs below
 validate_dir() {
-	local dir="$1" log="$workdir/$(tr '/' '_' <<< "$1").log"
-	if [[ $dir == */e2e || $dir == */e2e/* ]]; then
-		# Send the hub's clone url to the working copy, for e2e roots only:
-		# everything else pins a real ref a normal clone can reach.
-		export GIT_CONFIG_COUNT=1
-		export GIT_CONFIG_KEY_0="url.$hub_worktree/.insteadOf"
-		export GIT_CONFIG_VALUE_0=https://github.com/meshcloud/meshstack-hub.git
-	fi
+	local dir="$1" log
+	log="$workdir/$(tr '/' '_' <<< "$1").log"
 	# The provider registry occasionally resets a connection under this many
 	# parallel inits. One retry costs a second and removes the flake.
 	(cd "$dir" && { tofu init -backend=false -input=false -no-color ||
@@ -70,7 +72,7 @@ validate_dir() {
 		echo "$dir" >> "$workdir/failed"
 }
 export -f validate_dir
-export workdir hub_worktree
+export workdir
 
 xargs -P "$jobs" -I{} bash -c 'validate_dir "$@"' _ {} <<< "$dirs"
 

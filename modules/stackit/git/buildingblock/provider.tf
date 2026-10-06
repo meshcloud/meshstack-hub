@@ -12,7 +12,7 @@ provider "stackit" {
 # still is at plan time. Username and password are plain string attributes, which do accept one.
 provider "restapi" {
   uri                  = local.forgejo_base_url
-  username             = var.local_user_username
+  username             = local.local_user_username
   password             = random_password.local_user.result
   write_returns_object = true
 
@@ -22,6 +22,44 @@ provider "restapi" {
 
   # A single TCP reset from the STACKIT API failed whole runs: without this the provider makes one
   # attempt and gives up.
+  retries {
+    max_retries = 5
+    min_wait    = 1
+    max_wait    = 10
+  }
+}
+
+provider "restapi" {
+  alias = "without_returned_object"
+
+  uri                  = local.forgejo_base_url
+  username             = local.local_user_username
+  password             = random_password.local_user.result
+  write_returns_object = false
+
+  headers = {
+    Content-Type = "application/json"
+  }
+
+  retries {
+    max_retries = 5
+    min_wait    = 1
+    max_wait    = 10
+  }
+}
+
+# Authenticates with the token of an owner of an adopted organization.
+provider "restapi" {
+  alias = "existing"
+
+  uri                  = local.forgejo_base_url
+  write_returns_object = false
+
+  headers = {
+    Authorization = var.imports == null ? "" : "token ${ephemeral.vault_kv_secret_v2.existing_forgejo_api_token.data.forgejo_api_token}"
+    Content-Type  = "application/json"
+  }
+
   retries {
     max_retries = 5
     min_wait    = 1

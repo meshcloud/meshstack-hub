@@ -34,6 +34,19 @@ variable "bbd_readme" {
   description = "Overrides the markdown readme shown in the marketplace before ordering."
 }
 
+variable "approval_policies" {
+  type = object({
+    building_block_creation = optional(bool, false)
+    user_input_changes      = optional(bool, false)
+    any_input_changes       = optional(bool, false)
+    manual_triggers         = optional(bool, false)
+    version_upgrade         = optional(bool, false)
+  })
+  nullable    = false
+  default     = {}
+  description = "Run triggers that need an operator's approval before a run of this definition is applied. A gate switched on in meshPanel is reset on the next apply unless it is set here."
+}
+
 variable "meshstack" {
   type = object({
     owning_workspace_identifier = string
@@ -79,6 +92,7 @@ resource "meshstack_building_block_definition" "this" {
     support_url         = "https://portal.stackit.cloud"
     target_type         = "TENANT_LEVEL"
     run_transparency    = true
+    approval_policies   = var.approval_policies
     supported_platforms = [{ name = "STACKIT" }]
 
     readme = coalesce(var.bbd_readme, chomp(<<-EOT
@@ -111,7 +125,10 @@ resource "meshstack_building_block_definition" "this" {
       portal can create that first link. The building block's summary says exactly what to click.
 
       Once linked, that service account's token authenticates as the robot, so every later robot
-      can be created through the Harbor API without touching the portal again.
+      can be created through the Harbor API without touching the portal again. Every run checks
+      for the link, so after linking, run the building block again; it then mints a push and a
+      pull robot and writes them to the Vault KV v2 secrets given as `output_to_vault`. With
+      **Require Robot Link** set, a run that finds no link fails.
 
       ## 📊 Shared responsibility
 
@@ -208,28 +225,43 @@ resource "meshstack_building_block_definition" "this" {
         validation_regex_error_message = "Registry name must be 5 to 58 characters, lowercase alphanumeric or dashes, and not start or end with a dash."
       }
 
-      # The registry is ordered before the robot it is told about exists, so the name arrives on a
-      # later update and the block has to accept it changing after it was first ordered.
-      bootstrap_robot_username = {
-        display_name           = "Bootstrap Robot Name"
-        description            = "Name of a Harbor robot in this registry, linked to this platform's STACKIT service account. Only the Harbor UI can create the first one; leave empty until you have. Its password is not needed."
-        type                   = "STRING"
+      require_robot_link = {
+        display_name           = "Require Robot Link"
+        description            = "Fail the run while no robot is linked to the service account, instead of minting no robots."
+        type                   = "BOOLEAN"
         assignment_type        = "USER_INPUT"
-        is_optional            = true
+        default_value          = jsonencode(false)
         updateable_by_consumer = true
       }
 
       mirrored_base_images = {
         display_name           = "Mirrored Base Images"
-        description            = "HCL list of fully qualified upstream images to mirror into the registry as `<registry>/<name>:<tag>`. Mirroring starts once the bootstrap robot is set."
+        description            = "HCL list of fully qualified upstream images to mirror into the registry as `<registry>/<name>:<tag>`. Mirroring starts once a robot is linked to the service account."
         type                   = "CODE"
         assignment_type        = "USER_INPUT"
         default_value          = jsonencode(jsonencode([]))
         updateable_by_consumer = true
       }
+
+      output_to_vault = {
+        display_name           = "Output to Vault"
+        description            = "HCL object `{address, mount, username, password, path}` of the Vault KV v2 secrets the push and pull robots are written to, as `<path>/push` and `<path>/pull` under the keys `username` and `password`. Leave empty to write them nowhere."
+        type                   = "CODE"
+        assignment_type        = "USER_INPUT"
+        sensitive              = {}
+        is_optional            = true
+        updateable_by_consumer = true
+      }
     }
 
     outputs = {
+      vault_secret = {
+        display_name    = "Vault Secret"
+        description     = "JSON object `{push, pull}`, each `{path, secret_hash}` of a robot secret in Vault, or `{}` when no robots are written. `secret_hash` changes with the secret's content."
+        type            = "CODE"
+        assignment_type = "NONE"
+      }
+
       registry_name = {
         display_name    = "Registry Name"
         type            = "STRING"
@@ -251,12 +283,6 @@ resource "meshstack_building_block_definition" "this" {
       registry_robot_url = {
         display_name    = "Registry Robot URL"
         type            = "STRING"
-        assignment_type = "NONE"
-      }
-
-      access_credentials = {
-        display_name    = "Access Credentials"
-        type            = "CODE"
         assignment_type = "NONE"
       }
 

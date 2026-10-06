@@ -1,8 +1,3 @@
-variable "stackit_organization_id" {
-  type        = string
-  description = "STACKIT organization ID under which target projects live."
-}
-
 variable "stackit_project_id" {
   type        = string
   description = "STACKIT project ID where the backplane service account will be created."
@@ -12,6 +7,15 @@ variable "stackit_service_account_name" {
   type        = string
   default     = null
   description = "Name of the backplane service account. Defaults to 'mesh-sa-federation'."
+}
+
+variable "service_account_definition_ref" {
+  type = object({
+    kind = string
+    uuid = string
+  })
+  default     = null
+  description = "Ref of the STACKIT Service Account definition, whose building blocks are the parents of this definition's building blocks. Null declares no such dependency."
 }
 
 variable "bbd_display_name" {
@@ -72,11 +76,15 @@ output "building_block_definition" {
   }
 }
 
+output "backplane_service_account_email" {
+  description = "Email of the backplane service account the runs act as. The STACKIT Service Account definition grants it `editor` on the projects it may federate in."
+  value       = module.backplane.service_account_email
+}
+
 module "backplane" {
   source = "github.com/meshcloud/meshstack-hub//modules/stackit/service-account-federation/backplane?ref=${var.hub.git_ref}"
 
   project_id           = var.stackit_project_id
-  organization_id      = var.stackit_organization_id
   service_account_name = coalesce(var.stackit_service_account_name, "mesh-sa-federation")
 
   workload_identity_federation = {
@@ -129,8 +137,9 @@ resource "meshstack_building_block_definition" "this" {
   }
 
   version_spec = {
-    draft         = var.hub.bbd_draft
-    deletion_mode = "DELETE"
+    draft           = var.hub.bbd_draft
+    deletion_mode   = "DELETE"
+    dependency_refs = var.service_account_definition_ref == null ? null : [var.service_account_definition_ref]
     runner_ref = var.building_block_runner_uuid == null ? null : {
       kind = "meshBuildingBlockRunner"
       uuid = var.building_block_runner_uuid
@@ -186,14 +195,6 @@ resource "meshstack_building_block_definition" "this" {
         assignment_type = "STATIC"
         is_environment  = true
         argument        = jsonencode("/var/run/secrets/workload-identity/azure/token")
-      }
-
-      automation_service_account_email = {
-        display_name    = "Automation Service Account Email"
-        description     = "Backplane identity the run acts as, as a regular input the configuration can read."
-        type            = "STRING"
-        assignment_type = "STATIC"
-        argument        = jsonencode(module.backplane.service_account_email)
       }
 
       workspace_identifier = {

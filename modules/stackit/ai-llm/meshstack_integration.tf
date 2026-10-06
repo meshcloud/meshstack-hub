@@ -30,6 +30,19 @@ variable "bbd_readme" {
   description = "Overrides the markdown readme shown in the marketplace before ordering."
 }
 
+variable "approval_policies" {
+  type = object({
+    building_block_creation = optional(bool, false)
+    user_input_changes      = optional(bool, false)
+    any_input_changes       = optional(bool, false)
+    manual_triggers         = optional(bool, false)
+    version_upgrade         = optional(bool, false)
+  })
+  nullable    = false
+  default     = {}
+  description = "Run triggers that need an operator's approval before a run of this definition is applied. A gate switched on in meshPanel is reset on the next apply unless it is set here."
+}
+
 variable "meshstack" {
   type = object({
     owning_workspace_identifier = string
@@ -75,6 +88,7 @@ resource "meshstack_building_block_definition" "this" {
     support_url         = "https://portal.stackit.cloud"
     target_type         = "TENANT_LEVEL"
     run_transparency    = true
+    approval_policies   = var.approval_policies
     supported_platforms = [{ name = "STACKIT" }]
 
     readme = coalesce(var.bbd_readme, chomp(<<-EOT
@@ -96,9 +110,10 @@ resource "meshstack_building_block_definition" "this" {
       ## 🔌 How an application uses it
 
       The endpoint speaks the OpenAI API, so any OpenAI client works against it by pointing its base
-      URL there. In the reference architecture the endpoint, the token and the model arrive in every
-      application namespace as a Kubernetes secret named `stackit-ai`, with the keys
-      `STACKIT_AI_BASE_URL`, `STACKIT_AI_API_KEY` and `STACKIT_AI_MODEL`.
+      URL there. The endpoint, the token and the model are written to a Vault KV v2 secret with the
+      keys `STACKIT_AI_BASE_URL`, `STACKIT_AI_API_KEY` and `STACKIT_AI_MODEL`. In the reference
+      architecture they arrive in every application namespace as a Kubernetes secret named
+      `stackit-ai` with the same keys.
 
       ## 📊 Shared responsibility
 
@@ -191,23 +206,21 @@ resource "meshstack_building_block_definition" "this" {
         assignment_type = "STATIC"
         argument        = jsonencode("Inference access for applications on this platform.")
       }
+
+      output_to_vault = {
+        display_name           = "Output to Vault"
+        description            = "HCL object `{address, mount, username, password, path}` of the Vault KV v2 secret the endpoint, the token and the model are written to, under the keys `STACKIT_AI_BASE_URL`, `STACKIT_AI_API_KEY` and `STACKIT_AI_MODEL`."
+        type                   = "CODE"
+        assignment_type        = "USER_INPUT"
+        sensitive              = {}
+        updateable_by_consumer = true
+      }
     }
 
     outputs = {
-      base_url = {
-        display_name    = "Inference Endpoint"
-        type            = "STRING"
-        assignment_type = "NONE"
-      }
-
-      model = {
-        display_name    = "Model"
-        type            = "STRING"
-        assignment_type = "NONE"
-      }
-
-      access_credentials = {
-        display_name    = "Access Credentials"
+      vault_secret = {
+        display_name    = "Vault Secret"
+        description     = "JSON object `{path, secret_hash}` of the secret in Vault. `secret_hash` changes with the secret's content."
         type            = "CODE"
         assignment_type = "NONE"
       }
@@ -228,8 +241,9 @@ terraform {
 
   required_providers {
     meshstack = {
-      source  = "meshcloud/meshstack"
-      version = ">= 0.21.0"
+      source = "meshcloud/meshstack"
+      # 0.25.2 is the first release that accepts `spec.approval_policies`.
+      version = ">= 0.25.2"
     }
   }
 }

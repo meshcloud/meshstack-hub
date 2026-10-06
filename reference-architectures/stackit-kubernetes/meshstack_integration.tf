@@ -5,6 +5,32 @@ variable "playground_mode" {
   description = "Deploy a throwaway platform that gets a random identifier suffix and stays destroyable."
 }
 
+variable "approval_policies" {
+  type = object({
+    building_block_creation = optional(bool, false)
+    user_input_changes      = optional(bool, false)
+    any_input_changes       = optional(bool, false)
+    manual_triggers         = optional(bool, false)
+    version_upgrade         = optional(bool, false)
+  })
+  nullable    = false
+  default     = {}
+  description = "Run triggers that need an operator's approval before a run of this architecture, or of a platform definition it registers, is applied. A gate switched on in meshPanel is reset on the next apply unless it is set here."
+}
+
+variable "starterkit_approval_policies" {
+  type = object({
+    building_block_creation = optional(bool, false)
+    user_input_changes      = optional(bool, false)
+    any_input_changes       = optional(bool, false)
+    manual_triggers         = optional(bool, false)
+    version_upgrade         = optional(bool, false)
+  })
+  nullable    = false
+  default     = {}
+  description = "Run triggers that need an operator's approval before a run of the Git repository, Forgejo connector or SKE starterkit definition this architecture registers is applied."
+}
+
 variable "meshstack" {
   type = object({
     owning_workspace_identifier = string
@@ -52,6 +78,7 @@ resource "meshstack_building_block_definition" "this" {
     support_url           = "https://portal.stackit.cloud/ske"
     target_type           = "WORKSPACE_LEVEL"
     run_transparency      = true
+    approval_policies     = var.approval_policies
 
     readme = chomp(<<-EOT
     The **STACKIT Kubernetes Platform** building block bootstraps a sovereign-cloud Kubernetes
@@ -63,11 +90,15 @@ resource "meshstack_building_block_definition" "this" {
 
     - **Hosting project** – a STACKIT project (self-hosted as a meshStack tenant) that the cluster
       runs in.
-    - **Service account** – ordered from the landing zone's STACKIT Service Account definition. The
-      cluster, Git, registry, DNS and AI definitions below are federated into it.
+    - **Service account** – ordered from the landing zone's STACKIT Service Account definition. Every
+      STACKIT building block below is federated into it.
+    - **Platform Services** – one nested building block that orders everything below as the service
+      account.
+    - **Secrets Manager** – a STACKIT Secrets Manager instance that holds every credential the
+      building blocks below create, so no building block shows one as an output.
     - **SKE cluster** – a managed STACKIT Kubernetes Engine cluster with an admin kubeconfig, ordered
       from the STACKIT SKE Cluster building block this architecture registers.
-    - **Platform services** – HAProxy ingress, cert-manager with a Let's Encrypt ClusterIssuer, and
+    - **In-cluster services** – HAProxy ingress, cert-manager with a Let's Encrypt ClusterIssuer, and
       the meshStack replication/metering service accounts.
     - **DNS zone** – a zone under the DNS Parent Domain with a wildcard record pointing at the
       ingress load balancer.
@@ -82,20 +113,21 @@ resource "meshstack_building_block_definition" "this" {
       prod unless the Stages input says otherwise, that application teams order Kubernetes
       namespaces from.
 
-    ## 🔁 Ordered once, updated once
+    ## 🔁 One order, one manual step
 
     One order creates everything above. What is left is a Harbor robot account, which only the
     STACKIT portal can create:
 
-    1. **Order it** with the **Harbor Bootstrap Robot Name** input left empty. The summary says how
-       to create the robot and link it to the platform's service account.
-    2. **Update the same building block** with the robot's name. The run then registers the
-       **STACKIT Git Repository**, **SKE Forgejo Connector** and **SKE Starterkit** definitions, so
-       application teams can order a repository wired to their namespaces.
+    1. **Order it.** The summary says how to create the robot and link it to the platform's
+       service account.
+    2. **Set Phase 2 Completed** on the same building block. The run then mints the registry's
+       push and pull robots and registers the **STACKIT Git Repository**, **SKE Forgejo
+       Connector** and **SKE Starterkit** definitions application teams order. It fails while no
+       robot is linked.
 
     ## 🔑 Authentication
 
-    You wire one value: the STACKIT Landing Zone building block's UUID. Everything else comes from
+    You wire one value: the STACKIT Landing Zone building block's refs. Everything else comes from
     that landing zone — the platform and landing zone the hosting project is created on, and the
     STACKIT Service Account definition this architecture orders to mint its own identity. No STACKIT
     credential is pasted here or held by this architecture: every STACKIT building block it orders
@@ -117,14 +149,16 @@ resource "meshstack_building_block_definition" "this" {
     draft         = var.hub.bbd_draft
     deletion_mode = "DELETE"
 
+    # meshStack lets a run order a building block only if it holds every permission of its
+    # definition, so this list covers the federation and the nested definition as well.
     permissions = [
-      "INTEGRATION_LIST",
       "BUILDINGBLOCKDEFINITION_LIST",
       "BUILDINGBLOCKDEFINITION_SAVE",
       "BUILDINGBLOCKDEFINITION_DELETE",
       "BUILDINGBLOCK_LIST",
       "BUILDINGBLOCK_SAVE",
       "BUILDINGBLOCK_DELETE",
+      "INTEGRATION_LIST",
       "LANDINGZONE_LIST",
       "LANDINGZONE_SAVE",
       "LANDINGZONE_DELETE",
@@ -189,15 +223,6 @@ resource "meshstack_building_block_definition" "this" {
         is_optional     = true
       }
 
-      harbor_username = {
-        display_name           = "Harbor Bootstrap Robot Name"
-        description            = "Name of the Harbor robot linked to this platform's STACKIT service account. Leave empty on the first order — the summary says what to do next. Its password is not needed."
-        type                   = "STRING"
-        assignment_type        = "USER_INPUT"
-        is_optional            = true
-        updateable_by_consumer = true
-      }
-
       dns_subdomain = {
         display_name                   = "DNS Subdomain"
         description                    = "Label the platform's DNS zone occupies under the parent domain. Leave empty to use the platform identifier."
@@ -207,6 +232,15 @@ resource "meshstack_building_block_definition" "this" {
         updateable_by_consumer         = true
         value_validation_regex         = "^[a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?$"
         validation_regex_error_message = "DNS subdomain must be a DNS label: lowercase letters, digits and dashes, not starting or ending with a dash."
+      }
+
+      phase2_completed = {
+        display_name           = "Phase 2 Completed"
+        description            = "Set to true once a Harbor robot is linked to the platform's service account, as the summary describes. The run then mints the registry's push and pull robots and registers the definitions application teams order. It fails while no robot is linked."
+        type                   = "BOOLEAN"
+        assignment_type        = "USER_INPUT"
+        default_value          = jsonencode(false)
+        updateable_by_consumer = true
       }
 
       ai_model = {
@@ -258,14 +292,23 @@ resource "meshstack_building_block_definition" "this" {
 
       payment_method_identifier = {
         display_name    = "Payment Method Identifier"
-        description     = "Payment method assigned to the hosting meshProject."
+        description     = "Payment method assigned to the hosting meshProject. Leave empty to assign none."
         type            = "STRING"
         assignment_type = "USER_INPUT"
+        is_optional     = true
+      }
+
+      project_identifier = {
+        display_name    = "Project Identifier"
+        description     = "Overrides the identifier of the hosting meshProject, `<platform identifier>-ske` by default. Set it when your meshStack restricts project identifiers."
+        type            = "STRING"
+        assignment_type = "USER_INPUT"
+        is_optional     = true
       }
 
       tags = {
         display_name           = "Tags"
-        description            = "Tag maps shared by every stage: `landingzone`, `building_block`, `project`, and `project_owner_tag_key` (the owner tag your meshStack enforces on projects, e.g. `projectOwner`). A tag whose value differs between stages belongs in Stages instead."
+        description            = "Tag maps shared by every stage: `landingzone`, `building_block`, `project` (the platform's project), `starterkit_project` (the starter kit's projects), and `project_owner_tag_key` (e.g. `projectOwner`). Stage-specific tags go in Stages."
         type                   = "CODE"
         assignment_type        = "USER_INPUT"
         updateable_by_consumer = true
@@ -273,6 +316,7 @@ resource "meshstack_building_block_definition" "this" {
           landingzone           = {}
           building_block        = {}
           project               = {}
+          starterkit_project    = {}
           project_owner_tag_key = ""
         }))
       }
@@ -324,6 +368,48 @@ resource "meshstack_building_block_definition" "this" {
         updateable_by_consumer = true
       }
 
+      approval_policies = {
+        display_name    = "Approval Policies"
+        description     = "HCL object of approval gates applied to the platform definitions this registers. Fixed by whoever deployed this definition."
+        type            = "CODE"
+        assignment_type = "STATIC"
+        argument        = jsonencode(jsonencode(var.approval_policies))
+      }
+
+      starterkit_approval_policies = {
+        display_name    = "Starterkit Approval Policies"
+        description     = "HCL object of approval gates applied to the application team definitions this registers. Fixed by whoever deployed this definition."
+        type            = "CODE"
+        assignment_type = "STATIC"
+        argument        = jsonencode(jsonencode(var.starterkit_approval_policies))
+      }
+
+      imports = {
+        display_name    = "Imports"
+        description     = "HCL object of what to take over: `project = {display_name?}` (Project Identifier), `ske = {}` (Cluster Name), `git = {instance_id, instance_name, forgejo_organization, existing_forgejo_api_token_path}`. `ske` and `git` need `project`. `?` marks optional."
+        type            = "CODE"
+        assignment_type = "USER_INPUT"
+        is_optional     = true
+      }
+
+      existing = {
+        display_name    = "Existing Ingress and DNS Zone"
+        description     = "HCL object `{ingress_load_balancer_ip, dns = {zone_name}}` of an ingress and a DNS zone, with a wildcard record to it, that the platform uses instead of creating its own. It does not manage them."
+        type            = "CODE"
+        assignment_type = "USER_INPUT"
+        is_optional     = true
+      }
+
+      import_secrets = {
+        display_name           = "Import Secrets"
+        description            = "HCL map of secrets to write to the platform's Secrets Manager, by path, each a map of keys to values. Use it to hand over the existing Forgejo API token that `imports.git` needs. Leave empty to write none."
+        type                   = "CODE"
+        assignment_type        = "USER_INPUT"
+        sensitive              = {}
+        is_optional            = true
+        updateable_by_consumer = true
+      }
+
       playground_mode = {
         display_name    = "Playground Mode"
         description     = "Throwaway deployment: the identifier gets a random suffix and nothing is protected against deletion. Do not publish such a platform or its definitions to other workspaces. Set false for real use."
@@ -355,8 +441,7 @@ terraform {
   required_providers {
     meshstack = {
       source = "meshcloud/meshstack"
-      # 0.25.2 adds `version_spec.inputs.*.is_optional`, which lets the first order skip the Harbor
-      # robot.
+      # 0.25.2 adds `version_spec.inputs.*.is_optional`.
       version = ">= 0.25.2"
     }
   }

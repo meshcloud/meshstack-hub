@@ -1,16 +1,19 @@
 variable "kubeconfig" {
-  description = "Kubeconfig content containing the configuration required to access and authenticate to the Kubernetes cluster."
-  type        = any
-  sensitive   = true
+  type        = string
+  nullable    = false
+  ephemeral   = true
+  description = "Kubeconfig (YAML) of a cluster-admin service account on the cluster the tenant namespaces live on."
+}
+
+variable "kubeconfig_version" {
+  type        = string
+  nullable    = false
+  default     = "1"
+  description = "Version of `kubeconfig`. It is ephemeral, so no version can be derived from it: increase this to send it to meshStack again."
 }
 
 variable "forgejo_host" {
   type = string
-}
-
-variable "forgejo_api_token" {
-  type      = string
-  sensitive = true
 }
 
 variable "forgejo_repo_definition_uuid" {
@@ -24,21 +27,47 @@ variable "harbor_host" {
   default     = "https://registry.onstackit.cloud"
 }
 
-variable "container_registry_access_credentials" {
+variable "vault_reader" {
   type = object({
-    push = object({ user = string, password = string })
-    pull = object({ user = string, password = string })
+    address  = string
+    mount    = string
+    username = string
+    password = string
   })
-  description = "Registry robot credentials, as the container registry building block reports them. Null until a bootstrap robot is linked in the Harbor UI."
+  nullable    = false
   sensitive   = true
-  default     = null
+  description = "Vault KV v2 login the building blocks read their secrets with: the server `address`, the engine `mount` and a userpass `username` and `password`."
+}
+
+variable "forgejo_api_token_path" {
+  type        = string
+  nullable    = false
+  description = "Vault KV v2 secret holding the Forgejo API token under the key `forgejo_api_token`."
+}
+
+variable "registry_pull_path" {
+  type        = string
+  nullable    = false
+  description = "Vault KV v2 secret holding the registry pull robot under the keys `username` and `password`."
 }
 
 variable "additional_kubernetes_secrets" {
-  type        = map(map(string))
-  description = "Additional Kubernetes secrets provisioned in tenant namespaces by the connector."
-  sensitive   = true
+  type        = map(string)
+  nullable    = false
   default     = {}
+  description = "Opaque Kubernetes secrets the connector creates in each tenant namespace, by name, each from the Vault KV v2 secret at the given path. Every key of that secret becomes a key of the Kubernetes secret."
+}
+
+variable "secrets_revision" {
+  type        = number
+  nullable    = false
+  default     = 1
+  description = "Revision of the Kubernetes secrets the connector fills from Vault. Increase it to push changed values to the tenant namespaces."
+
+  validation {
+    condition     = var.secrets_revision >= 1
+    error_message = "secrets_revision must be at least 1, or the kubernetes provider writes the secrets empty."
+  }
 }
 
 variable "bbd_display_name" {
@@ -57,6 +86,19 @@ variable "bbd_readme" {
   type        = string
   default     = null
   description = "Overrides the markdown readme shown in the marketplace before ordering."
+}
+
+variable "approval_policies" {
+  type = object({
+    building_block_creation = optional(bool, false)
+    user_input_changes      = optional(bool, false)
+    any_input_changes       = optional(bool, false)
+    manual_triggers         = optional(bool, false)
+    version_upgrade         = optional(bool, false)
+  })
+  nullable    = false
+  default     = {}
+  description = "Run triggers that need an operator's approval before a run of this definition is applied. A gate switched on in meshPanel is reset on the next apply unless it is set here."
 }
 
 variable "meshstack" {
@@ -108,6 +150,7 @@ resource "meshstack_building_block_definition" "this" {
     target_type         = "TENANT_LEVEL"
     supported_platforms = [{ name = "KUBERNETES" }]
     run_transparency    = true
+    approval_policies   = var.approval_policies
 
     readme = coalesce(var.bbd_readme, chomp(<<-EOT
     The **SKE Forgejo Connector** wires a Forgejo repository to a Kubernetes namespace on STACKIT SKE so that
@@ -117,6 +160,8 @@ resource "meshstack_building_block_definition" "this" {
 
     - **Kubernetes service account & RBAC** – scoped credentials for the Forgejo Actions runner, including
       cluster-issuer read access for cert-manager.
+    - **Additional secrets** – Opaque secrets the platform fills from its Secrets Manager, for example
+      the AI model serving credentials.
     - **Forgejo Actions secrets** – a per-stage `KUBECONFIG_<STAGE>` secret containing a kubeconfig scoped to
       the tenant namespace.
     - **Forgejo Actions variables** – per-stage `K8S_NAMESPACE_<STAGE>` and `APP_HOSTNAME_<STAGE>`.
@@ -154,7 +199,7 @@ resource "meshstack_building_block_definition" "this" {
 
     dependency_refs = [{ uuid = var.forgejo_repo_definition_uuid }]
 
-    inputs = merge({
+    inputs = {
       namespace = {
         display_name    = "K8S Namespace"
         description     = "Provided namespace in Kubernetes cluster."
@@ -164,23 +209,31 @@ resource "meshstack_building_block_definition" "this" {
 
       "kubeconfig.yaml" = {
         display_name    = "kubeconfig.yaml"
-        description     = "kubeconfig.yaml file providing admin credentials to cluster."
+        description     = "Kubeconfig of a cluster-admin service account on the cluster."
         type            = "FILE"
         assignment_type = "STATIC"
         sensitive = {
           argument = {
-            secret_value   = "data:application/yaml;base64,${base64encode(yamlencode(var.kubeconfig))}" # data type application/yaml is ignored anyway
-            secret_version = nonsensitive(sha256(yamlencode(var.kubeconfig)))
+            secret_value   = "data:application/yaml;base64,${base64encode(var.kubeconfig)}"
+            secret_version = var.kubeconfig_version
           }
         }
       }
 
-      repository_id = {
-        display_name    = "repository_id"
-        description     = "ID of the parent Forgejo repository where action secrets are created."
-        type            = "INTEGER"
+      repository_owner = {
+        display_name    = "repository_owner"
+        description     = "Owner of the parent Forgejo repository where action secrets are created."
+        type            = "STRING"
         assignment_type = "BUILDING_BLOCK_OUTPUT"
-        argument        = jsonencode("${var.forgejo_repo_definition_uuid}.repository_id")
+        argument        = jsonencode("${var.forgejo_repo_definition_uuid}.repository_owner")
+      }
+
+      repository_name = {
+        display_name    = "repository_name"
+        description     = "Name of the parent Forgejo repository where action secrets are created."
+        type            = "STRING"
+        assignment_type = "BUILDING_BLOCK_OUTPUT"
+        argument        = jsonencode("${var.forgejo_repo_definition_uuid}.repository_name")
       }
 
       stage = {
@@ -200,15 +253,10 @@ resource "meshstack_building_block_definition" "this" {
 
       additional_kubernetes_secrets = {
         display_name    = "additional_kubernetes_secrets"
-        description     = "Static sensitive map of additional Kubernetes Opaque secrets to create in the tenant namespace."
+        description     = "Map from the name of an Opaque Kubernetes secret created in the tenant namespace to the Vault KV v2 secret it is filled from."
         type            = "CODE"
         assignment_type = "STATIC"
-        sensitive = {
-          argument = {
-            secret_value   = jsonencode(var.additional_kubernetes_secrets)
-            secret_version = nonsensitive(sha256(jsonencode(var.additional_kubernetes_secrets)))
-          }
-        }
+        argument        = jsonencode(jsonencode(var.additional_kubernetes_secrets))
       }
 
       FORGEJO_HOST = {
@@ -220,18 +268,42 @@ resource "meshstack_building_block_definition" "this" {
         argument        = jsonencode(var.forgejo_host)
       }
 
-      FORGEJO_API_TOKEN = {
-        display_name    = "FORGEJO_API_TOKEN"
-        description     = "The API token for authenticating with the Forgejo instance."
-        type            = "STRING"
+      vault_reader = {
+        display_name    = "Vault Reader"
+        description     = "HCL object `{address, mount, username, password}` of the Vault KV v2 login the run reads its secrets with."
+        type            = "CODE"
         assignment_type = "STATIC"
-        is_environment  = true
         sensitive = {
           argument = {
-            secret_value   = var.forgejo_api_token
-            secret_version = nonsensitive(sha256(var.forgejo_api_token))
+            secret_value   = jsonencode(var.vault_reader)
+            secret_version = nonsensitive(sha256(jsonencode(var.vault_reader)))
           }
         }
+      }
+
+      forgejo_api_token_path = {
+        display_name    = "Forgejo API Token Path"
+        description     = "Vault KV v2 secret holding the Forgejo API token under the key `forgejo_api_token`."
+        type            = "STRING"
+        assignment_type = "STATIC"
+        argument        = jsonencode(var.forgejo_api_token_path)
+      }
+
+      registry_pull_path = {
+        display_name    = "Registry Pull Robot Path"
+        description     = "Vault KV v2 secret holding the registry pull robot under the keys `username` and `password`."
+        type            = "STRING"
+        assignment_type = "STATIC"
+        argument        = jsonencode(var.registry_pull_path)
+      }
+
+      # STRING, because meshStack takes only 32-bit numbers for an INTEGER input.
+      secrets_revision = {
+        display_name    = "Secrets Revision"
+        description     = "Revision of the Kubernetes secrets filled from Vault."
+        type            = "STRING"
+        assignment_type = "STATIC"
+        argument        = jsonencode(tostring(var.secrets_revision))
       }
 
       harbor_host = {
@@ -249,24 +321,7 @@ resource "meshstack_building_block_definition" "this" {
         assignment_type = "STATIC"
         argument        = jsonencode(var.hub.git_ref)
       }
-      # The registry robots only exist once a bootstrap robot is linked in the Harbor UI (a
-      # post-provisioning step), and the provider rejects an empty sensitive value — so this input
-      # joins the definition only when real credentials are supplied. Until then the connector wires
-      # no push secret and application pods pull public images only.
-      }, var.container_registry_access_credentials != null ? {
-      container_registry_access_credentials = {
-        display_name    = "container_registry_access_credentials"
-        description     = "Registry robot credentials: `push` for the pipeline, `pull` for the namespace."
-        type            = "CODE"
-        assignment_type = "STATIC"
-        sensitive = {
-          argument = {
-            secret_value   = jsonencode(var.container_registry_access_credentials)
-            secret_version = nonsensitive(sha256(jsonencode(var.container_registry_access_credentials)))
-          }
-        }
-      }
-    } : {})
+    }
 
     outputs = {
       "app_link" = {
@@ -283,8 +338,9 @@ terraform {
 
   required_providers {
     meshstack = {
-      source  = "meshcloud/meshstack"
-      version = ">= 0.21.0"
+      source = "meshcloud/meshstack"
+      # 0.25.2 is the first release that accepts `spec.approval_policies`.
+      version = ">= 0.25.2"
     }
   }
 }

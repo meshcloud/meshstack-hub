@@ -45,8 +45,14 @@ variable "use_global_location" {
 
 variable "payment_method_identifier" {
   type        = string
-  nullable    = false
-  description = "Payment method identifier assigned to the platform's meshProject."
+  default     = null
+  description = "Payment method identifier assigned to the platform's meshProject. Null assigns none."
+}
+
+variable "project_identifier" {
+  type        = string
+  default     = null
+  description = "Overrides the identifier of the platform's meshProject, `<platform identifier>-ske` by default. Set it when the meshStack instance restricts project identifiers."
 }
 
 variable "tags" {
@@ -54,6 +60,7 @@ variable "tags" {
     landingzone           = map(list(string))
     building_block        = map(list(string))
     project               = map(list(string))
+    starterkit_project    = map(list(string))
     project_owner_tag_key = optional(string, "")
   })
   nullable    = false
@@ -61,8 +68,9 @@ variable "tags" {
   Tags forwarded to the nested integrations, and shared by every stage.
   `landingzone` tags are applied to the created SKE landing zones. Include every tag a tag policy matches against a project tag, or no tenant can be created on them.
   `building_block` tags are applied to the nested building block definitions.
-  `project` tags are applied to the platform's meshProject and to the meshProjects the starter kit creates.
-  `project_owner_tag_key` names the tag that receives the creator's display name on the platform's meshProject (empty to set none). Set it to the mandatory owner tag your meshStack enforces (e.g. `projectOwner`).
+  `project` tags are applied to the platform's meshProject only.
+  `starterkit_project` tags are applied to the meshProjects the starter kit creates.
+  `project_owner_tag_key` names the tag that receives the creator's display name on the platform's meshProject and on the starter kit's meshProjects (empty to set none). Set it to the mandatory owner tag your meshStack enforces (e.g. `projectOwner`).
   EOT
 }
 
@@ -74,7 +82,7 @@ variable "stages" {
   nullable    = false
   description = <<-EOT
   Stages the platform offers. The map keys name them, and one landing zone is created per key, so a platform can offer fewer or more than the usual `dev` and `prod`. The starter kit creates one meshProject and one namespace per key.
-  `landingzone` and `project` carry the tags whose value differs between stages. They are merged over the matching map in `tags`, and over the `environment` tag the stage gets from its key.
+  `landingzone` and `project` carry the tags whose value differs between stages. They are merged over `tags.landingzone` and `tags.starterkit_project`, and over the `environment` tag the stage gets from its key.
   A tag policy pairs a landing zone tag with a project tag, so such a tag belongs here on both sides at once.
   EOT
 }
@@ -106,6 +114,30 @@ variable "workspace_members" {
   description = "Members of the owning workspace, injected by meshStack. Owners and managers become Project Admin of the platform's project."
 }
 
+variable "approval_policies" {
+  type = object({
+    building_block_creation = bool
+    user_input_changes      = bool
+    any_input_changes       = bool
+    manual_triggers         = bool
+    version_upgrade         = bool
+  })
+  nullable    = false
+  description = "Run triggers that need an operator's approval before a run of a platform definition this architecture registers is applied."
+}
+
+variable "starterkit_approval_policies" {
+  type = object({
+    building_block_creation = bool
+    user_input_changes      = bool
+    any_input_changes       = bool
+    manual_triggers         = bool
+    version_upgrade         = bool
+  })
+  nullable    = false
+  description = "Run triggers that need an operator's approval before a run of the Git repository, Forgejo connector or SKE starterkit definition this architecture registers is applied."
+}
+
 variable "playground_mode" {
   type        = bool
   nullable    = false
@@ -131,13 +163,6 @@ variable "cluster_issuer_email" {
   description = "Overrides the Let's Encrypt contact email registered for the ACME ClusterIssuer."
 }
 
-variable "harbor_username" {
-  type        = string
-  nullable    = true
-  default     = null
-  description = "Name of the Harbor robot linked to this platform's STACKIT service account, empty until it exists."
-}
-
 variable "dns_subdomain" {
   type        = string
   nullable    = true
@@ -149,6 +174,13 @@ variable "dns_parent_domain" {
   type        = string
   nullable    = false
   description = "Domain the platform's DNS zone is created under."
+}
+
+variable "phase2_completed" {
+  type        = bool
+  nullable    = false
+  default     = false
+  description = "Set to true once a Harbor robot is linked to the platform's service account, as the summary describes. The run then mints the registry's push and pull robots and registers the definitions application teams order. It fails while no robot is linked."
 }
 
 variable "ai_model" {
@@ -181,4 +213,45 @@ variable "hub" {
   `git_ref`: meshstack-hub reference the nested integrations are sourced from.
   `bbd_draft`: Forwarded to the nested integrations' `hub.bbd_draft`.
   EOT
+}
+
+variable "imports" {
+  type = object({
+    project = optional(object({
+      display_name = optional(string)
+    }))
+    ske = optional(object({}))
+    git = optional(object({
+      instance_id                     = string
+      instance_name                   = string
+      forgejo_organization            = string
+      existing_forgejo_api_token_path = string
+    }))
+  })
+  default     = null
+  description = "Existing resources the platform takes over instead of creating them: the meshProject `project_identifier` and its tenant on the landing zone platform (`project`, optionally keeping its `display_name`), the SKE cluster `cluster_name` (`ske`), and the STACKIT Git instance with its Forgejo organization (`git`) in that tenant's STACKIT project. `git.existing_forgejo_api_token_path` names a secret in the platform's Secrets Manager, usually one written through `import_secrets`, whose key `forgejo_api_token` holds a token of an owner of the organization. Null creates everything new."
+
+  validation {
+    condition     = var.imports == null || ((var.imports.ske == null && var.imports.git == null) || var.imports.project != null)
+    error_message = "imports.ske and imports.git need imports.project, because the cluster and the Git instance live in that project."
+  }
+}
+
+variable "existing" {
+  type = object({
+    ingress_load_balancer_ip = string
+    dns = object({
+      zone_name = string
+    })
+  })
+  default     = null
+  description = "Ingress and DNS zone the platform uses instead of creating its own, and does not manage: the ingress's load balancer IP, and the zone whose wildcard record already points at it. Unlike `imports`, nothing here is taken over. Null creates both."
+}
+
+variable "import_secrets" {
+  type        = map(map(string))
+  nullable    = false
+  default     = {}
+  sensitive   = true
+  description = "Secrets written to the platform's Secrets Manager before anything is adopted, by path, for example the existing Forgejo API token that `imports.git` needs."
 }

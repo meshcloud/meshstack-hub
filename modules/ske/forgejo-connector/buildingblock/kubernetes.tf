@@ -1,21 +1,14 @@
 locals {
-  # meshStack injects kubeconfig.yaml as a static FILE input at run time. `try` falls back to the
-  # committed mock so the module still validates without it, and the precondition below is
-  # what stops an apply against the mock.
-  kubeconfig = try(
-    yamldecode(file("${path.module}/kubeconfig.yaml")),
-    yamldecode(file("${path.module}/kubeconfig-mock.yaml"))
-  )
+  # meshStack writes kubeconfig.yaml from a static FILE input at run time. The committed mock lets
+  # the module validate without it, and the precondition below stops an apply against the mock.
+  kubeconfig_path         = fileexists("${path.module}/kubeconfig.yaml") ? "${path.module}/kubeconfig.yaml" : "${path.module}/kubeconfig-mock.yaml"
+  kubeconfig              = yamldecode(file(local.kubeconfig_path))
   kubeconfig_cluster      = one(local.kubeconfig["clusters"])["cluster"]
   kubeconfig_cluster_name = one(local.kubeconfig["clusters"])["name"]
-  kubeconfig_admin_user   = one(local.kubeconfig["users"])["user"]
 }
 
 provider "kubernetes" {
-  host                   = local.kubeconfig_cluster["server"]
-  cluster_ca_certificate = base64decode(local.kubeconfig_cluster["certificate-authority-data"])
-  client_certificate     = base64decode(local.kubeconfig_admin_user["client-certificate-data"])
-  client_key             = base64decode(local.kubeconfig_admin_user["client-key-data"])
+  config_path = local.kubeconfig_path
 }
 
 resource "random_string" "suffix" {
@@ -109,14 +102,15 @@ resource "kubernetes_secret" "image_pull" {
     namespace = var.namespace
   }
 
-  type = "kubernetes.io/dockerconfigjson"
-  data = {
+  type             = "kubernetes.io/dockerconfigjson"
+  data_wo_revision = var.secrets_revision
+  data_wo = {
     ".dockerconfigjson" = jsonencode({
       auths = {
         (var.harbor_host) = {
-          username = local.registry_pull.user
-          password = local.registry_pull.password
-          auth     = base64encode("${local.registry_pull.user}:${local.registry_pull.password}")
+          username = local.registry_pull["username"]
+          password = local.registry_pull["password"]
+          auth     = base64encode("${local.registry_pull["username"]}:${local.registry_pull["password"]}")
         }
       }
     })
@@ -131,8 +125,9 @@ resource "kubernetes_secret" "additional" {
     namespace = var.namespace
   }
 
-  type = "Opaque"
-  data = each.value
+  type             = "Opaque"
+  data_wo          = ephemeral.vault_kv_secret_v2.additional[each.key].data
+  data_wo_revision = var.secrets_revision
 }
 
 resource "kubernetes_default_service_account" "this" {
