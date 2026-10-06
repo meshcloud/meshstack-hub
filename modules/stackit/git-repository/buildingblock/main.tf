@@ -37,8 +37,8 @@ module "action_variables_and_secrets" {
     restapi.without_returned_object = restapi.without_returned_object
   }
 
-  forgejo_api_token = local.forgejo_api_token
-  repository_id     = forgejo_repository.this.id
-  action_variables  = merge(var.action_variables, var.extra_action_variables)
-  action_secrets    = local.registry_push_action_secrets
+  repository_owner = var.forgejo_organization
+  repository_name  = forgejo_repository.this.name
+  action_variables = merge(var.action_variables, var.extra_action_variables)
+  action_secrets   = local.registry_push_action_secrets
 }

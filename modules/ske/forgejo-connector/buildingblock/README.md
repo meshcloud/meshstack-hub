@@ -98,7 +98,8 @@ input of a cluster-admin service account on the SKE cluster.
 | <a name="input_hub_git_ref"></a> [hub\_git\_ref](#input\_hub\_git\_ref) | Hub git ref this building block runs from. Pins the shared modules it sources so they stay in lockstep with this module's own checkout. | `string` | `"main"` | no |
 | <a name="input_namespace"></a> [namespace](#input\_namespace) | Associated namespace in kubernetes cluster. | `string` | n/a | yes |
 | <a name="input_registry_pull_path"></a> [registry\_pull\_path](#input\_registry\_pull\_path) | Vault KV v2 secret holding the registry pull robot under the keys `username` and `password`. | `string` | n/a | yes |
-| <a name="input_repository_id"></a> [repository\_id](#input\_repository\_id) | The ID of the Forgejo repository. | `number` | n/a | yes |
+| <a name="input_repository_name"></a> [repository\_name](#input\_repository\_name) | Name of the Forgejo repository. | `string` | n/a | yes |
+| <a name="input_repository_owner"></a> [repository\_owner](#input\_repository\_owner) | Owner of the Forgejo repository. | `string` | n/a | yes |
 | <a name="input_stage"></a> [stage](#input\_stage) | Deployment stage used for Forgejo workflow dispatch and action secret naming. | `string` | n/a | yes |
 | <a name="input_vault_reader"></a> [vault\_reader](#input\_vault\_reader) | Vault KV v2 login this building block reads its secrets with: the server `address`, the engine `mount` and a userpass `username` and `password`. | <pre>object({<br/>    address  = string<br/>    mount    = string<br/>    username = string<br/>    password = string<br/>  })</pre> | n/a | yes |
 

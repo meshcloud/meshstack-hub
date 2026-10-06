@@ -3,9 +3,16 @@ variable "namespace" {
   type        = string
 }
 
-variable "repository_id" {
-  type        = number
-  description = "The ID of the Forgejo repository."
+variable "repository_owner" {
+  type        = string
+  nullable    = false
+  description = "Owner of the Forgejo repository."
+}
+
+variable "repository_name" {
+  type        = string
+  nullable    = false
+  description = "Name of the Forgejo repository."
 }
 
 variable "stage" {

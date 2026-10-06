@@ -356,6 +356,20 @@ resource "meshstack_building_block_definition" "this" {
         description     = "Numeric Forgejo repository ID, primarily intended for wiring dependent building blocks."
       }
 
+      repository_owner = {
+        display_name    = "Repository Owner"
+        type            = "STRING"
+        assignment_type = "NONE"
+        description     = "Forgejo organization that owns the repository."
+      }
+
+      repository_name = {
+        display_name    = "Repository Name"
+        type            = "STRING"
+        assignment_type = "NONE"
+        description     = "Name of the repository."
+      }
+
       repository_html_url = {
         display_name    = "Open Repository"
         type            = "STRING"

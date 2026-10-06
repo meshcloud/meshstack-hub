@@ -1,12 +1,13 @@
-variable "repository_id" {
-  type = number
-}
-
-variable "forgejo_api_token" {
+variable "repository_owner" {
   type        = string
   nullable    = false
-  sensitive   = true
-  description = "Forgejo API token the repository lookup authenticates with."
+  description = "Owner (user or organization) of the Forgejo repository."
+}
+
+variable "repository_name" {
+  type        = string
+  nullable    = false
+  description = "Name of the Forgejo repository."
 }
 
 variable "action_variables" {
