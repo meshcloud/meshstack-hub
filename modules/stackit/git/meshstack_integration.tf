@@ -238,6 +238,12 @@ resource "meshstack_building_block_definition" "this" {
         assignment_type = "NONE"
       }
 
+      instance_id = {
+        display_name    = "Instance ID"
+        type            = "STRING"
+        assignment_type = "NONE"
+      }
+
       instance_url = {
         display_name    = "Instance URL"
         type            = "STRING"
