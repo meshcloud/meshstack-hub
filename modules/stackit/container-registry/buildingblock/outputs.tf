@@ -14,12 +14,12 @@ output "registry_url" {
 }
 
 output "registry_robot_url" {
-  description = "Robot Accounts tab of the Harbor project, where the bootstrap robot is created."
+  description = "Robot Accounts tab of the Harbor project, where the robot linked to the service account is created."
   value       = local.registry_robot_url
 }
 
 output "summary" {
-  description = "Summary of the created registry and the one manual step it still needs."
+  description = "Summary of the created registry and, until a robot is linked, the one manual step it still needs."
   value = templatefile("${path.module}/SUMMARY.md.tftpl", {
     registry_name      = local.registry_name
     registry_host      = local.registry_host
@@ -27,6 +27,9 @@ output "summary" {
     registry_robot_url = local.registry_robot_url
     stackit_project_id = var.stackit_project_id
     user_assignments   = values(local.registry_role_assignments)
+
+    robots_minted                 = local.mint_robots
+    stackit_service_account_email = local.stackit_service_account_email
   })
 }
 

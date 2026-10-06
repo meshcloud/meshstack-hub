@@ -125,9 +125,10 @@ resource "meshstack_building_block_definition" "this" {
       portal can create that first link. The building block's summary says exactly what to click.
 
       Once linked, that service account's token authenticates as the robot, so every later robot
-      can be created through the Harbor API without touching the portal again. The building block
-      then mints a push and a pull robot and writes them to the Vault KV v2 secrets given as
-      `output_to_vault`.
+      can be created through the Harbor API without touching the portal again. Every run checks
+      for the link, so after linking, run the building block again; it then mints a push and a
+      pull robot and writes them to the Vault KV v2 secrets given as `output_to_vault`. With
+      **Require Robot Link** set, a run that finds no link fails.
 
       ## 📊 Shared responsibility
 
@@ -224,20 +225,18 @@ resource "meshstack_building_block_definition" "this" {
         validation_regex_error_message = "Registry name must be 5 to 58 characters, lowercase alphanumeric or dashes, and not start or end with a dash."
       }
 
-      # The registry is ordered before the robot it is told about exists, so the name arrives on a
-      # later update and the block has to accept it changing after it was first ordered.
-      bootstrap_robot_username = {
-        display_name           = "Bootstrap Robot Name"
-        description            = "Name of a Harbor robot in this registry, linked to this platform's STACKIT service account. Only the Harbor UI can create the first one; leave empty until you have. Its password is not needed."
-        type                   = "STRING"
+      require_robot_link = {
+        display_name           = "Require Robot Link"
+        description            = "Fail the run while no robot is linked to the service account, instead of minting no robots."
+        type                   = "BOOLEAN"
         assignment_type        = "USER_INPUT"
-        is_optional            = true
+        default_value          = jsonencode(false)
         updateable_by_consumer = true
       }
 
       mirrored_base_images = {
         display_name           = "Mirrored Base Images"
-        description            = "HCL list of fully qualified upstream images to mirror into the registry as `<registry>/<name>:<tag>`. Mirroring starts once the bootstrap robot is set."
+        description            = "HCL list of fully qualified upstream images to mirror into the registry as `<registry>/<name>:<tag>`. Mirroring starts once a robot is linked to the service account."
         type                   = "CODE"
         assignment_type        = "USER_INPUT"
         default_value          = jsonencode(jsonencode([]))
