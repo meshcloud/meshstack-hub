@@ -163,13 +163,6 @@ variable "cluster_issuer_email" {
   description = "Overrides the Let's Encrypt contact email registered for the ACME ClusterIssuer."
 }
 
-variable "harbor_username" {
-  type        = string
-  nullable    = true
-  default     = null
-  description = "Name of the Harbor robot linked to this platform's STACKIT service account, empty until it exists."
-}
-
 variable "dns_subdomain" {
   type        = string
   nullable    = true
@@ -181,6 +174,13 @@ variable "dns_parent_domain" {
   type        = string
   nullable    = false
   description = "Domain the platform's DNS zone is created under."
+}
+
+variable "phase2_completed" {
+  type        = bool
+  nullable    = false
+  default     = false
+  description = "Set to true once a Harbor robot is linked to the platform's service account, as the summary describes. The run then mints the registry's push and pull robots and registers the definitions application teams order. It fails while no robot is linked."
 }
 
 variable "ai_model" {

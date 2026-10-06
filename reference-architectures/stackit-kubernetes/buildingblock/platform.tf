@@ -58,10 +58,10 @@ resource "meshstack_building_block" "platform" {
       use_global_location  = { value = jsonencode(var.use_global_location) }
       cluster_name         = { value = jsonencode(local.cluster_name) }
       cluster_issuer_email = { value = jsonencode(local.cluster_issuer_email) }
-      harbor_username      = { value = jsonencode(var.harbor_username == null ? "" : var.harbor_username) }
       dns_subdomain        = { value = jsonencode(local.dns_subdomain) }
       dns_parent_domain    = { value = jsonencode(var.dns_parent_domain) }
       ai_model             = { value = jsonencode(var.ai_model) }
+      phase2_completed     = { value = jsonencode(var.phase2_completed) }
 
       starterkit_app_name        = { value = jsonencode(var.starterkit_app_name) }
       starterkit_repo_clone_addr = { value = jsonencode(var.starterkit_repo_clone_addr) }
