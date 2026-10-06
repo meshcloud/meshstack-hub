@@ -20,6 +20,11 @@ repos:
       - id: trailing-whitespace
   - repo: local
     hooks:
+      - id: shellcheck
+        name: shellcheck
+        entry: shellcheck
+        language: system
+        types: [shell]
       - id: validate-modules
         name: Validate modules
         entry: sh -c 'bash ci/validate_modules.sh --fix'
