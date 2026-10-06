@@ -1,198 +1,240 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN"
  "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
-<svg width="1462pt" height="391pt"
- viewBox="0.00 0.00 1462.00 391.00" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+<svg width="1888pt" height="391pt"
+ viewBox="0.00 0.00 1888.00 391.00" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
 <g id="graph0" class="graph" transform="scale(1 1) rotate(0) translate(4 387.36)">
 <title>stackit_kubernetes_platform</title>
-<polygon fill="white" stroke="none" points="-4,4 -4,-387.36 1458,-387.36 1458,4 -4,4"/>
+<polygon fill="white" stroke="none" points="-4,4 -4,-387.36 1884,-387.36 1884,4 -4,4"/>
 <g id="clust1" class="cluster">
 <title>cluster_mesh</title>
-<path fill="white" stroke="#d5dae0" d="M20,-116.64C20,-116.64 1373,-116.64 1373,-116.64 1379,-116.64 1385,-122.64 1385,-128.64 1385,-128.64 1385,-308.52 1385,-308.52 1385,-314.52 1379,-320.52 1373,-320.52 1373,-320.52 20,-320.52 20,-320.52 14,-320.52 8,-314.52 8,-308.52 8,-308.52 8,-128.64 8,-128.64 8,-122.64 14,-116.64 20,-116.64"/>
+<path fill="white" stroke="#d5dae0" d="M20,-116.64C20,-116.64 1843,-116.64 1843,-116.64 1849,-116.64 1855,-122.64 1855,-128.64 1855,-128.64 1855,-308.52 1855,-308.52 1855,-314.52 1849,-320.52 1843,-320.52 1843,-320.52 20,-320.52 20,-320.52 14,-320.52 8,-314.52 8,-308.52 8,-308.52 8,-128.64 8,-128.64 8,-122.64 14,-116.64 20,-116.64"/>
 <text xml:space="preserve" text-anchor="middle" x="132.38" y="-305.72" font-family="Helvetica,sans-Serif" font-size="12.00" fill="#697180"> &#160;meshStack — registered once per platform</text>
 </g>
 <g id="clust4" class="cluster">
 <title>cluster_stackit</title>
-<path fill="white" stroke="#d5dae0" d="M36,-8C36,-8 1434,-8 1434,-8 1440,-8 1446,-14 1446,-20 1446,-20 1446,-96.64 1446,-96.64 1446,-102.64 1440,-108.64 1434,-108.64 1434,-108.64 36,-108.64 36,-108.64 30,-108.64 24,-102.64 24,-96.64 24,-96.64 24,-20 24,-20 24,-14 30,-8 36,-8"/>
-<text xml:space="preserve" text-anchor="middle" x="136.37" y="-93.84" font-family="Helvetica,sans-Serif" font-size="12.00" fill="#697180"> &#160;STACKIT — provisioned infrastructure</text>
+<path fill="white" stroke="#d5dae0" d="M92,-8C92,-8 1860,-8 1860,-8 1866,-8 1872,-14 1872,-20 1872,-20 1872,-96.64 1872,-96.64 1872,-102.64 1866,-108.64 1860,-108.64 1860,-108.64 92,-108.64 92,-108.64 86,-108.64 80,-102.64 80,-96.64 80,-96.64 80,-20 80,-20 80,-14 86,-8 92,-8"/>
+<text xml:space="preserve" text-anchor="middle" x="192.37" y="-93.84" font-family="Helvetica,sans-Serif" font-size="12.00" fill="#697180"> &#160;STACKIT — provisioned infrastructure</text>
 </g>
 <!-- LZBB -->
 <g id="node1" class="node">
 <title>LZBB</title>
-<path fill="#f0f1f3" stroke="#cdd2d8" stroke-width="1.1" stroke-dasharray="5,2" d="M214.84,-383.36C214.84,-383.36 13.16,-383.36 13.16,-383.36 7.16,-383.36 1.16,-377.36 1.16,-371.36 1.16,-371.36 1.16,-353.12 1.16,-353.12 1.16,-347.12 7.16,-341.12 13.16,-341.12 13.16,-341.12 214.84,-341.12 214.84,-341.12 220.84,-341.12 226.84,-347.12 226.84,-353.12 226.84,-353.12 226.84,-371.36 226.84,-371.36 226.84,-377.36 220.84,-383.36 214.84,-383.36"/>
-<text xml:space="preserve" text-anchor="middle" x="114" y="-365.54" font-family="Helvetica,sans-Serif" font-size="11.00" fill="#99a1ac">🧱 STACKIT Landing Zone</text>
-<text xml:space="preserve" text-anchor="middle" x="114" y="-352.34" font-family="Helvetica,sans-Serif" font-size="11.00" fill="#99a1ac">see the STACKIT Landing Zone ref&#45;arch</text>
+<path fill="#f0f1f3" stroke="#cdd2d8" stroke-width="1.1" stroke-dasharray="5,2" d="M440.84,-383.36C440.84,-383.36 239.16,-383.36 239.16,-383.36 233.16,-383.36 227.16,-377.36 227.16,-371.36 227.16,-371.36 227.16,-353.12 227.16,-353.12 227.16,-347.12 233.16,-341.12 239.16,-341.12 239.16,-341.12 440.84,-341.12 440.84,-341.12 446.84,-341.12 452.84,-347.12 452.84,-353.12 452.84,-353.12 452.84,-371.36 452.84,-371.36 452.84,-377.36 446.84,-383.36 440.84,-383.36"/>
+<text xml:space="preserve" text-anchor="middle" x="340" y="-365.54" font-family="Helvetica,sans-Serif" font-size="11.00" fill="#99a1ac">🧱 STACKIT Landing Zone</text>
+<text xml:space="preserve" text-anchor="middle" x="340" y="-352.34" font-family="Helvetica,sans-Serif" font-size="11.00" fill="#99a1ac">see the STACKIT Landing Zone ref&#45;arch</text>
 </g>
 <!-- PLAT -->
 <g id="node2" class="node">
 <title>PLAT</title>
-<path fill="#ecedfb" stroke="#9aa2e6" stroke-width="1.1" d="M161.64,-277C161.64,-277 66.36,-277 66.36,-277 60.36,-277 54.36,-271 54.36,-265 54.36,-265 54.36,-253 54.36,-253 54.36,-247 60.36,-241 66.36,-241 66.36,-241 161.64,-241 161.64,-241 167.64,-241 173.64,-247 173.64,-253 173.64,-253 173.64,-265 173.64,-265 173.64,-271 167.64,-277 161.64,-277"/>
-<text xml:space="preserve" text-anchor="middle" x="114" y="-255.7" font-family="Helvetica,sans-Serif" font-size="11.00">🛰️ SKE Platform</text>
+<path fill="#ecedfb" stroke="#9aa2e6" stroke-width="1.1" d="M387.64,-277C387.64,-277 292.36,-277 292.36,-277 286.36,-277 280.36,-271 280.36,-265 280.36,-265 280.36,-253 280.36,-253 280.36,-247 286.36,-241 292.36,-241 292.36,-241 387.64,-241 387.64,-241 393.64,-241 399.64,-247 399.64,-253 399.64,-253 399.64,-265 399.64,-265 399.64,-271 393.64,-277 387.64,-277"/>
+<text xml:space="preserve" text-anchor="middle" x="340" y="-255.7" font-family="Helvetica,sans-Serif" font-size="11.00">🛰️ SKE Platform</text>
 </g>
 <!-- LZBB&#45;&gt;PLAT -->
-<g id="edge15" class="edge">
+<g id="edge19" class="edge">
 <title>LZBB&#45;&gt;PLAT</title>
-<path fill="none" stroke="#8b95a3" stroke-dasharray="1,5" d="M114,-340.85C114,-340.85 114,-285.77 114,-285.77"/>
-<polygon fill="#8b95a3" stroke="#8b95a3" points="116.45,-285.77 114,-278.77 111.55,-285.77 116.45,-285.77"/>
-<text xml:space="preserve" text-anchor="middle" x="85.74" y="-316.01" font-family="Helvetica,sans-Serif" font-size="9.00" fill="#697180">hosts platform</text>
+<path fill="none" stroke="#8b95a3" stroke-dasharray="1,5" d="M340,-340.85C340,-340.85 340,-285.77 340,-285.77"/>
+<polygon fill="#8b95a3" stroke="#8b95a3" points="342.45,-285.77 340,-278.77 337.55,-285.77 342.45,-285.77"/>
+<text xml:space="preserve" text-anchor="middle" x="311.74" y="-316.01" font-family="Helvetica,sans-Serif" font-size="9.00" fill="#697180">hosts platform</text>
 </g>
 <!-- LZ -->
 <g id="node3" class="node">
 <title>LZ</title>
-<path fill="#ecedfb" stroke="#9aa2e6" stroke-width="1.1" d="M330.24,-280.12C330.24,-280.12 225.76,-280.12 225.76,-280.12 219.76,-280.12 213.76,-274.12 213.76,-268.12 213.76,-268.12 213.76,-249.88 213.76,-249.88 213.76,-243.88 219.76,-237.88 225.76,-237.88 225.76,-237.88 330.24,-237.88 330.24,-237.88 336.24,-237.88 342.24,-243.88 342.24,-249.88 342.24,-249.88 342.24,-268.12 342.24,-268.12 342.24,-274.12 336.24,-280.12 330.24,-280.12"/>
-<text xml:space="preserve" text-anchor="middle" x="278" y="-262.3" font-family="Helvetica,sans-Serif" font-size="11.00">🛬 Landing Zone ×N</text>
-<text xml:space="preserve" text-anchor="middle" x="278" y="-249.1" font-family="Helvetica,sans-Serif" font-size="11.00">one per stage</text>
+<path fill="#ecedfb" stroke="#9aa2e6" stroke-width="1.1" d="M556.24,-280.12C556.24,-280.12 451.76,-280.12 451.76,-280.12 445.76,-280.12 439.76,-274.12 439.76,-268.12 439.76,-268.12 439.76,-249.88 439.76,-249.88 439.76,-243.88 445.76,-237.88 451.76,-237.88 451.76,-237.88 556.24,-237.88 556.24,-237.88 562.24,-237.88 568.24,-243.88 568.24,-249.88 568.24,-249.88 568.24,-268.12 568.24,-268.12 568.24,-274.12 562.24,-280.12 556.24,-280.12"/>
+<text xml:space="preserve" text-anchor="middle" x="504" y="-262.3" font-family="Helvetica,sans-Serif" font-size="11.00">🛬 Landing Zone ×N</text>
+<text xml:space="preserve" text-anchor="middle" x="504" y="-249.1" font-family="Helvetica,sans-Serif" font-size="11.00">one per stage</text>
 </g>
 <!-- PLAT&#45;&gt;LZ -->
 <!-- BBD_A -->
 <g id="node4" class="node">
 <title>BBD_A</title>
-<path fill="#ecedfb" stroke="#9aa2e6" stroke-width="1.1" d="M189.92,-176.88C189.92,-176.88 38.08,-176.88 38.08,-176.88 32.08,-176.88 26.08,-170.88 26.08,-164.88 26.08,-164.88 26.08,-146.64 26.08,-146.64 26.08,-140.64 32.08,-134.64 38.08,-134.64 38.08,-134.64 189.92,-134.64 189.92,-134.64 195.92,-134.64 201.92,-140.64 201.92,-146.64 201.92,-146.64 201.92,-164.88 201.92,-164.88 201.92,-170.88 195.92,-176.88 189.92,-176.88"/>
-<text xml:space="preserve" text-anchor="middle" x="114" y="-159.06" font-family="Helvetica,sans-Serif" font-size="11.00">📦 kubernetes BBD</text>
-<text xml:space="preserve" text-anchor="middle" x="114" y="-145.86" font-family="Helvetica,sans-Serif" font-size="11.00">replicator + metering identities</text>
+<path fill="#ecedfb" stroke="#9aa2e6" stroke-width="1.1" d="M415.92,-176.88C415.92,-176.88 264.08,-176.88 264.08,-176.88 258.08,-176.88 252.08,-170.88 252.08,-164.88 252.08,-164.88 252.08,-146.64 252.08,-146.64 252.08,-140.64 258.08,-134.64 264.08,-134.64 264.08,-134.64 415.92,-134.64 415.92,-134.64 421.92,-134.64 427.92,-140.64 427.92,-146.64 427.92,-146.64 427.92,-164.88 427.92,-164.88 427.92,-170.88 421.92,-176.88 415.92,-176.88"/>
+<text xml:space="preserve" text-anchor="middle" x="340" y="-159.06" font-family="Helvetica,sans-Serif" font-size="11.00">📦 kubernetes BBD</text>
+<text xml:space="preserve" text-anchor="middle" x="340" y="-145.86" font-family="Helvetica,sans-Serif" font-size="11.00">replicator + metering identities</text>
 </g>
 <!-- PLAT&#45;&gt;BBD_A -->
 <!-- BBD_K -->
 <g id="node5" class="node">
 <title>BBD_K</title>
-<path fill="#ecedfb" stroke="#9aa2e6" stroke-width="1.1" d="M352.16,-173.76C352.16,-173.76 253.84,-173.76 253.84,-173.76 247.84,-173.76 241.84,-167.76 241.84,-161.76 241.84,-161.76 241.84,-149.76 241.84,-149.76 241.84,-143.76 247.84,-137.76 253.84,-137.76 253.84,-137.76 352.16,-137.76 352.16,-137.76 358.16,-137.76 364.16,-143.76 364.16,-149.76 364.16,-149.76 364.16,-161.76 364.16,-161.76 364.16,-167.76 358.16,-173.76 352.16,-173.76"/>
-<text xml:space="preserve" text-anchor="middle" x="303" y="-152.46" font-family="Helvetica,sans-Serif" font-size="11.00">📦 ske/cluster BBD</text>
+<path fill="#ecedfb" stroke="#9aa2e6" stroke-width="1.1" d="M578.16,-173.76C578.16,-173.76 479.84,-173.76 479.84,-173.76 473.84,-173.76 467.84,-167.76 467.84,-161.76 467.84,-161.76 467.84,-149.76 467.84,-149.76 467.84,-143.76 473.84,-137.76 479.84,-137.76 479.84,-137.76 578.16,-137.76 578.16,-137.76 584.16,-137.76 590.16,-143.76 590.16,-149.76 590.16,-149.76 590.16,-161.76 590.16,-161.76 590.16,-167.76 584.16,-173.76 578.16,-173.76"/>
+<text xml:space="preserve" text-anchor="middle" x="529" y="-152.46" font-family="Helvetica,sans-Serif" font-size="11.00">📦 ske/cluster BBD</text>
 </g>
 <!-- BBD_A&#45;&gt;BBD_K -->
 <!-- AGENT -->
-<g id="node11" class="node">
+<g id="node13" class="node">
 <title>AGENT</title>
-<path fill="#eef2f6" stroke="#93a7bb" stroke-width="1.1" d="M174.48,-68.24C174.48,-68.24 53.52,-68.24 53.52,-68.24 47.52,-68.24 41.52,-62.24 41.52,-56.24 41.52,-56.24 41.52,-38 41.52,-38 41.52,-32 47.52,-26 53.52,-26 53.52,-26 174.48,-26 174.48,-26 180.48,-26 186.48,-32 186.48,-38 186.48,-38 186.48,-56.24 186.48,-56.24 186.48,-62.24 180.48,-68.24 174.48,-68.24"/>
-<text xml:space="preserve" text-anchor="middle" x="114" y="-50.42" font-family="Helvetica,sans-Serif" font-size="11.00">🔑 meshStack identities</text>
-<text xml:space="preserve" text-anchor="middle" x="114" y="-37.22" font-family="Helvetica,sans-Serif" font-size="11.00">replicator + metering</text>
+<path fill="#eef2f6" stroke="#93a7bb" stroke-width="1.1" d="M448.48,-68.24C448.48,-68.24 327.52,-68.24 327.52,-68.24 321.52,-68.24 315.52,-62.24 315.52,-56.24 315.52,-56.24 315.52,-38 315.52,-38 315.52,-32 321.52,-26 327.52,-26 327.52,-26 448.48,-26 448.48,-26 454.48,-26 460.48,-32 460.48,-38 460.48,-38 460.48,-56.24 460.48,-56.24 460.48,-62.24 454.48,-68.24 448.48,-68.24"/>
+<text xml:space="preserve" text-anchor="middle" x="388" y="-50.42" font-family="Helvetica,sans-Serif" font-size="11.00">🔑 meshStack identities</text>
+<text xml:space="preserve" text-anchor="middle" x="388" y="-37.22" font-family="Helvetica,sans-Serif" font-size="11.00">replicator + metering</text>
 </g>
 <!-- BBD_A&#45;&gt;AGENT -->
-<g id="edge16" class="edge">
+<g id="edge20" class="edge">
 <title>BBD_A&#45;&gt;AGENT</title>
-<path fill="none" stroke="#8b95a3" d="M114,-134.3C114,-134.3 114,-77.05 114,-77.05"/>
-<polygon fill="#8b95a3" stroke="#8b95a3" points="116.45,-77.05 114,-70.05 111.55,-77.05 116.45,-77.05"/>
-<text xml:space="preserve" text-anchor="middle" x="93.74" y="-108.37" font-family="Helvetica,sans-Serif" font-size="9.00" fill="#697180">provisions</text>
+<path fill="none" stroke="#8b95a3" d="M371.72,-134.3C371.72,-134.3 371.72,-77.05 371.72,-77.05"/>
+<polygon fill="#8b95a3" stroke="#8b95a3" points="374.17,-77.05 371.72,-70.05 369.27,-77.05 374.17,-77.05"/>
+<text xml:space="preserve" text-anchor="middle" x="351.46" y="-108.37" font-family="Helvetica,sans-Serif" font-size="9.00" fill="#697180">provisions</text>
+</g>
+<!-- BBD_SA -->
+<g id="node12" class="node">
+<title>BBD_SA</title>
+<path fill="#ecedfb" stroke="#9aa2e6" stroke-width="1.1" d="M822.13,-173.76C822.13,-173.76 641.87,-173.76 641.87,-173.76 635.87,-173.76 629.87,-167.76 629.87,-161.76 629.87,-161.76 629.87,-149.76 629.87,-149.76 629.87,-143.76 635.87,-137.76 641.87,-137.76 641.87,-137.76 822.13,-137.76 822.13,-137.76 828.13,-137.76 834.13,-143.76 834.13,-149.76 834.13,-149.76 834.13,-161.76 834.13,-161.76 834.13,-167.76 828.13,-173.76 822.13,-173.76"/>
+<text xml:space="preserve" text-anchor="middle" x="732" y="-152.46" font-family="Helvetica,sans-Serif" font-size="11.00">📦 kubernetes/service&#45;account BBD</text>
+</g>
+<!-- BBD_K&#45;&gt;BBD_SA -->
+<!-- SKE -->
+<g id="node14" class="node">
+<title>SKE</title>
+<path fill="#eef2f6" stroke="#93a7bb" stroke-width="1.1" d="M636.01,-68.24C636.01,-68.24 511.99,-68.24 511.99,-68.24 505.99,-68.24 499.99,-62.24 499.99,-56.24 499.99,-56.24 499.99,-38 499.99,-38 499.99,-32 505.99,-26 511.99,-26 511.99,-26 636.01,-26 636.01,-26 642.01,-26 648.01,-32 648.01,-38 648.01,-38 648.01,-56.24 648.01,-56.24 648.01,-62.24 642.01,-68.24 636.01,-68.24"/>
+<text xml:space="preserve" text-anchor="middle" x="574" y="-50.42" font-family="Helvetica,sans-Serif" font-size="11.00">☸️ SKE cluster</text>
+<text xml:space="preserve" text-anchor="middle" x="574" y="-37.22" font-family="Helvetica,sans-Serif" font-size="11.00">run by the platform team</text>
+</g>
+<!-- BBD_K&#45;&gt;SKE -->
+<g id="edge21" class="edge">
+<title>BBD_K&#45;&gt;SKE</title>
+<path fill="none" stroke="#8b95a3" d="M545.08,-137.33C545.08,-137.33 545.08,-77.14 545.08,-77.14"/>
+<polygon fill="#8b95a3" stroke="#8b95a3" points="547.53,-77.14 545.08,-70.14 542.63,-77.14 547.53,-77.14"/>
 </g>
 <!-- BBD_I -->
 <g id="node6" class="node">
 <title>BBD_I</title>
-<path fill="#ecedfb" stroke="#9aa2e6" stroke-width="1.1" d="M619.43,-176.88C619.43,-176.88 416.57,-176.88 416.57,-176.88 410.57,-176.88 404.57,-170.88 404.57,-164.88 404.57,-164.88 404.57,-146.64 404.57,-146.64 404.57,-140.64 410.57,-134.64 416.57,-134.64 416.57,-134.64 619.43,-134.64 619.43,-134.64 625.43,-134.64 631.43,-140.64 631.43,-146.64 631.43,-146.64 631.43,-164.88 631.43,-164.88 631.43,-170.88 625.43,-176.88 619.43,-176.88"/>
-<text xml:space="preserve" text-anchor="middle" x="518" y="-159.06" font-family="Helvetica,sans-Serif" font-size="11.00">📦 kubernetes/ingress BBD</text>
-<text xml:space="preserve" text-anchor="middle" x="518" y="-145.86" font-family="Helvetica,sans-Serif" font-size="11.00">cert&#45;manager · HAProxy · ClusterIssuer</text>
-</g>
-<!-- BBD_K&#45;&gt;BBD_I -->
-<!-- SKE -->
-<g id="node12" class="node">
-<title>SKE</title>
-<path fill="#eef2f6" stroke="#93a7bb" stroke-width="1.1" d="M362.01,-68.24C362.01,-68.24 237.99,-68.24 237.99,-68.24 231.99,-68.24 225.99,-62.24 225.99,-56.24 225.99,-56.24 225.99,-38 225.99,-38 225.99,-32 231.99,-26 237.99,-26 237.99,-26 362.01,-26 362.01,-26 368.01,-26 374.01,-32 374.01,-38 374.01,-38 374.01,-56.24 374.01,-56.24 374.01,-62.24 368.01,-68.24 362.01,-68.24"/>
-<text xml:space="preserve" text-anchor="middle" x="300" y="-50.42" font-family="Helvetica,sans-Serif" font-size="11.00">☸️ SKE cluster</text>
-<text xml:space="preserve" text-anchor="middle" x="300" y="-37.22" font-family="Helvetica,sans-Serif" font-size="11.00">run by the platform team</text>
-</g>
-<!-- BBD_K&#45;&gt;SKE -->
-<g id="edge17" class="edge">
-<title>BBD_K&#45;&gt;SKE</title>
-<path fill="none" stroke="#8b95a3" d="M303,-137.33C303,-137.33 303,-77.14 303,-77.14"/>
-<polygon fill="#8b95a3" stroke="#8b95a3" points="305.45,-77.14 303,-70.14 300.55,-77.14 305.45,-77.14"/>
+<path fill="#ecedfb" stroke="#9aa2e6" stroke-width="1.1" d="M1089.43,-176.88C1089.43,-176.88 886.57,-176.88 886.57,-176.88 880.57,-176.88 874.57,-170.88 874.57,-164.88 874.57,-164.88 874.57,-146.64 874.57,-146.64 874.57,-140.64 880.57,-134.64 886.57,-134.64 886.57,-134.64 1089.43,-134.64 1089.43,-134.64 1095.43,-134.64 1101.43,-140.64 1101.43,-146.64 1101.43,-146.64 1101.43,-164.88 1101.43,-164.88 1101.43,-170.88 1095.43,-176.88 1089.43,-176.88"/>
+<text xml:space="preserve" text-anchor="middle" x="988" y="-159.06" font-family="Helvetica,sans-Serif" font-size="11.00">📦 kubernetes/ingress BBD</text>
+<text xml:space="preserve" text-anchor="middle" x="988" y="-145.86" font-family="Helvetica,sans-Serif" font-size="11.00">cert&#45;manager · HAProxy · ClusterIssuer</text>
 </g>
 <!-- BBD_G -->
 <g id="node7" class="node">
 <title>BBD_G</title>
-<path fill="#ecedfb" stroke="#9aa2e6" stroke-width="1.1" d="M774.8,-173.76C774.8,-173.76 683.2,-173.76 683.2,-173.76 677.2,-173.76 671.2,-167.76 671.2,-161.76 671.2,-161.76 671.2,-149.76 671.2,-149.76 671.2,-143.76 677.2,-137.76 683.2,-137.76 683.2,-137.76 774.8,-137.76 774.8,-137.76 780.8,-137.76 786.8,-143.76 786.8,-149.76 786.8,-149.76 786.8,-161.76 786.8,-161.76 786.8,-167.76 780.8,-173.76 774.8,-173.76"/>
-<text xml:space="preserve" text-anchor="middle" x="729" y="-152.46" font-family="Helvetica,sans-Serif" font-size="11.00">📦 stackit/git BBD</text>
+<path fill="#ecedfb" stroke="#9aa2e6" stroke-width="1.1" d="M1244.8,-173.76C1244.8,-173.76 1153.2,-173.76 1153.2,-173.76 1147.2,-173.76 1141.2,-167.76 1141.2,-161.76 1141.2,-161.76 1141.2,-149.76 1141.2,-149.76 1141.2,-143.76 1147.2,-137.76 1153.2,-137.76 1153.2,-137.76 1244.8,-137.76 1244.8,-137.76 1250.8,-137.76 1256.8,-143.76 1256.8,-149.76 1256.8,-149.76 1256.8,-161.76 1256.8,-161.76 1256.8,-167.76 1250.8,-173.76 1244.8,-173.76"/>
+<text xml:space="preserve" text-anchor="middle" x="1199" y="-152.46" font-family="Helvetica,sans-Serif" font-size="11.00">📦 stackit/git BBD</text>
 </g>
 <!-- BBD_I&#45;&gt;BBD_G -->
 <!-- ING -->
-<g id="node13" class="node">
+<g id="node15" class="node">
 <title>ING</title>
-<path fill="#eef2f6" stroke="#93a7bb" stroke-width="1.1" d="M620.3,-68.24C620.3,-68.24 425.7,-68.24 425.7,-68.24 419.7,-68.24 413.7,-62.24 413.7,-56.24 413.7,-56.24 413.7,-38 413.7,-38 413.7,-32 419.7,-26 425.7,-26 425.7,-26 620.3,-26 620.3,-26 626.3,-26 632.3,-32 632.3,-38 632.3,-38 632.3,-56.24 632.3,-56.24 632.3,-62.24 626.3,-68.24 620.3,-68.24"/>
-<text xml:space="preserve" text-anchor="middle" x="523" y="-50.42" font-family="Helvetica,sans-Serif" font-size="11.00">🔐 Ingress + cert&#45;manager</text>
-<text xml:space="preserve" text-anchor="middle" x="523" y="-37.22" font-family="Helvetica,sans-Serif" font-size="11.00">HAProxy LoadBalancer · Let&#39;s Encrypt</text>
+<path fill="#eef2f6" stroke="#93a7bb" stroke-width="1.1" d="M1046.3,-68.24C1046.3,-68.24 851.7,-68.24 851.7,-68.24 845.7,-68.24 839.7,-62.24 839.7,-56.24 839.7,-56.24 839.7,-38 839.7,-38 839.7,-32 845.7,-26 851.7,-26 851.7,-26 1046.3,-26 1046.3,-26 1052.3,-26 1058.3,-32 1058.3,-38 1058.3,-38 1058.3,-56.24 1058.3,-56.24 1058.3,-62.24 1052.3,-68.24 1046.3,-68.24"/>
+<text xml:space="preserve" text-anchor="middle" x="949" y="-50.42" font-family="Helvetica,sans-Serif" font-size="11.00">🔐 Ingress + cert&#45;manager</text>
+<text xml:space="preserve" text-anchor="middle" x="949" y="-37.22" font-family="Helvetica,sans-Serif" font-size="11.00">HAProxy LoadBalancer · Let&#39;s Encrypt</text>
 </g>
 <!-- BBD_I&#45;&gt;ING -->
-<g id="edge18" class="edge">
+<g id="edge22" class="edge">
 <title>BBD_I&#45;&gt;ING</title>
-<path fill="none" stroke="#8b95a3" d="M522.56,-134.3C522.56,-134.3 522.56,-77.05 522.56,-77.05"/>
-<polygon fill="#8b95a3" stroke="#8b95a3" points="525.01,-77.05 522.56,-70.05 520.11,-77.05 525.01,-77.05"/>
+<path fill="none" stroke="#8b95a3" d="M966.44,-134.3C966.44,-134.3 966.44,-77.05 966.44,-77.05"/>
+<polygon fill="#8b95a3" stroke="#8b95a3" points="968.89,-77.05 966.44,-70.05 963.99,-77.05 968.89,-77.05"/>
 </g>
 <!-- BBD_H -->
 <g id="node8" class="node">
 <title>BBD_H</title>
-<path fill="#ecedfb" stroke="#9aa2e6" stroke-width="1.1" d="M1023.26,-176.88C1023.26,-176.88 838.74,-176.88 838.74,-176.88 832.74,-176.88 826.74,-170.88 826.74,-164.88 826.74,-164.88 826.74,-146.64 826.74,-146.64 826.74,-140.64 832.74,-134.64 838.74,-134.64 838.74,-134.64 1023.26,-134.64 1023.26,-134.64 1029.26,-134.64 1035.26,-140.64 1035.26,-146.64 1035.26,-146.64 1035.26,-164.88 1035.26,-164.88 1035.26,-170.88 1029.26,-176.88 1023.26,-176.88"/>
-<text xml:space="preserve" text-anchor="middle" x="931" y="-159.06" font-family="Helvetica,sans-Serif" font-size="11.00">📦 stackit/container&#45;registry BBD</text>
-<text xml:space="preserve" text-anchor="middle" x="931" y="-145.86" font-family="Helvetica,sans-Serif" font-size="11.00">registry · base image mirror · robots</text>
+<path fill="#ecedfb" stroke="#9aa2e6" stroke-width="1.1" d="M1493.26,-176.88C1493.26,-176.88 1308.74,-176.88 1308.74,-176.88 1302.74,-176.88 1296.74,-170.88 1296.74,-164.88 1296.74,-164.88 1296.74,-146.64 1296.74,-146.64 1296.74,-140.64 1302.74,-134.64 1308.74,-134.64 1308.74,-134.64 1493.26,-134.64 1493.26,-134.64 1499.26,-134.64 1505.26,-140.64 1505.26,-146.64 1505.26,-146.64 1505.26,-164.88 1505.26,-164.88 1505.26,-170.88 1499.26,-176.88 1493.26,-176.88"/>
+<text xml:space="preserve" text-anchor="middle" x="1401" y="-159.06" font-family="Helvetica,sans-Serif" font-size="11.00">📦 stackit/container&#45;registry BBD</text>
+<text xml:space="preserve" text-anchor="middle" x="1401" y="-145.86" font-family="Helvetica,sans-Serif" font-size="11.00">registry · base image mirror · robots</text>
 </g>
 <!-- BBD_G&#45;&gt;BBD_H -->
 <!-- GIT -->
-<g id="node14" class="node">
+<g id="node16" class="node">
 <title>GIT</title>
-<path fill="#eef2f6" stroke="#93a7bb" stroke-width="1.1" d="M770.06,-68.24C770.06,-68.24 683.94,-68.24 683.94,-68.24 677.94,-68.24 671.94,-62.24 671.94,-56.24 671.94,-56.24 671.94,-38 671.94,-38 671.94,-32 677.94,-26 683.94,-26 683.94,-26 770.06,-26 770.06,-26 776.06,-26 782.06,-32 782.06,-38 782.06,-38 782.06,-56.24 782.06,-56.24 782.06,-62.24 776.06,-68.24 770.06,-68.24"/>
-<text xml:space="preserve" text-anchor="middle" x="727" y="-50.42" font-family="Helvetica,sans-Serif" font-size="11.00">🔀 STACKIT Git</text>
-<text xml:space="preserve" text-anchor="middle" x="727" y="-37.22" font-family="Helvetica,sans-Serif" font-size="11.00">Forgejo instance</text>
+<path fill="#eef2f6" stroke="#93a7bb" stroke-width="1.1" d="M1196.06,-68.24C1196.06,-68.24 1109.94,-68.24 1109.94,-68.24 1103.94,-68.24 1097.94,-62.24 1097.94,-56.24 1097.94,-56.24 1097.94,-38 1097.94,-38 1097.94,-32 1103.94,-26 1109.94,-26 1109.94,-26 1196.06,-26 1196.06,-26 1202.06,-26 1208.06,-32 1208.06,-38 1208.06,-38 1208.06,-56.24 1208.06,-56.24 1208.06,-62.24 1202.06,-68.24 1196.06,-68.24"/>
+<text xml:space="preserve" text-anchor="middle" x="1153" y="-50.42" font-family="Helvetica,sans-Serif" font-size="11.00">🔀 STACKIT Git</text>
+<text xml:space="preserve" text-anchor="middle" x="1153" y="-37.22" font-family="Helvetica,sans-Serif" font-size="11.00">Forgejo instance</text>
 </g>
 <!-- BBD_G&#45;&gt;GIT -->
-<g id="edge19" class="edge">
+<g id="edge23" class="edge">
 <title>BBD_G&#45;&gt;GIT</title>
-<path fill="none" stroke="#8b95a3" d="M727,-137.33C727,-137.33 727,-77.14 727,-77.14"/>
-<polygon fill="#8b95a3" stroke="#8b95a3" points="729.45,-77.14 727,-70.14 724.55,-77.14 729.45,-77.14"/>
+<path fill="none" stroke="#8b95a3" d="M1174.63,-137.33C1174.63,-137.33 1174.63,-77.14 1174.63,-77.14"/>
+<polygon fill="#8b95a3" stroke="#8b95a3" points="1177.08,-77.14 1174.63,-70.14 1172.18,-77.14 1177.08,-77.14"/>
 </g>
 <!-- BBD_D -->
 <g id="node9" class="node">
 <title>BBD_D</title>
-<path fill="#ecedfb" stroke="#9aa2e6" stroke-width="1.1" d="M1184.86,-173.76C1184.86,-173.76 1087.14,-173.76 1087.14,-173.76 1081.14,-173.76 1075.14,-167.76 1075.14,-161.76 1075.14,-161.76 1075.14,-149.76 1075.14,-149.76 1075.14,-143.76 1081.14,-137.76 1087.14,-137.76 1087.14,-137.76 1184.86,-137.76 1184.86,-137.76 1190.86,-137.76 1196.86,-143.76 1196.86,-149.76 1196.86,-149.76 1196.86,-161.76 1196.86,-161.76 1196.86,-167.76 1190.86,-173.76 1184.86,-173.76"/>
-<text xml:space="preserve" text-anchor="middle" x="1136" y="-152.46" font-family="Helvetica,sans-Serif" font-size="11.00">📦 stackit/dns BBD</text>
+<path fill="#ecedfb" stroke="#9aa2e6" stroke-width="1.1" d="M1654.86,-173.76C1654.86,-173.76 1557.14,-173.76 1557.14,-173.76 1551.14,-173.76 1545.14,-167.76 1545.14,-161.76 1545.14,-161.76 1545.14,-149.76 1545.14,-149.76 1545.14,-143.76 1551.14,-137.76 1557.14,-137.76 1557.14,-137.76 1654.86,-137.76 1654.86,-137.76 1660.86,-137.76 1666.86,-143.76 1666.86,-149.76 1666.86,-149.76 1666.86,-161.76 1666.86,-161.76 1666.86,-167.76 1660.86,-173.76 1654.86,-173.76"/>
+<text xml:space="preserve" text-anchor="middle" x="1606" y="-152.46" font-family="Helvetica,sans-Serif" font-size="11.00">📦 stackit/dns BBD</text>
 </g>
 <!-- BBD_H&#45;&gt;BBD_D -->
 <!-- HARBOR -->
-<g id="node15" class="node">
+<g id="node17" class="node">
 <title>HARBOR</title>
-<path fill="#eef2f6" stroke="#93a7bb" stroke-width="1.1" d="M1003.92,-68.24C1003.92,-68.24 834.08,-68.24 834.08,-68.24 828.08,-68.24 822.08,-62.24 822.08,-56.24 822.08,-56.24 822.08,-38 822.08,-38 822.08,-32 828.08,-26 834.08,-26 834.08,-26 1003.92,-26 1003.92,-26 1009.92,-26 1015.92,-32 1015.92,-38 1015.92,-38 1015.92,-56.24 1015.92,-56.24 1015.92,-62.24 1009.92,-68.24 1003.92,-68.24"/>
-<text xml:space="preserve" text-anchor="middle" x="919" y="-50.42" font-family="Helvetica,sans-Serif" font-size="11.00">🗄️ STACKIT Container Registry</text>
-<text xml:space="preserve" text-anchor="middle" x="919" y="-37.22" font-family="Helvetica,sans-Serif" font-size="11.00">Harbor project per platform</text>
+<path fill="#eef2f6" stroke="#93a7bb" stroke-width="1.1" d="M1429.92,-68.24C1429.92,-68.24 1260.08,-68.24 1260.08,-68.24 1254.08,-68.24 1248.08,-62.24 1248.08,-56.24 1248.08,-56.24 1248.08,-38 1248.08,-38 1248.08,-32 1254.08,-26 1260.08,-26 1260.08,-26 1429.92,-26 1429.92,-26 1435.92,-26 1441.92,-32 1441.92,-38 1441.92,-38 1441.92,-56.24 1441.92,-56.24 1441.92,-62.24 1435.92,-68.24 1429.92,-68.24"/>
+<text xml:space="preserve" text-anchor="middle" x="1345" y="-50.42" font-family="Helvetica,sans-Serif" font-size="11.00">🗄️ STACKIT Container Registry</text>
+<text xml:space="preserve" text-anchor="middle" x="1345" y="-37.22" font-family="Helvetica,sans-Serif" font-size="11.00">Harbor project per platform</text>
 </g>
 <!-- BBD_H&#45;&gt;HARBOR -->
-<g id="edge20" class="edge">
+<g id="edge24" class="edge">
 <title>BBD_H&#45;&gt;HARBOR</title>
-<path fill="none" stroke="#8b95a3" d="M921.33,-134.3C921.33,-134.3 921.33,-77.05 921.33,-77.05"/>
-<polygon fill="#8b95a3" stroke="#8b95a3" points="923.78,-77.05 921.33,-70.05 918.88,-77.05 923.78,-77.05"/>
+<path fill="none" stroke="#8b95a3" d="M1369.33,-134.3C1369.33,-134.3 1369.33,-77.05 1369.33,-77.05"/>
+<polygon fill="#8b95a3" stroke="#8b95a3" points="1371.78,-77.05 1369.33,-70.05 1366.88,-77.05 1371.78,-77.05"/>
 </g>
 <!-- BBD_M -->
 <g id="node10" class="node">
 <title>BBD_M</title>
-<path fill="#ecedfb" stroke="#9aa2e6" stroke-width="1.1" d="M1355.13,-173.76C1355.13,-173.76 1248.87,-173.76 1248.87,-173.76 1242.87,-173.76 1236.87,-167.76 1236.87,-161.76 1236.87,-161.76 1236.87,-149.76 1236.87,-149.76 1236.87,-143.76 1242.87,-137.76 1248.87,-137.76 1248.87,-137.76 1355.13,-137.76 1355.13,-137.76 1361.13,-137.76 1367.13,-143.76 1367.13,-149.76 1367.13,-149.76 1367.13,-161.76 1367.13,-161.76 1367.13,-167.76 1361.13,-173.76 1355.13,-173.76"/>
-<text xml:space="preserve" text-anchor="middle" x="1302" y="-152.46" font-family="Helvetica,sans-Serif" font-size="11.00">📦 stackit/ai&#45;llm BBD</text>
+<path fill="#ecedfb" stroke="#9aa2e6" stroke-width="1.1" d="M1825.13,-173.76C1825.13,-173.76 1718.87,-173.76 1718.87,-173.76 1712.87,-173.76 1706.87,-167.76 1706.87,-161.76 1706.87,-161.76 1706.87,-149.76 1706.87,-149.76 1706.87,-143.76 1712.87,-137.76 1718.87,-137.76 1718.87,-137.76 1825.13,-137.76 1825.13,-137.76 1831.13,-137.76 1837.13,-143.76 1837.13,-149.76 1837.13,-149.76 1837.13,-161.76 1837.13,-161.76 1837.13,-167.76 1831.13,-173.76 1825.13,-173.76"/>
+<text xml:space="preserve" text-anchor="middle" x="1772" y="-152.46" font-family="Helvetica,sans-Serif" font-size="11.00">📦 stackit/ai&#45;llm BBD</text>
 </g>
 <!-- BBD_D&#45;&gt;BBD_M -->
 <!-- DNS -->
-<g id="node16" class="node">
+<g id="node18" class="node">
 <title>DNS</title>
-<path fill="#eef2f6" stroke="#93a7bb" stroke-width="1.1" d="M1212.41,-68.24C1212.41,-68.24 1067.59,-68.24 1067.59,-68.24 1061.59,-68.24 1055.59,-62.24 1055.59,-56.24 1055.59,-56.24 1055.59,-38 1055.59,-38 1055.59,-32 1061.59,-26 1067.59,-26 1067.59,-26 1212.41,-26 1212.41,-26 1218.41,-26 1224.41,-32 1224.41,-38 1224.41,-38 1224.41,-56.24 1224.41,-56.24 1224.41,-62.24 1218.41,-68.24 1212.41,-68.24"/>
-<text xml:space="preserve" text-anchor="middle" x="1140" y="-50.42" font-family="Helvetica,sans-Serif" font-size="11.00">🧭 STACKIT DNS zone</text>
-<text xml:space="preserve" text-anchor="middle" x="1140" y="-37.22" font-family="Helvetica,sans-Serif" font-size="11.00">wildcard to the load balancer</text>
+<path fill="#eef2f6" stroke="#93a7bb" stroke-width="1.1" d="M1638.41,-68.24C1638.41,-68.24 1493.59,-68.24 1493.59,-68.24 1487.59,-68.24 1481.59,-62.24 1481.59,-56.24 1481.59,-56.24 1481.59,-38 1481.59,-38 1481.59,-32 1487.59,-26 1493.59,-26 1493.59,-26 1638.41,-26 1638.41,-26 1644.41,-26 1650.41,-32 1650.41,-38 1650.41,-38 1650.41,-56.24 1650.41,-56.24 1650.41,-62.24 1644.41,-68.24 1638.41,-68.24"/>
+<text xml:space="preserve" text-anchor="middle" x="1566" y="-50.42" font-family="Helvetica,sans-Serif" font-size="11.00">🧭 STACKIT DNS zone</text>
+<text xml:space="preserve" text-anchor="middle" x="1566" y="-37.22" font-family="Helvetica,sans-Serif" font-size="11.00">wildcard to the load balancer</text>
 </g>
 <!-- BBD_D&#45;&gt;DNS -->
-<g id="edge21" class="edge">
+<g id="edge25" class="edge">
 <title>BBD_D&#45;&gt;DNS</title>
-<path fill="none" stroke="#8b95a3" d="M1136,-137.33C1136,-137.33 1136,-77.14 1136,-77.14"/>
-<polygon fill="#8b95a3" stroke="#8b95a3" points="1138.45,-77.14 1136,-70.14 1133.55,-77.14 1138.45,-77.14"/>
+<path fill="none" stroke="#8b95a3" d="M1597.78,-137.33C1597.78,-137.33 1597.78,-77.14 1597.78,-77.14"/>
+<polygon fill="#8b95a3" stroke="#8b95a3" points="1600.23,-77.14 1597.78,-70.14 1595.33,-77.14 1600.23,-77.14"/>
 </g>
 <!-- MODEL -->
-<g id="node17" class="node">
+<g id="node19" class="node">
 <title>MODEL</title>
-<path fill="#eef2f6" stroke="#93a7bb" stroke-width="1.1" d="M1415.95,-68.24C1415.95,-68.24 1276.05,-68.24 1276.05,-68.24 1270.05,-68.24 1264.05,-62.24 1264.05,-56.24 1264.05,-56.24 1264.05,-38 1264.05,-38 1264.05,-32 1270.05,-26 1276.05,-26 1276.05,-26 1415.95,-26 1415.95,-26 1421.95,-26 1427.95,-32 1427.95,-38 1427.95,-38 1427.95,-56.24 1427.95,-56.24 1427.95,-62.24 1421.95,-68.24 1415.95,-68.24"/>
-<text xml:space="preserve" text-anchor="middle" x="1346" y="-50.42" font-family="Helvetica,sans-Serif" font-size="11.00">🧠 STACKIT Model Serving</text>
-<text xml:space="preserve" text-anchor="middle" x="1346" y="-37.22" font-family="Helvetica,sans-Serif" font-size="11.00">sovereign LLM API</text>
+<path fill="#eef2f6" stroke="#93a7bb" stroke-width="1.1" d="M1841.95,-68.24C1841.95,-68.24 1702.05,-68.24 1702.05,-68.24 1696.05,-68.24 1690.05,-62.24 1690.05,-56.24 1690.05,-56.24 1690.05,-38 1690.05,-38 1690.05,-32 1696.05,-26 1702.05,-26 1702.05,-26 1841.95,-26 1841.95,-26 1847.95,-26 1853.95,-32 1853.95,-38 1853.95,-38 1853.95,-56.24 1853.95,-56.24 1853.95,-62.24 1847.95,-68.24 1841.95,-68.24"/>
+<text xml:space="preserve" text-anchor="middle" x="1772" y="-50.42" font-family="Helvetica,sans-Serif" font-size="11.00">🧠 STACKIT Model Serving</text>
+<text xml:space="preserve" text-anchor="middle" x="1772" y="-37.22" font-family="Helvetica,sans-Serif" font-size="11.00">sovereign LLM API</text>
 </g>
 <!-- BBD_M&#45;&gt;MODEL -->
-<g id="edge22" class="edge">
+<g id="edge26" class="edge">
 <title>BBD_M&#45;&gt;MODEL</title>
-<path fill="none" stroke="#8b95a3" d="M1315.59,-137.33C1315.59,-137.33 1315.59,-77.14 1315.59,-77.14"/>
-<polygon fill="#8b95a3" stroke="#8b95a3" points="1318.04,-77.14 1315.59,-70.14 1313.14,-77.14 1318.04,-77.14"/>
+<path fill="none" stroke="#8b95a3" d="M1772,-137.33C1772,-137.33 1772,-77.14 1772,-77.14"/>
+<polygon fill="#8b95a3" stroke="#8b95a3" points="1774.45,-77.14 1772,-70.14 1769.55,-77.14 1774.45,-77.14"/>
+</g>
+<!-- BBD_S -->
+<g id="node11" class="node">
+<title>BBD_S</title>
+<path fill="#ecedfb" stroke="#9aa2e6" stroke-width="1.1" d="M200.26,-173.76C200.26,-173.76 37.74,-173.76 37.74,-173.76 31.74,-173.76 25.74,-167.76 25.74,-161.76 25.74,-161.76 25.74,-149.76 25.74,-149.76 25.74,-143.76 31.74,-137.76 37.74,-137.76 37.74,-137.76 200.26,-137.76 200.26,-137.76 206.26,-137.76 212.26,-143.76 212.26,-149.76 212.26,-149.76 212.26,-161.76 212.26,-161.76 212.26,-167.76 206.26,-173.76 200.26,-173.76"/>
+<text xml:space="preserve" text-anchor="middle" x="119" y="-152.46" font-family="Helvetica,sans-Serif" font-size="11.00">📦 stackit/secrets&#45;manager BBD</text>
+</g>
+<!-- BBD_S&#45;&gt;BBD_A -->
+<!-- SM -->
+<g id="node20" class="node">
+<title>SM</title>
+<path fill="#eef2f6" stroke="#93a7bb" stroke-width="1.1" d="M263.67,-68.24C263.67,-68.24 110.33,-68.24 110.33,-68.24 104.33,-68.24 98.33,-62.24 98.33,-56.24 98.33,-56.24 98.33,-38 98.33,-38 98.33,-32 104.33,-26 110.33,-26 110.33,-26 263.67,-26 263.67,-26 269.67,-26 275.67,-32 275.67,-38 275.67,-38 275.67,-56.24 275.67,-56.24 275.67,-62.24 269.67,-68.24 263.67,-68.24"/>
+<text xml:space="preserve" text-anchor="middle" x="187" y="-50.42" font-family="Helvetica,sans-Serif" font-size="11.00">🔒 STACKIT Secrets Manager</text>
+<text xml:space="preserve" text-anchor="middle" x="187" y="-37.22" font-family="Helvetica,sans-Serif" font-size="11.00">every platform credential</text>
+</g>
+<!-- BBD_S&#45;&gt;SM -->
+<g id="edge27" class="edge">
+<title>BBD_S&#45;&gt;SM</title>
+<path fill="none" stroke="#8b95a3" d="M155.29,-137.33C155.29,-137.33 155.29,-77.14 155.29,-77.14"/>
+<polygon fill="#8b95a3" stroke="#8b95a3" points="157.74,-77.14 155.29,-70.14 152.84,-77.14 157.74,-77.14"/>
+</g>
+<!-- BBD_SA&#45;&gt;BBD_I -->
+<!-- KSA -->
+<g id="node21" class="node">
+<title>KSA</title>
+<path fill="#eef2f6" stroke="#93a7bb" stroke-width="1.1" d="M787.97,-68.24C787.97,-68.24 700.03,-68.24 700.03,-68.24 694.03,-68.24 688.03,-62.24 688.03,-56.24 688.03,-56.24 688.03,-38 688.03,-38 688.03,-32 694.03,-26 700.03,-26 700.03,-26 787.97,-26 787.97,-26 793.97,-26 799.97,-32 799.97,-38 799.97,-38 799.97,-56.24 799.97,-56.24 799.97,-62.24 793.97,-68.24 787.97,-68.24"/>
+<text xml:space="preserve" text-anchor="middle" x="744" y="-50.42" font-family="Helvetica,sans-Serif" font-size="11.00">🔑 Cluster admin</text>
+<text xml:space="preserve" text-anchor="middle" x="744" y="-37.22" font-family="Helvetica,sans-Serif" font-size="11.00">service account</text>
+</g>
+<!-- BBD_SA&#45;&gt;KSA -->
+<g id="edge28" class="edge">
+<title>BBD_SA&#45;&gt;KSA</title>
+<path fill="none" stroke="#8b95a3" d="M744,-137.33C744,-137.33 744,-77.14 744,-77.14"/>
+<polygon fill="#8b95a3" stroke="#8b95a3" points="746.45,-77.14 744,-70.14 741.55,-77.14 746.45,-77.14"/>
 </g>
 <!-- AGENT&#45;&gt;SKE -->
-<!-- SKE&#45;&gt;ING -->
+<!-- SKE&#45;&gt;KSA -->
 <!-- ING&#45;&gt;GIT -->
 <!-- GIT&#45;&gt;HARBOR -->
 <!-- HARBOR&#45;&gt;DNS -->
 <!-- DNS&#45;&gt;MODEL -->
+<!-- SM&#45;&gt;AGENT -->
+<!-- KSA&#45;&gt;ING -->
 </g>
 </svg>

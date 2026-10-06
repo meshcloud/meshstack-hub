@@ -45,8 +45,14 @@ variable "use_global_location" {
 
 variable "payment_method_identifier" {
   type        = string
-  nullable    = false
-  description = "Payment method identifier assigned to the platform's meshProject."
+  default     = null
+  description = "Payment method identifier assigned to the platform's meshProject. Null assigns none."
+}
+
+variable "project_identifier" {
+  type        = string
+  default     = null
+  description = "Overrides the identifier of the platform's meshProject, `<platform identifier>-ske` by default. Set it when the meshStack instance restricts project identifiers."
 }
 
 variable "tags" {
@@ -54,6 +60,7 @@ variable "tags" {
     landingzone           = map(list(string))
     building_block        = map(list(string))
     project               = map(list(string))
+    starterkit_project    = map(list(string))
     project_owner_tag_key = optional(string, "")
   })
   nullable    = false
@@ -61,8 +68,9 @@ variable "tags" {
   Tags forwarded to the nested integrations, and shared by every stage.
   `landingzone` tags are applied to the created SKE landing zones. Include every tag a tag policy matches against a project tag, or no tenant can be created on them.
   `building_block` tags are applied to the nested building block definitions.
-  `project` tags are applied to the platform's meshProject and to the meshProjects the starter kit creates.
-  `project_owner_tag_key` names the tag that receives the creator's display name on the platform's meshProject (empty to set none). Set it to the mandatory owner tag your meshStack enforces (e.g. `projectOwner`).
+  `project` tags are applied to the platform's meshProject only.
+  `starterkit_project` tags are applied to the meshProjects the starter kit creates.
+  `project_owner_tag_key` names the tag that receives the creator's display name on the platform's meshProject and on the starter kit's meshProjects (empty to set none). Set it to the mandatory owner tag your meshStack enforces (e.g. `projectOwner`).
   EOT
 }
 
@@ -74,7 +82,7 @@ variable "stages" {
   nullable    = false
   description = <<-EOT
   Stages the platform offers. The map keys name them, and one landing zone is created per key, so a platform can offer fewer or more than the usual `dev` and `prod`. The starter kit creates one meshProject and one namespace per key.
-  `landingzone` and `project` carry the tags whose value differs between stages. They are merged over the matching map in `tags`, and over the `environment` tag the stage gets from its key.
+  `landingzone` and `project` carry the tags whose value differs between stages. They are merged over `tags.landingzone` and `tags.starterkit_project`, and over the `environment` tag the stage gets from its key.
   A tag policy pairs a landing zone tag with a project tag, so such a tag belongs here on both sides at once.
   EOT
 }

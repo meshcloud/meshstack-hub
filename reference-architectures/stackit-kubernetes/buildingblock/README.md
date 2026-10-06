@@ -1,23 +1,24 @@
 # STACKIT Kubernetes Platform — Building Block
 
 Terraform for the importable **STACKIT Kubernetes Platform** reference architecture. Ordered on top
-of a deployed STACKIT Landing Zone, it bootstraps the whole platform: a self-hosted STACKIT project
-and its service account, an SKE cluster, in-cluster ingress (cert-manager, HAProxy and a Let's
-Encrypt ClusterIssuer), the meshStack replicator and metering identities, a DNS zone, a STACKIT Model
-Serving token, a STACKIT Git instance, a container registry, and the meshStack SKE platform with one
-landing zone per stage.
+of a deployed STACKIT Landing Zone, it bootstraps what the rest of the platform needs to run as one
+STACKIT identity, and then orders the rest as one nested building block.
 
-Ingress and the meshStack identities come from `modules/kubernetes/*` and know nothing about SKE.
+This outer run holds no STACKIT credential and declares no `stackit` provider. It creates:
 
-It also **registers building block definitions of its own** — `ske/cluster`, `stackit/git`,
-`stackit/container-registry`, `stackit/dns`, `stackit/ai-llm`, `kubernetes/ingress` and `kubernetes`
-on every run, and `stackit/git-repository`, `ske/forgejo-connector` and `ske/ske-starterkit` once
-`harbor_username` names the Harbor bootstrap robot. It orders the landing zone's STACKIT Service
-Account definition, named in the `landingzone` input, and then the landing zone's STACKIT Service
-Account Federation definition as its child, listing its STACKIT definitions in `federated_building_block_definitions`.
-Their runs act as that account through workload identity federation.
+- the meshProject and a self-hosted meshStack tenant, which is the STACKIT project the platform runs
+  in, with the owners and managers of the workspace as Project Admins,
+- the **Automation Identity**, ordered from the landing zone's STACKIT Service Account definition,
+- the **Bootstrap Identity Federation**, ordered from the landing zone's STACKIT Service Account
+  Federation definition as its child. It trusts only the one definition this run registers, the
+  nested **STACKIT Kubernetes Platform Services** definition,
+- one **Platform Services** building block, ordered from that definition. Its run is in
+  [`../platform/buildingblock`](../platform/buildingblock/README.md) and creates everything else,
+  the platform's Secrets Manager included.
 
-The architecture itself (overview, diagram, the order and its one update, shared responsibilities)
+Its summary is the summary of the Platform Services building block.
+
+The architecture itself (overview, diagrams, the order and its one update, shared responsibilities)
 lives in the [reference architecture README](../README.md). Registration into meshStack is in
 [`../meshstack_integration.tf`](../meshstack_integration.tf).
 
