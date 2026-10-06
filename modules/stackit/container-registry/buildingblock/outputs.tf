@@ -29,3 +29,13 @@ output "summary" {
     user_assignments   = values(local.registry_role_assignments)
   })
 }
+
+output "vault_secret" {
+  description = "`{push, pull}`, each `{path, secret_hash}` of a robot secret written under `output_to_vault`, or `{}` when no robots are written. `secret_hash` is the secret's KV version and changes with its content."
+  value = {
+    for robot, hash in local.vault_secret_hash : robot => {
+      path        = "${nonsensitive(var.output_to_vault.path)}/${robot}"
+      secret_hash = hash
+    } if local.write_to_vault && local.mint_robots
+  }
+}

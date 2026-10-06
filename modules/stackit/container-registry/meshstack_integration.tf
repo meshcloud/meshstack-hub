@@ -256,6 +256,13 @@ resource "meshstack_building_block_definition" "this" {
     }
 
     outputs = {
+      vault_secret = {
+        display_name    = "Vault Secret"
+        description     = "JSON object `{push, pull}`, each `{path, secret_hash}` of a robot secret in Vault, or `{}` when no robots are written. `secret_hash` changes with the secret's content."
+        type            = "CODE"
+        assignment_type = "NONE"
+      }
+
       registry_name = {
         display_name    = "Registry Name"
         type            = "STRING"

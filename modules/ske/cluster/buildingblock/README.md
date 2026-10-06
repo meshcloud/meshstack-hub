@@ -59,4 +59,5 @@ No modules.
 | <a name="output_kube_host"></a> [kube\_host](#output\_kube\_host) | Kubernetes API server URL of the cluster. |
 | <a name="output_kubeconfig"></a> [kubeconfig](#output\_kubeconfig) | Raw kubeconfig content for cluster access. Empty when `output_to_vault` is set. |
 | <a name="output_provider_config"></a> [provider\_config](#output\_provider\_config) | Decoded kubeconfig values for wiring a kubernetes/helm provider without re-parsing the raw kubeconfig. Null when `output_to_vault` is set. |
+| <a name="output_vault_secret"></a> [vault\_secret](#output\_vault\_secret) | `{path, secret_hash}` of the secret written to `output_to_vault`, or `{}` when that is not set. `secret_hash` is the secret's KV version and changes with its content. |
 <!-- END_TF_DOCS -->

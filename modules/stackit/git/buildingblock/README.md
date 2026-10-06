@@ -143,4 +143,5 @@ rejects one.
 | <a name="output_instance_url"></a> [instance\_url](#output\_instance\_url) | URL of the Forgejo instance. |
 | <a name="output_local_user_username"></a> [local\_user\_username](#output\_local\_user\_username) | Username of the technical user the token belongs to. |
 | <a name="output_organization_url"></a> [organization\_url](#output\_organization\_url) | URL of the Forgejo organization. Falls back to the instance URL when no organization was asked for. |
+| <a name="output_vault_secret"></a> [vault\_secret](#output\_vault\_secret) | `{path, secret_hash}` of the secret written to `output_to_vault`, or `{}` when that is not set. `secret_hash` is the secret's KV version and changes with its content. |
 <!-- END_TF_DOCS -->

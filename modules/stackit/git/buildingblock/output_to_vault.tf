@@ -2,6 +2,9 @@ locals {
   write_to_vault = nonsensitive(var.output_to_vault != null)
 
   vault_data_json = jsonencode({ forgejo_api_token = local.forgejo_api_token })
+
+  # The version must be a number, so the first 48 bits of the hash stand in for it.
+  vault_secret_hash = parseint(substr(nonsensitive(sha256(local.vault_data_json)), 0, 12), 16)
 }
 
 provider "vault" {
@@ -23,9 +26,8 @@ resource "vault_kv_secret_v2" "this" {
     enabled = local.write_to_vault
   }
 
-  mount        = var.output_to_vault.mount
-  name         = var.output_to_vault.path
-  data_json_wo = local.vault_data_json
-  # The version must be a number, so the first 48 bits of the hash stand in for it.
-  data_json_wo_version = parseint(substr(nonsensitive(sha256(local.vault_data_json)), 0, 12), 16)
+  mount                = var.output_to_vault.mount
+  name                 = var.output_to_vault.path
+  data_json_wo         = local.vault_data_json
+  data_json_wo_version = local.vault_secret_hash
 }

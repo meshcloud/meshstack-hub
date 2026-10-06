@@ -530,6 +530,13 @@ resource "meshstack_building_block_definition" "this" {
     }
 
     outputs = {
+      vault_secret = {
+        display_name    = "Vault Secret"
+        description     = "JSON object `{path, secret_hash}` of the secret in Vault, or `{}` when `output_to_vault` is not set. `secret_hash` changes with the secret's content."
+        type            = "CODE"
+        assignment_type = "NONE"
+      }
+
       # Consumed by the composing architecture (read from this block's status outputs) to wire up
       # the meshstack_platform. Sensitive service account tokens — do not publish this definition
       # outside the platform workspace.

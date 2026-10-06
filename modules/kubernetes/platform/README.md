@@ -97,4 +97,5 @@ No modules.
 | <a name="output_replicator_service_account_name"></a> [replicator\_service\_account\_name](#output\_replicator\_service\_account\_name) | Name of the replicator ServiceAccount, its token Secret, its ClusterRole and its ClusterRoleBinding — all four share it. |
 | <a name="output_replicator_token"></a> [replicator\_token](#output\_replicator\_token) | Service account token meshStack uses to replicate namespaces onto the cluster. Empty when `output_to_vault` is set. |
 | <a name="output_service_account_namespace"></a> [service\_account\_namespace](#output\_service\_account\_namespace) | Namespace holding the replicator and metering service accounts. |
+| <a name="output_vault_secret"></a> [vault\_secret](#output\_vault\_secret) | `{path, secret_hash}` of the secret written to `output_to_vault`, or `{}` when that is not set. `secret_hash` is the secret's KV version and changes with its content. |
 <!-- END_TF_DOCS -->

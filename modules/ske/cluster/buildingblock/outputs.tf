@@ -34,3 +34,13 @@ output "provider_config" {
   }
   sensitive = true
 }
+
+output "vault_secret" {
+  description = "`{path, secret_hash}` of the secret written to `output_to_vault`, or `{}` when that is not set. `secret_hash` is the secret's KV version and changes with its content."
+  value = {
+    for key, value in {
+      path        = local.write_to_vault ? nonsensitive(var.output_to_vault.path) : null
+      secret_hash = local.vault_secret_hash
+    } : key => value if local.write_to_vault
+  }
+}
