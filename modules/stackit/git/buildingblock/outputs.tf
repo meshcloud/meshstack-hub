@@ -1,23 +1,23 @@
 output "instance_name" {
   description = "Name of the STACKIT Git instance."
-  value       = stackit_git.this.name
+  value       = module.instance.instance.name
 }
 
 output "instance_id" {
   description = "STACKIT Git instance id."
-  value       = stackit_git.this.instance_id
+  value       = module.instance.instance.instance_id
 }
 
 output "instance_url" {
   description = "URL of the Forgejo instance."
-  value       = stackit_git.this.url
+  value       = module.instance.instance.url
 }
 
 output "organization_url" {
   description = "URL of the Forgejo organization. Falls back to the instance URL when no organization was asked for."
   value = local.create_forgejo_organization ? format(
-    "%s/%s", trimsuffix(stackit_git.this.url, "/"), var.forgejo_organization
-  ) : stackit_git.this.url
+    "%s/%s", trimsuffix(module.instance.instance.url, "/"), var.forgejo_organization
+  ) : module.instance.instance.url
 }
 
 output "forgejo_organization" {
@@ -30,7 +30,7 @@ output "forgejo_organization" {
 
 output "local_user_username" {
   description = "Username of the technical user the token belongs to."
-  value       = var.local_user_username
+  value       = local.local_user_username
 }
 
 output "vault_secret" {
