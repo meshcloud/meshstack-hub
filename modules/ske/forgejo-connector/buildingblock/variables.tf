@@ -24,8 +24,9 @@ variable "app_hostname" {
 }
 
 variable "additional_kubernetes_secrets" {
-  type        = map(map(string))
-  description = "Additional Kubernetes secrets to create in the tenant namespace. Map keys are secret names, values are secret data maps."
+  type        = map(string)
+  nullable    = false
+  description = "Opaque Kubernetes secrets to create in the tenant namespace, by name, each from the Vault KV v2 secret at the given path. Every key of that secret becomes a key of the Kubernetes secret."
 }
 
 variable "harbor_host" {
@@ -33,14 +34,28 @@ variable "harbor_host" {
   description = "The URL of the Harbor registry."
 }
 
-variable "container_registry_access_credentials" {
+variable "vault_reader" {
   type = object({
-    push = object({ user = string, password = string })
-    pull = object({ user = string, password = string })
+    address  = string
+    mount    = string
+    username = string
+    password = string
   })
-  description = "Registry robot credentials. Null wires no registry, so pods pull public images only."
+  nullable    = false
   sensitive   = true
-  default     = null
+  description = "Vault KV v2 login this building block reads its secrets with: the server `address`, the engine `mount` and a userpass `username` and `password`."
+}
+
+variable "forgejo_api_token_path" {
+  type        = string
+  nullable    = false
+  description = "Vault KV v2 secret holding the Forgejo API token under the key `forgejo_api_token`."
+}
+
+variable "registry_pull_path" {
+  type        = string
+  nullable    = false
+  description = "Vault KV v2 secret holding the registry pull robot under the keys `username` and `password`."
 }
 
 variable "hub_git_ref" {

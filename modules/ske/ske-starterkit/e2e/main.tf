@@ -27,7 +27,7 @@ variable "ske_kubeconfig" {
   type        = string
   sensitive   = true
   default     = null
-  description = "Kubeconfig for the SKE cluster (YAML or JSON), used by the Forgejo Connector building block."
+  description = "Admin kubeconfig of the SKE cluster (YAML or JSON). Hub mode creates the service accounts of the meshPlatform and of the Forgejo Connector with it."
 }
 
 variable "harbor_push_username" {

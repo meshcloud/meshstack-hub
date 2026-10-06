@@ -27,8 +27,8 @@ namespace.
   attached to the default service account so pods can pull from STACKIT Harbor.
 - **Pipeline trigger** – after provisioning, automatically triggers the Forgejo
   Actions pipeline workflow and waits for it to complete.
-- **Additional secrets** – optional map of arbitrary Opaque secrets injected
-  into the namespace (e.g. AI service keys).
+- **Additional secrets** – optional Opaque secrets injected into the namespace
+  (e.g. AI service keys), each filled from a Vault KV v2 secret.
 
 ## Why `restapi` is used for Action secrets & variables
 
@@ -40,16 +40,14 @@ them from state) and does not support action variables at all.
 
 ## Provider configuration
 
-The module expects the following environment variables for the Forgejo provider
-and the restapi providers:
-
-| Variable            | Description |
-|---------------------|-------------|
-| `FORGEJO_HOST`      | Base URL of the Forgejo instance. |
-| `FORGEJO_API_TOKEN`  | API token for authenticating with Forgejo. |
+The Forgejo and restapi providers take the host from the `FORGEJO_HOST`
+environment variable. The Forgejo API token, the registry pull robot and the
+additional secrets are read from a Vault KV v2 engine, such as a STACKIT Secrets
+Manager instance, with the `vault_reader` login. What a run reads is kept in its
+Terraform state.
 
 The Kubernetes provider is configured from a `kubeconfig.yaml` static file
-input containing admin credentials to the SKE cluster.
+input of a cluster-admin service account on the SKE cluster.
 
 <!-- terraform-docs is disabled for this directory (see .pre-commit-config.yaml), so the block below is maintained by hand. -->
 <!-- BEGIN_TF_DOCS -->
@@ -62,6 +60,7 @@ input containing admin credentials to the SKE cluster.
 | <a name="requirement_kubernetes"></a> [kubernetes](#requirement\_kubernetes) | >= 2.35.1 |
 | <a name="requirement_random"></a> [random](#requirement\_random) | >= 3.8.0 |
 | <a name="requirement_restapi"></a> [restapi](#requirement\_restapi) | >= 3.0.0 |
+| <a name="requirement_vault"></a> [vault](#requirement\_vault) | >= 5.12.0 |
 
 ## Modules
 
@@ -84,20 +83,24 @@ input containing admin credentials to the SKE cluster.
 | [random_string.suffix](https://registry.terraform.io/providers/hashicorp/random/latest/docs/resources/string) | resource |
 | [terraform_data.await_pipeline_workflow](https://registry.terraform.io/providers/hashicorp/terraform/latest/docs/resources/data) | resource |
 | [external_external.env](https://registry.terraform.io/providers/hashicorp/external/latest/docs/data-sources/external) | data source |
+| [vault_kv_secret_v2.additional](https://registry.terraform.io/providers/hashicorp/vault/latest/docs/data-sources/kv_secret_v2) | data source |
+| [vault_kv_secret_v2.forgejo_api_token](https://registry.terraform.io/providers/hashicorp/vault/latest/docs/data-sources/kv_secret_v2) | data source |
+| [vault_kv_secret_v2.registry_pull](https://registry.terraform.io/providers/hashicorp/vault/latest/docs/data-sources/kv_secret_v2) | data source |
 
 ## Inputs
 
 | Name | Description | Type | Default | Required |
 |------|-------------|------|---------|:--------:|
-| <a name="input_additional_kubernetes_secrets"></a> [additional\_kubernetes\_secrets](#input\_additional\_kubernetes\_secrets) | Additional Kubernetes secrets to create in the tenant namespace. Map keys are secret names, values are secret data maps. | `map(map(string))` | `{}` | no |
+| <a name="input_additional_kubernetes_secrets"></a> [additional\_kubernetes\_secrets](#input\_additional\_kubernetes\_secrets) | Opaque Kubernetes secrets to create in the tenant namespace, by name, each from the Vault KV v2 secret at the given path. Every key of that secret becomes a key of the Kubernetes secret. | `map(string)` | n/a | yes |
 | <a name="input_app_hostname"></a> [app\_hostname](#input\_app\_hostname) | Public application hostname for this stage (used by deploy workflow and ingress). | `string` | n/a | yes |
+| <a name="input_forgejo_api_token_path"></a> [forgejo\_api\_token\_path](#input\_forgejo\_api\_token\_path) | Vault KV v2 secret holding the Forgejo API token under the key `forgejo_api_token`. | `string` | n/a | yes |
 | <a name="input_harbor_host"></a> [harbor\_host](#input\_harbor\_host) | The URL of the Harbor registry. | `string` | `"https://registry.onstackit.cloud"` | no |
-| <a name="input_harbor_password"></a> [harbor\_password](#input\_harbor\_password) | The password for the Harbor registry. | `string` | n/a | yes |
-| <a name="input_harbor_username"></a> [harbor\_username](#input\_harbor\_username) | The username for the Harbor registry. | `string` | n/a | yes |
 | <a name="input_hub_git_ref"></a> [hub\_git\_ref](#input\_hub\_git\_ref) | Hub git ref this building block runs from. Pins the shared modules it sources so they stay in lockstep with this module's own checkout. | `string` | `"main"` | no |
 | <a name="input_namespace"></a> [namespace](#input\_namespace) | Associated namespace in kubernetes cluster. | `string` | n/a | yes |
+| <a name="input_registry_pull_path"></a> [registry\_pull\_path](#input\_registry\_pull\_path) | Vault KV v2 secret holding the registry pull robot under the keys `username` and `password`. | `string` | n/a | yes |
 | <a name="input_repository_id"></a> [repository\_id](#input\_repository\_id) | The ID of the Forgejo repository. | `number` | n/a | yes |
 | <a name="input_stage"></a> [stage](#input\_stage) | Deployment stage used for Forgejo workflow dispatch and action secret naming. | `string` | n/a | yes |
+| <a name="input_vault_reader"></a> [vault\_reader](#input\_vault\_reader) | Vault KV v2 login this building block reads its secrets with: the server `address`, the engine `mount` and a userpass `username` and `password`. | <pre>object({<br/>    address  = string<br/>    mount    = string<br/>    username = string<br/>    password = string<br/>  })</pre> | n/a | yes |
 
 ## Outputs
 
