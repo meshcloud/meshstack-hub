@@ -4,6 +4,7 @@ supportedPlatforms:
   - kubernetes
 description: |
   CI/CD pipeline using Forgejo Actions for secure, scalable Kubernetes deployment.
+e2eCoveredBy: ske/ske-starterkit
 ---
 
 # Forgejo Actions Integration with STACKIT Kubernetes
