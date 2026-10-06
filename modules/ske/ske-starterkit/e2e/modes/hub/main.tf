@@ -11,12 +11,21 @@ variable "test_context" {
     stackit_service_account_email = string
     stackit_project_id            = string
     stackit_git_instance_id       = string
-    dns_zone_name                 = string
 
     fixtures = object({
       stackit = object({
         project_id                  = string
         secrets_manager_instance_id = string
+        ske_platform = object({
+          kube_host       = string
+          kubeconfig_path = string
+        })
+        git = object({
+          forgejo_api_token_path = string
+        })
+        dns = object({
+          zone_name = string
+        })
       })
     })
   })
@@ -25,12 +34,10 @@ variable "test_context" {
 
 variable "backplane_secrets" {
   type = object({
-    stackit_git_forgejo_api_token = string
-    ske_kubeconfig                = string
-    harbor_push_username          = string
-    harbor_push_password          = string
-    harbor_pull_username          = string
-    harbor_pull_password          = string
+    harbor_push_username = string
+    harbor_push_password = string
+    harbor_pull_username = string
+    harbor_pull_password = string
   })
   sensitive = true
   nullable  = false
@@ -42,20 +49,24 @@ variable "backplane_secrets" {
   }
 }
 
+ephemeral "vault_kv_secret_v2" "ske_kubeconfig" {
+  provider = vault.reader
+
+  mount = local.secrets_manager_instance_id
+  name  = var.test_context.fixtures.stackit.ske_platform.kubeconfig_path
+}
+
 locals {
-  # yamldecode parses both YAML (the ICF-published Vault value) and JSON (a superset), so it is
-  # robust regardless of the format the kubeconfig secret is provided in.
-  ske_kubeconfig = yamldecode(var.backplane_secrets.ske_kubeconfig)
+  ske_kubeconfig = yamldecode(ephemeral.vault_kv_secret_v2.ske_kubeconfig.data.kubeconfig)
 
   secrets_manager_address     = "https://prod.sm.eu01.stackit.cloud"
   secrets_manager_instance_id = var.test_context.fixtures.stackit.secrets_manager_instance_id
 
   # Runs share the fixture instance, so each one writes only under its own id.
   vault_paths = {
-    forgejo_api_token = "${var.test_context.run_id}/git/forgejo-api-token"
-    registry_push     = "${var.test_context.run_id}/registry/push"
-    registry_pull     = "${var.test_context.run_id}/registry/pull"
-    ai                = "${var.test_context.run_id}/ai/model-serving"
+    registry_push = "${var.test_context.run_id}/registry/push"
+    registry_pull = "${var.test_context.run_id}/registry/pull"
+    ai            = "${var.test_context.run_id}/ai/model-serving"
   }
 }
 
@@ -71,13 +82,6 @@ resource "stackit_secretsmanager_user" "reader" {
   instance_id   = local.secrets_manager_instance_id
   description   = "${var.test_context.run_id} ske-starterkit reader"
   write_enabled = false
-}
-
-resource "vault_kv_secret_v2" "forgejo_api_token" {
-  mount                = local.secrets_manager_instance_id
-  name                 = local.vault_paths.forgejo_api_token
-  data_json_wo         = jsonencode({ forgejo_api_token = var.backplane_secrets.stackit_git_forgejo_api_token })
-  data_json_wo_version = 1
 }
 
 resource "vault_kv_secret_v2" "registry_push" {
@@ -169,7 +173,7 @@ locals {
 module "meshstack_kubernetes_platform" {
   source = "./meshstack_kubernetes_platform"
 
-  kube_host = local.ske_kubeconfig["clusters"][0]["cluster"]["server"]
+  kube_host = var.test_context.fixtures.stackit.ske_platform.kube_host
   workspace = var.test_context.workspace
   run_id    = var.test_context.run_id
 }
@@ -194,7 +198,7 @@ module "stackit_git_repository" {
     username = stackit_secretsmanager_user.reader.username
     password = stackit_secretsmanager_user.reader.password
   }
-  forgejo_api_token_path = vault_kv_secret_v2.forgejo_api_token.name
+  forgejo_api_token_path = var.test_context.fixtures.stackit.git.forgejo_api_token_path
   registry_push_path     = vault_kv_secret_v2.registry_push.name
 
   stackit_service_account_email = var.test_context.stackit_service_account_email
@@ -250,7 +254,7 @@ module "forgejo_connector" {
     username = stackit_secretsmanager_user.reader.username
     password = stackit_secretsmanager_user.reader.password
   }
-  forgejo_api_token_path = vault_kv_secret_v2.forgejo_api_token.name
+  forgejo_api_token_path = var.test_context.fixtures.stackit.git.forgejo_api_token_path
   registry_pull_path     = vault_kv_secret_v2.registry_pull.name
 
   additional_kubernetes_secrets = {
@@ -275,7 +279,7 @@ module "ske_starterkit" {
   landing_zone_refs      = module.meshstack_kubernetes_platform.landing_zone_refs
   app_name               = "ai-summarizer"
   repo_clone_addr        = "https://github.com/likvid-bank/starterkit-template-stackit-ai-summarizer.git"
-  dns_zone_name          = var.test_context.dns_zone_name
+  dns_zone_name          = var.test_context.fixtures.stackit.dns.zone_name
   add_random_name_suffix = false
 
   building_block_definition_version_refs = {
