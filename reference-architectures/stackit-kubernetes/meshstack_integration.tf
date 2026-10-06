@@ -113,16 +113,17 @@ resource "meshstack_building_block_definition" "this" {
       prod unless the Stages input says otherwise, that application teams order Kubernetes
       namespaces from.
 
-    ## 🔁 Ordered once, updated once
+    ## 🔁 One order, one manual step
 
     One order creates everything above. What is left is a Harbor robot account, which only the
     STACKIT portal can create:
 
-    1. **Order it** with the **Harbor Bootstrap Robot Name** input left empty. The summary says how
-       to create the robot and link it to the platform's service account.
-    2. **Update the same building block** with the robot's name. The run then mints the
-       registry's push and pull robots and registers the **STACKIT Git Repository**, **SKE Forgejo
-       Connector** and **SKE Starterkit** definitions application teams order.
+    1. **Order it.** The summary says how to create the robot and link it to the platform's
+       service account.
+    2. **Set Phase 2 Completed** on the same building block. The run then mints the registry's
+       push and pull robots and registers the **STACKIT Git Repository**, **SKE Forgejo
+       Connector** and **SKE Starterkit** definitions application teams order. It fails while no
+       robot is linked.
 
     ## 🔑 Authentication
 
@@ -222,15 +223,6 @@ resource "meshstack_building_block_definition" "this" {
         is_optional     = true
       }
 
-      harbor_username = {
-        display_name           = "Harbor Bootstrap Robot Name"
-        description            = "Name of the Harbor robot linked to this platform's STACKIT service account. Leave empty on the first order — the summary says what to do next. Its password is not needed."
-        type                   = "STRING"
-        assignment_type        = "USER_INPUT"
-        is_optional            = true
-        updateable_by_consumer = true
-      }
-
       dns_subdomain = {
         display_name                   = "DNS Subdomain"
         description                    = "Label the platform's DNS zone occupies under the parent domain. Leave empty to use the platform identifier."
@@ -240,6 +232,15 @@ resource "meshstack_building_block_definition" "this" {
         updateable_by_consumer         = true
         value_validation_regex         = "^[a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?$"
         validation_regex_error_message = "DNS subdomain must be a DNS label: lowercase letters, digits and dashes, not starting or ending with a dash."
+      }
+
+      phase2_completed = {
+        display_name           = "Phase 2 Completed"
+        description            = "Set to true once a Harbor robot is linked to the platform's service account, as the summary describes. The run then mints the registry's push and pull robots and registers the definitions application teams order. It fails while no robot is linked."
+        type                   = "BOOLEAN"
+        assignment_type        = "USER_INPUT"
+        default_value          = jsonencode(false)
+        updateable_by_consumer = true
       }
 
       ai_model = {
@@ -440,8 +441,7 @@ terraform {
   required_providers {
     meshstack = {
       source = "meshcloud/meshstack"
-      # 0.25.2 adds `version_spec.inputs.*.is_optional`, which lets the first order skip the Harbor
-      # robot.
+      # 0.25.2 adds `version_spec.inputs.*.is_optional`.
       version = ">= 0.25.2"
     }
   }

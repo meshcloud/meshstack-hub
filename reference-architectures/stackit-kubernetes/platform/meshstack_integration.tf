@@ -268,15 +268,6 @@ resource "meshstack_building_block_definition" "this" {
         updateable_by_consumer = true
       }
 
-      harbor_username = {
-        display_name           = "Harbor Bootstrap Robot Name"
-        description            = "Name of the Harbor robot linked to the platform's service account, empty until it exists."
-        type                   = "STRING"
-        assignment_type        = "USER_INPUT"
-        is_optional            = true
-        updateable_by_consumer = true
-      }
-
       dns_subdomain = {
         display_name           = "DNS Subdomain"
         description            = "Label the platform's DNS zone occupies under the parent domain."
@@ -290,6 +281,15 @@ resource "meshstack_building_block_definition" "this" {
         description            = "Domain the platform's DNS zone is created under."
         type                   = "STRING"
         assignment_type        = "USER_INPUT"
+        updateable_by_consumer = true
+      }
+
+      phase2_completed = {
+        display_name           = "Phase 2 Completed"
+        description            = "Whether a Harbor robot is linked to the platform's service account. Registers the phase 2 definitions, and fails the run while no robot is linked."
+        type                   = "BOOLEAN"
+        assignment_type        = "USER_INPUT"
+        default_value          = jsonencode(false)
         updateable_by_consumer = true
       }
 

@@ -159,8 +159,8 @@ resource "meshstack_building_block" "container_registry" {
       registry_name                 = { value = jsonencode(lower(var.platform_identifier)) }
       STACKIT_SERVICE_ACCOUNT_EMAIL = { value = jsonencode(local.service_account_email) }
 
-      bootstrap_robot_username = { value = jsonencode(var.harbor_username) }
-      mirrored_base_images     = { value = jsonencode(jsonencode(["docker.io/library/python:3.12.9-slim-bookworm"])) }
+      require_robot_link   = { value = jsonencode(var.phase2_completed) }
+      mirrored_base_images = { value = jsonencode(jsonencode(["docker.io/library/python:3.12.9-slim-bookworm"])) }
       output_to_vault = {
         sensitive = {
           secret_value   = local.output_to_vault.container_registry

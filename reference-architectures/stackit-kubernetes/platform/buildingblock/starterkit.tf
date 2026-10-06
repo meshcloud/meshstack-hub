@@ -1,9 +1,4 @@
 locals {
-  # The Harbor robot is the last step still done by hand, so it is the one thing that takes a second
-  # order. Only the username decides, and it is deliberately not a sensitive input: meshStack sends a
-  # non-empty value for a sensitive input left blank, which read as a robot that does not exist.
-  harbor_robot_linked = trimspace(var.harbor_username) != ""
-
   registry_host = jsondecode(meshstack_building_block.container_registry.status.outputs["registry_host"].value)
   # The registry block appends a suffix of its own, so the name it reports back is the one to use.
   registry_name = jsondecode(meshstack_building_block.container_registry.status.outputs["registry_name"].value)
@@ -19,7 +14,7 @@ locals {
 
   # The registry reports its robots only once they exist, and a disabled module still evaluates its
   # arguments.
-  connector_secrets_revision = local.harbor_robot_linked ? parseint(substr(sha256(jsonencode([
+  connector_secrets_revision = var.phase2_completed ? parseint(substr(sha256(jsonencode([
     local.container_registry_vault_secret.pull.secret_hash,
     local.ai_llm_vault_secret.secret_hash,
   ])), 0, 12), 16) : 1
@@ -27,7 +22,7 @@ locals {
 
 module "git_repository_integration" {
   lifecycle {
-    enabled = local.harbor_robot_linked
+    enabled = var.phase2_completed
   }
 
   source = "github.com/meshcloud/meshstack-hub//modules/stackit/git-repository?ref=${var.hub.git_ref}"
@@ -64,7 +59,7 @@ resource "meshstack_building_block" "starterkit_federation" {
   wait_for_completion = true
 
   lifecycle {
-    enabled = local.harbor_robot_linked
+    enabled = var.phase2_completed
 
     postcondition {
       condition     = self.status.status == "SUCCEEDED"
@@ -99,7 +94,7 @@ resource "meshstack_building_block" "starterkit_federation" {
 # later robot can then go through the Harbor API.
 module "forgejo_connector_integration" {
   lifecycle {
-    enabled = local.harbor_robot_linked
+    enabled = var.phase2_completed
   }
 
   source = "github.com/meshcloud/meshstack-hub//modules/ske/forgejo-connector?ref=${var.hub.git_ref}"
@@ -134,7 +129,7 @@ module "forgejo_connector_integration" {
 # registered on the same condition as they are, because it orders them.
 module "ske_starterkit_integration" {
   lifecycle {
-    enabled = local.harbor_robot_linked
+    enabled = var.phase2_completed
   }
 
   # Its repositories resolve members as the platform service account, so the federation must exist first.

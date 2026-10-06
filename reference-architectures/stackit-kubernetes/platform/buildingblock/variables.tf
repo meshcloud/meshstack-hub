@@ -96,13 +96,6 @@ variable "cluster_issuer_email" {
   description = "Let's Encrypt contact email registered for the ACME ClusterIssuer and the DNS zone."
 }
 
-variable "harbor_username" {
-  type        = string
-  nullable    = false
-  default     = ""
-  description = "Name of the Harbor robot linked to the platform's STACKIT service account, empty until it exists."
-}
-
 variable "dns_subdomain" {
   type        = string
   nullable    = false
@@ -113,6 +106,13 @@ variable "dns_parent_domain" {
   type        = string
   nullable    = false
   description = "Domain the platform's DNS zone is created under."
+}
+
+variable "phase2_completed" {
+  type        = bool
+  nullable    = false
+  default     = false
+  description = "Whether a Harbor robot is linked to the platform's service account. Registers the phase 2 definitions, and fails the run while no robot is linked."
 }
 
 variable "ai_model" {

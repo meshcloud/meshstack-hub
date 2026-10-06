@@ -34,7 +34,7 @@ definition needs with the reader user, as an ephemeral value, and registers it a
 input. Its version is the `secret_hash` the writing block reports in its `vault_secret` output, so a
 changed secret reaches the definitions on the next run.
 
-Once `harbor_username` is set, it also registers the phase 2 definitions — `stackit/git-repository`,
+Once `phase2_completed` is set, it also registers the phase 2 definitions — `stackit/git-repository`,
 `ske/forgejo-connector` and `ske/ske-starterkit` — and orders a second STACKIT Service Account
 Federation for the Git repository definition. The Git repository and Forgejo connector runs read
 their secrets from the Secrets Manager themselves, with the reader login and the paths this run

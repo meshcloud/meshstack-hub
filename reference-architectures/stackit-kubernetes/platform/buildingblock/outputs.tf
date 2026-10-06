@@ -28,7 +28,7 @@ output "summary" {
     dns_bb_uuid                    = var.existing == null ? meshstack_building_block.dns.metadata.uuid : ""
     ai_bb_uuid                     = meshstack_building_block.ai_llm.metadata.uuid
     ai_model                       = var.ai_model
-    harbor_robot_linked            = local.harbor_robot_linked
+    phase2_completed               = var.phase2_completed
     platform_service_account_email = local.service_account_email
     platform_service_account_id    = var.automation_identity.service_account_id
   })

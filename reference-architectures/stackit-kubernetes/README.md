@@ -281,10 +281,11 @@ One run provisions everything:
   into it through `mirrored_base_images`.
 
 The one step left is the Harbor bootstrap robot, which only the STACKIT portal can create. The
-summary says how. Updating the building block with its name in **Harbor Bootstrap Robot Name**
-mints the push and pull robots and registers the **STACKIT Git Repository**, **SKE Forgejo
-Connector** and **SKE Starterkit** definitions, so application teams can order a repository wired
-to their namespaces.
+summary says how. Setting `phase2_completed` on the building block afterwards mints the push and
+pull robots and registers the **STACKIT Git Repository**, **SKE Forgejo Connector** and **SKE
+Starterkit** definitions, so application teams can order a repository wired to their namespaces.
+See
+[The Harbor bootstrap robot is still a manual step](#the-harbor-bootstrap-robot-is-still-a-manual-step).
 
 ### Where the Forgejo token comes from
 
@@ -361,8 +362,15 @@ names on to applications, so the existing ingress should serve the ones the plat
 
 The container registry building block creates the Harbor project and mints the push and pull robots,
 but only from a robot that already exists. The Harbor API opens only to an identity Harbor already
-knows, and only the portal can link the first robot to a STACKIT service account. That robot's name
-is the one optional input the architecture waits for; its password is never needed.
+knows, and only the portal can link the first robot to a STACKIT service account. Its password is
+never needed, and no input names it: every container registry run asks Harbor whether the service
+account is linked.
+
+After linking the robot, set `phase2_completed` to true. The input reaches the container registry
+building block as `require_robot_link`, so the registry runs again, finds the link and mints the
+push and pull robots, and Platform Services registers the phase 2 definitions in the same run. While
+no robot is linked, `require_robot_link` fails the registry run, so the platform does not register
+definitions without registry credentials.
 
 ### Approval Gates
 
