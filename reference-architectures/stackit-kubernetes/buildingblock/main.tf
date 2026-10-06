@@ -185,6 +185,8 @@ resource "meshstack_tenant" "stackit_project" {
 module "cluster_integration" {
   source = "github.com/meshcloud/meshstack-hub//modules/ske/cluster?ref=${var.hub.git_ref}"
 
+  approval_policies = var.approval_policies
+
   meshstack = { owning_workspace_identifier = var.workspace, tags = var.tags.building_block }
   hub       = var.hub
 }
@@ -192,12 +194,16 @@ module "cluster_integration" {
 module "git_integration" {
   source = "github.com/meshcloud/meshstack-hub//modules/stackit/git?ref=${var.hub.git_ref}"
 
+  approval_policies = var.approval_policies
+
   meshstack = { owning_workspace_identifier = var.workspace, tags = var.tags.building_block }
   hub       = var.hub
 }
 
 module "container_registry_integration" {
   source = "github.com/meshcloud/meshstack-hub//modules/stackit/container-registry?ref=${var.hub.git_ref}"
+
+  approval_policies = var.approval_policies
 
   meshstack = { owning_workspace_identifier = var.workspace, tags = var.tags.building_block }
   hub       = var.hub
@@ -297,6 +303,8 @@ module "kubernetes_integration" {
   metering_token   = local.metering_token
   landing_zones    = local.landing_zones
 
+  approval_policies = var.approval_policies
+
   meshstack = {
     owning_workspace_identifier = var.workspace
     location_name               = local.location_name
@@ -349,6 +357,8 @@ module "ingress_integration" {
   # only the sensitive kubeconfig — see that module's integration for why the two must not mix.
   acme_email = local.cluster_issuer_email
 
+  approval_policies = var.approval_policies
+
   meshstack = { owning_workspace_identifier = var.workspace, tags = var.tags.building_block }
   hub       = var.hub
 }
@@ -385,6 +395,8 @@ module "ai_llm_integration" {
 
   model = var.ai_model
 
+  approval_policies = var.approval_policies
+
   meshstack = { owning_workspace_identifier = var.workspace, tags = var.tags.building_block }
   hub       = var.hub
 }
@@ -418,6 +430,8 @@ module "dns_integration" {
   depends_on = [module.ingress_integration]
 
   parent_domain = var.dns_parent_domain
+
+  approval_policies = var.approval_policies
 
   meshstack = { owning_workspace_identifier = var.workspace, tags = var.tags.building_block }
   hub       = var.hub
@@ -533,6 +547,8 @@ module "git_repository_integration" {
     HARBOR_PROJECT  = local.registry_name
   }
 
+  approval_policies = var.starterkit_approval_policies
+
   meshstack = { owning_workspace_identifier = var.workspace, tags = var.tags.building_block }
   hub       = var.hub
 }
@@ -604,6 +620,8 @@ module "forgejo_connector_integration" {
     }
   }
 
+  approval_policies = var.starterkit_approval_policies
+
   meshstack = { owning_workspace_identifier = var.workspace, tags = var.tags.building_block }
   hub       = var.hub
 }
@@ -637,6 +655,8 @@ module "ske_starterkit_integration" {
     stages        = local.stage_project_tags
     owner_tag_key = var.tags.project_owner_tag_key == "" ? null : var.tags.project_owner_tag_key
   }
+
+  approval_policies = var.starterkit_approval_policies
 
   meshstack = { owning_workspace_identifier = var.workspace, tags = var.tags.building_block }
   hub       = var.hub

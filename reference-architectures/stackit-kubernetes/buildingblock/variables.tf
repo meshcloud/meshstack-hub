@@ -106,6 +106,30 @@ variable "workspace_members" {
   description = "Members of the owning workspace, injected by meshStack. Owners and managers become Project Admin of the platform's project."
 }
 
+variable "approval_policies" {
+  type = object({
+    building_block_creation = bool
+    user_input_changes      = bool
+    any_input_changes       = bool
+    manual_triggers         = bool
+    version_upgrade         = bool
+  })
+  nullable    = false
+  description = "Run triggers that need an operator's approval before a run of a platform definition this architecture registers is applied."
+}
+
+variable "starterkit_approval_policies" {
+  type = object({
+    building_block_creation = bool
+    user_input_changes      = bool
+    any_input_changes       = bool
+    manual_triggers         = bool
+    version_upgrade         = bool
+  })
+  nullable    = false
+  description = "Run triggers that need an operator's approval before a run of the Git repository, Forgejo connector or SKE starterkit definition this architecture registers is applied."
+}
+
 variable "playground_mode" {
   type        = bool
   nullable    = false

@@ -256,6 +256,14 @@ but only from a robot that already exists. The Harbor API opens only to an ident
 knows, and only the portal can link the first robot to a STACKIT service account. That robot's name
 is the one optional input the architecture waits for; its password is never needed.
 
+### Approval Gates
+
+`approval_policies` sets which run triggers need an operator's approval before a run of this
+architecture is applied, and the same gates apply to the platform definitions it registers: SKE
+cluster, STACKIT Git, container registry, DNS, AI LLM, Kubernetes and ingress.
+`starterkit_approval_policies` does the same for the definitions application teams order: Git
+repository, Forgejo connector and SKE starterkit. Both default to no gate at all.
+
 ## Shared Responsibilities
 
 | Responsibility                                           | Platform Team | Application Team |
