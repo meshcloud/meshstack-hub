@@ -3,6 +3,9 @@ name: Kubernetes Service Account
 supportedPlatforms:
   - kubernetes
 description: Creates a Kubernetes service account with ClusterRole binding and generates a kubeconfig for authentication
+# The cluster kubeconfig is the only thing this needs, and it arrives as an input — there is
+# nothing to set up cloud-side beforehand.
+requiresBackplane: false
 ---
 
 # Kubernetes Service Account Building Block
