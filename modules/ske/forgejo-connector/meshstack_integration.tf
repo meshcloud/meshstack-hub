@@ -242,13 +242,6 @@ resource "meshstack_building_block_definition" "this" {
         argument        = jsonencode(var.harbor_host)
       }
 
-      hub_git_ref = {
-        display_name    = "hub_git_ref"
-        description     = "Hub git ref this building block runs from."
-        type            = "STRING"
-        assignment_type = "STATIC"
-        argument        = jsonencode(var.hub.git_ref)
-      }
       # The registry robots only exist once a bootstrap robot is linked in the Harbor UI (a
       # post-provisioning step), and the provider rejects an empty sensitive value — so this input
       # joins the definition only when real credentials are supplied. Until then the connector wires

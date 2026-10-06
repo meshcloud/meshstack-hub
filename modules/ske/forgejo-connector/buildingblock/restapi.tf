@@ -1,3 +1,4 @@
+# Only deletes the legacy action variables and secrets in forgejo.tf.
 data "external" "env" {
   program = ["python3", "-c", <<-PY
   import json
