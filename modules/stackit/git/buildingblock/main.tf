@@ -10,7 +10,7 @@ locals {
 
   # An adopted instance already has a technical user of that name, whose password this state does
   # not hold.
-  local_user_username = var.imports == null ? var.local_user_username : "${var.local_user_username}-${random_string.local_user_suffix.result}"
+  local_user_username = var.imports == null ? var.local_user_username : "${var.local_user_username}-${random_string.import_suffix.result}"
 
   local_user_email = coalesce(
     var.local_user_email, "${local.local_user_username}@${var.instance_name}.git.onstackit.cloud"
@@ -50,7 +50,12 @@ import {
   id       = "${var.stackit_project_id},${each.value}"
 }
 
-resource "random_string" "local_user_suffix" {
+moved {
+  from = random_string.local_user_suffix
+  to   = random_string.import_suffix
+}
+
+resource "random_string" "import_suffix" {
   lifecycle {
     enabled = var.imports != null
   }
@@ -127,7 +132,7 @@ resource "restapi_object" "local_user_token" {
 # does the same call without that refresh behaviour.
 resource "restapi_object" "forgejo_organization" {
   lifecycle {
-    enabled = local.create_forgejo_organization
+    enabled = local.create_forgejo_organization && var.imports == null
   }
 
   path          = "/api/v1/orgs"
