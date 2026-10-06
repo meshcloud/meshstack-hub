@@ -26,10 +26,13 @@ So the two are split:
 
 ## How the run gets its permission
 
-Its backplane holds `iam.member-admin` at organization scope. No organization-scope role below
-`organization.admin` carries `iam.service-account-federation.create`. So the run grants itself
-`editor` on the service account's project, and `wait-for-federation-access.sh` polls until that
-assignment is in effect.
+No organization-scope role below `organization.admin` carries
+`iam.service-account-federation.create`. The STACKIT Service Account block grants this block's
+backplane `editor` on the project when it creates the account. `wait-for-federation-access.sh`
+polls until that assignment is in effect.
+
+Older versions of this block made that grant themselves. Their state gives it up without deleting
+it, because the service account block owns it now.
 
 <!-- BEGIN_TF_DOCS -->
 ## Requirements
@@ -48,7 +51,6 @@ No modules.
 
 | Name | Type |
 |------|------|
-| [stackit_authorization_project_role_assignment.federation_admin](https://registry.terraform.io/providers/stackitcloud/stackit/latest/docs/resources/authorization_project_role_assignment) | resource |
 | [stackit_service_account_federated_identity_provider.this](https://registry.terraform.io/providers/stackitcloud/stackit/latest/docs/resources/service_account_federated_identity_provider) | resource |
 | [terraform_data.federation_access](https://registry.terraform.io/providers/hashicorp/terraform/latest/docs/resources/data) | resource |
 | [meshstack_integrations.this](https://registry.terraform.io/providers/meshcloud/meshstack/latest/docs/data-sources/integrations) | data source |
@@ -57,7 +59,6 @@ No modules.
 
 | Name | Description | Type | Default | Required |
 |------|-------------|------|---------|:--------:|
-| <a name="input_automation_service_account_email"></a> [automation\_service\_account\_email](#input\_automation\_service\_account\_email) | Email of the service account this run acts as. It grants itself `editor` on the project to create federations. | `string` | n/a | yes |
 | <a name="input_federated_building_block_definitions"></a> [federated\_building\_block\_definitions](#input\_federated\_building\_block\_definitions) | UUIDs of building block definitions whose runs may act as the service account. | `list(string)` | n/a | yes |
 | <a name="input_project_id"></a> [project\_id](#input\_project\_id) | STACKIT project the service account lives in. | `string` | n/a | yes |
 | <a name="input_service_account_email"></a> [service\_account\_email](#input\_service\_account\_email) | Email of the STACKIT service account to federate. | `string` | n/a | yes |

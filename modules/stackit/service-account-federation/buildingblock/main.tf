@@ -11,22 +11,18 @@ locals {
   }
 }
 
-# At project scope the narrowest roles that carry `iam.service-account-federation.create` are `editor`
-# and `project.member`. The backplane's organization-wide `iam.member-admin` lets it assign itself one,
-# on this project only.
-resource "stackit_authorization_project_role_assignment" "federation_admin" {
-  resource_id = var.project_id
-  role        = "editor"
-  subject     = var.automation_service_account_email
+# The service account block owns this grant now, so an older state must not delete it.
+removed {
+  from = stackit_authorization_project_role_assignment.federation_admin
+
+  lifecycle {
+    destroy = false
+  }
 }
 
-# The assignment above is applied asynchronously, so the federation calls have to wait until it is in
-# effect, not only run after it.
+# The service account block grants `editor` asynchronously, possibly just before this run starts.
 resource "terraform_data" "federation_access" {
-  triggers_replace = [
-    stackit_authorization_project_role_assignment.federation_admin.id,
-    var.service_account_email,
-  ]
+  triggers_replace = [var.service_account_email]
 
   provisioner "local-exec" {
     command = "${path.module}/wait-for-federation-access.sh"
