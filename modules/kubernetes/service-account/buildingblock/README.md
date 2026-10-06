@@ -72,4 +72,5 @@ No modules.
 |------|-------------|
 | <a name="output_instructions"></a> [instructions](#output\_instructions) | Instructions for using the kubeconfig |
 | <a name="output_kubeconfig"></a> [kubeconfig](#output\_kubeconfig) | Kubeconfig file content for authenticating with the Kubernetes cluster. Empty when `output_to_vault` is set. |
+| <a name="output_vault_secret"></a> [vault\_secret](#output\_vault\_secret) | `{path, secret_hash}` of the secret written to `output_to_vault`, or `{}` when that is not set. `secret_hash` is the secret's KV version and changes with its content. |
 <!-- END_TF_DOCS -->

@@ -5,6 +5,9 @@ locals {
     push = jsonencode({ username = local.push_robot_username, password = local.push_robot_password })
     pull = jsonencode({ username = local.pull_robot_username, password = local.pull_robot_password })
   }
+
+  # The version must be a number, so the first 48 bits of the hash stand in for it.
+  vault_secret_hash = { for robot, json in local.vault_data_json : robot => parseint(substr(nonsensitive(sha256(json)), 0, 12), 16) }
 }
 
 provider "vault" {
@@ -26,11 +29,10 @@ resource "vault_kv_secret_v2" "push_robot" {
     enabled = local.write_to_vault && local.mint_robots
   }
 
-  mount        = var.output_to_vault.mount
-  name         = "${var.output_to_vault.path}/push"
-  data_json_wo = local.vault_data_json.push
-  # The version must be a number, so the first 48 bits of the hash stand in for it.
-  data_json_wo_version = parseint(substr(nonsensitive(sha256(local.vault_data_json.push)), 0, 12), 16)
+  mount                = var.output_to_vault.mount
+  name                 = "${var.output_to_vault.path}/push"
+  data_json_wo         = local.vault_data_json.push
+  data_json_wo_version = local.vault_secret_hash.push
 }
 
 resource "vault_kv_secret_v2" "pull_robot" {
@@ -38,9 +40,8 @@ resource "vault_kv_secret_v2" "pull_robot" {
     enabled = local.write_to_vault && local.mint_robots
   }
 
-  mount        = var.output_to_vault.mount
-  name         = "${var.output_to_vault.path}/pull"
-  data_json_wo = local.vault_data_json.pull
-  # The version must be a number, so the first 48 bits of the hash stand in for it.
-  data_json_wo_version = parseint(substr(nonsensitive(sha256(local.vault_data_json.pull)), 0, 12), 16)
+  mount                = var.output_to_vault.mount
+  name                 = "${var.output_to_vault.path}/pull"
+  data_json_wo         = local.vault_data_json.pull
+  data_json_wo_version = local.vault_secret_hash.pull
 }

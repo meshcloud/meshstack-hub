@@ -282,6 +282,13 @@ resource "meshstack_building_block_definition" "this" {
     }
 
     outputs = {
+      vault_secret = {
+        display_name    = "Vault Secret"
+        description     = "JSON object `{path, secret_hash}` of the secret in Vault, or `{}` when `output_to_vault` is not set. `secret_hash` changes with the secret's content."
+        type            = "CODE"
+        assignment_type = "NONE"
+      }
+
       instance_name = {
         display_name    = "Instance Name"
         type            = "STRING"

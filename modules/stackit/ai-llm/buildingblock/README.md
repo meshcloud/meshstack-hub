@@ -80,4 +80,5 @@ No modules.
 | Name | Description |
 |------|-------------|
 | <a name="output_summary"></a> [summary](#output\_summary) | Markdown summary shown on the building block. |
+| <a name="output_vault_secret"></a> [vault\_secret](#output\_vault\_secret) | `{path, secret_hash}` of the secret written to `output_to_vault`. `secret_hash` is the secret's KV version and changes with its content. |
 <!-- END_TF_DOCS -->
