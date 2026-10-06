@@ -7,7 +7,11 @@ variable "test_context" {
     run_id               = string
     forgejo_base_url     = string
     forgejo_organization = string
-    dns_zone_name        = string
+
+    stackit_service_account_email = string
+    stackit_project_id            = string
+    stackit_git_instance_id       = string
+    dns_zone_name                 = string
   })
   nullable = false
 }
@@ -59,6 +63,10 @@ module "stackit_git_repository" {
   forgejo_base_url     = var.test_context.forgejo_base_url
   forgejo_api_token    = var.backplane_secrets.stackit_git_forgejo_api_token
   forgejo_organization = var.test_context.forgejo_organization
+
+  stackit_service_account_email = var.test_context.stackit_service_account_email
+  stackit_project_id            = var.test_context.stackit_project_id
+  stackit_git_instance_id       = var.test_context.stackit_git_instance_id
 
   action_secrets = {
     HARBOR_USERNAME = var.backplane_secrets.harbor_push_username

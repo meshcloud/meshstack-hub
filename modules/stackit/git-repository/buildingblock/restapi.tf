@@ -15,26 +15,14 @@ locals {
   }
 }
 
-# The restapi provider's write_returns_object flag must be set at the provider
-# level, so we need two aliases to handle the different Forgejo API behaviors:
-#
-# with_returned_object (write_returns_object = true)
-#   Use for Forgejo endpoints whose POST/PUT returns a JSON response body,
-#   e.g. POST /orgs/{org}/teams, PUT /repos/{owner}/{repo}/actions/variables/{name}
-#
-# without_returned_object (write_returns_object = false)
-#   Use for Forgejo endpoints whose PUT/DELETE returns 204 No Content,
-#   e.g. PUT /teams/{id}/repos/{owner}/{repo}, PUT /teams/{id}/members/{username},
-#        PUT /repos/{owner}/{repo}/actions/secrets/{name}
-
+# write_returns_object is provider-level, so there is one alias for endpoints that return a body and one for 204 No Content.
 provider "restapi" {
   alias                = "with_returned_object"
   uri                  = data.external.env.result["FORGEJO_HOST"]
   headers              = local.restapi_provider_headers
   write_returns_object = true
 
-  # Forgejo occasionally answers 5xx under concurrent load (e.g. team CRUD
-  # racing other repo operations); retry instead of failing the run outright.
+  # Forgejo sometimes answers 5xx under concurrent load.
   retries {
     max_retries = 5
     min_wait    = 1
