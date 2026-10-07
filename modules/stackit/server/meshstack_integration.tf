@@ -1,0 +1,340 @@
+variable "stackit_region" {
+  type        = string
+  nullable    = false
+  default     = "eu01"
+  description = "STACKIT region for the VM and its network resources."
+}
+
+variable "image_name_regex" {
+  type        = string
+  nullable    = false
+  default     = "^Ubuntu 22\\.04$"
+  description = "Anchored regex matching the STACKIT image name the VM boots from."
+}
+
+variable "network_id" {
+  type        = string
+  nullable    = false
+  default     = ""
+  description = "Existing STACKIT network to attach the VM to. Empty creates a dedicated one."
+}
+
+variable "machine_type" {
+  type        = string
+  nullable    = false
+  default     = "g1.2"
+  description = "STACKIT machine flavor for the VM."
+}
+
+variable "disk_size_gb" {
+  type        = number
+  nullable    = false
+  default     = 32
+  description = "Size of the VM boot volume in GB."
+}
+
+variable "ssh_username" {
+  type        = string
+  nullable    = false
+  default     = "ubuntu"
+  description = "Login user the chosen image ships with, reported in the SSH command output."
+}
+
+variable "ssh_allowed_cidr" {
+  type        = string
+  nullable    = false
+  default     = "0.0.0.0/0"
+  description = "CIDR allowed to reach the VM on TCP 22."
+}
+
+variable "bbd_display_name" {
+  type        = string
+  default     = null
+  description = "Overrides the name of the marketplace entry application teams see in the catalog."
+}
+
+variable "bbd_description" {
+  type        = string
+  default     = null
+  description = "Overrides the one-line description shown next to the marketplace entry."
+}
+
+variable "bbd_readme" {
+  type        = string
+  default     = null
+  description = "Overrides the markdown readme shown in the marketplace before ordering."
+}
+
+variable "meshstack" {
+  type = object({
+    owning_workspace_identifier = string
+    tags                        = optional(map(list(string)), {})
+  })
+  description = "Shared meshStack context. Tags are optional and propagated to building block definition metadata."
+}
+
+variable "hub" {
+  type = object({
+    git_ref   = optional(string, "main")
+    bbd_draft = optional(bool, true)
+  })
+  const = true
+  default = {
+    git_ref   = "main"
+    bbd_draft = true
+  }
+  description = <<-EOT
+  `git_ref`: Hub release reference. Set to a tag (e.g. 'v1.2.3') or branch or commit sha of meshcloud/meshstack-hub repo.<br>
+  `bbd_draft`: If true, allows changing the building block definition for upgrading dependent building blocks.
+  EOT
+}
+
+output "building_block_definition" {
+  description = "BBD is consumed in building block compositions."
+  value = {
+    uuid        = meshstack_building_block_definition.this.metadata.uuid
+    version_ref = meshstack_building_block_definition.this.version_latest
+  }
+}
+
+resource "meshstack_building_block_definition" "this" {
+  metadata = {
+    owned_by_workspace = var.meshstack.owning_workspace_identifier
+    tags               = var.meshstack.tags
+  }
+
+  spec = {
+    display_name = coalesce(var.bbd_display_name, "STACKIT Server")
+    symbol       = "https://raw.githubusercontent.com/meshcloud/meshstack-hub/${var.hub.git_ref}/modules/stackit/server/buildingblock/logo.png"
+    description = coalesce(var.bbd_description, chomp(<<-EOT
+      Provisions a STACKIT VM with a generated SSH key and an optional personal cloud-init.
+    EOT
+    ))
+    support_url         = "https://docs.stackit.cloud/stackit/en/virtual-machine-flavors-75137525.html"
+    target_type         = "TENANT_LEVEL"
+    run_transparency    = true
+    supported_platforms = [{ name = "STACKIT" }]
+
+    readme = coalesce(var.bbd_readme, chomp(<<-EOT
+    The **STACKIT Server** building block provisions a single STACKIT VM an application team can SSH
+    into right after ordering. The platform fixes the region, image and disk; the team chooses the
+    VM name, machine flavor, who may reach it over SSH, and an optional personal cloud-init.
+
+    ## 📦 What it provisions
+
+    - A **STACKIT VM** (server, dedicated network, security group, network interface and public IP).
+      The security group opens **TCP 22** to the CIDR you choose and nothing else inbound; outbound
+      goes through the network router's NAT.
+    - A **generated ED25519 key pair**. STACKIT only stores the public half; the private half comes
+      back as the sensitive **SSH Private Key** output, so no key has to be seeded beforehand.
+
+    ## 🔑 Logging in
+
+    Save the **SSH Private Key** output to a file, `chmod 600` it, and run the **SSH Command** output
+    (`ssh -i <key> ${var.ssh_username}@<public ip>`).
+
+    ## 🧩 Personal cloud-init
+
+    Paste a `#cloud-config` document (or a shell script) into the **Personal cloud-init** input to
+    install packages or run commands on first boot. Leave it empty to boot the image unmodified.
+
+    ## 📊 Shared Responsibility
+
+    | Responsibility | Platform Team | Application Team |
+    |---|:---:|:---:|
+    | Provide the region, image and disk policy | ✅ | ❌ |
+    | Operate the STACKIT project the VM runs in | ✅ | ❌ |
+    | Choose the VM flavor and who may SSH in | ❌ | ✅ |
+    | Author the personal cloud-init | ❌ | ✅ |
+    | Safeguard the generated private key | ❌ | ✅ |
+    EOT
+    ))
+  }
+
+  version_spec = {
+    draft         = var.hub.bbd_draft
+    deletion_mode = "DELETE"
+
+    implementation = {
+      terraform = {
+        terraform_version              = "1.12.5"
+        repository_url                 = "https://github.com/meshcloud/meshstack-hub.git"
+        repository_path                = "modules/stackit/server/buildingblock"
+        ref_name                       = var.hub.git_ref
+        async                          = false
+        use_mesh_http_backend_fallback = true
+      }
+    }
+
+    inputs = {
+      STACKIT_SERVICE_ACCOUNT_EMAIL = {
+        display_name           = "STACKIT Service Account Email"
+        description            = "Email of the STACKIT service account the provider authenticates as via WIF. Federate it to this definition with the STACKIT Service Account Federation building block."
+        type                   = "STRING"
+        assignment_type        = "USER_INPUT"
+        is_environment         = true
+        updateable_by_consumer = true
+      }
+
+      STACKIT_USE_OIDC = {
+        display_name    = "STACKIT Use OIDC"
+        description     = "Enables OIDC-based WIF for the STACKIT provider."
+        type            = "STRING"
+        assignment_type = "STATIC"
+        is_environment  = true
+        argument        = jsonencode("1")
+      }
+
+      STACKIT_FEDERATED_TOKEN_FILE = {
+        display_name    = "STACKIT Federated Token File"
+        description     = "Path to the WIF token file injected by meshStack."
+        type            = "STRING"
+        assignment_type = "STATIC"
+        is_environment  = true
+        argument        = jsonencode("/var/run/secrets/workload-identity/azure/token")
+      }
+
+      stackit_project_id = {
+        display_name    = "STACKIT Project ID"
+        description     = "STACKIT project the VM is created in — the platform-native tenant id of the tenant this building block is added to."
+        type            = "STRING"
+        assignment_type = "PLATFORM_TENANT_ID"
+      }
+
+      stackit_region = {
+        display_name    = "STACKIT Region"
+        description     = "STACKIT region for the VM and its network resources."
+        type            = "STRING"
+        assignment_type = "STATIC"
+        argument        = jsonencode(var.stackit_region)
+      }
+
+      availability_zone = {
+        display_name    = "Availability Zone"
+        description     = "STACKIT availability zone for the VM and its boot volume."
+        type            = "STRING"
+        assignment_type = "STATIC"
+        argument        = jsonencode("${var.stackit_region}-1")
+      }
+
+      network_id = {
+        display_name    = "Network ID"
+        description     = "Existing STACKIT network to attach to. Empty creates a dedicated one."
+        type            = "STRING"
+        assignment_type = "STATIC"
+        argument        = jsonencode(var.network_id)
+      }
+
+      image_name_regex = {
+        display_name    = "Image Name Regex"
+        description     = "Anchored regex matching the STACKIT image name the VM boots from."
+        type            = "STRING"
+        assignment_type = "STATIC"
+        argument        = jsonencode(var.image_name_regex)
+      }
+
+      disk_size_gb = {
+        display_name    = "Disk Size (GB)"
+        description     = "Size of the VM boot volume in GB."
+        type            = "INTEGER"
+        assignment_type = "STATIC"
+        argument        = jsonencode(var.disk_size_gb)
+      }
+
+      ssh_username = {
+        display_name    = "SSH Username"
+        description     = "Login user the chosen image ships with."
+        type            = "STRING"
+        assignment_type = "STATIC"
+        argument        = jsonencode(var.ssh_username)
+      }
+
+      name = {
+        display_name                   = "VM Name"
+        description                    = "Name for the VM and its network resources (alphanumeric, dashes, dots, underscores)."
+        type                           = "STRING"
+        assignment_type                = "USER_INPUT"
+        default_value                  = jsonencode("vm")
+        value_validation_regex         = "^[a-zA-Z0-9._-]+$"
+        validation_regex_error_message = "Only alphanumeric characters, dots, dashes, and underscores are allowed."
+      }
+
+      machine_type = {
+        display_name    = "Machine Type"
+        description     = "STACKIT machine flavor for the VM."
+        type            = "STRING"
+        assignment_type = "USER_INPUT"
+        default_value   = jsonencode(var.machine_type)
+      }
+
+      ssh_allowed_cidr = {
+        display_name           = "SSH Allowed CIDR"
+        description            = "CIDR allowed to reach the VM on TCP 22. Narrow it to an office range; 0.0.0.0/0 exposes SSH to the internet."
+        type                   = "STRING"
+        assignment_type        = "USER_INPUT"
+        default_value          = jsonencode(var.ssh_allowed_cidr)
+        updateable_by_consumer = true
+      }
+
+      cloud_init = {
+        display_name    = "Personal cloud-init"
+        description     = "Optional #cloud-config or shell script applied on first boot. Empty boots the image unmodified."
+        type            = "CODE"
+        assignment_type = "USER_INPUT"
+        # A plain string input: the CODE content is the raw cloud-init text, so single jsonencode.
+        default_value          = jsonencode("")
+        updateable_by_consumer = true
+      }
+    }
+
+    outputs = {
+      public_ip = {
+        display_name    = "Public IP"
+        type            = "STRING"
+        assignment_type = "NONE"
+      }
+
+      ssh_username = {
+        display_name    = "SSH Username"
+        type            = "STRING"
+        assignment_type = "NONE"
+      }
+
+      ssh_command = {
+        display_name    = "SSH Command"
+        type            = "STRING"
+        assignment_type = "NONE"
+      }
+
+      ssh_private_key = {
+        display_name    = "SSH Private Key"
+        type            = "STRING"
+        assignment_type = "NONE"
+        sensitive       = {}
+      }
+
+      server_id = {
+        display_name    = "Server ID"
+        type            = "STRING"
+        assignment_type = "NONE"
+      }
+
+      summary = {
+        display_name    = "Summary"
+        type            = "STRING"
+        assignment_type = "SUMMARY"
+      }
+    }
+  }
+}
+
+terraform {
+  required_version = ">= 1.12.0"
+
+  required_providers {
+    meshstack = {
+      source  = "meshcloud/meshstack"
+      version = ">= 0.21.0"
+    }
+  }
+}
