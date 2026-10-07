@@ -3,10 +3,11 @@ resource "terraform_data" "noop" {
 }
 
 data "external" "aws_version" {
-  # Demonstrate that we can call aws cli installed in the prerun script.
-  # Validates the installed version is v2 and surfaces it as a Terraform output.
+  # Demonstrate that Terraform can call a tool from the module's own flake, so the pre-run
+  # does not have to install it on the runner.
+  # Validates the version is v2 and surfaces it as a Terraform output.
   program = ["bash", "-c", <<-EOT
-    version=$(aws --version 2>&1)
+    version=$(nix shell ./nix#awscli2 --command aws --version)
     echo "{\"version\": \"$version\"}"
   EOT
   ]
