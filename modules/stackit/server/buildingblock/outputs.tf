@@ -26,10 +26,17 @@ output "server_id" {
 
 output "summary" {
   description = "Markdown summary shown in meshPanel after the run."
-  value = templatefile("${path.module}/SUMMARY.md.tftpl", {
-    name         = var.name
-    public_ip    = stackit_public_ip.this.ip
-    ssh_username = var.ssh_username
-    machine_type = var.machine_type
-  })
+  value       = <<-EOT
+    # STACKIT VM `${var.name}`
+
+    Your `${var.machine_type}` VM is up at **`${stackit_public_ip.this.ip}`**.
+
+    Log in with the generated key (from the **SSH Private Key** output):
+
+    ```sh
+    # save the SSH Private Key output to a file first
+    chmod 600 id_vm
+    ssh -i id_vm ${var.ssh_username}@${stackit_public_ip.this.ip}
+    ```
+  EOT
 }
