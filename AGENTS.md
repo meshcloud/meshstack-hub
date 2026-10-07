@@ -46,7 +46,7 @@ website/                         public/assets/ is generated; never add files th
 ## Instruction files — load the ones matching the files you touch
 
 - `modules/*/*/**` — two-tier layout, `README.md` front-matter, logos, which readme the app team
-  reads, checklist for new modules →
+  reads, pre-run scripts, checklist for new modules →
   [module-layout.md](.agents/references/module-layout.md). For the create/update workflow use the
   [`module` skill](.agents/skills/module/SKILL.md).
 - `*/meshstack_integration.tf` — variable and block order, `variable "hub"` / `variable

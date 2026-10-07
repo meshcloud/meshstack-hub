@@ -1,5 +1,5 @@
 ---
-description: Module layout and documentation requirements for meshstack-hub building blocks — the backplane/buildingblock two-tier structure, where logos live, buildingblock/README.md front-matter, which readme the app team reads (BBD readme field vs APP_TEAM_README.md), backplane/README.md, and the checklist for new modules.
+description: Module layout and documentation requirements for meshstack-hub building blocks — the backplane/buildingblock two-tier structure, where logos live, buildingblock/README.md front-matter, which readme the app team reads (BBD readme field vs APP_TEAM_README.md), backplane/README.md, pre-run scripts, and the checklist for new modules.
 ---
 
 # Module Layout and Documentation
@@ -77,6 +77,36 @@ The readme (inline or `APP_TEAM_README.md`) must include:
 - User-facing content → BBD `readme` field in `meshstack_integration.tf` (or `APP_TEAM_README.md` if no integration file)
 - Platform-engineer-facing content → `backplane/README.md`
 
+<!-- scorecard-checks: prerun_no_global_install, flake_used_by_terraform -->
+## Pre-run Scripts
+
+A pre-run script (`buildingblock/prerun.sh`, passed as the BBD's `pre_run_script`) must change
+nothing on the runner host. The runner outlives the run: a long-lived container, a CI host, or a
+developer machine running the runner from source. So a pre-run script installs into no nix profile
+at all (`nix profile add`, `nix-env -i`): the runner's default profile leaks the tool into every
+later run and fails where that profile already provides the tool, and a profile in the working
+directory (`--profile "$PWD/.nix-profile"`) is unnecessary, because `nix shell` provides a tool
+without one.
+
+The current recommendation for a tool that Terraform calls is a flake in `buildingblock/nix/` that
+pins nixpkgs in a committed `flake.lock` and exposes the tool as a package. The flake goes into its
+own folder because `nix shell` copies the flake's whole folder into the world-readable nix store,
+and the working directory holds the run's inputs, secrets included. The runner checks
+`buildingblock/` out as the working directory of `tofu`, so Terraform runs the tool through that
+flake:
+
+```hcl
+program = ["bash", "-c", "nix shell ./nix#awscli2 --command aws --version"]
+```
+
+The pre-run script then only checks that `nix` is on the runner. A tool that only the script needs
+runs the same way: `nix shell nixpkgs#<pkg> --command …`. See `modules/meshstack/noop` for a
+complete example. A flake that no `.tf` file next to its `nix/` folder calls through `nix shell` is
+a leftover: delete it.
+
+This is not the final answer. If you find a better way to give Terraform a tool without changing
+the runner host, use it, and update this section and the `prerun_no_global_install` check.
+
 ---
 
 ## Checklist for New Modules
@@ -109,6 +139,7 @@ The readme (inline or `APP_TEAM_README.md`) must include:
 - [ ] Every child `meshstack_building_block` carries the run-status `postcondition` — see [Ordering Child Building Blocks](meshstack-resources.md#ordering-child-building-blocks)
 - [ ] Every `*_ref` on a meshStack resource takes the target's `ref` output — see [Referencing meshStack Objects](meshstack-resources.md#referencing-meshstack-objects)
 - [ ] Every `try` carries a comment saying what it swallows — see [Guarding Expressions with `try`](terraform-conventions.md#guarding-expressions-with-try)
+- [ ] A pre-run script installs nothing on the runner host; Terraform takes its tools from a flake in `buildingblock/nix/` — see [Pre-run Scripts](#pre-run-scripts)
 - [ ] No trailing whitespace
 - [ ] **Azure modules**: also follow the [Azure Backplane Checklist](azure-backplane.md#checklist-for-azure-backplanes)
 - [ ] **GCP modules**: also follow the [GCP Backplane Checklist](gcp-backplane.md#checklist-for-gcp-backplanes)

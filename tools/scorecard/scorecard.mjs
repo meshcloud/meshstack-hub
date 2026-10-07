@@ -14,7 +14,7 @@
  */
 
 import { readFileSync, existsSync, readdirSync, statSync } from "fs";
-import { join, relative } from "path";
+import { basename, dirname, join, relative } from "path";
 
 const ROOT = new URL("../../", import.meta.url).pathname.replace(/\/$/, "");
 const MODULES_DIR = join(ROOT, "modules");
@@ -324,6 +324,75 @@ const detectors = [
       const shown = offenders.slice(0, 6).join(", ");
       const more = offenders.length > 6 ? `, +${offenders.length - 6} more` : "";
       return { pass: false, detail: `say what each try() swallows and why: ${shown}${more}` };
+    },
+  },
+  {
+    id: "prerun_no_global_install",
+    category: "core",
+    name: "Pre-run scripts install no tools on the runner",
+    emoji: "🧼",
+    fn: (mod) => {
+      const offenders = [];
+      const scripts = collectFilesRecursive(mod.path).filter((file) => /^prerun\./.test(basename(file)));
+
+      for (const file of scripts) {
+        readFileSync(file, "utf-8").split("\n").forEach((line, index) => {
+          if (/\bnix\s+profile\s+(add|install)\b|\bnix-env\b.*\s(-[A-Za-z]*i[A-Za-z]*|--install)\b/.test(line)) {
+            offenders.push(`${relative(mod.path, file)}:${index + 1}`);
+          }
+        });
+      }
+
+      if (scripts.length === 0) return { pass: null, detail: "no pre-run script" };
+      if (offenders.length === 0) return { pass: true };
+      return {
+        pass: false,
+        detail:
+          `installs into a nix profile, which changes the runner host (${offenders.join(", ")}). ` +
+          "Current recommendation: a flake in buildingblock/nix/ and Terraform calling `nix shell ./nix#<tool> --command …`. " +
+          "Found a better way? Use it and update .agents/references/module-layout.md#pre-run-scripts",
+      };
+    },
+  },
+  {
+    id: "flake_used_by_terraform",
+    category: "core",
+    name: "A module flake sits in nix/, is pinned, and Terraform calls it",
+    emoji: "❄️",
+    fn: (mod) => {
+      const flakeDirs = new Set(
+        collectFilesRecursive(mod.path)
+          .filter((file) => ["flake.nix", "flake.lock"].includes(basename(file)))
+          .map((file) => dirname(file)),
+      );
+      if (flakeDirs.size === 0) return { pass: null, detail: "module has no flake" };
+
+      const problems = [];
+      for (const dir of flakeDirs) {
+        const where = relative(mod.path, dir) || ".";
+        if (basename(dir) !== "nix") {
+          problems.push(
+            `${where}: flake outside a nix/ folder, so nix shell copies the whole working directory, secrets included, into the world-readable nix store`,
+          );
+          continue;
+        }
+        if (!existsSync(join(dir, "flake.nix"))) problems.push(`${where}: flake.lock without flake.nix`);
+        else if (!existsSync(join(dir, "flake.lock"))) problems.push(`${where}: flake.nix without flake.lock, so nixpkgs is unpinned`);
+
+        const tfDir = dirname(dir);
+        const callsFlake = readdirSync(tfDir)
+          .filter((entry) => entry.endsWith(".tf"))
+          .some((entry) => /\bnix\b["',\s]+shell\b["',\s]+(path:)?\.\/nix#/.test(readFileSync(join(tfDir, entry), "utf-8")));
+        if (!callsFlake) problems.push(`${where}: no .tf file in its parent calls \`nix shell ./nix#…\`, so the flake is unused`);
+      }
+
+      if (problems.length === 0) return { pass: true };
+      return {
+        pass: false,
+        detail:
+          `${problems.join("; ")}. A module flake lives in nix/ next to the .tf files and gives Terraform its tools through ` +
+          "`nix shell ./nix#<tool> --command …` — see .agents/references/module-layout.md#pre-run-scripts",
+      };
     },
   },
   {
@@ -1672,13 +1741,17 @@ function extractBBDReadmeContent(content) {
 // buildingblock/pre_role_assignment/) declare their own required_providers and are
 // initialised as part of the parent, so their constraints count too.
 function collectTfFilesRecursive(dir) {
+  return collectFilesRecursive(dir).filter((file) => file.endsWith(".tf"));
+}
+
+function collectFilesRecursive(dir) {
   if (!existsSync(dir)) return [];
   const found = [];
   for (const entry of readdirSync(dir)) {
     if (entry.startsWith(".")) continue; // .terraform, .terraform.lock.hcl
     const p = join(dir, entry);
-    if (statSync(p).isDirectory()) found.push(...collectTfFilesRecursive(p));
-    else if (entry.endsWith(".tf")) found.push(p);
+    if (statSync(p).isDirectory()) found.push(...collectFilesRecursive(p));
+    else found.push(p);
   }
   return found;
 }
