@@ -1,0 +1,38 @@
+resource "stackit_service_account" "building_block" {
+  project_id = var.project_id
+  name       = var.service_account_name
+}
+
+resource "stackit_service_account_federated_identity_provider" "building_block" {
+  for_each = { for i, s in var.workload_identity_federation.subjects : tostring(i) => s }
+
+  project_id            = var.project_id
+  service_account_email = stackit_service_account.building_block.email
+  name                  = "meshstack-${each.key}"
+  issuer                = var.workload_identity_federation.issuer
+
+  assertions = [
+    {
+      item     = "aud"
+      operator = "equals"
+      value    = "api://AzureADTokenExchange"
+    },
+    {
+      item     = "sub"
+      operator = "equals"
+      value    = each.value
+    }
+  ]
+}
+
+# iaas.admin at org scope lets the building block create a VM and its network, security group,
+# public IP and key pair in any tenant project under the organization. Required because this is a
+# TENANT_LEVEL building block: the backplane is deployed once, before the target project of any
+# future VM is known, so permissions can't be scoped to a single project ahead of time. iaas.admin
+# is the narrowest predefined role that spans both compute and network and exists at org scope
+# (compute.admin is project-only); prefer a narrower role here if STACKIT ever introduces one.
+resource "stackit_authorization_organization_role_assignment" "iaas_admin" {
+  resource_id = var.organization_id
+  role        = "iaas.admin"
+  subject     = stackit_service_account.building_block.email
+}

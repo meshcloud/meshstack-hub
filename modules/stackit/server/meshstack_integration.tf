@@ -1,3 +1,19 @@
+variable "stackit_organization_id" {
+  type        = string
+  description = "STACKIT organization ID under which target projects live. The backplane grants the service account VM permissions here."
+}
+
+variable "stackit_project_id" {
+  type        = string
+  description = "STACKIT project ID where the backplane service account is created."
+}
+
+variable "stackit_service_account_name" {
+  type        = string
+  default     = null
+  description = "Name of the backplane service account. Defaults to 'mesh-server'. Override when deploying multiple backplane instances in the same STACKIT project."
+}
+
 variable "stackit_region" {
   type        = string
   nullable    = false
@@ -65,6 +81,12 @@ variable "bbd_readme" {
   description = "Overrides the markdown readme shown in the marketplace before ordering."
 }
 
+variable "building_block_runner_uuid" {
+  type        = string
+  default     = null
+  description = "Runs this building block on the given meshStack building block runner instead of the shared one meshStack hosts."
+}
+
 variable "meshstack" {
   type = object({
     owning_workspace_identifier = string
@@ -93,7 +115,20 @@ output "building_block_definition" {
   description = "BBD is consumed in building block compositions."
   value = {
     uuid        = meshstack_building_block_definition.this.metadata.uuid
-    version_ref = meshstack_building_block_definition.this.version_latest
+    version_ref = var.hub.bbd_draft ? meshstack_building_block_definition.this.version_latest : meshstack_building_block_definition.this.version_latest_release
+  }
+}
+
+module "backplane" {
+  source = "github.com/meshcloud/meshstack-hub//modules/stackit/server/backplane?ref=${var.hub.git_ref}"
+
+  project_id           = var.stackit_project_id
+  organization_id      = var.stackit_organization_id
+  service_account_name = coalesce(var.stackit_service_account_name, "mesh-server")
+
+  workload_identity_federation = {
+    issuer   = meshstack_building_block_definition.this.version_latest.workload_identity_federation.issuer
+    subjects = [meshstack_building_block_definition.this.version_latest.workload_identity_federation.subject]
   }
 }
 
@@ -154,6 +189,10 @@ resource "meshstack_building_block_definition" "this" {
   version_spec = {
     draft         = var.hub.bbd_draft
     deletion_mode = "DELETE"
+    runner_ref = var.building_block_runner_uuid == null ? null : {
+      kind = "meshBuildingBlockRunner"
+      uuid = var.building_block_runner_uuid
+    }
 
     implementation = {
       terraform = {
@@ -168,12 +207,12 @@ resource "meshstack_building_block_definition" "this" {
 
     inputs = {
       STACKIT_SERVICE_ACCOUNT_EMAIL = {
-        display_name           = "STACKIT Service Account Email"
-        description            = "Email of the STACKIT service account the provider authenticates as via WIF. Federate it to this definition with the STACKIT Service Account Federation building block."
-        type                   = "STRING"
-        assignment_type        = "USER_INPUT"
-        is_environment         = true
-        updateable_by_consumer = true
+        display_name    = "STACKIT Service Account Email"
+        description     = "Email of the STACKIT service account the provider authenticates as via WIF."
+        type            = "STRING"
+        assignment_type = "STATIC"
+        is_environment  = true
+        argument        = jsonencode(module.backplane.service_account_email)
       }
 
       STACKIT_USE_OIDC = {
@@ -334,7 +373,7 @@ terraform {
   required_providers {
     meshstack = {
       source  = "meshcloud/meshstack"
-      version = ">= 0.21.0"
+      version = ">= 0.26.2"
     }
   }
 }
