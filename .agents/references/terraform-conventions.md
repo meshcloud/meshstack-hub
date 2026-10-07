@@ -94,3 +94,29 @@ The comment sits directly above the `try`, or above the attribute that owns the 
 `try` is nested inside it. Prefer not needing it: a variable default, `optional()` or an explicit
 `null` check says the same thing without hiding the next error too.
 
+## Output Content: Inline Heredoc Over a Template File
+
+Write a markdown output's content — the `summary` output most of all — **inline with a `<<-EOT`
+heredoc** in `outputs.tf`, interpolating values directly. Most summaries are a handful of lines, and
+a heredoc keeps the text next to the values it renders, with no second file to open:
+
+```hcl
+output "summary" {
+  description = "Markdown summary shown in meshPanel after the run."
+  value       = <<-EOT
+    # VM `${var.name}`
+
+    Reachable at **`${stackit_public_ip.this.ip}`**.
+  EOT
+}
+```
+
+Reach for `templatefile("${path.module}/SUMMARY.md.tftpl", { … })` only when the content earns its
+own file: it is long, it is reused, or it needs template directives (`%{ for … }`, `%{ if … }`) that
+read better as a standalone `.tftpl`. A short summary clears none of those bars, so inline it. Some
+older STACKIT modules still carry a `SUMMARY.md.tftpl` for a few lines of text; that is not the
+pattern to copy.
+
+This is a separate question from the BBD `readme` field, which has its own rule — always inline
+`chomp(<<-EOT)`, never `file()` ([bbd-readme.md](bbd-readme.md)).
+
