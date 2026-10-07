@@ -3,7 +3,6 @@ name: STACKIT Server
 supportedPlatforms:
   - stackit
 description: Deploys a STACKIT VM with a generated SSH key and an optional personal cloud-init.
-requiresBackplane: false # authenticates as an existing service account via the STACKIT Service Account Federation building block, so there is no cloud-side setup to run here
 ---
 
 ## What this provisions

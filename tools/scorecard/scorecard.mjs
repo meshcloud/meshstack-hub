@@ -661,11 +661,14 @@ const detectors = [
           detail: "derives the runner's trust from data.meshstack_integrations…replicator — that entry is the replicator's own identity and only ever matched because the runner shares its namespace",
         };
       if (!/workload_identity_federation\s*=/.test(content)) return { pass: null, detail: "module does not federate" };
-      if (!/status\.workload_identity_federation\.issuer/.test(content))
-        return { pass: false, detail: "issuer is not taken from meshstack_building_block_definition.<name>.status.workload_identity_federation.issuer, which follows the runner the definition runs on" };
+      // The runner's resolved identity lives on the definition's version, exposed by the provider as
+      // version_latest / version_latest_release — there is no status.workload_identity_federation
+      // attribute. See meshstack-integration.md § Runner identity.
+      if (!/version_latest(?:_release)?\.workload_identity_federation\.issuer/.test(content))
+        return { pass: false, detail: "issuer is not taken from meshstack_building_block_definition.<name>.version_latest.workload_identity_federation.issuer, which follows the runner the definition runs on" };
       return {
-        pass: /status\.workload_identity_federation\.subject/.test(content),
-        detail: "subjects are not taken from meshstack_building_block_definition.<name>.status.workload_identity_federation.subject, so the backplane may trust something the runner never presents",
+        pass: /version_latest(?:_release)?\.workload_identity_federation\.subject/.test(content),
+        detail: "subjects are not taken from meshstack_building_block_definition.<name>.version_latest.workload_identity_federation.subject, so the backplane may trust something the runner never presents",
       };
     },
   },
