@@ -21,10 +21,10 @@ echo "Working directory: $(pwd)"
 ls -lah
 echo ""
 
-echo "--- Tool Installation ---"
-echo "Install additional packages safely via nix"
-nix profile add nixpkgs#awscli2
-aws --version
+echo "--- Tools ---"
+echo "Terraform takes the aws cli from this building block's flake, which needs nix on the runner"
+command -v nix >/dev/null || { echo "nix not found: this building block needs nix on the runner" >&2; exit 1; }
+nix --version
 echo ""
 
 echo "--- Terraform State Manipulation ---"
