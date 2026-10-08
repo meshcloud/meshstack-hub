@@ -4,29 +4,28 @@ data "opentelekomcloud_identity_role_v3" "domain" {
   name = each.value
 }
 
-resource "random_password" "building_block" {
-  length           = 32
-  special          = true
-  override_special = "!#%&*()-_=+[]{}<>:?"
-  min_lower        = 1
-  min_upper        = 1
-  min_numeric      = 1
-  min_special      = 1
+data "opentelekomcloud_identity_role_v3" "project" {
+  for_each = toset(var.project_roles)
+
+  name = each.value
 }
 
-# T Cloud Public's Terraform provider cannot exchange an OIDC token, so the building block needs a
+# T Cloud Public's Terraform provider cannot exchange an OIDC token, so the building blocks need a
 # static credential.
 resource "opentelekomcloud_identity_user_v3" "building_block" {
   name        = var.user_name
   description = "meshStack: creates T Cloud Public projects and maps project users into them."
-  password    = random_password.building_block.result
   access_type = "programmatic"
-  pwd_reset   = false
+}
+
+resource "opentelekomcloud_identity_credential_v3" "building_block" {
+  user_id     = opentelekomcloud_identity_user_v3.building_block.id
+  description = "meshStack building blocks"
 }
 
 resource "opentelekomcloud_identity_group_v3" "building_block" {
   name        = var.user_name
-  description = "Domain roles of the meshStack project building block user."
+  description = "Roles of the meshStack building block user."
 }
 
 resource "opentelekomcloud_identity_user_group_membership_v3" "building_block" {
@@ -42,33 +41,41 @@ resource "opentelekomcloud_identity_role_assignment_v3" "domain" {
   role_id   = each.value.id
 }
 
+resource "opentelekomcloud_identity_role_assignment_v3" "project" {
+  for_each = data.opentelekomcloud_identity_role_v3.project
+
+  group_id     = opentelekomcloud_identity_group_v3.building_block.id
+  all_projects = true
+  role_id      = each.value.id
+}
+
 locals {
-  # Logs a federated user in as a virtual user named after their email, with no group and so no
-  # permission. Project building blocks append one rule per project role that adds the groups. The
-  # mapping must never be empty, and this rule is also what makes a user without any project still
-  # able to sign in and see that they have none.
-  base_mapping_rules = var.identity_provider == null ? null : jsonencode([
+  federation_enabled = var.identity_provider != null
+}
+
+resource "opentelekomcloud_identity_provider" "this" {
+  lifecycle {
+    enabled = local.federation_enabled
+
+    # The federation mapping building block owns the rules; this only seeds the mapping so that it is
+    # never empty.
+    ignore_changes = [mapping_rules]
+  }
+
+  name        = var.identity_provider.name
+  protocol    = var.identity_provider.protocol
+  description = "Company identity provider; meshStack maps project users into project groups."
+  status      = true
+  metadata    = var.identity_provider.protocol == "saml" ? var.identity_provider.metadata : null
+
+  # Lets any federated user sign in as a virtual user named after their email, with no group and so
+  # no permission.
+  mapping_rules = jsonencode([
     {
       local  = [{ user = { name = "{0}" } }]
       remote = [{ type = var.identity_provider.email_attribute }]
     }
   ])
-}
-
-resource "opentelekomcloud_identity_provider" "this" {
-  lifecycle {
-    enabled = var.identity_provider != null
-
-    # Project building blocks own every rule but the base one, so a re-apply here must not wipe them.
-    ignore_changes = [mapping_rules]
-  }
-
-  name          = var.identity_provider.name
-  protocol      = var.identity_provider.protocol
-  description   = "Customer identity provider; meshStack project building blocks map users into project groups."
-  status        = true
-  metadata      = var.identity_provider.protocol == "saml" ? var.identity_provider.metadata : null
-  mapping_rules = local.base_mapping_rules
 
   dynamic "access_config" {
     for_each = var.identity_provider.protocol == "oidc" ? [var.identity_provider.oidc] : []
@@ -82,4 +89,46 @@ resource "opentelekomcloud_identity_provider" "this" {
       scopes                 = access_config.value.scopes
     }
   }
+}
+
+# OBS bucket names are unique across all of T Cloud Public, not just the domain.
+resource "random_string" "bucket_suffix" {
+  lifecycle {
+    enabled = local.federation_enabled
+  }
+
+  length  = 8
+  special = false
+  upper   = false
+}
+
+# Every project building block records its group membership here as `mappings/<project>.json`, and
+# the federation mapping building block rebuilds the identity provider's mapping from all of them.
+resource "opentelekomcloud_obs_bucket" "mappings" {
+  lifecycle {
+    enabled = local.federation_enabled
+
+    # The federation mapping building block's OBS trigger adds a notification to the bucket.
+    ignore_changes = [event_notifications]
+  }
+
+  bucket = "${var.user_name}-mappings-${random_string.bucket_suffix.result}"
+  acl    = "private"
+}
+
+resource "opentelekomcloud_obs_bucket_policy" "mappings" {
+  lifecycle {
+    enabled = local.federation_enabled
+  }
+
+  bucket = opentelekomcloud_obs_bucket.mappings.bucket
+  policy = jsonencode({
+    Statement = [{
+      Sid       = "ProjectBuildingBlocksWriteMembership"
+      Effect    = "Allow"
+      Principal = { ID = ["domain/${opentelekomcloud_identity_user_v3.building_block.domain_id}:user/${opentelekomcloud_identity_user_v3.building_block.id}"] }
+      Action    = ["GetObject", "PutObject", "DeleteObject", "ListBucket"]
+      Resource  = [opentelekomcloud_obs_bucket.mappings.bucket, "${opentelekomcloud_obs_bucket.mappings.bucket}/mappings/*"]
+    }]
+  })
 }

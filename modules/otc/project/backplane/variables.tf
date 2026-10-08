@@ -11,8 +11,19 @@ variable "domain_roles" {
   nullable    = false
   description = <<-EOT
   Domain-scoped IAM system roles granted to the building block user, by role `name` (not display
-  name). `secu_admin` (Security Administrator) covers creating projects, groups, role assignments
-  and federation mappings — the only things the building block touches.
+  name). `secu_admin` (Security Administrator) covers creating projects, groups, role assignments,
+  agencies and federation mappings.
+  EOT
+}
+
+variable "project_roles" {
+  type        = list(string)
+  default     = ["te_admin"]
+  nullable    = false
+  description = <<-EOT
+  IAM system roles granted to the building block user on all projects, by role `name`.
+  `te_admin` (Tenant Administrator) lets the federation mapping building block create its function
+  in the management project. It adds little to `secu_admin`, which may grant any role anyway.
   EOT
 }
 
@@ -40,8 +51,8 @@ variable "identity_provider" {
   default     = null
   description = <<-EOT
   The customer's identity provider, federated into the domain so meshStack project users log in as
-  virtual users. Null skips federation: the building block still creates projects and groups, but
-  nobody is mapped into them.
+  virtual users, and the bucket project building blocks record their membership in. Null skips
+  both: the building block still creates projects and groups, but nobody is mapped into them.
   EOT
 
   validation {

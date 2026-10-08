@@ -3,13 +3,16 @@ name: T Cloud Public Landing Zone
 description: >
   Bootstraps a self-service-ready T Cloud Public (Open Telekom Cloud) platform: a backplane IAM user,
   an optional federated company identity provider, and the T Cloud Public Project platform with a
-  default landing zone. Every project gets one IAM group per meshStack role, and federated users are
-  mapped into those groups by the meshStack project they belong to.
+  default landing zone, and a management project of its own. Every project gets one IAM group per
+  meshStack role, and federated users are mapped into those groups by the meshStack project they
+  belong to.
 cloudProviders:
   - otc
 buildingBlocks:
   - path: otc/project
-    role: Provisions a T Cloud Public project with one IAM group per meshStack role and maps federated project users into them.
+    role: Provisions a T Cloud Public project with one IAM group per meshStack role and records which federated users belong in them.
+  - path: otc/federation-mapping
+    role: Rebuilds the federated identity provider's mapping from every project's recorded members, from a function in the management project.
 ---
 
 # T Cloud Public Landing Zone
@@ -40,7 +43,7 @@ The left half shows the company identity provider and the **T Cloud Public domai
 IAM user, the identity provider federated into the domain, and the tenant projects under the region
 project, each with its IAM groups. The right half is **meshStack**: the platform, its landing zone
 and the project building block definition. Dotted edges across the boundary show how each meshStack
-construct acts on T Cloud Public. Green nodes are created once per meshStack project.
+construct acts on T Cloud Public. Green nodes are created once per meshStack project; the management tenant is one of them.
 
 ![T Cloud Public Landing Zone reference architecture](otc-landingzone.svg)
 
@@ -50,22 +53,28 @@ Running this reference architecture:
 
 1. Creates a **meshStack location**, unless the global location is chosen.
 2. Sources the [`modules/otc`](../../modules/otc) platform integration, which:
-   - creates the **backplane IAM user** `mesh-<platform identifier>` and a group holding Security
-     Administrator on the domain, which the project building block authenticates as;
-   - federates the **company identity provider** (SAML or OIDC) when one is configured, with a base
-     mapping rule that lets any federated user sign in without permissions;
+   - creates the **backplane IAM user** `mesh-<platform identifier>` with an access key, in a group
+     holding Security Administrator on the domain and Tenant Administrator on all projects. The
+     building blocks this architecture registers authenticate as it;
+   - with an identity provider, federates the **company identity provider** (SAML or OIDC) and
+     creates the **mapping bucket** projects record their members in;
    - registers the **T Cloud Public Project** platform, its default landing zone and the
      [`otc/project`](../../modules/otc/project) building block definition as the landing zone's
      mandatory building block.
+3. Creates the **management project**: a meshProject `<platform identifier>-mgmt` in the workspace,
+   with the workspace's owners and managers as Project Admins, and a tenant on the new platform. The
+   project building block provisions it like any other project, as `<region>_<platform identifier>-mgmt`.
+4. With an identity provider, registers the
+   [`otc/federation-mapping`](../../modules/otc/federation-mapping) building block definition and
+   orders it once on the management project.
 
 For every meshStack project in the landing zone, the `otc/project` building block then:
 
 1. Creates the project `<region>_<project>` under the region's project.
 2. Creates one IAM group per meshStack role and gives it the T Cloud Public system roles that the
    **role mapping** names, on that project.
-3. Writes one mapping rule per role into the identity provider's mapping. The rule matches the role's
-   users by email and adds the role's group. A user who changes role in meshStack gets the new
-   groups at their next sign-in.
+3. Records which emails belong in which of its groups as `mappings/<region>_<project>.json` in the
+   mapping bucket.
 
 ### Identity: federation, not replication
 
@@ -73,28 +82,30 @@ T Cloud Public gives a federated user their groups at sign-in, from the identity
 rules. So meshStack never writes users or group memberships. The mapping rules are the only place
 membership lives, and meshStack remains the source of truth for who is on a project.
 
-An identity provider has a single mapping that all projects share. Each project building block owns
-exactly the rules that name one of its groups, and merges them in and out with
-`federation_mapping.py`. The IAM API has no conditional write, so the script reads the mapping back
-after writing and retries if a concurrent run of another project overwrote its change.
+An identity provider has a single mapping that every project contributes to, so no project writes
+it. Each project only writes its own record in the bucket, which no other project touches. The
+federation mapping building block runs a FunctionGraph function in the management project that
+rebuilds the whole mapping from all records:
 
-Without an identity provider (the input left empty), projects and groups are still created, but nobody is
-mapped into them. The platform team then has to add IAM users to the groups by hand.
+- whenever a record is written or deleted (an OBS trigger on `mappings/*.json`),
+- and every hour regardless, which repairs a dropped event.
+
+The function runs one instance at a time, so two rebuilds never interleave. A role change in
+meshStack applies from the user's next sign-in after the rebuild, usually seconds later.
+
+Without an identity provider (the input left empty), projects and groups are still created, but
+nobody is mapped into them. The platform team then has to add IAM users to the groups by hand.
 
 ### Authentication
 
 T Cloud Public's Terraform provider cannot exchange an OIDC token for credentials, so meshStack's
 workload identity federation is not usable yet:
 
-- This building block runs with an **access key and secret key** you supply. They belong to an IAM
-  user holding Security Administrator on the domain, and are used on every run.
-- The project building block runs as the **backplane IAM user** with a generated password, which
-  reaches meshStack as a sensitive static input. It is a password rather than an AK/SK because the
-  federation script calls the IAM API directly, and a password gets it a token without
-  implementing AK/SK request signing.
-
-The IAM API can turn an OIDC ID token into a temporary credential, so moving the project building
-block to workload identity is a later step, not a dead end.
+- This building block runs with an **access key and secret key** you supply, of an IAM user in the
+  domain's `admin` group. They are used on every run.
+- The project and federation mapping building blocks run as the **backplane IAM user**, whose access
+  key reaches meshStack as sensitive static inputs.
+- The function holds no key at all: it acts as an agency delegated to FunctionGraph.
 
 ## Getting Started
 
@@ -102,14 +113,15 @@ block to workload identity is a later step, not a dead end.
 
 | Requirement | Description |
 |---|---|
-| T Cloud Public domain | With an IAM user holding Security Administrator, and an access key for it. |
+| T Cloud Public domain | With an IAM user in the domain's `admin` group, and an access key for it. Use the account name exactly as the console shows it, e.g. `OTC-EU-DE-00000000001000000000`. |
 | meshStack platform type `OTC` | A custom platform type named `OTC` must exist in the meshStack instance. Override the name with `otc_platform_type` on [`modules/otc`](../../modules/otc). |
 | Identity provider *(recommended)* | SAML metadata, or the OIDC issuer, client ID and JWKS signing keys. The email claim or attribute must carry exactly the address meshStack knows for each user. For OIDC, register the IdP's redirect URI shown in the T Cloud Public console. |
 
 ### Deployment Order
 
-Order the **T Cloud Public Landing Zone** building block once per workspace. It creates the
-platform, the landing zone and the project building block definition in the same apply.
+Order the **T Cloud Public Landing Zone** building block once per workspace. In the same run it
+creates the platform, the landing zone and the project building block definition, then the
+management project through that landing zone, then the federation mapping building block on it.
 Application teams can then create meshStack projects in the landing zone.
 
 ### Playground Mode
@@ -143,6 +155,7 @@ architecture is applied. It defaults to no gate at all.
 | Responsibility | Platform Team | Application Team |
 |---|:---:|:---:|
 | Provide the admin access key, domain and role mapping | ✅ | ❌ |
+| Run the management project and the federation mapping function in it | ✅ | ❌ |
 | Federate the company identity provider and keep its signing keys current | ✅ | ❌ |
 | Provision the T Cloud Public Project platform and default landing zone | ✅ | ❌ |
 | Request T Cloud Public projects through the landing zone | ❌ | ✅ |

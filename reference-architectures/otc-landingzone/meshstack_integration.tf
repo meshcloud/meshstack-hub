@@ -71,8 +71,10 @@ variable "playground_mode" {
 
 variable "default_tags" {
   type = object({
-    landingzone    = optional(map(list(string)), {})
-    building_block = optional(map(list(string)), {})
+    landingzone           = optional(map(list(string)), {})
+    building_block        = optional(map(list(string)), {})
+    project               = optional(map(list(string)), {})
+    project_owner_tag_key = optional(string, "")
   })
   nullable = false
 
@@ -85,7 +87,9 @@ variable "default_tags" {
       confidentiality   = ["internal", "public"]
       environment       = ["dev"]
     }
-    building_block = {}
+    building_block        = {}
+    project               = {}
+    project_owner_tag_key = "projectOwner"
   }
 
   description = "Starter values pre-filling the Tags form, as maps of tag key to values. Ships with an example set; override per foundation to match the instance's own tag schema. The operator can still edit, extend or clear them when ordering."
@@ -99,7 +103,7 @@ output "building_block_definition" {
   }
 }
 
-# The Tags input is a meshPanel form the operator fills from scratch: for each of the two tag maps
+# The Tags input is a meshPanel form the operator fills from scratch: for each of the three tag maps
 # they add as many {key, values} entries as they need — nothing is read from the instance's tag
 # schema. A map of free-form keys has no form widget (meshPanel renders only declared properties), so
 # each map is modelled as a growable array of entries; buildingblock/ folds them back into the
@@ -124,16 +128,19 @@ locals {
     for section, m in {
       landingzone    = var.default_tags.landingzone
       building_block = var.default_tags.building_block
+      project        = var.default_tags.project
     } : section => [for tk, tv in m : { key = tk, values = tv }]
   }
 
   tags_json_schema = {
     "$schema" = "http://json-schema.org/draft-07/schema#"
     type      = "object"
-    required  = ["landingzone", "building_block"]
+    required  = ["landingzone", "building_block", "project", "project_owner_tag_key"]
     properties = {
-      landingzone    = merge(local.tag_list_schema, { title = "Landing Zone Tags", default = local.tags_default_entries.landingzone })
-      building_block = merge(local.tag_list_schema, { title = "Building Block Tags", default = local.tags_default_entries.building_block })
+      landingzone           = merge(local.tag_list_schema, { title = "Landing Zone Tags", default = local.tags_default_entries.landingzone })
+      building_block        = merge(local.tag_list_schema, { title = "Building Block Tags", default = local.tags_default_entries.building_block })
+      project               = merge(local.tag_list_schema, { title = "Management Project Tags", default = local.tags_default_entries.project })
+      project_owner_tag_key = { type = "string", title = "Project Owner Tag Key", default = var.default_tags.project_owner_tag_key }
     }
   }
 }
@@ -148,7 +155,7 @@ resource "meshstack_building_block_definition" "this" {
   spec = {
     display_name      = coalesce(var.bbd_display_name, "T Cloud Public Landing Zone Reference Architecture")
     symbol            = "https://raw.githubusercontent.com/meshcloud/meshstack-hub/${var.hub.git_ref}/reference-architectures/otc-landingzone/buildingblock/logo.png"
-    description       = coalesce(var.bbd_description, "Onboards a T Cloud Public (Open Telekom Cloud) domain into meshStack: a location, the backplane IAM user, an optional federated identity provider and the T Cloud Public Project platform with its default landing zone.")
+    description       = coalesce(var.bbd_description, "Onboards a T Cloud Public (Open Telekom Cloud) domain into meshStack: the T Cloud Public Project platform with its landing zone, a management project, and optionally federated sign-in through your company identity provider.")
     support_url       = "https://console.otc.t-systems.com"
     target_type       = "WORKSPACE_LEVEL"
     run_transparency  = true
@@ -184,16 +191,23 @@ resource "meshstack_building_block_definition" "this" {
 
     - **meshStack location** – named after the chosen platform identifier.
     - **Backplane IAM user and group** – `mesh-<platform identifier>`, holding Security Administrator
-      on the domain. The project building block authenticates as it.
-    - **Identity provider** *(optional)* – your company SAML or OIDC provider, federated into the domain.
+      on the domain and Tenant Administrator on all projects, with an access key the building blocks
+      authenticate with.
     - **T Cloud Public Project platform** – the `T Cloud Public Project` building block definition,
       platform and default landing zone. Every project gets one IAM group per meshStack role.
+    - **Management project** – the meshProject `<platform identifier>-mgmt` with a tenant on the new
+      platform, so the T Cloud Public project `<region>_<platform identifier>-mgmt`. Workspace owners
+      and managers become its Project Admins.
+    - **Federated sign-in** *(with an identity provider)* – your company SAML or OIDC provider,
+      federated into the domain, the bucket every project records its members in, and the
+      **Federation Mapping** building block on the management project, whose function keeps the
+      identity provider's mapping in step with meshStack.
 
     ## 🔑 Authentication
 
-    You provide an access key and secret key of an IAM user holding Security Administrator on the
-    domain. They are used on every run of this building block, never by the project building block,
-    which runs as the backplane user instead.
+    You provide an access key and secret key of an IAM user in the domain's `admin` group. They are
+    used on every run of this building block, never by the building blocks it registers, which run
+    as the backplane user instead.
 
     ## 🧪 Playground mode
 
@@ -232,7 +246,16 @@ resource "meshstack_building_block_definition" "this" {
       "LANDINGZONE_DELETE",
       "PLATFORMINSTANCE_LIST",
       "PLATFORMINSTANCE_SAVE",
-      "PLATFORMINSTANCE_DELETE"
+      "PLATFORMINSTANCE_DELETE",
+      "PROJECT_LIST",
+      "PROJECT_SAVE",
+      "PROJECT_DELETE",
+      "PROJECTPRINCIPALROLE_LIST",
+      "PROJECTPRINCIPALROLE_SAVE",
+      "PROJECTPRINCIPALROLE_DELETE",
+      "TENANT_LIST",
+      "TENANT_SAVE",
+      "TENANT_DELETE"
     ]
 
     implementation = {
@@ -279,7 +302,7 @@ resource "meshstack_building_block_definition" "this" {
 
       otc_access_key = {
         display_name           = "Access Key"
-        description            = "Access key of an IAM user holding Security Administrator on the domain, reused on every run."
+        description            = "Access key of an IAM user in the domain's `admin` group (Security Administrator and Tenant Administrator), reused on every run."
         type                   = "STRING"
         assignment_type        = "USER_INPUT"
         updateable_by_consumer = true
@@ -306,14 +329,16 @@ resource "meshstack_building_block_definition" "this" {
         is_optional            = true
         display_order          = 60
 
+        # No defaults: meshPanel submits a form with defaults as a value, so an untouched form would
+        # switch federation on. Choosing a protocol is what does.
+
         json_schema = jsonencode({
           "$schema" = "http://json-schema.org/draft-07/schema#"
           type      = "object"
-          required  = ["protocol"]
           properties = {
-            protocol                    = { type = "string", title = "Protocol", enum = ["oidc", "saml"], default = "oidc" }
-            name                        = { type = "string", title = "Name", default = "company-idp" }
-            email_attribute             = { type = "string", title = "Email Claim / Attribute", default = "email" }
+            protocol                    = { type = "string", title = "Protocol", enum = ["oidc", "saml"] }
+            name                        = { type = "string", title = "Name (default: company-idp)" }
+            email_attribute             = { type = "string", title = "Email Claim / Attribute (default: email)" }
             oidc_provider_url           = { type = "string", title = "OIDC Issuer URL" }
             oidc_client_id              = { type = "string", title = "OIDC Client ID" }
             oidc_signing_key            = { type = "string", title = "OIDC Signing Keys (JWKS JSON)" }
@@ -347,12 +372,35 @@ resource "meshstack_building_block_definition" "this" {
       # `500 InternalError` on the version update, not a 400.
       tags = {
         display_name           = "Tags"
-        description            = "Tags forwarded to the nested integration. Build them in the form: add {key, values} entries for the landing zone and the building block definition."
+        description            = "Tags forwarded to the nested integrations and the management meshProject. Build them in the form: add {key, values} entries, plus the project owner tag key."
         type                   = "JSON"
         assignment_type        = "USER_INPUT"
         updateable_by_consumer = true
         display_order          = 80
         json_schema            = jsonencode(local.tags_json_schema)
+      }
+
+      payment_method_identifier = {
+        display_name    = "Payment Method Identifier"
+        description     = "Payment method assigned to the management meshProject. Leave empty if your meshStack does not require one."
+        type            = "STRING"
+        assignment_type = "USER_INPUT"
+        is_optional     = true
+        display_order   = 85
+      }
+
+      creator = {
+        display_name    = "Creator"
+        description     = "Who ordered the landing zone, injected by meshStack."
+        type            = "CODE"
+        assignment_type = "AUTHOR"
+      }
+
+      workspace_members = {
+        display_name    = "Workspace Members"
+        description     = "Members of the owning workspace. Owners and managers become Project Admin of the management project."
+        type            = "CODE"
+        assignment_type = "USER_PERMISSIONS"
       }
 
       use_global_location = {
@@ -366,7 +414,7 @@ resource "meshstack_building_block_definition" "this" {
 
       workspace = {
         display_name    = "Workspace Identifier"
-        description     = "Workspace that will own the created platform, location and landing zone."
+        description     = "Workspace that will own the created platform, location, landing zone and management project."
         type            = "STRING"
         assignment_type = "WORKSPACE_IDENTIFIER"
         display_order   = 100

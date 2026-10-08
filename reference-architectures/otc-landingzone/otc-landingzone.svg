@@ -1,171 +1,256 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN"
  "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
-<svg width="1248pt" height="325pt"
- viewBox="0.00 0.00 1248.00 325.00" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
-<g id="graph0" class="graph" transform="scale(1 1) rotate(0) translate(4 320.88)">
+<svg width="1546pt" height="434pt"
+ viewBox="0.00 0.00 1546.00 434.00" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+<g id="graph0" class="graph" transform="scale(1 1) rotate(0) translate(4 430.36)">
 <title>otc_landingzone</title>
-<polygon fill="white" stroke="none" points="-4,4 -4,-320.88 1244,-320.88 1244,4 -4,4"/>
+<polygon fill="white" stroke="none" points="-4,4 -4,-430.36 1542,-430.36 1542,4 -4,4"/>
 <g id="clust1" class="cluster">
 <title>cluster_idp</title>
-<path fill="white" stroke="#d5dae0" d="M20,-208.24C20,-208.24 156,-208.24 156,-208.24 162,-208.24 168,-214.24 168,-220.24 168,-220.24 168,-296.88 168,-296.88 168,-302.88 162,-308.88 156,-308.88 156,-308.88 20,-308.88 20,-308.88 14,-308.88 8,-302.88 8,-296.88 8,-296.88 8,-220.24 8,-220.24 8,-214.24 14,-208.24 20,-208.24"/>
-<text xml:space="preserve" text-anchor="middle" x="45.01" y="-294.08" font-family="Helvetica,sans-Serif" font-size="12.00" fill="#697180"> &#160;Company</text>
+<path fill="white" stroke="#d5dae0" d="M20,-317.72C20,-317.72 156,-317.72 156,-317.72 162,-317.72 168,-323.72 168,-329.72 168,-329.72 168,-406.36 168,-406.36 168,-412.36 162,-418.36 156,-418.36 156,-418.36 20,-418.36 20,-418.36 14,-418.36 8,-412.36 8,-406.36 8,-406.36 8,-329.72 8,-329.72 8,-323.72 14,-317.72 20,-317.72"/>
+<text xml:space="preserve" text-anchor="middle" x="45.01" y="-403.56" font-family="Helvetica,sans-Serif" font-size="12.00" fill="#697180"> &#160;Company</text>
 </g>
 <g id="clust2" class="cluster">
 <title>cluster_otc</title>
-<path fill="white" stroke="#d5dae0" d="M188,-8C188,-8 970,-8 970,-8 976,-8 982,-14 982,-20 982,-20 982,-293.76 982,-293.76 982,-299.76 976,-305.76 970,-305.76 970,-305.76 188,-305.76 188,-305.76 182,-305.76 176,-299.76 176,-293.76 176,-293.76 176,-20 176,-20 176,-14 182,-8 188,-8"/>
-<text xml:space="preserve" text-anchor="middle" x="226.35" y="-290.96" font-family="Helvetica,sans-Serif" font-size="12.00" fill="#697180"> &#160;T Cloud Public</text>
+<path fill="white" stroke="#d5dae0" d="M188,-8C188,-8 1159,-8 1159,-8 1165,-8 1171,-14 1171,-20 1171,-20 1171,-403.24 1171,-403.24 1171,-409.24 1165,-415.24 1159,-415.24 1159,-415.24 188,-415.24 188,-415.24 182,-415.24 176,-409.24 176,-403.24 176,-403.24 176,-20 176,-20 176,-14 182,-8 188,-8"/>
+<text xml:space="preserve" text-anchor="middle" x="226.35" y="-400.44" font-family="Helvetica,sans-Serif" font-size="12.00" fill="#697180"> &#160;T Cloud Public</text>
 </g>
 <g id="clust4" class="cluster">
 <title>cluster_mesh</title>
-<path fill="white" stroke="#d5dae0" d="M1002,-8C1002,-8 1220,-8 1220,-8 1226,-8 1232,-14 1232,-20 1232,-20 1232,-293.76 1232,-293.76 1232,-299.76 1226,-305.76 1220,-305.76 1220,-305.76 1002,-305.76 1002,-305.76 996,-305.76 990,-299.76 990,-293.76 990,-293.76 990,-20 990,-20 990,-14 996,-8 1002,-8"/>
-<text xml:space="preserve" text-anchor="middle" x="1031.01" y="-290.96" font-family="Helvetica,sans-Serif" font-size="12.00" fill="#697180"> &#160;meshStack</text>
+<path fill="white" stroke="#d5dae0" d="M1191,-8C1191,-8 1518,-8 1518,-8 1524,-8 1530,-14 1530,-20 1530,-20 1530,-403.24 1530,-403.24 1530,-409.24 1524,-415.24 1518,-415.24 1518,-415.24 1191,-415.24 1191,-415.24 1185,-415.24 1179,-409.24 1179,-403.24 1179,-403.24 1179,-20 1179,-20 1179,-14 1185,-8 1191,-8"/>
+<text xml:space="preserve" text-anchor="middle" x="1220.01" y="-400.44" font-family="Helvetica,sans-Serif" font-size="12.00" fill="#697180"> &#160;meshStack</text>
 </g>
 <!-- IDP -->
 <g id="node1" class="node">
 <title>IDP</title>
-<path fill="#ffffff" stroke="#a2abb8" stroke-width="1.1" d="M137.78,-268.48C137.78,-268.48 38.22,-268.48 38.22,-268.48 32.22,-268.48 26.22,-262.48 26.22,-256.48 26.22,-256.48 26.22,-238.24 26.22,-238.24 26.22,-232.24 32.22,-226.24 38.22,-226.24 38.22,-226.24 137.78,-226.24 137.78,-226.24 143.78,-226.24 149.78,-232.24 149.78,-238.24 149.78,-238.24 149.78,-256.48 149.78,-256.48 149.78,-262.48 143.78,-268.48 137.78,-268.48"/>
-<text xml:space="preserve" text-anchor="middle" x="88" y="-250.66" font-family="Helvetica,sans-Serif" font-size="11.00">🪪 Identity Provider</text>
-<text xml:space="preserve" text-anchor="middle" x="88" y="-237.46" font-family="Helvetica,sans-Serif" font-size="11.00">SAML or OIDC</text>
+<path fill="#ffffff" stroke="#a2abb8" stroke-width="1.1" d="M137.78,-377.96C137.78,-377.96 38.22,-377.96 38.22,-377.96 32.22,-377.96 26.22,-371.96 26.22,-365.96 26.22,-365.96 26.22,-347.72 26.22,-347.72 26.22,-341.72 32.22,-335.72 38.22,-335.72 38.22,-335.72 137.78,-335.72 137.78,-335.72 143.78,-335.72 149.78,-341.72 149.78,-347.72 149.78,-347.72 149.78,-365.96 149.78,-365.96 149.78,-371.96 143.78,-377.96 137.78,-377.96"/>
+<text xml:space="preserve" text-anchor="middle" x="88" y="-360.14" font-family="Helvetica,sans-Serif" font-size="11.00">🪪 Identity Provider</text>
+<text xml:space="preserve" text-anchor="middle" x="88" y="-346.94" font-family="Helvetica,sans-Serif" font-size="11.00">SAML or OIDC</text>
 </g>
 <!-- FED -->
 <g id="node4" class="node">
 <title>FED</title>
-<path fill="#ffffff" stroke="#a2abb8" stroke-width="1.1" d="M543.38,-165.24C543.38,-165.24 390.62,-165.24 390.62,-165.24 384.62,-165.24 378.62,-159.24 378.62,-153.24 378.62,-153.24 378.62,-135 378.62,-135 378.62,-129 384.62,-123 390.62,-123 390.62,-123 543.38,-123 543.38,-123 549.38,-123 555.38,-129 555.38,-135 555.38,-135 555.38,-153.24 555.38,-153.24 555.38,-159.24 549.38,-165.24 543.38,-165.24"/>
-<text xml:space="preserve" text-anchor="middle" x="467" y="-147.42" font-family="Helvetica,sans-Serif" font-size="11.00">🔗 Federated Identity Provider</text>
-<text xml:space="preserve" text-anchor="middle" x="467" y="-134.22" font-family="Helvetica,sans-Serif" font-size="11.00">one shared mapping</text>
+<path fill="#ffffff" stroke="#a2abb8" stroke-width="1.1" d="M543.38,-274.72C543.38,-274.72 390.62,-274.72 390.62,-274.72 384.62,-274.72 378.62,-268.72 378.62,-262.72 378.62,-262.72 378.62,-244.48 378.62,-244.48 378.62,-238.48 384.62,-232.48 390.62,-232.48 390.62,-232.48 543.38,-232.48 543.38,-232.48 549.38,-232.48 555.38,-238.48 555.38,-244.48 555.38,-244.48 555.38,-262.72 555.38,-262.72 555.38,-268.72 549.38,-274.72 543.38,-274.72"/>
+<text xml:space="preserve" text-anchor="middle" x="467" y="-256.9" font-family="Helvetica,sans-Serif" font-size="11.00">🔗 Federated Identity Provider</text>
+<text xml:space="preserve" text-anchor="middle" x="467" y="-243.7" font-family="Helvetica,sans-Serif" font-size="11.00">one shared mapping</text>
 </g>
 <!-- IDP&#45;&gt;FED -->
-<g id="edge11" class="edge">
+<g id="edge18" class="edge">
 <title>IDP&#45;&gt;FED</title>
-<path fill="none" stroke="#8b95a3" stroke-dasharray="1,5" d="M150.03,-253C229.86,-253 358.4,-253 358.4,-253 358.4,-253 358.4,-151 358.4,-151 358.4,-151 369.8,-151 369.8,-151"/>
-<polygon fill="#8b95a3" stroke="#8b95a3" points="369.8,-153.45 376.8,-151 369.8,-148.55 369.8,-153.45"/>
-<text xml:space="preserve" text-anchor="middle" x="283.4" y="-255.7" font-family="Helvetica,sans-Serif" font-size="9.00" fill="#697180">federated into</text>
+<path fill="none" stroke="#8b95a3" stroke-dasharray="1,5" d="M150.03,-363C229.86,-363 358.4,-363 358.4,-363 358.4,-363 358.4,-261 358.4,-261 358.4,-261 369.8,-261 369.8,-261"/>
+<polygon fill="#8b95a3" stroke="#8b95a3" points="369.8,-263.45 376.8,-261 369.8,-258.55 369.8,-263.45"/>
+<text xml:space="preserve" text-anchor="middle" x="283.4" y="-365.7" font-family="Helvetica,sans-Serif" font-size="9.00" fill="#697180">federated into</text>
 </g>
 <!-- DOMAIN -->
 <g id="node2" class="node">
 <title>DOMAIN</title>
-<path fill="#ffffff" stroke="#a2abb8" stroke-width="1.1" d="M538.15,-265.36C538.15,-265.36 395.85,-265.36 395.85,-265.36 389.85,-265.36 383.85,-259.36 383.85,-253.36 383.85,-253.36 383.85,-241.36 383.85,-241.36 383.85,-235.36 389.85,-229.36 395.85,-229.36 395.85,-229.36 538.15,-229.36 538.15,-229.36 544.15,-229.36 550.15,-235.36 550.15,-241.36 550.15,-241.36 550.15,-253.36 550.15,-253.36 550.15,-259.36 544.15,-265.36 538.15,-265.36"/>
-<text xml:space="preserve" text-anchor="middle" x="467" y="-244.06" font-family="Helvetica,sans-Serif" font-size="11.00">🏢 Domain (OTC&#45;EU&#45;DE&#45;…)</text>
+<path fill="#ffffff" stroke="#a2abb8" stroke-width="1.1" d="M538.15,-374.84C538.15,-374.84 395.85,-374.84 395.85,-374.84 389.85,-374.84 383.85,-368.84 383.85,-362.84 383.85,-362.84 383.85,-350.84 383.85,-350.84 383.85,-344.84 389.85,-338.84 395.85,-338.84 395.85,-338.84 538.15,-338.84 538.15,-338.84 544.15,-338.84 550.15,-344.84 550.15,-350.84 550.15,-350.84 550.15,-362.84 550.15,-362.84 550.15,-368.84 544.15,-374.84 538.15,-374.84"/>
+<text xml:space="preserve" text-anchor="middle" x="467" y="-353.54" font-family="Helvetica,sans-Serif" font-size="11.00">🏢 Domain (OTC&#45;EU&#45;DE&#45;…)</text>
 </g>
 <!-- BPUSER -->
 <g id="node3" class="node">
 <title>BPUSER</title>
-<path fill="#ffffff" stroke="#a2abb8" stroke-width="1.1" d="M326.17,-165.24C326.17,-165.24 205.83,-165.24 205.83,-165.24 199.83,-165.24 193.83,-159.24 193.83,-153.24 193.83,-153.24 193.83,-135 193.83,-135 193.83,-129 199.83,-123 205.83,-123 205.83,-123 326.17,-123 326.17,-123 332.17,-123 338.17,-129 338.17,-135 338.17,-135 338.17,-153.24 338.17,-153.24 338.17,-159.24 332.17,-165.24 326.17,-165.24"/>
-<text xml:space="preserve" text-anchor="middle" x="266" y="-147.42" font-family="Helvetica,sans-Serif" font-size="11.00">🔑 Backplane IAM User</text>
-<text xml:space="preserve" text-anchor="middle" x="266" y="-134.22" font-family="Helvetica,sans-Serif" font-size="11.00">Security Administrator</text>
+<path fill="#ffffff" stroke="#a2abb8" stroke-width="1.1" d="M326.17,-274.72C326.17,-274.72 205.83,-274.72 205.83,-274.72 199.83,-274.72 193.83,-268.72 193.83,-262.72 193.83,-262.72 193.83,-244.48 193.83,-244.48 193.83,-238.48 199.83,-232.48 205.83,-232.48 205.83,-232.48 326.17,-232.48 326.17,-232.48 332.17,-232.48 338.17,-238.48 338.17,-244.48 338.17,-244.48 338.17,-262.72 338.17,-262.72 338.17,-268.72 332.17,-274.72 326.17,-274.72"/>
+<text xml:space="preserve" text-anchor="middle" x="266" y="-256.9" font-family="Helvetica,sans-Serif" font-size="11.00">🔑 Backplane IAM User</text>
+<text xml:space="preserve" text-anchor="middle" x="266" y="-243.7" font-family="Helvetica,sans-Serif" font-size="11.00">access key</text>
 </g>
 <!-- DOMAIN&#45;&gt;BPUSER -->
-<g id="edge3" class="edge">
+<g id="edge4" class="edge">
 <title>DOMAIN&#45;&gt;BPUSER</title>
-<path fill="none" stroke="#8b95a3" d="M383.5,-241C328.28,-241 266,-241 266,-241 266,-241 266,-174.13 266,-174.13"/>
-<polygon fill="#8b95a3" stroke="#8b95a3" points="268.45,-174.13 266,-167.13 263.55,-174.13 268.45,-174.13"/>
+<path fill="none" stroke="#8b95a3" d="M383.5,-351C328.28,-351 266,-351 266,-351 266,-351 266,-283.73 266,-283.73"/>
+<polygon fill="#8b95a3" stroke="#8b95a3" points="268.45,-283.73 266,-276.73 263.55,-283.73 268.45,-283.73"/>
 </g>
 <!-- DOMAIN&#45;&gt;FED -->
-<g id="edge4" class="edge">
+<g id="edge5" class="edge">
 <title>DOMAIN&#45;&gt;FED</title>
-<path fill="none" stroke="#8b95a3" d="M467,-228.9C467,-228.9 467,-174.14 467,-174.14"/>
-<polygon fill="#8b95a3" stroke="#8b95a3" points="469.45,-174.14 467,-167.14 464.55,-174.14 469.45,-174.14"/>
+<path fill="none" stroke="#8b95a3" d="M467,-338.38C467,-338.38 467,-283.62 467,-283.62"/>
+<polygon fill="#8b95a3" stroke="#8b95a3" points="469.45,-283.62 467,-276.62 464.55,-283.62 469.45,-283.62"/>
 </g>
 <!-- REGION -->
-<g id="node5" class="node">
+<g id="node8" class="node">
 <title>REGION</title>
-<path fill="#ffffff" stroke="#a2abb8" stroke-width="1.1" d="M738.37,-162.12C738.37,-162.12 607.63,-162.12 607.63,-162.12 601.63,-162.12 595.63,-156.12 595.63,-150.12 595.63,-150.12 595.63,-138.12 595.63,-138.12 595.63,-132.12 601.63,-126.12 607.63,-126.12 607.63,-126.12 738.37,-126.12 738.37,-126.12 744.37,-126.12 750.37,-132.12 750.37,-138.12 750.37,-138.12 750.37,-150.12 750.37,-150.12 750.37,-156.12 744.37,-162.12 738.37,-162.12"/>
-<text xml:space="preserve" text-anchor="middle" x="673" y="-140.82" font-family="Helvetica,sans-Serif" font-size="11.00">📁 Region Project (eu&#45;de)</text>
+<path fill="#ffffff" stroke="#a2abb8" stroke-width="1.1" d="M927.37,-271.6C927.37,-271.6 796.63,-271.6 796.63,-271.6 790.63,-271.6 784.63,-265.6 784.63,-259.6 784.63,-259.6 784.63,-247.6 784.63,-247.6 784.63,-241.6 790.63,-235.6 796.63,-235.6 796.63,-235.6 927.37,-235.6 927.37,-235.6 933.37,-235.6 939.37,-241.6 939.37,-247.6 939.37,-247.6 939.37,-259.6 939.37,-259.6 939.37,-265.6 933.37,-271.6 927.37,-271.6"/>
+<text xml:space="preserve" text-anchor="middle" x="862" y="-250.3" font-family="Helvetica,sans-Serif" font-size="11.00">📁 Region Project (eu&#45;de)</text>
 </g>
 <!-- DOMAIN&#45;&gt;REGION -->
-<g id="edge5" class="edge">
+<g id="edge6" class="edge">
 <title>DOMAIN&#45;&gt;REGION</title>
-<path fill="none" stroke="#8b95a3" d="M550.49,-247C607.59,-247 673,-247 673,-247 673,-247 673,-171.03 673,-171.03"/>
-<polygon fill="#8b95a3" stroke="#8b95a3" points="675.45,-171.03 673,-164.03 670.55,-171.03 675.45,-171.03"/>
+<path fill="none" stroke="#8b95a3" d="M550.29,-357C666.18,-357 862,-357 862,-357 862,-357 862,-280.6 862,-280.6"/>
+<polygon fill="#8b95a3" stroke="#8b95a3" points="864.45,-280.6 862,-273.6 859.55,-280.6 864.45,-280.6"/>
 </g>
 <!-- BPUSER&#45;&gt;FED -->
 <!-- PRJBBD -->
-<g id="node10" class="node">
+<g id="node13" class="node">
 <title>PRJBBD</title>
-<path fill="#ecedfb" stroke="#9aa2e6" stroke-width="1.1" d="M1159.25,-62C1159.25,-62 1062.75,-62 1062.75,-62 1056.75,-62 1050.75,-56 1050.75,-50 1050.75,-50 1050.75,-38 1050.75,-38 1050.75,-32 1056.75,-26 1062.75,-26 1062.75,-26 1159.25,-26 1159.25,-26 1165.25,-26 1171.25,-32 1171.25,-38 1171.25,-38 1171.25,-50 1171.25,-50 1171.25,-56 1165.25,-62 1159.25,-62"/>
-<text xml:space="preserve" text-anchor="middle" x="1111" y="-40.7" font-family="Helvetica,sans-Serif" font-size="11.00">📦 otc/project BBD</text>
+<path fill="#ecedfb" stroke="#9aa2e6" stroke-width="1.1" d="M1305.25,-168.36C1305.25,-168.36 1208.75,-168.36 1208.75,-168.36 1202.75,-168.36 1196.75,-162.36 1196.75,-156.36 1196.75,-156.36 1196.75,-144.36 1196.75,-144.36 1196.75,-138.36 1202.75,-132.36 1208.75,-132.36 1208.75,-132.36 1305.25,-132.36 1305.25,-132.36 1311.25,-132.36 1317.25,-138.36 1317.25,-144.36 1317.25,-144.36 1317.25,-156.36 1317.25,-156.36 1317.25,-162.36 1311.25,-168.36 1305.25,-168.36"/>
+<text xml:space="preserve" text-anchor="middle" x="1257" y="-147.06" font-family="Helvetica,sans-Serif" font-size="11.00">📦 otc/project BBD</text>
 </g>
 <!-- BPUSER&#45;&gt;PRJBBD -->
-<g id="edge12" class="edge">
+<g id="edge19" class="edge">
 <title>BPUSER&#45;&gt;PRJBBD</title>
-<path fill="none" stroke="#8b95a3" stroke-dasharray="1,5" d="M266,-122.51C266,-102.89 266,-77 266,-77 266,-77 1080.87,-77 1080.87,-77 1080.87,-77 1080.87,-70.94 1080.87,-70.94"/>
-<polygon fill="#8b95a3" stroke="#8b95a3" points="1083.32,-70.94 1080.87,-63.94 1078.42,-70.94 1083.32,-70.94"/>
-<text xml:space="preserve" text-anchor="middle" x="626.94" y="-79.7" font-family="Helvetica,sans-Serif" font-size="9.00" fill="#697180">authenticates</text>
+<path fill="none" stroke="#8b95a3" stroke-dasharray="1,5" d="M266,-232.16C266,-212.69 266,-187 266,-187 266,-187 1214.82,-187 1214.82,-187 1214.82,-187 1214.82,-177.19 1214.82,-177.19"/>
+<polygon fill="#8b95a3" stroke="#8b95a3" points="1217.27,-177.19 1214.82,-170.19 1212.37,-177.19 1217.27,-177.19"/>
+<text xml:space="preserve" text-anchor="middle" x="695.96" y="-189.7" font-family="Helvetica,sans-Serif" font-size="9.00" fill="#697180">authenticates</text>
 </g>
-<!-- FED&#45;&gt;REGION -->
+<!-- BUCKET -->
+<g id="node5" class="node">
+<title>BUCKET</title>
+<path fill="#ffffff" stroke="#a2abb8" stroke-width="1.1" d="M732.33,-274.72C732.33,-274.72 607.67,-274.72 607.67,-274.72 601.67,-274.72 595.67,-268.72 595.67,-262.72 595.67,-262.72 595.67,-244.48 595.67,-244.48 595.67,-238.48 601.67,-232.48 607.67,-232.48 607.67,-232.48 732.33,-232.48 732.33,-232.48 738.33,-232.48 744.33,-238.48 744.33,-244.48 744.33,-244.48 744.33,-262.72 744.33,-262.72 744.33,-268.72 738.33,-274.72 732.33,-274.72"/>
+<text xml:space="preserve" text-anchor="middle" x="670" y="-256.9" font-family="Helvetica,sans-Serif" font-size="11.00">🪣 Mapping Bucket</text>
+<text xml:space="preserve" text-anchor="middle" x="670" y="-243.7" font-family="Helvetica,sans-Serif" font-size="11.00">mappings/&lt;project&gt;.json</text>
+</g>
+<!-- FED&#45;&gt;BUCKET -->
 <!-- GROUPS -->
-<g id="node7" class="node">
+<g id="node10" class="node">
 <title>GROUPS</title>
-<path fill="#e5f2ea" stroke="#85bfa0" stroke-width="1.1" d="M951.54,-165.24C951.54,-165.24 802.46,-165.24 802.46,-165.24 796.46,-165.24 790.46,-159.24 790.46,-153.24 790.46,-153.24 790.46,-135 790.46,-135 790.46,-129 796.46,-123 802.46,-123 802.46,-123 951.54,-123 951.54,-123 957.54,-123 963.54,-129 963.54,-135 963.54,-135 963.54,-153.24 963.54,-153.24 963.54,-159.24 957.54,-165.24 951.54,-165.24"/>
-<text xml:space="preserve" text-anchor="middle" x="877" y="-147.42" font-family="Helvetica,sans-Serif" font-size="11.00">👥 IAM Groups ×3 per project</text>
-<text xml:space="preserve" text-anchor="middle" x="877" y="-134.22" font-family="Helvetica,sans-Serif" font-size="11.00">admin · user · reader</text>
+<path fill="#e5f2ea" stroke="#85bfa0" stroke-width="1.1" d="M1140.54,-274.72C1140.54,-274.72 991.46,-274.72 991.46,-274.72 985.46,-274.72 979.46,-268.72 979.46,-262.72 979.46,-262.72 979.46,-244.48 979.46,-244.48 979.46,-238.48 985.46,-232.48 991.46,-232.48 991.46,-232.48 1140.54,-232.48 1140.54,-232.48 1146.54,-232.48 1152.54,-238.48 1152.54,-244.48 1152.54,-244.48 1152.54,-262.72 1152.54,-262.72 1152.54,-268.72 1146.54,-274.72 1140.54,-274.72"/>
+<text xml:space="preserve" text-anchor="middle" x="1066" y="-256.9" font-family="Helvetica,sans-Serif" font-size="11.00">👥 IAM Groups ×3 per project</text>
+<text xml:space="preserve" text-anchor="middle" x="1066" y="-243.7" font-family="Helvetica,sans-Serif" font-size="11.00">admin · user · reader</text>
 </g>
 <!-- FED&#45;&gt;GROUPS -->
-<g id="edge8" class="edge">
+<g id="edge13" class="edge">
 <title>FED&#45;&gt;GROUPS</title>
-<path fill="none" stroke="#8b95a3" stroke-dasharray="5,2" d="M496.46,-122.69C496.46,-114.91 496.46,-108 496.46,-108 496.46,-108 815.27,-108 815.27,-108 815.27,-108 815.27,-114.18 815.27,-114.18"/>
-<polygon fill="#8b95a3" stroke="#8b95a3" points="812.82,-114.18 815.27,-121.18 817.72,-114.18 812.82,-114.18"/>
-<text xml:space="preserve" text-anchor="middle" x="619.84" y="-110.7" font-family="Helvetica,sans-Serif" font-size="9.00" fill="#697180">maps users into</text>
+<path fill="none" stroke="#8b95a3" stroke-dasharray="5,2" d="M437.54,-232.31C437.54,-224.26 437.54,-217 437.54,-217 437.54,-217 1023.27,-217 1023.27,-217 1023.27,-217 1023.27,-223.8 1023.27,-223.8"/>
+<polygon fill="#8b95a3" stroke="#8b95a3" points="1020.82,-223.8 1023.27,-230.8 1025.72,-223.8 1020.82,-223.8"/>
+<text xml:space="preserve" text-anchor="middle" x="694.38" y="-219.7" font-family="Helvetica,sans-Serif" font-size="9.00" fill="#697180">maps users into</text>
+</g>
+<!-- FUNC -->
+<g id="node7" class="node">
+<title>FUNC</title>
+<path fill="#ffffff" stroke="#a2abb8" stroke-width="1.1" d="M873.52,-68.24C873.52,-68.24 738.48,-68.24 738.48,-68.24 732.48,-68.24 726.48,-62.24 726.48,-56.24 726.48,-56.24 726.48,-38 726.48,-38 726.48,-32 732.48,-26 738.48,-26 738.48,-26 873.52,-26 873.52,-26 879.52,-26 885.52,-32 885.52,-38 885.52,-38 885.52,-56.24 885.52,-56.24 885.52,-62.24 879.52,-68.24 873.52,-68.24"/>
+<text xml:space="preserve" text-anchor="middle" x="806" y="-50.42" font-family="Helvetica,sans-Serif" font-size="11.00">⚡ FunctionGraph Function</text>
+<text xml:space="preserve" text-anchor="middle" x="806" y="-37.22" font-family="Helvetica,sans-Serif" font-size="11.00">rebuilds the mapping</text>
+</g>
+<!-- BUCKET&#45;&gt;FUNC -->
+<g id="edge11" class="edge">
+<title>BUCKET&#45;&gt;FUNC</title>
+<path fill="none" stroke="#8b95a3" stroke-dasharray="5,2" d="M661.08,-231.94C661.08,-177.64 661.08,-40 661.08,-40 661.08,-40 717.82,-40 717.82,-40"/>
+<polygon fill="#8b95a3" stroke="#8b95a3" points="717.82,-42.45 724.82,-40 717.82,-37.55 717.82,-42.45"/>
+<text xml:space="preserve" text-anchor="middle" x="646.07" y="-110.3" font-family="Helvetica,sans-Serif" font-size="9.00" fill="#697180">triggers</text>
+</g>
+<!-- BUCKET&#45;&gt;REGION -->
+<!-- MGMT -->
+<g id="node6" class="node">
+<title>MGMT</title>
+<path fill="#ffffff" stroke="#a2abb8" stroke-width="1.1" d="M871.37,-171.48C871.37,-171.48 740.63,-171.48 740.63,-171.48 734.63,-171.48 728.63,-165.48 728.63,-159.48 728.63,-159.48 728.63,-141.24 728.63,-141.24 728.63,-135.24 734.63,-129.24 740.63,-129.24 740.63,-129.24 871.37,-129.24 871.37,-129.24 877.37,-129.24 883.37,-135.24 883.37,-141.24 883.37,-141.24 883.37,-159.48 883.37,-159.48 883.37,-165.48 877.37,-171.48 871.37,-171.48"/>
+<text xml:space="preserve" text-anchor="middle" x="806" y="-153.66" font-family="Helvetica,sans-Serif" font-size="11.00">🛠️ Management Project</text>
+<text xml:space="preserve" text-anchor="middle" x="806" y="-140.46" font-family="Helvetica,sans-Serif" font-size="11.00">eu&#45;de_&lt;platform&gt;&#45;mgmt</text>
+</g>
+<!-- MGMT&#45;&gt;FUNC -->
+<g id="edge9" class="edge">
+<title>MGMT&#45;&gt;FUNC</title>
+<path fill="none" stroke="#8b95a3" d="M806,-128.97C806,-128.97 806,-77 806,-77"/>
+<polygon fill="#8b95a3" stroke="#8b95a3" points="808.45,-77 806,-70 803.55,-77 808.45,-77"/>
+<text xml:space="preserve" text-anchor="middle" x="797.25" y="-105.68" font-family="Helvetica,sans-Serif" font-size="9.00" fill="#697180">runs</text>
+</g>
+<!-- FUNC&#45;&gt;FED -->
+<g id="edge12" class="edge">
+<title>FUNC&#45;&gt;FED</title>
+<path fill="none" stroke="#8b95a3" stroke-dasharray="5,2" d="M726.29,-54C634.57,-54 496.46,-54 496.46,-54 496.46,-54 496.46,-223.73 496.46,-223.73"/>
+<polygon fill="#8b95a3" stroke="#8b95a3" points="494.01,-223.73 496.46,-230.73 498.91,-223.73 494.01,-223.73"/>
+<text xml:space="preserve" text-anchor="middle" x="492.24" y="-56.7" font-family="Helvetica,sans-Serif" font-size="9.00" fill="#697180">rebuilds mapping</text>
+</g>
+<!-- REGION&#45;&gt;MGMT -->
+<g id="edge8" class="edge">
+<title>REGION&#45;&gt;MGMT</title>
+<path fill="none" stroke="#8b95a3" d="M834,-235.14C834,-235.14 834,-180.38 834,-180.38"/>
+<polygon fill="#8b95a3" stroke="#8b95a3" points="836.45,-180.38 834,-173.38 831.55,-180.38 836.45,-180.38"/>
+<text xml:space="preserve" text-anchor="middle" x="816.24" y="-210.46" font-family="Helvetica,sans-Serif" font-size="9.00" fill="#697180">parent of</text>
 </g>
 <!-- PRJ -->
-<g id="node6" class="node">
+<g id="node9" class="node">
 <title>PRJ</title>
-<path fill="#e5f2ea" stroke="#85bfa0" stroke-width="1.1" d="M852.88,-62C852.88,-62 689.12,-62 689.12,-62 683.12,-62 677.12,-56 677.12,-50 677.12,-50 677.12,-38 677.12,-38 677.12,-32 683.12,-26 689.12,-26 689.12,-26 852.88,-26 852.88,-26 858.88,-26 864.88,-32 864.88,-38 864.88,-38 864.88,-50 864.88,-50 864.88,-56 858.88,-62 852.88,-62"/>
-<text xml:space="preserve" text-anchor="middle" x="771" y="-40.7" font-family="Helvetica,sans-Serif" font-size="11.00">🗂️ Project eu&#45;de_&lt;project&gt; ×N</text>
+<path fill="#e5f2ea" stroke="#85bfa0" stroke-width="1.1" d="M1098.88,-168.36C1098.88,-168.36 935.12,-168.36 935.12,-168.36 929.12,-168.36 923.12,-162.36 923.12,-156.36 923.12,-156.36 923.12,-144.36 923.12,-144.36 923.12,-138.36 929.12,-132.36 935.12,-132.36 935.12,-132.36 1098.88,-132.36 1098.88,-132.36 1104.88,-132.36 1110.88,-138.36 1110.88,-144.36 1110.88,-144.36 1110.88,-156.36 1110.88,-156.36 1110.88,-162.36 1104.88,-168.36 1098.88,-168.36"/>
+<text xml:space="preserve" text-anchor="middle" x="1017" y="-147.06" font-family="Helvetica,sans-Serif" font-size="11.00">🗂️ Project eu&#45;de_&lt;project&gt; ×N</text>
 </g>
 <!-- REGION&#45;&gt;PRJ -->
-<g id="edge6" class="edge">
+<g id="edge7" class="edge">
 <title>REGION&#45;&gt;PRJ</title>
-<path fill="none" stroke="#8b95a3" d="M713.74,-125.76C713.74,-125.76 713.74,-70.76 713.74,-70.76"/>
-<polygon fill="#8b95a3" stroke="#8b95a3" points="716.19,-70.76 713.74,-63.76 711.29,-70.76 716.19,-70.76"/>
-<text xml:space="preserve" text-anchor="middle" x="695.98" y="-100.96" font-family="Helvetica,sans-Serif" font-size="9.00" fill="#697180">parent of</text>
+<path fill="none" stroke="#8b95a3" d="M931.24,-235.14C931.24,-235.14 931.24,-177.17 931.24,-177.17"/>
+<polygon fill="#8b95a3" stroke="#8b95a3" points="933.69,-177.17 931.24,-170.17 928.79,-177.17 933.69,-177.17"/>
+<text xml:space="preserve" text-anchor="middle" x="913.48" y="-208.86" font-family="Helvetica,sans-Serif" font-size="9.00" fill="#697180">parent of</text>
 </g>
 <!-- GROUPS&#45;&gt;PRJ -->
-<g id="edge7" class="edge">
+<g id="edge10" class="edge">
 <title>GROUPS&#45;&gt;PRJ</title>
-<path fill="none" stroke="#8b95a3" d="M840.08,-122.89C840.08,-122.89 840.08,-71.02 840.08,-71.02"/>
-<polygon fill="#8b95a3" stroke="#8b95a3" points="842.53,-71.02 840.08,-64.02 837.63,-71.02 842.53,-71.02"/>
-<text xml:space="preserve" text-anchor="middle" x="824.07" y="-99.66" font-family="Helvetica,sans-Serif" font-size="9.00" fill="#697180">roles on</text>
+<path fill="none" stroke="#8b95a3" d="M1067.08,-232.21C1067.08,-232.21 1067.08,-177.13 1067.08,-177.13"/>
+<polygon fill="#8b95a3" stroke="#8b95a3" points="1069.53,-177.13 1067.08,-170.13 1064.63,-177.13 1069.53,-177.13"/>
+<text xml:space="preserve" text-anchor="middle" x="1051.07" y="-207.37" font-family="Helvetica,sans-Serif" font-size="9.00" fill="#697180">roles on</text>
 </g>
 <!-- PLAT -->
-<g id="node8" class="node">
+<g id="node11" class="node">
 <title>PLAT</title>
-<path fill="#ecedfb" stroke="#9aa2e6" stroke-width="1.1" d="M1202.04,-265.36C1202.04,-265.36 1019.96,-265.36 1019.96,-265.36 1013.96,-265.36 1007.96,-259.36 1007.96,-253.36 1007.96,-253.36 1007.96,-241.36 1007.96,-241.36 1007.96,-235.36 1013.96,-229.36 1019.96,-229.36 1019.96,-229.36 1202.04,-229.36 1202.04,-229.36 1208.04,-229.36 1214.04,-235.36 1214.04,-241.36 1214.04,-241.36 1214.04,-253.36 1214.04,-253.36 1214.04,-259.36 1208.04,-265.36 1202.04,-265.36"/>
-<text xml:space="preserve" text-anchor="middle" x="1111" y="-244.06" font-family="Helvetica,sans-Serif" font-size="11.00">🛰️ T Cloud Public Project Platform</text>
+<path fill="#ecedfb" stroke="#9aa2e6" stroke-width="1.1" d="M1445.04,-374.84C1445.04,-374.84 1262.96,-374.84 1262.96,-374.84 1256.96,-374.84 1250.96,-368.84 1250.96,-362.84 1250.96,-362.84 1250.96,-350.84 1250.96,-350.84 1250.96,-344.84 1256.96,-338.84 1262.96,-338.84 1262.96,-338.84 1445.04,-338.84 1445.04,-338.84 1451.04,-338.84 1457.04,-344.84 1457.04,-350.84 1457.04,-350.84 1457.04,-362.84 1457.04,-362.84 1457.04,-368.84 1451.04,-374.84 1445.04,-374.84"/>
+<text xml:space="preserve" text-anchor="middle" x="1354" y="-353.54" font-family="Helvetica,sans-Serif" font-size="11.00">🛰️ T Cloud Public Project Platform</text>
 </g>
 <!-- LZ -->
-<g id="node9" class="node">
+<g id="node12" class="node">
 <title>LZ</title>
-<path fill="#ecedfb" stroke="#9aa2e6" stroke-width="1.1" d="M1173.63,-162.12C1173.63,-162.12 1048.37,-162.12 1048.37,-162.12 1042.37,-162.12 1036.37,-156.12 1036.37,-150.12 1036.37,-150.12 1036.37,-138.12 1036.37,-138.12 1036.37,-132.12 1042.37,-126.12 1048.37,-126.12 1048.37,-126.12 1173.63,-126.12 1173.63,-126.12 1179.63,-126.12 1185.63,-132.12 1185.63,-138.12 1185.63,-138.12 1185.63,-150.12 1185.63,-150.12 1185.63,-156.12 1179.63,-162.12 1173.63,-162.12"/>
-<text xml:space="preserve" text-anchor="middle" x="1111" y="-140.82" font-family="Helvetica,sans-Serif" font-size="11.00">🛬 Default Landing Zone</text>
+<path fill="#ecedfb" stroke="#9aa2e6" stroke-width="1.1" d="M1416.63,-271.6C1416.63,-271.6 1291.37,-271.6 1291.37,-271.6 1285.37,-271.6 1279.37,-265.6 1279.37,-259.6 1279.37,-259.6 1279.37,-247.6 1279.37,-247.6 1279.37,-241.6 1285.37,-235.6 1291.37,-235.6 1291.37,-235.6 1416.63,-235.6 1416.63,-235.6 1422.63,-235.6 1428.63,-241.6 1428.63,-247.6 1428.63,-247.6 1428.63,-259.6 1428.63,-259.6 1428.63,-265.6 1422.63,-271.6 1416.63,-271.6"/>
+<text xml:space="preserve" text-anchor="middle" x="1354" y="-250.3" font-family="Helvetica,sans-Serif" font-size="11.00">🛬 Default Landing Zone</text>
 </g>
 <!-- PLAT&#45;&gt;LZ -->
-<g id="edge9" class="edge">
+<g id="edge14" class="edge">
 <title>PLAT&#45;&gt;LZ</title>
-<path fill="none" stroke="#8b95a3" d="M1111,-228.9C1111,-228.9 1111,-170.93 1111,-170.93"/>
-<polygon fill="#8b95a3" stroke="#8b95a3" points="1113.45,-170.93 1111,-163.93 1108.55,-170.93 1113.45,-170.93"/>
+<path fill="none" stroke="#8b95a3" d="M1354,-338.38C1354,-338.38 1354,-280.41 1354,-280.41"/>
+<polygon fill="#8b95a3" stroke="#8b95a3" points="1356.45,-280.41 1354,-273.41 1351.55,-280.41 1356.45,-280.41"/>
 </g>
 <!-- LZ&#45;&gt;PRJBBD -->
-<g id="edge10" class="edge">
+<g id="edge15" class="edge">
 <title>LZ&#45;&gt;PRJBBD</title>
-<path fill="none" stroke="#8b95a3" d="M1111,-125.76C1111,-125.76 1111,-70.76 1111,-70.76"/>
-<polygon fill="#8b95a3" stroke="#8b95a3" points="1113.45,-70.76 1111,-63.76 1108.55,-70.76 1113.45,-70.76"/>
-<text xml:space="preserve" text-anchor="middle" x="1093.74" y="-100.96" font-family="Helvetica,sans-Serif" font-size="9.00" fill="#697180">requests</text>
+<path fill="none" stroke="#8b95a3" d="M1298.31,-235.14C1298.31,-235.14 1298.31,-177.17 1298.31,-177.17"/>
+<polygon fill="#8b95a3" stroke="#8b95a3" points="1300.76,-177.17 1298.31,-170.17 1295.86,-177.17 1300.76,-177.17"/>
+<text xml:space="preserve" text-anchor="middle" x="1281.05" y="-208.86" font-family="Helvetica,sans-Serif" font-size="9.00" fill="#697180">requests</text>
 </g>
-<!-- PRJBBD&#45;&gt;FED -->
-<g id="edge14" class="edge">
-<title>PRJBBD&#45;&gt;FED</title>
-<path fill="none" stroke="#8b95a3" stroke-dasharray="1,5" d="M1141.13,-62.52C1141.13,-76.4 1141.13,-93 1141.13,-93 1141.13,-93 437.54,-93 437.54,-93 437.54,-93 437.54,-114.22 437.54,-114.22"/>
-<polygon fill="#8b95a3" stroke="#8b95a3" points="435.09,-114.22 437.54,-121.22 439.99,-114.22 435.09,-114.22"/>
-<text xml:space="preserve" text-anchor="middle" x="746.94" y="-84.9" font-family="Helvetica,sans-Serif" font-size="9.00" fill="#697180">writes its mapping rules</text>
+<!-- MGMTT -->
+<g id="node14" class="node">
+<title>MGMTT</title>
+<path fill="#e5f2ea" stroke="#85bfa0" stroke-width="1.1" d="M1500.38,-171.48C1500.38,-171.48 1369.62,-171.48 1369.62,-171.48 1363.62,-171.48 1357.62,-165.48 1357.62,-159.48 1357.62,-159.48 1357.62,-141.24 1357.62,-141.24 1357.62,-135.24 1363.62,-129.24 1369.62,-129.24 1369.62,-129.24 1500.38,-129.24 1500.38,-129.24 1506.38,-129.24 1512.38,-135.24 1512.38,-141.24 1512.38,-141.24 1512.38,-159.48 1512.38,-159.48 1512.38,-165.48 1506.38,-171.48 1500.38,-171.48"/>
+<text xml:space="preserve" text-anchor="middle" x="1435" y="-153.66" font-family="Helvetica,sans-Serif" font-size="11.00">🛠️ Management Tenant</text>
+<text xml:space="preserve" text-anchor="middle" x="1435" y="-140.46" font-family="Helvetica,sans-Serif" font-size="11.00">&lt;platform&gt;&#45;mgmt</text>
+</g>
+<!-- LZ&#45;&gt;MGMTT -->
+<g id="edge16" class="edge">
+<title>LZ&#45;&gt;MGMTT</title>
+<path fill="none" stroke="#8b95a3" d="M1393.13,-235.14C1393.13,-235.14 1393.13,-180.38 1393.13,-180.38"/>
+<polygon fill="#8b95a3" stroke="#8b95a3" points="1395.58,-180.38 1393.13,-173.38 1390.68,-180.38 1395.58,-180.38"/>
+<text xml:space="preserve" text-anchor="middle" x="1382.37" y="-210.46" font-family="Helvetica,sans-Serif" font-size="9.00" fill="#697180">holds</text>
+</g>
+<!-- PRJBBD&#45;&gt;BUCKET -->
+<g id="edge21" class="edge">
+<title>PRJBBD&#45;&gt;BUCKET</title>
+<path fill="none" stroke="#8b95a3" stroke-dasharray="1,5" d="M1232.89,-168.71C1232.89,-183.55 1232.89,-202 1232.89,-202 1232.89,-202 736.48,-202 736.48,-202 736.48,-202 736.48,-223.5 736.48,-223.5"/>
+<polygon fill="#8b95a3" stroke="#8b95a3" points="734.03,-223.5 736.48,-230.5 738.93,-223.5 734.03,-223.5"/>
+<text xml:space="preserve" text-anchor="middle" x="955.57" y="-193.9" font-family="Helvetica,sans-Serif" font-size="9.00" fill="#697180">records members</text>
 </g>
 <!-- PRJBBD&#45;&gt;PRJ -->
-<g id="edge13" class="edge">
+<g id="edge20" class="edge">
 <title>PRJBBD&#45;&gt;PRJ</title>
-<path fill="none" stroke="#8b95a3" stroke-dasharray="1,5" d="M1050.21,-44C1050.21,-44 873.77,-44 873.77,-44"/>
-<polygon fill="#8b95a3" stroke="#8b95a3" points="873.77,-41.55 866.77,-44 873.77,-46.45 873.77,-41.55"/>
-<text xml:space="preserve" text-anchor="middle" x="941.74" y="-46.7" font-family="Helvetica,sans-Serif" font-size="9.00" fill="#697180">provisions</text>
+<path fill="none" stroke="#8b95a3" stroke-dasharray="1,5" d="M1196.44,-150C1196.44,-150 1119.7,-150 1119.7,-150"/>
+<polygon fill="#8b95a3" stroke="#8b95a3" points="1119.7,-147.55 1112.7,-150 1119.7,-152.45 1119.7,-147.55"/>
+<text xml:space="preserve" text-anchor="middle" x="1137.81" y="-152.7" font-family="Helvetica,sans-Serif" font-size="9.00" fill="#697180">provisions</text>
+</g>
+<!-- FMBBD -->
+<g id="node15" class="node">
+<title>FMBBD</title>
+<path fill="#ecedfb" stroke="#9aa2e6" stroke-width="1.1" d="M1500.08,-68.24C1500.08,-68.24 1295.92,-68.24 1295.92,-68.24 1289.92,-68.24 1283.92,-62.24 1283.92,-56.24 1283.92,-56.24 1283.92,-38 1283.92,-38 1283.92,-32 1289.92,-26 1295.92,-26 1295.92,-26 1500.08,-26 1500.08,-26 1506.08,-26 1512.08,-32 1512.08,-38 1512.08,-38 1512.08,-56.24 1512.08,-56.24 1512.08,-62.24 1506.08,-68.24 1500.08,-68.24"/>
+<text xml:space="preserve" text-anchor="middle" x="1398" y="-50.42" font-family="Helvetica,sans-Serif" font-size="11.00">📦 otc/federation&#45;mapping BBD</text>
+<text xml:space="preserve" text-anchor="middle" x="1398" y="-37.22" font-family="Helvetica,sans-Serif" font-size="11.00">ordered once on the management tenant</text>
+</g>
+<!-- MGMTT&#45;&gt;FMBBD -->
+<g id="edge17" class="edge">
+<title>MGMTT&#45;&gt;FMBBD</title>
+<path fill="none" stroke="#8b95a3" d="M1434.85,-128.97C1434.85,-128.97 1434.85,-77 1434.85,-77"/>
+<polygon fill="#8b95a3" stroke="#8b95a3" points="1437.3,-77 1434.85,-70 1432.4,-77 1437.3,-77"/>
+<text xml:space="preserve" text-anchor="middle" x="1422.1" y="-105.68" font-family="Helvetica,sans-Serif" font-size="9.00" fill="#697180">orders</text>
+</g>
+<!-- FMBBD&#45;&gt;FUNC -->
+<g id="edge22" class="edge">
+<title>FMBBD&#45;&gt;FUNC</title>
+<path fill="none" stroke="#8b95a3" stroke-dasharray="1,5" d="M1283.51,-47C1283.51,-47 894.54,-47 894.54,-47"/>
+<polygon fill="#8b95a3" stroke="#8b95a3" points="894.54,-44.55 887.54,-47 894.54,-49.45 894.54,-44.55"/>
+<text xml:space="preserve" text-anchor="middle" x="1068.77" y="-49.7" font-family="Helvetica,sans-Serif" font-size="9.00" fill="#697180">provisions</text>
 </g>
 </g>
 </svg>

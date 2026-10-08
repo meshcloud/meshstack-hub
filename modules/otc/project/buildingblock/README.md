@@ -3,7 +3,7 @@ name: T Cloud Public Project
 supportedPlatforms:
   - otc
 description: |
-  Creates a T Cloud Public (Open Telekom Cloud) project with one IAM group per meshStack role and maps federated project users into those groups.
+  Creates a T Cloud Public (Open Telekom Cloud) project with one IAM group per meshStack role and records which federated users belong in them.
 ---
 
 # T Cloud Public Project Building Block
@@ -12,20 +12,22 @@ Creates a T Cloud Public IAM project named `<region>_<project_name>` under the r
 one IAM group per meshStack role, each holding the T Cloud Public system roles `role_mapping` gives
 it on the project.
 
-Users are not replicated. When an identity provider is federated (see the backplane), the building
-block writes one mapping rule per role into the identity provider's mapping, matching the role's
-users by email. Federated users sign in as virtual users and receive the groups at sign-in, so a
-role change applies from the user's next sign-in.
+Users are not replicated. Federated users get their groups at sign-in from the identity provider's
+mapping. A provider has one mapping that every project shares, so this building block does not write
+it: it records which emails belong in which of its groups as `mappings/<project>.json` in the
+mapping bucket, and the [federation mapping](../../federation-mapping) building block rebuilds the
+whole mapping from all of those records. A role change applies from the user's next sign-in after
+that rebuild.
 
-The identity provider has a single mapping that every project shares. `federation_mapping.py` merges
-this project's rules in and out of it, owns exactly the rules that name one of this project's
-groups, and re-reads the mapping after writing to retry if a concurrent run overwrote it.
+Without a mapping bucket (`mapping_bucket = null`) the groups are created, but nobody is mapped into
+them.
 
 ## Authentication
 
-The provider and the script read `OS_AUTH_URL`, `OS_DOMAIN_NAME`, `OS_USERNAME` and `OS_PASSWORD`
-from the environment, which the meshStack integration sets from the backplane user. The token is
-domain-scoped, because the backplane grants its roles on the domain.
+The provider reads `OS_AUTH_URL`, `OS_DOMAIN_NAME`, `OS_ACCESS_KEY` and `OS_SECRET_KEY` from the
+environment, which the meshStack integration sets from the backplane user. `tenant_name` is the
+region's own project, because AK/SK authentication requires one; IAM resources go through the
+provider's domain-scoped client regardless.
 
 <!-- BEGIN_TF_DOCS -->
 ## Requirements
@@ -46,7 +48,7 @@ No modules.
 | [opentelekomcloud_identity_group_v3.this](https://registry.terraform.io/providers/opentelekomcloud/opentelekomcloud/latest/docs/resources/identity_group_v3) | resource |
 | [opentelekomcloud_identity_project_v3.this](https://registry.terraform.io/providers/opentelekomcloud/opentelekomcloud/latest/docs/resources/identity_project_v3) | resource |
 | [opentelekomcloud_identity_role_assignment_v3.this](https://registry.terraform.io/providers/opentelekomcloud/opentelekomcloud/latest/docs/resources/identity_role_assignment_v3) | resource |
-| [terraform_data.federation_mapping](https://registry.terraform.io/providers/hashicorp/terraform/latest/docs/resources/data) | resource |
+| [opentelekomcloud_obs_bucket_object.membership](https://registry.terraform.io/providers/opentelekomcloud/opentelekomcloud/latest/docs/resources/obs_bucket_object) | resource |
 | [opentelekomcloud_identity_project_v3.region](https://registry.terraform.io/providers/opentelekomcloud/opentelekomcloud/latest/docs/data-sources/identity_project_v3) | data source |
 | [opentelekomcloud_identity_role_v3.this](https://registry.terraform.io/providers/opentelekomcloud/opentelekomcloud/latest/docs/data-sources/identity_role_v3) | data source |
 
@@ -55,8 +57,7 @@ No modules.
 | Name | Description | Type | Default | Required |
 | ---- | ----------- | ---- | ------- | :------: |
 | <a name="input_console_login_url"></a> [console\_login\_url](#input\_console\_login\_url) | Where project users sign in — the identity provider's login link when federation is set up. | `string` | `"https://console.otc.t-systems.com"` | no |
-| <a name="input_identity_provider_email_attribute"></a> [identity\_provider\_email\_attribute](#input\_identity\_provider\_email\_attribute) | SAML attribute or OIDC claim that carries the user's email address, matched against meshStack users' `email`. | `string` | `"email"` | no |
-| <a name="input_identity_provider_name"></a> [identity\_provider\_name](#input\_identity\_provider\_name) | Federated identity provider whose mapping puts project users into the project groups. Null creates the groups without mapping anyone into them. | `string` | `null` | no |
+| <a name="input_mapping_bucket"></a> [mapping\_bucket](#input\_mapping\_bucket) | OBS bucket the federation mapping building block rebuilds the identity provider's mapping from. Null creates the groups without mapping anyone into them. | `string` | `null` | no |
 | <a name="input_project_name"></a> [project\_name](#input\_project\_name) | Name of the project without the region prefix. The project is created as `<region>_<project_name>`. | `string` | n/a | yes |
 | <a name="input_region"></a> [region](#input\_region) | T Cloud Public region the project is created in. The project name is prefixed with it, as T Cloud Public requires. | `string` | `"eu-de"` | no |
 | <a name="input_role_mapping"></a> [role\_mapping](#input\_role\_mapping) | Maps each meshStack role to the T Cloud Public system roles (by role `name`, e.g. `te_admin`, `readonly`) its project group gets. Unknown meshStack roles in `users` are ignored. | `map(list(string))` | n/a | yes |
