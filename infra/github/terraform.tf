@@ -6,11 +6,6 @@ terraform {
       source = "integrations/github"
     }
   }
-
-  backend "gcs" {
-    bucket = "meshcloud-tf-states"
-    prefix = "meshstack-hub/infra/github"
-  }
 }
 
 provider "github" {

@@ -34,3 +34,9 @@ website/public/assets/*.json
 
 # Local terragrunt integration test files — not for committing
 terragrunt.hcl
+# ...except the units of the hub's own infrastructure
+!/infra/*/terragrunt.hcl
+
+# Terragrunt
+.terragrunt-cache/
+backend.generated.tf
