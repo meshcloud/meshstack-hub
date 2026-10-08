@@ -58,6 +58,8 @@ Running this reference architecture:
      building blocks this architecture registers authenticate as it;
    - with an identity provider, federates the **company identity provider** (SAML or OIDC) and
      creates the **mapping bucket** projects record their members in;
+   - creates the meshStack **platform type** `OTC-<PLATFORM IDENTIFIER>`, one per landing zone so
+     that several can share a meshStack instance;
    - registers the **T Cloud Public Project** platform, its default landing zone and the
      [`otc/project`](../../modules/otc/project) building block definition as the landing zone's
      mandatory building block.
@@ -114,7 +116,6 @@ workload identity federation is not usable yet:
 | Requirement | Description |
 |---|---|
 | T Cloud Public domain | With an IAM user in the domain's `admin` group, and an access key for it. Use the account name exactly as the console shows it, e.g. `OTC-EU-DE-00000000001000000000`. |
-| meshStack platform type `OTC` | A custom platform type named `OTC` must exist in the meshStack instance. Override the name with `otc_platform_type` on [`modules/otc`](../../modules/otc). |
 | Identity provider *(recommended)* | SAML metadata, or the OIDC issuer, client ID and JWKS signing keys. The email claim or attribute must carry exactly the address meshStack knows for each user. For OIDC, register the IdP's redirect URI shown in the T Cloud Public console. |
 
 ### Deployment Order

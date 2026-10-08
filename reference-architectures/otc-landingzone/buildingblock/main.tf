@@ -72,8 +72,13 @@ module "otc_integration" {
   otc_region              = var.otc_region
   otc_auth_url            = local.auth_url
   otc_backplane_user_name = "mesh-${local.platform_identifier}"
-  otc_identity_provider   = local.identity_provider
-  role_mapping            = var.role_mapping
+
+  # A platform type of its own, named after the platform: its name is unique across the meshStack
+  # instance, so a shared `OTC` would make a second landing zone in the same instance fail.
+  otc_platform_type        = upper("OTC-${local.platform_identifier}")
+  otc_platform_type_create = true
+  otc_identity_provider    = local.identity_provider
+  role_mapping             = var.role_mapping
 
   hub = var.hub
 
@@ -170,6 +175,7 @@ module "federation_mapping_integration" {
   otc_mapping_bucket                    = module.otc_integration.federation.mapping_bucket
   otc_identity_provider_name            = module.otc_integration.federation.identity_provider_name
   otc_identity_provider_email_attribute = module.otc_integration.federation.email_attribute
+  otc_platform_type                     = module.otc_integration.platform_type_name
 
   meshstack = { owning_workspace_identifier = var.workspace, tags = local.tags.building_block }
   hub       = var.hub
