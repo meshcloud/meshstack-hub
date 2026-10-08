@@ -39,21 +39,61 @@ locals {
   })
 }
 
-module "action_secrets_and_variables" {
-  source = "github.com/meshcloud/meshstack-hub//modules/stackit/git-repository/buildingblock/action-variables-and-secrets?ref=${var.hub_git_ref}"
-  providers = {
-    restapi.with_returned_object    = restapi.with_returned_object
-    restapi.without_returned_object = restapi.without_returned_object
-  }
+resource "forgejo_repository_action_variable" "this" {
+  for_each = local.action_variables
 
-  repository_id    = var.repository_id
-  action_variables = local.action_variables
-  action_secrets   = local.action_secrets
+  # Creating a variable fails while one with the same name exists, so the legacy one must be gone first.
+  depends_on = [restapi_object.legacy_action_variable]
+
+  repository_id = var.repository_id
+  name          = each.key
+  data          = each.value
+}
+
+# Only the names are unwrapped, and they have to be: they are the resource instance keys.
+resource "forgejo_repository_action_secret" "this" {
+  for_each = nonsensitive(toset(keys(local.action_secrets)))
+
+  # Without this, deleting a legacy secret can run after writing its replacement and remove it.
+  depends_on = [restapi_object.legacy_action_secret]
+
+  repository_id = var.repository_id
+  name          = each.key
+  data          = local.action_secrets[each.key]
+}
+
+# Older versions created these as restapi objects. Moving them here deletes them before the forgejo
+# resources replace them. Remove once every building block has run on this version.
+resource "restapi_object" "legacy_action_variable" {
+  for_each = toset([])
+
+  provider = restapi.with_returned_object
+  path     = "/"
+  data     = "{}"
+}
+
+resource "restapi_object" "legacy_action_secret" {
+  for_each = toset([])
+
+  provider = restapi.without_returned_object
+  path     = "/"
+  data     = "{}"
+}
+
+moved {
+  from = module.action_secrets_and_variables.restapi_object.action_variable
+  to   = restapi_object.legacy_action_variable
+}
+
+moved {
+  from = module.action_secrets_and_variables.restapi_object.action_secret
+  to   = restapi_object.legacy_action_secret
 }
 
 resource "terraform_data" "await_pipeline_workflow" {
   depends_on = [
-    module.action_secrets_and_variables,
+    forgejo_repository_action_variable.this,
+    forgejo_repository_action_secret.this,
   ]
 
   triggers_replace = [

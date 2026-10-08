@@ -42,10 +42,3 @@ variable "container_registry_access_credentials" {
   sensitive   = true
   default     = null
 }
-
-variable "hub_git_ref" {
-  type        = string
-  description = "Hub git ref this building block runs from. Pins the shared modules it sources so they stay in lockstep with this module's own checkout."
-  const       = true
-  default     = "main"
-}
