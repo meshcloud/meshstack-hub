@@ -13,7 +13,7 @@ locals {
   }
 
   # The form is flat so that meshPanel can render it; the integration takes the nested shape.
-  identity_provider = var.identity_provider.protocol == "none" ? null : {
+  identity_provider = var.identity_provider == null ? null : {
     name            = var.identity_provider.name
     protocol        = var.identity_provider.protocol
     email_attribute = var.identity_provider.email_attribute

@@ -31,7 +31,7 @@ digraph otc_landingzone {
     style="rounded" color="#d5dae0"
     margin=18
 
-    DOMAIN  [label="🏢 Domain (OTC000…)" fillcolor="#ffffff" color="#a2abb8"]
+    DOMAIN  [label="🏢 Domain (OTC-EU-DE-…)" fillcolor="#ffffff" color="#a2abb8"]
     BPUSER  [label="🔑 Backplane IAM User\nSecurity Administrator" fillcolor="#ffffff" color="#a2abb8"]
     FED     [label="🔗 Federated Identity Provider\none shared mapping" fillcolor="#ffffff" color="#a2abb8"]
     REGION  [label="📁 Region Project (eu-de)" fillcolor="#ffffff" color="#a2abb8"]
