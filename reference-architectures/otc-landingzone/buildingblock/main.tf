@@ -75,10 +75,11 @@ module "otc_integration" {
 
   # A platform type of its own, named after the platform: its name is unique across the meshStack
   # instance, so a shared `OTC` would make a second landing zone in the same instance fail.
-  otc_platform_type        = upper("OTC-${local.platform_identifier}")
-  otc_platform_type_create = true
-  otc_identity_provider    = local.identity_provider
-  role_mapping             = var.role_mapping
+  otc_platform_type              = upper("OTC-${local.platform_identifier}")
+  otc_platform_type_display_name = "T Cloud Public (${local.platform_identifier})"
+  otc_platform_type_create       = true
+  otc_identity_provider          = local.identity_provider
+  role_mapping                   = var.role_mapping
 
   hub = var.hub
 
