@@ -90,10 +90,10 @@ variable "platform_identifier" {
 
 variable "tags" {
   type = object({
-    landingzone    = list(object({ key = string, values = list(string) }))
-    building_block = list(object({ key = string, values = list(string) }))
-    # Optional so that a landing zone ordered before the management project existed keeps running
-    # without its Tags being filled in again.
+    # All optional: the Tags form requires none of them (see meshstack_integration.tf), and a
+    # landing zone ordered before the management project existed has no `project` at all.
+    landingzone           = optional(list(object({ key = string, values = list(string) })), [])
+    building_block        = optional(list(object({ key = string, values = list(string) })), [])
     project               = optional(list(object({ key = string, values = list(string) })), [])
     project_owner_tag_key = optional(string, "")
   })
