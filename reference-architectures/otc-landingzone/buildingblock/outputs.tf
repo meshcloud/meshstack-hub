@@ -26,7 +26,7 @@ output "summary" {
     | **Region** | `${var.otc_region}` |
     | **Landing Zone** | `${module.otc_integration.landingzone_ref.name}` |
     | **Backplane IAM user** | `mesh-${local.platform_identifier}` |
-    | **Identity provider** | ${var.identity_provider.protocol == "none" ? "none — users are not mapped into projects" : "`${var.identity_provider.name}` (${var.identity_provider.protocol})"} |
+    | **Identity provider** | ${var.identity_provider == null ? "none — users are not mapped into projects" : "`${var.identity_provider.name}` (${var.identity_provider.protocol})"} |
 
     Application teams can now create meshStack projects in the `${module.otc_integration.landingzone_ref.name}`
     landing zone. Each one becomes a T Cloud Public project `${var.otc_region}_<project>`.

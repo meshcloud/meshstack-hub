@@ -259,11 +259,11 @@ resource "meshstack_building_block_definition" "this" {
 
       otc_domain_name = {
         display_name                   = "T Cloud Public Domain Name"
-        description                    = "Domain (tenant) name, e.g. `OTC00000000001000000123`."
+        description                    = "Account name exactly as the console shows it, e.g. `OTC-EU-DE-00000000001000000000`."
         type                           = "STRING"
         assignment_type                = "USER_INPUT"
-        value_validation_regex         = "^OTC[0-9]+$"
-        validation_regex_error_message = "The domain name starts with OTC followed by digits."
+        value_validation_regex         = "^OTC(-[A-Z0-9]+-[A-Z0-9]+-)?[0-9]+$"
+        validation_regex_error_message = "Use the account name exactly as the console shows it, e.g. OTC-EU-DE-00000000001000000000."
         display_order                  = 20
       }
 
@@ -299,10 +299,11 @@ resource "meshstack_building_block_definition" "this" {
 
       identity_provider = {
         display_name           = "Identity Provider"
-        description            = "Company identity provider project users sign in through. Leave the protocol at `none` to skip federation; fill only the fields of the chosen protocol."
+        description            = "Company identity provider project users sign in through. Leave it empty to skip federation; otherwise fill only the fields of the chosen protocol."
         type                   = "JSON"
         assignment_type        = "USER_INPUT"
         updateable_by_consumer = true
+        is_optional            = true
         display_order          = 60
 
         json_schema = jsonencode({
@@ -310,7 +311,7 @@ resource "meshstack_building_block_definition" "this" {
           type      = "object"
           required  = ["protocol"]
           properties = {
-            protocol                    = { type = "string", title = "Protocol", enum = ["none", "oidc", "saml"], default = "none" }
+            protocol                    = { type = "string", title = "Protocol", enum = ["oidc", "saml"], default = "oidc" }
             name                        = { type = "string", title = "Name", default = "company-idp" }
             email_attribute             = { type = "string", title = "Email Claim / Attribute", default = "email" }
             oidc_provider_url           = { type = "string", title = "OIDC Issuer URL" }
@@ -342,7 +343,8 @@ resource "meshstack_building_block_definition" "this" {
         })
       }
 
-      # Keep this description under roughly 200 characters; see stackit-landingzone for why.
+      # Keep this description under roughly 200 characters. meshStack answers a longer one with
+      # `500 InternalError` on the version update, not a 400.
       tags = {
         display_name           = "Tags"
         description            = "Tags forwarded to the nested integration. Build them in the form: add {key, values} entries for the landing zone and the building block definition."
