@@ -32,19 +32,26 @@ digraph otc_landingzone {
     margin=18
 
     DOMAIN  [label="🏢 Domain (OTC-EU-DE-…)" fillcolor="#ffffff" color="#a2abb8"]
-    BPUSER  [label="🔑 Backplane IAM User\nSecurity Administrator" fillcolor="#ffffff" color="#a2abb8"]
+    BPUSER  [label="🔑 Backplane IAM User\naccess key" fillcolor="#ffffff" color="#a2abb8"]
     FED     [label="🔗 Federated Identity Provider\none shared mapping" fillcolor="#ffffff" color="#a2abb8"]
+    BUCKET  [label="🪣 Mapping Bucket\nmappings/<project>.json" fillcolor="#ffffff" color="#a2abb8"]
+    MGMT    [label="🛠️ Management Project\neu-de_<platform>-mgmt" fillcolor="#ffffff" color="#a2abb8"]
+    FUNC    [label="⚡ FunctionGraph Function\nrebuilds the mapping" fillcolor="#ffffff" color="#a2abb8"]
     REGION  [label="📁 Region Project (eu-de)" fillcolor="#ffffff" color="#a2abb8"]
     PRJ     [label="🗂️ Project eu-de_<project> ×N" fillcolor="#e5f2ea" color="#85bfa0"]
     GROUPS  [label="👥 IAM Groups ×3 per project\nadmin · user · reader" fillcolor="#e5f2ea" color="#85bfa0"]
 
-    { rank=same; BPUSER -> FED -> REGION [style=invis] }
+    { rank=same; BPUSER -> FED -> BUCKET -> REGION [style=invis] }
 
     DOMAIN -> BPUSER
     DOMAIN -> FED
     DOMAIN -> REGION
     REGION -> PRJ    [xlabel="parent of"]
+    REGION -> MGMT   [xlabel="parent of"]
+    MGMT   -> FUNC   [xlabel="runs"]
     GROUPS -> PRJ    [xlabel="roles on"]
+    BUCKET -> FUNC   [xlabel="triggers" style=dashed constraint=false]
+    FUNC   -> FED    [xlabel="rebuilds mapping" style=dashed constraint=false]
     FED    -> GROUPS [xlabel="maps users into" style=dashed constraint=false]
   }
 
@@ -58,13 +65,18 @@ digraph otc_landingzone {
     PLAT   [label="🛰️ T Cloud Public Project Platform" fillcolor="#ecedfb" color="#9aa2e6"]
     LZ     [label="🛬 Default Landing Zone" fillcolor="#ecedfb" color="#9aa2e6"]
     PRJBBD [label="📦 otc/project BBD" fillcolor="#ecedfb" color="#9aa2e6"]
+    MGMTT  [label="🛠️ Management Tenant\n<platform>-mgmt" fillcolor="#e5f2ea" color="#85bfa0"]
+    FMBBD  [label="📦 otc/federation-mapping BBD\nordered once on the management tenant" fillcolor="#ecedfb" color="#9aa2e6"]
 
-    PLAT -> LZ
-    LZ   -> PRJBBD [xlabel="requests"]
+    PLAT  -> LZ
+    LZ    -> PRJBBD [xlabel="requests"]
+    LZ    -> MGMTT  [xlabel="holds"]
+    MGMTT -> FMBBD  [xlabel="orders"]
   }
 
   IDP    -> FED    [xlabel="federated into" style=dotted constraint=false]
   BPUSER -> PRJBBD [xlabel="authenticates" style=dotted constraint=false]
   PRJBBD -> PRJ    [xlabel="provisions" style=dotted constraint=false]
-  PRJBBD -> FED    [xlabel="writes its mapping rules" style=dotted constraint=false]
+  PRJBBD -> BUCKET [xlabel="records members" style=dotted constraint=false]
+  FMBBD  -> FUNC   [xlabel="provisions" style=dotted constraint=false]
 }

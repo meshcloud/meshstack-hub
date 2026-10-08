@@ -13,7 +13,7 @@ variable "use_global_location" {
 variable "otc_domain_name" {
   type        = string
   nullable    = false
-  description = "T Cloud Public domain (tenant) name, e.g. `OTC-EU-DE-00000000001000000000`."
+  description = "T Cloud Public domain (account) name, e.g. `OTC-EU-DE-00000000001000000000`."
 }
 
 variable "otc_region" {
@@ -32,7 +32,7 @@ variable "otc_access_key" {
   type        = string
   sensitive   = true
   nullable    = false
-  description = "Access key of an IAM user holding Security Administrator on the domain. Used to create the backplane user, its role assignments and the identity provider."
+  description = "Access key of an IAM user in the domain's `admin` group. Used to create the backplane user, its role assignments, the identity provider and the mapping bucket."
 }
 
 variable "otc_secret_key" {
@@ -44,7 +44,7 @@ variable "otc_secret_key" {
 
 variable "identity_provider" {
   type = object({
-    protocol                    = string
+    protocol                    = optional(string)
     name                        = optional(string, "company-idp")
     email_attribute             = optional(string, "email")
     saml_metadata               = optional(string)
@@ -54,10 +54,10 @@ variable "identity_provider" {
     oidc_authorization_endpoint = optional(string)
   })
   default     = null
-  description = "Company identity provider federated into the domain, as the flat object the meshPanel form produces. Null, the input left empty, skips federation."
+  description = "Company identity provider federated into the domain, as the flat object the meshPanel form produces. Null, or no protocol chosen, skips federation."
 
   validation {
-    condition     = var.identity_provider == null || contains(["saml", "oidc"], var.identity_provider.protocol)
+    condition     = var.identity_provider == null || var.identity_provider.protocol == null || contains(["saml", "oidc"], var.identity_provider.protocol)
     error_message = "identity_provider.protocol must be saml or oidc."
   }
 }
@@ -77,15 +77,52 @@ variable "platform_identifier" {
 
 variable "tags" {
   type = object({
-    landingzone    = list(object({ key = string, values = list(string) }))
-    building_block = list(object({ key = string, values = list(string) }))
+    landingzone           = list(object({ key = string, values = list(string) }))
+    building_block        = list(object({ key = string, values = list(string) }))
+    project               = list(object({ key = string, values = list(string) }))
+    project_owner_tag_key = string
   })
   nullable    = false
   description = <<-EOT
   Tags forwarded to the nested T Cloud Public integration, each map built in the meshPanel form as a list of {key, values} entries.
   `landingzone` tags are applied to the created landing zone.
-  `building_block` tags are applied to the nested building block definition.
+  `building_block` tags are applied to the nested building block definitions.
+  `project` tags are applied to the management meshProject.
+  `project_owner_tag_key` names the tag that receives the creator's display name on the management meshProject (empty to set none).
   EOT
+}
+
+variable "payment_method_identifier" {
+  type        = string
+  default     = null
+  description = "Payment method assigned to the management meshProject. Null assigns none."
+}
+
+variable "creator" {
+  type = object({
+    type        = string
+    identifier  = string
+    displayName = string
+    username    = optional(string)
+    email       = optional(string)
+    euid        = optional(string)
+  })
+  nullable    = false
+  description = "Who ordered the landing zone, injected by meshStack. Their display name is written to the management meshProject's owner tag (see `tags.project_owner_tag_key`)."
+}
+
+variable "workspace_members" {
+  type = list(object({
+    meshIdentifier = string
+    username       = string
+    firstName      = string
+    lastName       = string
+    email          = string
+    euid           = string
+    roles          = list(string)
+  }))
+  nullable    = false
+  description = "Members of the owning workspace, injected by meshStack. Owners and managers become Project Admin of the management project."
 }
 
 variable "role_mapping" {
