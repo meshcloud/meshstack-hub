@@ -18,7 +18,7 @@ variable "bbd_readme" {
 
 variable "otc_domain_name" {
   type        = string
-  description = "T Cloud Public domain (tenant) name, e.g. `OTC-EU-DE-00000000001000000000`, in which projects are created."
+  description = "T Cloud Public domain (account) name, e.g. `OTC-EU-DE-00000000001000000000`, in which projects are created."
 }
 
 variable "otc_region" {
@@ -145,26 +145,36 @@ output "identity_provider_login_link" {
   value       = module.backplane.identity_provider_login_link
 }
 
+output "federation" {
+  description = "What the federation mapping building block needs to rebuild the identity provider's mapping, or null without federation."
+  value = var.otc_identity_provider == null ? null : {
+    mapping_bucket         = module.backplane.mapping_bucket
+    identity_provider_name = module.backplane.identity_provider_name
+    email_attribute        = module.backplane.identity_provider_email_attribute
+  }
+}
+
+output "backplane_credentials" {
+  description = "Access key of the backplane IAM user, for compositions that run further building blocks as it."
+  sensitive   = true
+  value = {
+    access_key = module.backplane.access_key
+    secret_key = module.backplane.secret_key
+  }
+}
+
 locals {
   console_login_url = coalesce(module.backplane.identity_provider_login_link, "https://console.otc.t-systems.com")
 
-  # Federation inputs only exist with an identity provider; without one the buildingblock variable
-  # defaults leave mapping off.
+  # Without federation there is no bucket, and the buildingblock variable's null default leaves
+  # membership unrecorded.
   federation_inputs = var.otc_identity_provider == null ? {} : {
-    identity_provider_name = {
-      display_name    = "Identity Provider"
-      description     = "Federated identity provider whose mapping puts project users into the project groups."
+    mapping_bucket = {
+      display_name    = "Mapping Bucket"
+      description     = "OBS bucket the project records its group membership in."
       type            = "STRING"
       assignment_type = "STATIC"
-      argument        = jsonencode(module.backplane.identity_provider_name)
-    }
-
-    identity_provider_email_attribute = {
-      display_name    = "Identity Provider Email Attribute"
-      description     = "SAML attribute or OIDC claim carrying the user's email address."
-      type            = "STRING"
-      assignment_type = "STATIC"
-      argument        = jsonencode(module.backplane.identity_provider_email_attribute)
+      argument        = jsonencode(module.backplane.mapping_bucket)
     }
   }
 }
@@ -243,7 +253,7 @@ resource "meshstack_building_block_definition" "this" {
   spec = {
     display_name              = coalesce(var.bbd_display_name, "T Cloud Public Project")
     symbol                    = "https://raw.githubusercontent.com/meshcloud/meshstack-hub/${var.hub.git_ref}/modules/otc/project/buildingblock/logo.png"
-    description               = coalesce(var.bbd_description, "Creates a T Cloud Public project with one IAM group per meshStack role and maps federated project users into them.")
+    description               = coalesce(var.bbd_description, "Creates a T Cloud Public project with one IAM group per meshStack role and records which federated users belong in them.")
     support_url               = "https://console.otc.t-systems.com"
     target_type               = "TENANT_LEVEL"
     run_transparency          = true
@@ -348,7 +358,7 @@ resource "meshstack_building_block_definition" "this" {
 
       OS_AUTH_URL = {
         display_name    = "OTC Auth URL"
-        description     = "IAM endpoint the provider and the federation script authenticate against."
+        description     = "IAM endpoint the provider authenticates against."
         type            = "STRING"
         assignment_type = "STATIC"
         is_environment  = true
@@ -364,25 +374,30 @@ resource "meshstack_building_block_definition" "this" {
         argument        = jsonencode(var.otc_domain_name)
       }
 
-      OS_USERNAME = {
-        display_name    = "OTC Username"
-        description     = "IAM user the building block authenticates as, created by the backplane."
-        type            = "STRING"
-        assignment_type = "STATIC"
-        is_environment  = true
-        argument        = jsonencode(module.backplane.user_name)
-      }
-
-      OS_PASSWORD = {
-        display_name    = "OTC Password"
-        description     = "Password of the backplane IAM user."
+      OS_ACCESS_KEY = {
+        display_name    = "OTC Access Key"
+        description     = "Access key of the backplane IAM user the building block authenticates as."
         type            = "STRING"
         assignment_type = "STATIC"
         is_environment  = true
         sensitive = {
           argument = {
-            secret_value   = module.backplane.password
-            secret_version = nonsensitive(sha256(module.backplane.password))
+            secret_value   = module.backplane.access_key
+            secret_version = nonsensitive(sha256(module.backplane.access_key))
+          }
+        }
+      }
+
+      OS_SECRET_KEY = {
+        display_name    = "OTC Secret Key"
+        description     = "Secret key of the backplane IAM user."
+        type            = "STRING"
+        assignment_type = "STATIC"
+        is_environment  = true
+        sensitive = {
+          argument = {
+            secret_value   = module.backplane.secret_key
+            secret_version = nonsensitive(sha256(module.backplane.secret_key))
           }
         }
       }
