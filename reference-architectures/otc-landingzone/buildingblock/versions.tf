@@ -4,7 +4,7 @@ terraform {
   required_providers {
     meshstack = {
       source  = "meshcloud/meshstack"
-      version = ">= 0.26.2"
+      version = ">= 0.26.4" # meshstack_platform_type
     }
     opentelekomcloud = {
       source  = "opentelekomcloud/opentelekomcloud"
