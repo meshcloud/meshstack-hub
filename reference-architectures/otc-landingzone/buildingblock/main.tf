@@ -136,10 +136,11 @@ resource "meshstack_project_user_binding" "management_admin" {
   }
 }
 
-# wait_for_completion blocks until the project building block has created the T Cloud Public
-# project, so the federation mapping building block below has a project to run in.
 resource "meshstack_tenant" "management" {
-  wait_for_completion = true
+  # Only the federation mapping building block below needs the T Cloud Public project to exist, so
+  # only then does the run wait for it. Waiting is not free: the run's meshStack token cannot be
+  # renewed, and a run that outlives it loses the tenant from its state.
+  wait_for_completion = local.federation_enabled
 
   metadata = {
     owned_by_workspace = var.workspace
@@ -157,7 +158,9 @@ resource "meshstack_tenant" "management" {
     prevent_destroy = !var.playground_mode
   }
 
-  depends_on = [meshstack_project_user_binding.management_admin]
+  # On destroy the tenant has to go first: deleting it runs the project building block's destroy,
+  # which authenticates as the backplane user the integration deletes.
+  depends_on = [meshstack_project_user_binding.management_admin, module.otc_integration]
 }
 
 module "federation_mapping_integration" {
