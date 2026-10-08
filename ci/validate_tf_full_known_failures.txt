@@ -22,3 +22,6 @@ modules/stackit/server                               # sources //modules/stackit
 modules/gcp/budget-alert                             # sources //modules/gcp/budget-alert/backplane?ref=main, which has no workload_identity_federation_trust input yet
 modules/gcp/storage-bucket                           # sources //modules/gcp/storage-bucket/backplane?ref=main, which has no workload_identity_federation_trust input yet
 reference-architectures/stackit-landingzone/buildingblock # sources //modules/stackit/service-account?ref=main
+modules/otc                                          # sources //modules/otc/project/backplane?ref=main
+modules/otc/project                                  # sources //modules/otc/project/backplane?ref=main
+reference-architectures/otc-landingzone/buildingblock # sources //modules/otc?ref=main
