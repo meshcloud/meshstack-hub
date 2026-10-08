@@ -39,6 +39,12 @@ variable "otc_platform_type" {
   description = "Name of the custom meshStack platform type the platform is registered as: uppercase letters, digits and dashes."
 }
 
+variable "otc_platform_type_display_name" {
+  type        = string
+  default     = "T Cloud Public"
+  description = "Display name of the platform type when `otc_platform_type_create` is true. meshStack requires it to be unique across the instance, like the name."
+}
+
 variable "otc_platform_type_create" {
   type        = bool
   default     = false
@@ -205,7 +211,7 @@ resource "meshstack_platform_type" "this" {
   }
 
   spec = {
-    display_name     = "T Cloud Public"
+    display_name     = var.otc_platform_type_display_name
     default_endpoint = "https://console.otc.t-systems.com"
     icon             = "data:image/png;base64,${filebase64("${path.module}/logo.png")}"
   }

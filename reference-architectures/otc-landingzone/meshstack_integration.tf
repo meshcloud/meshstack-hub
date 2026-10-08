@@ -87,9 +87,12 @@ variable "default_tags" {
       confidentiality   = ["internal", "public"]
       environment       = ["dev"]
     }
-    building_block        = {}
-    project               = {}
-    project_owner_tag_key = "projectOwner"
+    building_block = {}
+    project        = {}
+
+    # Empty, because a tag key the instance has no tag definition for fails the management project
+    # with `409 TagValidation`. Set it to the owner tag your meshStack enforces, e.g. `projectOwner`.
+    project_owner_tag_key = ""
   }
 
   description = "Starter values pre-filling the Tags form, as maps of tag key to values. Ships with an example set; override per foundation to match the instance's own tag schema. The operator can still edit, extend or clear them when ordering."
