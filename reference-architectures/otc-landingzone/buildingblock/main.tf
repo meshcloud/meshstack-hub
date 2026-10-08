@@ -99,7 +99,7 @@ module "otc_integration" {
 # building block provisions it like any other and the platform team reaches it through meshStack.
 resource "meshstack_project" "management" {
   metadata = {
-    name               = "${local.platform_identifier}-mgmt"
+    name               = "${local.platform_identifier}-mgmt-dev"
     owned_by_workspace = var.workspace
   }
 
