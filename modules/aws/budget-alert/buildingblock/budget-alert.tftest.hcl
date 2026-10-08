@@ -4,7 +4,7 @@
 run "verify" {
   variables {
     budget_name           = "integrationtest"
-    contact_emails        = "foo@example.com, bar@example.com"
+    contact_emails        = ["foo@example.com", "bar@example.com"]
     monthly_budget_amount = 100
   }
 

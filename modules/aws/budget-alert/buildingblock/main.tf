@@ -1,9 +1,3 @@
-locals {
-  contact_emails_list = [
-    for x in split(",", var.contact_emails) : trimspace(x)
-  ]
-}
-
 # AWS requires a startdate, we use time_static to ensure the date doesn't change on subsequent applies
 resource "time_static" "start_date" {
 }
@@ -23,7 +17,7 @@ resource "aws_budgets_budget" "account_budget" {
     threshold                  = var.actual_threshold_percent
     threshold_type             = "PERCENTAGE"
     notification_type          = "ACTUAL"
-    subscriber_email_addresses = local.contact_emails_list
+    subscriber_email_addresses = var.contact_emails
   }
 
   notification {
@@ -31,6 +25,6 @@ resource "aws_budgets_budget" "account_budget" {
     threshold                  = var.forecasted_threshold_percent
     threshold_type             = "PERCENTAGE"
     notification_type          = "FORECASTED"
-    subscriber_email_addresses = local.contact_emails_list
+    subscriber_email_addresses = var.contact_emails
   }
 }

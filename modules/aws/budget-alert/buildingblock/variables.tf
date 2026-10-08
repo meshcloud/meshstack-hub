@@ -5,8 +5,19 @@ variable "budget_name" {
 }
 
 variable "contact_emails" {
-  type        = string
-  description = "Comma-separated list of emails of the users who should receive the Budget alert. e.g. 'foo@example.com, bar@example.com'"
+  type        = list(string)
+  nullable    = false
+  description = "Email addresses of the users who should receive the budget alert, e.g. [\"foo@example.com\", \"bar@example.com\"]."
+
+  validation {
+    condition     = length(var.contact_emails) > 0
+    error_message = "contact_emails must hold at least one email address."
+  }
+
+  validation {
+    condition     = alltrue([for email in var.contact_emails : can(regex("^[^@\\s]+@[^@\\s]+\\.[^@\\s]+$", email))])
+    error_message = "Every entry in contact_emails must look like an email address, e.g. foo@example.com."
+  }
 }
 
 variable "monthly_budget_amount" {
