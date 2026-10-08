@@ -13,6 +13,23 @@ output "project_url" {
   description = "Where project users sign in to the T Cloud Public console."
 }
 
+locals {
+  # Built outside the heredoc: template directives inside `<<-EOT` throw off its indentation
+  # stripping, which indents these lines into a code block.
+  summary_role_rows = join("\n", [
+    for role, group in local.groups : "| ${role} | `${group}` | ${join(", ", [for r in var.role_mapping[role] : "`${r}`"])} |"
+  ])
+
+  summary_sign_in = var.mapping_bucket != null ? join(" ", [
+    "Sign in at [${var.console_login_url}](${var.console_login_url}) with your company account; your",
+    "project roles apply from your next sign-in after a change. After signing in, switch to the",
+    "project `${opentelekomcloud_identity_project_v3.this.name}` in the console's project selector.",
+    ]) : join(" ", [
+    "No identity provider is federated, so no user is mapped into the groups yet. Ask your platform",
+    "team to add IAM users to the groups above.",
+  ])
+}
+
 output "summary" {
   description = "Markdown summary shown in meshPanel after the run."
   value       = <<-EOT
@@ -22,17 +39,8 @@ output "summary" {
 
     | meshStack role | IAM group | T Cloud Public roles |
     |---|---|---|
-    %{for role, group in local.groups~}
-    | ${role} | `${group}` | ${join(", ", [for r in var.role_mapping[role] : "`${r}`"])} |
-    %{endfor~}
+    ${local.summary_role_rows}
 
-    %{if var.mapping_bucket != null~}
-    Sign in at [${var.console_login_url}](${var.console_login_url}) with your company account; your
-    project roles apply from your next sign-in after the change. After signing in, switch to the project
-    `${opentelekomcloud_identity_project_v3.this.name}` in the console's project selector.
-    %{else~}
-    No identity provider is federated, so no user is mapped into the groups yet. Ask your platform
-    team to add IAM users to the groups above.
-    %{endif~}
+    ${local.summary_sign_in}
   EOT
 }
