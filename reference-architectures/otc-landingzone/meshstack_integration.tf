@@ -135,7 +135,10 @@ locals {
   tags_json_schema = {
     "$schema" = "http://json-schema.org/draft-07/schema#"
     type      = "object"
-    required  = ["landingzone", "building_block", "project", "project_owner_tag_key"]
+    # `project` and `project_owner_tag_key` came with the management project. meshStack validates a
+    # stored value against the current schema on every edit, so requiring them would reject any
+    # landing zone ordered before.
+    required = ["landingzone", "building_block"]
     properties = {
       landingzone           = merge(local.tag_list_schema, { title = "Landing Zone Tags", default = local.tags_default_entries.landingzone })
       building_block        = merge(local.tag_list_schema, { title = "Building Block Tags", default = local.tags_default_entries.building_block })

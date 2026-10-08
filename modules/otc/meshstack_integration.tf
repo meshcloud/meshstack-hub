@@ -36,7 +36,13 @@ variable "otc_auth_url" {
 variable "otc_platform_type" {
   type        = string
   default     = "OTC"
-  description = "Name of the custom meshStack platform type the platform is registered as. It must already exist in the meshStack instance."
+  description = "Name of the custom meshStack platform type the platform is registered as: uppercase letters, digits and dashes."
+}
+
+variable "otc_platform_type_create" {
+  type        = bool
+  default     = false
+  description = "Create the platform type named `otc_platform_type`. Leave false when it already exists in the meshStack instance; a platform type name is unique across the instance."
 }
 
 variable "otc_backplane_user_name" {
@@ -130,6 +136,11 @@ output "building_block_definition" {
   }
 }
 
+output "platform_type_name" {
+  description = "Name of the platform type the platform is registered as, for definitions that support it."
+  value       = local.platform_type_ref.name
+}
+
 output "platform_ref" {
   description = "Reference to the meshPlatform this integration creates, for compositions that create meshTenants on it."
   value       = meshstack_platform.this.ref
@@ -164,6 +175,10 @@ output "backplane_credentials" {
 }
 
 locals {
+  # Either the platform type this integration creates, or the existing one it names. The ref makes
+  # the platform and the definition wait for a type created in the same apply.
+  platform_type_ref = var.otc_platform_type_create ? meshstack_platform_type.this.ref : { kind = "meshPlatformType", name = var.otc_platform_type }
+
   console_login_url = coalesce(module.backplane.identity_provider_login_link, "https://console.otc.t-systems.com")
 
   # Without federation there is no bucket, and the buildingblock variable's null default leaves
@@ -176,6 +191,23 @@ locals {
       assignment_type = "STATIC"
       argument        = jsonencode(module.backplane.mapping_bucket)
     }
+  }
+}
+
+resource "meshstack_platform_type" "this" {
+  lifecycle {
+    enabled = var.otc_platform_type_create
+  }
+
+  metadata = {
+    name               = var.otc_platform_type
+    owned_by_workspace = var.meshstack.owning_workspace_identifier
+  }
+
+  spec = {
+    display_name     = "T Cloud Public"
+    default_endpoint = "https://console.otc.t-systems.com"
+    icon             = "data:image/png;base64,${filebase64("${path.module}/logo.png")}"
   }
 }
 
@@ -208,7 +240,7 @@ resource "meshstack_platform" "this" {
 
     config = {
       custom = {
-        platform_type_ref = { name = var.otc_platform_type }
+        platform_type_ref = local.platform_type_ref
         metering = {
           processing = {
             compact_timelines_after_days = 30
@@ -257,7 +289,7 @@ resource "meshstack_building_block_definition" "this" {
     support_url               = "https://console.otc.t-systems.com"
     target_type               = "TENANT_LEVEL"
     run_transparency          = true
-    supported_platforms       = [{ name = var.otc_platform_type }]
+    supported_platforms       = [{ name = local.platform_type_ref.name }]
     use_in_landing_zones_only = true
 
     readme = coalesce(var.bbd_readme, chomp(<<-EOT
@@ -437,7 +469,7 @@ terraform {
   required_providers {
     meshstack = {
       source  = "meshcloud/meshstack"
-      version = ">= 0.26.2"
+      version = ">= 0.26.4" # meshstack_platform_type
     }
     opentelekomcloud = {
       source  = "opentelekomcloud/opentelekomcloud"
