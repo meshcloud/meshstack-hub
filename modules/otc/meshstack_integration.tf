@@ -18,7 +18,7 @@ variable "bbd_readme" {
 
 variable "otc_domain_name" {
   type        = string
-  description = "T Cloud Public domain (tenant) name, e.g. `OTC00000000001000000123`, in which projects are created."
+  description = "T Cloud Public domain (tenant) name, e.g. `OTC-EU-DE-00000000001000000000`, in which projects are created."
 }
 
 variable "otc_region" {

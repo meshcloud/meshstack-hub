@@ -13,7 +13,7 @@ variable "use_global_location" {
 variable "otc_domain_name" {
   type        = string
   nullable    = false
-  description = "T Cloud Public domain (tenant) name, e.g. `OTC00000000001000000123`."
+  description = "T Cloud Public domain (tenant) name, e.g. `OTC-EU-DE-00000000001000000000`."
 }
 
 variable "otc_region" {
@@ -53,12 +53,12 @@ variable "identity_provider" {
     oidc_signing_key            = optional(string)
     oidc_authorization_endpoint = optional(string)
   })
-  nullable    = false
-  description = "Company identity provider federated into the domain, as the flat object the meshPanel form produces. `protocol = \"none\"` skips federation."
+  default     = null
+  description = "Company identity provider federated into the domain, as the flat object the meshPanel form produces. Null, the input left empty, skips federation."
 
   validation {
-    condition     = contains(["none", "saml", "oidc"], var.identity_provider.protocol)
-    error_message = "identity_provider.protocol must be none, saml or oidc."
+    condition     = var.identity_provider == null || contains(["saml", "oidc"], var.identity_provider.protocol)
+    error_message = "identity_provider.protocol must be saml or oidc."
   }
 }
 

@@ -78,7 +78,7 @@ exactly the rules that name one of its groups, and merges them in and out with
 `federation_mapping.py`. The IAM API has no conditional write, so the script reads the mapping back
 after writing and retries if a concurrent run of another project overwrote its change.
 
-Without an identity provider (protocol `none`), projects and groups are still created, but nobody is
+Without an identity provider (the input left empty), projects and groups are still created, but nobody is
 mapped into them. The platform team then has to add IAM users to the groups by hand.
 
 ### Authentication
@@ -132,11 +132,11 @@ architecture is applied. It defaults to no gate at all.
 
 - **Hub-and-spoke networking.** T Cloud Public documents a hub VPC with a NAT gateway and spoke
   VPCs peered to it. A hub building block and a self-service spoke VPC building block would add it.
-  Unlike STACKIT network areas, T Cloud Public has no built-in IP address management, so the address
-  plan would need its own allocation.
+  T Cloud Public has no built-in IP address management, so the address plan would need its own
+  allocation.
 - **Security baseline.** A Cloud Trace Service tracker writing to a KMS-encrypted OBS bucket, and the
   domain's password, login and protection policies.
-- **Project starterkit**, like the STACKIT one.
+- **Project starterkit** that creates a meshStack project and its T Cloud Public project in one order.
 
 ## Shared Responsibilities
 

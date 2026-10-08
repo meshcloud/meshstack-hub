@@ -14,10 +14,8 @@ resource "random_password" "building_block" {
   min_special      = 1
 }
 
-# T Cloud Public's Terraform provider cannot exchange an OIDC token, so unlike the STACKIT backplane
-# this one has to hand the building block a static credential. A password rather than an AK/SK,
-# because the federation pre-run calls the IAM API directly and a password gets it a token without
-# re-implementing AK/SK request signing.
+# T Cloud Public's Terraform provider cannot exchange an OIDC token, so the building block needs a
+# static credential.
 resource "opentelekomcloud_identity_user_v3" "building_block" {
   name        = var.user_name
   description = "meshStack: creates T Cloud Public projects and maps project users into them."
