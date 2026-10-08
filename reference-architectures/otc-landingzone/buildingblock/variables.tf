@@ -60,6 +60,19 @@ variable "identity_provider" {
     condition     = var.identity_provider == null || var.identity_provider.protocol == null || contains(["saml", "oidc"], var.identity_provider.protocol)
     error_message = "identity_provider.protocol must be saml or oidc."
   }
+
+  validation {
+    condition = (
+      var.identity_provider == null || var.identity_provider.protocol != "oidc" ||
+      alltrue([for v in [var.identity_provider.oidc_provider_url, var.identity_provider.oidc_client_id, var.identity_provider.oidc_signing_key] : v != null && v != ""])
+    )
+    error_message = "The oidc protocol needs the OIDC Issuer URL, Client ID and Signing Keys. Fill them in, or clear the Identity Provider input to skip federation."
+  }
+
+  validation {
+    condition     = var.identity_provider == null || var.identity_provider.protocol != "saml" || (var.identity_provider.saml_metadata != null && var.identity_provider.saml_metadata != "")
+    error_message = "The saml protocol needs the SAML Metadata XML. Fill it in, or clear the Identity Provider input to skip federation."
+  }
 }
 
 variable "platform_identifier" {
@@ -77,10 +90,12 @@ variable "platform_identifier" {
 
 variable "tags" {
   type = object({
-    landingzone           = list(object({ key = string, values = list(string) }))
-    building_block        = list(object({ key = string, values = list(string) }))
-    project               = list(object({ key = string, values = list(string) }))
-    project_owner_tag_key = string
+    landingzone    = list(object({ key = string, values = list(string) }))
+    building_block = list(object({ key = string, values = list(string) }))
+    # Optional so that a landing zone ordered before the management project existed keeps running
+    # without its Tags being filled in again.
+    project               = optional(list(object({ key = string, values = list(string) })), [])
+    project_owner_tag_key = optional(string, "")
   })
   nullable    = false
   description = <<-EOT
