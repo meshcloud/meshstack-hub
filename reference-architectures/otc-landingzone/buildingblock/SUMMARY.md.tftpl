@@ -19,15 +19,13 @@
 
 %{ if !federation_enabled ~}
 > [!WARNING]
-> ## No identity provider connected: users are managed in T Cloud Public
+> ## No identity provider connected: users sign in with their own T Cloud Public user
 
-Application teams can create projects, and every project gets its `admin`, `user` and `reader`
-groups, but nobody is put into them. meshStack's project members do not reach T Cloud Public until
-an identity provider is connected.
-
-**Until then**, add users to the project groups by hand in the
-[T Cloud Public IAM console](https://console.otc.t-systems.com/iam/). The groups are named
-`${region}_<project>_<role>`.
+meshStack still decides who is in which project: each project's `admin`, `user` and `reader` groups
+get the project's members. But meshStack does not create users. Each member needs an IAM user in
+the [T Cloud Public IAM console](https://console.otc.t-systems.com/iam/), named like the part of
+their meshStack email before the `@`: `jane.doe@example.com` signs in as `jane.doe`. A project run
+fails, naming the user, while one of its members has no such IAM user.
 
 **To connect your identity provider:**
 

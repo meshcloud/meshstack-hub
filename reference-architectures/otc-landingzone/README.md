@@ -95,8 +95,10 @@ rebuilds the whole mapping from all records:
 The function runs one instance at a time, so two rebuilds never interleave. A role change in
 meshStack applies from the user's next sign-in after the rebuild, usually seconds later.
 
-Without an identity provider (the input left empty), projects and groups are still created, but
-nobody is mapped into them. The platform team then has to add IAM users to the groups by hand.
+Without an identity provider (the input left empty), meshStack still puts each project's members
+into its groups, but as existing local IAM users: a member's IAM user is the one named like the part
+of their email before the `@`, since IAM usernames cannot contain one. meshStack creates no users;
+a project run fails, naming the user, while a member has no IAM user yet.
 
 ### Authentication
 

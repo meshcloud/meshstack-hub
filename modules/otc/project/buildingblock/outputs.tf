@@ -25,8 +25,10 @@ locals {
     "project roles apply from your next sign-in after a change. After signing in, switch to the",
     "project `${opentelekomcloud_identity_project_v3.this.name}` in the console's project selector.",
     ]) : join(" ", [
-    "No identity provider is federated, so no user is mapped into the groups yet. Ask your platform",
-    "team to add IAM users to the groups above.",
+    "No identity provider is federated, so members sign in with their own T Cloud Public IAM user:",
+    "meshStack puts the user named like the part of their email before the `@` into the groups above.",
+    "Sign in at [${var.console_login_url}](${var.console_login_url}) and switch to the project",
+    "`${opentelekomcloud_identity_project_v3.this.name}` in the console's project selector.",
   ])
 }
 
