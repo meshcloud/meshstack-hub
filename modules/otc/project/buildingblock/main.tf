@@ -19,6 +19,22 @@ locals {
   membership = {
     for role, group in local.groups : group => sort([for u in var.users : u.email if contains(u.roles, role)])
   }
+
+  # Without federation, existing local IAM users are put into the groups instead. IAM usernames
+  # cannot contain an `@`, and the provider looks users up by name only, so a member's IAM user is
+  # the one named like the part of their email before the `@`.
+  local_users_enabled = var.mapping_bucket == null
+
+  local_user_names = local.local_users_enabled ? {
+    for u in var.users : u.email => split("@", u.email)[0]
+  } : {}
+
+  local_group_members = {
+    for role, group in local.groups : role => sort(distinct([
+      for u in var.users : local.local_user_names[u.email] if contains(u.roles, role)
+    ]))
+    if local.local_users_enabled && anytrue([for u in var.users : contains(u.roles, role)])
+  }
 }
 
 data "opentelekomcloud_identity_project_v3" "region" {
@@ -69,4 +85,19 @@ resource "opentelekomcloud_obs_bucket_object" "membership" {
   })
 
   depends_on = [opentelekomcloud_identity_group_v3.this]
+}
+
+# A member without a matching IAM user fails the lookup, and with it the run, naming the user that is
+# missing. Creating that user in T Cloud Public and re-running is the fix; meshStack creates none.
+data "opentelekomcloud_identity_user_v3" "member" {
+  for_each = toset(values(local.local_user_names))
+
+  name = each.value
+}
+
+resource "opentelekomcloud_identity_group_membership_v3" "local" {
+  for_each = local.local_group_members
+
+  group = opentelekomcloud_identity_group_v3.this[each.key].id
+  users = [for name in each.value : data.opentelekomcloud_identity_user_v3.member[name].id]
 }

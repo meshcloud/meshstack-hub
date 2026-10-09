@@ -41,7 +41,7 @@ variable "role_mapping" {
 variable "mapping_bucket" {
   type        = string
   default     = null
-  description = "OBS bucket the federation mapping building block rebuilds the identity provider's mapping from. Null creates the groups without mapping anyone into them."
+  description = "OBS bucket the federation mapping building block rebuilds the identity provider's mapping from. Null means no federation: members are then put into the groups as existing local IAM users instead, named like the part of their email before the `@`."
 }
 
 variable "console_login_url" {
