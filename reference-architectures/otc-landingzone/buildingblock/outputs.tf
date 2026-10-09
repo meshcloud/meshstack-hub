@@ -8,38 +8,22 @@ output "console_login_url" {
   description = "Where project users sign in: the identity provider's login link, or the plain console without federation."
 }
 
-locals {
-  # Built outside the heredoc: template directives inside `<<-EOT` throw off its indentation
-  # stripping, which merged the table rows and the playground note in meshPanel.
-  summary_playground_note = var.playground_mode ? join("\n", [
-    "> **Playground mode.** The platform identifier carries a random suffix so this deployment does",
-    "> not occupy a name for good. Do not publish this platform or the building block definition it",
-    "> registered to other workspaces. Redeploy with `playground_mode` set to false for a platform",
-    "> that is actually used.",
-    "",
-  ]) : ""
-
-  summary_identity_provider = local.federation_enabled ? "`${var.identity_provider.name}` (${var.identity_provider.protocol})" : "none — users are not mapped into projects"
-}
-
 output "summary" {
-  description = "Summary of what this reference architecture created."
-  value       = <<-EOT
-    # T Cloud Public Landing Zone: **${local.platform_identifier}**
+  description = "Summary of what this reference architecture created, and whether an identity provider still has to be connected."
+  value = templatefile("${path.module}/SUMMARY.md.tftpl", {
+    platform_identifier = local.platform_identifier
+    playground_mode     = var.playground_mode
+    domain_name         = var.otc_domain_name
+    region              = var.otc_region
+    landingzone_name    = module.otc_integration.landingzone_ref.name
+    backplane_user_name = "mesh-${local.platform_identifier}"
+    management_project  = meshstack_project.management.metadata.name
 
-    ${local.summary_playground_note}
-    | Property | Value |
-    |----------|-------|
-    | **Domain** | `${var.otc_domain_name}` |
-    | **Region** | `${var.otc_region}` |
-    | **Landing Zone** | `${module.otc_integration.landingzone_ref.name}` |
-    | **Backplane IAM user** | `mesh-${local.platform_identifier}` |
-    | **Management project** | `${meshstack_project.management.metadata.name}` (T Cloud Public `${var.otc_region}_${meshstack_project.management.metadata.name}`) |
-    | **Identity provider** | ${local.summary_identity_provider} |
-
-    Application teams can now create meshStack projects in the `${module.otc_integration.landingzone_ref.name}`
-    landing zone. Each one becomes a T Cloud Public project `${var.otc_region}_<project>`.
-
-    Users sign in at <${coalesce(module.otc_integration.identity_provider_login_link, "https://console.otc.t-systems.com")}>.
-  EOT
+    federation_enabled         = local.federation_enabled
+    identity_provider_name     = local.federation_enabled ? var.identity_provider.name : ""
+    identity_provider_protocol = local.federation_enabled ? var.identity_provider.protocol : ""
+    email_attribute            = local.federation_enabled ? var.identity_provider.email_attribute : ""
+    login_link                 = coalesce(module.otc_integration.identity_provider_login_link, "https://console.otc.t-systems.com")
+    federation_mapping_bb_uuid = local.federation_enabled ? meshstack_building_block.federation_mapping.metadata.uuid : ""
+  })
 }
