@@ -85,12 +85,13 @@ run "building_block_noop_hub" {
 
   assert {
     # Inputs meshStack fills in from the instance (workspace members, the ordering principal, the
-    # workspace identifier) differ per meshStack instance, so they are asserted separately below.
+    # workspace identifier) differ per meshStack instance, and the Payment Method is named per run,
+    # so they are asserted separately below.
     condition = (
       {
         for k, v in jsondecode(jsondecode(meshstack_building_block.this.status.outputs["debug_input_variables_json"].value)) :
         k => v
-        if !contains(["user_permissions", "user_permissions_json", "author", "workspace_identifier"], k)
+        if !contains(["user_permissions", "user_permissions_json", "author", "workspace_identifier", "payment_method"], k)
       }
       ==
       jsondecode(file("${path.root}/tests/building_block_noop_hub.debug_input_variables_json.expected.json"))
@@ -142,6 +143,16 @@ run "building_block_noop_hub" {
   assert {
     condition     = jsondecode(meshstack_building_block.this.status.outputs["workspace_identifier"].value) == meshstack_building_block.this.metadata.owned_by_workspace
     error_message = "expected output workspace_identifier to be ${meshstack_building_block.this.metadata.owned_by_workspace}, got ${jsondecode(meshstack_building_block.this.status.outputs["workspace_identifier"].value)}"
+  }
+
+  # Compared to a literal ref rather than the provider's `ref` attribute, so this pins the payload
+  # meshStack hands the run, not just agreement between provider and backend.
+  assert {
+    condition = jsondecode(jsondecode(meshstack_building_block.this.status.outputs["payment_method"].value)) == {
+      kind = "meshPaymentMethod"
+      name = meshstack_payment_method.noop_e2e.metadata.name
+    }
+    error_message = "expected output payment_method to reference meshPaymentMethod ${meshstack_payment_method.noop_e2e.metadata.name}, got ${jsondecode(meshstack_building_block.this.status.outputs["payment_method"].value)}"
   }
 
   # AUTHOR resolves to whoever ordered the block — the test's own API key here, a real user in
