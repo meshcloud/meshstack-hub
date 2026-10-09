@@ -75,19 +75,39 @@ For every meshStack project in the landing zone, the `otc/project` building bloc
 1. Creates the project `<region>_<project>` under the region's project.
 2. Creates one IAM group per meshStack role and gives it the T Cloud Public system roles that the
    **role mapping** names, on that project.
-3. Records which emails belong in which of its groups as `mappings/<region>_<project>.json` in the
-   mapping bucket.
+3. Fills the groups with the project's members: without an identity provider by adding their
+   existing IAM users, with one by recording which emails belong in which group as
+   `mappings/<region>_<project>.json` in the mapping bucket. See
+   [Identity: two modes](#identity-two-modes).
 
-### Identity: federation, not replication
+### Identity: two modes
 
-T Cloud Public gives a federated user their groups at sign-in, from the identity provider's mapping
-rules. So meshStack never writes users or group memberships. The mapping rules are the only place
-membership lives, and meshStack remains the source of truth for who is on a project.
+meshStack decides who is on which project in both modes. They differ in who the user is in T Cloud
+Public, and that decides what puts them into the project groups.
 
-An identity provider has a single mapping that every project contributes to, so no project writes
-it. Each project only writes its own record in the bucket, which no other project touches. The
-federation mapping building block runs a FunctionGraph function in the management project that
-rebuilds the whole mapping from all records:
+| | Without an identity provider | With an identity provider |
+|---|---|---|
+| Who signs in | a local IAM user, with a T Cloud Public password | a federated *virtual user*, with the company account |
+| Who creates the user | the platform team, in the IAM console | nobody; it exists for the session only |
+| What fills the project groups | the project building block, with Terraform | the identity provider's mapping, at sign-in |
+| Federation mapping function | not deployed | deployed in the management project |
+| A role change in meshStack applies | on the project building block's next run | at the user's next sign-in |
+
+#### Without an identity provider
+
+The project building block puts each member's existing IAM user into the group of their role. IAM
+usernames cannot contain an `@`, and the provider looks users up by name only, so a member's IAM user
+is the one named like the part of their email before the `@`: `jane.doe@example.com` is `jane.doe`.
+meshStack creates no users. A project run fails, naming the user, while one of its members has no
+IAM user yet.
+
+#### With an identity provider
+
+A virtual user does not exist in IAM, so there is nobody to put into a group. Their groups come only
+from the identity provider's mapping rules, evaluated at sign-in. A provider has a single mapping
+that every project contributes to, so no project writes it. Each project only writes its own record
+in the bucket, which no other project touches. The federation mapping building block runs a
+FunctionGraph function in the management project that rebuilds the whole mapping from all records:
 
 - whenever a record is written or deleted (an OBS trigger on `mappings/*.json`),
 - and every hour regardless, which repairs a dropped event.
@@ -95,10 +115,15 @@ rebuilds the whole mapping from all records:
 The function runs one instance at a time, so two rebuilds never interleave. A role change in
 meshStack applies from the user's next sign-in after the rebuild, usually seconds later.
 
-Without an identity provider (the input left empty), meshStack still puts each project's members
-into its groups, but as existing local IAM users: a member's IAM user is the one named like the part
-of their email before the `@`, since IAM usernames cannot contain one. meshStack creates no users;
-a project run fails, naming the user, while a member has no IAM user yet.
+#### Why virtual users, not IAM user SSO
+
+T Cloud Public can also link a federated sign-in to an existing IAM user (*IAM user SSO*). Users
+would then be real IAM users again, and the Terraform of the mode without an identity provider would
+fill the groups with no function at all. But every user would have to be created in IAM and linked
+to their identity in the identity provider first, and T Cloud Public offers no SCIM to automate
+that. Connecting an identity provider is meant to end user maintenance in T Cloud Public, so this
+landing zone uses virtual users and accepts the function as the price. IAM user SSO fits only an
+organisation that already provisions IAM users through a process of its own.
 
 ### Authentication
 
