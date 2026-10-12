@@ -49,13 +49,3 @@ variable "apps_base_domain" {
   description = "Base domain used for application URLs (e.g. 'likvid-k8s.msh.host'). The app subdomain will be prefixed to this value."
   default     = "likvid-k8s.msh.host"
 }
-
-variable "namespace_group_object_ids" {
-  type = object({
-    admin = optional(list(string), [])
-    edit  = optional(list(string), [])
-    view  = optional(list(string), [])
-  })
-  description = "Existing Entra group object IDs granted the admin, edit and view role in every created namespace, in addition to the groups each namespace creates for its workspace members."
-  default     = {}
-}

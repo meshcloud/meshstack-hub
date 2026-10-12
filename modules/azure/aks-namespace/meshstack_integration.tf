@@ -57,9 +57,26 @@ variable "workspace_role_mapping" {
     "Workspace Owner"   = "admin"
     "Workspace Manager" = "admin"
     "Workspace Member"  = "edit"
-    "Workspace Reader"  = "view"
   }
   description = "Maps a meshStack workspace role name to the namespace role (admin, edit or view) its members get in every namespace. A workspace role missing here gets no access."
+}
+
+variable "resource_quota" {
+  type = object({
+    requests_cpu    = optional(string, "2")
+    requests_memory = optional(string, "4Gi")
+    limits_cpu      = optional(string, "4")
+    limits_memory   = optional(string, "8Gi")
+    pods            = optional(string, "50")
+  })
+  default = {
+    requests_cpu    = "2"
+    requests_memory = "4Gi"
+    limits_cpu      = "4"
+    limits_memory   = "8Gi"
+    pods            = "50"
+  }
+  description = "ResourceQuota applied to every namespace the building block creates. Application teams cannot change it."
 }
 
 variable "backplane_name" {
@@ -157,7 +174,7 @@ resource "meshstack_building_block_definition" "this" {
 
   spec = {
     display_name             = coalesce(var.bbd_display_name, "Azure AKS Namespace")
-    description              = coalesce(var.bbd_description, "A Kubernetes namespace on the shared AKS cluster, with a resource quota and access for your Entra groups.")
+    description              = coalesce(var.bbd_description, "A Kubernetes namespace on the shared AKS cluster, with a resource quota and access for your workspace members.")
     support_url              = "mailto:support@meshcloud.io"
     documentation_url        = "https://hub.meshcloud.io/platforms/azure/definitions/azure-aks-namespace"
     notification_subscribers = var.notification_subscribers
@@ -181,11 +198,11 @@ resource "meshstack_building_block_definition" "this" {
       ## 💡 Usage examples
 
       **Example 1: A dev and a prod namespace**
-      Order the block twice, once as `myapp-dev` and once as `myapp-prod`, and give each a different quota.
+      Order the block twice, once as `myapp-dev` and once as `myapp-prod`.
 
       **Example 2: Read-only access for auditors**
-      Give your auditors the workspace Reader role and they land in the namespace's `view` group. For a group
-      that already exists, add its object ID to **Additional View Group Object IDs**.
+      Give your auditors the workspace Reader role and they land in the namespace's `view` group, which can
+      inspect workloads without changing them.
 
       ## 📊 Shared Responsibility
 
@@ -193,7 +210,8 @@ resource "meshstack_building_block_definition" "this" {
       |---|:---:|:---:|
       | Operate the AKS cluster and its identity | ✅ | ❌ |
       | Set up the backplane identity and permissions | ✅ | ❌ |
-      | Choose the namespace name and quota | ❌ | ✅ |
+      | Set the namespace quota | ✅ | ❌ |
+      | Choose the namespace name | ❌ | ✅ |
       | Decide who is a workspace member and with which role | ❌ | ✅ |
       | Deploy and operate workloads in the namespace | ❌ | ✅ |
     EOT
@@ -310,45 +328,19 @@ resource "meshstack_building_block_definition" "this" {
         # jsonencode twice is correct for structured inputs, see https://registry.terraform.io/providers/meshcloud/meshstack/latest/docs/resources/building_block_definition#argument-1
         argument = jsonencode(jsonencode(var.workspace_role_mapping))
       }
+      resource_quota = {
+        type            = "CODE"
+        display_name    = "Resource Quota"
+        description     = "ResourceQuota applied to the namespace: requests_cpu, requests_memory, limits_cpu, limits_memory and pods."
+        assignment_type = "STATIC"
+        # jsonencode twice is correct for structured inputs, see https://registry.terraform.io/providers/meshcloud/meshstack/latest/docs/resources/building_block_definition#argument-1
+        argument = jsonencode(jsonencode(var.resource_quota))
+      }
       users = {
         type            = "CODE"
         display_name    = "Users"
         description     = "Workspace members with their roles. Injected automatically by meshStack."
         assignment_type = "USER_PERMISSIONS"
-      }
-      admin_group_object_ids = {
-        type            = "CODE"
-        display_name    = "Additional Admin Group Object IDs"
-        description     = "Existing Entra group object IDs that also get the 'admin' role in the namespace, as a JSON list."
-        assignment_type = "USER_INPUT"
-        default_value   = jsonencode([])
-      }
-      edit_group_object_ids = {
-        type            = "CODE"
-        display_name    = "Additional Edit Group Object IDs"
-        description     = "Existing Entra group object IDs that also get the 'edit' role in the namespace, as a JSON list."
-        assignment_type = "USER_INPUT"
-        default_value   = jsonencode([])
-      }
-      view_group_object_ids = {
-        type            = "CODE"
-        display_name    = "Additional View Group Object IDs"
-        description     = "Existing Entra group object IDs that also get the 'view' role in the namespace, as a JSON list."
-        assignment_type = "USER_INPUT"
-        default_value   = jsonencode([])
-      }
-      resource_quota = {
-        type            = "CODE"
-        display_name    = "Resource Quota"
-        description     = "JSON object with requests_cpu, requests_memory, limits_cpu, limits_memory and pods."
-        assignment_type = "USER_INPUT"
-        default_value = jsonencode({
-          requests_cpu    = "2"
-          requests_memory = "4Gi"
-          limits_cpu      = "4"
-          limits_memory   = "8Gi"
-          pods            = "50"
-        })
       }
     }
 
@@ -392,6 +384,8 @@ resource "meshstack_building_block_definition" "this" {
     }
   }
 }
+
+provider "meshstack" {}
 
 terraform {
   required_version = ">= 1.12.0"

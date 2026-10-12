@@ -79,15 +79,6 @@ resource "meshstack_building_block" "namespace" {
       namespace_name = {
         value = jsonencode("${local.identifier}-${each.key}")
       }
-      admin_group_object_ids = {
-        value = jsonencode(var.namespace_group_object_ids.admin)
-      }
-      edit_group_object_ids = {
-        value = jsonencode(var.namespace_group_object_ids.edit)
-      }
-      view_group_object_ids = {
-        value = jsonencode(var.namespace_group_object_ids.view)
-      }
     }
   }
 

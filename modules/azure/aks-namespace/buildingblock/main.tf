@@ -50,23 +50,6 @@ locals {
   ])
 
   created_group_object_ids = { for role, g in azuread_group.namespace : role => g.object_id }
-
-  extra_group_object_ids = {
-    admin = var.admin_group_object_ids
-    edit  = var.edit_group_object_ids
-    view  = var.view_group_object_ids
-  }
-
-  # The created group's object ID is unknown until apply, so it cannot be part of a for_each key:
-  # that binding is keyed by its role alone.
-  group_bindings = merge(
-    { for role in local.namespace_roles : "${role}-created" => { cluster_role = role, object_id = local.created_group_object_ids[role] } },
-    merge([
-      for role, ids in local.extra_group_object_ids : {
-        for id in ids : "${role}-${id}" => { cluster_role = role, object_id = id }
-      }
-    ]...)
-  )
 }
 
 resource "azuread_group" "namespace" {
@@ -139,8 +122,9 @@ resource "kubernetes_limit_range_v1" "this" {
   }
 }
 
+# Each group's name is its namespace role, which is also the cluster role it is bound to.
 resource "kubernetes_role_binding_v1" "group" {
-  for_each = local.group_bindings
+  for_each = azuread_group.namespace
 
   metadata {
     name      = "meshstack-${each.key}"
@@ -150,7 +134,7 @@ resource "kubernetes_role_binding_v1" "group" {
   role_ref {
     api_group = "rbac.authorization.k8s.io"
     kind      = "ClusterRole"
-    name      = each.value.cluster_role
+    name      = each.key
   }
 
   subject {

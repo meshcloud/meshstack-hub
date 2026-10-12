@@ -20,20 +20,6 @@ variable "apps_base_domain" {
   description = "Base domain used for app URLs (example: `apps.prod.example.com`)."
 }
 
-variable "namespace_group_object_ids" {
-  type = object({
-    admin = optional(list(string), [])
-    edit  = optional(list(string), [])
-    view  = optional(list(string), [])
-  })
-  default = {
-    admin = []
-    edit  = []
-    view  = []
-  }
-  description = "Existing Entra group object IDs granted the admin, edit and view role in every namespace the starter kit creates, in addition to the groups each namespace creates for its workspace members."
-}
-
 variable "notification_subscribers" {
   type    = list(string)
   default = []
@@ -165,7 +151,7 @@ EOT
     }
     inputs = {
       "building_block_definition_version_refs" = {
-        # jsonencode twice is correct for structured inputs, see the namespace_group_object_ids input below.
+        # jsonencode twice is correct for structured inputs, see https://registry.terraform.io/providers/meshcloud/meshstack/latest/docs/resources/building_block_definition#argument-1
         argument               = jsonencode(jsonencode(var.building_block_definition_version_refs))
         assignment_type        = "STATIC"
         description            = "Definition versions the starter kit creates its child building blocks from."
@@ -216,16 +202,6 @@ EOT
         updateable_by_consumer         = false
         value_validation_regex         = local.name_regex
         validation_regex_error_message = "No underscore/dots/spaces are allowed. A maximum length of 25 characters is allowed."
-      }
-      "namespace_group_object_ids" = {
-        # jsonencode twice is correct for structured inputs, see https://registry.terraform.io/providers/meshcloud/meshstack/latest/docs/resources/building_block_definition#argument-1
-        argument               = jsonencode(jsonencode(var.namespace_group_object_ids))
-        assignment_type        = "STATIC"
-        description            = "Entra groups that get the admin, edit and view role in the created namespaces."
-        display_name           = "Namespace Group Object IDs"
-        is_environment         = false
-        type                   = "CODE"
-        updateable_by_consumer = false
       }
       "workspace_identifier" = {
         assignment_type        = "WORKSPACE_IDENTIFIER"

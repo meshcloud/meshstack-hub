@@ -59,8 +59,7 @@ Creates the namespace on the platform team's cluster, with:
 
 - a `ResourceQuota` and a `LimitRange` with default container requests and limits
 - an Entra group per namespace role (`admin`, `edit`, `view`), filled from the workspace's members
-  by their workspace role (owner and manager, member, reader), and bound to the matching cluster role.
-  Existing groups can be added alongside
+  by their workspace role (owner and manager, member, reader), and bound to the matching cluster role
 - the owning workspace recorded as a label
 
 The block runs as a user-assigned managed identity that meshStack's building block runner federates

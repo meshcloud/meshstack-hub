@@ -27,24 +27,6 @@ variable "namespace_name" {
   }
 }
 
-variable "admin_group_object_ids" {
-  type        = list(string)
-  default     = []
-  description = "Existing Entra group object IDs, in addition to the group this block creates, granted the `admin` cluster role inside the namespace."
-}
-
-variable "edit_group_object_ids" {
-  type        = list(string)
-  default     = []
-  description = "Existing Entra group object IDs, in addition to the group this block creates, granted the `edit` cluster role inside the namespace."
-}
-
-variable "view_group_object_ids" {
-  type        = list(string)
-  default     = []
-  description = "Existing Entra group object IDs, in addition to the group this block creates, granted the `view` cluster role inside the namespace."
-}
-
 variable "resource_quota" {
   type = object({
     requests_cpu    = optional(string, "2")
