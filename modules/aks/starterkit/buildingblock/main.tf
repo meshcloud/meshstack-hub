@@ -5,79 +5,19 @@ locals {
 
   repo_name = "${local.identifier}-${random_id.repo_suffix.hex}"
 
-  # GitHub Actions environment name per stage. Indexed by stage key (fails on an unknown stage).
+  # GitHub Actions environment name per stage. Its keys are the stages the starter kit creates a
+  # namespace for.
   github_environment_names = {
     dev  = "development"
     prod = "production"
   }
+
+  stages = toset(keys(local.github_environment_names))
 }
 
 # Generate a random suffix for the repository name to ensure uniqueness
 resource "random_id" "repo_suffix" {
   byte_length = 4 // 8 hex characters
-}
-
-resource "meshstack_project" "this" {
-  for_each = var.landing_zone_refs
-
-  metadata = {
-    name               = "${local.identifier}-${each.key}"
-    owned_by_workspace = var.workspace_identifier
-  }
-  spec = {
-    display_name = "${var.name} ${title(each.key)}"
-    tags = merge(
-      var.project_tags[each.key],
-      var.project_tags.owner_tag_key == null ? {} : {
-        (var.project_tags.owner_tag_key) : [var.creator.displayName]
-      }
-    )
-  }
-}
-
-resource "meshstack_project_user_binding" "creator_admin" {
-  for_each = var.creator.type == "User" && var.creator.username != null ? var.landing_zone_refs : {}
-
-  metadata = {
-    name = uuid()
-  }
-
-  role_ref = {
-    name = "Project Admin"
-  }
-
-  target_ref = {
-    owned_by_workspace = var.workspace_identifier
-    name               = meshstack_project.this[each.key].metadata.name
-  }
-
-  subject = {
-    name = var.creator.username
-  }
-}
-
-resource "meshstack_tenant" "this" {
-  for_each = var.landing_zone_refs
-
-  metadata = {
-    owned_by_workspace = var.workspace_identifier
-    owned_by_project   = meshstack_project.this[each.key].metadata.name
-  }
-
-  spec = {
-    platform_ref     = var.platform_ref
-    landing_zone_ref = var.landing_zone_refs[each.key]
-  }
-
-  # This orders the destroy, not the create. Deleted in parallel, the tenant and the binding are both
-  # the run's first write, so both run the same `INSERT ... ON DUPLICATE KEY UPDATE` on meshStack's
-  # Author table for the run's fresh ephemeral API key. The two deadlock, the loser's transaction is
-  # marked rollback-only, and its delete returns a 500 that fails the whole destroy run. Ordering them
-  # means the first delete creates the Author row and the second one finds it.
-  #
-  # A band-aid: meshStack does not retry on a deadlock. Remove it once meshStack does. This is not the
-  # BD-2288 create-ordering workaround that ddd5dba removed from here — that one is still fixed.
-  depends_on = [meshstack_project_user_binding.creator_admin]
 }
 
 resource "meshstack_building_block" "repo" {
@@ -123,23 +63,30 @@ resource "meshstack_building_block" "repo" {
   }
 }
 
-resource "meshstack_building_block" "github_actions" {
-  for_each = var.landing_zone_refs
+resource "meshstack_building_block" "namespace" {
+  for_each = local.stages
 
   spec = {
-    building_block_definition_version_ref = var.building_block_definition_version_refs["github-actions-connector"]
-    target_ref                            = meshstack_tenant.this[each.key].ref
-    display_name                          = "GHA Connector ${title(each.key)}"
-    parent_building_block_refs            = [meshstack_building_block.repo.ref]
+    building_block_definition_version_ref = var.building_block_definition_version_refs["aks-namespace"]
+
+    display_name = "${var.name} ${title(each.key)} namespace"
+    target_ref = {
+      kind = "meshWorkspace"
+      name = var.workspace_identifier
+    }
+
     inputs = {
-      github_environment_name = {
-        value = jsonencode(local.github_environment_names[each.key])
+      namespace_name = {
+        value = jsonencode("${local.identifier}-${each.key}")
       }
-      additional_environment_variables = {
-        value = jsonencode(jsonencode({
-          "DOMAIN_NAME"        = each.key == "prod" ? local.identifier : "${local.identifier}-${each.key}"
-          "AKS_NAMESPACE_NAME" = meshstack_tenant.this[each.key].spec.platform_tenant_id
-        }))
+      admin_group_object_ids = {
+        value = jsonencode(var.namespace_group_object_ids.admin)
+      }
+      edit_group_object_ids = {
+        value = jsonencode(var.namespace_group_object_ids.edit)
+      }
+      view_group_object_ids = {
+        value = jsonencode(var.namespace_group_object_ids.view)
       }
     }
   }
@@ -152,57 +99,34 @@ resource "meshstack_building_block" "github_actions" {
   }
 }
 
-# --- State address migrations (no resource recreation) ---
-# The building block moves are chained: hop 1 is the resource-type migration
-# (meshstack_building_block_v2 -> meshstack_building_block), hop 2 is the dev/prod -> for_each address
-# change. Terraform follows the chain, so a deployed meshstack_building_block_v2.github_actions_dev
-# migrates v2 -> GA -> for_each in sequence without recreation.
+resource "meshstack_building_block" "github_actions" {
+  for_each = local.stages
 
-# Hop 1 — resource-type migrations.
-moved {
-  from = meshstack_building_block_v2.repo
-  to   = meshstack_building_block.repo
-}
-moved {
-  from = meshstack_building_block_v2.github_actions_dev
-  to   = meshstack_building_block.github_actions_dev
-}
-moved {
-  from = meshstack_building_block_v2.github_actions_prod
-  to   = meshstack_building_block.github_actions_prod
-}
+  spec = {
+    building_block_definition_version_ref = var.building_block_definition_version_refs["github-actions-connector"]
+    target_ref = {
+      kind = "meshWorkspace"
+      name = var.workspace_identifier
+    }
+    display_name               = "GHA Connector ${title(each.key)}"
+    parent_building_block_refs = [meshstack_building_block.repo.ref, meshstack_building_block.namespace[each.key].ref]
+    inputs = {
+      github_environment_name = {
+        value = jsonencode(local.github_environment_names[each.key])
+      }
+      additional_environment_variables = {
+        value = jsonencode(jsonencode({
+          "DOMAIN_NAME"        = each.key == "prod" ? local.identifier : "${local.identifier}-${each.key}"
+          "AKS_NAMESPACE_NAME" = jsondecode(meshstack_building_block.namespace[each.key].status.outputs.namespace_name.value)
+        }))
+      }
+    }
+  }
 
-# Hop 2 — spelled-out dev/prod -> for_each keys (this refactor). Projects and bindings have no
-# hop-1 migration, so their move is the only hop.
-moved {
-  from = meshstack_tenant.dev
-  to   = meshstack_tenant.this["dev"]
-}
-moved {
-  from = meshstack_tenant.prod
-  to   = meshstack_tenant.this["prod"]
-}
-moved {
-  from = meshstack_project.dev
-  to   = meshstack_project.this["dev"]
-}
-moved {
-  from = meshstack_project.prod
-  to   = meshstack_project.this["prod"]
-}
-moved {
-  from = meshstack_project_user_binding.creator_dev_admin[0]
-  to   = meshstack_project_user_binding.creator_admin["dev"]
-}
-moved {
-  from = meshstack_project_user_binding.creator_prod_admin[0]
-  to   = meshstack_project_user_binding.creator_admin["prod"]
-}
-moved {
-  from = meshstack_building_block.github_actions_dev
-  to   = meshstack_building_block.github_actions["dev"]
-}
-moved {
-  from = meshstack_building_block.github_actions_prod
-  to   = meshstack_building_block.github_actions["prod"]
+  lifecycle {
+    postcondition {
+      condition     = self.status.status == "SUCCEEDED"
+      error_message = "Building block ${self.metadata.uuid} is ${self.status.status}, not SUCCEEDED. See its run in meshPanel."
+    }
+  }
 }

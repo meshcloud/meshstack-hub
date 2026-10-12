@@ -4,20 +4,7 @@ variable "workspace_identifier" {
 
 variable "name" {
   type        = string
-  description = "This name will be used for the created projects, app subdomain and GitHub repository."
-}
-
-variable "platform_ref" {
-  type = object({
-    uuid = string
-    kind = optional(string, "meshPlatform")
-  })
-  description = "Reference (by uuid) to the meshPlatform the tenants are created on. Wired in as a static building block input from the platform/backplane that owns the meshPlatform (its `.ref` output). Required because the meshTenant v4 API references platforms by ref."
-}
-
-variable "landing_zone_refs" {
-  type        = map(object({ name = string, kind = optional(string, "meshLandingZone") }))
-  description = "Landing zone references keyed by stage (usually dev and prod). Wired in as a static building block input from the platform/backplane that owns the meshLandingZones (their `.ref` outputs)."
+  description = "This name will be used for the created namespaces, app subdomain and GitHub repository."
 }
 
 variable "building_block_definition_version_refs" {
@@ -25,7 +12,7 @@ variable "building_block_definition_version_refs" {
   type = map(object({
     uuid = string
   }))
-  description = "Building block definition versions this starter kit creates its child building blocks from, keyed by definition name (`git-repository` and `github-actions-connector`)."
+  description = "Building block definition versions this starter kit creates its child building blocks from, keyed by definition name (`git-repository`, `aks-namespace` and `github-actions-connector`)."
 }
 
 variable "github_repo_input_repo_visibility" {
@@ -45,33 +32,12 @@ variable "github_org" {
   description = "GitHub organization name. Used only for display purposes."
 }
 
-variable "creator" {
-  type = object({
-    type        = string
-    identifier  = string
-    displayName = string
-    username    = optional(string)
-    email       = optional(string)
-    euid        = optional(string)
-  })
-  description = "Information about the creator of the resources who will be assigned Project Admin role"
-}
-
 variable "repo_admin" {
   type        = string
   description = "GitHub handle of the user who will be assigned as the repository admin. Delete building block definition input if not needed."
   default     = null
 }
 
-variable "project_tags" {
-  type = object({
-    dev  = map(list(string))
-    prod = map(list(string))
-
-    owner_tag_key = optional(string, null)
-  })
-  description = "Tags for the created Dev/Prod projects."
-}
 variable "github_template_repo_path" {
   type        = string
   description = "GitHub repository template to use when creating the application repository, in the format 'owner/repo'."
@@ -82,4 +48,14 @@ variable "apps_base_domain" {
   type        = string
   description = "Base domain used for application URLs (e.g. 'likvid-k8s.msh.host'). The app subdomain will be prefixed to this value."
   default     = "likvid-k8s.msh.host"
+}
+
+variable "namespace_group_object_ids" {
+  type = object({
+    admin = optional(list(string), [])
+    edit  = optional(list(string), [])
+    view  = optional(list(string), [])
+  })
+  description = "Entra group object IDs granted the admin, edit and view role in every created namespace."
+  default     = {}
 }
