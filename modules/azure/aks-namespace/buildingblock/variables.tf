@@ -30,19 +30,19 @@ variable "namespace_name" {
 variable "admin_group_object_ids" {
   type        = list(string)
   default     = []
-  description = "Entra group object IDs granted the `admin` cluster role inside the namespace."
+  description = "Existing Entra group object IDs, in addition to the group this block creates, granted the `admin` cluster role inside the namespace."
 }
 
 variable "edit_group_object_ids" {
   type        = list(string)
   default     = []
-  description = "Entra group object IDs granted the `edit` cluster role inside the namespace."
+  description = "Existing Entra group object IDs, in addition to the group this block creates, granted the `edit` cluster role inside the namespace."
 }
 
 variable "view_group_object_ids" {
   type        = list(string)
   default     = []
-  description = "Entra group object IDs granted the `view` cluster role inside the namespace."
+  description = "Existing Entra group object IDs, in addition to the group this block creates, granted the `view` cluster role inside the namespace."
 }
 
 variable "resource_quota" {
@@ -72,4 +72,46 @@ variable "oidc_token_file_path" {
   type        = string
   default     = "/var/run/secrets/workload-identity/azure/token"
   description = "File the building block runner writes its federated OIDC token to."
+}
+
+variable "group_name_prefix" {
+  type        = string
+  default     = ""
+  description = "Prepended to the display names of the Entra groups this block creates. Leave empty to omit."
+}
+
+variable "user_lookup_attribute" {
+  type        = string
+  default     = "email"
+  description = "Directory attribute used to match workspace members to Entra users. 'upn' matches the User Principal Name; 'email' matches the primary mail address."
+
+  validation {
+    condition     = contains(["upn", "email"], var.user_lookup_attribute)
+    error_message = "Must be 'upn' or 'email'."
+  }
+}
+
+variable "role_mapping" {
+  type        = map(string)
+  nullable    = false
+  description = "Maps a meshStack workspace role name to the namespace role (`admin`, `edit` or `view`) its members get. A workspace role missing here gets no access."
+
+  validation {
+    condition     = alltrue([for r in values(var.role_mapping) : contains(["admin", "edit", "view"], r)])
+    error_message = "Values must be 'admin', 'edit' or 'view'."
+  }
+}
+
+variable "users" {
+  type = list(object({
+    meshIdentifier = string
+    username       = string
+    firstName      = string
+    lastName       = string
+    email          = string
+    euid           = string
+    roles          = list(string)
+  }))
+  default     = []
+  description = "Workspace members with their meshStack roles, injected by meshStack. Each is added to the group of the namespace role their workspace role maps to."
 }

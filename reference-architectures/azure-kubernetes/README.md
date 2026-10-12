@@ -58,12 +58,14 @@ reads the namespace name from the namespace block's output.
 Creates the namespace on the platform team's cluster, with:
 
 - a `ResourceQuota` and a `LimitRange` with default container requests and limits
-- `admin`, `edit` and `view` role bindings for Entra groups
+- an Entra group per namespace role (`admin`, `edit`, `view`), filled from the workspace's members
+  by their workspace role (owner and manager, member, reader), and bound to the matching cluster role.
+  Existing groups can be added alongside
 - the owning workspace recorded as a label
 
 The block runs as a user-assigned managed identity that meshStack's building block runner federates
 into. It holds no kubeconfig. The identity has cluster admin on the one cluster through Azure RBAC
-for Kubernetes. If you set `acr_id` on its backplane, the cluster's kubelet identity also gets
+for Kubernetes, and Microsoft Graph `User.Read.All` and `Group.ReadWrite.All` to manage the groups. If you set `acr_id` on its backplane, the cluster's kubelet identity also gets
 `AcrPull` on your Azure Container Registry, so no namespace needs an image pull secret.
 
 ### 3. GitHub Repository: `github/repository`
@@ -106,7 +108,8 @@ builds, scans and deploys on every push.
 | Register and maintain building block definitions | ✅ | ❌ |
 | Set up the namespace backplane identity and permissions | ✅ | ❌ |
 | Configure GitHub App & template repositories | ✅ | ❌ |
-| Decide which Entra groups get namespace access | ✅ | ❌ |
+| Grant the namespace backplane its Microsoft Graph permissions (admin consent) | ✅ | ❌ |
+| Manage workspace members and their roles | ❌ | ✅ |
 | Order starterkit from the self-service catalog | ❌ | ✅ |
 | Develop and maintain application source code | ❌ | ✅ |
 | Manage Kubernetes resources inside namespaces | ❌ | ✅ |

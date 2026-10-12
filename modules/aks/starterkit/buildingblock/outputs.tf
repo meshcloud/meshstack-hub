@@ -67,8 +67,8 @@ View deployment status: [GitHub Actions](${jsondecode(meshstack_building_block.r
 - Check workflow status in the [Actions tab](<${jsondecode(meshstack_building_block.repo.status.outputs.repo_html_url.value)}/actions>)
 
 ### 3. Manage Access
-- Namespace access follows the Entra groups the platform team configured for this starter kit.
-  Ask them to add your team's group.
+- Namespace access follows your workspace roles: owners and managers get `admin`, members `edit`,
+  readers `view`. Change a member's workspace role in meshStack and re-run the namespace block.
 
 ---
 

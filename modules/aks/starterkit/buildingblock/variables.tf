@@ -56,6 +56,6 @@ variable "namespace_group_object_ids" {
     edit  = optional(list(string), [])
     view  = optional(list(string), [])
   })
-  description = "Entra group object IDs granted the admin, edit and view role in every created namespace."
+  description = "Existing Entra group object IDs granted the admin, edit and view role in every created namespace, in addition to the groups each namespace creates for its workspace members."
   default     = {}
 }

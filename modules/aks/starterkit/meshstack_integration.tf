@@ -31,7 +31,7 @@ variable "namespace_group_object_ids" {
     edit  = []
     view  = []
   }
-  description = "Entra group object IDs granted the admin, edit and view role in every namespace the starter kit creates."
+  description = "Existing Entra group object IDs granted the admin, edit and view role in every namespace the starter kit creates, in addition to the groups each namespace creates for its workspace members."
 }
 
 variable "notification_subscribers" {

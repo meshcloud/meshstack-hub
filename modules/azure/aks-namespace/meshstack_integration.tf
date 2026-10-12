@@ -34,6 +34,34 @@ variable "acr_id" {
   description = "Resource ID of the Azure Container Registry workloads pull from. When set, the cluster's kubelet identity gets AcrPull on it."
 }
 
+variable "azure_user_lookup_attribute" {
+  type        = string
+  default     = "email"
+  description = "Directory attribute used to match meshStack workspace members to Entra users. 'email' matches the user's SMTP address and is the right choice when members are B2B guests, whose user principal name is rewritten on invitation. 'upn' only works for members native to this tenant."
+
+  validation {
+    condition     = contains(["upn", "email"], var.azure_user_lookup_attribute)
+    error_message = "Must be 'upn' or 'email'."
+  }
+}
+
+variable "azure_group_name_prefix" {
+  type        = string
+  default     = ""
+  description = "Prepended to the display names of the Entra groups created per namespace. Leave empty to omit."
+}
+
+variable "workspace_role_mapping" {
+  type = map(string)
+  default = {
+    "Workspace Owner"   = "admin"
+    "Workspace Manager" = "admin"
+    "Workspace Member"  = "edit"
+    "Workspace Reader"  = "view"
+  }
+  description = "Maps a meshStack workspace role name to the namespace role (admin, edit or view) its members get in every namespace. A workspace role missing here gets no access."
+}
+
 variable "backplane_name" {
   type        = string
   default     = "azure-aks-namespace"
@@ -145,7 +173,10 @@ resource "meshstack_building_block_definition" "this" {
 
       Use this building block when you:
       - need a namespace to deploy a containerised application to
-      - want your team's Entra groups to manage it without cluster-wide rights
+      - want your workspace members to manage it without cluster-wide rights
+
+      Ordering it creates an Entra group per namespace role (`admin`, `edit`, `view`) and adds your
+      workspace members to them according to their workspace role.
 
       ## 💡 Usage examples
 
@@ -153,7 +184,8 @@ resource "meshstack_building_block_definition" "this" {
       Order the block twice, once as `myapp-dev` and once as `myapp-prod`, and give each a different quota.
 
       **Example 2: Read-only access for auditors**
-      Add your auditors' Entra group to **View Group Object IDs** so they can inspect workloads without changing them.
+      Give your auditors the workspace Reader role and they land in the namespace's `view` group. For a group
+      that already exists, add its object ID to **Additional View Group Object IDs**.
 
       ## 📊 Shared Responsibility
 
@@ -162,7 +194,7 @@ resource "meshstack_building_block_definition" "this" {
       | Operate the AKS cluster and its identity | ✅ | ❌ |
       | Set up the backplane identity and permissions | ✅ | ❌ |
       | Choose the namespace name and quota | ❌ | ✅ |
-      | Decide which Entra groups get access | ❌ | ✅ |
+      | Decide who is a workspace member and with which role | ❌ | ✅ |
       | Deploy and operate workloads in the namespace | ❌ | ✅ |
     EOT
     ))
@@ -256,24 +288,52 @@ resource "meshstack_building_block_definition" "this" {
         value_validation_regex         = "^[a-z0-9]([-a-z0-9]{0,61}[a-z0-9])?$"
         validation_regex_error_message = "Lowercase letters, digits and dashes only, at most 63 characters, starting and ending with a letter or digit."
       }
+      group_name_prefix = {
+        type            = "STRING"
+        display_name    = "Group Name Prefix"
+        description     = "Prepended to the display names of the Entra groups created for the namespace."
+        assignment_type = "STATIC"
+        argument        = jsonencode(var.azure_group_name_prefix)
+      }
+      user_lookup_attribute = {
+        type            = "STRING"
+        display_name    = "User Lookup Attribute"
+        description     = "Directory attribute used to look up users. 'email' matches the SMTP address; 'upn' matches the User Principal Name."
+        assignment_type = "STATIC"
+        argument        = jsonencode(var.azure_user_lookup_attribute)
+      }
+      role_mapping = {
+        type            = "CODE"
+        display_name    = "Role Mapping"
+        description     = "Maps meshStack workspace roles to the namespace roles admin, edit and view."
+        assignment_type = "STATIC"
+        # jsonencode twice is correct for structured inputs, see https://registry.terraform.io/providers/meshcloud/meshstack/latest/docs/resources/building_block_definition#argument-1
+        argument = jsonencode(jsonencode(var.workspace_role_mapping))
+      }
+      users = {
+        type            = "CODE"
+        display_name    = "Users"
+        description     = "Workspace members with their roles. Injected automatically by meshStack."
+        assignment_type = "USER_PERMISSIONS"
+      }
       admin_group_object_ids = {
         type            = "CODE"
-        display_name    = "Admin Group Object IDs"
-        description     = "Entra group object IDs that get the 'admin' role in the namespace, as a JSON list."
+        display_name    = "Additional Admin Group Object IDs"
+        description     = "Existing Entra group object IDs that also get the 'admin' role in the namespace, as a JSON list."
         assignment_type = "USER_INPUT"
         default_value   = jsonencode([])
       }
       edit_group_object_ids = {
         type            = "CODE"
-        display_name    = "Edit Group Object IDs"
-        description     = "Entra group object IDs that get the 'edit' role in the namespace, as a JSON list."
+        display_name    = "Additional Edit Group Object IDs"
+        description     = "Existing Entra group object IDs that also get the 'edit' role in the namespace, as a JSON list."
         assignment_type = "USER_INPUT"
         default_value   = jsonencode([])
       }
       view_group_object_ids = {
         type            = "CODE"
-        display_name    = "View Group Object IDs"
-        description     = "Entra group object IDs that get the 'view' role in the namespace, as a JSON list."
+        display_name    = "Additional View Group Object IDs"
+        description     = "Existing Entra group object IDs that also get the 'view' role in the namespace, as a JSON list."
         assignment_type = "USER_INPUT"
         default_value   = jsonencode([])
       }
@@ -309,6 +369,18 @@ resource "meshstack_building_block_definition" "this" {
         type            = "STRING"
         display_name    = "AKS Resource Group"
         description     = "Resource group of the AKS cluster hosting the namespace."
+        assignment_type = "NONE"
+      }
+      group_object_ids = {
+        type            = "STRING"
+        display_name    = "Group Object IDs"
+        description     = "JSON map of namespace role to the Entra group created for it."
+        assignment_type = "NONE"
+      }
+      unresolved_users = {
+        type            = "STRING"
+        display_name    = "Unresolved Users"
+        description     = "JSON list of workspace members not found in the directory, and so not added to any group."
         assignment_type = "NONE"
       }
       summary = {
