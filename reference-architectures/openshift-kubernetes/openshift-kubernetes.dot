@@ -1,0 +1,83 @@
+/*
+ * OpenShift Kubernetes reference architecture.
+ * Conventions: .agents/references/diagrams.md — render with: task diagrams
+ */
+digraph openshift_kubernetes {
+  rankdir=TB
+  splines=ortho
+  forcelabels=true
+  bgcolor="white"
+  nodesep=0.55
+  ranksep=0.85
+
+  node [shape=box style="rounded,filled" fontname="Helvetica" fontsize=11
+        fillcolor="#ffffff" color="#a2abb8" penwidth=1.1 margin="0.20,0.11"]
+  edge [fontname="Helvetica" fontsize=9 fontcolor="#697180" color="#8b95a3" arrowsize=0.7]
+
+  subgraph cluster_openshift {
+    label="  OpenShift"
+    labeljust=l
+    fontname="Helvetica" fontsize=12 fontcolor="#697180"
+    style="rounded" color="#d5dae0"
+    margin=18
+
+    OCP [label="☸️ OpenShift cluster\nrun by the platform team" fillcolor="#eef2f6" color="#93a7bb"]
+    REG [label="🗄️ Internal image registry\nexposed by its default route" fillcolor="#eef2f6" color="#93a7bb"]
+    RTR [label="🔐 Default router\n*.apps wildcard + TLS" fillcolor="#eef2f6" color="#93a7bb"]
+    SA  [label="🔑 Connector service account\nset up by the backplane" fillcolor="#eef2f6" color="#93a7bb"]
+    NS  [label="☸️ Project ×N\none per stage" fillcolor="#e5f2ea" color="#85bfa0"]
+
+    { rank=same; REG -> RTR -> SA [style=invis] }
+
+    OCP -> REG
+    OCP -> RTR
+    OCP -> SA
+    RTR -> NS  [xlabel="routes to" style=dashed]
+  }
+
+  subgraph cluster_github {
+    label="  GitHub"
+    labeljust=l
+    fontname="Helvetica" fontsize=12 fontcolor="#697180"
+    style="rounded" color="#d5dae0"
+    margin=18
+
+    TPL  [label="🔀 Template repository\nmaintained by the platform team" fillcolor="#ffffff" color="#a2abb8"]
+    REPO [label="🔀 App repository ×1\nper application team" fillcolor="#e5f2ea" color="#85bfa0"]
+    GHA  [label="⚙️ GitHub environment ×N\none per stage" fillcolor="#e5f2ea" color="#85bfa0"]
+
+    TPL  -> REPO [xlabel="created from"]
+    REPO -> GHA  [xlabel="runs workflow"]
+  }
+
+  subgraph cluster_mesh {
+    label="  meshStack"
+    labeljust=l
+    fontname="Helvetica" fontsize=12 fontcolor="#697180"
+    style="rounded" color="#d5dae0"
+    margin=18
+
+    PLAT  [label="🛰️ OpenShift Platform" fillcolor="#ecedfb" color="#9aa2e6"]
+    LZ    [label="🛬 Landing Zone ×N\none per stage" fillcolor="#ecedfb" color="#9aa2e6"]
+    PROJ  [label="🗂️ Project ×N\none per stage" fillcolor="#e5f2ea" color="#85bfa0"]
+    BBD_S [label="📦 openshift/starterkit BBD\nself-service catalog entry" fillcolor="#ecedfb" color="#9aa2e6"]
+    BBD_R [label="📦 github/repository BBD" fillcolor="#ecedfb" color="#9aa2e6"]
+    BBD_C [label="📦 openshift/github-connector BBD" fillcolor="#ecedfb" color="#9aa2e6"]
+
+    { rank=same; BBD_R -> BBD_C [style=invis] }
+
+    PLAT  -> LZ
+    LZ    -> PROJ  [xlabel="applies to"]
+    BBD_S -> BBD_R [xlabel="composes"]
+    BBD_S -> BBD_C
+    BBD_S -> PROJ  [xlabel="creates" style=dotted constraint=false]
+  }
+
+  PLAT  -> OCP  [xlabel="replicates into" style=dotted constraint=false]
+  PROJ  -> NS   [xlabel="tenant namespace" style=dotted constraint=false]
+  BBD_R -> REPO [xlabel="provisions" style=dotted constraint=false]
+  BBD_C -> SA   [xlabel="runs as" style=dotted constraint=false]
+  BBD_C -> GHA  [xlabel="provisions" style=dotted constraint=false]
+  GHA   -> REG  [xlabel="pushes images" style=dotted constraint=false]
+  GHA   -> NS   [xlabel="deploys to" style=dotted constraint=false]
+}
