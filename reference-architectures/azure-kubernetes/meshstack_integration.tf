@@ -96,10 +96,16 @@ variable "apps_base_domain" {
   description = "Base domain application URLs are built under (example: `apps.example.com`)."
 }
 
+variable "namespace_backplane_name" {
+  type        = string
+  default     = "azure-kubernetes-namespace"
+  description = "Name of the namespace backplane's resource group, managed identity and custom role. The role definition name is unique per Entra tenant, so set a different value when another deployment already uses this one. Must match ^[-a-z0-9]+$."
+}
+
 variable "connector_backplane_name" {
   type        = string
-  default     = "bb-github-connector"
-  description = "Prefix for the resources the GitHub Actions connector's backplane creates (resource group, app registration, container registry). The registry name is derived from it, so it must be globally unique."
+  default     = "azure-kubernetes-connector"
+  description = "Prefix for the resources the GitHub Actions connector's backplane creates (resource group, app registration, container registry). The registry name is this value without dashes, so it must be globally unique across Azure, 5 to 50 lowercase alphanumerics and dashes."
 }
 
 variable "notification_subscribers" {
@@ -154,6 +160,7 @@ module "aks_namespace" {
   aks_cluster_name            = var.aks_cluster_name
   aks_resource_group_name     = var.aks_resource_group_name
   acr_id                      = var.acr_id
+  backplane_name              = var.namespace_backplane_name
   workspace_role_mapping      = var.workspace_role_mapping
   resource_quota              = var.resource_quota
   notification_subscribers    = var.notification_subscribers

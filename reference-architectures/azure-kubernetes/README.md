@@ -129,7 +129,13 @@ The root module declares no providers, so the caller configures them:
 |---|---|
 | `meshstack` | The building block definitions. |
 | `azurerm`, `azuread` | The namespace backplane (managed identity, role assignments, Graph permissions) and the connector backplane (container registry, registry service principal). |
-| `kubernetes` | The connector backplane, which creates a cluster role the connector's service accounts bind to. Point it at the AKS cluster with admin credentials. |
+
+The connector backplane configures its own `kubernetes` provider from the cluster's admin
+credentials, so the cluster needs local accounts enabled.
+
+Backplane resource names are unique per subscription or tenant (resource groups, the custom role,
+the container registry). Set `namespace_backplane_name` and `connector_backplane_name` when another
+deployment already uses the defaults.
 
 The identity running the deployment needs to create managed identities and role assignments on the
 cluster, and to grant Microsoft Graph app roles (admin consent) for the namespace backplane.
