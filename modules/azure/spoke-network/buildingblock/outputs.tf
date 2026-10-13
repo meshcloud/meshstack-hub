@@ -34,8 +34,8 @@ output "summary" {
     | **Resource Group** | `${azurerm_resource_group.spoke_rg.name}` |
     | **Location** | `${azurerm_resource_group.spoke_rg.location}` |
     | **VNet ID** | `${azurerm_virtual_network.spoke_vnet.id}` |
-    | **Portal** | [Open in Azure Portal](${local.vnet_portal_url}) |%{if local.ipam_pool_portal_url != null}
-    | **IPAM Pool** | [Open in Azure Portal](${local.ipam_pool_portal_url}) |%{endif}
+    | **Portal** | [Open VNet in Azure Portal](${local.vnet_portal_url}) |%{if local.ipam_pool_portal_url != null}
+    | **IPAM Pool** | [Open IPAM Pool in Azure Portal](${local.ipam_pool_portal_url}) |%{endif}
 
     ## Hub Peering
 
