@@ -26,7 +26,8 @@ resource "azurerm_role_definition" "backplane" {
 
   permissions {
     actions = [
-      "Microsoft.Network/register/action",
+      # azurerm registers its whole default provider set on start, not just Microsoft.Network.
+      "*/register/action",
       "Microsoft.Resources/subscriptions/providers/read",
 
       "Microsoft.Resources/subscriptions/resourceGroups/read",
