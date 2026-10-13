@@ -44,7 +44,7 @@ resource "kubernetes_cluster_role_binding" "github_actions_clusterissuer_access"
   role_ref {
     api_group = "rbac.authorization.k8s.io"
     kind      = "ClusterRole"
-    name      = "clusterissuer-reader" # This role is created in the backplane module
+    name      = "aks-github-connector-clusterissuer-reader" # This role is created in the backplane module
   }
 
   subject {
