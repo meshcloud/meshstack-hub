@@ -89,15 +89,62 @@ builds, scans and deploys on every push.
 | Azure Container Registry | Optional. Pass its resource ID to the `azure/aks-namespace` backplane. |
 | GitHub organization | With a GitHub App installed for the Terraform GitHub provider. |
 
-### Deployment order
+### Deploy it as code
 
-1. Deploy `azure/aks-namespace` and note its `building_block_definition` output.
-2. Deploy `github/repository`.
-3. Deploy `aks/github-connector`, passing the namespace definition's UUID as
-   `aks.namespace_definition_uuid`.
-4. Deploy `aks/starterkit`, passing the three definition versions in
-   `building_block_definition_version_refs` under the keys `git-repository`, `aks-namespace` and
-   `github-actions-connector`.
+`meshstack_integration.tf` in this folder is a ready-to-use root module that registers all four
+building block definitions in the right order and wires them together: the namespace, the
+repository and the connector definitions first, then the starterkit that composes them. A
+foundation repository references it like any hub module:
+
+```hcl
+module "azure_kubernetes" {
+  source = "github.com/meshcloud/meshstack-hub//reference-architectures/azure-kubernetes?ref=<tag>"
+
+  meshstack = { owning_workspace_identifier = "platform-team" }
+  hub       = { git_ref = "<tag>", bbd_draft = false }
+
+  azure_tenant_id         = "..."
+  azure_subscription_id   = "..."
+  azure_scope             = "/subscriptions/..."
+  azure_location          = "westeurope"
+  aks_cluster_name        = "aks-prod"
+  aks_resource_group_name = "rg-aks-prod"
+
+  github = {
+    org                 = "acme-platform"
+    app_id              = "..."
+    app_installation_id = "..."
+    app_pem_file        = file("github-app.pem")
+  }
+  github_template_repo_path = "acme-platform/aks-starterkit-template"
+  apps_base_domain          = "apps.example.com"
+}
+```
+
+`hub.git_ref` must be a literal: the nested modules are sourced from it.
+
+The root module declares no providers, so the caller configures them:
+
+| Provider | Used for |
+|---|---|
+| `meshstack` | The building block definitions. |
+| `azurerm`, `azuread` | The namespace backplane (managed identity, role assignments, Graph permissions) and the connector backplane (container registry, registry service principal). |
+| `kubernetes` | The connector backplane, which creates a cluster role the connector's service accounts bind to. Point it at the AKS cluster with admin credentials. |
+
+The identity running the deployment needs to create managed identities and role assignments on the
+cluster, and to grant Microsoft Graph app roles (admin consent) for the namespace backplane.
+
+#### What it registers
+
+| Module | Definition | Wired to |
+|---|---|---|
+| `azure/aks-namespace` | Namespace with quota and Entra groups | Its backplane identity trusts the definition's runner identity. |
+| `github/repository` | GitHub repository from a template | |
+| `aks/github-connector` | GitHub Actions to namespace wiring | The repository and namespace definitions. |
+| `aks/starterkit` | The single catalog entry for application teams | All three definitions above, by version reference. |
+
+Set `hub.bbd_draft = false` once the definitions are ready to be used; the starterkit then orders
+released versions.
 
 ## Shared Responsibilities
 

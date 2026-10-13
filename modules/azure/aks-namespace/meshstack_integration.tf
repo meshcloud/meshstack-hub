@@ -385,8 +385,6 @@ resource "meshstack_building_block_definition" "this" {
   }
 }
 
-provider "meshstack" {}
-
 terraform {
   required_version = ">= 1.12.0"
 
