@@ -8,7 +8,6 @@ modules/aws/agentic-coding-sandbox/buildingblock     # attribute value of the wr
 modules/azure/aks/buildingblock                      # resources point at a provider configuration the module does not declare
 modules/azure/azure-virtual-machine-starterkit/buildingblock # resource type the provider does not have
 modules/azure/container-registry/buildingblock       # resources point at a provider configuration the module does not declare
-modules/azure/spoke-network                          # var.azure_tenant_id never declared
 modules/gcp                                          # terraform-gcp-meshplatform has no tag 0.3.0
 modules/ionos/dcd/backplane                          # required arguments missing, plus arguments the provider rejects
 
@@ -23,3 +22,5 @@ modules/gcp/budget-alert                             # sources //modules/gcp/bud
 modules/gcp/storage-bucket                           # sources //modules/gcp/storage-bucket/backplane?ref=main, which has no workload_identity_federation_trust input yet
 reference-architectures/stackit-landingzone/buildingblock # sources //modules/stackit/service-account?ref=main
 modules/azure/key-vault                              # sources //modules/azure/key-vault/backplane?ref=main, which has no location input yet
+modules/azure/ipam-pool                              # sources //modules/azure/ipam-pool/backplane?ref=main, which does not exist yet
+modules/azure/spoke-network                          # sources //modules/azure/spoke-network/backplane?ref=main, which has no ipam_pool_id input yet
