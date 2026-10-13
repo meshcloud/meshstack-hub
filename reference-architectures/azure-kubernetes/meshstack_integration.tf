@@ -50,9 +50,8 @@ variable "workspace_role_mapping" {
   type = map(string)
   default = {
     "Workspace Owner"   = "admin"
-    "Workspace Manager" = "admin"
-    "Workspace Member"  = "edit"
-    "Workspace Reader"  = "view"
+    "Workspace Manager" = "edit"
+    "Workspace Member"  = "view"
   }
   description = "Maps a meshStack workspace role name to the namespace role (admin, edit or view) its members get in every namespace."
 }
@@ -89,11 +88,13 @@ variable "github" {
 variable "github_template_repo_path" {
   type        = string
   description = "Template repository (owner/repo) every application repository is created from."
+  default     = "likvid-bank/aks-starterkit-template"
 }
 
 variable "apps_base_domain" {
   type        = string
   description = "Base domain application URLs are built under (example: `apps.example.com`)."
+  default     = "likvid-k8s.msh.host"
 }
 
 variable "namespace_backplane_name" {
@@ -241,5 +242,13 @@ terraform {
       source  = "meshcloud/meshstack"
       version = ">= 0.26.2"
     }
+    azurerm = {
+      source  = "hashicorp/azurerm"
+      version = ">= 4.64.0"
+    }
   }
+}
+
+provider "azurerm" {
+  features {}
 }
