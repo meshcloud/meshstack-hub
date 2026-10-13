@@ -41,7 +41,27 @@ resource "azurerm_virtual_network" "spoke_vnet" {
   name                = "${var.name}-vnet"
   location            = azurerm_resource_group.spoke_rg.location
   resource_group_name = azurerm_resource_group.spoke_rg.name
-  address_space       = [var.address_space]
+  address_space       = var.ipam_pool_id == null ? [var.address_space] : null
+
+  dynamic "ip_address_pool" {
+    for_each = var.ipam_pool_id == null ? [] : [var.ipam_pool_id]
+    content {
+      id                     = ip_address_pool.value
+      number_of_ip_addresses = tostring(pow(2, 32 - var.ipam_prefix_length))
+    }
+  }
+
+  lifecycle {
+    precondition {
+      condition     = (var.address_space == null) != (var.ipam_pool_id == null)
+      error_message = "Set exactly one of address_space or ipam_pool_id."
+    }
+  }
+}
+
+locals {
+  # With a pool the planned address_space is null, so read what the pool allocated instead.
+  address_space = var.ipam_pool_id == null ? var.address_space : join(", ", one(azurerm_virtual_network.spoke_vnet.ip_address_pool).allocated_ip_address_prefixes)
 }
 
 #

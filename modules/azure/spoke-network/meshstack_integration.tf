@@ -1,3 +1,8 @@
+variable "azure_tenant_id" {
+  type        = string
+  description = "Azure Entra tenant ID used for provider authentication."
+}
+
 variable "azure_hub_subscription_id" {
   type        = string
   description = "PROVIDER TARGET: hub subscription the azurerm provider reads the hub vnet from and creates the hub-side peering in. Bare GUID (e.g. '92eae5db-...'), NOT a '/subscriptions/...' path. Same sub as azure_hub_scope in a simple setup, but different format/purpose (that one is the RBAC scope)."
@@ -60,6 +65,12 @@ variable "backplane_name" {
   type        = string
   default     = "azure-spoke-network"
   description = "Name for the backplane resources (identity, resource group, role definitions). Must match pattern ^[-a-z0-9]+$."
+}
+
+variable "azure_ipam_pool_id" {
+  type        = string
+  default     = null
+  description = "Resource ID of an IPAM pool (see the azure/ipam-pool module) spokes draw their address space from. When set, application teams pick a size instead of typing a CIDR range."
 }
 
 variable "notification_subscribers" {
@@ -132,6 +143,7 @@ module "backplane" {
   hub_scope       = var.azure_hub_scope
   location        = var.azure_location
   subscription_id = var.azure_backplane_subscription_id
+  ipam_pool_id    = var.azure_ipam_pool_id
 
   workload_identity_federation = {
     issuer   = meshstack_building_block_definition.this.version_latest.workload_identity_federation.issuer
@@ -191,7 +203,7 @@ resource "meshstack_building_block_definition" "this" {
 
     implementation = {
       terraform = {
-        terraform_version              = "1.9.0"
+        terraform_version              = "1.12.5"
         repository_url                 = "https://github.com/meshcloud/meshstack-hub.git"
         repository_path                = "modules/azure/spoke-network/buildingblock"
         ref_name                       = var.hub.git_ref
@@ -225,103 +237,131 @@ resource "meshstack_building_block_definition" "this" {
       }
     }
 
-    inputs = {
-      ARM_CLIENT_ID = {
-        type            = "STRING"
-        display_name    = "ARM Client ID"
-        description     = "Client ID of the managed identity used to authenticate with Azure."
-        assignment_type = "STATIC"
-        is_environment  = true
-        argument        = jsonencode(module.backplane.identity.client_id)
-      }
-      ARM_TENANT_ID = {
-        type            = "STRING"
-        display_name    = "ARM Tenant ID"
-        description     = "Azure Entra tenant ID for authentication."
-        assignment_type = "STATIC"
-        is_environment  = true
-        argument        = jsonencode(var.azure_tenant_id)
-      }
-      ARM_USE_OIDC = {
-        type            = "STRING"
-        display_name    = "ARM Use OIDC"
-        description     = "Enables OIDC-based workload identity federation for the Azure provider."
-        assignment_type = "STATIC"
-        is_environment  = true
-        argument        = jsonencode("true")
-      }
-      ARM_OIDC_TOKEN_FILE_PATH = {
-        type            = "STRING"
-        display_name    = "ARM OIDC Token File Path"
-        description     = "Path to the OIDC token file used for workload identity federation authentication."
-        assignment_type = "STATIC"
-        is_environment  = true
-        argument        = jsonencode("/var/run/secrets/workload-identity/azure/token")
-      }
-      subscription_id = {
-        type            = "STRING"
-        display_name    = "Spoke Subscription ID"
-        description     = "The Azure subscription where the spoke resource group and vnet are created."
-        assignment_type = "PLATFORM_TENANT_ID"
-      }
-      hub_subscription_id = {
-        type            = "STRING"
-        display_name    = "Hub Subscription ID"
-        description     = "The Azure subscription that hosts the hub vnet."
-        assignment_type = "STATIC"
-        argument        = jsonencode(var.azure_hub_subscription_id)
-      }
-      hub_rg = {
-        type            = "STRING"
-        display_name    = "Hub Resource Group"
-        description     = "Name of the resource group that contains the hub vnet."
-        assignment_type = "STATIC"
-        argument        = jsonencode(var.azure_hub_resource_group_name)
-      }
-      hub_vnet = {
-        type            = "STRING"
-        display_name    = "Hub VNet"
-        description     = "Name of the hub vnet to peer into."
-        assignment_type = "STATIC"
-        argument        = jsonencode(var.azure_hub_vnet_name)
-      }
-      spoke_rg_name = {
-        type            = "STRING"
-        display_name    = "Spoke Resource Group"
-        description     = "Name of the resource group created in the spoke subscription to host the spoke vnet."
-        assignment_type = "STATIC"
-        argument        = jsonencode(var.azure_spoke_resource_group_name)
-      }
-      location = {
-        type            = "STRING"
-        display_name    = "Location"
-        description     = "The Azure region where the spoke resource group and vnet are created."
-        assignment_type = "STATIC"
-        argument        = jsonencode(var.azure_location)
-      }
-      name = {
-        type            = "STRING"
-        display_name    = "Spoke Network Name"
-        description     = "Name of the spoke network. Used as the basis for the vnet and peering resource names."
-        assignment_type = "PROJECT_IDENTIFIER"
-        #value_validation_regex         = "^[a-z0-9][-a-z0-9]{1,40}$"
-        #validation_regex_error_message = "Only lowercase letters, numbers and dashes are allowed (2–41 characters, must start with a letter or number)."
-      }
-      address_space = {
-        type                           = "STRING"
-        display_name                   = "Address Space"
-        description                    = "Address space of the spoke virtual network in CIDR notation, e.g. '10.123.0.0/24'."
-        assignment_type                = "USER_INPUT"
-        value_validation_regex         = "^([0-9]{1,3}\\.){3}[0-9]{1,3}/[0-9]{1,2}$"
-        validation_regex_error_message = "Address space must be a valid IPv4 CIDR range, e.g. '10.123.0.0/24'."
-      }
-    }
+    # The form asks for a CIDR range, or for a size when a pool hands out the range.
+    inputs = merge(
+      {
+        ARM_CLIENT_ID = {
+          type            = "STRING"
+          display_name    = "ARM Client ID"
+          description     = "Client ID of the managed identity used to authenticate with Azure."
+          assignment_type = "STATIC"
+          is_environment  = true
+          argument        = jsonencode(module.backplane.identity.client_id)
+        }
+        ARM_TENANT_ID = {
+          type            = "STRING"
+          display_name    = "ARM Tenant ID"
+          description     = "Azure Entra tenant ID for authentication."
+          assignment_type = "STATIC"
+          is_environment  = true
+          argument        = jsonencode(var.azure_tenant_id)
+        }
+        ARM_USE_OIDC = {
+          type            = "STRING"
+          display_name    = "ARM Use OIDC"
+          description     = "Enables OIDC-based workload identity federation for the Azure provider."
+          assignment_type = "STATIC"
+          is_environment  = true
+          argument        = jsonencode("true")
+        }
+        ARM_OIDC_TOKEN_FILE_PATH = {
+          type            = "STRING"
+          display_name    = "ARM OIDC Token File Path"
+          description     = "Path to the OIDC token file used for workload identity federation authentication."
+          assignment_type = "STATIC"
+          is_environment  = true
+          argument        = jsonencode("/var/run/secrets/workload-identity/azure/token")
+        }
+        subscription_id = {
+          type            = "STRING"
+          display_name    = "Spoke Subscription ID"
+          description     = "The Azure subscription where the spoke resource group and vnet are created."
+          assignment_type = "PLATFORM_TENANT_ID"
+        }
+        hub_subscription_id = {
+          type            = "STRING"
+          display_name    = "Hub Subscription ID"
+          description     = "The Azure subscription that hosts the hub vnet."
+          assignment_type = "STATIC"
+          argument        = jsonencode(var.azure_hub_subscription_id)
+        }
+        hub_rg = {
+          type            = "STRING"
+          display_name    = "Hub Resource Group"
+          description     = "Name of the resource group that contains the hub vnet."
+          assignment_type = "STATIC"
+          argument        = jsonencode(var.azure_hub_resource_group_name)
+        }
+        hub_vnet = {
+          type            = "STRING"
+          display_name    = "Hub VNet"
+          description     = "Name of the hub vnet to peer into."
+          assignment_type = "STATIC"
+          argument        = jsonencode(var.azure_hub_vnet_name)
+        }
+        spoke_rg_name = {
+          type            = "STRING"
+          display_name    = "Spoke Resource Group"
+          description     = "Name of the resource group created in the spoke subscription to host the spoke vnet."
+          assignment_type = "STATIC"
+          argument        = jsonencode(var.azure_spoke_resource_group_name)
+        }
+        location = {
+          type            = "STRING"
+          display_name    = "Location"
+          description     = "The Azure region where the spoke resource group and vnet are created."
+          assignment_type = "STATIC"
+          argument        = jsonencode(var.azure_location)
+        }
+        name = {
+          type            = "STRING"
+          display_name    = "Spoke Network Name"
+          description     = "Name of the spoke network. Used as the basis for the vnet and peering resource names."
+          assignment_type = "PROJECT_IDENTIFIER"
+          #value_validation_regex         = "^[a-z0-9][-a-z0-9]{1,40}$"
+          #validation_regex_error_message = "Only lowercase letters, numbers and dashes are allowed (2–41 characters, must start with a letter or number)."
+        }
+      },
+      { for k, v in {
+        address_space = {
+          type                           = "STRING"
+          display_name                   = "Address Space"
+          description                    = "Address space of the spoke virtual network in CIDR notation, e.g. '10.123.0.0/24'."
+          assignment_type                = "USER_INPUT"
+          value_validation_regex         = "^([0-9]{1,3}\\.){3}[0-9]{1,3}/[0-9]{1,2}$"
+          validation_regex_error_message = "Address space must be a valid IPv4 CIDR range, e.g. '10.123.0.0/24'."
+        }
+      } : k => v if var.azure_ipam_pool_id == null },
+      { for k, v in {
+        ipam_pool_id = {
+          type            = "STRING"
+          display_name    = "IPAM Pool ID"
+          description     = "The IPAM pool the spoke draws its address space from."
+          assignment_type = "STATIC"
+          argument        = jsonencode(var.azure_ipam_pool_id)
+        }
+        ipam_prefix_length = {
+          type              = "SINGLE_SELECT"
+          display_name      = "Network Size"
+          description       = "Size of the address space to allocate: 26 is a /26 (64 addresses), 24 a /24 (256 addresses), 22 a /22 (1024 addresses)."
+          assignment_type   = "USER_INPUT"
+          selectable_values = ["26", "25", "24", "23", "22"]
+          default_value     = jsonencode("24")
+        }
+      } : k => v if var.azure_ipam_pool_id != null },
+    )
 
     outputs = {
       vnet_id = {
         type            = "STRING"
         display_name    = "Spoke VNet ID"
         description     = "The Azure resource ID of the created spoke virtual network."
+        assignment_type = "NONE"
+      }
+      address_space = {
+        type            = "STRING"
+        display_name    = "Address Space"
+        description     = "The address space of the spoke virtual network, as given or as allocated from the IPAM pool."
         assignment_type = "NONE"
       }
       summary = {

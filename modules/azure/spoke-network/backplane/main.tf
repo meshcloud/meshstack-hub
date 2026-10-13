@@ -99,3 +99,13 @@ resource "azurerm_role_assignment" "backplane_hub" {
   role_definition_id = azurerm_role_definition.backplane_hub.role_definition_resource_id
   principal_id       = azurerm_user_assigned_identity.backplane.principal_id
 }
+
+resource "azurerm_role_assignment" "backplane_ipam_pool" {
+  lifecycle {
+    enabled = var.ipam_pool_id != null
+  }
+
+  scope                = var.ipam_pool_id
+  role_definition_name = "IPAM Pool User"
+  principal_id         = azurerm_user_assigned_identity.backplane.principal_id
+}
