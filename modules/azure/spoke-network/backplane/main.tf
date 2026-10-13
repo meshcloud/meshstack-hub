@@ -100,12 +100,11 @@ resource "azurerm_role_assignment" "backplane_hub" {
   principal_id       = azurerm_user_assigned_identity.backplane.principal_id
 }
 
+# Lets spokes draw their address space from an IPAM pool in the hub scope, where the platform team
+# keeps it. Granted unconditionally: scoped to one pool, it could only be created once the pool
+# exists and its ID is known while planning, which a pool created in the same apply is not.
 resource "azurerm_role_assignment" "backplane_ipam_pool" {
-  lifecycle {
-    enabled = var.ipam_pool_id != null
-  }
-
-  scope                = var.ipam_pool_id
+  scope                = var.hub_scope
   role_definition_name = "IPAM Pool User"
   principal_id         = azurerm_user_assigned_identity.backplane.principal_id
 }

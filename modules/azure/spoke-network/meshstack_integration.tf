@@ -143,7 +143,6 @@ module "backplane" {
   hub_scope       = var.azure_hub_scope
   location        = var.azure_location
   subscription_id = var.azure_backplane_subscription_id
-  ipam_pool_id    = var.azure_ipam_pool_id
 
   workload_identity_federation = {
     issuer   = meshstack_building_block_definition.this.version_latest.workload_identity_federation.issuer
