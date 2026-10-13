@@ -1,7 +1,11 @@
 output "vnet_id" {
   description = "The ID of the virtual network created by this module."
   value       = azurerm_virtual_network.spoke_vnet.id
+}
 
+output "address_space" {
+  description = "The address space of the virtual network, as given or as allocated from the IPAM pool."
+  value       = local.address_space
 }
 
 output "summary" {
@@ -16,7 +20,7 @@ output "summary" {
     | Property | Value |
     |----------|-------|
     | **VNet Name** | `${azurerm_virtual_network.spoke_vnet.name}` |
-    | **Address Space** | `${var.address_space}` |
+    | **Address Space** | `${local.address_space}` |
     | **Resource Group** | `${azurerm_resource_group.spoke_rg.name}` |
     | **Location** | `${azurerm_resource_group.spoke_rg.location}` |
     | **VNet ID** | `${azurerm_virtual_network.spoke_vnet.id}` |

@@ -31,7 +31,25 @@ variable "spoke_rg_name" {
 
 variable "address_space" {
   type        = string
-  description = "Address space of the virtual network in CIDR notation"
+  default     = null
+  description = "Address space of the virtual network in CIDR notation. Set either this or `ipam_pool_id`."
+}
+
+variable "ipam_pool_id" {
+  type        = string
+  default     = null
+  description = "Resource ID of an Azure Virtual Network Manager IPAM pool to draw the address space from. Set either this or `address_space`."
+}
+
+variable "ipam_prefix_length" {
+  type        = number
+  default     = 24
+  description = "Prefix length of the address space drawn from `ipam_pool_id`, e.g. 24 for a /24."
+
+  validation {
+    condition     = var.ipam_prefix_length >= 16 && var.ipam_prefix_length <= 29
+    error_message = "Prefix length must be between 16 and 29."
+  }
 }
 
 variable "subscription_id" {

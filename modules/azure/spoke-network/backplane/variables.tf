@@ -45,3 +45,9 @@ variable "workload_identity_federation" {
   nullable    = false
   description = "WIF issuer and subjects for federated authentication of the automation identity."
 }
+
+variable "ipam_pool_id" {
+  type        = string
+  default     = null
+  description = "Resource ID of an IPAM pool spokes draw their address space from. When set, the identity is granted the built-in IPAM Pool User role on it."
+}
