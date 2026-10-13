@@ -23,14 +23,14 @@ Sets up the automation identity the IPAM pool building block runs as.
 ## Consumers of the pool
 
 The identity of every building block that draws address space from the pool needs the built-in
-**IPAM Pool User** role on the pool. The spoke network backplane assigns it to its own identity when
-it is given the pool's ID (`modules/azure/spoke-network`).
+**IPAM Pool User** role on the pool. The spoke network backplane (`modules/azure/spoke-network`)
+grants it to its own identity at its hub scope, so keep the pool there.
 
 <!-- BEGIN_TF_DOCS -->
 ## Requirements
 
 | Name | Version |
-| ---- | ------- |
+|------|---------|
 | <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.12.0 |
 | <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) | >= 4.37.0, < 5.0.0 |
 
@@ -41,7 +41,7 @@ No modules.
 ## Resources
 
 | Name | Type |
-| ---- | ---- |
+|------|------|
 | [azurerm_federated_identity_credential.backplane](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/federated_identity_credential) | resource |
 | [azurerm_resource_group.backplane](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/resource_group) | resource |
 | [azurerm_role_assignment.backplane](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/role_assignment) | resource |
@@ -51,7 +51,7 @@ No modules.
 ## Inputs
 
 | Name | Description | Type | Default | Required |
-| ---- | ----------- | ---- | ------- | :------: |
+|------|-------------|------|---------|:--------:|
 | <a name="input_location"></a> [location](#input\_location) | Azure region for the UAMI resource group. | `string` | n/a | yes |
 | <a name="input_name"></a> [name](#input\_name) | Name for the building block identity, resource group and role definition. | `string` | n/a | yes |
 | <a name="input_scope"></a> [scope](#input\_scope) | Scope the IPAM pool building block deploys into and the network manager governs (management group or subscription ID). Typically the parent of the platform subscription and all landing zones. | `string` | n/a | yes |
@@ -61,7 +61,7 @@ No modules.
 ## Outputs
 
 | Name | Description |
-| ---- | ----------- |
+|------|-------------|
 | <a name="output_identity"></a> [identity](#output\_identity) | The managed identity used as the automation principal for this building block. |
 | <a name="output_role_definition_id"></a> [role\_definition\_id](#output\_role\_definition\_id) | The ID of the role definition that enables deployment of the IPAM pool. |
 | <a name="output_scope"></a> [scope](#output\_scope) | The scope where the role definition and role assignment are applied. |

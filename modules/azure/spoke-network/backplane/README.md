@@ -39,16 +39,16 @@ the meshStack replicator subject(s) passed in `var.workload_identity_federation`
 - The identity is granted `Microsoft.Authorization/roleAssignments/*` at the spoke scope because the
   building block hands ownership of the spoke resource group to the tenant. Consider confining the
   identity to the connectivity resource group with an Azure Policy if you need a tighter boundary.
-- `var.ipam_pool_id` (optional) lets spokes draw their address space from an IPAM pool, e.g. one
-  created by the `azure/ipam-pool` building block. The identity then gets the built-in
-  **IPAM Pool User** role on that pool. Keep `var.scope` inside the scope of the pool's network
-  manager, and create the pool before applying this backplane.
+- The identity also holds the built-in **IPAM Pool User** role at `var.hub_scope`, so spokes can
+  draw their address space from an IPAM pool there, e.g. one created by the `azure/ipam-pool`
+  building block. Keep the pool inside `var.hub_scope`, and `var.scope` inside the scope of the
+  pool's network manager.
 
 <!-- BEGIN_TF_DOCS -->
 ## Requirements
 
 | Name | Version |
-| ---- | ------- |
+|------|---------|
 | <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.12.0 |
 | <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) | >= 4.37.0, < 5.0.0 |
 
@@ -59,7 +59,7 @@ No modules.
 ## Resources
 
 | Name | Type |
-| ---- | ---- |
+|------|------|
 | [azurerm_federated_identity_credential.backplane](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/federated_identity_credential) | resource |
 | [azurerm_resource_group.backplane](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/resource_group) | resource |
 | [azurerm_role_assignment.backplane](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/role_assignment) | resource |
@@ -72,9 +72,8 @@ No modules.
 ## Inputs
 
 | Name | Description | Type | Default | Required |
-| ---- | ----------- | ---- | ------- | :------: |
+|------|-------------|------|---------|:--------:|
 | <a name="input_hub_scope"></a> [hub\_scope](#input\_hub\_scope) | Scope where the hub vnet lives (management group or subscription ID). The identity is granted vnet peering permissions here so it can peer the spoke into the hub. | `string` | n/a | yes |
-| <a name="input_ipam_pool_id"></a> [ipam\_pool\_id](#input\_ipam\_pool\_id) | Resource ID of an IPAM pool spokes draw their address space from. When set, the identity is granted the built-in IPAM Pool User role on it. | `string` | `null` | no |
 | <a name="input_location"></a> [location](#input\_location) | Azure region for the UAMI resource group. | `string` | n/a | yes |
 | <a name="input_name"></a> [name](#input\_name) | Name for the building block identity, resource group and role definitions. | `string` | n/a | yes |
 | <a name="input_scope"></a> [scope](#input\_scope) | Scope where the spoke network can be deployed (management group or subscription ID), typically the parent of all landing zones. | `string` | n/a | yes |
@@ -84,7 +83,7 @@ No modules.
 ## Outputs
 
 | Name | Description |
-| ---- | ----------- |
+|------|-------------|
 | <a name="output_hub_role_definition_id"></a> [hub\_role\_definition\_id](#output\_hub\_role\_definition\_id) | The ID of the role definition that enables peering the spoke into the hub vnet. |
 | <a name="output_hub_role_definition_name"></a> [hub\_role\_definition\_name](#output\_hub\_role\_definition\_name) | The name of the role definition that enables peering the spoke into the hub vnet. |
 | <a name="output_hub_scope"></a> [hub\_scope](#output\_hub\_scope) | The scope where the hub peering role definition and role assignment are applied. |

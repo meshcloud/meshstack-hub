@@ -14,7 +14,7 @@ instead of having it planned by hand.
 ## Requirements
 
 | Name | Version |
-| ---- | ------- |
+|------|---------|
 | <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.12.0 |
 | <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) | >= 4.37.0, < 5.0.0 |
 
@@ -25,7 +25,7 @@ No modules.
 ## Resources
 
 | Name | Type |
-| ---- | ---- |
+|------|------|
 | [azurerm_network_manager.ipam](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/network_manager) | resource |
 | [azurerm_network_manager_ipam_pool.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/network_manager_ipam_pool) | resource |
 | [azurerm_resource_group.ipam](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/resource_group) | resource |
@@ -33,7 +33,7 @@ No modules.
 ## Inputs
 
 | Name | Description | Type | Default | Required |
-| ---- | ----------- | ---- | ------- | :------: |
+|------|-------------|------|---------|:--------:|
 | <a name="input_address_prefix"></a> [address\_prefix](#input\_address\_prefix) | Address range of the pool in CIDR notation, e.g. '10.100.0.0/16'. Spoke networks are carved out of this range. | `string` | n/a | yes |
 | <a name="input_location"></a> [location](#input\_location) | Azure region where the resource group, network manager and IPAM pool are created. | `string` | n/a | yes |
 | <a name="input_name"></a> [name](#input\_name) | Name of the IPAM pool. Also the basis for the network manager name. | `string` | n/a | yes |
@@ -44,7 +44,7 @@ No modules.
 ## Outputs
 
 | Name | Description |
-| ---- | ----------- |
+|------|-------------|
 | <a name="output_address_prefix"></a> [address\_prefix](#output\_address\_prefix) | The address range the pool hands out. |
 | <a name="output_ipam_pool_id"></a> [ipam\_pool\_id](#output\_ipam\_pool\_id) | The resource ID of the IPAM pool. Spoke networks reference it to draw their address space. |
 | <a name="output_network_manager_id"></a> [network\_manager\_id](#output\_network\_manager\_id) | The resource ID of the network manager hosting the pool. |
