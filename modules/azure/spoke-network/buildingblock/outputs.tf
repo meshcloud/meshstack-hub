@@ -8,6 +8,11 @@ output "address_space" {
   value       = local.address_space
 }
 
+output "ipam_pool_portal_url" {
+  description = "Azure Portal URL of the IPAM pool the address space was drawn from, or null without a pool."
+  value       = local.ipam_pool_portal_url
+}
+
 output "summary" {
   description = "Markdown summary of the created spoke network and its hub peering."
   value       = <<-EOT
@@ -24,7 +29,8 @@ output "summary" {
     | **Resource Group** | `${azurerm_resource_group.spoke_rg.name}` |
     | **Location** | `${azurerm_resource_group.spoke_rg.location}` |
     | **VNet ID** | `${azurerm_virtual_network.spoke_vnet.id}` |
-    | **Portal** | [Open in Azure Portal](https://portal.azure.com/#@${data.azurerm_client_config.spoke.tenant_id}/resource${azurerm_virtual_network.spoke_vnet.id}/overview) |
+    | **Portal** | [Open in Azure Portal](https://portal.azure.com/#@${data.azurerm_client_config.spoke.tenant_id}/resource${azurerm_virtual_network.spoke_vnet.id}/overview) |%{if local.ipam_pool_portal_url != null}
+    | **IPAM Pool** | [Open in Azure Portal](${local.ipam_pool_portal_url}) |%{endif}
 
     ## Hub Peering
 

@@ -55,6 +55,7 @@ No modules.
 | Name | Description |
 |------|-------------|
 | <a name="output_address_space"></a> [address\_space](#output\_address\_space) | The address space of the virtual network, as given or as allocated from the IPAM pool. |
+| <a name="output_ipam_pool_portal_url"></a> [ipam\_pool\_portal\_url](#output\_ipam\_pool\_portal\_url) | Azure Portal URL of the IPAM pool the address space was drawn from, or null without a pool. |
 | <a name="output_summary"></a> [summary](#output\_summary) | Markdown summary of the created spoke network and its hub peering. |
 | <a name="output_vnet_id"></a> [vnet\_id](#output\_vnet\_id) | The ID of the virtual network created by this module. |
 <!-- END_TF_DOCS -->
