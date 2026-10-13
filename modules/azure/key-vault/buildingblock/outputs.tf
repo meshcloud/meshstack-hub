@@ -13,6 +13,11 @@ output "key_vault_uri" {
   value       = azurerm_key_vault.key_vault.vault_uri
 }
 
+output "key_vault_portal_url" {
+  description = "Azure Portal URL of the Azure Key Vault"
+  value       = "https://portal.azure.com/#@${data.azurerm_client_config.current.tenant_id}/resource${azurerm_key_vault.key_vault.id}"
+}
+
 output "key_vault_resource_group" {
   description = "Name of the resource group containing the Key Vault"
   value       = azurerm_resource_group.key_vault.name
