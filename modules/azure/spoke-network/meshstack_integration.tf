@@ -365,6 +365,12 @@ resource "meshstack_building_block_definition" "this" {
           description     = "The address space of the spoke virtual network, as given or as allocated from the IPAM pool."
           assignment_type = "NONE"
         }
+        vnet_portal_url = {
+          type            = "STRING"
+          display_name    = "Spoke VNet"
+          description     = "Opens the spoke virtual network in the Azure Portal."
+          assignment_type = "RESOURCE_URL"
+        }
         summary = {
           type            = "STRING"
           display_name    = "Summary"

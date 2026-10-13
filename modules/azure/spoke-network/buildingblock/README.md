@@ -58,4 +58,5 @@ No modules.
 | <a name="output_ipam_pool_portal_url"></a> [ipam\_pool\_portal\_url](#output\_ipam\_pool\_portal\_url) | Azure Portal URL of the IPAM pool the address space was drawn from, or null without a pool. |
 | <a name="output_summary"></a> [summary](#output\_summary) | Markdown summary of the created spoke network and its hub peering. |
 | <a name="output_vnet_id"></a> [vnet\_id](#output\_vnet\_id) | The ID of the virtual network created by this module. |
+| <a name="output_vnet_portal_url"></a> [vnet\_portal\_url](#output\_vnet\_portal\_url) | Azure Portal URL of the spoke virtual network. |
 <!-- END_TF_DOCS -->

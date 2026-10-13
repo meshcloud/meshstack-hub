@@ -20,6 +20,12 @@ run "azure_spoke_network" {
   }
 
   assert {
+    condition = (startswith(try(jsondecode(meshstack_building_block.this.status.outputs["vnet_portal_url"].value), ""), "https://portal.azure.com/#@")
+    && endswith(try(jsondecode(meshstack_building_block.this.status.outputs["vnet_portal_url"].value), ""), "/resource${try(jsondecode(meshstack_building_block.this.status.outputs["vnet_id"].value), "missing")}/overview"))
+    error_message = "Expected vnet_portal_url to deep-link the vnet in the Azure Portal, got ${try(meshstack_building_block.this.status.outputs["vnet_portal_url"].value, "no such output")}."
+  }
+
+  assert {
     condition     = can(regex(output.expected_address_space, try(jsondecode(meshstack_building_block.this.status.outputs["address_space"].value), "")))
     error_message = "Expected an address space matching ${output.expected_address_space}, got ${try(meshstack_building_block.this.status.outputs["address_space"].value, "no such output")}."
   }
