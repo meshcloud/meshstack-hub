@@ -8,7 +8,9 @@ description: |
 
 # Azure Key Vault
 
-This Terraform module provisions an Azure Key Vault with support for both public and private networking configurations, including private endpoints with DNS integration and hub VNet peering.
+This Terraform module provisions an Azure Key Vault in the tenant's subscription, with support for
+both public and private networking configurations, including private endpoints with DNS
+integration and hub VNet peering.
 
 ## Features
 
@@ -20,46 +22,23 @@ This Terraform module provisions an Azure Key Vault with support for both public
 - **Flexible Networking**: Support for new or existing VNets and subnets
 - **Tagging Support**: Custom tags for resource organization
 
-## Requirements
-- Terraform `>= 1.3.0`
-- AzureRM Provider `>= 4.18.0, < 5.0.0`
-
 ## Deployment Scenarios
 
-This module supports 4 deployment scenarios:
+| # | Scenario | `private_endpoint_enabled` | `vnet_name` | `hub_vnet_name` |
+|---|---|---|---|---|
+| 1 | New VNet + hub peering | `true` | `null` (created) | set (peering created) |
+| 2 | Existing shared VNet | `true` | set (existing) | `null` (no peering) |
+| 3 | Private, isolated | `true` | `null` or set | `null` |
+| 4 | Public | `false` | any | any |
 
-1. **New VNet + Hub Peering**: Creates new VNet with private endpoint and bidirectional peering to hub
-2. **Existing Shared VNet**: Deploys private endpoint into existing VNet (no peering)
-3. **Private Isolated**: Creates private Key Vault without hub connectivity
-4. **Completely Public**: Public Key Vault accessible from internet
-
-See [APP_TEAM_README.md](./APP_TEAM_README.md) for detailed usage examples and configuration.
+`meshstack_integration.tf` exposes scenarios 1, 3 and 4: the hub peering is offered when the
+platform team configures a hub.
 
 ## Providers
 
-```hcl
-terraform {
-  required_providers {
-    azurerm = {
-      source  = "hashicorp/azurerm"
-      version = ">= 4.18.0, < 5.0.0"
-    }
-    random = {
-      source  = "hashicorp/random"
-      version = ">= 3.6.3, < 4.0.0"
-    }
-  }
-}
-
-provider "azurerm" {
-  features {}
-}
-
-provider "azurerm" {
-  alias = "hub"
-  features {}
-}
-```
+Both `azurerm` providers authenticate as the backplane's managed identity through workload identity
+federation. The default one targets `subscription_id`, the tenant's landing zone; the `hub` alias
+targets `hub_subscription_id`.
 
 ## Network Architecture
 
@@ -88,7 +67,7 @@ provider "azurerm" {
 
 | Name | Version |
 |------|---------|
-| <a name="requirement_azuread"></a> [azuread](#requirement\_azuread) | >= 3.1.0, < 4.0.0 |
+| <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.12.0 |
 | <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) | >= 4.18.0, < 5.0.0 |
 | <a name="requirement_random"></a> [random](#requirement\_random) | >= 3.6.3, < 4.0.0 |
 
@@ -134,6 +113,7 @@ No modules.
 | <a name="input_public_network_access_enabled"></a> [public\_network\_access\_enabled](#input\_public\_network\_access\_enabled) | n/a | `bool` | `false` | no |
 | <a name="input_subnet_address_prefix"></a> [subnet\_address\_prefix](#input\_subnet\_address\_prefix) | Address prefix for the private endpoint subnet (only used if subnet\_name is not provided) | `string` | `"10.250.1.0/24"` | no |
 | <a name="input_subnet_name"></a> [subnet\_name](#input\_subnet\_name) | Name of the subnet for private endpoint. If not provided, a new subnet will be created. | `string` | `null` | no |
+| <a name="input_subscription_id"></a> [subscription\_id](#input\_subscription\_id) | The Azure subscription the Key Vault is created in, the tenant's landing zone. | `string` | n/a | yes |
 | <a name="input_tags"></a> [tags](#input\_tags) | Tags to apply to all resources | `map(string)` | `{}` | no |
 | <a name="input_use_remote_gateways"></a> [use\_remote\_gateways](#input\_use\_remote\_gateways) | Use remote gateways from hub VNet. Set to true only if hub has a VPN/ExpressRoute gateway configured. | `bool` | `false` | no |
 | <a name="input_vnet_address_space"></a> [vnet\_address\_space](#input\_vnet\_address\_space) | Address space for the VNet (only used if vnet\_name is not provided) | `string` | `"10.250.0.0/16"` | no |
@@ -145,6 +125,7 @@ No modules.
 |------|-------------|
 | <a name="output_key_vault_id"></a> [key\_vault\_id](#output\_key\_vault\_id) | The ID of the Azure Key Vault |
 | <a name="output_key_vault_name"></a> [key\_vault\_name](#output\_key\_vault\_name) | The name of the Azure Key Vault |
+| <a name="output_key_vault_portal_url"></a> [key\_vault\_portal\_url](#output\_key\_vault\_portal\_url) | Azure Portal URL of the Azure Key Vault |
 | <a name="output_key_vault_resource_group"></a> [key\_vault\_resource\_group](#output\_key\_vault\_resource\_group) | Name of the resource group containing the Key Vault |
 | <a name="output_key_vault_uri"></a> [key\_vault\_uri](#output\_key\_vault\_uri) | The URI of the Azure Key Vault |
 | <a name="output_private_dns_zone_id"></a> [private\_dns\_zone\_id](#output\_private\_dns\_zone\_id) | ID of the private DNS zone (when System-managed) |

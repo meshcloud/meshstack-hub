@@ -1,3 +1,9 @@
+variable "subscription_id" {
+  type        = string
+  nullable    = false
+  description = "The Azure subscription the Key Vault is created in, the tenant's landing zone."
+}
+
 variable "key_vault_name" {
   type        = string
   nullable    = false
