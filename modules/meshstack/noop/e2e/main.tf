@@ -4,13 +4,15 @@ variable "test_context" {
     workspace   = string
     project     = string
     run_id      = string
-    meshstack = object({
+    # Optional because meshstack-cli's acceptance test builds its own test_context and orders noop
+    # from ref=main on a fresh instance, which has no mandatory tags.
+    meshstack = optional(object({
       tag_schema = object({
         mandatory = object({
           payment_method = map(list(string))
         })
       })
-    })
+    }), { tag_schema = { mandatory = { payment_method = {} } } })
   })
   nullable = false
 }
