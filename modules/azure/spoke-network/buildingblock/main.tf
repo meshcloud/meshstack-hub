@@ -62,6 +62,8 @@ resource "azurerm_virtual_network" "spoke_vnet" {
 locals {
   # With a pool the planned address_space is null, so read what the pool allocated instead.
   address_space = var.ipam_pool_id == null ? var.address_space : join(", ", one(azurerm_virtual_network.spoke_vnet.ip_address_pool).allocated_ip_address_prefixes)
+
+  ipam_pool_portal_url = var.ipam_pool_id == null ? null : "https://portal.azure.com/#@${data.azurerm_client_config.spoke.tenant_id}/resource${var.ipam_pool_id}/resourceOverviewId"
 }
 
 #

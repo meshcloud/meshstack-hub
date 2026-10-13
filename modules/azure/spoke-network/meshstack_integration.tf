@@ -350,26 +350,37 @@ resource "meshstack_building_block_definition" "this" {
       } : k => v if var.azure_ipam_pool_id != null },
     )
 
-    outputs = {
-      vnet_id = {
-        type            = "STRING"
-        display_name    = "Spoke VNet ID"
-        description     = "The Azure resource ID of the created spoke virtual network."
-        assignment_type = "NONE"
-      }
-      address_space = {
-        type            = "STRING"
-        display_name    = "Address Space"
-        description     = "The address space of the spoke virtual network, as given or as allocated from the IPAM pool."
-        assignment_type = "NONE"
-      }
-      summary = {
-        type            = "STRING"
-        display_name    = "Summary"
-        description     = "Markdown summary of the created spoke network and its hub peering."
-        assignment_type = "SUMMARY"
-      }
-    }
+    # Without a pool the building block reports no pool URL, so the definition declares none.
+    outputs = merge(
+      {
+        vnet_id = {
+          type            = "STRING"
+          display_name    = "Spoke VNet ID"
+          description     = "The Azure resource ID of the created spoke virtual network."
+          assignment_type = "NONE"
+        }
+        address_space = {
+          type            = "STRING"
+          display_name    = "Address Space"
+          description     = "The address space of the spoke virtual network, as given or as allocated from the IPAM pool."
+          assignment_type = "NONE"
+        }
+        summary = {
+          type            = "STRING"
+          display_name    = "Summary"
+          description     = "Markdown summary of the created spoke network and its hub peering."
+          assignment_type = "SUMMARY"
+        }
+      },
+      { for k, v in {
+        ipam_pool_portal_url = {
+          type            = "STRING"
+          display_name    = "IPAM Pool"
+          description     = "Opens the IPAM pool the address space was drawn from in the Azure Portal."
+          assignment_type = "RESOURCE_URL"
+        }
+      } : k => v if var.azure_ipam_pool_id != null },
+    )
   }
 }
 
