@@ -23,4 +23,3 @@ modules/gcp/storage-bucket                           # sources //modules/gcp/sto
 reference-architectures/stackit-landingzone/buildingblock # sources //modules/stackit/service-account?ref=main
 modules/azure/key-vault                              # sources //modules/azure/key-vault/backplane?ref=main, which has no location input yet
 modules/azure/ipam-pool                              # sources //modules/azure/ipam-pool/backplane?ref=main, which does not exist yet
-modules/azure/spoke-network                          # sources //modules/azure/spoke-network/backplane?ref=main, which has no ipam_pool_id input yet
