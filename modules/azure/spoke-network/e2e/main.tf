@@ -34,6 +34,11 @@ locals {
   ipam = local.mode == "hub" ? var.ipam : try(var.test_context.ipam, false)
 }
 
+output "ipam" {
+  description = "Whether the ordered spoke draws its address space from a pool."
+  value       = local.ipam
+}
+
 output "expected_address_space" {
   description = "Regex the allocated address space has to match. The hub run's pool is 10.200.0.0/16; a foundation's pool is its own."
   value = (!local.ipam ? "^10\\.201\\.0\\.0/24$"

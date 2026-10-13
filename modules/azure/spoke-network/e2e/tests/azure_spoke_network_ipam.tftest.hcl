@@ -23,4 +23,9 @@ run "azure_spoke_network_ipam" {
     condition     = can(regex(output.expected_address_space, try(jsondecode(meshstack_building_block.this.status.outputs["address_space"].value), "")))
     error_message = "Expected an address space matching ${output.expected_address_space}, got ${try(meshstack_building_block.this.status.outputs["address_space"].value, "no such output")}."
   }
+
+  assert {
+    condition     = !output.ipam || can(regex("^https://portal\\.azure\\.com/#@[^/]+/resource/subscriptions/[^/]+/resourceGroups/[^/]+/providers/Microsoft\\.Network/networkManagers/[^/]+/ipamPools/[^/]+/resourceOverviewId$", try(jsondecode(meshstack_building_block.this.status.outputs["ipam_pool_portal_url"].value), "")))
+    error_message = "Expected ipam_pool_portal_url to deep-link the pool in the Azure Portal, got ${try(meshstack_building_block.this.status.outputs["ipam_pool_portal_url"].value, "no such output")}."
+  }
 }
