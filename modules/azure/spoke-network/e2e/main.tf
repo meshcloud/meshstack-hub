@@ -22,12 +22,23 @@ variable "test_context" {
 variable "ipam" {
   type        = bool
   default     = false
-  description = "Exercise the variant that draws the address space from an IPAM pool instead of a typed CIDR range."
+  description = "Exercise the variant that draws the address space from an IPAM pool instead of a typed CIDR range. Hub mode only: in foundation mode the published definition decides, see `local.ipam`."
 }
 
 locals {
   # `try` because `test_context` is untyped, so a hub run need not set `mode` at all.
   mode = try(var.test_context.mode, "hub")
+
+  # A foundation publishes one definition, with or without a pool, and every test file orders
+  # against it. `try` because a foundation without a pool need not set `ipam` at all.
+  ipam = local.mode == "hub" ? var.ipam : try(var.test_context.ipam, false)
+}
+
+output "expected_address_space" {
+  description = "Regex the allocated address space has to match. The hub run's pool is 10.200.0.0/16; a foundation's pool is its own."
+  value = (!local.ipam ? "^10\\.201\\.0\\.0/24$"
+    : local.mode == "hub" ? "^10\\.200\\.[0-9]{1,3}\\.0/24$"
+  : "^([0-9]{1,3}\\.){3}[0-9]{1,3}/24$")
 }
 
 module "definition" {
@@ -57,8 +68,8 @@ resource "meshstack_building_block" "this" {
 
     # The definition asks for a CIDR range, or for a size when a pool hands out the range.
     inputs = merge(
-      { for k, v in { address_space = { value = jsonencode("10.201.0.0/24") } } : k => v if !var.ipam },
-      { for k, v in { ipam_prefix_length = { value = jsonencode("24") } } : k => v if var.ipam },
+      { for k, v in { address_space = { value = jsonencode("10.201.0.0/24") } } : k => v if !local.ipam },
+      { for k, v in { ipam_prefix_length = { value = jsonencode("24") } } : k => v if local.ipam },
     )
   }
 }

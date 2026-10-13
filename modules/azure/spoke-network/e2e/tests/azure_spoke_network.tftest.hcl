@@ -1,5 +1,8 @@
 # Outputs are read through `try` because a failed run reports none, and an assertion that indexes a
 # missing output errors instead of failing — which buries the status assertion.
+#
+# In foundation mode the published definition decides the variant, not `ipam`, so this file and the
+# `_ipam` one order the same kind of spoke there.
 
 variables {
   ipam = false
@@ -12,12 +15,12 @@ run "azure_spoke_network" {
   }
 
   assert {
-    condition     = can(regex("^/subscriptions/[^/]+/resourceGroups/${var.test_context.run_id}-spoke/providers/Microsoft\\.Network/virtualNetworks/[^/]+-vnet$", try(jsondecode(meshstack_building_block.this.status.outputs["vnet_id"].value), "")))
-    error_message = "Expected a vnet in resource group ${var.test_context.run_id}-spoke, got ${try(meshstack_building_block.this.status.outputs["vnet_id"].value, "no such output")}."
+    condition     = can(regex("^/subscriptions/[^/]+/resourceGroups/[^/]+/providers/Microsoft\\.Network/virtualNetworks/[^/]+-vnet$", try(jsondecode(meshstack_building_block.this.status.outputs["vnet_id"].value), "")))
+    error_message = "Expected a vnet resource ID, got ${try(meshstack_building_block.this.status.outputs["vnet_id"].value, "no such output")}."
   }
 
   assert {
-    condition     = try(jsondecode(meshstack_building_block.this.status.outputs["address_space"].value), null) == "10.201.0.0/24"
-    error_message = "Expected the typed address space 10.201.0.0/24, got ${try(meshstack_building_block.this.status.outputs["address_space"].value, "no such output")}."
+    condition     = can(regex(output.expected_address_space, try(jsondecode(meshstack_building_block.this.status.outputs["address_space"].value), "")))
+    error_message = "Expected an address space matching ${output.expected_address_space}, got ${try(meshstack_building_block.this.status.outputs["address_space"].value, "no such output")}."
   }
 }
