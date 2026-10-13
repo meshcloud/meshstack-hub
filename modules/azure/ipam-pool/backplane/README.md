@@ -8,7 +8,8 @@ Sets up the automation identity the IPAM pool building block runs as.
   the meshStack building block runner.
 - A custom role `<name>-deploy` at `scope`, assigned to the UAMI. It allows creating the resource
   group, the network manager and its IPAM pools, and reading the management groups and subscriptions
-  the network manager is to govern.
+  the network manager is to govern. It also carries `Microsoft.Network/virtualNetworks/write`,
+  which Azure requires on the governed scope to create a network manager at all.
 
 ## Before you deploy
 

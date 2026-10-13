@@ -40,6 +40,11 @@ resource "azurerm_role_definition" "backplane" {
       "Microsoft.Network/networkManagers/ipamPools/write",
       "Microsoft.Network/networkManagers/ipamPools/delete",
 
+      # Azure checks this on every scope a new network manager governs (LinkedAuthorizationFailed
+      # otherwise), although the building block creates no virtual network itself.
+      "Microsoft.Network/virtualNetworks/read",
+      "Microsoft.Network/virtualNetworks/write",
+
       "Microsoft.Management/managementGroups/read",
       "Microsoft.Resources/subscriptions/read",
     ]
