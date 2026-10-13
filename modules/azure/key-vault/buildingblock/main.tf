@@ -2,6 +2,17 @@ data "azurerm_subscription" "current" {}
 
 data "azurerm_client_config" "current" {}
 
+locals {
+  # The subscription's display name reduced to lowercase letters, digits and single dashes, the
+  # characters both a vault and a resource group name allow.
+  subscription_slug = trim(replace(lower(data.azurerm_subscription.current.display_name), "/[^a-z0-9]+/", "-"), "-")
+
+  # A vault name is 3-24 characters and the random suffix takes 6, so the prefix gets 18:
+  # "kv-" and 15 of the slug. The "kv-" also keeps it starting with a letter.
+  key_vault_name                = coalesce(var.key_vault_name, trimsuffix("kv-${substr(local.subscription_slug, 0, 15)}", "-"))
+  key_vault_resource_group_name = coalesce(var.key_vault_resource_group_name, "rg-${substr(local.subscription_slug, 0, 80)}-kv")
+}
+
 resource "random_string" "resource_code" {
   length  = 5
   special = false
@@ -9,13 +20,13 @@ resource "random_string" "resource_code" {
 }
 
 resource "azurerm_resource_group" "key_vault" {
-  name     = var.key_vault_resource_group_name
+  name     = local.key_vault_resource_group_name
   location = var.location
 }
 
 resource "azurerm_virtual_network" "vnet" {
   count               = var.private_endpoint_enabled && var.vnet_name == null ? 1 : 0
-  name                = "${var.key_vault_name}-vnet"
+  name                = "${local.key_vault_name}-vnet"
   address_space       = [var.vnet_address_space]
   location            = var.location
   resource_group_name = azurerm_resource_group.key_vault.name
@@ -27,7 +38,7 @@ resource "azurerm_virtual_network" "vnet" {
 data "azurerm_virtual_network" "existing_vnet" {
   count               = var.private_endpoint_enabled && var.vnet_name != null ? 1 : 0
   name                = var.vnet_name
-  resource_group_name = var.existing_vnet_resource_group_name != null ? var.existing_vnet_resource_group_name : var.key_vault_resource_group_name
+  resource_group_name = var.existing_vnet_resource_group_name != null ? var.existing_vnet_resource_group_name : local.key_vault_resource_group_name
 }
 
 locals {
@@ -37,7 +48,7 @@ locals {
 
 resource "azurerm_subnet" "pe_subnet" {
   count                = var.private_endpoint_enabled && var.subnet_name == null ? 1 : 0
-  name                 = "${var.key_vault_name}-pe-subnet"
+  name                 = "${local.key_vault_name}-pe-subnet"
   resource_group_name  = azurerm_resource_group.key_vault.name
   virtual_network_name = local.vnet_name
   address_prefixes     = [var.subnet_address_prefix]
@@ -51,7 +62,7 @@ data "azurerm_subnet" "existing_subnet" {
   count                = var.private_endpoint_enabled && var.subnet_name != null ? 1 : 0
   name                 = var.subnet_name
   virtual_network_name = var.vnet_name
-  resource_group_name  = var.existing_vnet_resource_group_name != null ? var.existing_vnet_resource_group_name : var.key_vault_resource_group_name
+  resource_group_name  = var.existing_vnet_resource_group_name != null ? var.existing_vnet_resource_group_name : local.key_vault_resource_group_name
 }
 
 locals {
@@ -59,7 +70,7 @@ locals {
 }
 
 resource "azurerm_key_vault" "key_vault" {
-  name                          = "${var.key_vault_name}-${random_string.resource_code.result}"
+  name                          = "${local.key_vault_name}-${random_string.resource_code.result}"
   location                      = var.location
   resource_group_name           = azurerm_resource_group.key_vault.name
   tenant_id                     = data.azurerm_client_config.current.tenant_id
@@ -73,13 +84,13 @@ resource "azurerm_key_vault" "key_vault" {
 
 resource "azurerm_private_endpoint" "key_vault_pe" {
   count               = var.private_endpoint_enabled ? 1 : 0
-  name                = "${var.key_vault_name}-pe"
+  name                = "${local.key_vault_name}-pe"
   location            = var.location
   resource_group_name = azurerm_resource_group.key_vault.name
   subnet_id           = local.subnet_id
 
   private_service_connection {
-    name                           = "${var.key_vault_name}-psc"
+    name                           = "${local.key_vault_name}-psc"
     private_connection_resource_id = azurerm_key_vault.key_vault.id
     is_manual_connection           = false
     subresource_names              = ["vault"]
@@ -109,7 +120,7 @@ resource "azurerm_private_dns_zone" "key_vault_dns" {
 
 resource "azurerm_private_dns_zone_virtual_network_link" "key_vault_dns_link" {
   count                 = var.private_endpoint_enabled && var.private_dns_zone_id == "System" ? 1 : 0
-  name                  = "${var.key_vault_name}-dns-link"
+  name                  = "${local.key_vault_name}-dns-link"
   resource_group_name   = azurerm_resource_group.key_vault.name
   private_dns_zone_name = azurerm_private_dns_zone.key_vault_dns[0].name
   virtual_network_id    = local.vnet_id
@@ -136,7 +147,7 @@ data "azurerm_virtual_network" "hub_vnet" {
 
 resource "azurerm_virtual_network_peering" "key_vault_to_hub" {
   count                     = var.private_endpoint_enabled && var.vnet_name == null && var.hub_vnet_name != null ? 1 : 0
-  name                      = "${var.key_vault_name}-to-hub"
+  name                      = "${local.key_vault_name}-to-hub"
   resource_group_name       = azurerm_resource_group.key_vault.name
   virtual_network_name      = local.vnet_name
   remote_virtual_network_id = data.azurerm_virtual_network.hub_vnet[0].id
@@ -150,7 +161,7 @@ resource "azurerm_virtual_network_peering" "key_vault_to_hub" {
 resource "azurerm_virtual_network_peering" "hub_to_key_vault" {
   count                     = var.private_endpoint_enabled && var.vnet_name == null && var.hub_vnet_name != null ? 1 : 0
   provider                  = azurerm.hub
-  name                      = "hub-to-${var.key_vault_name}"
+  name                      = "hub-to-${local.key_vault_name}"
   resource_group_name       = data.azurerm_resource_group.hub_rg[0].name
   virtual_network_name      = data.azurerm_virtual_network.hub_vnet[0].name
   remote_virtual_network_id = local.vnet_id

@@ -46,6 +46,12 @@ variable "azure_hub_vnet_name" {
   description = "Name of the hub vnet that private Key Vaults peer into."
 }
 
+variable "key_vault_names_from_subscription" {
+  type        = bool
+  default     = false
+  description = "Name the Key Vault `kv-<subscription name>-<suffix>` and its resource group `rg-<subscription name>-kv` instead of asking for both. Allows one Key Vault per subscription, as a second one finds its resource group taken."
+}
+
 variable "backplane_name" {
   type        = string
   default     = "azure-key-vault"
@@ -131,6 +137,16 @@ locals {
 
   # The building block appends "-" and 5 random characters; Key Vault names allow 24 at most.
   key_vault_name_regex = "^[a-zA-Z][a-zA-Z0-9-]{1,16}[a-zA-Z0-9]$"
+
+  # Interpolated into the indented readme heredoc rather than written there with %{if}, whose
+  # directive lines keep their indentation and turn the markdown after them into a code block.
+  naming_readme = var.key_vault_names_from_subscription ? join("\n", [
+    "## 🏷️ Naming",
+    "",
+    "The vault is named after your subscription, `kv-<subscription name>-<random suffix>`, in the resource group `rg-<subscription name>-kv`. Each subscription can hold one vault from this building block.",
+    "",
+    "",
+  ]) : ""
 }
 
 module "backplane" {
@@ -183,7 +199,7 @@ resource "meshstack_building_block_definition" "this" {
       **Example 2: A private vault for production**
       A team enables the private endpoint, so the vault resolves to a private IP and is reachable only from the connected network.
 
-      ## 🔐 Access
+      ${local.naming_readme}## 🔐 Access
 
       The vault uses RBAC authorization, and nobody has data access when it is created. Grant yourself or your application a role such as `Key Vault Secrets Officer` or `Key Vault Secrets User` on the vault before reading or writing secrets.
 
@@ -268,24 +284,6 @@ resource "meshstack_building_block_definition" "this" {
         assignment_type = "STATIC"
         argument        = jsonencode(var.azure_location)
       }
-      key_vault_name = {
-        type                           = "STRING"
-        display_name                   = "Key Vault Name"
-        description                    = "Name prefix of the Key Vault. A random 5-character suffix is appended for global uniqueness (e.g. 'payments' becomes 'payments-x7k2q')."
-        assignment_type                = "USER_INPUT"
-        value_validation_regex         = local.key_vault_name_regex
-        validation_regex_error_message = "3 to 18 characters: letters, digits and dashes, starting with a letter and ending with a letter or digit."
-        display_order                  = 1
-      }
-      key_vault_resource_group_name = {
-        type                           = "STRING"
-        display_name                   = "Resource Group Name"
-        description                    = "Resource group the building block creates for the Key Vault. It is deleted with the building block."
-        assignment_type                = "USER_INPUT"
-        value_validation_regex         = "^[-\\w\\._\\(\\)]{1,90}$"
-        validation_regex_error_message = "1 to 90 characters: letters, digits, underscores, dashes, periods and parentheses."
-        display_order                  = 2
-      }
       public_network_access_enabled = {
         type            = "BOOLEAN"
         display_name    = "Public Network Access"
@@ -320,6 +318,27 @@ resource "meshstack_building_block_definition" "this" {
         default_value   = jsonencode("10.250.1.0/24")
         display_order   = 6
       }
+      },
+      # Left out, the building block derives both names from the subscription.
+      var.key_vault_names_from_subscription ? {} : {
+        key_vault_name = {
+          type                           = "STRING"
+          display_name                   = "Key Vault Name"
+          description                    = "Name prefix of the Key Vault. A random 5-character suffix is appended for global uniqueness (e.g. 'payments' becomes 'payments-x7k2q')."
+          assignment_type                = "USER_INPUT"
+          value_validation_regex         = local.key_vault_name_regex
+          validation_regex_error_message = "3 to 18 characters: letters, digits and dashes, starting with a letter and ending with a letter or digit."
+          display_order                  = 1
+        }
+        key_vault_resource_group_name = {
+          type                           = "STRING"
+          display_name                   = "Resource Group Name"
+          description                    = "Resource group the building block creates for the Key Vault. It is deleted with the building block."
+          assignment_type                = "USER_INPUT"
+          value_validation_regex         = "^[-\\w\\._\\(\\)]{1,90}$"
+          validation_regex_error_message = "1 to 90 characters: letters, digits, underscores, dashes, periods and parentheses."
+          display_order                  = 2
+        }
       },
       local.hub_peering_enabled ? {
         hub_subscription_id = {

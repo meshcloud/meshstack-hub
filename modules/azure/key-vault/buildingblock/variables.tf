@@ -6,14 +6,14 @@ variable "subscription_id" {
 
 variable "key_vault_name" {
   type        = string
-  nullable    = false
-  description = "The name of the key vault."
+  default     = null
+  description = "Name prefix of the key vault, before its random suffix. Null derives `kv-<subscription name>` from the subscription's display name."
 }
 
 variable "key_vault_resource_group_name" {
   type        = string
-  nullable    = false
-  description = "The name of the resource group containing the key vault."
+  default     = null
+  description = "The name of the resource group containing the key vault. Null derives `rg-<subscription name>-kv` from the subscription's display name."
 }
 
 variable "location" {
