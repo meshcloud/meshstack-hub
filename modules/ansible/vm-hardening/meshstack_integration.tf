@@ -239,8 +239,10 @@ resource "meshstack_building_block_definition" "this" {
 
   version_spec = {
     draft = var.hub.bbd_draft
-    # Nothing to tear down: hardening stays on the VM, and the VM belongs to its own building block.
-    deletion_mode   = "DELETE"
+    # PURGE: removing the block runs no workflow. There is nothing to tear down, since hardening
+    # stays on the VM and the VM belongs to its own building block, and meshStack refuses DELETE
+    # without a destroy workflow.
+    deletion_mode   = "PURGE"
     dependency_refs = [{ uuid = var.vm_bbd_uuid }]
 
     implementation = {
