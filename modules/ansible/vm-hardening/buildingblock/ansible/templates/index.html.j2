@@ -5,27 +5,31 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Hardened by Ansible</title>
   <style>
-    :root { --bg: #f6f7f9; --card: #ffffff; --text: #1d2330; --muted: #5d6676; --ok: #1f8a4c; --line: #e2e6ec; }
+    :root { --bg: #f6f7f9; --card: #ffffff; --text: #1d2330; --muted: #5d6676; --line: #e2e6ec; }
     @media (prefers-color-scheme: dark) {
-      :root { --bg: #11151c; --card: #1a2029; --text: #e7ebf1; --muted: #9aa4b2; --ok: #4cc488; --line: #2a323e; }
+      :root { --bg: #11151c; --card: #1a2029; --text: #e7ebf1; --muted: #9aa4b2; --line: #2a323e; }
     }
     body { margin: 0; background: var(--bg); color: var(--text); font: 16px/1.5 system-ui, sans-serif; }
-    main { max-width: 720px; margin: 48px auto; padding: 0 16px; }
-    .card { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 24px 28px; }
+    main { max-width: 820px; margin: 48px auto; padding: 0 16px; }
+    .card { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 24px 28px; margin-bottom: 20px; }
     h1 { margin: 0 0 4px; font-size: 26px; }
-    p.lead { margin: 0 0 20px; color: var(--muted); }
+    h2 { margin: 0 0 12px; font-size: 19px; }
+    h3 { margin: 18px 0 6px; font-size: 16px; }
+    p { margin: 0 0 12px; }
+    p.lead { color: var(--muted); }
+    ul { margin: 0; padding-left: 22px; }
+    li { margin: 2px 0; }
     table { width: 100%; border-collapse: collapse; }
     td { padding: 8px 0; border-top: 1px solid var(--line); vertical-align: top; }
     td:first-child { color: var(--muted); width: 40%; }
-    .ok { color: var(--ok); font-weight: 600; }
     a { color: inherit; }
   </style>
 </head>
 <body>
   <main>
     <div class="card">
-      <h1>🛡️ Hardened by Ansible</h1>
-      <p class="lead">This page reaches you through an SSH tunnel. nginx listens on 127.0.0.1 only.</p>
+      <h1>🛡️ This VM is hardened</h1>
+      <p class="lead">Ansible brought this VM to a security baseline: the operating system and SSH are locked down to what a server needs, and nothing else answers from the internet. You are reading this page through an SSH tunnel because nginx listens on 127.0.0.1 only.</p>
       <table>
         <tr><td>Host</td><td>{{ ansible_facts['hostname'] }}</td></tr>
         <tr><td>Operating system</td><td>{{ ansible_facts['distribution'] }} {{ ansible_facts['distribution_version'] }}, kernel {{ ansible_facts['kernel'] }}</td></tr>
@@ -35,13 +39,56 @@
 {% if project %}
         <tr><td>meshStack project</td><td>{{ project }}</td></tr>
 {% endif %}
-        <tr><td>OS baseline</td><td class="ok">✔ devsec.hardening.os_hardening</td></tr>
-        <tr><td>SSH baseline</td><td class="ok">✔ devsec.hardening.ssh_hardening</td></tr>
-        <tr><td>Password and root login</td><td class="ok">✔ disabled</td></tr>
+        <tr><td>Baseline</td><td><a href="https://github.com/dev-sec/ansible-collection-hardening">devsec.hardening</a> os_hardening and ssh_hardening</td></tr>
 {% if run_url %}
         <tr><td>Ansible run</td><td><a href="{{ run_url }}">GitHub Actions log</a></td></tr>
 {% endif %}
       </table>
+    </div>
+
+    <div class="card">
+      <h2>What "hardened" means here</h2>
+
+      <h3>🔑 SSH</h3>
+      <ul>
+        <li>Login with a key only: password and root login are off.</li>
+        <li>Two authentication attempts per connection; idle sessions close after 15 minutes.</li>
+        <li>Only modern ciphers, MACs and key exchanges.</li>
+        <li>Local port forwarding (<code>ssh -L</code>) only; no agent, X11 or remote forwarding.</li>
+      </ul>
+
+      <h3>👤 Accounts and login</h3>
+      <ul>
+        <li>Strong password rules, and a password expires after 60 days.</li>
+        <li>An account locks for 10 minutes after 5 failed logins.</li>
+        <li><code>su</code> is limited to root.</li>
+      </ul>
+
+      <h3>🧠 Kernel and network</h3>
+      <ul>
+        <li>Full address space layout randomization; kernel pointers are hidden and <code>ptrace</code> is restricted.</li>
+        <li>No IP forwarding; ICMP redirects and source-routed packets are ignored.</li>
+        <li>SYN flood protection, and packets with impossible source addresses are logged.</li>
+      </ul>
+
+      <h3>📁 Files and processes</h3>
+      <ul>
+        <li>No core dumps, so a crash cannot leak memory to disk.</li>
+        <li>Password files belong to root with tight permissions; group-writable system files are fixed.</li>
+        <li>SUID/SGID bits are removed from binaries that do not need them.</li>
+      </ul>
+
+      <h3>✂️ Attack surface</h3>
+      <ul>
+        <li>Unused filesystems and rare network protocols cannot be loaded.</li>
+        <li>Legacy remote-access services such as telnet, rsh and inetd are removed.</li>
+        <li>nginx answers on 127.0.0.1 only and does not reveal its version.</li>
+      </ul>
+
+      <h3>📝 Audit</h3>
+      <ul>
+        <li><code>auditd</code> records security-relevant events.</li>
+      </ul>
     </div>
   </main>
 </body>
