@@ -320,8 +320,9 @@ resource "meshstack_building_block_definition" "this" {
         description     = "Optional #cloud-config or shell script applied on first boot. Empty boots the image unmodified."
         type            = "CODE"
         assignment_type = "USER_INPUT"
-        # A plain string input: the CODE content is the raw cloud-init text, so single jsonencode.
-        default_value          = jsonencode("")
+        # meshPanel treats an empty default as a missing value and refuses the order until something
+        # is typed in. Left unset, the variable's own "" default boots the image unmodified.
+        is_optional            = true
         updateable_by_consumer = true
       }
     }
