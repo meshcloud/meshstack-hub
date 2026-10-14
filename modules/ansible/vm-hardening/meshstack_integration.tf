@@ -212,8 +212,9 @@ resource "meshstack_building_block_definition" "this" {
 
     ## 🔑 Reaching the landing page
 
-    Save the SSH private key output of your VM building block as `id_vm`, `chmod 600 id_vm`, and
-    run the **SSH Tunnel Command** output. Then open http://localhost:8080.
+    Save the SSH private key output of your VM building block as `id_vm`. The summary then has one
+    snippet to paste into a terminal in that folder: it opens the SSH tunnel in the background and
+    your browser on http://localhost:8080.
 
     ## ⚠️ Before you order
 

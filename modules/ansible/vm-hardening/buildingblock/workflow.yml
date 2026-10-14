@@ -212,12 +212,15 @@ jobs:
 
           Ansible applied the [devsec.hardening](https://github.com/dev-sec/ansible-collection-hardening) OS and SSH baseline and set up nginx. nginx listens on \`127.0.0.1\` only, so the one way in is an SSH tunnel.
 
-          1. Save the SSH private key output of your VM building block as \`id_vm\` and run \`chmod 600 id_vm\`.
-          2. Open the tunnel:
-             \`\`\`sh
-             $tunnel
-             \`\`\`
-          3. Open http://localhost:8080
+          **Open the landing page.** Save the SSH private key output of your VM building block as \`id_vm\`, then paste this into a terminal in the same folder. It opens the tunnel in the background and your browser on the page:
+
+          \`\`\`sh
+          chmod 600 id_vm &&
+            ssh -i id_vm -f -N -o ExitOnForwardFailure=yes -o StrictHostKeyChecking=accept-new -L 8080:127.0.0.1:80 $SSH_USERNAME@$PUBLIC_IP &&
+            { open http://localhost:8080 2>/dev/null || xdg-open http://localhost:8080; }
+          \`\`\`
+
+          Close the tunnel again with \`pkill -f "8080:127.0.0.1:80 $SSH_USERNAME@$PUBLIC_IP"\`. On Windows, run \`$tunnel\` and open http://localhost:8080 yourself.
 
           | Check | Result |
           |---|---|
