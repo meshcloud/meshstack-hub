@@ -210,70 +210,57 @@ jobs:
           set -o errexit -o nounset -o pipefail
 
           tunnel="ssh -i id_vm -o IdentitiesOnly=yes -N -L 8080:127.0.0.1:80 $SSH_USERNAME@$PUBLIC_IP"
-          open_tunnel=$(cat <<EOF
-          chmod 600 id_vm &&
-            ssh -i id_vm -o IdentitiesOnly=yes -f -N -o ExitOnForwardFailure=yes -o StrictHostKeyChecking=accept-new -L 8080:127.0.0.1:80 $SSH_USERNAME@$PUBLIC_IP &&
-            { open http://localhost:8080 2>/dev/null || xdg-open http://localhost:8080; }
-          EOF
-          )
+          open_page="chmod 600 id_vm && ssh -i id_vm -o IdentitiesOnly=yes -o StrictHostKeyChecking=accept-new -o ExitOnForwardFailure=yes -f -N -L 8080:127.0.0.1:80 $SSH_USERNAME@$PUBLIC_IP && (open http://localhost:8080 || xdg-open http://localhost:8080)"
 
-          header=$(cat <<EOF
-          # 🛡️ Hardened VM \`$PUBLIC_IP\`
+          # meshPanel drops everything from a "<" to the next ">" as HTML, even inside a code block, so
+          # the key is written with printf rather than a heredoc.
+          write_key="printf '%s\n' \\"
+          while IFS= read -r line; do
+            write_key+=$'\n'"  '$line' \\"
+          done < "$RUNNER_TEMP/id_vm"
+          write_key+=$'\n'"  > id_vm"
 
-          Ansible brought the VM to the [devsec.hardening](https://github.com/dev-sec/ansible-collection-hardening) OS and SSH baseline and put nginx on it as a landing page. nginx listens on \`127.0.0.1\` only, so the one way in is an SSH tunnel.
+          render() {
+            local intro="$1" commands="$2"
+            printf '%s\n' \
+              "# 🛡️ Hardened VM \`$PUBLIC_IP\`" \
+              "" \
+              "**Open the landing page:** $intro" \
+              "" \
+              '```sh' \
+              "$commands" \
+              '```' \
+              "" \
+              "**What Ansible hardened** ([devsec.hardening](https://github.com/dev-sec/ansible-collection-hardening)), also listed on the landing page:" \
+              "" \
+              "- 🔑 **SSH**: key-only login, no root or password login, two attempts per connection, only local port forwarding." \
+              "- 👤 **Accounts**: strong password rules, a password expires after 60 days, an account locks for 10 minutes after 5 failed logins." \
+              "- 🧠 **Kernel and network**: full ASLR, no IP forwarding, ICMP redirects and source routing ignored, SYN flood protection." \
+              "- 📁 **Files and processes**: no core dumps, tight permissions on password files, SUID/SGID bits removed where not needed." \
+              "- ✂️ **Attack surface**: unused filesystems and rare network protocols blocked, telnet, rsh and inetd removed." \
+              "- 📝 **Audit**: auditd records security-relevant events." \
+              "" \
+              "| Check | Result |" \
+              "|---|---|" \
+              "| Tasks in the verification run | $OK ok · $CHANGED changed · $FAILED failed |" \
+              "| Drift after the second run | $([[ "$CHANGED" == "0" ]] && echo "✅ none" || echo "❌ $CHANGED tasks") |" \
+              "| Port 80 from the internet | $EXPOSED |" \
+              "" \
+              "nginx listens on \`127.0.0.1\` only, so the page is reachable through the SSH tunnel alone. [Ansible run log]($RUN_URL)"
+          }
 
-          **What hardened means here**
-
-          - 🔑 **SSH**: key-only login, no root or password login, two attempts per connection, only local port forwarding.
-          - 👤 **Accounts**: strong password rules, a password expires after 60 days, an account locks for 10 minutes after 5 failed logins.
-          - 🧠 **Kernel and network**: full ASLR, no IP forwarding, ICMP redirects and source routing ignored, SYN flood protection.
-          - 📁 **Files and processes**: no core dumps, tight permissions on password files, SUID/SGID bits removed where not needed.
-          - ✂️ **Attack surface**: unused filesystems and rare network protocols blocked, telnet, rsh and inetd removed.
-          - 📝 **Audit**: auditd records security-relevant events.
-          EOF
-          )
-
-          footer=$(cat <<EOF
-          Close the tunnel again with \`pkill -f "8080:127.0.0.1:80 $SSH_USERNAME@$PUBLIC_IP"\`. On Windows, save the key as \`id_vm\`, run \`$tunnel\` and open http://localhost:8080 yourself.
-
-          | Check | Result |
-          |---|---|
-          | Tasks in the verification run | $OK ok · $CHANGED changed · $FAILED failed |
-          | Drift after the second run | $([[ "$CHANGED" == "0" ]] && echo "✅ none" || echo "❌ $CHANGED tasks") |
-          | Port 80 from the internet | $EXPOSED |
-
-          [Ansible run log]($RUN_URL)
-          EOF
-          )
-
-          with_key_file=$(cat <<EOF
-          **Open the landing page.** Save the SSH private key output of your VM building block as \`id_vm\`, then paste this into a terminal in the same folder. It opens the tunnel in the background and your browser on the page:
-
-          \`\`\`sh
-          $open_tunnel
-          \`\`\`
-          EOF
-          )
-
+          without_key_intro="save the SSH private key output of your VM building block as \`id_vm\`, then paste this into a terminal in the same folder (macOS or Linux)."
           if [[ "$EMBED_SSH_KEY" == "true" ]]; then
-            with_key=$(cat <<EOF
-          **Open the landing page.** Paste this into a terminal. It writes the private key of the VM to \`id_vm\` in the current folder, opens the tunnel in the background and your browser on the page:
-
-          \`\`\`sh
-          cat > id_vm <<KEY
-          $(cat "$RUNNER_TEMP/id_vm")
-          KEY
-          $open_tunnel
-          \`\`\`
-          EOF
-            )
+            render "paste this into a terminal (macOS or Linux)." "$write_key"$'\n'"$open_page" > "$RUNNER_TEMP/summary-meshstack.md"
           else
-            with_key=$with_key_file
+            render "$without_key_intro" "$open_page" > "$RUNNER_TEMP/summary-meshstack.md"
           fi
+          render "$without_key_intro" "$open_page" > "$RUNNER_TEMP/summary-github.md"
 
-          printf '%s\n\n%s\n\n%s\n' "$header" "$with_key" "$footer" > "$RUNNER_TEMP/summary-meshstack.md"
-          printf '%s\n\n%s\n\n%s\n' "$header" "$with_key_file" "$footer" > "$RUNNER_TEMP/summary-github.md"
-
+          if grep -q "<" "$RUNNER_TEMP/summary-meshstack.md"; then
+            echo "::error::The summary contains a '<', which meshPanel would strip as HTML."
+            exit 1
+          fi
           if grep -q "PRIVATE KEY" "$RUNNER_TEMP/summary-github.md"; then
             echo "::error::The GitHub step summary would contain the private key."
             exit 1
