@@ -70,6 +70,12 @@ variable "supported_platform_types" {
   description = "meshStack platform types the VM building block runs on, e.g. `[\"STACKIT\"]`. The hardening definition is offered on the same tenants."
 }
 
+variable "summary_embeds_ssh_key" {
+  type        = bool
+  default     = false
+  description = "Puts the VM's private key into the summary, so one pasted snippet opens the landing page. For demos only: everyone who can see the building block can read the key. The GitHub run never shows it either way."
+}
+
 variable "bbd_display_name" {
   type        = string
   default     = null
@@ -215,6 +221,8 @@ resource "meshstack_building_block_definition" "this" {
     Save the SSH private key output of your VM building block as `id_vm`. The summary then has one
     snippet to paste into a terminal in that folder: it opens the SSH tunnel in the background and
     your browser on http://localhost:8080.
+    Where the platform team enabled it, the snippet writes the key file itself, so pasting it is all
+    there is to do.
 
     ## ⚠️ Before you order
 
@@ -291,6 +299,14 @@ resource "meshstack_building_block_definition" "this" {
         description     = "Workspace the VM belongs to, shown on the landing page."
         type            = "STRING"
         assignment_type = "WORKSPACE_IDENTIFIER"
+      }
+
+      summary_embeds_ssh_key = {
+        display_name    = "Summary Embeds SSH Key"
+        description     = "Whether the summary carries the VM's private key in its paste-ready snippet."
+        type            = "BOOLEAN"
+        assignment_type = "STATIC"
+        argument        = jsonencode(var.summary_embeds_ssh_key)
       }
 
       project_identifier = {
