@@ -1,0 +1,55 @@
+- name: Harden OS and SSH
+  hosts: all
+  become: true
+  tags: [hardening]
+  vars:
+    # Cloud images commonly boot through UEFI from a vfat partition, which os_hardening blocks by default.
+    os_filesystem_whitelist: [vfat]
+
+    # The landing page is reached through `ssh -L`, so local forwarding has to stay allowed.
+    ssh_allow_tcp_forwarding: local
+  roles:
+    - devsec.hardening.os_hardening
+    - devsec.hardening.ssh_hardening
+
+- name: Serve the landing page
+  hosts: all
+  become: true
+  tags: [webserver]
+  vars:
+    workspace: ""
+    project: ""
+    run_url: ""
+  tasks:
+    - name: Install nginx
+      ansible.builtin.apt:
+        name: nginx
+        update_cache: true
+        cache_valid_time: 3600
+        # unattended-upgrades holds the dpkg lock for a while after a fresh VM boots.
+        lock_timeout: 600
+
+    - name: Listen on localhost only
+      ansible.builtin.template:
+        src: templates/nginx-site.conf.j2
+        dest: /etc/nginx/sites-available/default
+        mode: "0644"
+      notify: Reload nginx
+
+    - name: Write the landing page
+      ansible.builtin.template:
+        src: templates/index.html.j2
+        dest: /var/www/html/index.html
+        mode: "0644"
+
+    - name: Start nginx
+      ansible.builtin.service:
+        name: nginx
+        state: started
+        enabled: true
+
+  handlers:
+    - name: Reload nginx
+      ansible.builtin.service:
+        name: nginx
+        state: reloaded
