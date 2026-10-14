@@ -195,9 +195,10 @@ resource "meshstack_building_block_definition" "this" {
 
     readme = coalesce(var.bbd_readme, chomp(<<-EOT
     Hardens a VM you ordered as a building block in this tenant. A GitHub Actions workflow runs an
-    **Ansible** playbook against the VM: the
-    [devsec.hardening](https://github.com/dev-sec/ansible-collection-hardening) OS and SSH baselines,
-    then nginx serving a landing page on `127.0.0.1` only. You reach it through an SSH tunnel.
+    **Ansible** playbook against the VM that locks the operating system and SSH down to what a server
+    needs, following the [devsec.hardening](https://github.com/dev-sec/ansible-collection-hardening)
+    baseline. It then puts nginx on the VM as a landing page that lists what was hardened, served on
+    `127.0.0.1` only and reached through an SSH tunnel.
 
     ## 🎯 When to use it
 
@@ -216,6 +217,26 @@ resource "meshstack_building_block_definition" "this" {
     Someone changed the SSH configuration by hand. Re-running this building block puts the baseline
     back, and the summary shows the run ended without drift.
 
+    ## 🛡️ What a hardened VM means
+
+    | Area | What the baseline does |
+    |---|---|
+    | 🔑 SSH | Key-only login, no root or password login, two attempts per connection, idle sessions closed after 15 minutes, only modern ciphers |
+    | 👤 Accounts | Strong password rules, passwords expire after 60 days, an account locks for 10 minutes after 5 failed logins, `su` limited to root |
+    | 🧠 Kernel and network | Full ASLR, hidden kernel pointers, restricted `ptrace`, no IP forwarding, ICMP redirects and source routing ignored, SYN flood protection |
+    | 📁 Files and processes | No core dumps, tight permissions on password files, SUID/SGID bits removed where not needed |
+    | ✂️ Attack surface | Unused filesystems and rare network protocols blocked, telnet, rsh and inetd removed, nginx on `127.0.0.1` only |
+    | 📝 Audit | `auditd` records security-relevant events |
+
+    ## 🧭 What changes for you
+
+    - You log in with your SSH key only. SSH ends a connection after two failed attempts, so if your
+      SSH agent holds several keys, pass yours explicitly: `ssh -i id_vm -o IdentitiesOnly=yes`.
+    - `ssh -L` port forwarding works; agent forwarding (`ssh -A`), X11 and `ssh -R` do not.
+    - `sudo` keeps working for the VM's login user.
+    - Software that needs a blocked filesystem or protocol, or a removed SUID bit, has to be allowed
+      in the baseline by the platform team first.
+
     ## 🔑 Reaching the landing page
 
     Save the SSH private key output of your VM building block as `id_vm`. The summary then has one
@@ -229,8 +250,6 @@ resource "meshstack_building_block_definition" "this" {
     - The VM has to run Debian or Ubuntu, and its login user needs passwordless sudo.
     - The VM has to accept SSH from GitHub-hosted runners, which in practice means from anywhere.
       SSH stays key-only: the baseline disables password and root login.
-    - The baseline restricts SSH: TCP forwarding is limited to local forwards (`ssh -L`), and
-      agent and X11 forwarding are off.
     - Removing this building block leaves the VM hardened. It does not undo the playbook.
 
     ## 📊 Shared Responsibility

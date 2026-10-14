@@ -209,18 +209,27 @@ jobs:
         run: |
           set -o errexit -o nounset -o pipefail
 
-          tunnel="ssh -i id_vm -N -L 8080:127.0.0.1:80 $SSH_USERNAME@$PUBLIC_IP"
+          tunnel="ssh -i id_vm -o IdentitiesOnly=yes -N -L 8080:127.0.0.1:80 $SSH_USERNAME@$PUBLIC_IP"
           open_tunnel=$(cat <<EOF
           chmod 600 id_vm &&
-            ssh -i id_vm -f -N -o ExitOnForwardFailure=yes -o StrictHostKeyChecking=accept-new -L 8080:127.0.0.1:80 $SSH_USERNAME@$PUBLIC_IP &&
+            ssh -i id_vm -o IdentitiesOnly=yes -f -N -o ExitOnForwardFailure=yes -o StrictHostKeyChecking=accept-new -L 8080:127.0.0.1:80 $SSH_USERNAME@$PUBLIC_IP &&
             { open http://localhost:8080 2>/dev/null || xdg-open http://localhost:8080; }
           EOF
           )
 
           header=$(cat <<EOF
-          # 🛡️ Hardened web server on \`$PUBLIC_IP\`
+          # 🛡️ Hardened VM \`$PUBLIC_IP\`
 
-          Ansible applied the [devsec.hardening](https://github.com/dev-sec/ansible-collection-hardening) OS and SSH baseline and set up nginx. nginx listens on \`127.0.0.1\` only, so the one way in is an SSH tunnel.
+          Ansible brought the VM to the [devsec.hardening](https://github.com/dev-sec/ansible-collection-hardening) OS and SSH baseline and put nginx on it as a landing page. nginx listens on \`127.0.0.1\` only, so the one way in is an SSH tunnel.
+
+          **What hardened means here**
+
+          - 🔑 **SSH**: key-only login, no root or password login, two attempts per connection, only local port forwarding.
+          - 👤 **Accounts**: strong password rules, a password expires after 60 days, an account locks for 10 minutes after 5 failed logins.
+          - 🧠 **Kernel and network**: full ASLR, no IP forwarding, ICMP redirects and source routing ignored, SYN flood protection.
+          - 📁 **Files and processes**: no core dumps, tight permissions on password files, SUID/SGID bits removed where not needed.
+          - ✂️ **Attack surface**: unused filesystems and rare network protocols blocked, telnet, rsh and inetd removed.
+          - 📝 **Audit**: auditd records security-relevant events.
           EOF
           )
 
