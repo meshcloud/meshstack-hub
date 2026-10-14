@@ -1,0 +1,255 @@
+name: ansible-vm-hardening
+
+on:
+  workflow_dispatch:
+    inputs:
+      buildingBlockRun:
+        description: "Building block run object, base64-encoded, with its inputs decrypted by the meshStack runner"
+        required: true
+
+permissions:
+  contents: read
+
+jobs:
+  harden:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ansible-vm-hardening
+    env:
+      ANSIBLE_CONFIG: ansible.cfg
+    steps:
+      # The run object carries the VM's private key and the run token in plain text. Masking every line
+      # before any other step runs keeps both out of the log, which anyone can read on a public repo.
+      - name: Read the building block run
+        id: run
+        working-directory: .
+        env:
+          BUILDING_BLOCK_RUN: ${{ inputs.buildingBlockRun }}
+        run: |
+          set -o errexit -o nounset -o pipefail
+
+          run_json=$(base64 -d <<<"$BUILDING_BLOCK_RUN")
+          input() { jq -r --arg key "$1" '.spec.buildingBlock.spec.inputs[] | select(.key == $key) | .value // empty' <<<"$run_json"; }
+
+          run_token=$(input MESHSTACK_RUN_TOKEN)
+          private_key=$(input ssh_private_key)
+
+          echo "::add-mask::$run_token"
+          while IFS= read -r line; do
+            [[ -n "$line" ]] && echo "::add-mask::$line"
+          done <<<"$private_key"
+
+          if [[ -z "$run_token" ]]; then
+            echo "::error::The run object has no MESHSTACK_RUN_TOKEN. The definition must be async."
+            exit 1
+          fi
+
+          if ! grep -q -- "-----BEGIN OPENSSH PRIVATE KEY-----" <<<"$private_key"; then
+            echo "::error::ssh_private_key is not a plain OpenSSH key. The definition must pass the run object (omit_run_object_input = false), the only mode in which the runner decrypts it."
+            exit 1
+          fi
+
+          printf '{"token":"%s"}' "$run_token" > "$RUNNER_TEMP/meshstack_token.json"
+          install -m 600 /dev/null "$RUNNER_TEMP/id_vm"
+          printf '%s\n' "$private_key" > "$RUNNER_TEMP/id_vm"
+
+      - uses: actions/checkout@v4
+
+      - name: Register source
+        id: register-source
+        uses: meshcloud/actions-register-source@v2
+        with:
+          steps: |
+            [
+              { "id": "connect", "displayName": "Connect to the VM" },
+              { "id": "harden", "displayName": "Harden OS and SSH (devsec.hardening)" },
+              { "id": "webserver", "displayName": "Serve the landing page" },
+              { "id": "verify", "displayName": "Verify: no drift, nothing exposed" }
+            ]
+
+      - name: Install Ansible
+        run: |
+          pipx install ansible-core
+          ansible-galaxy collection install -r requirements.yml
+
+      - name: Write the inventory
+        env:
+          PUBLIC_IP: ${{ steps.register-source.outputs.public_ip }}
+          SSH_USERNAME: ${{ steps.register-source.outputs.ssh_username }}
+        run: |
+          cat > inventory.yml <<EOF
+          all:
+            hosts:
+              vm:
+                ansible_host: "$PUBLIC_IP"
+                ansible_user: "$SSH_USERNAME"
+                ansible_ssh_private_key_file: "$RUNNER_TEMP/id_vm"
+          EOF
+
+      - uses: meshcloud/actions-send-status@v2
+        with:
+          step_id: connect
+          step_status: IN_PROGRESS
+
+      - name: Connect to the VM
+        id: connect
+        run: ansible all -m ansible.builtin.wait_for_connection -a "timeout=300"
+
+      - uses: meshcloud/actions-send-status@v2
+        if: ${{ always() && steps.connect.outcome != 'skipped' }}
+        with:
+          step_id: connect
+          step_status: ${{ steps.connect.outcome == 'success' && 'SUCCEEDED' || 'FAILED' }}
+          user_message: ${{ steps.connect.outcome == 'success' && 'Reached the VM over SSH.' || 'Could not reach the VM over SSH. It has to accept SSH from GitHub-hosted runners.' }}
+          system_message: ${{ steps.connect.outcome == 'success' && 'Reached the VM over SSH.' || 'wait_for_connection timed out, see the GitHub Actions log.' }}
+
+      - uses: meshcloud/actions-send-status@v2
+        with:
+          step_id: harden
+          step_status: IN_PROGRESS
+
+      - name: Harden OS and SSH
+        id: harden
+        run: |
+          ansible-playbook site.yml --tags hardening | tee "$RUNNER_TEMP/harden.log"
+
+      - uses: meshcloud/actions-send-status@v2
+        if: ${{ always() && steps.harden.outcome != 'skipped' }}
+        with:
+          step_id: harden
+          step_status: ${{ steps.harden.outcome == 'success' && 'SUCCEEDED' || 'FAILED' }}
+          user_message: ${{ steps.harden.outcome == 'success' && 'Applied the devsec.hardening OS and SSH baseline.' || 'Hardening failed.' }}
+          system_message: ${{ steps.harden.outcome == 'success' && 'Applied the devsec.hardening OS and SSH baseline.' || 'ansible-playbook --tags hardening failed, see the GitHub Actions log.' }}
+
+      - uses: meshcloud/actions-send-status@v2
+        with:
+          step_id: webserver
+          step_status: IN_PROGRESS
+
+      - name: Serve the landing page
+        id: webserver
+        env:
+          WORKSPACE: ${{ steps.register-source.outputs.workspace_identifier }}
+          PROJECT: ${{ steps.register-source.outputs.project_identifier }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          ansible-playbook site.yml --tags webserver \
+            -e workspace="$WORKSPACE" -e project="$PROJECT" -e run_url="$RUN_URL"
+
+      - uses: meshcloud/actions-send-status@v2
+        if: ${{ always() && steps.webserver.outcome != 'skipped' }}
+        with:
+          step_id: webserver
+          step_status: ${{ steps.webserver.outcome == 'success' && 'SUCCEEDED' || 'FAILED' }}
+          user_message: ${{ steps.webserver.outcome == 'success' && 'nginx serves the landing page on 127.0.0.1.' || 'Configuring nginx failed.' }}
+          system_message: ${{ steps.webserver.outcome == 'success' && 'nginx serves the landing page on 127.0.0.1.' || 'ansible-playbook --tags webserver failed, see the GitHub Actions log.' }}
+
+      - uses: meshcloud/actions-send-status@v2
+        with:
+          step_id: verify
+          step_status: IN_PROGRESS
+
+      # A second full run of the same playbook must change nothing: that is the evidence the VM now
+      # matches the baseline. The probe from outside checks that only the SSH tunnel reaches nginx.
+      - name: Verify
+        id: verify
+        env:
+          PUBLIC_IP: ${{ steps.register-source.outputs.public_ip }}
+          WORKSPACE: ${{ steps.register-source.outputs.workspace_identifier }}
+          PROJECT: ${{ steps.register-source.outputs.project_identifier }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          set -o errexit -o nounset -o pipefail
+
+          ansible-playbook site.yml \
+            -e workspace="$WORKSPACE" -e project="$PROJECT" -e run_url="$RUN_URL" | tee "$RUNNER_TEMP/verify.log"
+          ansible all -m ansible.builtin.uri -a "url=http://127.0.0.1/ return_content=false"
+
+          recap=$(grep -E '^vm +:' "$RUNNER_TEMP/verify.log" | tail -1)
+          count() { grep -oE "$1=[0-9]+" <<<"$recap" | cut -d= -f2; }
+          ok=$(count ok); changed=$(count changed); failed=$(count failed)
+
+          if curl --silent --max-time 5 "http://$PUBLIC_IP/" >/dev/null; then
+            exposed="❌ open"
+          else
+            exposed="✅ closed"
+          fi
+
+          {
+            echo "ok=$ok"
+            echo "changed=$changed"
+            echo "failed=$failed"
+            echo "exposed=$exposed"
+          } >> "$GITHUB_OUTPUT"
+
+          if [[ "$changed" != "0" ]]; then
+            echo "::error::The second run changed $changed tasks, so the baseline is not idempotent."
+            exit 1
+          fi
+          if [[ "$exposed" == "❌ open" ]]; then
+            echo "::error::Port 80 answers from outside the VM."
+            exit 1
+          fi
+
+      - name: Prepare the summary
+        id: summary
+        if: ${{ always() && steps.verify.outcome != 'skipped' }}
+        env:
+          PUBLIC_IP: ${{ steps.register-source.outputs.public_ip }}
+          SSH_USERNAME: ${{ steps.register-source.outputs.ssh_username }}
+          OK: ${{ steps.verify.outputs.ok }}
+          CHANGED: ${{ steps.verify.outputs.changed }}
+          FAILED: ${{ steps.verify.outputs.failed }}
+          EXPOSED: ${{ steps.verify.outputs.exposed }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          set -o errexit -o nounset -o pipefail
+
+          tunnel="ssh -i id_vm -N -L 8080:127.0.0.1:80 $SSH_USERNAME@$PUBLIC_IP"
+          summary=$(cat <<EOF
+          # 🛡️ Hardened web server on \`$PUBLIC_IP\`
+
+          Ansible applied the [devsec.hardening](https://github.com/dev-sec/ansible-collection-hardening) OS and SSH baseline and set up nginx. nginx listens on \`127.0.0.1\` only, so the one way in is an SSH tunnel.
+
+          1. Save the SSH private key output of your VM building block as \`id_vm\` and run \`chmod 600 id_vm\`.
+          2. Open the tunnel:
+             \`\`\`sh
+             $tunnel
+             \`\`\`
+          3. Open http://localhost:8080
+
+          | Check | Result |
+          |---|---|
+          | Tasks in the verification run | $OK ok · $CHANGED changed · $FAILED failed |
+          | Drift after the second run | $([[ "$CHANGED" == "0" ]] && echo "✅ none" || echo "❌ $CHANGED tasks") |
+          | Port 80 from the internet | $EXPOSED |
+
+          [Ansible run log]($RUN_URL)
+          EOF
+          )
+
+          echo "$summary" >> "$GITHUB_STEP_SUMMARY"
+          jq -nc \
+            --arg summary "$summary" \
+            --arg tunnel "$tunnel" \
+            '{
+              summary: { value: $summary, type: "STRING" },
+              tunnel_command: { value: $tunnel, type: "STRING" },
+              landing_page_url: { value: "http://localhost:8080", type: "STRING" }
+            }' > "$RUNNER_TEMP/outputs.json"
+          echo "outputs_json=$(cat "$RUNNER_TEMP/outputs.json")" >> "$GITHUB_OUTPUT"
+
+      - uses: meshcloud/actions-send-status@v2
+        if: ${{ always() && steps.verify.outcome != 'skipped' }}
+        with:
+          step_id: verify
+          step_status: ${{ steps.verify.outcome == 'success' && 'SUCCEEDED' || 'FAILED' }}
+          user_message: ${{ steps.verify.outcome == 'success' && 'No drift, and nginx is reachable through the SSH tunnel only.' || 'Verification failed.' }}
+          system_message: ${{ steps.verify.outcome == 'success' && 'No drift, and nginx is reachable through the SSH tunnel only.' || 'The second run changed tasks or port 80 answered from outside, see the GitHub Actions log.' }}
+          outputs_json: ${{ steps.summary.outputs.outputs_json || '{}' }}
+
+      - uses: meshcloud/actions-send-status@v2
+        if: ${{ always() }}
+        with:
+          run_status: ${{ job.status == 'success' && 'SUCCEEDED' || 'FAILED' }}

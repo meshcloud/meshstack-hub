@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Hardened by Ansible</title>
+  <style>
+    :root { --bg: #f6f7f9; --card: #ffffff; --text: #1d2330; --muted: #5d6676; --ok: #1f8a4c; --line: #e2e6ec; }
+    @media (prefers-color-scheme: dark) {
+      :root { --bg: #11151c; --card: #1a2029; --text: #e7ebf1; --muted: #9aa4b2; --ok: #4cc488; --line: #2a323e; }
+    }
+    body { margin: 0; background: var(--bg); color: var(--text); font: 16px/1.5 system-ui, sans-serif; }
+    main { max-width: 720px; margin: 48px auto; padding: 0 16px; }
+    .card { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 24px 28px; }
+    h1 { margin: 0 0 4px; font-size: 26px; }
+    p.lead { margin: 0 0 20px; color: var(--muted); }
+    table { width: 100%; border-collapse: collapse; }
+    td { padding: 8px 0; border-top: 1px solid var(--line); vertical-align: top; }
+    td:first-child { color: var(--muted); width: 40%; }
+    .ok { color: var(--ok); font-weight: 600; }
+    a { color: inherit; }
+  </style>
+</head>
+<body>
+  <main>
+    <div class="card">
+      <h1>🛡️ Hardened by Ansible</h1>
+      <p class="lead">This page reaches you through an SSH tunnel. nginx listens on 127.0.0.1 only.</p>
+      <table>
+        <tr><td>Host</td><td>{{ ansible_facts['hostname'] }}</td></tr>
+        <tr><td>Operating system</td><td>{{ ansible_facts['distribution'] }} {{ ansible_facts['distribution_version'] }}, kernel {{ ansible_facts['kernel'] }}</td></tr>
+{% if workspace %}
+        <tr><td>meshStack workspace</td><td>{{ workspace }}</td></tr>
+{% endif %}
+{% if project %}
+        <tr><td>meshStack project</td><td>{{ project }}</td></tr>
+{% endif %}
+        <tr><td>OS baseline</td><td class="ok">✔ devsec.hardening.os_hardening</td></tr>
+        <tr><td>SSH baseline</td><td class="ok">✔ devsec.hardening.ssh_hardening</td></tr>
+        <tr><td>Password and root login</td><td class="ok">✔ disabled</td></tr>
+{% if run_url %}
+        <tr><td>Ansible run</td><td><a href="{{ run_url }}">GitHub Actions log</a></td></tr>
+{% endif %}
+      </table>
+    </div>
+  </main>
+</body>
+</html>
