@@ -29,7 +29,7 @@ The GitHub App needs these repository permissions on the target repository:
 ## Requirements
 
 | Name | Version |
-| ---- | ------- |
+|------|---------|
 | <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.11.0 |
 | <a name="requirement_github"></a> [github](#requirement\_github) | >= 6.0.0, < 7.0.0 |
 
@@ -40,13 +40,13 @@ No modules.
 ## Resources
 
 | Name | Type |
-| ---- | ---- |
+|------|------|
 | [github_repository_file.this](https://registry.terraform.io/providers/integrations/github/latest/docs/resources/repository_file) | resource |
 
 ## Inputs
 
 | Name | Description | Type | Default | Required |
-| ---- | ----------- | ---- | ------- | :------: |
+|------|-------------|------|---------|:--------:|
 | <a name="input_github_app_id"></a> [github\_app\_id](#input\_github\_app\_id) | GitHub App ID used to authenticate the GitHub provider. | `string` | n/a | yes |
 | <a name="input_github_app_installation_id"></a> [github\_app\_installation\_id](#input\_github\_app\_installation\_id) | GitHub App installation ID for the owner. Found under GitHub App settings → Install App → your org. | `string` | n/a | yes |
 | <a name="input_github_app_private_key"></a> [github\_app\_private\_key](#input\_github\_app\_private\_key) | PEM-encoded private key of the GitHub App. | `string` | n/a | yes |
@@ -57,7 +57,7 @@ No modules.
 ## Outputs
 
 | Name | Description |
-| ---- | ----------- |
+|------|-------------|
 | <a name="output_branch"></a> [branch](#output\_branch) | Branch the workflow is dispatched on. |
 | <a name="output_workflow"></a> [workflow](#output\_workflow) | Workflow file meshStack dispatches. |
 <!-- END_TF_DOCS -->
