@@ -150,7 +150,7 @@ output "building_block_definitions" {
 }
 
 module "aks_namespace" {
-  source = "github.com/meshcloud/meshstack-hub//modules/azure/aks-namespace?ref=${var.hub.git_ref}"
+  source = "github.com/meshcloud/meshstack-hub//modules/aks/namespace?ref=${var.hub.git_ref}"
 
   azure_tenant_id             = var.azure_tenant_id
   azure_subscription_id       = var.azure_subscription_id

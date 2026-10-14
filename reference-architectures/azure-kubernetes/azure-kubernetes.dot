@@ -60,7 +60,7 @@ digraph azure_kubernetes {
 
     BBD_S [label="📦 aks/starterkit BBD\nself-service catalog entry" fillcolor="#ecedfb" color="#9aa2e6"]
     BBD_R [label="📦 github/repository BBD" fillcolor="#ecedfb" color="#9aa2e6"]
-    BBD_N [label="📦 azure/aks-namespace BBD" fillcolor="#ecedfb" color="#9aa2e6"]
+    BBD_N [label="📦 aks/namespace BBD" fillcolor="#ecedfb" color="#9aa2e6"]
     BBD_C [label="📦 aks/github-connector BBD" fillcolor="#ecedfb" color="#9aa2e6"]
 
     { rank=same; BBD_R -> BBD_N -> BBD_C [style=invis] }

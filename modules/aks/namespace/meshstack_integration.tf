@@ -148,7 +148,7 @@ output "building_block_definition" {
 }
 
 module "backplane" {
-  source = "github.com/meshcloud/meshstack-hub//modules/azure/aks-namespace/backplane?ref=${var.hub.git_ref}"
+  source = "github.com/meshcloud/meshstack-hub//modules/aks/namespace/backplane?ref=${var.hub.git_ref}"
 
   name     = var.backplane_name
   scope    = var.azure_scope
@@ -176,9 +176,9 @@ resource "meshstack_building_block_definition" "this" {
     display_name             = coalesce(var.bbd_display_name, "Azure AKS Namespace")
     description              = coalesce(var.bbd_description, "A Kubernetes namespace on the shared AKS cluster, with a resource quota and access for your workspace members.")
     support_url              = "mailto:support@meshcloud.io"
-    documentation_url        = "https://hub.meshcloud.io/platforms/azure/definitions/azure-aks-namespace"
+    documentation_url        = "https://hub.meshcloud.io/platforms/aks/definitions/azure-aks-namespace"
     notification_subscribers = var.notification_subscribers
-    symbol                   = "https://raw.githubusercontent.com/meshcloud/meshstack-hub/${var.hub.git_ref}/modules/azure/aks-namespace/buildingblock/logo.png"
+    symbol                   = "https://raw.githubusercontent.com/meshcloud/meshstack-hub/${var.hub.git_ref}/modules/aks/namespace/buildingblock/logo.png"
     target_type              = "WORKSPACE_LEVEL"
 
     readme = coalesce(var.bbd_readme, chomp(<<-EOT
@@ -231,7 +231,7 @@ resource "meshstack_building_block_definition" "this" {
       terraform = {
         terraform_version              = "1.12.5"
         repository_url                 = "https://github.com/meshcloud/meshstack-hub.git"
-        repository_path                = "modules/azure/aks-namespace/buildingblock"
+        repository_path                = "modules/aks/namespace/buildingblock"
         ref_name                       = var.hub.git_ref
         use_mesh_http_backend_fallback = true
       }

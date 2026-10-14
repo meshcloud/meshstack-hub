@@ -9,7 +9,7 @@ cloudProviders:
 buildingBlocks:
   - path: aks/starterkit
     role: Orchestrates the full developer onboarding experience by composing all building blocks into one self-service offering.
-  - path: azure/aks-namespace
+  - path: aks/namespace
     role: Creates a Kubernetes namespace with a resource quota, default limits and Entra group access on an existing AKS cluster.
   - path: github/repository
     role: Creates GitHub repositories with predefined configurations and access control for application teams.
@@ -46,14 +46,14 @@ The starterkit is a **building block composition** that application teams order 
 self-service catalog. When a developer clicks "Order", it:
 
 1. Creates a **GitHub repository** from a configurable template (`github/repository`).
-2. Creates a **dev** and a **prod** namespace (`azure/aks-namespace`).
+2. Creates a **dev** and a **prod** namespace (`aks/namespace`).
 3. Wires each namespace to the repository with a **GitHub Actions connector**
    (`aks/github-connector`). Dev deploys from `main`, prod from `release`.
 
 Each connector is ordered with the repository and its namespace as parent building blocks, and
 reads the namespace name from the namespace block's output.
 
-### 2. Namespace: `azure/aks-namespace`
+### 2. Namespace: `aks/namespace`
 
 Creates the namespace on the platform team's cluster, with:
 
@@ -86,7 +86,7 @@ builds, scans and deploys on every push.
 |---|---|
 | meshStack instance | With the OpenTofu building block runner configured. |
 | AKS cluster | Entra-integrated, with Azure RBAC for Kubernetes authorization enabled, and reachable from the runner. |
-| Azure Container Registry | Optional. Pass its resource ID to the `azure/aks-namespace` backplane. |
+| Azure Container Registry | Optional. Pass its resource ID to the `aks/namespace` backplane. |
 | GitHub organization | With a GitHub App installed for the Terraform GitHub provider. |
 
 ### Deploy it as code
@@ -144,7 +144,7 @@ cluster, and to grant Microsoft Graph app roles (admin consent) for the namespac
 
 | Module | Definition | Wired to |
 |---|---|---|
-| `azure/aks-namespace` | Namespace with quota and Entra groups | Its backplane identity trusts the definition's runner identity. |
+| `aks/namespace` | Namespace with quota and Entra groups | Its backplane identity trusts the definition's runner identity. |
 | `github/repository` | GitHub repository from a template | |
 | `aks/github-connector` | GitHub Actions to namespace wiring | The repository and namespace definitions. |
 | `aks/starterkit` | The single catalog entry for application teams | All three definitions above, by version reference. |

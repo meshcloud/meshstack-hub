@@ -1,7 +1,7 @@
 run "azure_aks_namespace_hub" {
   assert {
     condition     = meshstack_building_block.this.status.status == "SUCCEEDED"
-    error_message = "azure/aks-namespace hub building block expected SUCCEEDED, got ${meshstack_building_block.this.status.status}"
+    error_message = "aks/namespace hub building block expected SUCCEEDED, got ${meshstack_building_block.this.status.status}"
   }
 
   assert {
