@@ -247,7 +247,8 @@ resource "meshstack_building_block_definition" "this" {
 
     implementation = {
       github_workflows = {
-        repository      = var.github_repository
+        # The repository name alone: meshStack prefixes the owner from the integration.
+        repository      = local.github_repository_name
         branch          = module.backplane.branch
         apply_workflow  = module.backplane.workflow
         integration_ref = local.github_integration_ref
