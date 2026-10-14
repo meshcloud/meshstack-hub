@@ -20,9 +20,15 @@ variable "github_base_url" {
   description = "Base URL of the GitHub API. Override for GitHub Enterprise Server."
 }
 
+variable "github_integration_uuid" {
+  type        = string
+  default     = null
+  description = "UUID of an existing meshStack GitHub integration for the repository owner to dispatch the workflow with. Null registers a new one from the GitHub App credentials below."
+}
+
 variable "github_app_id" {
   type        = string
-  description = "ID of the GitHub App meshStack dispatches the workflow with. It needs `actions: write` to dispatch, and `contents: write` plus `workflows: write` because the backplane commits the workflow with it."
+  description = "ID of the GitHub App the backplane commits the workflow and the playbook with, which needs `contents: write` and `workflows: write`. Without `github_integration_uuid` meshStack also dispatches the workflow with it, which needs `actions: write`."
 }
 
 variable "github_app_installation_id" {
@@ -85,7 +91,7 @@ variable "bbd_readme" {
 variable "integration_display_name" {
   type        = string
   default     = null
-  description = "Overrides the name of the meshStack integration this module registers."
+  description = "Overrides the name of the meshStack integration this module registers. Ignored when `github_integration_uuid` is set."
 }
 
 variable "meshstack" {
@@ -123,6 +129,11 @@ output "building_block_definition" {
 locals {
   github_owner           = split("/", var.github_repository)[0]
   github_repository_name = split("/", var.github_repository)[1]
+
+  github_integration_ref = var.github_integration_uuid == null ? meshstack_integration.github.ref : {
+    kind = "meshIntegration"
+    uuid = var.github_integration_uuid
+  }
 }
 
 module "backplane" {
@@ -137,6 +148,10 @@ module "backplane" {
 }
 
 resource "meshstack_integration" "github" {
+  lifecycle {
+    enabled = var.github_integration_uuid == null
+  }
+
   metadata = {
     owned_by_workspace = var.meshstack.owning_workspace_identifier
   }
@@ -233,7 +248,7 @@ resource "meshstack_building_block_definition" "this" {
         repository      = var.github_repository
         branch          = module.backplane.branch
         apply_workflow  = module.backplane.workflow
-        integration_ref = meshstack_integration.github.ref
+        integration_ref = local.github_integration_ref
         async           = true
 
         # Only the run object carries the inputs the runner decrypted; in URL mode the workflow fetches
