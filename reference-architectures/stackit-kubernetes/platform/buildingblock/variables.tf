@@ -48,10 +48,9 @@ variable "imports" {
   type = object({
     ske = optional(object({}))
     git = optional(object({
-      instance_id                     = string
-      instance_name                   = string
-      forgejo_organization            = string
-      existing_forgejo_api_token_path = string
+      instance_id          = string
+      instance_name        = string
+      forgejo_organization = string
     }))
     dns = optional(object({
       zone_id       = string
@@ -65,11 +64,15 @@ variable "imports" {
 }
 
 variable "import_secrets" {
-  type        = map(map(string))
+  type = object({
+    git = optional(object({
+      forgejo_api_token = string
+    }))
+  })
   nullable    = false
   default     = {}
   sensitive   = true
-  description = "Secrets this run writes to the platform's Secrets Manager, by path, before it orders the blocks that read them."
+  description = "Secrets of what `imports` names, which this run writes to the platform's Secrets Manager before it orders the blocks that read them: `git.forgejo_api_token`, a token of an owner of the adopted Forgejo organization."
 }
 
 variable "use_global_location" {

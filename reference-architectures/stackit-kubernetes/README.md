@@ -206,22 +206,24 @@ Three rules keep this tree deletable:
 ### Secrets
 
 No building block in the tree outputs a secret. The nested run orders the platform's Secrets
-Manager and creates a writer and a reader user in it. Each block that creates a credential gets the writer login and a
-path in its `output_to_vault` input and writes the credential there. The nested run reads what a
-definition it registers needs with the reader login, as an ephemeral value, and hands it on as a
-write-only input:
+Manager and creates a writer and a reader user in it. Each block that creates a credential gets the
+writer login and the path prefix `<platform identifier>/` in its `output_to_vault` input, writes one
+secret at `<prefix><provider>/<service>` and reports its path in the `vault_secret` output. The
+nested run reads what a definition it registers needs with the reader login, as an ephemeral value,
+and hands it on as a write-only input:
 
-| Path | Written by | Read for |
-|---|---|---|
-| `cluster/ske` | SKE Cluster | the Kubernetes Platform Admin definition |
-| `cluster/serviceaccount` | Kubernetes Platform Admin | the meshPlatform Credentials and Ingress definitions |
-| `kubernetes/platform` | Kubernetes meshPlatform Credentials | the meshStack SKE platform |
-| `git/forgejo-api-token` | STACKIT Git Instance | the Git Repository and Forgejo Connector runs |
-| `registry/push` | STACKIT Container Registry | the Git Repository runs |
-| `registry/pull` | STACKIT Container Registry | the Forgejo Connector runs |
-| `ai/model-serving` | AI Model Serving | the Forgejo Connector runs, for the `stackit-ai` secret |
+| Secret | Keys | Written by | Read for |
+|---|---|---|---|
+| `<prefix>ske/cluster` | `kubeconfig` | SKE Cluster | the Kubernetes Platform Admin definition |
+| `<prefix>kubernetes/service-account` | `kubeconfig` | Kubernetes Platform Admin | the meshPlatform Credentials and Ingress definitions |
+| `<prefix>kubernetes/platform` | `replicator-token`, `metering-token` | Kubernetes meshPlatform Credentials | the meshStack SKE platform |
+| `<prefix>stackit/git` | `forgejo-api-token` | STACKIT Git Instance | the Git Repository and Forgejo Connector runs |
+| `<prefix>stackit/container-registry` | `push-action-secrets`, `pull-kubernetes-secret` | STACKIT Container Registry | the Git Repository and Forgejo Connector runs |
+| `<prefix>stackit/ai-llm` | `kubernetes-secret` | AI Model Serving | the Forgejo Connector runs, for the `stackit-ai` secret |
+| `<prefix>imports/stackit/git` | `forgejo-api-token` | the nested run, from **Import Secrets** | the STACKIT Git Instance that adopts an organization |
 
-The Forgejo Connector definition also gets `cluster/serviceaccount` as its kubeconfig. The phase 2
+The registry and AI keys hold JSON objects, so a reader takes them from `data_json`. The Forgejo
+Connector definition also gets the `kubernetes/service-account` kubeconfig. The phase 2
 definitions get the reader login and the paths instead of the values, and each of their runs reads
 the secrets it needs. The Git Repository runs keep the push robot in their state, because the
 restapi provider has no write-only attributes. The Forgejo Connector runs keep nothing they read.
@@ -291,7 +293,7 @@ See
 
 No human mints it. The Git building block creates a technical user through the STACKIT Git API
 and exchanges that user's password for a Personal Access Token, which it writes to the Secrets
-Manager at `git/forgejo-api-token`, where the Git Repository and Forgejo Connector runs read it. See
+Manager at `<prefix>stackit/git`, where the Git Repository and Forgejo Connector runs read it. See
 `modules/stackit/git/buildingblock/README.md` for the two calls involved.
 
 ## Adopting Existing Resources
@@ -303,7 +305,7 @@ example a platform built before this architecture, instead of creating them:
 |---|---|---|
 | `project = {display_name, admin_bindings}` | the meshProject **Project Identifier** and its tenant on the landing zone platform; with the optional `display_name`, the project keeps that display name; the optional `admin_bindings` maps a username to the name of its existing Project Admin binding on the project, which meshStack allows only once per user | the outer run |
 | `ske = {}` | the SKE cluster **Cluster Name** in that tenant's STACKIT project | the SKE Cluster building block |
-| `git = {instance_id, instance_name, forgejo_organization, existing_forgejo_api_token_path}` | the STACKIT Git instance in that project and its Forgejo organization | the STACKIT Git Instance building block |
+| `git = {instance_id, instance_name, forgejo_organization}` | the STACKIT Git instance in that project and its Forgejo organization | the STACKIT Git Instance building block |
 | `dns = {zone_id, record_set_id}` | the DNS zone **DNS Subdomain**.**DNS Parent Domain** in that project and its wildcard record set | the DNS Zone building block |
 | `ingress = {}` | the namespaces `cert-manager` and `haproxy-ingress` in the cluster, the Helm releases `cert-manager` and `haproxy` in them, and the ClusterIssuer `letsencrypt-prod` | the Kubernetes Ingress building block |
 
@@ -315,15 +317,14 @@ instance's existing user has a password it does not know, and it orders no share
 STACKIT allows one per instance.
 
 To take over the organization, the Git building block needs a token of one of its owners: it makes
-its own technical user an owner with it, and removes that user again on deletion. It reads the token
-from `existing_forgejo_api_token_path` in the platform's Secrets Manager, under the key
-`forgejo_api_token`. The Secrets Manager is created by the platform, so hand the token over in the
-sensitive **Import Secrets** input, a map of Secrets Manager paths to secrets, which the nested run
-writes before it orders the Git building block:
+its own technical user an owner with it, and removes that user again on deletion. The Secrets
+Manager is created by the platform, so hand the token over in the sensitive **Import Secrets**
+input. The nested run writes it to `<prefix>imports/stackit/git` before it orders the Git building
+block, which reads it from there:
 
 ```hcl
 {
-  "imports/git/forgejo-api-token" = { forgejo_api_token = "<token>" }
+  git = { forgejo_api_token = "<token>" }
 }
 ```
 

@@ -220,7 +220,7 @@ resource "meshstack_building_block_definition" "this" {
 
       imports = {
         display_name    = "Imports"
-        description     = "HCL object of what the cluster, Git, DNS and ingress building blocks take over: `ske = {}`, `git = {instance_id, instance_name, forgejo_organization, existing_forgejo_api_token_path}`, `dns = {zone_id, record_set_id}`, `ingress = {}`. All optional."
+        description     = "HCL object of what the cluster, Git, DNS and ingress building blocks take over: `ske = {}`, `git = {instance_id, instance_name, forgejo_organization}`, `dns = {zone_id, record_set_id}`, `ingress = {}`. All optional."
         type            = "CODE"
         assignment_type = "USER_INPUT"
         is_optional     = true
@@ -228,7 +228,7 @@ resource "meshstack_building_block_definition" "this" {
 
       import_secrets = {
         display_name           = "Import Secrets"
-        description            = "HCL map of secrets this run writes to the platform's Secrets Manager, by path, each a map of keys to values."
+        description            = "HCL object `{git = {forgejo_api_token}}` this run writes to the platform's Secrets Manager for the adopted Forgejo organization."
         type                   = "CODE"
         assignment_type        = "USER_INPUT"
         sensitive              = {}

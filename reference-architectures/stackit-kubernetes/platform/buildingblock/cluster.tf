@@ -28,8 +28,8 @@ resource "meshstack_building_block" "cluster" {
       STACKIT_SERVICE_ACCOUNT_EMAIL = { value = jsonencode(local.service_account_email) }
       output_to_vault = {
         sensitive = {
-          secret_value   = local.output_to_vault.cluster_kubeconfig
-          secret_version = nonsensitive(sha256(local.output_to_vault.cluster_kubeconfig))
+          secret_value   = local.output_to_vault
+          secret_version = nonsensitive(sha256(local.output_to_vault))
         }
       }
       }, var.imports.ske == null ? {} : {
@@ -105,8 +105,8 @@ resource "meshstack_building_block" "service_account" {
       cluster_role = { value = jsonencode("cluster-admin") }
       output_to_vault = {
         sensitive = {
-          secret_value   = local.output_to_vault.service_account_kubeconfig
-          secret_version = nonsensitive(sha256(local.output_to_vault.service_account_kubeconfig))
+          secret_value   = local.output_to_vault
+          secret_version = nonsensitive(sha256(local.output_to_vault))
         }
       }
     }
@@ -129,8 +129,8 @@ module "kubernetes_integration" {
 
   kubeconfig         = ephemeral.vault_kv_secret_v2.service_account_kubeconfig.data.kubeconfig
   kube_host          = jsondecode(meshstack_building_block.cluster.status.outputs["kube_host"].value)
-  replicator_token   = ephemeral.vault_kv_secret_v2.kubernetes_platform.data.replicator_token
-  metering_token     = ephemeral.vault_kv_secret_v2.kubernetes_platform.data.metering_token
+  replicator_token   = ephemeral.vault_kv_secret_v2.kubernetes_platform.data["replicator-token"]
+  metering_token     = ephemeral.vault_kv_secret_v2.kubernetes_platform.data["metering-token"]
   kubeconfig_version = tostring(local.service_account_vault_secret.secret_hash)
   tokens_version     = tostring(local.kubernetes_platform_vault_secret.secret_hash)
   landing_zones      = local.landing_zones
@@ -168,8 +168,8 @@ resource "meshstack_building_block" "kubernetes_platform" {
     inputs = {
       output_to_vault = {
         sensitive = {
-          secret_value   = local.output_to_vault.kubernetes_platform
-          secret_version = nonsensitive(sha256(local.output_to_vault.kubernetes_platform))
+          secret_value   = local.output_to_vault
+          secret_version = nonsensitive(sha256(local.output_to_vault))
         }
       }
     }

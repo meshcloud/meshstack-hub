@@ -75,7 +75,7 @@ resource "meshstack_building_block" "platform" {
       stages = { value = jsonencode(jsonencode(var.stages)) }
       }, alltrue([for adopted in values(local.platform_imports) : adopted == null]) ? {} : {
       imports = { value = jsonencode(jsonencode(local.platform_imports)) }
-      }, nonsensitive(length(var.import_secrets)) == 0 ? {} : {
+      }, nonsensitive(var.import_secrets.git == null) ? {} : {
       import_secrets = {
         sensitive = {
           secret_value   = jsonencode(var.import_secrets)

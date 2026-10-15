@@ -35,18 +35,9 @@ locals {
     password = stackit_secretsmanager_user.reader.password
   }
 
-  vault_paths = {
-    cluster_kubeconfig         = "cluster/ske"
-    service_account_kubeconfig = "cluster/serviceaccount"
-    kubernetes_platform        = "kubernetes/platform"
-    git                        = "git/forgejo-api-token"
-    container_registry         = "registry"
-    ai_llm                     = "ai/model-serving"
-  }
+  secrets_path_prefix = "${var.platform_identifier}/"
 
-  output_to_vault = {
-    for block, path in local.vault_paths : block => jsonencode(merge(local.secrets_manager_writer, { path = path }))
-  }
+  output_to_vault = jsonencode(merge(local.secrets_manager_writer, { path_prefix = local.secrets_path_prefix }))
 }
 
 resource "meshstack_location" "this" {

@@ -14,11 +14,13 @@ landing zone per stage.
 With `imports.ske`, `imports.git`, `imports.dns` or `imports.ingress` set, the SKE Cluster, STACKIT
 Git Instance, DNS Zone or Kubernetes Ingress building block takes over what already exists instead
 of creating it. In playground mode it gets `release_on_destroy`, so deleting it leaves what it took
-over in place. The Git building block also
-takes over the Forgejo organization with the existing token at
-`imports.git.existing_forgejo_api_token_path`. This run writes each entry of `import_secrets` to the
-Secrets Manager with the writer user before it orders the Git building block, so that token can
-arrive through it.
+over in place. The Git building block also takes over the Forgejo organization with the token in
+`import_secrets.git`, which this run writes to `<platform identifier>/imports/stackit/git` in the
+Secrets Manager with the writer user before it orders the Git building block.
+
+Every block that writes a secret gets the prefix `<platform identifier>/` in `output_to_vault` and
+reports the secret's path and hash in its `vault_secret` output. This run reads every path from
+there.
 
 It **registers building block definitions of its own** — `stackit/secrets-manager`, `ske/cluster`,
 `kubernetes/service-account`, `kubernetes`, `kubernetes/ingress`, `stackit/git`,

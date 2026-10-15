@@ -9,13 +9,15 @@ locals {
 
   dns_zone_name = jsondecode(meshstack_building_block.dns.status.outputs["zone_name"].value)
 
+  git_vault_secret                = jsondecode(jsondecode(meshstack_building_block.git.status.outputs["vault_secret"].value))
   ai_llm_vault_secret             = jsondecode(jsondecode(meshstack_building_block.ai_llm.status.outputs["vault_secret"].value))
   container_registry_vault_secret = jsondecode(jsondecode(meshstack_building_block.container_registry.status.outputs["vault_secret"].value))
 
-  # The registry reports its robots only once they exist, and a disabled module still evaluates its
-  # arguments.
+  # The registry reports its secret only once the robots exist, and a disabled module still evaluates
+  # its arguments.
+  container_registry_secret_path = var.phase2_completed ? local.container_registry_vault_secret.path : ""
   connector_secrets_revision = var.phase2_completed ? parseint(substr(sha256(jsonencode([
-    local.container_registry_vault_secret.pull.secret_hash,
+    local.container_registry_vault_secret.secret_hash,
     local.ai_llm_vault_secret.secret_hash,
   ])), 0, 12), 16) : 1
 }
@@ -31,8 +33,8 @@ module "git_repository_integration" {
   forgejo_organization = local.forgejo_organization
 
   vault_reader           = local.secrets_manager_reader
-  forgejo_api_token_path = local.vault_paths.git
-  registry_push_path     = "${local.vault_paths.container_registry}/push"
+  forgejo_api_token_path = local.git_vault_secret.path
+  registry_secret_path   = local.container_registry_secret_path
 
   # The token's technical user is restricted in Forgejo and cannot look up other users, so members
   # are resolved through the STACKIT Git API instead.
@@ -105,16 +107,13 @@ module "forgejo_connector_integration" {
   forgejo_host                 = local.forgejo_instance_url
   forgejo_repo_definition_uuid = module.git_repository_integration.building_block_definition.uuid
 
-  harbor_host = "https://${local.registry_host}"
-
   vault_reader           = local.secrets_manager_reader
-  forgejo_api_token_path = local.vault_paths.git
-  registry_pull_path     = "${local.vault_paths.container_registry}/pull"
+  forgejo_api_token_path = local.git_vault_secret.path
+  registry_secret_path   = local.container_registry_secret_path
 
-  # `stackit-ai` is the secret name the starter kit's demo application reads inference configuration
-  # from; the AI building block already writes the key names it expects.
+  # The starter kit's demo application reads its inference configuration from `stackit-ai`.
   additional_kubernetes_secrets = {
-    "stackit-ai" = local.vault_paths.ai_llm
+    "stackit-ai" = local.ai_llm_vault_secret.path
   }
   secrets_revision = local.connector_secrets_revision
 

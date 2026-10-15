@@ -69,8 +69,8 @@ resource "meshstack_building_block" "ai_llm" {
       STACKIT_SERVICE_ACCOUNT_EMAIL = { value = jsonencode(local.service_account_email) }
       output_to_vault = {
         sensitive = {
-          secret_value   = local.output_to_vault.ai_llm
-          secret_version = nonsensitive(sha256(local.output_to_vault.ai_llm))
+          secret_value   = local.output_to_vault
+          secret_version = nonsensitive(sha256(local.output_to_vault))
         }
       }
     }
@@ -90,7 +90,7 @@ resource "meshstack_building_block" "git" {
   wait_for_completion = true
 
   # An adopted organization's existing token is read on every run, the delete run included.
-  depends_on = [vault_kv_secret_v2.import]
+  depends_on = [vault_kv_secret_v2.import_git]
 
   lifecycle {
     postcondition {
@@ -112,14 +112,14 @@ resource "meshstack_building_block" "git" {
       STACKIT_SERVICE_ACCOUNT_EMAIL = { value = jsonencode(local.service_account_email) }
       output_to_vault = {
         sensitive = {
-          secret_value   = local.output_to_vault.git
-          secret_version = nonsensitive(sha256(local.output_to_vault.git))
+          secret_value   = local.output_to_vault
+          secret_version = nonsensitive(sha256(local.output_to_vault))
         }
       }
       }, var.imports.git == null ? {} : {
       imports = { value = jsonencode(jsonencode({
         instance_id                     = var.imports.git.instance_id
-        existing_forgejo_api_token_path = var.imports.git.existing_forgejo_api_token_path
+        existing_forgejo_api_token_path = vault_kv_secret_v2.import_git.name
       })) }
       release_on_destroy = { value = jsonencode(var.playground_mode) }
     })
@@ -160,8 +160,8 @@ resource "meshstack_building_block" "container_registry" {
       mirrored_base_images = { value = jsonencode(jsonencode(["docker.io/library/python:3.12.9-slim-bookworm"])) }
       output_to_vault = {
         sensitive = {
-          secret_value   = local.output_to_vault.container_registry
-          secret_version = nonsensitive(sha256(local.output_to_vault.container_registry))
+          secret_value   = local.output_to_vault
+          secret_version = nonsensitive(sha256(local.output_to_vault))
         }
       }
     }
