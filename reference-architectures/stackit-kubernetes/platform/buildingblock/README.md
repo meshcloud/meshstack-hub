@@ -11,8 +11,8 @@ ClusterIssuer), the meshStack replicator and metering identities, a DNS zone, a 
 Serving token, a STACKIT Git instance, a container registry, and the meshStack SKE platform with one
 landing zone per stage.
 
-With `imports.ske`, `imports.git`, `imports.dns` or `imports.ingress` set, the SKE Cluster, STACKIT
-Git Instance, DNS Zone or Kubernetes Ingress building block takes over what already exists instead
+With a key of `imports` set (`ske`, `git`, `dns`, `ingress`, `secrets_manager`, `container_registry`
+or `kubernetes_platform`), the building block of that name takes over what already exists instead
 of creating it. In playground mode it gets `release_on_destroy`, so deleting it leaves what it took
 over in place. The Git building block also takes over the Forgejo organization with the token in
 `import_secrets.git`, which this run writes to `<platform identifier>/imports/stackit/git` in the

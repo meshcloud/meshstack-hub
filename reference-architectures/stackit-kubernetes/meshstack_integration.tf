@@ -386,7 +386,7 @@ resource "meshstack_building_block_definition" "this" {
 
       imports = {
         display_name    = "Imports"
-        description     = "HCL object of what to take over: `project = {display_name?, admin_bindings?}`, `ske = {}`, `git = {instance_id, instance_name, forgejo_organization}`, `dns = {zone_id, record_set_id}`, `ingress = {}`. All need `project`, `git` needs Import Secrets."
+        description     = "HCL object of what to take over, by key: `project`, `ske`, `git`, `dns`, `ingress`, `secrets_manager`, `container_registry`, `kubernetes_platform`; see Adopting Existing Resources in the README. All need `project`, `git` needs Import Secrets."
         type            = "CODE"
         assignment_type = "USER_INPUT"
         is_optional     = true

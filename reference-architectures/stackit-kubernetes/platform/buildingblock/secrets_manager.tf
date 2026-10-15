@@ -23,10 +23,13 @@ resource "meshstack_building_block" "secrets_manager" {
     display_name                          = "Secrets Manager"
     target_ref                            = local.tenant_ref
 
-    inputs = {
+    inputs = merge({
       instance_name                 = { value = jsonencode(var.platform_identifier) }
       STACKIT_SERVICE_ACCOUNT_EMAIL = { value = jsonencode(local.service_account_email) }
-    }
+      }, var.imports.secrets_manager == null ? {} : {
+      imports            = { value = jsonencode(jsonencode(var.imports.secrets_manager)) }
+      release_on_destroy = { value = jsonencode(var.playground_mode) }
+    })
   }
 }
 

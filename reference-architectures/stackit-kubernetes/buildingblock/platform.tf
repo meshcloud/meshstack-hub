@@ -73,7 +73,7 @@ resource "meshstack_building_block" "platform" {
         project_owner_tag_key = var.tags.project_owner_tag_key
       })) }
       stages = { value = jsonencode(jsonencode(var.stages)) }
-      }, alltrue([for adopted in values(local.platform_imports) : adopted == null]) ? {} : {
+      }, length(local.platform_imports) == 0 ? {} : {
       imports = { value = jsonencode(jsonencode(local.platform_imports)) }
       }, nonsensitive(var.import_secrets.git == null) ? {} : {
       import_secrets = {

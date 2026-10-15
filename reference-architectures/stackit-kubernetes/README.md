@@ -308,19 +308,22 @@ example a platform built before this architecture, instead of creating them:
 | `git = {instance_id, instance_name, forgejo_organization}` | the STACKIT Git instance in that project and its Forgejo organization | the STACKIT Git Instance building block |
 | `dns = {zone_id, record_set_id}` | the DNS zone **DNS Subdomain**.**DNS Parent Domain** in that project and its wildcard record set | the DNS Zone building block |
 | `ingress = {}` | the namespaces `cert-manager` and `haproxy-ingress` in the cluster, the Helm releases `cert-manager` and `haproxy` in them, and the ClusterIssuer `letsencrypt-prod` | the Kubernetes Ingress building block |
+| `secrets_manager = {instance_id}` | the Secrets Manager instance in that project, renamed to the platform identifier | the Secrets Manager building block |
+| `container_registry = {artifactory_id, registry_name}` | the container registry of that full name in that project | the STACKIT Container Registry building block |
+| `kubernetes_platform = {}` | the namespace `meshcloud` in the cluster and the replicator and metering identities `meshfed-service` and `meshfed-metering`, as an earlier meshStack platform registration left them | the Kubernetes meshPlatform Credentials building block |
 
 Every key but `project` needs `project`, because what it names lives in that tenant's STACKIT
-project, and `ingress` needs `ske`. Everything else is created new, also when it is adopted: the
-service account and its federations, the Secrets Manager, the kubeconfig and the meshStack
-platform. The Git building block creates its own technical user with a random suffix, because the
-instance's existing user has a password it does not know, and it orders no shared runner, because
-STACKIT allows one per instance.
+project, and `ingress` and `kubernetes_platform` need `ske`. Everything else is created new, also
+when it is adopted: the service account and its federations, the Secrets Manager users, the AI
+Model Serving token, the registry's robots, the kubeconfig and the meshStack platform. The Git
+building block creates its own technical user with a random suffix, because the instance's existing
+user has a password it does not know, and it orders no shared runner, because STACKIT allows one
+per instance.
 
 To take over the organization, the Git building block needs a token of one of its owners: it makes
-its own technical user an owner with it, and removes that user again on deletion. The Secrets
-Manager is created by the platform, so hand the token over in the sensitive **Import Secrets**
-input. The nested run writes it to `<prefix>imports/stackit/git` before it orders the Git building
-block, which reads it from there:
+its own technical user an owner with it, and removes that user again on deletion. Hand the token
+over in the sensitive **Import Secrets** input. The nested run writes it to
+`<prefix>imports/stackit/git` before it orders the Git building block, which reads it from there:
 
 ```hcl
 {

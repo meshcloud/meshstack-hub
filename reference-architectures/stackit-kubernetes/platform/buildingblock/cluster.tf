@@ -165,14 +165,17 @@ resource "meshstack_building_block" "kubernetes_platform" {
     display_name                          = "Kubernetes meshPlatform Credentials"
     target_ref                            = local.tenant_ref
 
-    inputs = {
+    inputs = merge({
       output_to_vault = {
         sensitive = {
           secret_value   = local.output_to_vault
           secret_version = nonsensitive(sha256(local.output_to_vault))
         }
       }
-    }
+      }, var.imports.kubernetes_platform == null ? {} : {
+      imports            = { value = jsonencode(jsonencode(var.imports.kubernetes_platform)) }
+      release_on_destroy = { value = jsonencode(var.playground_mode) }
+    })
   }
 }
 

@@ -151,9 +151,9 @@ resource "meshstack_building_block" "container_registry" {
     display_name                          = "STACKIT Container Registry"
     target_ref                            = local.tenant_ref
 
-    inputs = {
+    inputs = merge({
       # A Harbor project name is lowercase only, while the platform identifier also allows capitals.
-      registry_name                 = { value = jsonencode(lower(var.platform_identifier)) }
+      registry_name                 = { value = jsonencode(var.imports.container_registry != null ? var.imports.container_registry.registry_name : lower(var.platform_identifier)) }
       STACKIT_SERVICE_ACCOUNT_EMAIL = { value = jsonencode(local.service_account_email) }
 
       require_robot_link   = { value = jsonencode(var.phase2_completed) }
@@ -164,6 +164,9 @@ resource "meshstack_building_block" "container_registry" {
           secret_version = nonsensitive(sha256(local.output_to_vault))
         }
       }
-    }
+      }, var.imports.container_registry == null ? {} : {
+      imports            = { value = jsonencode(jsonencode({ artifactory_id = var.imports.container_registry.artifactory_id })) }
+      release_on_destroy = { value = jsonencode(var.playground_mode) }
+    })
   }
 }

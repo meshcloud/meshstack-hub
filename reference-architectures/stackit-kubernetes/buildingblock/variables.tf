@@ -232,18 +232,26 @@ variable "imports" {
       record_set_id = string
     }))
     ingress = optional(object({}))
+    secrets_manager = optional(object({
+      instance_id = string
+    }))
+    container_registry = optional(object({
+      artifactory_id = string
+      registry_name  = string
+    }))
+    kubernetes_platform = optional(object({}))
   })
   default     = null
-  description = "Existing resources the platform takes over instead of creating them: the meshProject `project_identifier` and its tenant on the landing zone platform (`project`, optionally keeping its `display_name` and taking over its existing Project Admin bindings in `admin_bindings`, a map of username to binding name), the SKE cluster `cluster_name` (`ske`), the STACKIT Git instance with its Forgejo organization (`git`) and the DNS zone `<dns_subdomain>.<dns_parent_domain>` with its wildcard record set (`dns`) in that tenant's STACKIT project, and the ingress installation in the cluster (`ingress`). `git` needs `import_secrets.git`. Null creates everything new."
+  description = "Existing resources the platform takes over instead of creating them: the meshProject `project_identifier` and its tenant on the landing zone platform (`project`, optionally keeping its `display_name` and taking over its existing Project Admin bindings in `admin_bindings`, a map of username to binding name), the SKE cluster `cluster_name` (`ske`), the STACKIT Git instance with its Forgejo organization (`git`), the DNS zone `<dns_subdomain>.<dns_parent_domain>` with its wildcard record set (`dns`), the Secrets Manager instance (`secrets_manager`) and the container registry (`container_registry`) in that tenant's STACKIT project, and the ingress installation (`ingress`) and the meshStack replicator and metering identities (`kubernetes_platform`) in the cluster. `git` needs `import_secrets.git`. Null creates everything new."
 
   validation {
-    condition     = var.imports == null || var.imports.project != null || alltrue([for key in ["ske", "git", "dns", "ingress"] : var.imports[key] == null])
-    error_message = "imports.ske, .git, .dns and .ingress need imports.project, because they live in that project."
+    condition     = var.imports == null || var.imports.project != null || alltrue([for key, adopted in var.imports : adopted == null])
+    error_message = "Every key of imports needs imports.project, because what it names lives in that project."
   }
 
   validation {
-    condition     = var.imports == null || var.imports.ingress == null || var.imports.ske != null
-    error_message = "imports.ingress needs imports.ske, because the ingress runs in that cluster."
+    condition     = var.imports == null || (var.imports.ingress == null && var.imports.kubernetes_platform == null) || var.imports.ske != null
+    error_message = "imports.ingress and imports.kubernetes_platform need imports.ske, because they live in that cluster."
   }
 
   validation {

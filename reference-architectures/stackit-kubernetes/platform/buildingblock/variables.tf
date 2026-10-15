@@ -57,10 +57,18 @@ variable "imports" {
       record_set_id = string
     }))
     ingress = optional(object({}))
+    secrets_manager = optional(object({
+      instance_id = string
+    }))
+    container_registry = optional(object({
+      artifactory_id = string
+      registry_name  = string
+    }))
+    kubernetes_platform = optional(object({}))
   })
   nullable    = false
   default     = {}
-  description = "Existing SKE cluster `cluster_name`, STACKIT Git instance with its Forgejo organization and DNS zone with its wildcard record set in the platform's STACKIT project, and ingress installation in the cluster, that the cluster, Git, DNS and ingress building blocks take over instead of creating them. In playground mode, deleting those building blocks leaves them in place."
+  description = "Existing SKE cluster `cluster_name`, STACKIT Git instance with its Forgejo organization, DNS zone with its wildcard record set, Secrets Manager instance and container registry in the platform's STACKIT project, and ingress installation and meshStack replicator and metering identities in the cluster, that the building blocks of the same name take over instead of creating them. In playground mode, deleting those building blocks leaves them in place."
 }
 
 variable "import_secrets" {
