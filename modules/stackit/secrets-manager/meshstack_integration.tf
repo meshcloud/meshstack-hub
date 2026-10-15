@@ -224,6 +224,22 @@ resource "meshstack_building_block_definition" "this" {
         type            = "STRING"
         assignment_type = "USER_INPUT"
       }
+
+      imports = {
+        display_name    = "Imports"
+        description     = "HCL object `{instance_id}` of an existing instance to take over. It is renamed to Instance Name. Leave empty to create a new instance."
+        type            = "CODE"
+        assignment_type = "USER_INPUT"
+        is_optional     = true
+      }
+
+      release_on_destroy = {
+        display_name    = "Release on Destroy"
+        description     = "Leave the instance in place when this building block is deleted. Cannot change once the instance is managed."
+        type            = "BOOLEAN"
+        assignment_type = "USER_INPUT"
+        default_value   = jsonencode(false)
+      }
     }
 
     outputs = {
