@@ -108,8 +108,10 @@ locals {
   # leaving room in the project name for the stage and the random suffix.
   name_regex = "^[a-zA-Z0-9-]{0,24}$"
 
-  stages     = sort(keys(var.landing_zone_refs))
-  stage_list = join(", ", [for stage in local.stages : "`${stage}`"])
+  stages = sort(keys(var.landing_zone_refs))
+  # The readme renders markdown, the description is plain text.
+  stage_list       = join(", ", [for stage in local.stages : "`${stage}`"])
+  stage_list_plain = join(", ", local.stages)
 }
 
 resource "meshstack_building_block_definition" "this" {
@@ -120,7 +122,7 @@ resource "meshstack_building_block_definition" "this" {
 
   spec = {
     display_name             = coalesce(var.bbd_display_name, "OpenShift Starterkit")
-    description              = coalesce(var.bbd_description, "A ready-to-deploy OpenShift environment: one project per stage (${local.stage_list}), a GitHub repository from a template and a GitHub Actions pipeline that deploys into every stage.")
+    description              = coalesce(var.bbd_description, "A ready-to-deploy OpenShift environment: one project per stage (${local.stage_list_plain}), a GitHub repository from a template and a GitHub Actions pipeline that deploys into every stage.")
     symbol                   = "https://raw.githubusercontent.com/meshcloud/meshstack-hub/${var.hub.git_ref}/modules/openshift/starterkit/buildingblock/logo.png"
     notification_subscribers = var.notification_subscribers
     run_transparency         = true
