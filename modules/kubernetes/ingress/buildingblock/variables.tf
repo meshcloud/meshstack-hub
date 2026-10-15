@@ -307,3 +307,16 @@ variable "dns01" {
     error_message = "dns01.certificate_domain must be dns01.zone_name or a name below it, because the DNS-01 solver only answers for names inside the zone."
   }
 }
+
+variable "imports" {
+  type        = object({})
+  default     = null
+  description = "Set to `{}` to take over an existing installation: the namespaces `cert_manager_namespace` and `haproxy_namespace`, the Helm releases `cert-manager` and `haproxy_release_name` in them, and the ClusterIssuer `cluster_issuer_name`. Null installs anew."
+}
+
+variable "release_on_destroy" {
+  type        = bool
+  nullable    = false
+  default     = false
+  description = "Leave the namespaces and Helm releases in place when this building block is destroyed. Cannot change once they are managed."
+}
