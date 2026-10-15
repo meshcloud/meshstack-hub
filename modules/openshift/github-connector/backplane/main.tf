@@ -2,6 +2,11 @@ resource "kubernetes_namespace" "connector" {
   metadata {
     name = var.namespace
   }
+
+  lifecycle {
+    # OpenShift annotates every namespace with its SCC UID range and SELinux labels.
+    ignore_changes = [metadata[0].annotations]
+  }
 }
 
 # Identity of the building block run. It needs no access to workloads: it only sets up the service
@@ -10,6 +15,11 @@ resource "kubernetes_service_account" "connector" {
   metadata {
     name      = var.service_account_name
     namespace = kubernetes_namespace.connector.metadata[0].name
+  }
+
+  lifecycle {
+    # OpenShift adds a dockercfg pull secret for the internal registry to every service account.
+    ignore_changes = [image_pull_secret, secret]
   }
 }
 

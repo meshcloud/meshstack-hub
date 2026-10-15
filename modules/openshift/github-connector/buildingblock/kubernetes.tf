@@ -4,6 +4,11 @@ resource "kubernetes_service_account" "github_actions" {
     name      = "github-actions"
     namespace = var.namespace
   }
+
+  lifecycle {
+    # OpenShift adds a dockercfg pull secret for the internal registry to every service account.
+    ignore_changes = [image_pull_secret, secret]
+  }
 }
 
 resource "kubernetes_secret" "github_actions" {
