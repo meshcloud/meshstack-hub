@@ -129,14 +129,15 @@ it in the registry. The default is an empty list, which mirrors nothing.
 
 ## Modules
 
-No modules.
+| Name | Source | Version |
+| ---- | ------ | ------- |
+| <a name="module_artifactory"></a> [artifactory](#module\_artifactory) | ./modules/artifactory | n/a |
 
 ## Resources
 
 | Name | Type |
 | ---- | ---- |
 | [random_string.name_suffix](https://registry.terraform.io/providers/hashicorp/random/latest/docs/resources/string) | resource |
-| [restapi_object.artifactory](https://registry.terraform.io/providers/Mastercard/restapi/latest/docs/resources/object) | resource |
 | [restapi_object.pull_robot](https://registry.terraform.io/providers/Mastercard/restapi/latest/docs/resources/object) | resource |
 | [restapi_object.push_robot](https://registry.terraform.io/providers/Mastercard/restapi/latest/docs/resources/object) | resource |
 | [restapi_object.service_enablement](https://registry.terraform.io/providers/Mastercard/restapi/latest/docs/resources/object) | resource |
@@ -152,9 +153,11 @@ No modules.
 
 | Name | Description | Type | Default | Required |
 | ---- | ----------- | ---- | ------- | :------: |
+| <a name="input_imports"></a> [imports](#input\_imports) | Existing registry named `registry_name` this building block takes over instead of creating one. The container registry service is then left enabled on destroy. Null creates a new registry. | <pre>object({<br/>    artifactory_id = string<br/>  })</pre> | `null` | no |
 | <a name="input_mirrored_base_images"></a> [mirrored\_base\_images](#input\_mirrored\_base\_images) | Fully qualified upstream images to mirror into the registry as `<registry>/<name>:<tag>`. | `list(string)` | n/a | yes |
 | <a name="input_output_to_vault"></a> [output\_to\_vault](#input\_output\_to\_vault) | Vault KV v2 login this building block writes its secret with once the robots exist: the server `address`, the engine `mount`, a userpass `username` and `password`, and an optional `path_prefix`. The secret is `<path_prefix>stackit/container-registry`, with the keys `pull-kubernetes-secret` (`{".dockerconfigjson"}`) and `push-action-secrets` (`{HARBOR_REGISTRY, HARBOR_USERNAME, HARBOR_PASSWORD}`). Null writes none. | <pre>object({<br/>    address     = string<br/>    mount       = string<br/>    username    = string<br/>    password    = string<br/>    path_prefix = optional(string, "")<br/>  })</pre> | `null` | no |
-| <a name="input_registry_name"></a> [registry\_name](#input\_registry\_name) | Base name of the registry, to which a random suffix is appended. | `string` | n/a | yes |
+| <a name="input_registry_name"></a> [registry\_name](#input\_registry\_name) | Base name of the registry, to which a random suffix is appended. With `imports`, the full name of the adopted registry. | `string` | n/a | yes |
+| <a name="input_release_on_destroy"></a> [release\_on\_destroy](#input\_release\_on\_destroy) | Leave the registry in place when this building block is destroyed. Cannot change once the registry is managed. | `bool` | `false` | no |
 | <a name="input_require_robot_link"></a> [require\_robot\_link](#input\_require\_robot\_link) | Fail the run while no robot is linked to the service account, instead of minting no robots. | `bool` | `false` | no |
 | <a name="input_role_mapping"></a> [role\_mapping](#input\_role\_mapping) | Maps meshStack project roles to STACKIT container registry roles. Unknown roles are ignored. | `map(list(string))` | n/a | yes |
 | <a name="input_stackit_project_id"></a> [stackit\_project\_id](#input\_stackit\_project\_id) | STACKIT project the registry is created in. | `string` | n/a | yes |

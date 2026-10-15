@@ -13,7 +13,7 @@ variable "stackit_region" {
 variable "registry_name" {
   type        = string
   nullable    = false
-  description = "Base name of the registry, to which a random suffix is appended."
+  description = "Base name of the registry, to which a random suffix is appended. With `imports`, the full name of the adopted registry."
 
   # The API takes 5 to 255 characters and also allows dots and underscores. Dashes only, and a
   # tighter cap, keep the name usable as a Harbor project name and in an image reference. The cap is
@@ -68,4 +68,19 @@ variable "output_to_vault" {
   default     = null
   sensitive   = true
   description = "Vault KV v2 login this building block writes its secret with once the robots exist: the server `address`, the engine `mount`, a userpass `username` and `password`, and an optional `path_prefix`. The secret is `<path_prefix>stackit/container-registry`, with the keys `pull-kubernetes-secret` (`{\".dockerconfigjson\"}`) and `push-action-secrets` (`{HARBOR_REGISTRY, HARBOR_USERNAME, HARBOR_PASSWORD}`). Null writes none."
+}
+
+variable "imports" {
+  type = object({
+    artifactory_id = string
+  })
+  default     = null
+  description = "Existing registry named `registry_name` this building block takes over instead of creating one. The container registry service is then left enabled on destroy. Null creates a new registry."
+}
+
+variable "release_on_destroy" {
+  type        = bool
+  nullable    = false
+  default     = false
+  description = "Leave the registry in place when this building block is destroyed. Cannot change once the registry is managed."
 }
