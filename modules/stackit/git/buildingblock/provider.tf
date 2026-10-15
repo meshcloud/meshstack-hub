@@ -56,7 +56,7 @@ provider "restapi" {
   write_returns_object = false
 
   headers = {
-    Authorization = var.imports == null ? "" : "token ${ephemeral.vault_kv_secret_v2.existing_forgejo_api_token.data.forgejo_api_token}"
+    Authorization = var.imports == null ? "" : "token ${ephemeral.vault_kv_secret_v2.existing_forgejo_api_token.data["forgejo-api-token"]}"
     Content-Type  = "application/json"
   }
 

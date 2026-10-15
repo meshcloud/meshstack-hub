@@ -14,7 +14,7 @@ It combines:
 - workspace-level target type
 - static inputs `FORGEJO_HOST`, `forgejo_organization`, `default_branch` and `action_variables`
 - the sensitive static input `vault_reader` and the Vault paths `forgejo_api_token_path` and, if
-  set, `registry_push_path`
+  set, `registry_secret_path`
 - user inputs (`name`, `description`, `private`, `clone_addr`, `extra_action_variables`)
 - outputs exposed to users (`repository_id`, `repository_owner`, `repository_name`, `repository_html_url`, `repository_clone_url`, `repository_ssh_url`, `summary`)
 
@@ -23,9 +23,9 @@ This allows platform teams to publish a reusable self-service Git repository bui
 ## Secrets
 
 The definition holds no secret value except the Vault login. Each run reads the Forgejo API token
-and the optional registry push robot from a Vault KV v2 engine, such as a STACKIT Secrets Manager
-instance, and sets the push robot on the repository as the Actions secrets `HARBOR_USERNAME` and
-`HARBOR_PASSWORD`. What a run reads is kept in its Terraform state.
+and the optional registry secret from a Vault KV v2 engine, such as a STACKIT Secrets Manager
+instance, and sets each entry of the registry secret's `push-action-secrets` on the repository as an
+Actions secret of the same name. What a run reads is kept in its Terraform state.
 
 <!-- BEGIN_TF_DOCS -->
 ## Requirements
@@ -50,12 +50,12 @@ instance, and sets the push robot on the repository as the Actions secrets `HARB
 | <a name="input_bbd_description"></a> [bbd\_description](#input\_bbd\_description) | Overrides the one-line description shown next to the marketplace entry. | `string` | `null` | no |
 | <a name="input_bbd_display_name"></a> [bbd\_display\_name](#input\_bbd\_display\_name) | Overrides the name of the marketplace entry application teams see in the catalog. | `string` | `null` | no |
 | <a name="input_bbd_readme"></a> [bbd\_readme](#input\_bbd\_readme) | Overrides the markdown readme shown in the marketplace before ordering. | `string` | `null` | no |
-| <a name="input_forgejo_api_token_path"></a> [forgejo\_api\_token\_path](#input\_forgejo\_api\_token\_path) | Vault KV v2 secret holding the Forgejo API token under the key `forgejo_api_token`. The token needs the write:repository and write:organization scopes. | `string` | n/a | yes |
+| <a name="input_forgejo_api_token_path"></a> [forgejo\_api\_token\_path](#input\_forgejo\_api\_token\_path) | Vault KV v2 secret holding the Forgejo API token under the key `forgejo-api-token`. The token needs the write:repository and write:organization scopes. | `string` | n/a | yes |
 | <a name="input_forgejo_base_url"></a> [forgejo\_base\_url](#input\_forgejo\_base\_url) | n/a | `string` | n/a | yes |
 | <a name="input_forgejo_organization"></a> [forgejo\_organization](#input\_forgejo\_organization) | n/a | `string` | n/a | yes |
 | <a name="input_hub"></a> [hub](#input\_hub) | `git_ref`: Hub release reference. Set to a tag (e.g. 'v1.2.3') or branch or commit sha of meshcloud/meshstack-hub repo.<br><br/>`bbd_draft`: If true, allows changing the building block definition for upgrading dependent building blocks. | <pre>object({<br/>    git_ref   = optional(string, "main")<br/>    bbd_draft = optional(bool, true)<br/>  })</pre> | <pre>{<br/>  "bbd_draft": true,<br/>  "git_ref": "main"<br/>}</pre> | no |
 | <a name="input_meshstack"></a> [meshstack](#input\_meshstack) | Shared meshStack context. Tags are optional and propagated to building block definition metadata. | <pre>object({<br/>    owning_workspace_identifier = string<br/>    tags                        = optional(map(list(string)), {})<br/>  })</pre> | n/a | yes |
-| <a name="input_registry_push_path"></a> [registry\_push\_path](#input\_registry\_push\_path) | Vault KV v2 secret holding a container registry push robot under the keys `username` and `password`, set on every repository as the Actions secrets `HARBOR_USERNAME` and `HARBOR_PASSWORD`. Null sets neither. | `string` | `null` | no |
+| <a name="input_registry_secret_path"></a> [registry\_secret\_path](#input\_registry\_secret\_path) | Vault KV v2 secret whose key `push-action-secrets` holds Actions secrets by name, as the container registry building block writes them. Each is set on every repository. Null sets none. | `string` | `null` | no |
 | <a name="input_stackit_git_instance_id"></a> [stackit\_git\_instance\_id](#input\_stackit\_git\_instance\_id) | STACKIT Git instance whose users are matched to workspace members by email. | `string` | n/a | yes |
 | <a name="input_stackit_project_id"></a> [stackit\_project\_id](#input\_stackit\_project\_id) | STACKIT project of the Git instance. | `string` | n/a | yes |
 | <a name="input_stackit_service_account_email"></a> [stackit\_service\_account\_email](#input\_stackit\_service\_account\_email) | Service account the runs act as via WIF to list STACKIT Git users. It must federate this definition. | `string` | n/a | yes |

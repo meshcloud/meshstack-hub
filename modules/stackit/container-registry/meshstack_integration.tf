@@ -245,7 +245,7 @@ resource "meshstack_building_block_definition" "this" {
 
       output_to_vault = {
         display_name           = "Output to Vault"
-        description            = "HCL object `{address, mount, username, password, path}` of the Vault KV v2 secrets the push and pull robots are written to, as `<path>/push` and `<path>/pull` under the keys `username` and `password`. Leave empty to write them nowhere."
+        description            = "HCL object `{address, mount, username, password, path_prefix?}` of the Vault KV v2 login the robots are written with, to `<path_prefix>stackit/container-registry` under `pull-kubernetes-secret` and `push-action-secrets`. Leave empty to write none."
         type                   = "CODE"
         assignment_type        = "USER_INPUT"
         sensitive              = {}
@@ -257,7 +257,7 @@ resource "meshstack_building_block_definition" "this" {
     outputs = {
       vault_secret = {
         display_name    = "Vault Secret"
-        description     = "JSON object `{push, pull}`, each `{path, secret_hash}` of a robot secret in Vault, or `{}` when no robots are written. `secret_hash` changes with the secret's content."
+        description     = "JSON object `{path, secret_hash}` of the secret in Vault, or `{}` when `output_to_vault` is not set or no robots exist yet. `secret_hash` changes with the secret's content."
         type            = "CODE"
         assignment_type = "NONE"
       }

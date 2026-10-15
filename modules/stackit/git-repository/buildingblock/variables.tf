@@ -82,13 +82,13 @@ variable "vault_reader" {
 variable "forgejo_api_token_path" {
   type        = string
   nullable    = false
-  description = "Vault KV v2 secret holding the Forgejo API token under the key `forgejo_api_token`."
+  description = "Vault KV v2 secret holding the Forgejo API token under the key `forgejo-api-token`."
 }
 
-variable "registry_push_path" {
+variable "registry_secret_path" {
   type        = string
   default     = null
-  description = "Vault KV v2 secret holding a container registry push robot under the keys `username` and `password`, set as the Actions secrets `HARBOR_USERNAME` and `HARBOR_PASSWORD`. Null sets neither."
+  description = "Vault KV v2 secret whose key `push-action-secrets` holds Actions secrets by name, such as the container registry's push robot. Each is set on the repository. Null sets none."
 }
 
 variable "stackit_project_id" {

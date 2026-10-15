@@ -1,9 +1,13 @@
 locals {
-  # The starter kit application reads its inference configuration from these keys.
+  vault_secret_path = "${nonsensitive(var.output_to_vault.path_prefix)}stackit/ai-llm"
+
   vault_data_json = jsonencode({
-    STACKIT_AI_BASE_URL = local.base_url
-    STACKIT_AI_API_KEY  = stackit_modelserving_token.this.token
-    STACKIT_AI_MODEL    = var.model
+    # The starter kit application reads its inference configuration from these keys.
+    "kubernetes-secret" = {
+      STACKIT_AI_BASE_URL = local.base_url
+      STACKIT_AI_API_KEY  = stackit_modelserving_token.this.token
+      STACKIT_AI_MODEL    = var.model
+    }
   })
 
   # The version must be a number, so the first 48 bits of the hash stand in for it.
@@ -23,7 +27,7 @@ provider "vault" {
 
 resource "vault_kv_secret_v2" "this" {
   mount                = var.output_to_vault.mount
-  name                 = var.output_to_vault.path
+  name                 = local.vault_secret_path
   data_json_wo         = local.vault_data_json
   data_json_wo_version = local.vault_secret_hash
 }

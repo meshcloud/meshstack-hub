@@ -91,15 +91,15 @@ variable "role_mapping" {
 
 variable "output_to_vault" {
   type = object({
-    address  = string
-    mount    = string
-    username = string
-    password = string
-    path     = string
+    address     = string
+    mount       = string
+    username    = string
+    password    = string
+    path_prefix = optional(string, "")
   })
   default     = null
   sensitive   = true
-  description = "Vault KV v2 secret this building block writes its secrets to: the server `address`, the engine `mount`, a userpass `username` and `password`, and the secret `path`. Null writes none."
+  description = "Vault KV v2 login this building block writes its secret with: the server `address`, the engine `mount`, a userpass `username` and `password`, and an optional `path_prefix`. The secret is `<path_prefix>stackit/git`, with the key `forgejo-api-token`. Null writes none."
 }
 
 variable "imports" {
@@ -108,7 +108,7 @@ variable "imports" {
     existing_forgejo_api_token_path = string
   })
   default     = null
-  description = "Existing STACKIT Git instance and its Forgejo organization `forgejo_organization` this building block takes over instead of creating them. The instance's name must equal `instance_name`. `existing_forgejo_api_token_path` names the secret in the Vault of `output_to_vault` whose key `forgejo_api_token` holds a token of an owner of the organization. The technical user and the writer and reader teams then get a random suffix, no shared runner is ordered, and the organization is left in place on destroy. Null creates a new instance and organization."
+  description = "Existing STACKIT Git instance and its Forgejo organization `forgejo_organization` this building block takes over instead of creating them. The instance's name must equal `instance_name`. `existing_forgejo_api_token_path` names the secret in the Vault of `output_to_vault` whose key `forgejo-api-token` holds a token of an owner of the organization. The technical user and the writer and reader teams then get a random suffix, no shared runner is ordered, and the organization is left in place on destroy. Null creates a new instance and organization."
 
   validation {
     condition     = var.imports == null || nonsensitive(var.output_to_vault != null)

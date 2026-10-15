@@ -104,17 +104,7 @@ resource "kubernetes_secret" "image_pull" {
 
   type             = "kubernetes.io/dockerconfigjson"
   data_wo_revision = var.secrets_revision
-  data_wo = {
-    ".dockerconfigjson" = jsonencode({
-      auths = {
-        (var.harbor_host) = {
-          username = local.registry_pull["username"]
-          password = local.registry_pull["password"]
-          auth     = base64encode("${local.registry_pull["username"]}:${local.registry_pull["password"]}")
-        }
-      }
-    })
-  }
+  data_wo          = jsondecode(ephemeral.vault_kv_secret_v2.registry.data_json)["pull-kubernetes-secret"]
 }
 
 resource "kubernetes_secret" "additional" {
@@ -126,7 +116,7 @@ resource "kubernetes_secret" "additional" {
   }
 
   type             = "Opaque"
-  data_wo          = ephemeral.vault_kv_secret_v2.additional[each.key].data
+  data_wo          = jsondecode(ephemeral.vault_kv_secret_v2.additional[each.key].data_json)["kubernetes-secret"]
   data_wo_revision = var.secrets_revision
 }
 

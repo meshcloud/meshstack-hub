@@ -21,13 +21,13 @@ variable "vault_reader" {
 variable "forgejo_api_token_path" {
   type        = string
   nullable    = false
-  description = "Vault KV v2 secret holding the Forgejo API token under the key `forgejo_api_token`. The token needs the write:repository and write:organization scopes."
+  description = "Vault KV v2 secret holding the Forgejo API token under the key `forgejo-api-token`. The token needs the write:repository and write:organization scopes."
 }
 
-variable "registry_push_path" {
+variable "registry_secret_path" {
   type        = string
   default     = null
-  description = "Vault KV v2 secret holding a container registry push robot under the keys `username` and `password`, set on every repository as the Actions secrets `HARBOR_USERNAME` and `HARBOR_PASSWORD`. Null sets neither."
+  description = "Vault KV v2 secret whose key `push-action-secrets` holds Actions secrets by name, as the container registry building block writes them. Each is set on every repository. Null sets none."
 }
 
 variable "action_variables" {
@@ -251,7 +251,7 @@ resource "meshstack_building_block_definition" "this" {
 
       forgejo_api_token_path = {
         display_name    = "Forgejo API Token Path"
-        description     = "Vault KV v2 secret holding the Forgejo API token under the key `forgejo_api_token`."
+        description     = "Vault KV v2 secret holding the Forgejo API token under the key `forgejo-api-token`."
         type            = "STRING"
         assignment_type = "STATIC"
         argument        = jsonencode(var.forgejo_api_token_path)
@@ -338,13 +338,13 @@ resource "meshstack_building_block_definition" "this" {
         default_value          = jsonencode(jsonencode({}))
         updateable_by_consumer = true
       }
-      }, var.registry_push_path == null ? {} : {
-      registry_push_path = {
-        display_name    = "Registry Push Robot Path"
-        description     = "Vault KV v2 secret holding the push robot set as the Actions secrets `HARBOR_USERNAME` and `HARBOR_PASSWORD`."
+      }, var.registry_secret_path == null ? {} : {
+      registry_secret_path = {
+        display_name    = "Registry Secret Path"
+        description     = "Vault KV v2 secret whose key `push-action-secrets` holds the Actions secrets set on the repository."
         type            = "STRING"
         assignment_type = "STATIC"
-        argument        = jsonencode(var.registry_push_path)
+        argument        = jsonencode(var.registry_secret_path)
       }
     })
 

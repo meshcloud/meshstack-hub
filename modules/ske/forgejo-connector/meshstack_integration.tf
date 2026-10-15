@@ -21,12 +21,6 @@ variable "forgejo_repo_definition_uuid" {
   description = "UUID of the Forgejo repository building block definition used as parent dependency for tenant building blocks (connector)."
 }
 
-variable "harbor_host" {
-  type        = string
-  description = "The URL of the Harbor registry."
-  default     = "https://registry.onstackit.cloud"
-}
-
 variable "vault_reader" {
   type = object({
     address  = string
@@ -42,20 +36,20 @@ variable "vault_reader" {
 variable "forgejo_api_token_path" {
   type        = string
   nullable    = false
-  description = "Vault KV v2 secret holding the Forgejo API token under the key `forgejo_api_token`."
+  description = "Vault KV v2 secret holding the Forgejo API token under the key `forgejo-api-token`."
 }
 
-variable "registry_pull_path" {
+variable "registry_secret_path" {
   type        = string
   nullable    = false
-  description = "Vault KV v2 secret holding the registry pull robot under the keys `username` and `password`."
+  description = "Vault KV v2 secret holding the data of the image pull Secret under the key `pull-kubernetes-secret`, as the container registry building block writes it."
 }
 
 variable "additional_kubernetes_secrets" {
   type        = map(string)
   nullable    = false
   default     = {}
-  description = "Opaque Kubernetes secrets the connector creates in each tenant namespace, by name, each from the Vault KV v2 secret at the given path. Every key of that secret becomes a key of the Kubernetes secret."
+  description = "Opaque Kubernetes secrets the connector creates in each tenant namespace, by name, each from the key `kubernetes-secret` of the Vault KV v2 secret at the given path. Every key of that object becomes a key of the Kubernetes secret."
 }
 
 variable "secrets_revision" {
@@ -253,7 +247,7 @@ resource "meshstack_building_block_definition" "this" {
 
       additional_kubernetes_secrets = {
         display_name    = "additional_kubernetes_secrets"
-        description     = "Map from the name of an Opaque Kubernetes secret created in the tenant namespace to the Vault KV v2 secret it is filled from."
+        description     = "Map from the name of an Opaque Kubernetes secret created in the tenant namespace to the Vault KV v2 secret whose key `kubernetes-secret` it is filled from."
         type            = "CODE"
         assignment_type = "STATIC"
         argument        = jsonencode(jsonencode(var.additional_kubernetes_secrets))
@@ -283,18 +277,18 @@ resource "meshstack_building_block_definition" "this" {
 
       forgejo_api_token_path = {
         display_name    = "Forgejo API Token Path"
-        description     = "Vault KV v2 secret holding the Forgejo API token under the key `forgejo_api_token`."
+        description     = "Vault KV v2 secret holding the Forgejo API token under the key `forgejo-api-token`."
         type            = "STRING"
         assignment_type = "STATIC"
         argument        = jsonencode(var.forgejo_api_token_path)
       }
 
-      registry_pull_path = {
-        display_name    = "Registry Pull Robot Path"
-        description     = "Vault KV v2 secret holding the registry pull robot under the keys `username` and `password`."
+      registry_secret_path = {
+        display_name    = "Registry Secret Path"
+        description     = "Vault KV v2 secret holding the data of the image pull Secret under the key `pull-kubernetes-secret`."
         type            = "STRING"
         assignment_type = "STATIC"
-        argument        = jsonencode(var.registry_pull_path)
+        argument        = jsonencode(var.registry_secret_path)
       }
 
       # STRING, because meshStack takes only 32-bit numbers for an INTEGER input.
@@ -304,14 +298,6 @@ resource "meshstack_building_block_definition" "this" {
         type            = "STRING"
         assignment_type = "STATIC"
         argument        = jsonencode(tostring(var.secrets_revision))
-      }
-
-      harbor_host = {
-        display_name    = "harbor_host"
-        description     = "The URL of the Harbor registry."
-        type            = "STRING"
-        assignment_type = "STATIC"
-        argument        = jsonencode(var.harbor_host)
       }
 
       hub_git_ref = {

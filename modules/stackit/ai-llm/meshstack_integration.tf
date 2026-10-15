@@ -209,7 +209,7 @@ resource "meshstack_building_block_definition" "this" {
 
       output_to_vault = {
         display_name           = "Output to Vault"
-        description            = "HCL object `{address, mount, username, password, path}` of the Vault KV v2 secret the endpoint, the token and the model are written to, under the keys `STACKIT_AI_BASE_URL`, `STACKIT_AI_API_KEY` and `STACKIT_AI_MODEL`."
+        description            = "HCL object `{address, mount, username, password, path_prefix?}` of the Vault KV v2 login the endpoint, token and model are written with, to `<path_prefix>stackit/ai-llm` under the key `kubernetes-secret`."
         type                   = "CODE"
         assignment_type        = "USER_INPUT"
         sensitive              = {}

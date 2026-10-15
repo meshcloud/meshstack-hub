@@ -23,8 +23,8 @@ A fresh instance carries no credential, so the building block makes one instead 
    takes HTTP Basic auth only — a caller holding an API token cannot mint another — which is exactly
    why the local user exists.
 
-With `output_to_vault` set, the token is written to that Vault KV v2 secret under the key
-`forgejo_api_token`, where the building blocks that manage repositories, runners and organization
+With `output_to_vault` set, the token is written to the Vault KV v2 secret `<path_prefix>stackit/git`
+under the key `forgejo-api-token`, where the building blocks that manage repositories, runners and organization
 members read it. There is no token input and no token output.
 
 Forgejo never returns a token's secret again, so the value is read from the `create_response` of the
@@ -71,7 +71,7 @@ instance.
 It also takes over the Forgejo organization `forgejo_organization` without changing its settings:
 
 1. It reads an existing token of an owner of the organization from `existing_forgejo_api_token_path`
-   in the Vault of `output_to_vault`, under the key `forgejo_api_token`. The token stays out of the
+   in the Vault of `output_to_vault`, under the key `forgejo-api-token`. The token stays out of the
    state: it is read with an ephemeral resource and only reaches a provider configuration.
 2. With that token, it adds its technical user to the organization's `Owners` team, which only an
    owner can do.
@@ -138,13 +138,13 @@ With `release_on_destroy` set, destroying the building block leaves the instance
 | Name | Description | Type | Default | Required |
 | ---- | ----------- | ---- | ------- | :------: |
 | <a name="input_forgejo_organization"></a> [forgejo\_organization](#input\_forgejo\_organization) | Forgejo organization to create inside the instance. Empty provisions the bare instance. | `string` | n/a | yes |
-| <a name="input_imports"></a> [imports](#input\_imports) | Existing STACKIT Git instance and its Forgejo organization `forgejo_organization` this building block takes over instead of creating them. The instance's name must equal `instance_name`. `existing_forgejo_api_token_path` names the secret in the Vault of `output_to_vault` whose key `forgejo_api_token` holds a token of an owner of the organization. The technical user and the writer and reader teams then get a random suffix, no shared runner is ordered, and the organization is left in place on destroy. Null creates a new instance and organization. | <pre>object({<br/>    instance_id                     = string<br/>    existing_forgejo_api_token_path = string<br/>  })</pre> | `null` | no |
+| <a name="input_imports"></a> [imports](#input\_imports) | Existing STACKIT Git instance and its Forgejo organization `forgejo_organization` this building block takes over instead of creating them. The instance's name must equal `instance_name`. `existing_forgejo_api_token_path` names the secret in the Vault of `output_to_vault` whose key `forgejo-api-token` holds a token of an owner of the organization. The technical user and the writer and reader teams then get a random suffix, no shared runner is ordered, and the organization is left in place on destroy. Null creates a new instance and organization. | <pre>object({<br/>    instance_id                     = string<br/>    existing_forgejo_api_token_path = string<br/>  })</pre> | `null` | no |
 | <a name="input_instance_name"></a> [instance\_name](#input\_instance\_name) | First label of the instance hostname `<name>.git.onstackit.cloud`, globally unique across all of STACKIT. | `string` | n/a | yes |
 | <a name="input_local_user_email"></a> [local\_user\_email](#input\_local\_user\_email) | Email of the technical user. Leave empty to derive one from the instance hostname. | `string` | n/a | yes |
 | <a name="input_local_user_token_name"></a> [local\_user\_token\_name](#input\_local\_user\_token\_name) | Name of the Personal Access Token the module mints. | `string` | n/a | yes |
 | <a name="input_local_user_token_scopes"></a> [local\_user\_token\_scopes](#input\_local\_user\_token\_scopes) | Forgejo scopes of the minted token. | `list(string)` | n/a | yes |
 | <a name="input_local_user_username"></a> [local\_user\_username](#input\_local\_user\_username) | Username of the technical user the module mints its token on. | `string` | n/a | yes |
-| <a name="input_output_to_vault"></a> [output\_to\_vault](#input\_output\_to\_vault) | Vault KV v2 secret this building block writes its secrets to: the server `address`, the engine `mount`, a userpass `username` and `password`, and the secret `path`. Null writes none. | <pre>object({<br/>    address  = string<br/>    mount    = string<br/>    username = string<br/>    password = string<br/>    path     = string<br/>  })</pre> | `null` | no |
+| <a name="input_output_to_vault"></a> [output\_to\_vault](#input\_output\_to\_vault) | Vault KV v2 login this building block writes its secret with: the server `address`, the engine `mount`, a userpass `username` and `password`, and an optional `path_prefix`. The secret is `<path_prefix>stackit/git`, with the key `forgejo-api-token`. Null writes none. | <pre>object({<br/>    address     = string<br/>    mount       = string<br/>    username    = string<br/>    password    = string<br/>    path_prefix = optional(string, "")<br/>  })</pre> | `null` | no |
 | <a name="input_release_on_destroy"></a> [release\_on\_destroy](#input\_release\_on\_destroy) | Leave the instance in place when this building block is destroyed. Cannot change once the instance is managed. | `bool` | `false` | no |
 | <a name="input_role_mapping"></a> [role\_mapping](#input\_role\_mapping) | Maps meshStack roles from `users[*].roles` to Forgejo organization roles: `owner`, `writer` or `reader`. The highest one wins; unknown meshStack roles are ignored. | `map(list(string))` | n/a | yes |
 | <a name="input_shared_runner_labels"></a> [shared\_runner\_labels](#input\_shared\_runner\_labels) | Labels of the STACKIT-hosted shared runner to order. Leave empty to order none. | `list(string)` | n/a | yes |

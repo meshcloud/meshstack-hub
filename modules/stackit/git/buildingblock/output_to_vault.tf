@@ -1,7 +1,8 @@
 locals {
-  write_to_vault = nonsensitive(var.output_to_vault != null)
+  write_to_vault    = nonsensitive(var.output_to_vault != null)
+  vault_secret_path = local.write_to_vault ? "${nonsensitive(var.output_to_vault.path_prefix)}stackit/git" : null
 
-  vault_data_json = jsonencode({ forgejo_api_token = local.forgejo_api_token })
+  vault_data_json = jsonencode({ "forgejo-api-token" = local.forgejo_api_token })
 
   # The version must be a number, so the first 48 bits of the hash stand in for it.
   vault_secret_hash = parseint(substr(nonsensitive(sha256(local.vault_data_json)), 0, 12), 16)
@@ -27,7 +28,7 @@ resource "vault_kv_secret_v2" "this" {
   }
 
   mount                = var.output_to_vault.mount
-  name                 = var.output_to_vault.path
+  name                 = local.vault_secret_path
   data_json_wo         = local.vault_data_json
   data_json_wo_version = local.vault_secret_hash
 }

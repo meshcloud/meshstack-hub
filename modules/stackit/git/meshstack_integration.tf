@@ -272,7 +272,7 @@ resource "meshstack_building_block_definition" "this" {
 
       output_to_vault = {
         display_name           = "Output to Vault"
-        description            = "HCL object `{address, mount, username, password, path}` of the Vault KV v2 secret the Forgejo API token is written to, under the key `forgejo_api_token`. Leave empty to write it nowhere."
+        description            = "HCL object `{address, mount, username, password, path_prefix?}` of the Vault KV v2 login the Forgejo API token is written with, to `<path_prefix>stackit/git` under the key `forgejo-api-token`. Leave empty to write it nowhere."
         type                   = "CODE"
         assignment_type        = "USER_INPUT"
         sensitive              = {}
@@ -282,7 +282,7 @@ resource "meshstack_building_block_definition" "this" {
 
       imports = {
         display_name    = "Imports"
-        description     = "HCL object `{instance_id, existing_forgejo_api_token_path}` of an instance named Instance Name to take over, with its organization Forgejo Organization. The path names a secret in Output to Vault with an owner's `forgejo_api_token`."
+        description     = "HCL object `{instance_id, existing_forgejo_api_token_path}` of an instance named Instance Name to take over, with its organization Forgejo Organization. The path names a secret in Output to Vault with an owner's `forgejo-api-token`."
         type            = "CODE"
         assignment_type = "USER_INPUT"
         is_optional     = true

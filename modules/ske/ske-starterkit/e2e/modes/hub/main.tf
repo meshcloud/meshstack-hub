@@ -16,12 +16,10 @@ variable "test_context" {
       stackit = object({
         project_id                  = string
         secrets_manager_instance_id = string
+        secrets_path_prefix         = string
         ske_platform = object({
-          kube_host       = string
-          kubeconfig_path = string
-        })
-        git = object({
-          forgejo_api_token_path = string
+          project_id = string
+          kube_host  = string
         })
         dns = object({
           zone_name = string
@@ -32,84 +30,24 @@ variable "test_context" {
   nullable = false
 }
 
-variable "backplane_secrets" {
-  type = object({
-    harbor_push_username = string
-    harbor_push_password = string
-    harbor_pull_username = string
-    harbor_pull_password = string
-  })
-  sensitive = true
-  nullable  = false
-
-  validation {
-    # `nullable = false` rejects only the whole object, so the attributes are checked explicitly.
-    condition     = alltrue([for secret in values(var.backplane_secrets) : secret != null])
-    error_message = "Every backplane secret must be set; the test runner exports them as TF_VAR_<name>."
-  }
-}
-
-ephemeral "vault_kv_secret_v2" "ske_kubeconfig" {
-  provider = vault.reader
-
-  mount = local.secrets_manager_instance_id
-  name  = var.test_context.fixtures.stackit.ske_platform.kubeconfig_path
-}
-
 locals {
-  ske_kubeconfig = yamldecode(ephemeral.vault_kv_secret_v2.ske_kubeconfig.data.kubeconfig)
-
   secrets_manager_address     = "https://prod.sm.eu01.stackit.cloud"
   secrets_manager_instance_id = var.test_context.fixtures.stackit.secrets_manager_instance_id
+  secrets_path_prefix         = var.test_context.fixtures.stackit.secrets_path_prefix
 
-  # Runs share the fixture instance, so each one writes only under its own id.
-  vault_paths = {
-    registry_push = "${var.test_context.run_id}/registry/push"
-    registry_pull = "${var.test_context.run_id}/registry/pull"
-    ai            = "${var.test_context.run_id}/ai/model-serving"
-  }
-}
-
-resource "stackit_secretsmanager_user" "writer" {
-  project_id    = var.test_context.fixtures.stackit.project_id
-  instance_id   = local.secrets_manager_instance_id
-  description   = "${var.test_context.run_id} ske-starterkit writer"
-  write_enabled = true
+  ske_kubeconfig = yamldecode(ephemeral.vault_kv_secret_v2.ske_kubeconfig.data.kubeconfig)
 }
 
 resource "stackit_secretsmanager_user" "reader" {
-  project_id    = var.test_context.fixtures.stackit.project_id
+  project_id    = var.test_context.fixtures.stackit.ske_platform.project_id
   instance_id   = local.secrets_manager_instance_id
   description   = "${var.test_context.run_id} ske-starterkit reader"
   write_enabled = false
 }
 
-resource "vault_kv_secret_v2" "registry_push" {
-  mount                = local.secrets_manager_instance_id
-  name                 = local.vault_paths.registry_push
-  data_json_wo         = jsonencode({ username = var.backplane_secrets.harbor_push_username, password = var.backplane_secrets.harbor_push_password })
-  data_json_wo_version = 1
-}
-
-resource "vault_kv_secret_v2" "registry_pull" {
-  mount                = local.secrets_manager_instance_id
-  name                 = local.vault_paths.registry_pull
-  data_json_wo         = jsonencode({ username = var.backplane_secrets.harbor_pull_username, password = var.backplane_secrets.harbor_pull_password })
-  data_json_wo_version = 1
-}
-
-# Smoke tests don't exercise real inference. The app only needs the `stackit-ai` secret to exist so
-# its pods can start: the app chart mounts it via `envFrom`, and `helm --wait --atomic` rolls the
-# deploy back while a pod waits for a missing secret.
-resource "vault_kv_secret_v2" "ai" {
+ephemeral "vault_kv_secret_v2" "ske_kubeconfig" {
   mount = local.secrets_manager_instance_id
-  name  = local.vault_paths.ai
-  data_json_wo = jsonencode({
-    STACKIT_AI_BASE_URL = "https://ai.invalid/v1"
-    STACKIT_AI_API_KEY  = "dummy-smoke-test"
-    STACKIT_AI_MODEL    = "dummy-model"
-  })
-  data_json_wo_version = 1
+  name  = "${local.secrets_path_prefix}ske/cluster"
 }
 
 # The connector takes the token kubeconfig of a cluster-admin service account, as the STACKIT
@@ -198,8 +136,8 @@ module "stackit_git_repository" {
     username = stackit_secretsmanager_user.reader.username
     password = stackit_secretsmanager_user.reader.password
   }
-  forgejo_api_token_path = var.test_context.fixtures.stackit.git.forgejo_api_token_path
-  registry_push_path     = vault_kv_secret_v2.registry_push.name
+  forgejo_api_token_path = "${local.secrets_path_prefix}stackit/git"
+  registry_secret_path   = "${local.secrets_path_prefix}stackit/container-registry"
 
   stackit_service_account_email = var.test_context.stackit_service_account_email
   stackit_project_id            = var.test_context.stackit_project_id
@@ -254,11 +192,12 @@ module "forgejo_connector" {
     username = stackit_secretsmanager_user.reader.username
     password = stackit_secretsmanager_user.reader.password
   }
-  forgejo_api_token_path = var.test_context.fixtures.stackit.git.forgejo_api_token_path
-  registry_pull_path     = vault_kv_secret_v2.registry_pull.name
+  forgejo_api_token_path = "${local.secrets_path_prefix}stackit/git"
+  registry_secret_path   = "${local.secrets_path_prefix}stackit/container-registry"
 
+  # The app chart mounts this secret via `envFrom`.
   additional_kubernetes_secrets = {
-    "stackit-ai" = vault_kv_secret_v2.ai.name
+    "stackit-ai" = "${local.secrets_path_prefix}stackit/ai-llm"
   }
 }
 

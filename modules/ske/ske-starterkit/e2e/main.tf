@@ -15,32 +15,6 @@ variable "test_context" {
   }
 }
 
-# Secrets never travel in `test_context` — it is built from state a CI job can read. They arrive as
-# TF_VAR_*, which only the root module sees, so they are declared here and piped down.
-variable "harbor_push_username" {
-  type      = string
-  sensitive = true
-  default   = null
-}
-
-variable "harbor_push_password" {
-  type      = string
-  sensitive = true
-  default   = null
-}
-
-variable "harbor_pull_username" {
-  type      = string
-  sensitive = true
-  default   = null
-}
-
-variable "harbor_pull_password" {
-  type      = string
-  sensitive = true
-  default   = null
-}
-
 locals {
   # Statically evaluated at `tofu init`, before any module is installed — so a foundation, which
   # already published the definition, never even resolves the hub build tree.
@@ -52,13 +26,6 @@ module "definition" {
   source = "./modes/${local.mode}"
 
   test_context = var.test_context
-
-  backplane_secrets = {
-    harbor_push_username = var.harbor_push_username
-    harbor_push_password = var.harbor_push_password
-    harbor_pull_username = var.harbor_pull_username
-    harbor_pull_password = var.harbor_pull_password
-  }
 }
 
 resource "meshstack_building_block" "this" {

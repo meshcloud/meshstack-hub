@@ -14,9 +14,9 @@ ephemeral "vault_kv_secret_v2" "forgejo_api_token" {
   name  = var.forgejo_api_token_path
 }
 
-ephemeral "vault_kv_secret_v2" "registry_pull" {
+ephemeral "vault_kv_secret_v2" "registry" {
   mount = var.vault_reader.mount
-  name  = var.registry_pull_path
+  name  = var.registry_secret_path
 }
 
 ephemeral "vault_kv_secret_v2" "additional" {
@@ -27,6 +27,5 @@ ephemeral "vault_kv_secret_v2" "additional" {
 }
 
 locals {
-  forgejo_api_token = ephemeral.vault_kv_secret_v2.forgejo_api_token.data["forgejo_api_token"]
-  registry_pull     = ephemeral.vault_kv_secret_v2.registry_pull.data
+  forgejo_api_token = ephemeral.vault_kv_secret_v2.forgejo_api_token.data["forgejo-api-token"]
 }

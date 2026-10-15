@@ -33,12 +33,7 @@ variable "app_hostname" {
 variable "additional_kubernetes_secrets" {
   type        = map(string)
   nullable    = false
-  description = "Opaque Kubernetes secrets to create in the tenant namespace, by name, each from the Vault KV v2 secret at the given path. Every key of that secret becomes a key of the Kubernetes secret."
-}
-
-variable "harbor_host" {
-  type        = string
-  description = "The URL of the Harbor registry."
+  description = "Opaque Kubernetes secrets to create in the tenant namespace, by name, each from the key `kubernetes-secret` of the Vault KV v2 secret at the given path. Every key of that object becomes a key of the Kubernetes secret."
 }
 
 variable "vault_reader" {
@@ -56,13 +51,13 @@ variable "vault_reader" {
 variable "forgejo_api_token_path" {
   type        = string
   nullable    = false
-  description = "Vault KV v2 secret holding the Forgejo API token under the key `forgejo_api_token`."
+  description = "Vault KV v2 secret holding the Forgejo API token under the key `forgejo-api-token`."
 }
 
-variable "registry_pull_path" {
+variable "registry_secret_path" {
   type        = string
   nullable    = false
-  description = "Vault KV v2 secret holding the registry pull robot under the keys `username` and `password`."
+  description = "Vault KV v2 secret holding the data of the image pull Secret under the key `pull-kubernetes-secret`."
 }
 
 variable "secrets_revision" {

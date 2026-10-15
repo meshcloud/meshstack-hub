@@ -23,12 +23,14 @@ namespace.
   `K8S_NAMESPACE_<STAGE>` and `APP_HOSTNAME_<STAGE>` managed via the shared
   [`action-variables-and-secrets`](https://github.com/meshcloud/meshstack-hub/tree/feature/ske-starter-kit-harbor-integration/modules/stackit/git-repository/buildingblock/action-variables-and-secrets)
   sub-module.
-- **Harbor image-pull secret** – `kubernetes.io/dockerconfigjson` secret
+- **Harbor image-pull secret** – `kubernetes.io/dockerconfigjson` secret, copied
+  from the key `pull-kubernetes-secret` of the container registry's Vault secret and
   attached to the default service account so pods can pull from STACKIT Harbor.
 - **Pipeline trigger** – after provisioning, automatically triggers the Forgejo
   Actions pipeline workflow and waits for it to complete.
 - **Additional secrets** – optional Opaque secrets injected into the namespace
-  (e.g. AI service keys), each filled from a Vault KV v2 secret.
+  (e.g. AI service keys), each filled from the key `kubernetes-secret` of a Vault
+  KV v2 secret.
 
 ## Why `restapi` is used for Action secrets & variables
 
@@ -41,7 +43,7 @@ them from state) and does not support action variables at all.
 ## Provider configuration
 
 The Forgejo and restapi providers take the host from the `FORGEJO_HOST`
-environment variable. The Forgejo API token, the registry pull robot and the
+environment variable. The Forgejo API token, the image pull Secret and the
 additional secrets are read from a Vault KV v2 engine, such as a STACKIT Secrets
 Manager instance, with the `vault_reader` login. What a run reads is kept in its
 Terraform state.
@@ -84,19 +86,18 @@ input of a cluster-admin service account on the SKE cluster.
 | [external_external.env](https://registry.terraform.io/providers/hashicorp/external/latest/docs/data-sources/external) | data source |
 | [vault_kv_secret_v2.additional](https://registry.terraform.io/providers/hashicorp/vault/latest/docs/ephemeral-resources/kv_secret_v2) | ephemeral resource |
 | [vault_kv_secret_v2.forgejo_api_token](https://registry.terraform.io/providers/hashicorp/vault/latest/docs/ephemeral-resources/kv_secret_v2) | ephemeral resource |
-| [vault_kv_secret_v2.registry_pull](https://registry.terraform.io/providers/hashicorp/vault/latest/docs/ephemeral-resources/kv_secret_v2) | ephemeral resource |
+| [vault_kv_secret_v2.registry](https://registry.terraform.io/providers/hashicorp/vault/latest/docs/ephemeral-resources/kv_secret_v2) | ephemeral resource |
 
 ## Inputs
 
 | Name | Description | Type | Default | Required |
 |------|-------------|------|---------|:--------:|
-| <a name="input_additional_kubernetes_secrets"></a> [additional\_kubernetes\_secrets](#input\_additional\_kubernetes\_secrets) | Opaque Kubernetes secrets to create in the tenant namespace, by name, each from the Vault KV v2 secret at the given path. Every key of that secret becomes a key of the Kubernetes secret. | `map(string)` | n/a | yes |
+| <a name="input_additional_kubernetes_secrets"></a> [additional\_kubernetes\_secrets](#input\_additional\_kubernetes\_secrets) | Opaque Kubernetes secrets to create in the tenant namespace, by name, each from the key `kubernetes-secret` of the Vault KV v2 secret at the given path. Every key of that object becomes a key of the Kubernetes secret. | `map(string)` | n/a | yes |
 | <a name="input_app_hostname"></a> [app\_hostname](#input\_app\_hostname) | Public application hostname for this stage (used by deploy workflow and ingress). | `string` | n/a | yes |
-| <a name="input_forgejo_api_token_path"></a> [forgejo\_api\_token\_path](#input\_forgejo\_api\_token\_path) | Vault KV v2 secret holding the Forgejo API token under the key `forgejo_api_token`. | `string` | n/a | yes |
-| <a name="input_harbor_host"></a> [harbor\_host](#input\_harbor\_host) | The URL of the Harbor registry. | `string` | `"https://registry.onstackit.cloud"` | no |
+| <a name="input_forgejo_api_token_path"></a> [forgejo\_api\_token\_path](#input\_forgejo\_api\_token\_path) | Vault KV v2 secret holding the Forgejo API token under the key `forgejo-api-token`. | `string` | n/a | yes |
 | <a name="input_hub_git_ref"></a> [hub\_git\_ref](#input\_hub\_git\_ref) | Hub git ref this building block runs from. Pins the shared modules it sources so they stay in lockstep with this module's own checkout. | `string` | `"main"` | no |
 | <a name="input_namespace"></a> [namespace](#input\_namespace) | Associated namespace in kubernetes cluster. | `string` | n/a | yes |
-| <a name="input_registry_pull_path"></a> [registry\_pull\_path](#input\_registry\_pull\_path) | Vault KV v2 secret holding the registry pull robot under the keys `username` and `password`. | `string` | n/a | yes |
+| <a name="input_registry_secret_path"></a> [registry\_secret\_path](#input\_registry\_secret\_path) | Vault KV v2 secret holding the data of the image pull Secret under the key `pull-kubernetes-secret`. | `string` | n/a | yes |
 | <a name="input_repository_name"></a> [repository\_name](#input\_repository\_name) | Name of the Forgejo repository. | `string` | n/a | yes |
 | <a name="input_repository_owner"></a> [repository\_owner](#input\_repository\_owner) | Owner of the Forgejo repository. | `string` | n/a | yes |
 | <a name="input_secrets_revision"></a> [secrets\_revision](#input\_secrets\_revision) | Revision of the Kubernetes secrets filled from Vault. Increase it to write changed values to them. | `number` | `1` | no |

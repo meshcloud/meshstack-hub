@@ -1,13 +1,29 @@
 locals {
-  write_to_vault = nonsensitive(var.output_to_vault != null)
+  write_to_vault    = nonsensitive(var.output_to_vault != null)
+  vault_secret_path = local.write_to_vault ? "${nonsensitive(var.output_to_vault.path_prefix)}stackit/container-registry" : null
 
-  vault_data_json = {
-    push = jsonencode({ username = local.push_robot_username, password = local.push_robot_password })
-    pull = jsonencode({ username = local.pull_robot_username, password = local.pull_robot_password })
-  }
+  vault_data_json = jsonencode({
+    "pull-kubernetes-secret" = {
+      ".dockerconfigjson" = jsonencode({
+        auths = {
+          (local.registry_host) = {
+            username = local.pull_robot_username
+            password = local.pull_robot_password
+            auth     = base64encode("${local.pull_robot_username}:${local.pull_robot_password}")
+          }
+        }
+      })
+    }
+    # The secret names the starter kit template's workflow reads.
+    "push-action-secrets" = {
+      HARBOR_REGISTRY = local.registry_host
+      HARBOR_USERNAME = local.push_robot_username
+      HARBOR_PASSWORD = local.push_robot_password
+    }
+  })
 
   # The version must be a number, so the first 48 bits of the hash stand in for it.
-  vault_secret_hash = { for robot, json in local.vault_data_json : robot => parseint(substr(nonsensitive(sha256(json)), 0, 12), 16) }
+  vault_secret_hash = parseint(substr(nonsensitive(sha256(local.vault_data_json)), 0, 12), 16)
 }
 
 provider "vault" {
@@ -24,24 +40,13 @@ provider "vault" {
   }
 }
 
-resource "vault_kv_secret_v2" "push_robot" {
+resource "vault_kv_secret_v2" "this" {
   lifecycle {
     enabled = local.write_to_vault && local.mint_robots
   }
 
   mount                = var.output_to_vault.mount
-  name                 = "${var.output_to_vault.path}/push"
-  data_json_wo         = local.vault_data_json.push
-  data_json_wo_version = local.vault_secret_hash.push
-}
-
-resource "vault_kv_secret_v2" "pull_robot" {
-  lifecycle {
-    enabled = local.write_to_vault && local.mint_robots
-  }
-
-  mount                = var.output_to_vault.mount
-  name                 = "${var.output_to_vault.path}/pull"
-  data_json_wo         = local.vault_data_json.pull
-  data_json_wo_version = local.vault_secret_hash.pull
+  name                 = local.vault_secret_path
+  data_json_wo         = local.vault_data_json
+  data_json_wo_version = local.vault_secret_hash
 }

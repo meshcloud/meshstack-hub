@@ -14,8 +14,9 @@ variable "test_context" {
       stackit = object({
         project_id                  = string
         secrets_manager_instance_id = string
-        git = object({
-          forgejo_api_token_path = string
+        secrets_path_prefix         = string
+        ske_platform = object({
+          project_id = string
         })
       })
     })
@@ -27,8 +28,7 @@ locals {
   secrets_manager_address     = "https://prod.sm.eu01.stackit.cloud"
   secrets_manager_instance_id = var.test_context.fixtures.stackit.secrets_manager_instance_id
 
-  # Runs share the fixture instance, so each one writes only under its own id.
-  registry_push_path = "${var.test_context.run_id}/registry/push"
+  secrets_manager_project_id = var.test_context.fixtures.stackit.ske_platform.project_id
 }
 
 provider "stackit" {
@@ -37,14 +37,14 @@ provider "stackit" {
 }
 
 resource "stackit_secretsmanager_user" "writer" {
-  project_id    = var.test_context.fixtures.stackit.project_id
+  project_id    = local.secrets_manager_project_id
   instance_id   = local.secrets_manager_instance_id
   description   = "${var.test_context.run_id} git-repository writer"
   write_enabled = true
 }
 
 resource "stackit_secretsmanager_user" "reader" {
-  project_id    = var.test_context.fixtures.stackit.project_id
+  project_id    = local.secrets_manager_project_id
   instance_id   = local.secrets_manager_instance_id
   description   = "${var.test_context.run_id} git-repository reader"
   write_enabled = false
@@ -61,11 +61,18 @@ provider "vault" {
   }
 }
 
-# Only set as Actions secrets, so no registry has to accept it.
-resource "vault_kv_secret_v2" "registry_push" {
-  mount                = local.secrets_manager_instance_id
-  name                 = local.registry_push_path
-  data_json_wo         = jsonencode({ username = "${var.test_context.run_id}-push", password = "e2e-only" })
+# Only set as Actions secrets, so no registry has to accept it. Runs share the fixture instance, so
+# each one writes only under its own id.
+resource "vault_kv_secret_v2" "registry" {
+  mount = local.secrets_manager_instance_id
+  name  = "${var.test_context.run_id}/stackit/container-registry"
+  data_json_wo = jsonencode({
+    "push-action-secrets" = {
+      HARBOR_REGISTRY = "registry.invalid"
+      HARBOR_USERNAME = "${var.test_context.run_id}-push"
+      HARBOR_PASSWORD = "e2e-only"
+    }
+  })
   data_json_wo_version = 1
 }
 
@@ -92,8 +99,8 @@ module "stackit_git_repository" {
     username = stackit_secretsmanager_user.reader.username
     password = stackit_secretsmanager_user.reader.password
   }
-  forgejo_api_token_path = var.test_context.fixtures.stackit.git.forgejo_api_token_path
-  registry_push_path     = vault_kv_secret_v2.registry_push.name
+  forgejo_api_token_path = "${var.test_context.fixtures.stackit.secrets_path_prefix}stackit/git"
+  registry_secret_path   = vault_kv_secret_v2.registry.name
 
   stackit_service_account_email = var.test_context.stackit_service_account_email
   stackit_project_id            = var.test_context.stackit_project_id
