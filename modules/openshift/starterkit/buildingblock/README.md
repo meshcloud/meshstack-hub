@@ -51,7 +51,7 @@ No modules.
 ## Inputs
 
 | Name | Description | Type | Default | Required |
-| ---- | ----------- | ---- | ------- | :------: |
+|------|-------------|------|---------|:--------:|
 | <a name="input_add_random_name_suffix"></a> [add\_random\_name\_suffix](#input\_add\_random\_name\_suffix) | Whether to append a random suffix to the name, so the same name can be ordered more than once on a shared cluster. | `bool` | n/a | yes |
 | <a name="input_apps_domain"></a> [apps\_domain](#input\_apps\_domain) | Wildcard domain of the cluster's default router, under which the app hostnames are created (example: `apps.ocp.example.com`). | `string` | n/a | yes |
 | <a name="input_building_block_definition_version_refs"></a> [building\_block\_definition\_version\_refs](#input\_building\_block\_definition\_version\_refs) | Building block definition versions this starter kit creates its child building blocks from, keyed by definition name (`git-repository` and `github-actions-connector`). | <pre>map(object({<br/>    uuid = string<br/>  }))</pre> | n/a | yes |

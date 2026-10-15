@@ -62,7 +62,7 @@ No modules.
 ## Inputs
 
 | Name | Description | Type | Default | Required |
-| ---- | ----------- | ---- | ------- | :------: |
+|------|-------------|------|---------|:--------:|
 | <a name="input_additional_environment_variables"></a> [additional\_environment\_variables](#input\_additional\_environment\_variables) | Additional GitHub Actions variables to set on the environment. | `map(string)` | `{}` | no |
 | <a name="input_deploy_branch"></a> [deploy\_branch](#input\_deploy\_branch) | Branch whose workflow deploys into this namespace. The connector dispatches the workflow on it once its credentials are in place. | `string` | `"main"` | no |
 | <a name="input_github_environment_name"></a> [github\_environment\_name](#input\_github\_environment\_name) | GitHub environment that receives the deployment credentials of this namespace. | `string` | n/a | yes |

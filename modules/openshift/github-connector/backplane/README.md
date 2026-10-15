@@ -55,7 +55,7 @@ No modules.
 ## Inputs
 
 | Name | Description | Type | Default | Required |
-| ---- | ----------- | ---- | ------- | :------: |
+|------|-------------|------|---------|:--------:|
 | <a name="input_api_server_ca_certificate"></a> [api\_server\_ca\_certificate](#input\_api\_server\_ca\_certificate) | PEM CA bundle that verifies the API server. Defaults to the cluster CA the service account token carries; set it when the API server presents a certificate signed by another CA. | `string` | `null` | no |
 | <a name="input_api_server_url"></a> [api\_server\_url](#input\_api\_server\_url) | URL of the OpenShift API server that building block runs and GitHub Actions connect to (example: `https://api.ocp.example.com:6443`). | `string` | n/a | yes |
 | <a name="input_namespace"></a> [namespace](#input\_namespace) | Namespace the backplane creates for the building block's service account. | `string` | `"meshstack-github-connector"` | no |
