@@ -58,7 +58,7 @@ resource "azurerm_role_assignment" "bb_github_connector_acr" {
 # The ClusterIssuer is needed so that SSL certificates can be issued for projects using the GitHub Actions Connector.
 resource "kubernetes_cluster_role" "clusterissuer_reader" {
   metadata {
-    name = "clusterissuer-reader"
+    name = "aks-github-connector-clusterissuer-reader"
   }
 
   rule {
