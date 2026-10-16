@@ -69,6 +69,9 @@ The smoke-test runner dumps one `test_context` var-file, verbatim, for every mod
 runner module-agnostic. Its full shape is the `test_context` output of the `test_context` module in
 `meshstack-smoke-test`.
 
+Code that follows these conventions needs no comments describing conventions already described in
+this skill.
+
 Take **every environment fact from `var.test_context`**; only secrets arrive as scalar `TF_VAR_*`.
 A `TF_VAR_*` fixture has to be wired in the harness repo as well, which is a second place for it to
 go missing.
@@ -296,9 +299,6 @@ resource "meshstack_building_block" "this" {
       kind = "meshWorkspace"
       name = var.test_context.workspace
     }
-    # inputs: one `value = jsonencode(...)` per input (jsonencode strings too, e.g.
-    # jsonencode("x"), jsonencode(1), jsonencode(true)). Sensitive inputs instead use
-    # `sensitive = { secret_value = ... }`.
     inputs = { ... }
   }
 }
@@ -376,7 +376,8 @@ target_ref = {
 - Always assert `status.status == "SUCCEEDED"` as the first check.
 - Assert meaningful output values (URLs, strings, booleans) to validate the building block executed
   correctly. Every output `value` is a `jsonencode`d string — read it with
-  `jsondecode(<res>.status.outputs["<name>"].value)` (a CODE/JSON output decodes twice).
+  `jsondecode(<res>.status.outputs["<name>"].value)` (a CODE/JSON output decodes twice). Do not wrap
+  it in `try`: when a failed run reports no outputs, the status assertion still fails first.
 - One file serves both modes. Assert on the **building block only** — that is the one thing both
   modes produce. The backplane does not exist in foundation mode, so nothing may assert on it.
 - Use `file("${path.root}/tests/<name>.expected.*")` for large expected values (JSON, Markdown) to

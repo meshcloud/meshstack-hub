@@ -1,5 +1,5 @@
 ---
-description: Conventions for meshStack provider resources in meshstack-hub — point every *_ref attribute at the target's ref output, ignore changes to meshstack_platform availability, and assert the run status of every child meshstack_building_block a starterkit or composition orders.
+description: Conventions for meshStack provider resources in meshstack-hub — point every *_ref attribute at the target's ref output, describe building block inputs by assignment_type, ignore changes to meshstack_platform availability, and assert the run status of every child meshstack_building_block a starterkit or composition orders.
 ---
 
 # meshStack Provider Resources
@@ -33,6 +33,31 @@ configuration does not manage, a ref wired in from elsewhere, and the user and g
 `role_ref` and `target_ref` take an identifier with no `kind`. A building block is ordered against a
 definition *version*, which `ref` does not identify — that one takes `version_latest` or
 `version_latest_release`.
+
+## Building Block Inputs
+
+A definition input's `assignment_type` says where its value comes from. A `meshstack_building_block`
+sets only `USER_INPUT`, `PAYMENT_METHOD` and `PLATFORM_OPERATOR_MANUAL_INPUT` values; meshStack
+assigns all others. Set each as `{ value = jsonencode(...) }`, strings included. An input the
+definition marks sensitive takes `{ sensitive = { ... } }` instead, see [Secrets](#secrets). For
+details, read the [meshStack docs](https://docs.meshcloud.io/concepts/building-block/#building-block-inputs).
+
+| `assignment_type` | Value |
+|---|---|
+| `USER_INPUT` | Set by the app team when it orders the building block. |
+| `PLATFORM_OPERATOR_MANUAL_INPUT` | Set by a platform operator. Needs an operator API key. |
+| `STATIC` | The definition's `argument`, the same for every building block. |
+| `PAYMENT_METHOD` | The `ref` of one of the workspace's active payment methods. Workspace-level only. |
+| `WORKSPACE_IDENTIFIER` | The owning workspace. |
+| `PROJECT_IDENTIFIER` | The tenant's project. Tenant-level only. |
+| `FULL_PLATFORM_IDENTIFIER` | The tenant's platform. Tenant-level only. |
+| `PLATFORM_TENANT_ID` | The platform-native tenant id, e.g. AWS account, Azure subscription, STACKIT project. Tenant-level only. |
+| `MESHSTACK_TENANT_UUID` | The meshTenant's uuid. Tenant-level only. |
+| `TENANT_BUILDING_BLOCK_UUID` | The building block's own uuid. |
+| `USER_PERMISSIONS` | Users and roles on the workspace or project. |
+| `AUTHOR` | Who created the building block. |
+| `TAG` | A tag on the workspace, project, payment method or landing zone. |
+| `BUILDING_BLOCK_OUTPUT` | An output of a parent building block, `argument = jsonencode("<parent definition uuid>.<output>")`. The parent definition must be in `version_spec.dependency_refs`, or meshStack rejects the version with "references a non-existent dependency". |
 
 <!-- scorecard-checks: platform_lifecycle_ignore_availability -->
 ## `meshstack_platform` Lifecycle
