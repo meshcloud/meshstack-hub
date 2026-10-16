@@ -45,6 +45,13 @@ resource "meshstack_building_block" "service_account" {
 
   wait_for_completion = true
 
+  lifecycle {
+    postcondition {
+      condition     = self.status.status == "SUCCEEDED"
+      error_message = "Building block ${self.metadata.uuid} is ${self.status.status}, not SUCCEEDED. See its run in meshPanel."
+    }
+  }
+
   spec = {
     building_block_definition_version_ref = module.definition.service_account_version_ref
 
@@ -77,9 +84,6 @@ resource "meshstack_building_block_definition" "probe" {
     draft         = true
     deletion_mode = "DELETE"
 
-    # Lets the probe read an output of its federation parent.
-    dependency_refs = [{ kind = "meshBuildingBlockDefinition", uuid = module.definition.definition_uuid }]
-
     implementation = {
       terraform = {
         terraform_version              = "1.12.5"
@@ -101,9 +105,8 @@ resource "meshstack_building_block_definition" "probe" {
       STACKIT_SERVICE_ACCOUNT_EMAIL = {
         display_name    = "STACKIT Service Account Email"
         type            = "STRING"
-        assignment_type = "BUILDING_BLOCK_OUTPUT"
+        assignment_type = "USER_INPUT"
         is_environment  = true
-        argument        = jsonencode("${module.definition.definition_uuid}.service_account_email")
       }
 
       STACKIT_USE_OIDC = {
@@ -162,6 +165,9 @@ resource "meshstack_building_block" "probe" {
     display_name               = "${var.test_context.run_id}-federation-probe"
     target_ref                 = local.target_ref
     parent_building_block_refs = [meshstack_building_block.this.ref]
-    inputs                     = {}
+
+    inputs = {
+      STACKIT_SERVICE_ACCOUNT_EMAIL = { value = meshstack_building_block.service_account.status.outputs["service_account_email"].value }
+    }
   }
 }

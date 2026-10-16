@@ -63,7 +63,3 @@ output "service_account_version_ref" {
 output "version_ref" {
   value = module.service_account_federation.building_block_definition.version_ref
 }
-
-output "definition_uuid" {
-  value = module.service_account_federation.building_block_definition.uuid
-}

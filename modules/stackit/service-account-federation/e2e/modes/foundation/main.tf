@@ -52,8 +52,3 @@ output "version_ref" {
     error_message = "No ${var.test_context.bbd_draft ? "" : "released "}version of a building block definition named '${local.display_names.federation}' owned by workspace '${data.meshstack_building_block_definitions.published.workspace_identifier}'. Deploy it before smoke testing it, with the `hub.bbd_draft` that test_context.bbd_draft says."
   }
 }
-
-output "definition_uuid" {
-  # `try` for the same reason; the precondition on `version_ref` names the miss.
-  value = try(local.definitions.federation.metadata.uuid, "")
-}
