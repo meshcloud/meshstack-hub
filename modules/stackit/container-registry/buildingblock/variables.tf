@@ -13,7 +13,7 @@ variable "stackit_region" {
 variable "registry_name" {
   type        = string
   nullable    = false
-  description = "Base name of the registry, to which a random suffix is appended."
+  description = "Base name of the registry, to which a random suffix is appended. With `imports`, the full name of the adopted registry."
 
   # The API takes 5 to 255 characters and also allows dots and underscores. Dashes only, and a
   # tighter cap, keep the name usable as a Harbor project name and in an image reference. The cap is
@@ -68,4 +68,19 @@ variable "output_to_vault" {
   default     = null
   sensitive   = true
   description = "Vault KV v2 userpass login that writes the robots to `<path_prefix>stackit/container-registry` once they exist. Null writes none."
+}
+
+variable "imports" {
+  type = object({
+    artifactory_id = string
+  })
+  default     = null
+  description = "Existing registry named `registry_name` to take over; null creates one."
+}
+
+variable "release_on_destroy" {
+  type        = bool
+  nullable    = false
+  default     = false
+  description = "Leave the registry in place on destroy. Cannot change once the registry is managed."
 }
