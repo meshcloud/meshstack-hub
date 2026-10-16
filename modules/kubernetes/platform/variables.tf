@@ -36,13 +36,13 @@ variable "metering_additional_rules" {
 
 variable "output_to_vault" {
   type = object({
-    address  = string
-    mount    = string
-    username = string
-    password = string
-    path     = string
+    address     = string
+    mount       = string
+    username    = string
+    password    = string
+    path_prefix = optional(string, "")
   })
   default     = null
   sensitive   = true
-  description = "Vault KV v2 secret this building block writes its secrets to instead of returning them as outputs: the server `address`, the engine `mount`, a userpass `username` and `password`, and the secret `path`. Null returns them as outputs."
+  description = "Vault KV v2 userpass login that writes the tokens to `<path_prefix>kubernetes/platform`. Null returns them as outputs."
 }

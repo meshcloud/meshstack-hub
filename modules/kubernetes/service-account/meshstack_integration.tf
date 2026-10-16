@@ -246,7 +246,7 @@ resource "meshstack_building_block_definition" "this" {
 
       output_to_vault = {
         display_name           = "Output to Vault"
-        description            = "HCL object `{address, mount, username, password, path}` of the Vault KV v2 secret the kubeconfig is written to, under the key `kubeconfig`. Leave empty to return it as an output instead."
+        description            = "HCL object `{address, mount, username, password, path_prefix?}`: Vault KV v2 login that writes the kubeconfig to `<path_prefix>kubernetes/service-account`. Empty returns it as an output."
         type                   = "CODE"
         assignment_type        = "USER_INPUT"
         sensitive              = {}
@@ -256,6 +256,13 @@ resource "meshstack_building_block_definition" "this" {
     }
 
     outputs = {
+      vault_secret = {
+        display_name    = "Vault Secret"
+        description     = "JSON `{path, secret_hash}` of the secret in Vault; `{}` without `output_to_vault`."
+        type            = "CODE"
+        assignment_type = "NONE"
+      }
+
       kubeconfig = {
         display_name    = "Kubeconfig"
         type            = "STRING"

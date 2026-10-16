@@ -28,13 +28,17 @@ output "forgejo_organization" {
   value = coalesce(var.forgejo_organization, "")
 }
 
-output "forgejo_api_token" {
-  description = "Personal Access Token for this instance, for building blocks that manage repositories, runners or organization members."
-  value       = local.forgejo_api_token
-  sensitive   = true
-}
-
 output "local_user_username" {
   description = "Username of the technical user the token belongs to."
   value       = var.local_user_username
+}
+
+output "vault_secret" {
+  description = "`{path, secret_hash}` of the secret in Vault, where `secret_hash` changes with its content; `{}` without `output_to_vault`."
+  value = {
+    for key, value in {
+      path        = local.vault_secret_path
+      secret_hash = local.vault_secret_hash
+    } : key => value if local.write_to_vault
+  }
 }

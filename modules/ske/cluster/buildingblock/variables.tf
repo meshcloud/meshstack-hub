@@ -51,3 +51,16 @@ variable "maintenance" {
   nullable    = false
   description = "SKE maintenance window."
 }
+
+variable "output_to_vault" {
+  type = object({
+    address     = string
+    mount       = string
+    username    = string
+    password    = string
+    path_prefix = optional(string, "")
+  })
+  default     = null
+  sensitive   = true
+  description = "Vault KV v2 login this building block writes its secret with: the server `address`, the engine `mount`, a userpass `username` and `password`, and an optional `path_prefix`. The secret is `<path_prefix>ske/cluster`, with the key `kubeconfig`. Null returns it as an output."
+}

@@ -56,3 +56,16 @@ variable "mirrored_base_images" {
   nullable    = false
   description = "Fully qualified upstream images to mirror into the registry as `<registry>/<name>:<tag>`."
 }
+
+variable "output_to_vault" {
+  type = object({
+    address     = string
+    mount       = string
+    username    = string
+    password    = string
+    path_prefix = optional(string, "")
+  })
+  default     = null
+  sensitive   = true
+  description = "Vault KV v2 userpass login that writes the robots to `<path_prefix>stackit/container-registry` once they exist. Null writes none."
+}

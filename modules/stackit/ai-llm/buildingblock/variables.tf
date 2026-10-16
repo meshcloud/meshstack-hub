@@ -27,3 +27,16 @@ variable "model" {
   nullable    = false
   description = "Model applications default to. Must be one the `/v1/models` endpoint serves."
 }
+
+variable "output_to_vault" {
+  type = object({
+    address     = string
+    mount       = string
+    username    = string
+    password    = string
+    path_prefix = optional(string, "")
+  })
+  nullable    = false
+  sensitive   = true
+  description = "Vault KV v2 userpass login that writes the endpoint, token and model to `<path_prefix>stackit/ai-llm`."
+}
