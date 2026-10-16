@@ -1,8 +1,23 @@
+data "external" "harbor_link" {
+  program = ["bash", "${path.module}/read-harbor-link.sh"]
+
+  query = {
+    project_id    = var.stackit_project_id
+    region        = var.stackit_region
+    registry_name = var.registry_name
+    registry_host = local.registry_host
+  }
+
+  lifecycle {
+    postcondition {
+      condition     = !var.require_robot_link || self.result.linked == "true"
+      error_message = "No Harbor robot is linked to the STACKIT service account ${local.stackit_service_account_email}. Link one in the registry's Robot Accounts tab first, as the summary describes."
+    }
+  }
+}
+
 locals {
-  # The bootstrap robot is not a credential — it is the link this run authenticates through, and
-  # its own secret is never sent. Naming it is how an operator says the link exists, which is the
-  # only way to know: nothing in the API reports it.
-  mint_robots = nonsensitive(var.bootstrap_robot_username != "")
+  mint_robots = data.external.harbor_link.result.linked == "true"
 
   push_robot = local.mint_robots ? jsondecode(restapi_object.push_robot.create_response) : null
   pull_robot = local.mint_robots ? jsondecode(restapi_object.pull_robot.create_response) : null
