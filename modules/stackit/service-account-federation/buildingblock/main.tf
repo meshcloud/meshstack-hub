@@ -1,13 +1,14 @@
-data "meshstack_integrations" "this" {}
+data "meshstack_building_block_definitions" "federated" {
+  workspace_identifier = var.workspace_identifier
+  uuids                = var.federated_building_block_definitions
+}
 
 locals {
-  wif_issuer         = data.meshstack_integrations.this.workload_identity_federation.replicator.issuer
-  wif_subject_prefix = trimsuffix(data.meshstack_integrations.this.workload_identity_federation.replicator.subject, ":replicator")
-  wif_audience       = data.meshstack_integrations.this.workload_identity_federation.replicator.azure.audience
-
-  federated_subjects = {
-    for uuid in var.federated_building_block_definitions :
-    uuid => "${local.wif_subject_prefix}:workspace.${var.workspace_identifier}.buildingblockdefinition.${uuid}"
+  # The hub modules hand out version_latest as the version to order, so that is the identity a run of
+  # a federated definition presents.
+  federated_identities = {
+    for definition in data.meshstack_building_block_definitions.federated.building_block_definitions :
+    definition.metadata.uuid => definition.version_latest.workload_identity_federation
   }
 }
 
@@ -39,24 +40,33 @@ resource "terraform_data" "federation_access" {
 }
 
 resource "stackit_service_account_federated_identity_provider" "this" {
-  for_each   = local.federated_subjects
+  for_each   = toset(var.federated_building_block_definitions)
   depends_on = [terraform_data.federation_access]
+
+  lifecycle {
+    precondition {
+      # try() covers a uuid the listing does not return, a version without an identity, and an identity
+      # without an azure block.
+      condition     = try(local.federated_identities[each.key].azure.audience, null) != null
+      error_message = "Building block definition ${each.key} is not owned by workspace ${var.workspace_identifier}, or meshStack resolves no workload identity with an Azure audience for it. Check the uuid, and that the definition's runner declares workload identity federation."
+    }
+  }
 
   project_id            = var.project_id
   service_account_email = var.service_account_email
   name                  = "meshstack-${substr(each.key, 0, 8)}"
-  issuer                = local.wif_issuer
+  issuer                = local.federated_identities[each.key].issuer
 
   assertions = [
     {
       item     = "aud"
       operator = "equals"
-      value    = local.wif_audience
+      value    = local.federated_identities[each.key].azure.audience
     },
     {
       item     = "sub"
       operator = "equals"
-      value    = each.value
+      value    = local.federated_identities[each.key].subject
     }
   ]
 }
