@@ -2,10 +2,10 @@ data "external" "harbor_link" {
   program = ["bash", "${path.module}/read-harbor-link.sh"]
 
   query = {
-    project_id    = var.stackit_project_id
-    region        = var.stackit_region
-    registry_name = var.registry_name
-    registry_host = local.registry_host
+    project_id            = var.stackit_project_id
+    region                = var.stackit_region
+    registry_name_pattern = var.imports == null ? "^${var.registry_name}-[a-z0-9]{4}$" : "^${var.registry_name}$"
+    registry_host         = local.registry_host
   }
 
   lifecycle {
@@ -57,7 +57,7 @@ provider "restapi" {
 # with a copy that has none.
 resource "restapi_object" "push_robot" {
   provider   = restapi.harbor
-  depends_on = [restapi_object.artifactory]
+  depends_on = [module.artifactory]
 
   lifecycle {
     enabled = local.mint_robots
@@ -87,7 +87,7 @@ resource "restapi_object" "push_robot" {
 
 resource "restapi_object" "pull_robot" {
   provider   = restapi.harbor
-  depends_on = [restapi_object.artifactory]
+  depends_on = [module.artifactory]
 
   lifecycle {
     enabled = local.mint_robots
