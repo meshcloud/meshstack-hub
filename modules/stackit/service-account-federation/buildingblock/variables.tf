@@ -10,12 +10,6 @@ variable "service_account_email" {
   description = "Email of the STACKIT service account to federate."
 }
 
-variable "automation_service_account_email" {
-  type        = string
-  nullable    = false
-  description = "Email of the service account this run acts as. It grants itself `editor` on the project to create federations."
-}
-
 variable "workspace_identifier" {
   type        = string
   nullable    = false

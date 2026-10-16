@@ -24,11 +24,3 @@ resource "stackit_service_account_federated_identity_provider" "building_block" 
     }
   ]
 }
-
-# No organization-scope role below `organization.admin` carries `iam.service-account-federation.create`.
-# This role only lets the run grant itself `editor` on the one project it federates in.
-resource "stackit_authorization_organization_role_assignment" "member_admin" {
-  resource_id = var.organization_id
-  role        = "iam.member-admin"
-  subject     = stackit_service_account.building_block.email
-}

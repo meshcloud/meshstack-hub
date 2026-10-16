@@ -46,18 +46,18 @@ module "service_account" {
   stackit_organization_id      = var.test_context.fixtures.stackit.organization_id
   stackit_project_id           = var.test_context.fixtures.stackit.project_id
   stackit_service_account_name = "${var.test_context.run_id}-sabp"
+
+  stackit_federation_backplane_email = module.federation.backplane_service_account_email
 }
 
 module "federation" {
   source = "../"
 
-  # A federation block is a child of a service account block, so its definition goes first on teardown.
-  depends_on = [module.service_account]
+  service_account_definition_ref = module.service_account.building_block_definition.ref
 
   meshstack                    = local.meshstack
   hub                          = local.hub
   bbd_display_name             = "${var.test_context.run_id} STACKIT Service Account Federation"
-  stackit_organization_id      = var.test_context.fixtures.stackit.organization_id
   stackit_project_id           = var.test_context.fixtures.stackit.project_id
   stackit_service_account_name = "${var.test_context.run_id}-fbp"
 }
