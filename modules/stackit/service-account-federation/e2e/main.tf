@@ -81,6 +81,9 @@ resource "meshstack_building_block_definition" "probe" {
     draft         = true
     deletion_mode = "DELETE"
 
+    # Lets the probe read an output of its federation parent.
+    dependency_refs = [{ kind = "meshBuildingBlockDefinition", uuid = module.definition.definition_uuid }]
+
     implementation = {
       terraform = {
         terraform_version              = "1.12.5"
