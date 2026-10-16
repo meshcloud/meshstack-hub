@@ -3,6 +3,11 @@ output "repository_id" {
   description = "The ID of the created repository"
 }
 
+output "repository_owner" {
+  value       = var.forgejo_organization
+  description = "Organization that owns the created repository"
+}
+
 output "repository_name" {
   value       = var.name
   description = "Name of the created repository"
