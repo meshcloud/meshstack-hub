@@ -37,7 +37,7 @@ assignment is in effect.
 | Name | Version |
 |------|---------|
 | <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.11.0 |
-| <a name="requirement_meshstack"></a> [meshstack](#requirement\_meshstack) | >= 0.24.0, < 1.0.0 |
+| <a name="requirement_meshstack"></a> [meshstack](#requirement\_meshstack) | >= 0.26.7, < 1.0.0 |
 | <a name="requirement_stackit"></a> [stackit](#requirement\_stackit) | >= 0.98.0, < 1.0.0 |
 
 ## Modules
@@ -51,7 +51,7 @@ No modules.
 | [stackit_authorization_project_role_assignment.federation_admin](https://registry.terraform.io/providers/stackitcloud/stackit/latest/docs/resources/authorization_project_role_assignment) | resource |
 | [stackit_service_account_federated_identity_provider.this](https://registry.terraform.io/providers/stackitcloud/stackit/latest/docs/resources/service_account_federated_identity_provider) | resource |
 | [terraform_data.federation_access](https://registry.terraform.io/providers/hashicorp/terraform/latest/docs/resources/data) | resource |
-| [meshstack_integrations.this](https://registry.terraform.io/providers/meshcloud/meshstack/latest/docs/data-sources/integrations) | data source |
+| [meshstack_building_block_definitions.federated](https://registry.terraform.io/providers/meshcloud/meshstack/latest/docs/data-sources/building_block_definitions) | data source |
 
 ## Inputs
 

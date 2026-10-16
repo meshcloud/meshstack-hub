@@ -136,10 +136,8 @@ resource "meshstack_building_block_definition" "this" {
       uuid = var.building_block_runner_uuid
     }
 
-    # The run builds each federated identity from the replicator entry, which only matches the meshStack-hosted
-    # runner, so the listed definitions must run there until a run can read a definition's resolved identity from the provider.
     permissions = [
-      "INTEGRATION_LIST",
+      "BUILDINGBLOCKDEFINITION_LIST",
     ]
 
     implementation = {
