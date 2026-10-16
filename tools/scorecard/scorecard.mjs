@@ -720,8 +720,15 @@ const detectors = [
     emoji: "🪪",
     // Only a building block module is scanned here. The platform-level
     // modules/<cloud>/meshstack_integration.tf files are not modules in this sense and keep
-    // reading the replicator entry, which is what they exist to configure.
+    // reading the replicator entry, which is what they exist to configure. buildingblock/ is
+    // scanned too, because a run that federates other definitions builds its trust there.
     fn: (mod) => {
+      const buildingBlock = readAllBuildingBlockTf(mod);
+      if (buildingBlock && /workload_identity_federation\.replicator/.test(buildingBlock))
+        return {
+          pass: false,
+          detail: "buildingblock/ derives a trust from data.meshstack_integrations…replicator — read each definition's identity from data.meshstack_building_block_definitions, which follows the runner the definition runs on",
+        };
       const content = readIntegrationTf(mod);
       if (!content) return { pass: false, detail: "no integration file" };
       if (/workload_identity_federation\.replicator/.test(content))
@@ -1875,6 +1882,14 @@ function collectProviderConstraints(mod) {
   }
 
   return constraints;
+}
+
+function readAllBuildingBlockTf(mod) {
+  const dir = join(mod.path, "buildingblock");
+  if (!existsSync(dir)) return null;
+  const files = readdirSync(dir).filter((f) => f.endsWith(".tf"));
+  if (files.length === 0) return null;
+  return files.map((f) => readFileSync(join(dir, f), "utf-8")).join("\n");
 }
 
 function readAllBackplaneTf(mod) {
