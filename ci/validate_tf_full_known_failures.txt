@@ -10,16 +10,7 @@ modules/azure/azure-virtual-machine-starterkit/buildingblock # resource type the
 modules/azure/container-registry/buildingblock       # resources point at a provider configuration the module does not declare
 modules/gcp                                          # terraform-gcp-meshplatform has no tag 0.3.0
 modules/ionos/dcd/backplane                          # required arguments missing, plus arguments the provider rejects
+modules/otc/project                                  # logo.png, which the platform type icon reads, does not exist
 
-# Not yet on main. These reference modules a feature branch introduces at
-# ?ref=main (the default hub git_ref), which a clone of main cannot resolve
-# until that work lands on main. The script prints a ::notice:: to drop each
-# line once it loads, so remove each entry after the module it names is on main.
-modules/gcp/gke-temporary-access                     # sources //modules/gcp/gke-temporary-access/backplane?ref=main, which does not exist yet
-modules/otc                                          # sources //modules/otc/project/backplane?ref=main
-modules/otc/project                                  # sources //modules/otc/project/backplane?ref=main
-modules/otc/cce                                      # sources //modules/otc/cce/backplane?ref=main
-modules/otc/network                                  # sources //modules/otc/network/backplane?ref=main
-modules/otc/obs-bucket                               # sources //modules/otc/obs-bucket/backplane?ref=main
-modules/otc/rds                                      # sources //modules/otc/rds/backplane?ref=main
-reference-architectures/otc-landingzone/buildingblock # sources //modules/otc?ref=main
+# Breaking module changes on this branch, until the reference architecture adopts them.
+reference-architectures/stackit-kubernetes/buildingblock # passes inputs the modules at the commit under test no longer take
