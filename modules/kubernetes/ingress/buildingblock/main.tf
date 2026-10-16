@@ -1,11 +1,7 @@
 locals {
-  # var.dns01 is sensitive as a whole, so every expression derived from it carries the sensitivity
-  # mark. lifecycle.enabled, resource names and outputs reject a marked value, so unmark the plain
-  # facts — is DNS-01 on, which provider, which zone — while the credentials keep their mark.
-  # nonsensitive() rejects an argument that carries no mark, so try() falls back to the value.
-  # Each `try` below swallows exactly one error: nonsensitive() failing because the value it was
-  # handed is not marked sensitive. That happens when var.dns01 is null, and the fallback is the
-  # same expression unwrapped.
+  # lifecycle.enabled, names and outputs reject a sensitive value, so the plain facts of var.dns01
+  # are unmarked while its credentials keep the mark.
+  # try: nonsensitive() rejects a value without the mark, which is the case when var.dns01 is null.
   dns01_enabled = try(nonsensitive(var.dns01 != null), var.dns01 != null)
   # try: as above.
   dns01_stackit_enabled = local.dns01_enabled ? try(nonsensitive(var.dns01.stackit != null), var.dns01.stackit != null) : false
@@ -13,11 +9,7 @@ locals {
   dns01_route53_enabled = local.dns01_enabled ? try(nonsensitive(var.dns01.route53 != null), var.dns01.route53 != null) : false
   # try: as above.
   dns01_zone_name = local.dns01_enabled ? try(nonsensitive(var.dns01.zone_name), var.dns01.zone_name) : null
-
-  # The solver answers for the whole zone, while the certificate may cover a narrower domain
-  # inside it. A caller that sets no certificate_domain gets the zone itself, which is the
-  # wildcard `*.<zone_name>`.
-  # try: as above — it only swallows nonsensitive() rejecting an unmarked value.
+  # try: as above.
   dns01_certificate_domain = local.dns01_enabled ? coalesce(
     try(nonsensitive(var.dns01.certificate_domain), var.dns01.certificate_domain),
     local.dns01_zone_name
@@ -26,8 +18,9 @@ locals {
   # The chart derives the controller Service name from the release name.
   haproxy_service_name = "${var.haproxy_release_name}-kubernetes-ingress"
 
-  # Helm renders these values into the pod spec as YAML, and the API server rejects a resource
-  # quantity that is null, so drop every field the caller left unset.
+  issuer_release_name = "ingress-issuer"
+
+  # The API server rejects a null resource quantity.
   resources = {
     for name, spec in {
       cert_manager                 = var.cert_manager_resources
@@ -44,11 +37,7 @@ locals {
   }
 }
 
-resource "kubernetes_namespace_v1" "cert_manager" {
-  metadata {
-    name = var.cert_manager_namespace
-  }
-
+resource "terraform_data" "kubeconfig" {
   lifecycle {
     precondition {
       condition     = fileexists("${path.module}/kubeconfig.yaml")
@@ -57,16 +46,25 @@ resource "kubernetes_namespace_v1" "cert_manager" {
   }
 }
 
-resource "helm_release" "cert_manager" {
-  name       = "cert-manager"
-  namespace  = kubernetes_namespace_v1.cert_manager.metadata[0].name
-  repository = "https://charts.jetstack.io"
-  chart      = "cert-manager"
-  version    = var.cert_manager_version
+module "cert_manager_namespace" {
+  source = "./modules/namespace"
 
-  create_namespace = false
-  wait             = true
-  timeout          = 300
+  depends_on = [terraform_data.kubeconfig]
+
+  release_on_destroy = var.release_on_destroy
+  name               = var.cert_manager_namespace
+}
+
+module "cert_manager" {
+  source = "./modules/helm-release"
+
+  release_on_destroy = var.release_on_destroy
+  name               = "cert-manager"
+  namespace          = module.cert_manager_namespace.name
+  repository         = "https://charts.jetstack.io"
+  chart              = "cert-manager"
+  chart_version      = var.cert_manager_version
+  timeout            = 300
 
   values = [
     yamlencode({
@@ -76,8 +74,7 @@ resource "helm_release" "cert_manager" {
       }
       extraArgs = var.cert_manager_extra_args
 
-      # The chart ships no resources for any of its four workloads, so each of them would run
-      # unbounded without these values.
+      # The chart ships no resources for any of its four workloads.
       resources       = local.resources.cert_manager
       webhook         = { resources = local.resources.cert_manager_webhook }
       cainjector      = { resources = local.resources.cert_manager_cainjector }
@@ -86,8 +83,7 @@ resource "helm_release" "cert_manager" {
   ]
 }
 
-# The webhook mounts the STACKIT service account key from a secret, so the secret has to sit in
-# the same namespace as the webhook pod.
+# The webhook mounts the key from a secret in its own namespace.
 resource "kubernetes_secret_v1" "stackit_dns01" {
   lifecycle {
     enabled = local.dns01_stackit_enabled
@@ -95,7 +91,7 @@ resource "kubernetes_secret_v1" "stackit_dns01" {
 
   metadata {
     name      = "stackit-sa-authentication"
-    namespace = kubernetes_namespace_v1.cert_manager.metadata[0].name
+    namespace = module.cert_manager_namespace.name
   }
 
   data = {
@@ -103,15 +99,14 @@ resource "kubernetes_secret_v1" "stackit_dns01" {
   }
 }
 
-# cert-manager has no built-in solver for STACKIT DNS. This chart registers one under the
-# acme.stackit.de API group, which the ClusterIssuer then calls as solverName "stackit".
+# cert-manager has no built-in solver for STACKIT DNS.
 resource "helm_release" "stackit_cert_manager_webhook" {
   lifecycle {
     enabled = local.dns01_stackit_enabled
   }
 
   name       = "stackit-cert-manager-webhook"
-  namespace  = kubernetes_namespace_v1.cert_manager.metadata[0].name
+  namespace  = module.cert_manager_namespace.name
   repository = "https://stackitcloud.github.io/stackit-cert-manager-webhook"
   chart      = "stackit-cert-manager-webhook"
   version    = var.stackit_webhook_version
@@ -124,7 +119,7 @@ resource "helm_release" "stackit_cert_manager_webhook" {
     yamlencode({
       groupName = "acme.stackit.de"
       certManager = {
-        namespace          = kubernetes_namespace_v1.cert_manager.metadata[0].name
+        namespace          = module.cert_manager_namespace.name
         serviceAccountName = "cert-manager"
       }
       stackitSaAuthentication = {
@@ -135,11 +130,9 @@ resource "helm_release" "stackit_cert_manager_webhook" {
     })
   ]
 
-  depends_on = [helm_release.cert_manager]
+  depends_on = [module.cert_manager]
 }
 
-# The route53 solver is built into cert-manager, so it needs no extra chart. It only needs the
-# secret access key handed to it through a secret reference.
 resource "kubernetes_secret_v1" "route53_dns01" {
   lifecycle {
     enabled = local.dns01_route53_enabled
@@ -147,7 +140,7 @@ resource "kubernetes_secret_v1" "route53_dns01" {
 
   metadata {
     name      = "route53-dns01-credentials"
-    namespace = kubernetes_namespace_v1.cert_manager.metadata[0].name
+    namespace = module.cert_manager_namespace.name
   }
 
   data = {
@@ -155,23 +148,26 @@ resource "kubernetes_secret_v1" "route53_dns01" {
   }
 }
 
-resource "kubernetes_namespace_v1" "haproxy_ingress" {
-  metadata {
-    name = var.haproxy_namespace
-  }
+module "haproxy_namespace" {
+  source = "./modules/namespace"
+
+  depends_on = [terraform_data.kubeconfig]
+
+  release_on_destroy = var.release_on_destroy
+  name               = var.haproxy_namespace
 }
 
-# The ClusterIssuer and the wildcard Certificate are custom resources whose CRDs only exist once
-# cert-manager is installed. Helm renders and applies them without a plan-time schema lookup,
-# which is what kubernetes_manifest would need — that lookup is the reason foundations had to run
-# the ClusterIssuer as a separate Terraform unit.
-resource "helm_release" "issuer" {
-  name      = "ingress-issuer"
-  namespace = kubernetes_namespace_v1.cert_manager.metadata[0].name
-  chart     = "${path.module}/chart"
+# Helm applies the cert-manager resources without the plan-time CRD lookup of kubernetes_manifest.
+module "issuer" {
+  source = "./modules/helm-release"
 
-  atomic  = true
-  wait    = true
+  release_on_destroy = var.release_on_destroy
+  name               = local.issuer_release_name
+  namespace          = module.cert_manager_namespace.name
+  chart              = "${path.module}/chart"
+  take_ownership     = var.imports != null
+  # A failed atomic install would uninstall the adopted ClusterIssuer.
+  atomic  = var.imports == null
   timeout = 300
 
   values = [
@@ -200,32 +196,31 @@ resource "helm_release" "issuer" {
         enabled    = local.dns01_enabled
         domain     = local.dns01_certificate_domain
         name       = var.wildcard_certificate_name
-        namespace  = kubernetes_namespace_v1.haproxy_ingress.metadata[0].name
+        namespace  = module.haproxy_namespace.name
         secretName = var.wildcard_certificate_name
       }
     })
   ]
 
   depends_on = [
-    helm_release.cert_manager,
-    helm_release.stackit_cert_manager_webhook
+    module.cert_manager,
+    helm_release.stackit_cert_manager_webhook,
   ]
 }
 
-resource "helm_release" "haproxy" {
-  name       = var.haproxy_release_name
-  namespace  = kubernetes_namespace_v1.haproxy_ingress.metadata[0].name
-  repository = "https://haproxytech.github.io/helm-charts"
-  chart      = "kubernetes-ingress"
-  version    = var.haproxy_version
+module "haproxy" {
+  source = "./modules/helm-release"
 
-  create_namespace = false
-  timeout          = var.haproxy_timeout
+  release_on_destroy = var.release_on_destroy
+  name               = var.haproxy_release_name
+  namespace          = module.haproxy_namespace.name
+  repository         = "https://haproxytech.github.io/helm-charts"
+  chart              = "kubernetes-ingress"
+  chart_version      = var.haproxy_version
+  timeout            = var.haproxy_timeout
 
   values = [
     yamlencode({
-      # The chart requests 250m CPU and 400Mi memory for the controller and for the CRD Job, and
-      # sets no limit on either.
       crdjob = { resources = local.resources.haproxy_crdjob }
 
       controller = merge(
@@ -239,28 +234,71 @@ resource "helm_release" "haproxy" {
             annotations = var.haproxy_service_annotations
           }
         },
-        # HAProxy serves this certificate for every host that brings no certificate of its own.
-        # controller.defaultTLSSecret.secretNamespace defaults to the release namespace, which is
-        # where the wildcard Certificate writes its secret, so only the name has to be set.
-        # Without DNS-01 the chart default stays in place and HAProxy keeps its self-signed
-        # certificate for unmatched hosts.
+        # defaultTLSSecret.secretNamespace defaults to the release namespace, where the wildcard
+        # Certificate writes its secret.
         local.dns01_enabled ? { defaultTLSSecret = { secret = var.wildcard_certificate_name } } : {}
       )
     })
   ]
 
-  depends_on = [helm_release.issuer]
+  depends_on = [module.issuer]
 }
 
-# The cloud provider assigns the load balancer address after HAProxy is up. Foundations point
-# their DNS A records at it.
 data "kubernetes_service_v1" "haproxy_controller" {
   metadata {
     name      = local.haproxy_service_name
-    namespace = kubernetes_namespace_v1.haproxy_ingress.metadata[0].name
+    namespace = module.haproxy_namespace.name
   }
 
-  depends_on = [helm_release.haproxy]
+  depends_on = [module.haproxy]
+}
+
+import {
+  for_each = var.imports != null && !var.release_on_destroy ? toset([var.cert_manager_namespace]) : toset([])
+  to       = module.cert_manager_namespace.kubernetes_namespace_v1.this
+  id       = each.value
+}
+
+import {
+  for_each = var.imports != null && var.release_on_destroy ? toset([var.cert_manager_namespace]) : toset([])
+  to       = module.cert_manager_namespace.kubernetes_namespace_v1.released
+  id       = each.value
+}
+
+import {
+  for_each = var.imports != null && !var.release_on_destroy ? toset([var.haproxy_namespace]) : toset([])
+  to       = module.haproxy_namespace.kubernetes_namespace_v1.this
+  id       = each.value
+}
+
+import {
+  for_each = var.imports != null && var.release_on_destroy ? toset([var.haproxy_namespace]) : toset([])
+  to       = module.haproxy_namespace.kubernetes_namespace_v1.released
+  id       = each.value
+}
+
+import {
+  for_each = var.imports != null && !var.release_on_destroy ? toset(["${var.cert_manager_namespace}/cert-manager"]) : toset([])
+  to       = module.cert_manager.helm_release.this
+  id       = each.value
+}
+
+import {
+  for_each = var.imports != null && var.release_on_destroy ? toset(["${var.cert_manager_namespace}/cert-manager"]) : toset([])
+  to       = module.cert_manager.helm_release.released
+  id       = each.value
+}
+
+import {
+  for_each = var.imports != null && !var.release_on_destroy ? toset(["${var.haproxy_namespace}/${var.haproxy_release_name}"]) : toset([])
+  to       = module.haproxy.helm_release.this
+  id       = each.value
+}
+
+import {
+  for_each = var.imports != null && var.release_on_destroy ? toset(["${var.haproxy_namespace}/${var.haproxy_release_name}"]) : toset([])
+  to       = module.haproxy.helm_release.released
+  id       = each.value
 }
 
 moved {
@@ -284,8 +322,18 @@ moved {
 }
 
 moved {
+  from = kubernetes_namespace_v1.cert_manager
+  to   = module.cert_manager_namespace.kubernetes_namespace_v1.this
+}
+
+moved {
   from = module.ingress.helm_release.cert_manager
   to   = helm_release.cert_manager
+}
+
+moved {
+  from = helm_release.cert_manager
+  to   = module.cert_manager.helm_release.this
 }
 
 moved {
@@ -309,11 +357,26 @@ moved {
 }
 
 moved {
+  from = kubernetes_namespace_v1.haproxy_ingress
+  to   = module.haproxy_namespace.kubernetes_namespace_v1.this
+}
+
+moved {
   from = module.ingress.helm_release.issuer
   to   = helm_release.issuer
 }
 
 moved {
+  from = helm_release.issuer
+  to   = module.issuer.helm_release.this
+}
+
+moved {
   from = module.ingress.helm_release.haproxy
   to   = helm_release.haproxy
+}
+
+moved {
+  from = helm_release.haproxy
+  to   = module.haproxy.helm_release.this
 }
