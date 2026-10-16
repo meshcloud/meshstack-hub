@@ -56,3 +56,16 @@ variable "mirrored_base_images" {
   nullable    = false
   description = "Fully qualified upstream images to mirror into the registry as `<registry>/<name>:<tag>`."
 }
+
+variable "output_to_vault" {
+  type = object({
+    address     = string
+    mount       = string
+    username    = string
+    password    = string
+    path_prefix = optional(string, "")
+  })
+  default     = null
+  sensitive   = true
+  description = "Vault KV v2 login this building block writes its secret with once the robots exist: the server `address`, the engine `mount`, a userpass `username` and `password`, and an optional `path_prefix`. The secret is `<path_prefix>stackit/container-registry`, with the keys `pull-kubernetes-secret` (`{\".dockerconfigjson\"}`) and `push-action-secrets` (`{HARBOR_REGISTRY, HARBOR_USERNAME, HARBOR_PASSWORD}`). Null writes none."
+}

@@ -520,7 +520,7 @@ resource "meshstack_building_block_definition" "this" {
 
       output_to_vault = {
         display_name           = "Output to Vault"
-        description            = "HCL object `{address, mount, username, password, path}` of the Vault KV v2 secret the tokens are written to, under the keys `replicator_token` and `metering_token`. Leave empty to return them as outputs instead."
+        description            = "HCL object `{address, mount, username, password, path_prefix?}` of the Vault KV v2 login the tokens are written with, to `<path_prefix>kubernetes/platform` under the keys `replicator-token` and `metering-token`. Leave empty to return them as outputs."
         type                   = "CODE"
         assignment_type        = "USER_INPUT"
         sensitive              = {}
@@ -530,6 +530,13 @@ resource "meshstack_building_block_definition" "this" {
     }
 
     outputs = {
+      vault_secret = {
+        display_name    = "Vault Secret"
+        description     = "JSON object `{path, secret_hash}` of the secret in Vault, or `{}` when `output_to_vault` is not set. `secret_hash` changes with the secret's content."
+        type            = "CODE"
+        assignment_type = "NONE"
+      }
+
       # Consumed by the composing architecture (read from this block's status outputs) to wire up
       # the meshstack_platform. Sensitive service account tokens — do not publish this definition
       # outside the platform workspace.

@@ -88,3 +88,16 @@ variable "role_mapping" {
     error_message = "role_mapping values must be `owner`, `writer` or `reader`."
   }
 }
+
+variable "output_to_vault" {
+  type = object({
+    address     = string
+    mount       = string
+    username    = string
+    password    = string
+    path_prefix = optional(string, "")
+  })
+  default     = null
+  sensitive   = true
+  description = "Vault KV v2 login this building block writes its secret with: the server `address`, the engine `mount`, a userpass `username` and `password`, and an optional `path_prefix`. The secret is `<path_prefix>stackit/git`, with the key `forgejo-api-token`. Null writes none."
+}
