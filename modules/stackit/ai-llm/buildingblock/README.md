@@ -43,7 +43,7 @@ carries both; `model-serving.admin` carries the first but not the second.
 ## Requirements
 
 | Name | Version |
-| ---- | ------- |
+|------|---------|
 | <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.12.0 |
 | <a name="requirement_external"></a> [external](#requirement\_external) | >= 2.3.0, < 3.0.0 |
 | <a name="requirement_restapi"></a> [restapi](#requirement\_restapi) | >= 3.0.0, < 4.0.0 |
@@ -57,7 +57,7 @@ No modules.
 ## Resources
 
 | Name | Type |
-| ---- | ---- |
+|------|------|
 | [restapi_object.service_enablement](https://registry.terraform.io/providers/Mastercard/restapi/latest/docs/resources/object) | resource |
 | [stackit_modelserving_token.this](https://registry.terraform.io/providers/stackitcloud/stackit/latest/docs/resources/modelserving_token) | resource |
 | [terraform_data.service_enabled](https://registry.terraform.io/providers/hashicorp/terraform/latest/docs/resources/data) | resource |
@@ -67,7 +67,7 @@ No modules.
 ## Inputs
 
 | Name | Description | Type | Default | Required |
-| ---- | ----------- | ---- | ------- | :------: |
+|------|-------------|------|---------|:--------:|
 | <a name="input_model"></a> [model](#input\_model) | Model applications default to. Must be one the `/v1/models` endpoint serves. | `string` | n/a | yes |
 | <a name="input_output_to_vault"></a> [output\_to\_vault](#input\_output\_to\_vault) | Vault KV v2 login this building block writes its secret with: the server `address`, the engine `mount`, a userpass `username` and `password`, and an optional `path_prefix`. The secret is `<path_prefix>stackit/ai-llm`, with the key `kubernetes-secret` (`{STACKIT_AI_BASE_URL, STACKIT_AI_API_KEY, STACKIT_AI_MODEL}`). | <pre>object({<br/>    address     = string<br/>    mount       = string<br/>    username    = string<br/>    password    = string<br/>    path_prefix = optional(string, "")<br/>  })</pre> | n/a | yes |
 | <a name="input_stackit_project_id"></a> [stackit\_project\_id](#input\_stackit\_project\_id) | STACKIT project the model serving token is created in. | `string` | n/a | yes |
@@ -78,7 +78,7 @@ No modules.
 ## Outputs
 
 | Name | Description |
-| ---- | ----------- |
+|------|-------------|
 | <a name="output_summary"></a> [summary](#output\_summary) | Markdown summary shown on the building block. |
 | <a name="output_vault_secret"></a> [vault\_secret](#output\_vault\_secret) | `{path, secret_hash}` of the secret written to `output_to_vault`. `secret_hash` is the secret's KV version and changes with its content. |
 <!-- END_TF_DOCS -->
