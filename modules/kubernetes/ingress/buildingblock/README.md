@@ -63,6 +63,14 @@ its null default: DNS-01 needs a long-lived credential for the zone inside the c
 authenticate through workload identity federation. Certificates are issued per hostname over
 HTTP-01. Wiring DNS-01 in means adding `dns01` as an input of the definition.
 
+## Taking over an installation
+
+With `imports = {}`, the building block takes over the namespaces, the `cert-manager` and HAProxy
+Helm releases and the ClusterIssuer of an existing installation. Before the issuer release runs, it
+puts Helm's ownership label and annotations on the ClusterIssuer, so the release adopts it. With
+`release_on_destroy` set, destroying the building block leaves the namespaces and releases in place.
+`release_on_destroy` cannot change once they are managed.
+
 <!-- BEGIN_TF_DOCS -->
 ## Requirements
 
@@ -74,20 +82,22 @@ HTTP-01. Wiring DNS-01 in means adding `dns01` as an input of the definition.
 
 ## Modules
 
-No modules.
+| Name | Source | Version |
+| ---- | ------ | ------- |
+| <a name="module_cert_manager"></a> [cert\_manager](#module\_cert\_manager) | ./modules/helm-release | n/a |
+| <a name="module_cert_manager_namespace"></a> [cert\_manager\_namespace](#module\_cert\_manager\_namespace) | ./modules/namespace | n/a |
+| <a name="module_haproxy"></a> [haproxy](#module\_haproxy) | ./modules/helm-release | n/a |
+| <a name="module_haproxy_namespace"></a> [haproxy\_namespace](#module\_haproxy\_namespace) | ./modules/namespace | n/a |
+| <a name="module_issuer"></a> [issuer](#module\_issuer) | ./modules/helm-release | n/a |
 
 ## Resources
 
 | Name | Type |
 | ---- | ---- |
-| [helm_release.cert_manager](https://registry.terraform.io/providers/hashicorp/helm/latest/docs/resources/release) | resource |
-| [helm_release.haproxy](https://registry.terraform.io/providers/hashicorp/helm/latest/docs/resources/release) | resource |
-| [helm_release.issuer](https://registry.terraform.io/providers/hashicorp/helm/latest/docs/resources/release) | resource |
 | [helm_release.stackit_cert_manager_webhook](https://registry.terraform.io/providers/hashicorp/helm/latest/docs/resources/release) | resource |
-| [kubernetes_namespace_v1.cert_manager](https://registry.terraform.io/providers/hashicorp/kubernetes/latest/docs/resources/namespace_v1) | resource |
-| [kubernetes_namespace_v1.haproxy_ingress](https://registry.terraform.io/providers/hashicorp/kubernetes/latest/docs/resources/namespace_v1) | resource |
 | [kubernetes_secret_v1.route53_dns01](https://registry.terraform.io/providers/hashicorp/kubernetes/latest/docs/resources/secret_v1) | resource |
 | [kubernetes_secret_v1.stackit_dns01](https://registry.terraform.io/providers/hashicorp/kubernetes/latest/docs/resources/secret_v1) | resource |
+| [terraform_data.kubeconfig](https://registry.terraform.io/providers/hashicorp/terraform/latest/docs/resources/data) | resource |
 | [kubernetes_service_v1.haproxy_controller](https://registry.terraform.io/providers/hashicorp/kubernetes/latest/docs/data-sources/service_v1) | data source |
 
 ## Inputs
@@ -116,7 +126,9 @@ No modules.
 | <a name="input_haproxy_service_type"></a> [haproxy\_service\_type](#input\_haproxy\_service\_type) | Service type of the HAProxy ingress controller. | `string` | `"LoadBalancer"` | no |
 | <a name="input_haproxy_timeout"></a> [haproxy\_timeout](#input\_haproxy\_timeout) | Seconds to wait for the HAProxy Helm release to become ready. The default of 20 minutes covers the time a cloud provider takes to provision the load balancer. | `number` | `1200` | no |
 | <a name="input_haproxy_version"></a> [haproxy\_version](#input\_haproxy\_version) | Version of the haproxytech/kubernetes-ingress Helm chart. See https://github.com/haproxytech/helm-charts/blob/main/kubernetes-ingress/Chart.yaml. | `string` | n/a | yes |
+| <a name="input_imports"></a> [imports](#input\_imports) | Set to `{}` to take over an existing installation: the namespaces `cert_manager_namespace` and `haproxy_namespace`, the Helm releases `cert-manager` and `haproxy_release_name` in them, and the ClusterIssuer `cluster_issuer_name`. Null installs anew. | `object({})` | `null` | no |
 | <a name="input_ingress_class_name"></a> [ingress\_class\_name](#input\_ingress\_class\_name) | Name of the IngressClass the controller serves. The HTTP-01 solver of the ClusterIssuer uses the same name. | `string` | n/a | yes |
+| <a name="input_release_on_destroy"></a> [release\_on\_destroy](#input\_release\_on\_destroy) | Leave the namespaces and Helm releases in place when this building block is destroyed. Cannot change once they are managed. | `bool` | `false` | no |
 | <a name="input_stackit_webhook_resources"></a> [stackit\_webhook\_resources](#input\_stackit\_webhook\_resources) | Resource requests and limits of the STACKIT cert-manager webhook. Only used when dns01.stackit<br/>is set. The default is sized for a demonstration cluster and a production consumer has to raise<br/>it.<br/><br/>The chart sets no resources and its values file states that `100m` CPU and `128Mi` memory are<br/>enough for the webhook, which is what the limit uses. The webhook answers one DNS-01 challenge<br/>per certificate renewal, so the request stays well below that. Production wants the chart's own<br/>figures as the request as well. | <pre>object({<br/>    requests = optional(object({ cpu = optional(string), memory = optional(string) }), {})<br/>    limits   = optional(object({ cpu = optional(string), memory = optional(string) }), {})<br/>  })</pre> | <pre>{<br/>  "limits": {<br/>    "cpu": "100m",<br/>    "memory": "128Mi"<br/>  },<br/>  "requests": {<br/>    "cpu": "10m",<br/>    "memory": "64Mi"<br/>  }<br/>}</pre> | no |
 | <a name="input_stackit_webhook_version"></a> [stackit\_webhook\_version](#input\_stackit\_webhook\_version) | Version of the stackit-cert-manager-webhook Helm chart. Must be a version served by the chart index at https://stackitcloud.github.io/stackit-cert-manager-webhook, which lags behind the GitHub release tags. Only used when dns01.stackit is set. | `string` | `"0.4.9"` | no |
 | <a name="input_wildcard_certificate_name"></a> [wildcard\_certificate\_name](#input\_wildcard\_certificate\_name) | Name of the wildcard Certificate and of the secret it writes, both in haproxy\_namespace. Only used when dns01 is set. | `string` | `"wildcard-tls"` | no |

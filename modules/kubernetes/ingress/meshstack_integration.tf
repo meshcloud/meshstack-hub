@@ -276,6 +276,23 @@ resource "meshstack_building_block_definition" "this" {
         assignment_type = "STATIC"
         argument        = jsonencode(jsonencode(var.haproxy_service_annotations))
       }
+
+      imports = {
+        display_name    = "Imports"
+        description     = "HCL `{}` takes over the existing namespaces, Helm releases and ClusterIssuer; empty installs anew."
+        type            = "CODE"
+        assignment_type = "USER_INPUT"
+        is_optional     = true
+      }
+
+      release_on_destroy = {
+        display_name           = "Release on Destroy"
+        description            = "Leave the namespaces and Helm releases in place when this building block is deleted. Cannot change once they are managed."
+        type                   = "BOOLEAN"
+        assignment_type        = "USER_INPUT"
+        default_value          = jsonencode(false)
+        updateable_by_consumer = true
+      }
     }
 
     outputs = {
