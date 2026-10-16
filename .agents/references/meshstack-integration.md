@@ -138,6 +138,14 @@ resource "meshstack_building_block_definition" "this" {
 
 **If a `meshstack_building_block_definition` input's `argument` field references a variable, that variable must have an explicit default** — do not rely on nested `optional()` defaults (for example via a bare `default = {}`), since some downstream consumers don't evaluate Terraform's object-attribute defaulting and would see unset fields instead. Keep the `optional()` type constraints regardless — they still document intent and protect callers who omit keys.
 
+## Adding an Input to an Existing Definition
+
+meshStack stops every existing building block of the definition in `WAITING_FOR_USER_INPUT` when
+the definition gains a required input, even one with a default. So a new input is either
+`is_optional = true`, or every caller always sets it and it is `updateable_by_consumer = true`;
+without that flag, setting it on an existing block fails with 403 "You tried to edit input ...".
+A BOOLEAN input cannot be optional, so it always takes the second way.
+
 <!-- scorecard-checks: wif_no_replicator -->
 ## Runner identity
 

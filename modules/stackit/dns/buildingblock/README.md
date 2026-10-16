@@ -39,6 +39,13 @@ The run authenticates via Workload Identity Federation as the platform's STACKIT
 which needs the `dns.zone.*` permissions. Both `editor` and the narrower `dns.admin` carry all of
 them.
 
+## Taking over a zone
+
+With `imports = {zone_id, record_set_id}`, the building block takes over an existing zone named
+`<subdomain>.<parent_domain>` and its wildcard record set. With
+`release_on_destroy` set, destroying the building block leaves both in place.
+`release_on_destroy` cannot change once they are managed.
+
 <!-- BEGIN_TF_DOCS -->
 ## Requirements
 
@@ -49,14 +56,14 @@ them.
 
 ## Modules
 
-No modules.
+| Name | Source | Version |
+|------|--------|---------|
+| <a name="module_wildcard"></a> [wildcard](#module\_wildcard) | ./modules/record-set | n/a |
+| <a name="module_zone"></a> [zone](#module\_zone) | ./modules/zone | n/a |
 
 ## Resources
 
-| Name | Type |
-|------|------|
-| [stackit_dns_record_set.wildcard](https://registry.terraform.io/providers/stackitcloud/stackit/latest/docs/resources/dns_record_set) | resource |
-| [stackit_dns_zone.this](https://registry.terraform.io/providers/stackitcloud/stackit/latest/docs/resources/dns_zone) | resource |
+No resources.
 
 ## Inputs
 
@@ -64,7 +71,9 @@ No modules.
 |------|-------------|------|---------|:--------:|
 | <a name="input_contact_email"></a> [contact\_email](#input\_contact\_email) | Address in the zone's SOA record, where a resolver problem is reported. | `string` | n/a | yes |
 | <a name="input_default_ttl"></a> [default\_ttl](#input\_default\_ttl) | Default TTL in seconds for records in this zone. | `number` | n/a | yes |
+| <a name="input_imports"></a> [imports](#input\_imports) | Existing zone and its wildcard record set this building block takes over. The zone's DNS name must equal `<subdomain>.<parent_domain>`. Null creates both. | <pre>object({<br/>    zone_id       = string<br/>    record_set_id = string<br/>  })</pre> | `null` | no |
 | <a name="input_parent_domain"></a> [parent\_domain](#input\_parent\_domain) | Domain this zone is created under. | `string` | n/a | yes |
+| <a name="input_release_on_destroy"></a> [release\_on\_destroy](#input\_release\_on\_destroy) | Leave the zone and its record set in place when this building block is destroyed. Cannot change once they are managed. | `bool` | `false` | no |
 | <a name="input_stackit_project_id"></a> [stackit\_project\_id](#input\_stackit\_project\_id) | STACKIT project the zone is created in. | `string` | n/a | yes |
 | <a name="input_stackit_region"></a> [stackit\_region](#input\_stackit\_region) | STACKIT region the zone is placed in. | `string` | n/a | yes |
 | <a name="input_subdomain"></a> [subdomain](#input\_subdomain) | Label this zone occupies under `parent_domain`, e.g. `my-platform` for `my-platform.stackit.run`. | `string` | n/a | yes |

@@ -50,6 +50,7 @@ supportedPlatforms:
   - <platform-id> # e.g. aws, azure, stackit
 description: One-sentence description of what the module provisions.
 requiresBackplane: false # optional — see below
+e2eCoveredBy: <provider>/<service> # optional — see below
 ---
 ```
 
@@ -57,6 +58,11 @@ requiresBackplane: false # optional — see below
 the scorecard treats the missing `backplane/` tier as not applicable instead of a gap. Only set it
 for building blocks that genuinely provision nothing cloud-side (e.g. those receiving all
 credentials as static inputs) — add a comment above it saying why.
+
+`e2eCoveredBy: <provider>/<service>` is optional and declares that another module's e2e suite tests
+this module, for example a connector that only runs inside a starter kit. The scorecard then treats
+the `e2e_tests` and `e2e_tftest` checks as not applicable, as long as
+`modules/<provider>/<service>/e2e/tests` exists.
 
 **User-facing readme — two patterns depending on module completeness:**
 

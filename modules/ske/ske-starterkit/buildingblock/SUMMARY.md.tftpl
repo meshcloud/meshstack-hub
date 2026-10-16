@@ -1,0 +1,58 @@
+# SKE Starter Kit
+
+✅ **Your environment is ready!**
+
+This starter kit has set up the following resources in workspace `${workspace_identifier}`:
+
+@buildingblock[${git_repository_uuid}]
+%{ for stage in stages ~}
+
+@project[${stage.project_workspace}.${stage.project_name}]\
+&nbsp;&nbsp;&nbsp;&nbsp;@tenant[${stage.tenant_uuid}]\
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;@buildingblock[${stage.forgejo_connector_uuid}]
+%{ endfor ~}
+
+---
+
+## What's Included
+
+Your [Forgejo repository](${repo_html_url}) on STACKIT Git was initialized from `${repo_clone_addr}`.
+Its Forgejo Actions pipeline builds the `${app_name}` image and deploys it to the SKE namespace of each stage.
+
+Each stage's Forgejo Connector wired the repository to that stage's namespace with the Actions
+secrets and variables `KUBECONFIG_<STAGE>`, `K8S_NAMESPACE_<STAGE>` and `APP_HOSTNAME_<STAGE>`.
+
+---
+
+## Deployments
+
+Each stage deploys from the branch of the same name. The Forgejo Connector already ran the
+`pipeline.yaml` workflow once per stage, so your app is live:
+
+%{ for stage in stages ~}
+- **${title(stage.name)}**: [${stage.app_hostname}](https://${stage.app_hostname})
+%{ endfor ~}
+
+View deployment status: [Forgejo Actions](${repo_html_url}/actions?workflow=pipeline.yaml)
+
+---
+
+## Next Steps
+
+### 1. Develop
+%{ for stage in stages ~}
+- Push changes to **${stage.name}** → deploys to **${stage.name}**
+%{ endfor ~}
+
+### 2. Monitor
+- Check workflow status in the [Actions tab](<${repo_html_url}/actions>)
+
+### 3. Manage Access
+- Invite team members via meshStack:
+%{ for stage in stages ~}
+  - [${title(stage.name)} Access](#/w/${workspace_identifier}/p/${stage.project_name}/access-management/role-mapping)
+%{ endfor ~}
+
+---
+
+🎉 Happy coding!
