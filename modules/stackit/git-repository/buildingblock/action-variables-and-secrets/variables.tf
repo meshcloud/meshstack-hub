@@ -1,5 +1,13 @@
-variable "repository_id" {
-  type = number
+variable "repository_owner" {
+  type        = string
+  nullable    = false
+  description = "Owner (user or organization) of the Forgejo repository."
+}
+
+variable "repository_name" {
+  type        = string
+  nullable    = false
+  description = "Name of the Forgejo repository."
 }
 
 variable "action_variables" {

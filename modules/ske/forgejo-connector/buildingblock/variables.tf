@@ -3,9 +3,16 @@ variable "namespace" {
   type        = string
 }
 
-variable "repository_id" {
-  type        = number
-  description = "The ID of the Forgejo repository."
+variable "repository_owner" {
+  type        = string
+  nullable    = false
+  description = "Owner of the Forgejo repository."
+}
+
+variable "repository_name" {
+  type        = string
+  nullable    = false
+  description = "Name of the Forgejo repository."
 }
 
 variable "stage" {
@@ -24,23 +31,45 @@ variable "app_hostname" {
 }
 
 variable "additional_kubernetes_secrets" {
-  type        = map(map(string))
-  description = "Additional Kubernetes secrets to create in the tenant namespace. Map keys are secret names, values are secret data maps."
+  type        = map(string)
+  nullable    = false
+  description = "Opaque Kubernetes secrets to create in the tenant namespace, by name, each filled from the object under the key `kubernetes-secret` of the Vault KV v2 secret at the given path."
 }
 
-variable "harbor_host" {
-  type        = string
-  description = "The URL of the Harbor registry."
-}
-
-variable "container_registry_access_credentials" {
+variable "vault_reader" {
   type = object({
-    push = object({ user = string, password = string })
-    pull = object({ user = string, password = string })
+    address  = string
+    mount    = string
+    username = string
+    password = string
   })
-  description = "Registry robot credentials. Null wires no registry, so pods pull public images only."
+  nullable    = false
   sensitive   = true
-  default     = null
+  description = "Vault KV v2 userpass login the run reads its secrets with."
+}
+
+variable "forgejo_api_token_path" {
+  type        = string
+  nullable    = false
+  description = "Vault KV v2 secret holding the Forgejo API token under the key `forgejo-api-token`."
+}
+
+variable "registry_secret_path" {
+  type        = string
+  nullable    = false
+  description = "Vault KV v2 secret holding the data of the image pull Secret under the key `pull-kubernetes-secret`."
+}
+
+variable "secrets_revision" {
+  type        = number
+  nullable    = false
+  default     = 1
+  description = "Increase to write changed Vault values to the Kubernetes secrets."
+
+  validation {
+    condition     = var.secrets_revision >= 1
+    error_message = "secrets_revision must be at least 1, or the kubernetes provider writes the secrets empty."
+  }
 }
 
 variable "hub_git_ref" {
