@@ -114,9 +114,9 @@ resource "meshstack_building_block_definition" "this" {
 
       ## 🔑 The token mints itself
 
-      A fresh instance carries no credential, so the building block makes one: it switches on local
-      login, creates a technical user through the STACKIT Git API, and exchanges that user's password
-      for a Personal Access Token. Ordering it takes one run and no manual step.
+      A fresh instance carries no credential, so the building block makes one: it creates a technical
+      user through the STACKIT Git API and exchanges that user's password for a Personal Access
+      Token. Ordering it takes one run and no manual step.
 
       The token is written to the Vault KV v2 secret given as `output_to_vault`, where building
       blocks that manage repositories, runners or organization members read it.
@@ -276,6 +276,23 @@ resource "meshstack_building_block_definition" "this" {
         assignment_type        = "USER_INPUT"
         sensitive              = {}
         is_optional            = true
+        updateable_by_consumer = true
+      }
+
+      imports = {
+        display_name    = "Imports"
+        description     = "HCL object `{instance_id, existing_forgejo_api_token_path}` of an instance named Instance Name to take over, with its organization Forgejo Organization. The path names a secret in Output to Vault with an owner's `forgejo-api-token`."
+        type            = "CODE"
+        assignment_type = "USER_INPUT"
+        is_optional     = true
+      }
+
+      release_on_destroy = {
+        display_name           = "Release on Destroy"
+        description            = "Leave the instance in place when this building block is deleted. Cannot change once the instance is managed."
+        type                   = "BOOLEAN"
+        assignment_type        = "USER_INPUT"
+        default_value          = jsonencode(false)
         updateable_by_consumer = true
       }
     }
