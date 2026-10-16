@@ -3,6 +3,10 @@ data "external" "stackit_access_token" {
 }
 
 resource "random_string" "name_suffix" {
+  lifecycle {
+    enabled = var.imports == null
+  }
+
   length  = 4
   special = false
   upper   = false
@@ -18,8 +22,8 @@ locals {
   # Deleting an artifactory is a soft delete, and the name it held stays taken — recreating one under
   # the same name answers 409 for good. So the caller names the registry and this adds a suffix that
   # makes the name disposable. It lives in state, so a rerun keeps the same registry; only a genuinely
-  # new one draws a new suffix.
-  registry_name = "${var.registry_name}-${random_string.name_suffix.result}"
+  # new one draws a new suffix. An adopted registry keeps the name it has.
+  registry_name = var.imports == null ? "${var.registry_name}-${random_string.name_suffix.result}" : var.registry_name
 
   registry_host = "registry.onstackit.cloud"
 
@@ -57,6 +61,11 @@ locals {
 resource "restapi_object" "service_enablement" {
   provider = restapi.service_enablement
 
+  # An adopted registry proves the service is on, and deleting this block must not switch it off.
+  lifecycle {
+    enabled = var.imports == null
+  }
+
   path        = local.service_enablement_path
   create_path = "${local.service_enablement_path}/{id}"
 
@@ -70,6 +79,10 @@ resource "restapi_object" "service_enablement" {
 # reconciliation finishes the registry API answers `403 Service not enabled`. The script polls the
 # service's own state rather than sleeping for a guessed duration.
 resource "terraform_data" "service_enabled" {
+  lifecycle {
+    enabled = var.imports == null
+  }
+
   triggers_replace = [restapi_object.service_enablement.id]
 
   provisioner "local-exec" {
@@ -84,28 +97,34 @@ resource "terraform_data" "service_enabled" {
   }
 }
 
-resource "restapi_object" "artifactory" {
-  provider   = restapi.registry
+module "artifactory" {
+  source     = "./modules/artifactory"
   depends_on = [terraform_data.service_enabled]
 
-  path = local.artifactory_path
+  providers = {
+    restapi = restapi.registry
+  }
 
-  # The API identifies an artifactory by a uuid it assigns, not by its name, so read, update and
-  # destroy all address `artifactories/{uuid}`. The uuid comes from the create response, which is
-  # why the provider sets `create_returns_object`. Naming `name` as the id instead sends the name
-  # down those paths and the API rejects it: `parameter "artifactoryId" in path has an error:
-  # minimum string length is 36`.
-  id_attribute = "id"
+  release_on_destroy = var.release_on_destroy
+  path               = local.artifactory_path
+  name               = local.registry_name
+}
 
-  # PATCH, the only update this endpoint has, carries `proxy` and nothing else — a name is fixed for
-  # the artifactory's life, so a new one means a new artifactory.
-  force_new = ["name"]
+moved {
+  from = restapi_object.artifactory
+  to   = module.artifactory.restapi_object.this
+}
 
-  data = jsonencode({
-    name = local.registry_name
-  })
+import {
+  for_each = var.imports != null && !var.release_on_destroy ? toset([var.imports.artifactory_id]) : toset([])
+  to       = module.artifactory.restapi_object.this
+  id       = "${local.artifactory_path}/${each.value}"
+}
 
-  ignore_server_additions = true
+import {
+  for_each = var.imports != null && var.release_on_destroy ? toset([var.imports.artifactory_id]) : toset([])
+  to       = module.artifactory.restapi_object.released
+  id       = "${local.artifactory_path}/${each.value}"
 }
 
 data "external" "artifactory" {
@@ -114,7 +133,7 @@ data "external" "artifactory" {
   query = {
     project_id     = var.stackit_project_id
     region         = var.stackit_region
-    artifactory_id = restapi_object.artifactory.id
+    artifactory_id = module.artifactory.artifactory.id
   }
 }
 
@@ -125,7 +144,7 @@ data "external" "artifactory" {
 resource "stackit_authorization_project_role_assignment" "registry_users" {
   for_each = local.registry_role_assignments
 
-  depends_on = [restapi_object.artifactory]
+  depends_on = [module.artifactory]
 
   resource_id = var.stackit_project_id
   role        = each.value.role

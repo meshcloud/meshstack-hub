@@ -218,7 +218,7 @@ resource "meshstack_building_block_definition" "this" {
 
       registry_name = {
         display_name                   = "Registry Name"
-        description                    = "Base name of the container registry. A short random suffix is appended, because STACKIT keeps a deleted registry's name reserved."
+        description                    = "Base name of the container registry. A short random suffix is appended, because STACKIT keeps a deleted registry's name reserved. With Imports, the adopted registry's full name."
         type                           = "STRING"
         assignment_type                = "USER_INPUT"
         value_validation_regex         = "^[a-z0-9][a-z0-9-]{3,56}[a-z0-9]$"
@@ -250,6 +250,23 @@ resource "meshstack_building_block_definition" "this" {
         assignment_type        = "USER_INPUT"
         sensitive              = {}
         is_optional            = true
+        updateable_by_consumer = true
+      }
+
+      imports = {
+        display_name    = "Imports"
+        description     = "HCL object `{artifactory_id}` of an existing registry to take over. Registry Name is then its full name, and no suffix is appended. Leave empty to create a new registry."
+        type            = "CODE"
+        assignment_type = "USER_INPUT"
+        is_optional     = true
+      }
+
+      release_on_destroy = {
+        display_name           = "Release on Destroy"
+        description            = "Leave the registry in place when this building block is deleted. Cannot change once the registry is managed."
+        type                   = "BOOLEAN"
+        assignment_type        = "USER_INPUT"
+        default_value          = jsonencode(false)
         updateable_by_consumer = true
       }
     }
