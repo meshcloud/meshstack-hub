@@ -1,15 +1,8 @@
 variable "test_context" {
   type = object({
-    # Receives the ordered building blocks.
-    workspace = string
-
-    # Owns the definitions, when that is not `workspace`. Only a released version can be ordered
-    # from another workspace: a draft is visible to its owner alone.
+    workspace            = string
     definition_workspace = optional(string)
-
-    # Must match the `hub.bbd_draft` the definitions were deployed with: a draft has no released
-    # version to order against.
-    bbd_draft = bool
+    bbd_draft            = bool
   })
   nullable = false
 }
@@ -19,8 +12,6 @@ data "meshstack_building_block_definitions" "published" {
 }
 
 locals {
-  # The defaults of `spec.display_name` in the two modules' meshstack_integration.tf. A deployment
-  # that renamed its definitions has to say so here.
   display_names = {
     service_account = "STACKIT Service Account"
     federation      = "STACKIT Service Account Federation"

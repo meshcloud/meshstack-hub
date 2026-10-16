@@ -15,11 +15,9 @@ variable "test_context" {
 }
 
 provider "stackit" {
-  # Credentials come from the environment, WIF in CI.
   experiments = ["iam"]
 }
 
-# The federation needs a service account to federate, and the service account block creates it.
 module "service_account" {
   source = "../../../../service-account"
 

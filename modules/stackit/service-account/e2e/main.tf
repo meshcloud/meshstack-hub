@@ -13,14 +13,12 @@ variable "test_context" {
   }
 
   validation {
-    # `try` because `test_context` is untyped, so a hub run need not set `mode` at all.
     condition     = contains(["hub", "foundation"], try(var.test_context.mode, "hub"))
     error_message = "test_context.mode must be \"hub\" (the default) or \"foundation\"."
   }
 }
 
 locals {
-  # `try` because `test_context` is untyped, so a hub run need not set `mode` at all.
   mode = try(var.test_context.mode, "hub")
 }
 
@@ -31,7 +29,6 @@ module "definition" {
 }
 
 resource "meshstack_building_block" "this" {
-  # Also orders teardown: the delete run must finish before the backplane's WIF trust is destroyed.
   depends_on = [module.definition]
 
   wait_for_completion = true
@@ -40,7 +37,6 @@ resource "meshstack_building_block" "this" {
     building_block_definition_version_ref = module.definition.version_ref
 
     display_name = "${var.test_context.run_id}-service-account"
-    # `project_id` is a PLATFORM_TENANT_ID input, which meshStack resolves from this tenant.
     target_ref = {
       kind = "meshTenant"
       uuid = var.test_context.fixtures.stackit.mesh_tenant_id

@@ -15,7 +15,6 @@ variable "test_context" {
 }
 
 provider "stackit" {
-  # Credentials come from the environment, WIF in CI.
   experiments = ["iam"]
 }
 

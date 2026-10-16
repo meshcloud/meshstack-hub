@@ -20,14 +20,12 @@ variable "test_context" {
   }
 
   validation {
-    # `try` because `test_context` is untyped, so a hub run need not set `mode` at all.
     condition     = contains(["hub", "foundation"], try(var.test_context.mode, "hub"))
     error_message = "test_context.mode must be \"hub\" (the default) or \"foundation\"."
   }
 }
 
 locals {
-  # `try` because `test_context` is untyped, so a hub run need not set `mode` at all.
   mode = try(var.test_context.mode, "hub")
 
   target_ref = {
@@ -43,7 +41,6 @@ module "definition" {
 }
 
 resource "meshstack_building_block" "service_account" {
-  # Also orders teardown: each delete run must finish before the backplane's WIF trust is destroyed.
   depends_on = [module.definition]
 
   wait_for_completion = true
@@ -62,8 +59,7 @@ resource "meshstack_building_block" "service_account" {
   }
 }
 
-# The definition whose runs the federation lets act as the service account. It must be owned by the
-# workspace that orders the federation.
+# Must be owned by the workspace that orders the federation.
 resource "meshstack_building_block_definition" "probe" {
   metadata = {
     owned_by_workspace = var.test_context.workspace
@@ -102,7 +98,6 @@ resource "meshstack_building_block_definition" "probe" {
         assignment_type = "PLATFORM_TENANT_ID"
       }
 
-      # The federation block is the probe's parent and names the service account it may act as.
       STACKIT_SERVICE_ACCOUNT_EMAIL = {
         display_name    = "STACKIT Service Account Email"
         type            = "STRING"
