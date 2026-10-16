@@ -24,7 +24,7 @@ page=1
 total_pages=1
 while ((page <= total_pages)); do
   body="$(get "${instances_url}/${instance_id}/users?page=${page}")"
-  users="$(jq -c --argjson acc "${users}" '$acc + ([.users[] | {key: (.email | ascii_downcase), value: .username}] | from_entries)' <<<"${body}")"
+  users="$(jq -c --argjson acc "${users}" '$acc + ([(.users // [])[] | {key: (.email | ascii_downcase), value: .username}] | from_entries)' <<<"${body}")"
   total_pages="$(jq -r '.totalPages // 1' <<<"${body}")"
   page=$((page + 1))
 done
