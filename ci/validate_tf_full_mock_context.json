@@ -13,6 +13,9 @@
   "meshstack_endpoint": "https://validation-only.example.invalid",
   "forgejo_base_url": "https://validation-only.example.invalid",
   "forgejo_organization": "validation-only",
+  "stackit_service_account_email": "validation-only@sa.stackit.cloud",
+  "stackit_project_id": "00000000-0000-0000-0000-000000000000",
+  "stackit_git_instance_id": "00000000-0000-0000-0000-000000000000",
   "dns_zone_name": "validation-only.example.invalid",
 
   "meshstack": {
