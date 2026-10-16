@@ -15,7 +15,7 @@ This building block creates one meshStack project per stage the platform offers,
 ## Requirements
 
 | Name | Version |
-|------|---------|
+| ---- | ------- |
 | <a name="requirement_meshstack"></a> [meshstack](#requirement\_meshstack) | >= 0.24.4 |
 | <a name="requirement_random"></a> [random](#requirement\_random) | >= 3.8.1, < 4.0.0 |
 
@@ -26,7 +26,7 @@ No modules.
 ## Resources
 
 | Name | Type |
-|------|------|
+| ---- | ---- |
 | [meshstack_building_block.forgejo_connector](https://registry.terraform.io/providers/meshcloud/meshstack/latest/docs/resources/building_block) | resource |
 | [meshstack_building_block.git_repository](https://registry.terraform.io/providers/meshcloud/meshstack/latest/docs/resources/building_block) | resource |
 | [meshstack_project.this](https://registry.terraform.io/providers/meshcloud/meshstack/latest/docs/resources/project) | resource |
@@ -38,7 +38,7 @@ No modules.
 ## Inputs
 
 | Name | Description | Type | Default | Required |
-|------|-------------|------|---------|:--------:|
+| ---- | ----------- | ---- | ------- | :------: |
 | <a name="input_add_random_name_suffix"></a> [add\_random\_name\_suffix](#input\_add\_random\_name\_suffix) | Whether to append a random suffix to the provided name for shared environments. | `bool` | n/a | yes |
 | <a name="input_app_name"></a> [app\_name](#input\_app\_name) | Image name the pipeline builds under, set on the repository as APP\_NAME. | `string` | n/a | yes |
 | <a name="input_building_block_definition_version_refs"></a> [building\_block\_definition\_version\_refs](#input\_building\_block\_definition\_version\_refs) | Building block definition versions this starter kit creates its child building blocks from, keyed by definition name (`git-repository` and `forgejo-connector`). | <pre>map(object({<br/>    uuid = string<br/>  }))</pre> | n/a | yes |
@@ -53,5 +53,7 @@ No modules.
 
 ## Outputs
 
-No outputs.
+| Name | Description |
+| ---- | ----------- |
+| <a name="output_summary"></a> [summary](#output\_summary) | Summary with next steps and insights into created resources |
 <!-- END_TF_DOCS -->
