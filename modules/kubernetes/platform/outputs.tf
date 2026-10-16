@@ -12,7 +12,7 @@ output "metering_token" {
 
 output "service_account_namespace" {
   description = "Namespace holding the replicator and metering service accounts."
-  value       = kubernetes_namespace_v1.meshcloud.metadata[0].name
+  value       = module.namespace.name
 }
 
 output "replicator_service_account_name" {
