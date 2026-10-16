@@ -3,6 +3,13 @@ resource "kubernetes_service_account" "this" {
     name      = var.name
     namespace = var.namespace
   }
+
+  lifecycle {
+    precondition {
+      condition     = fileexists("${path.module}/kubeconfig.yaml")
+      error_message = "kubeconfig.yaml is missing. meshStack writes it from the static FILE input of the building block definition."
+    }
+  }
 }
 
 resource "kubernetes_secret" "this" {
@@ -18,9 +25,33 @@ resource "kubernetes_secret" "this" {
 }
 
 resource "kubernetes_role_binding" "this" {
+  lifecycle {
+    enabled = !var.bind_cluster_wide
+  }
+
   metadata {
     name      = "${var.name}-${var.cluster_role}"
     namespace = var.namespace
+  }
+  subject {
+    kind      = "ServiceAccount"
+    name      = var.name
+    namespace = var.namespace
+  }
+  role_ref {
+    api_group = "rbac.authorization.k8s.io"
+    kind      = "ClusterRole"
+    name      = var.cluster_role
+  }
+}
+
+resource "kubernetes_cluster_role_binding" "this" {
+  lifecycle {
+    enabled = var.bind_cluster_wide
+  }
+
+  metadata {
+    name = "${var.namespace}-${var.name}-${var.cluster_role}"
   }
   subject {
     kind      = "ServiceAccount"

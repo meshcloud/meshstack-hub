@@ -19,6 +19,11 @@ LoadBalancer annotations differ, and those are an input. AKS needs
 `service.beta.kubernetes.io/azure-load-balancer-health-probe-request-path = "/healthz"`; on STACKIT,
 `lb.stackit.cloud/internal-lb` keeps the load balancer off the public internet.
 
+## The kubeconfig is part of the definition
+
+The block reaches the cluster through `kubeconfig.yaml`, a static FILE input of its building block
+definition, so one definition serves one cluster.
+
 ## Why it is one module and not four
 
 The wildcard certificate and HAProxy's `defaultTLSSecret` are a single decision: the certificate is
@@ -112,7 +117,6 @@ No modules.
 | <a name="input_haproxy_timeout"></a> [haproxy\_timeout](#input\_haproxy\_timeout) | Seconds to wait for the HAProxy Helm release to become ready. The default of 20 minutes covers the time a cloud provider takes to provision the load balancer. | `number` | `1200` | no |
 | <a name="input_haproxy_version"></a> [haproxy\_version](#input\_haproxy\_version) | Version of the haproxytech/kubernetes-ingress Helm chart. See https://github.com/haproxytech/helm-charts/blob/main/kubernetes-ingress/Chart.yaml. | `string` | n/a | yes |
 | <a name="input_ingress_class_name"></a> [ingress\_class\_name](#input\_ingress\_class\_name) | Name of the IngressClass the controller serves. The HTTP-01 solver of the ClusterIssuer uses the same name. | `string` | n/a | yes |
-| <a name="input_kubeconfig"></a> [kubeconfig](#input\_kubeconfig) | Raw kubeconfig (YAML) of the target cluster, from a preceding building block so it is known at plan time. | `string` | n/a | yes |
 | <a name="input_stackit_webhook_resources"></a> [stackit\_webhook\_resources](#input\_stackit\_webhook\_resources) | Resource requests and limits of the STACKIT cert-manager webhook. Only used when dns01.stackit<br/>is set. The default is sized for a demonstration cluster and a production consumer has to raise<br/>it.<br/><br/>The chart sets no resources and its values file states that `100m` CPU and `128Mi` memory are<br/>enough for the webhook, which is what the limit uses. The webhook answers one DNS-01 challenge<br/>per certificate renewal, so the request stays well below that. Production wants the chart's own<br/>figures as the request as well. | <pre>object({<br/>    requests = optional(object({ cpu = optional(string), memory = optional(string) }), {})<br/>    limits   = optional(object({ cpu = optional(string), memory = optional(string) }), {})<br/>  })</pre> | <pre>{<br/>  "limits": {<br/>    "cpu": "100m",<br/>    "memory": "128Mi"<br/>  },<br/>  "requests": {<br/>    "cpu": "10m",<br/>    "memory": "64Mi"<br/>  }<br/>}</pre> | no |
 | <a name="input_stackit_webhook_version"></a> [stackit\_webhook\_version](#input\_stackit\_webhook\_version) | Version of the stackit-cert-manager-webhook Helm chart. Must be a version served by the chart index at https://stackitcloud.github.io/stackit-cert-manager-webhook, which lags behind the GitHub release tags. Only used when dns01.stackit is set. | `string` | `"0.4.9"` | no |
 | <a name="input_wildcard_certificate_name"></a> [wildcard\_certificate\_name](#input\_wildcard\_certificate\_name) | Name of the wildcard Certificate and of the secret it writes, both in haproxy\_namespace. Only used when dns01 is set. | `string` | `"wildcard-tls"` | no |
