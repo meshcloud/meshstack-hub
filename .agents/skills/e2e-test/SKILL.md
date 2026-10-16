@@ -376,7 +376,8 @@ target_ref = {
 - Always assert `status.status == "SUCCEEDED"` as the first check.
 - Assert meaningful output values (URLs, strings, booleans) to validate the building block executed
   correctly. Every output `value` is a `jsonencode`d string — read it with
-  `jsondecode(<res>.status.outputs["<name>"].value)` (a CODE/JSON output decodes twice).
+  `jsondecode(<res>.status.outputs["<name>"].value)` (a CODE/JSON output decodes twice). Do not wrap
+  it in `try`: when a failed run reports no outputs, the status assertion still fails first.
 - One file serves both modes. Assert on the **building block only** — that is the one thing both
   modes produce. The backplane does not exist in foundation mode, so nothing may assert on it.
 - Use `file("${path.root}/tests/<name>.expected.*")` for large expected values (JSON, Markdown) to
