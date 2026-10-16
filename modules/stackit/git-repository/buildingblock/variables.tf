@@ -78,3 +78,22 @@ variable "action_secrets" {
     error_message = "Forgejo Actions secret names must be 30 characters or less."
   }
 }
+
+variable "stackit_project_id" {
+  type        = string
+  nullable    = false
+  description = "STACKIT project of the Git instance."
+}
+
+variable "stackit_git_instance_id" {
+  type        = string
+  nullable    = false
+  description = "STACKIT Git instance whose users are matched to workspace members by email."
+}
+
+variable "hub_git_ref" {
+  type        = string
+  description = "Hub git ref this building block runs from. Pins the shared modules it sources so they stay in lockstep with this module's own checkout."
+  const       = true
+  default     = "main"
+}
