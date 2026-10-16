@@ -1,20 +1,12 @@
-variable "forgejo_host" {
-  type        = string
-  nullable    = false
-  description = "Base URL of the Forgejo instance."
-}
-
-variable "forgejo_api_token" {
-  type        = string
-  nullable    = false
-  sensitive   = true
-  description = "Token of an owner of `organization`, used for the membership calls the restapi provider cannot track."
-}
-
 variable "organization" {
   type        = string
-  nullable    = false
-  description = "Forgejo organization the teams belong to."
+  nullable    = true
+  description = "Forgejo organization the teams belong to. Required when `teams` is not empty."
+
+  validation {
+    condition     = var.organization != null || length(var.teams) == 0
+    error_message = "organization is required when teams is not empty."
+  }
 }
 
 variable "teams" {
@@ -27,7 +19,7 @@ variable "teams" {
     members                   = map(string)
   }))
   nullable    = false
-  description = "Teams by a stable key. `permission` is `read`, `write`, `admin` or `owner`, which uses the organization's built-in Owners team. `members` maps a stable key to a Forgejo username; an empty username is skipped until it is known."
+  description = "Teams by a stable key. `permission` is `read`, `write`, `admin` or `owner`, which uses the organization's built-in Owners team. `members` maps a stable key to a Forgejo username; an empty username is skipped."
 
   validation {
     condition     = alltrue([for team in values(var.teams) : contains(["read", "write", "admin", "owner"], team.permission)])

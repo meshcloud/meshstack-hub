@@ -15,12 +15,6 @@ variable "test_context" {
   nullable = false
 }
 
-# Unused here: the root pipes one uniform surface to both modes.
-variable "backplane_secrets" {
-  type      = any
-  sensitive = true
-}
-
 # The definition is looked up through the meshStack API rather than handed in from the deployment's
 # terraform state. Two reasons: a foundation smoke test then needs no credential beyond a meshStack
 # API key — the deployment's state also holds the kubeconfig and the Forgejo and Harbor secrets —
