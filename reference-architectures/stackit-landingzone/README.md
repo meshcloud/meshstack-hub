@@ -93,11 +93,27 @@ When a **network** configuration is provided, it additionally:
 
 ## Service Accounts
 
-You supply one account, as `stackit_service_account_key`, and the architecture creates one. The
-account you supply creates the folder, the foundation project and the meshStack objects, and its key
-is reused on every run rather than only the first. The account it creates lives in the foundation
-project and is what creates tenant projects; it authenticates through workload identity federation,
-so no key for it is ever stored.
+You supply one account, as `STACKIT_SERVICE_ACCOUNT_EMAIL`, and the architecture creates one. The
+account you supply creates the folder, the foundation project and the meshStack objects. The account
+it creates lives in the foundation project and is what creates tenant projects. Both authenticate
+through workload identity federation, so no key is ever stored for either.
+
+### Ordering it: bootstrap, then deploy
+
+The architecture has no backplane that could mint the account you supply and trust meshStack on it.
+So it tells you what to trust instead, and it does that from meshPanel — ordering this architecture
+needs no foundation repository and no terminal.
+
+1. **Bootstrap.** Order the building block with **Stage** set to `bootstrap`. The run creates
+   nothing. Its summary reports the three claims to register: the issuer, the audience
+   `api://AzureADTokenExchange`, and the subject naming this definition.
+2. **Trust them.** In the STACKIT portal, add a federated identity provider with those exact values
+   to a service account holding `resource-manager.admin` on your organization.
+3. **Deploy.** Set **Stage** to `deploy` and fill in the **STACKIT Service Account Email** field that
+   appears. The run authenticates as that account and builds the landing zone.
+
+The subject names this definition version, so a definition in another workspace authenticates
+nothing. Enabling hub-and-spoke networking later works the same way — edit the inputs, run again.
 
 ### How composing architectures get an identity
 

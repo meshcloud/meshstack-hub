@@ -1,3 +1,34 @@
+%{ if !deploy ~}
+# STACKIT Landing Zone: trust these claims
+
+This run created nothing. It reports the workload identity this definition deploys as, so you can
+trust it on a STACKIT service account before the landing zone is built.
+
+## 1. Pick or create a service account
+
+Any STACKIT service account with `resource-manager.admin` on your organization will do. It is the
+identity every run of this landing zone acts as.
+
+## 2. Register a federated identity provider on it
+
+In the STACKIT portal, add a federated identity provider to that service account with exactly these
+values:
+
+| Claim | Value |
+|-------|-------|
+| **Issuer** | `${wif_issuer}` |
+| **Audience** (`aud` equals) | `${wif_audience}` |
+| **Subject** (`sub` equals) | `${wif_subject}` |
+
+> [!IMPORTANT]
+> The subject names *this* definition version. Trusting a different definition, or a different
+> workspace, authenticates nothing.
+
+## 3. Run again as that account
+
+Set **Stage** to `deploy` and fill in the **STACKIT Service Account Email** field that appears with
+the account you just trusted. The next run builds the landing zone with no key stored anywhere.
+%{ else ~}
 # STACKIT Landing Zone: **${platform_identifier}**
 
 %{ if playground_mode ~}
@@ -59,4 +90,5 @@ value from this landing zone. Paste this block into its **STACKIT Landing Zone**
 %{ if network_enabled ~}
 
 Set its **Landing Zone Variant** to `networked` to run the cluster inside the hub-and-spoke network.
+%{ endif ~}
 %{ endif ~}
