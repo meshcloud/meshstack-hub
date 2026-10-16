@@ -50,3 +50,24 @@ variable "wildcard_target_ip" {
     error_message = "wildcard_target_ip must be an IPv4 address."
   }
 }
+
+variable "imports" {
+  type = object({
+    zone_id       = string
+    record_set_id = string
+  })
+  default     = null
+  description = "Existing zone `<subdomain>.<parent_domain>` and its wildcard record set to take over; null creates both."
+
+  validation {
+    condition     = var.imports == null || var.wildcard_target_ip != null
+    error_message = "imports needs wildcard_target_ip, because the imported record set is the wildcard record."
+  }
+}
+
+variable "release_on_destroy" {
+  type        = bool
+  nullable    = false
+  default     = false
+  description = "Leave the zone and its record set in place on destroy. Cannot change once they are managed."
+}
