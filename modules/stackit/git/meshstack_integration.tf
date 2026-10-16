@@ -118,8 +118,8 @@ resource "meshstack_building_block_definition" "this" {
       login, creates a technical user through the STACKIT Git API, and exchanges that user's password
       for a Personal Access Token. Ordering it takes one run and no manual step.
 
-      The token is reported as an output, so building blocks that manage repositories, runners or
-      organization members take it from here.
+      The token is written to the Vault KV v2 secret given as `output_to_vault`, where building
+      blocks that manage repositories, runners or organization members read it.
 
       ## 📊 Shared responsibility
 
@@ -269,9 +269,26 @@ resource "meshstack_building_block_definition" "this" {
           "write:user",
         ]))
       }
+
+      output_to_vault = {
+        display_name           = "Output to Vault"
+        description            = "HCL object `{address, mount, username, password, path_prefix?}` of the Vault KV v2 login the Forgejo API token is written with, to `<path_prefix>stackit/git` under the key `forgejo-api-token`. Leave empty to write it nowhere."
+        type                   = "CODE"
+        assignment_type        = "USER_INPUT"
+        sensitive              = {}
+        is_optional            = true
+        updateable_by_consumer = true
+      }
     }
 
     outputs = {
+      vault_secret = {
+        display_name    = "Vault Secret"
+        description     = "JSON object `{path, secret_hash}` of the secret in Vault, or `{}` when `output_to_vault` is not set. `secret_hash` changes with the secret's content."
+        type            = "CODE"
+        assignment_type = "NONE"
+      }
+
       instance_name = {
         display_name    = "Instance Name"
         type            = "STRING"
@@ -298,12 +315,6 @@ resource "meshstack_building_block_definition" "this" {
 
       forgejo_organization = {
         display_name    = "Forgejo Organization"
-        type            = "STRING"
-        assignment_type = "NONE"
-      }
-
-      forgejo_api_token = {
-        display_name    = "Forgejo API Token"
         type            = "STRING"
         assignment_type = "NONE"
       }
