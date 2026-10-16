@@ -2,15 +2,15 @@ locals {
   # The instance resource does not expose the API URL. STACKIT serves all eu01 instances from this
   # endpoint and mounts each instance's KV engine at its instance ID.
   api_url  = "https://prod.sm.eu01.stackit.cloud"
-  kv_mount = stackit_secretsmanager_instance.this.instance_id
+  kv_mount = module.instance.instance.instance_id
 
-  portal_instance_path = "https://portal.stackit.cloud/secrets-manager/instances/${stackit_secretsmanager_instance.this.instance_id}"
+  portal_instance_path = "https://portal.stackit.cloud/secrets-manager/instances/${module.instance.instance.instance_id}"
   instance_url         = "${local.portal_instance_path}/overview?project=${var.project_id}"
   users_url            = "${local.portal_instance_path}/users?project=${var.project_id}"
 }
 
 output "instance_id" {
-  value       = stackit_secretsmanager_instance.this.instance_id
+  value       = module.instance.instance.instance_id
   description = "ID of the Secrets Manager instance."
 }
 
@@ -32,7 +32,7 @@ output "kv_mount" {
 output "summary" {
   description = "Summary with connection details."
   value = templatefile("${path.module}/SUMMARY.md.tftpl", {
-    instance_name = stackit_secretsmanager_instance.this.name
+    instance_name = module.instance.instance.name
     instance_url  = local.instance_url
     users_url     = local.users_url
     api_url       = local.api_url
