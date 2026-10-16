@@ -102,7 +102,7 @@ With `release_on_destroy` set, destroying the building block leaves the instance
 ## Requirements
 
 | Name | Version |
-| ---- | ------- |
+|------|---------|
 | <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.12.0 |
 | <a name="requirement_external"></a> [external](#requirement\_external) | >= 2.3.0, < 3.0.0 |
 | <a name="requirement_random"></a> [random](#requirement\_random) | >= 3.5.0, < 4.0.0 |
@@ -113,7 +113,7 @@ With `release_on_destroy` set, destroying the building block leaves the instance
 ## Modules
 
 | Name | Source | Version |
-| ---- | ------ | ------- |
+|------|--------|---------|
 | <a name="module_existing_organization_owner"></a> [existing\_organization\_owner](#module\_existing\_organization\_owner) | ./forgejo-teams | n/a |
 | <a name="module_instance"></a> [instance](#module\_instance) | ./modules/git-instance | n/a |
 | <a name="module_organization_teams"></a> [organization\_teams](#module\_organization\_teams) | ./forgejo-teams | n/a |
@@ -121,7 +121,7 @@ With `release_on_destroy` set, destroying the building block leaves the instance
 ## Resources
 
 | Name | Type |
-| ---- | ---- |
+|------|------|
 | [random_password.local_user](https://registry.terraform.io/providers/hashicorp/random/latest/docs/resources/password) | resource |
 | [random_string.import_suffix](https://registry.terraform.io/providers/hashicorp/random/latest/docs/resources/string) | resource |
 | [restapi_object.adopted_forgejo_organization](https://registry.terraform.io/providers/Mastercard/restapi/latest/docs/resources/object) | resource |
@@ -136,16 +136,16 @@ With `release_on_destroy` set, destroying the building block leaves the instance
 ## Inputs
 
 | Name | Description | Type | Default | Required |
-| ---- | ----------- | ---- | ------- | :------: |
+|------|-------------|------|---------|:--------:|
 | <a name="input_forgejo_organization"></a> [forgejo\_organization](#input\_forgejo\_organization) | Forgejo organization to create inside the instance. Empty provisions the bare instance. | `string` | n/a | yes |
-| <a name="input_imports"></a> [imports](#input\_imports) | Existing STACKIT Git instance and its Forgejo organization `forgejo_organization` this building block takes over instead of creating them. The instance's name must equal `instance_name`. `existing_forgejo_api_token_path` names the secret in the Vault of `output_to_vault` whose key `forgejo-api-token` holds a token of an owner of the organization. The technical user and the writer and reader teams then get a random suffix, no shared runner is ordered, and the organization is left in place on destroy. Null creates a new instance and organization. | <pre>object({<br/>    instance_id                     = string<br/>    existing_forgejo_api_token_path = string<br/>  })</pre> | `null` | no |
+| <a name="input_imports"></a> [imports](#input\_imports) | Existing STACKIT Git instance named `instance_name` and its Forgejo organization `forgejo_organization` to take over; `existing_forgejo_api_token_path` names the secret in the `output_to_vault` Vault holding an owner's `forgejo-api-token`. Null creates both. | <pre>object({<br/>    instance_id                     = string<br/>    existing_forgejo_api_token_path = string<br/>  })</pre> | `null` | no |
 | <a name="input_instance_name"></a> [instance\_name](#input\_instance\_name) | First label of the instance hostname `<name>.git.onstackit.cloud`, globally unique across all of STACKIT. | `string` | n/a | yes |
 | <a name="input_local_user_email"></a> [local\_user\_email](#input\_local\_user\_email) | Email of the technical user. Leave empty to derive one from the instance hostname. | `string` | n/a | yes |
 | <a name="input_local_user_token_name"></a> [local\_user\_token\_name](#input\_local\_user\_token\_name) | Name of the Personal Access Token the module mints. | `string` | n/a | yes |
 | <a name="input_local_user_token_scopes"></a> [local\_user\_token\_scopes](#input\_local\_user\_token\_scopes) | Forgejo scopes of the minted token. | `list(string)` | n/a | yes |
 | <a name="input_local_user_username"></a> [local\_user\_username](#input\_local\_user\_username) | Username of the technical user the module mints its token on. | `string` | n/a | yes |
-| <a name="input_output_to_vault"></a> [output\_to\_vault](#input\_output\_to\_vault) | Vault KV v2 login this building block writes its secret with: the server `address`, the engine `mount`, a userpass `username` and `password`, and an optional `path_prefix`. The secret is `<path_prefix>stackit/git`, with the key `forgejo-api-token`. Null writes none. | <pre>object({<br/>    address     = string<br/>    mount       = string<br/>    username    = string<br/>    password    = string<br/>    path_prefix = optional(string, "")<br/>  })</pre> | `null` | no |
-| <a name="input_release_on_destroy"></a> [release\_on\_destroy](#input\_release\_on\_destroy) | Leave the instance in place when this building block is destroyed. Cannot change once the instance is managed. | `bool` | `false` | no |
+| <a name="input_output_to_vault"></a> [output\_to\_vault](#input\_output\_to\_vault) | Vault KV v2 userpass login that writes the Forgejo API token to `<path_prefix>stackit/git`. Null writes none. | <pre>object({<br/>    address     = string<br/>    mount       = string<br/>    username    = string<br/>    password    = string<br/>    path_prefix = optional(string, "")<br/>  })</pre> | `null` | no |
+| <a name="input_release_on_destroy"></a> [release\_on\_destroy](#input\_release\_on\_destroy) | Leave the instance in place on destroy. Cannot change once the instance is managed. | `bool` | `false` | no |
 | <a name="input_role_mapping"></a> [role\_mapping](#input\_role\_mapping) | Maps meshStack roles from `users[*].roles` to Forgejo organization roles: `owner`, `writer` or `reader`. The highest one wins; unknown meshStack roles are ignored. | `map(list(string))` | n/a | yes |
 | <a name="input_shared_runner_labels"></a> [shared\_runner\_labels](#input\_shared\_runner\_labels) | Labels of the STACKIT-hosted shared runner to order. Leave empty to order none. | `list(string)` | n/a | yes |
 | <a name="input_stackit_project_id"></a> [stackit\_project\_id](#input\_stackit\_project\_id) | STACKIT project the Git instance is created in. | `string` | n/a | yes |
@@ -155,12 +155,12 @@ With `release_on_destroy` set, destroying the building block leaves the instance
 ## Outputs
 
 | Name | Description |
-| ---- | ----------- |
+|------|-------------|
 | <a name="output_forgejo_organization"></a> [forgejo\_organization](#output\_forgejo\_organization) | Name of the Forgejo organization for this instance. Empty when none was asked for. |
 | <a name="output_instance_id"></a> [instance\_id](#output\_instance\_id) | STACKIT Git instance id. |
 | <a name="output_instance_name"></a> [instance\_name](#output\_instance\_name) | Name of the STACKIT Git instance. |
 | <a name="output_instance_url"></a> [instance\_url](#output\_instance\_url) | URL of the Forgejo instance. |
 | <a name="output_local_user_username"></a> [local\_user\_username](#output\_local\_user\_username) | Username of the technical user the token belongs to. |
 | <a name="output_organization_url"></a> [organization\_url](#output\_organization\_url) | URL of the Forgejo organization. Falls back to the instance URL when no organization was asked for. |
-| <a name="output_vault_secret"></a> [vault\_secret](#output\_vault\_secret) | `{path, secret_hash}` of the secret written to `output_to_vault`, or `{}` when that is not set. `secret_hash` is the secret's KV version and changes with its content. |
+| <a name="output_vault_secret"></a> [vault\_secret](#output\_vault\_secret) | `{path, secret_hash}` of the secret in Vault, where `secret_hash` changes with its content; `{}` without `output_to_vault`. |
 <!-- END_TF_DOCS -->

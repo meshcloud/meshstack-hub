@@ -39,7 +39,7 @@ No modules.
 
 | Name | Description | Type | Default | Required |
 |------|-------------|------|---------|:--------:|
-| <a name="input_federation_backplane_email"></a> [federation\_backplane\_email](#input\_federation\_backplane\_email) | Email of the backplane service account of the STACKIT Service Account Federation definition. It gets the `editor` role on the project, so a federation building block can federate the service account. | `string` | n/a | yes |
+| <a name="input_federation_backplane_email"></a> [federation\_backplane\_email](#input\_federation\_backplane\_email) | Backplane service account of the STACKIT Service Account Federation definition, granted `editor` on the project. | `string` | n/a | yes |
 | <a name="input_project_id"></a> [project\_id](#input\_project\_id) | STACKIT project ID (existing project) in which the service account will be created. | `string` | n/a | yes |
 | <a name="input_roles"></a> [roles](#input\_roles) | STACKIT project roles to grant the service account within the project (e.g. "reader", "editor"). | `list(string)` | n/a | yes |
 | <a name="input_service_account_name"></a> [service\_account\_name](#input\_service\_account\_name) | Name of the STACKIT service account to create. Must be unique within the project. | `string` | n/a | yes |
