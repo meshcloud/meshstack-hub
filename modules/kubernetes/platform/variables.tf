@@ -46,3 +46,16 @@ variable "output_to_vault" {
   sensitive   = true
   description = "Vault KV v2 userpass login that writes the tokens to `<path_prefix>kubernetes/platform`. Null returns them as outputs."
 }
+
+variable "imports" {
+  type        = object({})
+  default     = null
+  description = "Set to `{}` to take over the existing namespace `service_account_namespace` and the replicator and metering ServiceAccounts, token Secrets, ClusterRoles and ClusterRoleBindings of their fixed names, for example those of an earlier meshPlatform registration. Null creates them."
+}
+
+variable "release_on_destroy" {
+  type        = bool
+  nullable    = false
+  default     = false
+  description = "Leave the namespace and the objects in it in place on destroy. Cannot change once they are managed."
+}
