@@ -34,6 +34,10 @@ configuration does not manage, a ref wired in from elsewhere, and the user and g
 definition *version*, which `ref` does not identify — that one takes `version_latest` or
 `version_latest_release`.
 
+An input with `assignment_type = "BUILDING_BLOCK_OUTPUT"` also needs the parent's definition in
+`version_spec.dependency_refs`, or meshStack rejects the version with "references a non-existent
+dependency".
+
 <!-- scorecard-checks: platform_lifecycle_ignore_availability -->
 ## `meshstack_platform` Lifecycle
 
