@@ -167,14 +167,13 @@ resource "meshstack_building_block_definition" "this" {
         argument        = jsonencode("eu01")
       }
 
-      # Must be a currently-available STACKIT SKE minor (they retire old ones — 1.31 is already gone).
-      # Maintenance patches it upward automatically; bump this when STACKIT drops the pinned minor.
+      # STACKIT retires old minors; bump this when it drops the pinned one.
       kubernetes_version_min = {
         display_name    = "Minimum Kubernetes Version"
         description     = "Minimum Kubernetes minor version to run."
         type            = "STRING"
         assignment_type = "STATIC"
-        argument        = jsonencode("1.34")
+        argument        = jsonencode("1.36")
       }
 
       node_pool = {
