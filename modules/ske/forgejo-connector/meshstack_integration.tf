@@ -59,6 +59,19 @@ variable "bbd_readme" {
   description = "Overrides the markdown readme shown in the marketplace before ordering."
 }
 
+variable "approval_policies" {
+  type = object({
+    building_block_creation = optional(bool, false)
+    user_input_changes      = optional(bool, false)
+    any_input_changes       = optional(bool, false)
+    manual_triggers         = optional(bool, false)
+    version_upgrade         = optional(bool, false)
+  })
+  nullable    = false
+  default     = {}
+  description = "Run triggers that need an operator's approval before a run of this definition is applied. A gate switched on in meshPanel is reset on the next apply unless it is set here."
+}
+
 variable "meshstack" {
   type = object({
     owning_workspace_identifier = string
@@ -108,6 +121,7 @@ resource "meshstack_building_block_definition" "this" {
     target_type         = "TENANT_LEVEL"
     supported_platforms = [{ name = "KUBERNETES" }]
     run_transparency    = true
+    approval_policies   = var.approval_policies
 
     readme = coalesce(var.bbd_readme, chomp(<<-EOT
     The **SKE Forgejo Connector** wires a Forgejo repository to a Kubernetes namespace on STACKIT SKE so that
@@ -283,8 +297,9 @@ terraform {
 
   required_providers {
     meshstack = {
-      source  = "meshcloud/meshstack"
-      version = ">= 0.21.0"
+      source = "meshcloud/meshstack"
+      # 0.25.2 is the first release that accepts `spec.approval_policies`.
+      version = ">= 0.25.2"
     }
   }
 }
