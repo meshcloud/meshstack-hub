@@ -125,7 +125,9 @@ resource "meshstack_building_block_definition" "this" {
       portal can create that first link. The building block's summary says exactly what to click.
 
       Once linked, that service account's token authenticates as the robot, so every later robot
-      can be created through the Harbor API without touching the portal again.
+      can be created through the Harbor API without touching the portal again. The building block
+      then mints a push and a pull robot and writes them to the Vault KV v2 secrets given as
+      `output_to_vault`.
 
       ## 📊 Shared responsibility
 
@@ -240,9 +242,26 @@ resource "meshstack_building_block_definition" "this" {
         default_value          = jsonencode(jsonencode([]))
         updateable_by_consumer = true
       }
+
+      output_to_vault = {
+        display_name           = "Output to Vault"
+        description            = "HCL object `{address, mount, username, password, path_prefix?}`: Vault KV v2 login that writes the robots to `<path_prefix>stackit/container-registry`. Empty writes none."
+        type                   = "CODE"
+        assignment_type        = "USER_INPUT"
+        sensitive              = {}
+        is_optional            = true
+        updateable_by_consumer = true
+      }
     }
 
     outputs = {
+      vault_secret = {
+        display_name    = "Vault Secret"
+        description     = "JSON `{path, secret_hash}` of the secret in Vault; `{}` without `output_to_vault` or before the robots exist."
+        type            = "CODE"
+        assignment_type = "NONE"
+      }
+
       registry_name = {
         display_name    = "Registry Name"
         type            = "STRING"
@@ -264,12 +283,6 @@ resource "meshstack_building_block_definition" "this" {
       registry_robot_url = {
         display_name    = "Registry Robot URL"
         type            = "STRING"
-        assignment_type = "NONE"
-      }
-
-      access_credentials = {
-        display_name    = "Access Credentials"
-        type            = "CODE"
         assignment_type = "NONE"
       }
 

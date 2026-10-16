@@ -110,9 +110,10 @@ resource "meshstack_building_block_definition" "this" {
       ## 🔌 How an application uses it
 
       The endpoint speaks the OpenAI API, so any OpenAI client works against it by pointing its base
-      URL there. In the reference architecture the endpoint, the token and the model arrive in every
-      application namespace as a Kubernetes secret named `stackit-ai`, with the keys
-      `STACKIT_AI_BASE_URL`, `STACKIT_AI_API_KEY` and `STACKIT_AI_MODEL`.
+      URL there. The endpoint, the token and the model are written to a Vault KV v2 secret with the
+      keys `STACKIT_AI_BASE_URL`, `STACKIT_AI_API_KEY` and `STACKIT_AI_MODEL`. In the reference
+      architecture they arrive in every application namespace as a Kubernetes secret named
+      `stackit-ai` with the same keys.
 
       ## 📊 Shared responsibility
 
@@ -204,23 +205,21 @@ resource "meshstack_building_block_definition" "this" {
         assignment_type = "STATIC"
         argument        = jsonencode("Inference access for applications on this platform.")
       }
+
+      output_to_vault = {
+        display_name           = "Output to Vault"
+        description            = "HCL object `{address, mount, username, password, path_prefix?}`: Vault KV v2 login that writes the endpoint, token and model to `<path_prefix>stackit/ai-llm`."
+        type                   = "CODE"
+        assignment_type        = "USER_INPUT"
+        sensitive              = {}
+        updateable_by_consumer = true
+      }
     }
 
     outputs = {
-      base_url = {
-        display_name    = "Inference Endpoint"
-        type            = "STRING"
-        assignment_type = "NONE"
-      }
-
-      model = {
-        display_name    = "Model"
-        type            = "STRING"
-        assignment_type = "NONE"
-      }
-
-      access_credentials = {
-        display_name    = "Access Credentials"
+      vault_secret = {
+        display_name    = "Vault Secret"
+        description     = "JSON `{path, secret_hash}` of the secret in Vault."
         type            = "CODE"
         assignment_type = "NONE"
       }

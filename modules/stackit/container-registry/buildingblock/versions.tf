@@ -18,5 +18,9 @@ terraform {
       source  = "hashicorp/random"
       version = ">= 3.5.0, < 4.0.0"
     }
+    vault = {
+      source  = "hashicorp/vault"
+      version = ">= 5.12.0, < 6.0.0"
+    }
   }
 }

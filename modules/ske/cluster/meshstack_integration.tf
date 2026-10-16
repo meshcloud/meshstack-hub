@@ -91,8 +91,9 @@ resource "meshstack_building_block_definition" "this" {
 
       - **SKE cluster** – a managed Kubernetes cluster in the given STACKIT project, with one node
         pool (default: `g2i.2`, 1-3 nodes) and automatic Kubernetes/machine-image updates.
-      - **Admin kubeconfig** – a 180-day kubeconfig, auto-refreshed on apply, exposed as an output so
-        a composing architecture can wire up its `kubernetes`/`helm` providers and downstream blocks.
+      - **Admin kubeconfig** – a 180-day kubeconfig, auto-refreshed on apply, so a composing
+        architecture can wire up its `kubernetes`/`helm` providers and downstream blocks. It is
+        written to a Vault KV v2 secret when `output_to_vault` is set, and an output otherwise.
 
       ## 🔑 Authentication
 
@@ -216,9 +217,26 @@ resource "meshstack_building_block_definition" "this" {
           end                                  = "02:00:00Z"
         }))
       }
+
+      output_to_vault = {
+        display_name           = "Output to Vault"
+        description            = "HCL object `{address, mount, username, password, path_prefix?}` of the Vault KV v2 login the kubeconfig is written with, to `<path_prefix>ske/cluster` under the key `kubeconfig`. Leave empty to return it as an output instead."
+        type                   = "CODE"
+        assignment_type        = "USER_INPUT"
+        sensitive              = {}
+        is_optional            = true
+        updateable_by_consumer = true
+      }
     }
 
     outputs = {
+      vault_secret = {
+        display_name    = "Vault Secret"
+        description     = "JSON object `{path, secret_hash}` of the secret in Vault, or `{}` when `output_to_vault` is not set. `secret_hash` changes with the secret's content."
+        type            = "CODE"
+        assignment_type = "NONE"
+      }
+
       cluster_name = {
         display_name    = "Cluster Name"
         type            = "STRING"
