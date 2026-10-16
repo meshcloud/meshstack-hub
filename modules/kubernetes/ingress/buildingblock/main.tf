@@ -1,14 +1,4 @@
 locals {
-  kubeconfig   = yamldecode(var.kubeconfig)
-  kube_cluster = one(local.kubeconfig.clusters).cluster
-  kube_user    = one(local.kubeconfig.users).user
-  kube = {
-    host                   = local.kube_cluster.server
-    cluster_ca_certificate = base64decode(local.kube_cluster["certificate-authority-data"])
-    client_certificate     = base64decode(local.kube_user["client-certificate-data"])
-    client_key             = base64decode(local.kube_user["client-key-data"])
-  }
-
   # var.dns01 is sensitive as a whole, so every expression derived from it carries the sensitivity
   # mark. lifecycle.enabled, resource names and outputs reject a marked value, so unmark the plain
   # facts — is DNS-01 on, which provider, which zone — while the credentials keep their mark.
@@ -57,6 +47,13 @@ locals {
 resource "kubernetes_namespace_v1" "cert_manager" {
   metadata {
     name = var.cert_manager_namespace
+  }
+
+  lifecycle {
+    precondition {
+      condition     = fileexists("${path.module}/kubeconfig.yaml")
+      error_message = "kubeconfig.yaml is missing. meshStack writes it from the static FILE input of the building block definition."
+    }
   }
 }
 
