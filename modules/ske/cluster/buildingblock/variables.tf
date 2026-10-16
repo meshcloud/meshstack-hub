@@ -64,3 +64,16 @@ variable "output_to_vault" {
   sensitive   = true
   description = "Vault KV v2 login this building block writes its secret with: the server `address`, the engine `mount`, a userpass `username` and `password`, and an optional `path_prefix`. The secret is `<path_prefix>ske/cluster`, with the key `kubeconfig`. Null returns it as an output."
 }
+
+variable "imports" {
+  type        = object({})
+  default     = null
+  description = "Set to `{}` to take over the existing SKE cluster `cluster_name`."
+}
+
+variable "release_on_destroy" {
+  type        = bool
+  nullable    = false
+  default     = false
+  description = "Leave the cluster in place on destroy. Cannot change once the cluster is managed."
+}
