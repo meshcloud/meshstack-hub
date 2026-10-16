@@ -312,6 +312,8 @@ const detectors = [
         const lines = blankHeredocBodies(readFileSync(file, "utf-8")).split("\n");
         lines.forEach((line, index) => {
           if (isCommentLine(line) || !/\btry\s*\(/.test(line)) return;
+          // The e2e-test skill types test_context `any`, so this guard explains itself.
+          if (/\btry\s*\(\s*var\.test_context\./.test(line)) return;
           guards++;
           if (!hasCommentAbove(lines, index))
             offenders.push(`${relative(mod.path, file)}:${index + 1}`);

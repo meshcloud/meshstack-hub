@@ -69,6 +69,9 @@ The smoke-test runner dumps one `test_context` var-file, verbatim, for every mod
 runner module-agnostic. Its full shape is the `test_context` output of the `test_context` module in
 `meshstack-smoke-test`.
 
+Code that follows these conventions needs no comments describing conventions already described in
+this skill.
+
 Take **every environment fact from `var.test_context`**; only secrets arrive as scalar `TF_VAR_*`.
 A `TF_VAR_*` fixture has to be wired in the harness repo as well, which is a second place for it to
 go missing.
