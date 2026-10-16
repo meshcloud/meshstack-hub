@@ -526,6 +526,23 @@ resource "meshstack_building_block_definition" "this" {
         is_optional            = true
         updateable_by_consumer = true
       }
+
+      imports = {
+        display_name    = "Imports"
+        description     = "HCL `{}` takes over the existing namespace and the replicator and metering identities; empty creates them."
+        type            = "CODE"
+        assignment_type = "USER_INPUT"
+        is_optional     = true
+      }
+
+      release_on_destroy = {
+        display_name           = "Release on Destroy"
+        description            = "Leave the namespace and the identities in place when this building block is deleted. Cannot change once they are managed."
+        type                   = "BOOLEAN"
+        assignment_type        = "USER_INPUT"
+        default_value          = jsonencode(false)
+        updateable_by_consumer = true
+      }
     }
 
     outputs = {
