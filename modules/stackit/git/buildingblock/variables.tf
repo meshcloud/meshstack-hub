@@ -101,3 +101,29 @@ variable "output_to_vault" {
   sensitive   = true
   description = "Vault KV v2 userpass login that writes the Forgejo API token to `<path_prefix>stackit/git`. Null writes none."
 }
+
+variable "imports" {
+  type = object({
+    instance_id                     = string
+    existing_forgejo_api_token_path = string
+  })
+  default     = null
+  description = "Existing STACKIT Git instance named `instance_name` and its Forgejo organization `forgejo_organization` to take over; `existing_forgejo_api_token_path` names the secret in the `output_to_vault` Vault holding an owner's `forgejo-api-token`. Null creates both."
+
+  validation {
+    condition     = var.imports == null || nonsensitive(var.output_to_vault != null)
+    error_message = "imports needs output_to_vault, whose Vault holds the existing Forgejo API token."
+  }
+
+  validation {
+    condition     = var.imports == null || coalesce(var.forgejo_organization, "") != ""
+    error_message = "imports needs forgejo_organization, the organization it takes over."
+  }
+}
+
+variable "release_on_destroy" {
+  type        = bool
+  nullable    = false
+  default     = false
+  description = "Leave the instance in place on destroy. Cannot change once the instance is managed."
+}
