@@ -299,9 +299,6 @@ resource "meshstack_building_block" "this" {
       kind = "meshWorkspace"
       name = var.test_context.workspace
     }
-    # inputs: one `value = jsonencode(...)` per input (jsonencode strings too, e.g.
-    # jsonencode("x"), jsonencode(1), jsonencode(true)). Sensitive inputs instead use
-    # `sensitive = { secret_value = ... }`.
     inputs = { ... }
   }
 }
