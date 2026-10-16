@@ -106,7 +106,7 @@ resource "meshstack_building_block_definition" "this" {
 
   spec = {
     display_name        = coalesce(var.bbd_display_name, "STACKIT Service Account")
-    symbol              = "https://raw.githubusercontent.com/meshcloud/meshstack-hub/${var.hub.git_ref}/modules/stackit/service-account/buildingblock/logo.png"
+    symbol              = "https://raw.githubusercontent.com/meshcloud/meshstack-hub/${var.hub.git_ref}/modules/stackit/service-account/buildingblock/logo.svg"
     description         = coalesce(var.bbd_description, "Creates a STACKIT service account with project roles.")
     support_url         = "https://portal.stackit.cloud"
     target_type         = "TENANT_LEVEL"
