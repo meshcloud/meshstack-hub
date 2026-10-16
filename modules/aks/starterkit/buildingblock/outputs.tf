@@ -16,65 +16,20 @@ output "github_repo_url" {
 
 output "summary" {
   description = "Summary with next steps and insights into created resources"
-  value       = <<-EOT
-# AKS Starter Kit
+  value = templatefile("${path.module}/SUMMARY.md.tftpl", {
+    workspace_identifier = var.workspace_identifier
+    identifier           = local.identifier
+    apps_base_domain     = var.apps_base_domain
+    repo_uuid            = meshstack_building_block.repo.metadata.uuid
+    repo_html_url        = jsondecode(meshstack_building_block.repo.status.outputs.repo_html_url.value)
 
-✅ **Your environment is ready!**
-
-This starter kit has set up the following resources in workspace `${var.workspace_identifier}`:
-
-@buildingblock[${meshstack_building_block.repo.metadata.uuid}]
-
-@project[${meshstack_project.this["dev"].metadata.owned_by_workspace}.${meshstack_project.this["dev"].metadata.name}]\
-&nbsp;&nbsp;&nbsp;&nbsp;@tenant[${meshstack_tenant.this["dev"].metadata.uuid}]\
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;@buildingblock[${meshstack_building_block.github_actions["dev"].metadata.uuid}]
-
-@project[${meshstack_project.this["prod"].metadata.owned_by_workspace}.${meshstack_project.this["prod"].metadata.name}]\
-&nbsp;&nbsp;&nbsp;&nbsp;@tenant[${meshstack_tenant.this["prod"].metadata.uuid}]\
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;@buildingblock[${meshstack_building_block.github_actions["prod"].metadata.uuid}]
-
----
-
-## What's Included
-
-Your GitHub repository contains:
-
-- Angular frontend & Node.js backend
-- Dockerfiles for both apps
-- Kubernetes deployment files
-- GitHub Actions CI/CD workflows for AKS
-
----
-
-## Deployments
-
-Trigger a deployment by:
-- Pushing to the **main** branch (deploys to **dev**)
-- Merging **main** into **release** via PR (deploys to **prod**)
-
-View deployment status: [GitHub Actions](${jsondecode(meshstack_building_block.repo.status.outputs.repo_html_url.value)}/actions/workflows/k8s-deploy.yml)
-
-- **Dev**: [${local.identifier}-dev.${var.apps_base_domain}](https://${local.identifier}-dev.${var.apps_base_domain})
-- **Prod**: [${local.identifier}.${var.apps_base_domain}](https://${local.identifier}.${var.apps_base_domain})
-
----
-
-## Next Steps
-
-### 1. Develop
-- Push changes to **main** → deploys to **dev**
-- Merge PR from **main → release** → deploys to **prod**
-
-### 2. Monitor
-- Check workflow status in the [Actions tab](<${jsondecode(meshstack_building_block.repo.status.outputs.repo_html_url.value)}/actions>)
-
-### 3. Manage Access
-- Invite team members via meshStack:
-  - [Dev Access](#/w/${var.workspace_identifier}/p/${meshstack_project.this["dev"].metadata.name}/access-management/role-mapping)
-  - [Prod Access](#/w/${var.workspace_identifier}/p/${meshstack_project.this["prod"].metadata.name}/access-management/role-mapping)
-
----
-
-🎉 Happy coding!
-EOT
+    stages = {
+      for stage, project in meshstack_project.this : stage => {
+        project_workspace   = project.metadata.owned_by_workspace
+        project_name        = project.metadata.name
+        tenant_uuid         = meshstack_tenant.this[stage].metadata.uuid
+        github_actions_uuid = meshstack_building_block.github_actions[stage].metadata.uuid
+      }
+    }
+  })
 }
