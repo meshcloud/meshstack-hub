@@ -95,7 +95,7 @@ Secret of its own service account.
 
 | Name | Description | Type | Default | Required |
 |------|-------------|------|---------|:--------:|
-| <a name="input_additional_kubernetes_secrets"></a> [additional\_kubernetes\_secrets](#input\_additional\_kubernetes\_secrets) | Opaque Kubernetes secrets to create in the tenant namespace, by name, each from the key `kubernetes-secret` of the Vault KV v2 secret at the given path. Every key of that object becomes a key of the Kubernetes secret. | `map(string)` | n/a | yes |
+| <a name="input_additional_kubernetes_secrets"></a> [additional\_kubernetes\_secrets](#input\_additional\_kubernetes\_secrets) | Opaque Kubernetes secrets to create in the tenant namespace, by name, each filled from the object under the key `kubernetes-secret` of the Vault KV v2 secret at the given path. | `map(string)` | n/a | yes |
 | <a name="input_app_hostname"></a> [app\_hostname](#input\_app\_hostname) | Public application hostname for this stage (used by deploy workflow and ingress). | `string` | n/a | yes |
 | <a name="input_forgejo_api_token_path"></a> [forgejo\_api\_token\_path](#input\_forgejo\_api\_token\_path) | Vault KV v2 secret holding the Forgejo API token under the key `forgejo-api-token`. | `string` | n/a | yes |
 | <a name="input_hub_git_ref"></a> [hub\_git\_ref](#input\_hub\_git\_ref) | Hub git ref this building block runs from. Pins the shared modules it sources so they stay in lockstep with this module's own checkout. | `string` | `"main"` | no |
@@ -105,9 +105,9 @@ Secret of its own service account.
 | <a name="input_registry_secret_path"></a> [registry\_secret\_path](#input\_registry\_secret\_path) | Vault KV v2 secret holding the data of the image pull Secret under the key `pull-kubernetes-secret`. | `string` | n/a | yes |
 | <a name="input_repository_name"></a> [repository\_name](#input\_repository\_name) | Name of the Forgejo repository. | `string` | n/a | yes |
 | <a name="input_repository_owner"></a> [repository\_owner](#input\_repository\_owner) | Owner of the Forgejo repository. | `string` | n/a | yes |
-| <a name="input_secrets_revision"></a> [secrets\_revision](#input\_secrets\_revision) | Revision of the Kubernetes secrets filled from Vault. Increase it to write changed values to them. | `number` | `1` | no |
+| <a name="input_secrets_revision"></a> [secrets\_revision](#input\_secrets\_revision) | Increase to write changed Vault values to the Kubernetes secrets. | `number` | `1` | no |
 | <a name="input_stage"></a> [stage](#input\_stage) | Deployment stage used for Forgejo workflow dispatch and action secret naming. | `string` | n/a | yes |
-| <a name="input_vault_reader"></a> [vault\_reader](#input\_vault\_reader) | Vault KV v2 login this building block reads its secrets with: the server `address`, the engine `mount` and a userpass `username` and `password`. | <pre>object({<br/>    address  = string<br/>    mount    = string<br/>    username = string<br/>    password = string<br/>  })</pre> | n/a | yes |
+| <a name="input_vault_reader"></a> [vault\_reader](#input\_vault\_reader) | Vault KV v2 userpass login the run reads its secrets with. | <pre>object({<br/>    address  = string<br/>    mount    = string<br/>    username = string<br/>    password = string<br/>  })</pre> | n/a | yes |
 
 ## Outputs
 
