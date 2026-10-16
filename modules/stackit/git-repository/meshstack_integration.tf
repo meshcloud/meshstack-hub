@@ -93,7 +93,7 @@ resource "meshstack_building_block_definition" "this" {
 
   spec = {
     display_name = coalesce(var.bbd_display_name, "STACKIT Git Repository")
-    symbol       = "https://raw.githubusercontent.com/meshcloud/meshstack-hub/${var.hub.git_ref}/modules/stackit/git-repository/buildingblock/logo.png"
+    symbol       = "https://raw.githubusercontent.com/meshcloud/meshstack-hub/${var.hub.git_ref}/modules/stackit/git-repository/buildingblock/logo.svg"
     description = coalesce(var.bbd_description, chomp(<<-EOT
       Provisions a Git repository on STACKIT Git (Forgejo) with team-based
       workspace member access management.

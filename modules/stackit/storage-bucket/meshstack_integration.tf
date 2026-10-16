@@ -84,7 +84,7 @@ resource "meshstack_building_block_definition" "this" {
 
   spec = {
     display_name     = coalesce(var.bbd_display_name, "STACKIT Storage Bucket")
-    symbol           = "https://raw.githubusercontent.com/meshcloud/meshstack-hub/${var.hub.git_ref}/modules/stackit/storage-bucket/buildingblock/logo.png"
+    symbol           = "https://raw.githubusercontent.com/meshcloud/meshstack-hub/${var.hub.git_ref}/modules/stackit/storage-bucket/buildingblock/logo.svg"
     description      = coalesce(var.bbd_description, "Provisions an S3-compatible Object Storage bucket on STACKIT with access credentials.")
     target_type      = "WORKSPACE_LEVEL"
     run_transparency = true

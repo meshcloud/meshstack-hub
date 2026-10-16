@@ -93,7 +93,7 @@ resource "meshstack_building_block_definition" "this" {
 
   spec = {
     display_name        = coalesce(var.bbd_display_name, "STACKIT Service Account Federation")
-    symbol              = "https://raw.githubusercontent.com/meshcloud/meshstack-hub/${var.hub.git_ref}/modules/stackit/service-account-federation/buildingblock/logo.png"
+    symbol              = "https://raw.githubusercontent.com/meshcloud/meshstack-hub/${var.hub.git_ref}/modules/stackit/service-account-federation/buildingblock/logo.svg"
     description         = coalesce(var.bbd_description, "Lets runs of your workspace's building block definitions act as an existing STACKIT service account via workload identity federation.")
     support_url         = "https://portal.stackit.cloud"
     target_type         = "TENANT_LEVEL"
