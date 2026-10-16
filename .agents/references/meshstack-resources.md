@@ -141,3 +141,19 @@ re-run. The provider reads the run through `status.action`; the
   approval — is the one case for a looser condition, e.g.
   `self.status.succeeded || self.status.action == "APPROVE_RUN"`.
 
+
+## Reading a Child's Outputs
+
+A child's `status.outputs` are unknown for one plan whenever the child re-runs: its definition
+changed (the `content_hash` of `version_latest`), or one of its inputs is unknown. Nothing derived
+from them may force a replacement: an argument that requires replacement, a `for_each` key, a
+`count`, a `lifecycle.enabled` or a provider configuration. Guard such a place in one of these ways:
+
+- `ignore_changes` on that argument, when the value cannot change for the life of the resource
+  (the Secrets Manager users and their `instance_id`);
+- a value this configuration already knows: a variable, a constant, or a naming convention such as
+  the Secrets Manager path prefix;
+- a `terraform_data` pin with `ignore_changes = [input]`, read through its `output`.
+
+An output that only feeds another building block's input needs no guard: that block runs once more
+with the same value.

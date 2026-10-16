@@ -60,7 +60,7 @@ digraph stackit_kubernetes_app_team {
     margin=18
 
     HARBOR [label="🗄️ Container Registry\nHarbor project per platform" fillcolor="#eef2f6" color="#93a7bb"]
-    MODEL  [label="🧠 Model Serving\nsovereign LLM API" fillcolor="#eef2f6" color="#93a7bb"]
+    MODEL  [label="🧠 Model Serving\nLLM API" fillcolor="#eef2f6" color="#93a7bb"]
     ING    [label="🔐 Ingress + cert-manager\nHAProxy LoadBalancer" fillcolor="#eef2f6" color="#93a7bb"]
     DNS    [label="🧭 DNS zone\nwildcard hostname" fillcolor="#eef2f6" color="#93a7bb"]
 
