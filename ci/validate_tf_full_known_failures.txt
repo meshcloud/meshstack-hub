@@ -10,6 +10,3 @@ modules/azure/azure-virtual-machine-starterkit/buildingblock # resource type the
 modules/azure/container-registry/buildingblock       # resources point at a provider configuration the module does not declare
 modules/gcp                                          # terraform-gcp-meshplatform has no tag 0.3.0
 modules/ionos/dcd/backplane                          # required arguments missing, plus arguments the provider rejects
-
-# Breaking module changes on this branch, until the reference architecture adopts them.
-reference-architectures/stackit-kubernetes/buildingblock # passes inputs the modules at the commit under test no longer take
