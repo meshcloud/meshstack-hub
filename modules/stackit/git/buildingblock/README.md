@@ -102,7 +102,7 @@ With `release_on_destroy` set, destroying the building block leaves the instance
 ## Requirements
 
 | Name | Version |
-| ---- | ------- |
+|------|---------|
 | <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.12.0 |
 | <a name="requirement_external"></a> [external](#requirement\_external) | >= 2.3.0, < 3.0.0 |
 | <a name="requirement_random"></a> [random](#requirement\_random) | >= 3.5.0, < 4.0.0 |
@@ -113,7 +113,7 @@ With `release_on_destroy` set, destroying the building block leaves the instance
 ## Modules
 
 | Name | Source | Version |
-| ---- | ------ | ------- |
+|------|--------|---------|
 | <a name="module_existing_organization_owner"></a> [existing\_organization\_owner](#module\_existing\_organization\_owner) | ./forgejo-teams | n/a |
 | <a name="module_instance"></a> [instance](#module\_instance) | ./modules/git-instance | n/a |
 | <a name="module_organization_teams"></a> [organization\_teams](#module\_organization\_teams) | ./forgejo-teams | n/a |
@@ -121,7 +121,7 @@ With `release_on_destroy` set, destroying the building block leaves the instance
 ## Resources
 
 | Name | Type |
-| ---- | ---- |
+|------|------|
 | [random_password.local_user](https://registry.terraform.io/providers/hashicorp/random/latest/docs/resources/password) | resource |
 | [random_string.import_suffix](https://registry.terraform.io/providers/hashicorp/random/latest/docs/resources/string) | resource |
 | [restapi_object.adopted_forgejo_organization](https://registry.terraform.io/providers/Mastercard/restapi/latest/docs/resources/object) | resource |
@@ -136,7 +136,7 @@ With `release_on_destroy` set, destroying the building block leaves the instance
 ## Inputs
 
 | Name | Description | Type | Default | Required |
-| ---- | ----------- | ---- | ------- | :------: |
+|------|-------------|------|---------|:--------:|
 | <a name="input_forgejo_organization"></a> [forgejo\_organization](#input\_forgejo\_organization) | Forgejo organization to create inside the instance. Empty provisions the bare instance. | `string` | n/a | yes |
 | <a name="input_imports"></a> [imports](#input\_imports) | Existing STACKIT Git instance and its Forgejo organization `forgejo_organization` this building block takes over instead of creating them. The instance's name must equal `instance_name`. `existing_forgejo_api_token_path` names the secret in the Vault of `output_to_vault` whose key `forgejo-api-token` holds a token of an owner of the organization. The technical user and the writer and reader teams then get a random suffix, no shared runner is ordered, and the organization is left in place on destroy. Null creates a new instance and organization. | <pre>object({<br/>    instance_id                     = string<br/>    existing_forgejo_api_token_path = string<br/>  })</pre> | `null` | no |
 | <a name="input_instance_name"></a> [instance\_name](#input\_instance\_name) | First label of the instance hostname `<name>.git.onstackit.cloud`, globally unique across all of STACKIT. | `string` | n/a | yes |
@@ -155,7 +155,7 @@ With `release_on_destroy` set, destroying the building block leaves the instance
 ## Outputs
 
 | Name | Description |
-| ---- | ----------- |
+|------|-------------|
 | <a name="output_forgejo_organization"></a> [forgejo\_organization](#output\_forgejo\_organization) | Name of the Forgejo organization for this instance. Empty when none was asked for. |
 | <a name="output_instance_id"></a> [instance\_id](#output\_instance\_id) | STACKIT Git instance id. |
 | <a name="output_instance_name"></a> [instance\_name](#output\_instance\_name) | Name of the STACKIT Git instance. |

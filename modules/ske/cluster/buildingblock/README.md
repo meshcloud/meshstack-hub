@@ -25,7 +25,7 @@ place. `release_on_destroy` cannot change once the cluster is managed.
 ## Requirements
 
 | Name | Version |
-| ---- | ------- |
+|------|---------|
 | <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.12.0 |
 | <a name="requirement_stackit"></a> [stackit](#requirement\_stackit) | >= 0.83.0, < 1.0.0 |
 | <a name="requirement_vault"></a> [vault](#requirement\_vault) | >= 5.12.0, < 6.0.0 |
@@ -33,20 +33,20 @@ place. `release_on_destroy` cannot change once the cluster is managed.
 ## Modules
 
 | Name | Source | Version |
-| ---- | ------ | ------- |
+|------|--------|---------|
 | <a name="module_cluster"></a> [cluster](#module\_cluster) | ./modules/ske-cluster | n/a |
 
 ## Resources
 
 | Name | Type |
-| ---- | ---- |
+|------|------|
 | [stackit_ske_kubeconfig.this](https://registry.terraform.io/providers/stackitcloud/stackit/latest/docs/resources/ske_kubeconfig) | resource |
 | [vault_kv_secret_v2.this](https://registry.terraform.io/providers/hashicorp/vault/latest/docs/resources/kv_secret_v2) | resource |
 
 ## Inputs
 
 | Name | Description | Type | Default | Required |
-| ---- | ----------- | ---- | ------- | :------: |
+|------|-------------|------|---------|:--------:|
 | <a name="input_cluster_name"></a> [cluster\_name](#input\_cluster\_name) | Name of the SKE cluster. | `string` | n/a | yes |
 | <a name="input_imports"></a> [imports](#input\_imports) | Set to `{}` to take over the existing SKE cluster named `cluster_name` instead of creating one. Null creates a new cluster. | `object({})` | `null` | no |
 | <a name="input_kubernetes_version_min"></a> [kubernetes\_version\_min](#input\_kubernetes\_version\_min) | Minimum Kubernetes minor version to run. Null lets STACKIT pick the current default. | `string` | n/a | yes |
@@ -60,7 +60,7 @@ place. `release_on_destroy` cannot change once the cluster is managed.
 ## Outputs
 
 | Name | Description |
-| ---- | ----------- |
+|------|-------------|
 | <a name="output_cluster_name"></a> [cluster\_name](#output\_cluster\_name) | Name of the SKE cluster. |
 | <a name="output_cluster_url"></a> [cluster\_url](#output\_cluster\_url) | Deep link to the STACKIT project the cluster lives in, in the STACKIT portal. |
 | <a name="output_kube_host"></a> [kube\_host](#output\_kube\_host) | Kubernetes API server URL of the cluster. |
