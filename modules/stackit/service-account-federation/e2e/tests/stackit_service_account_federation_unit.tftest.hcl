@@ -7,10 +7,9 @@ mock_provider "stackit" {}
 mock_provider "meshstack" {}
 
 variables {
-  project_id                       = "11111111-2222-3333-4444-555555555555"
-  service_account_email            = "sa@example.com"
-  automation_service_account_email = "backplane@example.com"
-  workspace_identifier             = "platform-ws"
+  project_id            = "11111111-2222-3333-4444-555555555555"
+  service_account_email = "sa@example.com"
+  workspace_identifier  = "platform-ws"
 }
 
 override_data {

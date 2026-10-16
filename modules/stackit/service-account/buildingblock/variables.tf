@@ -15,3 +15,9 @@ variable "roles" {
   nullable    = false
   description = "STACKIT project roles to grant the service account within the project (e.g. \"reader\", \"editor\")."
 }
+
+variable "federation_backplane_email" {
+  type        = string
+  nullable    = false
+  description = "Backplane service account of the STACKIT Service Account Federation definition, granted `editor` on the project."
+}
