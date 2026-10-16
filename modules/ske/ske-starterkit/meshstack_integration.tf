@@ -71,6 +71,19 @@ variable "bbd_readme" {
   description = "Overrides the markdown readme shown in the marketplace before ordering."
 }
 
+variable "approval_policies" {
+  type = object({
+    building_block_creation = optional(bool, false)
+    user_input_changes      = optional(bool, false)
+    any_input_changes       = optional(bool, false)
+    manual_triggers         = optional(bool, false)
+    version_upgrade         = optional(bool, false)
+  })
+  nullable    = false
+  default     = {}
+  description = "Run triggers that need an operator's approval on this definition."
+}
+
 variable "meshstack" {
   type = object({
     owning_workspace_identifier = string
@@ -163,7 +176,8 @@ resource "meshstack_building_block_definition" "this" {
     ---
     EOT
     ))
-    run_transparency = true
+    run_transparency  = true
+    approval_policies = var.approval_policies
   }
 
   version_spec = {
