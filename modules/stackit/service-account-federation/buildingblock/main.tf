@@ -4,8 +4,7 @@ data "meshstack_building_block_definitions" "federated" {
 }
 
 locals {
-  # The hub modules hand out version_latest as the version to order, so that is the identity a run of
-  # a federated definition presents.
+  # Hub modules order a definition's version_latest, so runs present its identity.
   federated_identities = {
     for definition in data.meshstack_building_block_definitions.federated.building_block_definitions :
     definition.metadata.uuid => definition.version_latest.workload_identity_federation
@@ -45,10 +44,9 @@ resource "stackit_service_account_federated_identity_provider" "this" {
 
   lifecycle {
     precondition {
-      # try() covers a uuid the listing does not return, a version without an identity, and an identity
-      # without an azure block.
+      # try() turns every missing step of the lookup into null, so one comparison covers them all.
       condition     = try(local.federated_identities[each.key].azure.audience, null) != null
-      error_message = "Building block definition ${each.key} is not owned by workspace ${var.workspace_identifier}, or meshStack resolves no workload identity with an Azure audience for it. Check the uuid, and that the definition's runner declares workload identity federation."
+      error_message = "Building block definition ${each.key} must be owned by workspace ${var.workspace_identifier} and run on a runner whose workload identity federation includes an Azure audience."
     }
   }
 
