@@ -47,6 +47,8 @@ No modules.
 | [opentelekomcloud_fgs_trigger_v2.bucket](https://registry.terraform.io/providers/opentelekomcloud/opentelekomcloud/latest/docs/resources/fgs_trigger_v2) | resource |
 | [opentelekomcloud_fgs_trigger_v2.resync](https://registry.terraform.io/providers/opentelekomcloud/opentelekomcloud/latest/docs/resources/fgs_trigger_v2) | resource |
 | [opentelekomcloud_identity_agency_v3.function](https://registry.terraform.io/providers/opentelekomcloud/opentelekomcloud/latest/docs/resources/identity_agency_v3) | resource |
+| [opentelekomcloud_lts_group_v2.function](https://registry.terraform.io/providers/opentelekomcloud/opentelekomcloud/latest/docs/resources/lts_group_v2) | resource |
+| [opentelekomcloud_lts_stream_v2.function](https://registry.terraform.io/providers/opentelekomcloud/opentelekomcloud/latest/docs/resources/lts_stream_v2) | resource |
 
 ## Inputs
 
@@ -55,6 +57,7 @@ No modules.
 | <a name="input_base_group"></a> [base\_group](#input\_base\_group) | Group without roles the base rule puts every federated user in, since sign-in fails when no rule assigns a group. | `string` | n/a | yes |
 | <a name="input_email_attribute"></a> [email\_attribute](#input\_email\_attribute) | SAML attribute or OIDC claim that carries the user's email address, matched against the recorded emails. | `string` | `"email"` | no |
 | <a name="input_identity_provider_name"></a> [identity\_provider\_name](#input\_identity\_provider\_name) | Federated identity provider whose mapping the function rebuilds. | `string` | n/a | yes |
+| <a name="input_log_retention_days"></a> [log\_retention\_days](#input\_log\_retention\_days) | How many days the function's logs are kept. | `number` | `30` | no |
 | <a name="input_mapping_bucket"></a> [mapping\_bucket](#input\_mapping\_bucket) | OBS bucket project building blocks record their group membership in, as `mappings/<project>.json`. | `string` | n/a | yes |
 | <a name="input_name"></a> [name](#input\_name) | Name of the function and its agency. Agency names are unique across the domain. | `string` | `"meshstack-idp-mapping"` | no |
 | <a name="input_project_id"></a> [project\_id](#input\_project\_id) | ID of the management project the function runs in. | `string` | n/a | yes |

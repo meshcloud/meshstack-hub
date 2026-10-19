@@ -49,3 +49,10 @@ variable "resync_schedule" {
   nullable    = false
   description = "How often the function rebuilds the mapping regardless of bucket events, as a FunctionGraph cron schedule."
 }
+
+variable "log_retention_days" {
+  type        = number
+  default     = 30
+  nullable    = false
+  description = "How many days the function's logs are kept."
+}

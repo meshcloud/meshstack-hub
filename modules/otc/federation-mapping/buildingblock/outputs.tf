@@ -12,7 +12,8 @@ output "summary" {
     provider `${var.identity_provider_name}` whenever a project records or removes its membership in
     the bucket `${var.mapping_bucket}`, and every run of `${var.resync_schedule}` regardless.
 
-    Its logs are in the FunctionGraph console of this project. A user who is missing a project role
-    after signing in again usually shows up there as a rule that was not written.
+    Its logs are in the log group `${opentelekomcloud_lts_group_v2.function.group_name}` of this project, also
+    shown under the function's Monitoring tab. A user who is missing a project role after signing in
+    again usually shows up there as a rule that was not written.
   EOT
 }
