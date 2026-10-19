@@ -31,6 +31,7 @@ resource "opentelekomcloud_fgs_function_v2" "this" {
     MAPPING_BUCKET    = var.mapping_bucket
     IDENTITY_PROVIDER = var.identity_provider_name
     EMAIL_ATTRIBUTE   = var.email_attribute
+    BASE_GROUP        = var.base_group
   })
 }
 

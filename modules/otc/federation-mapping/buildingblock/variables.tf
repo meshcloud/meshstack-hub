@@ -30,6 +30,12 @@ variable "email_attribute" {
   description = "SAML attribute or OIDC claim that carries the user's email address, matched against the recorded emails."
 }
 
+variable "base_group" {
+  type        = string
+  nullable    = false
+  description = "Group without roles the base rule puts every federated user in, since sign-in fails when no rule assigns a group."
+}
+
 variable "name" {
   type        = string
   default     = "meshstack-idp-mapping"

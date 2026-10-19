@@ -168,6 +168,7 @@ output "federation" {
     mapping_bucket         = module.backplane.mapping_bucket
     identity_provider_name = module.backplane.identity_provider_name
     email_attribute        = module.backplane.identity_provider_email_attribute
+    base_group             = module.backplane.identity_provider_base_group
   }
 }
 

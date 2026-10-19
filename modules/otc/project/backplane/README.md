@@ -8,7 +8,7 @@ building block, need inside a T Cloud Public domain:
   (default `te_admin`, Tenant Administrator). The building blocks authenticate as it.
 - **Optionally, the company identity provider** (SAML or OIDC), federated into the domain so
   meshStack project users sign in as virtual users. It is seeded with one base rule that lets any
-  federated user sign in without permissions, and changes to its rules are ignored afterwards: the
+  federated user sign in, into a group without roles, and changes to its rules are ignored afterwards: the
   federation mapping building block owns them.
 - **With the identity provider, the mapping bucket.** Every project building block records its group
   membership there as `mappings/<project>.json`. A bucket policy lets the building block user write
@@ -73,6 +73,7 @@ No modules.
 | ---- | ---- |
 | [opentelekomcloud_identity_credential_v3.building_block](https://registry.terraform.io/providers/opentelekomcloud/opentelekomcloud/latest/docs/resources/identity_credential_v3) | resource |
 | [opentelekomcloud_identity_group_v3.building_block](https://registry.terraform.io/providers/opentelekomcloud/opentelekomcloud/latest/docs/resources/identity_group_v3) | resource |
+| [opentelekomcloud_identity_group_v3.federated](https://registry.terraform.io/providers/opentelekomcloud/opentelekomcloud/latest/docs/resources/identity_group_v3) | resource |
 | [opentelekomcloud_identity_provider.this](https://registry.terraform.io/providers/opentelekomcloud/opentelekomcloud/latest/docs/resources/identity_provider) | resource |
 | [opentelekomcloud_identity_role_assignment_v3.domain](https://registry.terraform.io/providers/opentelekomcloud/opentelekomcloud/latest/docs/resources/identity_role_assignment_v3) | resource |
 | [opentelekomcloud_identity_role_assignment_v3.project](https://registry.terraform.io/providers/opentelekomcloud/opentelekomcloud/latest/docs/resources/identity_role_assignment_v3) | resource |
@@ -98,6 +99,7 @@ No modules.
 | Name | Description |
 | ---- | ----------- |
 | <a name="output_access_key"></a> [access\_key](#output\_access\_key) | Access key of the IAM user the building blocks authenticate as. |
+| <a name="output_identity_provider_base_group"></a> [identity\_provider\_base\_group](#output\_identity\_provider\_base\_group) | Group without roles that the base rule puts every federated user in, or null without federation. |
 | <a name="output_identity_provider_email_attribute"></a> [identity\_provider\_email\_attribute](#output\_identity\_provider\_email\_attribute) | SAML attribute or OIDC claim that carries the user's email address. |
 | <a name="output_identity_provider_login_link"></a> [identity\_provider\_login\_link](#output\_identity\_provider\_login\_link) | Console login link for federated users, or null without federation. |
 | <a name="output_identity_provider_name"></a> [identity\_provider\_name](#output\_identity\_provider\_name) | Name of the federated identity provider, or null without federation. |
