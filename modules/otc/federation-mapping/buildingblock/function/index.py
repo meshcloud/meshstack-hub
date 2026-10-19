@@ -19,6 +19,7 @@ import hashlib
 import hmac
 import json
 import os
+import urllib.error
 import urllib.parse
 import urllib.request
 import xml.etree.ElementTree as ET
@@ -29,6 +30,15 @@ PREFIX = "mappings/"
 
 def log(message: str) -> None:
     print(f"[idp-mapping] {message}", flush=True)
+
+
+def send(req: urllib.request.Request) -> bytes:
+    # The status alone does not say why a call was refused; OBS and IAM explain it in the body.
+    try:
+        with urllib.request.urlopen(req, timeout=30) as resp:
+            return resp.read()
+    except urllib.error.HTTPError as e:
+        raise RuntimeError(f"{req.get_method()} {req.full_url} answered {e.code}: {e.read().decode(errors='replace')}") from e
 
 
 class Obs:
@@ -54,8 +64,7 @@ class Obs:
             "x-obs-security-token": self.token,
             "Authorization": f"OBS {self.ak}:{signature}",
         })
-        with urllib.request.urlopen(req, timeout=30) as resp:
-            return resp.read()
+        return send(req)
 
     def keys(self) -> list[str]:
         keys, marker = [], ""
@@ -84,9 +93,8 @@ def iam(method: str, path: str, token: str, body: dict | None = None) -> dict:
         "X-Auth-Token": token,
         "Content-Type": "application/json;charset=utf8",
     })
-    with urllib.request.urlopen(req, timeout=30) as resp:
-        raw = resp.read()
-        return json.loads(raw) if raw else {}
+    raw = send(req)
+    return json.loads(raw) if raw else {}
 
 
 def rules(records: list[dict], email_attribute: str, base_group: str) -> list[dict]:
