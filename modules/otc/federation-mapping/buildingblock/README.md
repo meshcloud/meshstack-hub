@@ -25,7 +25,8 @@ The function runs in the management project, the tenant this building block is o
 - **One instance at a time** (`max_instance_num = 1`): two rebuilds never interleave.
 
 The function acts as an agency delegated to FunctionGraph, holding Security Administrator for the
-mapping and OBS ReadOnlyAccess for the bucket. It uses only the Python standard library.
+mapping and OBS Administrator for the bucket. It rescopes its project token to the domain before it
+writes the mapping. It uses only the Python standard library.
 
 <!-- BEGIN_TF_DOCS -->
 ## Requirements
