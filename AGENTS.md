@@ -53,8 +53,8 @@ website/                         public/assets/ is generated; never add files th
   "meshstack"`, module sources and BBD `ref_name` pinned by `var.hub.git_ref`, BBD
   `terraform_version`, overridable catalog properties (`bbd_*`), `building_block_definition` output →
   [meshstack-integration.md](.agents/references/meshstack-integration.md)
-- Any `.tf` declaring a `meshstack_*` resource — `*_ref` attributes, `meshstack_platform`
-  lifecycle, run-status postcondition on every child building block →
+- Any `.tf` declaring a `meshstack_*` resource — `*_ref` attributes, building block inputs,
+  `meshstack_platform` lifecycle, run-status postcondition on every child building block →
   [meshstack-resources.md](.agents/references/meshstack-resources.md)
 - Any `.tf` — OpenTofu-only toolchain, `lifecycle.enabled` over `count`, `snake_case`, provider
   versions floating inside one major, commenting what a `try` swallows →
