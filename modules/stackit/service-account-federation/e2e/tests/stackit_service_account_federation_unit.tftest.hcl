@@ -1,8 +1,8 @@
-# Mocked unit runs against ../buildingblock for which identity each federation trusts, and for the
-# definitions it must refuse. They never touch meshStack or STACKIT and need no credentials. This
-# directory has no main.tf, so the smoke test does not pick it up as a live e2e case.
+# Mocked unit runs against ../buildingblock: which identity each federation trusts, and which
+# definitions it refuses. They run offline. The smoke test discovers e2e cases by e2e/main.tf, so it
+# leaves this directory to `tofu test`.
 #
-# Override values may not call functions or reference variables, so every definition is spelled out.
+# Override values take literals only, so every definition is spelled out.
 
 mock_provider "stackit" {}
 mock_provider "meshstack" {}
@@ -19,8 +19,7 @@ override_data {
   values = {
     building_block_definitions = [
       {
-        # Released v1 on the hosted runner and a newer draft v2 on another runner. Hub modules hand
-        # out version_latest, so runs present the identity of v2.
+        # Released v1 on the hosted runner, newer draft v2 on another runner. Runs present v2's identity.
         metadata = { uuid = "aaaaaaaa-0000-0000-0000-000000000001", owned_by_workspace = "platform-ws" }
         spec     = { display_name = "a", target_type = "TENANT_LEVEL" }
         ref      = { kind = "meshBuildingBlockDefinition", uuid = "aaaaaaaa-0000-0000-0000-000000000001" }
@@ -64,7 +63,7 @@ override_data {
         }
       },
       {
-        # Its runner declares no workload identity federation.
+        # Its runner leaves workload identity federation unset.
         metadata               = { uuid = "cccccccc-0000-0000-0000-000000000003", owned_by_workspace = "platform-ws" }
         spec                   = { display_name = "c", target_type = "TENANT_LEVEL" }
         ref                    = { kind = "meshBuildingBlockDefinition", uuid = "cccccccc-0000-0000-0000-000000000003" }
@@ -73,7 +72,7 @@ override_data {
         version_latest_release = { uuid = "c-v1", number = 1, state = "RELEASED", content_hash = null, workload_identity_federation = null }
       },
       {
-        # Its runner federates with GCP only, and the STACKIT federation needs the Azure audience.
+        # Its runner federates with GCP only, and STACKIT needs the Azure audience.
         metadata = { uuid = "dddddddd-0000-0000-0000-000000000004", owned_by_workspace = "platform-ws" }
         spec     = { display_name = "d", target_type = "TENANT_LEVEL" }
         ref      = { kind = "meshBuildingBlockDefinition", uuid = "dddddddd-0000-0000-0000-000000000004" }
@@ -107,22 +106,22 @@ run "trusts_the_identity_of_the_latest_version" {
 
   assert {
     condition     = stackit_service_account_federated_identity_provider.this["aaaaaaaa-0000-0000-0000-000000000001"].issuer == "https://oidc-other.example.com"
-    error_message = "The issuer must come from version_latest, not from the latest release."
+    error_message = "The issuer comes from version_latest."
   }
 
   assert {
     condition     = stackit_service_account_federated_identity_provider.this["aaaaaaaa-0000-0000-0000-000000000001"].assertions[1].value == "system:serviceaccount:other:workspace.platform-ws.buildingblockdefinition.aaaaaaaa-0000-0000-0000-000000000001"
-    error_message = "The subject must come from version_latest, not from the latest release."
+    error_message = "The subject comes from version_latest."
   }
 
   assert {
     condition     = stackit_service_account_federated_identity_provider.this["bbbbbbbb-0000-0000-0000-000000000002"].assertions[0].value == "api://AzureADTokenExchange"
-    error_message = "The audience must come from the azure block of the identity."
+    error_message = "The audience comes from the identity's azure block."
   }
 
   assert {
     condition     = stackit_service_account_federated_identity_provider.this["aaaaaaaa-0000-0000-0000-000000000001"].name == "meshstack-aaaaaaaa"
-    error_message = "Federations must stay keyed by uuid, so existing state keeps its addresses."
+    error_message = "Federations stay keyed by uuid, so existing state keeps its addresses."
   }
 }
 
@@ -139,7 +138,7 @@ run "an_empty_list_creates_no_federation" {
 
   assert {
     condition     = length(stackit_service_account_federated_identity_provider.this) == 0
-    error_message = "No federation is expected for an empty list."
+    error_message = "An empty list creates zero federations."
   }
 }
 
