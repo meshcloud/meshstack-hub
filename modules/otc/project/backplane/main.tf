@@ -52,6 +52,7 @@ resource "opentelekomcloud_identity_role_assignment_v3" "project" {
 
 locals {
   federation_enabled = var.identity_provider != null
+  oidc_enabled       = local.federation_enabled && try(var.identity_provider.protocol == "oidc", false)
 }
 
 # Sign-in fails with O011 when the matching rules assign no group, so the base rule puts every
@@ -63,6 +64,41 @@ resource "opentelekomcloud_identity_group_v3" "federated" {
 
   name        = "${var.user_name}-federated"
   description = "Every federated user; holds no role. Project groups grant the permissions."
+}
+
+# T Cloud Public stores the signing keys instead of fetching them, so a key rotation at the IdP
+# breaks sign-in until the next run copies the current keys over.
+data "http" "oidc_discovery" {
+  lifecycle {
+    enabled = local.oidc_enabled
+
+    postcondition {
+      condition     = self.status_code == 200
+      error_message = "${self.url} answered ${self.status_code}. The OIDC issuer URL must be the issuer itself, without /.well-known/openid-configuration."
+    }
+
+    # T Cloud Public rejects tokens whose iss differs from the configured provider URL. The try
+    # swallows a body that is not JSON, which the status check above already reports.
+    postcondition {
+      condition     = try(jsondecode(self.response_body).issuer, null) == var.identity_provider.oidc.provider_url
+      error_message = "The discovery document names the issuer ${try(jsondecode(self.response_body).issuer, "(none)")}. Use exactly that as the OIDC issuer URL."
+    }
+  }
+
+  url = "${trimsuffix(var.identity_provider.oidc.provider_url, "/")}/.well-known/openid-configuration"
+}
+
+data "http" "oidc_jwks" {
+  lifecycle {
+    enabled = local.oidc_enabled
+
+    postcondition {
+      condition     = self.status_code == 200
+      error_message = "${self.url} answered ${self.status_code}."
+    }
+  }
+
+  url = jsondecode(data.http.oidc_discovery.response_body).jwks_uri
 }
 
 resource "opentelekomcloud_identity_provider" "this" {
@@ -89,14 +125,14 @@ resource "opentelekomcloud_identity_provider" "this" {
   ])
 
   dynamic "access_config" {
-    for_each = var.identity_provider.protocol == "oidc" ? [var.identity_provider.oidc] : []
+    for_each = local.oidc_enabled ? [var.identity_provider.oidc] : []
 
     content {
       access_type            = "program_console"
       provider_url           = access_config.value.provider_url
       client_id              = access_config.value.client_id
-      signing_key            = access_config.value.signing_key
-      authorization_endpoint = access_config.value.authorization_endpoint
+      signing_key            = data.http.oidc_jwks.response_body
+      authorization_endpoint = jsondecode(data.http.oidc_discovery.response_body).authorization_endpoint
       scopes                 = access_config.value.scopes
     }
   }

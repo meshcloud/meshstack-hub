@@ -31,10 +31,8 @@ locals {
     email_attribute = var.identity_provider.email_attribute
     metadata        = var.identity_provider.saml_metadata
     oidc = var.identity_provider.protocol != "oidc" ? null : {
-      provider_url           = var.identity_provider.oidc_provider_url
-      client_id              = var.identity_provider.oidc_client_id
-      signing_key            = var.identity_provider.oidc_signing_key
-      authorization_endpoint = var.identity_provider.oidc_authorization_endpoint
+      provider_url = var.identity_provider.oidc_provider_url
+      client_id    = var.identity_provider.oidc_client_id
     }
   }
 }

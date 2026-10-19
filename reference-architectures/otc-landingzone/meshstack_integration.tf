@@ -189,8 +189,8 @@ resource "meshstack_building_block_definition" "this" {
     `eu-de_<project>` project.
 
     **Example 2: Federated access with Entra ID**
-    The platform engineer also fills in the **Identity Provider** form with the Entra ID issuer, client
-    ID and signing keys. Project users then sign in with their company account and receive exactly the
+    The platform engineer also fills in the **Identity Provider** form with the Entra ID issuer and client
+    ID. Project users then sign in with their company account and receive exactly the
     roles their meshStack project grants them.
 
     ## 📦 Resources created
@@ -342,14 +342,12 @@ resource "meshstack_building_block_definition" "this" {
           "$schema" = "http://json-schema.org/draft-07/schema#"
           type      = "object"
           properties = {
-            protocol                    = { type = "string", title = "Protocol", enum = ["oidc", "saml"] }
-            name                        = { type = "string", title = "Name (default: company-idp)" }
-            email_attribute             = { type = "string", title = "Email Claim / Attribute (default: email)" }
-            oidc_provider_url           = { type = "string", title = "OIDC Issuer URL" }
-            oidc_client_id              = { type = "string", title = "OIDC Client ID" }
-            oidc_signing_key            = { type = "string", title = "OIDC Signing Keys (JWKS JSON)" }
-            oidc_authorization_endpoint = { type = "string", title = "OIDC Authorization Endpoint" }
-            saml_metadata               = { type = "string", title = "SAML Metadata XML" }
+            protocol          = { type = "string", title = "Protocol", enum = ["oidc", "saml"] }
+            name              = { type = "string", title = "Name (default: company-idp)" }
+            email_attribute   = { type = "string", title = "Email Claim / Attribute (default: email)" }
+            oidc_provider_url = { type = "string", title = "OIDC Issuer URL" }
+            oidc_client_id    = { type = "string", title = "OIDC Client ID" }
+            saml_metadata     = { type = "string", title = "SAML Metadata XML" }
           }
         })
       }
