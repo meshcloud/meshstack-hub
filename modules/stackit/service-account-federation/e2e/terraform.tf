@@ -1,12 +1,14 @@
 terraform {
-  required_version = ">= 1.11.0"
+  required_version = ">= 1.12.0"
 
   required_providers {
     meshstack = {
-      source = "meshcloud/meshstack"
+      source  = "meshcloud/meshstack"
+      version = ">= 0.26.7, < 1.0.0"
     }
     stackit = {
-      source = "stackitcloud/stackit"
+      source  = "stackitcloud/stackit"
+      version = ">= 0.98.0, < 1.0.0"
     }
   }
 }
