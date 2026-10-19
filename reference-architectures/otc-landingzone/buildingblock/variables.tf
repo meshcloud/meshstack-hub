@@ -144,6 +144,18 @@ variable "role_mapping" {
   description = "Maps each meshStack project role to the T Cloud Public system roles (by role `name`) its project group gets."
 }
 
+variable "services" {
+  type        = list(string)
+  default     = []
+  nullable    = false
+  description = "Service building block definitions to register for application teams on the landing zone: any of `network`, `obs-bucket`, `rds`, `cce`."
+
+  validation {
+    condition     = alltrue([for s in var.services : contains(["network", "obs-bucket", "rds", "cce"], s)])
+    error_message = "services may only contain network, obs-bucket, rds and cce."
+  }
+}
+
 variable "playground_mode" {
   type        = bool
   nullable    = false

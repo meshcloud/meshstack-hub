@@ -52,7 +52,7 @@ project members into the project groups. Nothing already provisioned is touched.
 > [!TIP]
 > ## Sign-in is federated through `${identity_provider_name}` (${identity_provider_protocol})
 
-meshStack's project members sign in at <${login_link}> with their company account, and receive
+meshStack's project members sign in at [${login_link}](${login_link}) with their company account, and receive
 their project roles from their next sign-in. They are matched by the `${email_attribute}` claim or
 attribute, which has to carry the email address meshStack knows for them.
 
@@ -63,4 +63,12 @@ project.
 ## What application teams get
 
 Application teams create meshStack projects in the `${landingzone_name}` landing zone. Each one
-becomes a T Cloud Public project `${region}_<project>`, with one IAM group per meshStack role.
+becomes a T Cloud Public project `${region}_PROJECT`, PROJECT being the meshStack project name,
+with one IAM group per meshStack role.
+%{ if length(services) > 0 ~}
+
+In those projects they can order these service building blocks: ${join(", ", services)}.
+%{ if contains(services, "RDS") || contains(services, "CCE") ~}
+RDS and CCE run in the project's network, so a team orders the network building block first.
+%{ endif ~}
+%{ endif ~}
