@@ -6,6 +6,17 @@ resource "opentelekomcloud_identity_agency_v3" "function" {
   domain_roles          = ["Security Administrator", "OBS ReadOnlyAccess"]
 }
 
+# FunctionGraph collects no logs unless the function names a log group and stream.
+resource "opentelekomcloud_lts_group_v2" "function" {
+  group_name  = var.name
+  ttl_in_days = var.log_retention_days
+}
+
+resource "opentelekomcloud_lts_stream_v2" "function" {
+  group_id    = opentelekomcloud_lts_group_v2.function.id
+  stream_name = var.name
+}
+
 resource "opentelekomcloud_fgs_function_v2" "this" {
   name        = var.name
   app         = "default"
@@ -24,6 +35,12 @@ resource "opentelekomcloud_fgs_function_v2" "this" {
   # interleaving their reads and writes. An event dropped meanwhile is covered by the next one, or
   # by the timer.
   max_instance_num = "1"
+
+  enable_lts_log = true
+  log_group_id   = opentelekomcloud_lts_group_v2.function.id
+  log_group_name = opentelekomcloud_lts_group_v2.function.group_name
+  log_topic_id   = opentelekomcloud_lts_stream_v2.function.id
+  log_topic_name = opentelekomcloud_lts_stream_v2.function.stream_name
 
   user_data = jsonencode({
     REGION            = var.region
