@@ -347,7 +347,7 @@ resource "meshstack_building_block_definition" "this" {
             email_attribute   = { type = "string", title = "Email Claim / Attribute (default: email)" }
             oidc_provider_url = { type = "string", title = "OIDC Issuer URL" }
             oidc_client_id    = { type = "string", title = "OIDC Client ID" }
-            saml_metadata     = { type = "string", title = "SAML Metadata XML" }
+            saml_metadata_url = { type = "string", title = "SAML Metadata URL" }
           }
         })
       }

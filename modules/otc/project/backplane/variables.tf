@@ -32,8 +32,8 @@ variable "identity_provider" {
     name     = string
     protocol = string
 
-    # SAML: the IdP's metadata XML.
-    metadata = optional(string)
+    # SAML: where the IdP publishes its metadata XML, read on every run.
+    metadata_url = optional(string)
 
     # OIDC: the IdP's issuer and client. The signing keys and authorization endpoint are read from
     # the issuer's discovery document on every run.
@@ -61,8 +61,8 @@ variable "identity_provider" {
 
   validation {
     condition = var.identity_provider == null || (
-      var.identity_provider.protocol == "saml" ? var.identity_provider.metadata != null : var.identity_provider.oidc != null
+      var.identity_provider.protocol == "saml" ? var.identity_provider.metadata_url != null : var.identity_provider.oidc != null
     )
-    error_message = "A `saml` identity provider needs `metadata`, an `oidc` one needs `oidc`."
+    error_message = "A `saml` identity provider needs `metadata_url`, an `oidc` one needs `oidc`."
   }
 }
