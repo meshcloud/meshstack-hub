@@ -59,9 +59,9 @@ variable "otc_backplane_user_name" {
 
 variable "otc_identity_provider" {
   type = object({
-    name     = string
-    protocol = string
-    metadata = optional(string)
+    name         = string
+    protocol     = string
+    metadata_url = optional(string)
     oidc = optional(object({
       provider_url = string
       client_id    = string

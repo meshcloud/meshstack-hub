@@ -143,7 +143,7 @@ workload identity federation is not usable yet:
 | Requirement | Description |
 |---|---|
 | T Cloud Public domain | With an IAM user in the domain's `admin` group, and an access key for it. Use the account name exactly as the console shows it, e.g. `OTC-EU-DE-00000000001000000000`. |
-| Identity provider *(recommended)* | SAML metadata, or the OIDC issuer and client ID. The email claim or attribute must carry exactly the address meshStack knows for each user. For OIDC, register the IdP's redirect URI shown in the T Cloud Public console. |
+| Identity provider *(recommended)* | SAML metadata URL, or the OIDC issuer and client ID. The email claim or attribute must carry exactly the address meshStack knows for each user. For OIDC, register the IdP's redirect URI shown in the T Cloud Public console. |
 
 ### Deployment Order
 

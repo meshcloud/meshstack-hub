@@ -53,6 +53,7 @@ resource "opentelekomcloud_identity_role_assignment_v3" "project" {
 locals {
   federation_enabled = var.identity_provider != null
   oidc_enabled       = local.federation_enabled && try(var.identity_provider.protocol == "oidc", false)
+  saml_enabled       = local.federation_enabled && try(var.identity_provider.protocol == "saml", false)
 }
 
 # Sign-in fails with O011 when the matching rules assign no group, so the base rule puts every
@@ -66,8 +67,21 @@ resource "opentelekomcloud_identity_group_v3" "federated" {
   description = "Every federated user; holds no role. Project groups grant the permissions."
 }
 
-# T Cloud Public stores the signing keys instead of fetching them, so a key rotation at the IdP
-# breaks sign-in until the next run copies the current keys over.
+# T Cloud Public stores the signing keys and SAML metadata instead of fetching them, so a key or
+# certificate rotation at the IdP breaks sign-in until the next run copies the current ones over.
+data "http" "saml_metadata" {
+  lifecycle {
+    enabled = local.saml_enabled
+
+    postcondition {
+      condition     = self.status_code == 200 && strcontains(self.response_body, "EntityDescriptor")
+      error_message = "${self.url} answered ${self.status_code} without SAML metadata. Use the URL the identity provider publishes its federation metadata XML at."
+    }
+  }
+
+  url = var.identity_provider.metadata_url
+}
+
 data "http" "oidc_discovery" {
   lifecycle {
     enabled = local.oidc_enabled
@@ -114,7 +128,7 @@ resource "opentelekomcloud_identity_provider" "this" {
   protocol    = var.identity_provider.protocol
   description = "Company identity provider; meshStack maps project users into project groups."
   status      = true
-  metadata    = var.identity_provider.protocol == "saml" ? var.identity_provider.metadata : null
+  metadata    = local.saml_enabled ? data.http.saml_metadata.response_body : null
 
   # Lets any federated user sign in as a virtual user named after their email, with no permission.
   mapping_rules = jsonencode([
