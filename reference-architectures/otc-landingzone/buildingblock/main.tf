@@ -29,7 +29,7 @@ locals {
     name            = var.identity_provider.name
     protocol        = var.identity_provider.protocol
     email_attribute = var.identity_provider.email_attribute
-    metadata        = var.identity_provider.saml_metadata
+    metadata_url    = var.identity_provider.saml_metadata_url
     oidc = var.identity_provider.protocol != "oidc" ? null : {
       provider_url = var.identity_provider.oidc_provider_url
       client_id    = var.identity_provider.oidc_client_id

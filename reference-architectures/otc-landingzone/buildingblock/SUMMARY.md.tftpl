@@ -44,7 +44,7 @@ fails, naming the user, while one of its members has no such IAM user.
 2. Make sure the identity provider sends each user's email address, and that it is exactly the one
    meshStack knows for them. Users are matched to projects by email.
 3. **Update this building block** and fill in the **Identity Provider** input: the issuer URL
-   and client ID for OIDC, or the metadata XML for SAML.
+   and client ID for OIDC, or the metadata URL for SAML.
 
 The next run federates the identity provider and deploys the function that maps meshStack's
 project members into the project groups. Nothing already provisioned is touched.

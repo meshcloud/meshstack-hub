@@ -47,7 +47,7 @@ variable "identity_provider" {
     protocol          = optional(string)
     name              = optional(string, "company-idp")
     email_attribute   = optional(string, "email")
-    saml_metadata     = optional(string)
+    saml_metadata_url = optional(string)
     oidc_provider_url = optional(string)
     oidc_client_id    = optional(string)
   })
@@ -68,8 +68,8 @@ variable "identity_provider" {
   }
 
   validation {
-    condition     = var.identity_provider == null || var.identity_provider.protocol != "saml" || (var.identity_provider.saml_metadata != null && var.identity_provider.saml_metadata != "")
-    error_message = "The saml protocol needs the SAML Metadata XML. Fill it in, or clear the Identity Provider input to skip federation."
+    condition     = var.identity_provider == null || var.identity_provider.protocol != "saml" || (var.identity_provider.saml_metadata_url != null && var.identity_provider.saml_metadata_url != "")
+    error_message = "The saml protocol needs the SAML Metadata URL. Fill it in, or clear the Identity Provider input to skip federation."
   }
 }
 
