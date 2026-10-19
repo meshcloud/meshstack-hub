@@ -143,7 +143,7 @@ workload identity federation is not usable yet:
 | Requirement | Description |
 |---|---|
 | T Cloud Public domain | With an IAM user in the domain's `admin` group, and an access key for it. Use the account name exactly as the console shows it, e.g. `OTC-EU-DE-00000000001000000000`. |
-| Identity provider *(recommended)* | SAML metadata, or the OIDC issuer, client ID and JWKS signing keys. The email claim or attribute must carry exactly the address meshStack knows for each user. For OIDC, register the IdP's redirect URI shown in the T Cloud Public console. |
+| Identity provider *(recommended)* | SAML metadata, or the OIDC issuer and client ID. The email claim or attribute must carry exactly the address meshStack knows for each user. For OIDC, register the IdP's redirect URI shown in the T Cloud Public console. |
 
 ### Deployment Order
 
@@ -184,7 +184,7 @@ architecture is applied. It defaults to no gate at all.
 |---|:---:|:---:|
 | Provide the admin access key, domain and role mapping | ✅ | ❌ |
 | Run the management project and the federation mapping function in it | ✅ | ❌ |
-| Federate the company identity provider and keep its signing keys current | ✅ | ❌ |
+| Federate the company identity provider, and re-run the building block after it rotates its signing keys | ✅ | ❌ |
 | Provision the T Cloud Public Project platform and default landing zone | ✅ | ❌ |
 | Request T Cloud Public projects through the landing zone | ❌ | ✅ |
 | Decide who is on each project, and with which role | ❌ | ✅ |
