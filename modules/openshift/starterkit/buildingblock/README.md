@@ -62,7 +62,7 @@ No modules.
 | <a name="input_name"></a> [name](#input\_name) | This name will be used for the created projects, the GitHub repository and the app hostnames. | `string` | n/a | yes |
 | <a name="input_platform_ref"></a> [platform\_ref](#input\_platform\_ref) | Reference (by uuid) to the meshPlatform the tenants are created on. Wired in as a static building block input from the platform/backplane that owns the meshPlatform (its `.ref` output). Required because the meshTenant v4 API references platforms by ref. | <pre>object({<br/>    uuid = string<br/>    kind = optional(string, "meshPlatform")<br/>  })</pre> | n/a | yes |
 | <a name="input_project_tags"></a> [project\_tags](#input\_project\_tags) | Tags for the created meshProjects. `stages` is keyed as `landing_zone_refs`; `owner_tag_key` names the tag that receives the creator's display name. | <pre>object({<br/>    stages        = map(map(list(string)))<br/>    owner_tag_key = optional(string, null)<br/>  })</pre> | n/a | yes |
-| <a name="input_repo_admin"></a> [repo\_admin](#input\_repo\_admin) | GitHub handle that becomes admin of the repository. `null` or the string `"null"` adds no one. | `string` | `null` | no |
+| <a name="input_repo_admin"></a> [repo\_admin](#input\_repo\_admin) | GitHub handle that becomes admin of the repository. `null` adds no one. | `string` | `null` | no |
 | <a name="input_workspace_identifier"></a> [workspace\_identifier](#input\_workspace\_identifier) | n/a | `string` | n/a | yes |
 
 ## Outputs

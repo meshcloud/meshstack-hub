@@ -33,6 +33,7 @@ resource "meshstack_building_block" "repo" {
       name = var.workspace_identifier
     }
 
+    # repo_owner takes the string "null" for no owner: the git-repository definition has no optional inputs.
     inputs = {
       repo_name       = { value = jsonencode(local.name) }
       repo_owner      = { value = jsonencode(coalesce(var.repo_admin, "null")) }

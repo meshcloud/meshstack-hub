@@ -24,4 +24,3 @@ reference-architectures/stackit-landingzone/buildingblock # sources //modules/st
 modules/azure/key-vault                              # sources //modules/azure/key-vault/backplane?ref=main, which has no location input yet
 modules/azure/ipam-pool                              # sources //modules/azure/ipam-pool/backplane?ref=main, which does not exist yet
 modules/ansible/vm-hardening                         # sources //modules/ansible/vm-hardening/backplane?ref=main, which does not exist yet
-modules/openshift/github-connector                   # sources //modules/openshift/github-connector/backplane?ref=main, which does not exist yet
