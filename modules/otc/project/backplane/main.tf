@@ -148,6 +148,10 @@ resource "opentelekomcloud_identity_provider" "this" {
       signing_key            = data.http.oidc_jwks.response_body
       authorization_endpoint = jsondecode(data.http.oidc_discovery.response_body).authorization_endpoint
       scopes                 = access_config.value.scopes
+
+      # The provider leaves these unset, but IAM requires them for console access.
+      response_type = "id_token"
+      response_mode = "fragment"
     }
   }
 }
