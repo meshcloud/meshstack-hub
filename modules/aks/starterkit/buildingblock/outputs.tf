@@ -25,13 +25,11 @@ This starter kit has set up the following resources in workspace `${var.workspac
 
 @buildingblock[${meshstack_building_block.repo.metadata.uuid}]
 
-@project[${meshstack_project.this["dev"].metadata.owned_by_workspace}.${meshstack_project.this["dev"].metadata.name}]\
-&nbsp;&nbsp;&nbsp;&nbsp;@tenant[${meshstack_tenant.this["dev"].metadata.uuid}]\
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;@buildingblock[${meshstack_building_block.github_actions["dev"].metadata.uuid}]
+@buildingblock[${meshstack_building_block.namespace["dev"].metadata.uuid}]\
+&nbsp;&nbsp;&nbsp;&nbsp;@buildingblock[${meshstack_building_block.github_actions["dev"].metadata.uuid}]
 
-@project[${meshstack_project.this["prod"].metadata.owned_by_workspace}.${meshstack_project.this["prod"].metadata.name}]\
-&nbsp;&nbsp;&nbsp;&nbsp;@tenant[${meshstack_tenant.this["prod"].metadata.uuid}]\
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;@buildingblock[${meshstack_building_block.github_actions["prod"].metadata.uuid}]
+@buildingblock[${meshstack_building_block.namespace["prod"].metadata.uuid}]\
+&nbsp;&nbsp;&nbsp;&nbsp;@buildingblock[${meshstack_building_block.github_actions["prod"].metadata.uuid}]
 
 ---
 
@@ -69,9 +67,8 @@ View deployment status: [GitHub Actions](${jsondecode(meshstack_building_block.r
 - Check workflow status in the [Actions tab](<${jsondecode(meshstack_building_block.repo.status.outputs.repo_html_url.value)}/actions>)
 
 ### 3. Manage Access
-- Invite team members via meshStack:
-  - [Dev Access](#/w/${var.workspace_identifier}/p/${meshstack_project.this["dev"].metadata.name}/access-management/role-mapping)
-  - [Prod Access](#/w/${var.workspace_identifier}/p/${meshstack_project.this["prod"].metadata.name}/access-management/role-mapping)
+- Namespace access follows your workspace roles: owners and managers get `admin`, members `edit`,
+  readers `view`. Change a member's workspace role in meshStack and re-run the namespace block.
 
 ---
 

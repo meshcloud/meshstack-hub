@@ -11,9 +11,10 @@ variable "github" {
 
 variable "aks" {
   type = object({
+    namespace_definition_uuid  = string
     connector_config_tf_base64 = string
   })
-  description = "AKS integration configuration. `connector_config_tf_base64` is the base64-encoded `config.tf` payload passed into the run (for example: `data:application/octet-stream;base64,ZXhhbXBsZQ==`)."
+  description = "AKS integration configuration. `namespace_definition_uuid` is the UUID of the deployed Azure AKS Namespace building block definition; the connector wires itself to the namespace of its parent block of that definition. `connector_config_tf_base64` is the base64-encoded `config.tf` payload passed into the run (for example: `data:application/octet-stream;base64,ZXhhbXBsZQ==`)."
 }
 
 variable "notification_subscribers" {
@@ -85,8 +86,7 @@ resource "meshstack_building_block_definition" "aks_github_connector" {
     display_name             = coalesce(var.bbd_display_name, "GitHub Actions AKS Connector")
     notification_subscribers = var.notification_subscribers
     symbol                   = "https://raw.githubusercontent.com/meshcloud/meshstack-hub/${var.hub.git_ref}/modules/aks/github-connector/buildingblock/logo.png"
-    target_type              = "TENANT_LEVEL"
-    supported_platforms      = [{ name = "AZURE_KUBERNETES_SERVICE" }]
+    target_type              = "WORKSPACE_LEVEL"
 
     readme = coalesce(var.bbd_readme, chomp(<<EOT
 The **GitHub Actions AKS Connector** integrates a GitHub repository with an Azure Kubernetes Service (AKS) namespace. It sets up the necessary service accounts, secrets, and workflows so that GitHub Actions can build, push, and deploy container images to your AKS namespace automatically.
@@ -101,6 +101,7 @@ This building block is ideal for teams that:
 
 ## Prerequisites
 
+-   An **Azure AKS Namespace** building block in your workspace. The connector deploys into its namespace and is ordered with it as a parent.
 -   A `Dockerfile` must be present in the connected GitHub repository, as the workflow will build and deploy this image.
 
 ## Resources Created
@@ -140,7 +141,8 @@ EOT
     }
 
     dependency_refs = [
-      { uuid = var.github.repo_definition_uuid }
+      { uuid = var.github.repo_definition_uuid },
+      { uuid = var.aks.namespace_definition_uuid },
     ]
 
     inputs = {
@@ -186,10 +188,13 @@ EOT
         }
       }
       "namespace" = {
-        assignment_type = "PLATFORM_TENANT_ID"
-        display_name    = "AKS Namespace"
-        is_environment  = false
-        type            = "STRING"
+        argument               = jsonencode("${var.aks.namespace_definition_uuid}.namespace_name")
+        assignment_type        = "BUILDING_BLOCK_OUTPUT"
+        description            = "Name of the AKS namespace to deploy into, taken from the parent Azure AKS Namespace building block."
+        display_name           = "AKS Namespace"
+        is_environment         = false
+        type                   = "STRING"
+        updateable_by_consumer = false
       }
       "github_repo" = {
         argument               = jsonencode("${var.github.repo_definition_uuid}.repo_name")
@@ -235,12 +240,6 @@ EOT
     }
 
     outputs = {}
-
-    permissions = [
-      "TENANT_LIST",
-      "TENANT_SAVE",
-      "TENANT_DELETE",
-    ]
   }
 }
 

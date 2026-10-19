@@ -1,16 +1,8 @@
-variable "platform_ref" {
-  type = object({
-    uuid = string
-    kind = optional(string, "meshPlatform")
-  })
-  description = "Reference (by uuid) to the meshPlatform tenants are created on — e.g. the `.ref` output of the meshstack_platform resource/backplane that owns it. Wired to the building block as a static input; required since the meshTenant v4 API references platforms by ref."
-}
-
 variable "building_block_definition_version_refs" {
   type = map(object({
     uuid = string
   }))
-  description = "Building block definition versions the starter kit creates its child building blocks from, keyed by definition name (`git-repository` and `github-actions-connector`)."
+  description = "Building block definition versions the starter kit creates its child building blocks from, keyed by definition name (`git-repository`, `aks-namespace` and `github-actions-connector`)."
 }
 
 variable "github_org" {
@@ -28,26 +20,9 @@ variable "apps_base_domain" {
   description = "Base domain used for app URLs (example: `apps.prod.example.com`)."
 }
 
-variable "landing_zone_refs" {
-  type        = map(object({ name = string, kind = optional(string, "meshLandingZone") }))
-  description = "Landing zone references keyed by stage (usually dev and prod), e.g. the `.ref` outputs of the meshstack_landingzone resources/backplane that owns them."
-}
-
 variable "notification_subscribers" {
   type    = list(string)
   default = []
-}
-
-variable "project_tags" {
-  type = object({
-    dev  = map(list(string))
-    prod = map(list(string))
-  })
-  default = {
-    dev  = { environment = ["dev"] }
-    prod = { environment = ["prod"] }
-  }
-  description = "Configure project tags of starter kit, for dev and prod."
 }
 
 variable "bbd_display_name" {
@@ -101,7 +76,7 @@ output "building_block_definition" {
 }
 
 locals {
-  name_regex = "^[a-zA-Z0-9-]{0,24}$" # underscore and dots not allowed because of K8s namespace, max length of 25 because of project character limit and suffixes added by the building block
+  name_regex = "^[a-zA-Z0-9-]{0,24}$" # underscore and dots not allowed because of K8s namespace, max length of 25 because of the suffixes the building block adds to the name
 }
 
 resource "meshstack_building_block_definition" "aks_starterkit" {
@@ -137,12 +112,10 @@ This building block is ideal for teams that:
 This building block automates the creation of the following resources:
 
 -   **GitHub Repository**: A new repository to store your application code and Dockerfile.
--   **Development Project**: You, as the creator, will have access to this project and AKS namespace.
-    -   **AKS Namespace**: A dedicated Kubernetes namespace for development.
-        -   **GitHub Actions Connector**: Connects the GitHub repository to the development AKS namespace via GitHub Actions and deploys after every commit to the main branch.
--   **Production Project**: You, as the creator, will have access to this project and AKS namespace.
-    -   **AKS Namespace**: A dedicated Kubernetes namespace for production.
-        -   **GitHub Actions Connector**: Connects the GitHub repository to the production AKS namespace via GitHub Actions and deploys after every commit to the release branch.
+-   **Development namespace**: A dedicated Kubernetes namespace for development, with a resource quota.
+    -   **GitHub Actions Connector**: Connects the GitHub repository to the development namespace via GitHub Actions and deploys after every commit to the main branch.
+-   **Production namespace**: A dedicated Kubernetes namespace for production, with a resource quota.
+    -   **GitHub Actions Connector**: Connects the GitHub repository to the production namespace via GitHub Actions and deploys after every commit to the release branch.
 
 ## Shared Responsibilities
 
@@ -152,7 +125,7 @@ This building block automates the creation of the following resources:
 | Create and manage Git repository             | ✅                         | ❌                |
 | Set up GitHub Actions CI/CD pipeline        | ✅                         | ❌                |
 | Build and scan Docker images                 | ✅                         | ❌                |
-| Manage Kubernetes namespaces (dev/prod)      | ✅                         | ❌                |
+| Create Kubernetes namespaces (dev/prod) and grant access | ✅                         | ❌                |
 | Manage resources inside namespaces            | ❌                         | ✅                |
 | Develop and maintain application source code | ❌                         | ✅                |
 | Maintain application configurations          | ❌                         | ✅                |
@@ -177,34 +150,8 @@ EOT
       }
     }
     inputs = {
-      "creator" = {
-        assignment_type        = "AUTHOR"
-        description            = "Information about the creator of the resources who will be assigned Project Admin role"
-        display_name           = "Creator"
-        is_environment         = false
-        type                   = "CODE"
-        updateable_by_consumer = false
-      }
-      "platform_ref" = {
-        # jsonencode twice is correct for structured inputs, see the project_tags input below.
-        argument               = jsonencode(jsonencode(var.platform_ref))
-        assignment_type        = "STATIC"
-        display_name           = "Platform Reference"
-        is_environment         = false
-        type                   = "CODE"
-        updateable_by_consumer = false
-      }
-      "landing_zone_refs" = {
-        # jsonencode twice is correct for structured inputs, see the project_tags input below.
-        argument               = jsonencode(jsonencode(var.landing_zone_refs))
-        assignment_type        = "STATIC"
-        display_name           = "Landing Zone References for Dev/Prod."
-        is_environment         = false
-        type                   = "CODE"
-        updateable_by_consumer = false
-      }
       "building_block_definition_version_refs" = {
-        # jsonencode twice is correct for structured inputs, see the project_tags input below.
+        # jsonencode twice is correct for structured inputs, see https://registry.terraform.io/providers/meshcloud/meshstack/latest/docs/resources/building_block_definition#argument-1
         argument               = jsonencode(jsonencode(var.building_block_definition_version_refs))
         assignment_type        = "STATIC"
         description            = "Definition versions the starter kit creates its child building blocks from."
@@ -248,21 +195,13 @@ EOT
       }
       "name" = {
         assignment_type                = "USER_INPUT"
-        description                    = "This name will be used for the created projects, AKS namespaces and GitHub repository."
-        display_name                   = "Name of the Project"
+        description                    = "This name will be used for the created AKS namespaces and GitHub repository."
+        display_name                   = "Name"
         is_environment                 = false
         type                           = "STRING"
         updateable_by_consumer         = false
         value_validation_regex         = local.name_regex
         validation_regex_error_message = "No underscore/dots/spaces are allowed. A maximum length of 25 characters is allowed."
-      }
-      "project_tags" = {
-        # jsonencode twice is correct, see https://registry.terraform.io/providers/meshcloud/meshstack/latest/docs/resources/building_block_definition#argument-1
-        argument        = jsonencode(jsonencode(var.project_tags))
-        assignment_type = "STATIC"
-        description     = "Tags for the created Dev/Prod projects."
-        display_name    = "Project Tags"
-        type            = "CODE"
       }
       "workspace_identifier" = {
         assignment_type        = "WORKSPACE_IDENTIFIER"
@@ -308,15 +247,6 @@ EOT
       "BUILDINGBLOCK_DELETE",
       "BUILDINGBLOCK_LIST",
       "BUILDINGBLOCK_SAVE",
-      "PROJECTPRINCIPALROLE_DELETE",
-      "PROJECTPRINCIPALROLE_LIST",
-      "PROJECTPRINCIPALROLE_SAVE",
-      "PROJECT_DELETE",
-      "PROJECT_LIST",
-      "PROJECT_SAVE",
-      "TENANT_DELETE",
-      "TENANT_LIST",
-      "TENANT_SAVE",
     ]
   }
 }
