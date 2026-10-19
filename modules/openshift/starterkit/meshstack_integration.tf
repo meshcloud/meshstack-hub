@@ -199,10 +199,10 @@ resource "meshstack_building_block_definition" "this" {
       }
       repo_admin = {
         display_name    = "Repository Admin"
-        description     = "GitHub handle that becomes admin of the repository. Leave as 'null' if not needed."
+        description     = "GitHub handle that becomes admin of the repository. Leave it blank to add no one."
         type            = "STRING"
         assignment_type = "USER_INPUT"
-        default_value   = jsonencode("null")
+        is_optional     = true
       }
       workspace_identifier = {
         display_name    = "Workspace Identifier"
@@ -308,8 +308,9 @@ terraform {
 
   required_providers {
     meshstack = {
-      source  = "meshcloud/meshstack"
-      version = ">= 0.24.0"
+      source = "meshcloud/meshstack"
+      # 0.25.2 adds `version_spec.inputs.*.is_optional`, which makes the repository admin skippable.
+      version = ">= 0.25.2"
     }
   }
 }

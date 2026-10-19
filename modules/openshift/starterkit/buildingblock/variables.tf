@@ -60,7 +60,7 @@ variable "github_template_repo_path" {
 variable "repo_admin" {
   type        = string
   default     = null
-  description = "GitHub handle that becomes admin of the repository. `null` or the string `\"null\"` adds no one."
+  description = "GitHub handle that becomes admin of the repository. `null` adds no one."
 }
 
 variable "apps_domain" {
