@@ -24,8 +24,8 @@ programmatic-only, and the key reaches meshStack as sensitive static inputs.
 
 - A T Cloud Public domain, and credentials for it holding Security Administrator to apply this
   module.
-- For federation: the identity provider's SAML metadata, or its OIDC issuer, client ID and JWKS
-  signing keys. The claim or attribute named in `email_attribute` must carry exactly the email
+- For federation: the identity provider's SAML metadata, or its OIDC issuer and client ID. The
+  signing keys come from the issuer's discovery document, which the run must be able to reach. The claim or attribute named in `email_attribute` must carry exactly the email
   address meshStack knows for each user.
 
 ## Usage
@@ -40,7 +40,6 @@ module "project_backplane" {
     oidc = {
       provider_url = "https://login.microsoftonline.com/<tenant-id>/v2.0"
       client_id    = "<app-client-id>"
-      signing_key  = file("jwks.json")
     }
   }
 }
@@ -60,6 +59,7 @@ module "project_backplane" {
 | Name | Version |
 | ---- | ------- |
 | <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.12.0 |
+| <a name="requirement_http"></a> [http](#requirement\_http) | >= 3.4.0, < 4.0.0 |
 | <a name="requirement_opentelekomcloud"></a> [opentelekomcloud](#requirement\_opentelekomcloud) | >= 1.37.0, < 2.0.0 |
 | <a name="requirement_random"></a> [random](#requirement\_random) | >= 3.6.0, < 4.0.0 |
 
@@ -82,6 +82,8 @@ No modules.
 | [opentelekomcloud_obs_bucket.mappings](https://registry.terraform.io/providers/opentelekomcloud/opentelekomcloud/latest/docs/resources/obs_bucket) | resource |
 | [opentelekomcloud_obs_bucket_policy.mappings](https://registry.terraform.io/providers/opentelekomcloud/opentelekomcloud/latest/docs/resources/obs_bucket_policy) | resource |
 | [random_string.bucket_suffix](https://registry.terraform.io/providers/hashicorp/random/latest/docs/resources/string) | resource |
+| [http_http.oidc_discovery](https://registry.terraform.io/providers/hashicorp/http/latest/docs/data-sources/http) | data source |
+| [http_http.oidc_jwks](https://registry.terraform.io/providers/hashicorp/http/latest/docs/data-sources/http) | data source |
 | [opentelekomcloud_identity_role_v3.domain](https://registry.terraform.io/providers/opentelekomcloud/opentelekomcloud/latest/docs/data-sources/identity_role_v3) | data source |
 | [opentelekomcloud_identity_role_v3.project](https://registry.terraform.io/providers/opentelekomcloud/opentelekomcloud/latest/docs/data-sources/identity_role_v3) | data source |
 
@@ -90,7 +92,7 @@ No modules.
 | Name | Description | Type | Default | Required |
 | ---- | ----------- | ---- | ------- | :------: |
 | <a name="input_domain_roles"></a> [domain\_roles](#input\_domain\_roles) | Domain-scoped IAM system roles granted to the building block user, by role `name` (not display<br/>name). `secu_admin` (Security Administrator) covers creating projects, groups, role assignments,<br/>agencies and federation mappings. | `list(string)` | <pre>[<br/>  "secu_admin"<br/>]</pre> | no |
-| <a name="input_identity_provider"></a> [identity\_provider](#input\_identity\_provider) | The customer's identity provider, federated into the domain so meshStack project users log in as<br/>virtual users, and the bucket project building blocks record their membership in. Null skips<br/>both: the building block still creates projects and groups, but nobody is mapped into them. | <pre>object({<br/>    name     = string<br/>    protocol = string<br/><br/>    # SAML: the IdP's metadata XML.<br/>    metadata = optional(string)<br/><br/>    # OIDC: the IdP's issuer, client and signing keys (JWKS JSON).<br/>    oidc = optional(object({<br/>      provider_url           = string<br/>      client_id              = string<br/>      signing_key            = string<br/>      authorization_endpoint = optional(string)<br/>      scopes                 = optional(list(string), ["openid"])<br/>    }))<br/><br/>    # The SAML attribute or OIDC claim that carries the user's email. Project building blocks<br/>    # match meshStack users against it, so it must hold exactly the address meshStack knows.<br/>    email_attribute = optional(string, "email")<br/>  })</pre> | `null` | no |
+| <a name="input_identity_provider"></a> [identity\_provider](#input\_identity\_provider) | The customer's identity provider, federated into the domain so meshStack project users log in as<br/>virtual users, and the bucket project building blocks record their membership in. Null skips<br/>both: the building block still creates projects and groups, but nobody is mapped into them. | <pre>object({<br/>    name     = string<br/>    protocol = string<br/><br/>    # SAML: the IdP's metadata XML.<br/>    metadata = optional(string)<br/><br/>    # OIDC: the IdP's issuer and client. The signing keys and authorization endpoint are read from<br/>    # the issuer's discovery document on every run.<br/>    oidc = optional(object({<br/>      provider_url = string<br/>      client_id    = string<br/>      scopes       = optional(list(string), ["openid", "email", "profile"])<br/>    }))<br/><br/>    # The SAML attribute or OIDC claim that carries the user's email. Project building blocks<br/>    # match meshStack users against it, so it must hold exactly the address meshStack knows.<br/>    email_attribute = optional(string, "email")<br/>  })</pre> | `null` | no |
 | <a name="input_project_roles"></a> [project\_roles](#input\_project\_roles) | IAM system roles granted to the building block user on all projects, by role `name`.<br/>`te_admin` (Tenant Administrator) lets the federation mapping building block create its function<br/>in the management project. It adds little to `secu_admin`, which may grant any role anyway. | `list(string)` | <pre>[<br/>  "te_admin"<br/>]</pre> | no |
 | <a name="input_user_name"></a> [user\_name](#input\_user\_name) | Name of the IAM user the building block authenticates as. Override when deploying several backplanes into one domain. | `string` | `"mesh-project"` | no |
 

@@ -63,11 +63,9 @@ variable "otc_identity_provider" {
     protocol = string
     metadata = optional(string)
     oidc = optional(object({
-      provider_url           = string
-      client_id              = string
-      signing_key            = string
-      authorization_endpoint = optional(string)
-      scopes                 = optional(list(string), ["openid"])
+      provider_url = string
+      client_id    = string
+      scopes       = optional(list(string), ["openid", "email", "profile"])
     }))
     email_attribute = optional(string, "email")
   })

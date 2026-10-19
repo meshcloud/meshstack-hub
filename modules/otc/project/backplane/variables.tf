@@ -35,13 +35,12 @@ variable "identity_provider" {
     # SAML: the IdP's metadata XML.
     metadata = optional(string)
 
-    # OIDC: the IdP's issuer, client and signing keys (JWKS JSON).
+    # OIDC: the IdP's issuer and client. The signing keys and authorization endpoint are read from
+    # the issuer's discovery document on every run.
     oidc = optional(object({
-      provider_url           = string
-      client_id              = string
-      signing_key            = string
-      authorization_endpoint = optional(string)
-      scopes                 = optional(list(string), ["openid"])
+      provider_url = string
+      client_id    = string
+      scopes       = optional(list(string), ["openid", "email", "profile"])
     }))
 
     # The SAML attribute or OIDC claim that carries the user's email. Project building blocks

@@ -44,14 +44,12 @@ variable "otc_secret_key" {
 
 variable "identity_provider" {
   type = object({
-    protocol                    = optional(string)
-    name                        = optional(string, "company-idp")
-    email_attribute             = optional(string, "email")
-    saml_metadata               = optional(string)
-    oidc_provider_url           = optional(string)
-    oidc_client_id              = optional(string)
-    oidc_signing_key            = optional(string)
-    oidc_authorization_endpoint = optional(string)
+    protocol          = optional(string)
+    name              = optional(string, "company-idp")
+    email_attribute   = optional(string, "email")
+    saml_metadata     = optional(string)
+    oidc_provider_url = optional(string)
+    oidc_client_id    = optional(string)
   })
   default     = null
   description = "Company identity provider federated into the domain, as the flat object the meshPanel form produces. Null, or no protocol chosen, skips federation."
@@ -64,9 +62,9 @@ variable "identity_provider" {
   validation {
     condition = (
       var.identity_provider == null || var.identity_provider.protocol != "oidc" ||
-      alltrue([for v in [var.identity_provider.oidc_provider_url, var.identity_provider.oidc_client_id, var.identity_provider.oidc_signing_key] : v != null && v != ""])
+      alltrue([for v in [var.identity_provider.oidc_provider_url, var.identity_provider.oidc_client_id] : v != null && v != ""])
     )
-    error_message = "The oidc protocol needs the OIDC Issuer URL, Client ID and Signing Keys. Fill them in, or clear the Identity Provider input to skip federation."
+    error_message = "The oidc protocol needs the OIDC Issuer URL and Client ID. Fill them in, or clear the Identity Provider input to skip federation."
   }
 
   validation {
