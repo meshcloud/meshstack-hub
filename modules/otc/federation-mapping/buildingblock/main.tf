@@ -3,9 +3,14 @@ resource "opentelekomcloud_identity_agency_v3" "function" {
   name                  = var.name
   description           = "Lets the meshStack federation mapping function rebuild the identity provider mapping."
   delegated_domain_name = "op_svc_cff"
-  # The function only reads the mapping bucket, but OBS refuses an agency holding just OBS
-  # ReadOnlyAccess on the domain; OBS Administrator is the role it honours.
-  domain_roles = ["Security Administrator", "OBS Administrator"]
+  domain_roles          = ["Security Administrator", "OBS ReadOnlyAccess"]
+
+  lifecycle {
+    # TODO: OBS ignores OBS ReadOnlyAccess on the domain; a role granted on all projects works, but
+    # the provider reads that grant back without a name and then fails every update. Ignored until
+    # the bucket read is settled.
+    ignore_changes = [project_role]
+  }
 }
 
 # FunctionGraph collects no logs unless the function names a log group and stream.
