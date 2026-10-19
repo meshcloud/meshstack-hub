@@ -23,6 +23,7 @@ import urllib.error
 import urllib.parse
 import urllib.request
 import xml.etree.ElementTree as ET
+from email.message import Message
 from email.utils import formatdate
 
 PREFIX = "mappings/"
@@ -32,11 +33,11 @@ def log(message: str) -> None:
     print(f"[idp-mapping] {message}", flush=True)
 
 
-def send(req: urllib.request.Request) -> bytes:
+def send(req: urllib.request.Request) -> tuple[bytes, Message]:
     # The status alone does not say why a call was refused; OBS and IAM explain it in the body.
     try:
         with urllib.request.urlopen(req, timeout=30) as resp:
-            return resp.read()
+            return resp.read(), resp.headers
     except urllib.error.HTTPError as e:
         raise RuntimeError(f"{req.get_method()} {req.full_url} answered {e.code}: {e.read().decode(errors='replace')}") from e
 
@@ -64,7 +65,7 @@ class Obs:
             "x-obs-security-token": self.token,
             "Authorization": f"OBS {self.ak}:{signature}",
         })
-        return send(req)
+        return send(req)[0]
 
     def keys(self) -> list[str]:
         keys, marker = [], ""
@@ -86,15 +87,32 @@ def _tag(element: ET.Element) -> str:
     return element.tag.rsplit("}", 1)[-1]
 
 
-def iam(method: str, path: str, token: str, body: dict | None = None) -> dict:
+def iam(method: str, path: str, token: str, body: dict | None = None,
+        headers: dict[str, str] | None = None) -> tuple[dict, Message]:
     url = os.environ["IAM_ENDPOINT"].rstrip("/") + path
     data = json.dumps(body).encode() if body is not None else None
     req = urllib.request.Request(url, data=data, method=method, headers={
         "X-Auth-Token": token,
         "Content-Type": "application/json;charset=utf8",
+        **(headers or {}),
     })
-    raw = send(req)
-    return json.loads(raw) if raw else {}
+    raw, response_headers = send(req)
+    return (json.loads(raw) if raw else {}), response_headers
+
+
+def domain_token(token: str) -> str:
+    """Rescopes the agency's project token to the domain.
+
+    The agency holds Security Administrator on the domain, but FunctionGraph hands out a token
+    scoped to the function's project, and IAM only honours domain roles in a domain-scoped token.
+    """
+    info, _ = iam("GET", "/auth/tokens", token, headers={"X-Subject-Token": token})
+    domain_id = info["token"]["project"]["domain"]["id"]
+    _, headers = iam("POST", "/auth/tokens", token, {"auth": {
+        "identity": {"methods": ["token"], "token": {"id": token}},
+        "scope": {"domain": {"id": domain_id}},
+    }})
+    return headers["X-Subject-Token"]
 
 
 def rules(records: list[dict], email_attribute: str, base_group: str) -> list[dict]:
@@ -122,9 +140,9 @@ def handler(event, context):
     obs = Obs(context, os.environ["REGION"], os.environ["MAPPING_BUCKET"])
     records = [obs.json(key) for key in obs.keys()]
 
-    token = context.getToken()
+    token = domain_token(context.getToken())
     idp = os.environ["IDENTITY_PROVIDER"]
-    protocols = iam("GET", f"/OS-FEDERATION/identity_providers/{idp}/protocols", token)["protocols"]
+    protocols = iam("GET", f"/OS-FEDERATION/identity_providers/{idp}/protocols", token)[0]["protocols"]
     mapping_ids = {p["mapping_id"] for p in protocols}
     if len(mapping_ids) != 1:
         raise RuntimeError(f"identity provider {idp} has mappings {sorted(mapping_ids)}, expected exactly one")
