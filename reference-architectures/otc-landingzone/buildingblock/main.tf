@@ -207,3 +207,89 @@ resource "meshstack_building_block" "federation_mapping" {
     inputs = {}
   }
 }
+
+# Each service is its own hub module so it can be registered without this reference architecture;
+# the services input only decides which of them this landing zone offers. They act as the backplane
+# user, which holds Tenant Administrator on every project.
+locals {
+  service_integration = {
+    otc_domain_name   = var.otc_domain_name
+    otc_region        = var.otc_region
+    otc_auth_url      = local.auth_url
+    otc_access_key    = module.otc_integration.backplane_credentials.access_key
+    otc_secret_key    = module.otc_integration.backplane_credentials.secret_key
+    otc_platform_type = module.otc_integration.platform_type_name
+  }
+}
+
+module "network_integration" {
+  lifecycle {
+    enabled = contains(var.services, "network")
+  }
+
+  source = "github.com/meshcloud/meshstack-hub//modules/otc/network?ref=${var.hub.git_ref}"
+
+  otc_domain_name   = local.service_integration.otc_domain_name
+  otc_region        = local.service_integration.otc_region
+  otc_auth_url      = local.service_integration.otc_auth_url
+  otc_access_key    = local.service_integration.otc_access_key
+  otc_secret_key    = local.service_integration.otc_secret_key
+  otc_platform_type = local.service_integration.otc_platform_type
+
+  meshstack = { owning_workspace_identifier = var.workspace, tags = local.tags.building_block }
+  hub       = var.hub
+}
+
+module "obs_bucket_integration" {
+  lifecycle {
+    enabled = contains(var.services, "obs-bucket")
+  }
+
+  source = "github.com/meshcloud/meshstack-hub//modules/otc/obs-bucket?ref=${var.hub.git_ref}"
+
+  otc_domain_name   = local.service_integration.otc_domain_name
+  otc_region        = local.service_integration.otc_region
+  otc_auth_url      = local.service_integration.otc_auth_url
+  otc_access_key    = local.service_integration.otc_access_key
+  otc_secret_key    = local.service_integration.otc_secret_key
+  otc_platform_type = local.service_integration.otc_platform_type
+
+  meshstack = { owning_workspace_identifier = var.workspace, tags = local.tags.building_block }
+  hub       = var.hub
+}
+
+module "rds_integration" {
+  lifecycle {
+    enabled = contains(var.services, "rds")
+  }
+
+  source = "github.com/meshcloud/meshstack-hub//modules/otc/rds?ref=${var.hub.git_ref}"
+
+  otc_domain_name   = local.service_integration.otc_domain_name
+  otc_region        = local.service_integration.otc_region
+  otc_auth_url      = local.service_integration.otc_auth_url
+  otc_access_key    = local.service_integration.otc_access_key
+  otc_secret_key    = local.service_integration.otc_secret_key
+  otc_platform_type = local.service_integration.otc_platform_type
+
+  meshstack = { owning_workspace_identifier = var.workspace, tags = local.tags.building_block }
+  hub       = var.hub
+}
+
+module "cce_integration" {
+  lifecycle {
+    enabled = contains(var.services, "cce")
+  }
+
+  source = "github.com/meshcloud/meshstack-hub//modules/otc/cce?ref=${var.hub.git_ref}"
+
+  otc_domain_name   = local.service_integration.otc_domain_name
+  otc_region        = local.service_integration.otc_region
+  otc_auth_url      = local.service_integration.otc_auth_url
+  otc_access_key    = local.service_integration.otc_access_key
+  otc_secret_key    = local.service_integration.otc_secret_key
+  otc_platform_type = local.service_integration.otc_platform_type
+
+  meshstack = { owning_workspace_identifier = var.workspace, tags = local.tags.building_block }
+  hub       = var.hub
+}

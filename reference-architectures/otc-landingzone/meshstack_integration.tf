@@ -186,7 +186,7 @@ resource "meshstack_building_block_definition" "this" {
     **Example 1: Sandbox projects for every team**
     A platform engineer runs this building block once with the domain's admin access key. Teams can
     then create meshStack projects in the T Cloud Public landing zone, each backed by a
-    `eu-de_<project>` project.
+    `eu-de_PROJECT` project.
 
     **Example 2: Federated access with Entra ID**
     The platform engineer also fills in the **Identity Provider** form with the Entra ID issuer and client
@@ -196,14 +196,17 @@ resource "meshstack_building_block_definition" "this" {
     ## 📦 Resources created
 
     - **meshStack location** – named after the chosen platform identifier.
-    - **Backplane IAM user and group** – `mesh-<platform identifier>`, holding Security Administrator
-      on the domain and Tenant Administrator on all projects, with an access key the building blocks
-      authenticate with.
+    - **Backplane IAM user and group** – `mesh-PLATFORM` (PLATFORM being the platform identifier),
+      holding Security Administrator on the domain and Tenant Administrator on all projects, with an
+      access key the building blocks authenticate with.
     - **T Cloud Public Project platform** – the `T Cloud Public Project` building block definition,
       platform and default landing zone. Every project gets one IAM group per meshStack role.
-    - **Management project** – the meshProject `<platform identifier>-mgmt` with a tenant on the new
-      platform, so the T Cloud Public project `<region>_<platform identifier>-mgmt`. Workspace owners
-      and managers become its Project Admins.
+    - **Management project** – the meshProject `PLATFORM-mgmt` with a tenant on the new platform,
+      so the T Cloud Public project `REGION_PLATFORM-mgmt`. Workspace owners and managers become its
+      Project Admins.
+    - **Service building blocks** – the definitions picked under **Services**, offered to application
+      teams on the landing zone: Network (VPC, subnet and SNAT gateway), Encrypted OBS Bucket, RDS
+      database and CCE Kubernetes cluster. They run as the backplane user.
     - **Federated sign-in** *(with an identity provider)* – your company SAML or OIDC provider,
       federated into the domain, the bucket every project records its members in, and the
       **Federation Mapping** building block on the management project, whose function keeps the
@@ -229,6 +232,8 @@ resource "meshstack_building_block_definition" "this" {
     | Federate the company identity provider | ✅ | ❌ |
     | Provision the location, backplane user and T Cloud Public Project platform | ✅ | ❌ |
     | Request T Cloud Public projects through the landing zone | ❌ | ✅ |
+    | Choose which service building blocks the landing zone offers | ✅ | ❌ |
+    | Order and run service building blocks in their projects | ❌ | ✅ |
     | Decide who is on each project, and with which role | ❌ | ✅ |
     | Manage workloads inside the provisioned projects | ❌ | ✅ |
     EOT
@@ -370,6 +375,17 @@ resource "meshstack_building_block_definition" "this" {
             reader = { type = "array", title = "reader", items = { type = "string" }, default = ["readonly"] }
           }
         })
+      }
+
+      services = {
+        display_name           = "Services"
+        description            = "Service building blocks offered to application teams in this landing zone: network (VPC, subnet, SNAT), obs-bucket (encrypted bucket), rds (database), cce (Kubernetes)."
+        type                   = "MULTI_SELECT"
+        assignment_type        = "USER_INPUT"
+        updateable_by_consumer = true
+        selectable_values      = ["network", "obs-bucket", "rds", "cce"]
+        default_value          = jsonencode(["network", "obs-bucket", "rds", "cce"])
+        display_order          = 75
       }
 
       # Keep this description under roughly 200 characters. meshStack answers a longer one with

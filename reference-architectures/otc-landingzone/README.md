@@ -13,6 +13,14 @@ buildingBlocks:
     role: Provisions a T Cloud Public project with one IAM group per meshStack role and records which federated users belong in them.
   - path: otc/federation-mapping
     role: Rebuilds the federated identity provider's mapping from every project's recorded members, from a function in the management project.
+  - path: otc/network
+    role: Optional service. Gives an application project a VPC, a subnet and an SNAT gateway for outbound traffic.
+  - path: otc/obs-bucket
+    role: Optional service. Gives an application project a KMS-encrypted OBS bucket with its own scoped access user.
+  - path: otc/rds
+    role: Optional service. Gives an application project a managed MySQL, PostgreSQL or SQL Server database in its network.
+  - path: otc/cce
+    role: Optional service. Gives an application project a CCE Kubernetes cluster in its network.
 ---
 
 # T Cloud Public Landing Zone
@@ -168,6 +176,23 @@ architecture cannot change it.
 `approval_policies` sets which run triggers need an operator's approval before a run of this
 architecture is applied. It defaults to no gate at all.
 
+### Service Building Blocks
+
+The **Services** input picks which service building block definitions the landing zone offers to
+application teams. Each one is a hub module of its own that wraps a T Cloud Public partner Terraform
+module, pinned to a release, and runs in the application team's project as the backplane user:
+
+| Service | Hub module | Wraps |
+|---|---|---|
+| `network` | [`otc/network`](../../modules/otc/network) | iits-consulting VPC and SNAT modules |
+| `obs-bucket` | [`otc/obs-bucket`](../../modules/otc/obs-bucket) | iits-consulting restricted OBS module |
+| `rds` | [`otc/rds`](../../modules/otc/rds) | iits-consulting RDS module |
+| `cce` | [`otc/cce`](../../modules/otc/cce) | iits-consulting CCE module |
+
+RDS and CCE find their network by name, so an application team orders **Network** first. Removing a
+service from the selection deletes its building block definition, which meshStack refuses while
+building blocks of it still exist.
+
 ## Not Yet Covered
 
 - **Hub-and-spoke networking.** T Cloud Public documents a hub VPC with a NAT gateway and spoke
@@ -187,5 +212,7 @@ architecture is applied. It defaults to no gate at all.
 | Federate the company identity provider, and re-run the building block after it rotates its signing keys | ✅ | ❌ |
 | Provision the T Cloud Public Project platform and default landing zone | ✅ | ❌ |
 | Request T Cloud Public projects through the landing zone | ❌ | ✅ |
+| Choose which service building blocks the landing zone offers | ✅ | ❌ |
+| Order and run service building blocks in their projects | ❌ | ✅ |
 | Decide who is on each project, and with which role | ❌ | ✅ |
 | Build and run workloads inside the projects | ❌ | ✅ |
