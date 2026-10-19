@@ -54,6 +54,17 @@ locals {
   federation_enabled = var.identity_provider != null
 }
 
+# Sign-in fails with O011 when the matching rules assign no group, so the base rule puts every
+# federated user in this group, which holds no role.
+resource "opentelekomcloud_identity_group_v3" "federated" {
+  lifecycle {
+    enabled = local.federation_enabled
+  }
+
+  name        = "${var.user_name}-federated"
+  description = "Every federated user; holds no role. Project groups grant the permissions."
+}
+
 resource "opentelekomcloud_identity_provider" "this" {
   lifecycle {
     enabled = local.federation_enabled
@@ -69,11 +80,10 @@ resource "opentelekomcloud_identity_provider" "this" {
   status      = true
   metadata    = var.identity_provider.protocol == "saml" ? var.identity_provider.metadata : null
 
-  # Lets any federated user sign in as a virtual user named after their email, with no group and so
-  # no permission.
+  # Lets any federated user sign in as a virtual user named after their email, with no permission.
   mapping_rules = jsonencode([
     {
-      local  = [{ user = { name = "{0}" } }]
+      local  = [{ user = { name = "{0}" } }, { group = { name = opentelekomcloud_identity_group_v3.federated.name } }]
       remote = [{ type = var.identity_provider.email_attribute }]
     }
   ])

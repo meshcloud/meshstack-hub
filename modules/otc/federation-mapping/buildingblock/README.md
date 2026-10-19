@@ -52,6 +52,7 @@ No modules.
 
 | Name | Description | Type | Default | Required |
 | ---- | ----------- | ---- | ------- | :------: |
+| <a name="input_base_group"></a> [base\_group](#input\_base\_group) | Group without roles the base rule puts every federated user in, since sign-in fails when no rule assigns a group. | `string` | n/a | yes |
 | <a name="input_email_attribute"></a> [email\_attribute](#input\_email\_attribute) | SAML attribute or OIDC claim that carries the user's email address, matched against the recorded emails. | `string` | `"email"` | no |
 | <a name="input_identity_provider_name"></a> [identity\_provider\_name](#input\_identity\_provider\_name) | Federated identity provider whose mapping the function rebuilds. | `string` | n/a | yes |
 | <a name="input_mapping_bucket"></a> [mapping\_bucket](#input\_mapping\_bucket) | OBS bucket project building blocks record their group membership in, as `mappings/<project>.json`. | `string` | n/a | yes |

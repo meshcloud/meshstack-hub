@@ -30,6 +30,11 @@ output "identity_provider_email_attribute" {
   description = "SAML attribute or OIDC claim that carries the user's email address."
 }
 
+output "identity_provider_base_group" {
+  value       = local.federation_enabled ? opentelekomcloud_identity_group_v3.federated.name : null
+  description = "Group without roles that the base rule puts every federated user in, or null without federation."
+}
+
 output "identity_provider_login_link" {
   value       = local.federation_enabled ? opentelekomcloud_identity_provider.this.login_link : null
   description = "Console login link for federated users, or null without federation."

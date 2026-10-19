@@ -89,9 +89,13 @@ def iam(method: str, path: str, token: str, body: dict | None = None) -> dict:
         return json.loads(raw) if raw else {}
 
 
-def rules(records: list[dict], email_attribute: str) -> list[dict]:
-    # Lets any federated user sign in as a virtual user named after their email, with no group.
-    result = [{"local": [{"user": {"name": "{0}"}}], "remote": [{"type": email_attribute}]}]
+def rules(records: list[dict], email_attribute: str, base_group: str) -> list[dict]:
+    # Lets any federated user sign in as a virtual user named after their email. Sign-in fails when
+    # no rule assigns a group, so this one assigns the base group, which holds no role.
+    result = [{
+        "local": [{"user": {"name": "{0}"}}, {"group": {"name": base_group}}],
+        "remote": [{"type": email_attribute}],
+    }]
     for record in sorted(records, key=lambda r: r["project"]):
         for group, emails in sorted(record["groups"].items()):
             if not emails:
@@ -118,7 +122,7 @@ def handler(event, context):
         raise RuntimeError(f"identity provider {idp} has mappings {sorted(mapping_ids)}, expected exactly one")
     mapping_id = mapping_ids.pop()
 
-    desired = rules(records, os.environ["EMAIL_ATTRIBUTE"])
+    desired = rules(records, os.environ["EMAIL_ATTRIBUTE"], os.environ["BASE_GROUP"])
     iam("PATCH", f"/OS-FEDERATION/mappings/{mapping_id}", token, {"mapping": {"rules": desired}})
     log(f"mapping {mapping_id} rebuilt from {len(records)} projects: {len(desired)} rules")
     return {"projects": len(records), "rules": len(desired)}

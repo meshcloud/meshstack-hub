@@ -61,6 +61,11 @@ variable "otc_identity_provider_email_attribute" {
   description = "SAML attribute or OIDC claim that carries the user's email address."
 }
 
+variable "otc_identity_provider_base_group" {
+  type        = string
+  description = "Group without roles the base rule puts every federated user in."
+}
+
 variable "otc_platform_type" {
   type        = string
   default     = "OTC"
@@ -208,6 +213,14 @@ resource "meshstack_building_block_definition" "this" {
         type            = "STRING"
         assignment_type = "STATIC"
         argument        = jsonencode(var.otc_identity_provider_email_attribute)
+      }
+
+      base_group = {
+        display_name    = "Base Group"
+        description     = "Group without roles the base rule puts every federated user in."
+        type            = "STRING"
+        assignment_type = "STATIC"
+        argument        = jsonencode(var.otc_identity_provider_base_group)
       }
 
       OS_AUTH_URL = {
