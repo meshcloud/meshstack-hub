@@ -1,6 +1,5 @@
 # Mocked unit runs against ../buildingblock: which identity each federation trusts, and which
-# definitions it refuses. They run offline. The smoke test discovers e2e cases by e2e/main.tf, so it
-# leaves this directory to `tofu test`.
+# definitions it refuses. They run offline, alongside the live case.
 #
 # Override values take literals only, so every definition is spelled out.
 
