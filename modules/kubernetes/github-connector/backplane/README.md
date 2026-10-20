@@ -41,9 +41,36 @@ integration passes it to the building block definition as a sensitive static inp
 - The API server is reachable from the meshStack building block runner and from the GitHub Actions
   runners that deploy.
 
+## GitHub App
+
+The building block authenticates to GitHub as a GitHub App that the platform team creates for this
+connector alone. GitHub has no API for creating Apps, so the backplane cannot provision it. Do not
+reuse the App of the `github/repository` building block: that one needs `Administration` write,
+which can delete repositories, and every connector run would hold it.
+
+Create it under the organization's **Settings → Developer settings → GitHub Apps → New GitHub App**:
+
+| Setting | Value |
+|---|---|
+| Webhook | inactive |
+| Repository permissions → Environments | Read and write — create the environment, its secret and variables |
+| Repository permissions → Actions | Read and write — read the environment, dispatch `github_workflow_filename` and wait for its run. Read-only suffices when no workflow is dispatched. |
+| Repository permissions → Metadata | Read-only (mandatory) |
+| All other permissions | No access |
+| Where can this GitHub App be installed? | Only on this account |
+
+Install it on the organization with **All repositories**, so that repositories the
+`github/repository` building block creates later are covered without a manual step. Choose
+**Only select repositories** instead to restrict the connector to an allow list, and add each
+repository before connecting it.
+
+Generate a private key and pass the App ID, the installation ID (the number at the end of the
+installation's settings URL) and the key as `github_app_id`, `github_app_installation_id` and
+`github_app_pem_file` to the integration.
+
 ## Operational notes
 
-- The token never expires. Rotate it by tainting `kubernetes_secret.connector_token` and applying
+- The token never expires. Rotate it by tainting `kubernetes_secret_v1.connector_token` and applying
   the integration again, which re-uploads it to the building block definition.
 - Set `api_server_ca_certificate` when the API server presents a certificate from another CA than
   the cluster's own, for example a publicly trusted one.

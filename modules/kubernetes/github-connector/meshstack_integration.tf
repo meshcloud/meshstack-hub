@@ -11,23 +11,23 @@ variable "kubernetes_api_server_ca_certificate" {
 
 variable "github_org" {
   type        = string
-  description = "GitHub organization the GitHub App is installed in and the repositories live in."
+  description = "GitHub organization the connector's GitHub App is installed in and the repositories live in."
 }
 
 variable "github_app_id" {
   type        = string
-  description = "ID of the GitHub App the building block authenticates as."
+  description = "ID of the GitHub App the building block authenticates as. A dedicated App with only Environments and Actions write, not the App of the `github/repository` building block — see the backplane README."
 }
 
 variable "github_app_installation_id" {
   type        = string
-  description = "Installation ID of the GitHub App in `github_org`."
+  description = "Installation ID of the connector's GitHub App in `github_org`."
 }
 
 variable "github_app_pem_file" {
   type        = string
   sensitive   = true
-  description = "PEM private key of the GitHub App."
+  description = "PEM private key of the connector's GitHub App."
 }
 
 variable "github_repo_definition_uuid" {
