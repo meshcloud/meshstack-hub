@@ -4,9 +4,7 @@ supportedPlatforms:
   - otc
 description: |
   Creates a private, KMS-encrypted T Cloud Public OBS bucket with an access user that may use only that bucket.
-# The building block authenticates with the project building block's backplane user, which the
-# integration passes in; it provisions no cloud-side identity of its own.
-requiresBackplane: false
+requiresBackplane: true
 ---
 
 # T Cloud Public OBS Bucket Building Block
@@ -28,9 +26,16 @@ the domain either way, while its KMS key appears under the region's project.
 
 ## Authentication
 
-The provider reads `OS_AUTH_URL`, `OS_DOMAIN_NAME`, `OS_ACCESS_KEY` and `OS_SECRET_KEY` from the
-environment, which the meshStack integration sets. The user behind them needs to create IAM users,
-groups and custom policies, KMS keys and OBS buckets.
+The building block holds no access key. Its runs sign in through workload identity federation:
+
+1. meshStack mounts a token naming this definition into every run.
+2. `prerun.sh` exchanges it at the identity provider in `OTC_IDENTITY_PROVIDER`, which the
+   [backplane](../backplane) federates, for a federated IAM token and that for a temporary access
+   key valid for one hour.
+3. The provider reads the temporary key from the file the script writes. Without that file, as
+   outside meshStack, it reads `OS_ACCESS_KEY` and `OS_SECRET_KEY` from the environment.
+
+`OS_AUTH_URL` and `OS_DOMAIN_NAME` come from the environment the meshStack integration sets.
 
 <!-- BEGIN_TF_DOCS -->
 ## Requirements
