@@ -4,9 +4,7 @@ supportedPlatforms:
   - otc
 description: |
   Provisions a managed MySQL, PostgreSQL or SQL Server database (RDS) in a T Cloud Public project, on the network the T Cloud Public Network building block created.
-# The building block authenticates with the platform's backplane user, which the composing
-# integration passes in; it provisions no cloud-side identity of its own.
-requiresBackplane: false
+requiresBackplane: true
 ---
 
 # T Cloud Public Relational Database Building Block
@@ -24,6 +22,9 @@ its Standard Edition. `size` maps to a flavor of 2, 4 or 8 vCPUs with 2 GB of me
 
 ## Authentication
 
-The provider reads `OS_AUTH_URL`, `OS_DOMAIN_NAME`, `OS_ACCESS_KEY` and `OS_SECRET_KEY` from the
-environment, which the meshStack integration sets. `tenant_id` is the building block's tenant, the
-application team's project.
+The building block holds no access key. Its runs sign in through workload identity federation: the
+pre-run script from [`otc/workload-identity`](../../workload-identity) exchanges the run token at
+the identity provider in `OTC_IDENTITY_PROVIDER`, which the [backplane](../backplane) federates, for
+a temporary access key valid for one hour. The provider reads it from the file the script writes.
+Without that file, as outside meshStack, it reads `OS_ACCESS_KEY` and `OS_SECRET_KEY` from the
+environment.

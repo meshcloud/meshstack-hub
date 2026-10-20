@@ -1,5 +1,5 @@
 locals {
-  # Temporary credentials prerun.sh got through workload identity federation. Without the file, as
+  # Temporary credentials the pre-run script got through workload identity federation. Without the file, as
   # outside meshStack, the provider reads OS_ACCESS_KEY and OS_SECRET_KEY from the environment.
   credentials_file = "${path.root}/otc_credentials.json"
   credentials      = fileexists(local.credentials_file) ? jsondecode(file(local.credentials_file)) : null

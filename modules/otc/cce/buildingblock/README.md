@@ -4,9 +4,7 @@ supportedPlatforms:
   - otc
 description: |
   Provisions a Cloud Container Engine (CCE) Kubernetes cluster with one worker node pool per availability zone in a T Cloud Public project's network.
-# The building block authenticates with the platform's backplane user, which the integration passes
-# in; it provisions no cloud-side identity of its own.
-requiresBackplane: false
+requiresBackplane: true
 ---
 
 # T Cloud Public CCE Cluster Building Block
@@ -24,9 +22,12 @@ building block does not create.
 
 ## Authentication
 
-The provider reads `OS_AUTH_URL`, `OS_DOMAIN_NAME`, `OS_ACCESS_KEY` and `OS_SECRET_KEY` from the
-environment, which the meshStack integration sets. `tenant_id` is the project the building block is
-ordered on.
+The building block holds no access key. Its runs sign in through workload identity federation: the
+pre-run script from [`otc/workload-identity`](../../workload-identity) exchanges the run token at
+the identity provider in `OTC_IDENTITY_PROVIDER`, which the [backplane](../backplane) federates, for
+a temporary access key valid for one hour. The provider reads it from the file the script writes.
+Without that file, as outside meshStack, it reads `OS_ACCESS_KEY` and `OS_SECRET_KEY` from the
+environment.
 
 <!-- BEGIN_TF_DOCS -->
 ## Requirements

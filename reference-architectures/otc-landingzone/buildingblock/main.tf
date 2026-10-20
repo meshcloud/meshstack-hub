@@ -209,9 +209,9 @@ resource "meshstack_building_block" "federation_mapping" {
 }
 
 # Each service is its own hub module so it can be registered without this reference architecture;
-# the services input only decides which of them this landing zone offers. They act as the backplane
-# user, which holds Tenant Administrator on every project, except the OBS bucket: it signs in through
-# workload identity federation, as a group holding only what it needs.
+# the services input only decides which of them this landing zone offers. None gets an access key:
+# each signs in through workload identity federation as a group holding only what it needs, which
+# this run sets up with the admin credentials.
 locals {
   # The services input's selectable values, as meshPanel shows them. meshstack_integration.tf offers
   # the same strings.
@@ -226,8 +226,6 @@ locals {
     otc_domain_name   = var.otc_domain_name
     otc_region        = var.otc_region
     otc_auth_url      = local.auth_url
-    otc_access_key    = module.otc_integration.backplane_credentials.access_key
-    otc_secret_key    = module.otc_integration.backplane_credentials.secret_key
     otc_platform_type = module.otc_integration.platform_type_name
   }
 }
@@ -242,9 +240,9 @@ module "network_integration" {
   otc_domain_name   = local.service_integration.otc_domain_name
   otc_region        = local.service_integration.otc_region
   otc_auth_url      = local.service_integration.otc_auth_url
-  otc_access_key    = local.service_integration.otc_access_key
-  otc_secret_key    = local.service_integration.otc_secret_key
   otc_platform_type = local.service_integration.otc_platform_type
+
+  workload_identity_name = "mesh-${local.platform_identifier}-network"
 
   meshstack = { owning_workspace_identifier = var.workspace, tags = local.tags.building_block }
   hub       = var.hub
@@ -262,7 +260,6 @@ module "obs_bucket_integration" {
   otc_auth_url      = local.service_integration.otc_auth_url
   otc_platform_type = local.service_integration.otc_platform_type
 
-  # Signs in through workload identity federation; this run's admin credentials set it up.
   workload_identity_name = "mesh-${local.platform_identifier}-obs-bucket"
 
   meshstack = { owning_workspace_identifier = var.workspace, tags = local.tags.building_block }
@@ -279,9 +276,9 @@ module "rds_integration" {
   otc_domain_name   = local.service_integration.otc_domain_name
   otc_region        = local.service_integration.otc_region
   otc_auth_url      = local.service_integration.otc_auth_url
-  otc_access_key    = local.service_integration.otc_access_key
-  otc_secret_key    = local.service_integration.otc_secret_key
   otc_platform_type = local.service_integration.otc_platform_type
+
+  workload_identity_name = "mesh-${local.platform_identifier}-rds"
 
   meshstack = { owning_workspace_identifier = var.workspace, tags = local.tags.building_block }
   hub       = var.hub
@@ -297,9 +294,9 @@ module "cce_integration" {
   otc_domain_name   = local.service_integration.otc_domain_name
   otc_region        = local.service_integration.otc_region
   otc_auth_url      = local.service_integration.otc_auth_url
-  otc_access_key    = local.service_integration.otc_access_key
-  otc_secret_key    = local.service_integration.otc_secret_key
   otc_platform_type = local.service_integration.otc_platform_type
+
+  workload_identity_name = "mesh-${local.platform_identifier}-cce"
 
   meshstack = { owning_workspace_identifier = var.workspace, tags = local.tags.building_block }
   hub       = var.hub
