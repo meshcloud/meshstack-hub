@@ -148,11 +148,11 @@ variable "services" {
   type        = list(string)
   default     = []
   nullable    = false
-  description = "Service building block definitions to register for application teams on the landing zone: any of `network`, `obs-bucket`, `rds`, `cce`."
+  description = "Service building block definitions to register for application teams on the landing zone, by their labels in `local.services`."
 
   validation {
-    condition     = alltrue([for s in var.services : contains(["network", "obs-bucket", "rds", "cce"], s)])
-    error_message = "services may only contain network, obs-bucket, rds and cce."
+    condition     = alltrue([for s in var.services : contains(values(local.services), s)])
+    error_message = "services may only contain: ${join("; ", values(local.services))}."
   }
 }
 

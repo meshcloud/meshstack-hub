@@ -112,6 +112,14 @@ output "building_block_definition" {
 # each map is modelled as a growable array of entries; buildingblock/ folds them back into the
 # map(list(string)) the nested integrations take.
 locals {
+  # Must match local.services in buildingblock/main.tf, which maps them back to its modules.
+  service_labels = [
+    "Network: VPC, subnet and SNAT gateway",
+    "OBS Bucket: KMS-encrypted object storage",
+    "RDS: managed MySQL, PostgreSQL or SQL Server",
+    "CCE: Kubernetes cluster",
+  ]
+
   tag_list_schema = {
     type = "array"
     items = {
@@ -377,14 +385,15 @@ resource "meshstack_building_block_definition" "this" {
         })
       }
 
+      # meshPanel shows the selectable values as they are, so each one names what it provisions.
       services = {
         display_name           = "Services"
-        description            = "Service building blocks offered to application teams in this landing zone: network (VPC, subnet, SNAT), obs-bucket (encrypted bucket), rds (database), cce (Kubernetes)."
+        description            = "Building block definitions this landing zone offers to application teams in their projects. Deselecting one deletes its definition."
         type                   = "MULTI_SELECT"
         assignment_type        = "USER_INPUT"
         updateable_by_consumer = true
-        selectable_values      = ["network", "obs-bucket", "rds", "cce"]
-        default_value          = jsonencode(["network", "obs-bucket", "rds", "cce"])
+        selectable_values      = local.service_labels
+        default_value          = jsonencode(local.service_labels)
         display_order          = 75
       }
 

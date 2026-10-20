@@ -212,6 +212,15 @@ resource "meshstack_building_block" "federation_mapping" {
 # the services input only decides which of them this landing zone offers. They act as the backplane
 # user, which holds Tenant Administrator on every project.
 locals {
+  # The services input's selectable values, as meshPanel shows them. meshstack_integration.tf offers
+  # the same strings.
+  services = {
+    network    = "Network: VPC, subnet and SNAT gateway"
+    obs_bucket = "OBS Bucket: KMS-encrypted object storage"
+    rds        = "RDS: managed MySQL, PostgreSQL or SQL Server"
+    cce        = "CCE: Kubernetes cluster"
+  }
+
   service_integration = {
     otc_domain_name   = var.otc_domain_name
     otc_region        = var.otc_region
@@ -224,7 +233,7 @@ locals {
 
 module "network_integration" {
   lifecycle {
-    enabled = contains(var.services, "network")
+    enabled = contains(var.services, local.services.network)
   }
 
   source = "github.com/meshcloud/meshstack-hub//modules/otc/network?ref=${var.hub.git_ref}"
@@ -242,7 +251,7 @@ module "network_integration" {
 
 module "obs_bucket_integration" {
   lifecycle {
-    enabled = contains(var.services, "obs-bucket")
+    enabled = contains(var.services, local.services.obs_bucket)
   }
 
   source = "github.com/meshcloud/meshstack-hub//modules/otc/obs-bucket?ref=${var.hub.git_ref}"
@@ -260,7 +269,7 @@ module "obs_bucket_integration" {
 
 module "rds_integration" {
   lifecycle {
-    enabled = contains(var.services, "rds")
+    enabled = contains(var.services, local.services.rds)
   }
 
   source = "github.com/meshcloud/meshstack-hub//modules/otc/rds?ref=${var.hub.git_ref}"
@@ -278,7 +287,7 @@ module "rds_integration" {
 
 module "cce_integration" {
   lifecycle {
-    enabled = contains(var.services, "cce")
+    enabled = contains(var.services, local.services.cce)
   }
 
   source = "github.com/meshcloud/meshstack-hub//modules/otc/cce?ref=${var.hub.git_ref}"

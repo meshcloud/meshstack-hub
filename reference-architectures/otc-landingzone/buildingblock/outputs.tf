@@ -26,11 +26,6 @@ output "summary" {
     login_link                 = coalesce(module.otc_integration.identity_provider_login_link, "https://console.otc.t-systems.com")
     federation_mapping_bb_uuid = local.federation_enabled ? meshstack_building_block.federation_mapping.metadata.uuid : ""
 
-    services = [for s in var.services : {
-      network      = "Network"
-      "obs-bucket" = "Encrypted OBS Bucket"
-      rds          = "RDS"
-      cce          = "CCE"
-    }[s]]
+    services = [for s in var.services : split(":", s)[0]]
   })
 }
