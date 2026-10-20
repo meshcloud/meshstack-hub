@@ -2,10 +2,6 @@ terraform {
   required_version = ">= 1.12.0"
 
   required_providers {
-    http = {
-      source  = "hashicorp/http"
-      version = ">= 3.4.0, < 4.0.0"
-    }
     meshstack = {
       source  = "meshcloud/meshstack"
       version = ">= 0.26.4" # meshstack_platform_type
