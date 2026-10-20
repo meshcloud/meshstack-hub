@@ -3,6 +3,7 @@ data "http" "discovery" {
 
   lifecycle {
     postcondition {
+      # try: a body that is no JSON document, or one without an issuer, fails the check as well.
       condition     = self.status_code == 200 && try(jsondecode(self.response_body).issuer, null) == var.workload_identity_federation.issuer
       error_message = "The issuer's discovery document is unreachable or names a different issuer."
     }
