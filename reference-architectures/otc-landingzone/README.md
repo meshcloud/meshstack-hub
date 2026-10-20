@@ -184,10 +184,10 @@ module, pinned to a release, and runs in the application team's project as the b
 
 | Service | Hub module | Wraps |
 |---|---|---|
-| `network` | [`otc/network`](../../modules/otc/network) | iits-consulting VPC and SNAT modules |
-| `obs-bucket` | [`otc/obs-bucket`](../../modules/otc/obs-bucket) | iits-consulting restricted OBS module |
-| `rds` | [`otc/rds`](../../modules/otc/rds) | iits-consulting RDS module |
-| `cce` | [`otc/cce`](../../modules/otc/cce) | iits-consulting CCE module |
+| Network | [`otc/network`](../../modules/otc/network) | iits-consulting VPC and SNAT modules |
+| OBS Bucket | [`otc/obs-bucket`](../../modules/otc/obs-bucket) | iits-consulting restricted OBS module |
+| RDS | [`otc/rds`](../../modules/otc/rds) | iits-consulting RDS module |
+| CCE | [`otc/cce`](../../modules/otc/cce) | iits-consulting CCE module |
 
 RDS and CCE find their network by name, so an application team orders **Network** first. Removing a
 service from the selection deletes its building block definition, which meshStack refuses while
