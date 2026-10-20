@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
-# The provider cannot sign in with an OIDC token, so this exchanges the run's workload identity
-# token for temporary credentials, which provider.tf reads from the file written here.
+# The opentelekomcloud provider cannot sign in with an OIDC token, so this exchanges the run's
+# workload identity token for temporary credentials. The building block's provider reads them
+# from the file written here.
 set -euo pipefail
 
 token_path=/var/run/secrets/workload-identity/gcp/token

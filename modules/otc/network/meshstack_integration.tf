@@ -33,16 +33,10 @@ variable "otc_auth_url" {
   description = "IAM endpoint the building block authenticates against."
 }
 
-variable "otc_access_key" {
+variable "workload_identity_name" {
   type        = string
-  sensitive   = true
-  description = "Access key the building block authenticates with. Needs rights to manage VPCs, subnets, NAT gateways and elastic IPs in the application teams' projects."
-}
-
-variable "otc_secret_key" {
-  type        = string
-  sensitive   = true
-  description = "Secret key belonging to `otc_access_key`."
+  default     = "meshstack-network"
+  description = "Name of the identity provider and IAM group the building block signs in through. Unique across the domain."
 }
 
 variable "otc_platform_type" {
@@ -79,6 +73,19 @@ variable "hub" {
   `git_ref`: Hub release reference. Set to a tag (e.g. 'v1.2.3') or branch or commit sha of the meshstack-hub repo.
   `bbd_draft`: If true, the building block definition version is kept in draft mode.
   EOT
+}
+
+# Runs sign in through workload identity federation, so the definition carries no access key. This
+# module's own provider credentials only set up the identity provider and its group.
+module "backplane" {
+  source = "github.com/meshcloud/meshstack-hub//modules/otc/network/backplane?ref=${var.hub.git_ref}"
+
+  name = var.workload_identity_name
+  workload_identity_federation = {
+    issuer   = meshstack_building_block_definition.this.version_latest.workload_identity_federation.issuer
+    subject  = meshstack_building_block_definition.this.version_latest.workload_identity_federation.subject
+    audience = meshstack_building_block_definition.this.version_latest.workload_identity_federation.gcp.audience
+  }
 }
 
 output "building_block_definition" {
@@ -154,6 +161,7 @@ resource "meshstack_building_block_definition" "this" {
         ref_name                       = var.hub.git_ref
         async                          = false
         use_mesh_http_backend_fallback = true
+        pre_run_script                 = file("${path.module}/../workload-identity/prerun.sh")
       }
     }
 
@@ -226,32 +234,13 @@ resource "meshstack_building_block_definition" "this" {
         argument        = jsonencode(var.otc_domain_name)
       }
 
-      OS_ACCESS_KEY = {
-        display_name    = "OTC Access Key"
-        description     = "Access key the building block authenticates with."
+      OTC_IDENTITY_PROVIDER = {
+        display_name    = "OTC Identity Provider"
+        description     = "Identity provider the pre-run script exchanges the run token at."
         type            = "STRING"
         assignment_type = "STATIC"
         is_environment  = true
-        sensitive = {
-          argument = {
-            secret_value   = var.otc_access_key
-            secret_version = nonsensitive(sha256(var.otc_access_key))
-          }
-        }
-      }
-
-      OS_SECRET_KEY = {
-        display_name    = "OTC Secret Key"
-        description     = "Secret key belonging to the access key."
-        type            = "STRING"
-        assignment_type = "STATIC"
-        is_environment  = true
-        sensitive = {
-          argument = {
-            secret_value   = var.otc_secret_key
-            secret_version = nonsensitive(sha256(var.otc_secret_key))
-          }
-        }
+        argument        = jsonencode(var.workload_identity_name)
       }
     }
 
@@ -296,6 +285,10 @@ terraform {
     meshstack = {
       source  = "meshcloud/meshstack"
       version = ">= 0.26.2"
+    }
+    opentelekomcloud = {
+      source  = "opentelekomcloud/opentelekomcloud"
+      version = ">= 1.37.0, < 2.0.0"
     }
   }
 }

@@ -214,7 +214,8 @@ resource "meshstack_building_block_definition" "this" {
       Project Admins.
     - **Service building blocks** – the definitions picked under **Services**, offered to application
       teams on the landing zone: Network (VPC, subnet and SNAT gateway), Encrypted OBS Bucket, RDS
-      database and CCE Kubernetes cluster. They run as the backplane user.
+      database and CCE Kubernetes cluster. Each signs in with its own run identity and holds only
+      the permissions of its service, never an access key.
     - **Federated sign-in** *(with an identity provider)* – your company SAML or OIDC provider,
       federated into the domain, the bucket every project records its members in, and the
       **Federation Mapping** building block on the management project, whose function keeps the
@@ -223,8 +224,9 @@ resource "meshstack_building_block_definition" "this" {
     ## 🔑 Authentication
 
     You provide an access key and secret key of an IAM user in the domain's `admin` group. They are
-    used on every run of this building block, never by the building blocks it registers, which run
-    as the backplane user instead.
+    used on every run of this building block, never by the building blocks it registers: the
+    project building block runs as the backplane user, the service building blocks as their own
+    run identity.
 
     ## 🧪 Playground mode
 

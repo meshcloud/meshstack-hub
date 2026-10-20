@@ -180,7 +180,7 @@ architecture is applied. It defaults to no gate at all.
 
 The **Services** input picks which service building block definitions the landing zone offers to
 application teams. Each one is a hub module of its own that wraps a T Cloud Public partner Terraform
-module, pinned to a release, and runs in the application team's project as the backplane user:
+module, pinned to a release, and runs in the application team's project:
 
 | Service | Hub module | Wraps |
 |---|---|---|
@@ -188,6 +188,12 @@ module, pinned to a release, and runs in the application team's project as the b
 | OBS Bucket | [`otc/obs-bucket`](../../modules/otc/obs-bucket) | iits-consulting restricted OBS module |
 | RDS | [`otc/rds`](../../modules/otc/rds) | iits-consulting RDS module |
 | CCE | [`otc/cce`](../../modules/otc/cce) | iits-consulting CCE module |
+
+No service holds an access key. Each signs in through workload identity federation: this
+architecture federates meshStack's run identity as one identity provider per service definition,
+whose rule admits only that definition's runs into an IAM group with that service's permissions.
+A pre-run script exchanges the run token for a temporary access key. See
+[`otc/workload-identity`](../../modules/otc/workload-identity).
 
 RDS and CCE find their network by name, so an application team orders **Network** first. Removing a
 service from the selection deletes its building block definition, which meshStack refuses while
