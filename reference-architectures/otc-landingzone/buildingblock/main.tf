@@ -210,7 +210,8 @@ resource "meshstack_building_block" "federation_mapping" {
 
 # Each service is its own hub module so it can be registered without this reference architecture;
 # the services input only decides which of them this landing zone offers. They act as the backplane
-# user, which holds Tenant Administrator on every project.
+# user, which holds Tenant Administrator on every project, except the OBS bucket: it signs in through
+# workload identity federation, as a group holding only what it needs.
 locals {
   # The services input's selectable values, as meshPanel shows them. meshstack_integration.tf offers
   # the same strings.
@@ -259,9 +260,10 @@ module "obs_bucket_integration" {
   otc_domain_name   = local.service_integration.otc_domain_name
   otc_region        = local.service_integration.otc_region
   otc_auth_url      = local.service_integration.otc_auth_url
-  otc_access_key    = local.service_integration.otc_access_key
-  otc_secret_key    = local.service_integration.otc_secret_key
   otc_platform_type = local.service_integration.otc_platform_type
+
+  # Signs in through workload identity federation; this run's admin credentials set it up.
+  workload_identity_name = "mesh-${local.platform_identifier}-obs-bucket"
 
   meshstack = { owning_workspace_identifier = var.workspace, tags = local.tags.building_block }
   hub       = var.hub
