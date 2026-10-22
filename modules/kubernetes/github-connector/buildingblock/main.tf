@@ -42,15 +42,11 @@ resource "github_actions_environment_secret" "kubeconfig" {
   plaintext_value = local.kubeconfig
 }
 
-resource "github_actions_environment_variable" "this" {
-  for_each = merge(var.additional_environment_variables, {
-    K8S_NAMESPACE = var.namespace
-  })
-
+resource "github_actions_environment_variable" "k8s_namespace" {
   environment   = github_repository_environment.this.environment
   repository    = github_repository_environment.this.repository
-  variable_name = each.key
-  value         = each.value
+  variable_name = "K8S_NAMESPACE"
+  value         = var.namespace
 }
 
 resource "terraform_data" "workflow_dispatch" {
@@ -73,6 +69,6 @@ resource "terraform_data" "workflow_dispatch" {
 
   depends_on = [
     github_actions_environment_secret.kubeconfig,
-    github_actions_environment_variable.this,
+    github_actions_environment_variable.k8s_namespace,
   ]
 }

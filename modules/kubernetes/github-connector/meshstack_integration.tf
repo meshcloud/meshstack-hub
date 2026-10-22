@@ -253,13 +253,6 @@ resource "meshstack_building_block_definition" "this" {
         assignment_type = "USER_INPUT"
         default_value   = jsonencode("main")
       }
-      additional_environment_variables = {
-        display_name    = "Additional Environment Variables"
-        description     = "Further GitHub Actions variables to set on the environment, as a map of name to value."
-        type            = "CODE"
-        assignment_type = "USER_INPUT"
-        default_value   = jsonencode({})
-      }
     }
 
     outputs = {

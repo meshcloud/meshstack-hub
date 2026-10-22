@@ -29,12 +29,6 @@ variable "deploy_branch" {
   description = "Branch whose workflow deploys into this namespace. The connector dispatches the workflow on it once its credentials are in place."
 }
 
-variable "additional_environment_variables" {
-  type        = map(string)
-  default     = {}
-  description = "Additional GitHub Actions variables to set on the environment."
-}
-
 variable "workflow_filename" {
   type        = string
   default     = ""
