@@ -7,9 +7,11 @@ description: Lets runs of the listed building block definitions act as an existi
 
 # STACKIT Service Account Federation Building Block
 
-Creates one workload identity federation provider on an existing STACKIT service account for each
-listed building block definition of the ordering workspace. Runs of those definitions can then act
-as the service account without a long-lived key.
+Creates workload identity federation providers on an existing STACKIT service account for the
+listed building block definitions of the ordering workspace: one per identity that the latest and
+the latest released version of a definition present, which differ when a newer version moved to
+another runner. Runs of those definitions can then act as the service account without a long-lived
+key. A run reads the identities anew, so re-run it after a definition changes runner.
 
 ## Why this is not part of the service account block
 
