@@ -20,7 +20,6 @@ The GitHub environment receives:
 |---|---|---|
 | `KUBECONFIG` | secret | kubeconfig of the service account, context set to the namespace |
 | `K8S_NAMESPACE` | variable | the namespace name |
-| any `additional_environment_variables` | variable | set by the caller, e.g. the app hostname |
 
 The connector does not provide an image registry. Deployments reference images the cluster can
 already pull.
@@ -32,7 +31,7 @@ credentials are in place, so the first deployment does not wait for a push.
 ## Requirements
 
 | Name | Version |
-| ---- | ------- |
+|------|---------|
 | <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.12.0 |
 | <a name="requirement_github"></a> [github](#requirement\_github) | >= 6.5.0, < 7.0.0 |
 | <a name="requirement_kubernetes"></a> [kubernetes](#requirement\_kubernetes) | >= 3.0.0, < 4.0.0 |
@@ -44,9 +43,9 @@ No modules.
 ## Resources
 
 | Name | Type |
-| ---- | ---- |
+|------|------|
 | [github_actions_environment_secret.kubeconfig](https://registry.terraform.io/providers/integrations/github/latest/docs/resources/actions_environment_secret) | resource |
-| [github_actions_environment_variable.this](https://registry.terraform.io/providers/integrations/github/latest/docs/resources/actions_environment_variable) | resource |
+| [github_actions_environment_variable.k8s_namespace](https://registry.terraform.io/providers/integrations/github/latest/docs/resources/actions_environment_variable) | resource |
 | [github_repository_environment.this](https://registry.terraform.io/providers/integrations/github/latest/docs/resources/repository_environment) | resource |
 | [kubernetes_role_binding_v1.github_actions_edit](https://registry.terraform.io/providers/hashicorp/kubernetes/latest/docs/resources/role_binding_v1) | resource |
 | [kubernetes_secret_v1.github_actions](https://registry.terraform.io/providers/hashicorp/kubernetes/latest/docs/resources/secret_v1) | resource |
@@ -56,8 +55,7 @@ No modules.
 ## Inputs
 
 | Name | Description | Type | Default | Required |
-| ---- | ----------- | ---- | ------- | :------: |
-| <a name="input_additional_environment_variables"></a> [additional\_environment\_variables](#input\_additional\_environment\_variables) | Additional GitHub Actions variables to set on the environment. | `map(string)` | `{}` | no |
+|------|-------------|------|---------|:--------:|
 | <a name="input_deploy_branch"></a> [deploy\_branch](#input\_deploy\_branch) | Branch whose workflow deploys into this namespace. The connector dispatches the workflow on it once its credentials are in place. | `string` | `"main"` | no |
 | <a name="input_github_environment_name"></a> [github\_environment\_name](#input\_github\_environment\_name) | GitHub environment that receives the deployment credentials of this namespace. | `string` | n/a | yes |
 | <a name="input_github_repo"></a> [github\_repo](#input\_github\_repo) | Name of the GitHub repository to connect, within the organization the GitHub App is installed in. | `string` | n/a | yes |
@@ -68,6 +66,6 @@ No modules.
 ## Outputs
 
 | Name | Description |
-| ---- | ----------- |
+|------|-------------|
 | <a name="output_github_environment_name"></a> [github\_environment\_name](#output\_github\_environment\_name) | GitHub environment that holds the deployment credentials of this namespace. |
 <!-- END_TF_DOCS -->
