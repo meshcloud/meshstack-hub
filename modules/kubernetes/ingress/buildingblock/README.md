@@ -17,10 +17,10 @@ set — a **wildcard Certificate** that HAProxy serves as its default TLS certif
 Nothing here is cloud-specific. It runs on SKE, AKS, EKS or a cluster of your own; only the
 LoadBalancer annotations differ, and those are an input.
 
-## The kubeconfig is part of the definition
+## The kubeconfig is an input of the building block
 
-The block reaches the cluster through `kubeconfig.yaml`, a static FILE input of its building block
-definition, so one definition serves one cluster.
+The block reaches the cluster through `kubeconfig.yaml`, a sensitive FILE input the ordering
+composition sets on the building block, so a rotated kubeconfig changes no definition.
 
 ## Why it is one module and not four
 

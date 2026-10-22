@@ -1,17 +1,3 @@
-variable "kubeconfig" {
-  type        = string
-  nullable    = false
-  ephemeral   = true
-  description = "Kubeconfig (YAML) of the cluster the building block definition this registers installs ingress on."
-}
-
-variable "kubeconfig_version" {
-  type        = string
-  nullable    = false
-  default     = "1"
-  description = "Version of `kubeconfig`. It is ephemeral, so no version can be derived from it: increase this to send it to meshStack again."
-}
-
 variable "cert_manager_version" {
   type        = string
   nullable    = false
@@ -156,8 +142,7 @@ resource "meshstack_building_block_definition" "this" {
 
       This is a bootstrap block a platform team orders once per cluster — for example the **STACKIT
       Kubernetes Platform** reference architecture orders it right after the cluster exists. It
-      reaches the cluster through the kubeconfig its definition is registered with, so one
-      definition serves one cluster.
+      reaches the cluster through the kubeconfig the ordering composition passes as an input.
 
       ## 📦 Resources created
 
@@ -202,16 +187,12 @@ resource "meshstack_building_block_definition" "this" {
 
     inputs = {
       "kubeconfig.yaml" = {
-        display_name    = "kubeconfig.yaml"
-        description     = "Kubeconfig of the cluster to install ingress on."
-        type            = "FILE"
-        assignment_type = "STATIC"
-        sensitive = {
-          argument = {
-            secret_value   = "data:application/yaml;base64,${base64encode(var.kubeconfig)}"
-            secret_version = var.kubeconfig_version
-          }
-        }
+        display_name           = "kubeconfig.yaml"
+        description            = "Kubeconfig of the cluster to install ingress on."
+        type                   = "FILE"
+        assignment_type        = "USER_INPUT"
+        sensitive              = {}
+        updateable_by_consumer = true
       }
 
       acme_email = {
