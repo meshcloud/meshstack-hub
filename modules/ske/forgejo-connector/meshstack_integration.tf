@@ -1,24 +1,20 @@
-variable "kubeconfig" {
+variable "kube_host" {
   type        = string
   nullable    = false
-  ephemeral   = true
-  description = "Kubeconfig (YAML) of a cluster-admin service account on the cluster the tenant namespaces live on."
-}
-
-variable "kubeconfig_version" {
-  type        = string
-  nullable    = false
-  default     = "1"
-  description = "Version of `kubeconfig`. It is ephemeral, so no version can be derived from it: increase this to send it to meshStack again."
+  description = "API server URL of the cluster the tenant namespaces live on."
 }
 
 variable "forgejo_host" {
   type = string
 }
 
-variable "forgejo_repo_definition_uuid" {
-  type        = string
-  description = "UUID of the Forgejo repository building block definition used as parent dependency for tenant building blocks (connector)."
+variable "forgejo_repo_definition_ref" {
+  type = object({
+    kind = string
+    uuid = string
+  })
+  nullable    = false
+  description = "Ref of the Forgejo repository definition whose building blocks parent this definition's building blocks."
 }
 
 variable "vault_reader" {
@@ -31,6 +27,12 @@ variable "vault_reader" {
   nullable    = false
   sensitive   = true
   description = "Vault KV v2 userpass login the runs read their secrets with."
+}
+
+variable "kubeconfig_path" {
+  type        = string
+  nullable    = false
+  description = "Vault KV v2 secret holding the kubeconfig of a cluster-admin service account on that cluster under the key `kubeconfig`."
 }
 
 variable "forgejo_api_token_path" {
@@ -190,7 +192,7 @@ resource "meshstack_building_block_definition" "this" {
       }
     }
 
-    dependency_refs = [{ uuid = var.forgejo_repo_definition_uuid }]
+    dependency_refs = [var.forgejo_repo_definition_ref]
 
     inputs = {
       namespace = {
@@ -200,17 +202,12 @@ resource "meshstack_building_block_definition" "this" {
         assignment_type = "PLATFORM_TENANT_ID"
       }
 
-      "kubeconfig.yaml" = {
-        display_name    = "kubeconfig.yaml"
-        description     = "Kubeconfig of a cluster-admin service account on the cluster."
-        type            = "FILE"
+      kube_host = {
+        display_name    = "Kubernetes API Server"
+        description     = "API server URL of the cluster the tenant namespaces live on."
+        type            = "STRING"
         assignment_type = "STATIC"
-        sensitive = {
-          argument = {
-            secret_value   = "data:application/yaml;base64,${base64encode(var.kubeconfig)}"
-            secret_version = var.kubeconfig_version
-          }
-        }
+        argument        = jsonencode(var.kube_host)
       }
 
       repository_owner = {
@@ -218,7 +215,7 @@ resource "meshstack_building_block_definition" "this" {
         description     = "Owner of the parent Forgejo repository where action secrets are created."
         type            = "STRING"
         assignment_type = "BUILDING_BLOCK_OUTPUT"
-        argument        = jsonencode("${var.forgejo_repo_definition_uuid}.repository_owner")
+        argument        = jsonencode("${var.forgejo_repo_definition_ref.uuid}.repository_owner")
       }
 
       repository_name = {
@@ -226,7 +223,7 @@ resource "meshstack_building_block_definition" "this" {
         description     = "Name of the parent Forgejo repository where action secrets are created."
         type            = "STRING"
         assignment_type = "BUILDING_BLOCK_OUTPUT"
-        argument        = jsonencode("${var.forgejo_repo_definition_uuid}.repository_name")
+        argument        = jsonencode("${var.forgejo_repo_definition_ref.uuid}.repository_name")
       }
 
       stage = {
@@ -272,6 +269,14 @@ resource "meshstack_building_block_definition" "this" {
             secret_version = nonsensitive(sha256(jsonencode(var.vault_reader)))
           }
         }
+      }
+
+      kubeconfig_path = {
+        display_name    = "Kubeconfig Path"
+        description     = "Vault KV v2 secret holding the kubeconfig of a cluster-admin service account under the key `kubeconfig`."
+        type            = "STRING"
+        assignment_type = "STATIC"
+        argument        = jsonencode(var.kubeconfig_path)
       }
 
       forgejo_api_token_path = {

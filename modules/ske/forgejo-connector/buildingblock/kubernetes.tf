@@ -1,14 +1,11 @@
 locals {
-  # meshStack writes kubeconfig.yaml from a static FILE input at run time. The committed mock lets
-  # the module validate without it, and the precondition below stops an apply against the mock.
-  kubeconfig_path         = fileexists("${path.module}/kubeconfig.yaml") ? "${path.module}/kubeconfig.yaml" : "${path.module}/kubeconfig-mock.yaml"
-  kubeconfig              = yamldecode(file(local.kubeconfig_path))
-  kubeconfig_cluster      = one(local.kubeconfig["clusters"])["cluster"]
-  kubeconfig_cluster_name = one(local.kubeconfig["clusters"])["name"]
+  admin_kubeconfig = yamldecode(ephemeral.vault_kv_secret_v2.kubeconfig.data.kubeconfig)
 }
 
 provider "kubernetes" {
-  config_path = local.kubeconfig_path
+  host                   = one(local.admin_kubeconfig.clusters).cluster.server
+  cluster_ca_certificate = base64decode(one(local.admin_kubeconfig.clusters).cluster["certificate-authority-data"])
+  token                  = one(local.admin_kubeconfig.users).user.token
 }
 
 resource "random_string" "suffix" {
@@ -24,14 +21,6 @@ resource "kubernetes_service_account" "forgejo_actions" {
   metadata {
     name      = "forgejo-actions-${random_string.suffix.result}"
     namespace = var.namespace
-  }
-
-  # Unfortunately, check blocks only supported in Terraform, not OpenTofu.
-  lifecycle {
-    precondition {
-      condition     = local.kubeconfig_cluster["server"] != "https://example.invalid"
-      error_message = "Mock kubeconfig detected. Ensure meshStack injected kubeconfig.yaml before apply."
-    }
   }
 }
 

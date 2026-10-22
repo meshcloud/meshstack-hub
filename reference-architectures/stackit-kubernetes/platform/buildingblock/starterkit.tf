@@ -91,8 +91,8 @@ module "forgejo_connector_integration" {
   kubeconfig         = ephemeral.vault_kv_secret_v2.service_account_kubeconfig.data.kubeconfig
   kubeconfig_version = tostring(local.service_account_vault_secret.secret_hash)
 
-  forgejo_host                 = local.forgejo_instance_url
-  forgejo_repo_definition_uuid = module.git_repository_integration.building_block_definition.uuid
+  forgejo_host                = local.forgejo_instance_url
+  forgejo_repo_definition_ref = module.git_repository_integration.building_block_definition.ref
 
   vault_reader           = local.secrets_manager_reader
   forgejo_api_token_path = local.git_vault_secret.path

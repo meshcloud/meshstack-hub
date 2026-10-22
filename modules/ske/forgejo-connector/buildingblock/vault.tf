@@ -9,6 +9,11 @@ provider "vault" {
   }
 }
 
+ephemeral "vault_kv_secret_v2" "kubeconfig" {
+  mount = var.vault_reader.mount
+  name  = var.kubeconfig_path
+}
+
 ephemeral "vault_kv_secret_v2" "forgejo_api_token" {
   mount = var.vault_reader.mount
   name  = var.forgejo_api_token_path

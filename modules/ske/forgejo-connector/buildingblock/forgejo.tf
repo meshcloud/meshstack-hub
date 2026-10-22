@@ -5,24 +5,32 @@ locals {
   }
 
   action_secrets = {
-    "KUBECONFIG_${upper(var.stage)}" = yamlencode(merge(local.kubeconfig, {
-      current-context = local.kubeconfig_cluster_name
-      # Note: Overwriting the users is crucial here to avoid passing down the admin user to the tenant-sliced K8s slices.
-      users = [{
-        name = kubernetes_service_account.forgejo_actions.metadata[0].name
-        user = {
-          "token" = kubernetes_secret.forgejo_actions.data.token
+    # The admin kubeconfig is ephemeral, so the namespace's kubeconfig is built from the service
+    # account's token Secret, which carries the cluster CA as well.
+    "KUBECONFIG_${upper(var.stage)}" = yamlencode({
+      apiVersion      = "v1"
+      kind            = "Config"
+      current-context = var.namespace
+      clusters = [{
+        name = "ske"
+        cluster = {
+          server                     = var.kube_host
+          certificate-authority-data = base64encode(kubernetes_secret.forgejo_actions.data["ca.crt"])
         }
       }]
+      users = [{
+        name = kubernetes_service_account.forgejo_actions.metadata[0].name
+        user = { token = kubernetes_secret.forgejo_actions.data.token }
+      }]
       contexts = [{
-        name = local.kubeconfig_cluster_name
+        name = var.namespace
         context = {
-          cluster   = local.kubeconfig_cluster_name
+          cluster   = "ske"
           namespace = var.namespace
           user      = kubernetes_service_account.forgejo_actions.metadata[0].name
         }
       }]
-    }))
+    })
   }
 }
 

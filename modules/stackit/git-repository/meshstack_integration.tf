@@ -109,6 +109,7 @@ output "building_block_definition" {
   description = "BBD is consumed in building block compositions."
   value = {
     uuid        = meshstack_building_block_definition.this.metadata.uuid
+    ref         = meshstack_building_block_definition.this.ref
     version_ref = meshstack_building_block_definition.this.version_latest
   }
 }
