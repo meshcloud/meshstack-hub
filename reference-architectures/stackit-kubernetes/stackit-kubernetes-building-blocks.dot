@@ -33,11 +33,10 @@ digraph stackit_kubernetes_building_blocks {
     FED     [label="🤝 Automation Identity Federation\ntrusts the six STACKIT definitions" fillcolor="#e5f2ea" color="#85bfa0"]
     SM      [label="🔒 Secrets Manager\nstackit/secrets-manager" fillcolor="#e5f2ea" color="#85bfa0"]
     USERS   [label="🔒 Secrets Manager users\nwriter · reader" fillcolor="#eef2f6" color="#93a7bb"]
-    CLUSTER [label="☸️ SKE Cluster\nske/cluster" fillcolor="#e5f2ea" color="#85bfa0"]
+    CLUSTER [label="☸️ SKE Cluster\nske/cluster · platform admin" fillcolor="#e5f2ea" color="#85bfa0"]
     GIT     [label="🔀 STACKIT Git Instance\nstackit/git" fillcolor="#e5f2ea" color="#85bfa0"]
     REG     [label="🗄️ STACKIT Container Registry\nstackit/container-registry" fillcolor="#e5f2ea" color="#85bfa0"]
     AI      [label="🧠 AI Model Serving\nstackit/ai-llm" fillcolor="#e5f2ea" color="#85bfa0"]
-    KSA     [label="🔑 Kubernetes Platform Admin\nkubernetes/service-account" fillcolor="#e5f2ea" color="#85bfa0"]
     CREDS   [label="🔑 Kubernetes meshPlatform Credentials\nkubernetes" fillcolor="#e5f2ea" color="#85bfa0"]
     ING     [label="🔐 Kubernetes Ingress\nkubernetes/ingress" fillcolor="#e5f2ea" color="#85bfa0"]
     DNS     [label="🧭 DNS Zone\nstackit/dns" fillcolor="#e5f2ea" color="#85bfa0"]
@@ -54,9 +53,8 @@ digraph stackit_kubernetes_building_blocks {
     FED     -> AI
     FED     -> SM
     SM      -> USERS   [xlabel="instance"]
-    CLUSTER -> KSA     [xlabel="kubeconfig via\nSecrets Manager"]
-    KSA     -> CREDS   [xlabel="service account\nkubeconfig"]
-    KSA     -> ING
+    CLUSTER -> CREDS   [xlabel="admin kubeconfig via\nSecrets Manager"]
+    CLUSTER -> ING
     ING     -> DNS     [xlabel="load balancer IP"]
     FED     -> DNS     [constraint=false]
     CREDS   -> MP      [xlabel="tokens via\nSecrets Manager" style=dashed]

@@ -88,8 +88,8 @@ module "forgejo_connector_integration" {
 
   source = "github.com/meshcloud/meshstack-hub//modules/ske/forgejo-connector?ref=${var.hub.git_ref}"
 
-  kubeconfig         = ephemeral.vault_kv_secret_v2.service_account_kubeconfig.data.kubeconfig
-  kubeconfig_version = tostring(local.service_account_vault_secret.secret_hash)
+  kube_host       = local.kube_host
+  kubeconfig_path = "${local.secrets_path_prefix}ske/cluster"
 
   forgejo_host                = local.forgejo_instance_url
   forgejo_repo_definition_ref = module.git_repository_integration.building_block_definition.ref
