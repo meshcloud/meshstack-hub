@@ -60,9 +60,20 @@ variable "output_to_vault" {
     password    = string
     path_prefix = optional(string, "")
   })
-  default     = null
+  nullable    = false
   sensitive   = true
-  description = "Vault KV v2 login this building block writes its secret with: the server `address`, the engine `mount`, a userpass `username` and `password`, and an optional `path_prefix`. The secret is `<path_prefix>ske/cluster`, with the key `kubeconfig`. Null returns it as an output."
+  description = "Vault KV v2 userpass login that writes the platform admin kubeconfig to `<path_prefix>ske/cluster`."
+}
+
+variable "admin_token_generation" {
+  type        = string
+  nullable    = false
+  description = "Month `YYYY-MM` of the current platform admin token."
+
+  validation {
+    condition     = can(regex("^[0-9]{4}-(0[1-9]|1[0-2])$", var.admin_token_generation))
+    error_message = "admin_token_generation must be a month in the form YYYY-MM."
+  }
 }
 
 variable "imports" {

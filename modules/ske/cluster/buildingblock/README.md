@@ -2,20 +2,22 @@
 name: STACKIT SKE Cluster
 supportedPlatforms:
   - stackit
-description: Provisions a STACKIT Kubernetes Engine (SKE) cluster with a node pool and mints an admin kubeconfig.
+description: Provisions a STACKIT Kubernetes Engine (SKE) cluster with a node pool and a platform admin service account whose kubeconfig it writes to Vault.
 ---
 
 # STACKIT SKE Cluster Building Block
 
 This building block provisions a **STACKIT Kubernetes Engine (SKE)** cluster with a single node pool
-and a nightly maintenance window, and mints an admin kubeconfig for it.
+and a nightly maintenance window, and the platform admin service account `meshstack-admin` in
+`kube-system`, bound to `cluster-admin`.
 
-It exists so a composing architecture can create the cluster in its own apply and, once it exists,
-read the kubeconfig back to configure `kubernetes`/`helm` providers and downstream building blocks —
-a provider config cannot depend on a cluster created in the same apply.
+Each run reaches the cluster with an SKE kubeconfig that expires after an hour and is never stored.
+The admin service account's token kubeconfig is written to the Vault KV v2 secret
+`<path_prefix>ske/cluster` under the key `kubeconfig`. The token belongs to the month
+`admin_token_generation`; the token of the month before stays valid and older ones are deleted, so a
+composition that passes the current month rotates it monthly.
 
-With `output_to_vault` set, the kubeconfig is written to the Vault KV v2 secret
-`<path_prefix>ske/cluster` under the key `kubeconfig` instead, the `kubeconfig` output is empty and the `provider_config` output is null.
+The API server URL is read from the cluster's `kube-system/shoot-info` ConfigMap.
 
 With `imports = {}`, the building block takes over the existing cluster named `cluster_name`
 instead of creating one. With `release_on_destroy` set, destroying the building block leaves the cluster in
