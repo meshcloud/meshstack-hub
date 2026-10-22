@@ -69,6 +69,12 @@ locals {
     }
   })
 
+  token_month = parseint(substr(var.token_generation, 0, 4), 10) * 12 + parseint(substr(var.token_generation, 5, 2), 10) - 1
+  token_generations = toset([
+    var.token_generation,
+    format("%04d-%02d", floor((local.token_month - 1) / 12), (local.token_month - 1) % 12 + 1),
+  ])
+
   replicator_token = module.service_accounts["replicator"].token
   # meshStack fails a building block whose declared output is null.
   metering_token = var.metering_enabled ? module.service_accounts["metering"].token : ""
@@ -78,7 +84,7 @@ resource "terraform_data" "kubeconfig" {
   lifecycle {
     precondition {
       condition     = fileexists("${path.module}/kubeconfig.yaml")
-      error_message = "kubeconfig.yaml is missing. meshStack writes it from the static FILE input of the building block definition."
+      error_message = "kubeconfig.yaml is missing. meshStack writes it from the FILE input of the building block."
     }
   }
 }
@@ -101,4 +107,7 @@ module "service_accounts" {
   namespace          = module.namespace.name
   annotations        = each.value.annotations
   rules              = each.value.rules
+
+  token_generations        = local.token_generations
+  current_token_generation = var.token_generation
 }

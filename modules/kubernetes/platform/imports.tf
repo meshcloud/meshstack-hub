@@ -31,17 +31,7 @@ import {
   id       = "${var.service_account_namespace}/${each.value}"
 }
 
-import {
-  for_each = local.managed_service_accounts
-  to       = module.service_accounts[each.key].kubernetes_secret_v1.this
-  id       = "${var.service_account_namespace}/${each.value}"
-}
 
-import {
-  for_each = local.released_service_accounts
-  to       = module.service_accounts[each.key].kubernetes_secret_v1.released
-  id       = "${var.service_account_namespace}/${each.value}"
-}
 
 import {
   for_each = local.managed_service_accounts

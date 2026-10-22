@@ -7,7 +7,7 @@ variable "release_on_destroy" {
 variable "name" {
   type        = string
   nullable    = false
-  description = "Name of the ServiceAccount, its token Secret, its ClusterRole and its ClusterRoleBinding."
+  description = "Name of the ServiceAccount, its ClusterRole and its ClusterRoleBinding, and prefix of its token Secrets."
 }
 
 variable "namespace" {
@@ -29,4 +29,16 @@ variable "rules" {
     non_resource_urls = optional(list(string))
   }))
   nullable = false
+}
+
+variable "token_generations" {
+  type        = set(string)
+  nullable    = false
+  description = "Generations to keep a token Secret for."
+}
+
+variable "current_token_generation" {
+  type        = string
+  nullable    = false
+  description = "Generation of the token the module returns."
 }
