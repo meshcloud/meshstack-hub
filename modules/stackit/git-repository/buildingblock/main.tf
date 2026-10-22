@@ -1,5 +1,6 @@
 provider "forgejo" {
-  # configured via env variables FORGEJO_HOST, FORGEJO_API_TOKEN
+  host      = data.external.env.result["FORGEJO_HOST"]
+  api_token = local.forgejo_api_token
 }
 
 locals {
@@ -25,12 +26,8 @@ resource "forgejo_repository" "this" {
   clone_addr = local.have_clone_addr ? var.clone_addr : null
   mirror     = local.have_clone_addr ? false : null
 
-  # Destroy ordering: deleting a team concurrently with the repository it is
-  # assigned to intermittently fails in Forgejo (DELETE /api/v1/teams/{id}
-  # errors while the repo delete is in flight). depends_on makes the repo a
-  # dependent of the teams, so on destroy the repo is deleted first and team
-  # deletion only starts once the repo is gone.
-  depends_on = [restapi_object.team]
+  # Forgejo fails to delete a team while its repository is being deleted, so the repository goes first.
+  depends_on = [module.teams]
 }
 
 module "action_variables_and_secrets" {
@@ -40,7 +37,8 @@ module "action_variables_and_secrets" {
     restapi.without_returned_object = restapi.without_returned_object
   }
 
-  repository_id    = forgejo_repository.this.id
+  repository_owner = var.forgejo_organization
+  repository_name  = forgejo_repository.this.name
   action_variables = merge(var.action_variables, var.extra_action_variables)
-  action_secrets   = var.action_secrets
+  action_secrets   = local.registry_push_action_secrets
 }

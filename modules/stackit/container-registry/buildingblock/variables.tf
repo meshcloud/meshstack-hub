@@ -13,7 +13,7 @@ variable "stackit_region" {
 variable "registry_name" {
   type        = string
   nullable    = false
-  description = "Base name of the registry, to which a random suffix is appended."
+  description = "Base name of the registry, to which a random suffix is appended. With `imports`, the full name of the adopted registry."
 
   # The API takes 5 to 255 characters and also allows dots and underscores. Dashes only, and a
   # tighter cap, keep the name usable as a Harbor project name and in an image reference. The cap is
@@ -22,13 +22,6 @@ variable "registry_name" {
     condition     = can(regex("^[a-z0-9][a-z0-9-]{3,56}[a-z0-9]$", var.registry_name))
     error_message = "registry_name must be 5 to 58 characters, lowercase alphanumeric or dashes, and not start or end with a dash."
   }
-}
-
-variable "bootstrap_robot_username" {
-  type        = string
-  nullable    = false
-  default     = ""
-  description = "Harbor robot linked to this run's STACKIT service account. Empty mints no robots."
 }
 
 variable "users" {
@@ -51,8 +44,43 @@ variable "role_mapping" {
   description = "Maps meshStack project roles to STACKIT container registry roles. Unknown roles are ignored."
 }
 
+variable "require_robot_link" {
+  type        = bool
+  nullable    = false
+  default     = false
+  description = "Fail the run while no robot is linked to the service account, instead of minting no robots."
+}
+
 variable "mirrored_base_images" {
   type        = list(string)
   nullable    = false
   description = "Fully qualified upstream images to mirror into the registry as `<registry>/<name>:<tag>`."
+}
+
+variable "output_to_vault" {
+  type = object({
+    address     = string
+    mount       = string
+    username    = string
+    password    = string
+    path_prefix = optional(string, "")
+  })
+  default     = null
+  sensitive   = true
+  description = "Vault KV v2 login this building block writes its secret with once the robots exist: the server `address`, the engine `mount`, a userpass `username` and `password`, and an optional `path_prefix`. The secret is `<path_prefix>stackit/container-registry`, with the keys `pull-kubernetes-secret` (`{\".dockerconfigjson\"}`) and `push-action-secrets` (`{HARBOR_REGISTRY, HARBOR_USERNAME, HARBOR_PASSWORD}`). Null writes none."
+}
+
+variable "imports" {
+  type = object({
+    artifactory_id = string
+  })
+  default     = null
+  description = "Existing registry named `registry_name` this building block takes over instead of creating one. The container registry service is then left enabled on destroy. Null creates a new registry."
+}
+
+variable "release_on_destroy" {
+  type        = bool
+  nullable    = false
+  default     = false
+  description = "Leave the registry in place when this building block is destroyed. Cannot change once the registry is managed."
 }

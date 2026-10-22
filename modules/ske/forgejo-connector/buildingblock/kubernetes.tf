@@ -1,21 +1,11 @@
 locals {
-  # meshStack injects kubeconfig.yaml as a static FILE input at run time. `try` falls back to the
-  # committed mock so the module still validates without it, and the precondition below is
-  # what stops an apply against the mock.
-  kubeconfig = try(
-    yamldecode(file("${path.module}/kubeconfig.yaml")),
-    yamldecode(file("${path.module}/kubeconfig-mock.yaml"))
-  )
-  kubeconfig_cluster      = one(local.kubeconfig["clusters"])["cluster"]
-  kubeconfig_cluster_name = one(local.kubeconfig["clusters"])["name"]
-  kubeconfig_admin_user   = one(local.kubeconfig["users"])["user"]
+  admin_kubeconfig = yamldecode(ephemeral.vault_kv_secret_v2.kubeconfig.data.kubeconfig)
 }
 
 provider "kubernetes" {
-  host                   = local.kubeconfig_cluster["server"]
-  cluster_ca_certificate = base64decode(local.kubeconfig_cluster["certificate-authority-data"])
-  client_certificate     = base64decode(local.kubeconfig_admin_user["client-certificate-data"])
-  client_key             = base64decode(local.kubeconfig_admin_user["client-key-data"])
+  host                   = one(local.admin_kubeconfig.clusters).cluster.server
+  cluster_ca_certificate = base64decode(one(local.admin_kubeconfig.clusters).cluster["certificate-authority-data"])
+  token                  = one(local.admin_kubeconfig.users).user.token
 }
 
 resource "random_string" "suffix" {
@@ -31,14 +21,6 @@ resource "kubernetes_service_account" "forgejo_actions" {
   metadata {
     name      = "forgejo-actions-${random_string.suffix.result}"
     namespace = var.namespace
-  }
-
-  # Unfortunately, check blocks only supported in Terraform, not OpenTofu.
-  lifecycle {
-    precondition {
-      condition     = local.kubeconfig_cluster["server"] != "https://example.invalid"
-      error_message = "Mock kubeconfig detected. Ensure meshStack injected kubeconfig.yaml before apply."
-    }
   }
 }
 
@@ -109,18 +91,9 @@ resource "kubernetes_secret" "image_pull" {
     namespace = var.namespace
   }
 
-  type = "kubernetes.io/dockerconfigjson"
-  data = {
-    ".dockerconfigjson" = jsonencode({
-      auths = {
-        (var.harbor_host) = {
-          username = local.registry_pull.user
-          password = local.registry_pull.password
-          auth     = base64encode("${local.registry_pull.user}:${local.registry_pull.password}")
-        }
-      }
-    })
-  }
+  type             = "kubernetes.io/dockerconfigjson"
+  data_wo_revision = var.secrets_revision
+  data_wo          = jsondecode(ephemeral.vault_generic_secret.registry.data_json)["pull-kubernetes-secret"]
 }
 
 resource "kubernetes_secret" "additional" {
@@ -131,8 +104,9 @@ resource "kubernetes_secret" "additional" {
     namespace = var.namespace
   }
 
-  type = "Opaque"
-  data = each.value
+  type             = "Opaque"
+  data_wo          = jsondecode(ephemeral.vault_generic_secret.additional[each.key].data_json)["kubernetes-secret"]
+  data_wo_revision = var.secrets_revision
 }
 
 resource "kubernetes_default_service_account" "this" {

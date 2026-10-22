@@ -1,15 +1,22 @@
 variable "replicator_token" {
   type        = string
   nullable    = false
-  sensitive   = true
+  ephemeral   = true
   description = "Replicator service account token, from an ordered instance of the building block definition this registers."
 }
 
 variable "metering_token" {
   type        = string
   nullable    = false
-  sensitive   = true
+  ephemeral   = true
   description = "Metering service account token, from the same building block instance as `replicator_token`."
+}
+
+variable "tokens_version" {
+  type        = string
+  nullable    = false
+  default     = "1"
+  description = "Version of `replicator_token` and `metering_token`. They are ephemeral, so no version can be derived from them: increase this to send them to meshStack again."
 }
 
 variable "kube_host" {
@@ -199,6 +206,19 @@ variable "bbd_readme" {
   description = "Overrides the markdown readme shown in the marketplace before ordering."
 }
 
+variable "approval_policies" {
+  type = object({
+    building_block_creation = optional(bool, false)
+    user_input_changes      = optional(bool, false)
+    any_input_changes       = optional(bool, false)
+    manual_triggers         = optional(bool, false)
+    version_upgrade         = optional(bool, false)
+  })
+  nullable    = false
+  default     = {}
+  description = "Run triggers that need an operator's approval before a run of this definition is applied. A gate switched on in meshPanel is reset on the next apply unless it is set here."
+}
+
 variable "meshstack" {
   type = object({
     owning_workspace_identifier = string
@@ -319,7 +339,7 @@ resource "meshstack_platform" "this" {
           client_config = {
             access_token = {
               secret_value   = var.replicator_token
-              secret_version = nonsensitive(sha256(var.replicator_token))
+              secret_version = var.tokens_version
             }
           }
           namespace_name_pattern = var.namespace_name_pattern
@@ -329,7 +349,7 @@ resource "meshstack_platform" "this" {
           client_config = {
             access_token = {
               secret_value   = var.metering_token
-              secret_version = nonsensitive(sha256(var.metering_token))
+              secret_version = var.tokens_version
             }
           }
           processing = {
@@ -384,6 +404,7 @@ resource "meshstack_building_block_definition" "this" {
     support_url         = "https://docs.meshcloud.io/docs/meshstack.kubernetes.index.html"
     target_type         = "TENANT_LEVEL"
     run_transparency    = true
+    approval_policies   = var.approval_policies
     supported_platforms = [{ name = "STACKIT" }]
 
     readme = coalesce(var.bbd_readme, chomp(<<-EOT
@@ -394,17 +415,18 @@ resource "meshstack_building_block_definition" "this" {
 
       A platform team orders this once per cluster, as part of turning that cluster into a meshStack
       platform — the **STACKIT Kubernetes Platform** reference architecture does it right after the
-      cluster exists and feeds the tokens into the platform it registers. It configures its
-      `kubernetes` provider from a kubeconfig input, so it runs in a separate apply from the cluster
-      creation.
+      cluster exists and feeds the tokens into the platform it registers. It reaches the cluster
+      through the kubeconfig the ordering composition passes as an input.
 
       ## 📦 Resources created
 
-      - **Replicator identity** (`meshfed-service`) – ServiceAccount, token Secret, ClusterRole and
+      - **Replicator identity** (`meshfed-service`) – ServiceAccount, ClusterRole and
         ClusterRoleBinding allowing meshStack to create namespaces, resource quotas and role
         bindings for every tenant.
-      - **Metering identity** (`meshfed-metering`) – the same four objects, allowed only to read
-        pods and persistent volume claims. Optional.
+      - **Metering identity** (`meshfed-metering`) – the same objects, allowed only to read pods and
+        persistent volume claims. Optional.
+      - **Token Secrets** – one per identity for the month in Token Generation and one for the month
+        before, so a rotation leaves the previous token valid for a month.
 
       ## ℹ️ It does not register a platform
 
@@ -439,16 +461,23 @@ resource "meshstack_building_block_definition" "this" {
     }
 
     inputs = {
-      kubeconfig = {
-        display_name    = "Cluster Kubeconfig"
-        description     = "Raw kubeconfig (YAML) of the cluster to create the meshStack identities in."
-        type            = "CODE"
-        assignment_type = "USER_INPUT"
-        sensitive       = {}
-
-        # A composing architecture hands this over from the cluster it created, and a rotated
-        # kubeconfig has to reach the block that was already ordered with the old one.
+      "kubeconfig.yaml" = {
+        display_name           = "kubeconfig.yaml"
+        description            = "Kubeconfig of the cluster to create the meshStack identities in."
+        type                   = "FILE"
+        assignment_type        = "USER_INPUT"
+        sensitive              = {}
         updateable_by_consumer = true
+      }
+
+      token_generation = {
+        display_name                   = "Token Generation"
+        description                    = "Month `YYYY-MM` of the replicator and metering tokens. The tokens of the month before stay valid, older ones are deleted."
+        type                           = "STRING"
+        assignment_type                = "USER_INPUT"
+        value_validation_regex         = "^[0-9]{4}-(0[1-9]|1[0-2])$"
+        validation_regex_error_message = "Token Generation must be a month in the form YYYY-MM."
+        updateable_by_consumer         = true
       }
 
       service_account_namespace = {
@@ -482,9 +511,43 @@ resource "meshstack_building_block_definition" "this" {
         assignment_type = "STATIC"
         argument        = jsonencode(jsonencode(var.metering_additional_rules))
       }
+
+      output_to_vault = {
+        display_name           = "Output to Vault"
+        description            = "HCL object `{address, mount, username, password, path_prefix?}` of the Vault KV v2 login the tokens are written with, to `<path_prefix>kubernetes/platform` under the keys `replicator-token` and `metering-token`. Leave empty to return them as outputs."
+        type                   = "CODE"
+        assignment_type        = "USER_INPUT"
+        sensitive              = {}
+        is_optional            = true
+        updateable_by_consumer = true
+      }
+
+      imports = {
+        display_name    = "Imports"
+        description     = "HCL `{}` to take over the existing Service Account Namespace and the replicator and metering identities of their fixed names. Leave empty to create them."
+        type            = "CODE"
+        assignment_type = "USER_INPUT"
+        is_optional     = true
+      }
+
+      release_on_destroy = {
+        display_name           = "Release on Destroy"
+        description            = "Leave the namespace and the identities in place when this building block is deleted. Cannot change once they are managed."
+        type                   = "BOOLEAN"
+        assignment_type        = "USER_INPUT"
+        default_value          = jsonencode(false)
+        updateable_by_consumer = true
+      }
     }
 
     outputs = {
+      vault_secret = {
+        display_name    = "Vault Secret"
+        description     = "JSON object `{path, secret_hash}` of the secret in Vault, or `{}` when `output_to_vault` is not set. `secret_hash` changes with the secret's content."
+        type            = "CODE"
+        assignment_type = "NONE"
+      }
+
       # Consumed by the composing architecture (read from this block's status outputs) to wire up
       # the meshstack_platform. Sensitive service account tokens — do not publish this definition
       # outside the platform workspace.
@@ -516,8 +579,9 @@ terraform {
 
   required_providers {
     meshstack = {
-      source  = "meshcloud/meshstack"
-      version = ">= 0.24.0"
+      source = "meshcloud/meshstack"
+      # 0.25.2 is the first release that accepts `spec.approval_policies`.
+      version = ">= 0.25.2"
     }
   }
 }

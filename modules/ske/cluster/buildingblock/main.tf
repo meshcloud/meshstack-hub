@@ -1,5 +1,9 @@
-resource "stackit_ske_cluster" "this" {
+module "cluster" {
+  source = "./modules/ske-cluster"
+
+  release_on_destroy     = var.release_on_destroy
   project_id             = var.stackit_project_id
+  region                 = var.stackit_region
   name                   = var.cluster_name
   kubernetes_version_min = var.kubernetes_version_min
 
@@ -22,18 +26,19 @@ resource "stackit_ske_cluster" "this" {
   }
 }
 
-resource "stackit_ske_kubeconfig" "this" {
-  project_id   = var.stackit_project_id
-  cluster_name = stackit_ske_cluster.this.name
-
-  # 180 days is the maximum the SKE API accepts; it rejects anything outside [600, 15552000] with a
-  # 400. refresh = true re-mints the kubeconfig once it expires, but only when this module is applied.
-  expiration = "15552000"
-  refresh    = true
+moved {
+  from = stackit_ske_cluster.this
+  to   = module.cluster.stackit_ske_cluster.this
 }
 
-locals {
-  kubeconfig            = yamldecode(stackit_ske_kubeconfig.this.kube_config)
-  kubeconfig_cluster    = one(local.kubeconfig.clusters).cluster
-  kubeconfig_admin_user = one(local.kubeconfig.users).user
+import {
+  for_each = var.imports != null && !var.release_on_destroy ? toset([var.cluster_name]) : toset([])
+  to       = module.cluster.stackit_ske_cluster.this
+  id       = "${var.stackit_project_id},${var.stackit_region},${each.value}"
+}
+
+import {
+  for_each = var.imports != null && var.release_on_destroy ? toset([var.cluster_name]) : toset([])
+  to       = module.cluster.stackit_ske_cluster.released
+  id       = "${var.stackit_project_id},${var.stackit_region},${each.value}"
 }

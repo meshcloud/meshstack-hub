@@ -32,7 +32,8 @@ completion from the per-job list.
 Required environment variables:
   FORGEJO_HOST       – Forgejo instance URL (from provider)
   FORGEJO_API_TOKEN  – API token with repo action scope (from provider)
-  REPOSITORY_ID      – numeric repository ID
+  REPOSITORY_OWNER   – owner of the repository
+  REPOSITORY_NAME    – name of the repository
   BRANCH             – branch to dispatch on (e.g. "dev" or "prod")
   EXPECTED_JOBS      – comma-separated job names that must all succeed
                        (as they appear in /actions/tasks, e.g. "build_image,deploy")
@@ -197,16 +198,13 @@ def evaluate_run(tasks: list[dict], expected_jobs: set[str], seen_job_status: di
 def main() -> None:
     host = normalize_host(os.environ["FORGEJO_HOST"])
     token = os.environ["FORGEJO_API_TOKEN"]
-    repository_id = os.environ["REPOSITORY_ID"]
+    owner = os.environ["REPOSITORY_OWNER"]
+    repo_name = os.environ["REPOSITORY_NAME"]
     workflow_name = os.environ.get("WORKFLOW_NAME", "pipeline.yaml")
     branch = os.environ["BRANCH"]
     expected_jobs = {j.strip() for j in os.environ["EXPECTED_JOBS"].split(",") if j.strip()}
     if not expected_jobs:
         raise SystemExit("EXPECTED_JOBS must list at least one job name")
-
-    _, repo = get_json(host, token, f"/api/v1/repositories/{repository_id}")
-    owner = repo["owner"]["username"]
-    repo_name = repo["name"]
 
     print(f"Dispatching workflow {workflow_name} on branch {branch} for {owner}/{repo_name}")
     print(f"Awaiting jobs: {', '.join(sorted(expected_jobs))}")

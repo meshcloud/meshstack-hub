@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN"
  "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
-<svg width="998pt" height="575pt"
- viewBox="0.00 0.00 998.00 575.00" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+<svg width="990pt" height="575pt"
+ viewBox="0.00 0.00 990.00 575.00" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
 <g id="graph0" class="graph" transform="scale(1 1) rotate(0) translate(4 571.36)">
 <title>stackit_kubernetes_app_team</title>
-<polygon fill="white" stroke="none" points="-4,4 -4,-571.36 994,-571.36 994,4 -4,4"/>
+<polygon fill="white" stroke="none" points="-4,4 -4,-571.36 986,-571.36 986,4 -4,4"/>
 <g id="clust1" class="cluster">
 <title>cluster_catalog</title>
 <path fill="white" stroke="#d5dae0" d="M20,-350.72C20,-350.72 437,-350.72 437,-350.72 443,-350.72 449,-356.72 449,-362.72 449,-362.72 449,-547.36 449,-547.36 449,-553.36 443,-559.36 437,-559.36 437,-559.36 20,-559.36 20,-559.36 14,-559.36 8,-553.36 8,-547.36 8,-547.36 8,-362.72 8,-362.72 8,-356.72 14,-350.72 20,-350.72"/>
@@ -18,7 +18,7 @@
 </g>
 <g id="clust6" class="cluster">
 <title>cluster_shared</title>
-<path fill="white" stroke="#d5dae0" d="M215,-8C215,-8 970,-8 970,-8 976,-8 982,-14 982,-20 982,-20 982,-96.64 982,-96.64 982,-102.64 976,-108.64 970,-108.64 970,-108.64 215,-108.64 215,-108.64 209,-108.64 203,-102.64 203,-96.64 203,-96.64 203,-20 203,-20 203,-14 209,-8 215,-8"/>
+<path fill="white" stroke="#d5dae0" d="M215,-8C215,-8 962,-8 962,-8 968,-8 974,-14 974,-20 974,-20 974,-96.64 974,-96.64 974,-102.64 968,-108.64 962,-108.64 962,-108.64 215,-108.64 215,-108.64 209,-108.64 203,-102.64 203,-96.64 203,-96.64 203,-20 203,-20 203,-14 209,-8 215,-8"/>
 <text xml:space="preserve" text-anchor="middle" x="313.36" y="-93.84" font-family="Helvetica,sans-Serif" font-size="12.00" fill="#697180"> &#160;STACKIT platform — shared services</text>
 </g>
 <!-- BBD_S -->
@@ -148,39 +148,39 @@
 <!-- MODEL -->
 <g id="node9" class="node">
 <title>MODEL</title>
-<path fill="#eef2f6" stroke="#93a7bb" stroke-width="1.1" d="M551.87,-68.24C551.87,-68.24 454.13,-68.24 454.13,-68.24 448.13,-68.24 442.13,-62.24 442.13,-56.24 442.13,-56.24 442.13,-38 442.13,-38 442.13,-32 448.13,-26 454.13,-26 454.13,-26 551.87,-26 551.87,-26 557.87,-26 563.87,-32 563.87,-38 563.87,-38 563.87,-56.24 563.87,-56.24 563.87,-62.24 557.87,-68.24 551.87,-68.24"/>
-<text xml:space="preserve" text-anchor="middle" x="503" y="-50.42" font-family="Helvetica,sans-Serif" font-size="11.00">🧠 Model Serving</text>
-<text xml:space="preserve" text-anchor="middle" x="503" y="-37.22" font-family="Helvetica,sans-Serif" font-size="11.00">sovereign LLM API</text>
+<path fill="#eef2f6" stroke="#93a7bb" stroke-width="1.1" d="M544.2,-68.24C544.2,-68.24 453.8,-68.24 453.8,-68.24 447.8,-68.24 441.8,-62.24 441.8,-56.24 441.8,-56.24 441.8,-38 441.8,-38 441.8,-32 447.8,-26 453.8,-26 453.8,-26 544.2,-26 544.2,-26 550.2,-26 556.2,-32 556.2,-38 556.2,-38 556.2,-56.24 556.2,-56.24 556.2,-62.24 550.2,-68.24 544.2,-68.24"/>
+<text xml:space="preserve" text-anchor="middle" x="499" y="-50.42" font-family="Helvetica,sans-Serif" font-size="11.00">🧠 Model Serving</text>
+<text xml:space="preserve" text-anchor="middle" x="499" y="-37.22" font-family="Helvetica,sans-Serif" font-size="11.00">LLM API</text>
 </g>
 <!-- NS&#45;&gt;MODEL -->
 <g id="edge17" class="edge">
 <title>NS&#45;&gt;MODEL</title>
-<path fill="none" stroke="#8b95a3" stroke-dasharray="5,2" d="M364.36,-154C423.6,-154 503,-154 503,-154 503,-154 503,-77.26 503,-77.26"/>
-<polygon fill="#8b95a3" stroke="#8b95a3" points="505.45,-77.26 503,-70.26 500.55,-77.26 505.45,-77.26"/>
-<text xml:space="preserve" text-anchor="middle" x="428.78" y="-156.7" font-family="Helvetica,sans-Serif" font-size="9.00" fill="#697180">calls with injected key</text>
+<path fill="none" stroke="#8b95a3" stroke-dasharray="5,2" d="M364.47,-154C422.38,-154 499,-154 499,-154 499,-154 499,-77.26 499,-77.26"/>
+<polygon fill="#8b95a3" stroke="#8b95a3" points="501.45,-77.26 499,-70.26 496.55,-77.26 501.45,-77.26"/>
+<text xml:space="preserve" text-anchor="middle" x="426.83" y="-156.7" font-family="Helvetica,sans-Serif" font-size="9.00" fill="#697180">calls with injected key</text>
 </g>
 <!-- ING -->
 <g id="node10" class="node">
 <title>ING</title>
-<path fill="#eef2f6" stroke="#93a7bb" stroke-width="1.1" d="M771.05,-68.24C771.05,-68.24 636.95,-68.24 636.95,-68.24 630.95,-68.24 624.95,-62.24 624.95,-56.24 624.95,-56.24 624.95,-38 624.95,-38 624.95,-32 630.95,-26 636.95,-26 636.95,-26 771.05,-26 771.05,-26 777.05,-26 783.05,-32 783.05,-38 783.05,-38 783.05,-56.24 783.05,-56.24 783.05,-62.24 777.05,-68.24 771.05,-68.24"/>
-<text xml:space="preserve" text-anchor="middle" x="704" y="-50.42" font-family="Helvetica,sans-Serif" font-size="11.00">🔐 Ingress + cert&#45;manager</text>
-<text xml:space="preserve" text-anchor="middle" x="704" y="-37.22" font-family="Helvetica,sans-Serif" font-size="11.00">HAProxy LoadBalancer</text>
+<path fill="#eef2f6" stroke="#93a7bb" stroke-width="1.1" d="M763.05,-68.24C763.05,-68.24 628.95,-68.24 628.95,-68.24 622.95,-68.24 616.95,-62.24 616.95,-56.24 616.95,-56.24 616.95,-38 616.95,-38 616.95,-32 622.95,-26 628.95,-26 628.95,-26 763.05,-26 763.05,-26 769.05,-26 775.05,-32 775.05,-38 775.05,-38 775.05,-56.24 775.05,-56.24 775.05,-62.24 769.05,-68.24 763.05,-68.24"/>
+<text xml:space="preserve" text-anchor="middle" x="696" y="-50.42" font-family="Helvetica,sans-Serif" font-size="11.00">🔐 Ingress + cert&#45;manager</text>
+<text xml:space="preserve" text-anchor="middle" x="696" y="-37.22" font-family="Helvetica,sans-Serif" font-size="11.00">HAProxy LoadBalancer</text>
 </g>
 <!-- NS&#45;&gt;ING -->
 <g id="edge18" class="edge">
 <title>NS&#45;&gt;ING</title>
-<path fill="none" stroke="#8b95a3" stroke-dasharray="5,2" d="M364.41,-168C477.9,-168 704,-168 704,-168 704,-168 704,-77.24 704,-77.24"/>
-<polygon fill="#8b95a3" stroke="#8b95a3" points="706.45,-77.24 704,-70.24 701.55,-77.24 706.45,-77.24"/>
-<text xml:space="preserve" text-anchor="middle" x="555.57" y="-170.7" font-family="Helvetica,sans-Serif" font-size="9.00" fill="#697180">exposed via</text>
+<path fill="none" stroke="#8b95a3" stroke-dasharray="5,2" d="M364.46,-168C476.12,-168 696,-168 696,-168 696,-168 696,-77.24 696,-77.24"/>
+<polygon fill="#8b95a3" stroke="#8b95a3" points="698.45,-77.24 696,-70.24 693.55,-77.24 698.45,-77.24"/>
+<text xml:space="preserve" text-anchor="middle" x="551.59" y="-170.7" font-family="Helvetica,sans-Serif" font-size="9.00" fill="#697180">exposed via</text>
 </g>
 <!-- HARBOR&#45;&gt;MODEL -->
 <!-- MODEL&#45;&gt;ING -->
 <!-- DNS -->
 <g id="node11" class="node">
 <title>DNS</title>
-<path fill="#eef2f6" stroke="#93a7bb" stroke-width="1.1" d="M952.26,-68.24C952.26,-68.24 855.74,-68.24 855.74,-68.24 849.74,-68.24 843.74,-62.24 843.74,-56.24 843.74,-56.24 843.74,-38 843.74,-38 843.74,-32 849.74,-26 855.74,-26 855.74,-26 952.26,-26 952.26,-26 958.26,-26 964.26,-32 964.26,-38 964.26,-38 964.26,-56.24 964.26,-56.24 964.26,-62.24 958.26,-68.24 952.26,-68.24"/>
-<text xml:space="preserve" text-anchor="middle" x="904" y="-50.42" font-family="Helvetica,sans-Serif" font-size="11.00">🧭 DNS zone</text>
-<text xml:space="preserve" text-anchor="middle" x="904" y="-37.22" font-family="Helvetica,sans-Serif" font-size="11.00">wildcard hostname</text>
+<path fill="#eef2f6" stroke="#93a7bb" stroke-width="1.1" d="M944.26,-68.24C944.26,-68.24 847.74,-68.24 847.74,-68.24 841.74,-68.24 835.74,-62.24 835.74,-56.24 835.74,-56.24 835.74,-38 835.74,-38 835.74,-32 841.74,-26 847.74,-26 847.74,-26 944.26,-26 944.26,-26 950.26,-26 956.26,-32 956.26,-38 956.26,-38 956.26,-56.24 956.26,-56.24 956.26,-62.24 950.26,-68.24 944.26,-68.24"/>
+<text xml:space="preserve" text-anchor="middle" x="896" y="-50.42" font-family="Helvetica,sans-Serif" font-size="11.00">🧭 DNS zone</text>
+<text xml:space="preserve" text-anchor="middle" x="896" y="-37.22" font-family="Helvetica,sans-Serif" font-size="11.00">wildcard hostname</text>
 </g>
 <!-- ING&#45;&gt;DNS -->
 </g>

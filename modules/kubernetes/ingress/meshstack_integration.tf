@@ -72,6 +72,19 @@ variable "bbd_readme" {
   description = "Overrides the markdown readme shown in the marketplace before ordering."
 }
 
+variable "approval_policies" {
+  type = object({
+    building_block_creation = optional(bool, false)
+    user_input_changes      = optional(bool, false)
+    any_input_changes       = optional(bool, false)
+    manual_triggers         = optional(bool, false)
+    version_upgrade         = optional(bool, false)
+  })
+  nullable    = false
+  default     = {}
+  description = "Run triggers that need an operator's approval before a run of this definition is applied. A gate switched on in meshPanel is reset on the next apply unless it is set here."
+}
+
 variable "meshstack" {
   type = object({
     owning_workspace_identifier = string
@@ -117,6 +130,7 @@ resource "meshstack_building_block_definition" "this" {
     support_url         = "https://cert-manager.io/docs/"
     target_type         = "TENANT_LEVEL"
     run_transparency    = true
+    approval_policies   = var.approval_policies
     supported_platforms = [{ name = "STACKIT" }]
 
     readme = coalesce(var.bbd_readme, chomp(<<-EOT
@@ -128,8 +142,7 @@ resource "meshstack_building_block_definition" "this" {
 
       This is a bootstrap block a platform team orders once per cluster — for example the **STACKIT
       Kubernetes Platform** reference architecture orders it right after the cluster exists. It
-      configures its `kubernetes` and `helm` providers from a kubeconfig input, so it runs in a
-      separate apply from the cluster creation.
+      reaches the cluster through the kubeconfig the ordering composition passes as an input.
 
       ## 📦 Resources created
 
@@ -173,23 +186,15 @@ resource "meshstack_building_block_definition" "this" {
     }
 
     inputs = {
-      kubeconfig = {
-        display_name    = "Cluster Kubeconfig"
-        description     = "Raw kubeconfig (YAML) of the cluster to install ingress on."
-        type            = "CODE"
-        assignment_type = "USER_INPUT"
-        sensitive       = {}
-
-        # A composing architecture hands this over from the cluster it created, and a rotated
-        # kubeconfig has to reach the block that was already ordered with the old one.
+      "kubeconfig.yaml" = {
+        display_name           = "kubeconfig.yaml"
+        description            = "Kubeconfig of the cluster to install ingress on."
+        type                   = "FILE"
+        assignment_type        = "USER_INPUT"
+        sensitive              = {}
         updateable_by_consumer = true
       }
 
-      # STATIC, not USER_INPUT, and for a mechanical reason as much as a policy one: the meshstack
-      # provider throws "inconsistent values for sensitive attribute" when one building block's
-      # inputs map mixes a `sensitive` and a plain `value` input, and `kubeconfig` above is
-      # sensitive. Keeping every other order-time input off the block avoids that, and the ACME
-      # contact is a platform-team decision anyway.
       acme_email = {
         display_name    = "ACME Contact Email"
         description     = "Contact address Let's Encrypt uses for expiry warnings and account recovery."
@@ -253,6 +258,23 @@ resource "meshstack_building_block_definition" "this" {
         assignment_type = "STATIC"
         argument        = jsonencode(jsonencode(var.haproxy_service_annotations))
       }
+
+      imports = {
+        display_name    = "Imports"
+        description     = "HCL `{}` to take over the existing namespaces `cert-manager` and `haproxy-ingress`, the Helm releases `cert-manager` and `haproxy` in them, and the ClusterIssuer named ClusterIssuer Name. Leave empty to install anew."
+        type            = "CODE"
+        assignment_type = "USER_INPUT"
+        is_optional     = true
+      }
+
+      release_on_destroy = {
+        display_name           = "Release on Destroy"
+        description            = "Leave the namespaces and Helm releases in place when this building block is deleted. Cannot change once they are managed."
+        type                   = "BOOLEAN"
+        assignment_type        = "USER_INPUT"
+        default_value          = jsonencode(false)
+        updateable_by_consumer = true
+      }
     }
 
     outputs = {
@@ -284,8 +306,9 @@ terraform {
 
   required_providers {
     meshstack = {
-      source  = "meshcloud/meshstack"
-      version = ">= 0.24.0"
+      source = "meshcloud/meshstack"
+      # 0.25.2 is the first release that accepts `spec.approval_policies`.
+      version = ">= 0.25.2"
     }
   }
 }

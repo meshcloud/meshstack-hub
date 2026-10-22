@@ -53,5 +53,7 @@ No modules.
 
 ## Outputs
 
-No outputs.
+| Name | Description |
+|------|-------------|
+| <a name="output_summary"></a> [summary](#output\_summary) | Summary with next steps and insights into created resources |
 <!-- END_TF_DOCS -->

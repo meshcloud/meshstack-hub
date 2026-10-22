@@ -1,42 +1,37 @@
-provider "forgejo" {
-  # configured via env variables FORGEJO_HOST, FORGEJO_API_TOKEN
-}
-
 locals {
-  registry_wired = var.container_registry_access_credentials != null
-
-  # An empty credential still produces a usable dockerconfigjson, so pods start and pull public
-  # images rather than failing on a missing secret.
-  registry_pull = local.registry_wired ? var.container_registry_access_credentials.pull : { user = "", password = "" }
-
   action_variables = {
     "K8S_NAMESPACE_${upper(var.stage)}" = var.namespace
     "APP_HOSTNAME_${upper(var.stage)}"  = var.app_hostname
   }
 
-  action_secrets = merge(local.registry_wired ? {
-    HARBOR_USERNAME = var.container_registry_access_credentials.push.user
-    HARBOR_PASSWORD = var.container_registry_access_credentials.push.password
-    } : {}, {
-    "KUBECONFIG_${upper(var.stage)}" = yamlencode(merge(local.kubeconfig, {
-      current-context = local.kubeconfig_cluster_name
-      # Note: Overwriting the users is crucial here to avoid passing down the admin user to the tenant-sliced K8s slices.
-      users = [{
-        name = kubernetes_service_account.forgejo_actions.metadata[0].name
-        user = {
-          "token" = kubernetes_secret.forgejo_actions.data.token
+  action_secrets = {
+    # The admin kubeconfig is ephemeral, so the namespace's kubeconfig is built from the service
+    # account's token Secret, which carries the cluster CA as well.
+    "KUBECONFIG_${upper(var.stage)}" = yamlencode({
+      apiVersion      = "v1"
+      kind            = "Config"
+      current-context = var.namespace
+      clusters = [{
+        name = "ske"
+        cluster = {
+          server                     = var.kube_host
+          certificate-authority-data = base64encode(kubernetes_secret.forgejo_actions.data["ca.crt"])
         }
       }]
+      users = [{
+        name = kubernetes_service_account.forgejo_actions.metadata[0].name
+        user = { token = kubernetes_secret.forgejo_actions.data.token }
+      }]
       contexts = [{
-        name = local.kubeconfig_cluster_name
+        name = var.namespace
         context = {
-          cluster   = local.kubeconfig_cluster_name
+          cluster   = "ske"
           namespace = var.namespace
           user      = kubernetes_service_account.forgejo_actions.metadata[0].name
         }
       }]
-    }))
-  })
+    })
+  }
 }
 
 module "action_secrets_and_variables" {
@@ -46,7 +41,8 @@ module "action_secrets_and_variables" {
     restapi.without_returned_object = restapi.without_returned_object
   }
 
-  repository_id    = var.repository_id
+  repository_owner = var.repository_owner
+  repository_name  = var.repository_name
   action_variables = local.action_variables
   action_secrets   = local.action_secrets
 }
@@ -69,9 +65,11 @@ resource "terraform_data" "await_pipeline_workflow" {
     # on); cap the wait at 15 minutes here since local-exec has no timeout option.
     command = "timeout 900 ${path.module}/trigger_and_await_forgejo_workflow.py"
     environment = {
-      REPOSITORY_ID = tostring(var.repository_id)
-      WORKFLOW_NAME = "pipeline.yaml"
-      BRANCH        = var.stage
+      FORGEJO_API_TOKEN = local.forgejo_api_token
+      REPOSITORY_OWNER  = var.repository_owner
+      REPOSITORY_NAME   = var.repository_name
+      WORKFLOW_NAME     = "pipeline.yaml"
+      BRANCH            = var.stage
       # Jobs (as named in /actions/tasks) that must all succeed for the run to
       # count as done. Required because Forgejo's API exposes no run-level status
       # and needs-gated jobs only appear once their dependency finishes; see the

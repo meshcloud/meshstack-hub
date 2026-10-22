@@ -29,6 +29,7 @@
         jq
         pre-commit
         pngquant
+        shellcheck
       ];
 
     dev_packages = pkgs:

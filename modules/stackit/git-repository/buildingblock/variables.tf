@@ -67,14 +67,45 @@ variable "extra_action_variables" {
   description = "Forgejo Actions variables for this repository only, merged over `action_variables`."
 }
 
-variable "action_secrets" {
-  type        = map(string)
-  description = "Map of Forgejo Actions secrets to create in the repository."
+variable "vault_reader" {
+  type = object({
+    address  = string
+    mount    = string
+    username = string
+    password = string
+  })
   nullable    = false
-  sensitive   = false # the whole map is not sensitive, but map values are!
+  sensitive   = true
+  description = "Vault KV v2 login this building block reads its secrets with: the server `address`, the engine `mount` and a userpass `username` and `password`."
+}
 
-  validation {
-    condition     = alltrue([for key in keys(var.action_secrets) : (length(key) <= 30)])
-    error_message = "Forgejo Actions secret names must be 30 characters or less."
-  }
+variable "forgejo_api_token_path" {
+  type        = string
+  nullable    = false
+  description = "Vault KV v2 secret holding the Forgejo API token under the key `forgejo-api-token`."
+}
+
+variable "registry_secret_path" {
+  type        = string
+  default     = null
+  description = "Vault KV v2 secret whose key `push-action-secrets` holds Actions secrets by name, such as the container registry's push robot. Each is set on the repository. Null sets none."
+}
+
+variable "stackit_project_id" {
+  type        = string
+  nullable    = false
+  description = "STACKIT project of the Git instance."
+}
+
+variable "stackit_git_instance_id" {
+  type        = string
+  nullable    = false
+  description = "STACKIT Git instance whose users are matched to workspace members by email."
+}
+
+variable "hub_git_ref" {
+  type        = string
+  description = "Hub git ref this building block runs from. Pins the shared modules it sources so they stay in lockstep with this module's own checkout."
+  const       = true
+  default     = "main"
 }

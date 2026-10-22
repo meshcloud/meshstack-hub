@@ -16,6 +16,19 @@ variable "bbd_readme" {
   description = "Overrides the markdown readme shown in the marketplace before ordering."
 }
 
+variable "approval_policies" {
+  type = object({
+    building_block_creation = optional(bool, false)
+    user_input_changes      = optional(bool, false)
+    any_input_changes       = optional(bool, false)
+    manual_triggers         = optional(bool, false)
+    version_upgrade         = optional(bool, false)
+  })
+  nullable    = false
+  default     = {}
+  description = "Run triggers that need an operator's approval before a run of this definition is applied. A gate switched on in meshPanel is reset on the next apply unless it is set here."
+}
+
 variable "meshstack" {
   type = object({
     owning_workspace_identifier = string
@@ -56,15 +69,16 @@ resource "meshstack_building_block_definition" "this" {
   spec = {
     display_name        = coalesce(var.bbd_display_name, "STACKIT SKE Cluster")
     symbol              = "https://raw.githubusercontent.com/meshcloud/meshstack-hub/${var.hub.git_ref}/modules/ske/cluster/buildingblock/logo.png"
-    description         = coalesce(var.bbd_description, "Provisions a STACKIT Kubernetes Engine (SKE) cluster with a node pool and mints an admin kubeconfig.")
+    description         = coalesce(var.bbd_description, "Provisions a STACKIT Kubernetes Engine (SKE) cluster with a node pool and a platform admin service account whose kubeconfig it writes to Vault.")
     support_url         = "https://portal.stackit.cloud/ske"
     target_type         = "TENANT_LEVEL"
     run_transparency    = true
+    approval_policies   = var.approval_policies
     supported_platforms = [{ name = "STACKIT" }]
 
     readme = coalesce(var.bbd_readme, chomp(<<-EOT
       Provisions a **STACKIT Kubernetes Engine (SKE)** cluster with a single node pool and a nightly
-      maintenance window, and mints an admin kubeconfig for it.
+      maintenance window, and a platform admin service account for the blocks that work inside it.
 
       ## 🎯 When to use it
 
@@ -77,8 +91,11 @@ resource "meshstack_building_block_definition" "this" {
 
       - **SKE cluster** – a managed Kubernetes cluster in the given STACKIT project, with one node
         pool (default: `g2i.2`, 1-3 nodes) and automatic Kubernetes/machine-image updates.
-      - **Admin kubeconfig** – a 180-day kubeconfig, auto-refreshed on apply, exposed as an output so
-        a composing architecture can wire up its `kubernetes`/`helm` providers and downstream blocks.
+      - **Platform admin service account** – `meshstack-admin` in `kube-system`, bound to
+        `cluster-admin`. Its token kubeconfig is written to a Vault KV v2 secret. The token rotates
+        with the input `admin_token_generation`; the token of the generation before stays valid.
+        The run itself reaches the cluster with an SKE kubeconfig that expires after an hour and is
+        never stored.
 
       ## 🔑 Authentication
 
@@ -167,14 +184,13 @@ resource "meshstack_building_block_definition" "this" {
         argument        = jsonencode("eu01")
       }
 
-      # Must be a currently-available STACKIT SKE minor (they retire old ones — 1.31 is already gone).
-      # Maintenance patches it upward automatically; bump this when STACKIT drops the pinned minor.
+      # STACKIT retires old minors; bump this when it drops the pinned one.
       kubernetes_version_min = {
         display_name    = "Minimum Kubernetes Version"
         description     = "Minimum Kubernetes minor version to run."
         type            = "STRING"
         assignment_type = "STATIC"
-        argument        = jsonencode("1.34")
+        argument        = jsonencode("1.36")
       }
 
       node_pool = {
@@ -204,9 +220,52 @@ resource "meshstack_building_block_definition" "this" {
           end                                  = "02:00:00Z"
         }))
       }
+
+      output_to_vault = {
+        display_name           = "Output to Vault"
+        description            = "HCL object `{address, mount, username, password, path_prefix?}` of the Vault KV v2 login the platform admin kubeconfig is written with, to `<path_prefix>ske/cluster` under the key `kubeconfig`."
+        type                   = "CODE"
+        assignment_type        = "USER_INPUT"
+        sensitive              = {}
+        updateable_by_consumer = true
+      }
+
+      admin_token_generation = {
+        display_name                   = "Admin Token Generation"
+        description                    = "Month `YYYY-MM` of the platform admin token the kubeconfig carries. The token of the month before stays valid, older ones are deleted."
+        type                           = "STRING"
+        assignment_type                = "USER_INPUT"
+        value_validation_regex         = "^[0-9]{4}-(0[1-9]|1[0-2])$"
+        validation_regex_error_message = "Admin Token Generation must be a month in the form YYYY-MM."
+        updateable_by_consumer         = true
+      }
+
+      imports = {
+        display_name    = "Imports"
+        description     = "HCL `{}` to take over the existing SKE cluster named Cluster Name instead of creating one. Leave empty to create a new cluster."
+        type            = "CODE"
+        assignment_type = "USER_INPUT"
+        is_optional     = true
+      }
+
+      release_on_destroy = {
+        display_name           = "Release on Destroy"
+        description            = "Leave the cluster in place when this building block is deleted. Cannot change once the cluster is managed."
+        type                   = "BOOLEAN"
+        assignment_type        = "USER_INPUT"
+        default_value          = jsonencode(false)
+        updateable_by_consumer = true
+      }
     }
 
     outputs = {
+      vault_secret = {
+        display_name    = "Vault Secret"
+        description     = "JSON object `{path, secret_hash}` of the secret in Vault. `secret_hash` changes with the secret's content."
+        type            = "CODE"
+        assignment_type = "NONE"
+      }
+
       cluster_name = {
         display_name    = "Cluster Name"
         type            = "STRING"
@@ -215,15 +274,6 @@ resource "meshstack_building_block_definition" "this" {
 
       kube_host = {
         display_name    = "Kubernetes API Server"
-        type            = "STRING"
-        assignment_type = "NONE"
-      }
-
-      # Consumed by a composing architecture (read from this block's status outputs) to configure its
-      # kubernetes/helm providers and hand cluster access to downstream building blocks. It carries
-      # cluster-admin credentials — do not publish this definition outside the platform workspace.
-      kubeconfig = {
-        display_name    = "Kubeconfig"
         type            = "STRING"
         assignment_type = "NONE"
       }
@@ -244,8 +294,9 @@ terraform {
 
   required_providers {
     meshstack = {
-      source  = "meshcloud/meshstack"
-      version = ">= 0.24.0"
+      source = "meshcloud/meshstack"
+      # 0.25.2 is the first release that accepts `spec.approval_policies`.
+      version = ">= 0.25.2"
     }
   }
 }
