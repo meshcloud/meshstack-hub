@@ -34,6 +34,17 @@ variable "metering_additional_rules" {
   description = "Extra RBAC rules added to the metering cluster role."
 }
 
+variable "token_generation" {
+  type        = string
+  nullable    = false
+  description = "Month `YYYY-MM` of the replicator and metering tokens. The tokens of the month before stay valid, older ones are deleted."
+
+  validation {
+    condition     = can(regex("^[0-9]{4}-(0[1-9]|1[0-2])$", var.token_generation))
+    error_message = "token_generation must be a month in the form YYYY-MM."
+  }
+}
+
 variable "output_to_vault" {
   type = object({
     address     = string
@@ -50,7 +61,7 @@ variable "output_to_vault" {
 variable "imports" {
   type        = object({})
   default     = null
-  description = "Set to `{}` to take over the existing namespace `service_account_namespace` and the replicator and metering ServiceAccounts, token Secrets, ClusterRoles and ClusterRoleBindings of their fixed names, for example those of an earlier meshPlatform registration. Null creates them."
+  description = "Set to `{}` to take over the existing namespace `service_account_namespace` and the replicator and metering ServiceAccounts, ClusterRoles and ClusterRoleBindings of their fixed names, for example those of an earlier meshPlatform registration. Null creates them."
 }
 
 variable "release_on_destroy" {

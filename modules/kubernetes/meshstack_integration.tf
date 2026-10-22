@@ -1,10 +1,3 @@
-variable "kubeconfig" {
-  type        = string
-  nullable    = false
-  ephemeral   = true
-  description = "Kubeconfig (YAML) the building block definition this registers creates the meshStack identities with."
-}
-
 variable "replicator_token" {
   type        = string
   nullable    = false
@@ -17,13 +10,6 @@ variable "metering_token" {
   nullable    = false
   ephemeral   = true
   description = "Metering service account token, from the same building block instance as `replicator_token`."
-}
-
-variable "kubeconfig_version" {
-  type        = string
-  nullable    = false
-  default     = "1"
-  description = "Version of `kubeconfig`. It is ephemeral, so no version can be derived from it: increase this to send it to meshStack again."
 }
 
 variable "tokens_version" {
@@ -430,15 +416,17 @@ resource "meshstack_building_block_definition" "this" {
       A platform team orders this once per cluster, as part of turning that cluster into a meshStack
       platform — the **STACKIT Kubernetes Platform** reference architecture does it right after the
       cluster exists and feeds the tokens into the platform it registers. It reaches the cluster
-      through the kubeconfig its definition is registered with, so one definition serves one cluster.
+      through the kubeconfig the ordering composition passes as an input.
 
       ## 📦 Resources created
 
-      - **Replicator identity** (`meshfed-service`) – ServiceAccount, token Secret, ClusterRole and
+      - **Replicator identity** (`meshfed-service`) – ServiceAccount, ClusterRole and
         ClusterRoleBinding allowing meshStack to create namespaces, resource quotas and role
         bindings for every tenant.
-      - **Metering identity** (`meshfed-metering`) – the same four objects, allowed only to read
-        pods and persistent volume claims. Optional.
+      - **Metering identity** (`meshfed-metering`) – the same objects, allowed only to read pods and
+        persistent volume claims. Optional.
+      - **Token Secrets** – one per identity for the month in Token Generation and one for the month
+        before, so a rotation leaves the previous token valid for a month.
 
       ## ℹ️ It does not register a platform
 
@@ -474,16 +462,22 @@ resource "meshstack_building_block_definition" "this" {
 
     inputs = {
       "kubeconfig.yaml" = {
-        display_name    = "kubeconfig.yaml"
-        description     = "Kubeconfig of the cluster to create the meshStack identities in."
-        type            = "FILE"
-        assignment_type = "STATIC"
-        sensitive = {
-          argument = {
-            secret_value   = "data:application/yaml;base64,${base64encode(var.kubeconfig)}"
-            secret_version = var.kubeconfig_version
-          }
-        }
+        display_name           = "kubeconfig.yaml"
+        description            = "Kubeconfig of the cluster to create the meshStack identities in."
+        type                   = "FILE"
+        assignment_type        = "USER_INPUT"
+        sensitive              = {}
+        updateable_by_consumer = true
+      }
+
+      token_generation = {
+        display_name                   = "Token Generation"
+        description                    = "Month `YYYY-MM` of the replicator and metering tokens. The tokens of the month before stay valid, older ones are deleted."
+        type                           = "STRING"
+        assignment_type                = "USER_INPUT"
+        value_validation_regex         = "^[0-9]{4}-(0[1-9]|1[0-2])$"
+        validation_regex_error_message = "Token Generation must be a month in the form YYYY-MM."
+        updateable_by_consumer         = true
       }
 
       service_account_namespace = {

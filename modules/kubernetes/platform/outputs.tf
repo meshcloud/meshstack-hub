@@ -16,7 +16,7 @@ output "service_account_namespace" {
 }
 
 output "replicator_service_account_name" {
-  description = "Name of the replicator ServiceAccount, its token Secret, its ClusterRole and its ClusterRoleBinding — all four share it."
+  description = "Name of the replicator ServiceAccount, its ClusterRole and its ClusterRoleBinding, and prefix of its token Secrets."
   value       = local.replicator_name
 }
 
