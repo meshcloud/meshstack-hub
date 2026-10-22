@@ -31,7 +31,6 @@ digraph stackit_kubernetes_platform {
     SVC    [label="📦 Platform Services BBD\nregisters and orders everything below" fillcolor="#ecedfb" color="#9aa2e6"]
     BBD_S  [label="📦 stackit/secrets-manager BBD" fillcolor="#ecedfb" color="#9aa2e6"]
     BBD_K  [label="📦 ske/cluster BBD" fillcolor="#ecedfb" color="#9aa2e6"]
-    BBD_SA [label="📦 kubernetes/service-account BBD" fillcolor="#ecedfb" color="#9aa2e6"]
     BBD_I  [label="📦 kubernetes/ingress BBD" fillcolor="#ecedfb" color="#9aa2e6"]
     BBD_A  [label="📦 kubernetes BBD" fillcolor="#ecedfb" color="#9aa2e6"]
     PLAT   [label="🛰️ SKE Platform\none landing zone per stage" fillcolor="#ecedfb" color="#9aa2e6"]
@@ -41,7 +40,7 @@ digraph stackit_kubernetes_platform {
     BBD_M  [label="📦 stackit/ai-llm BBD" fillcolor="#ecedfb" color="#9aa2e6"]
 
     // Under rankdir=LR a same-rank chain stacks upwards, so it runs bottom to top.
-    { rank=same; BBD_M -> BBD_D -> BBD_H -> BBD_G -> PLAT -> BBD_A -> BBD_I -> BBD_SA -> BBD_K -> BBD_S -> SVC [style=invis] }
+    { rank=same; BBD_M -> BBD_D -> BBD_H -> BBD_G -> PLAT -> BBD_A -> BBD_I -> BBD_K -> BBD_S -> SVC [style=invis] }
     { rank=same; SVC -> OUTER [dir=back xlabel="registers"] }
   }
 
@@ -56,7 +55,7 @@ digraph stackit_kubernetes_platform {
     SA     [label="🔑 Automation Identity\nthe platform's service account" fillcolor="#eef2f6" color="#93a7bb"]
     SM     [label="🔒 Secrets Manager\nevery platform credential" fillcolor="#eef2f6" color="#93a7bb"]
     SKE    [label="☸️ SKE cluster" fillcolor="#eef2f6" color="#93a7bb"]
-    KSA    [label="🔑 Cluster admin\nKubernetes service account" fillcolor="#eef2f6" color="#93a7bb"]
+    KSA    [label="🔑 Platform admin\nKubernetes service account" fillcolor="#eef2f6" color="#93a7bb"]
     ING    [label="🔐 Ingress\nHAProxy · cert-manager · Let's Encrypt" fillcolor="#eef2f6" color="#93a7bb"]
     AGENT  [label="🔑 meshStack identities\nreplicator · metering" fillcolor="#eef2f6" color="#93a7bb"]
     GIT    [label="🔀 STACKIT Git\nForgejo instance and organization" fillcolor="#eef2f6" color="#93a7bb"]
@@ -75,7 +74,7 @@ digraph stackit_kubernetes_platform {
   OUTER -> SA     [xlabel="provisions"]
   BBD_S -> SM
   BBD_K -> SKE
-  BBD_SA -> KSA
+  BBD_K -> KSA
   BBD_I -> ING
   BBD_A -> AGENT
   PLAT  -> AGENT  [xlabel="replicates as" style=dotted]

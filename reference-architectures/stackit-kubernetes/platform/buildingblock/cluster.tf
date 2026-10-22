@@ -1,3 +1,9 @@
+locals {
+  # The cluster and platform credentials blocks keep this month's and the previous month's tokens.
+  # Derived from the plan time, a month never gets skipped while the schedule runs this block daily.
+  token_generation = formatdate("YYYY-MM", plantimestamp())
+}
+
 module "cluster_integration" {
   source = "github.com/meshcloud/meshstack-hub//modules/ske/cluster?ref=${var.hub.git_ref}"
 
@@ -33,7 +39,8 @@ resource "meshstack_building_block" "cluster" {
             secret_version = nonsensitive(sha256(local.output_to_vault))
           }
         }
-        release_on_destroy = { value = jsonencode(var.imports.ske != null && var.playground_mode) }
+        admin_token_generation = { value = jsonencode(local.token_generation) }
+        release_on_destroy     = { value = jsonencode(var.imports.ske != null && var.playground_mode) }
       },
       var.imports.ske == null ? {} : {
         imports = { value = jsonencode(jsonencode(var.imports.ske)) }
@@ -45,6 +52,17 @@ resource "meshstack_building_block" "cluster" {
 locals {
   # `{path, secret_hash}`: the hash versions every input this run fills from the secret.
   cluster_vault_secret = jsondecode(jsondecode(meshstack_building_block.cluster.status.outputs["vault_secret"].value))
+
+  kube_host = terraform_data.kube_host.output
+}
+
+# A rotation reruns the cluster block, and the Forgejo connector takes the host as a STATIC input.
+resource "terraform_data" "kube_host" {
+  input = jsondecode(meshstack_building_block.cluster.status.outputs["kube_host"].value)
+
+  lifecycle {
+    ignore_changes = [input]
+  }
 }
 
 ephemeral "vault_kv_secret_v2" "cluster_kubeconfig" {
@@ -53,90 +71,44 @@ ephemeral "vault_kv_secret_v2" "cluster_kubeconfig" {
 }
 
 locals {
-  service_account_full_name = "${lower(var.platform_identifier)}-platform-admin"
-
-  # The service account definition takes a name of at most 63 characters. A longer one keeps the
-  # cut identifier in front and ends with a hash of the full name, so two cut names stay apart.
-  service_account_name = length(local.service_account_full_name) <= 63 ? local.service_account_full_name : format(
-    "%s-%s-platform-admin",
-    replace(substr(lower(var.platform_identifier), 0, 43), "/-+$/", ""),
-    substr(sha256(local.service_account_full_name), 0, 4)
-  )
+  cluster_kubeconfig_input = {
+    sensitive = {
+      secret_value   = "data:application/yaml;base64,${base64encode(ephemeral.vault_kv_secret_v2.cluster_kubeconfig.data.kubeconfig)}"
+      secret_version = tostring(local.cluster_vault_secret.secret_hash)
+    }
+  }
 }
 
-# The client certificate of the SKE kubeconfig expires, this service account's token does not. The
-# blocks working inside the cluster use the token.
-module "service_account_integration" {
-  source = "github.com/meshcloud/meshstack-hub//modules/kubernetes/service-account?ref=${var.hub.git_ref}"
-
-  # Delete a child's definition before its parent's: meshStack fails on its `fk_tbb_Parent`
-  # constraint otherwise.
-  depends_on = [module.cluster_integration]
-
-  kubeconfig          = ephemeral.vault_kv_secret_v2.cluster_kubeconfig.data.kubeconfig
-  kubeconfig_version  = tostring(local.cluster_vault_secret.secret_hash)
-  cluster_name        = var.cluster_name
-  namespace           = "kube-system"
-  cluster_roles       = ["cluster-admin"]
-  bind_cluster_wide   = true
-  supported_platforms = ["STACKIT"]
-
-  approval_policies = var.approval_policies
-
-  meshstack = { owning_workspace_identifier = var.workspace, tags = var.tags.building_block }
-  hub       = var.hub
-}
-
-resource "meshstack_building_block" "service_account" {
-  wait_for_completion = true
+# Platforms built before the cluster created the admin service account had a "Kubernetes Platform
+# Admin" block. It stays in meshStack as the parent of the blocks below.
+removed {
+  from = meshstack_building_block.service_account
 
   lifecycle {
-    postcondition {
-      condition     = self.status.status == "SUCCEEDED"
-      error_message = "Building block ${self.metadata.uuid} ended in ${self.status.status}. See its run in meshPanel."
-    }
-  }
-
-  spec = {
-    parent_building_block_refs            = [meshstack_building_block.cluster.ref]
-    building_block_definition_version_ref = module.service_account_integration.building_block_definition.version_ref
-    display_name                          = "Kubernetes Platform Admin"
-    target_ref                            = local.tenant_ref
-
-    inputs = {
-      name         = { value = jsonencode(local.service_account_name) }
-      cluster_role = { value = jsonencode("cluster-admin") }
-      output_to_vault = {
-        sensitive = {
-          secret_value   = local.output_to_vault
-          secret_version = nonsensitive(sha256(local.output_to_vault))
-        }
-      }
-    }
+    destroy = false
   }
 }
 
-locals {
-  service_account_vault_secret = jsondecode(jsondecode(meshstack_building_block.service_account.status.outputs["vault_secret"].value))
-}
+removed {
+  from = module.service_account_integration
 
-ephemeral "vault_kv_secret_v2" "service_account_kubeconfig" {
-  mount = local.secrets_manager_instance_id
-  name  = local.service_account_vault_secret.path
+  lifecycle {
+    destroy = false
+  }
 }
 
 module "kubernetes_integration" {
   source = "github.com/meshcloud/meshstack-hub//modules/kubernetes?ref=${var.hub.git_ref}"
 
-  depends_on = [module.service_account_integration]
+  # Delete a child's definition before its parent's: meshStack fails on its `fk_tbb_Parent`
+  # constraint otherwise.
+  depends_on = [module.cluster_integration]
 
-  kubeconfig         = ephemeral.vault_kv_secret_v2.service_account_kubeconfig.data.kubeconfig
-  kube_host          = jsondecode(meshstack_building_block.cluster.status.outputs["kube_host"].value)
-  replicator_token   = ephemeral.vault_kv_secret_v2.kubernetes_platform.data["replicator-token"]
-  metering_token     = ephemeral.vault_kv_secret_v2.kubernetes_platform.data["metering-token"]
-  kubeconfig_version = tostring(local.service_account_vault_secret.secret_hash)
-  tokens_version     = tostring(local.kubernetes_platform_vault_secret.secret_hash)
-  landing_zones      = local.landing_zones
+  kube_host        = local.kube_host
+  replicator_token = ephemeral.vault_kv_secret_v2.kubernetes_platform.data["replicator-token"]
+  metering_token   = ephemeral.vault_kv_secret_v2.kubernetes_platform.data["metering-token"]
+  tokens_version   = tostring(local.kubernetes_platform_vault_secret.secret_hash)
+  landing_zones    = local.landing_zones
 
   approval_policies = var.approval_policies
 
@@ -156,6 +128,10 @@ resource "meshstack_building_block" "kubernetes_platform" {
   wait_for_completion = true
 
   lifecycle {
+    # meshStack changes a block's parents only with its definition version, and a changed draft keeps
+    # its version: a block created under the Kubernetes Platform Admin keeps it as its parent.
+    ignore_changes = [spec.parent_building_block_refs]
+
     postcondition {
       condition     = self.status.status == "SUCCEEDED"
       error_message = "Building block ${self.metadata.uuid} ended in ${self.status.status}. See its run in meshPanel."
@@ -163,13 +139,15 @@ resource "meshstack_building_block" "kubernetes_platform" {
   }
 
   spec = {
-    parent_building_block_refs            = [meshstack_building_block.service_account.ref]
+    parent_building_block_refs            = [meshstack_building_block.cluster.ref]
     building_block_definition_version_ref = module.kubernetes_integration.building_block_definition.version_ref
     display_name                          = "Kubernetes meshPlatform Credentials"
     target_ref                            = local.tenant_ref
 
     inputs = merge(
       {
+        "kubeconfig.yaml" = local.cluster_kubeconfig_input
+        token_generation  = { value = jsonencode(local.token_generation) }
         output_to_vault = {
           sensitive = {
             secret_value   = local.output_to_vault
@@ -199,10 +177,8 @@ ephemeral "vault_kv_secret_v2" "kubernetes_platform" {
 module "ingress_integration" {
   source = "github.com/meshcloud/meshstack-hub//modules/kubernetes/ingress?ref=${var.hub.git_ref}"
 
-  depends_on = [module.service_account_integration]
+  depends_on = [module.cluster_integration]
 
-  kubeconfig            = ephemeral.vault_kv_secret_v2.service_account_kubeconfig.data.kubeconfig
-  kubeconfig_version    = tostring(local.service_account_vault_secret.secret_hash)
   acme_email            = var.cluster_issuer_email
   haproxy_replica_count = var.playground_mode ? 1 : 2
 
@@ -216,6 +192,9 @@ resource "meshstack_building_block" "ingress" {
   wait_for_completion = true
 
   lifecycle {
+    # See the platform credentials block.
+    ignore_changes = [spec.parent_building_block_refs]
+
     postcondition {
       condition     = self.status.status == "SUCCEEDED"
       error_message = "Building block ${self.metadata.uuid} ended in ${self.status.status}. See its run in meshPanel."
@@ -223,13 +202,16 @@ resource "meshstack_building_block" "ingress" {
   }
 
   spec = {
-    parent_building_block_refs            = [meshstack_building_block.service_account.ref]
+    parent_building_block_refs            = [meshstack_building_block.cluster.ref]
     building_block_definition_version_ref = module.ingress_integration.building_block_definition.version_ref
     display_name                          = "Kubernetes Ingress"
     target_ref                            = local.tenant_ref
 
     inputs = merge(
-      { release_on_destroy = { value = jsonencode(var.imports.ingress != null && var.playground_mode) } },
+      {
+        "kubeconfig.yaml"  = local.cluster_kubeconfig_input
+        release_on_destroy = { value = jsonencode(var.imports.ingress != null && var.playground_mode) }
+      },
       var.imports.ingress == null ? {} : { imports = { value = jsonencode(jsonencode(var.imports.ingress)) } },
     )
   }
