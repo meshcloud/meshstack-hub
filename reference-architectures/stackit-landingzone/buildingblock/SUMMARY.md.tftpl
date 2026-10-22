@@ -37,11 +37,12 @@ The [STACKIT Kubernetes Platform](https://hub.meshcloud.io/reference-architectur
 reference architecture runs a full SKE developer platform on top of this landing zone. It takes one
 value from this landing zone. Paste this block into its **STACKIT Landing Zone** input:
 
-%{ if service_account_bbd_version_uuid == "" || service_account_federation_bbd_version_uuid == "" ~}
+%{ if !identity_definitions_released ~}
 > [!WARNING]
-> The block needs a released version of the **STACKIT Service Account** and the **STACKIT Service
-> Account Federation** definitions, because another workspace may only order released versions.
-> Release both in meshPanel, publish them to the marketplace, then run this building block again.
+> The latest versions of the **STACKIT Service Account** and the **STACKIT Service Account
+> Federation** definitions are drafts, and another workspace may only order released versions.
+> Deploy this landing zone with `hub.bbd_draft = false`, publish both definitions to the
+> marketplace, then run this building block again.
 
 %{ endif ~}
 ```hcl
