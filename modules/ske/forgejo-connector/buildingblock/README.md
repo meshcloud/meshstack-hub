@@ -48,8 +48,10 @@ additional secrets are read from a Vault KV v2 engine, such as a STACKIT Secrets
 Manager instance, with the `vault_reader` login. What a run reads is kept in its
 Terraform state.
 
-The Kubernetes provider is configured from a `kubeconfig.yaml` static file
-input of a cluster-admin service account on the SKE cluster.
+The Kubernetes provider is configured from the kubeconfig of a cluster-admin
+service account, read from the same engine at `kubeconfig_path` on every run.
+The namespace's `KUBECONFIG_<STAGE>` is built from `kube_host` and the token
+Secret of its own service account.
 
 <!-- terraform-docs is disabled for this directory (see .pre-commit-config.yaml), so the block below is maintained by hand. -->
 <!-- BEGIN_TF_DOCS -->
@@ -87,6 +89,7 @@ input of a cluster-admin service account on the SKE cluster.
 | [vault_generic_secret.additional](https://registry.terraform.io/providers/hashicorp/vault/latest/docs/ephemeral-resources/generic_secret) | ephemeral resource |
 | [vault_generic_secret.registry](https://registry.terraform.io/providers/hashicorp/vault/latest/docs/ephemeral-resources/generic_secret) | ephemeral resource |
 | [vault_kv_secret_v2.forgejo_api_token](https://registry.terraform.io/providers/hashicorp/vault/latest/docs/ephemeral-resources/kv_secret_v2) | ephemeral resource |
+| [vault_kv_secret_v2.kubeconfig](https://registry.terraform.io/providers/hashicorp/vault/latest/docs/ephemeral-resources/kv_secret_v2) | ephemeral resource |
 
 ## Inputs
 
@@ -96,6 +99,8 @@ input of a cluster-admin service account on the SKE cluster.
 | <a name="input_app_hostname"></a> [app\_hostname](#input\_app\_hostname) | Public application hostname for this stage (used by deploy workflow and ingress). | `string` | n/a | yes |
 | <a name="input_forgejo_api_token_path"></a> [forgejo\_api\_token\_path](#input\_forgejo\_api\_token\_path) | Vault KV v2 secret holding the Forgejo API token under the key `forgejo-api-token`. | `string` | n/a | yes |
 | <a name="input_hub_git_ref"></a> [hub\_git\_ref](#input\_hub\_git\_ref) | Hub git ref this building block runs from. Pins the shared modules it sources so they stay in lockstep with this module's own checkout. | `string` | `"main"` | no |
+| <a name="input_kube_host"></a> [kube\_host](#input\_kube\_host) | API server URL of the cluster the namespace lives on. | `string` | n/a | yes |
+| <a name="input_kubeconfig_path"></a> [kubeconfig\_path](#input\_kubeconfig\_path) | Vault KV v2 secret holding the kubeconfig of a cluster-admin service account under the key `kubeconfig`. | `string` | n/a | yes |
 | <a name="input_namespace"></a> [namespace](#input\_namespace) | Associated namespace in kubernetes cluster. | `string` | n/a | yes |
 | <a name="input_registry_secret_path"></a> [registry\_secret\_path](#input\_registry\_secret\_path) | Vault KV v2 secret holding the data of the image pull Secret under the key `pull-kubernetes-secret`. | `string` | n/a | yes |
 | <a name="input_repository_name"></a> [repository\_name](#input\_repository\_name) | Name of the Forgejo repository. | `string` | n/a | yes |

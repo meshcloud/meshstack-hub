@@ -48,6 +48,18 @@ variable "vault_reader" {
   description = "Vault KV v2 userpass login the run reads its secrets with."
 }
 
+variable "kube_host" {
+  type        = string
+  nullable    = false
+  description = "API server URL of the cluster the namespace lives on."
+}
+
+variable "kubeconfig_path" {
+  type        = string
+  nullable    = false
+  description = "Vault KV v2 secret holding the kubeconfig of a cluster-admin service account under the key `kubeconfig`."
+}
+
 variable "forgejo_api_token_path" {
   type        = string
   nullable    = false

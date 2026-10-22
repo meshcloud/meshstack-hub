@@ -54,64 +54,6 @@ ephemeral "vault_kv_secret_v2" "ske_kubeconfig" {
   name  = "${local.secrets_path_prefix}ske/cluster"
 }
 
-# The connector takes the token kubeconfig of a cluster-admin service account, as the STACKIT
-# Kubernetes reference architecture gives it.
-resource "kubernetes_service_account_v1" "connector" {
-  metadata {
-    name      = "${var.test_context.run_id}-connector"
-    namespace = "kube-system"
-  }
-}
-
-resource "kubernetes_secret_v1" "connector_token" {
-  metadata {
-    name      = "${var.test_context.run_id}-connector"
-    namespace = "kube-system"
-    annotations = {
-      "kubernetes.io/service-account.name" = kubernetes_service_account_v1.connector.metadata[0].name
-    }
-  }
-
-  type                           = "kubernetes.io/service-account-token"
-  wait_for_service_account_token = true
-}
-
-resource "kubernetes_cluster_role_binding_v1" "connector" {
-  metadata {
-    name = "${var.test_context.run_id}-connector"
-  }
-  role_ref {
-    api_group = "rbac.authorization.k8s.io"
-    kind      = "ClusterRole"
-    name      = "cluster-admin"
-  }
-  subject {
-    kind      = "ServiceAccount"
-    name      = kubernetes_service_account_v1.connector.metadata[0].name
-    namespace = "kube-system"
-  }
-}
-
-locals {
-  connector_kubeconfig = yamlencode({
-    apiVersion      = "v1"
-    kind            = "Config"
-    current-context = "connector"
-    clusters = [{
-      name    = local.ske_kubeconfig["clusters"][0]["name"]
-      cluster = local.ske_kubeconfig["clusters"][0]["cluster"]
-    }]
-    users = [{
-      name = "connector"
-      user = { token = kubernetes_secret_v1.connector_token.data["token"] }
-    }]
-    contexts = [{
-      name    = "connector"
-      context = { cluster = local.ske_kubeconfig["clusters"][0]["name"], user = "connector" }
-    }]
-  })
-}
-
 module "meshstack_kubernetes_platform" {
   source = "./meshstack_kubernetes_platform"
 
@@ -186,9 +128,9 @@ module "forgejo_connector" {
     bbd_draft = true
   }
 
-  kubeconfig                   = local.connector_kubeconfig
-  forgejo_host                 = var.test_context.forgejo_base_url
-  forgejo_repo_definition_uuid = module.stackit_git_repository.building_block_definition.uuid
+  kube_host                   = var.test_context.fixtures.stackit.ske_platform.kube_host
+  forgejo_host                = var.test_context.forgejo_base_url
+  forgejo_repo_definition_ref = module.stackit_git_repository.building_block_definition.ref
 
   vault_reader = {
     address  = local.secrets_manager_address
@@ -196,6 +138,7 @@ module "forgejo_connector" {
     username = stackit_secretsmanager_user.reader.username
     password = stackit_secretsmanager_user.reader.password
   }
+  kubeconfig_path        = "${local.secrets_path_prefix}ske/cluster"
   forgejo_api_token_path = "${local.secrets_path_prefix}stackit/git"
   registry_secret_path   = "${local.secrets_path_prefix}stackit/container-registry"
 
