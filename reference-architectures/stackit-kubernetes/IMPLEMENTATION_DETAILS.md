@@ -25,9 +25,13 @@ input, so updating the outer building block is the only way to change the platfo
 - **Starter Kit Identity Federation** (phase 2) trusts the Git repository definition, whose runs
   list the Git instance's users through the STACKIT Git API to match workspace members by email.
   The Forgejo token's technical user is restricted and cannot see them.
-- The Kubernetes Platform Admin service account is a child of the cluster; the meshPlatform
-  Credentials and the Ingress are children of the service account; the DNS zone is also a child of
-  the Ingress, because it takes the load balancer IP.
+- The meshPlatform Credentials and the Ingress are children of the cluster; the DNS zone is also a
+  child of the Ingress, because it takes the load balancer IP. On a platform built with the former
+  Kubernetes Platform Admin block, the nested run moves both blocks to the cluster and forgets the
+  old block and its definition without destroying them; delete that block by hand.
+
+A federation trusts the identities of the latest and the latest released version of each
+definition, and reads them when it runs. Every definition is ordered at its latest version.
 
 A new STACKIT capability needs its role in the landing zone's `stackit_assignable_roles`, its
 definition's uuid in `federated_building_block_definitions`, and the federation as a parent of its
@@ -43,8 +47,7 @@ value and registers it as a write-only input.
 
 | Secret | Keys | Written by | Read for |
 |---|---|---|---|
-| `<prefix>ske/cluster` | `kubeconfig` | SKE Cluster | the Kubernetes Platform Admin definition |
-| `<prefix>kubernetes/service-account` | `kubeconfig` | Kubernetes Platform Admin | the `kubernetes`, ingress and Forgejo connector definitions |
+| `<prefix>ske/cluster` | `kubeconfig` | SKE Cluster | the `kubernetes` and ingress blocks, Forgejo connector runs |
 | `<prefix>kubernetes/platform` | `replicator-token`, `metering-token` | Kubernetes meshPlatform Credentials | the meshStack SKE platform |
 | `<prefix>stackit/git` | `forgejo-api-token` | STACKIT Git Instance | Git repository and Forgejo connector runs |
 | `<prefix>stackit/container-registry` | `push-action-secrets`, `pull-kubernetes-secret` | STACKIT Container Registry | Git repository and Forgejo connector runs |
@@ -56,12 +59,30 @@ reader login and the paths, and their runs read the secrets themselves. Git repo
 the push robot in their state, because the restapi provider has no write-only attributes.
 
 An ephemeral value has no version meshStack could compare, so the nested run passes each
-`secret_hash` on as `kubeconfig_version` or `tokens_version`. A rotated secret reaches the
-definitions on the next nested run. The Forgejo connector gets one hash of the pull robot and the
+`secret_hash` on as the version of the write-only value it fills: the `kubeconfig.yaml` input of
+the `kubernetes` and ingress blocks, and the platform's tokens. A rotated secret reaches them in
+the same nested run. The Forgejo connector gets one hash of the pull robot and the
 AI secret as `secrets_revision`, so its runs rewrite the Kubernetes secrets when either changes.
 
 The Forgejo token has no human owner: the Git block creates a technical user through the STACKIT
 Git API and exchanges its password for a personal access token.
+
+## Credentials and rotation
+
+No stored credential expires. Each cluster run opens an SKE kubeconfig that expires after an hour
+and is never stored. With it, the cluster block creates the platform admin service account
+`meshstack-admin` in `kube-system`, bound to `cluster-admin`, and writes its token kubeconfig to
+`<prefix>ske/cluster`.
+
+The admin, replicator and metering tokens rotate monthly. The nested run takes the month
+`YYYY-MM` from the plan time and passes it to the cluster block as `admin_token_generation` and to
+the platform credentials block as `token_generation`. Each keeps the token Secrets of that month
+and the month before and writes the current tokens to the same secret. The nested definition runs
+daily (`DRIFT_RECONCILIATION`, automatic approval), so a rotation happens on the first day of a
+month. On draft definitions the daily run also applies changes of the Hub branch without review.
+
+STATIC inputs carry only the reader login and paths, so a rotation changes no definition and works
+with released versions.
 
 ## Phase 2
 
@@ -87,8 +108,7 @@ organization itself; it goes with the instance.
 
 - **A child's definition is deleted before its parent's.** meshStack deletes a definition's
   building blocks with it, and fails on the `fk_tbb_Parent` foreign key if one is still the parent
-  of another block. So the service account definition depends on the cluster definition, and the
-  `kubernetes` and ingress definitions on the service account definition.
+  of another block. So the `kubernetes` and ingress definitions depend on the cluster definition.
 - **The Secrets Manager goes last.** Its users and every block that writes to it take its instance
   id.
 - **The service account depends on no definition it federates**, or a definition that reads the

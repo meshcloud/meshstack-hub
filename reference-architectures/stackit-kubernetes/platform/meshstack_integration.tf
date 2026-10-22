@@ -74,6 +74,13 @@ resource "meshstack_building_block_definition" "this" {
     approval_policies     = var.approval_policies
     supported_platforms   = [{ name = "STACKIT" }]
 
+    # The daily run rotates the cluster tokens at the turn of the month.
+    schedule = {
+      mode               = "DRIFT_RECONCILIATION"
+      frequency          = "DAILY"
+      automatic_approval = true
+    }
+
     readme = chomp(<<-EOT
     The **STACKIT Kubernetes Platform Services** building block builds everything of a STACKIT
     Kubernetes Platform that needs a STACKIT identity. Only the **STACKIT Kubernetes Platform**
@@ -84,7 +91,7 @@ resource "meshstack_building_block_definition" "this" {
 
     - **Secrets Manager** – the platform's instance, with one user that writes and one that reads.
       Every credential the blocks below create goes there.
-    - **SKE cluster** and an admin **Kubernetes service account** for the blocks that work inside it.
+    - **SKE cluster** with a platform admin service account for the blocks that work inside it.
     - **Platform services** – HAProxy ingress, cert-manager and the meshStack replication and
       metering service accounts.
     - **DNS zone**, **AI Model Serving** token, **STACKIT Git instance** and **container registry**.
@@ -94,6 +101,12 @@ resource "meshstack_building_block_definition" "this" {
 
     Every run acts as the platform's STACKIT service account through workload identity federation.
     The building blocks it orders act as the same account, through a federation it orders itself.
+
+    ## 🔁 Daily run
+
+    meshStack runs this block daily and applies what changed. On the first run of a month it rotates
+    the tokens of the platform admin, replicator and metering service accounts; the previous
+    month's tokens stay valid until the next rotation.
 
     ## 📊 Shared responsibility
 

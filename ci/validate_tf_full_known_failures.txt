@@ -11,6 +11,3 @@ modules/azure/container-registry/buildingblock       # resources point at a prov
 modules/gcp                                          # terraform-gcp-meshplatform has no tag 0.3.0
 modules/ionos/dcd/backplane                          # required arguments missing, plus arguments the provider rejects
 modules/otc/project                                  # logo.png, which the platform type icon reads, does not exist
-
-# The modules change ahead of the reference architecture that calls them.
-reference-architectures/stackit-kubernetes/platform/buildingblock

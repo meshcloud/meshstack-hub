@@ -8,7 +8,6 @@ output "summary" {
     secrets_manager_instance_id = local.secrets_manager_instance_id
     cluster_name                = var.cluster_name
     cluster_bb_uuid             = meshstack_building_block.cluster.metadata.uuid
-    service_account_bb_uuid     = meshstack_building_block.service_account.metadata.uuid
     kubernetes_platform_bb_uuid = meshstack_building_block.kubernetes_platform.metadata.uuid
     ingress_bb_uuid             = meshstack_building_block.ingress.metadata.uuid
     ingress_load_balancer_ip    = local.ingress_load_balancer_ip
