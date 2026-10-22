@@ -41,7 +41,7 @@ resource "terraform_data" "kubeconfig" {
   lifecycle {
     precondition {
       condition     = fileexists("${path.module}/kubeconfig.yaml")
-      error_message = "kubeconfig.yaml is missing. meshStack writes it from the static FILE input of the building block definition."
+      error_message = "kubeconfig.yaml is missing. meshStack writes it from the FILE input of the building block."
     }
   }
 }
