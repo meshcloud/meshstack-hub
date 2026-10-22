@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
-# Role assignments apply asynchronously and the provider does not retry the 403. `editor` can list
-# federations and the backplane's `iam.service-account-admin` cannot, so a 200 means the role landed.
+# Role assignments apply asynchronously and the provider does not retry the 403. Listing federations
+# needs `editor`, so a 200 means the role landed.
 set -euo pipefail
 
 token_endpoint="${STACKIT_IDP_TOKEN_ENDPOINT:-https://accounts.stackit.cloud/oauth/v2/token}"
