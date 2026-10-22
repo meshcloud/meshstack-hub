@@ -1,15 +1,7 @@
-variable "kubeconfig" {
+variable "kube_host" {
   type        = string
   nullable    = false
-  ephemeral   = true
-  description = "Kubeconfig (YAML) of a cluster-admin service account on the cluster the tenant namespaces live on."
-}
-
-variable "kubeconfig_version" {
-  type        = string
-  nullable    = false
-  default     = "1"
-  description = "Version of `kubeconfig`. It is ephemeral, so no version can be derived from it: increase this to send it to meshStack again."
+  description = "API server URL of the cluster the tenant namespaces live on."
 }
 
 variable "forgejo_host" {
@@ -31,6 +23,12 @@ variable "vault_reader" {
   nullable    = false
   sensitive   = true
   description = "Vault KV v2 login the building blocks read their secrets with: the server `address`, the engine `mount` and a userpass `username` and `password`."
+}
+
+variable "kubeconfig_path" {
+  type        = string
+  nullable    = false
+  description = "Vault KV v2 secret holding the kubeconfig of a cluster-admin service account on that cluster under the key `kubeconfig`."
 }
 
 variable "forgejo_api_token_path" {
@@ -201,17 +199,12 @@ resource "meshstack_building_block_definition" "this" {
         assignment_type = "PLATFORM_TENANT_ID"
       }
 
-      "kubeconfig.yaml" = {
-        display_name    = "kubeconfig.yaml"
-        description     = "Kubeconfig of a cluster-admin service account on the cluster."
-        type            = "FILE"
+      kube_host = {
+        display_name    = "Kubernetes API Server"
+        description     = "API server URL of the cluster the tenant namespaces live on."
+        type            = "STRING"
         assignment_type = "STATIC"
-        sensitive = {
-          argument = {
-            secret_value   = "data:application/yaml;base64,${base64encode(var.kubeconfig)}"
-            secret_version = var.kubeconfig_version
-          }
-        }
+        argument        = jsonencode(var.kube_host)
       }
 
       repository_owner = {
@@ -273,6 +266,14 @@ resource "meshstack_building_block_definition" "this" {
             secret_version = nonsensitive(sha256(jsonencode(var.vault_reader)))
           }
         }
+      }
+
+      kubeconfig_path = {
+        display_name    = "Kubeconfig Path"
+        description     = "Vault KV v2 secret holding the kubeconfig of a cluster-admin service account under the key `kubeconfig`."
+        type            = "STRING"
+        assignment_type = "STATIC"
+        argument        = jsonencode(var.kubeconfig_path)
       }
 
       forgejo_api_token_path = {
