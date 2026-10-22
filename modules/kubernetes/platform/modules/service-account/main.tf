@@ -24,15 +24,14 @@ resource "kubernetes_service_account_v1" "released" {
   }
 }
 
-resource "kubernetes_secret_v1" "this" {
-  depends_on = [kubernetes_service_account_v1.this]
-
-  lifecycle {
-    enabled = !var.release_on_destroy
-  }
+# The previous generation stays valid, so meshStack keeps working with a token it read just before a
+# rotation.
+resource "kubernetes_secret_v1" "token" {
+  for_each   = var.token_generations
+  depends_on = [kubernetes_service_account_v1.this, kubernetes_service_account_v1.released]
 
   metadata {
-    name      = var.name
+    name      = "${var.name}-token-${each.key}"
     namespace = var.namespace
     annotations = {
       "kubernetes.io/service-account.name" = var.name
@@ -44,25 +43,13 @@ resource "kubernetes_secret_v1" "this" {
   wait_for_service_account_token = true
 }
 
-resource "kubernetes_secret_v1" "released" {
-  depends_on = [kubernetes_service_account_v1.released]
+# An adopted token Secret belongs to the platform registration it was adopted from.
+removed {
+  from = kubernetes_secret_v1.released
 
   lifecycle {
-    enabled         = var.release_on_destroy
-    destroy         = false
-    prevent_destroy = true
+    destroy = false
   }
-
-  metadata {
-    name      = var.name
-    namespace = var.namespace
-    annotations = {
-      "kubernetes.io/service-account.name" = var.name
-    }
-  }
-
-  type                           = "kubernetes.io/service-account-token"
-  wait_for_service_account_token = true
 }
 
 resource "kubernetes_cluster_role_v1" "this" {

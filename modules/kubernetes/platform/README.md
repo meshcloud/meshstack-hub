@@ -18,8 +18,11 @@ tokens back:
 - **metering** (`meshfed-metering`) — reads pods and persistent volume claims to collect usage
   data, and can be switched off.
 
-Each is a ServiceAccount, a `kubernetes.io/service-account-token` Secret, a ClusterRole and a
-ClusterRoleBinding. Nothing cloud-specific is involved, so this runs on any conformant cluster.
+Each is a ServiceAccount, a ClusterRole, a ClusterRoleBinding and `kubernetes.io/service-account-token`
+Secrets named `<name>-token-<YYYY-MM>`: one for the month in `token_generation` and one for the
+month before. The block returns the current tokens, so a composition that passes the current month
+rotates them monthly while the previous tokens stay valid for another month. Nothing cloud-specific
+is involved, so this runs on any conformant cluster.
 
 ## What it is not
 
@@ -30,10 +33,10 @@ the cluster, and the **STACKIT Kubernetes Platform** reference architecture does
 the Vault KV v2 secret `<path_prefix>kubernetes/platform` under the keys `replicator-token` and
 `metering-token` instead, and both outputs are empty.
 
-## The kubeconfig is part of the definition
+## The kubeconfig is an input of the building block
 
-The block reaches the cluster through `kubeconfig.yaml`, a static FILE input of its building block
-definition, so one definition serves one cluster.
+The block reaches the cluster through `kubeconfig.yaml`, a sensitive FILE input the ordering
+composition sets on the building block, so a rotated kubeconfig changes no definition.
 
 ## One set of identities per cluster
 
@@ -45,7 +48,7 @@ has to carry more than one meshStack platform registration.
 
 ## The tokens are populated before the run finishes
 
-Kubernetes fills a service-account-token Secret asynchronously. Both Secrets here keep the
+Kubernetes fills a service-account-token Secret asynchronously. The token Secrets here keep the
 provider's `wait_for_service_account_token = true`, so the apply that creates them blocks until
 `data.token` is set — which is what makes `replicator_token` and `metering_token` reliably
 non-empty on the first run, with no sleep, poll or second apply.
