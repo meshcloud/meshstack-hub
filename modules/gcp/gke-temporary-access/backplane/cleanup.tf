@@ -31,6 +31,9 @@ resource "kubernetes_cluster_role_v1" "cleanup" {
 }
 
 resource "kubernetes_role_binding_v1" "cleanup" {
+  # Grant the rights only once the policy that restricts them is in force.
+  depends_on = [kubernetes_manifest.rolebinding_policy_binding]
+
   for_each = var.namespaces
 
   metadata {
