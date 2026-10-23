@@ -16,7 +16,7 @@ variable "github_org" {
 
 variable "github_app_id" {
   type        = string
-  description = "ID of the GitHub App the building block authenticates as. A dedicated App with only Environments and Actions write, not the App of the `github/repository` building block — see the backplane README."
+  description = "ID of the GitHub App the building block authenticates as. A dedicated App with only Administration and Environments write, not the App of the `github/repository` building block — see the backplane README."
 }
 
 variable "github_app_installation_id" {
@@ -33,12 +33,6 @@ variable "github_app_pem_file" {
 variable "github_repo_definition_uuid" {
   type        = string
   description = "UUID of the `github/repository` building block definition whose repositories this connector connects to."
-}
-
-variable "github_workflow_filename" {
-  type        = string
-  default     = ""
-  description = "Workflow the connector dispatches once a namespace is connected (example: `k8s-deploy.yml`). Empty skips the dispatch."
 }
 
 variable "notification_subscribers" {
@@ -134,7 +128,7 @@ resource "meshstack_building_block_definition" "this" {
     A developer pushes to `main`. The workflow in the `development` environment applies the manifests with `kubectl` and rolls out the new version in the dev namespace.
 
     **Example 2: Gate production behind a release branch**
-    The team connects the prod namespace to the `production` environment with `release` as deploy branch, and adds a required reviewer to that environment in GitHub.
+    The team connects the prod namespace to the `production` environment, and restricts that environment in GitHub to the `release` branch with a required reviewer.
 
     ## 📦 What you get
 
@@ -226,12 +220,6 @@ resource "meshstack_building_block_definition" "this" {
           }
         }
       }
-      workflow_filename = {
-        display_name    = "Workflow Filename"
-        type            = "STRING"
-        assignment_type = "STATIC"
-        argument        = jsonencode(var.github_workflow_filename)
-      }
       github_repo = {
         display_name    = "GitHub Repository"
         description     = "Repository to connect, from the parent repository building block."
@@ -245,13 +233,6 @@ resource "meshstack_building_block_definition" "this" {
         type            = "STRING"
         assignment_type = "USER_INPUT"
         default_value   = jsonencode("development")
-      }
-      deploy_branch = {
-        display_name    = "Deploy Branch"
-        description     = "Branch whose workflow deploys into this namespace."
-        type            = "STRING"
-        assignment_type = "USER_INPUT"
-        default_value   = jsonencode("main")
       }
     }
 
