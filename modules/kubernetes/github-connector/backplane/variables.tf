@@ -6,7 +6,7 @@ variable "api_server_url" {
 variable "api_server_ca_certificate" {
   type        = string
   default     = null
-  description = "PEM CA bundle that verifies the API server. Defaults to the cluster CA the service account token carries; set it when the API server presents a certificate signed by another CA."
+  description = "PEM CA bundle that verifies the API server. Defaults to the cluster CA. Set it when the API server presents a certificate signed by another CA."
 }
 
 variable "namespace" {
@@ -18,11 +18,11 @@ variable "namespace" {
 variable "service_account_name" {
   type        = string
   default     = "meshstack-github-connector"
-  description = "Name of the service account, cluster role and cluster role binding the building block runs with."
+  description = "Name of the connector's service account. Its other resources derive their names from it."
 }
 
-variable "tenant_namespace_label" {
+variable "managed_namespace_label" {
   type        = string
   default     = "io.meshcloud/meshstack.managed-entity"
-  description = "Label the meshStack replicator sets to `true` on tenant namespaces. The building block may only change objects in namespaces carrying it."
+  description = "Label the meshStack replicator sets to `true` on managed namespaces. The building block may only change objects in namespaces carrying it."
 }

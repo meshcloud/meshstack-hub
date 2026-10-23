@@ -52,10 +52,10 @@ No modules.
 
 | Name | Description | Type | Default | Required |
 |------|-------------|------|---------|:--------:|
-| <a name="input_github_environment_name"></a> [github\_environment\_name](#input\_github\_environment\_name) | GitHub environment that receives the deployment credentials of this namespace. | `string` | n/a | yes |
-| <a name="input_github_repo"></a> [github\_repo](#input\_github\_repo) | Name of the GitHub repository to connect, within the organization the GitHub App is installed in. | `string` | n/a | yes |
-| <a name="input_kubernetes_api"></a> [kubernetes\_api](#input\_kubernetes\_api) | API server URL, PEM CA bundle and token of the connector backplane's service account. | <pre>object({<br/>    server                 = string<br/>    cluster_ca_certificate = string<br/>    token                  = string<br/>  })</pre> | n/a | yes |
-| <a name="input_namespace"></a> [namespace](#input\_namespace) | Namespace of the tenant the connector deploys into. | `string` | n/a | yes |
+| <a name="input_github_environment_name"></a> [github\_environment\_name](#input\_github\_environment\_name) | GitHub environment that will be created for this connection. | `string` | n/a | yes |
+| <a name="input_github_repo"></a> [github\_repo](#input\_github\_repo) | Name of the GitHub repository to connect. | `string` | n/a | yes |
+| <a name="input_kubernetes_api"></a> [kubernetes\_api](#input\_kubernetes\_api) | Kubernetes API server connection data. | <pre>object({<br/>    server                 = string<br/>    cluster_ca_certificate = string<br/>    token                  = string<br/>  })</pre> | n/a | yes |
+| <a name="input_namespace"></a> [namespace](#input\_namespace) | The Kubernetes namespace that will be deployed to. | `string` | n/a | yes |
 
 ## Outputs
 

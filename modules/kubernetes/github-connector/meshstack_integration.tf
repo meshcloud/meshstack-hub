@@ -6,7 +6,7 @@ variable "kubernetes_api_server_url" {
 variable "kubernetes_api_server_ca_certificate" {
   type        = string
   default     = null
-  description = "PEM CA bundle that verifies the API server, when it presents a certificate from another CA than the cluster's own."
+  description = "PEM CA bundle used by the API server. Only set if it uses a certificate from another CA than the cluster's own."
 }
 
 variable "github_org" {
@@ -16,7 +16,7 @@ variable "github_org" {
 
 variable "github_app_id" {
   type        = string
-  description = "ID of the GitHub App the building block authenticates as. A dedicated App with only Administration and Environments write and Actions read, not the App of the `github/repository` building block — see the backplane README."
+  description = "ID of the GitHub App the building block authenticates as."
 }
 
 variable "github_app_installation_id" {
@@ -24,7 +24,7 @@ variable "github_app_installation_id" {
   description = "Installation ID of the connector's GitHub App in `github_org`."
 }
 
-variable "github_app_pem_file" {
+variable "github_app_private_key" {
   type        = string
   sensitive   = true
   description = "PEM private key of the connector's GitHub App."
@@ -32,7 +32,7 @@ variable "github_app_pem_file" {
 
 variable "github_repo_definition_uuid" {
   type        = string
-  description = "UUID of the `github/repository` building block definition whose repositories this connector connects to."
+  description = "UUID of the `github/repository` building block definition which supplies the repositories this connector connects to."
 }
 
 variable "notification_subscribers" {
@@ -43,19 +43,19 @@ variable "notification_subscribers" {
 variable "bbd_display_name" {
   type        = string
   default     = null
-  description = "Overrides the name of the marketplace entry application teams see in the catalog."
+  description = "Overrides the name of the marketplace entry in the catalog."
 }
 
 variable "bbd_description" {
   type        = string
   default     = null
-  description = "Overrides the one-line description shown next to the marketplace entry."
+  description = "Overrides the one-line description shown in the marketplace."
 }
 
 variable "bbd_readme" {
   type        = string
   default     = null
-  description = "Overrides the markdown readme shown in the marketplace before ordering."
+  description = "Overrides the markdown readme shown in the marketplace."
 }
 
 variable "meshstack" {
@@ -194,14 +194,14 @@ resource "meshstack_building_block_definition" "this" {
         argument        = jsonencode(var.github_app_installation_id)
       }
       GITHUB_APP_PEM_FILE = {
-        display_name    = "GitHub App PEM File"
+        display_name    = "GitHub App Private Key"
         type            = "CODE"
         assignment_type = "STATIC"
         is_environment  = true
         sensitive = {
           argument = {
-            secret_value   = var.github_app_pem_file
-            secret_version = nonsensitive(sha256(var.github_app_pem_file))
+            secret_value   = var.github_app_private_key
+            secret_version = nonsensitive(sha256(var.github_app_private_key))
           }
         }
       }

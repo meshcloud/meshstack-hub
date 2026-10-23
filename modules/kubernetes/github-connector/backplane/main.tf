@@ -4,8 +4,7 @@ resource "kubernetes_namespace_v1" "connector" {
   }
 }
 
-# Identity of the building block run. It needs no access to workloads: it only sets up the service
-# account that GitHub Actions deploys with, inside the tenant namespace it is connected to.
+# Service account to be used by building block runs to create service accounts for GH.
 resource "kubernetes_service_account_v1" "connector" {
   metadata {
     name      = var.service_account_name
@@ -15,7 +14,7 @@ resource "kubernetes_service_account_v1" "connector" {
 
 resource "kubernetes_secret_v1" "connector_token" {
   metadata {
-    name      = "${var.service_account_name}-token"
+    name      = "${kubernetes_service_account_v1.connector.metadata[0].name}-token"
     namespace = kubernetes_namespace_v1.connector.metadata[0].name
     annotations = {
       "kubernetes.io/service-account.name" = kubernetes_service_account_v1.connector.metadata[0].name
@@ -27,11 +26,10 @@ resource "kubernetes_secret_v1" "connector_token" {
 
 resource "kubernetes_cluster_role_v1" "connector" {
   metadata {
-    name = var.service_account_name
+    name = kubernetes_service_account_v1.connector.metadata[0].name
   }
 
-  # No `list` or `watch`: RBAC cannot scope reads to tenant namespaces, so the run may only read
-  # objects it knows by name instead of enumerating every secret in the cluster.
+  # Because RBAC cannot scope reads to managed namespaces, we at least forbid `list` and `watch` access.
   rule {
     api_groups = [""]
     resources  = ["serviceaccounts", "secrets"]
@@ -44,8 +42,7 @@ resource "kubernetes_cluster_role_v1" "connector" {
     verbs      = ["get", "create", "update", "patch", "delete"]
   }
 
-  # RBAC escalation prevention lets a subject grant a role only if it holds the role's permissions
-  # itself or may `bind` it. `bind` on exactly `edit` keeps the run from handing out anything else.
+  # Clusterrole bind only allowed for `edit` role.
   rule {
     api_groups     = ["rbac.authorization.k8s.io"]
     resources      = ["clusterroles"]
@@ -56,7 +53,7 @@ resource "kubernetes_cluster_role_v1" "connector" {
 
 resource "kubernetes_cluster_role_binding_v1" "connector" {
   metadata {
-    name = var.service_account_name
+    name = kubernetes_service_account_v1.connector.metadata[0].name
   }
 
   role_ref {
@@ -76,11 +73,11 @@ locals {
   connector_username = "system:serviceaccount:${kubernetes_namespace_v1.connector.metadata[0].name}:${kubernetes_service_account_v1.connector.metadata[0].name}"
 }
 
-# The cluster role above applies to every namespace, because RBAC cannot select namespaces by
-# label. This policy confines the run's writes to meshStack tenant namespaces.
-resource "kubernetes_validating_admission_policy_v1" "tenant_namespaces_only" {
+# Restrict the service account's writes to managed namespaces.
+# Admission never sees reads, so `get` on secrets stays cluster-wide.
+resource "kubernetes_validating_admission_policy_v1" "managed_namespaces_only" {
   metadata = {
-    name = "${var.service_account_name}-tenant-namespaces-only"
+    name = "${kubernetes_service_account_v1.connector.metadata[0].name}-managed-namespaces-only"
   }
 
   spec = {
@@ -96,28 +93,30 @@ resource "kubernetes_validating_admission_policy_v1" "tenant_namespaces_only" {
       }]
     }
 
+    # If the request comes from the connector service account.
     match_conditions = [{
       name       = "is-connector"
       expression = "request.userInfo.username == '${local.connector_username}'"
     }]
 
+    # The namespace must have the managed namespace label set to true.
     validations = [{
-      expression = "namespaceObject != null && has(namespaceObject.metadata.labels) && '${var.tenant_namespace_label}' in namespaceObject.metadata.labels && namespaceObject.metadata.labels['${var.tenant_namespace_label}'] == 'true'"
-      message    = "The GitHub connector may only change objects in namespaces labeled ${var.tenant_namespace_label}=true."
+      expression = "namespaceObject != null && has(namespaceObject.metadata.labels) && '${var.managed_namespace_label}' in namespaceObject.metadata.labels && namespaceObject.metadata.labels['${var.managed_namespace_label}'] == 'true'"
+      message    = "The GitHub connector may only change objects in namespaces labeled ${var.managed_namespace_label}=true."
     }]
   }
 }
 
-# The provider has no resource for policy bindings yet.
-resource "kubernetes_manifest" "tenant_namespaces_only_binding" {
+# Use manifest because the provider has no resource for policy bindings yet.
+resource "kubernetes_manifest" "managed_namespaces_only_binding" {
   manifest = {
     apiVersion = "admissionregistration.k8s.io/v1"
     kind       = "ValidatingAdmissionPolicyBinding"
     metadata = {
-      name = "${var.service_account_name}-tenant-namespaces-only"
+      name = "${kubernetes_service_account_v1.connector.metadata[0].name}-managed-namespaces-only"
     }
     spec = {
-      policyName        = kubernetes_validating_admission_policy_v1.tenant_namespaces_only.metadata.name
+      policyName        = kubernetes_validating_admission_policy_v1.managed_namespaces_only.metadata.name
       validationActions = ["Deny"]
     }
   }

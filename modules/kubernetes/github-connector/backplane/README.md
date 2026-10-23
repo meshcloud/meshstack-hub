@@ -10,14 +10,14 @@ Sets up the resources used by the connector building block on one Kubernetes clu
 - A cluster role binding for this service account/role.
 - A `ValidatingAdmissionPolicy` and binding that reject every create, update or delete by the
   service account outside namespaces labeled `io.meshcloud/meshstack.managed-entity=true`, which
-  is the label meshStack puts on tenant namespaces.
+  is the label meshStack puts on the namespaces it manages.
 
 ## Security model
 
 RBAC cannot select namespaces by label, so the cluster role applies everywhere. Two measures confine
 it:
 
-- **Writes** are limited to tenant namespaces by the admission policy. The run cannot create service
+- **Writes** are limited to managed namespaces by the admission policy. The run cannot create service
   accounts, secrets or role bindings in `kube-system` or other namespaces that are not managed by meshStack.
 - **Reads** cannot be limited by admission. The cluster role therefore grants only `get` permissions.
   The run can read a secret whose name it knows, but cannot enumerate the secrets of the cluster.
@@ -58,7 +58,7 @@ select **Only select repositories** instead, any allowed repositories must be ad
 
 Generate a private key and pass the App ID, the installation ID (the number at the end of the
 installation's settings URL) and the key as `github_app_id`, `github_app_installation_id` and
-`github_app_pem_file` to the integration.
+`github_app_private_key` to the integration.
 
 ## Operational notes
 
@@ -85,25 +85,25 @@ No modules.
 |------|------|
 | [kubernetes_cluster_role_binding_v1.connector](https://registry.terraform.io/providers/hashicorp/kubernetes/latest/docs/resources/cluster_role_binding_v1) | resource |
 | [kubernetes_cluster_role_v1.connector](https://registry.terraform.io/providers/hashicorp/kubernetes/latest/docs/resources/cluster_role_v1) | resource |
-| [kubernetes_manifest.tenant_namespaces_only_binding](https://registry.terraform.io/providers/hashicorp/kubernetes/latest/docs/resources/manifest) | resource |
+| [kubernetes_manifest.managed_namespaces_only_binding](https://registry.terraform.io/providers/hashicorp/kubernetes/latest/docs/resources/manifest) | resource |
 | [kubernetes_namespace_v1.connector](https://registry.terraform.io/providers/hashicorp/kubernetes/latest/docs/resources/namespace_v1) | resource |
 | [kubernetes_secret_v1.connector_token](https://registry.terraform.io/providers/hashicorp/kubernetes/latest/docs/resources/secret_v1) | resource |
 | [kubernetes_service_account_v1.connector](https://registry.terraform.io/providers/hashicorp/kubernetes/latest/docs/resources/service_account_v1) | resource |
-| [kubernetes_validating_admission_policy_v1.tenant_namespaces_only](https://registry.terraform.io/providers/hashicorp/kubernetes/latest/docs/resources/validating_admission_policy_v1) | resource |
+| [kubernetes_validating_admission_policy_v1.managed_namespaces_only](https://registry.terraform.io/providers/hashicorp/kubernetes/latest/docs/resources/validating_admission_policy_v1) | resource |
 
 ## Inputs
 
 | Name | Description | Type | Default | Required |
 |------|-------------|------|---------|:--------:|
-| <a name="input_api_server_ca_certificate"></a> [api\_server\_ca\_certificate](#input\_api\_server\_ca\_certificate) | PEM CA bundle that verifies the API server. Defaults to the cluster CA the service account token carries; set it when the API server presents a certificate signed by another CA. | `string` | `null` | no |
+| <a name="input_api_server_ca_certificate"></a> [api\_server\_ca\_certificate](#input\_api\_server\_ca\_certificate) | PEM CA bundle that verifies the API server. Defaults to the cluster CA. Set it when the API server presents a certificate signed by another CA. | `string` | `null` | no |
 | <a name="input_api_server_url"></a> [api\_server\_url](#input\_api\_server\_url) | URL of the Kubernetes API server that building block runs and GitHub Actions connect to (example: `https://api.k8s.example.com:6443`). | `string` | n/a | yes |
+| <a name="input_managed_namespace_label"></a> [managed\_namespace\_label](#input\_managed\_namespace\_label) | Label the meshStack replicator sets to `true` on managed namespaces. The building block may only change objects in namespaces carrying it. | `string` | `"io.meshcloud/meshstack.managed-entity"` | no |
 | <a name="input_namespace"></a> [namespace](#input\_namespace) | Namespace the backplane creates for the building block's service account. | `string` | `"meshstack-github-connector"` | no |
-| <a name="input_service_account_name"></a> [service\_account\_name](#input\_service\_account\_name) | Name of the service account, cluster role and cluster role binding the building block runs with. | `string` | `"meshstack-github-connector"` | no |
-| <a name="input_tenant_namespace_label"></a> [tenant\_namespace\_label](#input\_tenant\_namespace\_label) | Label the meshStack replicator sets to `true` on tenant namespaces. The building block may only change objects in namespaces carrying it. | `string` | `"io.meshcloud/meshstack.managed-entity"` | no |
+| <a name="input_service_account_name"></a> [service\_account\_name](#input\_service\_account\_name) | Name of the connector's service account. Its other resources derive their names from it. | `string` | `"meshstack-github-connector"` | no |
 
 ## Outputs
 
 | Name | Description |
 |------|-------------|
-| <a name="output_kubernetes_api"></a> [kubernetes\_api](#output\_kubernetes\_api) | API server URL, CA bundle and service account token the building block connects with. |
+| <a name="output_kubernetes_api"></a> [kubernetes\_api](#output\_kubernetes\_api) | Kubernetes API connection data. |
 <!-- END_TF_DOCS -->

@@ -1,5 +1,5 @@
 output "kubernetes_api" {
-  description = "API server URL, CA bundle and service account token the building block connects with."
+  description = "Kubernetes API connection data."
   sensitive   = true
   value = {
     server                 = var.api_server_url
