@@ -9,6 +9,12 @@ variable "kubernetes_api_server_ca_certificate" {
   description = "PEM CA bundle used by the API server. Only set if it uses a certificate from another CA than the cluster's own."
 }
 
+variable "github_actions_cluster_role" {
+  type        = string
+  default     = "edit"
+  description = "Cluster role GitHub Actions gets in the namespace."
+}
+
 variable "github_org" {
   type        = string
   description = "GitHub organization the connector's GitHub App is installed in and the repositories live in."
@@ -93,8 +99,9 @@ output "building_block_definition" {
 module "backplane" {
   source = "github.com/meshcloud/meshstack-hub//modules/kubernetes/github-connector/backplane?ref=${var.hub.git_ref}"
 
-  api_server_url            = var.kubernetes_api_server_url
-  api_server_ca_certificate = var.kubernetes_api_server_ca_certificate
+  api_server_url              = var.kubernetes_api_server_url
+  api_server_ca_certificate   = var.kubernetes_api_server_ca_certificate
+  github_actions_cluster_role = var.github_actions_cluster_role
 }
 
 resource "meshstack_building_block_definition" "this" {
@@ -132,7 +139,7 @@ resource "meshstack_building_block_definition" "this" {
 
     ## 📦 What you get
 
-    - A `github-actions-<repo>-<hash>` service account in the namespace, allowed to edit resources there. Connect several repositories to the same namespace by ordering one connector each.
+    - A `github-actions-<repo>-<hash>` service account in the namespace with the `${var.github_actions_cluster_role}` cluster role. Connect several repositories to the same namespace by ordering one connector each.
     - A new GitHub environment with the secret `KUBECONFIG` and the variable `K8S_NAMESPACE`.
 
     ⚠️ The connector creates the GitHub environment and deletes it again with the building block. Choose an environment that does not exist yet, otherwise the building block fails with a conflict.
@@ -221,6 +228,13 @@ resource "meshstack_building_block_definition" "this" {
             secret_version = nonsensitive(sha256(jsonencode(module.backplane.kubernetes_api)))
           }
         }
+      }
+      cluster_role = {
+        display_name    = "Kubernetes Cluster Role"
+        description     = "Cluster role GitHub Actions gets in the namespace."
+        type            = "STRING"
+        assignment_type = "STATIC"
+        argument        = jsonencode(var.github_actions_cluster_role)
       }
       github_repo = {
         display_name    = "GitHub Repository"

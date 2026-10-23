@@ -22,3 +22,8 @@ variable "github_environment_name" {
   type        = string
   description = "GitHub environment that will be created for this connection."
 }
+
+variable "cluster_role" {
+  type        = string
+  description = "Cluster role granted to the GitHub Actions service account in the namespace."
+}

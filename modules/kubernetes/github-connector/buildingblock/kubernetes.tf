@@ -25,16 +25,16 @@ resource "kubernetes_secret_v1" "github_actions" {
   type = "kubernetes.io/service-account-token"
 }
 
-resource "kubernetes_role_binding_v1" "github_actions_edit" {
+resource "kubernetes_role_binding_v1" "github_actions" {
   metadata {
-    name      = "${kubernetes_service_account_v1.github_actions.metadata[0].name}-edit"
+    name      = "${kubernetes_service_account_v1.github_actions.metadata[0].name}-${var.cluster_role}"
     namespace = var.namespace
   }
 
   role_ref {
     api_group = "rbac.authorization.k8s.io"
     kind      = "ClusterRole"
-    name      = "edit"
+    name      = var.cluster_role
   }
 
   subject {

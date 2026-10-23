@@ -42,12 +42,12 @@ resource "kubernetes_cluster_role_v1" "connector" {
     verbs      = ["get", "create", "update", "patch", "delete"]
   }
 
-  # Clusterrole bind only allowed for `edit` role.
+  # Clusterrole bind only allowed for the specific role.
   rule {
     api_groups     = ["rbac.authorization.k8s.io"]
     resources      = ["clusterroles"]
     verbs          = ["bind"]
-    resource_names = ["edit"]
+    resource_names = [var.github_actions_cluster_role]
   }
 }
 

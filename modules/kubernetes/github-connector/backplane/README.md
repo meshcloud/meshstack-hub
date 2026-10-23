@@ -6,7 +6,8 @@ Sets up the resources used by the connector building block on one Kubernetes clu
 
 - A namespace (`meshstack-github-connector` by default) holding a service account and its
   long-lived token secret.
-- A cluster role that lets the service account manage service accounts, secrets and role bindings.
+- A cluster role that lets the service account manage service accounts, secrets and role bindings,
+  and bind only `github_actions_cluster_role` (`edit` by default).
 - A cluster role binding for this service account/role.
 - A `ValidatingAdmissionPolicy` and binding that reject every create, update or delete by the
   service account outside namespaces labeled `io.meshcloud/meshstack.managed-entity=true`, which
@@ -97,6 +98,7 @@ No modules.
 |------|-------------|------|---------|:--------:|
 | <a name="input_api_server_ca_certificate"></a> [api\_server\_ca\_certificate](#input\_api\_server\_ca\_certificate) | PEM CA bundle that verifies the API server. Defaults to the cluster CA. Set it when the API server presents a certificate signed by another CA. | `string` | `null` | no |
 | <a name="input_api_server_url"></a> [api\_server\_url](#input\_api\_server\_url) | URL of the Kubernetes API server that building block runs and GitHub Actions connect to (example: `https://api.k8s.example.com:6443`). | `string` | n/a | yes |
+| <a name="input_github_actions_cluster_role"></a> [github\_actions\_cluster\_role](#input\_github\_actions\_cluster\_role) | Cluster role the building block may grant to GitHub Actions service accounts in managed namespaces. | `string` | `"edit"` | no |
 | <a name="input_managed_namespace_label"></a> [managed\_namespace\_label](#input\_managed\_namespace\_label) | Label the meshStack replicator sets to `true` on managed namespaces. The building block may only change objects in namespaces carrying it. | `string` | `"io.meshcloud/meshstack.managed-entity"` | no |
 | <a name="input_namespace"></a> [namespace](#input\_namespace) | Namespace the backplane creates for the building block's service account. | `string` | `"meshstack-github-connector"` | no |
 | <a name="input_service_account_name"></a> [service\_account\_name](#input\_service\_account\_name) | Name of the connector's service account. Its other resources derive their names from it. | `string` | `"meshstack-github-connector"` | no |
