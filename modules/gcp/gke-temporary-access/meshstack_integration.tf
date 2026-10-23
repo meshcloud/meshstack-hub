@@ -1,0 +1,320 @@
+variable "gcp_project_id" {
+  type        = string
+  description = "GCP project ID that contains the GKE cluster."
+}
+
+variable "gke_cluster_name" {
+  type        = string
+  description = "Name of the GKE cluster developers get temporary access to."
+}
+
+variable "gke_cluster_location" {
+  type        = string
+  description = "Region or zone of the GKE cluster."
+}
+
+variable "gke_namespaces" {
+  type        = list(string)
+  description = "Namespaces developers can request temporary access to. They must already exist in the cluster."
+}
+
+variable "gke_cluster_role" {
+  type        = string
+  default     = "view"
+  description = "Existing ClusterRole developers are bound to in the chosen namespace."
+}
+
+variable "gke_cleanup_namespace" {
+  type        = string
+  default     = null
+  description = "Namespace for the CronJob that removes expired RoleBindings. Defaults to the backplane's default."
+}
+
+variable "gke_cleanup_image" {
+  type        = string
+  default     = null
+  description = "Image of the cleanup CronJob. It needs bash, date and kubectl. Defaults to the backplane's default."
+}
+
+variable "workload_identity" {
+  type = object({
+    pool_identifier         = optional(string, "meshstack-building-block-pool")
+    subject_token_file_path = optional(string, "/var/run/secrets/workload-identity/gcp/token")
+  })
+  default     = {}
+  description = "Workload identity federation settings for GCP authentication. GCP soft-deletes a workload identity pool for ~30 days and refuses to reissue its id in that window, so a backplane that has to be recreated needs a fresh pool_identifier."
+}
+
+variable "backplane_service_account_id" {
+  type        = string
+  default     = "buildingblock-gke-access-sa"
+  description = "Account id of the backplane service account. It also prefixes the in-cluster ClusterRoles and admission policy, so it must be unique per project and per cluster."
+}
+
+variable "bbd_display_name" {
+  type        = string
+  default     = null
+  description = "Overrides the name of the marketplace entry application teams see in the catalog."
+}
+
+variable "bbd_description" {
+  type        = string
+  default     = null
+  description = "Overrides the one-line description shown next to the marketplace entry."
+}
+
+variable "bbd_readme" {
+  type        = string
+  default     = null
+  description = "Overrides the markdown readme shown in the marketplace before ordering."
+}
+
+variable "building_block_runner_uuid" {
+  type        = string
+  default     = null
+  description = "Runs this building block on the given meshStack building block runner instead of the shared one meshStack hosts."
+}
+
+variable "meshstack" {
+  type = object({
+    owning_workspace_identifier = string
+    tags                        = optional(map(list(string)), {})
+  })
+  description = "Shared meshStack context. Tags are optional and propagated to building block definition metadata."
+}
+
+variable "hub" {
+  type = object({
+    git_ref   = optional(string, "main")
+    bbd_draft = optional(bool, true)
+  })
+  const = true
+  default = {
+    git_ref   = "main"
+    bbd_draft = true
+  }
+  description = <<-EOT
+  `git_ref`: Hub release reference. Set to a tag (e.g. 'v1.2.3') or branch or commit sha of the meshstack-hub repo.
+  `bbd_draft`: If true, the building block definition version is kept in draft mode.
+  EOT
+}
+
+output "building_block_definition" {
+  description = "BBD is consumed in building block compositions."
+  value = {
+    uuid        = meshstack_building_block_definition.this.metadata.uuid
+    version_ref = var.hub.bbd_draft ? meshstack_building_block_definition.this.version_latest : meshstack_building_block_definition.this.version_latest_release
+  }
+}
+
+# Needs a google provider and a kubernetes provider pointing at the cluster, both configured by the
+# caller.
+module "backplane" {
+  source = "github.com/meshcloud/meshstack-hub//modules/gcp/gke-temporary-access/backplane?ref=${var.hub.git_ref}"
+
+  project_id         = var.gcp_project_id
+  namespaces         = toset(var.gke_namespaces)
+  cluster_role       = var.gke_cluster_role
+  cleanup_namespace  = var.gke_cleanup_namespace
+  cleanup_image      = var.gke_cleanup_image
+  service_account_id = var.backplane_service_account_id
+
+  workload_identity_federation = {
+    workload_identity_pool_identifier = var.workload_identity.pool_identifier
+    subject_token_file_path           = var.workload_identity.subject_token_file_path
+  }
+
+  workload_identity_federation_trust = {
+    issuer   = meshstack_building_block_definition.this.version_latest.workload_identity_federation.issuer
+    audience = meshstack_building_block_definition.this.version_latest.workload_identity_federation.gcp.audience
+    subjects = [meshstack_building_block_definition.this.version_latest.workload_identity_federation.subject]
+  }
+}
+
+resource "meshstack_building_block_definition" "this" {
+  metadata = {
+    owned_by_workspace = var.meshstack.owning_workspace_identifier
+    tags               = var.meshstack.tags
+  }
+
+  spec = {
+    display_name = coalesce(var.bbd_display_name, "GKE Temporary Namespace Access")
+    description  = coalesce(var.bbd_description, "Grants you access to one namespace of a GKE cluster for a few hours.")
+    readme = coalesce(var.bbd_readme, chomp(<<-EOT
+      This building block grants you time-limited access to one namespace of the
+      `${var.gke_cluster_name}` GKE cluster, on your own Google account. Choose the namespace and
+      how many hours you need, up to 8. The access ends automatically.
+
+      ## 🎯 When to use it
+
+      Use this building block when you:
+      - need to debug a workload in a namespace you can't normally see.
+      - want to inspect pods, logs, or configuration without asking for permanent cluster access.
+
+      ## 💡 Usage examples
+
+      **Example 1: Debugging a failing deployment**
+      Your service in `payments` keeps restarting. You request 2 hours of access, run
+      `gcloud container clusters get-credentials` as shown in the summary, and read the pod logs
+      and events with `kubectl`.
+
+      **Example 2: Checking configuration after a release**
+      After a release you want to confirm which ConfigMaps and image versions are running. You
+      request 1 hour of access and inspect the namespace's resources.
+
+      ## 📊 Shared Responsibility
+
+      | Responsibility | Platform Team | Application Team |
+      |---|:---:|:---:|
+      | Decide which namespaces can be requested and with which role | ✅ | ❌ |
+      | Remove access when it expires | ✅ | ❌ |
+      | Request only the namespace and time you need | ❌ | ✅ |
+      | Sign in to `gcloud` with the Google account matching your meshStack email | ❌ | ✅ |
+      | Delete the building block when you are done | ❌ | ✅ |
+      EOT
+    ))
+    support_url       = ""
+    documentation_url = ""
+    target_type       = "WORKSPACE_LEVEL"
+  }
+
+  version_spec = {
+    draft         = var.hub.bbd_draft
+    deletion_mode = "DELETE"
+    runner_ref = var.building_block_runner_uuid == null ? null : {
+      kind = "meshBuildingBlockRunner"
+      uuid = var.building_block_runner_uuid
+    }
+
+    implementation = {
+      terraform = {
+        terraform_version              = "1.12.5"
+        repository_url                 = "https://github.com/meshcloud/meshstack-hub.git"
+        repository_path                = "modules/gcp/gke-temporary-access/buildingblock"
+        ref_name                       = var.hub.git_ref
+        use_mesh_http_backend_fallback = true
+      }
+    }
+
+    inputs = {
+      GOOGLE_APPLICATION_CREDENTIALS = {
+        type            = "STRING"
+        assignment_type = "STATIC"
+        display_name    = "Google Application Credentials"
+        description     = "The path to the Google application credentials JSON file for authentication."
+        is_environment  = true
+        argument        = jsonencode("./CREDENTIALS_FILE")
+      }
+      CREDENTIALS_FILE = {
+        type            = "FILE"
+        assignment_type = "STATIC"
+        display_name    = "Credentials File"
+        description     = "External account credentials that let the runner federate into the backplane's service account."
+
+        sensitive = {
+          argument = {
+            secret_value   = "data:application/json;base64,${base64encode(module.backplane.credentials_json)}"
+            secret_version = nonsensitive(sha256("data:application/json;base64,${base64encode(module.backplane.credentials_json)}"))
+          }
+        }
+      }
+      project_id = {
+        type            = "STRING"
+        assignment_type = "STATIC"
+        display_name    = "GCP Project ID"
+        description     = "GCP project ID that contains the GKE cluster."
+        argument        = jsonencode(var.gcp_project_id)
+      }
+      cluster_name = {
+        type            = "STRING"
+        assignment_type = "STATIC"
+        display_name    = "GKE Cluster Name"
+        description     = "Name of the GKE cluster."
+        argument        = jsonencode(var.gke_cluster_name)
+      }
+      cluster_location = {
+        type            = "STRING"
+        assignment_type = "STATIC"
+        display_name    = "GKE Cluster Location"
+        description     = "Region or zone of the GKE cluster."
+        argument        = jsonencode(var.gke_cluster_location)
+      }
+      cluster_role = {
+        type            = "STRING"
+        assignment_type = "STATIC"
+        display_name    = "Cluster Role"
+        description     = "ClusterRole the developer is bound to."
+        argument        = jsonencode(module.backplane.cluster_role)
+      }
+      binding_label = {
+        type            = "STRING"
+        assignment_type = "STATIC"
+        display_name    = "Binding Label"
+        description     = "Label the cleanup CronJob selects RoleBindings by."
+        argument        = jsonencode(module.backplane.binding_label)
+      }
+      expiry_annotation = {
+        type            = "STRING"
+        assignment_type = "STATIC"
+        display_name    = "Expiry Annotation"
+        description     = "Annotation the cleanup CronJob reads the expiry from."
+        argument        = jsonencode(module.backplane.expiry_annotation)
+      }
+      author = {
+        type            = "CODE"
+        assignment_type = "AUTHOR"
+        display_name    = "Requester"
+        description     = "The user who requested access. Injected by meshStack."
+      }
+      namespace = {
+        type              = "SINGLE_SELECT"
+        assignment_type   = "USER_INPUT"
+        display_name      = "Namespace"
+        description       = "Namespace you need access to."
+        selectable_values = sort(tolist(module.backplane.namespaces))
+      }
+      duration_hours = {
+        type              = "SINGLE_SELECT"
+        assignment_type   = "USER_INPUT"
+        display_name      = "Duration (hours)"
+        description       = "How many hours you need access, counted from when the building block first runs."
+        selectable_values = [for hours in range(1, 9) : tostring(hours)]
+        default_value     = jsonencode("2")
+      }
+    }
+
+    outputs = {
+      expires_at = {
+        type            = "STRING"
+        assignment_type = "NONE"
+        display_name    = "Expires At"
+        description     = "When the access ends, in UTC."
+      }
+      summary = {
+        type            = "STRING"
+        assignment_type = "SUMMARY"
+        display_name    = "Summary"
+        description     = "How to connect, or that the access has expired."
+      }
+    }
+  }
+}
+
+terraform {
+  required_version = ">= 1.12.0"
+
+  required_providers {
+    meshstack = {
+      source  = "meshcloud/meshstack"
+      version = ">= 0.26.2"
+    }
+    google = {
+      source  = "hashicorp/google"
+      version = ">= 7.0, < 8.0.0"
+    }
+    kubernetes = {
+      source  = "hashicorp/kubernetes"
+      version = ">= 3.0.0, < 4.0.0"
+    }
+  }
+}
