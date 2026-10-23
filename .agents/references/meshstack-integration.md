@@ -25,6 +25,21 @@ A secondary purpose of these files is to serve as a ready-to-use Terraform modul
   ```
   The `const = true` attribute on `var.hub` allows Terraform/OpenTofu to resolve the interpolation at `init` time.
 
+## The `meshStack import` check
+
+meshStack imports a module by reading its `meshstack_integration.tf` from `main` with its own HCL
+parser, which does not accept everything OpenTofu does. So a pull request that changes a
+`meshstack_integration.tf` gets the required `meshStack import` check: a meshStack backend parses
+every `meshstack_integration.tf` with the pull request applied, and the check output lists each
+module that failed. A pull request that changes none of them passes the check at once.
+
+A fork pull request gets no run. A maintainer has to push its branch to this repository and open a
+pull request from it.
+
+When the check fails on a file that `tofu validate` accepts, the file uses a construct meshStack
+cannot read yet. Say so on the pull request and leave it to a meshStack developer, who decides
+whether meshStack learns the construct or the module avoids it.
+
 <!-- scorecard-checks: required_providers_meshstack -->
 ## Required providers
 
