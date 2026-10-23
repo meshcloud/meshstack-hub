@@ -140,7 +140,7 @@ resource "meshstack_building_block_definition" "this" {
 
   spec = {
     display_name = coalesce(var.bbd_display_name, "STACKIT Server")
-    symbol       = "https://raw.githubusercontent.com/meshcloud/meshstack-hub/${var.hub.git_ref}/modules/stackit/server/buildingblock/logo.png"
+    symbol       = "https://raw.githubusercontent.com/meshcloud/meshstack-hub/${var.hub.git_ref}/modules/stackit/server/buildingblock/logo.svg"
     description = coalesce(var.bbd_description, chomp(<<-EOT
       Provisions a STACKIT VM with a generated SSH key and an optional personal cloud-init.
     EOT

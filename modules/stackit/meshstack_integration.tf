@@ -265,7 +265,7 @@ resource "meshstack_building_block_definition" "this" {
 
   spec = {
     display_name              = each.value.bbd_display_name
-    symbol                    = "https://raw.githubusercontent.com/meshcloud/meshstack-hub/${var.hub.git_ref}/modules/stackit/project/buildingblock/logo.png"
+    symbol                    = "https://raw.githubusercontent.com/meshcloud/meshstack-hub/${var.hub.git_ref}/modules/stackit/project/buildingblock/logo.svg"
     description               = "Creates a new STACKIT project and manages user access permissions with configurable role-based access control."
     support_url               = "https://portal.stackit.cloud"
     target_type               = "TENANT_LEVEL"
