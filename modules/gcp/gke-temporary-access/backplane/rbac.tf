@@ -21,6 +21,9 @@ resource "kubernetes_cluster_role_v1" "grant_access" {
 
 # Bound per namespace, so the building block can only grant access to the namespaces offered.
 resource "kubernetes_role_binding_v1" "grant_access" {
+  # Grant the rights only once the policy that restricts them is in force.
+  depends_on = [kubernetes_manifest.rolebinding_policy_binding]
+
   for_each = var.namespaces
 
   metadata {

@@ -35,6 +35,21 @@ The IAM condition can't force an expiry on the grants the service account makes.
 theoretically grant `roles/container.clusterViewer` without a time limit. That grant does not
 give access to any cluster resources though.
 
+## Admission policy
+
+RBAC can't restrict RoleBindings by label or by subject. A ValidatingAdmissionPolicy does, for
+RoleBindings the building block's service account or the cleanup ServiceAccount create, update or
+delete:
+
+- They may only update or delete RoleBindings labelled with `binding_label`. The backplane's own
+  RoleBindings and any others in the namespaces are out of reach.
+- New RoleBindings must carry `binding_label` and `expiry_annotation`, have exactly one subject of
+  kind `User`, and reference the ClusterRole `cluster_role`. That rules out binding a group such as
+  `system:authenticated`.
+
+ValidatingAdmissionPolicy is GA since Kubernetes 1.30, so the cluster must run GKE 1.30 or later.
+Cluster admins can still remove the policy.
+
 ## Cleanup CronJob
 
 A CronJob in `cleanup_namespace` (default `gke-temporary-access`) runs every five minutes and
@@ -56,7 +71,9 @@ The identity that applies this module needs the following on `var.project_id`:
 | `roles/resourcemanager.projectIamAdmin` | grant that service account its project roles |
 
 It also needs RBAC rights in the cluster to create the cleanup namespace and CronJob, ClusterRoles,
-and RoleBindings that grant `bind` on `cluster_role`, which in practice means `cluster-admin`.
+RoleBindings that grant `bind` on `cluster_role`, and the ValidatingAdmissionPolicy, which in
+practice means `cluster-admin`. The cluster must be reachable while planning, because the policy is
+a `kubernetes_manifest`.
 
 `serviceusage.serviceUsageAdmin` and the Service Usage API itself must be in place before the first
 apply:
@@ -109,6 +126,8 @@ No modules.
 | [kubernetes_cluster_role_v1.cleanup](https://registry.terraform.io/providers/hashicorp/kubernetes/latest/docs/resources/cluster_role_v1) | resource |
 | [kubernetes_cluster_role_v1.grant_access](https://registry.terraform.io/providers/hashicorp/kubernetes/latest/docs/resources/cluster_role_v1) | resource |
 | [kubernetes_cron_job_v1.cleanup](https://registry.terraform.io/providers/hashicorp/kubernetes/latest/docs/resources/cron_job_v1) | resource |
+| [kubernetes_manifest.rolebinding_policy](https://registry.terraform.io/providers/hashicorp/kubernetes/latest/docs/resources/manifest) | resource |
+| [kubernetes_manifest.rolebinding_policy_binding](https://registry.terraform.io/providers/hashicorp/kubernetes/latest/docs/resources/manifest) | resource |
 | [kubernetes_namespace_v1.cleanup](https://registry.terraform.io/providers/hashicorp/kubernetes/latest/docs/resources/namespace_v1) | resource |
 | [kubernetes_role_binding_v1.cleanup](https://registry.terraform.io/providers/hashicorp/kubernetes/latest/docs/resources/role_binding_v1) | resource |
 | [kubernetes_role_binding_v1.grant_access](https://registry.terraform.io/providers/hashicorp/kubernetes/latest/docs/resources/role_binding_v1) | resource |
