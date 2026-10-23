@@ -16,7 +16,7 @@ variable "github_org" {
 
 variable "github_app_id" {
   type        = string
-  description = "ID of the GitHub App the building block authenticates as. A dedicated App with only Administration and Environments write, not the App of the `github/repository` building block — see the backplane README."
+  description = "ID of the GitHub App the building block authenticates as. A dedicated App with only Administration and Environments write and Actions read, not the App of the `github/repository` building block — see the backplane README."
 }
 
 variable "github_app_installation_id" {
