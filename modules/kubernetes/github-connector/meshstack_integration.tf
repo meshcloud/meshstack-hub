@@ -133,7 +133,9 @@ resource "meshstack_building_block_definition" "this" {
     ## 📦 What you get
 
     - A `github-actions-<repo>-<hash>` service account in the namespace, allowed to edit resources there. Connect several repositories to the same namespace by ordering one connector each.
-    - A GitHub environment with the secret `KUBECONFIG` and the variable `K8S_NAMESPACE`.
+    - A new GitHub environment with the secret `KUBECONFIG` and the variable `K8S_NAMESPACE`.
+
+    ⚠️ The connector creates the GitHub environment and deletes it again with the building block. Choose an environment that does not exist yet, otherwise the building block fails with a conflict.
 
     The connector provides no image registry. Your deployments reference images the cluster can already pull.
 
@@ -229,7 +231,7 @@ resource "meshstack_building_block_definition" "this" {
       }
       github_environment_name = {
         display_name    = "GitHub Environment"
-        description     = "GitHub environment that receives the credentials of this namespace."
+        description     = "GitHub environment that receives the credentials of this namespace. The connector creates it, so it must not exist yet."
         type            = "STRING"
         assignment_type = "USER_INPUT"
         default_value   = jsonencode("development")

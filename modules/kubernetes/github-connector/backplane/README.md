@@ -71,7 +71,7 @@ installation's settings URL) and the key as `github_app_id`, `github_app_install
 ## Requirements
 
 | Name | Version |
-| ---- | ------- |
+|------|---------|
 | <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.12.0 |
 | <a name="requirement_kubernetes"></a> [kubernetes](#requirement\_kubernetes) | >= 3.0.0, < 4.0.0 |
 
@@ -82,7 +82,7 @@ No modules.
 ## Resources
 
 | Name | Type |
-| ---- | ---- |
+|------|------|
 | [kubernetes_cluster_role_binding_v1.connector](https://registry.terraform.io/providers/hashicorp/kubernetes/latest/docs/resources/cluster_role_binding_v1) | resource |
 | [kubernetes_cluster_role_v1.connector](https://registry.terraform.io/providers/hashicorp/kubernetes/latest/docs/resources/cluster_role_v1) | resource |
 | [kubernetes_manifest.tenant_namespaces_only_binding](https://registry.terraform.io/providers/hashicorp/kubernetes/latest/docs/resources/manifest) | resource |
@@ -94,7 +94,7 @@ No modules.
 ## Inputs
 
 | Name | Description | Type | Default | Required |
-| ---- | ----------- | ---- | ------- | :------: |
+|------|-------------|------|---------|:--------:|
 | <a name="input_api_server_ca_certificate"></a> [api\_server\_ca\_certificate](#input\_api\_server\_ca\_certificate) | PEM CA bundle that verifies the API server. Defaults to the cluster CA the service account token carries; set it when the API server presents a certificate signed by another CA. | `string` | `null` | no |
 | <a name="input_api_server_url"></a> [api\_server\_url](#input\_api\_server\_url) | URL of the Kubernetes API server that building block runs and GitHub Actions connect to (example: `https://api.k8s.example.com:6443`). | `string` | n/a | yes |
 | <a name="input_namespace"></a> [namespace](#input\_namespace) | Namespace the backplane creates for the building block's service account. | `string` | `"meshstack-github-connector"` | no |
@@ -104,6 +104,6 @@ No modules.
 ## Outputs
 
 | Name | Description |
-| ---- | ----------- |
+|------|-------------|
 | <a name="output_kubernetes_api"></a> [kubernetes\_api](#output\_kubernetes\_api) | API server URL, CA bundle and service account token the building block connects with. |
 <!-- END_TF_DOCS -->

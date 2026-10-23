@@ -2,15 +2,18 @@
 name: GitHub Actions Connector for Kubernetes
 supportedPlatforms:
   - kubernetes
-description: Connects a GitHub repository to a Kubernetes namespace, so GitHub Actions deploys into the namespace.
+description: Create a service account in Kubernetes and make the credentials available as a GitHub environment secret.
 ---
 
 # GitHub Actions Connector for Kubernetes
 
-This building block wires one GitHub repository environment to one Kubernetes namespace. It creates
-a `github-actions-<repo>-<hash>` service account in the namespace, binds it to `edit` there, and
-hands its credentials to a GitHub environment. A namespace can hold several connectors, one per
-repository and environment; a starter kit orders one per stage.
+This building block connects one GitHub repository environment to one Kubernetes namespace. It creates
+a `github-actions-<repo>-<hash>` service account in the namespace, assigns `edit` permissions, and
+hands the credentials to a GitHub environment. A namespace can have several connectors, one per
+repository and environment.
+
+The connector creates the GitHub environment and deletes it again with the building block. The
+environment must not exist before, otherwise creating the building block fails with a conflict.
 
 ## Contract with the repository's workflow
 
@@ -20,9 +23,6 @@ The GitHub environment receives:
 |---|---|---|
 | `KUBECONFIG` | secret | kubeconfig of the service account, context set to the namespace |
 | `K8S_NAMESPACE` | variable | the namespace name |
-
-The connector does not provide an image registry. Deployments reference images the cluster can
-already pull.
 
 <!-- BEGIN_TF_DOCS -->
 ## Requirements
