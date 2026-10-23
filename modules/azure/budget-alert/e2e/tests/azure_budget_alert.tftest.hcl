@@ -1,7 +1,9 @@
-run "azure_budget_alert_hub" {
+# Mode-agnostic: asserts on the building block only, so it runs unchanged whether the definition was
+# built from hub source or already deployed by a foundation.
+run "azure_budget_alert" {
   assert {
     condition     = meshstack_building_block.this.status.status == "SUCCEEDED"
-    error_message = "azure/budget-alert hub building block expected SUCCEEDED, got ${meshstack_building_block.this.status.status}"
+    error_message = "azure/budget-alert building block expected SUCCEEDED, got ${meshstack_building_block.this.status.status}"
   }
 
   assert {
