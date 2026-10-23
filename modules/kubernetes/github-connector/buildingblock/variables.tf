@@ -1,6 +1,6 @@
 variable "namespace" {
   type        = string
-  description = "Namespace of the tenant the connector deploys into."
+  description = "The Kubernetes namespace that will be deployed to."
 }
 
 variable "kubernetes_api" {
@@ -10,15 +10,15 @@ variable "kubernetes_api" {
     token                  = string
   })
   sensitive   = true
-  description = "API server URL, PEM CA bundle and token of the connector backplane's service account."
+  description = "Kubernetes API server connection data."
 }
 
 variable "github_repo" {
   type        = string
-  description = "Name of the GitHub repository to connect, within the organization the GitHub App is installed in."
+  description = "Name of the GitHub repository to connect."
 }
 
 variable "github_environment_name" {
   type        = string
-  description = "GitHub environment that receives the deployment credentials of this namespace."
+  description = "GitHub environment that will be created for this connection."
 }

@@ -5,7 +5,7 @@ provider "kubernetes" {
 }
 
 # Authenticates as the GitHub App from GITHUB_OWNER, GITHUB_APP_ID, GITHUB_APP_INSTALLATION_ID and
-# GITHUB_APP_PEM_FILE in the run's environment.
+# GITHUB_APP_PEM_FILE environment variables.
 provider "github" {
   app_auth {}
 }

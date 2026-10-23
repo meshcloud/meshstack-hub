@@ -1,12 +1,11 @@
 locals {
-  # Several connectors may share a namespace, one per repository and environment. Repository and
-  # environment names allow characters Kubernetes names reject, so the readable prefix is
-  # sanitized and the hash keeps names unique.
+  # Several connectors may share a namespace, one per repository and environment.
+  # Sanitize the repo name for kubernetes and add a hash to avoid collisions.
   repo_slug            = trim(substr(replace(lower(var.github_repo), "/[^a-z0-9-]+/", "-"), 0, 40), "-")
   service_account_name = "github-actions-${local.repo_slug}-${substr(sha256("${var.github_repo}/${var.github_environment_name}"), 0, 8)}"
 }
 
-# Identity GitHub Actions deploys with. It is bound to this namespace only.
+# Credentials for this service account will be passed to GitHub.
 resource "kubernetes_service_account_v1" "github_actions" {
   metadata {
     name      = local.service_account_name
@@ -16,7 +15,7 @@ resource "kubernetes_service_account_v1" "github_actions" {
 
 resource "kubernetes_secret_v1" "github_actions" {
   metadata {
-    name      = "${local.service_account_name}-token"
+    name      = "${kubernetes_service_account_v1.github_actions.metadata[0].name}-token"
     namespace = var.namespace
     annotations = {
       "kubernetes.io/service-account.name" = kubernetes_service_account_v1.github_actions.metadata[0].name
@@ -28,7 +27,7 @@ resource "kubernetes_secret_v1" "github_actions" {
 
 resource "kubernetes_role_binding_v1" "github_actions_edit" {
   metadata {
-    name      = "${local.service_account_name}-edit"
+    name      = "${kubernetes_service_account_v1.github_actions.metadata[0].name}-edit"
     namespace = var.namespace
   }
 
