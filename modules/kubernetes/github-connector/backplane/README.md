@@ -45,16 +45,19 @@ integration passes it to the building block definition as a sensitive static inp
 
 The building block authenticates to GitHub as a GitHub App that the platform team creates for this
 connector alone. GitHub has no API for creating Apps, so the backplane cannot provision it. Do not
-reuse the App of the `github/repository` building block: that one needs `Administration` write,
-which can delete repositories, and every connector run would hold it.
+reuse the App of the `github/repository` building block: every connector run would hold its
+Contents and Workflows write on all repositories.
+
+Creating a GitHub environment requires `Administration` write, which also allows deleting the
+repository. Install the App only on the repositories it connects when that is a concern.
 
 Create it under the organization's **Settings → Developer settings → GitHub Apps → New GitHub App**:
 
 | Setting | Value |
 |---|---|
 | Webhook | inactive |
-| Repository permissions → Environments | Read and write — create the environment, its secret and variables |
-| Repository permissions → Actions | Read and write — read the environment, dispatch `github_workflow_filename` and wait for its run. Read-only suffices when no workflow is dispatched. |
+| Repository permissions → Administration | Read and write — create the environment |
+| Repository permissions → Environments | Read and write — the environment's secret and variable |
 | Repository permissions → Metadata | Read-only (mandatory) |
 | All other permissions | No access |
 | Where can this GitHub App be installed? | Only on this account |

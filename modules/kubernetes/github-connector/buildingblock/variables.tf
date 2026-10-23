@@ -22,15 +22,3 @@ variable "github_environment_name" {
   type        = string
   description = "GitHub environment that receives the deployment credentials of this namespace."
 }
-
-variable "deploy_branch" {
-  type        = string
-  default     = "main"
-  description = "Branch whose workflow deploys into this namespace. The connector dispatches the workflow on it once its credentials are in place."
-}
-
-variable "workflow_filename" {
-  type        = string
-  default     = ""
-  description = "Workflow to dispatch on `deploy_branch` after setup (example: `k8s-deploy.yml`). It must declare `on: workflow_dispatch`. Empty skips the dispatch."
-}

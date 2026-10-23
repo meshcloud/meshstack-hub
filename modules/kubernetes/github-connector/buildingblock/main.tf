@@ -48,27 +48,3 @@ resource "github_actions_environment_variable" "k8s_namespace" {
   variable_name = "K8S_NAMESPACE"
   value         = var.namespace
 }
-
-resource "terraform_data" "workflow_dispatch" {
-  lifecycle {
-    enabled = var.workflow_filename != ""
-  }
-
-  triggers_replace = [sha256(local.kubeconfig)]
-
-  provisioner "local-exec" {
-    command     = "${path.module}/dispatch_github_workflow.py"
-    interpreter = ["python3"]
-    environment = {
-      GITHUB_REPO       = var.github_repo
-      WORKFLOW_FILENAME = var.workflow_filename
-      WORKFLOW_REF      = var.deploy_branch
-      # GITHUB_OWNER and the GITHUB_APP_* credentials come from the run's environment inputs.
-    }
-  }
-
-  depends_on = [
-    github_actions_environment_secret.kubeconfig,
-    github_actions_environment_variable.k8s_namespace,
-  ]
-}

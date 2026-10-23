@@ -24,9 +24,6 @@ The GitHub environment receives:
 The connector does not provide an image registry. Deployments reference images the cluster can
 already pull.
 
-When `workflow_filename` is set, the connector dispatches that workflow on `deploy_branch` once the
-credentials are in place, so the first deployment does not wait for a push.
-
 <!-- BEGIN_TF_DOCS -->
 ## Requirements
 
@@ -50,18 +47,15 @@ No modules.
 | [kubernetes_role_binding_v1.github_actions_edit](https://registry.terraform.io/providers/hashicorp/kubernetes/latest/docs/resources/role_binding_v1) | resource |
 | [kubernetes_secret_v1.github_actions](https://registry.terraform.io/providers/hashicorp/kubernetes/latest/docs/resources/secret_v1) | resource |
 | [kubernetes_service_account_v1.github_actions](https://registry.terraform.io/providers/hashicorp/kubernetes/latest/docs/resources/service_account_v1) | resource |
-| [terraform_data.workflow_dispatch](https://registry.terraform.io/providers/hashicorp/terraform/latest/docs/resources/data) | resource |
 
 ## Inputs
 
 | Name | Description | Type | Default | Required |
 |------|-------------|------|---------|:--------:|
-| <a name="input_deploy_branch"></a> [deploy\_branch](#input\_deploy\_branch) | Branch whose workflow deploys into this namespace. The connector dispatches the workflow on it once its credentials are in place. | `string` | `"main"` | no |
 | <a name="input_github_environment_name"></a> [github\_environment\_name](#input\_github\_environment\_name) | GitHub environment that receives the deployment credentials of this namespace. | `string` | n/a | yes |
 | <a name="input_github_repo"></a> [github\_repo](#input\_github\_repo) | Name of the GitHub repository to connect, within the organization the GitHub App is installed in. | `string` | n/a | yes |
 | <a name="input_kubernetes_api"></a> [kubernetes\_api](#input\_kubernetes\_api) | API server URL, PEM CA bundle and token of the connector backplane's service account. | <pre>object({<br/>    server                 = string<br/>    cluster_ca_certificate = string<br/>    token                  = string<br/>  })</pre> | n/a | yes |
 | <a name="input_namespace"></a> [namespace](#input\_namespace) | Namespace of the tenant the connector deploys into. | `string` | n/a | yes |
-| <a name="input_workflow_filename"></a> [workflow\_filename](#input\_workflow\_filename) | Workflow to dispatch on `deploy_branch` after setup (example: `k8s-deploy.yml`). It must declare `on: workflow_dispatch`. Empty skips the dispatch. | `string` | `""` | no |
 
 ## Outputs
 
