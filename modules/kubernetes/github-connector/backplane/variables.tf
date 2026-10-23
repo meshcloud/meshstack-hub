@@ -26,3 +26,9 @@ variable "managed_namespace_label" {
   default     = "io.meshcloud/meshstack.managed-entity"
   description = "Label the meshStack replicator sets to `true` on managed namespaces. The building block may only change objects in namespaces carrying it."
 }
+
+variable "github_actions_cluster_role" {
+  type        = string
+  default     = "edit"
+  description = "Cluster role the building block may grant to GitHub Actions service accounts in managed namespaces."
+}

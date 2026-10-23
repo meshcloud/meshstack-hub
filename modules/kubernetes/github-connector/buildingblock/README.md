@@ -8,9 +8,9 @@ description: Create a service account in Kubernetes and make the credentials ava
 # GitHub Actions Connector for Kubernetes
 
 This building block connects one GitHub repository environment to one Kubernetes namespace. It creates
-a `github-actions-<repo>-<hash>` service account in the namespace, assigns `edit` permissions, and
-hands the credentials to a GitHub environment. A namespace can have several connectors, one per
-repository and environment.
+a `github-actions-<repo>-<hash>` service account in the namespace, binds it to a cluster role
+(`edit` by default), and hands the credentials to a GitHub environment. A namespace can have
+several connectors, one per repository and environment.
 
 The connector creates the GitHub environment and deletes it again with the building block. The
 environment must not exist before, otherwise creating the building block fails with a conflict.
@@ -44,7 +44,7 @@ No modules.
 | [github_actions_environment_secret.kubeconfig](https://registry.terraform.io/providers/integrations/github/latest/docs/resources/actions_environment_secret) | resource |
 | [github_actions_environment_variable.k8s_namespace](https://registry.terraform.io/providers/integrations/github/latest/docs/resources/actions_environment_variable) | resource |
 | [github_repository_environment.this](https://registry.terraform.io/providers/integrations/github/latest/docs/resources/repository_environment) | resource |
-| [kubernetes_role_binding_v1.github_actions_edit](https://registry.terraform.io/providers/hashicorp/kubernetes/latest/docs/resources/role_binding_v1) | resource |
+| [kubernetes_role_binding_v1.github_actions](https://registry.terraform.io/providers/hashicorp/kubernetes/latest/docs/resources/role_binding_v1) | resource |
 | [kubernetes_secret_v1.github_actions](https://registry.terraform.io/providers/hashicorp/kubernetes/latest/docs/resources/secret_v1) | resource |
 | [kubernetes_service_account_v1.github_actions](https://registry.terraform.io/providers/hashicorp/kubernetes/latest/docs/resources/service_account_v1) | resource |
 
@@ -52,6 +52,7 @@ No modules.
 
 | Name | Description | Type | Default | Required |
 |------|-------------|------|---------|:--------:|
+| <a name="input_cluster_role"></a> [cluster\_role](#input\_cluster\_role) | Cluster role granted to the GitHub Actions service account in the namespace. | `string` | n/a | yes |
 | <a name="input_github_environment_name"></a> [github\_environment\_name](#input\_github\_environment\_name) | GitHub environment that will be created for this connection. | `string` | n/a | yes |
 | <a name="input_github_repo"></a> [github\_repo](#input\_github\_repo) | Name of the GitHub repository to connect. | `string` | n/a | yes |
 | <a name="input_kubernetes_api"></a> [kubernetes\_api](#input\_kubernetes\_api) | Kubernetes API server connection data. | <pre>object({<br/>    server                 = string<br/>    cluster_ca_certificate = string<br/>    token                  = string<br/>  })</pre> | n/a | yes |
