@@ -1,72 +1,91 @@
-# GKE Temporary Access Backplane
+# GKE Temporary Namespace Access Backplane
 
-This module prepares a GCP project and its GKE cluster for the GKE Temporary Access building block.
-The building block gives a user time-limited access to one namespace. It does that with two grants
-to the developer's Google identity:
+This module prepares a GCP project and its GKE cluster for the GKE Temporary Namespace Access
+building block. The building block grants a developer time-limited access to one namespace using
+their Google account. It makes two grants:
 
-- `roles/container.clusterViewer` on the project, with an IAM condition that expires. GKE refuses
-  authentication without `container.clusters.get`.
-- A RoleBinding to `cluster_role` (default `view`) in the chosen namespace. It sets what the
-  developer can do.
+- GCP: `roles/container.clusterViewer` on the project, with an IAM condition that expires. This is
+  required because GKE refuses authentication without `container.clusters.get`.
+- GKE: A RoleBinding to `cluster_role` (default `view`) in the chosen namespace. It sets what the
+  building block user can do in the namespace.
 
 The backplane enables the APIs, creates a service account for the building block with workload
 identity federation, and gives it just enough rights to make those two grants. It also runs a
 CronJob that removes expired RoleBindings.
 
-## Prerequisite: no permanent `container.clusters.get`
+## How access expires
 
-The expiry only works if developers can't authenticate to the cluster any other way. Developers must
-not permanently hold a role that contains `container.clusters.get` on the project, directly or
-inherited from a folder or the organization. Basic roles (`roles/viewer`, `roles/editor`,
-`roles/owner`) and all `roles/container.*` roles contain it.
+The conditional IAM grant expires at the requested time. If another IAM grant still allows the
+developer to authenticate, the cleanup CronJob removes this building block's RoleBinding on its
+next successful run. It runs every five minutes. Independently granted access is unaffected.
 
-`roles/logging.viewer` (part of `roles/viewer`) exposes container logs of every namespace in Cloud
-Logging. Remove it as well if the namespaces' logs are sensitive.
+For IAM expiry to prevent cluster authentication, developers must not hold `container.clusters.get`
+through another grant. Check effective permissions on the project, including roles inherited from a
+folder or the organization.
 
-## What the building block's service account may do
+## Building block service account permissions
 
 | Where | Grant | Why |
 |---|---|---|
 | Project | `roles/container.clusterViewer` | authenticate to the cluster |
 | Project | `roles/resourcemanager.projectIamAdmin`, limited by an IAM condition to grants of `roles/container.clusterViewer` | grant developers time-limited cluster access |
-| Cluster | create and delete RoleBindings, `bind` on `cluster_role` only | grant developers `cluster_role` in a namespace |
+| Cluster | get, list, create, update, patch and delete RoleBindings; `bind` on `cluster_role` only | grant developers `cluster_role` in a namespace |
 
-The IAM condition can't force an expiry on the grants the service account makes. So it can
-theoretically grant `roles/container.clusterViewer` without a time limit. That grant does not
-give access to any cluster resources though.
+The IAM condition restricts which role the service account can grant, but does not require those
+grants to expire. The service account could therefore grant `roles/container.clusterViewer` without
+a time limit. That role alone does not authorize access to resources inside a namespace.
 
 ## Forbidden namespaces
 
-Developers can request any namespace except the forbidden ones: the system namespaces (`kube-*`,
-`gke-*`, `gmp-*`), `cleanup_namespace` and `forbidden_namespaces`. A trailing `*` matches a prefix.
-New namespaces can be requested as soon as they exist, so add sensitive ones to
-`forbidden_namespaces` before creating them.
+Developers can request any existing namespace that does not match the denylist. The cleanup
+namespace (`cleanup_namespace`) is always blocked. A trailing `*` matches a prefix.
+
+| `forbidden_namespaces` | Blocked namespaces |
+|---|---|
+| Omitted | `kube-*`, `gke-*`, `gmp-*` and the cleanup namespace |
+| `[]` | Only the cleanup namespace |
+| Explicit list | The supplied names or patterns and the cleanup namespace |
+
+An explicit list replaces the default system-namespace patterns. For example, this blocks
+`production`, namespaces starting with `payments-`, and the cleanup namespace:
+
+```hcl
+forbidden_namespaces = ["production", "payments-*"]
+```
+
+To keep any default system-namespace patterns alongside custom ones, include them explicitly.
+
+Add new sensitive namespaces that are not covered by an existing prefix before creating them.
 
 ## Admission policy
 
-RBAC can't restrict RoleBindings by label or by subject. A ValidatingAdmissionPolicy does, for
-RoleBindings the building block's service account or the cleanup ServiceAccount create, update or
-delete:
+RBAC can't restrict RoleBindings by label or by subject. A ValidatingAdmissionPolicy restricts
+create, update and delete requests from the building block's Google service account and the
+cleanup job's Kubernetes ServiceAccount:
 
-- They may not create or update RoleBindings in forbidden namespaces. RBAC grants them
-  RoleBindings cluster-wide, so this rule alone keeps the forbidden namespaces out of reach.
-- They may only update or delete RoleBindings labelled with `binding_label`. All other RoleBindings
-  are out of reach.
-- New RoleBindings must carry `binding_label` and `expiry_annotation`, have exactly one subject of
-  kind `User` whose name doesn't start with `system:`, and reference the ClusterRole `cluster_role`.
-  That rules out binding a group such as `system:authenticated`, `system:anonymous` or a
-  ServiceAccount.
+- Creating or updating RoleBindings in forbidden namespaces is denied. Deleting managed bindings
+  remains allowed so previously granted access can still be revoked.
+- Updates and deletions are allowed only for RoleBindings already labelled `<binding_label>=true`.
+  Other RoleBindings cannot be modified or deleted by these identities, but remain readable
+  through their RBAC permissions.
+- Created or updated RoleBindings must have the label `<binding_label>=true`, an annotation with
+  the key `expiry_annotation`, only `User` subjects whose names do not start with `system:`, and a
+  reference to the ClusterRole `cluster_role`. This excludes groups such as
+  `system:authenticated`, the `system:anonymous` user, and ServiceAccounts.
 
-ValidatingAdmissionPolicy is GA since Kubernetes 1.30, so the cluster must run GKE 1.30 or later.
-Cluster admins can still remove the policy.
+ValidatingAdmissionPolicy is generally available in Kubernetes 1.30 and later, so the cluster must
+run GKE 1.30 or later.
 
 ## Cleanup CronJob
 
-A CronJob in `cleanup_namespace` (default `gke-temporary-access`) runs every five minutes and
-deletes each RoleBinding with the `binding_label` if `expiry_annotation` is in the past. The building block sets both on every RoleBinding it creates.
+A CronJob in `cleanup_namespace` (default `gke-temporary-access`) runs every five minutes. It selects
+RoleBindings labelled `<binding_label>=true` and deletes those whose expiry timestamp, stored under
+the annotation key `expiry_annotation`, is in the past. The building block sets both metadata entries
+on every RoleBinding it creates.
 
-Its ServiceAccount may list and delete RoleBindings cluster-wide. The script needs `bash`,
-`date` and `kubectl` and runs on `cleanup_image` (defaults to `alpine/k8s`).
+The job's Kubernetes ServiceAccount may list RoleBindings cluster-wide, but the admission policy
+limits deletion to managed bindings. The script needs `bash`, `date` and `kubectl` and runs on
+`cleanup_image` (default `alpine/k8s:1.37.1`).
 
 ## Permissions
 
@@ -78,7 +97,7 @@ The identity that applies this module needs the following on `var.project_id`:
 | `roles/iam.workloadIdentityPoolAdmin` | create the workload identity pool and its OIDC provider |
 | `roles/iam.serviceAccountAdmin` | create the building block service account and set its IAM policy |
 | `roles/resourcemanager.projectIamAdmin` | grant that service account its project roles |
-| `roles/container.clusterViewer` and `roles/compute.viewer` | read the cluster's endpoint and CA certificate in `meshstack_integration.tf`; the google provider also lists the node pools' instance groups |
+| `roles/container.clusterViewer` | authenticate to the cluster |
 
 It also needs RBAC rights in the cluster to create the cleanup namespace and CronJob, ClusterRoles,
 ClusterRoleBindings that grant `bind` on `cluster_role`, and the ValidatingAdmissionPolicy, which in
@@ -96,11 +115,6 @@ gcloud services enable serviceusage.googleapis.com --project <project>
 
 `iam`, `cloudresourcemanager`, `sts`, `iamcredentials` and `container`, all with
 `disable_on_destroy = false`.
-
-## IAM propagation
-
-`credentials_json` waits on `time_sleep.wait_for_iam` (180 s by default) because GCP IAM is
-eventually consistent. Tune it with `iam_propagation_delay_seconds`.
 
 ## Workload identity pools are not immediately reusable
 
@@ -142,31 +156,29 @@ No modules.
 | [kubernetes_manifest.rolebinding_policy_binding](https://registry.terraform.io/providers/hashicorp/kubernetes/latest/docs/resources/manifest) | resource |
 | [kubernetes_namespace_v1.cleanup](https://registry.terraform.io/providers/hashicorp/kubernetes/latest/docs/resources/namespace_v1) | resource |
 | [kubernetes_service_account_v1.cleanup](https://registry.terraform.io/providers/hashicorp/kubernetes/latest/docs/resources/service_account_v1) | resource |
-| [time_sleep.wait_for_iam](https://registry.terraform.io/providers/hashicorp/time/latest/docs/resources/sleep) | resource |
 | [google_project.this](https://registry.terraform.io/providers/hashicorp/google/latest/docs/data-sources/project) | data source |
 
 ## Inputs
 
 | Name | Description | Type | Default | Required |
 |------|-------------|------|---------|:--------:|
-| <a name="input_cleanup_image"></a> [cleanup\_image](#input\_cleanup\_image) | Image of the cleanup CronJob. It needs bash, date and kubectl. | `string` | `"alpine/k8s:1.37.1"` | no |
-| <a name="input_cleanup_namespace"></a> [cleanup\_namespace](#input\_cleanup\_namespace) | Namespace the backplane creates for the CronJob that removes expired RoleBindings. | `string` | `"gke-temporary-access"` | no |
-| <a name="input_cluster_role"></a> [cluster\_role](#input\_cluster\_role) | Existing ClusterRole the building block binds developers to in the chosen namespace. | `string` | `"view"` | no |
-| <a name="input_forbidden_namespaces"></a> [forbidden\_namespaces](#input\_forbidden\_namespaces) | Namespaces developers can't request access to, on top of the system namespaces and `cleanup_namespace`. A trailing `*` matches a prefix. | `set(string)` | `[]` | no |
-| <a name="input_iam_propagation_delay_seconds"></a> [iam\_propagation\_delay\_seconds](#input\_iam\_propagation\_delay\_seconds) | Seconds to wait after granting the building block's IAM roles before publishing its credentials. GCP IAM is eventually consistent, and Google's guidance is to allow two to seven minutes before retrying a denied impersonation. Set to 0 if the backplane is always provisioned well before any building block run. | `number` | `180` | no |
+| <a name="input_cleanup_image"></a> [cleanup\_image](#input\_cleanup\_image) | Container image used by the cleanup CronJob. It must include `bash`, `date` and `kubectl`. | `string` | `"alpine/k8s:1.37.1"` | no |
+| <a name="input_cleanup_namespace"></a> [cleanup\_namespace](#input\_cleanup\_namespace) | Namespace created for the CronJob that removes expired RoleBindings. | `string` | `"gke-temporary-access"` | no |
+| <a name="input_cluster_role"></a> [cluster\_role](#input\_cluster\_role) | Existing ClusterRole assigned to users by the building block. | `string` | `"view"` | no |
+| <a name="input_forbidden_namespaces"></a> [forbidden\_namespaces](#input\_forbidden\_namespaces) | Namespace denylist. Defaults to `kube-*`, `gke-*` and `gmp-*`. An explicit list replaces these defaults. The cleanup namespace is always blocked, even with `[]`. A trailing `*` matches a prefix. | `list(string)` | <pre>[<br/>  "kube-*",<br/>  "gke-*",<br/>  "gmp-*"<br/>]</pre> | no |
 | <a name="input_project_id"></a> [project\_id](#input\_project\_id) | GCP project ID that contains the GKE cluster. | `string` | n/a | yes |
-| <a name="input_service_account_id"></a> [service\_account\_id](#input\_service\_account\_id) | Account ID of the service account the building block runs as. Also prefixes the in-cluster ClusterRole, so it must be unique per cluster. | `string` | `"buildingblock-gke-access-sa"` | no |
+| <a name="input_service_account_id"></a> [service\_account\_id](#input\_service\_account\_id) | Account ID of the building block's Google service account. It also prefixes the in-cluster ClusterRoles and admission policy, so it must be unique per project and per cluster. | `string` | `"buildingblock-gke-access-sa"` | no |
 | <a name="input_workload_identity_federation"></a> [workload\_identity\_federation](#input\_workload\_identity\_federation) | Workload identity federation settings describing the building block runner. | <pre>object({<br/>    workload_identity_pool_identifier = string<br/>    subject_token_file_path           = string<br/>  })</pre> | n/a | yes |
-| <a name="input_workload_identity_federation_trust"></a> [workload\_identity\_federation\_trust](#input\_workload\_identity\_federation\_trust) | What the pool provider trusts: the runner's OIDC issuer and audience, and the subject claims it accepts, each matched exactly. Take them from `version_latest.workload_identity_federation` of the building block definitions that run here. | <pre>object({<br/>    issuer   = string<br/>    audience = string<br/>    subjects = list(string)<br/>  })</pre> | n/a | yes |
+| <a name="input_workload_identity_federation_trust"></a> [workload\_identity\_federation\_trust](#input\_workload\_identity\_federation\_trust) | The building block runner's OIDC issuer and audience, and the subject claims it accepts. | <pre>object({<br/>    issuer   = string<br/>    audience = string<br/>    subjects = list(string)<br/>  })</pre> | n/a | yes |
 
 ## Outputs
 
 | Name | Description |
 |------|-------------|
-| <a name="output_binding_label"></a> [binding\_label](#output\_binding\_label) | Label the building block sets on each RoleBinding it creates, so the cleanup CronJob finds it. |
+| <a name="output_binding_label"></a> [binding\_label](#output\_binding\_label) | Label key used to identify managed RoleBindings. The building block sets its value to `true`. |
 | <a name="output_cluster_role"></a> [cluster\_role](#output\_cluster\_role) | ClusterRole the building block binds developers to. |
-| <a name="output_credentials_json"></a> [credentials\_json](#output\_credentials\_json) | External account credentials for the building block's service account. Points the runner at its own OIDC token file, which it exchanges for a short-lived access token. |
-| <a name="output_expiry_annotation"></a> [expiry\_annotation](#output\_expiry\_annotation) | Annotation the building block sets to the RoleBinding's expiry, in UTC RFC 3339 (`YYYY-MM-DDTHH:MM:SSZ`). |
+| <a name="output_credentials_json"></a> [credentials\_json](#output\_credentials\_json) | Credentials for the building block's service account. Points the runner at its own OIDC token file, which it exchanges for a short-lived access token. |
+| <a name="output_expiry_annotation"></a> [expiry\_annotation](#output\_expiry\_annotation) | Annotation key used to store the RoleBinding's expiry timestamp in RFC 3339 format (UTC, `YYYY-MM-DDTHH:MM:SSZ`). |
 | <a name="output_forbidden_namespaces"></a> [forbidden\_namespaces](#output\_forbidden\_namespaces) | Namespaces the building block can't grant access to. A trailing `*` matches a prefix. |
 | <a name="output_service_account_email"></a> [service\_account\_email](#output\_service\_account\_email) | Email of the service account the building block runs as. |
 <!-- END_TF_DOCS -->

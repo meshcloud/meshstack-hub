@@ -1,6 +1,5 @@
 locals {
-  # The contract with the building block: it labels each RoleBinding it creates and annotates when
-  # the binding expires, in UTC RFC 3339, so the cleanup script can compare it as a string.
+  # Label and annotation are set by the building block on cluster role bindings.
   binding_label     = "meshcloud.io/gke-temporary-access"
   expiry_annotation = "meshcloud.io/expires-at"
 }
@@ -31,7 +30,7 @@ resource "kubernetes_cluster_role_v1" "cleanup" {
 }
 
 resource "kubernetes_cluster_role_binding_v1" "cleanup" {
-  # Grant the rights only once the policy that restricts them is in force.
+  # Grant the rights only after the admission policy.
   depends_on = [kubernetes_manifest.rolebinding_policy_binding]
 
   metadata {
@@ -51,8 +50,6 @@ resource "kubernetes_cluster_role_binding_v1" "cleanup" {
   }
 }
 
-# Removes expired RoleBindings even while developers still hold a permanent container.clusters.get,
-# which makes the IAM expiry alone ineffective.
 resource "kubernetes_cron_job_v1" "cleanup" {
   metadata {
     name      = "cleanup-expired-access"
@@ -109,7 +106,7 @@ resource "kubernetes_cron_job_v1" "cleanup" {
                 name  = "EXPIRY_JSONPATH"
                 value = "{range .items[*]}{.metadata.namespace}{\" \"}{.metadata.name}{\" \"}{.metadata.annotations.${replace(local.expiry_annotation, ".", "\\.")}}{\"\\n\"}{end}"
               }
-              # kubectl writes its discovery cache below $HOME.
+              # kubectl writes discovery cache below $HOME.
               env {
                 name  = "HOME"
                 value = "/tmp"
