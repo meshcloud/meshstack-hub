@@ -22,7 +22,7 @@ override_data {
         metadata = { uuid = "aaaaaaaa-0000-0000-0000-000000000001", owned_by_workspace = "platform-ws" }
         spec     = { display_name = "a", target_type = "TENANT_LEVEL" }
         ref      = { kind = "meshBuildingBlockDefinition", uuid = "aaaaaaaa-0000-0000-0000-000000000001" }
-        versions = []
+        versions = null
         version_latest = {
           uuid = "a-v2", number = 2, state = "DRAFT", content_hash = null
           workload_identity_federation = {
@@ -48,7 +48,7 @@ override_data {
         metadata               = { uuid = "bbbbbbbb-0000-0000-0000-000000000002", owned_by_workspace = "platform-ws" }
         spec                   = { display_name = "b", target_type = "TENANT_LEVEL" }
         ref                    = { kind = "meshBuildingBlockDefinition", uuid = "bbbbbbbb-0000-0000-0000-000000000002" }
-        versions               = []
+        versions               = null
         version_latest_release = null
         version_latest = {
           uuid = "b-v1", number = 1, state = "DRAFT", content_hash = null
@@ -66,7 +66,7 @@ override_data {
         metadata               = { uuid = "cccccccc-0000-0000-0000-000000000003", owned_by_workspace = "platform-ws" }
         spec                   = { display_name = "c", target_type = "TENANT_LEVEL" }
         ref                    = { kind = "meshBuildingBlockDefinition", uuid = "cccccccc-0000-0000-0000-000000000003" }
-        versions               = []
+        versions               = null
         version_latest         = { uuid = "c-v1", number = 1, state = "RELEASED", content_hash = null, workload_identity_federation = null }
         version_latest_release = { uuid = "c-v1", number = 1, state = "RELEASED", content_hash = null, workload_identity_federation = null }
       },
@@ -75,7 +75,7 @@ override_data {
         metadata = { uuid = "dddddddd-0000-0000-0000-000000000004", owned_by_workspace = "platform-ws" }
         spec     = { display_name = "d", target_type = "TENANT_LEVEL" }
         ref      = { kind = "meshBuildingBlockDefinition", uuid = "dddddddd-0000-0000-0000-000000000004" }
-        versions = []
+        versions = null
         version_latest = {
           uuid = "d-v1", number = 1, state = "RELEASED", content_hash = null
           workload_identity_federation = {
