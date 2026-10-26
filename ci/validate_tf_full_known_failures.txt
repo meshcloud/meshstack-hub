@@ -15,13 +15,4 @@ modules/ionos/dcd/backplane                          # required arguments missin
 # ?ref=main (the default hub git_ref), which a clone of main cannot resolve
 # until that work lands on main. The script prints a ::notice:: to drop each
 # line once it loads, so remove each entry after the module it names is on main.
-reference-architectures/stackit-kubernetes/buildingblock # sources ske/cluster, stackit/git and the kubernetes/* modules at ?ref=main
-modules/stackit/service-account-federation           # sources //modules/stackit/service-account-federation/backplane?ref=main
-modules/stackit/server                               # sources //modules/stackit/server/backplane?ref=main
-modules/gcp/budget-alert                             # sources //modules/gcp/budget-alert/backplane?ref=main, which has no workload_identity_federation_trust input yet
-modules/gcp/storage-bucket                           # sources //modules/gcp/storage-bucket/backplane?ref=main, which has no workload_identity_federation_trust input yet
-reference-architectures/stackit-landingzone/buildingblock # sources //modules/stackit/service-account?ref=main
-modules/azure/key-vault                              # sources //modules/azure/key-vault/backplane?ref=main, which has no location input yet
-modules/azure/ipam-pool                              # sources //modules/azure/ipam-pool/backplane?ref=main, which does not exist yet
-modules/ansible/vm-hardening                         # sources //modules/ansible/vm-hardening/backplane?ref=main, which does not exist yet
-modules/kubernetes/github-connector                  # sources //modules/kubernetes/github-connector/backplane?ref=main, which does not exist yet
+modules/gcp/gke-temporary-access                     # sources //modules/gcp/gke-temporary-access/backplane?ref=main, which does not exist yet

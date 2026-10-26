@@ -1,5 +1,5 @@
-# A backplane never owns its project exclusively and can be short-lived, so `disable_on_destroy`
-# stays false: switching these APIs off on teardown would break every other tenant of the project.
+# To avoid disrupting other workloads when the building block backplane is destroyed
+# disable_on_destroy is disabled.
 resource "google_project_service" "required" {
   for_each = toset([
     "iam.googleapis.com",

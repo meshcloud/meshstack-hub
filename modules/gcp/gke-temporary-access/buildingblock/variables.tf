@@ -16,8 +16,7 @@ variable "cluster_location" {
   nullable    = false
 }
 
-# Passed in rather than looked up: the google provider's cluster lookup also lists the node pools'
-# instance groups, which needs Compute Engine permissions the building block shouldn't hold.
+# Pass cluster details in to avoid the Compute Engine permissions required by the Google provider's lookup.
 variable "cluster_endpoint" {
   description = "IP address or hostname of the cluster's control plane."
   type        = string
@@ -31,7 +30,7 @@ variable "cluster_ca_certificate" {
 }
 
 variable "author" {
-  description = "The meshStack user who requested access. They receive the access on their Google identity, which must use the same email."
+  description = "The meshStack user who requested access. Access is granted to their Google account, whose email address must match their meshStack email."
   type = object({
     type        = string
     identifier  = string
@@ -66,7 +65,7 @@ variable "namespace" {
       for pattern in var.forbidden_namespaces :
       endswith(pattern, "*") ? startswith(var.namespace, trimsuffix(pattern, "*")) : var.namespace == pattern
     ])
-    error_message = "Access to namespace \"${var.namespace}\" can't be requested."
+    error_message = "Namespace \"${var.namespace}\" is restricted by the platform team."
   }
 }
 
@@ -77,13 +76,13 @@ variable "forbidden_namespaces" {
 }
 
 variable "duration_hours" {
-  description = "How many hours the access lasts, counted from the first run."
+  description = "Access duration in whole hours, from 1 to 8, measured from the first run."
   type        = number
   nullable    = false
 
   validation {
     condition     = var.duration_hours == floor(var.duration_hours) && var.duration_hours >= 1 && var.duration_hours <= 8
-    error_message = "Access lasts between 1 and 8 whole hours."
+    error_message = "Duration must be a whole number from 1 to 8 hours."
   }
 }
 
@@ -94,13 +93,13 @@ variable "cluster_role" {
 }
 
 variable "binding_label" {
-  description = "Label the cleanup CronJob selects RoleBindings by. Take it from the backplane's `binding_label` output."
+  description = "Label key used to identify managed RoleBindings. The building block sets its value to `true`. Take it from the backplane's `binding_label` output."
   type        = string
   nullable    = false
 }
 
 variable "expiry_annotation" {
-  description = "Annotation the cleanup CronJob reads the expiry from. Take it from the backplane's `expiry_annotation` output."
+  description = "Annotation key used to store the RoleBinding's expiry timestamp in RFC 3339 format (UTC). Take it from the backplane's `expiry_annotation` output."
   type        = string
   nullable    = false
 }

@@ -3,7 +3,6 @@ data "google_project" "this" {
 }
 
 resource "google_iam_workload_identity_pool" "meshstack" {
-  # Nothing below references the APIs, so Terraform cannot infer this ordering on its own.
   depends_on = [google_project_service.required]
 
   project                   = var.project_id
@@ -38,8 +37,8 @@ resource "google_service_account" "buildingblock" {
 
   project      = var.project_id
   account_id   = var.service_account_id
-  display_name = "GKE Temporary Access Building Block"
-  description  = "Grants developers time-limited read access to GKE namespaces"
+  display_name = "GKE Temporary Namespace Access Building Block"
+  description  = "Grants developers time-limited access to GKE namespaces"
 }
 
 resource "google_service_account_iam_binding" "workload_identity" {
@@ -72,23 +71,5 @@ resource "google_project_iam_member" "grant_cluster_viewer" {
     title       = "only-grant-cluster-viewer"
     description = "May only add or remove grants of roles/container.clusterViewer"
     expression  = "api.getAttribute('iam.googleapis.com/modifiedGrantsByRole', []).hasOnly(['roles/container.clusterViewer'])"
-  }
-}
-
-# GCP IAM is eventually consistent. A building block run that starts right after these grants is
-# denied, so hold the credentials output back until they take effect.
-resource "time_sleep" "wait_for_iam" {
-  depends_on = [
-    google_service_account_iam_binding.workload_identity,
-    google_project_iam_member.cluster_viewer,
-    google_project_iam_member.grant_cluster_viewer,
-  ]
-
-  create_duration = "${var.iam_propagation_delay_seconds}s"
-
-  triggers = {
-    workload_identity_members   = join(",", google_service_account_iam_binding.workload_identity.members)
-    cluster_viewer_member       = google_project_iam_member.cluster_viewer.member
-    grant_cluster_viewer_member = google_project_iam_member.grant_cluster_viewer.member
   }
 }

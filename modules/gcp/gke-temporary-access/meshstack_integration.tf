@@ -15,8 +15,16 @@ variable "gke_cluster_location" {
 
 variable "gke_forbidden_namespaces" {
   type        = list(string)
-  default     = []
-  description = "Namespaces developers can't request access to, on top of the system namespaces. A trailing `*` matches a prefix."
+  default     = ["kube-*", "gke-*", "gmp-*"]
+  description = "Namespace denylist. Defaults to `kube-*`, `gke-*` and `gmp-*`. An explicit list replaces these defaults. The cleanup namespace is always blocked, even with `[]`. Null is not allowed. A trailing `*` matches a prefix."
+
+  # Preserve explicit null so validation can reject it instead of substituting the default.
+  nullable = true
+
+  validation {
+    condition     = var.gke_forbidden_namespaces != null
+    error_message = "gke_forbidden_namespaces must not be null. Omit it to use the default prefixes, or use [] to block only the cleanup namespace."
+  }
 }
 
 variable "gke_cluster_role" {
@@ -34,7 +42,7 @@ variable "gke_cleanup_namespace" {
 variable "gke_cleanup_image" {
   type        = string
   default     = null
-  description = "Image of the cleanup CronJob. It needs bash, date and kubectl. Defaults to the backplane's default."
+  description = "Container image used by the cleanup CronJob. It must include `bash`, `date` and `kubectl`. Defaults to the backplane's image."
 }
 
 variable "workload_identity" {
@@ -43,13 +51,13 @@ variable "workload_identity" {
     subject_token_file_path = optional(string, "/var/run/secrets/workload-identity/gcp/token")
   })
   default     = {}
-  description = "Workload identity federation settings for GCP authentication. GCP soft-deletes a workload identity pool for ~30 days and refuses to reissue its id in that window, so a backplane that has to be recreated needs a fresh pool_identifier."
+  description = "Workload identity federation settings for GCP authentication. GCP retains soft-deleted pools for about 30 days, during which their identifiers cannot be reused. Use a fresh `pool_identifier` when recreating the backplane."
 }
 
 variable "backplane_service_account_id" {
   type        = string
   default     = "buildingblock-gke-access-sa"
-  description = "Account id of the backplane service account. It also prefixes the in-cluster ClusterRoles and admission policy, so it must be unique per project and per cluster."
+  description = "Account ID of the building block's Google service account. It also prefixes the in-cluster ClusterRoles and admission policy, so it must be unique per project and per cluster."
 }
 
 variable "bbd_display_name" {
@@ -108,13 +116,12 @@ output "building_block_definition" {
   }
 }
 
-# Needs a google provider and a kubernetes provider pointing at the cluster, both configured by the
-# caller.
+# The caller supplies Google and Kubernetes providers; Kubernetes must point at the target cluster.
 module "backplane" {
   source = "github.com/meshcloud/meshstack-hub//modules/gcp/gke-temporary-access/backplane?ref=${var.hub.git_ref}"
 
   project_id           = var.gcp_project_id
-  forbidden_namespaces = toset(var.gke_forbidden_namespaces)
+  forbidden_namespaces = var.gke_forbidden_namespaces
   cluster_role         = var.gke_cluster_role
   cleanup_namespace    = var.gke_cleanup_namespace
   cleanup_image        = var.gke_cleanup_image
@@ -146,11 +153,15 @@ resource "meshstack_building_block_definition" "this" {
 
   spec = {
     display_name = coalesce(var.bbd_display_name, "GKE Temporary Namespace Access")
-    description  = coalesce(var.bbd_description, "Grants you access to one namespace of a GKE cluster for a few hours.")
+    description  = coalesce(var.bbd_description, "Grants you access to one namespace of a GKE cluster for 1 to 8 hours.")
     readme = coalesce(var.bbd_readme, chomp(<<-EOT
-      This building block grants you time-limited access to one namespace of the
-      `${var.gke_cluster_name}` GKE cluster, on your own Google account. Choose the namespace and
-      how many hours you need, up to 8. The access ends automatically.
+      This building block grants you access to one namespace of the `${var.gke_cluster_name}` GKE
+      cluster using your Google account. Choose an existing namespace and a duration from 1 to 8
+      hours. Your Google account's email address must match your meshStack email.
+
+      The duration is measured from the first run; reruns do not reset the start time. The temporary
+      IAM grant expires at the requested time, and a cleanup job removes the namespace grant on its
+      next successful run (scheduled every five minutes). Other access you already have is unaffected.
 
       ## 🎯 When to use it
 
@@ -216,7 +227,7 @@ resource "meshstack_building_block_definition" "this" {
         type            = "FILE"
         assignment_type = "STATIC"
         display_name    = "Credentials File"
-        description     = "External account credentials that let the runner federate into the backplane's service account."
+        description     = "External account credentials that let the runner impersonate the building block's Google service account through workload identity federation."
 
         sensitive = {
           argument = {
@@ -271,14 +282,14 @@ resource "meshstack_building_block_definition" "this" {
         type            = "STRING"
         assignment_type = "STATIC"
         display_name    = "Binding Label"
-        description     = "Label the cleanup CronJob selects RoleBindings by."
+        description     = "Label key used to identify managed RoleBindings. The building block sets its value to `true`."
         argument        = jsonencode(module.backplane.binding_label)
       }
       expiry_annotation = {
         type            = "STRING"
         assignment_type = "STATIC"
         display_name    = "Expiry Annotation"
-        description     = "Annotation the cleanup CronJob reads the expiry from."
+        description     = "Annotation key used to store the RoleBinding's expiry timestamp in RFC 3339 format (UTC)."
         argument        = jsonencode(module.backplane.expiry_annotation)
       }
       author = {
@@ -298,13 +309,13 @@ resource "meshstack_building_block_definition" "this" {
         type            = "STRING"
         assignment_type = "USER_INPUT"
         display_name    = "Namespace"
-        description     = "Namespace you need access to. System namespaces can't be requested."
+        description     = "Existing namespace you need access to. Namespaces restricted by the platform team are unavailable."
       }
       duration_hours = {
         type              = "SINGLE_SELECT"
         assignment_type   = "USER_INPUT"
         display_name      = "Duration (hours)"
-        description       = "How many hours you need access, counted from when the building block first runs."
+        description       = "Access duration in whole hours, from 1 to 8, measured from the first run."
         selectable_values = [for hours in range(1, 9) : tostring(hours)]
         default_value     = jsonencode("2")
       }
@@ -315,7 +326,7 @@ resource "meshstack_building_block_definition" "this" {
         type            = "STRING"
         assignment_type = "NONE"
         display_name    = "Expires At"
-        description     = "When the access ends, in UTC."
+        description     = "Access expiry timestamp in RFC 3339 format (UTC)."
       }
       summary = {
         type            = "STRING"
