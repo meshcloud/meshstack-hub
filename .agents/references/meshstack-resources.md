@@ -93,8 +93,8 @@ resource "meshstack_building_block" "example" {
   # ...
   lifecycle {
     postcondition {
-      condition     = self.status.status == "SUCCEEDED"
-      error_message = "Building block ${self.metadata.uuid} is ${self.status.status}, not SUCCEEDED. See its run in meshPanel."
+      condition     = self.status.succeeded
+      error_message = "Building block ${self.metadata.uuid} did not succeed (health status ${self.status.health_status}, action ${self.status.action}). See its run in meshPanel."
     }
   }
 }
@@ -103,8 +103,9 @@ resource "meshstack_building_block" "example" {
 Copy those four lines verbatim, in every child building block, including the ones in
 `reference-architectures/` — the scorecard only scans `modules/`, so nothing checks them for you.
 Do not write a per-block message: OpenTofu prints the resource address and the file and line of the
-failing postcondition, and `self` supplies the uuid and the status, so the identical message names
-the specific block anyway.
+failing postcondition, and `self` supplies the uuid, health status and action, so the identical
+message names the specific block anyway. `status.succeeded` needs meshStack provider v0.27.0, so a
+module with this postcondition requires `>= 0.27.0`.
 
 **Why the check has to be in the configuration.** From meshStack provider v0.25.2 on, a run that
 does not succeed never fails the apply — the provider warns, keeps the block, and the next plan
@@ -125,16 +126,16 @@ child block in state for the next apply to repair.
 is still `PENDING` or `IN_PROGRESS`, and the postcondition then fails on a run that had not
 finished.
 
-**What a non-`SUCCEEDED` status does on the next plan** depends on whether the provider plans a
+**What a run that did not succeed does on the next plan** depends on whether the provider plans a
 re-run:
 
-- `FAILED` or `ABORTED` — the provider plans an in-place re-run, which makes `status` unknown in the
-  plan, so the postcondition moves to the apply. If the re-run does not succeed either, the
+- `FAILED` or `ABORTED` — the provider plans an in-place re-run, which makes `succeeded` unknown in
+  the plan, so the postcondition moves to the apply. If the re-run does not succeed either, the
   postcondition is what fails that apply: the provider itself only ever warns about a run status.
 - One of the four `WAITING_FOR_*` statuses (`OPERATOR_INPUT`, `USER_INPUT`, `DEPENDENT_INPUT`,
-  `APPROVAL`) — the provider plans no re-run, `status` stays known, and the postcondition **fails
+  `APPROVAL`) — the provider plans no re-run, `succeeded` stays known, and the postcondition **fails
   the plan**, not just the apply. That is the intended signal: no apply will fix this by itself, so
   someone has to supply the input or approve the run in meshPanel. A child block that is *meant* to
   park — one whose definition requires an approval — is the one case for a looser condition, e.g.
-  `contains(["SUCCEEDED", "WAITING_FOR_APPROVAL"], self.status.status)`.
+  `self.status.succeeded || self.status.action == "APPROVE_RUN"`.
 

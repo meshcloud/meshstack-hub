@@ -47,7 +47,7 @@ Destroy the building blocks first.
 | Name | Version |
 |------|---------|
 | <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.12.0 |
-| <a name="requirement_meshstack"></a> [meshstack](#requirement\_meshstack) | >= 0.20.6 |
+| <a name="requirement_meshstack"></a> [meshstack](#requirement\_meshstack) | >= 0.27.0 |
 | <a name="requirement_time"></a> [time](#requirement\_time) | >= 0.11.0, < 1.0.0 |
 
 ## Modules

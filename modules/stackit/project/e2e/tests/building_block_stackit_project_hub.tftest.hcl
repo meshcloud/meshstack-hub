@@ -1,7 +1,7 @@
 run "building_block_stackit_project_hub" {
   assert {
-    condition     = output.project_building_block.status.status == "SUCCEEDED"
-    error_message = "stackit project hub building block expected SUCCEEDED, got ${output.project_building_block.status.status}"
+    condition     = output.project_building_block.status.succeeded
+    error_message = "stackit project hub building block expected SUCCEEDED, got health status ${output.project_building_block.status.health_status}, action ${output.project_building_block.status.action}"
   }
 
   assert {

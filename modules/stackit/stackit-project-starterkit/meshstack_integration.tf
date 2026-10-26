@@ -423,9 +423,8 @@ terraform {
 
   required_providers {
     meshstack = {
-      source = "meshcloud/meshstack"
-      # 0.25.2 is the first release that accepts `spec.approval_policies`.
-      version = ">= 0.25.2"
+      source  = "meshcloud/meshstack"
+      version = ">= 0.27.0"
     }
   }
 }

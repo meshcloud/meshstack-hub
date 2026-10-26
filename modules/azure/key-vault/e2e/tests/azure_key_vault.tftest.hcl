@@ -3,8 +3,8 @@
 
 run "azure_key_vault" {
   assert {
-    condition     = meshstack_building_block.this.status.status == "SUCCEEDED"
-    error_message = "Building block run did not succeed: ${meshstack_building_block.this.status.status}"
+    condition     = meshstack_building_block.this.status.succeeded
+    error_message = "Building block run did not succeed: health status ${meshstack_building_block.this.status.health_status}, action ${meshstack_building_block.this.status.action}"
   }
 
   assert {

@@ -1,7 +1,7 @@
 run "building_block_stackit_service_account_hub" {
   assert {
-    condition     = meshstack_building_block.this.status.status == "SUCCEEDED"
-    error_message = "stackit service-account hub building block expected SUCCEEDED, got ${meshstack_building_block.this.status.status}"
+    condition     = meshstack_building_block.this.status.succeeded
+    error_message = "stackit service-account hub building block expected SUCCEEDED, got health status ${meshstack_building_block.this.status.health_status}, action ${meshstack_building_block.this.status.action}"
   }
 
   assert {

@@ -520,7 +520,7 @@ terraform {
   required_providers {
     meshstack = {
       source  = "meshcloud/meshstack"
-      version = ">= 0.25.3"
+      version = ">= 0.27.0"
     }
   }
 }

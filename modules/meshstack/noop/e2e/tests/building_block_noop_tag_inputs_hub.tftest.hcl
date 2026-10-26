@@ -21,8 +21,8 @@ run "tag_inputs_resolve_on_create" {
   }
 
   assert {
-    condition     = output.building_block_status == "SUCCEEDED"
-    error_message = "noop tag inputs building block expected SUCCEEDED, got ${output.building_block_status}"
+    condition     = output.building_block_status.succeeded
+    error_message = "noop tag inputs building block expected SUCCEEDED, got health status ${output.building_block_status.health_status}, action ${output.building_block_status.action}"
   }
 
   assert {
@@ -52,8 +52,8 @@ run "tag_value_changes_resolve_on_the_next_run" {
   }
 
   assert {
-    condition     = output.building_block_status == "SUCCEEDED"
-    error_message = "noop tag inputs building block expected SUCCEEDED after the tag edits, got ${output.building_block_status}"
+    condition     = output.building_block_status.succeeded
+    error_message = "noop tag inputs building block expected SUCCEEDED after the tag edits, got health status ${output.building_block_status.health_status}, action ${output.building_block_status.action}"
   }
 
   assert {
@@ -82,8 +82,8 @@ run "reassigned_payment_method_resolves_its_own_tag" {
   }
 
   assert {
-    condition     = output.building_block_status == "SUCCEEDED"
-    error_message = "noop tag inputs building block expected SUCCEEDED after the reassignment, got ${output.building_block_status}"
+    condition     = output.building_block_status.succeeded
+    error_message = "noop tag inputs building block expected SUCCEEDED after the reassignment, got health status ${output.building_block_status.health_status}, action ${output.building_block_status.action}"
   }
 
   # No tag was edited in this run — the project is funded from the substitute payment method instead,

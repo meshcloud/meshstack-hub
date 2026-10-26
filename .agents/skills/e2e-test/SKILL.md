@@ -373,7 +373,7 @@ target_ref = {
 
 - Name the file `<cloud>_<service>.tftest.hcl`, or `<cloud>_<service>_<variant>.tftest.hcl` when a
   module has several variants. Older modules carry a `_hub` suffix from when the file was hub-only.
-- Always assert `status.status == "SUCCEEDED"` as the first check.
+- Always assert `status.succeeded` as the first check.
 - Assert meaningful output values (URLs, strings, booleans) to validate the building block executed
   correctly. Every output `value` is a `jsonencode`d string — read it with
   `jsondecode(<res>.status.outputs["<name>"].value)` (a CODE/JSON output decodes twice).

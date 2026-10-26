@@ -7,8 +7,8 @@ variables {
 
 run "meshstack_github_workflow_async_hub" {
   assert {
-    condition     = meshstack_building_block.this.status.status == "SUCCEEDED"
-    error_message = "github workflow hub building block (async) expected SUCCEEDED, got ${meshstack_building_block.this.status.status}"
+    condition     = meshstack_building_block.this.status.succeeded
+    error_message = "github workflow hub building block (async) expected SUCCEEDED, got health status ${meshstack_building_block.this.status.health_status}, action ${meshstack_building_block.this.status.action}"
   }
 
   assert {

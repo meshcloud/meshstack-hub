@@ -247,9 +247,9 @@ const detectors = [
           const where = `${relative(mod.path, file)}: ${name}`;
           const postcondition = findRunStatusPostcondition(body);
           if (!postcondition) {
-            offenders.push(`${where} — no postcondition on self.status.status`);
-          } else if (!/error_message\s*=[^\n]*self\.status\.status/.test(postcondition)) {
-            offenders.push(`${where} — error_message does not name self.status.status`);
+            offenders.push(`${where} — no postcondition on self.status.succeeded`);
+          } else if (!/error_message\s*=[^\n]*self\.status\.health_status[^\n]*self\.status\.action/.test(postcondition)) {
+            offenders.push(`${where} — error_message does not name self.status.health_status and self.status.action`);
           }
           if (postcondition && /wait_for_completion\s*=\s*false/.test(body)) {
             offenders.push(`${where} — wait_for_completion = false, so the run is still PENDING when the postcondition is checked`);
@@ -1695,7 +1695,7 @@ function findRunStatusPostcondition(resourceBody) {
     const close = findMatchingBrace(resourceBody, open);
     if (close < 0) continue;
     const body = resourceBody.slice(open + 1, close);
-    if (/self\.status\.status\s*==\s*"SUCCEEDED"/.test(body)) return body;
+    if (/self\.status\.succeeded\b/.test(body)) return body;
   }
   return null;
 }

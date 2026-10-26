@@ -2,8 +2,8 @@
 # built from hub source or already deployed by a foundation.
 run "ske_starterkit" {
   assert {
-    condition     = meshstack_building_block.this.status.status == "SUCCEEDED"
-    error_message = "ske-starterkit building block expected SUCCEEDED, got ${meshstack_building_block.this.status.status}"
+    condition     = meshstack_building_block.this.status.succeeded
+    error_message = "ske-starterkit building block expected SUCCEEDED, got health status ${meshstack_building_block.this.status.health_status}, action ${meshstack_building_block.this.status.action}"
   }
 
   assert {

@@ -1,7 +1,7 @@
 run "azure_entra_id_groups_hub" {
   assert {
-    condition     = meshstack_building_block.this.status.status == "SUCCEEDED"
-    error_message = "azure/entra-id-groups hub building block expected SUCCEEDED, got ${meshstack_building_block.this.status.status}"
+    condition     = meshstack_building_block.this.status.succeeded
+    error_message = "azure/entra-id-groups hub building block expected SUCCEEDED, got health status ${meshstack_building_block.this.status.health_status}, action ${meshstack_building_block.this.status.action}"
   }
 
   # group_object_ids is a role -> object ID map serialised into a STRING output. Counting GUIDs in

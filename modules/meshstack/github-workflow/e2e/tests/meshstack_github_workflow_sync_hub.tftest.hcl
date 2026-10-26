@@ -12,8 +12,8 @@ variables {
 
 run "meshstack_github_workflow_sync_hub" {
   assert {
-    condition     = meshstack_building_block.this.status.status == "SUCCEEDED"
-    error_message = "github workflow hub building block (sync) expected SUCCEEDED, got ${meshstack_building_block.this.status.status}"
+    condition     = meshstack_building_block.this.status.succeeded
+    error_message = "github workflow hub building block (sync) expected SUCCEEDED, got health status ${meshstack_building_block.this.status.health_status}, action ${meshstack_building_block.this.status.action}"
   }
 
   assert {

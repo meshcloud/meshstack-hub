@@ -1,12 +1,12 @@
 run "stackit_service_account_federation" {
   assert {
-    condition     = meshstack_building_block.federation.status.status == "SUCCEEDED"
-    error_message = "The federation building block ended in ${meshstack_building_block.federation.status.status}."
+    condition     = meshstack_building_block.federation.status.succeeded
+    error_message = "The federation building block ended in health status ${meshstack_building_block.federation.status.health_status}, action ${meshstack_building_block.federation.status.action}."
   }
 
   assert {
-    condition     = meshstack_building_block.probe.status.status == "SUCCEEDED"
-    error_message = "The probe ended in ${meshstack_building_block.probe.status.status}; its run logs in as the federated service account."
+    condition     = meshstack_building_block.probe.status.succeeded
+    error_message = "The probe ended in health status ${meshstack_building_block.probe.status.health_status}, action ${meshstack_building_block.probe.status.action}; its run logs in as the federated service account."
   }
 
   assert {

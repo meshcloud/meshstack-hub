@@ -6,8 +6,8 @@
 
 run "meshstack_workspace_starterkit" {
   assert {
-    condition     = meshstack_building_block.this.status.status == "SUCCEEDED"
-    error_message = "Building block run did not succeed: ${meshstack_building_block.this.status.status}"
+    condition     = meshstack_building_block.this.status.succeeded
+    error_message = "Building block run did not succeed: health status ${meshstack_building_block.this.status.health_status}, action ${meshstack_building_block.this.status.action}"
   }
 
   assert {
@@ -28,7 +28,7 @@ run "meshstack_workspace_starterkit" {
   # Whether the landing zone's own building block is final by now decides whether the tenant can be
   # deleted at all — see the destroy failures in the PR.
   assert {
-    condition     = alltrue([for status in output.landing_zone_building_blocks : status == "SUCCEEDED"])
+    condition     = alltrue([for bb in output.landing_zone_building_blocks : bb.succeeded])
     error_message = "The landing zone's building blocks on the new tenant are not all SUCCEEDED: ${jsonencode(output.landing_zone_building_blocks)}."
   }
 

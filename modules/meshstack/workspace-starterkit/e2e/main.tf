@@ -119,6 +119,10 @@ data "meshstack_building_blocks" "tenant" {
 }
 
 output "landing_zone_building_blocks" {
-  description = "Statuses of the building blocks the landing zone ordered on the created tenant."
-  value       = [for bb in data.meshstack_building_blocks.tenant.building_blocks : bb.status.status]
+  description = "Run outcomes of the building blocks the landing zone ordered on the created tenant."
+  value = [for bb in data.meshstack_building_blocks.tenant.building_blocks : {
+    succeeded     = bb.status.succeeded
+    health_status = bb.status.health_status
+    action        = bb.status.action
+  }]
 }

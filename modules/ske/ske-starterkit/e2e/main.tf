@@ -113,7 +113,7 @@ data "external" "app_probe" {
   lifecycle {
     precondition {
       condition     = contains(keys(try(meshstack_building_block.this.status.outputs, {})), "app_link_${each.key}")
-      error_message = "meshstack_building_block.this has no 'app_link_${each.key}' output (status: ${try(meshstack_building_block.this.status.status, "unknown")}). It did not complete successfully — see the error above."
+      error_message = "meshstack_building_block.this has no 'app_link_${each.key}' output (health status: ${try(meshstack_building_block.this.status.health_status, "unknown")}, action: ${try(meshstack_building_block.this.status.action, "unknown")}). It did not complete successfully — see the error above."
     }
   }
 }

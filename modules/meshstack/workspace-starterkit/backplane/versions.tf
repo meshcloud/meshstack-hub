@@ -3,9 +3,8 @@ terraform {
 
   required_providers {
     meshstack = {
-      source = "meshcloud/meshstack"
-      # 0.20.6 adds `meshstack_api_key`, which is this whole backplane.
-      version = ">= 0.20.6"
+      source  = "meshcloud/meshstack"
+      version = ">= 0.27.0"
     }
     time = {
       source  = "hashicorp/time"

@@ -39,7 +39,7 @@ The Azure VM Starterkit building block automates the creation of a complete Azur
 
 | Name | Version |
 |------|---------|
-| <a name="requirement_meshstack"></a> [meshstack](#requirement\_meshstack) | >= 0.23.0 |
+| <a name="requirement_meshstack"></a> [meshstack](#requirement\_meshstack) | >= 0.27.0 |
 
 ## Modules
 

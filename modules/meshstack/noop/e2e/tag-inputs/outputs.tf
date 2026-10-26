@@ -13,6 +13,10 @@ output "resolved_tags" {
 }
 
 output "building_block_status" {
-  description = "Run status of the building block under test."
-  value       = meshstack_building_block.this.status.status
+  description = "Run outcome of the building block under test."
+  value = {
+    succeeded     = meshstack_building_block.this.status.succeeded
+    health_status = meshstack_building_block.this.status.health_status
+    action        = meshstack_building_block.this.status.action
+  }
 }

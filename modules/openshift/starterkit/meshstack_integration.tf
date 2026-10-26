@@ -308,9 +308,8 @@ terraform {
 
   required_providers {
     meshstack = {
-      source = "meshcloud/meshstack"
-      # 0.25.2 adds `version_spec.inputs.*.is_optional`, which makes the repository admin skippable.
-      version = ">= 0.25.2"
+      source  = "meshcloud/meshstack"
+      version = ">= 0.27.0"
     }
   }
 }
