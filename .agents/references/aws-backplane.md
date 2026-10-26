@@ -40,7 +40,7 @@ module "meshstack_oidc_provider" {
 from `version_latest.workload_identity_federation` of any definition that runs on that runner, and reads the
 thumbprint from the issuer's own TLS chain, so the issuer URL has to be reachable from wherever it
 runs. Pass its `arn` output to every backplane in that account. To register a self-hosted runner's
-issuer pass that runner's values, and then pass its uuid as `building_block_runner_uuid` to every
+issuer pass that runner's values, and then pass its reference as `meshstack.runner_ref` to every
 building block module running on it.
 
 This is where AWS differs from the other providers, and why the repetition is not the same kind of
@@ -383,7 +383,7 @@ AWS_WEB_IDENTITY_TOKEN_FILE = {
 A building block keeps running on the version it was created with, so moving the definition to a
 different runner breaks the blocks that still run on the old version until they upgrade.
 
-The status read and the `building_block_runner_uuid` behind it are the same in every cloud, see
+The status read and the `meshstack.runner_ref` behind it are the same in every cloud, see
 [meshstack-integration.md § Runner identity](meshstack-integration.md#runner-identity).
 
 ### Cross-account (StackSet) pattern

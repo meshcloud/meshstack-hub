@@ -104,8 +104,12 @@ variable "meshstack" {
   type = object({
     owning_workspace_identifier = string
     tags                        = optional(map(list(string)), {})
+    runner_ref = optional(object({
+      kind = string
+      uuid = string
+    }))
   })
-  description = "Shared meshStack context. Tags are optional and propagated to building block definition metadata."
+  description = "Shared meshStack context, see docs."
 }
 
 variable "hub" {
@@ -173,6 +177,7 @@ resource "meshstack_integration" "github" {
           secret_value   = var.github_app_private_key
           secret_version = nonsensitive(sha256(var.github_app_private_key))
         }
+        runner_ref = var.meshstack.runner_ref
       }
     }
   }
@@ -266,7 +271,8 @@ resource "meshstack_building_block_definition" "this" {
   }
 
   version_spec = {
-    draft = var.hub.bbd_draft
+    draft      = var.hub.bbd_draft
+    runner_ref = var.meshstack.runner_ref
     # PURGE: removing the block runs no workflow. There is nothing to tear down, since hardening
     # stays on the VM and the VM belongs to its own building block, and meshStack refuses DELETE
     # without a destroy workflow.

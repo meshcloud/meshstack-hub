@@ -49,8 +49,12 @@ variable "meshstack" {
   type = object({
     owning_workspace_identifier = string
     tags                        = optional(map(list(string)), {})
+    runner_ref = optional(object({
+      kind = string
+      uuid = string
+    }))
   })
-  description = "Shared meshStack context. Tags are optional and propagated to building block definition metadata."
+  description = "Shared meshStack context, see docs."
 }
 
 variable "hub" {
@@ -139,6 +143,7 @@ resource "meshstack_building_block_definition" "this" {
 
   version_spec = {
     draft         = var.hub.bbd_draft
+    runner_ref    = var.meshstack.runner_ref
     deletion_mode = "DELETE"
 
     implementation = {

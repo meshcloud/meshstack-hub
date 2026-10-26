@@ -115,8 +115,12 @@ variable "meshstack" {
       payment_method = map(list(string))
       project        = map(list(string))
     })
+    runner_ref = optional(object({
+      kind = string
+      uuid = string
+    }))
   })
-  description = "Shared meshStack context. `tags.building_block` is forwarded to the building block definition's own metadata; `tags.workspace`, `tags.payment_method` and `tags.project` are passed through as a static input, merged onto the workspace (alongside the mandatory expiry tag, see workspace_expiry_tag_key), the payment method and the project this building block creates."
+  description = "Shared meshStack context, see docs."
 }
 
 variable "hub" {
@@ -238,6 +242,7 @@ resource "meshstack_building_block_definition" "this" {
 
   version_spec = {
     draft         = var.hub.bbd_draft
+    runner_ref    = var.meshstack.runner_ref
     deletion_mode = "DELETE"
 
     implementation = {
