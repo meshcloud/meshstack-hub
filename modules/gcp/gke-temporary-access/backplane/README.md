@@ -53,8 +53,9 @@ delete:
 - They may only update or delete RoleBindings labelled with `binding_label`. All other RoleBindings
   are out of reach.
 - New RoleBindings must carry `binding_label` and `expiry_annotation`, have exactly one subject of
-  kind `User`, and reference the ClusterRole `cluster_role`. That rules out binding a group such as
-  `system:authenticated`.
+  kind `User` whose name doesn't start with `system:`, and reference the ClusterRole `cluster_role`.
+  That rules out binding a group such as `system:authenticated`, `system:anonymous` or a
+  ServiceAccount.
 
 ValidatingAdmissionPolicy is GA since Kubernetes 1.30, so the cluster must run GKE 1.30 or later.
 Cluster admins can still remove the policy.
@@ -77,6 +78,7 @@ The identity that applies this module needs the following on `var.project_id`:
 | `roles/iam.workloadIdentityPoolAdmin` | create the workload identity pool and its OIDC provider |
 | `roles/iam.serviceAccountAdmin` | create the building block service account and set its IAM policy |
 | `roles/resourcemanager.projectIamAdmin` | grant that service account its project roles |
+| `roles/container.clusterViewer` and `roles/compute.viewer` | read the cluster's endpoint and CA certificate in `meshstack_integration.tf`; the google provider also lists the node pools' instance groups |
 
 It also needs RBAC rights in the cluster to create the cleanup namespace and CronJob, ClusterRoles,
 ClusterRoleBindings that grant `bind` on `cluster_role`, and the ValidatingAdmissionPolicy, which in

@@ -17,9 +17,13 @@ locals {
   # already deleted. It also keeps expired grants from piling up in the project's IAM policy.
   is_active = timecmp(plantimestamp(), local.expires_at) < 0
 
+  # IAM matches emails case-insensitively, RBAC matches usernames exactly. GKE takes the username
+  # from the Google token, which carries the email in lowercase.
+  developer_email = lower(var.author.email)
+
   # One grant per building block. Two building blocks of the same developer must not share a
   # condition, or deleting one would revoke the other.
-  grant_id = substr(sha1("${var.author.email}/${var.namespace}/${time_static.requested_at.rfc3339}"), 0, 10)
+  grant_id = substr(sha1("${local.developer_email}/${var.namespace}/${time_static.requested_at.rfc3339}"), 0, 10)
 }
 
 # GKE refuses authentication without container.clusters.get, so this grant expiring is what ends
@@ -31,7 +35,7 @@ resource "google_project_iam_member" "cluster_viewer" {
 
   project = var.project_id
   role    = "roles/container.clusterViewer"
-  member  = "user:${var.author.email}"
+  member  = "user:${local.developer_email}"
 
   condition {
     title       = "gke-temporary-access-${local.grant_id}"
@@ -65,6 +69,6 @@ resource "kubernetes_role_binding_v1" "this" {
   subject {
     api_group = "rbac.authorization.k8s.io"
     kind      = "User"
-    name      = var.author.email
+    name      = local.developer_email
   }
 }
