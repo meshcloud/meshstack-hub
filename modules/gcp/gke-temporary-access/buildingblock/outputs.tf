@@ -16,14 +16,12 @@ output "summary" {
     kubectl get pods --namespace ${var.namespace}
     ```
 
-    The temporary IAM grant expires at the time shown above. A cleanup job removes this namespace
-    grant on its next successful run (scheduled every five minutes). Other access you already have
-    is unaffected. Delete this building block when you are done.
+    The temporary IAM grant expires at the time shown above. Other access you already have is unaffected.
     EOT
     ) : (<<-EOT
     # Access to `${var.namespace}` expired at ${local.expires_at}
 
-    Delete this building block and order a new one to request access again.
+    The grants have been removed. Order a new building block to request access again.
     EOT
   )
 }

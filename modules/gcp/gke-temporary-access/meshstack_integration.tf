@@ -161,7 +161,8 @@ resource "meshstack_building_block_definition" "this" {
 
       The duration is measured from the first run; reruns do not reset the start time. The temporary
       IAM grant expires at the requested time, and a cleanup job removes the namespace grant on its
-      next successful run (scheduled every five minutes). Other access you already have is unaffected.
+      next successful run (scheduled every five minutes). A daily run also removes the expired grants
+      from the project, so they don't accumulate in GCP. Other access you already have is unaffected.
 
       ## 🎯 When to use it
 
@@ -188,12 +189,19 @@ resource "meshstack_building_block_definition" "this" {
       | Remove access when it expires | ✅ | ❌ |
       | Request only the namespace and time you need | ❌ | ✅ |
       | Sign in to `gcloud` with the Google account matching your meshStack email | ❌ | ✅ |
-      | Delete the building block when you are done | ❌ | ✅ |
       EOT
     ))
     support_url       = ""
     documentation_url = ""
     target_type       = "WORKSPACE_LEVEL"
+
+    # A run after expiry destroys the expired grants. This is only for cleanup, the timely
+    # revocation comes from the CronJob and the IAM condition.
+    schedule = {
+      mode               = "DRIFT_RECONCILIATION"
+      frequency          = "DAILY"
+      automatic_approval = true
+    }
   }
 
   version_spec = {
