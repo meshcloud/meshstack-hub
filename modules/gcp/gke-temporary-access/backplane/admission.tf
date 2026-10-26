@@ -1,4 +1,11 @@
 locals {
+  system_namespaces    = ["kube-*", "gke-*", "gmp-*"]
+  forbidden_namespaces = setunion(local.system_namespaces, var.forbidden_namespaces, [kubernetes_namespace_v1.cleanup.metadata[0].name])
+
+  forbidden_exact_namespaces    = [for pattern in local.forbidden_namespaces : pattern if !endswith(pattern, "*")]
+  forbidden_namespace_prefixes  = [for pattern in local.forbidden_namespaces : trimsuffix(pattern, "*") if endswith(pattern, "*")]
+  namespace_is_forbidden_clause = "request.namespace in ${jsonencode(local.forbidden_exact_namespaces)} || ${jsonencode(local.forbidden_namespace_prefixes)}.exists(prefix, request.namespace.startsWith(prefix))"
+
   # CEL string literals. JSON string escaping is valid CEL.
   binding_label_literal     = jsonencode(local.binding_label)
   expiry_annotation_literal = jsonencode(local.expiry_annotation)
@@ -11,7 +18,7 @@ locals {
 }
 
 # RBAC can't limit RoleBindings by label or by subject. Without this policy the building block could
-# delete any RoleBinding in the offered namespaces, or bind cluster_role to a whole group.
+# delete any RoleBinding in the cluster, or bind cluster_role to a whole group.
 # kubernetes_manifest, because the provider has no resource for ValidatingAdmissionPolicyBinding.
 resource "kubernetes_manifest" "rolebinding_policy" {
   manifest = {
@@ -35,6 +42,12 @@ resource "kubernetes_manifest" "rolebinding_policy" {
         expression = "request.userInfo.username in ${jsonencode(local.guarded_usernames)}"
       }]
       validations = [
+        # Deletes stay allowed, so access granted before a namespace became forbidden can still end.
+        {
+          expression        = "request.operation == 'DELETE' || !(${local.namespace_is_forbidden_clause})"
+          messageExpression = "'Namespace ' + request.namespace + ' is forbidden.'"
+          reason            = "Forbidden"
+        },
         {
           expression = "request.operation == 'CREATE' || (has(oldObject.metadata.labels) && ${local.binding_label_literal} in oldObject.metadata.labels && oldObject.metadata.labels[${local.binding_label_literal}] == 'true')"
           message    = "May only update or delete RoleBindings labelled ${local.binding_label}=true."

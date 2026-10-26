@@ -13,9 +13,10 @@ variable "gke_cluster_location" {
   description = "Region or zone of the GKE cluster."
 }
 
-variable "gke_namespaces" {
+variable "gke_forbidden_namespaces" {
   type        = list(string)
-  description = "Namespaces developers can request temporary access to. They must already exist in the cluster."
+  default     = []
+  description = "Namespaces developers can't request access to, on top of the system namespaces. A trailing `*` matches a prefix."
 }
 
 variable "gke_cluster_role" {
@@ -112,12 +113,12 @@ output "building_block_definition" {
 module "backplane" {
   source = "github.com/meshcloud/meshstack-hub//modules/gcp/gke-temporary-access/backplane?ref=${var.hub.git_ref}"
 
-  project_id         = var.gcp_project_id
-  namespaces         = toset(var.gke_namespaces)
-  cluster_role       = var.gke_cluster_role
-  cleanup_namespace  = var.gke_cleanup_namespace
-  cleanup_image      = var.gke_cleanup_image
-  service_account_id = var.backplane_service_account_id
+  project_id           = var.gcp_project_id
+  forbidden_namespaces = toset(var.gke_forbidden_namespaces)
+  cluster_role         = var.gke_cluster_role
+  cleanup_namespace    = var.gke_cleanup_namespace
+  cleanup_image        = var.gke_cleanup_image
+  service_account_id   = var.backplane_service_account_id
 
   workload_identity_federation = {
     workload_identity_pool_identifier = var.workload_identity.pool_identifier
@@ -166,7 +167,7 @@ resource "meshstack_building_block_definition" "this" {
 
       | Responsibility | Platform Team | Application Team |
       |---|:---:|:---:|
-      | Decide which namespaces can be requested and with which role | ✅ | ❌ |
+      | Decide which namespaces can't be requested and which role is granted | ✅ | ❌ |
       | Remove access when it expires | ✅ | ❌ |
       | Request only the namespace and time you need | ❌ | ✅ |
       | Sign in to `gcloud` with the Google account matching your meshStack email | ❌ | ✅ |
@@ -266,12 +267,18 @@ resource "meshstack_building_block_definition" "this" {
         display_name    = "Requester"
         description     = "The user who requested access. Injected by meshStack."
       }
+      forbidden_namespaces = {
+        type            = "CODE"
+        assignment_type = "STATIC"
+        display_name    = "Forbidden Namespaces"
+        description     = "Namespaces developers can't request access to. A trailing `*` matches a prefix."
+        argument        = jsonencode(jsonencode(sort(tolist(module.backplane.forbidden_namespaces))))
+      }
       namespace = {
-        type              = "SINGLE_SELECT"
-        assignment_type   = "USER_INPUT"
-        display_name      = "Namespace"
-        description       = "Namespace you need access to."
-        selectable_values = sort(tolist(module.backplane.namespaces))
+        type            = "STRING"
+        assignment_type = "USER_INPUT"
+        display_name    = "Namespace"
+        description     = "Namespace you need access to. System namespaces can't be requested."
       }
       duration_hours = {
         type              = "SINGLE_SELECT"

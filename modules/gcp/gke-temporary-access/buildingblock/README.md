@@ -14,7 +14,8 @@ hours. It makes two grants to the developer's Google identity:
 - A RoleBinding to `cluster_role` in the namespace, labelled and annotated with its expiry for the
   backplane's cleanup CronJob.
 
-The expiry is fixed on the first run. A run after expiry removes both grants instead of recreating
+The namespace must exist and must not be forbidden by the backplane. The expiry is fixed on the
+first run. A run after expiry removes both grants instead of recreating
 them.
 
 The `kubernetes` provider authenticates as the building block's own service account, using the
@@ -55,7 +56,8 @@ No modules.
 | <a name="input_cluster_role"></a> [cluster\_role](#input\_cluster\_role) | ClusterRole to bind the developer to. Take it from the backplane's `cluster_role` output. | `string` | n/a | yes |
 | <a name="input_duration_hours"></a> [duration\_hours](#input\_duration\_hours) | How many hours the access lasts, counted from the first run. | `number` | n/a | yes |
 | <a name="input_expiry_annotation"></a> [expiry\_annotation](#input\_expiry\_annotation) | Annotation the cleanup CronJob reads the expiry from. Take it from the backplane's `expiry_annotation` output. | `string` | n/a | yes |
-| <a name="input_namespace"></a> [namespace](#input\_namespace) | Namespace to grant access to. Must be one of the namespaces the backplane offers. | `string` | n/a | yes |
+| <a name="input_forbidden_namespaces"></a> [forbidden\_namespaces](#input\_forbidden\_namespaces) | Namespaces developers can't request access to. A trailing `*` matches a prefix. Take it from the backplane's `forbidden_namespaces` output. | `set(string)` | n/a | yes |
+| <a name="input_namespace"></a> [namespace](#input\_namespace) | Namespace to grant access to. Must exist and must not be forbidden. | `string` | n/a | yes |
 | <a name="input_project_id"></a> [project\_id](#input\_project\_id) | GCP project ID that contains the GKE cluster. | `string` | n/a | yes |
 
 ## Outputs

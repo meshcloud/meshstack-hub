@@ -4,15 +4,11 @@ variable "project_id" {
   nullable    = false
 }
 
-variable "namespaces" {
-  description = "Namespaces developers can request temporary access to. They must already exist in the cluster."
+variable "forbidden_namespaces" {
+  description = "Namespaces developers can't request access to, on top of the system namespaces and `cleanup_namespace`. A trailing `*` matches a prefix."
   type        = set(string)
+  default     = []
   nullable    = false
-
-  validation {
-    condition     = length(var.namespaces) > 0
-    error_message = "Offer at least one namespace."
-  }
 }
 
 variable "cluster_role" {
