@@ -15,7 +15,8 @@ hours. It adds two grants to the developer's Google identity:
 
 The namespace must exist and must not be forbidden by the backplane. The duration is measured from
 the first run. Rerunning with the same duration does not extend access. A run after expiry removes
-both grants instead of recreating them.
+both grants instead of recreating them. Use daily drift reconciliation to triggers such runs
+automatically.
 
 The conditional IAM grant expires at the requested time. If another IAM grant still allows the
 developer to authenticate, the backplane's cleanup CronJob removes this building block's RoleBinding
