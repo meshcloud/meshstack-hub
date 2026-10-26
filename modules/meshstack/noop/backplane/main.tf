@@ -134,6 +134,11 @@ resource "google_cloud_run_v2_service" "runner" {
       }
 
       env {
+        name  = "RUNNER_METRICS_PORT"
+        value = "8080"
+      }
+
+      env {
         name  = "RUNNER_PRIVATE_KEY_FILE"
         value = "/keys/runner-private.pem"
       }
