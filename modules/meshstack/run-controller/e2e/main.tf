@@ -49,13 +49,13 @@ variable "github_app_installation_id" {
 
 variable "run_controller_image" {
   type        = string
-  default     = "ghcr.io/meshcloud/run-controller:main"
+  default     = "ghcr.io/meshcloud/run-controller:623418da18b934d1daa9fcbb2d30311f07eb432f"
   description = "Run-controller image. A controller built from runner `main` carries a version no image tag has, so the Job image needs a tag too."
 }
 
 variable "run_controller_job_image" {
   type    = string
-  default = "ghcr.io/meshcloud/building-block-runner:main"
+  default = "ghcr.io/meshcloud/building-block-runner:623418da18b934d1daa9fcbb2d30311f07eb432f"
 }
 
 locals {
