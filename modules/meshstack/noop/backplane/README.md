@@ -33,7 +33,7 @@ Adjust the mount paths in `main.tf` if your runner image expects a different lay
 
 ## Outputs
 
-| Output                  | Description                                                                                           |
-|-------------------------|-------------------------------------------------------------------------------------------------------|
-| `runner_ref`            | Wire into `meshstack_building_block_definition.version_spec.runner_ref` in `meshstack_integration.tf` |
-| `cloud_run_service_url` | URL of the deployed Cloud Run service                                                                 |
+| Output                  | Description                                                      |
+|-------------------------|------------------------------------------------------------------|
+| `runner_ref`            | Pass as `meshstack.runner_ref` to the `meshstack_integration.tf` |
+| `cloud_run_service_url` | URL of the deployed Cloud Run service                            |

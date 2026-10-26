@@ -51,6 +51,7 @@ module "noop" {
   meshstack = {
     owning_workspace_identifier = var.test_context.workspace
     tags                        = {}
+    runner_ref                  = module.backplane.runner_ref
   }
   hub = {
     git_ref   = var.test_context.hub_git_ref
@@ -59,7 +60,6 @@ module "noop" {
   tag_object = "WORKSPACE"
   tag_key    = meshstack_tag_definition.noop_e2e.spec.key
 
-  runner_ref = module.backplane.runner_ref
   depends_on = [module.backplane] # Without the backplane there is no runner and no place to run the BB.
 }
 
