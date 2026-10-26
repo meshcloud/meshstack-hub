@@ -23,3 +23,4 @@ modules/otc/network                                  # sources //modules/otc/net
 modules/otc/obs-bucket                               # sources //modules/otc/obs-bucket/backplane?ref=main
 modules/otc/rds                                      # sources //modules/otc/rds/backplane?ref=main
 reference-architectures/otc-landingzone/buildingblock # sources //modules/otc?ref=main
+modules/meshstack/run-controller                     # sources //modules/meshstack/run-controller/backplane?ref=main, which does not exist yet
