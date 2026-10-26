@@ -30,15 +30,12 @@ resource "kubernetes_cluster_role_v1" "cleanup" {
   }
 }
 
-resource "kubernetes_role_binding_v1" "cleanup" {
+resource "kubernetes_cluster_role_binding_v1" "cleanup" {
   # Grant the rights only once the policy that restricts them is in force.
   depends_on = [kubernetes_manifest.rolebinding_policy_binding]
 
-  for_each = var.namespaces
-
   metadata {
-    name      = kubernetes_cluster_role_v1.cleanup.metadata[0].name
-    namespace = each.value
+    name = kubernetes_cluster_role_v1.cleanup.metadata[0].name
   }
 
   role_ref {
@@ -95,28 +92,22 @@ resource "kubernetes_cron_job_v1" "cleanup" {
               command = ["bash", "-euo", "pipefail", "-c"]
               args = [<<-EOT
                 now=$(date -u +%Y-%m-%dT%H:%M:%SZ)
-                for namespace in $NAMESPACES; do
-                  kubectl get rolebindings -n "$namespace" -l "$BINDING_LABEL" -o "jsonpath=$EXPIRY_JSONPATH" |
-                    while read -r name expires_at; do
-                      if [[ "$expires_at" < "$now" ]]; then
-                        kubectl delete rolebinding -n "$namespace" "$name"
-                      fi
-                    done
-                done
+                kubectl get rolebindings --all-namespaces -l "$BINDING_LABEL" -o "jsonpath=$EXPIRY_JSONPATH" |
+                  while read -r namespace name expires_at; do
+                    if [[ "$expires_at" < "$now" ]]; then
+                      kubectl delete rolebinding -n "$namespace" "$name"
+                    fi
+                  done
               EOT
               ]
 
-              env {
-                name  = "NAMESPACES"
-                value = join(" ", var.namespaces)
-              }
               env {
                 name  = "BINDING_LABEL"
                 value = local.binding_label
               }
               env {
                 name  = "EXPIRY_JSONPATH"
-                value = "{range .items[*]}{.metadata.name}{\" \"}{.metadata.annotations.${replace(local.expiry_annotation, ".", "\\.")}}{\"\\n\"}{end}"
+                value = "{range .items[*]}{.metadata.namespace}{\" \"}{.metadata.name}{\" \"}{.metadata.annotations.${replace(local.expiry_annotation, ".", "\\.")}}{\"\\n\"}{end}"
               }
               # kubectl writes its discovery cache below $HOME.
               env {

@@ -25,10 +25,12 @@ output "service_account_email" {
   value       = google_service_account.buildingblock.email
 }
 
-output "namespaces" {
-  description = "Namespaces the building block can grant access to."
-  # Read off the bindings so a consumer offers a namespace only once the building block can grant it.
-  value = toset([for binding in kubernetes_role_binding_v1.grant_access : binding.metadata[0].namespace])
+output "forbidden_namespaces" {
+  # Orders a consumer's building block definition after the building block can grant access.
+  depends_on = [kubernetes_cluster_role_binding_v1.grant_access]
+
+  description = "Namespaces the building block can't grant access to. A trailing `*` matches a prefix."
+  value       = local.forbidden_namespaces
 }
 
 output "cluster_role" {

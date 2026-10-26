@@ -36,8 +36,29 @@ variable "author" {
 }
 
 variable "namespace" {
-  description = "Namespace to grant access to. Must be one of the namespaces the backplane offers."
+  description = "Namespace to grant access to. Must exist and must not be forbidden."
   type        = string
+  nullable    = false
+
+  validation {
+    condition     = can(regex("^[a-z0-9]([-a-z0-9]{0,61}[a-z0-9])?$", var.namespace))
+    error_message = "\"${var.namespace}\" is not a valid namespace name."
+  }
+
+  # The backplane's admission policy enforces this too. Checking here fails the run before it
+  # touches IAM, with a clearer message.
+  validation {
+    condition = !anytrue([
+      for pattern in var.forbidden_namespaces :
+      endswith(pattern, "*") ? startswith(var.namespace, trimsuffix(pattern, "*")) : var.namespace == pattern
+    ])
+    error_message = "Access to namespace \"${var.namespace}\" can't be requested."
+  }
+}
+
+variable "forbidden_namespaces" {
+  description = "Namespaces developers can't request access to. A trailing `*` matches a prefix. Take it from the backplane's `forbidden_namespaces` output."
+  type        = set(string)
   nullable    = false
 }
 
