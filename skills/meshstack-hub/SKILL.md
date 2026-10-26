@@ -280,9 +280,8 @@ then ask the user in one message for:
 - **Credentials for a module without a cloud backplane.** For example, `github/repository` takes the
   ID, installation ID and private key of a GitHub App. Pass a secret as a `TF_VAR_<name>`
   environment variable or from the user's secret store, never in a committed file.
-- **The runner.** If the user runs their own building block runner, its uuid goes into
-  `building_block_runner_uuid`. Without it, the definition runs on the shared runner meshStack
-  hosts.
+- **The runner.** If the user runs their own building block runner, its `ref` goes into
+  `meshstack.runner_ref`. Without it, the definition runs on the shared runner meshStack hosts.
 
 In the plan for the first apply, point out what it creates in the cloud: identities, role
 definitions and role assignments. They decide what the runner may do in the user's cloud, so the

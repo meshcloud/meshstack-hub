@@ -70,8 +70,12 @@ variable "meshstack" {
   type = object({
     owning_workspace_identifier = string
     tags                        = optional(map(list(string)), {})
+    runner_ref = optional(object({
+      kind = string
+      uuid = string
+    }))
   })
-  description = "Shared meshStack context. Tags are optional and propagated to building block definition metadata."
+  description = "Shared meshStack context, see docs."
 }
 
 variable "hub" {
@@ -124,6 +128,7 @@ resource "meshstack_integration" "this" {
           secret_value   = var.azuredevops_personal_access_token
           secret_version = nonsensitive(sha256(var.azuredevops_personal_access_token))
         }
+        runner_ref = var.meshstack.runner_ref
       }
     }
   }
@@ -156,7 +161,8 @@ resource "meshstack_building_block_definition" "this" {
   }
 
   version_spec = {
-    draft = var.hub.bbd_draft
+    draft      = var.hub.bbd_draft
+    runner_ref = var.meshstack.runner_ref
     # A delete run queues the same pipeline once more with MESHSTACK_BEHAVIOR=DESTROY, so the ref
     # below must still carry the pipeline file when a building block is destroyed.
     deletion_mode = "DELETE"

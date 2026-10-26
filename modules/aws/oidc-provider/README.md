@@ -43,8 +43,8 @@ runner reports them as `version_latest.workload_identity_federation.issuer` and
 `version_latest.workload_identity_federation.aws.audience`, so take them from a definition already deployed
 on each runner, in whichever cloud. AWS allows one provider per issuer and account, and each runner
 has its own audience, so runners that share an issuer, for example two run-controllers in one
-cluster, are all listed in `audiences`. For a self-hosted runner pass its values, and pass its uuid
-as `building_block_runner_uuid` to every building block module that runs on it. The thumbprint
+cluster, are all listed in `audiences`. For a self-hosted runner pass its values, and pass its reference
+as `meshstack.runner_ref` to every building block module that runs on it. The thumbprint
 comes from the issuer's own TLS chain, so no other input is needed.
 
 The issuer URL has to be reachable from wherever this runs, because the thumbprint is read from it.

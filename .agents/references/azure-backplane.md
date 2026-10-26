@@ -140,7 +140,7 @@ module "backplane" {
 }
 ```
 
-The status read and the `building_block_runner_uuid` behind it are the same in every cloud, see
+The status read and the `meshstack.runner_ref` behind it are the same in every cloud, see
 [meshstack-integration.md § Runner identity](meshstack-integration.md#runner-identity).
 
 **Known limitation.** The federated credential trusts the subject of the version the Terraform

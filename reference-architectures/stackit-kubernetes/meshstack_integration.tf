@@ -53,8 +53,12 @@ variable "meshstack" {
   type = object({
     owning_workspace_identifier = string
     tags                        = optional(map(list(string)), {})
+    runner_ref = optional(object({
+      kind = string
+      uuid = string
+    }))
   })
-  description = "Shared meshStack context. Tags are propagated to the building block definition metadata."
+  description = "Shared meshStack context, see docs."
 }
 
 variable "hub" {
@@ -158,6 +162,7 @@ resource "meshstack_building_block_definition" "this" {
 
   version_spec = {
     draft         = true
+    runner_ref    = var.meshstack.runner_ref
     deletion_mode = "DELETE"
 
     # meshStack lets a run order a building block only if it holds every permission of its
