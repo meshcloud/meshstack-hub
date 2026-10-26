@@ -59,8 +59,10 @@ resource "kubernetes_manifest" "rolebinding_policy" {
           reason     = "Forbidden"
         },
         {
-          expression = "request.operation == 'DELETE' || (has(object.subjects) && size(object.subjects) == 1 && object.subjects[0].kind == 'User')"
-          message    = "RoleBindings must have exactly one subject of kind User."
+          # Kubernetes reserves the system: prefix for built-in identities such as system:anonymous
+          # and ServiceAccounts, which a User subject could otherwise name.
+          expression = "request.operation == 'DELETE' || (has(object.subjects) && size(object.subjects) == 1 && object.subjects[0].kind == 'User' && !object.subjects[0].name.startsWith('system:'))"
+          message    = "RoleBindings must have exactly one subject of kind User, outside the system: prefix."
           reason     = "Forbidden"
         },
         {

@@ -8,7 +8,7 @@ output "summary" {
   value = local.is_active ? (<<-EOT
     # Access to `${var.namespace}` until ${local.expires_at}
 
-    `${var.author.email}` can use the `${var.cluster_role}` role in namespace `${var.namespace}`
+    `${local.developer_email}` can use the `${var.cluster_role}` role in namespace `${var.namespace}`
     of cluster `${var.cluster_name}`. Sign in to `gcloud` with that account, then run:
 
     ```sh
