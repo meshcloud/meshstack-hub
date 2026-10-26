@@ -92,7 +92,7 @@ resource "kubernetes_cron_job_v1" "cleanup" {
               command = ["bash", "-euo", "pipefail", "-c"]
               args = [<<-EOT
                 now=$(date -u +%Y-%m-%dT%H:%M:%SZ)
-                kubectl get rolebindings --all-namespaces -l "$BINDING_LABEL" -o "jsonpath=$EXPIRY_JSONPATH" |
+                kubectl get rolebindings --all-namespaces -l "$BINDING_LABEL=true" -o "jsonpath=$EXPIRY_JSONPATH" |
                   while read -r namespace name expires_at; do
                     if [[ "$expires_at" < "$now" ]]; then
                       kubectl delete rolebinding -n "$namespace" "$name"
