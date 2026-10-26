@@ -16,6 +16,20 @@ variable "cluster_location" {
   nullable    = false
 }
 
+# Passed in rather than looked up: the google provider's cluster lookup also lists the node pools'
+# instance groups, which needs Compute Engine permissions the building block shouldn't hold.
+variable "cluster_endpoint" {
+  description = "IP address or hostname of the cluster's control plane."
+  type        = string
+  nullable    = false
+}
+
+variable "cluster_ca_certificate" {
+  description = "Base64-encoded CA certificate of the cluster's control plane."
+  type        = string
+  nullable    = false
+}
+
 variable "author" {
   description = "The meshStack user who requested access. They receive the access on their Google identity, which must use the same email."
   type = object({

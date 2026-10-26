@@ -18,8 +18,8 @@ The namespace must exist and must not be forbidden by the backplane. The expiry 
 first run. A run after expiry removes both grants instead of recreating
 them.
 
-The `kubernetes` provider authenticates as the building block's own service account, using the
-cluster's public endpoint.
+The `kubernetes` provider authenticates as the building block's own service account, against the
+`cluster_endpoint` and `cluster_ca_certificate` passed in.
 
 <!-- BEGIN_TF_DOCS -->
 ## Requirements
@@ -43,7 +43,6 @@ No modules.
 | [kubernetes_role_binding_v1.this](https://registry.terraform.io/providers/hashicorp/kubernetes/latest/docs/resources/role_binding_v1) | resource |
 | [time_static.requested_at](https://registry.terraform.io/providers/hashicorp/time/latest/docs/resources/static) | resource |
 | [google_client_config.this](https://registry.terraform.io/providers/hashicorp/google/latest/docs/data-sources/client_config) | data source |
-| [google_container_cluster.this](https://registry.terraform.io/providers/hashicorp/google/latest/docs/data-sources/container_cluster) | data source |
 
 ## Inputs
 
@@ -51,6 +50,8 @@ No modules.
 |------|-------------|------|---------|:--------:|
 | <a name="input_author"></a> [author](#input\_author) | The meshStack user who requested access. They receive the access on their Google identity, which must use the same email. | <pre>object({<br/>    type        = string<br/>    identifier  = string<br/>    displayName = string<br/>    username    = optional(string)<br/>    email       = optional(string)<br/>    euid        = optional(string)<br/>  })</pre> | n/a | yes |
 | <a name="input_binding_label"></a> [binding\_label](#input\_binding\_label) | Label the cleanup CronJob selects RoleBindings by. Take it from the backplane's `binding_label` output. | `string` | n/a | yes |
+| <a name="input_cluster_ca_certificate"></a> [cluster\_ca\_certificate](#input\_cluster\_ca\_certificate) | Base64-encoded CA certificate of the cluster's control plane. | `string` | n/a | yes |
+| <a name="input_cluster_endpoint"></a> [cluster\_endpoint](#input\_cluster\_endpoint) | IP address or hostname of the cluster's control plane. | `string` | n/a | yes |
 | <a name="input_cluster_location"></a> [cluster\_location](#input\_cluster\_location) | Region or zone of the GKE cluster. | `string` | n/a | yes |
 | <a name="input_cluster_name"></a> [cluster\_name](#input\_cluster\_name) | Name of the GKE cluster. | `string` | n/a | yes |
 | <a name="input_cluster_role"></a> [cluster\_role](#input\_cluster\_role) | ClusterRole to bind the developer to. Take it from the backplane's `cluster_role` output. | `string` | n/a | yes |

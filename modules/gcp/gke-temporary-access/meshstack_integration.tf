@@ -132,6 +132,12 @@ module "backplane" {
   }
 }
 
+data "google_container_cluster" "this" {
+  project  = var.gcp_project_id
+  name     = var.gke_cluster_name
+  location = var.gke_cluster_location
+}
+
 resource "meshstack_building_block_definition" "this" {
   metadata = {
     owned_by_workspace = var.meshstack.owning_workspace_identifier
@@ -239,6 +245,20 @@ resource "meshstack_building_block_definition" "this" {
         display_name    = "GKE Cluster Location"
         description     = "Region or zone of the GKE cluster."
         argument        = jsonencode(var.gke_cluster_location)
+      }
+      cluster_endpoint = {
+        type            = "STRING"
+        assignment_type = "STATIC"
+        display_name    = "GKE Cluster Endpoint"
+        description     = "IP address or hostname of the cluster's control plane."
+        argument        = jsonencode(data.google_container_cluster.this.endpoint)
+      }
+      cluster_ca_certificate = {
+        type            = "STRING"
+        assignment_type = "STATIC"
+        display_name    = "GKE Cluster CA Certificate"
+        description     = "Base64-encoded CA certificate of the cluster's control plane."
+        argument        = jsonencode(data.google_container_cluster.this.master_auth[0].cluster_ca_certificate)
       }
       cluster_role = {
         type            = "STRING"
