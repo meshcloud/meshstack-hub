@@ -64,62 +64,97 @@ resource "meshstack_project" "sandbox" {
 }
 
 
-resource "meshstack_tenant" "sandbox" {
-  metadata = {
-    owned_by_workspace  = meshstack_project.sandbox.metadata.owned_by_workspace
-    owned_by_project    = meshstack_project.sandbox.metadata.name
-    platform_identifier = local.platform_identifier
-  }
+data "meshstack_platforms" "sandbox" {
+  identifier = local.platform_identifier
+}
 
-  spec = {
-    landing_zone_identifier = local.landing_zone_identifier
+data "meshstack_landingzone" "sandbox" {
+  metadata = {
+    name = local.landing_zone_identifier
   }
 }
 
-
-# NOTE: must use bb v1 resource because v2 requires a tenant uuid
-# but the tenant v4 api that delivers the uuid is not supported by  our terraform provider yet
-resource "meshstack_buildingblock" "budget_alert" {
+resource "meshstack_tenant" "sandbox" {
   metadata = {
-    definition_uuid    = local.budget_alert_definition_uuid
-    definition_version = local.budget_alert_definition_version
-    tenant_identifier  = "${meshstack_tenant.sandbox.metadata.owned_by_workspace}.${meshstack_tenant.sandbox.metadata.owned_by_project}.${meshstack_tenant.sandbox.metadata.platform_identifier}"
+    owned_by_workspace = meshstack_project.sandbox.metadata.owned_by_workspace
+    owned_by_project   = meshstack_project.sandbox.metadata.name
   }
 
   spec = {
+    platform_ref     = one(data.meshstack_platforms.sandbox.platforms).ref
+    landing_zone_ref = data.meshstack_landingzone.sandbox.ref
+  }
+}
+
+data "meshstack_building_block_definitions" "composed" {
+  uuids = [local.budget_alert_definition_uuid, local.enable_eu_south_2_region_definition_uuid]
+}
+
+locals {
+  definition_versions = {
+    for definition in data.meshstack_building_block_definitions.composed.building_block_definitions :
+    definition.metadata.uuid => { for version in definition.versions : version.number => { uuid = version.uuid } }
+  }
+}
+
+moved {
+  from = meshstack_buildingblock.budget_alert
+  to   = meshstack_building_block.budget_alert
+}
+
+resource "meshstack_building_block" "budget_alert" {
+  spec = {
+    building_block_definition_version_ref = local.definition_versions[local.budget_alert_definition_uuid][local.budget_alert_definition_version]
+
     display_name = "Budget Alert"
+    target_ref   = meshstack_tenant.sandbox.ref
 
     inputs = {
       budget_name = {
-        value_string = "Agentic Coding Budget Alert"
+        value = jsonencode("Agentic Coding Budget Alert")
       }
       monthly_budget_amount = {
-        value_int = var.budget_amount
+        value = jsonencode(var.budget_amount)
       }
       contact_emails = {
         # just a single email for now, not a comma-separated list
-        value_string = var.username
+        value = jsonencode(var.username)
       }
+    }
+  }
+
+  lifecycle {
+    postcondition {
+      condition     = self.status.succeeded
+      error_message = "Building block ${self.metadata.uuid} did not succeed (health status ${self.status.health_status}, action ${self.status.action}). See its run in meshPanel."
     }
   }
 }
 
+moved {
+  from = meshstack_buildingblock.enable_eu_south_2_region
+  to   = meshstack_building_block.enable_eu_south_2_region
+}
 
 # enable spain region for the sandbox tenant because that's the only region where Anthropic's Sonnet 4 is available
-resource "meshstack_buildingblock" "enable_eu_south_2_region" {
-  metadata = {
-    definition_uuid    = local.enable_eu_south_2_region_definition_uuid
-    definition_version = local.enable_eu_south_2_region_definition_version
-    tenant_identifier  = "${meshstack_tenant.sandbox.metadata.owned_by_workspace}.${meshstack_tenant.sandbox.metadata.owned_by_project}.${meshstack_tenant.sandbox.metadata.platform_identifier}"
-  }
-
+resource "meshstack_building_block" "enable_eu_south_2_region" {
   spec = {
+    building_block_definition_version_ref = local.definition_versions[local.enable_eu_south_2_region_definition_uuid][local.enable_eu_south_2_region_definition_version]
+
     display_name = "Enable eu-south-2 region"
+    target_ref   = meshstack_tenant.sandbox.ref
 
     inputs = {
       region = {
-        value_single_select = "eu-south-2"
+        value = jsonencode("eu-south-2")
       }
+    }
+  }
+
+  lifecycle {
+    postcondition {
+      condition     = self.status.succeeded
+      error_message = "Building block ${self.metadata.uuid} did not succeed (health status ${self.status.health_status}, action ${self.status.action}). See its run in meshPanel."
     }
   }
 }

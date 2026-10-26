@@ -77,7 +77,7 @@ End users provide:
 
 | Name | Version |
 |------|---------|
-| <a name="requirement_meshstack"></a> [meshstack](#requirement\_meshstack) | >= 0.7.1 |
+| <a name="requirement_meshstack"></a> [meshstack](#requirement\_meshstack) | >= 0.27.0 |
 
 ## Modules
 
@@ -87,11 +87,14 @@ No modules.
 
 | Name | Type |
 |------|------|
-| [meshstack_buildingblock.budget_alert](https://registry.terraform.io/providers/meshcloud/meshstack/latest/docs/resources/buildingblock) | resource |
-| [meshstack_buildingblock.enable_eu_south_2_region](https://registry.terraform.io/providers/meshcloud/meshstack/latest/docs/resources/buildingblock) | resource |
+| [meshstack_building_block.budget_alert](https://registry.terraform.io/providers/meshcloud/meshstack/latest/docs/resources/building_block) | resource |
+| [meshstack_building_block.enable_eu_south_2_region](https://registry.terraform.io/providers/meshcloud/meshstack/latest/docs/resources/building_block) | resource |
 | [meshstack_project.sandbox](https://registry.terraform.io/providers/meshcloud/meshstack/latest/docs/resources/project) | resource |
 | [meshstack_tenant.sandbox](https://registry.terraform.io/providers/meshcloud/meshstack/latest/docs/resources/tenant) | resource |
 | [random_string.suffix](https://registry.terraform.io/providers/hashicorp/random/latest/docs/resources/string) | resource |
+| [meshstack_building_block_definitions.composed](https://registry.terraform.io/providers/meshcloud/meshstack/latest/docs/data-sources/building_block_definitions) | data source |
+| [meshstack_landingzone.sandbox](https://registry.terraform.io/providers/meshcloud/meshstack/latest/docs/data-sources/landingzone) | data source |
+| [meshstack_platforms.sandbox](https://registry.terraform.io/providers/meshcloud/meshstack/latest/docs/data-sources/platforms) | data source |
 
 ## Inputs
 
