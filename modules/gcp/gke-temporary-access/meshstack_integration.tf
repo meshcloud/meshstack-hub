@@ -5,7 +5,7 @@ variable "gcp_project_id" {
 
 variable "gke_cluster_name" {
   type        = string
-  description = "Name of the GKE cluster developers get temporary access to."
+  description = "Name of the GKE cluster."
 }
 
 variable "gke_cluster_location" {
@@ -16,25 +16,25 @@ variable "gke_cluster_location" {
 variable "gke_forbidden_namespaces" {
   type        = list(string)
   default     = null
-  description = "Namespace denylist. Defaults to system namespaces. An explicit list replaces it. The cleanup namespace is always blocked, even with `[]`. A trailing `*` matches a prefix."
+  description = "Namespace denylist. Defaults to system namespaces. An explicit list replaces these defaults. The cleanup namespace is always blocked, even with `[]`. A trailing `*` matches a prefix."
 }
 
 variable "gke_cluster_role" {
   type        = string
   default     = null
-  description = "Existing ClusterRole developers are bound to in the chosen namespace. Defaults to the backplane's default."
+  description = "Existing ClusterRole assigned to users by the building block. Defaults to the backplane's default."
 }
 
 variable "gke_cleanup_namespace" {
   type        = string
   default     = null
-  description = "Namespace for the CronJob that removes expired RoleBindings. Defaults to the backplane's default."
+  description = "Namespace created for the CronJob that removes expired RoleBindings. Defaults to the backplane's default."
 }
 
 variable "gke_cleanup_image" {
   type        = string
   default     = null
-  description = "Container image used by the cleanup CronJob. It must include `bash`, `date` and `kubectl`. Defaults to the backplane's image."
+  description = "Container image used by the cleanup CronJob. It must include `bash`, `date` and `kubectl`. Defaults to the backplane's default."
 }
 
 variable "workload_identity" {
@@ -275,7 +275,7 @@ resource "meshstack_building_block_definition" "this" {
         type            = "STRING"
         assignment_type = "STATIC"
         display_name    = "Cluster Role"
-        description     = "ClusterRole the developer is bound to."
+        description     = "ClusterRole to bind the developer to."
         argument        = jsonencode(module.backplane.cluster_role)
       }
       binding_label = {
@@ -296,7 +296,7 @@ resource "meshstack_building_block_definition" "this" {
         type            = "CODE"
         assignment_type = "AUTHOR"
         display_name    = "Requester"
-        description     = "The user who requested access. Injected by meshStack."
+        description     = "The meshStack user who requested access. Access is granted to their Google account, whose email address must match their meshStack email."
       }
       forbidden_namespaces = {
         type            = "CODE"
@@ -332,7 +332,7 @@ resource "meshstack_building_block_definition" "this" {
         type            = "STRING"
         assignment_type = "SUMMARY"
         display_name    = "Summary"
-        description     = "How to connect, or that the access has expired."
+        description     = "Markdown summary shown in meshPanel after the run."
       }
     }
   }
