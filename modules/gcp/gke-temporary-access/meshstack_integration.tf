@@ -15,22 +15,14 @@ variable "gke_cluster_location" {
 
 variable "gke_forbidden_namespaces" {
   type        = list(string)
-  default     = ["kube-*", "gke-*", "gmp-*"]
-  description = "Namespace denylist. Defaults to `kube-*`, `gke-*` and `gmp-*`. An explicit list replaces these defaults. The cleanup namespace is always blocked, even with `[]`. Null is not allowed. A trailing `*` matches a prefix."
-
-  # Preserve explicit null so validation can reject it instead of substituting the default.
-  nullable = true
-
-  validation {
-    condition     = var.gke_forbidden_namespaces != null
-    error_message = "gke_forbidden_namespaces must not be null. Omit it to use the default prefixes, or use [] to block only the cleanup namespace."
-  }
+  default     = null
+  description = "Namespace denylist. Defaults to system namespaces. An explicit list replaces it. The cleanup namespace is always blocked, even with `[]`. A trailing `*` matches a prefix."
 }
 
 variable "gke_cluster_role" {
   type        = string
-  default     = "view"
-  description = "Existing ClusterRole developers are bound to in the chosen namespace."
+  default     = null
+  description = "Existing ClusterRole developers are bound to in the chosen namespace. Defaults to the backplane's default."
 }
 
 variable "gke_cleanup_namespace" {
