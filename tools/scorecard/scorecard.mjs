@@ -26,6 +26,7 @@
 import { execFileSync } from "node:child_process";
 import { readFileSync, writeFileSync, existsSync, readdirSync, statSync } from "node:fs";
 import { basename, dirname, join, relative } from "node:path";
+import { fileURLToPath } from "node:url";
 
 const ROOT = new URL("../../", import.meta.url).pathname.replace(/\/$/, "");
 const MODULES_DIR = join(ROOT, "modules");
@@ -603,30 +604,7 @@ const detectors = [
         return { pass: null, detail: "no meshstack_building_block_definition resource" };
       }
 
-      const referencedVars = collectBBDInputArgumentVariableReferences(content);
-      if (referencedVars.size === 0) {
-        return { pass: true, detail: "no var.* references in BBD input arguments" };
-      }
-
-      const variableBlocks = extractVariableBlocks(content);
-      const violations = [];
-
-      for (const varName of referencedVars) {
-        const variableBlock = variableBlocks.get(varName);
-        if (!variableBlock) continue;
-
-        const hasOptional = /optional\s*\(/.test(variableBlock);
-        if (!hasOptional) continue;
-
-        const hasDefault = /^\s*default\s*=/m.test(variableBlock);
-        const hasBareObjectDefault = /default\s*=\s*\{\s*\}/s.test(variableBlock);
-
-        if (!hasDefault || hasBareObjectDefault) {
-          const reason = !hasDefault ? "missing default" : "bare default = {}";
-          violations.push(`${varName} (${reason})`);
-        }
-      }
-
+      const violations = explicitDefaultViolations(content);
       if (violations.length === 0) return { pass: true };
 
       const shown = violations.slice(0, 5).join(", ");
@@ -1893,6 +1871,49 @@ function findExpressionEnd(text, startIndex) {
   return text.length;
 }
 
+export function explicitDefaultViolations(content) {
+  const variableBlocks = extractVariableBlocks(content);
+  const violations = new Set();
+
+  for (const ref of collectBBDInputArgumentVariableReferences(content)) {
+    const [varName, attribute] = ref.split(".");
+    const variableBlock = variableBlocks.get(varName);
+    if (!variableBlock) continue;
+
+    const readType = (attribute && objectAttributeType(variableBlock, attribute)) ?? variableBlock;
+    if (!/optional\s*\(/.test(readType)) continue;
+
+    const hasDefault = /^\s*default\s*=/m.test(variableBlock);
+    const hasBareObjectDefault = /default\s*=\s*\{\s*\}/s.test(variableBlock);
+
+    if (!hasDefault || hasBareObjectDefault) {
+      const reason = !hasDefault ? "missing default" : "bare default = {}";
+      violations.add(`${varName} (${reason})`);
+    }
+  }
+
+  return [...violations];
+}
+
+function objectAttributeType(variableBlock, attribute) {
+  const objectMatch = /\btype\s*=\s*object\s*\(\s*\{/.exec(variableBlock);
+  if (!objectMatch) return null;
+
+  const open = objectMatch.index + objectMatch[0].length - 1;
+  const close = findMatchingBrace(variableBlock, open);
+  if (close === -1) return null;
+
+  const body = variableBlock.slice(open + 1, close);
+  for (const m of body.matchAll(new RegExp(String.raw`\b${attribute}\s*=`, "g"))) {
+    const prefix = body.slice(0, m.index);
+    const depth = (prefix.match(/[({[]/g) ?? []).length - (prefix.match(/[)}\]]/g) ?? []).length;
+    if (depth !== 0) continue;
+    const start = m.index + m[0].length;
+    return body.slice(start, findExpressionEnd(body, start));
+  }
+  return null;
+}
+
 function collectBBDInputArgumentVariableReferences(content) {
   const refs = new Set();
   const resources = extractBBDResourceBlocks(content);
@@ -1922,8 +1943,8 @@ function collectBBDInputArgumentVariableReferences(content) {
         }
 
         const expression = inputsBody.slice(exprStart, exprEnd);
-        for (const varMatch of expression.matchAll(/\bvar\.([A-Za-z_][A-Za-z0-9_]*)\b/g)) {
-          refs.add(varMatch[1]);
+        for (const varMatch of expression.matchAll(/\bvar\.([A-Za-z_]\w*)(?:\.([A-Za-z_]\w*))?/g)) {
+          refs.add(varMatch[2] ? `${varMatch[1]}.${varMatch[2]}` : varMatch[1]);
         }
       }
     }
@@ -2816,4 +2837,4 @@ function main() {
   else process.stdout.write(report);
 }
 
-main();
+if (process.argv[1] === fileURLToPath(import.meta.url)) main();
