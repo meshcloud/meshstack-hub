@@ -19,8 +19,8 @@ and
 [terraform-opentelekomcloud-snat](https://github.com/iits-consulting/terraform-opentelekomcloud-snat),
 pinned by tag.
 
-The RDS and CCE building blocks look the network up by name, so the VPC and its subnet share the
-name `name`. Keep it unique within the project.
+The RDS and CCE building blocks run inside a network building block as its children, taking its
+`vpc_id` and `subnet_id` outputs, so the network cannot be deleted while one of them is still in it.
 
 ## Authentication
 

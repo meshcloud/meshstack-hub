@@ -154,6 +154,12 @@ variable "services" {
     condition     = alltrue([for s in var.services : contains(values(local.services), s)])
     error_message = "services may only contain: ${join("; ", values(local.services))}."
   }
+
+  # RDS and CCE run inside a network building block as its children.
+  validation {
+    condition     = contains(var.services, local.services.network) || !(contains(var.services, local.services.rds) || contains(var.services, local.services.cce))
+    error_message = "RDS and CCE need the Network service, whose building blocks they run in."
+  }
 }
 
 variable "playground_mode" {

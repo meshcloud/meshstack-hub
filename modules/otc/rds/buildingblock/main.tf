@@ -1,14 +1,3 @@
-# The T Cloud Public Network building block names the VPC and its subnet alike. When it has not run
-# in this project, these lookups fail with "your query returned no results".
-data "opentelekomcloud_vpc_v1" "network" {
-  name = var.network_name
-}
-
-data "opentelekomcloud_vpc_subnet_v1" "network" {
-  name   = var.network_name
-  vpc_id = data.opentelekomcloud_vpc_v1.network.id
-}
-
 data "opentelekomcloud_rds_versions_v3" "this" {
   database_name = var.db_type
 
@@ -72,8 +61,8 @@ module "rds" {
   source = "git::https://github.com/iits-consulting/terraform-opentelekomcloud-rds.git?ref=v7.7.0"
 
   name      = var.name
-  vpc_id    = data.opentelekomcloud_vpc_v1.network.id
-  subnet_id = data.opentelekomcloud_vpc_subnet_v1.network.id
+  vpc_id    = var.vpc_id
+  subnet_id = var.subnet_id
 
   db_type    = var.db_type
   db_version = local.db_version

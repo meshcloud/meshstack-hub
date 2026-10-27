@@ -69,6 +69,6 @@ with one IAM group per meshStack role.
 
 In those projects they can order these service building blocks: ${join(", ", services)}.
 %{ if contains(services, "RDS") || contains(services, "CCE") ~}
-RDS and CCE run in the project's network, so a team orders the network building block first.
+RDS and CCE run inside a network building block, so a team orders that one first.
 %{ endif ~}
 %{ endif ~}

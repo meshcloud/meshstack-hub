@@ -11,11 +11,16 @@ variable "region" {
   description = "T Cloud Public region of the project."
 }
 
-variable "network_name" {
+variable "vpc_id" {
   type        = string
-  default     = "app"
   nullable    = false
-  description = "Name of the VPC and of its subnet the database is placed in, as the T Cloud Public Network building block created them."
+  description = "ID of the VPC, from the parent T Cloud Public Network building block."
+}
+
+variable "subnet_id" {
+  type        = string
+  nullable    = false
+  description = "ID of the subnet, from the parent T Cloud Public Network building block."
 }
 
 variable "name" {

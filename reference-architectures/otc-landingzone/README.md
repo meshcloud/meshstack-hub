@@ -195,7 +195,8 @@ whose rule admits only that definition's runs into an IAM group with that servic
 A pre-run script exchanges the run token for a temporary access key. See
 [`otc/workload-identity`](../../modules/otc/workload-identity).
 
-RDS and CCE find their network by name, so an application team orders **Network** first. Removing a
+RDS and CCE run inside a **Network** building block as its children, so they need the Network
+service too, and an application team orders it first. Removing a
 service from the selection deletes its building block definition, which meshStack refuses while
 building blocks of it still exist.
 

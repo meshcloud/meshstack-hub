@@ -14,8 +14,9 @@ building block created in the same project, with one worker node pool per availa
 the [iits-consulting CCE module](https://github.com/iits-consulting/terraform-opentelekomcloud-cce),
 pinned to a release tag.
 
-The VPC and its subnet are looked up by `network_name`, which both carry. The worker nodes pull images
-from the internet through the network's SNAT gateway.
+The VPC and subnet come from its parent T Cloud Public Network building block, whose `vpc_id` and
+`subnet_id` outputs meshStack passes in. The worker nodes pull images from the internet through the
+network's SNAT gateway.
 
 Node volumes are not KMS-encrypted: that needs an `EVSAccessKMS` agency in the domain, which this
 building block does not create.
@@ -45,10 +46,7 @@ environment.
 
 ## Resources
 
-| Name | Type |
-| ---- | ---- |
-| [opentelekomcloud_vpc_subnet_v1.network](https://registry.terraform.io/providers/opentelekomcloud/opentelekomcloud/latest/docs/data-sources/vpc_subnet_v1) | data source |
-| [opentelekomcloud_vpc_v1.network](https://registry.terraform.io/providers/opentelekomcloud/opentelekomcloud/latest/docs/data-sources/vpc_v1) | data source |
+No resources.
 
 ## Inputs
 
@@ -57,12 +55,13 @@ environment.
 | <a name="input_availability_zones"></a> [availability\_zones](#input\_availability\_zones) | Availability zones of the worker nodes. Each zone gets its own node pool of `node_count` nodes. | `list(string)` | <pre>[<br/>  "eu-de-01"<br/>]</pre> | no |
 | <a name="input_cluster_version"></a> [cluster\_version](#input\_cluster\_version) | Kubernetes version of the cluster, as CCE names it, e.g. `v1.31`. Must be one CCE still offers. | `string` | `"v1.31"` | no |
 | <a name="input_name"></a> [name](#input\_name) | Name of the CCE cluster. Also prefixes its node pools and key pair. | `string` | n/a | yes |
-| <a name="input_network_name"></a> [network\_name](#input\_network\_name) | Name of the VPC and its subnet the cluster nodes join, as the T Cloud Public Network building block created them. | `string` | `"app"` | no |
 | <a name="input_node_count"></a> [node\_count](#input\_node\_count) | Number of worker nodes per availability zone. | `number` | `2` | no |
 | <a name="input_node_flavor"></a> [node\_flavor](#input\_node\_flavor) | ECS flavor of the worker nodes, e.g. `s3.xlarge.4` (4 vCPUs, 16 GiB). | `string` | `"s3.xlarge.4"` | no |
 | <a name="input_project_id"></a> [project\_id](#input\_project\_id) | ID of the T Cloud Public project the cluster is created in. | `string` | n/a | yes |
 | <a name="input_public_api"></a> [public\_api](#input\_public\_api) | Bind an elastic IP to the Kubernetes API, so it is reachable from the internet. Without it the API is reachable only from inside the VPC. | `bool` | `true` | no |
 | <a name="input_region"></a> [region](#input\_region) | T Cloud Public region of the project. | `string` | `"eu-de"` | no |
+| <a name="input_subnet_id"></a> [subnet\_id](#input\_subnet\_id) | ID of the subnet, from the parent T Cloud Public Network building block. | `string` | n/a | yes |
+| <a name="input_vpc_id"></a> [vpc\_id](#input\_vpc\_id) | ID of the VPC, from the parent T Cloud Public Network building block. | `string` | n/a | yes |
 
 ## Outputs
 
