@@ -9,7 +9,7 @@ only this definition's runs, and an IAM group holding what the building block ne
   for the nodes and key pair, and VPC Administrator (`vpc_netadm`) for the API server's elastic IP.
 
 It also creates the `cce_admin_trust` agency CCE acts through, delegated to CCE's service account
-with Tenant Administrator in the region, unless `create_cce_admin_trust` is false. The CCE console
+with Tenant Administrator on all projects, unless `create_cce_admin_trust` is false. The CCE console
 would otherwise create it on a user's first visit; the agency is one per domain.
 
 Apply it with credentials holding Security Administrator, with the provider targeting the region's

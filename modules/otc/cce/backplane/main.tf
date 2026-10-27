@@ -18,11 +18,10 @@ module "workload_identity" {
   }
 }
 
-data "opentelekomcloud_identity_project_v3" "region" {}
-
 # CCE manages nodes and networks through this agency, which the CCE console otherwise creates on a
 # user's first visit to a region. It is one per domain, holds Tenant Administrator for CCE's own
-# service account, and creating it takes IAM permissions the building block must not have.
+# service account, and creating it takes IAM permissions the building block must not have. On the
+# region's project alone, CCE cannot see the networks of the projects below it ("VPC not found").
 resource "opentelekomcloud_identity_agency_v3" "cce_admin_trust" {
   lifecycle {
     enabled = var.create_cce_admin_trust
@@ -33,7 +32,7 @@ resource "opentelekomcloud_identity_agency_v3" "cce_admin_trust" {
   delegated_domain_name = "op_svc_cce"
 
   project_role {
-    project = data.opentelekomcloud_identity_project_v3.region.name
-    roles   = ["Tenant Administrator"]
+    all_projects = true
+    roles        = ["Tenant Administrator"]
   }
 }
