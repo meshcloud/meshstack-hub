@@ -178,6 +178,7 @@ module "federation_mapping_integration" {
   otc_identity_provider_name            = module.otc_integration.federation.identity_provider_name
   otc_identity_provider_email_attribute = module.otc_integration.federation.email_attribute
   otc_identity_provider_base_group      = module.otc_integration.federation.base_group
+  function_name                         = "mesh-${local.platform_identifier}-idp-mapping"
   otc_platform_type                     = module.otc_integration.platform_type_name
 
   meshstack = { owning_workspace_identifier = var.workspace, tags = local.tags.building_block }
