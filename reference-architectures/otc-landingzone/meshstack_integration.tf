@@ -69,6 +69,13 @@ variable "playground_mode" {
   description = "Deploy a throwaway platform: the platform identifier and the backplane IAM user get a random suffix so they do not occupy a name for good. Set to false for a platform that is actually used. Passed to the building block as a STATIC input, so whoever orders the architecture cannot choose. A playground platform and the building block definition it registers are not meant to be published to other workspaces."
 }
 
+variable "create_cce_admin_trust" {
+  type        = bool
+  nullable    = false
+  default     = true
+  description = "Create the `cce_admin_trust` agency the CCE service building block needs. It is one per domain, so set false for a second landing zone in a domain that already has it."
+}
+
 variable "default_tags" {
   type = object({
     landingzone           = optional(map(list(string)), {})
@@ -467,6 +474,15 @@ resource "meshstack_building_block_definition" "this" {
         assignment_type = "STATIC"
         argument        = jsonencode(var.playground_mode)
         display_order   = 120
+      }
+
+      create_cce_admin_trust = {
+        display_name    = "Create CCE Agency"
+        description     = "Whether this landing zone creates the domain's cce_admin_trust agency. Only one landing zone in a domain may."
+        type            = "BOOLEAN"
+        assignment_type = "STATIC"
+        argument        = jsonencode(var.create_cce_admin_trust)
+        display_order   = 130
       }
     }
 

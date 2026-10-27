@@ -21,6 +21,13 @@ variable "domain_roles" {
   description = "IAM system roles granted to the group on the domain, by role `name`."
 }
 
+variable "project_roles" {
+  type        = list(string)
+  default     = []
+  nullable    = false
+  description = "IAM system roles and policies granted to the group on all projects, by `name` (e.g. `system_all_12` for RDS FullAccess), not display name."
+}
+
 variable "policies" {
   type = map(object({
     actions = list(string)

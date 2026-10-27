@@ -5,8 +5,9 @@ access key, with [`otc/workload-identity`](../../workload-identity): an identity
 only this definition's runs, and an IAM group holding what the building block needs:
 
 - read access to IAM on the domain;
-- `rds:*:*`, `vpc:*:*`, `kms:*:*` and `ces:*:*` on all projects, for the instance, its KMS key,
-  security group, elastic IP and alarm rule.
+- on all projects, by IAM name: RDS FullAccess (`system_all_12`), KMS Administrator (`kms_adm`),
+  which RDS requires for an encrypted instance, VPC Administrator (`vpc_netadm`) for the security
+  group and elastic IP, and CES FullAccess (`system_all_61`) for the alarm rule.
 
 Apply it with credentials holding Security Administrator, with the provider targeting the region's
 own project (`tenant_name = "eu-de"`).

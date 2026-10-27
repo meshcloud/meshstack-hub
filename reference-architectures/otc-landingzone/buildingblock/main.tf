@@ -298,6 +298,7 @@ module "cce_integration" {
   otc_platform_type = local.service_integration.otc_platform_type
 
   workload_identity_name = "mesh-${local.platform_identifier}-cce"
+  create_cce_admin_trust = var.create_cce_admin_trust
 
   meshstack = { owning_workspace_identifier = var.workspace, tags = local.tags.building_block }
   hub       = var.hub
