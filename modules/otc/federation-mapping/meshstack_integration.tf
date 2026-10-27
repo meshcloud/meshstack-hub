@@ -66,6 +66,13 @@ variable "otc_identity_provider_base_group" {
   description = "Group without roles the base rule puts every federated user in."
 }
 
+variable "function_name" {
+  type        = string
+  default     = "meshstack-idp-mapping"
+  nullable    = false
+  description = "Name of the function and its agency. Agency names are unique across the domain, so each federated identity provider in a domain needs its own."
+}
+
 variable "otc_platform_type" {
   type        = string
   default     = "OTC"
@@ -221,6 +228,14 @@ resource "meshstack_building_block_definition" "this" {
         type            = "STRING"
         assignment_type = "STATIC"
         argument        = jsonencode(var.otc_identity_provider_base_group)
+      }
+
+      name = {
+        display_name    = "Function Name"
+        description     = "Name of the function and its agency, unique across the domain."
+        type            = "STRING"
+        assignment_type = "STATIC"
+        argument        = jsonencode(var.function_name)
       }
 
       OS_AUTH_URL = {
