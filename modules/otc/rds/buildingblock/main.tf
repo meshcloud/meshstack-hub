@@ -75,11 +75,15 @@ module "rds" {
   vpc_id    = data.opentelekomcloud_vpc_v1.network.id
   subnet_id = data.opentelekomcloud_vpc_subnet_v1.network.id
 
-  db_type              = var.db_type
-  db_version           = local.db_version
-  db_flavor            = local.orderable_flavors[0]
-  db_size              = var.storage_size
-  db_high_availability = var.high_availability
+  db_type    = var.db_type
+  db_version = local.db_version
+  db_flavor  = local.orderable_flavors[0]
+
+  # With a flavor given, the upstream module sends every zone it has, which a single instance
+  # answers with DBS.280285 "Invalid AZ".
+  db_availability_zones = var.high_availability ? ["${var.region}-01", "${var.region}-02"] : ["${var.region}-01"]
+  db_size               = var.storage_size
+  db_high_availability  = var.high_availability
 }
 
 locals {
