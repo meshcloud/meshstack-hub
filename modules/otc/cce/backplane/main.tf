@@ -4,10 +4,36 @@ module "workload_identity" {
   name                         = var.name
   workload_identity_federation = var.workload_identity_federation
 
-  # The cluster, its node pool and add-ons, and the servers, disks, key pair, KMS key and elastic IP
-  # behind them, in whichever project the building block is ordered on.
+  # What the CCE documentation names for creating clusters and nodes, in whichever project the
+  # building block is ordered on. CCE itself acts through the cce_admin_trust agency below. Names as
+  # IAM lists them, display name alongside.
+  project_roles = [
+    "system_all_27", # CCE FullAccess: cluster, node pool and add-ons
+    "system_all_51", # ECS FullAccess: the nodes' servers and key pair
+    "vpc_netadm",    # VPC Administrator: the API server's elastic IP
+  ]
+
   policies = {
     iam = { scope = "domain", actions = ["iam:*:get*", "iam:*:list*"] }
-    cce = { scope = "all_projects", actions = ["cce:*:*", "ecs:*:*", "evs:*:*", "ims:*:*", "vpc:*:*", "elb:*:*", "kms:*:*"] }
+  }
+}
+
+data "opentelekomcloud_identity_project_v3" "region" {}
+
+# CCE manages nodes and networks through this agency, which the CCE console otherwise creates on a
+# user's first visit to a region. It is one per domain, holds Tenant Administrator for CCE's own
+# service account, and creating it takes IAM permissions the building block must not have.
+resource "opentelekomcloud_identity_agency_v3" "cce_admin_trust" {
+  lifecycle {
+    enabled = var.create_cce_admin_trust
+  }
+
+  name                  = "cce_admin_trust"
+  description           = "Lets CCE manage the resources of its clusters."
+  delegated_domain_name = "op_svc_cce"
+
+  project_role {
+    project = data.opentelekomcloud_identity_project_v3.region.name
+    roles   = ["Tenant Administrator"]
   }
 }

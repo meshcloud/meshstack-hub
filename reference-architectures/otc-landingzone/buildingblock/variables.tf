@@ -162,6 +162,13 @@ variable "playground_mode" {
   description = "Deploy a throwaway platform: the platform identifier and the backplane user name get a random suffix so they do not occupy a name for good. Set to false for a platform that is actually used. A playground platform and the building block definition it registers are not meant to be published to other workspaces."
 }
 
+variable "create_cce_admin_trust" {
+  type        = bool
+  default     = true
+  nullable    = false
+  description = "Create the `cce_admin_trust` agency the CCE service building block needs. It is one per domain."
+}
+
 variable "hub" {
   type = object({
     git_ref   = optional(string, "main")

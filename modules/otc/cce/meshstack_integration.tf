@@ -39,6 +39,12 @@ variable "workload_identity_name" {
   description = "Name of the identity provider and IAM group the building block signs in through. Unique across the domain."
 }
 
+variable "create_cce_admin_trust" {
+  type        = bool
+  default     = true
+  description = "Create the `cce_admin_trust` agency CCE needs in the region. It is one per domain, so set false where another deployment already created it."
+}
+
 variable "otc_platform_type" {
   type        = string
   default     = "OTC"
@@ -80,7 +86,8 @@ variable "hub" {
 module "backplane" {
   source = "github.com/meshcloud/meshstack-hub//modules/otc/cce/backplane?ref=${var.hub.git_ref}"
 
-  name = var.workload_identity_name
+  name                   = var.workload_identity_name
+  create_cce_admin_trust = var.create_cce_admin_trust
   workload_identity_federation = {
     issuer   = meshstack_building_block_definition.this.version_latest.workload_identity_federation.issuer
     subject  = meshstack_building_block_definition.this.version_latest.workload_identity_federation.subject

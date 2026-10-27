@@ -39,6 +39,20 @@ resource "opentelekomcloud_identity_role_assignment_v3" "domain_role" {
   role_id   = each.value.id
 }
 
+data "opentelekomcloud_identity_role_v3" "project" {
+  for_each = toset(var.project_roles)
+  name     = each.key
+}
+
+resource "opentelekomcloud_identity_role_assignment_v3" "project_role" {
+  for_each = data.opentelekomcloud_identity_role_v3.project
+
+  group_id     = opentelekomcloud_identity_group_v3.building_block.id
+  domain_id    = opentelekomcloud_identity_group_v3.building_block.domain_id
+  all_projects = true
+  role_id      = each.value.id
+}
+
 resource "opentelekomcloud_identity_role_v3" "policy" {
   for_each = var.policies
 
