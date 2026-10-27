@@ -279,7 +279,8 @@ module "rds_integration" {
   otc_auth_url      = local.service_integration.otc_auth_url
   otc_platform_type = local.service_integration.otc_platform_type
 
-  workload_identity_name = "mesh-${local.platform_identifier}-rds"
+  workload_identity_name  = "mesh-${local.platform_identifier}-rds"
+  network_definition_uuid = module.network_integration.building_block_definition.uuid
 
   meshstack = { owning_workspace_identifier = var.workspace, tags = local.tags.building_block }
   hub       = var.hub
@@ -297,8 +298,9 @@ module "cce_integration" {
   otc_auth_url      = local.service_integration.otc_auth_url
   otc_platform_type = local.service_integration.otc_platform_type
 
-  workload_identity_name = "mesh-${local.platform_identifier}-cce"
-  create_cce_admin_trust = var.create_cce_admin_trust
+  workload_identity_name  = "mesh-${local.platform_identifier}-cce"
+  network_definition_uuid = module.network_integration.building_block_definition.uuid
+  create_cce_admin_trust  = var.create_cce_admin_trust
 
   meshstack = { owning_workspace_identifier = var.workspace, tags = local.tags.building_block }
   hub       = var.hub

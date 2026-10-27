@@ -29,7 +29,7 @@ output "summary" {
   value       = <<-EOT
     # ${var.name}
 
-    A ${var.high_availability ? "highly available (primary and standby)" : "single-node"} ${var.db_type} ${local.db_version} database in the network `${var.network_name}`.
+    A ${var.high_availability ? "highly available (primary and standby)" : "single-node"} ${var.db_type} ${local.db_version} database in the project's network.
 
     | | |
     |---|---|
@@ -38,7 +38,7 @@ output "summary" {
     | Admin user | `${module.rds.db_root_username}` |
 
     The admin password is in this building block's outputs. The database has no public address:
-    connect from a server or cluster in the subnet `${var.network_name}`, for example with
+    connect from a server or cluster in the same subnet, for example with
     `${local.connect_command}`.
   EOT
 }

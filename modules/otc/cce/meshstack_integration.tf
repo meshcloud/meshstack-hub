@@ -45,6 +45,11 @@ variable "create_cce_admin_trust" {
   description = "Create the `cce_admin_trust` agency CCE needs in the region. It is one per domain, so set false where another deployment already created it."
 }
 
+variable "network_definition_uuid" {
+  type        = string
+  description = "UUID of the T Cloud Public Network building block definition whose blocks this one runs in."
+}
+
 variable "otc_platform_type" {
   type        = string
   default     = "OTC"
@@ -133,9 +138,10 @@ resource "meshstack_building_block_definition" "this" {
     - want to run containerized workloads on a managed Kubernetes control plane
     - need a cluster in the same network as your databases and other project resources
 
-    Order the **T Cloud Public Network** building block on the project first. The cluster joins its
-    VPC and subnet, and its worker nodes reach the internet through the network's SNAT gateway, so
-    keep SNAT enabled there. Creating a cluster takes about 15 to 30 minutes.
+    The cluster runs inside a **T Cloud Public Network** building block, which you order first and
+    pick when ordering this one. It joins its VPC and subnet, and its worker nodes reach the internet
+    through the network's SNAT gateway, so keep SNAT enabled there. The network cannot be deleted
+    while the cluster is still in it. Creating a cluster takes about 15 to 30 minutes.
 
     ## 💡 Usage examples
 
@@ -170,6 +176,10 @@ resource "meshstack_building_block_definition" "this" {
   version_spec = {
     draft         = var.hub.bbd_draft
     deletion_mode = "DELETE"
+    # The network is a parent building block: meshStack orders it first and refuses to delete it
+    # while this block still sits in it, whose own deletion needs the network to look it up.
+    dependency_refs = [{ uuid = var.network_definition_uuid }]
+
     runner_ref = var.building_block_runner_uuid == null ? null : {
       kind = "meshBuildingBlockRunner"
       uuid = var.building_block_runner_uuid
@@ -253,13 +263,20 @@ resource "meshstack_building_block_definition" "this" {
         display_order          = 50
       }
 
-      network_name = {
-        display_name    = "Network Name"
-        description     = "Name of the VPC and subnet the T Cloud Public Network building block created. Keep the default unless you renamed it there."
+      vpc_id = {
+        display_name    = "VPC ID"
+        description     = "VPC of the parent T Cloud Public Network building block."
         type            = "STRING"
-        assignment_type = "USER_INPUT"
-        default_value   = jsonencode("app")
-        display_order   = 60
+        assignment_type = "BUILDING_BLOCK_OUTPUT"
+        argument        = jsonencode("${var.network_definition_uuid}.vpc_id")
+      }
+
+      subnet_id = {
+        display_name    = "Subnet ID"
+        description     = "Subnet of the parent T Cloud Public Network building block."
+        type            = "STRING"
+        assignment_type = "BUILDING_BLOCK_OUTPUT"
+        argument        = jsonencode("${var.network_definition_uuid}.subnet_id")
       }
 
       OS_AUTH_URL = {

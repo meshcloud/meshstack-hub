@@ -29,11 +29,16 @@ variable "cluster_version" {
   description = "Kubernetes version of the cluster, as CCE names it, e.g. `v1.31`. Must be one CCE still offers."
 }
 
-variable "network_name" {
+variable "vpc_id" {
   type        = string
-  default     = "app"
   nullable    = false
-  description = "Name of the VPC and its subnet the cluster nodes join, as the T Cloud Public Network building block created them."
+  description = "ID of the VPC, from the parent T Cloud Public Network building block."
+}
+
+variable "subnet_id" {
+  type        = string
+  nullable    = false
+  description = "ID of the subnet, from the parent T Cloud Public Network building block."
 }
 
 variable "availability_zones" {

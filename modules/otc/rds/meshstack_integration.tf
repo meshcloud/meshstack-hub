@@ -39,6 +39,11 @@ variable "workload_identity_name" {
   description = "Name of the identity provider and IAM group the building block signs in through. Unique across the domain."
 }
 
+variable "network_definition_uuid" {
+  type        = string
+  description = "UUID of the T Cloud Public Network building block definition whose blocks this one runs in."
+}
+
 variable "otc_platform_type" {
   type        = string
   default     = "OTC"
@@ -116,8 +121,9 @@ resource "meshstack_building_block_definition" "this" {
     MySQL, PostgreSQL or SQL Server, with encrypted storage, automated backups and an optional
     standby node in a second availability zone.
 
-    The database is placed in your project's network and has no public address. Order the
-    **T Cloud Public Network** building block on the project first.
+    The database is placed in your project's network and has no public address. It runs inside a
+    **T Cloud Public Network** building block, which you order first and pick when ordering this
+    one. The network cannot be deleted while the database is still in it.
 
     ## 🎯 When to use it
 
@@ -153,6 +159,10 @@ resource "meshstack_building_block_definition" "this" {
   version_spec = {
     draft         = var.hub.bbd_draft
     deletion_mode = "DELETE"
+    # The network is a parent building block: meshStack orders it first and refuses to delete it
+    # while this block still sits in it, whose own deletion needs the network to look it up.
+    dependency_refs = [{ uuid = var.network_definition_uuid }]
+
     runner_ref = var.building_block_runner_uuid == null ? null : {
       kind = "meshBuildingBlockRunner"
       uuid = var.building_block_runner_uuid
@@ -222,12 +232,20 @@ resource "meshstack_building_block_definition" "this" {
         default_value   = jsonencode(false)
       }
 
-      network_name = {
-        display_name    = "Network"
-        description     = "Name of the network the T Cloud Public Network building block created in this project."
+      vpc_id = {
+        display_name    = "VPC ID"
+        description     = "VPC of the parent T Cloud Public Network building block."
         type            = "STRING"
-        assignment_type = "USER_INPUT"
-        default_value   = jsonencode("app")
+        assignment_type = "BUILDING_BLOCK_OUTPUT"
+        argument        = jsonencode("${var.network_definition_uuid}.vpc_id")
+      }
+
+      subnet_id = {
+        display_name    = "Subnet ID"
+        description     = "Subnet of the parent T Cloud Public Network building block."
+        type            = "STRING"
+        assignment_type = "BUILDING_BLOCK_OUTPUT"
+        argument        = jsonencode("${var.network_definition_uuid}.subnet_id")
       }
 
       project_id = {

@@ -14,8 +14,8 @@ Creates a managed RDS instance in the application team's project by wrapping the
 instance gets its own security group, which admits the subnet's CIDR on the engine's port, and its
 volumes are encrypted with a KMS key of its own. It has no public address.
 
-The database is placed in the VPC and subnet both named `network_name` (default `app`), which the
-T Cloud Public Network building block creates. Order that one first.
+The database is placed in the VPC and subnet of its parent T Cloud Public Network building block,
+whose `vpc_id` and `subnet_id` outputs meshStack passes in.
 
 Without `db_version`, the newest version the region offers for the engine is used, for SQL Server
 its Standard Edition. `size` maps to a flavor of 2, 4 or 8 vCPUs with 2 GB of memory per vCPU.
