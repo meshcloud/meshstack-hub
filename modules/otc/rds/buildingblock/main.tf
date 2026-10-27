@@ -45,6 +45,27 @@ locals {
   }
 }
 
+data "opentelekomcloud_rds_flavors_v3" "this" {
+  db_type       = var.db_type
+  db_version    = local.db_version
+  instance_mode = var.high_availability ? "ha" : "single"
+
+  lifecycle {
+    postcondition {
+      condition     = anytrue([for f in self.flavors : (strcontains(f.name, ".n1.") || strcontains(f.name, ".x1.")) && tostring(f.vcpus) == local.sizes[var.size].cpus && f.memory == local.sizes[var.size].memory])
+      error_message = "No ${var.db_type} ${local.db_version} flavor with ${local.sizes[var.size].cpus} vCPUs and ${local.sizes[var.size].memory} GB of memory can be ordered here."
+    }
+  }
+}
+
+locals {
+  # Only the general (n1) and dedicated (x1) families can be ordered. The older ones are still
+  # listed, unsupported in every availability zone, but the provider does not report that, so the
+  # upstream module's own pick lands on them and RDS answers DBS.280239 "Invalid specifications".
+  sized_flavors     = [for f in data.opentelekomcloud_rds_flavors_v3.this.flavors : f.name if tostring(f.vcpus) == local.sizes[var.size].cpus && f.memory == local.sizes[var.size].memory]
+  orderable_flavors = concat([for n in local.sized_flavors : n if strcontains(n, ".n1.")], [for n in local.sized_flavors : n if strcontains(n, ".x1.")])
+}
+
 # Creates its own security group, which admits the subnet's CIDR on the engine's port, and a KMS
 # key that encrypts the volumes.
 module "rds" {
@@ -56,8 +77,7 @@ module "rds" {
 
   db_type              = var.db_type
   db_version           = local.db_version
-  db_cpus              = local.sizes[var.size].cpus
-  db_memory            = local.sizes[var.size].memory
+  db_flavor            = local.orderable_flavors[0]
   db_size              = var.storage_size
   db_high_availability = var.high_availability
 }
