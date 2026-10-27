@@ -144,8 +144,9 @@ resource "meshstack_building_block_definition" "this" {
   }
 
   spec = {
-    display_name = coalesce(var.bbd_display_name, "GKE Temporary Namespace Access")
-    description  = coalesce(var.bbd_description, "Grants you access to one namespace of a GKE cluster for 1 to 8 hours.")
+    display_name          = coalesce(var.bbd_display_name, "GKE Temporary Namespace Access")
+    display_name_template = "GKE access to {{namespace}} for {{duration_hours}}h"
+    description           = coalesce(var.bbd_description, "Grants you access to one namespace of a GKE cluster for 1 to 8 hours.")
     readme = coalesce(var.bbd_readme, chomp(<<-EOT
       This building block grants you access to one namespace of the `${var.gke_cluster_name}` GKE
       cluster using your Google account. Choose an existing namespace and a duration from 1 to 8
