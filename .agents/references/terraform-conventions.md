@@ -1,5 +1,5 @@
 ---
-description: Core OpenTofu coding conventions for meshstack-hub HCL — always develop and validate against OpenTofu (not Terraform), prefer the `lifecycle.enabled` meta-argument over `count = condition ? 1 : 0`, `snake_case` variable naming, provider version constraints that float inside one major, and commenting what every `try` swallows.
+description: Core OpenTofu coding conventions for meshstack-hub HCL — always develop and validate against OpenTofu (not Terraform), prefer the `lifecycle.enabled` meta-argument over `count = condition ? 1 : 0`, `snake_case` variable naming, provider version constraints that float inside one major, commenting what every `try` swallows, and building block outputs that are never sensitive.
 ---
 
 # Terraform / OpenTofu Conventions
@@ -119,4 +119,13 @@ pattern to copy.
 
 This is a separate question from the BBD `readme` field, which has its own rule — always inline
 `chomp(<<-EOT)`, never `file()` ([bbd-readme.md](bbd-readme.md)).
+
+## Building Block Outputs Are Never Sensitive
+
+Every output the BBD declares in `version_spec.outputs` is an `output` of the same name in
+`buildingblock/`, and none is `sensitive = true`. meshStack shows every output in clear text, even
+one marked sensitive; from v2.0.0 on, the building block runner writes a warning for it into the run
+log. To hand a secret to the app team, write it to a vault or secrets manager, such as
+[`stackit/secrets-manager`](../../modules/stackit/secrets-manager), and output only a reference to
+it, such as its path or URL.
 

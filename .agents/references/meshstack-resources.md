@@ -69,7 +69,7 @@ access_token = {
 
 Wrap the hash in `nonsensitive(...)` when the value is sensitive, so `secret_version` stays readable
 in the plan — that hash is the visible rotation trigger. Leave the wrap off when the value is not
-sensitive; `nonsensitive` on a plain value is an error.
+sensitive.
 
 Do not use `provider::meshstack::non_ephemeral_secret` yet, even though its documentation offers it
 as the one-call form of exactly this. Terraform skips a provider-defined function whose argument is
