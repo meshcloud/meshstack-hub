@@ -584,6 +584,27 @@ const detectors = [
     },
   },
   {
+    id: "bbd_outputs_in_buildingblock",
+    category: "integration",
+    name: "BBD outputs are non-sensitive buildingblock/ outputs",
+    emoji: "🔓",
+    fn: (mod) => {
+      const content = readIntegrationTf(mod);
+      if (!content) return { pass: false, detail: "no integration file" };
+      if (!runsTerraform(mod)) return { pass: null, detail: "not applicable — non-terraform implementation" };
+      if (extractBBDResourceBlocks(content).length === 0) {
+        return { pass: null, detail: "no meshstack_building_block_definition resource" };
+      }
+
+      const violations = bbdOutputViolations(content, readAllBuildingBlockTf(mod) ?? "");
+      if (violations.length === 0) return { pass: true };
+      return {
+        pass: false,
+        detail: `declare every BBD output as a non-sensitive output in buildingblock/: ${violations.join(", ")}`,
+      };
+    },
+  },
+  {
     id: "bbd_catalog_overrides",
     category: "integration",
     name: "BBD catalog properties are overridable",
@@ -1642,6 +1663,37 @@ export function explicitDefaultViolations(content) {
   }
 
   return [...violations];
+}
+
+export function bbdOutputViolations(integrationContent, buildingBlockContent) {
+  const outputBlocks = extractOutputBlocks(buildingBlockContent);
+  const violations = [];
+
+  for (const name of declaredBBDOutputs(integrationContent)) {
+    const outputBlock = outputBlocks.get(name);
+    if (outputBlock === undefined) violations.push(`${name} (missing)`);
+    else if (/^\s*sensitive\s*=\s*true\b/m.test(outputBlock)) violations.push(`${name} (sensitive)`);
+  }
+
+  return violations;
+}
+
+function declaredBBDOutputs(content) {
+  const names = new Set();
+
+  for (const resourceBlock of extractBBDResourceBlocks(content)) {
+    const expression = specAttributeExpression(resourceBlock, "outputs");
+    if (expression === null) continue;
+
+    const outputs = expression.slice(0, findExpressionEnd(expression, 0));
+    for (const m of outputs.matchAll(/^\s*"?([\w-]+)"?\s*=\s*\{/gm)) {
+      const open = m.index + m[0].length - 1;
+      const close = findMatchingBrace(outputs, open);
+      if (close > open && /\bassignment_type\s*=/.test(outputs.slice(open, close))) names.add(m[1]);
+    }
+  }
+
+  return names;
 }
 
 function objectAttributeType(variableBlock, attribute) {

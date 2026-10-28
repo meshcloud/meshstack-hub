@@ -120,6 +120,7 @@ pattern to copy.
 This is a separate question from the BBD `readme` field, which has its own rule — always inline
 `chomp(<<-EOT)`, never `file()` ([bbd-readme.md](bbd-readme.md)).
 
+<!-- scorecard-checks: bbd_outputs_in_buildingblock -->
 ## Building Block Outputs Are Never Sensitive
 
 Every output the BBD declares in `version_spec.outputs` is an `output` of the same name in
