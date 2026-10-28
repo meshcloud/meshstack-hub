@@ -311,7 +311,6 @@ resource "meshstack_building_block_definition" "this" {
         repository_url                 = "https://github.com/meshcloud/meshstack-hub.git"
         repository_path                = "reference-architectures/stackit-landingzone/buildingblock"
         ref_name                       = var.hub.git_ref
-        async                          = false
         use_mesh_http_backend_fallback = true
       }
     }

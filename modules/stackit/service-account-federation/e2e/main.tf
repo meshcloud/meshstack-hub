@@ -86,7 +86,6 @@ resource "meshstack_building_block_definition" "probe" {
         repository_url    = "https://github.com/meshcloud/meshstack-hub.git"
         repository_path   = "modules/stackit/service-account-federation/e2e/probe"
         ref_name          = var.test_context.hub_git_ref
-        async             = false
       }
     }
 

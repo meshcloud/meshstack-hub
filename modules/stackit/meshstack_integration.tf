@@ -288,7 +288,6 @@ resource "meshstack_building_block_definition" "this" {
         repository_url                 = "https://github.com/meshcloud/meshstack-hub.git"
         repository_path                = "modules/stackit/project/buildingblock"
         ref_name                       = var.hub.git_ref
-        async                          = false
         use_mesh_http_backend_fallback = true
         pre_run_script = (var.stackit_organization_onboarding_enabled ? <<-SH
           exec python3 "./prerun.py" "$@"

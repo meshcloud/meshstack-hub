@@ -170,7 +170,6 @@ EOT
       terraform = {
         repository_url                 = "https://github.com/meshcloud/meshstack-hub.git"
         terraform_version              = "1.12.5"
-        async                          = false
         ref_name                       = var.hub.git_ref
         repository_path                = "modules/aks/starterkit/buildingblock"
         use_mesh_http_backend_fallback = true
