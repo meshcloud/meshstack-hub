@@ -1,6 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import {
+  bbdOutputViolations,
   declaresSummaryOutput,
   explicitDefaultViolations,
   identitiesFromVersions,
@@ -90,6 +91,19 @@ resource "meshstack_building_block_definition" "this" {
   spec = {
     target_type         = ${targetType}
     supported_platforms = ${supportedPlatforms}
+  }
+}
+`;
+
+const definitionWithOutputs = (outputs) => `
+resource "meshstack_building_block_definition" "this" {
+  version_spec = {
+    inputs = {
+      name = {
+        assignment_type = "USER_INPUT"
+      }
+    }
+    outputs = ${outputs}
   }
 }
 `;
@@ -305,4 +319,51 @@ test("identities that are not read from the runner-identity module fail", () => 
   assert.equal(identitiesFromVersions(trustedRunnersModule() + trustedRunnersDefinition({ identities: "local.identities" })), false);
   assert.equal(identitiesFromVersions(runnerModule("./runner") + trustedRunnersDefinition()), false);
   assert.equal(identitiesFromVersions(runnerModule() + federatedDefinition({ issuer: "module.runner.issuer", runnerRef: "module.runner.ref" })), false);
+});
+
+const summaryAndUrl = `{
+      summary = {
+        assignment_type = "SUMMARY"
+      }
+      "console-url" = {
+        assignment_type = "RESOURCE_URL"
+      }
+    }`;
+
+test("BBD outputs declared as plain buildingblock outputs pass", () => {
+  const buildingBlock = `
+output "summary" {
+  value = "done"
+}
+
+output "console-url" {
+  value = "https://example.com"
+}
+`;
+  assert.deepEqual(bbdOutputViolations(definitionWithOutputs(summaryAndUrl), buildingBlock), []);
+});
+
+test("a BBD output missing from the buildingblock or marked sensitive fails", () => {
+  const buildingBlock = `
+output "summary" {
+  value     = "done"
+  sensitive = true
+}
+`;
+  assert.deepEqual(bbdOutputViolations(definitionWithOutputs(summaryAndUrl), buildingBlock), [
+    "summary (sensitive)",
+    "console-url (missing)",
+  ]);
+});
+
+test("BBD outputs inside merge() are found", () => {
+  const outputs = `merge(
+      {
+        summary = {
+          assignment_type = "SUMMARY"
+        }
+      },
+      var.extra_outputs,
+    )`;
+  assert.deepEqual(bbdOutputViolations(definitionWithOutputs(outputs), ""), ["summary (missing)"]);
 });
