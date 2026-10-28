@@ -63,16 +63,6 @@ variable "vm_location" {
   default     = "westeurope"
 }
 
-variable "vm_os_type" {
-  type        = string
-  description = "The operating system type (Linux or Windows)."
-  default     = "Linux"
-  validation {
-    condition     = contains(["Linux", "Windows"], var.vm_os_type)
-    error_message = "vm_os_type must be either 'Linux' or 'Windows'"
-  }
-}
-
 variable "vm_size" {
   type        = string
   description = "The size of the virtual machine."
@@ -87,15 +77,7 @@ variable "vm_admin_username" {
 
 variable "vm_ssh_public_key" {
   type        = string
-  description = "SSH public key for Linux VM authentication (required for Linux)."
-  default     = null
-}
-
-variable "vm_admin_password" {
-  type        = string
-  description = "The admin password for Windows VM (required for Windows)."
-  default     = null
-  sensitive   = true
+  description = "SSH public key used to authenticate as the VM's admin user."
 }
 
 variable "vm_enable_public_ip" {
