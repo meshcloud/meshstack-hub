@@ -56,6 +56,13 @@ The easiest option is to directly import the module from the [meshStack Hub](htt
 
 Refer to each module's README.md for specific usage instructions such as needed input variables.
 
+## For AI agents
+
+To let an AI agent find a module and set it up in your meshStack, point it at the
+[`meshstack-hub` skill](skills/meshstack-hub/SKILL.md), for example from your repository's agent
+instructions. For everything else about meshStack, point it at
+[docs.meshcloud.io/llms.txt](https://docs.meshcloud.io/llms.txt).
+
 ## Community, Discussion & Support
 
 The meshStack Hub is a 🌤️ [cloudfoundation.org community](https://cloudfoundation.org/?ref=github-collie-cli) project.
