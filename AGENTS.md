@@ -39,9 +39,17 @@ works.
 modules/<provider>/<service>/    backplane/, buildingblock/, meshstack_integration.tf, e2e/
 reference-architectures/<cloud>-<capability>/
 .agents/references/, .agents/skills/   agent instructions — authoritative, this file only routes
+skills/meshstack-hub/            the skill for those who use hub modules
 tools/scorecard/                 module maturity checks
 website/                         public/assets/ is generated; never add files there by hand
 ```
+
+`.agents/` is for those who **change** this repository. [`skills/meshstack-hub`](skills/meshstack-hub/SKILL.md)
+is for those who **use** hub modules from their own repository. It is read outside this repository,
+so it never links into `.agents/`. A change to how a module is used — the shape of
+`meshstack_integration.tf`, the `hub` variable, how a version is pinned — updates that skill in the
+same pull request. docs.meshcloud.io links to its headings, so rename a heading only together with
+the docs.
 
 ## Instruction files — load the ones matching the files you touch
 
