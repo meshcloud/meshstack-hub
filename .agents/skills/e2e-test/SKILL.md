@@ -551,11 +551,12 @@ rm errored_test.tfstate   # after manual cleanup if needed
 
 ### Fetching building block run logs
 
-The most likely cause of a test failure is a building block run failure, manifesting as an error message like this
+The most likely cause of a test failure is a building block run failure. The provider only warns
+about a failed run; the postcondition on `self.status.succeeded` fails the apply with an error
+message like this
 
-> Failed to await building block creation
-> item in failed state: building block 97cc733e-9611-460a-8bbf-d930466cfc94
-> reached FAILED state during creation, check the building block run logs in meshStack
+> Building block 97cc733e-9611-460a-8bbf-d930466cfc94 did not succeed (health status FAILED, action
+> REVIEW_ERRORS). See its run in meshPanel.
 
 Use the `tools/debug/get-bb-run-logs.mjs` helper to fetch step-by-step Terraform logs for a
 building block run without manual curl calls:

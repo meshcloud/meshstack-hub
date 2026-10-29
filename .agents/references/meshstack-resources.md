@@ -56,7 +56,7 @@ Never write a `{ secret_value = ... }` object by hand. `secret_value` is write-o
 every plan and in state, so without a `secret_version` the provider has nothing that says the value
 changed. It then sends the secret once on create and never again — a rotated credential stays
 stale, and an input added to an existing resource arrives empty, which pauses a building block run
-in `WAITING_FOR_DEPENDENT_INPUT`.
+in `PROVIDE_INPUT`.
 
 Always write both fields, keying the version to the value's hash:
 
@@ -113,7 +113,7 @@ runs it again ([provider #277](https://github.com/meshcloud/terraform-provider-m
 That is right for the building block itself — OpenTofu and Terraform taint a resource whose
 creation errors and always replace a tainted resource, so the old behaviour destroyed a building
 block that a single re-run would have repaired. It is wrong for a starterkit, whose own run would
-report `SUCCEEDED` while the tenant is missing what it ordered.
+succeed while the tenant is missing what it ordered.
 
 The provider cannot supply the check for you. The plugin protocol has no way to declare a lifecycle
 condition — `precondition` and `postcondition` are core configuration constructs — and even if it
@@ -123,19 +123,21 @@ written to state and after every taint call site, so it fails the parent run and
 child block in state for the next apply to repair.
 
 **Keep `wait_for_completion` at its default `true`.** With `false` the create returns while the run
-is still `PENDING` or `IN_PROGRESS`, and the postcondition then fails on a run that had not
-finished.
+is still running, and the postcondition then fails on a run that had not finished.
 
 **What a run that did not succeed does on the next plan** depends on whether the provider plans a
-re-run:
+re-run. The provider reads the run through `status.action`; the
+[meshStack docs](https://docs.meshcloud.io/concepts/building-block/#waiting-for-a-run) explain how.
 
-- `FAILED` or `ABORTED` — the provider plans an in-place re-run, which makes `succeeded` unknown in
-  the plan, so the postcondition moves to the apply. If the re-run does not succeed either, the
-  postcondition is what fails that apply: the provider itself only ever warns about a run status.
-- One of the four `WAITING_FOR_*` statuses (`OPERATOR_INPUT`, `USER_INPUT`, `DEPENDENT_INPUT`,
-  `APPROVAL`) — the provider plans no re-run, `succeeded` stays known, and the postcondition **fails
-  the plan**, not just the apply. That is the intended signal: no apply will fix this by itself, so
-  someone has to supply the input or approve the run in meshPanel. A child block that is *meant* to
-  park — one whose definition requires an approval — is the one case for a looser condition, e.g.
+- `REVIEW_ERRORS` or `REVIEW_ABORTED_RUN` — the provider plans an in-place re-run, which makes
+  `succeeded` unknown in the plan, so the postcondition moves to the apply. If the re-run does not
+  succeed either, the postcondition is what fails that apply: the provider itself only ever warns
+  about a run status. A run that meshStack could not start also reads as `REVIEW_ERRORS` and is
+  repaired the same way.
+- `PROVIDE_INPUT`, `WAITING_FOR_DEPENDENCY` or `APPROVE_RUN` — the provider plans no re-run,
+  `succeeded` stays known, and the postcondition **fails the plan**, not just the apply. That is the
+  intended signal: no apply will fix this by itself, so someone has to supply the input or approve
+  the run in meshPanel. A child block that is *meant* to park — one whose definition requires an
+  approval — is the one case for a looser condition, e.g.
   `self.status.succeeded || self.status.action == "APPROVE_RUN"`.
 
