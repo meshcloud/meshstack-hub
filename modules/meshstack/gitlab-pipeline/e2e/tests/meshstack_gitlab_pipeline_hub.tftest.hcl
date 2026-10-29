@@ -47,16 +47,14 @@ run "meshstack_gitlab_pipeline_hub" {
     error_message = "a conditional input whose condition does not hold should not reach the pipeline"
   }
 
-  # The reason this module reads the run object rather than the trigger payload: only the run object
-  # carries a list as a list. The trigger renders it with Kotlin's toString, which is not JSON.
   assert {
     condition     = output.from_run_object["multi_select"].value == ["multi1", "multi2"]
     error_message = "expected the run object to carry multi_select as a JSON array, got ${jsonencode(output.from_run_object["multi_select"].value)}"
   }
 
   assert {
-    condition     = !can(jsondecode(output.from_trigger["multi_select"]))
-    error_message = "the trigger payload rendered multi_select as JSON — the pipeline could read lists from it after all, so this module's advice needs revisiting"
+    condition     = try(jsondecode(output.from_trigger["multi_select"]), null) == ["multi1", "multi2"]
+    error_message = "expected the trigger to carry multi_select as a JSON array, got ${output.from_trigger["multi_select"]}"
   }
 
   # Both channels are represented, and meshStack reports which one each input took.

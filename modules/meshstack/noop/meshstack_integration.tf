@@ -1,12 +1,3 @@
-variable "runner_ref" {
-  type = object({
-    kind = string
-    uuid = string
-  })
-  default     = null
-  description = "Optional reference to a meshStack building block runner. When set, building block runs are dispatched to this custom runner. Obtain the value from the backplane module's `runner_ref` output."
-}
-
 variable "bbd_display_name" {
   type        = string
   default     = null
@@ -41,8 +32,12 @@ variable "meshstack" {
   type = object({
     owning_workspace_identifier = string
     tags                        = optional(map(list(string)), {})
+    runner_ref = optional(object({
+      kind = string
+      uuid = string
+    }))
   })
-  description = "Shared meshStack context. Tags are optional and propagated to building block definition metadata."
+  description = "Shared meshStack context, see docs."
 }
 
 variable "hub" {
@@ -116,7 +111,7 @@ resource "meshstack_building_block_definition" "this" {
   version_spec = {
     draft         = var.hub.bbd_draft
     deletion_mode = "DELETE"
-    runner_ref    = var.runner_ref
+    runner_ref    = var.meshstack.runner_ref
     implementation = {
       terraform = {
         ref_name          = var.hub.git_ref

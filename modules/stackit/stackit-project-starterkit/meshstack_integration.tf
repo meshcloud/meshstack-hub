@@ -112,9 +112,13 @@ variable "meshstack" {
       project               = map(list(string))
       project_owner_tag_key = string
     })
+    runner_ref = optional(object({
+      kind = string
+      uuid = string
+    }))
   })
   nullable    = false
-  description = "Shared meshStack context. `tags.building_block` goes on the definition's own metadata; `tags.project` and `tags.project_owner_tag_key` are passed through to the meshProjects the starterkit creates."
+  description = "Shared meshStack context, see docs."
 }
 
 variable "hub" {
@@ -227,7 +231,8 @@ resource "meshstack_building_block_definition" "this" {
   }
 
   version_spec = {
-    draft = var.hub.bbd_draft
+    draft      = var.hub.bbd_draft
+    runner_ref = var.meshstack.runner_ref
 
     # PURGE, not DELETE, because the block deletes itself at the end of its own run — see
     # `terraform_data.self_purge` in the building block. Under PURGE meshStack runs no teardown, so

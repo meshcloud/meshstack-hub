@@ -208,14 +208,12 @@ variable "meshstack" {
     }), { landingzone = {}, building_block = {} })
     location_name       = optional(string, "global")
     platform_identifier = optional(string, "kubernetes")
+    runner_ref = optional(object({
+      kind = string
+      uuid = string
+    }))
   })
-  description = <<-EOT
-  Shared meshStack context.
-  `owning_workspace_identifier`: Identifier of the meshStack workspace that owns the managed resources.
-  `tags`: Optional tags propagated to building block definition and landing zone metadata. A landing zone's own `tags` win over `landingzone`.
-  `location_name`: meshStack location name for the platform. Defaults to "global".
-  `platform_identifier`: Identifier for the platform in meshStack. Defaults to "kubernetes".
-  EOT
+  description = "Shared meshStack context, see docs."
 }
 
 variable "hub" {
@@ -425,6 +423,7 @@ resource "meshstack_building_block_definition" "this" {
 
   version_spec = {
     draft         = var.hub.bbd_draft
+    runner_ref    = var.meshstack.runner_ref
     deletion_mode = "DELETE"
 
     implementation = {

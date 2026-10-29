@@ -52,18 +52,16 @@ variable "bbd_readme" {
   description = "Overrides the markdown readme shown in the marketplace before ordering."
 }
 
-variable "building_block_runner_uuid" {
-  type        = string
-  default     = null
-  description = "Runs this building block on the given meshStack building block runner instead of the shared one meshStack hosts."
-}
-
 variable "meshstack" {
   type = object({
     owning_workspace_identifier = string
     tags                        = optional(map(list(string)), {})
+    runner_ref = optional(object({
+      kind = string
+      uuid = string
+    }))
   })
-  description = "Shared meshStack context. Tags are optional and propagated to building block definition metadata."
+  description = "Shared meshStack context, see docs."
 }
 
 variable "hub" {
@@ -179,10 +177,7 @@ resource "meshstack_building_block_definition" "this" {
   version_spec = {
     draft         = var.hub.bbd_draft
     deletion_mode = "DELETE"
-    runner_ref = var.building_block_runner_uuid == null ? null : {
-      kind = "meshBuildingBlockRunner"
-      uuid = var.building_block_runner_uuid
-    }
+    runner_ref    = var.meshstack.runner_ref
 
     implementation = {
       terraform = {

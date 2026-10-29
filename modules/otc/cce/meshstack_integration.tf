@@ -56,18 +56,16 @@ variable "otc_platform_type" {
   description = "Name of the custom meshStack platform type the projects' tenants live on."
 }
 
-variable "building_block_runner_uuid" {
-  type        = string
-  default     = null
-  description = "Runs this building block on the given meshStack building block runner instead of the shared one meshStack hosts."
-}
-
 variable "meshstack" {
   type = object({
     owning_workspace_identifier = string
     tags                        = optional(map(list(string)), {})
+    runner_ref = optional(object({
+      kind = string
+      uuid = string
+    }))
   })
-  description = "Shared meshStack context. Tags are optional and propagated to building block definition metadata."
+  description = "Shared meshStack context, see docs."
 }
 
 variable "hub" {
@@ -180,10 +178,7 @@ resource "meshstack_building_block_definition" "this" {
     # while this block still sits in it, whose own deletion needs the network to look it up.
     dependency_refs = [{ uuid = var.network_definition_uuid }]
 
-    runner_ref = var.building_block_runner_uuid == null ? null : {
-      kind = "meshBuildingBlockRunner"
-      uuid = var.building_block_runner_uuid
-    }
+    runner_ref = var.meshstack.runner_ref
 
     implementation = {
       terraform = {

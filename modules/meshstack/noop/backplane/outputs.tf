@@ -1,5 +1,5 @@
 output "runner_ref" {
-  description = "meshStack building block runner reference. Wire into meshstack_building_block_definition.version_spec.runner_ref."
+  description = "meshStack building block runner reference. Pass it as meshstack.runner_ref to the module's meshstack_integration.tf."
   value       = meshstack_building_block_runner.this.ref
 }
 

@@ -109,14 +109,19 @@ variable "meshstack" {
   type = object({
     owning_workspace_identifier = string
     tags                        = optional(map(list(string)), {})
+    runner_ref = optional(object({
+      kind = string
+      uuid = string
+    }))
   })
-  description = "Shared meshStack context. Tags are optional and propagated to building block definition metadata."
+  description = "Shared meshStack context, see docs."
 }
 ```
 
 Use both in the building block definition. Always forward `var.meshstack.tags` to `metadata.tags` so
-workspace-level tags propagate to the definition, and `var.hub.bbd_draft` to the `draft` field of
-`version_spec`.
+workspace-level tags propagate to the definition, `var.hub.bbd_draft` to the `draft` field of
+`version_spec`, and `var.meshstack.runner_ref` to `version_spec.runner_ref` and to the `runner_ref`
+of any `meshstack_integration` config the definition uses, which meshStack encrypts its secrets for.
 
 ```hcl
 resource "meshstack_building_block_definition" "this" {
@@ -146,18 +151,9 @@ scheme once, meshStack resolves it per definition, and the module reads the resu
 definition's `version_latest`. It never builds a subject from strings.
 
 ```hcl
-variable "building_block_runner_uuid" {
-  type        = string
-  default     = null
-  description = "Runs this building block on the given meshStack building block runner instead of the shared one meshStack hosts."
-}
-
 resource "meshstack_building_block_definition" "this" {
   version_spec = {
-    runner_ref = var.building_block_runner_uuid == null ? null : {
-      kind = "meshBuildingBlockRunner"
-      uuid = var.building_block_runner_uuid
-    }
+    runner_ref = var.meshstack.runner_ref
     # ...
   }
 }
@@ -177,9 +173,10 @@ module "backplane" {
 - `issuer` and the per-cloud `audience` describe the runner, and the definition reports them for the
   runner its latest version runs on. AWS reads `.aws.audience`, GCP `.gcp.audience`;
   Azure and STACKIT need none. A self-hosted runner declares its own values, so never hardcode them.
-- `building_block_runner_uuid` feeds `version_spec.runner_ref`, and the status follows it, so the
-  backplane always trusts the runner the definition actually runs on. Omit it and the definition
-  runs on the shared runner meshStack hosts.
+- `var.meshstack.runner_ref` feeds `version_spec.runner_ref`, and the status follows it, so the
+  backplane always trusts the runner the definition actually runs on. Leave it null and the
+  definition runs on the shared runner meshStack hosts. Pass the `ref` of a
+  `meshstack_building_block_runner`; `kind` is required so that nobody builds the object by hand.
 - The whole status is known after apply. Where the definition consumes a backplane output that
   depends on the same input, split the input; GCP does, see
   [gcp-backplane.md](gcp-backplane.md#keeping-the-subject-out-of-the-credentials).

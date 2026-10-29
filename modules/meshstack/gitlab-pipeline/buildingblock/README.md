@@ -38,9 +38,10 @@ rather than as a variable of its own.
 
 Two consequences worth knowing before you copy this module:
 
-- **Values from the trigger are strings, and not always JSON.** A list arrives as `[multi1, multi2]`,
-  which no JSON parser accepts. Read structured values from the run object instead — the pipeline
-  fetches it from `MESHSTACK_SELF_URL` and that copy is properly typed and not length-capped.
+- **Values from the trigger are strings.** From building block runner v2.0.0 on, a list or object
+  arrives as JSON text, such as `["multi1","multi2"]`. The run object is still the better source —
+  the pipeline fetches it from `MESHSTACK_SELF_URL` and that copy is properly typed and not
+  length-capped.
 - **Sensitive values are the exception.** meshStack serves them encrypted and only a runner holds the
   key, so a sensitive input is readable by a pipeline *only* through the trigger payload, and only if
   you mark it `is_environment = true`. The `sensitive_in_run_object_is_plaintext` output records what
