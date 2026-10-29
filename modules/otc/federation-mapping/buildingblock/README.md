@@ -32,7 +32,7 @@ project token to the domain before it writes the mapping. It uses only the Pytho
 ## Requirements
 
 | Name | Version |
-| ---- | ------- |
+|------|---------|
 | <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.12.0 |
 | <a name="requirement_opentelekomcloud"></a> [opentelekomcloud](#requirement\_opentelekomcloud) | >= 1.37.0, < 2.0.0 |
 
@@ -43,7 +43,7 @@ No modules.
 ## Resources
 
 | Name | Type |
-| ---- | ---- |
+|------|------|
 | [opentelekomcloud_fgs_function_v2.this](https://registry.terraform.io/providers/opentelekomcloud/opentelekomcloud/latest/docs/resources/fgs_function_v2) | resource |
 | [opentelekomcloud_fgs_trigger_v2.bucket](https://registry.terraform.io/providers/opentelekomcloud/opentelekomcloud/latest/docs/resources/fgs_trigger_v2) | resource |
 | [opentelekomcloud_fgs_trigger_v2.resync](https://registry.terraform.io/providers/opentelekomcloud/opentelekomcloud/latest/docs/resources/fgs_trigger_v2) | resource |
@@ -54,7 +54,7 @@ No modules.
 ## Inputs
 
 | Name | Description | Type | Default | Required |
-| ---- | ----------- | ---- | ------- | :------: |
+|------|-------------|------|---------|:--------:|
 | <a name="input_base_group"></a> [base\_group](#input\_base\_group) | Group without roles the base rule puts every federated user in, since sign-in fails when no rule assigns a group. | `string` | n/a | yes |
 | <a name="input_email_attribute"></a> [email\_attribute](#input\_email\_attribute) | SAML attribute or OIDC claim that carries the user's email address, matched against the recorded emails. | `string` | `"email"` | no |
 | <a name="input_identity_provider_name"></a> [identity\_provider\_name](#input\_identity\_provider\_name) | Federated identity provider whose mapping the function rebuilds. | `string` | n/a | yes |
@@ -68,7 +68,7 @@ No modules.
 ## Outputs
 
 | Name | Description |
-| ---- | ----------- |
+|------|-------------|
 | <a name="output_function_urn"></a> [function\_urn](#output\_function\_urn) | URN of the function that rebuilds the mapping. |
 | <a name="output_summary"></a> [summary](#output\_summary) | Markdown summary shown in meshPanel after the run. |
 <!-- END_TF_DOCS -->

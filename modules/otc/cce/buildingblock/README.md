@@ -34,14 +34,14 @@ environment.
 ## Requirements
 
 | Name | Version |
-| ---- | ------- |
+|------|---------|
 | <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.12.0 |
 | <a name="requirement_opentelekomcloud"></a> [opentelekomcloud](#requirement\_opentelekomcloud) | >= 1.37.0, < 2.0.0 |
 
 ## Modules
 
 | Name | Source | Version |
-| ---- | ------ | ------- |
+|------|--------|---------|
 | <a name="module_cce"></a> [cce](#module\_cce) | git::https://github.com/iits-consulting/terraform-opentelekomcloud-cce.git | v7.6.0 |
 
 ## Resources
@@ -51,7 +51,7 @@ No resources.
 ## Inputs
 
 | Name | Description | Type | Default | Required |
-| ---- | ----------- | ---- | ------- | :------: |
+|------|-------------|------|---------|:--------:|
 | <a name="input_availability_zones"></a> [availability\_zones](#input\_availability\_zones) | Availability zones of the worker nodes. Each zone gets its own node pool of `node_count` nodes. | `list(string)` | <pre>[<br/>  "eu-de-01"<br/>]</pre> | no |
 | <a name="input_cluster_version"></a> [cluster\_version](#input\_cluster\_version) | Kubernetes version of the cluster, as CCE names it, e.g. `v1.31`. Must be one CCE still offers. | `string` | `"v1.31"` | no |
 | <a name="input_name"></a> [name](#input\_name) | Name of the CCE cluster. Also prefixes its node pools and key pair. | `string` | n/a | yes |
@@ -66,7 +66,7 @@ No resources.
 ## Outputs
 
 | Name | Description |
-| ---- | ----------- |
+|------|-------------|
 | <a name="output_api_endpoint"></a> [api\_endpoint](#output\_api\_endpoint) | URL of the Kubernetes API: public when `public_api` is set, otherwise private to the VPC. |
 | <a name="output_cluster_id"></a> [cluster\_id](#output\_cluster\_id) | ID of the CCE cluster. |
 | <a name="output_cluster_name"></a> [cluster\_name](#output\_cluster\_name) | Name of the CCE cluster. |

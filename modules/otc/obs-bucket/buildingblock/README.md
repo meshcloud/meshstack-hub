@@ -41,7 +41,7 @@ The building block holds no access key. Its runs sign in through workload identi
 ## Requirements
 
 | Name | Version |
-| ---- | ------- |
+|------|---------|
 | <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.12.0 |
 | <a name="requirement_opentelekomcloud"></a> [opentelekomcloud](#requirement\_opentelekomcloud) | >= 1.37.0, < 2.0.0 |
 | <a name="requirement_random"></a> [random](#requirement\_random) | >= 3.6.0, < 4.0.0 |
@@ -49,20 +49,20 @@ The building block holds no access key. Its runs sign in through workload identi
 ## Modules
 
 | Name | Source | Version |
-| ---- | ------ | ------- |
+|------|--------|---------|
 | <a name="module_bucket"></a> [bucket](#module\_bucket) | git::https://github.com/iits-consulting/terraform-opentelekomcloud-obs-restricted.git | v7.6.2 |
 
 ## Resources
 
 | Name | Type |
-| ---- | ---- |
+|------|------|
 | [random_string.bucket_suffix](https://registry.terraform.io/providers/hashicorp/random/latest/docs/resources/string) | resource |
 | [opentelekomcloud_identity_project_v3.tenant](https://registry.terraform.io/providers/opentelekomcloud/opentelekomcloud/latest/docs/data-sources/identity_project_v3) | data source |
 
 ## Inputs
 
 | Name | Description | Type | Default | Required |
-| ---- | ----------- | ---- | ------- | :------: |
+|------|-------------|------|---------|:--------:|
 | <a name="input_bucket_name"></a> [bucket\_name](#input\_bucket\_name) | Bucket name, unique across all of T Cloud Public. Null derives one from the project name and a random suffix. | `string` | `null` | no |
 | <a name="input_enable_versioning"></a> [enable\_versioning](#input\_enable\_versioning) | Keep previous versions of overwritten and deleted objects. | `bool` | `true` | no |
 | <a name="input_force_destroy"></a> [force\_destroy](#input\_force\_destroy) | Delete all objects with the bucket when the building block is deleted. Without it, deleting a non-empty bucket fails. | `bool` | `false` | no |
@@ -72,7 +72,7 @@ The building block holds no access key. Its runs sign in through workload identi
 ## Outputs
 
 | Name | Description |
-| ---- | ----------- |
+|------|-------------|
 | <a name="output_access_key"></a> [access\_key](#output\_access\_key) | Access key of the user that may only use this bucket and its KMS key. |
 | <a name="output_bucket_name"></a> [bucket\_name](#output\_bucket\_name) | Name of the bucket. |
 | <a name="output_obs_endpoint"></a> [obs\_endpoint](#output\_obs\_endpoint) | S3-compatible endpoint to reach the bucket at. |

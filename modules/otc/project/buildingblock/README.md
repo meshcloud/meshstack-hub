@@ -33,7 +33,7 @@ provider's domain-scoped client regardless.
 ## Requirements
 
 | Name | Version |
-| ---- | ------- |
+|------|---------|
 | <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.12.0 |
 | <a name="requirement_opentelekomcloud"></a> [opentelekomcloud](#requirement\_opentelekomcloud) | >= 1.37.0, < 2.0.0 |
 
@@ -44,7 +44,7 @@ No modules.
 ## Resources
 
 | Name | Type |
-| ---- | ---- |
+|------|------|
 | [opentelekomcloud_identity_group_membership_v3.local](https://registry.terraform.io/providers/opentelekomcloud/opentelekomcloud/latest/docs/resources/identity_group_membership_v3) | resource |
 | [opentelekomcloud_identity_group_v3.this](https://registry.terraform.io/providers/opentelekomcloud/opentelekomcloud/latest/docs/resources/identity_group_v3) | resource |
 | [opentelekomcloud_identity_project_v3.this](https://registry.terraform.io/providers/opentelekomcloud/opentelekomcloud/latest/docs/resources/identity_project_v3) | resource |
@@ -57,7 +57,7 @@ No modules.
 ## Inputs
 
 | Name | Description | Type | Default | Required |
-| ---- | ----------- | ---- | ------- | :------: |
+|------|-------------|------|---------|:--------:|
 | <a name="input_console_login_url"></a> [console\_login\_url](#input\_console\_login\_url) | Where project users sign in — the identity provider's login link when federation is set up. | `string` | `"https://console.otc.t-systems.com"` | no |
 | <a name="input_mapping_bucket"></a> [mapping\_bucket](#input\_mapping\_bucket) | OBS bucket the federation mapping building block rebuilds the identity provider's mapping from. Null means no federation: members are then put into the groups as existing local IAM users instead, named like the part of their email before the `@`. | `string` | `null` | no |
 | <a name="input_project_name"></a> [project\_name](#input\_project\_name) | Name of the project without the region prefix. The project is created as `<region>_<project_name>`. | `string` | n/a | yes |
@@ -68,7 +68,7 @@ No modules.
 ## Outputs
 
 | Name | Description |
-| ---- | ----------- |
+|------|-------------|
 | <a name="output_project_id"></a> [project\_id](#output\_project\_id) | ID of the created T Cloud Public project. |
 | <a name="output_project_name"></a> [project\_name](#output\_project\_name) | Name of the created T Cloud Public project, including the region prefix. |
 | <a name="output_project_url"></a> [project\_url](#output\_project\_url) | Where project users sign in to the T Cloud Public console. |
