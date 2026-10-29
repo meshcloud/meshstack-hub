@@ -22,7 +22,6 @@ resource "meshstack_api_key" "runner" {
     display_name = var.runner_display_name
     permissions = [
       "MANAGED_BUILDINGBLOCKRUNSOURCE_SAVE",
-      "MANAGED_BUILDINGBLOCKRUN_LIST",
       "MANAGED_BUILDINGBLOCKRUN_SAVE"
     ]
     expires_at = formatdate("YYYY-MM-DD", timeadd(time_static.runner_key_expiry.rfc3339, "168h"))
