@@ -155,9 +155,10 @@ variable "services" {
     error_message = "services may only contain: ${join("; ", values(local.services))}."
   }
 
-  # RDS and CCE run inside a network building block as its children.
+  # RDS and CCE run inside a network building block as its children. Not written as `a || !(b || c)`:
+  # meshStack's HCL parser fails on that when the definition is imported from git.
   validation {
-    condition     = contains(var.services, local.services.network) || !(contains(var.services, local.services.rds) || contains(var.services, local.services.cce))
+    condition     = contains(var.services, local.services.network) || length(setintersection(var.services, [local.services.rds, local.services.cce])) == 0
     error_message = "RDS and CCE need the Network service, whose building blocks they run in."
   }
 }
