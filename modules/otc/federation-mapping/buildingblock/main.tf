@@ -8,7 +8,20 @@ resource "opentelekomcloud_identity_agency_v3" "function" {
   # OBS answers AccessDenied when the agency holds its OBS role on the domain only.
   project_role {
     all_projects = true
-    roles        = ["OBS ReadOnlyAccess"]
+    roles        = [opentelekomcloud_identity_role_v3.read_mappings.display_name]
+  }
+}
+
+# No OBS system role reads objects without also writing them: OBS ReadOnlyAccess only lists, and
+# the function failed with 403 on the first record it read.
+resource "opentelekomcloud_identity_role_v3" "read_mappings" {
+  display_name  = "${var.name}-read-mappings"
+  description   = "Lets the meshStack federation mapping function list and read the membership records."
+  display_layer = "domain"
+
+  statement {
+    effect = "Allow"
+    action = ["obs:bucket:ListBucket", "obs:object:GetObject"]
   }
 }
 

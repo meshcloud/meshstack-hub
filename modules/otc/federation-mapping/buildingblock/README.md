@@ -25,8 +25,9 @@ The function runs in the management project, the tenant this building block is o
 - **One instance at a time** (`max_instance_num = 1`): two rebuilds never interleave.
 
 The function acts as an agency delegated to FunctionGraph, holding Security Administrator on the
-domain for the mapping and OBS ReadOnlyAccess on all projects for the bucket. It rescopes its
-project token to the domain before it writes the mapping. It uses only the Python standard library.
+domain for the mapping and, on all projects, a custom role that only lists and reads the membership
+records. It rescopes its project token to the domain before it writes the mapping. It uses only the
+Python standard library.
 
 <!-- BEGIN_TF_DOCS -->
 ## Requirements
@@ -48,6 +49,7 @@ No modules.
 | [opentelekomcloud_fgs_trigger_v2.bucket](https://registry.terraform.io/providers/opentelekomcloud/opentelekomcloud/latest/docs/resources/fgs_trigger_v2) | resource |
 | [opentelekomcloud_fgs_trigger_v2.resync](https://registry.terraform.io/providers/opentelekomcloud/opentelekomcloud/latest/docs/resources/fgs_trigger_v2) | resource |
 | [opentelekomcloud_identity_agency_v3.function](https://registry.terraform.io/providers/opentelekomcloud/opentelekomcloud/latest/docs/resources/identity_agency_v3) | resource |
+| [opentelekomcloud_identity_role_v3.read_mappings](https://registry.terraform.io/providers/opentelekomcloud/opentelekomcloud/latest/docs/resources/identity_role_v3) | resource |
 | [opentelekomcloud_lts_group_v2.function](https://registry.terraform.io/providers/opentelekomcloud/opentelekomcloud/latest/docs/resources/lts_group_v2) | resource |
 | [opentelekomcloud_lts_stream_v2.function](https://registry.terraform.io/providers/opentelekomcloud/opentelekomcloud/latest/docs/resources/lts_stream_v2) | resource |
 
