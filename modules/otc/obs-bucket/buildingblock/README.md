@@ -17,6 +17,16 @@ pinned to a release tag.
 Without a `bucket_name`, the name is derived from the project name and a random suffix, because
 bucket names are unique across all of T Cloud Public.
 
+## Project access
+
+The IAM groups the T Cloud Public Project building block creates for the project, named
+`<project>_<role>`, get access to this bucket and its key, so the project's members see it in the
+console: by default admins and users read and write its objects, readers only read them
+(`group_access`). OBS is a global service, so their roles on the project alone do not reach it.
+Each group gets a custom role scoped to this bucket, assigned on the `MOS` project, and one for the
+key on the region's project. The bucket role also lets them list every bucket name in the domain,
+which the console needs before it opens one; the other buckets' content stays closed to them.
+
 ## Region project
 
 OBS and KMS only work on a region's own project (`eu-de`, `eu-nl`), and the upstream module refuses
@@ -56,8 +66,16 @@ The building block holds no access key. Its runs sign in through workload identi
 
 | Name | Type |
 |------|------|
+| [opentelekomcloud_identity_role_assignment_v3.bucket](https://registry.terraform.io/providers/opentelekomcloud/opentelekomcloud/latest/docs/resources/identity_role_assignment_v3) | resource |
+| [opentelekomcloud_identity_role_assignment_v3.key](https://registry.terraform.io/providers/opentelekomcloud/opentelekomcloud/latest/docs/resources/identity_role_assignment_v3) | resource |
+| [opentelekomcloud_identity_role_v3.bucket](https://registry.terraform.io/providers/opentelekomcloud/opentelekomcloud/latest/docs/resources/identity_role_v3) | resource |
+| [opentelekomcloud_identity_role_v3.key](https://registry.terraform.io/providers/opentelekomcloud/opentelekomcloud/latest/docs/resources/identity_role_v3) | resource |
 | [random_string.bucket_suffix](https://registry.terraform.io/providers/hashicorp/random/latest/docs/resources/string) | resource |
+| [opentelekomcloud_identity_group_v3.project](https://registry.terraform.io/providers/opentelekomcloud/opentelekomcloud/latest/docs/data-sources/identity_group_v3) | data source |
+| [opentelekomcloud_identity_project_v3.obs](https://registry.terraform.io/providers/opentelekomcloud/opentelekomcloud/latest/docs/data-sources/identity_project_v3) | data source |
+| [opentelekomcloud_identity_project_v3.region](https://registry.terraform.io/providers/opentelekomcloud/opentelekomcloud/latest/docs/data-sources/identity_project_v3) | data source |
 | [opentelekomcloud_identity_project_v3.tenant](https://registry.terraform.io/providers/opentelekomcloud/opentelekomcloud/latest/docs/data-sources/identity_project_v3) | data source |
+| [opentelekomcloud_kms_key_v1.bucket](https://registry.terraform.io/providers/opentelekomcloud/opentelekomcloud/latest/docs/data-sources/kms_key_v1) | data source |
 
 ## Inputs
 
@@ -66,6 +84,7 @@ The building block holds no access key. Its runs sign in through workload identi
 | <a name="input_bucket_name"></a> [bucket\_name](#input\_bucket\_name) | Bucket name, unique across all of T Cloud Public. Null derives one from the project name and a random suffix. | `string` | `null` | no |
 | <a name="input_enable_versioning"></a> [enable\_versioning](#input\_enable\_versioning) | Keep previous versions of overwritten and deleted objects. | `bool` | `true` | no |
 | <a name="input_force_destroy"></a> [force\_destroy](#input\_force\_destroy) | Delete all objects with the bucket when the building block is deleted. Without it, deleting a non-empty bucket fails. | `bool` | `false` | no |
+| <a name="input_group_access"></a> [group\_access](#input\_group\_access) | Access to the bucket each meshStack project role's IAM group gets, `read` or `write`. The project building block names the groups `<project>_<role>`. | `map(string)` | <pre>{<br/>  "admin": "write",<br/>  "reader": "read",<br/>  "user": "write"<br/>}</pre> | no |
 | <a name="input_project_id"></a> [project\_id](#input\_project\_id) | ID of the application project this building block is ordered on. Its name seeds the default bucket name. | `string` | n/a | yes |
 | <a name="input_region"></a> [region](#input\_region) | T Cloud Public region the bucket and its KMS key are created in. | `string` | `"eu-de"` | no |
 

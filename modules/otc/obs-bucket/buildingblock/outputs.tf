@@ -38,6 +38,9 @@ output "summary" {
     aws s3 ls s3://${module.bucket.bucket_name} --endpoint-url https://obs.${var.region}.otc.t-systems.com
     ```
 
+    The members of the project open the bucket in the [OBS console](https://console.otc.t-systems.com/obs/)
+    after their next sign-in: ${join(", ", [for role, access in var.group_access : "${role}s ${access == "write" ? "read and write" : "read"}"])} its objects.
+
     ${var.force_destroy ? "Deleting this building block deletes the bucket **with all its objects**." : "Empty the bucket before deleting this building block; a bucket with objects in it is kept."}
   EOT
 }

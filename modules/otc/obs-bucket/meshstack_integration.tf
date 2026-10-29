@@ -114,7 +114,8 @@ resource "meshstack_building_block_definition" "this" {
     readme = coalesce(var.bbd_readme, chomp(<<-EOT
     This building block creates a private T Cloud Public OBS bucket, encrypted with its own KMS key,
     and an access key that works for this bucket only. Your application talks to it through the
-    S3-compatible OBS endpoint.
+    S3-compatible OBS endpoint, and the members of your project see the bucket in the T Cloud Public
+    console.
 
     ## 🎯 When to use it
 
@@ -136,6 +137,9 @@ resource "meshstack_building_block_definition" "this" {
 
     - Leave the bucket name empty to get one derived from your project name. A chosen name must be
       unique across all of T Cloud Public.
+    - Admins and users of your project can read and write the bucket's objects in the console,
+      readers can only read them. The console's bucket list also shows other buckets' names, but not
+      their content.
     - Deleting the building block keeps a bucket that still holds objects, unless you allowed it to
       delete them.
 
@@ -266,6 +270,7 @@ resource "meshstack_building_block_definition" "this" {
         display_name    = "Secret Key"
         type            = "STRING"
         assignment_type = "NONE"
+        sensitive       = {}
       }
 
       summary = {

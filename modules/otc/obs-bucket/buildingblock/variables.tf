@@ -37,3 +37,19 @@ variable "force_destroy" {
   nullable    = false
   description = "Delete all objects with the bucket when the building block is deleted. Without it, deleting a non-empty bucket fails."
 }
+
+variable "group_access" {
+  type = map(string)
+  default = {
+    admin  = "write"
+    user   = "write"
+    reader = "read"
+  }
+  nullable    = false
+  description = "Access to the bucket each meshStack project role's IAM group gets, `read` or `write`. The project building block names the groups `<project>_<role>`."
+
+  validation {
+    condition     = alltrue([for a in values(var.group_access) : contains(["read", "write"], a)])
+    error_message = "group_access values must be read or write."
+  }
+}
