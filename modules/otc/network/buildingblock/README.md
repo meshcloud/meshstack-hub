@@ -35,14 +35,14 @@ environment.
 ## Requirements
 
 | Name | Version |
-| ---- | ------- |
+|------|---------|
 | <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.12.0 |
 | <a name="requirement_opentelekomcloud"></a> [opentelekomcloud](#requirement\_opentelekomcloud) | >= 1.37.0, < 2.0.0 |
 
 ## Modules
 
 | Name | Source | Version |
-| ---- | ------ | ------- |
+|------|--------|---------|
 | <a name="module_snat"></a> [snat](#module\_snat) | git::https://github.com/iits-consulting/terraform-opentelekomcloud-snat.git | v7.4.2 |
 | <a name="module_vpc"></a> [vpc](#module\_vpc) | git::https://github.com/iits-consulting/terraform-opentelekomcloud-vpc.git | v7.4.2 |
 
@@ -53,7 +53,7 @@ No resources.
 ## Inputs
 
 | Name | Description | Type | Default | Required |
-| ---- | ----------- | ---- | ------- | :------: |
+|------|-------------|------|---------|:--------:|
 | <a name="input_cidr_block"></a> [cidr\_block](#input\_cidr\_block) | IP range of the VPC. | `string` | `"10.0.0.0/16"` | no |
 | <a name="input_name"></a> [name](#input\_name) | Name of the VPC and of its subnet. The RDS and CCE building blocks find the network by this name. | `string` | `"app"` | no |
 | <a name="input_project_id"></a> [project\_id](#input\_project\_id) | ID of the project the network is created in. | `string` | n/a | yes |
@@ -64,7 +64,7 @@ No resources.
 ## Outputs
 
 | Name | Description |
-| ---- | ----------- |
+|------|-------------|
 | <a name="output_snat_ip"></a> [snat\_ip](#output\_snat\_ip) | Public IP the subnet's outbound traffic leaves through, or empty without a NAT gateway. |
 | <a name="output_subnet_cidr"></a> [subnet\_cidr](#output\_subnet\_cidr) | IP range of the subnet. |
 | <a name="output_subnet_id"></a> [subnet\_id](#output\_subnet\_id) | Network ID of the subnet, as RDS instances and CCE clusters take it. |

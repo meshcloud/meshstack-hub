@@ -58,7 +58,7 @@ module "project_backplane" {
 ## Requirements
 
 | Name | Version |
-| ---- | ------- |
+|------|---------|
 | <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.12.0 |
 | <a name="requirement_http"></a> [http](#requirement\_http) | >= 3.4.0, < 4.0.0 |
 | <a name="requirement_opentelekomcloud"></a> [opentelekomcloud](#requirement\_opentelekomcloud) | >= 1.37.0, < 2.0.0 |
@@ -71,7 +71,7 @@ No modules.
 ## Resources
 
 | Name | Type |
-| ---- | ---- |
+|------|------|
 | [opentelekomcloud_identity_credential_v3.building_block](https://registry.terraform.io/providers/opentelekomcloud/opentelekomcloud/latest/docs/resources/identity_credential_v3) | resource |
 | [opentelekomcloud_identity_group_v3.building_block](https://registry.terraform.io/providers/opentelekomcloud/opentelekomcloud/latest/docs/resources/identity_group_v3) | resource |
 | [opentelekomcloud_identity_group_v3.federated](https://registry.terraform.io/providers/opentelekomcloud/opentelekomcloud/latest/docs/resources/identity_group_v3) | resource |
@@ -92,7 +92,7 @@ No modules.
 ## Inputs
 
 | Name | Description | Type | Default | Required |
-| ---- | ----------- | ---- | ------- | :------: |
+|------|-------------|------|---------|:--------:|
 | <a name="input_domain_roles"></a> [domain\_roles](#input\_domain\_roles) | Domain-scoped IAM system roles granted to the building block user, by role `name` (not display<br/>name). `secu_admin` (Security Administrator) covers creating projects, groups, role assignments,<br/>agencies and federation mappings. | `list(string)` | <pre>[<br/>  "secu_admin"<br/>]</pre> | no |
 | <a name="input_identity_provider"></a> [identity\_provider](#input\_identity\_provider) | The customer's identity provider, federated into the domain so meshStack project users log in as<br/>virtual users, and the bucket project building blocks record their membership in. Null skips<br/>both: the building block still creates projects and groups, but nobody is mapped into them. | <pre>object({<br/>    name     = string<br/>    protocol = string<br/><br/>    # SAML: where the IdP publishes its metadata XML, read on every run.<br/>    metadata_url = optional(string)<br/><br/>    # OIDC: the IdP's issuer and client. The signing keys and authorization endpoint are read from<br/>    # the issuer's discovery document on every run.<br/>    oidc = optional(object({<br/>      provider_url = string<br/>      client_id    = string<br/>      scopes       = optional(list(string), ["openid", "email", "profile"])<br/>    }))<br/><br/>    # The SAML attribute or OIDC claim that carries the user's email. Project building blocks<br/>    # match meshStack users against it, so it must hold exactly the address meshStack knows.<br/>    email_attribute = optional(string, "email")<br/>  })</pre> | `null` | no |
 | <a name="input_project_roles"></a> [project\_roles](#input\_project\_roles) | IAM system roles granted to the building block user on all projects, by role `name`.<br/>`te_admin` (Tenant Administrator) lets the federation mapping building block create its function<br/>in the management project. It adds little to `secu_admin`, which may grant any role anyway. | `list(string)` | <pre>[<br/>  "te_admin"<br/>]</pre> | no |
@@ -101,7 +101,7 @@ No modules.
 ## Outputs
 
 | Name | Description |
-| ---- | ----------- |
+|------|-------------|
 | <a name="output_access_key"></a> [access\_key](#output\_access\_key) | Access key of the IAM user the building blocks authenticate as. |
 | <a name="output_identity_provider_base_group"></a> [identity\_provider\_base\_group](#output\_identity\_provider\_base\_group) | Group without roles that the base rule puts every federated user in, or null without federation. |
 | <a name="output_identity_provider_email_attribute"></a> [identity\_provider\_email\_attribute](#output\_identity\_provider\_email\_attribute) | SAML attribute or OIDC claim that carries the user's email address. |
