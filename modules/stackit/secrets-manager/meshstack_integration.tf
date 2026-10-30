@@ -27,6 +27,17 @@ variable "stackit_custom_role_name" {
   description = "Name of the backplane custom organization role. Defaults to 'mesh-secrets-manager'. Override when deploying multiple backplane instances in the same STACKIT organization."
 }
 
+variable "role_mapping" {
+  type     = map(list(string))
+  nullable = false
+  default = {
+    admin  = ["secrets-manager.reader"]
+    user   = []
+    reader = []
+  }
+  description = "Maps meshStack project roles to STACKIT Secrets Manager project roles. Unknown roles are ignored. Granting them needs `iam.member-admin` on the target project, which the backplane's service account does not have; set `{}` with the backplane unless it gets that role."
+}
+
 variable "bbd_display_name" {
   type        = string
   default     = null
@@ -151,12 +162,24 @@ resource "meshstack_building_block_definition" "this" {
       A pipeline logs in with a read-only user and fetches deployment tokens, so no token is
       stored in the CI system itself.
 
+      ## 👤 Signing in
+
+      Project members whose meshStack role maps to a STACKIT Secrets Manager role read secrets with
+      their STACKIT login, no Secrets Manager user needed:
+
+      ```sh
+      export VAULT_ADDR=https://prod.sm.eu01.stackit.cloud
+      export VAULT_TOKEN=$(stackit auth get-access-token)
+      vault kv list -mount=<instance id> /
+      ```
+
       ## 📊 Shared Responsibility
 
       | Responsibility | Platform Team | Application Team |
       |---|:---:|:---:|
       | Provision the Secrets Manager instance | ✅ | ❌ |
       | Choose the instance name | ❌ | ✅ |
+      | Grant project users STACKIT roles on the Secrets Manager | ✅ | ❌ |
       | Create users and manage their credentials | ❌ | ✅ |
       | Store, update and delete secrets | ❌ | ✅ |
       EOT
@@ -222,6 +245,21 @@ resource "meshstack_building_block_definition" "this" {
         description     = "Name of the Secrets Manager instance."
         type            = "STRING"
         assignment_type = "USER_INPUT"
+      }
+
+      users = {
+        display_name    = "Users"
+        description     = "Project users with role assignments from meshStack."
+        type            = "CODE"
+        assignment_type = "USER_PERMISSIONS"
+      }
+
+      role_mapping = {
+        display_name    = "Role Mapping"
+        description     = "HCL object mapping meshStack project roles to STACKIT Secrets Manager project roles."
+        type            = "CODE"
+        assignment_type = "STATIC"
+        argument        = jsonencode(jsonencode(var.role_mapping))
       }
 
       imports = {

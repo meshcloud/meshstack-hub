@@ -28,3 +28,23 @@ variable "release_on_destroy" {
   default     = false
   description = "Leave the instance in place on destroy. Cannot change once the instance is managed."
 }
+
+variable "users" {
+  type = list(object({
+    meshIdentifier = string
+    username       = string
+    firstName      = string
+    lastName       = string
+    email          = string
+    euid           = string
+    roles          = list(string)
+  }))
+  nullable    = false
+  description = "Project users from meshStack, granted STACKIT roles through `role_mapping`."
+}
+
+variable "role_mapping" {
+  type        = map(list(string))
+  nullable    = false
+  description = "Maps meshStack project roles to STACKIT Secrets Manager project roles. Unknown roles are ignored."
+}
