@@ -1,15 +1,18 @@
+locals {
+  use_existing_forgejo_api_token = try(var.imports.existing_forgejo_api_token_path, null) != null
+}
+
 ephemeral "vault_kv_secret_v2" "existing_forgejo_api_token" {
   lifecycle {
-    enabled = var.imports != null
+    enabled = local.use_existing_forgejo_api_token
   }
 
   mount = var.output_to_vault.mount
   name  = var.imports.existing_forgejo_api_token_path
 }
 
-# Only an owner can make the technical user an owner, so the existing token does it. It also removes
-# the user again before the user is deleted, which STACKIT refuses while the user is in an
-# organization.
+# Only an owner can make the technical user an owner, so the existing token does it. The user leaves
+# again before it is deleted, which STACKIT refuses while the user is in an organization.
 module "existing_organization_owner" {
   source = "./forgejo-teams"
   providers = {

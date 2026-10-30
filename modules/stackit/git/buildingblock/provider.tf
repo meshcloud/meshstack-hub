@@ -48,17 +48,20 @@ provider "restapi" {
   }
 }
 
-# Authenticates with the token of an owner of an adopted organization.
+# Acts as an owner of an adopted organization: with an existing owner's token until the technical
+# user is an owner itself, then as the technical user.
 provider "restapi" {
   alias = "existing"
 
   uri                  = local.forgejo_base_url
+  username             = local.use_existing_forgejo_api_token ? null : local.local_user_username
+  password             = local.use_existing_forgejo_api_token ? null : random_password.local_user.result
   write_returns_object = false
 
-  headers = {
-    Authorization = var.imports == null ? "" : "token ${ephemeral.vault_kv_secret_v2.existing_forgejo_api_token.data["forgejo-api-token"]}"
-    Content-Type  = "application/json"
-  }
+  headers = merge(
+    { Content-Type = "application/json" },
+    local.use_existing_forgejo_api_token ? { Authorization = "token ${ephemeral.vault_kv_secret_v2.existing_forgejo_api_token.data["forgejo-api-token"]}" } : {},
+  )
 
   retries {
     max_retries = 5

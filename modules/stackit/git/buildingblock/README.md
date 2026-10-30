@@ -74,14 +74,16 @@ It also takes over the Forgejo organization `forgejo_organization` without chang
    in the Vault of `output_to_vault`, under the key `forgejo-api-token`. The token stays out of the
    state: it is read with an ephemeral resource and only reaches a provider configuration.
 2. With that token, it adds its technical user to the organization's `Owners` team, which only an
-   owner can do.
+   owner can do. Once that run succeeded, `existing_forgejo_api_token_path` can be dropped: later
+   runs act as the technical user, which is an owner now.
 3. As the technical user, it sends an empty `PATCH /api/v1/orgs/{org}`, which changes nothing. It
    does the same on destroy, so the organization is left in place.
 4. Its `writers` and `readers` teams carry the same random suffix as the technical user, because the
    organization may already have teams of these names.
 
-On destroy, the existing token removes the technical user from `Owners` again before STACKIT deletes
-the user: STACKIT refuses to delete a user who is still a member of an organization.
+On destroy, the technical user leaves `Owners` again before STACKIT deletes it: STACKIT refuses to
+delete a user who is still a member of an organization. Forgejo refuses to remove the last member of
+`Owners`, so the destroy fails if the technical user is the only owner left.
 
 With `release_on_destroy` set, destroying the building block leaves the instance in place.
 `release_on_destroy` cannot change once the instance is managed.
@@ -138,7 +140,7 @@ With `release_on_destroy` set, destroying the building block leaves the instance
 | Name | Description | Type | Default | Required |
 |------|-------------|------|---------|:--------:|
 | <a name="input_forgejo_organization"></a> [forgejo\_organization](#input\_forgejo\_organization) | Forgejo organization to create inside the instance. Empty provisions the bare instance. | `string` | n/a | yes |
-| <a name="input_imports"></a> [imports](#input\_imports) | Existing STACKIT Git instance named `instance_name` and its Forgejo organization `forgejo_organization` to take over; `existing_forgejo_api_token_path` names the secret in the `output_to_vault` Vault holding an owner's `forgejo-api-token`. Null creates both. | <pre>object({<br/>    instance_id                     = string<br/>    existing_forgejo_api_token_path = string<br/>  })</pre> | `null` | no |
+| <a name="input_imports"></a> [imports](#input\_imports) | Existing STACKIT Git instance named `instance_name` and its Forgejo organization `forgejo_organization` to take over; `existing_forgejo_api_token_path` names the secret in the `output_to_vault` Vault holding an owner's `forgejo-api-token`, needed until the technical user is an owner. Null creates both. | <pre>object({<br/>    instance_id                     = string<br/>    existing_forgejo_api_token_path = optional(string)<br/>  })</pre> | `null` | no |
 | <a name="input_instance_name"></a> [instance\_name](#input\_instance\_name) | First label of the instance hostname `<name>.git.onstackit.cloud`, globally unique across all of STACKIT. | `string` | n/a | yes |
 | <a name="input_local_user_email"></a> [local\_user\_email](#input\_local\_user\_email) | Email of the technical user. Leave empty to derive one from the instance hostname. | `string` | n/a | yes |
 | <a name="input_local_user_token_name"></a> [local\_user\_token\_name](#input\_local\_user\_token\_name) | Name of the Personal Access Token the module mints. | `string` | n/a | yes |
