@@ -31,6 +31,18 @@ module "instance" {
   name               = var.instance_name
 }
 
+resource "terraform_data" "instance_ready" {
+  triggers_replace = module.instance.instance.instance_id
+
+  provisioner "local-exec" {
+    command = "bash ${path.module}/wait-for-instance.sh"
+    environment = {
+      PROJECT_ID  = var.stackit_project_id
+      INSTANCE_ID = module.instance.instance.instance_id
+    }
+  }
+}
+
 moved {
   from = stackit_git.this
   to   = module.instance.stackit_git.this
@@ -73,6 +85,8 @@ resource "random_password" "local_user" {
 
 resource "restapi_object" "local_user" {
   provider = restapi.stackit_git
+
+  depends_on = [terraform_data.instance_ready]
 
   path         = "/v1beta/projects/${var.stackit_project_id}/instances/${module.instance.instance.instance_id}/users"
   id_attribute = "username"
@@ -158,6 +172,8 @@ resource "restapi_object" "shared_runner" {
   lifecycle {
     enabled = length(var.shared_runner_labels) > 0 && var.imports == null
   }
+
+  depends_on = [terraform_data.instance_ready]
 
   path         = "/v1beta/projects/${var.stackit_project_id}/instances/${module.instance.instance.instance_id}/runner"
   read_path    = "/v1beta/projects/${var.stackit_project_id}/instances/${module.instance.instance.instance_id}/runner"
