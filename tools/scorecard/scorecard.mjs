@@ -268,7 +268,7 @@ const detectors = [
   {
     id: "meshstack_ref_output",
     category: "core",
-    name: "meshStack `*_ref` attributes use the resource's ref output",
+    name: "meshStack `*_ref` attributes take a ref, never an object built from a uuid",
     emoji: "🎯",
     fn: (mod) => {
       const offenders = [];
@@ -283,8 +283,12 @@ const detectors = [
 
           for (const [attribute, expression] of extractRefAttributes(body)) {
             references++;
+            const where = `${relative(mod.path, file)}: ${address}.${attribute}`;
             for (const handRolled of handRolledRefs(expression, iterated)) {
-              offenders.push(`${relative(mod.path, file)}: ${address}.${attribute} reads ${handRolled}`);
+              offenders.push(`${where} reads ${handRolled}`);
+            }
+            for (const literal of uuidRefLiterals(expression)) {
+              offenders.push(`${where} builds ${literal} from a uuid`);
             }
           }
         }
@@ -296,7 +300,7 @@ const detectors = [
 
       const shown = offenders.slice(0, 4).join("; ");
       const more = offenders.length > 4 ? `, +${offenders.length - 4} more` : "";
-      return { pass: false, detail: `point at the resource's \`ref\` output instead: ${shown}${more}` };
+      return { pass: false, detail: `take a ref-typed variable or the resource's \`ref\` output: ${shown}${more}` };
     },
   },
   {
@@ -1832,6 +1836,22 @@ function handRolledRefs(expression, iteratedType) {
   return traversals
     .filter((t) => MESHSTACK_REF_RESOURCES.has(t.type) && !isRefShaped(t))
     .map((t) => t.text);
+}
+
+// Nobody types a uuid, so a ref holding one arrives whole. A name ref may be built from a variable
+// or a literal, because a building block input from meshStack is a plain string.
+function uuidRefLiterals(expression) {
+  const literals = [];
+  for (let open = expression.indexOf("{"); open >= 0; open = expression.indexOf("{", open + 1)) {
+    const close = findMatchingBrace(expression, open);
+    if (close < 0) continue;
+    const literal = expression.slice(open, close + 1);
+    const topLevel = literal.slice(1, -1).replace(/\{[^{}]*\}|\[[^[\]]*\]/g, "");
+    const keys = new Set([...topLevel.matchAll(/(?:^|[\s,])([a-z_]+)\s*=/g)].map((m) => m[1]));
+    const compact = literal.replace(/\s+/g, " ");
+    if (keys.has("uuid")) literals.push(compact);
+  }
+  return literals;
 }
 
 const isRefShaped = ({ type, path }) =>
