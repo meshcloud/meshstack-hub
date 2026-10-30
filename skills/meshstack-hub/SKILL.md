@@ -88,8 +88,9 @@ choose.
 The user keeps their meshStack configuration as code in their own repository; meshcloud calls it a
 foundation repository. Copy the module's `meshstack_integration.tf` into it at a pinned commit and
 edit the copy there, as the setup guide on hub.meshcloud.io does. The copy is then the user's code:
-they review it like their own, and can change what its variables do not cover. Calling the file as
-a remote module also works, but it is not the recommended way.
+they review it like their own, and can change what its variables do not cover. When the user needs
+no such change, they can call the module from the hub instead; see
+[Call the module instead of copying it](#call-the-module-instead-of-copying-it).
 
 1. Get the newest commit of the hub, and copy the file at that commit:
 
@@ -189,9 +190,56 @@ The old SHA is the one in the copy's `variable "hub"`.
 2. Apply that diff to the copy by hand, and keep the user's own edits. Then set the new SHA in
    `variable "hub"`. Changes in `backplane/` and `buildingblock/` come with the new SHA and need no
    edit in the copy.
-3. Run `tofu init` and `tofu plan`, and show the plan to the user. Stop and ask when it destroys or
+3. If the definition is released (`bbd_draft = false`), set `bbd_draft = true` in the same edit.
+   The new SHA changes the definition version, and a released version cannot change: the apply
+   fails with `Updating a version_spec in non-draft (released) state is not allowed`. With `true`,
+   the apply creates the next version as a draft. After a test order works, set `false` again to
+   release it; see
+   [Release a version](https://raw.githubusercontent.com/meshcloud/terraform-provider-meshstack/main/skills/terraform-provider-meshstack/SKILL.md#release-a-version).
+4. Run `tofu init` and `tofu plan`, and show the plan to the user. Stop and ask when it destroys or
    replaces anything in the backplane: the building blocks of the definition run with that
    identity.
+
+### Call the module instead of copying it
+
+A root module can call the module folder from the hub, pinned to a commit, instead of copying its
+`meshstack_integration.tf`. Nothing is copied, so the user cannot change what the variables do not
+cover. The SHA goes into two places: the `?ref=` of `source`, and `hub.git_ref`. With only the
+`?ref=`, the backplane, the definition's `ref_name` and the logo still point at `main`.
+
+```hcl
+module "key_vault" {
+  source = "github.com/meshcloud/meshstack-hub//modules/azure/key-vault?ref=<sha>"
+
+  hub = {
+    git_ref   = "<sha>"
+    bbd_draft = true
+  }
+
+  azure_tenant_id = "<entra-tenant-id>"
+  azure_scope     = "/providers/Microsoft.Management/managementGroups/<landing-zones>"
+
+  meshstack = {
+    owning_workspace_identifier = "<workspace>"
+  }
+}
+
+output "building_block_definition" {
+  value = module.key_vault.building_block_definition
+}
+```
+
+Give the root a `providers.tf` as in step 2 above, with a `required_providers` entry for
+`meshcloud/meshstack` and each cloud provider. Without it, `provider "meshstack"` in the root
+resolves to `hashicorp/meshstack`, and `tofu init` fails.
+
+In a Terragrunt repository, a unit calls the same folder with
+`terraform { source = "git::https://github.com/meshcloud/meshstack-hub.git//modules/<platform>/<service>?ref=<sha>" }`
+and sets `hub = { git_ref = "<sha>", bbd_draft = true }` in its `inputs`. Keep the SHA in one place,
+for example a `locals` block that both read, so that the two cannot point at different commits.
+
+To upgrade, read what changed as in step 1 of [Upgrade to a newer commit](#upgrade-to-a-newer-commit),
+then set the new SHA in both places, and follow steps 3 and 4 there.
 
 ### A module without `meshstack_integration.tf`
 
