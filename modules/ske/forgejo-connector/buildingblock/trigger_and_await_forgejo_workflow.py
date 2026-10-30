@@ -41,9 +41,11 @@ Required environment variables:
 Optional:
   WORKFLOW_NAME      – workflow file name (default: pipeline.yaml)
 
-There is intentionally no in-script timeout and no retry limit: the script polls
-until the run reaches a terminal verdict, retrying transient failures of the GETs
-on the way. The caller bounds the wall-clock time instead — the Terraform
+A failed run is dispatched once more, and only a second failure fails the
+script: a job can fail on the shared runner for reasons of its own, such as a
+registry login that comes back unauthorized. There is intentionally no in-script
+timeout and no retry limit on the GETs: the script polls until a run reaches a
+terminal verdict, retrying transient failures of the GETs on the way. The caller bounds the wall-clock time instead — the Terraform
 provisioner wraps this in `timeout 900` (15 minutes).
 """
 
@@ -195,20 +197,9 @@ def evaluate_run(tasks: list[dict], expected_jobs: set[str], seen_job_status: di
     return "success", ""
 
 
-def main() -> None:
-    host = normalize_host(os.environ["FORGEJO_HOST"])
-    token = os.environ["FORGEJO_API_TOKEN"]
-    owner = os.environ["REPOSITORY_OWNER"]
-    repo_name = os.environ["REPOSITORY_NAME"]
-    workflow_name = os.environ.get("WORKFLOW_NAME", "pipeline.yaml")
-    branch = os.environ["BRANCH"]
-    expected_jobs = {j.strip() for j in os.environ["EXPECTED_JOBS"].split(",") if j.strip()}
-    if not expected_jobs:
-        raise SystemExit("EXPECTED_JOBS must list at least one job name")
-
-    print(f"Dispatching workflow {workflow_name} on branch {branch} for {owner}/{repo_name}")
-    print(f"Awaiting jobs: {', '.join(sorted(expected_jobs))}")
-
+def dispatch_and_await(host: str, token: str, owner: str, repo_name: str, workflow_name: str,
+                       branch: str, expected_jobs: set[str]) -> str | None:
+    """Return None when the run succeeds, else the failure message."""
     dispatch_at = dt.datetime.now(dt.timezone.utc)
     dispatch_path = f"/api/v1/repos/{owner}/{repo_name}/actions/workflows/{workflow_name}/dispatches"
     status, _ = request_once(host, token, "POST", dispatch_path, {"ref": branch})
@@ -228,9 +219,9 @@ def main() -> None:
             url = tasks[0].get("url", "")
             if verdict == "success":
                 print(f"Workflow run {run_id} on {branch} completed successfully: {url}")
-                return
+                return None
             if verdict == "failure":
-                raise SystemExit(f"Workflow run {run_id} on {branch} failed: {detail}: {url}")
+                return f"Workflow run {run_id} on {branch} failed: {detail}: {url}"
         else:
             # print alternative info so we can distinguish between a job not running or a job timeout
             elapsed = int((dt.datetime.now(dt.timezone.utc) - dispatch_at).total_seconds())
@@ -239,6 +230,29 @@ def main() -> None:
 
         time.sleep(POLL_INTERVAL_SECONDS)
 
+
+def main() -> None:
+    host = normalize_host(os.environ["FORGEJO_HOST"])
+    token = os.environ["FORGEJO_API_TOKEN"]
+    owner = os.environ["REPOSITORY_OWNER"]
+    repo_name = os.environ["REPOSITORY_NAME"]
+    workflow_name = os.environ.get("WORKFLOW_NAME", "pipeline.yaml")
+    branch = os.environ["BRANCH"]
+    expected_jobs = {j.strip() for j in os.environ["EXPECTED_JOBS"].split(",") if j.strip()}
+    if not expected_jobs:
+        raise SystemExit("EXPECTED_JOBS must list at least one job name")
+
+    print(f"Dispatching workflow {workflow_name} on branch {branch} for {owner}/{repo_name}")
+    print(f"Awaiting jobs: {', '.join(sorted(expected_jobs))}")
+
+    failure = dispatch_and_await(host, token, owner, repo_name, workflow_name, branch, expected_jobs)
+    if failure is None:
+        return
+    # This Forgejo has no rerun endpoint, so a fresh dispatch stands in for it.
+    print(f"{failure}; dispatching once more")
+    failure = dispatch_and_await(host, token, owner, repo_name, workflow_name, branch, expected_jobs)
+    if failure is not None:
+        raise SystemExit(failure)
 
 if __name__ == "__main__":
     main()
