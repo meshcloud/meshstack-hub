@@ -6,8 +6,15 @@
 | **API URL** | ${api_url} |
 | **KV Mount** | `${kv_mount}` |
 
-[Create users](${users_url}) for this instance in the STACKIT portal.
-Then log in with the Vault CLI:
+Project members with a Secrets Manager role log in with their STACKIT access token:
+
+```sh
+export VAULT_ADDR=${api_url}
+export VAULT_TOKEN=$(stackit auth get-access-token)
+vault kv list -mount=${kv_mount} /
+```
+
+Workloads use a user you [create](${users_url}) for this instance in the STACKIT portal:
 
 ```sh
 export VAULT_ADDR=${api_url}

@@ -37,6 +37,7 @@ module "secrets_manager" {
   stackit_project_id           = var.test_context.fixtures.stackit.project_id
   stackit_service_account_name = "${var.test_context.run_id}-sm"
   stackit_custom_role_name     = "${local.run_id_letters}-sm"
+  role_mapping                 = {}
 }
 
 locals {
