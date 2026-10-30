@@ -28,9 +28,11 @@ caught only when meshStack rejects the apply.
 Ten resources expose `ref`: `meshstack_building_block`, `meshstack_building_block_definition`,
 `meshstack_building_block_runner`, `meshstack_integration`, `meshstack_landingzone`,
 `meshstack_location`, `meshstack_platform`, `meshstack_platform_type`, `meshstack_tenant` and
-`meshstack_workspace`. A literal or a variable stays where no `ref` can replace it: an object this
-configuration does not manage, a ref wired in from elsewhere, and the user and group bindings, whose
-`role_ref` and `target_ref` take an identifier with no `kind`. A building block is ordered against a
+`meshstack_workspace`. An object this configuration does not manage arrives as a ref-typed variable
+whenever its ref holds a `uuid`, because nobody types a uuid. A ref by name may be built from a
+variable or a literal anywhere, such as a location or workspace name, because a building block input
+from meshStack is a plain string. The user and group bindings keep their literals: their `role_ref`
+and `target_ref` take an identifier with no `kind`. A building block is ordered against a
 definition *version*, which `ref` does not identify — that one takes `version_latest` or
 `version_latest_release`.
 
