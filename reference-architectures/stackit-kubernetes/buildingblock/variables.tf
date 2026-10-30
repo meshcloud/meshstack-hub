@@ -127,6 +127,17 @@ variable "starterkit_approval_policies" {
   description = "Run triggers that need an operator's approval on the application team definitions (Git repository, Forgejo connector, SKE starterkit) this architecture registers."
 }
 
+variable "platform_engineer_role_mapping" {
+  type = object({
+    git                = optional(map(list(string)))
+    container_registry = optional(map(list(string)))
+    secrets_manager    = optional(map(list(string)))
+  })
+  nullable    = false
+  default     = {}
+  description = "Maps the meshStack project roles on the platform's project to roles on the Git instance (Forgejo `owner`, `writer`, `reader`), the container registry and the Secrets Manager (STACKIT project roles). A service left out keeps its module's default: Project Admins become Forgejo owners, registry admins and Secrets Manager readers."
+}
+
 variable "playground_mode" {
   type        = bool
   nullable    = false

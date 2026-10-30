@@ -1,6 +1,7 @@
 module "secrets_manager_integration" {
   source = "github.com/meshcloud/meshstack-hub//modules/stackit/secrets-manager?ref=${var.hub.git_ref}"
 
+  role_mapping      = var.platform_engineer_role_mapping.secrets_manager
   approval_policies = var.approval_policies
 
   meshstack = { owning_workspace_identifier = var.workspace, tags = var.tags.building_block }

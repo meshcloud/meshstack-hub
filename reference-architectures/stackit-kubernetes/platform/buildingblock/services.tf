@@ -83,6 +83,7 @@ resource "meshstack_building_block" "ai_llm" {
 module "git_integration" {
   source = "github.com/meshcloud/meshstack-hub//modules/stackit/git?ref=${var.hub.git_ref}"
 
+  role_mapping      = var.platform_engineer_role_mapping.git
   approval_policies = var.approval_policies
 
   meshstack = { owning_workspace_identifier = var.workspace, tags = var.tags.building_block }
@@ -135,6 +136,7 @@ resource "meshstack_building_block" "git" {
 module "container_registry_integration" {
   source = "github.com/meshcloud/meshstack-hub//modules/stackit/container-registry?ref=${var.hub.git_ref}"
 
+  role_mapping      = var.platform_engineer_role_mapping.container_registry
   approval_policies = var.approval_policies
 
   meshstack = { owning_workspace_identifier = var.workspace, tags = var.tags.building_block }
