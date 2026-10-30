@@ -105,14 +105,14 @@ variable "output_to_vault" {
 variable "imports" {
   type = object({
     instance_id                     = string
-    existing_forgejo_api_token_path = string
+    existing_forgejo_api_token_path = optional(string)
   })
   default     = null
-  description = "Existing STACKIT Git instance named `instance_name` and its Forgejo organization `forgejo_organization` to take over; `existing_forgejo_api_token_path` names the secret in the `output_to_vault` Vault holding an owner's `forgejo-api-token`. Null creates both."
+  description = "Existing STACKIT Git instance named `instance_name` and its Forgejo organization `forgejo_organization` to take over; `existing_forgejo_api_token_path` names the secret in the `output_to_vault` Vault holding an owner's `forgejo-api-token`, needed until the technical user is an owner. Null creates both."
 
   validation {
-    condition     = var.imports == null || nonsensitive(var.output_to_vault != null)
-    error_message = "imports needs output_to_vault, whose Vault holds the existing Forgejo API token."
+    condition     = try(var.imports.existing_forgejo_api_token_path, null) == null || nonsensitive(var.output_to_vault != null)
+    error_message = "imports.existing_forgejo_api_token_path needs output_to_vault, whose Vault holds the existing Forgejo API token."
   }
 
   validation {
