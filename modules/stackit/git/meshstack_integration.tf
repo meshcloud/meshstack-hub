@@ -7,6 +7,7 @@ variable "stackit_region" {
 
 variable "role_mapping" {
   type        = map(list(string))
+  nullable    = false
   description = "Maps meshStack project roles to Forgejo organization roles (`owner`, `writer` or `reader`). The highest one wins."
 
   default = {
