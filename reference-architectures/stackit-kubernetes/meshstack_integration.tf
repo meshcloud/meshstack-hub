@@ -395,7 +395,7 @@ resource "meshstack_building_block_definition" "this" {
 
       imports = {
         display_name    = "Imports"
-        description     = "HCL object of what to take over, by key: `project`, `ske`, `git`, `dns`, `ingress`, `secrets_manager`, `container_registry`, `kubernetes_platform`; see Adopting Existing Resources in the README. All need `project`, `git` needs Import Secrets."
+        description     = "HCL object of what to take over, by key: `project`, `ske`, `git`, `dns`, `ingress`, `secrets_manager`, `container_registry`, `kubernetes_platform`; see Adopting Existing Resources in the README. All need `project`; `git` first needs Import Secrets."
         type            = "CODE"
         assignment_type = "USER_INPUT"
         is_optional     = true
@@ -403,7 +403,7 @@ resource "meshstack_building_block_definition" "this" {
 
       import_secrets = {
         display_name           = "Import Secrets"
-        description            = "HCL object `{git = {forgejo_api_token}}`: the token of an owner of the Forgejo organization that `imports.git` adopts. Leave empty when nothing is adopted."
+        description            = "HCL object `{git = {forgejo_api_token}}`: the token of an owner of the Forgejo organization that `imports.git` adopts. Leave empty when nothing is adopted or once the organization is adopted."
         type                   = "CODE"
         assignment_type        = "USER_INPUT"
         sensitive              = {}

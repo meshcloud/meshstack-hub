@@ -77,7 +77,8 @@ resource "meshstack_building_block" "platform" {
       stages = { value = jsonencode(jsonencode(var.stages)) }
       }, length(local.platform_imports) == 0 ? {} : {
       imports = { value = jsonencode(jsonencode(local.platform_imports)) }
-      }, nonsensitive(var.import_secrets.git == null) ? {} : {
+      }, {
+      # Sent even when empty: meshStack keeps the stored value of an input an update leaves out.
       import_secrets = {
         sensitive = {
           secret_value   = jsonencode(var.import_secrets)

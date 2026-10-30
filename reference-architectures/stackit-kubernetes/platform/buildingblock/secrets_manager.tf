@@ -63,6 +63,7 @@ resource "stackit_secretsmanager_user" "reader" {
 }
 
 locals {
+  import_git           = var.imports.git != null && nonsensitive(var.import_secrets.git != null)
   import_git_data_json = var.import_secrets.git == null ? null : jsonencode({ "forgejo-api-token" = var.import_secrets.git.forgejo_api_token })
 }
 
@@ -70,12 +71,7 @@ resource "vault_kv_secret_v2" "import_git" {
   provider = vault.writer
 
   lifecycle {
-    enabled = var.imports.git != null
-
-    precondition {
-      condition     = nonsensitive(var.import_secrets.git != null)
-      error_message = "imports.git needs import_secrets.git, the Forgejo API token of an owner of the organization."
-    }
+    enabled = local.import_git
   }
 
   mount        = local.secrets_manager_instance_id
