@@ -80,7 +80,7 @@ variable "import_secrets" {
   nullable    = false
   default     = {}
   sensitive   = true
-  description = "Secrets of the resources in `imports`, written to the platform's Secrets Manager: `git.forgejo_api_token`, a token of an owner of the adopted Forgejo organization."
+  description = "Secrets of the resources in `imports`, written to the platform's Secrets Manager: `git.forgejo_api_token`, a token of an owner of the adopted Forgejo organization, needed until the Git building block's technical user is an owner."
 }
 
 variable "use_global_location" {

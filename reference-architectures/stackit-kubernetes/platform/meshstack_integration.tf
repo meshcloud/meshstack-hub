@@ -251,7 +251,7 @@ resource "meshstack_building_block_definition" "this" {
 
       import_secrets = {
         display_name           = "Import Secrets"
-        description            = "HCL object `{git = {forgejo_api_token}}` this run writes to the platform's Secrets Manager for the adopted Forgejo organization."
+        description            = "HCL object `{git = {forgejo_api_token}}` this run writes to the platform's Secrets Manager for the adopted Forgejo organization. Empty once the organization is adopted."
         type                   = "CODE"
         assignment_type        = "USER_INPUT"
         sensitive              = {}

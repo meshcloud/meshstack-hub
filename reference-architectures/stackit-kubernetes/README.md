@@ -196,6 +196,10 @@ Secrets** input:
 }
 ```
 
+The token only serves to make the Git building block's technical user an owner. Once the platform's
+first run succeeded, set **Import Secrets** to `{}`; later runs act as that user. Leaving the input
+out keeps the stored token, because meshStack keeps an input an update does not send.
+
 In playground mode, deleting the platform leaves what it took over in place. Otherwise it deletes
 it.
 

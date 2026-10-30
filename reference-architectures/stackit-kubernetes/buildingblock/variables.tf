@@ -242,7 +242,7 @@ variable "imports" {
     kubernetes_platform = optional(object({}))
   })
   default     = null
-  description = "Existing resources to take over, by key; see Adopting Existing Resources in the README. `git` needs `import_secrets.git`; null creates everything."
+  description = "Existing resources to take over, by key; see Adopting Existing Resources in the README. `git` needs `import_secrets.git` on its first run; null creates everything."
 
   validation {
     condition     = var.imports == null || var.imports.project != null || alltrue([for key, adopted in var.imports : adopted == null])
@@ -252,11 +252,6 @@ variable "imports" {
   validation {
     condition     = var.imports == null || (var.imports.ingress == null && var.imports.kubernetes_platform == null) || var.imports.ske != null
     error_message = "imports.ingress and imports.kubernetes_platform need imports.ske, because they live in that cluster."
-  }
-
-  validation {
-    condition     = var.imports == null || var.imports.git == null || nonsensitive(var.import_secrets.git != null)
-    error_message = "imports.git needs import_secrets.git, the Forgejo API token of an owner of the organization."
   }
 }
 
@@ -269,5 +264,5 @@ variable "import_secrets" {
   nullable    = false
   default     = {}
   sensitive   = true
-  description = "Secrets of the resources in `imports`: `git.forgejo_api_token`, a token of an owner of the adopted Forgejo organization."
+  description = "Secrets of the resources in `imports`: `git.forgejo_api_token`, a token of an owner of the adopted Forgejo organization, needed until the organization is adopted."
 }

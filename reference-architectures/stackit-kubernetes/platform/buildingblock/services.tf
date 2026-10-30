@@ -124,10 +124,10 @@ resource "meshstack_building_block" "git" {
         release_on_destroy = { value = jsonencode(var.imports.git != null && var.playground_mode) }
       },
       var.imports.git == null ? {} : {
-        imports = { value = jsonencode(jsonencode({
-          instance_id                     = var.imports.git.instance_id
-          existing_forgejo_api_token_path = vault_kv_secret_v2.import_git.name
-        })) }
+        imports = { value = jsonencode(jsonencode(merge(
+          { instance_id = var.imports.git.instance_id },
+          local.import_git ? { existing_forgejo_api_token_path = vault_kv_secret_v2.import_git.name } : {},
+        ))) }
       },
     )
   }
