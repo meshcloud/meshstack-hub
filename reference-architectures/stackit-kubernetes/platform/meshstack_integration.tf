@@ -11,6 +11,17 @@ variable "approval_policies" {
   description = "Run triggers that need an operator's approval on this definition and on the platform definitions it registers."
 }
 
+variable "platform_engineer_role_mapping" {
+  type = object({
+    git                = optional(map(list(string)))
+    container_registry = optional(map(list(string)))
+    secrets_manager    = optional(map(list(string)))
+  })
+  nullable    = false
+  default     = {}
+  description = "Maps the meshStack project roles on the platform's project to roles on the Git instance (Forgejo `owner`, `writer`, `reader`), the container registry and the Secrets Manager (STACKIT project roles). A service left out keeps its module's default: Project Admins become Forgejo owners, registry admins and Secrets Manager readers."
+}
+
 variable "starterkit_approval_policies" {
   type = object({
     building_block_creation = optional(bool, false)
@@ -359,6 +370,14 @@ resource "meshstack_building_block_definition" "this" {
         type            = "CODE"
         assignment_type = "STATIC"
         argument        = jsonencode(jsonencode(var.starterkit_approval_policies))
+      }
+
+      platform_engineer_role_mapping = {
+        display_name    = "Platform Engineer Role Mapping"
+        description     = "HCL object of role mappings by service (`git`, `container_registry`, `secrets_manager`) for the members of the platform's project."
+        type            = "CODE"
+        assignment_type = "STATIC"
+        argument        = jsonencode(jsonencode(var.platform_engineer_role_mapping))
       }
     }
 

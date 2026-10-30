@@ -154,6 +154,20 @@ the platform definitions it registers. `starterkit_approval_policies` does the s
 repository, Forgejo connector and starter kit definitions. Both default to no gate. A gate switched
 on in meshPanel is reset on the next apply unless it is set here.
 
+### Platform engineer access
+
+The owners and managers of the ordering workspace become Project Admins of the platform's project.
+`platform_engineer_role_mapping` maps the project's meshStack roles, by service, to what members
+get: by default Project Admins join the Forgejo `Owners` team (once they signed in to the Git
+instance), become registry admins and get `secrets-manager.reader`, with which they read secrets
+using their STACKIT access token:
+
+```sh
+export VAULT_ADDR=https://prod.sm.eu01.stackit.cloud
+export VAULT_TOKEN=$(stackit auth get-access-token)
+vault kv list -mount=<Secrets Manager instance id> <platform identifier>/
+```
+
 ## Adopting Existing Resources
 
 The optional **Imports** input takes over resources that already exist, for example a platform
