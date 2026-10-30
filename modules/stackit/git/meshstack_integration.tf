@@ -63,7 +63,7 @@ resource "meshstack_building_block_definition" "this" {
 
   spec = {
     display_name        = coalesce(var.bbd_display_name, "STACKIT Git Instance")
-    symbol              = "https://raw.githubusercontent.com/meshcloud/meshstack-hub/${var.hub.git_ref}/modules/stackit/git/buildingblock/logo.png"
+    symbol              = "https://raw.githubusercontent.com/meshcloud/meshstack-hub/${var.hub.git_ref}/modules/stackit/git/buildingblock/logo.svg"
     description         = coalesce(var.bbd_description, "Provisions a STACKIT Git (Forgejo) instance and the organization repositories are created in.")
     support_url         = "https://portal.stackit.cloud/git"
     target_type         = "TENANT_LEVEL"

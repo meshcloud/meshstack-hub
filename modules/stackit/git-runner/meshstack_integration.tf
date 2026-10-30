@@ -91,7 +91,7 @@ resource "meshstack_building_block_definition" "this" {
 
   spec = {
     display_name = coalesce(var.bbd_display_name, "STACKIT Git Runner")
-    symbol       = "https://raw.githubusercontent.com/meshcloud/meshstack-hub/${var.hub.git_ref}/modules/stackit/git-runner/buildingblock/logo.png"
+    symbol       = "https://raw.githubusercontent.com/meshcloud/meshstack-hub/${var.hub.git_ref}/modules/stackit/git-runner/buildingblock/logo.svg"
     description = coalesce(var.bbd_description, chomp(<<-EOT
       Deploys a STACKIT VM running a self-hosted STACKIT Git Actions runner at organization scope.
     EOT

@@ -74,7 +74,7 @@ resource "meshstack_building_block_definition" "this" {
 
   spec = {
     display_name        = coalesce(var.bbd_display_name, "STACKIT Container Registry")
-    symbol              = "https://raw.githubusercontent.com/meshcloud/meshstack-hub/${var.hub.git_ref}/modules/stackit/container-registry/buildingblock/logo.png"
+    symbol              = "https://raw.githubusercontent.com/meshcloud/meshstack-hub/${var.hub.git_ref}/modules/stackit/container-registry/buildingblock/logo.svg"
     description         = coalesce(var.bbd_description, "Provisions a STACKIT container registry (Harbor) in this project, so application images have somewhere to live.")
     support_url         = "https://portal.stackit.cloud"
     target_type         = "TENANT_LEVEL"
