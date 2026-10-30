@@ -27,13 +27,6 @@ variable "stackit_owner_email" {
   description = "Owner email assigned to the STACKIT resourcemanager folder, the foundation project, and every tenant project the platform creates."
 }
 
-variable "stackit_service_account_key" {
-  type        = string
-  sensitive   = true
-  nullable    = false
-  description = "STACKIT service account key JSON with `resource-manager.admin` on the organization. Used to create the landing-zone folder and foundation project."
-}
-
 variable "platform_identifier" {
   type        = string
   nullable    = false
@@ -131,4 +124,21 @@ variable "hub" {
   `git_ref`: meshstack-hub reference used to source the nested foundation, network-area, and network integration modules. `const` so it can be interpolated into the module source at init time.
   `bbd_draft`: Forwarded as-is to those nested integrations' own `hub.bbd_draft`, so their building block definition draft state tracks this building block's own release state.
   EOT
+}
+
+variable "stage" {
+  type        = string
+  nullable    = false
+  description = "`bootstrap` reports the WIF claims to trust on the service account and creates nothing. `deploy` builds the landing zone, authenticating as that account."
+
+  validation {
+    condition     = contains(["bootstrap", "deploy"], var.stage)
+    error_message = "stage must be either \"bootstrap\" or \"deploy\"."
+  }
+}
+
+variable "bbd_display_name" {
+  type        = string
+  nullable    = false
+  description = "Display name of the building block definition this building block runs, used to find it and read the WIF identity meshStack resolved for it."
 }
