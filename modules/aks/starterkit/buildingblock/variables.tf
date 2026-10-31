@@ -80,6 +80,6 @@ variable "github_template_repo_path" {
 
 variable "apps_base_domain" {
   type        = string
-  description = "Base domain used for application URLs (e.g. 'likvid-k8s.msh.host'). The app subdomain will be prefixed to this value."
+  description = "Base domain used for application URLs (e.g. 'likvid-k8s.msh.host'). The app subdomain will be prefixed to this value. Also passed to the deploy workflow as the APPS_BASE_DOMAIN environment variable."
   default     = "likvid-k8s.msh.host"
 }
