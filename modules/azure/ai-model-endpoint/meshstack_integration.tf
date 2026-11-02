@@ -13,10 +13,9 @@ variable "azure_scope" {
 }
 
 variable "azure_location" {
-  type = string
-  # Sweden Central offers the widest choice of models among EU regions.
-  default     = "swedencentral"
-  description = "Azure region of the backplane identity and of every AI Services account."
+  type        = string
+  default     = "germanywestcentral"
+  description = "Azure region of the backplane identity and of every AI Services account. Every model in `azure_models` must be available there for `azure_deployment_sku`; Sweden Central offers the widest choice among EU regions, where a location policy allows it."
 }
 
 variable "azure_models" {

@@ -45,7 +45,7 @@ module "ai_model_endpoint" {
 # Stands in for the application's identity, the one the building block grants model access to.
 resource "azurerm_resource_group" "app" {
   name     = "${var.test_context.run_id}-ai-app"
-  location = "swedencentral"
+  location = "germanywestcentral"
 }
 
 resource "azurerm_user_assigned_identity" "app" {
