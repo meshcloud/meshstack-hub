@@ -78,11 +78,21 @@ resource "azurerm_network_manager" "ipam" {
   }
 }
 
-resource "azurerm_network_manager_ipam_pool" "this" {
+# Same Azure lag as in ../../../../ipam-pool/buildingblock/main.tf.
+resource "time_sleep" "pool_deletion" {
   lifecycle {
     enabled = var.ipam
   }
   depends_on = [azurerm_network_manager.ipam]
+
+  destroy_duration = "3m"
+}
+
+resource "azurerm_network_manager_ipam_pool" "this" {
+  lifecycle {
+    enabled = var.ipam
+  }
+  depends_on = [time_sleep.pool_deletion]
 
   name               = var.test_context.run_id
   location           = local.location

@@ -15,7 +15,16 @@ resource "azurerm_network_manager" "ipam" {
   }
 }
 
+# Azure still counts a deleted pool as nested for a while after its GET returns 404, so deleting the
+# network manager right away fails with 409 CannotDeleteResource.
+resource "time_sleep" "pool_deletion" {
+  depends_on       = [azurerm_network_manager.ipam]
+  destroy_duration = "3m"
+}
+
 resource "azurerm_network_manager_ipam_pool" "this" {
+  depends_on = [time_sleep.pool_deletion]
+
   name               = var.name
   display_name       = var.name
   location           = azurerm_resource_group.ipam.location
