@@ -273,14 +273,6 @@ module "web_vmss" {
 - Rolling upgrade requires health probe configuration
 - Windows VMs require admin password (stored as sensitive)
 
-## Testing
-
-Tests are included in `vmss.tftest.hcl`. Run with:
-
-```bash
-tofu test
-```
-
 ## Resources Created
 
 - Resource Group
