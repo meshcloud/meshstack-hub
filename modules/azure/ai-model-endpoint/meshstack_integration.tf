@@ -288,6 +288,14 @@ resource "meshstack_building_block_definition" "this" {
         is_optional     = true
         display_order   = 3
       }
+      public_network_access_enabled = {
+        type            = "BOOLEAN"
+        display_name    = "Public Network Access"
+        description     = "Allow calls from the public internet. Entra ID still decides who may call the model. Turn it off only if you connect the account to your network with a private endpoint yourself."
+        assignment_type = "USER_INPUT"
+        default_value   = jsonencode(true)
+        display_order   = 4
+      }
       app_principal_id = {
         type                           = "STRING"
         display_name                   = "Application Identity Object ID"
@@ -296,7 +304,7 @@ resource "meshstack_building_block_definition" "this" {
         is_optional                    = true
         value_validation_regex         = "^[0-9a-fA-F-]{36}$"
         validation_regex_error_message = "Must be an object ID (GUID)."
-        display_order                  = 4
+        display_order                  = 5
       }
     }
 

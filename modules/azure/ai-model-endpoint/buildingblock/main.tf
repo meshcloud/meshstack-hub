@@ -28,6 +28,14 @@ resource "azurerm_cognitive_account" "this" {
   # leak, so access follows Azure RBAC alone.
   custom_subdomain_name = local.account_name
   local_auth_enabled    = false
+
+  public_network_access_enabled = var.public_network_access_enabled
+
+  # Lets the account reach other Azure resources, such as a storage account holding data for
+  # fine-tuning or a Key Vault with a customer-managed key, without a credential.
+  identity {
+    type = "SystemAssigned"
+  }
 }
 
 resource "azurerm_cognitive_deployment" "this" {
