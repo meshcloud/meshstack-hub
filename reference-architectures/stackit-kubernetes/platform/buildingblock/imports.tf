@@ -54,3 +54,49 @@ import {
   to       = module.kubernetes_integration.meshstack_landingzone.this[each.key]
   id       = each.value
 }
+
+locals {
+  # The definitions are registered only in phase 2.
+  adopted_starterkit_definitions = var.phase2_completed && var.imports.starterkit_definitions != null ? {
+    for key, uuid in var.imports.starterkit_definitions : key => uuid if uuid != null
+  } : {}
+
+  starterkit_definition_target_types = {
+    starterkit        = "WORKSPACE_LEVEL"
+    git_repository    = "WORKSPACE_LEVEL"
+    forgejo_connector = "TENANT_LEVEL"
+  }
+}
+
+# Owner and target type force a replacement, which would delete the definition with its building
+# blocks, so the lookup fails unless both match. The import then adds a version to the definition.
+data "meshstack_building_block_definition" "adopted" {
+  for_each = local.adopted_starterkit_definitions
+
+  metadata = {
+    uuid               = each.value
+    owned_by_workspace = var.workspace
+  }
+
+  spec = {
+    target_type = local.starterkit_definition_target_types[each.key]
+  }
+}
+
+import {
+  for_each = { for key, uuid in local.adopted_starterkit_definitions : key => uuid if key == "starterkit" }
+  to       = module.ske_starterkit_integration.meshstack_building_block_definition.this
+  id       = data.meshstack_building_block_definition.adopted[each.key].metadata.uuid
+}
+
+import {
+  for_each = { for key, uuid in local.adopted_starterkit_definitions : key => uuid if key == "git_repository" }
+  to       = module.git_repository_integration.meshstack_building_block_definition.this
+  id       = data.meshstack_building_block_definition.adopted[each.key].metadata.uuid
+}
+
+import {
+  for_each = { for key, uuid in local.adopted_starterkit_definitions : key => uuid if key == "forgejo_connector" }
+  to       = module.forgejo_connector_integration.meshstack_building_block_definition.this
+  id       = data.meshstack_building_block_definition.adopted[each.key].metadata.uuid
+}

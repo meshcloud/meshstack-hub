@@ -69,6 +69,11 @@ variable "imports" {
       location_name     = optional(string)
       landingzone_names = optional(map(string), {})
     }))
+    starterkit_definitions = optional(object({
+      starterkit        = optional(string)
+      git_repository    = optional(string)
+      forgejo_connector = optional(string)
+    }))
   })
   nullable    = false
   default     = {}

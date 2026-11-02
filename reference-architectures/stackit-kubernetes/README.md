@@ -184,7 +184,9 @@ built before this architecture:
 | `container_registry = {artifactory_id, registry_name}` | the container registry of that full name |
 | `kubernetes_platform = {platform_name, location_name, landingzone_names}` | the namespace `meshcloud` and the identities `meshfed-service` and `meshfed-metering` of an earlier meshStack platform registration; `platform_name` also takes over the KUBERNETES meshPlatform of that name, and `landingzone_names` maps a stage to the name of its existing landing zone on it. `location_name` references an existing location instead of creating one; `platform_name` needs it or **Use Global Location**. All three are optional; `{}` takes over only what is in the cluster |
 
-Every key needs `project`, because the resources live in its STACKIT project. `ingress` and
+| `starterkit_definitions = {starterkit, git_repository, forgejo_connector}` | the existing definitions application teams order, by uuid, each optional; the platform registers its definition as a new version of each, so their building blocks upgrade to it |
+
+Every key but `starterkit_definitions` needs `project`, because the resources live in its STACKIT project. `ingress` and
 `kubernetes_platform` also need `ske`. Everything else is created new. Names the imports leave out
 derive from **Platform Identifier**, so a stage added later gets `<platform identifier>-namespace-<stage>`.
 
@@ -202,7 +204,13 @@ first run succeeded, set **Import Secrets** to `{}`; later runs act as that user
 out keeps the stored token, because meshStack keeps an input an update does not send.
 
 In playground mode, deleting the platform leaves what it took over in place. Otherwise it deletes
-it. A meshPlatform can only be taken over with playground mode off.
+it. A meshPlatform and definitions can only be taken over with playground mode off.
+
+A definition is taken over in phase 2, when the platform registers it. Its latest version decides
+what that run does: a draft version is overwritten, and a released one gets a new draft version
+only if `hub.bbd_draft` is true. With `hub.bbd_draft = false` the run fails on a released version, so
+take the definitions over with `hub.bbd_draft = true` and release afterwards. Existing building
+blocks stay on their version until they are upgraded.
 
 The first run may change what it takes over to match this architecture's settings. To review it,
 switch on the `building_block_creation` and `any_input_changes` gates in `approval_policies` for the

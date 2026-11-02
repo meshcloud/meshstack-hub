@@ -263,13 +263,18 @@ variable "imports" {
       location_name     = optional(string)
       landingzone_names = optional(map(string), {})
     }))
+    starterkit_definitions = optional(object({
+      starterkit        = optional(string)
+      git_repository    = optional(string)
+      forgejo_connector = optional(string)
+    }))
   })
   default     = null
-  description = "Existing resources to take over, by key; see Adopting Existing Resources in the README. `git` needs `import_secrets.git` on its first run; null creates everything."
+  description = "Existing resources and definitions to take over, by key; see Adopting Existing Resources in the README. `git` needs `import_secrets.git` on its first run; null creates everything."
 
   validation {
-    condition     = var.imports == null || var.imports.project != null || alltrue([for key, adopted in var.imports : adopted == null])
-    error_message = "Every key of imports needs imports.project, because what it names lives in that project."
+    condition     = var.imports == null || var.imports.project != null || alltrue([for key, adopted in var.imports : adopted == null if key != "starterkit_definitions"])
+    error_message = "Every key of imports but starterkit_definitions needs imports.project, because what it names lives in that project."
   }
 
   validation {
@@ -287,10 +292,15 @@ variable "imports" {
     error_message = "imports.kubernetes_platform.platform_name needs imports.kubernetes_platform.location_name or use_global_location, because the platform exists in a location already."
   }
 
-  # A meshPlatform has no release on destroy, so a playground would delete the platform it adopted.
+  # The meshPlatform and the definitions have no release on destroy, so a playground would delete them.
   validation {
     condition     = !var.playground_mode || ((var.imports == null ? null : var.imports.kubernetes_platform) == null ? true : var.imports.kubernetes_platform.platform_name == null)
     error_message = "imports.kubernetes_platform.platform_name needs playground_mode = false."
+  }
+
+  validation {
+    condition     = !var.playground_mode || (var.imports == null ? null : var.imports.starterkit_definitions) == null
+    error_message = "imports.starterkit_definitions needs playground_mode = false."
   }
 }
 

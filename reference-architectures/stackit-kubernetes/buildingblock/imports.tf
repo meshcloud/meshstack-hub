@@ -1,13 +1,14 @@
 locals {
   imports = var.imports != null ? var.imports : {
-    project             = null
-    ske                 = null
-    git                 = null
-    dns                 = null
-    ingress             = null
-    secrets_manager     = null
-    container_registry  = null
-    kubernetes_platform = null
+    project                = null
+    ske                    = null
+    git                    = null
+    dns                    = null
+    ingress                = null
+    secrets_manager        = null
+    container_registry     = null
+    kubernetes_platform    = null
+    starterkit_definitions = null
   }
 
   # Null keys are left out, so adding a key to `imports` leaves the nested input unchanged.
