@@ -238,22 +238,12 @@ resource "meshstack_building_block_definition" "this" {
         argument        = jsonencode(var.azure_location)
       }
       models = {
-        type            = "JSON"
+        # CODE, not JSON: meshStack fills a JSON input through a form, which a static value has none of.
+        type            = "CODE"
         display_name    = "Approved Models"
         description     = "Models application teams may choose from, with the version deployed."
         assignment_type = "STATIC"
         argument        = jsonencode(jsonencode(var.azure_models))
-        json_schema = jsonencode({
-          type = "object"
-          additionalProperties = {
-            type     = "object"
-            required = ["version"]
-            properties = {
-              format  = { type = "string" }
-              version = { type = "string" }
-            }
-          }
-        })
       }
       deployment_sku = {
         type            = "STRING"
