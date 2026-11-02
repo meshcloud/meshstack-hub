@@ -15,13 +15,14 @@
       [
         awscli2
         (azure-cli.withExtensions [ azure-cli.extensions.account ])
-        nodejs
       ];
 
     # core packages required in CI and not preinstalled in github actions
     core_packages = pkgs: unstable_pkgs:
       with pkgs;
       [
+        git
+        nodejs
         unstable_pkgs.opentofu
         tflint
         tfupdate

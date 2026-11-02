@@ -1,3 +1,4 @@
+# Run tasks inside `nix develop`, which provides node, git and task.
 version: '3'
 
 vars:
