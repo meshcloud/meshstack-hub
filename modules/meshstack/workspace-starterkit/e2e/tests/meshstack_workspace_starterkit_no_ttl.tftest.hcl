@@ -1,6 +1,5 @@
 # Ordering without a TTL needs no second live workspace: what is worth checking is that the order
-# carries no TTL input at all, which a plan already shows. That the building block then writes no
-# expiry date is covered by the mocked run.
+# carries no TTL input at all, which a plan already shows.
 
 variables {
   ttl_optional = true
