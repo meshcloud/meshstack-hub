@@ -16,9 +16,9 @@ re-implements its logic. meshcloud maintains two public ones:
   foundation behind shared meshStack trials
 
 **CI in this repo is linting only.** It runs `pre-commit run --all-files` (`terraform-docs`,
-`terraform fmt`, trailing whitespace, `ci/validate_modules.sh`) and the scorecard — never `plan` or
-`apply`. Only an [e2e run](.agents/skills/e2e-test/SKILL.md#verify-before-merging) shows a module
-works.
+`terraform fmt`, trailing whitespace, `ci/validate_modules.sh`) and the scorecard, a report in a PR
+comment — never `plan` or `apply`. Only an
+[e2e run](.agents/skills/e2e-test/SKILL.md#verify-before-merging) shows a module works.
 
 ## Domain concepts
 
