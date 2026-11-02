@@ -69,10 +69,11 @@ resource "meshstack_building_block" "platform" {
       starterkit_repo_clone_addr = { value = jsonencode(var.starterkit_repo_clone_addr) }
 
       tags = { value = jsonencode(jsonencode({
-        landingzone           = var.tags.landingzone
-        building_block        = var.tags.building_block
-        starterkit_project    = var.tags.starterkit_project
-        project_owner_tag_key = var.tags.project_owner_tag_key
+        landingzone               = var.tags.landingzone
+        building_block            = var.tags.building_block
+        starterkit_building_block = var.tags.starterkit_building_block
+        starterkit_project        = var.tags.starterkit_project
+        project_owner_tag_key     = var.tags.project_owner_tag_key
       })) }
       stages            = { value = jsonencode(jsonencode(var.stages)) }
       quota_definitions = { value = jsonencode(jsonencode(var.quota_definitions)) }

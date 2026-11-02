@@ -142,11 +142,12 @@ resource "meshstack_building_block" "this" {
       starterkit_repo_clone_addr = { value = jsonencode("https://github.com/likvid-bank/starterkit-template-stackit-ai-summarizer.git") }
 
       tags = { value = jsonencode(jsonencode({
-        project               = var.test_context.meshstack.tag_schema.mandatory.project
-        starterkit_project    = local.starterkit_project_tags
-        landingzone           = local.landingzone_tags
-        building_block        = {}
-        project_owner_tag_key = ""
+        project                   = var.test_context.meshstack.tag_schema.mandatory.project
+        starterkit_project        = local.starterkit_project_tags
+        landingzone               = local.landingzone_tags
+        building_block            = {}
+        starterkit_building_block = {}
+        project_owner_tag_key     = ""
       })) }
       stages = { value = jsonencode(jsonencode({
         dev = { landingzone = { environment = ["dev"] }, project = { environment = ["dev"] } }

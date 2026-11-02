@@ -334,7 +334,7 @@ resource "meshstack_building_block_definition" "this" {
 
       tags = {
         display_name           = "Tags"
-        description            = "Tag maps `landingzone`, `building_block` and `starterkit_project`, and `project_owner_tag_key`, as the STACKIT Kubernetes Platform takes them."
+        description            = "Tag maps `landingzone`, `building_block`, `starterkit_building_block` and `starterkit_project`, and `project_owner_tag_key`, as the STACKIT Kubernetes Platform takes them."
         type                   = "CODE"
         assignment_type        = "USER_INPUT"
         updateable_by_consumer = true

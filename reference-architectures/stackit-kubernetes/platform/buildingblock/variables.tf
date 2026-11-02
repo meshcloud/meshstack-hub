@@ -144,10 +144,11 @@ variable "starterkit_repo_clone_addr" {
 
 variable "tags" {
   type = object({
-    landingzone           = map(list(string))
-    building_block        = map(list(string))
-    starterkit_project    = map(list(string))
-    project_owner_tag_key = optional(string, "")
+    landingzone               = map(list(string))
+    building_block            = map(list(string))
+    starterkit_building_block = optional(map(list(string)), {})
+    starterkit_project        = map(list(string))
+    project_owner_tag_key     = optional(string, "")
   })
   nullable    = false
   description = "Tags of the STACKIT Kubernetes Platform, see its `tags` input."

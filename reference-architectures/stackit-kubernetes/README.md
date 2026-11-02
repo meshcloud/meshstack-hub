@@ -123,7 +123,7 @@ The main inputs:
 | Landing Zone Variant | `default` or `networked` (needs hub-and-spoke networking on the landing zone) |
 | Platform Identifier | Name of the meshStack platform; the project, cluster, Git instance, registry and DNS zone are named after it |
 | Stages | One landing zone per key, with stage-specific tags and optional quotas; `dev` and `prod` by default |
-| Tags | Tags for landing zones, definitions, the platform's project and the starter kit's projects |
+| Tags | Tags for landing zones, the definitions platform engineers order (`building_block`) and those application teams order (`starterkit_building_block`), the platform's project and the starter kit's projects |
 | DNS Parent Domain | Domain the DNS zone is created under, `stackit.run` by default |
 | AI Model | Model applications default to, `openai/gpt-oss-120b` by default |
 | Starter Kit Image Name, Template Repository | What the starter kit builds, `ai-summarizer` from the likvid-bank template by default |

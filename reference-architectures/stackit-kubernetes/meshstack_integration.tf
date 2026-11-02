@@ -318,16 +318,17 @@ resource "meshstack_building_block_definition" "this" {
 
       tags = {
         display_name           = "Tags"
-        description            = "Tag maps shared by every stage: `landingzone`, `building_block`, `project` (the platform's project), `starterkit_project` (the starter kit's projects), and `project_owner_tag_key` (e.g. `projectOwner`). Stage-specific tags go in Stages."
+        description            = "Tag maps shared by every stage: `landingzone`, `building_block` (platform definitions), `starterkit_building_block` (app team definitions), `project`, `starterkit_project` (the starter kit's projects), `project_owner_tag_key` (e.g. `projectOwner`)."
         type                   = "CODE"
         assignment_type        = "USER_INPUT"
         updateable_by_consumer = true
         default_value = jsonencode(jsonencode({
-          landingzone           = {}
-          building_block        = {}
-          project               = {}
-          starterkit_project    = {}
-          project_owner_tag_key = ""
+          landingzone               = {}
+          building_block            = {}
+          starterkit_building_block = {}
+          project                   = {}
+          starterkit_project        = {}
+          project_owner_tag_key     = ""
         }))
       }
 

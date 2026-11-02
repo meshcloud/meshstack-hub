@@ -57,14 +57,15 @@ variable "project_identifier" {
 
 variable "tags" {
   type = object({
-    landingzone           = map(list(string))
-    building_block        = map(list(string))
-    project               = map(list(string))
-    starterkit_project    = map(list(string))
-    project_owner_tag_key = optional(string, "")
+    landingzone               = map(list(string))
+    building_block            = map(list(string))
+    starterkit_building_block = optional(map(list(string)), {})
+    project                   = map(list(string))
+    starterkit_project        = map(list(string))
+    project_owner_tag_key     = optional(string, "")
   })
   nullable    = false
-  description = "Tags shared by every stage: `landingzone` on the SKE landing zones, `building_block` on the nested definitions, `project` on the platform's meshProject and `starterkit_project` on the starter kit's meshProjects. `project_owner_tag_key` names the tag on those meshProjects that gets the creator's display name, e.g. `projectOwner`."
+  description = "Tags shared by every stage: `landingzone` on the SKE landing zones, `building_block` on the definitions platform engineers order, `starterkit_building_block` on those application teams order (Git repository, Forgejo connector, SKE starterkit), `project` on the platform's meshProject and `starterkit_project` on the starter kit's meshProjects. `project_owner_tag_key` names the tag on those meshProjects that gets the creator's display name, e.g. `projectOwner`."
 }
 
 variable "stages" {
