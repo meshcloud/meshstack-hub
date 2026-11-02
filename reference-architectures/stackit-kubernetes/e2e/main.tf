@@ -149,7 +149,7 @@ resource "meshstack_building_block" "this" {
         project_owner_tag_key = ""
       })) }
       stages = { value = jsonencode(jsonencode({
-        dev = { landingzone = {}, project = {} }
+        dev = { landingzone = { environment = ["dev"] }, project = { environment = ["dev"] } }
       })) }
     }
   }

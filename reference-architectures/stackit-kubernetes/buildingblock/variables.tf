@@ -77,7 +77,7 @@ variable "stages" {
     })))
   }))
   nullable    = false
-  description = "Stages by name, each with one landing zone and one starter kit meshProject and namespace. Their `landingzone` and `project` tags are merged over `tags.landingzone`, `tags.starterkit_project` and the `environment` tag of the key. `quotas` sets the landing zone's quotas; null keeps the defaults of the `kubernetes` hub module, the larger set for `prod`."
+  description = "Stages by name, each with one landing zone and one starter kit meshProject and namespace. Their `landingzone` and `project` tags are merged over `tags.landingzone` and `tags.starterkit_project`. `quotas` sets the landing zone's quotas; null keeps the defaults of the `kubernetes` hub module, the larger set for `prod`."
 }
 
 variable "quota_definitions" {

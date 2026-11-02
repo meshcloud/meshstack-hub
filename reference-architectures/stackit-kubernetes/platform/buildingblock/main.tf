@@ -17,13 +17,13 @@ locals {
   landing_zones = {
     for stage, cfg in var.stages : stage => {
       name   = lookup(local.kubernetes_platform_imports.landingzone_names, stage, "${var.platform_identifier}-namespace-${stage}")
-      tags   = merge({ environment = [stage] }, cfg.landingzone)
+      tags   = cfg.landingzone
       quotas = cfg.quotas
     }
   }
 
   stage_project_tags = {
-    for stage, cfg in var.stages : stage => merge(var.tags.starterkit_project, { environment = [stage] }, cfg.project)
+    for stage, cfg in var.stages : stage => merge(var.tags.starterkit_project, cfg.project)
   }
 
   secrets_manager_instance_id = terraform_data.secrets_manager_instance_id.output

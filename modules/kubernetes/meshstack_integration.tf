@@ -129,8 +129,8 @@ variable "landing_zones" {
   EOT
 
   default = {
-    dev  = { tags = { environment = ["dev"] } }
-    prod = { tags = { environment = ["prod"] } }
+    dev  = {}
+    prod = {}
   }
 }
 
