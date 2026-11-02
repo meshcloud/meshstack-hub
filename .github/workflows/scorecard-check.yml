@@ -20,9 +20,13 @@ jobs:
         with:
           fetch-depth: 0  # required for three-dot git diff to find the merge base
 
-      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7.0.0
+      - uses: nixbuild/nix-quick-install-action@2c9db80fb984ceb1bcaa77cdda3fdf8cfba92035 # v34
         with:
-          node-version: "22"
+          nix_on_tmpfs: true
+
+      - uses: rrbutani/use-nix-shell-action@59a52b2b9bbfe3cc0e7deb8f9059abe37a439edf # v1.1.0
+        with:
+          devShell: .#github_actions
 
       - name: Run scorecard on changed modules
         run: |
