@@ -157,9 +157,27 @@ variable "stages" {
   type = map(object({
     landingzone = optional(map(list(string)), {})
     project     = optional(map(list(string)), {})
+    quotas = optional(list(object({
+      key   = string
+      value = number
+    })))
   }))
   nullable    = false
   description = "Stages of the STACKIT Kubernetes Platform, see its `stages` input."
+}
+
+variable "quota_definitions" {
+  type = list(object({
+    quota_key               = string
+    label                   = string
+    description             = string
+    unit                    = string
+    min_value               = number
+    max_value               = number
+    auto_approval_threshold = number
+  }))
+  default     = null
+  description = "Quotas the meshPlatform offers, with their limits; null keeps the defaults of the `kubernetes` hub module. CPU in millicores (m), memory in mebibytes (Mi)."
 }
 
 variable "approval_policies" {

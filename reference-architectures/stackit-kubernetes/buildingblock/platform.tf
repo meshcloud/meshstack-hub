@@ -74,7 +74,8 @@ resource "meshstack_building_block" "platform" {
         starterkit_project    = var.tags.starterkit_project
         project_owner_tag_key = var.tags.project_owner_tag_key
       })) }
-      stages = { value = jsonencode(jsonencode(var.stages)) }
+      stages            = { value = jsonencode(jsonencode(var.stages)) }
+      quota_definitions = { value = jsonencode(jsonencode(var.quota_definitions)) }
       }, length(local.platform_imports) == 0 ? {} : {
       imports = { value = jsonencode(jsonencode(local.platform_imports)) }
       }, {

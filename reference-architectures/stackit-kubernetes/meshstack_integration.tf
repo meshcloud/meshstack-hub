@@ -262,6 +262,15 @@ resource "meshstack_building_block_definition" "this" {
         updateable_by_consumer = true
       }
 
+      quota_definitions = {
+        display_name           = "Quota Definitions"
+        description            = "HCL list of the quotas the meshPlatform offers (`quota_key`, `label`, `description`, `unit`, `min_value`, `max_value`, `auto_approval_threshold`). Empty keeps the defaults."
+        type                   = "CODE"
+        assignment_type        = "USER_INPUT"
+        is_optional            = true
+        updateable_by_consumer = true
+      }
+
       hub = {
         display_name    = "Hub"
         description     = "HCL object with `git_ref` (meshstack-hub reference to source nested modules from) and `bbd_draft` (nested definitions' draft state)."
@@ -324,7 +333,7 @@ resource "meshstack_building_block_definition" "this" {
 
       stages = {
         display_name           = "Stages"
-        description            = "Stages this platform offers, one landing zone per key. Each value holds the tags that differ between stages: `landingzone` for its landing zone, `project` for the starter kit's meshProjects. A tag a policy pairs across the two goes here on both sides."
+        description            = "Stages, one landing zone per key, each with its own tags: `landingzone` for its landing zone, `project` for the starter kit's meshProjects (a tag a policy pairs goes on both), and optional landing zone `quotas` (`[{key, value}]`)."
         type                   = "CODE"
         assignment_type        = "USER_INPUT"
         updateable_by_consumer = true

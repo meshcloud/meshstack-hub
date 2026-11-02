@@ -105,6 +105,7 @@ module "kubernetes_integration" {
   metering_token         = ephemeral.vault_kv_secret_v2.kubernetes_platform.data["metering-token"]
   tokens_version         = tostring(local.kubernetes_platform_vault_secret.secret_hash)
   landing_zones          = local.landing_zones
+  quota_definitions      = var.quota_definitions
 
   approval_policies = var.approval_policies
 

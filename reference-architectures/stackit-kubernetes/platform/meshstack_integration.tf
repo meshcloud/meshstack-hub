@@ -348,6 +348,15 @@ resource "meshstack_building_block_definition" "this" {
         updateable_by_consumer = true
       }
 
+      quota_definitions = {
+        display_name           = "Quota Definitions"
+        description            = "Quotas the meshPlatform offers, as the STACKIT Kubernetes Platform takes them."
+        type                   = "CODE"
+        assignment_type        = "USER_INPUT"
+        is_optional            = true
+        updateable_by_consumer = true
+      }
+
       hub = {
         display_name    = "Hub"
         description     = "HCL object with `git_ref` (meshstack-hub reference to source nested modules from) and `bbd_draft` (nested definitions' draft state)."

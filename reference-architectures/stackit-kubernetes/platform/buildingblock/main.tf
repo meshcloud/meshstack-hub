@@ -16,8 +16,9 @@ locals {
 
   landing_zones = {
     for stage, cfg in var.stages : stage => {
-      name = lookup(local.kubernetes_platform_imports.landingzone_names, stage, "${var.platform_identifier}-namespace-${stage}")
-      tags = merge({ environment = [stage] }, cfg.landingzone)
+      name   = lookup(local.kubernetes_platform_imports.landingzone_names, stage, "${var.platform_identifier}-namespace-${stage}")
+      tags   = merge({ environment = [stage] }, cfg.landingzone)
+      quotas = cfg.quotas
     }
   }
 

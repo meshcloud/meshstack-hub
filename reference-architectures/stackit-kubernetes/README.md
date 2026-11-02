@@ -122,7 +122,7 @@ The main inputs:
 | STACKIT Landing Zone | Platform, landing zones and the service account and federation definitions of the landing zone |
 | Landing Zone Variant | `default` or `networked` (needs hub-and-spoke networking on the landing zone) |
 | Platform Identifier | Name of the meshStack platform; the project, cluster, Git instance, registry and DNS zone are named after it |
-| Stages | One landing zone per key, with stage-specific tags; `dev` and `prod` by default |
+| Stages | One landing zone per key, with stage-specific tags and optional quotas; `dev` and `prod` by default |
 | Tags | Tags for landing zones, definitions, the platform's project and the starter kit's projects |
 | DNS Parent Domain | Domain the DNS zone is created under, `stackit.run` by default |
 | AI Model | Model applications default to, `openai/gpt-oss-120b` by default |
@@ -135,7 +135,7 @@ A tag that a tag policy pairs between a landing zone and a project belongs on bo
 otherwise no tenant can be created on the landing zone.
 
 Optional overrides: Cluster Name, ClusterIssuer Email, DNS Subdomain, Project Identifier, Payment
-Method Identifier, Use Global Location. The building block outputs a link to the STACKIT project
+Method Identifier, Use Global Location, Quota Definitions (the quotas the meshPlatform offers). The building block outputs a link to the STACKIT project
 and the summary of Platform Services.
 
 ### Phase 2: link the Harbor robot

@@ -71,9 +71,27 @@ variable "stages" {
   type = map(object({
     landingzone = optional(map(list(string)), {})
     project     = optional(map(list(string)), {})
+    quotas = optional(list(object({
+      key   = string
+      value = number
+    })))
   }))
   nullable    = false
-  description = "Stages by name, each with one landing zone and one starter kit meshProject and namespace. Their `landingzone` and `project` tags are merged over `tags.landingzone`, `tags.starterkit_project` and the `environment` tag of the key."
+  description = "Stages by name, each with one landing zone and one starter kit meshProject and namespace. Their `landingzone` and `project` tags are merged over `tags.landingzone`, `tags.starterkit_project` and the `environment` tag of the key. `quotas` sets the landing zone's quotas; null keeps the defaults of the `kubernetes` hub module, the larger set for `prod`."
+}
+
+variable "quota_definitions" {
+  type = list(object({
+    quota_key               = string
+    label                   = string
+    description             = string
+    unit                    = string
+    min_value               = number
+    max_value               = number
+    auto_approval_threshold = number
+  }))
+  default     = null
+  description = "Quotas the meshPlatform offers, with their limits; null keeps the defaults of the `kubernetes` hub module. CPU in millicores (m), memory in mebibytes (Mi)."
 }
 
 variable "creator" {
