@@ -1,5 +1,5 @@
 ---
-description: Conventions for meshstack-hub reference architectures under reference-architectures/ — folder structure, README.md front-matter (name, description, cloudProviders, buildingBlocks), required body sections, logo placement, and the checklist for new reference architectures.
+description: Conventions for meshstack-hub reference architectures under reference-architectures/ — folder structure, README.md front-matter (name, description, cloudProviders, buildingBlocks), required body sections, logo placement, tests, the scorecard, and the checklist for new reference architectures.
 ---
 
 # Reference Architectures
@@ -78,5 +78,24 @@ getting-started steps, and shared responsibility matrix.
 
 An importable architecture (`meshstack_integration.tf` + `buildingblock/`) follows the same rules as
 a module: [meshstack-integration.md](meshstack-integration.md) and
-[meshstack-resources.md](meshstack-resources.md). The scorecard only scans `modules/`, so nothing
-here checks them for you.
+[meshstack-resources.md](meshstack-resources.md).
+
+<!-- scorecard-checks: ref_arch_e2e -->
+## Testing
+
+An importable architecture has an `e2e/main.tf` with its tests under `e2e/tests/`: the smoke tests
+discover it by that file and run it like a module e2e. The rules of the
+[`e2e-test` skill](../skills/e2e-test/SKILL.md#where-terraform-tests-live) apply: every test runs
+against real infrastructure, and no `*.tftest.hcl` lives outside `e2e/`.
+
+## Scorecard
+
+```sh
+node tools/scorecard/scorecard.mjs --ref-archs            # every reference architecture
+node tools/scorecard/scorecard.mjs --ref-arch=<name> [--fix]
+node tools/scorecard/scorecard.mjs --changed-since=origin/main  # what the branch changed, as in the PR comment
+```
+
+The scorecard checks an architecture's tests only. For the modules it includes — those its code
+sources or registers and those its front-matter lists — it shows a one-line summary of their module
+scorecard; fix a finding there with `--module=<provider>/<service>`.

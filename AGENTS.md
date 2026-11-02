@@ -40,7 +40,7 @@ modules/<provider>/<service>/    backplane/, buildingblock/, meshstack_integrati
 reference-architectures/<cloud>-<capability>/
 .agents/references/, .agents/skills/   agent instructions — authoritative, this file only routes
 skills/meshstack-hub/            the skill for those who use hub modules
-tools/scorecard/                 module maturity checks
+tools/scorecard/                 module and reference architecture maturity checks
 website/                         public/assets/ is generated; never add files there by hand
 ```
 
@@ -76,8 +76,8 @@ the docs.
   [stackit](.agents/references/stackit-backplane.md)
 - `modules/*/*/e2e/**` and every `*.tftest.hcl` — `e2e/` is the only place one runs →
   [`e2e-test` skill](.agents/skills/e2e-test/SKILL.md)
-- `reference-architectures/**` →
-  [reference-architectures.md](.agents/references/reference-architectures.md)
+- `reference-architectures/**` — layout, README.md front-matter, tests, the scorecard's
+  `--ref-archs` mode → [reference-architectures.md](.agents/references/reference-architectures.md)
 - `**/*.dot` — Graphviz source plus committed SVG, rendered by `task diagrams` →
   [diagrams.md](.agents/references/diagrams.md)
 
@@ -89,7 +89,7 @@ the docs.
 - Check a module you touched, and fix the module rather than the check:
   ```sh
   node tools/scorecard/scorecard.mjs --module=<provider>/<service> [--fix]
-  node tools/scorecard/scorecard.mjs --changed-since=origin/main   # every module the branch changed
+  node tools/scorecard/scorecard.mjs --changed-since=origin/main   # every module and reference architecture the branch changed
   ```
 - Prototyping from a foundation repository may point a `source` at a local path
   (`../../../meshstack-hub/modules/<provider>/<service>/buildingblock`). Never commit that — switch
