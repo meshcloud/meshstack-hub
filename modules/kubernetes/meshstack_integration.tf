@@ -301,11 +301,13 @@ locals {
     { key = "persistentvolumeclaims", value = 4 },
   ]
 
+  stage_names = { dev = "Development", prod = "Production" }
+
   landing_zones = {
     for key, lz in var.landing_zones : key => {
       name         = coalesce(lz.name, "${var.meshstack.platform_identifier}-namespace-${key}")
-      display_name = coalesce(lz.display_name, "Kubernetes Namespace – Stage ${title(key)}")
-      description  = coalesce(lz.description, "Landing zone for ${key} workloads.")
+      display_name = coalesce(lz.display_name, "Kubernetes Namespace – ${lookup(local.stage_names, key, title(key))}")
+      description  = coalesce(lz.description, "Landing zone for ${lower(lookup(local.stage_names, key, key))} workloads.")
       tags         = lz.tags
       quotas       = coalesce(lz.quotas, key == "prod" ? local.prod_quotas : local.default_quotas)
     }

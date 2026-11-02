@@ -14,11 +14,15 @@ locals {
   create_location = !var.use_global_location && local.kubernetes_platform_imports.location_name == null
   location_name   = local.create_location ? meshstack_location.this.metadata.name : coalesce(local.kubernetes_platform_imports.location_name, "global")
 
+  stage_names = { dev = "Development", prod = "Production" }
+
   landing_zones = {
     for stage, cfg in var.stages : stage => {
-      name   = lookup(local.kubernetes_platform_imports.landingzone_names, stage, "${var.platform_identifier}-namespace-${stage}")
-      tags   = cfg.landingzone
-      quotas = cfg.quotas
+      name         = lookup(local.kubernetes_platform_imports.landingzone_names, stage, "${var.platform_identifier}-namespace-${stage}")
+      display_name = "SKE Kubernetes Namespace – ${lookup(local.stage_names, stage, title(stage))}"
+      description  = "Landing zone for ${lower(lookup(local.stage_names, stage, stage))} workloads."
+      tags         = cfg.landingzone
+      quotas       = cfg.quotas
     }
   }
 
