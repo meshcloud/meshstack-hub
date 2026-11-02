@@ -10,14 +10,20 @@
  * - Azure Backplane: applies only to Azure modules with a backplane/
  * - Testing: applies to all modules (aspirational)
  *
- * Usage: node tools/scorecard/scorecard.mjs [--category=<name>] [--provider=<name>]
+ * Usage: node tools/scorecard/scorecard.mjs [--category=<name>] [--provider=<name>] [--module=<id>] [--fix] [--output=<file>]
+ *        node tools/scorecard/scorecard.mjs --changed-since=<git ref>   modules changed since the ref
+ *
+ * It exits non-zero only on a script error, never on failing checks.
  */
 
-import { readFileSync, existsSync, readdirSync, statSync } from "fs";
-import { basename, dirname, join, relative } from "path";
+import { execFileSync } from "node:child_process";
+import { readFileSync, writeFileSync, existsSync, readdirSync, statSync } from "node:fs";
+import { basename, dirname, join, relative } from "node:path";
 
 const ROOT = new URL("../../", import.meta.url).pathname.replace(/\/$/, "");
 const MODULES_DIR = join(ROOT, "modules");
+
+const byCodeUnits = (a, b) => (a < b ? -1 : Number(a > b));
 
 // A building block definition's terraform_version selects a HashiCorp Terraform binary up to
 // 1.5.5 and an OpenTofu one above it. 1.10.0 is where OpenTofu started short-circuiting && and
@@ -2079,91 +2085,115 @@ function generateFixPrompt(mod, failingChecks, checkToRef) {
   return lines.join("\n");
 }
 
-// ─── Main ───────────────────────────────────────────────────────────────────
+// ─── Scoring ────────────────────────────────────────────────────────────────
 
-function main() {
-  const args = process.argv.slice(2);
-  const filterCategory = args.find((a) => a.startsWith("--category="))?.split("=")[1];
-  const filterProvider = args.find((a) => a.startsWith("--provider="))?.split("=")[1];
-  const filterModules = args.filter((a) => a.startsWith("--module=")).map((a) => a.split("=")[1]);
-  const fixMode = args.includes("--fix");
-
-  const { checkToRef, errors: refErrors } = buildCheckToRef();
-  if (refErrors.length > 0) {
-    process.stderr.write("❌ scorecard-checks marker validation failed:\n");
-    for (const e of refErrors) process.stderr.write(`  • ${e}\n`);
+function selectModules(modules, ids) {
+  if (ids.length === 0) return modules;
+  for (const id of ids.filter((id) => !modules.some((m) => m.id === id))) {
+    process.stderr.write(`Warning: module "${id}" not found — skipping.\n`);
+  }
+  const selected = modules.filter((m) => ids.includes(m.id));
+  if (selected.length === 0) {
+    process.stderr.write(`Error: none of the specified modules were found. Use <provider>/<service> format.\n`);
     process.exit(1);
   }
+  return selected;
+}
 
-  let modules = discoverModules();
-  if (filterProvider) {
-    modules = modules.filter((m) => m.provider === filterProvider);
-  }
-  if (filterModules.length > 0) {
-    const unknown = filterModules.filter((id) => !modules.some((m) => m.id === id));
-    for (const id of unknown) {
-      process.stderr.write(`Warning: module "${id}" not found — skipping.\n`);
-    }
-    modules = modules.filter((m) => filterModules.includes(m.id));
-    if (modules.length === 0) {
-      process.stderr.write(`Error: none of the specified modules were found. Use <provider>/<service> format.\n`);
-      process.exit(1);
-    }
-  }
+function scoreModule(mod, filterCategory) {
+  const categoryResults = {};
 
-  const results = [];
+  // Always compute all categories so the per-module summary is always complete.
+  // The filterCategory only controls which sections are *rendered*.
+  for (const [catId, cat] of Object.entries(CATEGORIES)) {
+    const applicable = cat.appliesTo(mod);
+    const catDetectors = detectors.filter((d) => d.category === catId);
+    const checks = catDetectors.map((d) => ({
+      ...d,
+      result: applicable ? d.fn(mod) : { pass: null, detail: "not applicable" },
+    }));
 
-  for (const mod of modules) {
-    const categoryResults = {};
+    const applicableChecks = checks.filter((c) => c.result.pass !== null);
+    const passed = applicableChecks.filter((c) => c.result.pass).length;
+    const total = applicableChecks.length;
+    const score = total > 0 ? Math.round((passed / total) * 100) : null;
 
-    // Always compute all categories so the per-module summary is always complete.
-    // The filterCategory only controls which sections are *rendered*.
-    for (const [catId, cat] of Object.entries(CATEGORIES)) {
-      const applicable = cat.appliesTo(mod);
-      const catDetectors = detectors.filter((d) => d.category === catId);
-      const checks = catDetectors.map((d) => ({
-        ...d,
-        result: applicable ? d.fn(mod) : { pass: null, detail: "not applicable" },
-      }));
-
-      const applicableChecks = checks.filter((c) => c.result.pass !== null);
-      const passed = applicableChecks.filter((c) => c.result.pass).length;
-      const total = applicableChecks.length;
-      const score = total > 0 ? Math.round((passed / total) * 100) : null;
-
-      categoryResults[catId] = { checks, passed, total, score, applicable };
-    }
-
-    // For overall score, only include categories matching the active filter (if any).
-    const allApplicableChecks = Object.entries(categoryResults)
-      .filter(([catId]) => !filterCategory || catId === filterCategory)
-      .flatMap(([, cr]) => cr.checks)
-      .filter((c) => c.result.pass !== null);
-    const totalPassed = allApplicableChecks.filter((c) => c.result.pass).length;
-    const totalChecks = allApplicableChecks.length;
-    const overallScore = totalChecks > 0 ? Math.round((totalPassed / totalChecks) * 100) : null;
-
-    results.push({ mod, categoryResults, passed: totalPassed, total: totalChecks, score: overallScore });
+    categoryResults[catId] = { checks, passed, total, score, applicable };
   }
 
-  // ─── Fix mode ───────────────────────────────────────────────────────────
-  if (fixMode) {
-    for (const r of results) {
-      const failingChecks = Object.values(r.categoryResults)
-        .filter((cr) => cr.applicable)
-        .flatMap((cr) => cr.checks)
-        .filter((c) => c.result.pass === false);
+  // For overall score, only include categories matching the active filter (if any).
+  const allApplicableChecks = Object.entries(categoryResults)
+    .filter(([catId]) => !filterCategory || catId === filterCategory)
+    .flatMap(([, cr]) => cr.checks)
+    .filter((c) => c.result.pass !== null);
+  const passed = allApplicableChecks.filter((c) => c.result.pass).length;
+  const total = allApplicableChecks.length;
+  const score = total > 0 ? Math.round((passed / total) * 100) : null;
 
-      if (failingChecks.length === 0) {
-        console.log(`✅ \`${r.mod.id}\` has no failing checks.`);
-      } else {
-        console.log(generateFixPrompt(r.mod, failingChecks, checkToRef));
-      }
-    }
-    return;
+  return { mod, categoryResults, passed, total, score };
+}
+
+// ─── Main ───────────────────────────────────────────────────────────────────
+
+const VALUE_FLAGS = ["--category", "--provider", "--module", "--changed-since", "--output"];
+const SWITCHES = new Set(["--fix"]);
+
+function fail(message) {
+  process.stderr.write(`Error: ${message}\n`);
+  process.exit(1);
+}
+
+function parseArgs(argv) {
+  const values = Object.fromEntries(VALUE_FLAGS.map((flag) => [flag, []]));
+  const switches = new Set();
+  for (const arg of argv) {
+    const eq = arg.indexOf("=");
+    const flag = eq < 0 ? arg : arg.slice(0, eq);
+    if (eq >= 0 && VALUE_FLAGS.includes(flag)) values[flag].push(arg.slice(eq + 1));
+    else if (eq < 0 && SWITCHES.has(flag)) switches.add(flag);
+    else fail(`unknown argument "${arg}"`);
   }
+  const opts = {
+    category: values["--category"].at(-1),
+    provider: values["--provider"].at(-1),
+    modules: values["--module"],
+    changedSince: values["--changed-since"].at(-1),
+    output: values["--output"].at(-1),
+    fix: switches.has("--fix"),
+  };
+  if (opts.changedSince !== undefined && opts.modules.length > 0) {
+    fail("--changed-since selects its own targets; drop --module");
+  }
+  return opts;
+}
 
-  // ─── Render Report ──────────────────────────────────────────────────────
+function git(...args) {
+  try {
+    return execFileSync("git", args, { cwd: ROOT, encoding: "utf-8" }); // NOSONAR: runs in the nix dev shell, which controls PATH
+  } catch {
+    fail(`git ${args.join(" ")} failed`);
+  }
+}
+
+function changedIds(baseRef) {
+  const paths = git("diff", "--name-only", `${baseRef}...HEAD`).split("\n");
+  // Provider-level files such as modules/<provider>/logo.png belong to no module.
+  return [...new Set(paths.map((p) => p.match(/^modules\/([^/]+\/[^/]+)\//)?.[1]).filter(Boolean))].sort(byCodeUnits);
+}
+
+function renderFixPrompts(results, checkToRef) {
+  return results.map((r) => {
+    const failingChecks = Object.values(r.categoryResults)
+      .filter((cr) => cr.applicable)
+      .flatMap((cr) => cr.checks)
+      .filter((c) => c.result.pass === false);
+    return failingChecks.length === 0
+      ? `✅ \`${r.mod.id}\` has no failing checks.`
+      : generateFixPrompt(r.mod, failingChecks, checkToRef);
+  });
+}
+
+function renderReport(modules, results, filterCategory) {
   const lines = [];
   lines.push("# 📊 meshstack-hub Module Scorecard");
   lines.push("");
@@ -2317,7 +2347,48 @@ function main() {
     lines.push("");
   }
 
-  console.log(lines.join("\n"));
+  return lines;
+}
+
+function selectChanged(baseRef, modules, lines) {
+  const changed = changedIds(baseRef);
+  if (changed.length === 0) {
+    lines.push(`_No module changes detected relative to \`${baseRef}\`._`);
+    return [];
+  }
+  const head = git("rev-parse", "HEAD").trim();
+  lines.push(`> Scorecard run on commit \`${head}\` relative to \`${baseRef}\``, "");
+  for (const id of changed.filter((id) => !modules.some((m) => m.id === id))) {
+    lines.push(`### \`${id}\``, "", "_Not a scored module (deleted?)._", "");
+  }
+  return modules.filter((m) => changed.includes(m.id));
+}
+
+function main() {
+  const opts = parseArgs(process.argv.slice(2));
+
+  const { checkToRef, errors: refErrors } = buildCheckToRef();
+  if (refErrors.length > 0) {
+    process.stderr.write("❌ scorecard-checks marker validation failed:\n");
+    for (const e of refErrors) process.stderr.write(`  • ${e}\n`);
+    process.exit(1);
+  }
+
+  const modules = discoverModules().filter((m) => !opts.provider || m.provider === opts.provider);
+  const lines = [];
+  const targets = opts.changedSince === undefined
+    ? selectModules(modules, opts.modules)
+    : selectChanged(opts.changedSince, modules, lines);
+
+  if (targets.length > 0) {
+    if (opts.changedSince !== undefined) process.stderr.write(`Scoring ${targets.map((t) => t.id).join(", ")}\n`);
+    const results = targets.map((mod) => scoreModule(mod, opts.category));
+    lines.push(...(opts.fix ? renderFixPrompts(results, checkToRef) : renderReport(targets, results, opts.category)));
+  }
+
+  const report = lines.join("\n") + "\n";
+  if (opts.output) writeFileSync(opts.output, report);
+  else process.stdout.write(report);
 }
 
 main();

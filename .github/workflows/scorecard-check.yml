@@ -30,8 +30,8 @@ jobs:
 
       - name: Run scorecard on changed modules
         run: |
-          bash tools/scorecard/pr-scorecard.sh \
-            --base="origin/${{ github.base_ref }}" \
+          node tools/scorecard/scorecard.mjs \
+            --changed-since="origin/${{ github.base_ref }}" \
             --output="$GITHUB_WORKSPACE/scorecard_report.md"
 
       - name: Post or update PR comment
