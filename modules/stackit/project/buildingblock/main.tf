@@ -11,6 +11,10 @@ locals {
     }
   ]
 
+  users_to_check = var.organization_id == "" ? [] : [for user in local.users_with_stackit_roles : user.email if length(setsubtract(user.roles, ["owner"])) > 0]
+  memberships    = length(local.users_to_check) > 0 ? data.external.stackit_users.result : {}
+  unknown_users  = [for email in local.users_to_check : email if local.memberships[email] == "unknown"]
+
   user_role_assignments = {
     for assignment in flatten([
       for user in local.users_with_stackit_roles : [
@@ -18,9 +22,26 @@ locals {
           key          = "${user.email}:${stackit_role}"
           subject      = user.email
           stackit_role = stackit_role
-        }
+        } if stackit_role == "owner" || !contains(local.unknown_users, user.email)
       ]
     ]) : assignment.key => assignment
+  }
+}
+
+# The project does not exist while planning the run that creates it, so users are looked up on the
+# organization. STACKIT accepts `owner` for a user without an account as an invitation, so that role
+# is granted without regard to the lookup.
+data "external" "stackit_users" {
+  lifecycle {
+    enabled = length(local.users_to_check) > 0
+  }
+
+  program = ["bash", "${path.module}/list-unknown-users.sh"]
+
+  query = {
+    resource_type = "organization"
+    resource_id   = var.organization_id
+    emails        = join(",", local.users_to_check)
   }
 }
 

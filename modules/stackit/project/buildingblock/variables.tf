@@ -62,3 +62,10 @@ variable "role_mapping" {
   nullable = false
 }
 
+
+variable "organization_id" {
+  type        = string
+  nullable    = false
+  default     = ""
+  description = "STACKIT organization where project users are looked up before their roles are granted; users STACKIT does not know are skipped and listed in the summary. Needs `iam.member.get` on the organization. Empty grants every user's roles without a lookup."
+}

@@ -43,6 +43,7 @@ provider "stackit" {
 | Name | Version |
 |------|---------|
 | <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.11.0 |
+| <a name="requirement_external"></a> [external](#requirement\_external) | >= 2.3.0, < 3.0.0 |
 | <a name="requirement_meshstack"></a> [meshstack](#requirement\_meshstack) | >= 0.27.0 |
 | <a name="requirement_stackit"></a> [stackit](#requirement\_stackit) | >= 0.98.0, < 1.0.0 |
 
@@ -56,6 +57,7 @@ No modules.
 |------|------|
 | [stackit_authorization_project_role_assignment.role_assignments](https://registry.terraform.io/providers/stackitcloud/stackit/latest/docs/resources/authorization_project_role_assignment) | resource |
 | [stackit_resourcemanager_project.project](https://registry.terraform.io/providers/stackitcloud/stackit/latest/docs/resources/resourcemanager_project) | resource |
+| [external_external.stackit_users](https://registry.terraform.io/providers/hashicorp/external/latest/docs/data-sources/external) | data source |
 
 ## Inputs
 
@@ -63,6 +65,7 @@ No modules.
 |------|-------------|------|---------|:--------:|
 | <a name="input_environment"></a> [environment](#input\_environment) | The environment type (production, staging, development). If not set, uses parent\_container\_id directly. | `string` | `null` | no |
 | <a name="input_labels"></a> [labels](#input\_labels) | Labels to apply to the project. Includes the `networkArea` label when the building block definition is wired to a network area. | `map(string)` | n/a | yes |
+| <a name="input_organization_id"></a> [organization\_id](#input\_organization\_id) | STACKIT organization where project users are looked up before their roles are granted; users STACKIT does not know are skipped and listed in the summary. Needs `iam.member.get` on the organization. Empty grants every user's roles without a lookup. | `string` | `""` | no |
 | <a name="input_parent_container_id"></a> [parent\_container\_id](#input\_parent\_container\_id) | The parent container ID (organization or folder) where the project will be created. | `string` | n/a | yes |
 | <a name="input_parent_container_ids"></a> [parent\_container\_ids](#input\_parent\_container\_ids) | Parent container IDs for different environments. If environment is set, the corresponding container ID will be used. | <pre>object({<br/>    production  = optional(string)<br/>    staging     = optional(string)<br/>    development = optional(string)<br/>  })</pre> | `{}` | no |
 | <a name="input_project_name"></a> [project\_name](#input\_project\_name) | The name of the StackIt project to create. | `string` | n/a | yes |

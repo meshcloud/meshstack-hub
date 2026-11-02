@@ -9,3 +9,16 @@
 | **Portal** | [Open in STACKIT Portal](${project_url}) |
 
 ${membership_summary}
+%{ if length(unknown_users) > 0 ~}
+
+### ⚠️ Users Not Found
+
+STACKIT does not know these project users, so they did not get their project roles other than `owner`:
+
+%{ for email in unknown_users ~}
+- `${email}`
+%{ endfor ~}
+
+**To resolve this**, each user must sign in to the [STACKIT Portal](https://portal.stackit.cloud)
+at least once. After they have signed in, re-run this building block and they will get their roles.
+%{ endif ~}

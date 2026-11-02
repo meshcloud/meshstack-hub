@@ -313,6 +313,15 @@ resource "meshstack_building_block_definition" "this" {
         argument        = jsonencode(var.stackit_project_owner_email)
       }
 
+      organization_id = {
+        display_name    = "STACKIT Organization ID"
+        description     = "Organization where the building block looks up project users before it grants their roles, skipping those STACKIT does not know. Empty skips the lookup."
+        type            = "STRING"
+        assignment_type = "STATIC"
+        # Only onboarding grants the service account `iam.member-admin`, which the lookup needs.
+        argument = jsonencode(var.stackit_organization_onboarding_enabled ? var.stackit_organization_id : "")
+      }
+
       STACKIT_USE_OIDC = {
         display_name    = "STACKIT Use OIDC"
         description     = "Enables OIDC-based WIF for the STACKIT provider."
