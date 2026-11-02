@@ -89,6 +89,7 @@ the docs.
 - Check a module you touched, and fix the module rather than the check:
   ```sh
   node tools/scorecard/scorecard.mjs --module=<provider>/<service> [--fix]
+  node tools/scorecard/scorecard.mjs --changed-since=origin/main   # every module the branch changed
   ```
 - Prototyping from a foundation repository may point a `source` at a local path
   (`../../../meshstack-hub/modules/<provider>/<service>/buildingblock`). Never commit that — switch

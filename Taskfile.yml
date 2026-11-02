@@ -16,16 +16,6 @@ tasks:
       - node tools/diagrams/render-diagrams.mjs --check
 
   scorecard:pr:
-    desc: "Run scorecard on modules changed vs BASE_REF (default: origin/main). Usage: task scorecard:pr BASE_REF=origin/my-branch"
+    desc: "Run the scorecard on modules changed vs BASE_REF (default: origin/main), or with the scorecard arguments given after --. Usage: task scorecard:pr, task scorecard:pr BASE_REF=origin/my-branch, task scorecard:pr -- --module=aws/budget-alert"
     cmds:
-      - bash tools/scorecard/pr-scorecard.sh --base={{.BASE_REF}}
-
-  scorecard:module:
-    desc: "Run scorecard for a single module. Usage: task scorecard:module MODULE=aws/budget-alert"
-    cmds:
-      - node tools/scorecard/scorecard.mjs --module={{.MODULE}} {{.CLI_ARGS}}
-
-  scorecard:all:
-    desc: Run scorecard across all modules
-    cmds:
-      - node tools/scorecard/scorecard.mjs {{.CLI_ARGS}}
+      - node tools/scorecard/scorecard.mjs {{.CLI_ARGS | default (print "--changed-since=" .BASE_REF)}}
