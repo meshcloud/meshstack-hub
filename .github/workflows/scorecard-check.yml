@@ -28,7 +28,7 @@ jobs:
         with:
           devShell: .#github_actions
 
-      - name: Run scorecard on changed modules
+      - name: Run scorecard on changed modules and reference architectures
         run: |
           node tools/scorecard/scorecard.mjs \
             --changed-since="origin/${{ github.base_ref }}" \

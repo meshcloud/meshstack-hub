@@ -103,7 +103,8 @@ resource "meshstack_building_block" "example" {
 ```
 
 Copy those four lines verbatim, in every child building block, including the ones in
-`reference-architectures/` — the scorecard only scans `modules/`, so nothing checks them for you.
+`reference-architectures/` — the scorecard checks only the tests of a reference architecture, so
+nothing checks them for you.
 Do not write a per-block message: OpenTofu prints the resource address and the file and line of the
 failing postcondition, and `self` supplies the uuid, health status and action, so the identical
 message names the specific block anyway. `status.succeeded` needs meshStack provider v0.27.0, so a

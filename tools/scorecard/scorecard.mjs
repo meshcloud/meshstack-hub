@@ -10,8 +10,12 @@
  * - Azure Backplane: applies only to Azure modules with a backplane/
  * - Testing: applies to all modules (aspirational)
  *
+ * A reference architecture is scored with the checks that target it (`targets`) and a summary of
+ * the module scorecard of every module it includes.
+ *
  * Usage: node tools/scorecard/scorecard.mjs [--category=<name>] [--provider=<name>] [--module=<id>] [--fix] [--output=<file>]
- *        node tools/scorecard/scorecard.mjs --changed-since=<git ref>   modules changed since the ref
+ *        node tools/scorecard/scorecard.mjs --ref-archs | --ref-arch=<name> ...
+ *        node tools/scorecard/scorecard.mjs --changed-since=<git ref>   modules and reference architectures changed since the ref
  *
  * It exits non-zero only on a script error, never on failing checks.
  */
@@ -22,6 +26,7 @@ import { basename, dirname, join, relative } from "node:path";
 
 const ROOT = new URL("../../", import.meta.url).pathname.replace(/\/$/, "");
 const MODULES_DIR = join(ROOT, "modules");
+const REF_ARCHS_DIR = join(ROOT, "reference-architectures");
 
 const byCodeUnits = (a, b) => (a < b ? -1 : Number(a > b));
 
@@ -1404,6 +1409,7 @@ const detectors = [
     category: "testing",
     name: "no .tftest.hcl outside e2e/",
     emoji: "🚫",
+    targets: ["module", "refArch"],
     fn: (mod) => {
       const e2e = join(mod.path, "e2e");
       const stray = collectFilesRecursive(mod.path)
@@ -1419,6 +1425,7 @@ const detectors = [
     category: "testing",
     name: "every .tftest.hcl runs against real infrastructure",
     emoji: "🎭",
+    targets: ["module", "refArch"],
     fn: (mod) => {
       const tests = collectFilesRecursive(mod.path).filter((file) => file.endsWith(".tftest.hcl"));
       if (tests.length === 0) return { pass: null, detail: "no .tftest.hcl files" };
@@ -1453,7 +1460,32 @@ const detectors = [
       return { pass: files.some((f) => f.endsWith(".tftest.hcl")) };
     },
   },
+  {
+    id: "ref_arch_e2e",
+    category: "testing",
+    name: "e2e/main.tf with a .tftest.hcl",
+    emoji: "🧪",
+    targets: ["refArch"],
+    fn: (ra) => {
+      if (collectTfFilesRecursive(ra.path).length === 0) {
+        return { pass: null, detail: "documentation only, nothing to deploy" };
+      }
+      const e2e = join(ra.path, "e2e");
+      if (!existsSync(join(e2e, "main.tf"))) {
+        return { pass: false, detail: "no e2e/main.tf, which is what the smoke tests discover" };
+      }
+      const tests = collectFilesRecursive(e2e).filter((file) => file.endsWith(".tftest.hcl"));
+      return tests.length ? { pass: true } : { pass: false, detail: "e2e/ has no .tftest.hcl" };
+    },
+  },
 ];
+
+const detectorsFor = (kind) => detectors.filter((d) => (d.targets ?? ["module"]).includes(kind));
+
+const categoriesFor = (kind) =>
+  Object.fromEntries(
+    Object.entries(CATEGORIES).filter(([catId]) => detectorsFor(kind).some((d) => d.category === catId))
+  );
 
 // ─── Helpers ────────────────────────────────────────────────────────────────
 
@@ -1971,16 +2003,51 @@ function discoverModules() {
       );
       if (hasBB || hasIntegration) {
         modules.push({
+          kind: "module",
           provider,
           service,
           path: modulePath,
           id: `${provider}/${service}`,
+          dir: `modules/${provider}/${service}`,
+          cliArg: `--module=${provider}/${service}`,
         });
       }
     }
   }
 
   return modules.sort((a, b) => a.id.localeCompare(b.id));
+}
+
+// A folder without a README.md is not a reference architecture; the website skips it too.
+function discoverRefArchs() {
+  return readdirSync(REF_ARCHS_DIR)
+    .filter((name) => existsSync(join(REF_ARCHS_DIR, name, "README.md")))
+    .sort()
+    .map((name) => ({
+      kind: "refArch",
+      path: join(REF_ARCHS_DIR, name),
+      id: name,
+      dir: `reference-architectures/${name}`,
+      cliArg: `--ref-arch=${name}`,
+    }));
+}
+
+// Modules the code sources or registers as BBDs, plus the README.md front-matter list, which is all
+// a documentation-only architecture has.
+function includedModules(ra, moduleIds) {
+  const paths = new Set();
+  for (const file of collectTfFilesRecursive(ra.path)) {
+    if (file.startsWith(join(ra.path, "e2e") + "/")) continue;
+    const content = readFileSync(file, "utf-8");
+    for (const m of content.matchAll(/(?<=\/\/|")modules\/([\w-]+(?:\/[\w-]+)?)/g)) paths.add(m[1]);
+  }
+  const frontmatter = readFileSync(join(ra.path, "README.md"), "utf-8").split(/^---\s*$/m)[1] ?? "";
+  for (const m of frontmatter.matchAll(/^\s*-?\s*path:\s*(\S+)\s*$/gm)) paths.add(m[1]);
+
+  const included = new Set();
+  const unscanned = new Set();
+  for (const path of paths) (moduleIds.has(path) ? included : unscanned).add(path);
+  return { included: [...included].sort(byCodeUnits), unscanned: [...unscanned].sort(byCodeUnits) };
 }
 
 // ─── Marker-based ref index ──────────────────────────────────────────────────
@@ -1998,6 +2065,7 @@ const REF_FILES = [
   ".agents/references/stackit-backplane.md",
   ".agents/references/bbd-readme.md",
   ".agents/skills/e2e-test/SKILL.md",
+  ".agents/references/reference-architectures.md",
 ];
 
 function headingToAnchor(heading) {
@@ -2055,17 +2123,19 @@ function buildCheckToRef() {
 
 function generateFixPrompt(mod, failingChecks, checkToRef) {
   const lines = [];
-  lines.push(`# Fix Scorecard Violations for \`${mod.id}\``);
-  lines.push("");
-  lines.push(`Fix the following scorecard violations in \`modules/${mod.id}/\`.`);
-  lines.push("After each fix re-run the scorecard to verify progress:");
-  lines.push("");
-  lines.push("```sh");
-  lines.push(`node tools/scorecard/scorecard.mjs --module=${mod.id}`);
-  lines.push("```");
-  lines.push("");
-  lines.push("## Failing Checks");
-  lines.push("");
+  lines.push(
+    `# Fix Scorecard Violations for \`${mod.id}\``,
+    "",
+    `Fix the following scorecard violations in \`${mod.dir}/\`.`,
+    "After each fix re-run the scorecard to verify progress:",
+    "",
+    "```sh",
+    `node tools/scorecard/scorecard.mjs ${mod.cliArg}`,
+    "```",
+    "",
+    "## Failing Checks",
+    "",
+  );
 
   for (const check of failingChecks) {
     const catName = CATEGORIES[check.category].name;
@@ -2087,30 +2157,30 @@ function generateFixPrompt(mod, failingChecks, checkToRef) {
 
 // ─── Scoring ────────────────────────────────────────────────────────────────
 
-function selectModules(modules, ids) {
-  if (ids.length === 0) return modules;
-  for (const id of ids.filter((id) => !modules.some((m) => m.id === id))) {
-    process.stderr.write(`Warning: module "${id}" not found — skipping.\n`);
+function selectTargets(all, ids, noun, format) {
+  if (ids.length === 0) return all;
+  for (const id of ids.filter((id) => !all.some((t) => t.id === id))) {
+    process.stderr.write(`Warning: ${noun} "${id}" not found — skipping.\n`);
   }
-  const selected = modules.filter((m) => ids.includes(m.id));
+  const selected = all.filter((t) => ids.includes(t.id));
   if (selected.length === 0) {
-    process.stderr.write(`Error: none of the specified modules were found. Use <provider>/<service> format.\n`);
+    process.stderr.write(`Error: none of the specified ${noun}s were found. Use ${format} format.\n`);
     process.exit(1);
   }
   return selected;
 }
 
-function scoreModule(mod, filterCategory) {
+function scoreTarget(target, categories, filterCategory) {
   const categoryResults = {};
 
-  // Always compute all categories so the per-module summary is always complete.
+  // Always compute all categories so the per-target summary is always complete.
   // The filterCategory only controls which sections are *rendered*.
-  for (const [catId, cat] of Object.entries(CATEGORIES)) {
-    const applicable = cat.appliesTo(mod);
-    const catDetectors = detectors.filter((d) => d.category === catId);
+  for (const [catId, cat] of Object.entries(categories)) {
+    const applicable = cat.appliesTo(target);
+    const catDetectors = detectorsFor(target.kind).filter((d) => d.category === catId);
     const checks = catDetectors.map((d) => ({
       ...d,
-      result: applicable ? d.fn(mod) : { pass: null, detail: "not applicable" },
+      result: applicable ? d.fn(target) : { pass: null, detail: "not applicable" },
     }));
 
     const applicableChecks = checks.filter((c) => c.result.pass !== null);
@@ -2130,13 +2200,31 @@ function scoreModule(mod, filterCategory) {
   const total = allApplicableChecks.length;
   const score = total > 0 ? Math.round((passed / total) * 100) : null;
 
-  return { mod, categoryResults, passed, total, score };
+  return { mod: target, categoryResults, passed, total, score };
+}
+
+function describeIncluded({ count, failing, unscanned }) {
+  const parts = [`${count} ${count === 1 ? "module" : "modules"}`];
+  if (failing.length > 0) {
+    const scores = failing.map(({ id, score }) => `\`${id}\` ${score}%`).join(", ");
+    parts.push(`${failing.length} with failures: ${scores}`);
+  }
+  if (unscanned.length > 0) {
+    const paths = unscanned.map((id) => `\`modules/${id}\``).join(", ");
+    parts.push(`not scored: ${paths}`);
+  }
+  return parts.join("; ");
 }
 
 // ─── Main ───────────────────────────────────────────────────────────────────
 
-const VALUE_FLAGS = ["--category", "--provider", "--module", "--changed-since", "--output"];
-const SWITCHES = new Set(["--fix"]);
+const NOUNS = {
+  module: { one: "module", many: "modules", title: "Module" },
+  refArch: { one: "reference architecture", many: "reference architectures", title: "Reference Architecture" },
+};
+
+const VALUE_FLAGS = ["--category", "--provider", "--module", "--ref-arch", "--changed-since", "--output"];
+const SWITCHES = new Set(["--ref-archs", "--fix"]);
 
 function fail(message) {
   process.stderr.write(`Error: ${message}\n`);
@@ -2157,12 +2245,14 @@ function parseArgs(argv) {
     category: values["--category"].at(-1),
     provider: values["--provider"].at(-1),
     modules: values["--module"],
+    refArchs: values["--ref-arch"],
+    allRefArchs: switches.has("--ref-archs"),
     changedSince: values["--changed-since"].at(-1),
     output: values["--output"].at(-1),
     fix: switches.has("--fix"),
   };
-  if (opts.changedSince !== undefined && opts.modules.length > 0) {
-    fail("--changed-since selects its own targets; drop --module");
+  if (opts.changedSince !== undefined && (opts.modules.length > 0 || opts.refArchs.length > 0 || opts.allRefArchs)) {
+    fail("--changed-since selects its own targets; drop --module, --ref-arch and --ref-archs");
   }
   return opts;
 }
@@ -2177,8 +2267,30 @@ function git(...args) {
 
 function changedIds(baseRef) {
   const paths = git("diff", "--name-only", `${baseRef}...HEAD`).split("\n");
+  const ids = (pattern) => [...new Set(paths.map((p) => p.match(pattern)?.[1]).filter(Boolean))].sort(byCodeUnits);
   // Provider-level files such as modules/<provider>/logo.png belong to no module.
-  return [...new Set(paths.map((p) => p.match(/^modules\/([^/]+\/[^/]+)\//)?.[1]).filter(Boolean))].sort(byCodeUnits);
+  return { modules: ids(/^modules\/([^/]+\/[^/]+)\//), refArchs: ids(/^reference-architectures\/([^/]+)\//) };
+}
+
+function scoreKind(kind, targets, allModules, filterCategory) {
+  const results = targets.map((t) => scoreTarget(t, categoriesFor(kind), filterCategory));
+  if (kind === "refArch") {
+    const moduleIds = new Set(allModules.map((m) => m.id));
+    const moduleScores = new Map();
+    const moduleScore = (id) => {
+      if (!moduleScores.has(id)) {
+        const mod = allModules.find((m) => m.id === id);
+        moduleScores.set(id, scoreTarget(mod, categoriesFor("module")));
+      }
+      return moduleScores.get(id);
+    };
+    for (const r of results) {
+      const { included, unscanned } = includedModules(r.mod, moduleIds);
+      const failing = included.filter((id) => moduleScore(id).score < 100).map((id) => ({ id, score: moduleScore(id).score }));
+      r.included = { count: included.length, failing, unscanned };
+    }
+  }
+  return results;
 }
 
 function renderFixPrompts(results, checkToRef) {
@@ -2193,29 +2305,38 @@ function renderFixPrompts(results, checkToRef) {
   });
 }
 
-function renderReport(modules, results, filterCategory) {
+function renderReport(kind, targets, results, filterCategory) {
+  const noun = NOUNS[kind];
+  const categories = categoriesFor(kind);
   const lines = [];
-  lines.push("# 📊 meshstack-hub Module Scorecard");
+  lines.push(`# 📊 meshstack-hub ${noun.title} Scorecard`);
   lines.push("");
   lines.push(
-    `> Generated: ${new Date().toISOString().split("T")[0]} | Modules scanned: **${modules.length}** | Categories: **${Object.keys(CATEGORIES).length}**`
+    `> Generated: ${new Date().toISOString().split("T")[0]} | ${noun.title}s scanned: **${targets.length}** | Categories: **${Object.keys(categories).length}**`
   );
   lines.push("");
 
   const categoriesToRender = filterCategory
-    ? { [filterCategory]: CATEGORIES[filterCategory] }
-    : CATEGORIES;
+    ? { [filterCategory]: categories[filterCategory] }
+    : categories;
 
-  // ─── Per-Module Category Summary (omit for single-module mode) ───────────
-  lines.push("## 📋 Per-Module Category Summary");
-  lines.push("");
-  lines.push("Score per category per building block. `n/a` = category does not apply to this module.");
+  lines.push(
+    `## 📋 Per-${noun.title} Category Summary`,
+    "",
+    `Score per category per ${noun.one}. \`n/a\` = category does not apply to this ${noun.one}.`,
+  );
+  if (kind === "refArch") {
+    lines.push("Included modules are scored by the module scorecard, and only summarized here.");
+  }
   lines.push("");
 
-  const summaryCategories = Object.entries(CATEGORIES);
+  const summaryCategories = Object.entries(categories);
   const catHeaderCols = summaryCategories.map(([, cat]) => cat.name).join(" | ");
-  lines.push(`| Module | Overall | ${catHeaderCols} |`);
-  lines.push(`|--------|---------|${summaryCategories.map(() => "---").join("|")}|`);
+  const includedHeader = kind === "refArch" ? " Included modules |" : "";
+  lines.push(
+    `| ${noun.title} | Overall | ${catHeaderCols} |${includedHeader}`,
+    `|--------|---------|${summaryCategories.map(() => "---").join("|")}|${kind === "refArch" ? "---|" : ""}`,
+  );
 
   for (const r of results) {
     const overallCell = r.total > 0
@@ -2230,7 +2351,8 @@ function renderReport(modules, results, filterCategory) {
       return `${emoji} ${cr.score}%`;
     });
 
-    lines.push(`| \`${r.mod.id}\` | ${overallCell} | ${catCells.join(" | ")} |`);
+    const includedCell = kind === "refArch" ? ` ${describeIncluded(r.included)} |` : "";
+    lines.push(`| \`${r.mod.id}\` | ${overallCell} | ${catCells.join(" | ")} |${includedCell}`);
   }
   lines.push("");
 
@@ -2238,16 +2360,16 @@ function renderReport(modules, results, filterCategory) {
   const scoredModules = results.filter((r) => r.total > 0);
   const allPassing = scoredModules.length > 0 && scoredModules.every((r) => r.score === 100);
   if (allPassing) {
-    lines.push("> ✅ **All checks passing!** This module meets all scorecard criteria.");
+    lines.push(`> ✅ **All checks passing!** Every ${noun.one} meets all scorecard criteria.`);
   } else {
     const failingCount = scoredModules.filter((r) => r.score < 100).length;
-    const noun = failingCount === 1 ? "1 module has" : `${failingCount} modules have`;
-    lines.push(`> ⚠️ **${noun} failing checks** — failing categories are expanded below.`);
+    const subject = failingCount === 1 ? `1 ${noun.one} has` : `${failingCount} ${noun.many} have`;
+    lines.push(`> ⚠️ **${subject} failing checks** — failing categories are expanded below.`);
   }
   lines.push("");
 
   for (const [catId, cat] of Object.entries(categoriesToRender)) {
-    const catDetectors = detectors.filter((d) => d.category === catId);
+    const catDetectors = detectorsFor(kind).filter((d) => d.category === catId);
     const applicableModules = results.filter((r) => r.categoryResults[catId]?.applicable);
 
     const categoryHasFailures = applicableModules.some((r) =>
@@ -2260,14 +2382,16 @@ function renderReport(modules, results, filterCategory) {
         ? "some checks failing"
         : "✅ all passing";
 
-    lines.push(`<details${openAttr}>`);
-    lines.push(`<summary><strong>${cat.name}</strong> — ${statusLabel}</summary>`);
-    lines.push("");
-    lines.push(`*${cat.description}* — applies to **${applicableModules.length}** modules`);
-    lines.push("");
+    lines.push(
+      `<details${openAttr}>`,
+      `<summary><strong>${cat.name}</strong> — ${statusLabel}</summary>`,
+      "",
+      `*${cat.description}* — applies to **${applicableModules.length}** ${noun.many}`,
+      "",
+    );
 
     if (applicableModules.length === 0) {
-      lines.push("No applicable modules.");
+      lines.push(`No applicable ${noun.many}.`);
       lines.push("");
       lines.push("</details>");
       lines.push("");
@@ -2275,7 +2399,7 @@ function renderReport(modules, results, filterCategory) {
     }
 
     const headerCols = catDetectors.map((d) => d.emoji).join(" | ");
-    lines.push(`| Module | Score | ${headerCols} |`);
+    lines.push(`| ${noun.title} | Score | ${headerCols} |`);
     lines.push(
       `|--------|-------|${catDetectors.map(() => "---").join("|")}|`
     );
@@ -2322,8 +2446,8 @@ function renderReport(modules, results, filterCategory) {
     lines.push("");
   }
 
-  // ─── Overall Summary (omit for single-module mode) ──────────────────────
-  const singleModule = modules.length === 1;
+  // ─── Overall Summary (omit for single-target mode) ──────────────────────
+  const singleModule = targets.length === 1;
   if (!singleModule) {
     lines.push("## 📈 Overall Summary");
     lines.push("");
@@ -2339,29 +2463,46 @@ function renderReport(modules, results, filterCategory) {
     const high = scoredResults.filter((r) => r.score >= 80).length;
     const mid = scoredResults.filter((r) => r.score >= 50 && r.score < 80).length;
     const low = scoredResults.filter((r) => r.score < 50).length;
-    lines.push("### Score Distribution");
-    lines.push("");
-    lines.push(`- 🟢 High maturity (≥80%): **${high}** modules`);
-    lines.push(`- 🟡 Medium maturity (50–79%): **${mid}** modules`);
-    lines.push(`- 🔴 Low maturity (<50%): **${low}** modules`);
-    lines.push("");
+    lines.push(
+      "### Score Distribution",
+      "",
+      `- 🟢 High maturity (≥80%): **${high}** ${noun.many}`,
+      `- 🟡 Medium maturity (50–79%): **${mid}** ${noun.many}`,
+      `- 🔴 Low maturity (<50%): **${low}** ${noun.many}`,
+      "",
+    );
   }
 
   return lines;
 }
 
-function selectChanged(baseRef, modules, lines) {
+function selectChanged(baseRef, modules, refArchs, lines) {
   const changed = changedIds(baseRef);
-  if (changed.length === 0) {
-    lines.push(`_No module changes detected relative to \`${baseRef}\`._`);
+  if (changed.modules.length === 0 && changed.refArchs.length === 0) {
+    lines.push(`_No module or reference architecture changes detected relative to \`${baseRef}\`._`);
     return [];
   }
   const head = git("rev-parse", "HEAD").trim();
   lines.push(`> Scorecard run on commit \`${head}\` relative to \`${baseRef}\``, "");
-  for (const id of changed.filter((id) => !modules.some((m) => m.id === id))) {
-    lines.push(`### \`${id}\``, "", "_Not a scored module (deleted?)._", "");
+  const select = (kind, all, ids, missing) => {
+    for (const id of ids.filter((id) => !all.some((t) => t.id === id))) {
+      lines.push(`### \`${id}\``, "", missing, "");
+    }
+    const targets = all.filter((t) => ids.includes(t.id));
+    return targets.length > 0 ? [[kind, targets]] : [];
+  };
+  return [
+    ...select("module", modules, changed.modules, "_Not a scored module (deleted?)._"),
+    ...select("refArch", refArchs, changed.refArchs, "_Not a reference architecture (deleted?)._"),
+  ];
+}
+
+function selectByOpts(opts, modules, lines) {
+  if (opts.changedSince !== undefined) return selectChanged(opts.changedSince, modules, discoverRefArchs(), lines);
+  if (opts.allRefArchs || opts.refArchs.length > 0) {
+    return [["refArch", selectTargets(discoverRefArchs(), opts.refArchs, "reference architecture", "<name>")]];
   }
-  return modules.filter((m) => changed.includes(m.id));
+  return [["module", selectTargets(modules, opts.modules, "module", "<provider>/<service>")]];
 }
 
 function main() {
@@ -2374,16 +2515,15 @@ function main() {
     process.exit(1);
   }
 
-  const modules = discoverModules().filter((m) => !opts.provider || m.provider === opts.provider);
+  const allModules = discoverModules();
+  const modules = allModules.filter((m) => !opts.provider || m.provider === opts.provider);
   const lines = [];
-  const targets = opts.changedSince === undefined
-    ? selectModules(modules, opts.modules)
-    : selectChanged(opts.changedSince, modules, lines);
+  const selection = selectByOpts(opts, modules, lines);
 
-  if (targets.length > 0) {
+  for (const [kind, targets] of selection) {
     if (opts.changedSince !== undefined) process.stderr.write(`Scoring ${targets.map((t) => t.id).join(", ")}\n`);
-    const results = targets.map((mod) => scoreModule(mod, opts.category));
-    lines.push(...(opts.fix ? renderFixPrompts(results, checkToRef) : renderReport(targets, results, opts.category)));
+    const results = scoreKind(kind, targets, allModules, opts.category);
+    lines.push(...(opts.fix ? renderFixPrompts(results, checkToRef) : renderReport(kind, targets, results, opts.category)));
   }
 
   const report = lines.join("\n") + "\n";
