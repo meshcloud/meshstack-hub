@@ -242,7 +242,7 @@ resource "meshstack_building_block_definition" "this" {
         display_name    = "Approved Models"
         description     = "Models application teams may choose from, with the version deployed."
         assignment_type = "STATIC"
-        argument        = jsonencode(var.azure_models)
+        argument        = jsonencode(jsonencode(var.azure_models))
         json_schema = jsonencode({
           type = "object"
           additionalProperties = {
