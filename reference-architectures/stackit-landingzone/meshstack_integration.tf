@@ -151,6 +151,18 @@ locals {
     } : section => [for tk, tv in m : { key = tk, values = tv }]
   }
 
+  imports_definition_properties = {
+    uuid                            = { type = "string", title = "Definition UUID" }
+    service_account_email           = { type = "string", title = "Backplane Service Account Email" }
+    federated_identity_provider_ids = { type = "array", title = "Federated Identity Provider IDs", items = { type = "string" } }
+  }
+
+  imports_definition_schema = {
+    type       = "object"
+    required   = keys(local.imports_definition_properties)
+    properties = local.imports_definition_properties
+  }
+
   tags_json_schema = {
     "$schema" = "http://json-schema.org/draft-07/schema#"
     type      = "object"
@@ -473,6 +485,52 @@ resource "meshstack_building_block_definition" "this" {
         assignment_type = "STATIC"
         argument        = jsonencode(jsonencode(var.starterkit_approval_policies))
         display_order   = 130
+      }
+
+      imports = {
+        display_name    = "Imports"
+        description     = "Existing resources to take over when adopting a platform built before this architecture; see Adopting an Existing Platform in the README. Leave empty to create everything."
+        type            = "JSON"
+        assignment_type = "USER_INPUT"
+        is_optional     = true
+        display_order   = 150
+
+        json_schema = jsonencode({
+          "$schema"            = "http://json-schema.org/draft-07/schema#"
+          type                 = "object"
+          additionalProperties = false
+          properties = {
+            folder = {
+              type     = "object"
+              title    = "Landing-Zone Folder"
+              required = ["container_id", "name"]
+              properties = {
+                container_id = { type = "string", title = "Container ID" }
+                name         = { type = "string", title = "Name" }
+              }
+            }
+            foundation_project = {
+              type     = "object"
+              title    = "Foundation Project"
+              required = ["container_id", "name", "parent_container_id"]
+              properties = {
+                container_id        = { type = "string", title = "Container ID" }
+                name                = { type = "string", title = "Name" }
+                parent_container_id = { type = "string", title = "Parent Container ID" }
+              }
+            }
+            platform = { type = "object", title = "Location, Platform and Landing Zones", properties = {} }
+            project_definition = {
+              type     = "object"
+              required = concat(keys(local.imports_definition_properties), ["service_account_name"])
+              properties = merge(local.imports_definition_properties, {
+                service_account_name = { type = "string", title = "Backplane Service Account Name" }
+              })
+            }
+            service_account_definition            = local.imports_definition_schema
+            service_account_federation_definition = local.imports_definition_schema
+          }
+        })
       }
 
       playground_mode = {

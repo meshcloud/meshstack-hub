@@ -132,3 +132,46 @@ variable "hub" {
   `bbd_draft`: Forwarded as-is to those nested integrations' own `hub.bbd_draft`, so their building block definition draft state tracks this building block's own release state.
   EOT
 }
+
+variable "imports" {
+  type = object({
+    folder = optional(object({
+      container_id = string
+      name         = string
+    }))
+    foundation_project = optional(object({
+      container_id        = string
+      name                = string
+      parent_container_id = string
+    }))
+    platform = optional(object({}))
+    project_definition = optional(object({
+      uuid                            = string
+      service_account_name            = string
+      service_account_email           = string
+      federated_identity_provider_ids = list(string)
+    }))
+    service_account_definition = optional(object({
+      uuid                            = string
+      service_account_email           = string
+      federated_identity_provider_ids = list(string)
+    }))
+    service_account_federation_definition = optional(object({
+      uuid                            = string
+      service_account_email           = string
+      federated_identity_provider_ids = list(string)
+    }))
+  })
+  default     = null
+  description = "Existing resources to take over, by key; see Adopting an Existing Platform in the README. Null creates everything."
+
+  validation {
+    condition     = var.imports == null || !var.playground_mode
+    error_message = "imports needs playground_mode = false: nothing taken over is released on destroy."
+  }
+
+  validation {
+    condition     = var.imports == null ? true : alltrue([for key, adopted in var.imports : adopted == null || key == "folder" || key == "platform" || var.imports.foundation_project != null])
+    error_message = "imports.project_definition, service_account_definition and service_account_federation_definition need imports.foundation_project, because their service accounts live in it."
+  }
+}

@@ -192,6 +192,25 @@ building block as a `STATIC` input, so it does not appear as a choice in the ord
 consumer cannot turn a real platform into a playground one, or the reverse. Change it by setting
 `playground_mode` on the reference architecture module and deploying a new definition version.
 
+### Adopting an Existing Platform
+
+The optional **Imports** input takes over a STACKIT platform built before this architecture, so
+nothing that tenants depend on is replaced. Every key is optional and needs `playground_mode =
+false`, because nothing taken over is released on destroy.
+
+| Key | Takes over |
+|---|---|
+| `folder = {container_id, name}` | the landing-zone folder, keeping its name |
+| `foundation_project = {container_id, name, parent_container_id}` | the foundation project, keeping its name and parent |
+| `platform = {}` | the location (unless **Use Global Location**), the STACKIT platform `<platform identifier>` in it and its landing zones `<platform identifier>-default` and, with `hub&spoke`, `-networked` |
+| `project_definition = {uuid, service_account_name, service_account_email, federated_identity_provider_ids}` | the STACKIT Project definition and its backplane: the project-creation service account, its federated identity providers in the order of the subjects they trust, and its organization roles |
+| `service_account_definition = {uuid, service_account_email, federated_identity_provider_ids}` | the STACKIT Service Account definition and its backplane |
+| `service_account_federation_definition = {uuid, service_account_email, federated_identity_provider_ids}` | the STACKIT Service Account Federation definition and its backplane |
+
+The three definition keys need `foundation_project`, where their service accounts live. A
+definition gets a new version and its building blocks stay on theirs until upgraded. Turn on the
+approval gates for the adoption and approve only a plan that replaces nothing.
+
 ### Approval Gates
 
 `approval_policies` sets which run triggers need an operator's approval before a run of this

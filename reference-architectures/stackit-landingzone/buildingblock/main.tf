@@ -23,6 +23,8 @@ locals {
   # Only resolvable once the hub network area building block has completed.
   network_area_id = local.network_enabled ? jsondecode(meshstack_building_block.network_area_hub.status.outputs["network_area_id"].value) : null
 
+  location_name = var.use_global_location ? "global" : meshstack_location.this.metadata.name
+
   # The meshPanel Tags form sends each tag map as a list of {key, values} entries.
   tags = {
     landingzone           = { for e in var.tags.landingzone : e.key => e.values }
@@ -59,7 +61,7 @@ resource "meshstack_location" "this" {
 }
 
 resource "stackit_resourcemanager_folder" "this" {
-  name                = local.platform_identifier
+  name                = local.imports.folder == null ? local.platform_identifier : local.imports.folder.name
   owner_email         = var.stackit_owner_email
   parent_container_id = var.stackit_org
 
@@ -69,9 +71,9 @@ resource "stackit_resourcemanager_folder" "this" {
 }
 
 resource "stackit_resourcemanager_project" "foundation" {
-  name                = "${local.platform_identifier}-foundation"
+  name                = local.imports.foundation_project == null ? "${local.platform_identifier}-foundation" : local.imports.foundation_project.name
   owner_email         = var.stackit_owner_email
-  parent_container_id = var.stackit_org
+  parent_container_id = local.imports.foundation_project == null ? var.stackit_org : local.imports.foundation_project.parent_container_id
 
   lifecycle {
     prevent_destroy = !var.playground_mode
@@ -95,7 +97,7 @@ module "stackit_integration" {
   stackit_project_owner_email             = var.stackit_owner_email
   stackit_parent_container_id             = stackit_resourcemanager_folder.this.container_id
   stackit_project_id                      = stackit_resourcemanager_project.foundation.project_id
-  stackit_service_account_name            = local.service_account_name
+  stackit_service_account_name            = local.imports.project_definition == null ? local.service_account_name : local.imports.project_definition.service_account_name
   role_mapping                            = var.role_mapping
   stackit_organization_onboarding_enabled = var.stackit_organization_onboarding_enabled
 
@@ -108,7 +110,7 @@ module "stackit_integration" {
 
   meshstack = {
     owning_workspace_identifier = var.workspace
-    location_name               = var.use_global_location ? "global" : meshstack_location.this.metadata.name
+    location_name               = local.location_name
     platform_identifier         = local.platform_identifier
     tags                        = local.tags
   }
