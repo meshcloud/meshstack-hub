@@ -126,7 +126,7 @@ it in the registry. The default is an empty list, which mirrors nothing.
 ## Requirements
 
 | Name | Version |
-|------|---------|
+| ---- | ------- |
 | <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.12.0 |
 | <a name="requirement_external"></a> [external](#requirement\_external) | >= 2.3.0, < 3.0.0 |
 | <a name="requirement_random"></a> [random](#requirement\_random) | >= 3.5.0, < 4.0.0 |
@@ -137,13 +137,13 @@ it in the registry. The default is an empty list, which mirrors nothing.
 ## Modules
 
 | Name | Source | Version |
-|------|--------|---------|
+| ---- | ------ | ------- |
 | <a name="module_artifactory"></a> [artifactory](#module\_artifactory) | ./modules/artifactory | n/a |
 
 ## Resources
 
 | Name | Type |
-|------|------|
+| ---- | ---- |
 | [random_string.name_suffix](https://registry.terraform.io/providers/hashicorp/random/latest/docs/resources/string) | resource |
 | [restapi_object.pull_robot](https://registry.terraform.io/providers/Mastercard/restapi/latest/docs/resources/object) | resource |
 | [restapi_object.push_robot](https://registry.terraform.io/providers/Mastercard/restapi/latest/docs/resources/object) | resource |
@@ -154,13 +154,14 @@ it in the registry. The default is an empty list, which mirrors nothing.
 | [vault_kv_secret_v2.this](https://registry.terraform.io/providers/hashicorp/vault/latest/docs/resources/kv_secret_v2) | resource |
 | [external_external.artifactory](https://registry.terraform.io/providers/hashicorp/external/latest/docs/data-sources/external) | data source |
 | [external_external.harbor_link](https://registry.terraform.io/providers/hashicorp/external/latest/docs/data-sources/external) | data source |
+| [external_external.service_account](https://registry.terraform.io/providers/hashicorp/external/latest/docs/data-sources/external) | data source |
 | [external_external.stackit_access_token](https://registry.terraform.io/providers/hashicorp/external/latest/docs/data-sources/external) | data source |
 | [external_external.stackit_users](https://registry.terraform.io/providers/hashicorp/external/latest/docs/data-sources/external) | data source |
 
 ## Inputs
 
 | Name | Description | Type | Default | Required |
-|------|-------------|------|---------|:--------:|
+| ---- | ----------- | ---- | ------- | :------: |
 | <a name="input_imports"></a> [imports](#input\_imports) | Existing registry named `registry_name` to take over; null creates one. | <pre>object({<br/>    artifactory_id = string<br/>  })</pre> | `null` | no |
 | <a name="input_mirrored_base_images"></a> [mirrored\_base\_images](#input\_mirrored\_base\_images) | Fully qualified upstream images to mirror into the registry as `<registry>/<name>:<tag>`. | `list(string)` | n/a | yes |
 | <a name="input_output_to_vault"></a> [output\_to\_vault](#input\_output\_to\_vault) | Vault KV v2 userpass login that writes the robots to `<path_prefix>stackit/container-registry` once they exist. Null writes none. | <pre>object({<br/>    address     = string<br/>    mount       = string<br/>    username    = string<br/>    password    = string<br/>    path_prefix = optional(string, "")<br/>  })</pre> | `null` | no |
@@ -175,7 +176,7 @@ it in the registry. The default is an empty list, which mirrors nothing.
 ## Outputs
 
 | Name | Description |
-|------|-------------|
+| ---- | ----------- |
 | <a name="output_registry_host"></a> [registry\_host](#output\_registry\_host) | Host applications pull images from and `docker login` targets. |
 | <a name="output_registry_name"></a> [registry\_name](#output\_registry\_name) | Name of the STACKIT container registry created in the project. |
 | <a name="output_registry_robot_url"></a> [registry\_robot\_url](#output\_registry\_robot\_url) | Robot Accounts tab of the Harbor project, where the robot linked to the service account is created. |

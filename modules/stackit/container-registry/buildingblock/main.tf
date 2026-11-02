@@ -136,6 +136,15 @@ import {
   id       = "${local.artifactory_path}/${each.value}"
 }
 
+data "external" "service_account" {
+  program = ["bash", "${path.module}/read-service-account-id.sh"]
+
+  query = {
+    project_id = var.stackit_project_id
+    email      = local.stackit_service_account_email
+  }
+}
+
 data "external" "artifactory" {
   program = ["bash", "${path.module}/read-artifactory.sh"]
 

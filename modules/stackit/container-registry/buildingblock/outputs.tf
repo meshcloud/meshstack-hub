@@ -32,6 +32,7 @@ output "summary" {
 
     robots_minted                 = local.mint_robots
     stackit_service_account_email = local.stackit_service_account_email
+    stackit_service_account_id    = data.external.service_account.result.id
   })
 }
 
