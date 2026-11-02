@@ -1422,6 +1422,31 @@ const detectors = [
     },
   },
   {
+    id: "no_mocked_tftest",
+    category: "testing",
+    name: "every .tftest.hcl runs against real infrastructure",
+    emoji: "🎭",
+    fn: (mod) => {
+      const tests = collectFilesRecursive(mod.path).filter((file) => file.endsWith(".tftest.hcl"));
+      if (tests.length === 0) return { pass: null, detail: "no .tftest.hcl files" };
+
+      const offenders = [];
+      for (const file of tests) {
+        const where = relative(mod.path, file);
+        if (/(^|[_.-])unit([_.-]|$)/.test(basename(file, ".tftest.hcl"))) {
+          offenders.push(`${where} is named as a unit test`);
+        }
+        const content = readFileSync(file, "utf-8");
+        const blocks = content.matchAll(/^\s*(mock_provider|override_resource|override_data|override_module)\b/gm);
+        for (const block of new Set([...blocks].map((m) => m[1]))) offenders.push(`${where} uses ${block}`);
+      }
+
+      return offenders.length
+        ? { pass: false, detail: `delete what mocks or overrides, and assert on the live apply instead: ${offenders.join("; ")}` }
+        : { pass: true };
+    },
+  },
+  {
     id: "e2e_tftest",
     category: "testing",
     name: "e2e/ contains .tftest.hcl files",

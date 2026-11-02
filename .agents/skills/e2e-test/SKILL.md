@@ -21,7 +21,7 @@ To successfully work across these repositories, always read their AGENTS.md file
 
 ---
 
-<!-- scorecard-checks: no_buildingblock_tftest -->
+<!-- scorecard-checks: no_buildingblock_tftest, no_mocked_tftest -->
 ## Where Terraform Tests Live
 
 **`e2e/` is the only place a `*.tftest.hcl` file runs.** Nothing in this repo runs `tofu test`
