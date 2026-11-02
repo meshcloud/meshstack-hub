@@ -27,8 +27,11 @@ To successfully work across these repositories, always read their AGENTS.md file
 **`e2e/` is the only place a `*.tftest.hcl` file runs.** Nothing in this repo runs `tofu test`
 anywhere else: CI runs `pre-commit run --all-files` — `terraform-docs`, `terraform fmt`,
 trailing whitespace and `ci/validate_modules.sh` — and the scorecard's Testing category scores
-`e2e/` coverage exclusively. Our current focus is on improving coverage via end-to-end tests.
-Keep an eye on future need of better "unit test" build infrastructure and clear separation.
+`e2e/` coverage exclusively.
+
+**Every test runs against real infrastructure.** No `mock_provider`, no `override_resource`,
+`override_data` or `override_module`, and no `*_unit.tftest.hcl`. A state the live apply cannot
+reach goes untested; anything it can reach is an assertion on the apply.
 
 **Do not add a `*.tftest.hcl` under `buildingblock/`.** Nothing will execute it, so it rots
 unnoticed. The  `no_buildingblock_tftest` scorecard check flags each one as migration debt.
@@ -382,48 +385,6 @@ target_ref = {
 - Use `file("${path.root}/tests/<name>.expected.*")` for large expected values (JSON, Markdown) to
   keep assertions readable.
 
-### Mocked unit runs, for what the apply cannot reach
-
-A live apply cannot produce every state a building block has to handle: a directory that is missing
-a user, an empty input collection, an upstream that returns nothing. Where such a state is worth
-covering, add a **second file in `e2e/tests/`** whose runs target the building block directly with
-mocked providers:
-
-```hcl
-# e2e/tests/<cloud>_<service>_unit.tftest.hcl
-mock_provider "azuread" {}
-
-run "unresolved_members_are_reported" {
-  module {
-    source = "../buildingblock"
-  }
-  # variables, override_data, assertions ...
-}
-```
-
-- They run in the same `tofu test` invocation as the apply file, need no credentials, and finish in
-  well under a second. `tofu init` in `e2e/` still applies, so the smoke-test runner's var-file is
-  required to get that far — which is why they live here and not under `buildingblock/`.
-- **`path.root` is the module under test inside such a run**, not `e2e/`. Read an expected-output
-  fixture as `file("${path.root}/../e2e/tests/<name>.expected.md")`.
-- `override_data` / `override_resource` values may not call functions or reference variables, so a
-  mocked collection has to be spelled out literally. A `for` over a list of the one or two
-  attributes that matter keeps the schema-required rest out of the way.
-
-**Be strict about what earns a run here.** Two bars, both required:
-
-1. The behaviour is worth testing — a user-visible failure, not an internal detail.
-2. The apply genuinely cannot reach it. If it can, **add an assertion to the apply instead**; that
-   assertion runs against real infrastructure and is worth more than any mock.
-
-Variable-validation cases usually clear neither bar. Neither does anything reachable only through a
-module input the building block definition does not expose — that is dead configuration surface, not
-covered behaviour. When a run is dropped for these reasons, say so in the commit rather than
-relocating it.
-
-Confirm each run actually bites by mutating the module and watching it fail. A mocked run that
-passes against broken code is worse than no run at all.
-
 ### Covering several variants of one module
 
 Some modules build a materially different building block definition depending on an input — for
@@ -635,5 +596,3 @@ source setup-override-provider.sh
 - [ ] Variant flags (sync/async and similar) are **root variables of the `e2e/` module** with a default, not `test_context` fields
 - [ ] Each `.tftest.hcl` file covers one variant, pinning the flag in a file-level `variables` block; `run` blocks share one file's state only when the subject of the test is a change to a live building block's surroundings — see [The exception](#the-exception-a-test-whose-subject-is-a-change)
 - [ ] Writes into a long-lived shared fixture go to a per-run ephemeral slice named from `run_id`, owned by the `e2e/` module and included in the building block's `depends_on`
-- [ ] State the live apply cannot reach is covered by a mocked `<cloud>_<service>_unit.tftest.hcl` in `e2e/tests/`, targeting `module { source = "../buildingblock" }` — and only where the two bars are cleared (worth testing, unreachable by the apply); anything the apply *can* reach is an assertion on the apply instead
-- [ ] Every mocked run is mutation-checked: break the module, watch the run fail

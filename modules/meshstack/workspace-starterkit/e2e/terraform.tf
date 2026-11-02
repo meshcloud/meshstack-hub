@@ -5,9 +5,5 @@ terraform {
     meshstack = {
       source = "meshcloud/meshstack"
     }
-    # For the mocked run against ../buildingblock, not for anything here.
-    time = {
-      source = "hashicorp/time"
-    }
   }
 }
