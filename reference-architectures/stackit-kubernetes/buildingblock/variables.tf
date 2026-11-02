@@ -239,7 +239,11 @@ variable "imports" {
       artifactory_id = string
       registry_name  = string
     }))
-    kubernetes_platform = optional(object({}))
+    kubernetes_platform = optional(object({
+      platform_name     = optional(string)
+      location_name     = optional(string)
+      landingzone_names = optional(map(string), {})
+    }))
   })
   default     = null
   description = "Existing resources to take over, by key; see Adopting Existing Resources in the README. `git` needs `import_secrets.git` on its first run; null creates everything."
@@ -252,6 +256,22 @@ variable "imports" {
   validation {
     condition     = var.imports == null || (var.imports.ingress == null && var.imports.kubernetes_platform == null) || var.imports.ske != null
     error_message = "imports.ingress and imports.kubernetes_platform need imports.ske, because they live in that cluster."
+  }
+
+  validation {
+    condition     = (var.imports == null ? null : var.imports.kubernetes_platform) == null ? true : length(var.imports.kubernetes_platform.landingzone_names) == 0 || var.imports.kubernetes_platform.platform_name != null
+    error_message = "imports.kubernetes_platform.landingzone_names needs imports.kubernetes_platform.platform_name, because the landing zones belong to that platform."
+  }
+
+  validation {
+    condition     = (var.imports == null ? null : var.imports.kubernetes_platform) == null ? true : var.imports.kubernetes_platform.platform_name == null || var.imports.kubernetes_platform.location_name != null || var.use_global_location
+    error_message = "imports.kubernetes_platform.platform_name needs imports.kubernetes_platform.location_name or use_global_location, because the platform exists in a location already."
+  }
+
+  # A meshPlatform has no release on destroy, so a playground would delete the platform it adopted.
+  validation {
+    condition     = !var.playground_mode || ((var.imports == null ? null : var.imports.kubernetes_platform) == null ? true : var.imports.kubernetes_platform.platform_name == null)
+    error_message = "imports.kubernetes_platform.platform_name needs playground_mode = false."
   }
 }
 

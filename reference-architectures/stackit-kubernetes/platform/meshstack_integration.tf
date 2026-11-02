@@ -243,7 +243,7 @@ resource "meshstack_building_block_definition" "this" {
 
       imports = {
         display_name    = "Imports"
-        description     = "HCL object of what the building blocks take over, by key: `ske`, `git`, `dns`, `ingress`, `secrets_manager`, `container_registry`, `kubernetes_platform`. All optional."
+        description     = "HCL object of what the building blocks take over, by key: `ske`, `git`, `dns`, `ingress`, `secrets_manager`, `container_registry`, `kubernetes_platform` (which also adopts the meshPlatform and landing zones it names). All optional."
         type            = "CODE"
         assignment_type = "USER_INPUT"
         is_optional     = true

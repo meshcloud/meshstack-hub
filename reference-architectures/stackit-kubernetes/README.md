@@ -182,10 +182,11 @@ built before this architecture:
 | `ingress = {}` | the namespaces `cert-manager` and `haproxy-ingress`, their Helm releases `cert-manager` and `haproxy`, and the ClusterIssuer `letsencrypt-prod` |
 | `secrets_manager = {instance_id}` | the Secrets Manager instance, renamed to the platform identifier |
 | `container_registry = {artifactory_id, registry_name}` | the container registry of that full name |
-| `kubernetes_platform = {}` | the namespace `meshcloud` and the identities `meshfed-service` and `meshfed-metering` of an earlier meshStack platform registration |
+| `kubernetes_platform = {platform_name, location_name, landingzone_names}` | the namespace `meshcloud` and the identities `meshfed-service` and `meshfed-metering` of an earlier meshStack platform registration; `platform_name` also takes over the KUBERNETES meshPlatform of that name, and `landingzone_names` maps a stage to the name of its existing landing zone on it. `location_name` references an existing location instead of creating one; `platform_name` needs it or **Use Global Location**. All three are optional; `{}` takes over only what is in the cluster |
 
 Every key needs `project`, because the resources live in its STACKIT project. `ingress` and
-`kubernetes_platform` also need `ske`. Everything else is created new.
+`kubernetes_platform` also need `ske`. Everything else is created new. Names the imports leave out
+derive from **Platform Identifier**, so a stage added later gets `<platform identifier>-namespace-<stage>`.
 
 `git` also needs a Forgejo API token of an owner of the organization, in the sensitive **Import
 Secrets** input:
@@ -201,7 +202,7 @@ first run succeeded, set **Import Secrets** to `{}`; later runs act as that user
 out keeps the stored token, because meshStack keeps an input an update does not send.
 
 In playground mode, deleting the platform leaves what it took over in place. Otherwise it deletes
-it.
+it. A meshPlatform can only be taken over with playground mode off.
 
 The first run may change what it takes over to match this architecture's settings. To review it,
 switch on the `building_block_creation` and `any_input_changes` gates in `approval_policies` for the

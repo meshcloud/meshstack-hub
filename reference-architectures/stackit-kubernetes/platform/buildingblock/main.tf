@@ -3,10 +3,20 @@ locals {
 
   service_account_email = var.automation_identity.service_account_email
 
-  location_name = var.use_global_location ? "global" : meshstack_location.this.metadata.name
+  kubernetes_platform_imports = var.imports.kubernetes_platform != null ? var.imports.kubernetes_platform : {
+    platform_name     = null
+    location_name     = null
+    landingzone_names = {}
+  }
+
+  platform_name = coalesce(local.kubernetes_platform_imports.platform_name, var.platform_identifier)
+
+  create_location = !var.use_global_location && local.kubernetes_platform_imports.location_name == null
+  location_name   = local.create_location ? meshstack_location.this.metadata.name : coalesce(local.kubernetes_platform_imports.location_name, "global")
 
   landing_zones = {
     for stage, cfg in var.stages : stage => {
+      name = lookup(local.kubernetes_platform_imports.landingzone_names, stage, "${var.platform_identifier}-namespace-${stage}")
       tags = merge({ environment = [stage] }, cfg.landingzone)
     }
   }
@@ -42,7 +52,7 @@ locals {
 
 resource "meshstack_location" "this" {
   lifecycle {
-    enabled = !var.use_global_location
+    enabled = local.create_location
   }
 
   metadata = {

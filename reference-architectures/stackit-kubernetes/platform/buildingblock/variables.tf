@@ -64,7 +64,11 @@ variable "imports" {
       artifactory_id = string
       registry_name  = string
     }))
-    kubernetes_platform = optional(object({}))
+    kubernetes_platform = optional(object({
+      platform_name     = optional(string)
+      location_name     = optional(string)
+      landingzone_names = optional(map(string), {})
+    }))
   })
   nullable    = false
   default     = {}

@@ -111,7 +111,7 @@ module "kubernetes_integration" {
   meshstack = {
     owning_workspace_identifier = var.workspace
     location_name               = local.location_name
-    platform_identifier         = var.platform_identifier
+    platform_identifier         = local.platform_name
     tags = {
       landingzone    = var.tags.landingzone
       building_block = var.tags.building_block
@@ -149,7 +149,8 @@ resource "meshstack_building_block" "kubernetes_platform" {
         release_on_destroy = { value = jsonencode(var.imports.kubernetes_platform != null && var.playground_mode) }
       },
       var.imports.kubernetes_platform == null ? {} : {
-        imports = { value = jsonencode(jsonencode(var.imports.kubernetes_platform)) }
+        # The meshPlatform and its landing zones are this run's own; the child adopts what is in the cluster.
+        imports = { value = jsonencode(jsonencode({})) }
       },
     )
   }

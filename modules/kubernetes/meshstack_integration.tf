@@ -112,6 +112,7 @@ variable "quota_definitions" {
 
 variable "landing_zones" {
   type = map(object({
+    name         = optional(string)
     display_name = optional(string)
     description  = optional(string)
     tags         = optional(map(list(string)), {})
@@ -123,7 +124,7 @@ variable "landing_zones" {
   nullable    = false
   description = <<-EOT
   Landing zones created on the platform, keyed by stage. The key is the only required part, so a platform can offer any set of stages.
-  `display_name` and `description` default to a name built from the key.
+  `name` defaults to `<platform_identifier>-namespace-<key>`; `display_name` and `description` default to a name built from the key.
   `quotas` defaults to a built-in set, the larger one for `prod`.
   EOT
 
@@ -302,6 +303,7 @@ locals {
 
   landing_zones = {
     for key, lz in var.landing_zones : key => {
+      name         = coalesce(lz.name, "${var.meshstack.platform_identifier}-namespace-${key}")
       display_name = coalesce(lz.display_name, "Kubernetes Namespace – Stage ${title(key)}")
       description  = coalesce(lz.description, "Landing zone for ${key} workloads.")
       tags         = lz.tags
@@ -377,7 +379,7 @@ resource "meshstack_landingzone" "this" {
   for_each = local.landing_zones
 
   metadata = {
-    name               = "${var.meshstack.platform_identifier}-namespace-${each.key}"
+    name               = each.value.name
     owned_by_workspace = var.meshstack.owning_workspace_identifier
     tags               = merge(var.meshstack.tags.landingzone, each.value.tags)
   }
