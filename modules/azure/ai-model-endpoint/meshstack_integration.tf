@@ -1,0 +1,369 @@
+variable "azure_tenant_id" {
+  type        = string
+  description = "Azure Entra tenant ID the landing zone subscriptions belong to."
+}
+
+variable "azure_scope" {
+  type        = string
+  description = "RBAC scope where the deploy role is granted: a management group ('/providers/Microsoft.Management/managementGroups/<id>') or a subscription ('/subscriptions/<guid>'), typically the parent of all landing zones."
+  validation {
+    condition     = can(regex("^/subscriptions/[0-9a-fA-F-]{36}$|^/providers/Microsoft\\.Management/managementGroups/.+$", var.azure_scope))
+    error_message = "Must be a full resource path: '/subscriptions/<guid>' or '/providers/Microsoft.Management/managementGroups/<id>', not a bare GUID."
+  }
+}
+
+variable "azure_location" {
+  type = string
+  # Sweden Central offers the widest choice of models among EU regions.
+  default     = "swedencentral"
+  description = "Azure region of the backplane identity and of every AI Services account."
+}
+
+variable "azure_models" {
+  type = map(object({
+    format  = optional(string, "OpenAI")
+    version = string
+  }))
+  default = {
+    "gpt-4.1"                = { version = "2025-04-14" }
+    "gpt-4.1-mini"           = { version = "2025-04-14" }
+    "gpt-4o"                 = { version = "2024-11-20" }
+    "text-embedding-3-large" = { version = "1" }
+  }
+  description = "Models application teams may choose from, keyed by model name. Each must be available in `azure_location` for `azure_deployment_sku`."
+}
+
+variable "azure_deployment_sku" {
+  type        = string
+  default     = "DataZoneStandard"
+  description = "Deployment type of every model. `DataZoneStandard` keeps inference inside the EU data zone of an EU region, `Standard` inside the region, `GlobalStandard` routes it worldwide."
+}
+
+variable "backplane_name" {
+  type        = string
+  default     = "azure-ai-model-endpoint"
+  description = "Name for the backplane resources (managed identity, role definition). Must match pattern ^[-a-z0-9]+$."
+}
+
+variable "notification_subscribers" {
+  type        = list(string)
+  default     = []
+  description = "List of email addresses to notify on building block lifecycle events."
+}
+
+variable "bbd_display_name" {
+  type        = string
+  default     = null
+  description = "Overrides the name of the marketplace entry application teams see in the catalog."
+}
+
+variable "bbd_description" {
+  type        = string
+  default     = null
+  description = "Overrides the one-line description shown next to the marketplace entry."
+}
+
+variable "bbd_readme" {
+  type        = string
+  default     = null
+  description = "Overrides the markdown readme shown in the marketplace before ordering."
+}
+
+variable "building_block_runner_ref" {
+  type = object({
+    kind = string
+    uuid = string
+  })
+  default     = null
+  description = "Runs this building block on the given meshStack building block runner instead of the shared one meshStack hosts. Pass the runner's `ref` output."
+}
+
+variable "meshstack" {
+  type = object({
+    owning_workspace_identifier = string
+    tags                        = optional(map(list(string)), {})
+  })
+  description = "Shared meshStack context. Tags are optional and propagated to building block definition metadata."
+}
+
+variable "hub" {
+  type = object({
+    git_ref   = optional(string, "main")
+    bbd_draft = optional(bool, true)
+  })
+  const = true
+  default = {
+    git_ref   = "main"
+    bbd_draft = true
+  }
+  description = <<-EOT
+  `git_ref`: Hub release reference. Set to a tag (e.g. 'v1.2.3') or branch or commit sha of the meshstack-hub repo.
+  `bbd_draft`: If true, the building block definition version is kept in draft mode.
+  EOT
+}
+
+output "building_block_definition" {
+  description = "BBD is consumed in building block compositions."
+  value = {
+    uuid        = meshstack_building_block_definition.this.metadata.uuid
+    version_ref = var.hub.bbd_draft ? meshstack_building_block_definition.this.version_latest : meshstack_building_block_definition.this.version_latest_release
+  }
+}
+
+module "backplane" {
+  source = "github.com/meshcloud/meshstack-hub//modules/azure/ai-model-endpoint/backplane?ref=${var.hub.git_ref}"
+
+  name     = var.backplane_name
+  scope    = var.azure_scope
+  location = var.azure_location
+
+  workload_identity_federation = {
+    issuer   = meshstack_building_block_definition.this.version_latest.workload_identity_federation.issuer
+    subjects = [meshstack_building_block_definition.this.version_latest.workload_identity_federation.subject]
+  }
+}
+
+resource "meshstack_building_block_definition" "this" {
+  metadata = {
+    owned_by_workspace = var.meshstack.owning_workspace_identifier
+    tags               = var.meshstack.tags
+  }
+
+  spec = {
+    display_name             = coalesce(var.bbd_display_name, "Azure AI Model Endpoint")
+    description              = coalesce(var.bbd_description, "Deploys an approved AI model such as GPT-4.1 in your Azure subscription, with Entra ID authentication, a content filter and EU data residency.")
+    support_url              = "mailto:support@meshcloud.io"
+    documentation_url        = "https://hub.meshcloud.io/platforms/azure/definitions/azure-ai-model-endpoint"
+    notification_subscribers = var.notification_subscribers
+    symbol                   = "https://raw.githubusercontent.com/meshcloud/meshstack-hub/${var.hub.git_ref}/modules/azure/ai-model-endpoint/buildingblock/logo.svg"
+    target_type              = "TENANT_LEVEL"
+    supported_platforms      = [{ name = "AZURE" }]
+    run_transparency         = true
+
+    readme = coalesce(var.bbd_readme, chomp(<<-EOT
+      This building block deploys an AI model, such as GPT-4.1 or an embedding model, as a ready-to-call endpoint in your Azure subscription. It speaks the Azure OpenAI API, has Microsoft's default content filter on, and accepts Entra ID tokens only, so there are no API keys to leak.
+
+      ## 🎯 When to use it
+
+      Use this building block when you:
+      - Want to add a chat, summarization or extraction feature to an application.
+      - Need embeddings for a search or retrieval-augmented generation (RAG) use case.
+      - Must keep prompts and completions inside the EU and want the model's cost on your own subscription.
+
+      ## 💡 Usage examples
+
+      **Example 1: Document Q&A for an internal portal**
+      A team orders `gpt-4.1-mini` and `text-embedding-3-large`, indexes its handbook with the embedding model and lets the chat model answer questions on it. The App Service calls both with its managed identity.
+
+      **Example 2: Ticket classification**
+      A team passes the object ID of its Function App's managed identity at order time. The function classifies incoming support tickets with `gpt-4.1` without any secret in its configuration.
+
+      ## 🔑 Calling the model
+
+      Use the **OpenAI Endpoint** and **Deployment Name** outputs with any Azure OpenAI client and an Entra ID token for the scope `https://cognitiveservices.azure.com/.default`. Your identity needs the role `Cognitive Services OpenAI User` on the account: the building block grants it to the identity you enter at order time.
+
+      ## 📊 Shared Responsibility
+
+      | Responsibility | Platform Team | Application Team |
+      |---|:---:|:---:|
+      | Select approved models, region and data residency | ✅ | ❌ |
+      | Provide model quota in the subscription | ✅ | ❌ |
+      | Provision the endpoint with content filter and keyless auth | ✅ | ❌ |
+      | Choose model and capacity for the workload | ❌ | ✅ |
+      | Prompts, application logic and evaluation of answers | ❌ | ✅ |
+      | Cost of tokens consumed | ❌ | ✅ |
+    EOT
+    ))
+  }
+
+  version_spec = {
+    draft = var.hub.bbd_draft
+
+    deletion_mode = "DELETE"
+    runner_ref    = var.building_block_runner_ref
+
+    implementation = {
+      terraform = {
+        terraform_version              = "1.12.5"
+        repository_url                 = "https://github.com/meshcloud/meshstack-hub.git"
+        repository_path                = "modules/azure/ai-model-endpoint/buildingblock"
+        ref_name                       = var.hub.git_ref
+        use_mesh_http_backend_fallback = true
+      }
+    }
+
+    inputs = {
+      ARM_CLIENT_ID = {
+        type            = "STRING"
+        display_name    = "ARM Client ID"
+        description     = "Client ID of the UAMI used to authenticate with Azure."
+        assignment_type = "STATIC"
+        is_environment  = true
+        argument        = jsonencode(module.backplane.identity.client_id)
+      }
+      ARM_TENANT_ID = {
+        type            = "STRING"
+        display_name    = "ARM Tenant ID"
+        description     = "Azure Entra tenant ID for authentication."
+        assignment_type = "STATIC"
+        is_environment  = true
+        argument        = jsonencode(var.azure_tenant_id)
+      }
+      ARM_USE_OIDC = {
+        type            = "STRING"
+        display_name    = "ARM Use OIDC"
+        description     = "Enables OIDC-based workload identity federation for the Azure provider."
+        assignment_type = "STATIC"
+        is_environment  = true
+        argument        = jsonencode("true")
+      }
+      ARM_OIDC_TOKEN_FILE_PATH = {
+        type            = "STRING"
+        display_name    = "ARM OIDC Token File Path"
+        description     = "Path to the OIDC token file used for workload identity federation authentication."
+        assignment_type = "STATIC"
+        is_environment  = true
+        argument        = jsonencode("/var/run/secrets/workload-identity/azure/token")
+      }
+      subscription_id = {
+        type            = "STRING"
+        display_name    = "Subscription ID"
+        description     = "The Azure subscription the endpoint is created in."
+        assignment_type = "PLATFORM_TENANT_ID"
+      }
+      location = {
+        type            = "STRING"
+        display_name    = "Location"
+        description     = "The Azure region of the AI Services account."
+        assignment_type = "STATIC"
+        argument        = jsonencode(var.azure_location)
+      }
+      models = {
+        type            = "JSON"
+        display_name    = "Approved Models"
+        description     = "Models application teams may choose from, with the version deployed."
+        assignment_type = "STATIC"
+        argument        = jsonencode(var.azure_models)
+        json_schema = jsonencode({
+          type = "object"
+          additionalProperties = {
+            type     = "object"
+            required = ["version"]
+            properties = {
+              format  = { type = "string" }
+              version = { type = "string" }
+            }
+          }
+        })
+      }
+      deployment_sku = {
+        type            = "STRING"
+        display_name    = "Deployment Type"
+        description     = "Where inference runs: DataZoneStandard, Standard or GlobalStandard."
+        assignment_type = "STATIC"
+        argument        = jsonencode(var.azure_deployment_sku)
+      }
+      name = {
+        type                           = "STRING"
+        display_name                   = "Name"
+        description                    = "Name prefix of the resource group and the AI Services account. A random 5-character suffix is appended to the account (e.g. 'ticket-ai' becomes 'ticket-ai-x7k2q')."
+        assignment_type                = "USER_INPUT"
+        value_validation_regex         = "^[a-z][a-z0-9-]{1,20}[a-z0-9]$"
+        validation_regex_error_message = "3 to 22 characters: lowercase letters, digits and dashes, starting with a letter and ending with a letter or digit."
+        display_order                  = 1
+      }
+      model_name = {
+        type              = "SINGLE_SELECT"
+        display_name      = "Model"
+        description       = "The model to deploy."
+        assignment_type   = "USER_INPUT"
+        selectable_values = keys(var.azure_models)
+        display_order     = 2
+      }
+      capacity = {
+        type            = "INTEGER"
+        display_name    = "Capacity (thousand tokens per minute)"
+        description     = "Rate limit of the deployment, taken from your subscription's model quota. Defaults to 10, enough for development and light production use."
+        assignment_type = "USER_INPUT"
+        is_optional     = true
+        display_order   = 3
+      }
+      app_principal_id = {
+        type                           = "STRING"
+        display_name                   = "Application Identity Object ID"
+        description                    = "Optional: object ID of the managed identity or service principal your application calls the model with. It is granted Cognitive Services OpenAI User on the account."
+        assignment_type                = "USER_INPUT"
+        is_optional                    = true
+        value_validation_regex         = "^[0-9a-fA-F-]{36}$"
+        validation_regex_error_message = "Must be an object ID (GUID)."
+        display_order                  = 4
+      }
+    }
+
+    outputs = {
+      openai_endpoint = {
+        type            = "STRING"
+        display_name    = "OpenAI Endpoint"
+        description     = "The endpoint OpenAI clients use as their Azure endpoint."
+        assignment_type = "NONE"
+      }
+      endpoint = {
+        type            = "STRING"
+        display_name    = "AI Services Endpoint"
+        description     = "The endpoint of the AI Services account."
+        assignment_type = "NONE"
+      }
+      deployment_name = {
+        type            = "STRING"
+        display_name    = "Deployment Name"
+        description     = "The deployment name requests address the model by."
+        assignment_type = "NONE"
+      }
+      model = {
+        type            = "STRING"
+        display_name    = "Model"
+        description     = "The deployed model and version."
+        assignment_type = "NONE"
+      }
+      account_name = {
+        type            = "STRING"
+        display_name    = "Account Name"
+        description     = "The name of the AI Services account."
+        assignment_type = "NONE"
+      }
+      resource_group = {
+        type            = "STRING"
+        display_name    = "Resource Group"
+        description     = "The resource group containing the AI Services account."
+        assignment_type = "NONE"
+      }
+      portal_url = {
+        type            = "STRING"
+        display_name    = "Open in Azure Portal"
+        description     = "Azure Portal URL of the AI Services account."
+        assignment_type = "RESOURCE_URL"
+      }
+      summary = {
+        type            = "STRING"
+        display_name    = "Summary"
+        description     = "A markdown summary of the endpoint and how to call it."
+        assignment_type = "SUMMARY"
+      }
+    }
+  }
+}
+
+terraform {
+  required_version = ">= 1.12.0"
+
+  required_providers {
+    meshstack = {
+      source  = "meshcloud/meshstack"
+      version = ">= 0.27.0"
+    }
+    azurerm = {
+      source  = "hashicorp/azurerm"
+      version = ">= 4.65.0, < 5.0.0"
+    }
+  }
+}
