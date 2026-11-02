@@ -39,17 +39,26 @@ locals {
   service_enablement_path = "/v2/projects/${var.stackit_project_id}/regions/${var.stackit_region}/services"
   artifactory_path        = "/v1/projects/${var.stackit_project_id}/regions/${var.stackit_region}/artifactories"
 
+  user_registry_roles = {
+    for user in var.users : user.email => distinct(flatten([
+      for meshstack_role in user.roles : lookup(var.role_mapping, meshstack_role, [])
+    ]))
+  }
+
+  users_to_check = [for email, roles in local.user_registry_roles : email if length(roles) > 0]
+  memberships    = length(local.users_to_check) > 0 ? data.external.stackit_users.result : {}
+  unknown_users  = [for email in local.users_to_check : email if local.memberships[email] == "unknown"]
+  owner_users    = [for email in local.users_to_check : email if contains(split(",", local.memberships[email]), "owner")]
+
   registry_role_assignments = {
     for assignment in flatten([
-      for user in var.users : [
-        for registry_role in distinct(flatten([
-          for meshstack_role in user.roles : lookup(var.role_mapping, meshstack_role, [])
-          ])) : {
-          key     = "${user.email}:${registry_role}"
-          subject = user.email
+      for email, roles in local.user_registry_roles : [
+        for registry_role in roles : {
+          key     = "${email}:${registry_role}"
+          subject = email
           role    = registry_role
         }
-      ]
+      ] if !contains(local.unknown_users, email) && !contains(local.owner_users, email)
     ]) : assignment.key => assignment
   }
 }
@@ -141,6 +150,20 @@ data "external" "artifactory" {
 # `container-registry.artifactory.*` role on the STACKIT project is what makes the Harbor project
 # appear for that user, and STACKIT onboards the Harbor account on their first sign-in. Verified
 # live — a user who saw nothing in Harbor saw the project right after the role was granted.
+data "external" "stackit_users" {
+  lifecycle {
+    enabled = length(local.users_to_check) > 0
+  }
+
+  program = ["bash", "${path.module}/list-unknown-users.sh"]
+
+  query = {
+    resource_type = "project"
+    resource_id   = var.stackit_project_id
+    emails        = join(",", local.users_to_check)
+  }
+}
+
 resource "stackit_authorization_project_role_assignment" "registry_users" {
   for_each = local.registry_role_assignments
 

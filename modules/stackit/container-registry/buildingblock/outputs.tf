@@ -27,6 +27,8 @@ output "summary" {
     registry_robot_url = local.registry_robot_url
     stackit_project_id = var.stackit_project_id
     user_assignments   = values(local.registry_role_assignments)
+    unknown_users      = local.unknown_users
+    owner_users        = local.owner_users
 
     robots_minted                 = local.mint_robots
     stackit_service_account_email = local.stackit_service_account_email
