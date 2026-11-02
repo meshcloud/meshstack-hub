@@ -6,5 +6,9 @@ terraform {
       source  = "stackitcloud/stackit"
       version = ">= 0.98.0, < 1.0.0"
     }
+    external = {
+      source  = "hashicorp/external"
+      version = ">= 2.3.0, < 3.0.0"
+    }
   }
 }

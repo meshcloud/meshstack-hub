@@ -30,6 +30,7 @@ The roles are project-wide: they open every Secrets Manager instance in the proj
 | Name | Version |
 |------|---------|
 | <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.12.0 |
+| <a name="requirement_external"></a> [external](#requirement\_external) | >= 2.3.0, < 3.0.0 |
 | <a name="requirement_stackit"></a> [stackit](#requirement\_stackit) | >= 0.98.0, < 1.0.0 |
 
 ## Modules
@@ -43,6 +44,7 @@ The roles are project-wide: they open every Secrets Manager instance in the proj
 | Name | Type |
 |------|------|
 | [stackit_authorization_project_role_assignment.users](https://registry.terraform.io/providers/stackitcloud/stackit/latest/docs/resources/authorization_project_role_assignment) | resource |
+| [external_external.stackit_users](https://registry.terraform.io/providers/hashicorp/external/latest/docs/data-sources/external) | data source |
 
 ## Inputs
 

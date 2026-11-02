@@ -37,5 +37,7 @@ output "summary" {
     users_url     = local.users_url
     api_url       = local.api_url
     kv_mount      = local.kv_mount
+    unknown_users = local.unknown_users
+    covered_roles = values(local.covered_roles)
   })
 }
