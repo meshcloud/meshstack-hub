@@ -82,6 +82,8 @@ conventions, see the reference files in `.agents/references/`.
 
 - **`logo` check**: requires `buildingblock/logo.png` or `buildingblock/logo.svg`. A PNG should be a 256×256 px, flat-design, white-background icon. `ci/validate_modules.sh` rejects anything larger than 512 px in either dimension. Generate with an AI image tool if missing, then run `bash ci/validate_modules.sh --fix` to resize and optimise it with `pngquant`.
 - **`e2e_tests` / `e2e_tftest`**: creating a full e2e test is a larger task — check with the module owner before adding. See `.agents/skills/e2e-test/SKILL.md`.
+- **The scorecard is a report**, posted as a PR comment, and never a gate: it exits non-zero only
+  on a script error, such as an unknown module.
 - **Never** fix a check by editing the check logic in `scorecard.mjs` — fix the module.
 
 ---

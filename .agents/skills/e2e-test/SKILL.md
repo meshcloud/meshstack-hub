@@ -33,8 +33,9 @@ trailing whitespace and `ci/validate_modules.sh` — and the scorecard's Testing
 `override_data` or `override_module`, and no `*_unit.tftest.hcl`. A state the live apply cannot
 reach goes untested; anything it can reach is an assertion on the apply.
 
-**Do not add a `*.tftest.hcl` under `buildingblock/`.** Nothing will execute it, so it rots
-unnoticed. The  `no_buildingblock_tftest` scorecard check flags each one as migration debt.
+**Do not add a `*.tftest.hcl` outside `e2e/`.** Nothing will execute it, so it rots unnoticed.
+The scorecard reports a module that breaks either rule (`no_buildingblock_tftest`,
+`no_mocked_tftest`).
 
 ## Verify Before Merging
 
