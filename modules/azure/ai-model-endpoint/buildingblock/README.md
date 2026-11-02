@@ -27,7 +27,7 @@ tenant's subscription.
 ## Requirements
 
 | Name | Version |
-| ---- | ------- |
+|------|---------|
 | <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.12.0 |
 | <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) | >= 4.65.0, < 5.0.0 |
 | <a name="requirement_random"></a> [random](#requirement\_random) | >= 3.6.3, < 4.0.0 |
@@ -39,7 +39,7 @@ No modules.
 ## Resources
 
 | Name | Type |
-| ---- | ---- |
+|------|------|
 | [azurerm_cognitive_account.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/cognitive_account) | resource |
 | [azurerm_cognitive_deployment.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/cognitive_deployment) | resource |
 | [azurerm_resource_group.this](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/resource_group) | resource |
@@ -50,7 +50,7 @@ No modules.
 ## Inputs
 
 | Name | Description | Type | Default | Required |
-| ---- | ----------- | ---- | ------- | :------: |
+|------|-------------|------|---------|:--------:|
 | <a name="input_app_principal_id"></a> [app\_principal\_id](#input\_app\_principal\_id) | Object ID of the identity the application calls the model with, such as a managed identity. It is granted `Cognitive Services OpenAI User` on the account. Null grants nothing. | `string` | `null` | no |
 | <a name="input_capacity"></a> [capacity](#input\_capacity) | Rate limit of the deployment in thousands of tokens per minute. It is taken from the subscription's quota for the model, region and deployment type. | `number` | `10` | no |
 | <a name="input_deployment_sku"></a> [deployment\_sku](#input\_deployment\_sku) | Deployment type of the model. `DataZoneStandard` keeps inference inside the data zone of the region (EU or US), `Standard` inside the region itself, `GlobalStandard` routes it worldwide. | `string` | `"DataZoneStandard"` | no |
@@ -58,12 +58,13 @@ No modules.
 | <a name="input_model_name"></a> [model\_name](#input\_model\_name) | The model to deploy, one of the keys of `models`. | `string` | n/a | yes |
 | <a name="input_models"></a> [models](#input\_models) | Models the platform team allows, keyed by model name. Set by the platform team, the application team picks one of the keys as `model_name`. | <pre>map(object({<br/>    format  = optional(string, "OpenAI")<br/>    version = string<br/>  }))</pre> | n/a | yes |
 | <a name="input_name"></a> [name](#input\_name) | Name prefix of the resource group and the AI Services account. A random 5-character suffix is appended to the account for global uniqueness of its subdomain. | `string` | n/a | yes |
+| <a name="input_public_network_access_enabled"></a> [public\_network\_access\_enabled](#input\_public\_network\_access\_enabled) | Whether the endpoint is reachable from the public internet. Entra ID still decides who may call it. Turn it off only when the application reaches the account through a private endpoint of its own. | `bool` | `true` | no |
 | <a name="input_subscription_id"></a> [subscription\_id](#input\_subscription\_id) | The Azure subscription the endpoint is created in, the tenant's landing zone. | `string` | n/a | yes |
 
 ## Outputs
 
 | Name | Description |
-| ---- | ----------- |
+|------|-------------|
 | <a name="output_account_name"></a> [account\_name](#output\_account\_name) | The name of the AI Services account, including its random suffix. |
 | <a name="output_deployment_name"></a> [deployment\_name](#output\_deployment\_name) | The deployment name requests address the model by. |
 | <a name="output_endpoint"></a> [endpoint](#output\_endpoint) | The endpoint of the AI Services account. |

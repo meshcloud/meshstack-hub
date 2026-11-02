@@ -59,6 +59,12 @@ variable "capacity" {
   }
 }
 
+variable "public_network_access_enabled" {
+  type        = bool
+  default     = true
+  description = "Whether the endpoint is reachable from the public internet. Entra ID still decides who may call it. Turn it off only when the application reaches the account through a private endpoint of its own."
+}
+
 variable "app_principal_id" {
   type        = string
   default     = null

@@ -42,6 +42,7 @@ output "summary" {
 
     - **Endpoint**: `${azurerm_cognitive_account.this.custom_subdomain_name}.openai.azure.com`
     - **Resource group**: ${azurerm_resource_group.this.name}
+    - **Network access**: ${var.public_network_access_enabled ? "public, protected by Entra ID" : "private endpoints only"}
     - **Access**: ${var.app_principal_id != null ? "`${var.app_principal_id}` holds `Cognitive Services OpenAI User`" : "no identity granted yet, assign `Cognitive Services OpenAI User` on the account"}
     - [Open in Azure Portal](${local.portal_url})
 
