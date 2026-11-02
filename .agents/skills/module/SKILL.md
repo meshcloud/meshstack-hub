@@ -65,7 +65,7 @@ conventions, see the reference files in `.agents/references/`.
    tools/scorecard/scorecard.mjs --module=<provider>/<service> --fix
    ```
 
-3. **Apply fixes** — for each failing check, read the referenced section and fix the module. Work category by category: **Core → Integration → Azure Backplane → Testing**.
+3. **Apply fixes** — for each failing check, read the referenced section and fix the module. Work category by category: **Core → Integration → Backplane → Shared Practices → Testing**. Shared Practices are the checks reference architectures get as well.
 
 4. **Verify** after each category:
    ```sh

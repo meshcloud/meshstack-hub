@@ -84,6 +84,14 @@ which plans fine. The fix is in the provider; switch over once a release carries
 Prefer storing no secret at all: use workload identity federation where meshStack supports it, or
 feed `secret_value` from an `ephemeral` resource.
 
+<!-- scorecard-checks: no_sensitive_outputs -->
+## No Credentials in Outputs
+
+A credential a building block creates goes to a secret store of the platform, such as the STACKIT
+Secrets Manager or Azure Key Vault, and the building block outputs where it is. Access then follows
+the store's permissions, and a consumer reads the current value when it runs. So no output of a
+`buildingblock/` root sets `sensitive = true`, and no BBD output is declared sensitive.
+
 <!-- scorecard-checks: child_bb_run_postcondition -->
 ## Ordering Child Building Blocks
 
@@ -103,8 +111,7 @@ resource "meshstack_building_block" "example" {
 ```
 
 Copy those four lines verbatim, in every child building block, including the ones in
-`reference-architectures/` — the scorecard checks only the tests of a reference architecture, so
-nothing checks them for you.
+`reference-architectures/` — the scorecard does not check this rule there.
 Do not write a per-block message: OpenTofu prints the resource address and the file and line of the
 failing postcondition, and `self` supplies the uuid, health status and action, so the identical
 message names the specific block anyway. `status.succeeded` needs meshStack provider v0.27.0, so a
