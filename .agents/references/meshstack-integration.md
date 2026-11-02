@@ -146,6 +146,18 @@ the definition gains a required input, even one with a default. So a new input i
 without that flag, setting it on an existing block fails with 403 "You tried to edit input ...".
 A BOOLEAN input cannot be optional, so it always takes the second way.
 
+<!-- scorecard-checks: bbd_structured_inputs, bbd_optional_over_default -->
+## Input Types and Defaults
+
+meshStack passes each input to the Terraform variable of the same name.
+
+- An input whose variable is an `object` or a `map` is `type = "JSON"` with a `json_schema`: meshPanel
+  renders a form from the schema, and meshStack rejects a value the schema does not allow. `CODE`
+  stays right for free text such as YAML, HCL or a script.
+- An input whose default only repeats the variable's `default` is `is_optional = true` with no
+  `default_value`. meshStack then sends no value and the variable's default applies, so the default
+  lives in one place. A BOOLEAN input cannot be optional and keeps its `default_value`.
+
 <!-- scorecard-checks: wif_no_replicator -->
 ## Runner identity
 

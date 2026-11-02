@@ -8,10 +8,13 @@
  * - Core Structure: applies to all modules
  * - Integration: applies only to modules with meshstack_integration.tf
  * - Azure Backplane: applies only to Azure modules with a backplane/
+ * - Shared Practices: modules and reference architectures alike
+ * - Reference Architecture: reference architectures only
  * - Testing: applies to all modules (aspirational)
  *
  * A reference architecture is scored with the checks that target it (`targets`) and a summary of
- * the module scorecard of every module it includes.
+ * the module scorecard of every module it includes. One without code fails every `needsCode` check,
+ * so its gaps read as a todo list.
  *
  * Usage: node tools/scorecard/scorecard.mjs [--category=<name>] [--provider=<name>] [--module=<id>] [--fix] [--output=<file>]
  *        node tools/scorecard/scorecard.mjs --ref-archs | --ref-arch=<name> ...
@@ -116,6 +119,18 @@ const CATEGORIES = {
     description: "STACKIT WIF-based automation principal conventions",
     appliesTo: (mod) =>
       mod.provider === "stackit" && existsSync(join(mod.path, "backplane")),
+  },
+  shared: {
+    id: "shared",
+    name: "Shared Practices",
+    description: "Practices modules and reference architectures share",
+    appliesTo: () => true,
+  },
+  ref_arch: {
+    id: "ref_arch",
+    name: "Reference Architecture",
+    description: "How a reference architecture orders and documents its building blocks",
+    appliesTo: () => true,
   },
   testing: {
     id: "testing",
@@ -278,9 +293,11 @@ const detectors = [
   },
   {
     id: "meshstack_ref_output",
-    category: "core",
+    category: "shared",
     name: "meshStack `*_ref` attributes take a ref, never an object built from a uuid",
     emoji: "🎯",
+    targets: ["module", "refArch"],
+    needsCode: true,
     fn: (mod) => {
       const offenders = [];
       let references = 0;
@@ -1466,16 +1483,185 @@ const detectors = [
     name: "e2e/main.tf with a .tftest.hcl",
     emoji: "🧪",
     targets: ["refArch"],
+    needsCode: "no buildingblock code and no e2e yet",
     fn: (ra) => {
-      if (collectTfFilesRecursive(ra.path).length === 0) {
-        return { pass: null, detail: "documentation only, nothing to deploy" };
-      }
       const e2e = join(ra.path, "e2e");
       if (!existsSync(join(e2e, "main.tf"))) {
         return { pass: false, detail: "no e2e/main.tf, which is what the smoke tests discover" };
       }
       const tests = collectFilesRecursive(e2e).filter((file) => file.endsWith(".tftest.hcl"));
       return tests.length ? { pass: true } : { pass: false, detail: "e2e/ has no .tftest.hcl" };
+    },
+  },
+
+  // ─── Shared Practices ───────────────────────────────────────────────────
+  {
+    id: "no_sensitive_outputs",
+    category: "shared",
+    name: "no building block output carries a secret",
+    emoji: "🔐",
+    targets: ["module", "refArch"],
+    needsCode: true,
+    fn: (target) => {
+      const offenders = [];
+      let declared = 0;
+      for (const { file, content } of readCodeFiles(target)) {
+        const where = relative(target.path, file);
+        if (basename(dirname(file)) === "buildingblock") {
+          for (const [name, body] of extractOutputBlocks(content)) {
+            declared++;
+            if (/^\s*sensitive\s*=\s*true\b/m.test(body)) offenders.push(`${where}: output "${name}"`);
+          }
+        }
+        for (const [bbd, body] of extractResourceBlocks(content, "meshstack_building_block_definition")) {
+          for (const [key, entry] of bbdEntries(body, "outputs")) {
+            declared++;
+            if (/^\s*(is_)?sensitive\s*=\s*true\b/m.test(entry)) offenders.push(`${where}: ${bbd} output "${key}"`);
+          }
+        }
+      }
+      if (declared === 0) return { pass: null, detail: "declares no building block outputs" };
+      return listOffenders(offenders, "write the credential to a secret store of the platform and output where it is");
+    },
+  },
+  {
+    id: "bbd_structured_inputs",
+    category: "shared",
+    name: "User-facing BBD inputs backed by an object or map variable are JSON with a json_schema",
+    emoji: "🧾",
+    targets: ["module", "refArch"],
+    needsCode: true,
+    fn: (target) => {
+      const offenders = [];
+      let checked = 0;
+      for (const { where, bbd, key, entry, variable } of bbdInputsWithVariables(target)) {
+        if (inputAttribute(entry, "type") !== "CODE") continue;
+        // Only these two are filled in through meshPanel, so only they get a form.
+        if (!/^(USER_INPUT|PLATFORM_OPERATOR_MANUAL_INPUT)$/.test(inputAttribute(entry, "assignment_type"))) continue;
+        checked++;
+        const tfType = variable.match(/^\s*type\s*=\s*(\w+)/m)?.[1];
+        if (tfType === "object" || tfType === "map") offenders.push(`${where}: ${bbd} input "${key}" (${tfType})`);
+      }
+      if (checked === 0) return { pass: null, detail: "no user-facing CODE inputs backed by a variable" };
+      return listOffenders(offenders, "a form beats free-form HCL for structured values, make these JSON inputs with a json_schema");
+    },
+  },
+  {
+    id: "bbd_optional_over_default",
+    category: "shared",
+    name: "BBD inputs do not repeat the variable's default in default_value",
+    emoji: "🪞",
+    targets: ["module", "refArch"],
+    needsCode: true,
+    fn: (target) => {
+      const offenders = [];
+      let checked = 0;
+      for (const { where, bbd, key, entry, variable } of bbdInputsWithVariables(target)) {
+        const inputDefault = entry.match(/^\s*default_value\s*=\s*jsonencode\((.*)\)\s*$/m)?.[1];
+        if (inputDefault === undefined || inputAttribute(entry, "type") === "BOOLEAN") continue;
+        checked++;
+        const variableDefault = variable.match(/^\s*default\s*=\s*(.+?)\s*$/m)?.[1];
+        if (isPlainLiteral(inputDefault) && normalizeLiteral(inputDefault) === normalizeLiteral(variableDefault ?? "")) {
+          offenders.push(`${where}: ${bbd} input "${key}"`);
+        }
+      }
+      if (checked === 0) return { pass: null, detail: "no non-BOOLEAN inputs with a default_value backed by a variable" };
+      return listOffenders(offenders, "drop default_value and set is_optional = true, so the variable's default stays the only one");
+    },
+  },
+
+  // ─── Reference Architecture ─────────────────────────────────────────────
+  {
+    id: "ref_arch_children_version_latest",
+    category: "ref_arch",
+    name: "Children are ordered with, and outputs hand out, version_latest",
+    emoji: "🆕",
+    targets: ["refArch"],
+    needsCode: true,
+    fn: (ra) => {
+      const files = readCodeFiles(ra);
+      const moduleDirs = new Map(files.flatMap(({ file, content }) => moduleSourceDirs(file, content)));
+      const offenders = [];
+      let checked = 0;
+      for (const { file, content } of files) {
+        const where = relative(ra.path, file);
+        for (const [name, body] of extractResourceBlocks(content, "meshstack_building_block")) {
+          const expression = attributeExpression(body, "building_block_definition_version_ref");
+          if (expression === null) continue;
+          checked++;
+          const viaModule = expression.match(/^module\.(\w+)\.building_block_definition\.version_ref$/)?.[1];
+          if (expression.startsWith("{")) {
+            offenders.push(`${where}: ${name} builds its version ref by hand`);
+          } else if (expression.includes("version_latest_release")) {
+            offenders.push(`${where}: ${name} orders version_latest_release`);
+          } else if (viaModule && handsOutRelease(moduleDirs.get(viaModule))) {
+            offenders.push(`${where}: ${name} orders module.${viaModule}'s version_latest_release`);
+          }
+        }
+        for (const [name, body] of extractOutputBlocks(content)) {
+          checked++;
+          if (body.includes("version_latest_release")) offenders.push(`${where}: output "${name}" hands out version_latest_release`);
+        }
+      }
+      if (checked === 0) return { pass: null, detail: "orders no building blocks and hands out no outputs" };
+      return listOffenders(offenders, "order and hand out version_latest, so a new version may move to another runner");
+    },
+  },
+  {
+    id: "ref_arch_hub_ref_from_caller",
+    category: "ref_arch",
+    name: "Hub sources, ref_name and assets follow var.hub.git_ref",
+    emoji: "📌",
+    targets: ["refArch"],
+    needsCode: true,
+    fn: (ra) => {
+      const offenders = [];
+      let checked = 0;
+      for (const { file, content } of readCodeFiles(ra)) {
+        const where = relative(ra.path, file);
+        const pinned = [
+          ...[...content.matchAll(/meshstack-hub\/\/[^"]*/g)].map((m) => [m[0], m[0].match(/\?ref=(.*)$/)?.[1]]),
+          ...[...content.matchAll(/raw\.githubusercontent\.com\/meshcloud\/meshstack-hub\/(\$\{[^}]*\}|[^/"]*)/g)].map((m) => [m[0], m[1]]),
+          ...[...content.matchAll(/^\s*ref_name\s*=\s*(.+?)\s*$/gm)].map((m) => [m[0].trim(), m[1].replace(/^"\$\{(.*)\}"$/, "$1")]),
+        ];
+        for (const [text, ref] of pinned) {
+          checked++;
+          if (!/^(\$\{)?var\.hub\.git_ref\}?$/.test(ref ?? "")) offenders.push(`${where}: ${text}`);
+        }
+      }
+      if (checked === 0) return { pass: null, detail: "references no Hub source" };
+      return listOffenders(offenders, "take the Hub ref from the caller's var.hub.git_ref");
+    },
+  },
+  {
+    id: "ref_arch_approval_policies",
+    category: "ref_arch",
+    name: "The definition takes its approval policies from a variable",
+    emoji: "🛂",
+    targets: ["refArch"],
+    needsCode: true,
+    fn: (ra) => {
+      const content = readIntegrationTf(ra);
+      if (!content) return { pass: false, detail: "no meshstack_integration.tf, so nothing registers the architecture" };
+      return /^\s*approval_policies\s*=\s*var\.\w+/m.test(content)
+        ? { pass: true }
+        : { pass: false, detail: "set spec.approval_policies from an approval_policies variable" };
+    },
+  },
+  {
+    id: "ref_arch_diagram",
+    category: "ref_arch",
+    name: "README.md shows a committed diagram (.dot + .svg)",
+    emoji: "🗺️",
+    targets: ["refArch"],
+    fn: (ra) => {
+      const readme = readFileSync(join(ra.path, "README.md"), "utf-8");
+      const shown = [...readme.matchAll(/!\[[^\]]*\]\(([^)\s]+)\.svg\)/g)].map((m) => m[1]);
+      if (shown.length === 0) return { pass: false, detail: "README.md shows no .svg diagram" };
+      const missing = shown.filter((name) => !existsSync(join(ra.path, `${name}.svg`)) || !existsSync(join(ra.path, `${name}.dot`)));
+      return missing.length
+        ? { pass: false, detail: `missing .dot or .svg for ${missing.join(", ")}` }
+        : { pass: true };
     },
   },
 ];
@@ -2018,6 +2204,99 @@ function discoverModules() {
   return modules.sort((a, b) => a.id.localeCompare(b.id));
 }
 
+// The configuration a target deploys, heredoc bodies blanked. e2e/ is left out: it is a caller.
+function readCodeFiles(target) {
+  const e2e = join(target.path, "e2e") + "/";
+  return collectTfFilesRecursive(target.path)
+    .filter((file) => !file.startsWith(e2e))
+    .map((file) => ({ file, content: blankHeredocBodies(readFileSync(file, "utf-8")) }));
+}
+
+function listOffenders(offenders, advice) {
+  if (offenders.length === 0) return { pass: true };
+  const shown = offenders.slice(0, 5).join("; ");
+  const more = offenders.length > 5 ? `, +${offenders.length - 5} more` : "";
+  return { pass: false, detail: `${advice}: ${shown}${more}` };
+}
+
+function attributeExpression(body, attribute) {
+  const m = body.match(new RegExp(String.raw`^[ \t]*${attribute}\s*=[ \t]*`, "m"));
+  if (!m) return null;
+  const start = m.index + m[0].length;
+  return body.slice(start, findExpressionEnd(body, start)).trim();
+}
+
+const inputAttribute = (entry, attribute) => entry.match(new RegExp(String.raw`^\s*${attribute}\s*=\s*"([^"]*)"`, "m"))?.[1];
+
+function bbdEntries(bbdBlock, attribute) {
+  const m = bbdBlock.match(new RegExp(String.raw`^\s*${attribute}\s*=\s*\{`, "m"));
+  if (!m) return [];
+  const open = m.index + m[0].length - 1;
+  const close = findMatchingBrace(bbdBlock, open);
+  if (close < 0) return [];
+  const body = bbdBlock.slice(open + 1, close);
+  const entries = [];
+  const re = /^\s*(?:"([^"]+)"|([A-Za-z_][\w-]*))\s*=\s*\{/gm;
+  let consumed = 0;
+  for (let m2 = re.exec(body); m2; m2 = re.exec(body)) {
+    const skipped = body.slice(consumed, m2.index);
+    if ((skipped.match(/\{/g) ?? []).length !== (skipped.match(/\}/g) ?? []).length) continue;
+    const entryOpen = m2.index + m2[0].length - 1;
+    const entryClose = findMatchingBrace(body, entryOpen);
+    if (entryClose < 0) break;
+    entries.push([m2[1] ?? m2[2], body.slice(entryOpen + 1, entryClose)]);
+    consumed = re.lastIndex = entryClose + 1;
+  }
+  return entries;
+}
+
+// meshStack passes each input to the Terraform variable of the same name in the definition's
+// repository_path, which every definition in this repo sets as a literal.
+function bbdInputsWithVariables(target) {
+  const found = [];
+  for (const { file, content } of readCodeFiles(target)) {
+    for (const [bbd, body] of extractResourceBlocks(content, "meshstack_building_block_definition")) {
+      const path = body.match(/^\s*repository_path\s*=\s*"([^"$]+)"/m)?.[1];
+      if (!path) continue;
+      const implementation = join(ROOT, path);
+      if (!existsSync(implementation)) continue;
+      const variables = extractVariableBlocks(
+        readdirSync(implementation)
+          .filter((f) => f.endsWith(".tf"))
+          .map((f) => readFileSync(join(implementation, f), "utf-8"))
+          .join("\n")
+      );
+      for (const [key, entry] of bbdEntries(body, "inputs")) {
+        const variable = variables.get(key);
+        if (variable) found.push({ where: relative(target.path, file), bbd, key, entry, variable });
+      }
+    }
+  }
+  return found;
+}
+
+const isPlainLiteral = (text) => /^("([^"\\$]|\\.)*"|-?\d+(\.\d+)?|true|false|\[\s*\]|\{\s*\})$/.test(text.trim());
+const normalizeLiteral = (text) => text.replace(/\s+/g, "");
+
+function moduleSourceDirs(file, content) {
+  const dirs = [];
+  for (const [name, body] of extractNamedBlocks(content, "module")) {
+    const source = body.match(/^\s*source\s*=\s*"([^"]+)"/m)?.[1];
+    if (!source) continue;
+    const hubPath = source.match(/meshstack-hub\/\/([^?]+)/)?.[1];
+    if (hubPath) dirs.push([name, join(ROOT, hubPath)]);
+    else if (source.startsWith(".")) dirs.push([name, join(dirname(file), source)]);
+  }
+  return dirs;
+}
+
+function handsOutRelease(moduleDir) {
+  const integration = moduleDir && join(moduleDir, "meshstack_integration.tf");
+  if (!integration || !existsSync(integration)) return false;
+  const output = extractOutputBlocks(readFileSync(integration, "utf-8")).get("building_block_definition");
+  return output?.includes("version_latest_release") ?? false;
+}
+
 // A folder without a README.md is not a reference architecture; the website skips it too.
 function discoverRefArchs() {
   return readdirSync(REF_ARCHS_DIR)
@@ -2026,6 +2305,7 @@ function discoverRefArchs() {
     .map((name) => ({
       kind: "refArch",
       path: join(REF_ARCHS_DIR, name),
+      hasCode: collectTfFilesRecursive(join(REF_ARCHS_DIR, name)).length > 0,
       id: name,
       dir: `reference-architectures/${name}`,
       cliArg: `--ref-arch=${name}`,
@@ -2170,6 +2450,14 @@ function selectTargets(all, ids, noun, format) {
   return selected;
 }
 
+function checkResult(target, detector, applicable) {
+  if (!applicable) return { pass: null, detail: "not applicable" };
+  if (target.kind === "refArch" && detector.needsCode && !target.hasCode) {
+    return { pass: false, detail: typeof detector.needsCode === "string" ? detector.needsCode : "no buildingblock code yet" };
+  }
+  return detector.fn(target);
+}
+
 function scoreTarget(target, categories, filterCategory) {
   const categoryResults = {};
 
@@ -2178,10 +2466,7 @@ function scoreTarget(target, categories, filterCategory) {
   for (const [catId, cat] of Object.entries(categories)) {
     const applicable = cat.appliesTo(target);
     const catDetectors = detectorsFor(target.kind).filter((d) => d.category === catId);
-    const checks = catDetectors.map((d) => ({
-      ...d,
-      result: applicable ? d.fn(target) : { pass: null, detail: "not applicable" },
-    }));
+    const checks = catDetectors.map((d) => ({ ...d, result: checkResult(target, d, applicable) }));
 
     const applicableChecks = checks.filter((c) => c.result.pass !== null);
     const passed = applicableChecks.filter((c) => c.result.pass).length;

@@ -48,6 +48,7 @@ Markdown body with overview, architecture diagram, how-it-works walkthrough,
 getting-started steps, and shared responsibility matrix.
 ```
 
+<!-- scorecard-checks: ref_arch_diagram -->
 ## Conventions
 
 - Folder name: `<cloud>-<capability>` (e.g. `azure-kubernetes`, `stackit-kubernetes`), with the
@@ -80,6 +81,28 @@ An importable architecture (`meshstack_integration.tf` + `buildingblock/`) follo
 a module: [meshstack-integration.md](meshstack-integration.md) and
 [meshstack-resources.md](meshstack-resources.md).
 
+<!-- scorecard-checks: ref_arch_children_version_latest, ref_arch_hub_ref_from_caller, ref_arch_approval_policies -->
+## Ordering Building Blocks
+
+- Order every child building block from `version_latest`, directly or through a module's
+  `building_block_definition.version_ref`, and hand out `version_latest` in outputs. A
+  `{ uuid = ... }` built by hand pins one version.
+- Take the Hub ref from the caller, as a module integration does: module sources end in
+  `?ref=${var.hub.git_ref}`, the BBD sets `ref_name = var.hub.git_ref`, and asset URLs such as the
+  `symbol` use the same ref.
+- The definition takes `spec.approval_policies` from an `approval_policies` variable, so whoever
+  installs the architecture can gate its runs.
+
+## Review Rules
+
+The scorecard does not check these; a reviewer does.
+
+- An input that only matters in one mode carries a `condition` (CEL): `imports` only when adopting,
+  playground knobs only with `playground_mode`.
+- A resource the architecture can adopt follows the imports pattern of its module: an `imports`
+  input decides between creating (`null`) and importing (an object), and `release_on_destroy`
+  leaves an adopted resource in place on destroy.
+
 <!-- scorecard-checks: ref_arch_e2e -->
 ## Testing
 
@@ -96,6 +119,9 @@ node tools/scorecard/scorecard.mjs --ref-arch=<name> [--fix]
 node tools/scorecard/scorecard.mjs --changed-since=origin/main  # what the branch changed, as in the PR comment
 ```
 
-The scorecard checks an architecture's tests only. For the modules it includes — those its code
-sources or registers and those its front-matter lists — it shows a one-line summary of their module
-scorecard; fix a finding there with `--module=<provider>/<service>`.
+It scores the practices it shares with modules (no credentials in outputs, refs over uuids,
+structured inputs and defaults), the rules of [Ordering Building Blocks](#ordering-building-blocks),
+the diagram and the tests. An architecture without code fails its code and e2e checks with "no
+buildingblock code yet", so the report reads as its todo list. For the modules it includes — those
+its code sources or registers and those its front-matter lists — it shows a one-line summary of
+their module scorecard; fix a finding there with `--module=<provider>/<service>`.
