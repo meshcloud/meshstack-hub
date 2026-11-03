@@ -1,7 +1,7 @@
 # Outputs are read through `try` because a failed run reports none, and an assertion that indexes a
 # missing output errors instead of failing — which buries the status assertion.
 
-run "azure_ai_model_endpoint" {
+run "azure_ai_llm" {
   assert {
     condition     = meshstack_building_block.this.status.succeeded
     error_message = "Building block run did not succeed: health status ${meshstack_building_block.this.status.health_status}, action ${meshstack_building_block.this.status.action}"

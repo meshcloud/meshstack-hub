@@ -1,4 +1,4 @@
-# Azure AI Model Endpoint — Backplane
+# Azure AI LLM — Backplane
 
 Reference for platform engineers deploying this module.
 

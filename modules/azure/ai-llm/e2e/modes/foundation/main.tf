@@ -21,7 +21,7 @@ data "meshstack_building_block_definitions" "published" {
 locals {
   # The default of `spec.display_name` in ../../meshstack_integration.tf. A deployment that renamed
   # its definition has to say so here.
-  display_name = "Azure AI Model Endpoint"
+  display_name = "Azure AI LLM"
 
   definition = one([
     for definition in data.meshstack_building_block_definitions.published.building_block_definitions
