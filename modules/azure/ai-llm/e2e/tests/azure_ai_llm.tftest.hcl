@@ -13,7 +13,7 @@ run "azure_ai_llm" {
   }
 
   assert {
-    condition     = try(jsondecode(meshstack_building_block.this.status.outputs["deployment_name"].value), null) == "gpt-4.1-mini"
+    condition     = try(jsondecode(meshstack_building_block.this.status.outputs["deployment_name"].value), null) == "gpt-5.4-mini"
     error_message = "Expected the deployment to be named after the ordered model, got ${try(meshstack_building_block.this.status.outputs["deployment_name"].value, "no such output")}."
   }
 

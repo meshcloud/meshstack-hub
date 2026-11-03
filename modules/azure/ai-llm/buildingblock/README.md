@@ -3,7 +3,7 @@ name: Azure AI LLM
 supportedPlatforms:
   - azure
 description: |
-  Deploys an approved AI model such as GPT-4.1 as a keyless, content-filtered Azure OpenAI endpoint in the tenant's subscription, with EU data residency by default.
+  Deploys an approved AI model such as GPT-5.5 as a keyless, content-filtered Azure OpenAI endpoint in the tenant's subscription, with EU data residency by default.
 ---
 
 # Azure AI LLM

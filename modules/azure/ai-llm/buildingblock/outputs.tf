@@ -55,7 +55,7 @@ output "summary" {
     client = AzureOpenAI(
         azure_endpoint="https://${azurerm_cognitive_account.this.custom_subdomain_name}.openai.azure.com/",
         azure_ad_token_provider=get_bearer_token_provider(DefaultAzureCredential(), "https://cognitiveservices.azure.com/.default"),
-        api_version="2024-10-21",
+        api_version="2025-04-01-preview",
     )
     client.chat.completions.create(model="${azurerm_cognitive_deployment.this.name}", messages=[{"role": "user", "content": "Hello"}])
     ```
