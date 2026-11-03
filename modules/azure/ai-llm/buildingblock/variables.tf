@@ -41,8 +41,8 @@ variable "model_name" {
 
 variable "deployment_sku" {
   type        = string
-  default     = "DataZoneStandard"
-  description = "Deployment type of the model. `DataZoneStandard` keeps inference inside the data zone of the region (EU or US), `Standard` inside the region itself, `GlobalStandard` routes it worldwide."
+  default     = "GlobalStandard"
+  description = "Deployment type of the model. `GlobalStandard` routes inference worldwide, `DataZoneStandard` keeps it inside the data zone of the region (EU or US), `Standard` inside the region itself."
   validation {
     condition     = contains(["Standard", "DataZoneStandard", "GlobalStandard"], var.deployment_sku)
     error_message = "Must be Standard, DataZoneStandard or GlobalStandard."

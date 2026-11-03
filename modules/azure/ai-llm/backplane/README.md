@@ -16,10 +16,14 @@ Reference for platform engineers deploying this module.
 
 ## Before application teams order
 
-- **Quota.** The tokens-per-minute capacity a building block requests comes from the subscription's
-  quota for the model, region and deployment type. A new subscription has a default quota per
-  model; raise it in the Azure Portal under *Quotas* if teams need more. A run that exceeds it fails
-  with `InsufficientQuota`.
+- **Quota.** The tokens-per-minute capacity a building block requests comes from the quota of the
+  subscription it is ordered into, per model, region and deployment type. Azure assigns that quota
+  by quota tier: a new subscription starts in tier 0, which only has `GlobalStandard` quota for a
+  few small models, and moves up with usage. The default `azure_models` and `azure_deployment_sku`
+  are what tier 0 covers, so an order works in a brand-new landing zone. A model or deployment type
+  outside that, `DataZoneStandard` for EU data residency included, fails with `InsufficientQuota`
+  (`0 / 0`) until the subscription reaches a higher tier or Microsoft approves a quota request.
+  Quota requests take Microsoft's request form; there is no API for them.
 - **Models and region.** Every model the integration offers must be available in `azure_location`
   for the chosen deployment type. Check the model availability table of Azure OpenAI before adding
   a model.

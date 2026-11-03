@@ -3,7 +3,7 @@ name: Azure AI LLM
 supportedPlatforms:
   - azure
 description: |
-  Deploys an approved AI model such as GPT-5.5 as a keyless, content-filtered Azure OpenAI endpoint in the tenant's subscription, with EU data residency by default.
+  Deploys an approved AI model such as GPT-5 mini as a keyless, content-filtered Azure OpenAI endpoint in the tenant's subscription.
 ---
 
 # Azure AI LLM
@@ -53,7 +53,7 @@ No modules.
 |------|-------------|------|---------|:--------:|
 | <a name="input_app_principal_id"></a> [app\_principal\_id](#input\_app\_principal\_id) | Object ID of the identity the application calls the model with, such as a managed identity. It is granted `Cognitive Services OpenAI User` on the account. Null grants nothing. | `string` | `null` | no |
 | <a name="input_capacity"></a> [capacity](#input\_capacity) | Rate limit of the deployment in thousands of tokens per minute. It is taken from the subscription's quota for the model, region and deployment type. | `number` | `10` | no |
-| <a name="input_deployment_sku"></a> [deployment\_sku](#input\_deployment\_sku) | Deployment type of the model. `DataZoneStandard` keeps inference inside the data zone of the region (EU or US), `Standard` inside the region itself, `GlobalStandard` routes it worldwide. | `string` | `"DataZoneStandard"` | no |
+| <a name="input_deployment_sku"></a> [deployment\_sku](#input\_deployment\_sku) | Deployment type of the model. `GlobalStandard` routes inference worldwide, `DataZoneStandard` keeps it inside the data zone of the region (EU or US), `Standard` inside the region itself. | `string` | `"GlobalStandard"` | no |
 | <a name="input_location"></a> [location](#input\_location) | The Azure region of the AI Services account. Every model in `models` must be available there for `deployment_sku`. | `string` | n/a | yes |
 | <a name="input_model_name"></a> [model\_name](#input\_model\_name) | The model to deploy, one of the keys of `models`. | `string` | n/a | yes |
 | <a name="input_models"></a> [models](#input\_models) | Models the platform team allows, keyed by model name. Set by the platform team, the application team picks one of the keys as `model_name`. | <pre>map(object({<br/>    format  = optional(string, "OpenAI")<br/>    version = string<br/>  }))</pre> | n/a | yes |
