@@ -27,14 +27,10 @@ locals {
 
   registry_host = "registry.onstackit.cloud"
 
-  # Harbor addresses a project by a numeric id, so the browser link is
-  # `<host>/harbor/projects/<id>/repositories` rather than `<host>/<name>`. That id only appears once
-  # Harbor has provisioned the project, which is what read-artifactory.sh waits for.
-  registry_url = data.external.artifactory.result.url
-
-  # Same Harbor project, its Robot Accounts tab — where the robot linked to the service account is
-  # created by hand.
-  registry_robot_url = replace(local.registry_url, "/repositories", "/robot-account")
+  # Harbor addresses a project by a numeric id, which only appears once Harbor has provisioned the
+  # project, so read-artifactory.sh waits for it.
+  registry_url       = data.external.artifactory.result.url
+  registry_robot_url = "${trimsuffix(local.registry_url, "/repositories")}/robot-account"
 
   service_enablement_path = "/v2/projects/${var.stackit_project_id}/regions/${var.stackit_region}/services"
   artifactory_path        = "/v1/projects/${var.stackit_project_id}/regions/${var.stackit_region}/artifactories"
@@ -134,6 +130,15 @@ import {
   for_each = var.imports != null && var.release_on_destroy ? toset([var.imports.artifactory_id]) : toset([])
   to       = module.artifactory.restapi_object.released
   id       = "${local.artifactory_path}/${each.value}"
+}
+
+data "external" "service_account" {
+  program = ["bash", "${path.module}/read-service-account-id.sh"]
+
+  query = {
+    project_id = var.stackit_project_id
+    email      = local.stackit_service_account_email
+  }
 }
 
 data "external" "artifactory" {
