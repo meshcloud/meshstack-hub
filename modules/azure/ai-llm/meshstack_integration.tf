@@ -24,12 +24,12 @@ variable "azure_models" {
     version = string
   }))
   default = {
-    "gpt-4.1"                = { version = "2025-04-14" }
-    "gpt-4.1-mini"           = { version = "2025-04-14" }
-    "gpt-4o"                 = { version = "2024-11-20" }
+    "gpt-5.5"                = { version = "2026-04-24" }
+    "gpt-5.4"                = { version = "2026-03-05" }
+    "gpt-5.4-mini"           = { version = "2026-03-17" }
     "text-embedding-3-large" = { version = "1" }
   }
-  description = "Models application teams may choose from, keyed by model name. Each must be available in `azure_location` for `azure_deployment_sku`."
+  description = "Models application teams may choose from, keyed by model name. Each must be available in `azure_location` for `azure_deployment_sku`, and a new subscription must get default quota for it there, or every order fails until someone raises the quota by hand: `az cognitiveservices usage list` shows a subscription's limits. Microsoft gives no default quota to models it is phasing out."
 }
 
 variable "azure_deployment_sku" {
@@ -130,7 +130,7 @@ resource "meshstack_building_block_definition" "this" {
 
   spec = {
     display_name             = coalesce(var.bbd_display_name, "Azure AI LLM")
-    description              = coalesce(var.bbd_description, "Deploys an approved AI model such as GPT-4.1 in your Azure subscription, with Entra ID authentication, a content filter and EU data residency.")
+    description              = coalesce(var.bbd_description, "Deploys an approved AI model such as GPT-5.5 in your Azure subscription, with Entra ID authentication, a content filter and EU data residency.")
     support_url              = "mailto:support@meshcloud.io"
     documentation_url        = "https://hub.meshcloud.io/platforms/azure/definitions/azure-ai-llm"
     notification_subscribers = var.notification_subscribers
@@ -140,7 +140,7 @@ resource "meshstack_building_block_definition" "this" {
     run_transparency         = true
 
     readme = coalesce(var.bbd_readme, chomp(<<-EOT
-      This building block deploys an AI model, such as GPT-4.1 or an embedding model, as a ready-to-call endpoint in your Azure subscription. It speaks the Azure OpenAI API, has Microsoft's default content filter on, and accepts Entra ID tokens only, so there are no API keys to leak.
+      This building block deploys an AI model, such as GPT-5.5 or an embedding model, as a ready-to-call endpoint in your Azure subscription. It speaks the Azure OpenAI API, has Microsoft's default content filter on, and accepts Entra ID tokens only, so there are no API keys to leak.
 
       ## 🎯 When to use it
 
@@ -152,10 +152,10 @@ resource "meshstack_building_block_definition" "this" {
       ## 💡 Usage examples
 
       **Example 1: Document Q&A for an internal portal**
-      A team orders `gpt-4.1-mini` and `text-embedding-3-large`, indexes its handbook with the embedding model and lets the chat model answer questions on it. The App Service calls both with its managed identity.
+      A team orders `gpt-5.4-mini` and `text-embedding-3-large`, indexes its handbook with the embedding model and lets the chat model answer questions on it. The App Service calls both with its managed identity.
 
       **Example 2: Ticket classification**
-      A team passes the object ID of its Function App's managed identity at order time. The function classifies incoming support tickets with `gpt-4.1` without any secret in its configuration.
+      A team passes the object ID of its Function App's managed identity at order time. The function classifies incoming support tickets with `gpt-5.4` without any secret in its configuration.
 
       ## 🔑 Calling the model
 
