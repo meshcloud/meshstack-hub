@@ -24,18 +24,18 @@ variable "azure_models" {
     version = string
   }))
   default = {
-    "gpt-5.5"                = { version = "2026-04-24" }
-    "gpt-5.4"                = { version = "2026-03-05" }
-    "gpt-5.4-mini"           = { version = "2026-03-17" }
-    "text-embedding-3-large" = { version = "1" }
+    "gpt-5-mini"             = { version = "2025-08-07" }
+    "text-embedding-3-small" = { version = "1" }
   }
-  description = "Models application teams may choose from, keyed by model name. Each must be available in `azure_location` for `azure_deployment_sku`, and a new subscription must get default quota for it there, or every order fails until someone raises the quota by hand: `az cognitiveservices usage list` shows a subscription's limits. Microsoft gives no default quota to models it is phasing out."
+  description = "Models application teams may choose from, keyed by model name. Each must be available in `azure_location` for `azure_deployment_sku`, and the subscriptions it is ordered into must have quota for it, or the order fails with InsufficientQuota: `az cognitiveservices usage list` shows a subscription's limits. Quota requests take a form, there is no API for them. The default is what a new subscription gets in quota tier 0, which only covers GlobalStandard."
 }
 
 variable "azure_deployment_sku" {
-  type        = string
-  default     = "DataZoneStandard"
-  description = "Deployment type of every model. `DataZoneStandard` keeps inference inside the EU data zone of an EU region, `Standard` inside the region, `GlobalStandard` routes it worldwide."
+  type = string
+  # A new subscription starts in quota tier 0, which has quota for GlobalStandard only. Switch to
+  # DataZoneStandard to keep inference in the EU once the landing zones have quota for it.
+  default     = "GlobalStandard"
+  description = "Deployment type of every model. `GlobalStandard` routes inference worldwide, `DataZoneStandard` keeps it inside the EU data zone of an EU region, `Standard` inside the region."
 }
 
 variable "backplane_name" {
@@ -130,7 +130,7 @@ resource "meshstack_building_block_definition" "this" {
 
   spec = {
     display_name             = coalesce(var.bbd_display_name, "Azure AI LLM")
-    description              = coalesce(var.bbd_description, "Deploys an approved AI model such as GPT-5.5 in your Azure subscription, with Entra ID authentication, a content filter and EU data residency.")
+    description              = coalesce(var.bbd_description, "Deploys an approved AI model such as GPT-5 mini in your Azure subscription, with Entra ID authentication and a content filter.")
     support_url              = "mailto:support@meshcloud.io"
     documentation_url        = "https://hub.meshcloud.io/platforms/azure/definitions/azure-ai-llm"
     notification_subscribers = var.notification_subscribers
@@ -140,22 +140,22 @@ resource "meshstack_building_block_definition" "this" {
     run_transparency         = true
 
     readme = coalesce(var.bbd_readme, chomp(<<-EOT
-      This building block deploys an AI model, such as GPT-5.5 or an embedding model, as a ready-to-call endpoint in your Azure subscription. It speaks the Azure OpenAI API, has Microsoft's default content filter on, and accepts Entra ID tokens only, so there are no API keys to leak.
+      This building block deploys an AI model, such as GPT-5 mini or an embedding model, as a ready-to-call endpoint in your Azure subscription. It speaks the Azure OpenAI API, has Microsoft's default content filter on, and accepts Entra ID tokens only, so there are no API keys to leak.
 
       ## 🎯 When to use it
 
       Use this building block when you:
       - Want to add a chat, summarization or extraction feature to an application.
       - Need embeddings for a search or retrieval-augmented generation (RAG) use case.
-      - Must keep prompts and completions inside the EU and want the model's cost on your own subscription.
+      - Want the model's cost on your own subscription.
 
       ## 💡 Usage examples
 
       **Example 1: Document Q&A for an internal portal**
-      A team orders `gpt-5.4-mini` and `text-embedding-3-large`, indexes its handbook with the embedding model and lets the chat model answer questions on it. The App Service calls both with its managed identity.
+      A team orders `gpt-5-mini` and `text-embedding-3-small`, indexes its handbook with the embedding model and lets the chat model answer questions on it. The App Service calls both with its managed identity.
 
       **Example 2: Ticket classification**
-      A team passes the object ID of its Function App's managed identity at order time. The function classifies incoming support tickets with `gpt-5.4` without any secret in its configuration.
+      A team passes the object ID of its Function App's managed identity at order time. The function classifies incoming support tickets with `gpt-5-mini` without any secret in its configuration.
 
       ## 🔑 Calling the model
 
@@ -248,7 +248,7 @@ resource "meshstack_building_block_definition" "this" {
       deployment_sku = {
         type            = "STRING"
         display_name    = "Deployment Type"
-        description     = "Where inference runs: DataZoneStandard, Standard or GlobalStandard."
+        description     = "Where inference runs: GlobalStandard, DataZoneStandard or Standard."
         assignment_type = "STATIC"
         argument        = jsonencode(var.azure_deployment_sku)
       }

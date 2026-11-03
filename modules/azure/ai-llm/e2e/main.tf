@@ -49,7 +49,7 @@ resource "meshstack_building_block" "this" {
     inputs = merge(
       {
         name       = { value = jsonencode(var.test_context.run_id) }
-        model_name = { value = jsonencode("gpt-5.4-mini") }
+        model_name = { value = jsonencode("gpt-5-mini") }
         # The smallest capacity there is, so the test barely dents the fixture subscription's quota.
         capacity = { value = jsonencode(1) }
       },
