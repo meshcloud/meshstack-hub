@@ -40,7 +40,7 @@ variable "azure_deployment_sku" {
 
 variable "backplane_name" {
   type        = string
-  default     = "azure-ai-model-endpoint"
+  default     = "azure-ai-llm"
   description = "Name for the backplane resources (managed identity, role definition). Must match pattern ^[-a-z0-9]+$."
 }
 
@@ -110,7 +110,7 @@ output "building_block_definition" {
 }
 
 module "backplane" {
-  source = "github.com/meshcloud/meshstack-hub//modules/azure/ai-model-endpoint/backplane?ref=${var.hub.git_ref}"
+  source = "github.com/meshcloud/meshstack-hub//modules/azure/ai-llm/backplane?ref=${var.hub.git_ref}"
 
   name     = var.backplane_name
   scope    = var.azure_scope
@@ -129,12 +129,12 @@ resource "meshstack_building_block_definition" "this" {
   }
 
   spec = {
-    display_name             = coalesce(var.bbd_display_name, "Azure AI Model Endpoint")
+    display_name             = coalesce(var.bbd_display_name, "Azure AI LLM")
     description              = coalesce(var.bbd_description, "Deploys an approved AI model such as GPT-4.1 in your Azure subscription, with Entra ID authentication, a content filter and EU data residency.")
     support_url              = "mailto:support@meshcloud.io"
-    documentation_url        = "https://hub.meshcloud.io/platforms/azure/definitions/azure-ai-model-endpoint"
+    documentation_url        = "https://hub.meshcloud.io/platforms/azure/definitions/azure-ai-llm"
     notification_subscribers = var.notification_subscribers
-    symbol                   = "https://raw.githubusercontent.com/meshcloud/meshstack-hub/${var.hub.git_ref}/modules/azure/ai-model-endpoint/buildingblock/logo.svg"
+    symbol                   = "https://raw.githubusercontent.com/meshcloud/meshstack-hub/${var.hub.git_ref}/modules/azure/ai-llm/buildingblock/logo.svg"
     target_type              = "TENANT_LEVEL"
     supported_platforms      = [{ name = "AZURE" }]
     run_transparency         = true
@@ -185,7 +185,7 @@ resource "meshstack_building_block_definition" "this" {
       terraform = {
         terraform_version              = "1.12.5"
         repository_url                 = "https://github.com/meshcloud/meshstack-hub.git"
-        repository_path                = "modules/azure/ai-model-endpoint/buildingblock"
+        repository_path                = "modules/azure/ai-llm/buildingblock"
         ref_name                       = var.hub.git_ref
         use_mesh_http_backend_fallback = true
       }

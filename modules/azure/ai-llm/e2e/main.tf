@@ -39,7 +39,7 @@ resource "meshstack_building_block" "this" {
   spec = {
     building_block_definition_version_ref = module.definition.version_ref
 
-    display_name = "${var.test_context.run_id} Azure AI Model Endpoint"
+    display_name = "${var.test_context.run_id} Azure AI LLM"
     # `subscription_id` is a PLATFORM_TENANT_ID input, which meshStack resolves from this tenant.
     target_ref = {
       kind = "meshTenant"

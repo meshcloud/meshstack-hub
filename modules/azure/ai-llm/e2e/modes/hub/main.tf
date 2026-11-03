@@ -23,7 +23,7 @@ provider "azurerm" {
   features {}
 }
 
-module "ai_model_endpoint" {
+module "ai_llm" {
   source = "../../../"
 
   meshstack = {
@@ -35,7 +35,7 @@ module "ai_model_endpoint" {
     bbd_draft = true
   }
 
-  bbd_display_name = "${var.test_context.run_id} Azure AI Model Endpoint"
+  bbd_display_name = "${var.test_context.run_id} Azure AI LLM"
 
   azure_tenant_id = var.test_context.fixtures.azure.entra_tenant_id
   azure_scope     = "/subscriptions/${var.test_context.fixtures.azure.subscription_uuid}"
@@ -55,7 +55,7 @@ resource "azurerm_user_assigned_identity" "app" {
 }
 
 output "version_ref" {
-  value = module.ai_model_endpoint.building_block_definition.version_ref
+  value = module.ai_llm.building_block_definition.version_ref
 }
 
 output "app_principal_id" {
