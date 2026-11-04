@@ -63,7 +63,9 @@ variable "hub" {
 
   description = <<-EOT
   `git_ref`: Hub release reference. Set to a tag (e.g. 'v1.2.3') or branch or commit sha of the meshstack-hub repo.
-  `bbd_draft`: If true, the building block definition version is kept in draft mode.
+  `bbd_draft`: If true, the application team definitions (starter kit, Git repository, Forgejo connector)
+  are kept in draft mode. This definition and the platform's own definitions are always drafts, so they
+  stay in the owning workspace.
   EOT
 }
 
@@ -148,7 +150,7 @@ resource "meshstack_building_block_definition" "this" {
   }
 
   version_spec = {
-    draft         = var.hub.bbd_draft
+    draft         = true
     deletion_mode = "DELETE"
 
     # meshStack lets a run order a building block only if it holds every permission of its
@@ -273,7 +275,7 @@ resource "meshstack_building_block_definition" "this" {
 
       hub = {
         display_name    = "Hub"
-        description     = "HCL object with `git_ref` (meshstack-hub reference to source nested modules from) and `bbd_draft` (nested definitions' draft state)."
+        description     = "HCL object with `git_ref` (meshstack-hub reference to source nested modules from) and `bbd_draft` (draft state of the application team definitions)."
         type            = "CODE"
         assignment_type = "STATIC"
         argument        = jsonencode(jsonencode(var.hub))

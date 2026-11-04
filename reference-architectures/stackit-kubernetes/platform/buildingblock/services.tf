@@ -6,7 +6,7 @@ module "dns_integration" {
   approval_policies = var.approval_policies
 
   meshstack = { owning_workspace_identifier = var.workspace, tags = var.tags.building_block }
-  hub       = var.hub
+  hub       = local.platform_hub
 }
 
 resource "meshstack_building_block" "dns" {
@@ -48,7 +48,7 @@ module "ai_llm_integration" {
   approval_policies = var.approval_policies
 
   meshstack = { owning_workspace_identifier = var.workspace, tags = var.tags.building_block }
-  hub       = var.hub
+  hub       = local.platform_hub
 }
 
 resource "meshstack_building_block" "ai_llm" {
@@ -87,7 +87,7 @@ module "git_integration" {
   approval_policies = var.approval_policies
 
   meshstack = { owning_workspace_identifier = var.workspace, tags = var.tags.building_block }
-  hub       = var.hub
+  hub       = local.platform_hub
 }
 
 resource "meshstack_building_block" "git" {
@@ -140,7 +140,7 @@ module "container_registry_integration" {
   approval_policies = var.approval_policies
 
   meshstack = { owning_workspace_identifier = var.workspace, tags = var.tags.building_block }
-  hub       = var.hub
+  hub       = local.platform_hub
 }
 
 resource "meshstack_building_block" "container_registry" {

@@ -1,6 +1,9 @@
 locals {
   tenant_ref = { kind = "meshTenant", uuid = var.tenant_uuid }
 
+  # A released definition can be published to every workspace; the platform's own stay in its workspace.
+  platform_hub = { git_ref = var.hub.git_ref, bbd_draft = true }
+
   service_account_email = var.automation_identity.service_account_email
 
   kubernetes_platform_imports = var.imports.kubernetes_platform != null ? var.imports.kubernetes_platform : {

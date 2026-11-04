@@ -230,7 +230,7 @@ variable "hub" {
 
   description = <<-EOT
   `git_ref`: meshstack-hub reference the nested integrations are sourced from.
-  `bbd_draft`: Forwarded to the nested integrations' `hub.bbd_draft`.
+  `bbd_draft`: Draft state of the application team definitions; the platform's own are always drafts.
   EOT
 }
 

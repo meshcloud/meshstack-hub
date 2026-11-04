@@ -210,7 +210,13 @@ A definition is taken over in phase 2, when the platform registers it. Its lates
 what that run does: a draft version is overwritten, and a released one gets a new draft version
 only if `hub.bbd_draft` is true. With `hub.bbd_draft = false` the run fails on a released version, so
 take the definitions over with `hub.bbd_draft = true` and release afterwards. Existing building
-blocks stay on their version until they are upgraded.
+blocks stay on their version until they are upgraded. meshStack checks the Forgejo connector's
+`repository_name` input against the latest released Git repository version, so release the Git
+repository's new draft by hand before the connector can be saved.
+
+`hub.bbd_draft` decides only whether the three application team definitions are released. This
+definition and the platform's own definitions are always drafts, so they stay in the owning
+workspace.
 
 The first run may change what it takes over to match this architecture's settings. To review it,
 switch on the `building_block_creation` and `any_input_changes` gates in `approval_policies` for the
