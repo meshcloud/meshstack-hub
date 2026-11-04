@@ -325,7 +325,6 @@ resource "meshstack_building_block_definition" "this" {
         })
       }
 
-      # Keep this description under roughly 200 characters: meshStack answers a longer one with a 500.
       tags = {
         display_name           = "Tags"
         description            = "Tags as {key, values} entries for landing zones, platform and app team building blocks, the platform project and the starterkit projects, plus the project owner tag key."
