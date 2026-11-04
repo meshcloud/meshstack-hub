@@ -286,6 +286,14 @@ resource "meshstack_building_block_definition" "this" {
         default_value     = jsonencode(var.default_landing_zone)
       }
 
+      payment_method = {
+        assignment_type        = "PAYMENT_METHOD"
+        type                   = "CODE"
+        display_name           = "Payment Method"
+        description            = "Payment method of the created meshProject, one of your workspace's payment methods."
+        updateable_by_consumer = true
+      }
+
       # ── Set by the platform team ──
 
       platform_ref = {

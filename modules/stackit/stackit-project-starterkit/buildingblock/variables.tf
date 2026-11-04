@@ -26,6 +26,14 @@ variable "landing_zone" {
   nullable = false
 }
 
+variable "payment_method" {
+  type = object({
+    kind = string
+    name = string
+  })
+  nullable = false
+}
+
 variable "workspace_identifier" {
   type     = string
   nullable = false

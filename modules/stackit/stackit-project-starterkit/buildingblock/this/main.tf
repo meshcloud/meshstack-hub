@@ -32,8 +32,9 @@ resource "meshstack_project" "this" {
   }
 
   spec = {
-    display_name = var.name
-    tags         = merge(var.tags.project, local.owner_tags)
+    display_name              = var.name
+    payment_method_identifier = var.payment_method.name
+    tags                      = merge(var.tags.project, local.owner_tags)
   }
 }
 

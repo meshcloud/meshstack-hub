@@ -28,6 +28,15 @@ variable "landing_zone" {
   }
 }
 
+variable "payment_method" {
+  type = object({
+    kind = string
+    name = string
+  })
+  nullable    = false
+  description = "Payment method of the created meshProject."
+}
+
 variable "workspace_identifier" {
   type        = string
   nullable    = false
