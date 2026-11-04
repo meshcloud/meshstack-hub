@@ -1,3 +1,7 @@
+variable "aws_region" {
+  type = string
+}
+
 variable "hub" {
   type = object({ git_ref = string })
 }
@@ -15,6 +19,10 @@ resource "meshstack_building_block_definition" "this" {
   spec = {
     display_name = "Example"
   }
+}
+
+variable "late" {
+  type = string
 }
 
 terraform {
