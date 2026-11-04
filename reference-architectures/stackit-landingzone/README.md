@@ -225,7 +225,7 @@ false`, because nothing taken over is released on destroy.
 | Key | Takes over |
 |---|---|
 | `folder = {container_id}` | the landing-zone folder, renamed to the platform identifier |
-| `foundation_project = {container_id, name}` | the foundation project, keeping its name |
+| `foundation_project = {container_id}` | the foundation project, renamed to `<platform identifier>-foundation` |
 | `platform = {}` | the location (unless **Use Global Location**), the STACKIT platform `<platform identifier>` in it and its landing zones `<platform identifier>-default` and, with `hub&spoke`, `-networked` |
 | `project_definition = {uuid, service_account_name, service_account_email, federated_identity_provider_ids}` | the STACKIT Project definition and its backplane: the project-creation service account, its federated identity providers in the order of the subjects they trust, and its organization roles |
 | `service_account_definition = {uuid, service_account_email, federated_identity_provider_ids}` | the STACKIT Service Account definition and its backplane |

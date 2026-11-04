@@ -87,7 +87,7 @@ resource "stackit_resourcemanager_folder" "this" {
 
 # Next to the landing-zone folder when there is a root folder, so that folder holds only tenants.
 resource "stackit_resourcemanager_project" "foundation" {
-  name                = local.imports.foundation_project == null ? "${local.platform_identifier}-foundation" : local.imports.foundation_project.name
+  name                = "${local.platform_identifier}-foundation"
   owner_email         = var.stackit_owner_email
   parent_container_id = local.root_folder_name == null ? stackit_resourcemanager_folder.this.container_id : local.root_container_id
 
