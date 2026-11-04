@@ -7,7 +7,7 @@ description: Onboards a STACKIT sandbox platform into meshStack (location, resou
 
 This building block bootstraps a complete STACKIT sandbox platform integration inside a meshStack
 workspace. It creates a meshStack location, a dedicated STACKIT resourcemanager folder and a
-foundation project hosting the landing-zone core assets, then sources the
+foundation project hosting the landing-zone core assets, optionally inside a root folder, then sources the
 [`modules/stackit`](../../../modules/stackit) project integration to provision the STACKIT Project
 platform together with its default landing zone.
 

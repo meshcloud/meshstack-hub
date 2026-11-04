@@ -34,6 +34,17 @@ variable "stackit_service_account_key" {
   description = "STACKIT service account key JSON with `resource-manager.admin` on the organization. Used to create the landing-zone folder and foundation project."
 }
 
+variable "root_folder_name" {
+  type        = string
+  default     = null
+  description = "Name of a folder at the organization root that holds the landing-zone folder and the foundation project, for an organization that serves more than one meshStack. Null puts the landing-zone folder at the organization root, except in playground mode, which names the folder `playground-<platform identifier>`."
+
+  validation {
+    condition     = var.root_folder_name == null ? true : length(var.root_folder_name) <= 63
+    error_message = "root_folder_name must be at most 63 characters."
+  }
+}
+
 variable "platform_identifier" {
   type        = string
   nullable    = false
@@ -137,12 +148,10 @@ variable "imports" {
   type = object({
     folder = optional(object({
       container_id = string
-      name         = string
     }))
     foundation_project = optional(object({
-      container_id        = string
-      name                = string
-      parent_container_id = string
+      container_id = string
+      name         = string
     }))
     platform = optional(object({}))
     project_definition = optional(object({

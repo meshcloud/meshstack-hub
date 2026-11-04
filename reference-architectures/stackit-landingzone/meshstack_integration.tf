@@ -245,10 +245,13 @@ resource "meshstack_building_block_definition" "this" {
     ## 📦 Resources created
 
     - **meshStack location** – named after the chosen platform identifier.
-    - **STACKIT resourcemanager folder** – created under the configured organization and owned by the given owner email.
-      New tenant projects are created inside this folder.
-    - **STACKIT foundation project** – created directly under the organization to host the
-      project-creation service account and other landing-zone core assets.
+    - **STACKIT root folder** *(optional)* – created at the organization root when a root folder
+      name is given, and always in playground mode. It holds the landing-zone folder and the
+      foundation project, so one organization can serve several meshStacks.
+    - **STACKIT resourcemanager folder** – created in the root folder, or under the organization
+      without one, and owned by the given owner email. New tenant projects are created inside this folder.
+    - **STACKIT foundation project** – hosts the project-creation service account and other
+      landing-zone core assets. It sits in the root folder, or in the landing-zone folder without one.
     - **STACKIT Project platform** – the `STACKIT Project` building block definition, platform and default landing zone,
       including the project-creation service account provisioned in the foundation project.
     - **STACKIT Service Account building block** – the `STACKIT Service Account` building block
@@ -263,8 +266,9 @@ resource "meshstack_building_block_definition" "this" {
 
     **Playground Mode** is fixed by whoever deployed this definition and cannot be chosen when
     ordering. It defaults to `true`, which deploys a throwaway platform: the platform identifier gets
-    a random suffix, and neither the landing-zone folder nor the foundation project is protected
-    against deletion, so the whole thing can be deleted again in one step.
+    a random suffix, everything goes into a root folder named `playground-<platform identifier>`,
+    and none of the folders nor the foundation project is protected against deletion, so the whole
+    thing can be deleted again in one step.
 
     The suffix matters because a platform identifier is unique across the whole meshStack instance
     and becomes part of every landing zone name under it. A playground deployment would otherwise
@@ -469,6 +473,16 @@ resource "meshstack_building_block_definition" "this" {
         display_order                  = 10
       }
 
+      root_folder_name = {
+        display_name           = "Root Folder Name"
+        description            = "Folder at the organization root for the landing-zone folder and the foundation project, when the organization serves more than one meshStack. Empty: no root folder."
+        type                   = "STRING"
+        assignment_type        = "USER_INPUT"
+        is_optional            = true
+        updateable_by_consumer = true
+        display_order          = 45
+      }
+
       use_global_location = {
         display_name    = "Use Global Location"
         description     = "If true, use the existing global meshStack location instead of creating a dedicated location for this platform."
@@ -503,20 +517,18 @@ resource "meshstack_building_block_definition" "this" {
             folder = {
               type     = "object"
               title    = "Landing-Zone Folder"
-              required = ["container_id", "name"]
+              required = ["container_id"]
               properties = {
                 container_id = { type = "string", title = "Container ID" }
-                name         = { type = "string", title = "Name" }
               }
             }
             foundation_project = {
               type     = "object"
               title    = "Foundation Project"
-              required = ["container_id", "name", "parent_container_id"]
+              required = ["container_id", "name"]
               properties = {
-                container_id        = { type = "string", title = "Container ID" }
-                name                = { type = "string", title = "Name" }
-                parent_container_id = { type = "string", title = "Parent Container ID" }
+                container_id = { type = "string", title = "Container ID" }
+                name         = { type = "string", title = "Name" }
               }
             }
             platform = { type = "object", title = "Location, Platform and Landing Zones", properties = {} }
@@ -546,6 +558,12 @@ resource "meshstack_building_block_definition" "this" {
     outputs = {
       lz_folder_container_id = {
         display_name    = "LZ Folder Container ID"
+        type            = "STRING"
+        assignment_type = "NONE"
+      }
+
+      root_container_id = {
+        display_name    = "Root Container ID"
         type            = "STRING"
         assignment_type = "NONE"
       }
