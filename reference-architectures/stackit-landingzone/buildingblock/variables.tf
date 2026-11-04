@@ -113,6 +113,18 @@ variable "tags" {
   EOT
 }
 
+variable "starterkit_approval_policies" {
+  type = object({
+    building_block_creation = bool
+    user_input_changes      = bool
+    any_input_changes       = bool
+    manual_triggers         = bool
+    version_upgrade         = bool
+  })
+  nullable    = false
+  description = "Run triggers that need an operator's approval before a run of the project starterkit is applied. The defaults are the provider's own, and the provider asserts them whenever the definition sets no policies — so a gate switched on in meshPanel is turned off again by the next run unless it is set here."
+}
+
 variable "imports" {
   type = object({
     folder = optional(object({
@@ -170,16 +182,4 @@ variable "hub" {
   `git_ref`: meshstack-hub reference used to source the nested foundation, network-area, and network integration modules. `const` so it can be interpolated into the module source at init time.
   `bbd_draft`: Forwarded as-is to those nested integrations' own `hub.bbd_draft`, so their building block definition draft state tracks this building block's own release state.
   EOT
-}
-
-variable "starterkit_approval_policies" {
-  type = object({
-    building_block_creation = bool
-    user_input_changes      = bool
-    any_input_changes       = bool
-    manual_triggers         = bool
-    version_upgrade         = bool
-  })
-  nullable    = false
-  description = "Run triggers that need an operator's approval before a run of the project starterkit is applied. The defaults are the provider's own, and the provider asserts them whenever the definition sets no policies — so a gate switched on in meshPanel is turned off again by the next run unless it is set here."
 }

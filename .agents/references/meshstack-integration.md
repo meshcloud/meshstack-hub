@@ -155,7 +155,8 @@ meshStack passes each input to the Terraform variable of the same name.
   renders a form from the schema, and meshStack rejects a value the schema does not allow. `CODE`
   stays right for free text such as YAML, HCL or a script.
 - Declare the inputs by ascending `display_order`, and the `buildingblock/` variables they feed in
-  the same order, so the code reads like the order form.
+  the same order, so the code reads like the order form. Inputs meshStack fills in, such as the
+  workspace identifier, come after those a person sets, and the STATIC `hub` comes last.
 - The definition owns every value, so a `buildingblock/` variable fed by an input has no `default`.
   A `const = true` variable keeps one, because `tofu init` and `validate` outside a run need it.
   The runner writes an empty input as `x = null`, so a variable default would never apply anyway.

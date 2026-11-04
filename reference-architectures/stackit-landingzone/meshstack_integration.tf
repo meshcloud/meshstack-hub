@@ -61,25 +61,6 @@ variable "approval_policies" {
   description = "Run triggers that need an operator's approval before a run of this architecture is applied. The defaults are the provider's own, and the provider asserts them whenever the definition sets no policies — so a gate switched on in meshPanel is turned off again by the next apply unless it is set here."
 }
 
-variable "starterkit_approval_policies" {
-  type = object({
-    building_block_creation = optional(bool, false)
-    user_input_changes      = optional(bool, false)
-    any_input_changes       = optional(bool, false)
-    manual_triggers         = optional(bool, false)
-    version_upgrade         = optional(bool, false)
-  })
-  nullable = false
-  default = {
-    building_block_creation = false
-    user_input_changes      = false
-    any_input_changes       = false
-    manual_triggers         = false
-    version_upgrade         = false
-  }
-  description = "The same, for the project starterkit definition this architecture registers. Set `building_block_creation` to have an operator approve every project an application team orders."
-}
-
 output "building_block_definition" {
   description = "BBD is consumed in building block compositions."
   value = {
@@ -102,6 +83,8 @@ locals {
       }
     }
   }
+
+  approval_gates = ["building_block_creation", "user_input_changes", "any_input_changes", "manual_triggers", "version_upgrade"]
 
   imports_definition_properties = {
     uuid                            = { type = "string", title = "uuid" }
@@ -431,6 +414,23 @@ resource "meshstack_building_block_definition" "this" {
         json_schema = jsonencode(local.tags_json_schema)
       }
 
+      starterkit_approval_policies = {
+        display_name           = "Starterkit Approval Policies"
+        description            = "Run triggers that need an operator's approval before a run of a project starterkit building block is applied."
+        type                   = "JSON"
+        assignment_type        = "USER_INPUT"
+        updateable_by_consumer = true
+        default_value          = jsonencode(jsonencode({ for gate in local.approval_gates : gate => false }))
+        display_order          = 105
+
+        json_schema = jsonencode({
+          type                 = "object"
+          additionalProperties = false
+          required             = local.approval_gates
+          properties           = { for gate in local.approval_gates : gate => { type = "boolean", title = gate } }
+        })
+      }
+
       imports = {
         display_name    = "Imports"
         description     = "Existing resources to take over when adopting a platform built before this architecture; see Adopting an Existing Platform in the README. Leave empty to create everything."
@@ -480,7 +480,7 @@ resource "meshstack_building_block_definition" "this" {
         description     = "Workspace that will own the created platform, location and landing zones."
         type            = "STRING"
         assignment_type = "WORKSPACE_IDENTIFIER"
-        display_order   = 120
+        display_order   = 900
       }
 
       hub = {
@@ -489,16 +489,7 @@ resource "meshstack_building_block_definition" "this" {
         type            = "CODE"
         assignment_type = "STATIC"
         argument        = jsonencode(jsonencode(var.hub))
-        display_order   = 130
-      }
-
-      starterkit_approval_policies = {
-        display_name    = "Starterkit Approval Policies"
-        description     = "HCL object of approval gates applied to the project starterkit definition this registers. Fixed by whoever deployed this definition."
-        type            = "CODE"
-        assignment_type = "STATIC"
-        argument        = jsonencode(jsonencode(var.starterkit_approval_policies))
-        display_order   = 140
+        display_order   = 1000
       }
     }
 

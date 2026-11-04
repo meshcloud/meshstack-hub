@@ -237,9 +237,9 @@ approval gates for the adoption and approve only a plan that replaces nothing.
 
 ### Approval Gates
 
-`approval_policies` sets which run triggers need an operator's approval before a run of this
-architecture is applied; `starterkit_approval_policies` does the same for the project starterkit
-definition it registers. Both default to no gate at all.
+The module variable `approval_policies` sets which run triggers need an operator's approval before
+a run of this architecture is applied. The order form input **Starterkit Approval Policies** does
+the same for the project starterkit definition it registers. Both default to no gate at all.
 
 ## Shared Responsibilities
 

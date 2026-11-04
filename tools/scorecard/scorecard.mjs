@@ -1590,12 +1590,17 @@ const detectors = [
         if (orders.size === 0) continue;
         checked++;
         if (!isAscending([...orders.values()])) offenders.push(`${where}: ${bbd} inputs`);
+        const tail = inputs
+          .filter(([key]) => orders.has(key))
+          .toSorted(([a], [b]) => orders.get(a) - orders.get(b))
+          .map(([key, entry]) => (key === "hub" ? 2 : /^(USER_INPUT|PLATFORM_OPERATOR_MANUAL_INPUT|STATIC)$/.test(inputAttribute(entry, "assignment_type")) ? 0 : 1));
+        if (!isAscending(tail)) offenders.push(`${where}: ${bbd} generated inputs and hub are not last`);
         if (!isAscending([...variables.keys()].filter((key) => orders.has(key)).map((key) => orders.get(key)))) {
           offenders.push(`${where}: ${bbd} buildingblock variables`);
         }
       }
       if (checked === 0) return { pass: null, detail: "no definition inputs with a display_order" };
-      return listOffenders(offenders, "declare the inputs by ascending display_order and the variables they feed in the same order");
+      return listOffenders(offenders, "declare the inputs by ascending display_order, generated inputs and then hub last, and the variables they feed in the same order");
     },
   },
   {
