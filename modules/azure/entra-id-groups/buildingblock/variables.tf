@@ -1,6 +1,7 @@
 variable "prefix" {
   type        = string
   nullable    = false
+  default     = ""
   description = "Optional prefix prepended to all group display names. Leave empty to omit."
 }
 
@@ -27,6 +28,7 @@ variable "project_roles" {
 variable "administrative_unit_id" {
   type        = string
   nullable    = false
+  default     = ""
   description = "Object ID of the Entra Administrative Unit to add the groups to. Leave empty to skip AU membership."
 }
 

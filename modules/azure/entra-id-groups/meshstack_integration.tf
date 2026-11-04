@@ -271,7 +271,7 @@ resource "meshstack_building_block_definition" "this" {
         display_name    = "Group Name Prefix"
         description     = "Optional prefix prepended to all group display names (e.g. 'plat'). Leave empty to omit."
         assignment_type = "USER_INPUT"
-        default_value   = jsonencode("")
+        is_optional     = true
       }
       workspace_identifier = {
         type            = "STRING"
@@ -284,7 +284,7 @@ resource "meshstack_building_block_definition" "this" {
         display_name    = "Administrative Unit ID"
         description     = "Object ID of the Entra Administrative Unit to add the groups to. Leave empty to skip AU membership."
         assignment_type = "USER_INPUT"
-        default_value   = jsonencode("")
+        is_optional     = true
       }
       user_lookup_attribute = {
         type            = "STRING"
