@@ -214,6 +214,13 @@ resource "meshstack_building_block_definition" "this" {
         value_validation_regex         = local.name_regex
         validation_regex_error_message = "Does not match ${local.name_regex} (no underscore/dots allowed). A maximum length of 25 characters is allowed."
       }
+      "payment_method" = {
+        assignment_type        = "PAYMENT_METHOD"
+        type                   = "CODE"
+        display_name           = "Payment Method"
+        description            = "Payment method of the created meshProjects, one of your workspace's payment methods."
+        updateable_by_consumer = true
+      }
       "workspace_identifier" = {
         assignment_type = "WORKSPACE_IDENTIFIER"
         type            = "STRING"

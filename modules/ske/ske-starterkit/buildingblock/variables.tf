@@ -15,6 +15,15 @@ variable "name" {
   description = "This name will be used for the created projects."
 }
 
+variable "payment_method" {
+  type = object({
+    kind = string
+    name = string
+  })
+  nullable    = false
+  description = "Payment method of the created meshProjects."
+}
+
 variable "workspace_identifier" {
   type = string
 }
