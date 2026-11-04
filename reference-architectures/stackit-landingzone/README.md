@@ -237,6 +237,10 @@ The three definition keys need `foundation_project`, where their service account
 definition gets a new version and its building blocks stay on theirs until upgraded. Turn on the
 approval gates for the adoption and approve only a plan that replaces nothing.
 
+The first run keeps the project-creation service account's name in its state, the adopted
+`service_account_name` or else one derived from the platform identifier. Once the adoption has
+succeeded, **Imports** can be set back to null without renaming or replacing anything.
+
 ### Approval Gates
 
 The module variable `approval_policies` sets which run triggers need an operator's approval before

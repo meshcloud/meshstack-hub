@@ -61,6 +61,16 @@ resource "terraform_data" "playground_mode" {
   }
 }
 
+# Pinned at the first run, so a later run without imports keeps the service account every tenant
+# project names as its owner. Read `input`: `output` is unknown at the first plan and would replace it.
+resource "terraform_data" "project_service_account_name" {
+  input = local.imports.project_definition == null ? local.service_account_name : local.imports.project_definition.service_account_name
+
+  lifecycle {
+    ignore_changes = [input]
+  }
+}
+
 resource "random_string" "playground_suffix" {
   lifecycle {
     enabled = var.playground_mode
@@ -136,7 +146,7 @@ module "stackit_integration" {
   stackit_project_owner_email             = var.stackit_owner_email
   stackit_parent_container_id             = stackit_resourcemanager_folder.this.container_id
   stackit_project_id                      = stackit_resourcemanager_project.foundation.project_id
-  stackit_service_account_name            = local.imports.project_definition == null ? local.service_account_name : local.imports.project_definition.service_account_name
+  stackit_service_account_name            = terraform_data.project_service_account_name.input
   role_mapping                            = { admin = var.role_mapping.admin, user = var.role_mapping.user, reader = var.role_mapping.reader }
   stackit_organization_onboarding_enabled = var.role_mapping.organization_onboarding
 
