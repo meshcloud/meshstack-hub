@@ -1,0 +1,18 @@
+<div class="bg-slate-900 rounded-xl border border-slate-200 overflow-hidden">
+  <div class="flex items-center justify-between gap-2 px-3 py-2 border-b border-slate-700">
+    <span class="text-sm text-slate-400">meshstack_integration.tf</span>
+    <ng-content></ng-content>
+  </div>
+  <div *ngFor="let section of sectionVms; let first = first" class="border-slate-700" [class.border-t]="!first">
+    <button
+      type="button"
+      (click)="section.expanded = !section.expanded"
+      [attr.aria-expanded]="section.expanded"
+      class="w-full flex items-center gap-2 px-3 py-2 text-left text-sm text-slate-300 hover:bg-slate-800 transition-colors">
+      <i class="fa-solid fa-chevron-right text-xs text-slate-500 transition-transform" [class.rotate-90]="section.expanded"></i>
+      <span>{{ section.title }}</span>
+      <span class="ml-auto text-xs text-slate-500">{{ section.lineCount }} lines</span>
+    </button>
+    <pre *ngIf="section.expanded" class="!pt-1.5 overflow-x-auto whitespace-pre"><code class="language-hcl" mstHighlight>{{ section.code }}</code></pre>
+  </div>
+</div>

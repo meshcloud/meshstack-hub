@@ -8,8 +8,8 @@ import { BreadCrumbService } from 'app/shared/breadcrumb/bread-crumb.service';
 import { BreadcrumbItem } from 'app/shared/breadcrumb/breadcrumb';
 import { BreadcrumbComponent } from 'app/shared/breadcrumb/breadcrumb.component';
 import { CardComponent } from 'app/shared/card';
-import { HighlightDirective } from 'app/shared/directives';
 import { TemplateService } from 'app/shared/template';
+import { TerraformSnippetComponent, TerraformSnippetSection } from 'app/shared/terraform-snippet';
 import { extractLogoColor } from 'app/shared/util/logo-color.util';
 import { buildHubModuleCodeSnippet } from 'app/shared/util/module-source.util';
 import { SeoService } from 'app/core';
@@ -28,11 +28,12 @@ interface TemplateDetailsVm {
   moduleCodeSnippet: string | null;
   backplaneUrl: string | null;
   terraformSnippet?: string;
+  terraformSnippetSections?: TerraformSnippetSection[];
 }
 
 @Component({
   selector: 'mst-template-details',
-  imports: [CommonModule, BreadcrumbComponent, CardComponent, RouterLink, HighlightDirective],
+  imports: [CommonModule, BreadcrumbComponent, CardComponent, RouterLink, TerraformSnippetComponent],
   templateUrl: './template-details.component.html',
   styleUrl: './template-details.component.scss',
   standalone: true

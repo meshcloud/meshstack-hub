@@ -1,3 +1,5 @@
+import { TerraformSnippetSection } from 'app/shared/terraform-snippet';
+
 export interface Platform {
   platformType: string;
   name: string;
@@ -8,5 +10,6 @@ export interface Platform {
   readme: string;
   integrationSourceUrl?: string | null;
   terraformSnippet?: string;
+  terraformSnippetSections?: TerraformSnippetSection[];
   official?: boolean;
 }

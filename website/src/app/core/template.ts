@@ -1,3 +1,5 @@
+import { TerraformSnippetSection } from 'app/shared/terraform-snippet';
+
 export interface Template {
 	name: string;
 	id: string;
@@ -9,4 +11,5 @@ export interface Template {
 	backplaneUrl: string | null;
 	supportedPlatforms: string[];
 	terraformSnippet?: string;
+	terraformSnippetSections?: TerraformSnippetSection[];
 }
