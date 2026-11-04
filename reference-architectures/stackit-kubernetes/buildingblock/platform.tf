@@ -20,6 +20,8 @@ module "platform_integration" {
   approval_policies            = var.approval_policies
   starterkit_approval_policies = var.starterkit_approval_policies
 
+  starterkit_add_random_name_suffix = var.starterkit_add_random_name_suffix
+
   platform_engineer_role_mapping = var.platform_engineer_role_mapping
 
   meshstack = { owning_workspace_identifier = var.workspace, tags = var.tags.building_block }

@@ -31,6 +31,13 @@ variable "starterkit_approval_policies" {
   description = "Run triggers that need an operator's approval on the application team definitions (Git repository, Forgejo connector, SKE starterkit) this architecture registers."
 }
 
+variable "starterkit_add_random_name_suffix" {
+  type        = bool
+  nullable    = false
+  default     = true
+  description = "Append a random suffix to the projects the starterkit creates. Keep it as the adopted starterkit had it: an upgrade that changes it renames, and so replaces, every project and tenant it created."
+}
+
 variable "platform_engineer_role_mapping" {
   type = object({
     git                = optional(map(list(string)))
@@ -395,6 +402,14 @@ resource "meshstack_building_block_definition" "this" {
         type            = "CODE"
         assignment_type = "STATIC"
         argument        = jsonencode(jsonencode(var.starterkit_approval_policies))
+      }
+
+      starterkit_add_random_name_suffix = {
+        display_name    = "Starterkit Random Name Suffix"
+        description     = "Whether the starterkit appends a random suffix to the projects it creates."
+        type            = "BOOLEAN"
+        assignment_type = "STATIC"
+        argument        = jsonencode(var.starterkit_add_random_name_suffix)
       }
 
       platform_engineer_role_mapping = {

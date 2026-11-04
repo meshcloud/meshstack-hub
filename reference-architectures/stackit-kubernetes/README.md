@@ -210,7 +210,9 @@ A definition is taken over in phase 2, when the platform registers it. Its lates
 what that run does: a draft version is overwritten, and a released one gets a new draft version
 only if `hub.bbd_draft` is true. With `hub.bbd_draft = false` the run fails on a released version, so
 take the definitions over with `hub.bbd_draft = true` and release afterwards. Existing building
-blocks stay on their version until they are upgraded. meshStack checks the Forgejo connector's
+blocks stay on their version until they are upgraded. Set `starterkit_add_random_name_suffix` to
+what the adopted starterkit used: a starterkit upgrade that changes it renames, and so replaces,
+every project and tenant the starterkit created. meshStack checks the Forgejo connector's
 `repository_name` input against the latest released Git repository version, so release the Git
 repository's new draft by hand before the connector can be saved.
 

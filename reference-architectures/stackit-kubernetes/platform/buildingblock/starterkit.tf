@@ -132,6 +132,8 @@ module "ske_starterkit_integration" {
   repo_clone_addr = var.starterkit_repo_clone_addr
   dns_zone_name   = local.dns_zone_name
 
+  add_random_name_suffix = var.starterkit_add_random_name_suffix
+
   project_tags = {
     stages        = local.stage_project_tags
     owner_tag_key = var.tags.project_owner_tag_key == "" ? null : var.tags.project_owner_tag_key
