@@ -1,7 +1,17 @@
 <div class="bg-slate-900 rounded-xl border border-slate-200 overflow-hidden">
   <div class="flex items-center justify-between gap-2 px-3 py-2 border-b border-slate-700">
-    <span class="text-sm text-slate-400">meshstack_integration.tf</span>
-    <ng-content></ng-content>
+    <span class="text-sm text-slate-400">{{ fileName }}</span>
+    <div class="flex items-center gap-1">
+      <button
+        type="button"
+        (click)="download()"
+        [title]="'Download ' + fileName"
+        [attr.aria-label]="'Download ' + fileName"
+        class="rounded-md p-1.5 text-sm leading-none text-slate-400 hover:bg-slate-800 hover:text-white transition-colors">
+        <i class="fa-solid fa-download"></i>
+      </button>
+      <ng-content></ng-content>
+    </div>
   </div>
   <div *ngFor="let section of sectionVms; let first = first" class="border-slate-700" [class.border-t]="!first">
     <button

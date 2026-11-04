@@ -22,6 +22,11 @@ interface SectionVm extends TerraformSnippetSection {
   host: { ngSkipHydration: 'true' }
 })
 export class TerraformSnippetComponent {
+  @Input()
+  public code = '';
+
+  public readonly fileName = 'meshstack_integration.tf';
+
   public sectionVms: SectionVm[] = [];
 
   @Input()
@@ -31,5 +36,15 @@ export class TerraformSnippetComponent {
       lineCount: section.code.split('\n').length,
       expanded: !section.collapsed
     }));
+  }
+
+  public download(): void {
+    const url = URL.createObjectURL(new Blob([this.code], { type: 'text/plain' }));
+    const link = document.createElement('a');
+
+    link.href = url;
+    link.download = this.fileName;
+    link.click();
+    URL.revokeObjectURL(url);
   }
 }
