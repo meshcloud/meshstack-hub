@@ -24,7 +24,20 @@ locals {
   # A production platform deletes what it adopted, like anything it created.
   release_imports_on_destroy = var.playground_mode && local.imports.project != null
 
-  owner_tags = var.tags.project_owner_tag_key == "" ? {} : { (var.tags.project_owner_tag_key) = [var.creator.displayName] }
+  tag_maps = {
+    for kind in ["landingzone", "building_block", "starterkit_building_block", "project", "starterkit_project"] :
+    kind => { for tag in var.tags[kind] : tag.key => tag.values }
+  }
+
+  stages = {
+    for stage in var.stages : stage.name => {
+      landingzone = { for tag in stage.landingzone : tag.key => tag.values }
+      project     = { for tag in stage.project : tag.key => tag.values }
+      quotas      = stage.quotas
+    }
+  }
+
+  owner_tags = var.tags.project_owner_tag_key == null ? {} : { (var.tags.project_owner_tag_key) = [var.creator.displayName] }
 
   platform_admins = toset([
     for member in var.workspace_members : member.username
@@ -42,6 +55,20 @@ locals {
   }, local.admin_binding_imports)
 
   stackit_project_id = module.tenant.tenant.spec.platform_tenant_id
+}
+
+# Flipping the flag on an existing platform would suffix or rename everything and change what may be destroyed.
+resource "terraform_data" "playground_mode" {
+  input = var.playground_mode
+
+  lifecycle {
+    ignore_changes = [input]
+
+    postcondition {
+      condition     = self.output == var.playground_mode
+      error_message = "playground_mode cannot change after the order."
+    }
+  }
 }
 
 resource "random_string" "playground_suffix" {
@@ -67,7 +94,7 @@ module "project" {
   spec = {
     display_name              = local.project_display_name
     payment_method_identifier = var.payment_method_identifier
-    tags                      = merge(var.tags.project, local.owner_tags)
+    tags                      = merge(local.tag_maps.project, local.owner_tags)
   }
 }
 

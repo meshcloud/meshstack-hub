@@ -44,11 +44,15 @@ locals {
   }
 
   # A landing zone has to offer every value a project assigned to it may carry.
-  starterkit_project_tags = {
-    confidentiality = ["Public"]
-  }
-  landingzone_tags = {
-    confidentiality = ["Public", "Internal", "Confidential"]
+  starterkit_project_tags = [{ key = "confidentiality", values = ["Public"] }]
+  landingzone_tags        = [{ key = "confidentiality", values = ["Public", "Internal", "Confidential"] }]
+
+  no_approval = {
+    building_block_creation = false
+    user_input_changes      = false
+    any_input_changes       = false
+    manual_triggers         = false
+    version_upgrade         = false
   }
 }
 
@@ -96,8 +100,6 @@ module "stackit_kubernetes" {
 
   meshstack = local.meshstack
   hub       = local.hub
-
-  playground_mode = true
 }
 
 resource "meshstack_building_block" "this" {
@@ -133,25 +135,28 @@ resource "meshstack_building_block" "this" {
       })) }
       landingzone_variant = { value = jsonencode("default") }
       platform_identifier = { value = jsonencode(var.test_context.run_id) }
+      playground_mode     = { value = jsonencode(true) }
       project_identifier  = { value = jsonencode("${var.test_context.run_id}-ske${var.test_context.meshstack.project_identifier_suffix}") }
       use_global_location = { value = jsonencode(false) }
       dns_parent_domain   = { value = jsonencode("stackit.run") }
       ai_model            = { value = jsonencode("openai/gpt-oss-120b") }
+      phase2_completed    = { value = jsonencode(false) }
 
       starterkit_app_name        = { value = jsonencode("ai-summarizer") }
       starterkit_repo_clone_addr = { value = jsonencode("https://github.com/likvid-bank/starterkit-template-stackit-ai-summarizer.git") }
 
       tags = { value = jsonencode(jsonencode({
-        project                   = var.test_context.meshstack.tag_schema.mandatory.project
+        project                   = [for key, values in var.test_context.meshstack.tag_schema.mandatory.project : { key = key, values = values }]
         starterkit_project        = local.starterkit_project_tags
         landingzone               = local.landingzone_tags
-        building_block            = {}
-        starterkit_building_block = {}
-        project_owner_tag_key     = ""
+        building_block            = []
+        starterkit_building_block = []
       })) }
-      stages = { value = jsonencode(jsonencode({
-        dev = { landingzone = { environment = ["dev"] }, project = { environment = ["dev"] } }
-      })) }
+      stages = { value = jsonencode(jsonencode([
+        { name = "dev", landingzone = [{ key = "environment", values = ["dev"] }], project = [{ key = "environment", values = ["dev"] }] },
+      ])) }
+      approval_policies            = { value = jsonencode(jsonencode(local.no_approval)) }
+      starterkit_approval_policies = { value = jsonencode(jsonencode(local.no_approval)) }
     }
   }
 }

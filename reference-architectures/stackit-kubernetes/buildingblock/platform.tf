@@ -8,7 +8,7 @@ locals {
   # It's fine that by default, Let's Encrypt Expiry notifications go nowhere.
   cluster_issuer_email = coalesce(var.cluster_issuer_email, local.platform_service_account_email)
 
-  dns_subdomain = trimspace(var.dns_subdomain == null ? "" : var.dns_subdomain) != "" ? lower(var.dns_subdomain) : lower(local.platform_identifier)
+  dns_subdomain = lower(coalesce(var.dns_subdomain, local.platform_identifier))
 }
 
 # The stackit provider rejects a service account email that is unknown while planning, so this run
@@ -24,7 +24,7 @@ module "platform_integration" {
 
   platform_engineer_role_mapping = var.platform_engineer_role_mapping
 
-  meshstack = { owning_workspace_identifier = var.workspace, tags = var.tags.building_block }
+  meshstack = { owning_workspace_identifier = var.workspace, tags = local.tag_maps.building_block }
   hub       = var.hub
 }
 
@@ -48,7 +48,7 @@ resource "meshstack_building_block" "platform" {
     display_name                          = "Platform Services"
     target_ref                            = module.tenant.tenant.ref
 
-    inputs = merge({
+    inputs = {
       STACKIT_SERVICE_ACCOUNT_EMAIL = { value = jsonencode(local.platform_service_account_email) }
       automation_identity = { value = jsonencode(jsonencode({
         building_block_ref    = meshstack_building_block.platform_service_account.ref
@@ -71,17 +71,15 @@ resource "meshstack_building_block" "platform" {
       starterkit_repo_clone_addr = { value = jsonencode(var.starterkit_repo_clone_addr) }
 
       tags = { value = jsonencode(jsonencode({
-        landingzone               = var.tags.landingzone
-        building_block            = var.tags.building_block
-        starterkit_building_block = var.tags.starterkit_building_block
-        starterkit_project        = var.tags.starterkit_project
+        landingzone               = local.tag_maps.landingzone
+        building_block            = local.tag_maps.building_block
+        starterkit_building_block = local.tag_maps.starterkit_building_block
+        starterkit_project        = local.tag_maps.starterkit_project
         project_owner_tag_key     = var.tags.project_owner_tag_key
       })) }
-      stages            = { value = jsonencode(jsonencode(var.stages)) }
+      stages            = { value = jsonencode(jsonencode(local.stages)) }
       quota_definitions = { value = jsonencode(jsonencode(var.quota_definitions)) }
-      }, length(local.platform_imports) == 0 ? {} : {
-      imports = { value = jsonencode(jsonencode(local.platform_imports)) }
-      }, {
+      imports           = { value = jsonencode(jsonencode(length(local.platform_imports) == 0 ? null : local.platform_imports)) }
       # Sent even when empty: meshStack keeps the stored value of an input an update leaves out.
       import_secrets = {
         sensitive = {
@@ -89,6 +87,6 @@ resource "meshstack_building_block" "platform" {
           secret_version = nonsensitive(sha256(jsonencode(var.import_secrets)))
         }
       }
-    })
+    }
   }
 }

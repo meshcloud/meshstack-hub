@@ -40,11 +40,9 @@ resource "meshstack_building_block" "cluster" {
           }
         }
         admin_token_generation = { value = jsonencode(local.token_generation) }
-        release_on_destroy     = { value = jsonencode(var.imports.ske != null && var.playground_mode) }
+        release_on_destroy     = { value = jsonencode(local.imports.adopt_ske && var.playground_mode) }
       },
-      var.imports.ske == null ? {} : {
-        imports = { value = jsonencode(jsonencode(var.imports.ske)) }
-      },
+      local.imports.adopt_ske ? { imports = { value = jsonencode(jsonencode({})) } } : {},
     )
   }
 }
@@ -147,9 +145,9 @@ resource "meshstack_building_block" "kubernetes_platform" {
             secret_version = nonsensitive(sha256(local.output_to_vault))
           }
         }
-        release_on_destroy = { value = jsonencode(var.imports.kubernetes_platform != null && var.playground_mode) }
+        release_on_destroy = { value = jsonencode(local.imports.kubernetes_platform != null && var.playground_mode) }
       },
-      var.imports.kubernetes_platform == null ? {} : {
+      local.imports.kubernetes_platform == null ? {} : {
         # The meshPlatform and its landing zones are this run's own; the child adopts what is in the cluster.
         imports = { value = jsonencode(jsonencode({})) }
       },
@@ -200,9 +198,9 @@ resource "meshstack_building_block" "ingress" {
     inputs = merge(
       {
         "kubeconfig.yaml"  = local.cluster_kubeconfig_input
-        release_on_destroy = { value = jsonencode(var.imports.ingress != null && var.playground_mode) }
+        release_on_destroy = { value = jsonencode(local.imports.adopt_ingress && var.playground_mode) }
       },
-      var.imports.ingress == null ? {} : { imports = { value = jsonencode(jsonencode(var.imports.ingress)) } },
+      local.imports.adopt_ingress ? { imports = { value = jsonencode(jsonencode({})) } } : {},
     )
   }
 }

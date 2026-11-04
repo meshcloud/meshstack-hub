@@ -177,6 +177,7 @@ resource "meshstack_building_block_definition" "this" {
         assignment_type        = "USER_INPUT"
         is_environment         = true
         updateable_by_consumer = true
+        display_order          = 10
       }
 
       STACKIT_USE_OIDC = {
@@ -186,6 +187,7 @@ resource "meshstack_building_block_definition" "this" {
         assignment_type = "STATIC"
         is_environment  = true
         argument        = jsonencode("1")
+        display_order   = 20
       }
 
       STACKIT_FEDERATED_TOKEN_FILE = {
@@ -195,6 +197,7 @@ resource "meshstack_building_block_definition" "this" {
         assignment_type = "STATIC"
         is_environment  = true
         argument        = jsonencode("/var/run/secrets/workload-identity/azure/token")
+        display_order   = 30
       }
 
       automation_identity = {
@@ -203,6 +206,7 @@ resource "meshstack_building_block_definition" "this" {
         type                   = "CODE"
         assignment_type        = "USER_INPUT"
         updateable_by_consumer = true
+        display_order          = 40
       }
 
       service_account_federation_bbd_version_ref = {
@@ -211,27 +215,7 @@ resource "meshstack_building_block_definition" "this" {
         type                   = "CODE"
         assignment_type        = "USER_INPUT"
         updateable_by_consumer = true
-      }
-
-      stackit_project_id = {
-        display_name    = "STACKIT Project ID"
-        description     = "STACKIT project the platform runs in."
-        type            = "STRING"
-        assignment_type = "PLATFORM_TENANT_ID"
-      }
-
-      tenant_uuid = {
-        display_name    = "Tenant UUID"
-        description     = "meshStack tenant of the STACKIT project, which the building blocks of this run are ordered for."
-        type            = "STRING"
-        assignment_type = "MESHSTACK_TENANT_UUID"
-      }
-
-      workspace = {
-        display_name    = "Workspace Identifier"
-        description     = "Workspace that owns the platform and the definitions this run registers."
-        type            = "STRING"
-        assignment_type = "WORKSPACE_IDENTIFIER"
+        display_order          = 50
       }
 
       platform_identifier = {
@@ -240,6 +224,7 @@ resource "meshstack_building_block_definition" "this" {
         type                   = "STRING"
         assignment_type        = "USER_INPUT"
         updateable_by_consumer = true
+        display_order          = 60
       }
 
       playground_mode = {
@@ -248,14 +233,144 @@ resource "meshstack_building_block_definition" "this" {
         type                   = "BOOLEAN"
         assignment_type        = "USER_INPUT"
         updateable_by_consumer = true
+        display_order          = 70
+      }
+
+      dns_parent_domain = {
+        display_name           = "DNS Parent Domain"
+        description            = "Domain the platform's DNS zone is created under."
+        type                   = "STRING"
+        assignment_type        = "USER_INPUT"
+        updateable_by_consumer = true
+        display_order          = 80
+      }
+
+      dns_subdomain = {
+        display_name           = "DNS Subdomain"
+        description            = "Label the platform's DNS zone occupies under the parent domain."
+        type                   = "STRING"
+        assignment_type        = "USER_INPUT"
+        updateable_by_consumer = true
+        display_order          = 90
+      }
+
+      cluster_issuer_email = {
+        display_name           = "ClusterIssuer Email"
+        description            = "Let's Encrypt contact email registered for the ACME ClusterIssuer and the DNS zone."
+        type                   = "STRING"
+        assignment_type        = "USER_INPUT"
+        updateable_by_consumer = true
+        display_order          = 100
+      }
+
+      phase2_completed = {
+        display_name           = "Phase 2 Completed"
+        description            = "Whether a Harbor robot is linked to the platform's service account; the run fails while none is."
+        type                   = "BOOLEAN"
+        assignment_type        = "USER_INPUT"
+        default_value          = jsonencode(false)
+        updateable_by_consumer = true
+        display_order          = 110
+      }
+
+      stages = {
+        display_name           = "Stages"
+        description            = "Stages the platform offers, as the STACKIT Kubernetes Platform takes them."
+        type                   = "CODE"
+        assignment_type        = "USER_INPUT"
+        updateable_by_consumer = true
+        display_order          = 120
+      }
+
+      tags = {
+        display_name           = "Tags"
+        description            = "Tag maps `landingzone`, `building_block`, `starterkit_building_block` and `starterkit_project`, and `project_owner_tag_key`, as the STACKIT Kubernetes Platform takes them."
+        type                   = "CODE"
+        assignment_type        = "USER_INPUT"
+        updateable_by_consumer = true
+        display_order          = 130
+      }
+
+      approval_policies = {
+        display_name    = "Approval Policies"
+        description     = "HCL object of approval gates on the platform definitions this registers."
+        type            = "CODE"
+        assignment_type = "STATIC"
+        argument        = jsonencode(jsonencode(var.approval_policies))
+        display_order   = 140
+      }
+
+      starterkit_approval_policies = {
+        display_name    = "Starterkit Approval Policies"
+        description     = "HCL object of approval gates on the application team definitions this registers."
+        type            = "CODE"
+        assignment_type = "STATIC"
+        argument        = jsonencode(jsonencode(var.starterkit_approval_policies))
+        display_order   = 150
+      }
+
+      use_global_location = {
+        display_name           = "Use Global Location"
+        description            = "Use the global meshStack location; false creates one for the platform."
+        type                   = "BOOLEAN"
+        assignment_type        = "USER_INPUT"
+        updateable_by_consumer = true
+        display_order          = 160
+      }
+
+      ai_model = {
+        display_name           = "AI Model"
+        description            = "Model applications on the platform default to."
+        type                   = "STRING"
+        assignment_type        = "USER_INPUT"
+        updateable_by_consumer = true
+        display_order          = 170
+      }
+
+      starterkit_app_name = {
+        display_name           = "Starter Kit Image Name"
+        description            = "Image name every application ordered from the starter kit builds under."
+        type                   = "STRING"
+        assignment_type        = "USER_INPUT"
+        updateable_by_consumer = true
+        display_order          = 180
+      }
+
+      starterkit_repo_clone_addr = {
+        display_name           = "Starter Kit Template Repository"
+        description            = "Git URL the starter kit initialises every application repository from."
+        type                   = "STRING"
+        assignment_type        = "USER_INPUT"
+        updateable_by_consumer = true
+        display_order          = 190
+      }
+
+      cluster_name = {
+        display_name           = "Cluster Name"
+        description            = "Name of the SKE cluster."
+        type                   = "STRING"
+        assignment_type        = "USER_INPUT"
+        updateable_by_consumer = true
+        display_order          = 200
+      }
+
+      quota_definitions = {
+        display_name           = "Quota Definitions"
+        description            = "Quotas the meshPlatform offers, as the STACKIT Kubernetes Platform takes them."
+        type                   = "CODE"
+        assignment_type        = "USER_INPUT"
+        is_optional            = true
+        updateable_by_consumer = true
+        display_order          = 210
       }
 
       imports = {
         display_name    = "Imports"
-        description     = "HCL object of what the building blocks take over, by key: `ske`, `git`, `dns`, `ingress`, `secrets_manager`, `container_registry`, `kubernetes_platform`, `starterkit_definitions`. All optional."
+        description     = "HCL object of what the building blocks take over, by key: `adopt_ske`, `git`, `dns`, `adopt_ingress`, `secrets_manager`, `container_registry`, `kubernetes_platform`, `starterkit_definitions`. All optional."
         type            = "CODE"
         assignment_type = "USER_INPUT"
         is_optional     = true
+        display_order   = 220
       }
 
       import_secrets = {
@@ -266,128 +381,7 @@ resource "meshstack_building_block_definition" "this" {
         sensitive              = {}
         is_optional            = true
         updateable_by_consumer = true
-      }
-
-      use_global_location = {
-        display_name           = "Use Global Location"
-        description            = "Use the global meshStack location; false creates one for the platform."
-        type                   = "BOOLEAN"
-        assignment_type        = "USER_INPUT"
-        updateable_by_consumer = true
-      }
-
-      cluster_name = {
-        display_name           = "Cluster Name"
-        description            = "Name of the SKE cluster."
-        type                   = "STRING"
-        assignment_type        = "USER_INPUT"
-        updateable_by_consumer = true
-      }
-
-      cluster_issuer_email = {
-        display_name           = "ClusterIssuer Email"
-        description            = "Let's Encrypt contact email registered for the ACME ClusterIssuer and the DNS zone."
-        type                   = "STRING"
-        assignment_type        = "USER_INPUT"
-        updateable_by_consumer = true
-      }
-
-      dns_subdomain = {
-        display_name           = "DNS Subdomain"
-        description            = "Label the platform's DNS zone occupies under the parent domain."
-        type                   = "STRING"
-        assignment_type        = "USER_INPUT"
-        updateable_by_consumer = true
-      }
-
-      dns_parent_domain = {
-        display_name           = "DNS Parent Domain"
-        description            = "Domain the platform's DNS zone is created under."
-        type                   = "STRING"
-        assignment_type        = "USER_INPUT"
-        updateable_by_consumer = true
-      }
-
-      phase2_completed = {
-        display_name           = "Phase 2 Completed"
-        description            = "Whether a Harbor robot is linked to the platform's service account; the run fails while none is."
-        type                   = "BOOLEAN"
-        assignment_type        = "USER_INPUT"
-        default_value          = jsonencode(false)
-        updateable_by_consumer = true
-      }
-
-      ai_model = {
-        display_name           = "AI Model"
-        description            = "Model applications on the platform default to."
-        type                   = "STRING"
-        assignment_type        = "USER_INPUT"
-        updateable_by_consumer = true
-      }
-
-      starterkit_app_name = {
-        display_name           = "Starter Kit Image Name"
-        description            = "Image name every application ordered from the starter kit builds under."
-        type                   = "STRING"
-        assignment_type        = "USER_INPUT"
-        updateable_by_consumer = true
-      }
-
-      starterkit_repo_clone_addr = {
-        display_name           = "Starter Kit Template Repository"
-        description            = "Git URL the starter kit initialises every application repository from."
-        type                   = "STRING"
-        assignment_type        = "USER_INPUT"
-        updateable_by_consumer = true
-      }
-
-      tags = {
-        display_name           = "Tags"
-        description            = "Tag maps `landingzone`, `building_block`, `starterkit_building_block` and `starterkit_project`, and `project_owner_tag_key`, as the STACKIT Kubernetes Platform takes them."
-        type                   = "CODE"
-        assignment_type        = "USER_INPUT"
-        updateable_by_consumer = true
-      }
-
-      stages = {
-        display_name           = "Stages"
-        description            = "Stages the platform offers, as the STACKIT Kubernetes Platform takes them."
-        type                   = "CODE"
-        assignment_type        = "USER_INPUT"
-        updateable_by_consumer = true
-      }
-
-      quota_definitions = {
-        display_name           = "Quota Definitions"
-        description            = "Quotas the meshPlatform offers, as the STACKIT Kubernetes Platform takes them."
-        type                   = "CODE"
-        assignment_type        = "USER_INPUT"
-        is_optional            = true
-        updateable_by_consumer = true
-      }
-
-      hub = {
-        display_name    = "Hub"
-        description     = "HCL object with `git_ref` (meshstack-hub reference to source nested modules from) and `bbd_draft` (draft state of the application team definitions)."
-        type            = "CODE"
-        assignment_type = "STATIC"
-        argument        = jsonencode(jsonencode(var.hub))
-      }
-
-      approval_policies = {
-        display_name    = "Approval Policies"
-        description     = "HCL object of approval gates on the platform definitions this registers."
-        type            = "CODE"
-        assignment_type = "STATIC"
-        argument        = jsonencode(jsonencode(var.approval_policies))
-      }
-
-      starterkit_approval_policies = {
-        display_name    = "Starterkit Approval Policies"
-        description     = "HCL object of approval gates on the application team definitions this registers."
-        type            = "CODE"
-        assignment_type = "STATIC"
-        argument        = jsonencode(jsonencode(var.starterkit_approval_policies))
+        display_order          = 230
       }
 
       starterkit_add_random_name_suffix = {
@@ -396,6 +390,7 @@ resource "meshstack_building_block_definition" "this" {
         type            = "BOOLEAN"
         assignment_type = "STATIC"
         argument        = jsonencode(var.starterkit_add_random_name_suffix)
+        display_order   = 240
       }
 
       platform_engineer_role_mapping = {
@@ -404,6 +399,40 @@ resource "meshstack_building_block_definition" "this" {
         type            = "CODE"
         assignment_type = "STATIC"
         argument        = jsonencode(jsonencode(var.platform_engineer_role_mapping))
+        display_order   = 250
+      }
+
+      stackit_project_id = {
+        display_name    = "STACKIT Project ID"
+        description     = "STACKIT project the platform runs in."
+        type            = "STRING"
+        assignment_type = "PLATFORM_TENANT_ID"
+        display_order   = 900
+      }
+
+      tenant_uuid = {
+        display_name    = "Tenant UUID"
+        description     = "meshStack tenant of the STACKIT project, which the building blocks of this run are ordered for."
+        type            = "STRING"
+        assignment_type = "MESHSTACK_TENANT_UUID"
+        display_order   = 910
+      }
+
+      workspace = {
+        display_name    = "Workspace Identifier"
+        description     = "Workspace that owns the platform and the definitions this run registers."
+        type            = "STRING"
+        assignment_type = "WORKSPACE_IDENTIFIER"
+        display_order   = 920
+      }
+
+      hub = {
+        display_name    = "Hub"
+        description     = "HCL object with `git_ref` (meshstack-hub reference to source nested modules from) and `bbd_draft` (draft state of the application team definitions)."
+        type            = "CODE"
+        assignment_type = "STATIC"
+        argument        = jsonencode(jsonencode(var.hub))
+        display_order   = 1000
       }
     }
 
