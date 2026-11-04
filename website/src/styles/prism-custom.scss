@@ -16,16 +16,14 @@ pre[class*="language-"] {
   margin: initial;
 }
 
-// prism-tomorrow sets 1em and Consolas/Monaco on both elements, which beats Tailwind
-// utilities on the <pre> by specificity. Size the <pre> here and let <code> follow it.
+// prism-tomorrow sets 1em on both elements, which beats Tailwind utilities on the <pre> by
+// specificity. Size the <pre> here and let <code> follow it.
 pre[class*="language-"] {
-  @apply font-mono;
   font-size: 0.8125rem;
   line-height: 1.6;
 }
 
 code[class*="language-"] {
-  font-family: inherit;
   font-size: inherit;
   line-height: inherit;
 }
