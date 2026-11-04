@@ -127,9 +127,7 @@
                   <div class="flex-1">
                     <div class="text-slate-700 font-medium mb-1 text-base">Configure variables</div>
                     <div class="text-slate-600 text-sm">
-                      Configure the required inputs via Terraform <span class="font-mono bg-slate-100 px-1 py-0.5 rounded text-sm">variable</span> values (for example in <span class="font-mono bg-slate-100 px-1 py-0.5 rounded text-sm">*.tfvars</span>).
-                      Provider blocks are usually kept in a separate file such as <span class="font-mono bg-slate-100 px-1 py-0.5 rounded text-sm">providers.tf</span>; they are appended here only for copy-paste convenience.
-                      Tip: the <a href="https://github.com/meshcloud/meshstack-cli" target="_blank" rel="noopener noreferrer" class="text-primary-600 hover:text-primary-700 underline font-medium">meshStack CLI</a> can set up this authentication for you via <span class="font-mono bg-slate-100 px-1 py-0.5 rounded text-sm">meshstack login</span>.
+                      Set the required inputs as <span class="font-mono bg-slate-100 px-1 py-0.5 rounded text-sm">variable</span> values, for example in <span class="font-mono bg-slate-100 px-1 py-0.5 rounded text-sm">*.tfvars</span>.
                     </div>
                   </div>
                 </div>
@@ -137,7 +135,10 @@
                   <div class="flex-shrink-0 w-6 h-6 rounded-full bg-primary-100 text-primary-600 flex items-center justify-center text-sm font-semibold">3</div>
                   <div class="flex-1">
                     <div class="text-slate-700 font-medium mb-1 text-base">Deploy with OpenTofu</div>
-                    <div class="text-slate-600 text-sm">Run <span class="font-mono bg-slate-100 px-1 py-0.5 rounded text-sm">tofu init</span>, <span class="font-mono bg-slate-100 px-1 py-0.5 rounded text-sm">tofu plan</span>, and <span class="font-mono bg-slate-100 px-1 py-0.5 rounded text-sm">tofu apply</span> to create the building block definition.</div>
+                    <div class="text-slate-600 text-sm">
+                      Log in with the <a href="https://github.com/meshcloud/meshstack-cli" target="_blank" rel="noopener noreferrer" class="text-primary-600 hover:text-primary-700 underline font-medium">meshStack CLI</a> via <span class="font-mono bg-slate-100 px-1 py-0.5 rounded text-sm">meshstack login</span> (recommended).
+                      Then run <span class="font-mono bg-slate-100 px-1 py-0.5 rounded text-sm">tofu init</span> and <span class="font-mono bg-slate-100 px-1 py-0.5 rounded text-sm">tofu apply</span> to create the building block definition.
+                    </div>
                   </div>
                 </div>
                 <div class="flex gap-3 items-start">
