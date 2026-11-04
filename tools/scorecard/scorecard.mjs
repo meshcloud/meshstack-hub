@@ -1576,29 +1576,6 @@ const detectors = [
     },
   },
   {
-    id: "bbd_optional_over_default",
-    category: "shared",
-    name: "BBD inputs do not repeat the variable's default in default_value",
-    emoji: "🪞",
-    targets: ["module", "refArch"],
-    needsCode: true,
-    fn: (target) => {
-      const offenders = [];
-      let checked = 0;
-      for (const { where, bbd, key, entry, variable } of bbdInputsWithVariables(target)) {
-        const inputDefault = entry.match(/^\s*default_value\s*=\s*jsonencode\((.*)\)\s*$/m)?.[1];
-        if (inputDefault === undefined || inputAttribute(entry, "type") === "BOOLEAN") continue;
-        checked++;
-        const variableDefault = variable.match(/^\s*default\s*=\s*(.+?)\s*$/m)?.[1];
-        if (isPlainLiteral(inputDefault) && normalizeLiteral(inputDefault) === normalizeLiteral(variableDefault ?? "")) {
-          offenders.push(`${where}: ${bbd} input "${key}"`);
-        }
-      }
-      if (checked === 0) return { pass: null, detail: "no non-BOOLEAN inputs with a default_value backed by a variable" };
-      return listOffenders(offenders, "drop default_value and set is_optional = true, so the variable's default stays the only one");
-    },
-  },
-  {
     id: "bbd_input_order",
     category: "shared",
     name: "BBD inputs and their variables are declared in display order",
@@ -1622,30 +1599,35 @@ const detectors = [
     },
   },
   {
-    id: "bbd_optional_input_default",
+    id: "bbd_input_defaults",
     category: "shared",
-    name: "Optional BBD inputs fall back to the variable's default, without empty-string handling",
-    emoji: "🕳️",
+    name: "The definition owns input defaults: fed variables have none, optional inputs are nullable, no \"\" as unset",
+    emoji: "🪞",
     targets: ["module", "refArch"],
     needsCode: true,
     fn: (target) => {
       const offenders = [];
       let checked = 0;
-      for (const { where, bbd, inputs, variables, code } of bbdsWithImplementation(target)) {
-        for (const [key, entry] of inputs) {
-          const variable = variables.get(key);
-          if (!variable || !/^\s*is_optional\s*=\s*true\b/m.test(entry)) continue;
-          checked++;
-          if (!/^\s*default\s*=/m.test(variable)) offenders.push(`${where}: ${bbd} input "${key}" (variable has no default)`);
-          else if (/^\s*default\s*=\s*null\s*$/m.test(variable) && /^\s*nullable\s*=\s*false\b/m.test(variable)) {
-            offenders.push(`${where}: ${bbd} input "${key}" (nullable = false)`);
-          }
+      for (const { where, bbd, key, entry, variable } of bbdInputsWithVariables(target)) {
+        checked++;
+        const optional = /^\s*is_optional\s*=\s*true\b/m.test(entry);
+        const notNullable = /^\s*nullable\s*=\s*false\b/m.test(variable);
+        if (/^\s*default\s*=/m.test(variable) && !/^\s*const\s*=\s*true\b/m.test(variable)) {
+          offenders.push(`${where}: ${bbd} input "${key}" (variable has a default)`);
+        }
+        if (optional && notNullable) offenders.push(`${where}: ${bbd} input "${key}" (optional, but nullable = false)`);
+        if (!optional && /^\s*default_value\s*=/m.test(entry) && !notNullable) {
+          offenders.push(`${where}: ${bbd} input "${key}" (has default_value, but the variable is nullable)`);
+        }
+      }
+      for (const { where, bbd, inputs, code } of bbdsWithImplementation(target)) {
+        for (const [key] of inputs) {
           const emptyString = new RegExp(String.raw`coalesce\(\s*var\.${key}\s*,\s*""|var\.${key}\s*[!=]=\s*""|compact\(\s*\[\s*var\.${key}\b`);
           if (emptyString.test(code)) offenders.push(`${where}: ${bbd} input "${key}" (handles "" as unset)`);
         }
       }
-      if (checked === 0) return { pass: null, detail: "no optional definition inputs backed by a variable" };
-      return listOffenders(offenders, "meshStack sends nothing for an empty optional input, so the variable's default applies; give it default = null and check only for null");
+      if (checked === 0) return { pass: null, detail: "no definition inputs backed by a variable" };
+      return listOffenders(offenders, "the runner writes an empty input as null, so put a sane default into default_value with a nullable = false variable, or make the input optional and check only for null");
     },
   },
 
@@ -2375,8 +2357,6 @@ function bbdsWithImplementation(target) {
 const displayOrder = (entry) => Number(entry.match(/^\s*display_order\s*=\s*(\d+)/m)?.[1] ?? NaN);
 const isAscending = (numbers) => numbers.every((n, i) => i === 0 || numbers[i - 1] <= n);
 
-const isPlainLiteral = (text) => /^("([^"\\$]|\\.)*"|-?\d+(\.\d+)?|true|false|\[\s*\]|\{\s*\})$/.test(text.trim());
-const normalizeLiteral = (text) => text.replace(/\s+/g, "");
 
 function moduleSourceDirs(file, content) {
   const dirs = [];

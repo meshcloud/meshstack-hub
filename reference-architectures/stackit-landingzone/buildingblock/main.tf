@@ -38,6 +38,20 @@ locals {
   }
 }
 
+# Flipping the flag on an existing platform would suffix or rename everything and change what may be destroyed.
+resource "terraform_data" "playground_mode" {
+  input = var.playground_mode
+
+  lifecycle {
+    ignore_changes = [input]
+
+    postcondition {
+      condition     = self.output == var.playground_mode
+      error_message = "playground_mode cannot change after the order."
+    }
+  }
+}
+
 resource "random_string" "playground_suffix" {
   lifecycle {
     enabled = var.playground_mode

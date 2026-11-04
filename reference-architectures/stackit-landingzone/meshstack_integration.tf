@@ -80,14 +80,6 @@ variable "starterkit_approval_policies" {
   description = "The same, for the project starterkit definition this architecture registers. Set `building_block_creation` to have an operator approve every project an application team orders."
 }
 
-variable "playground_mode" {
-  type     = bool
-  nullable = false
-  default  = true
-
-  description = "Deploy a throwaway platform: the platform identifier gets a random suffix so it does not occupy a name for good, and the landing-zone folder and foundation project are left destroyable. Set to false for a platform that is actually used. Passed to the building block as a STATIC input, so whoever orders the architecture cannot choose. A playground platform and the building block definitions it registers are not meant to be published to other workspaces."
-}
-
 output "building_block_definition" {
   description = "BBD is consumed in building block compositions."
   value = {
@@ -228,9 +220,8 @@ resource "meshstack_building_block_definition" "this" {
 
     ## 🧪 Playground mode
 
-    **Playground Mode** is fixed by whoever deployed this definition and cannot be chosen when
-    ordering. It defaults to `true`, which deploys a throwaway platform: the platform identifier gets
-    a random suffix, everything goes into a root folder named `playground-<platform identifier>`,
+    **Playground Mode** is chosen when ordering and cannot be changed afterwards. Turned on, it
+    deploys a throwaway platform: the platform identifier gets a random suffix, everything goes into a root folder named `playground-<platform identifier>`,
     and none of the folders nor the foundation project is protected against deletion, so the whole
     thing can be deleted again in one step.
 
@@ -239,8 +230,7 @@ resource "meshstack_building_block_definition" "this" {
     occupy the plain name for good. Such a platform and the building block definitions it registers
     are meant for the deploying workspace only — do not publish them to other workspaces.
 
-    A platform that is actually used is deployed from a definition with **Playground Mode** set to
-    `false`. The identifier is then taken as given, and the folder and foundation project are guarded
+    A platform that is actually used keeps **Playground Mode** off, the default. The identifier is then taken as given, and the folder and foundation project are guarded
     with `prevent_destroy`, so a deletion run fails rather than taking every tenant project with it.
 
     ## 🔑 Authentication
@@ -304,6 +294,15 @@ resource "meshstack_building_block_definition" "this" {
         value_validation_regex         = "^[a-zA-Z0-9-]+$"
         validation_regex_error_message = "platform_identifier must only contain letters, digits, and dashes."
         display_order                  = 10
+      }
+
+      playground_mode = {
+        display_name    = "Playground Mode"
+        description     = "Throwaway deployment: the identifier gets a random suffix and nothing is protected against deletion. Do not publish such a platform or its definitions to other workspaces. Cannot be changed after the order."
+        type            = "BOOLEAN"
+        assignment_type = "USER_INPUT"
+        default_value   = jsonencode(false)
+        display_order   = 15
       }
 
       use_global_location = {
@@ -372,8 +371,7 @@ resource "meshstack_building_block_definition" "this" {
         condition              = "\"hub&spoke\" in input.topology"
         display_order          = 70
 
-        # Decodes into var.network's object; hidden for the sandbox topology, so var.network falls
-        # back to its null default and the buildingblock leaves networking off.
+        # Hidden for the sandbox topology, so var.network arrives as null and networking stays off.
         json_schema = jsonencode({
           "$schema" = "http://json-schema.org/draft-07/schema#"
           type      = "object"
@@ -501,15 +499,6 @@ resource "meshstack_building_block_definition" "this" {
         assignment_type = "STATIC"
         argument        = jsonencode(jsonencode(var.starterkit_approval_policies))
         display_order   = 140
-      }
-
-      playground_mode = {
-        display_name    = "Playground Mode"
-        description     = "Throwaway deployment: the identifier gets a random suffix and nothing is protected against deletion. Do not publish such a platform or its definitions to other workspaces. Set false for real use."
-        type            = "BOOLEAN"
-        assignment_type = "STATIC"
-        argument        = jsonencode(var.playground_mode)
-        display_order   = 150
       }
     }
 

@@ -190,8 +190,8 @@ the tenant projects stay.
 
 ### Playground Mode
 
-`playground_mode` defaults to `true`, so an unconfigured deployment is a throwaway one. Two things
-change with it:
+**Playground Mode** deploys a throwaway platform. It is off by default, and three things change
+with it:
 
 | | `playground_mode = true` | `playground_mode = false` |
 |---|---|---|
@@ -207,15 +207,14 @@ playground deployment that took the plain name would occupy it for good, across 
 definitions it registers should be published to other workspaces: the platform can disappear at any
 time, and its name is not the one a real deployment will use.
 
-Set `playground_mode = false` for a platform that is actually used, as the `stackit-platform`
+Keep `playground_mode = false` for a platform that is actually used, as the `stackit-platform`
 workspace in likvid-cloudfoundation does. The guard is then a plan-time rule, so it also catches a
 teardown caused by a change that forces the folder to be replaced. It cannot catch a deletion that
 happens outside the Terraform run, such as someone removing the folder in the STACKIT portal.
 
-The flag belongs to whoever deploys the definition, not to whoever orders it. It reaches the
-building block as a `STATIC` input, so it does not appear as a choice in the order form and a
-consumer cannot turn a real platform into a playground one, or the reverse. Change it by setting
-`playground_mode` on the reference architecture module and deploying a new definition version.
+The flag is chosen in the order form and cannot be changed afterwards: a run that sees another
+value fails at plan time, so a real platform never turns into a playground one, or the reverse.
+Deleting the building block still works.
 
 ### Adopting an Existing Platform
 

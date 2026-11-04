@@ -146,27 +146,29 @@ the definition gains a required input, even one with a default. So a new input i
 without that flag, setting it on an existing block fails with 403 "You tried to edit input ...".
 A BOOLEAN input cannot be optional, so it always takes the second way.
 
-<!-- scorecard-checks: bbd_structured_inputs, bbd_optional_over_default -->
-## Input Types and Defaults
+<!-- scorecard-checks: bbd_structured_inputs, bbd_input_order, bbd_input_defaults -->
+## Input Types, Order and Defaults
 
 meshStack passes each input to the Terraform variable of the same name.
 
 - An input whose variable is an `object` or a `map` is `type = "JSON"` with a `json_schema`: meshPanel
   renders a form from the schema, and meshStack rejects a value the schema does not allow. `CODE`
   stays right for free text such as YAML, HCL or a script.
-- An input whose default only repeats the variable's `default` is `is_optional = true` with no
-  `default_value`. meshStack then sends no value and the variable's default applies, so the default
-  lives in one place. A BOOLEAN input cannot be optional and keeps its `default_value`.
-
-<!-- scorecard-checks: bbd_input_order, bbd_optional_input_default -->
-## Input Order and Optional Inputs
-
 - Declare the inputs by ascending `display_order`, and the `buildingblock/` variables they feed in
   the same order, so the code reads like the order form.
-- meshStack sends nothing for an optional input left empty, so its variable has a default, usually
-  `default = null`, and the code checks only for null. Handling `""` as unset hides that contract.
-  The check finds `coalesce(var.x, "")`, `var.x == ""`, `var.x != ""` and `compact([var.x])`, and
-  misses the same handling through a local.
+- The definition owns every value, so a `buildingblock/` variable fed by an input has no `default`.
+  A `const = true` variable keeps one, because `tofu init` and `validate` outside a run need it.
+  The runner writes an empty input as `x = null`, so a variable default would never apply anyway.
+- An input with a sane default is required and carries it in `default_value`; its variable is
+  `nullable = false`.
+- `is_optional = true` is for a value that is really absent, with no sane default. Its variable is
+  nullable and the code checks only for null. Handling `""` as unset hides that contract. The check
+  finds `coalesce(var.x, "")`, `var.x == ""`, `var.x != ""` and `compact([var.x])`, and misses the
+  same handling through a local.
+- meshStack stores a null value only for the optional inputs a block has when it is created. An
+  optional input added to the definition later reaches an older block's run as no value at all, so
+  the variable without a default fails the run. Until meshStack fills in null there too, a caller
+  sends every optional input explicitly, `jsonencode(null)` included.
 
 <!-- scorecard-checks: wif_no_replicator -->
 ## Runner identity

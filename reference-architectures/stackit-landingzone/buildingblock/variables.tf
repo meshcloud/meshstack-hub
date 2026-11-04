@@ -9,6 +9,12 @@ variable "platform_identifier" {
   }
 }
 
+variable "playground_mode" {
+  type        = bool
+  nullable    = false
+  description = "Deploy a throwaway platform: the platform identifier gets a random suffix so it does not occupy a name for good, and the landing-zone folder and foundation project are left destroyable. Set to false for a platform that is actually used. Cannot change after the first run. A playground platform and the building block definitions it registers are not meant to be published to other workspaces."
+}
+
 variable "use_global_location" {
   type        = bool
   nullable    = false
@@ -28,7 +34,6 @@ variable "stackit_org" {
 
 variable "root_folder_name" {
   type        = string
-  default     = null
   description = "Name of a folder at the organization root that holds the landing-zone folder and the foundation project, for an organization that serves more than one meshStack. Null puts the landing-zone folder at the organization root, except in playground mode, which names the folder `playground-<platform identifier>`."
 
   validation {
@@ -74,8 +79,7 @@ variable "network" {
     tenant_network_min_prefix_length = optional(number, 24)
     tenant_network_max_prefix_length = optional(number, 28)
   })
-  default     = null
-  description = "Hub-and-spoke address plan, read only when `topology` includes `hub&spoke`. The input is hidden, and so not sent, otherwise."
+  description = "Hub-and-spoke address plan, read only when `topology` includes `hub&spoke`. Otherwise the input is hidden and arrives as null."
 }
 
 variable "role_mapping" {
@@ -135,7 +139,6 @@ variable "imports" {
       federated_identity_provider_ids = list(string)
     }))
   })
-  default     = null
   description = "Existing resources to take over, by key; see Adopting an Existing Platform in the README. Null creates everything."
 
   validation {
@@ -179,10 +182,4 @@ variable "starterkit_approval_policies" {
   })
   nullable    = false
   description = "Run triggers that need an operator's approval before a run of the project starterkit is applied. The defaults are the provider's own, and the provider asserts them whenever the definition sets no policies — so a gate switched on in meshPanel is turned off again by the next run unless it is set here."
-}
-
-variable "playground_mode" {
-  type        = bool
-  nullable    = false
-  description = "Deploy a throwaway platform: the platform identifier gets a random suffix so it does not occupy a name for good, and the landing-zone folder and foundation project are left destroyable. Set to false for a platform that is actually used. A playground platform and the building block definitions it registers are not meant to be published to other workspaces."
 }
