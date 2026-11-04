@@ -3,6 +3,7 @@ package main
 import (
 	"bytes"
 	"embed"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
@@ -11,6 +12,7 @@ import (
 	"maps"
 	"os"
 	"slices"
+	"strings"
 	"text/template"
 
 	"github.com/hashicorp/hcl/v2"
@@ -35,13 +37,118 @@ func (p providerConfig) Key() string {
 }
 
 func main() {
-	if len(os.Args) != 2 {
-		log.Println("Usage: render-meshstack-integration-tf <file>")
+	var err error
+	switch {
+	case len(os.Args) == 2:
+		err = render(os.Args[1], os.Stdout)
+	case len(os.Args) == 3 && os.Args[1] == "--sections":
+		err = renderSections(os.Args[2], os.Stdout)
+	default:
+		log.Println("Usage: render-meshstack-integration-tf [--sections] <file>")
 		os.Exit(1)
 	}
-	if err := render(os.Args[1], os.Stdout); err != nil {
+	if err != nil {
 		log.Fatal(err)
 	}
+}
+
+type snippet struct {
+	Code     string    `json:"code"`
+	Sections []section `json:"sections"`
+}
+
+type section struct {
+	Title     string `json:"title"`
+	Collapsed bool   `json:"collapsed"`
+	Code      string `json:"code"`
+}
+
+// The website shows the snippet in the order a reader declares an integration, and collapses the
+// boilerplate around the building block definition so a reader sees what matters first.
+var sectionKinds = []section{
+	{Title: "Provider Setup", Collapsed: true},
+	{Title: "Variables", Collapsed: true},
+	{Title: "Locals", Collapsed: true},
+	{Title: "Building Block Definition"},
+	{Title: "Backplane"},
+	{Title: "Resources"},
+	{Title: "Outputs", Collapsed: true},
+}
+
+func renderSections(filename string, w io.Writer) error {
+	var code bytes.Buffer
+	if err := render(filename, &code); err != nil {
+		return err
+	}
+	return json.NewEncoder(w).Encode(snippetOf(code.Bytes(), filename))
+}
+
+// The copied code follows the section order, so it matches what the reader sees.
+func snippetOf(code []byte, filename string) snippet {
+	file, diags := hclwrite.ParseConfig(code, filename, hcl.Pos{Line: 1, Column: 1})
+	if diags.HasErrors() || !onlyBlocksWithTheirComments(file.Body()) {
+		log.Println("Show a single section, the file has content outside of blocks")
+		return snippet{Code: string(code), Sections: []section{{Title: "Integration", Code: string(code)}}}
+	}
+
+	sections := slices.Clone(sectionKinds)
+	for _, block := range file.Body().Blocks() {
+		kind := &sections[slices.IndexFunc(sections, func(s section) bool { return s.Title == sectionTitleOf(block) })]
+		blockCode := strings.TrimSpace(string(block.BuildTokens(nil).Bytes()))
+		if kind.Code != "" {
+			kind.Code += "\n\n"
+		}
+		kind.Code += blockCode
+	}
+	sections = slices.DeleteFunc(sections, func(s section) bool { return s.Code == "" })
+
+	sectionCodes := make([]string, 0, len(sections))
+	for _, s := range sections {
+		sectionCodes = append(sectionCodes, s.Code)
+	}
+	return snippet{Code: strings.Join(sectionCodes, "\n\n") + "\n", Sections: sections}
+}
+
+// hclwrite keeps the comment lines directly above a block with the block. Anything else, like a
+// comment separated from the next block by a blank line, would be lost when splitting by block.
+func onlyBlocksWithTheirComments(body *hclwrite.Body) bool {
+	commentsInBlocks := 0
+	for _, block := range body.Blocks() {
+		commentsInBlocks += countComments(block.BuildTokens(nil))
+	}
+	return len(body.Attributes()) == 0 && commentsInBlocks == countComments(body.BuildTokens(nil))
+}
+
+func countComments(tokens hclwrite.Tokens) int {
+	count := 0
+	for _, token := range tokens {
+		if token.Type == hclsyntax.TokenComment {
+			count++
+		}
+	}
+	return count
+}
+
+func sectionTitleOf(block *hclwrite.Block) string {
+	switch block.Type() {
+	case "variable":
+		return "Variables"
+	case "output":
+		return "Outputs"
+	case "locals":
+		return "Locals"
+	case "terraform", "provider":
+		return "Provider Setup"
+	case "module":
+		if block.Labels()[0] == "backplane" {
+			return "Backplane"
+		}
+	case "resource":
+		if block.Labels()[0] == "meshstack_building_block_definition" {
+			return "Building Block Definition"
+		}
+	}
+	return "Resources"
 }
 
 func render(filename string, w io.Writer) error {
@@ -58,7 +165,6 @@ func render(filename string, w io.Writer) error {
 	if err != nil {
 		return err
 	}
-	sortBlocksForReading(file.Body())
 	existingProviders := findExistingProviders(file, filename)
 
 	log.Printf("Found existing providers: %v\n", existingProviderKeys(existingProviders))
@@ -80,72 +186,6 @@ func render(filename string, w io.Writer) error {
 
 	_, err = file.WriteTo(w)
 	return err
-}
-
-// The source file keeps variables on top, but a reader of the website snippet wants to see the
-// building block definition first and the variables feeding it last.
-func sortBlocksForReading(body *hclwrite.Body) {
-	blocks := body.Blocks()
-	if !onlyBlocksWithTheirComments(body, blocks) {
-		log.Println("Keep source block order, the file has content outside of blocks")
-		return
-	}
-	slices.SortStableFunc(blocks, func(a, b *hclwrite.Block) int {
-		return readingRank(a) - readingRank(b)
-	})
-
-	for _, block := range blocks {
-		body.RemoveBlock(block)
-	}
-	body.Clear()
-	for i, block := range blocks {
-		if i > 0 {
-			body.AppendNewline()
-		}
-		body.AppendBlock(block)
-	}
-}
-
-// Reordering moves whole blocks, including the comment lines directly above each one. Anything
-// else, like a comment separated from the next block by a blank line, would get lost.
-func onlyBlocksWithTheirComments(body *hclwrite.Body, blocks []*hclwrite.Block) bool {
-	commentsInBlocks := 0
-	for _, block := range blocks {
-		commentsInBlocks += countComments(block.BuildTokens(nil))
-	}
-	return len(body.Attributes()) == 0 && commentsInBlocks == countComments(body.BuildTokens(nil))
-}
-
-func countComments(tokens hclwrite.Tokens) int {
-	count := 0
-	for _, token := range tokens {
-		if token.Type == hclsyntax.TokenComment {
-			count++
-		}
-	}
-	return count
-}
-
-func readingRank(block *hclwrite.Block) int {
-	switch block.Type() {
-	case "resource":
-		if block.Labels()[0] == "meshstack_building_block_definition" {
-			return 0
-		}
-		return 1
-	case "locals":
-		return 2
-	case "variable":
-		return 3
-	case "output":
-		return 4
-	case "terraform":
-		return 5
-	case "provider":
-		return 6
-	default: // module, data, and anything else that builds the integration
-		return 1
-	}
 }
 
 func findRequiredProviders(file *hclwrite.File, filename string) ([]providerConfig, error) {
