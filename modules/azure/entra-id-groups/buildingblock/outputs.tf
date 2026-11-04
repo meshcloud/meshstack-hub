@@ -20,6 +20,22 @@ locals {
     for role, g in azuread_group.project_role : "| `${role}` | `${g.display_name}` |"
   ]
 
+  user_names = { for user in var.users : user.euid => trimspace("${user.firstName} ${user.lastName}") }
+
+  summary_member_section = length(azuread_group_member.project_role) == 0 ? [] : concat(
+    [
+      "",
+      "## Members added",
+      "",
+      "| Member | Account | Entra group |",
+      "|---|---|---|",
+    ],
+    sort([
+      for key, m in azuread_group_member.project_role :
+      "| ${local.user_names[local.user_role_assignments[key].euid]} | `${local.user_role_assignments[key].euid}` | `${azuread_group.project_role[local.user_role_assignments[key].role].display_name}` |"
+    ])
+  )
+
   summary_unresolved_section = length(local.unresolved_user_euids) == 0 ? [] : concat(
     [
       "",
@@ -37,7 +53,7 @@ locals {
 }
 
 output "summary" {
-  description = "Markdown summary of the created groups and of any members that could not be resolved."
+  description = "Markdown summary of the created groups, the members added to them, and any members that could not be resolved."
   value = join("\n", concat(
     [
       "# Entra ID Groups",
@@ -52,6 +68,7 @@ output "summary" {
       "",
       "${length(azuread_group_member.project_role)} group membership(s) assigned from ${length(local.unique_user_euids)} member(s), matched on the `${var.user_lookup_attribute}` attribute.",
     ],
+    local.summary_member_section,
     local.summary_unresolved_section
   ))
 }
