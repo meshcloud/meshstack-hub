@@ -20,7 +20,9 @@
 | **Forgejo Organization** | [`${forgejo_organization}`](${forgejo_instance_url}/${forgejo_organization}) |
 | **Container Registry** | [${registry_host}/${registry_name}](${registry_url}) — @buildingblock[${container_registry_bb_uuid}] |
 | **DNS Zone** | `${dns_zone_name}` — @buildingblock[${dns_bb_uuid}] |
+%{ if ai_model != null ~}
 | **AI Model Serving** | `${ai_model}` — @buildingblock[${ai_bb_uuid}] |
+%{ endif ~}
 | **meshStack Platform** | `${platform_identifier}` |
 
 %{ if !phase2_completed ~}

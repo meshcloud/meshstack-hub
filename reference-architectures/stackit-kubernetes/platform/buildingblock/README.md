@@ -8,7 +8,7 @@ federation.
 It creates the platform's Secrets Manager instance with a writer and a reader user, an SKE cluster
 with a platform admin service account, in-cluster ingress (cert-manager, HAProxy and a Let's Encrypt
 ClusterIssuer), the meshStack replicator and metering identities, a DNS zone, a STACKIT Model
-Serving token, a STACKIT Git instance, a container registry, and the meshStack SKE platform with one
+Serving token when `ai_model` is set, a STACKIT Git instance, a container registry, and the meshStack SKE platform with one
 landing zone per stage.
 
 With a key of `imports` set (`ske`, `git`, `dns`, `ingress`, `secrets_manager`, `container_registry`

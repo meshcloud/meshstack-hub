@@ -21,7 +21,8 @@ input, so updating the outer building block is the only way to change the platfo
 
 - **Automation Identity Federation**, a child of the Automation Identity, trusts the six
   definitions whose runs act as the account: Secrets Manager, SKE cluster, Git, container
-  registry, AI Model Serving and DNS. Those six building blocks are its children.
+  registry, AI Model Serving and DNS. Those six building blocks are its children. Without an AI
+  model there is no AI Model Serving block, and the federation trusts the other five.
 - **Starter Kit Identity Federation** (phase 2) trusts the Git repository definition, whose runs
   list the Git instance's users through the STACKIT Git API to match workspace members by email.
   The Forgejo token's technical user is restricted and cannot see them.
@@ -62,7 +63,7 @@ An ephemeral value has no version meshStack could compare, so the nested run pas
 `secret_hash` on as the version of the write-only value it fills: the `kubeconfig.yaml` input of
 the `kubernetes` and ingress blocks, and the platform's tokens. A rotated secret reaches them in
 the same nested run. The Forgejo connector gets one hash of the pull robot and the
-AI secret as `secrets_revision`, so its runs rewrite the Kubernetes secrets when either changes.
+AI secret, if any, as `secrets_revision`, so its runs rewrite the Kubernetes secrets when either changes.
 
 The Forgejo token has no human owner: the Git block creates a technical user through the STACKIT
 Git API and exchanges its password for a personal access token.

@@ -25,7 +25,7 @@ output "summary" {
     stage_names                    = join(", ", [for stage in sort(keys(var.stages)) : "**${stage}**"])
     dns_zone_name                  = local.dns_zone_name
     dns_bb_uuid                    = meshstack_building_block.dns.metadata.uuid
-    ai_bb_uuid                     = meshstack_building_block.ai_llm.metadata.uuid
+    ai_bb_uuid                     = var.ai_model == null ? null : meshstack_building_block.ai_llm.metadata.uuid
     ai_model                       = var.ai_model
     phase2_completed               = var.phase2_completed
     platform_service_account_email = local.service_account_email

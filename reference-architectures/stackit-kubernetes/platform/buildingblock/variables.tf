@@ -131,8 +131,8 @@ variable "phase2_completed" {
 
 variable "ai_model" {
   type        = string
-  nullable    = false
-  description = "Model applications default to. Must be one STACKIT Model Serving's `/v1/models` endpoint serves."
+  default     = null
+  description = "Model applications default to. Must be one STACKIT Model Serving's `/v1/models` endpoint serves. Null sets up no Model Serving token and no `stackit-ai` secret."
 }
 
 variable "starterkit_app_name" {

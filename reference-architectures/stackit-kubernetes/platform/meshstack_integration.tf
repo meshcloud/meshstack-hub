@@ -324,9 +324,10 @@ resource "meshstack_building_block_definition" "this" {
 
       ai_model = {
         display_name           = "AI Model"
-        description            = "Model applications on the platform default to."
+        description            = "Model applications on the platform default to. Null sets up no Model Serving token."
         type                   = "STRING"
         assignment_type        = "USER_INPUT"
+        is_optional            = true
         updateable_by_consumer = true
       }
 

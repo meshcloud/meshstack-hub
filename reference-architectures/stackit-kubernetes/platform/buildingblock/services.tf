@@ -41,6 +41,10 @@ resource "meshstack_building_block" "dns" {
 }
 
 module "ai_llm_integration" {
+  lifecycle {
+    enabled = var.ai_model != null
+  }
+
   source = "github.com/meshcloud/meshstack-hub//modules/stackit/ai-llm?ref=${var.hub.git_ref}"
 
   model = var.ai_model
@@ -55,6 +59,8 @@ resource "meshstack_building_block" "ai_llm" {
   wait_for_completion = true
 
   lifecycle {
+    enabled = var.ai_model != null
+
     postcondition {
       condition     = self.status.succeeded
       error_message = "Building block ${self.metadata.uuid} did not succeed (health status ${self.status.health_status}, action ${self.status.action}). See its run in meshPanel."
