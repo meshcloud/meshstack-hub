@@ -93,11 +93,11 @@ When a **network** configuration is provided, it additionally:
 
 ## Service Accounts
 
-You supply one account, as `stackit_service_account_key`, and the architecture creates one. The
-account you supply creates the folder, the foundation project and the meshStack objects, and its key
-is reused on every run rather than only the first. The account it creates lives in the foundation
-project and is what creates tenant projects; it authenticates through workload identity federation,
-so no key for it is ever stored.
+You supply the **deployment service account**, as `stackit_service_account_key`, and the
+architecture creates the **project-creation service account**. The deployment service account
+creates the folder, the foundation project and the meshStack objects, and its key is reused on every
+run. The project-creation service account lives in the foundation project and creates tenant
+projects; it authenticates through workload identity federation, so no key for it is ever stored.
 
 ### How composing architectures get an identity
 
@@ -136,12 +136,13 @@ not a new credential.
 `stackit_owner_email` owns the folder, the foundation project and every tenant project the platform
 creates. STACKIT applies it at creation only, so changing it later means recreating what it owns.
 
-The key you supply is expected to be an organization owner, which may name any address — a team
-mailbox, typically. A key holding only `resource-manager.admin` may create a project but not act
-inside one it does not own, so with such a key the owner has to be that account's own address, or
-the run fails with `POST /v2/projects/<id>/service-accounts -> 403`.
+The deployment service account is expected to be an organization owner, which may name any
+address — a team mailbox, typically. A deployment service account holding only
+`resource-manager.admin` may create a project but not act inside one it does not own, so the owner
+then has to be the deployment service account's own email, or the run fails with
+`POST /v2/projects/<id>/service-accounts -> 403`.
 
-Tenant projects are unaffected either way: the tenant-project account works through its
+Tenant projects are unaffected either way: the project-creation service account works through its
 organization-scoped roles, not through ownership. One of those roles is conditional — with
 `stackit_organization_onboarding_enabled` off it lacks `iam.member-admin` and cannot assign project
 roles to users.
@@ -152,7 +153,7 @@ roles to users.
 
 | Requirement          | Description                                                                       |
 |----------------------|-----------------------------------------------------------------------------------|
-| STACKIT organization | With an organization-owner service account key. `resource-manager.admin` alone also works, but then constrains which `stackit_owner_email` values are valid — see [Service Accounts](#service-accounts). |
+| STACKIT organization | A key of the deployment service account, an organization owner. `resource-manager.admin` alone also works, but then constrains which `stackit_owner_email` values are valid — see [Service Accounts](#service-accounts). |
 | CIDR plan            | *(Only when enabling networking)* A non-overlapping IPv4 address plan chosen up front for the hub network ranges and transfer network. |
 
 ### Deployment Order
@@ -226,7 +227,7 @@ false`, because nothing taken over is released on destroy.
 |---|---|
 | `folder = {container_id}` | the landing-zone folder, renamed to the platform identifier |
 | `foundation_project = {container_id}` | the foundation project, renamed to `<platform identifier>-foundation` |
-| `platform = {}` | the location (unless **Use Global Location**), the STACKIT platform `<platform identifier>` in it and its landing zones `<platform identifier>-default` and, with `hub&spoke`, `-networked` |
+| `adopt_platform = true` | the location (unless **Use Global Location**), the STACKIT platform `<platform identifier>` in it and its landing zones `<platform identifier>-default` and, with `hub&spoke`, `-networked` |
 | `project_definition = {uuid, service_account_name, service_account_email, federated_identity_provider_ids}` | the STACKIT Project definition and its backplane: the project-creation service account, its federated identity providers in the order of the subjects they trust, and its organization roles |
 | `service_account_definition = {uuid, service_account_email, federated_identity_provider_ids}` | the STACKIT Service Account definition and its backplane |
 | `service_account_federation_definition = {uuid, service_account_email, federated_identity_provider_ids}` | the STACKIT Service Account Federation definition and its backplane |

@@ -110,7 +110,7 @@ variable "meshstack" {
     tags = object({
       building_block        = map(list(string))
       project               = map(list(string))
-      project_owner_tag_key = string
+      project_owner_tag_key = optional(string)
     })
   })
   nullable    = false

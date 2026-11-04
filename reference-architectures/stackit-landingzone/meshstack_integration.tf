@@ -88,32 +88,6 @@ variable "playground_mode" {
   description = "Deploy a throwaway platform: the platform identifier gets a random suffix so it does not occupy a name for good, and the landing-zone folder and foundation project are left destroyable. Set to false for a platform that is actually used. Passed to the building block as a STATIC input, so whoever orders the architecture cannot choose. A playground platform and the building block definitions it registers are not meant to be published to other workspaces."
 }
 
-variable "default_tags" {
-  type = object({
-    landingzone           = optional(map(list(string)), {})
-    building_block        = optional(map(list(string)), {})
-    project               = optional(map(list(string)), {})
-    project_owner_tag_key = optional(string, "")
-  })
-  nullable = false
-
-  # Spelled out rather than left to the `optional()` defaults: this feeds an input's `json_schema`
-  # default, and a consumer that does not evaluate object-attribute defaulting would see unset
-  # fields. See .agents/references/meshstack-integration.md.
-  default = {
-    landingzone = {
-      LandingZoneFamily = ["sandbox"]
-      confidentiality   = ["internal", "public"]
-      environment       = ["dev"]
-    }
-    building_block        = {}
-    project               = {}
-    project_owner_tag_key = "projectOwner"
-  }
-
-  description = "Starter values pre-filling the Tags form, as maps of tag key to values. Ships with an example set; override per foundation to match the instance's own tag schema. The operator can still edit, extend or clear them when ordering."
-}
-
 output "building_block_definition" {
   description = "BBD is consumed in building block compositions."
   value = {
@@ -122,11 +96,8 @@ output "building_block_definition" {
   }
 }
 
-# The Tags input is a meshPanel form the operator fills from scratch: for each of the three tag maps
-# they add as many {key, values} entries as they need — nothing is read from the instance's tag
-# schema. A map of free-form keys has no form widget (meshPanel renders only declared properties), so
-# each map is modelled as a growable array of entries; buildingblock/ folds them back into the
-# map(list(string)) the nested integrations take.
+# meshPanel has no form widget for a map of free-form keys, so each tag map is a growable list of
+# {key, values} entries; buildingblock/ folds them back into maps.
 locals {
   tag_list_schema = {
     type = "array"
@@ -140,38 +111,31 @@ locals {
     }
   }
 
-  # The form's starter entries come from var.default_tags, so each foundation seeds keys matching its
-  # own tag schema instead of anything hard-coded here. Each map is turned into the {key, values}
-  # entry list the form (and the buildingblock variable) use.
-  tags_default_entries = {
-    for section, m in {
-      landingzone    = var.default_tags.landingzone
-      building_block = var.default_tags.building_block
-      project        = var.default_tags.project
-    } : section => [for tk, tv in m : { key = tk, values = tv }]
-  }
-
   imports_definition_properties = {
-    uuid                            = { type = "string", title = "Definition UUID" }
-    service_account_email           = { type = "string", title = "Backplane Service Account Email" }
-    federated_identity_provider_ids = { type = "array", title = "Federated Identity Provider IDs", items = { type = "string" } }
+    uuid                            = { type = "string", title = "uuid" }
+    service_account_email           = { type = "string", title = "service_account_email" }
+    federated_identity_provider_ids = { type = "array", title = "federated_identity_provider_ids", items = { type = "string" } }
   }
 
-  imports_definition_schema = {
+  imports_container_schema = {
     type       = "object"
-    required   = keys(local.imports_definition_properties)
-    properties = local.imports_definition_properties
+    required   = ["container_id"]
+    properties = { container_id = { type = "string", title = "container_id" } }
   }
 
   tags_json_schema = {
     "$schema" = "http://json-schema.org/draft-07/schema#"
     type      = "object"
-    required  = ["landingzone", "building_block", "project", "project_owner_tag_key"]
+    required  = ["landingzone", "building_block", "project"]
     properties = {
-      landingzone           = merge(local.tag_list_schema, { title = "Landing Zone Tags", default = local.tags_default_entries.landingzone })
-      building_block        = merge(local.tag_list_schema, { title = "Building Block Tags", default = local.tags_default_entries.building_block })
-      project               = merge(local.tag_list_schema, { title = "Project Tags", default = local.tags_default_entries.project })
-      project_owner_tag_key = { type = "string", title = "Project Owner Tag Key", default = var.default_tags.project_owner_tag_key }
+      landingzone    = merge(local.tag_list_schema, { title = "Landing Zone Tags" })
+      building_block = merge(local.tag_list_schema, { title = "Building Block Tags" })
+      project        = merge(local.tag_list_schema, { title = "Project Tags" })
+      project_owner_tag_key = {
+        type        = "string"
+        title       = "Project Owner Tag Key"
+        description = "Tag on the created meshProjects that gets the creator's display name. Leave empty to set none."
+      }
     }
   }
 }
@@ -281,14 +245,14 @@ resource "meshstack_building_block_definition" "this" {
 
     ## 🔑 Authentication
 
-    You provide the STACKIT organization UUID, owner email, tags, default role mapping and a service account key as inputs.
-    The building block authenticates to STACKIT with the service account key, which needs `resource-manager.admin` on the organization.
+    You provide the STACKIT organization UUID, owner email, tags, default role mapping and the key of the deployment service account as inputs.
+    The building block authenticates to STACKIT as the deployment service account, which needs `resource-manager.admin` on the organization.
 
     ## 📊 Shared responsibility
 
     | Responsibility | Platform Team | Application Team |
     |---|:---:|:---:|
-    | Provide the STACKIT service account key, organization details, tags and role mapping | ✅ | ❌ |
+    | Provide the deployment service account key, organization details, tags and role mapping | ✅ | ❌ |
     | Provision the location, folder and STACKIT Project platform | ✅ | ❌ |
     | Register the self-service `STACKIT Service Account` building block | ✅ | ❌ |
     | (Optional) Provide the network CIDR plan and provision the hub network area | ✅ | ❌ |
@@ -339,7 +303,7 @@ resource "meshstack_building_block_definition" "this" {
         assignment_type        = "USER_INPUT"
         updateable_by_consumer = true
         sensitive              = {}
-        display_order          = 60
+        display_order          = 40
       }
 
       hub = {
@@ -348,7 +312,7 @@ resource "meshstack_building_block_definition" "this" {
         type            = "CODE"
         assignment_type = "STATIC"
         argument        = jsonencode(jsonencode(var.hub))
-        display_order   = 120
+        display_order   = 130
       }
 
       stackit_org = {
@@ -358,12 +322,12 @@ resource "meshstack_building_block_definition" "this" {
         assignment_type                = "USER_INPUT"
         value_validation_regex         = "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$"
         validation_regex_error_message = "STACKIT Organization UUID must be a valid UUID."
-        display_order                  = 40
+        display_order                  = 30
       }
 
       stackit_owner_email = {
         display_name    = "STACKIT Owner Email"
-        description     = "Owner of the STACKIT folder, foundation project, and every tenant project. Applied at creation only. Must be the deployment account's own address unless that account is an organization owner."
+        description     = "Owner of the STACKIT folder, foundation project, and every tenant project. Applied at creation only. Must be the deployment service account's own email unless the deployment service account is an organization owner."
         type            = "STRING"
         assignment_type = "USER_INPUT"
         display_order   = 50
@@ -378,7 +342,7 @@ resource "meshstack_building_block_definition" "this" {
         type                   = "JSON"
         assignment_type        = "USER_INPUT"
         updateable_by_consumer = true
-        display_order          = 80
+        display_order          = 100
 
         # meshStack decodes a JSON input into the buildingblock variable's declared object type (see
         # commit 991343f0), so `var.tags` stays the typed object and needs no jsondecode.
@@ -391,7 +355,7 @@ resource "meshstack_building_block_definition" "this" {
         type                   = "JSON"
         assignment_type        = "USER_INPUT"
         updateable_by_consumer = true
-        display_order          = 70
+        display_order          = 80
 
         # A JSON input decodes into var.role_mapping's map(list(string)); the three meshStack roles
         # are fixed keys, so the form is one field per role holding its STACKIT role list.
@@ -424,7 +388,7 @@ resource "meshstack_building_block_definition" "this" {
         assignment_type   = "USER_INPUT"
         selectable_values = ["sandbox", "hub&spoke"]
         default_value     = jsonencode(["sandbox"])
-        display_order     = 20
+        display_order     = 60
       }
 
       network = {
@@ -434,7 +398,7 @@ resource "meshstack_building_block_definition" "this" {
         assignment_type        = "USER_INPUT"
         updateable_by_consumer = true
         condition              = "\"hub&spoke\" in input.topology"
-        display_order          = 30
+        display_order          = 70
 
         # Decodes into var.network's object; hidden for the sandbox topology, so var.network falls
         # back to its null default and the buildingblock leaves networking off.
@@ -460,7 +424,7 @@ resource "meshstack_building_block_definition" "this" {
         description     = "Workspace that will own the created platform, location and landing zones."
         type            = "STRING"
         assignment_type = "WORKSPACE_IDENTIFIER"
-        display_order   = 110
+        display_order   = 120
       }
 
       platform_identifier = {
@@ -480,7 +444,7 @@ resource "meshstack_building_block_definition" "this" {
         assignment_type        = "USER_INPUT"
         is_optional            = true
         updateable_by_consumer = true
-        display_order          = 45
+        display_order          = 35
       }
 
       use_global_location = {
@@ -488,8 +452,8 @@ resource "meshstack_building_block_definition" "this" {
         description     = "If true, use the existing global meshStack location instead of creating a dedicated location for this platform."
         type            = "BOOLEAN"
         assignment_type = "USER_INPUT"
-        default_value   = jsonencode(false)
-        display_order   = 100
+        default_value   = jsonencode(true)
+        display_order   = 20
       }
 
       starterkit_approval_policies = {
@@ -498,7 +462,7 @@ resource "meshstack_building_block_definition" "this" {
         type            = "CODE"
         assignment_type = "STATIC"
         argument        = jsonencode(jsonencode(var.starterkit_approval_policies))
-        display_order   = 130
+        display_order   = 140
       }
 
       imports = {
@@ -507,39 +471,40 @@ resource "meshstack_building_block_definition" "this" {
         type            = "JSON"
         assignment_type = "USER_INPUT"
         is_optional     = true
-        display_order   = 150
+        display_order   = 110
 
         json_schema = jsonencode({
           "$schema"            = "http://json-schema.org/draft-07/schema#"
           type                 = "object"
           additionalProperties = false
           properties = {
-            folder = {
-              type     = "object"
-              title    = "Landing-Zone Folder"
-              required = ["container_id"]
-              properties = {
-                container_id = { type = "string", title = "Container ID" }
-              }
+            folder             = merge(local.imports_container_schema, { title = "folder" })
+            foundation_project = merge(local.imports_container_schema, { title = "foundation_project" })
+            adopt_platform = {
+              type        = "boolean"
+              title       = "adopt_platform"
+              description = "Adopt the existing meshPlatform, location and landing zones named by Platform Identifier."
             }
-            foundation_project = {
-              type     = "object"
-              title    = "Foundation Project"
-              required = ["container_id"]
-              properties = {
-                container_id = { type = "string", title = "Container ID" }
-              }
-            }
-            platform = { type = "object", title = "Location, Platform and Landing Zones", properties = {} }
             project_definition = {
               type     = "object"
+              title    = "project_definition"
               required = concat(keys(local.imports_definition_properties), ["service_account_name"])
               properties = merge(local.imports_definition_properties, {
-                service_account_name = { type = "string", title = "Backplane Service Account Name" }
+                service_account_name = { type = "string", title = "service_account_name" }
               })
             }
-            service_account_definition            = local.imports_definition_schema
-            service_account_federation_definition = local.imports_definition_schema
+            service_account_definition = {
+              type       = "object"
+              title      = "service_account_definition"
+              required   = keys(local.imports_definition_properties)
+              properties = local.imports_definition_properties
+            }
+            service_account_federation_definition = {
+              type       = "object"
+              title      = "service_account_federation_definition"
+              required   = keys(local.imports_definition_properties)
+              properties = local.imports_definition_properties
+            }
           }
         })
       }
@@ -550,7 +515,7 @@ resource "meshstack_building_block_definition" "this" {
         type            = "BOOLEAN"
         assignment_type = "STATIC"
         argument        = jsonencode(var.playground_mode)
-        display_order   = 140
+        display_order   = 150
       }
     }
 

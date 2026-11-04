@@ -101,10 +101,10 @@ variable "network_static" {
 variable "tags" {
   type = object({
     project               = map(list(string))
-    project_owner_tag_key = string
+    project_owner_tag_key = optional(string)
   })
   nullable    = false
-  description = "`project` tags are applied to the created meshProject; `project_owner_tag_key` names the tag that receives the creator's display name, empty to set none."
+  description = "`project` tags are applied to the created meshProject; `project_owner_tag_key` names the tag that receives the creator's display name, null or empty to set none."
 }
 
 variable "add_random_name_suffix" {

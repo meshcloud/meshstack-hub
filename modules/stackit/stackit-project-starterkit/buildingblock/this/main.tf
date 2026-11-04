@@ -18,7 +18,7 @@ locals {
   # A service account or an API key has no username to bind a role to.
   creator_is_user = var.creator.type == "User" && var.creator.username != null
 
-  owner_tags = var.tags.project_owner_tag_key == "" ? {} : { (var.tags.project_owner_tag_key) = [var.creator.displayName] }
+  owner_tags = { for key in compact([var.tags.project_owner_tag_key]) : key => [var.creator.displayName] }
 
   # The landing zone decides whether an order gets a network at all; `network` only shapes it, and is
   # null wherever the definition did not offer the input.

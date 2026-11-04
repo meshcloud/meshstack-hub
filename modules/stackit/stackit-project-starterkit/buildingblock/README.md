@@ -108,7 +108,7 @@ mandatory block's output. By the time the network block is ordered, the project 
 | <a name="input_network"></a> [network](#input\_network) | The only variable here that keeps a default. The definition hides this input unless the selected landing zone gets a spoke network, and a hidden input is not sent. | <pre>object({<br/>    prefix_length    = number<br/>    ipv4_nameservers = list(string)<br/>  })</pre> | `null` | no |
 | <a name="input_network_static"></a> [network\_static](#input\_network\_static) | n/a | <pre>object({<br/>    matching_landing_zones = set(string)<br/>    bbd_version_ref        = object({ uuid = string })<br/>  })</pre> | n/a | yes |
 | <a name="input_platform_ref"></a> [platform\_ref](#input\_platform\_ref) | n/a | <pre>object({<br/>    uuid = string<br/>    kind = string<br/>  })</pre> | n/a | yes |
-| <a name="input_tags"></a> [tags](#input\_tags) | n/a | <pre>object({<br/>    project               = map(list(string))<br/>    project_owner_tag_key = string<br/>  })</pre> | n/a | yes |
+| <a name="input_tags"></a> [tags](#input\_tags) | n/a | <pre>object({<br/>    project               = map(list(string))<br/>    project_owner_tag_key = optional(string)<br/>  })</pre> | n/a | yes |
 | <a name="input_workspace_identifier"></a> [workspace\_identifier](#input\_workspace\_identifier) | n/a | `string` | n/a | yes |
 
 ## Outputs

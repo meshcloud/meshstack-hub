@@ -24,7 +24,7 @@ variable "stackit_org" {
 variable "stackit_owner_email" {
   type        = string
   nullable    = false
-  description = "Owner email assigned to the STACKIT resourcemanager folder, the foundation project, and every tenant project the platform creates."
+  description = "Owner email assigned to the STACKIT resourcemanager folder, the foundation project, and every tenant project the platform creates. Must be the deployment service account's own email unless the deployment service account is an organization owner."
 }
 
 variable "stackit_service_account_key" {
@@ -32,7 +32,7 @@ variable "stackit_service_account_key" {
   sensitive   = true
   ephemeral   = true
   nullable    = false
-  description = "STACKIT service account key JSON with `resource-manager.admin` on the organization. Used to create the landing-zone folder and foundation project."
+  description = "Key JSON of the deployment service account, which needs `resource-manager.admin` on the organization. Used to create the landing-zone folder and foundation project."
 }
 
 variable "root_folder_name" {
@@ -62,7 +62,7 @@ variable "tags" {
     landingzone           = list(object({ key = string, values = list(string) }))
     building_block        = list(object({ key = string, values = list(string) }))
     project               = list(object({ key = string, values = list(string) }))
-    project_owner_tag_key = string
+    project_owner_tag_key = optional(string)
   })
   nullable    = false
   description = <<-EOT
@@ -70,7 +70,7 @@ variable "tags" {
   `landingzone` tags are applied to the created landing zones.
   `building_block` tags are applied to the nested building block definitions.
   `project` tags are applied to the meshProjects the starterkit creates.
-  `project_owner_tag_key` names the tag that receives the creator's display name.
+  `project_owner_tag_key` names the tag that receives the creator's display name; null or empty sets none.
   EOT
 }
 
@@ -153,7 +153,7 @@ variable "imports" {
     foundation_project = optional(object({
       container_id = string
     }))
-    platform = optional(object({}))
+    adopt_platform = optional(bool, false)
     project_definition = optional(object({
       uuid                            = string
       service_account_name            = string
@@ -180,7 +180,7 @@ variable "imports" {
   }
 
   validation {
-    condition     = var.imports == null ? true : alltrue([for key, adopted in var.imports : adopted == null || key == "folder" || key == "platform" || var.imports.foundation_project != null])
+    condition     = var.imports == null ? true : alltrue([for key, adopted in var.imports : adopted == null || contains(["folder", "adopt_platform"], key) || var.imports.foundation_project != null])
     error_message = "imports.project_definition, service_account_definition and service_account_federation_definition need imports.foundation_project, because their service accounts live in it."
   }
 }
