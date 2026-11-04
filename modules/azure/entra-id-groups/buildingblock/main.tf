@@ -3,9 +3,15 @@ locals {
   au_id      = var.administrative_unit_id != "" ? var.administrative_unit_id : null
   name_parts = compact([var.prefix, var.workspace_identifier, var.project_identifier])
 
+  # Without roles there is one group, keyed "members", that takes every member whatever their role.
+  # This is what a workspace-level building block gets, where the roles are the workspace roles.
+  group_display_names = length(local.roles) > 0 ? {
+    for role in local.roles : role => join(".", concat(local.name_parts, [role]))
+  } : { members = join(".", local.name_parts) }
+
   unique_user_euids = toset([for user in var.users : user.euid])
 
-  user_role_assignments = {
+  user_role_assignments = length(local.roles) > 0 ? {
     for pair in flatten([
       for user in var.users : [
         for role in user.roles : {
@@ -16,7 +22,7 @@ locals {
       ]
     ]) : pair.key => pair
     if contains(local.roles, pair.role)
-  }
+  } : { for euid in local.unique_user_euids : euid => { euid = euid, role = "members" } }
 }
 
 # One bulk lookup with ignore_missing, rather than a data source per member: a project member who
@@ -50,9 +56,9 @@ locals {
 }
 
 resource "azuread_group" "project_role" {
-  for_each = toset(local.roles)
+  for_each = local.group_display_names
 
-  display_name            = join(".", concat(local.name_parts, [each.value]))
+  display_name            = each.value
   security_enabled        = true
   mail_enabled            = false
   administrative_unit_ids = local.au_id != null ? [local.au_id] : []

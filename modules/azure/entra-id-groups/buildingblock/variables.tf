@@ -13,13 +13,15 @@ variable "workspace_identifier" {
 variable "project_identifier" {
   type        = string
   nullable    = false
-  description = "meshStack project identifier included in the group name."
+  default     = ""
+  description = "meshStack project identifier included in the group name. Empty for a workspace-level building block, whose group names end at the workspace."
 }
 
 variable "project_roles" {
   type        = string
   nullable    = false
-  description = "Comma-separated list of project role name suffixes. One Entra group is created per role. Defaults to the three standard meshStack roles: admin, user, reader."
+  default     = ""
+  description = "Comma-separated list of project role name suffixes. One Entra group is created per role. Empty creates a single group, without a role suffix, holding every member."
 }
 
 variable "administrative_unit_id" {
@@ -49,5 +51,5 @@ variable "users" {
     roles          = list(string)
   }))
   nullable    = false
-  description = "Project members from meshStack with their assigned roles. Each user is added to the group matching their role."
+  description = "Project or workspace members from meshStack with their assigned roles. Each user is added to the group matching their role, or to the single group when there are no roles."
 }

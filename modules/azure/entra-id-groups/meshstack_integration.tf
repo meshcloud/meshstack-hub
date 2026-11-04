@@ -19,6 +19,17 @@ variable "azure_user_lookup_attribute" {
   }
 }
 
+variable "target_type" {
+  type        = string
+  default     = "TENANT_LEVEL"
+  description = "'TENANT_LEVEL' creates one group per project role for an Azure tenant. 'WORKSPACE_LEVEL' creates one group per workspace holding every workspace member, whatever their workspace role."
+
+  validation {
+    condition     = contains(["TENANT_LEVEL", "WORKSPACE_LEVEL"], var.target_type)
+    error_message = "Must be 'TENANT_LEVEL' or 'WORKSPACE_LEVEL'."
+  }
+}
+
 variable "backplane_name" {
   type        = string
   default     = "azure-entra-id-groups"
@@ -100,6 +111,57 @@ module "backplane" {
   }
 }
 
+locals {
+  workspace_level = var.target_type == "WORKSPACE_LEVEL"
+
+  # Lines joined rather than %{if} directives in the readme heredoc: a directive line keeps its
+  # source indentation and leaves blank lines behind, which breaks the lists and the table.
+  readme_variant = local.workspace_level ? {
+    intro = "Automatically provision one Entra ID security group for a meshStack workspace and keep every workspace member in it. The group is named after the workspace identifier with an optional prefix, so access granted to it in Azure follows workspace membership in meshStack."
+    use_cases = join("\n", [
+      "- Grant a whole team access to Azure resources, such as a subscription or a shared service, through one group instead of user by user.",
+      "- Keep that access in sync with meshStack: someone who joins or leaves the workspace joins or leaves the group on the next run.",
+      "- Optionally scope the group inside a dedicated Entra Administrative Unit to isolate it from the rest of the directory.",
+    ])
+    examples = join("\n", [
+      "**Default:**",
+      "",
+      "Workspace `my-workspace` with prefix `plat` produces the group `plat.my-workspace`. Every Workspace Owner, Workspace Manager and Workspace Member is a member of it.",
+    ])
+    responsibilities = join("\n", [
+      "| Add users to the generated group (automated via workspace membership) | ✅ | ❌ |",
+      "| Manage who is a member of the workspace | ❌ | ✅ |",
+    ])
+    } : {
+    intro = "Automatically provision Entra ID security groups for every role in a meshStack project. Groups are named consistently using the workspace identifier, project identifier, an optional prefix, and the role name as suffix — giving your teams a predictable, auditable group structure in Azure Active Directory."
+    use_cases = join("\n", [
+      "- Map meshStack project roles (admin, user, reader, or custom roles) to Entra security groups for RBAC assignments in Azure.",
+      "- Enforce a standard naming scheme across all projects in your platform.",
+      "- Optionally scope groups inside a dedicated Entra Administrative Unit to isolate tenant-level identities from the rest of the directory.",
+    ])
+    examples = join("\n", [
+      "**Default meshStack roles (admin / user / reader):**",
+      "",
+      "A project `my-project` in workspace `my-workspace` with prefix `plat` produces three groups:",
+      "- `plat.my-workspace.my-project.admin`",
+      "- `plat.my-workspace.my-project.user`",
+      "- `plat.my-workspace.my-project.reader`",
+      "",
+      "**Custom roles:**",
+      "",
+      "Set *Project Roles* to `devops,qa,readonly` to create:",
+      "- `plat.my-workspace.my-project.devops`",
+      "- `plat.my-workspace.my-project.qa`",
+      "- `plat.my-workspace.my-project.readonly`",
+    ])
+    responsibilities = join("\n", [
+      "| Choose which project roles get groups | ❌ | ✅ |",
+      "| Assign users to generated groups (automated via project membership) | ✅ | ❌ |",
+      "| Manage which users have which project roles | ❌ | ✅ |",
+    ])
+  }
+}
+
 resource "meshstack_building_block_definition" "this" {
   metadata = {
     owned_by_workspace = var.meshstack.owning_workspace_identifier
@@ -108,39 +170,25 @@ resource "meshstack_building_block_definition" "this" {
 
   spec = {
     display_name             = coalesce(var.bbd_display_name, "Azure Entra ID Groups")
-    description              = coalesce(var.bbd_description, "Creates Entra security groups for meshStack project roles, with optional Administrative Unit membership.")
+    description              = coalesce(var.bbd_description, local.workspace_level ? "Creates an Entra security group holding every member of a meshStack workspace, with optional Administrative Unit membership." : "Creates Entra security groups for meshStack project roles, with optional Administrative Unit membership.")
     support_url              = "mailto:support@meshcloud.io"
     documentation_url        = "https://hub.meshcloud.io/platforms/azure/definitions/azure-entra-id-groups"
     notification_subscribers = var.notification_subscribers
     symbol                   = "https://raw.githubusercontent.com/meshcloud/meshstack-hub/main/modules/azure/entra-id-groups/buildingblock/logo.png"
-    target_type              = "TENANT_LEVEL"
-    supported_platforms      = [{ name = "AZURE" }]
+    target_type              = var.target_type
+    supported_platforms      = local.workspace_level ? null : [{ name = "AZURE" }]
 
     readme = coalesce(var.bbd_readme, chomp(<<-EOT
-      Automatically provision Entra ID security groups for every role in a meshStack project. Groups are named consistently using the workspace identifier, project identifier, an optional prefix, and the role name as suffix — giving your teams a predictable, auditable group structure in Azure Active Directory.
+      ${local.readme_variant.intro}
 
       ## When to use it
 
       Use this building block when you want to:
-      - Map meshStack project roles (admin, user, reader, or custom roles) to Entra security groups for RBAC assignments in Azure.
-      - Enforce a standard naming scheme across all projects in your platform.
-      - Optionally scope groups inside a dedicated Entra Administrative Unit to isolate tenant-level identities from the rest of the directory.
+      ${local.readme_variant.use_cases}
 
       ## Usage examples
 
-      **Default meshStack roles (admin / user / reader):**
-
-      A project `my-project` in workspace `my-workspace` with prefix `plat` produces three groups:
-      - `plat.my-workspace.my-project.admin`
-      - `plat.my-workspace.my-project.user`
-      - `plat.my-workspace.my-project.reader`
-
-      **Custom roles:**
-
-      Set *Project Roles* to `devops,qa,readonly` to create:
-      - `plat.my-workspace.my-project.devops`
-      - `plat.my-workspace.my-project.qa`
-      - `plat.my-workspace.my-project.readonly`
+      ${local.readme_variant.examples}
 
       **With Administrative Unit:**
 
@@ -148,9 +196,9 @@ resource "meshstack_building_block_definition" "this" {
 
       ## Members that cannot be resolved
 
-      Project members are matched to directory users by the attribute your platform team configured — the SMTP address by default. A member with no object in the directory, such as an external collaborator or a service account, is skipped rather than failing the deployment: the groups are still created and every other member is still assigned. The run summary names anyone who was skipped, and the *Unresolved Members* output lists them so you can act on it.
+      Members are matched to directory users by the attribute your platform team configured — the SMTP address by default. A member with no object in the directory, such as an external collaborator or a service account, is skipped rather than failing the deployment: the groups are still created and every other member is still assigned. The run summary names anyone who was skipped, and the *Unresolved Members* output lists them so you can act on it.
 
-      Such a member keeps their meshStack project roles, but they will not inherit any access granted through these groups until they exist in the directory.
+      Such a member keeps their meshStack roles, but they will not inherit any access granted through these groups until they exist in the directory.
 
       ## Shared Responsibilities
 
@@ -160,9 +208,7 @@ resource "meshstack_building_block_definition" "this" {
       | Define the group naming prefix | ✅ | ❌ |
       | Create and delete Entra groups | ✅ | ❌ |
       | Add the Administrative Unit (optional) | ✅ | ❌ |
-      | Choose which project roles get groups | ❌ | ✅ |
-      | Assign users to generated groups (automated via project membership) | ✅ | ❌ |
-      | Manage which users have which project roles | ❌ | ✅ |
+      ${local.readme_variant.responsibilities}
       | Use group IDs in downstream RBAC assignments | ❌ | ✅ |
     EOT
     ))
@@ -187,7 +233,7 @@ resource "meshstack_building_block_definition" "this" {
       }
     }
 
-    inputs = {
+    inputs = merge({
       ARM_CLIENT_ID = {
         type            = "STRING"
         display_name    = "ARM Client ID"
@@ -233,19 +279,6 @@ resource "meshstack_building_block_definition" "this" {
         description     = "meshStack workspace identifier. Injected automatically from the platform context."
         assignment_type = "WORKSPACE_IDENTIFIER"
       }
-      project_identifier = {
-        type            = "STRING"
-        display_name    = "Project Identifier"
-        description     = "meshStack project identifier. Injected automatically from the platform context."
-        assignment_type = "PROJECT_IDENTIFIER"
-      }
-      project_roles = {
-        type            = "STRING"
-        display_name    = "Project Roles"
-        description     = "Comma-separated list of project role name suffixes. One Entra group is created per role. Defaults to the three standard meshStack roles."
-        assignment_type = "USER_INPUT"
-        default_value   = jsonencode("admin,user,reader")
-      }
       administrative_unit_id = {
         type            = "STRING"
         display_name    = "Administrative Unit ID"
@@ -263,10 +296,24 @@ resource "meshstack_building_block_definition" "this" {
       users = {
         type            = "CODE"
         display_name    = "Users"
-        description     = "Project members from meshStack with their assigned roles. Injected automatically by meshStack."
+        description     = "Project or workspace members from meshStack with their assigned roles. Injected automatically by meshStack."
         assignment_type = "USER_PERMISSIONS"
       }
-    }
+      }, { for k, v in {
+        project_identifier = {
+          type            = "STRING"
+          display_name    = "Project Identifier"
+          description     = "meshStack project identifier. Injected automatically from the platform context."
+          assignment_type = "PROJECT_IDENTIFIER"
+        }
+        project_roles = {
+          type            = "STRING"
+          display_name    = "Project Roles"
+          description     = "Comma-separated list of project role name suffixes. One Entra group is created per role. Defaults to the three standard meshStack roles."
+          assignment_type = "USER_INPUT"
+          default_value   = jsonencode("admin,user,reader")
+        }
+    } : k => v if !local.workspace_level })
 
     outputs = {
       group_object_ids = {
