@@ -92,6 +92,16 @@ Secrets Manager or Azure Key Vault, and the building block outputs where it is. 
 the store's permissions, and a consumer reads the current value when it runs. So no output of a
 `buildingblock/` root sets `sensitive = true`, and no BBD output is declared sensitive.
 
+<!-- scorecard-checks: sensitive_inputs_ephemeral -->
+## Ephemeral Sensitive Inputs
+
+The runner uploads the plan file of every run to meshStack, which keeps it. A variable with only
+`sensitive = true` sits in that plan in plain text; `ephemeral = true` keeps it out, and the apply
+still gets the value. So every sensitive variable of a `buildingblock/` root is also ephemeral.
+OpenTofu accepts an ephemeral value only in provider blocks, write-only arguments (`*_wo`),
+ephemeral resources, ephemeral locals and outputs, and conditions; a variable used anywhere else
+needs a rework first, such as writing it to its target through a `*_wo` argument.
+
 <!-- scorecard-checks: child_bb_run_postcondition -->
 ## Ordering Child Building Blocks
 
