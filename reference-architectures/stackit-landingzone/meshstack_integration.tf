@@ -398,9 +398,7 @@ resource "meshstack_building_block_definition" "this" {
         })
       }
 
-      # Keep this description under roughly 200 characters. meshStack answers a longer one with
-      # `500 InternalError` on the version update, not a 400 — the longest description any live
-      # definition here carries is 206, and 387 fails.
+      # meshStack fails the version update with a 500 when this description exceeds about 200 characters.
       tags = {
         display_name           = "Tags"
         description            = "Tags forwarded to the nested integrations. Build them in the form: add {key, values} entries for landing zones, building blocks, and the created meshProjects, plus the project owner tag key."
@@ -409,8 +407,7 @@ resource "meshstack_building_block_definition" "this" {
         updateable_by_consumer = true
         display_order          = 100
 
-        # meshStack decodes a JSON input into the buildingblock variable's declared object type (see
-        # commit 991343f0), so `var.tags` stays the typed object and needs no jsondecode.
+        # meshStack decodes a JSON input into the variable's object type, so no jsondecode is needed.
         json_schema = jsonencode(local.tags_json_schema)
       }
 
