@@ -66,10 +66,10 @@ plan, so no two spokes can accidentally collide on CIDR ranges.
 
 Running this reference architecture always:
 
-1. Creates a **STACKIT resourcemanager folder** under the given organization — new STACKIT
-   projects are created inside this folder.
-2. Creates a **STACKIT foundation project** directly under the organization to host the
-   project-creation service account and other landing-zone core assets.
+1. Creates a **STACKIT resourcemanager folder** in the [root folder](#root-folder), or under the
+   organization without one — new STACKIT projects are created inside this folder.
+2. Creates a **STACKIT foundation project** to host the project-creation service account and other
+   landing-zone core assets. It sits in the root folder, or in the landing-zone folder without one.
 3. Sources the [`modules/stackit`](../../modules/stackit) platform integration to register the
    **STACKIT Project** platform and its default landing zone in meshStack, wired to the foundation
    service account.
@@ -164,6 +164,29 @@ spoke `stackit/network` building block in the same apply. Application teams can 
 projects and — when networking is enabled — order `stackit/network` inside their own STACKIT
 projects once those projects exist.
 
+### Root Folder
+
+One STACKIT organization can serve several meshStacks, for example a dev, a demo and a trial
+instance. **Root Folder Name** then creates a folder at the organization root that holds everything
+of this landing zone:
+
+```
+<organization>
+└── <root folder name>
+    ├── <platform identifier>              tenant projects
+    ├── <platform identifier>-foundation
+    └── projects of the meshStack that are no tenants
+```
+
+Leave it empty for an organization that serves one meshStack: the landing-zone folder then sits at
+the organization root and holds the foundation project. Playground mode always creates a root folder,
+named `playground-<platform identifier>`.
+
+The output `root_container_id` is the root folder, or the organization without one. Place other
+projects of the meshStack there, such as a bootstrap or metering project. Setting or renaming the
+root folder later moves the landing-zone folder and the foundation project in place; their ids and
+the tenant projects stay.
+
 ### Playground Mode
 
 `playground_mode` defaults to `true`, so an unconfigured deployment is a throwaway one. Two things
@@ -172,7 +195,8 @@ change with it:
 | | `playground_mode = true` | `playground_mode = false` |
 |---|---|---|
 | Platform identifier | random suffix appended | taken exactly as given |
-| Landing-zone folder and foundation project | destroyable | guarded with `prevent_destroy` |
+| Root folder | always, `playground-<platform identifier>` unless named | only when named |
+| Folders and foundation project | destroyable | guarded with `prevent_destroy` |
 
 The suffix exists because a platform identifier is unique across the whole meshStack instance, and
 `modules/stackit` builds every landing zone name from it as `<platform_identifier>-<variant>`. A
@@ -200,8 +224,8 @@ false`, because nothing taken over is released on destroy.
 
 | Key | Takes over |
 |---|---|
-| `folder = {container_id, name}` | the landing-zone folder, keeping its name |
-| `foundation_project = {container_id, name, parent_container_id}` | the foundation project, keeping its name and parent |
+| `folder = {container_id}` | the landing-zone folder, renamed to the platform identifier |
+| `foundation_project = {container_id, name}` | the foundation project, keeping its name |
 | `platform = {}` | the location (unless **Use Global Location**), the STACKIT platform `<platform identifier>` in it and its landing zones `<platform identifier>-default` and, with `hub&spoke`, `-networked` |
 | `project_definition = {uuid, service_account_name, service_account_email, federated_identity_provider_ids}` | the STACKIT Project definition and its backplane: the project-creation service account, its federated identity providers in the order of the subjects they trust, and its organization roles |
 | `service_account_definition = {uuid, service_account_email, federated_identity_provider_ids}` | the STACKIT Service Account definition and its backplane |

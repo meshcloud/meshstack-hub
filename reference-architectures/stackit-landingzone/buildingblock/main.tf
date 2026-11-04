@@ -25,6 +25,10 @@ locals {
 
   location_name = var.use_global_location ? "global" : meshstack_location.this.metadata.name
 
+  # A playground gets a root folder too, so its leftovers are easy to find and remove.
+  root_folder_name  = var.root_folder_name != null ? var.root_folder_name : var.playground_mode ? "playground-${local.platform_identifier}" : null
+  root_container_id = local.root_folder_name == null ? var.stackit_org : stackit_resourcemanager_folder.root.container_id
+
   # The meshPanel Tags form sends each tag map as a list of {key, values} entries.
   tags = {
     landingzone           = { for e in var.tags.landingzone : e.key => e.values }
@@ -60,20 +64,32 @@ resource "meshstack_location" "this" {
   }
 }
 
-resource "stackit_resourcemanager_folder" "this" {
-  name                = local.imports.folder == null ? local.platform_identifier : local.imports.folder.name
+resource "stackit_resourcemanager_folder" "root" {
+  name                = local.root_folder_name
   owner_email         = var.stackit_owner_email
   parent_container_id = var.stackit_org
+
+  lifecycle {
+    enabled         = local.root_folder_name != null
+    prevent_destroy = !var.playground_mode
+  }
+}
+
+resource "stackit_resourcemanager_folder" "this" {
+  name                = local.platform_identifier
+  owner_email         = var.stackit_owner_email
+  parent_container_id = local.root_container_id
 
   lifecycle {
     prevent_destroy = !var.playground_mode
   }
 }
 
+# Next to the landing-zone folder when there is a root folder, so that folder holds only tenants.
 resource "stackit_resourcemanager_project" "foundation" {
   name                = local.imports.foundation_project == null ? "${local.platform_identifier}-foundation" : local.imports.foundation_project.name
   owner_email         = var.stackit_owner_email
-  parent_container_id = local.imports.foundation_project == null ? var.stackit_org : local.imports.foundation_project.parent_container_id
+  parent_container_id = local.root_folder_name == null ? stackit_resourcemanager_folder.this.container_id : local.root_container_id
 
   lifecycle {
     prevent_destroy = !var.playground_mode
