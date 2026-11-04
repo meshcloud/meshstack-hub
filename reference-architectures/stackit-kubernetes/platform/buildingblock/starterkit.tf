@@ -136,7 +136,7 @@ module "ske_starterkit_integration" {
 
   project_tags = {
     stages        = local.stage_project_tags
-    owner_tag_key = var.tags.project_owner_tag_key == "" ? null : var.tags.project_owner_tag_key
+    owner_tag_key = var.tags.project_owner_tag_key
   }
 
   approval_policies = var.starterkit_approval_policies

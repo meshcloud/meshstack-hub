@@ -1,4 +1,20 @@
 locals {
+  overrides = coalesce(var.overrides, { cluster_name = null, cluster_issuer_email = null, project_identifier = null })
+
+  # The order form hides these inputs in playground mode, which fixes their values.
+  starterkit_add_random_name_suffix = var.playground_mode ? true : var.starterkit_add_random_name_suffix
+  dns_domain                        = var.playground_mode ? "stackit.run" : var.dns_domain
+  approval_policies                 = var.playground_mode ? local.no_approval : var.approval_policies
+  starterkit_approval_policies      = var.playground_mode ? local.no_approval : var.starterkit_approval_policies
+
+  no_approval = {
+    building_block_creation = false
+    user_input_changes      = false
+    any_input_changes       = false
+    manual_triggers         = false
+    version_upgrade         = false
+  }
+
   # The identifier is unique across the whole meshStack instance and lands in the platform name, the
   # location and the STACKIT project, so a playground deployment suffixes it instead of occupying the
   # plain name.
@@ -14,7 +30,7 @@ locals {
     substr(sha256(local.platform_identifier), 0, 4)
   )
 
-  project_identifier = coalesce(var.project_identifier, "${local.platform_identifier}-ske")
+  project_identifier = coalesce(local.overrides.project_identifier, "${local.platform_identifier}-ske")
 
   project_display_name = coalesce(
     local.imports.project == null ? null : local.imports.project.display_name,
@@ -24,7 +40,20 @@ locals {
   # A production platform deletes what it adopted, like anything it created.
   release_imports_on_destroy = var.playground_mode && local.imports.project != null
 
-  owner_tags = var.tags.project_owner_tag_key == "" ? {} : { (var.tags.project_owner_tag_key) = [var.creator.displayName] }
+  tag_maps = {
+    for kind in ["landingzone", "building_block", "starterkit_building_block", "project", "starterkit_project"] :
+    kind => { for tag in var.tags[kind] : tag.key => tag.values }
+  }
+
+  stages = {
+    for stage in var.stages : stage.name => {
+      landingzone = { for tag in stage.landingzone : tag.key => tag.values }
+      project     = { for tag in stage.project : tag.key => tag.values }
+      quotas      = stage.quotas
+    }
+  }
+
+  owner_tags = var.tags.project_owner_tag_key == null ? {} : { (var.tags.project_owner_tag_key) = [var.creator.displayName] }
 
   platform_admins = toset([
     for member in var.workspace_members : member.username
@@ -42,6 +71,34 @@ locals {
   }, local.admin_binding_imports)
 
   stackit_project_id = module.tenant.tenant.spec.platform_tenant_id
+}
+
+# Flipping the flag on an existing platform would suffix or rename everything and change what may be destroyed.
+resource "terraform_data" "playground_mode" {
+  input = var.playground_mode
+
+  lifecycle {
+    ignore_changes = [input]
+
+    postcondition {
+      condition     = self.output == var.playground_mode
+      error_message = "playground_mode cannot change after the order."
+    }
+  }
+}
+
+# An upgrade with another value renames, and so replaces, every project and tenant the starterkit created.
+resource "terraform_data" "starterkit_add_random_name_suffix" {
+  input = local.starterkit_add_random_name_suffix
+
+  lifecycle {
+    ignore_changes = [input]
+
+    postcondition {
+      condition     = self.output == local.starterkit_add_random_name_suffix
+      error_message = "starterkit_add_random_name_suffix cannot change after the order."
+    }
+  }
 }
 
 resource "random_string" "playground_suffix" {
@@ -66,8 +123,8 @@ module "project" {
 
   spec = {
     display_name              = local.project_display_name
-    payment_method_identifier = var.payment_method_identifier
-    tags                      = merge(var.tags.project, local.owner_tags)
+    payment_method_identifier = var.payment_method.name
+    tags                      = merge(local.tag_maps.project, local.owner_tags)
   }
 }
 

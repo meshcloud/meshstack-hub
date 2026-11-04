@@ -31,10 +31,10 @@ resource "meshstack_building_block" "dns" {
         wildcard_target_ip            = { value = jsonencode(local.ingress_load_balancer_ip) }
         contact_email                 = { value = jsonencode(var.cluster_issuer_email) }
         STACKIT_SERVICE_ACCOUNT_EMAIL = { value = jsonencode(local.service_account_email) }
-        release_on_destroy            = { value = jsonencode(var.imports.dns != null && var.playground_mode) }
+        release_on_destroy            = { value = jsonencode(local.imports.dns != null && var.playground_mode) }
       },
-      var.imports.dns == null ? {} : {
-        imports = { value = jsonencode(jsonencode(var.imports.dns)) }
+      local.imports.dns == null ? {} : {
+        imports = { value = jsonencode(jsonencode(local.imports.dns)) }
       },
     )
   }
@@ -89,7 +89,6 @@ resource "meshstack_building_block" "ai_llm" {
 module "git_integration" {
   source = "github.com/meshcloud/meshstack-hub//modules/stackit/git?ref=${var.hub.git_ref}"
 
-  role_mapping      = var.platform_engineer_role_mapping.git
   approval_policies = var.approval_policies
 
   meshstack = { owning_workspace_identifier = var.workspace, tags = var.tags.building_block }
@@ -117,8 +116,8 @@ resource "meshstack_building_block" "git" {
 
     inputs = merge(
       {
-        instance_name                 = { value = jsonencode(var.imports.git != null ? var.imports.git.instance_name : var.platform_identifier) }
-        forgejo_organization          = { value = jsonencode(var.imports.git != null ? var.imports.git.forgejo_organization : var.platform_identifier) }
+        instance_name                 = { value = jsonencode(local.imports.git != null ? local.imports.git.instance_name : var.platform_identifier) }
+        forgejo_organization          = { value = jsonencode(local.imports.git != null ? local.imports.git.forgejo_organization : var.platform_identifier) }
         shared_runner_labels          = { value = jsonencode(jsonencode(["stackit-ubuntu-22"])) }
         STACKIT_SERVICE_ACCOUNT_EMAIL = { value = jsonencode(local.service_account_email) }
         output_to_vault = {
@@ -127,11 +126,11 @@ resource "meshstack_building_block" "git" {
             secret_version = nonsensitive(sha256(local.output_to_vault))
           }
         }
-        release_on_destroy = { value = jsonencode(var.imports.git != null && var.playground_mode) }
+        release_on_destroy = { value = jsonencode(local.imports.git != null && var.playground_mode) }
       },
-      var.imports.git == null ? {} : {
+      local.imports.git == null ? {} : {
         imports = { value = jsonencode(jsonencode(merge(
-          { instance_id = var.imports.git.instance_id },
+          { instance_id = local.imports.git.instance_id },
           local.import_git ? { existing_forgejo_api_token_path = vault_kv_secret_v2.import_git.name } : {},
         ))) }
       },
@@ -142,7 +141,6 @@ resource "meshstack_building_block" "git" {
 module "container_registry_integration" {
   source = "github.com/meshcloud/meshstack-hub//modules/stackit/container-registry?ref=${var.hub.git_ref}"
 
-  role_mapping      = var.platform_engineer_role_mapping.container_registry
   approval_policies = var.approval_policies
 
   meshstack = { owning_workspace_identifier = var.workspace, tags = var.tags.building_block }
@@ -168,7 +166,7 @@ resource "meshstack_building_block" "container_registry" {
     inputs = merge(
       {
         # A Harbor project name is lowercase only, while the platform identifier also allows capitals.
-        registry_name                 = { value = jsonencode(var.imports.container_registry != null ? var.imports.container_registry.registry_name : lower(var.platform_identifier)) }
+        registry_name                 = { value = jsonencode(local.imports.container_registry != null ? local.imports.container_registry.registry_name : lower(var.platform_identifier)) }
         STACKIT_SERVICE_ACCOUNT_EMAIL = { value = jsonencode(local.service_account_email) }
 
         require_robot_link   = { value = jsonencode(var.phase2_completed) }
@@ -179,10 +177,10 @@ resource "meshstack_building_block" "container_registry" {
             secret_version = nonsensitive(sha256(local.output_to_vault))
           }
         }
-        release_on_destroy = { value = jsonencode(var.imports.container_registry != null && var.playground_mode) }
+        release_on_destroy = { value = jsonencode(local.imports.container_registry != null && var.playground_mode) }
       },
-      var.imports.container_registry == null ? {} : {
-        imports = { value = jsonencode(jsonencode({ artifactory_id = var.imports.container_registry.artifactory_id })) }
+      local.imports.container_registry == null ? {} : {
+        imports = { value = jsonencode(jsonencode({ artifactory_id = local.imports.container_registry.artifactory_id })) }
       },
     )
   }

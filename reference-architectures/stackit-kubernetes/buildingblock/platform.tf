@@ -1,14 +1,16 @@
 locals {
-  cluster_name = coalesce(var.cluster_name, format(
+  cluster_name = coalesce(local.overrides.cluster_name, format(
     "%s-%s",
     replace(substr(local.platform_identifier, 0, 6), "/-+$/", ""),
     substr(sha256(local.platform_identifier), 0, 4)
   ))
 
   # It's fine that by default, Let's Encrypt Expiry notifications go nowhere.
-  cluster_issuer_email = coalesce(var.cluster_issuer_email, local.platform_service_account_email)
+  cluster_issuer_email = coalesce(local.overrides.cluster_issuer_email, local.platform_service_account_email)
 
-  dns_subdomain = trimspace(var.dns_subdomain == null ? "" : var.dns_subdomain) != "" ? lower(var.dns_subdomain) : lower(local.platform_identifier)
+  # STACKIT allows a single label under its free domains.
+  dns_domain_labels = regex("^(?:([a-z0-9-]+)\\.)?(stackit\\.(?:run|zone|rocks|gg)|runs\\.onstackit\\.cloud)$", local.dns_domain)
+  dns_subdomain     = lower(coalesce(local.dns_domain_labels[0], local.platform_identifier))
 }
 
 # The stackit provider rejects a service account email that is unknown while planning, so this run
@@ -17,14 +19,12 @@ locals {
 module "platform_integration" {
   source = "github.com/meshcloud/meshstack-hub//reference-architectures/stackit-kubernetes/platform?ref=${var.hub.git_ref}"
 
-  approval_policies            = var.approval_policies
-  starterkit_approval_policies = var.starterkit_approval_policies
+  approval_policies            = local.approval_policies
+  starterkit_approval_policies = local.starterkit_approval_policies
 
-  starterkit_add_random_name_suffix = var.starterkit_add_random_name_suffix
+  starterkit_add_random_name_suffix = local.starterkit_add_random_name_suffix
 
-  platform_engineer_role_mapping = var.platform_engineer_role_mapping
-
-  meshstack = { owning_workspace_identifier = var.workspace, tags = var.tags.building_block }
+  meshstack = { owning_workspace_identifier = var.workspace, tags = local.tag_maps.building_block }
   hub       = var.hub
 }
 
@@ -48,7 +48,7 @@ resource "meshstack_building_block" "platform" {
     display_name                          = "Platform Services"
     target_ref                            = module.tenant.tenant.ref
 
-    inputs = merge({
+    inputs = {
       STACKIT_SERVICE_ACCOUNT_EMAIL = { value = jsonencode(local.platform_service_account_email) }
       automation_identity = { value = jsonencode(jsonencode({
         building_block_ref    = meshstack_building_block.platform_service_account.ref
@@ -63,25 +63,23 @@ resource "meshstack_building_block" "platform" {
       cluster_name         = { value = jsonencode(local.cluster_name) }
       cluster_issuer_email = { value = jsonencode(local.cluster_issuer_email) }
       dns_subdomain        = { value = jsonencode(local.dns_subdomain) }
-      dns_parent_domain    = { value = jsonencode(var.dns_parent_domain) }
-      ai_model             = { value = jsonencode(var.ai_model) }
+      dns_parent_domain    = { value = jsonencode(local.dns_domain_labels[1]) }
       phase2_completed     = { value = jsonencode(var.phase2_completed) }
 
-      starterkit_app_name        = { value = jsonencode(var.starterkit_app_name) }
-      starterkit_repo_clone_addr = { value = jsonencode(var.starterkit_repo_clone_addr) }
+      starterkit_app_name        = { value = jsonencode(var.starterkit_demo.name) }
+      starterkit_repo_clone_addr = { value = jsonencode(var.starterkit_demo.template_repo) }
+      ai_model                   = { value = jsonencode(var.starterkit_demo.ai_model) }
 
       tags = { value = jsonencode(jsonencode({
-        landingzone               = var.tags.landingzone
-        building_block            = var.tags.building_block
-        starterkit_building_block = var.tags.starterkit_building_block
-        starterkit_project        = var.tags.starterkit_project
+        landingzone               = local.tag_maps.landingzone
+        building_block            = local.tag_maps.building_block
+        starterkit_building_block = local.tag_maps.starterkit_building_block
+        starterkit_project        = local.tag_maps.starterkit_project
         project_owner_tag_key     = var.tags.project_owner_tag_key
       })) }
-      stages            = { value = jsonencode(jsonencode(var.stages)) }
+      stages            = { value = jsonencode(jsonencode(local.stages)) }
       quota_definitions = { value = jsonencode(jsonencode(var.quota_definitions)) }
-      }, length(local.platform_imports) == 0 ? {} : {
-      imports = { value = jsonencode(jsonencode(local.platform_imports)) }
-      }, {
+      imports           = { value = jsonencode(jsonencode(length(local.platform_imports) == 0 ? null : local.platform_imports)) }
       # Sent even when empty: meshStack keeps the stored value of an input an update leaves out.
       import_secrets = {
         sensitive = {
@@ -89,6 +87,6 @@ resource "meshstack_building_block" "platform" {
           secret_version = nonsensitive(sha256(jsonencode(var.import_secrets)))
         }
       }
-    })
+    }
   }
 }

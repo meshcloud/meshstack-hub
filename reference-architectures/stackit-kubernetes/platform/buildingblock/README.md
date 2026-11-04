@@ -8,12 +8,12 @@ federation.
 It creates the platform's Secrets Manager instance with a writer and a reader user, an SKE cluster
 with a platform admin service account, in-cluster ingress (cert-manager, HAProxy and a Let's Encrypt
 ClusterIssuer), the meshStack replicator and metering identities, a DNS zone, a STACKIT Model
-Serving token when `ai_model` is set, a STACKIT Git instance, a container registry, and the meshStack SKE platform with one
-landing zone per stage.
+Serving token when `ai_model` is set, a STACKIT Git instance, a container registry, and the
+meshStack SKE platform with one landing zone per stage.
 
-With a key of `imports` set (`ske`, `git`, `dns`, `ingress`, `secrets_manager`, `container_registry`
-or `kubernetes_platform`), the building block of that name takes over what already exists instead
-of creating it. In playground mode it gets `release_on_destroy`, so deleting it leaves what it took
+With a key of `imports` set (`adopt_ske`, `git`, `dns`, `adopt_ingress`, `secrets_manager`,
+`container_registry` or `kubernetes_platform`), the building block of that name takes over what
+already exists instead of creating it. In playground mode it gets `release_on_destroy`, so deleting it leaves what it took
 over in place. The Git building block also takes over the Forgejo organization with the token in
 `import_secrets.git`, which this run writes to `<platform identifier>/imports/stackit/git` in the
 Secrets Manager with the writer user before it orders the Git building block. Once the Git building

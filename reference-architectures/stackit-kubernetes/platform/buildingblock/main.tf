@@ -6,7 +6,18 @@ locals {
 
   service_account_email = var.automation_identity.service_account_email
 
-  kubernetes_platform_imports = var.imports.kubernetes_platform != null ? var.imports.kubernetes_platform : {
+  imports = var.imports != null ? var.imports : {
+    adopt_ske              = false
+    git                    = null
+    dns                    = null
+    adopt_ingress          = false
+    secrets_manager        = null
+    container_registry     = null
+    kubernetes_platform    = null
+    starterkit_definitions = null
+  }
+
+  kubernetes_platform_imports = local.imports.kubernetes_platform != null ? local.imports.kubernetes_platform : {
     platform_name     = null
     location_name     = null
     landingzone_names = {}

@@ -1,18 +1,18 @@
 locals {
   imports = var.imports != null ? var.imports : {
     project                = null
-    ske                    = null
+    adopt_ske              = false
     git                    = null
     dns                    = null
-    ingress                = null
+    adopt_ingress          = false
     secrets_manager        = null
     container_registry     = null
     kubernetes_platform    = null
     starterkit_definitions = null
   }
 
-  # Null keys are left out, so adding a key to `imports` leaves the nested input unchanged.
-  platform_imports = { for key, adopted in local.imports : key => adopted if key != "project" && adopted != null }
+  # Unset keys are left out, so adding a key to `imports` leaves the nested input unchanged.
+  platform_imports = { for key, adopted in local.imports : key => adopted if key != "project" && adopted != null && adopted != false }
 
   project_import_ids = local.imports.project == null ? toset([]) : toset(["${var.workspace}.${local.project_identifier}"])
 

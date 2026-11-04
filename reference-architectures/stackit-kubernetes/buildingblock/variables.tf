@@ -1,3 +1,41 @@
+variable "platform_identifier" {
+  type        = string
+  nullable    = false
+  description = "Identifier of the Kubernetes platform created in meshStack (letters, digits and dashes only). In playground mode a random suffix is appended to it."
+
+  validation {
+    condition     = can(regex("^[a-zA-Z0-9-]+$", var.platform_identifier))
+    error_message = "platform_identifier must only contain letters, digits, and dashes."
+  }
+}
+
+variable "phase2_completed" {
+  type        = bool
+  nullable    = false
+  description = "Set to true once a Harbor robot is linked to the platform's service account, as the summary describes; the run fails while none is."
+}
+
+variable "use_global_location" {
+  type        = bool
+  nullable    = false
+  description = "Use the global meshStack location instead of creating a dedicated one for this platform."
+}
+
+variable "payment_method" {
+  type = object({
+    kind = string
+    name = string
+  })
+  nullable    = false
+  description = "Payment method of the platform's own meshProject."
+}
+
+variable "playground_mode" {
+  type        = bool
+  nullable    = false
+  description = "Deploy a throwaway platform that gets a random identifier suffix and stays destroyable. Cannot change after the first run."
+}
+
 variable "landingzone" {
   type = object({
     platform_ref                               = object({ uuid = string })
@@ -20,65 +58,65 @@ variable "landingzone_variant" {
   }
 }
 
-variable "workspace" {
-  type        = string
-  nullable    = false
-  description = "Identifier of the meshStack workspace that owns the platform, location, landing zones, STACKIT project and the building block definitions this architecture registers."
-}
-
-variable "platform_identifier" {
-  type        = string
-  nullable    = false
-  description = "Identifier of the Kubernetes platform created in meshStack (letters, digits and dashes only). In playground mode a random suffix is appended to it."
+variable "starterkit_add_random_name_suffix" {
+  type        = bool
+  default     = null
+  description = "Append a random suffix to the projects the starterkit creates. Cannot change after the first run: it renames, and so replaces, every project and tenant the starterkit created. Ignored in playground mode, which always appends one."
 
   validation {
-    condition     = can(regex("^[a-zA-Z0-9-]+$", var.platform_identifier))
-    error_message = "platform_identifier must only contain letters, digits, and dashes."
+    condition     = var.playground_mode || var.starterkit_add_random_name_suffix != null
+    error_message = "starterkit_add_random_name_suffix is required unless playground_mode is set."
   }
 }
 
-variable "use_global_location" {
-  type        = bool
-  nullable    = false
-  description = "Use the global meshStack location instead of creating a dedicated one for this platform."
-}
-
-variable "payment_method_identifier" {
-  type        = string
-  default     = null
-  description = "Payment method identifier assigned to the platform's meshProject. Null assigns none."
-}
-
-variable "project_identifier" {
-  type        = string
-  default     = null
-  description = "Identifier of the platform's meshProject; null uses `<platform identifier>-ske`."
-}
-
-variable "tags" {
+variable "starterkit_demo" {
   type = object({
-    landingzone               = map(list(string))
-    building_block            = map(list(string))
-    starterkit_building_block = optional(map(list(string)), {})
-    project                   = map(list(string))
-    starterkit_project        = map(list(string))
-    project_owner_tag_key     = optional(string, "")
+    name          = string
+    template_repo = string
+    ai_model      = optional(string)
   })
   nullable    = false
-  description = "Tags shared by every stage: `landingzone` on the SKE landing zones, `building_block` on the definitions platform engineers order, `starterkit_building_block` on those application teams order (Git repository, Forgejo connector, SKE starterkit), `project` on the platform's meshProject and `starterkit_project` on the starter kit's meshProjects. `project_owner_tag_key` names the tag on those meshProjects that gets the creator's display name, e.g. `projectOwner`."
+  description = <<-EOT
+  Demo application the starter kit deploys.
+  `name`: image name every application ordered from the starter kit builds under, set as APP_NAME.
+  `template_repo`: template repository the starter kit initialises an application repository from.
+  `ai_model`: model applications default to, one STACKIT Model Serving's `/v1/models` endpoint serves; null sets up no Model Serving token and no `stackit-ai` secret.
+  EOT
+}
+
+variable "dns_domain" {
+  type        = string
+  default     = null
+  description = "DNS zone of the platform under a free STACKIT domain: a bare one such as `stackit.run` gives `<platform identifier>.stackit.run`, one label more such as `likvid.stackit.run` is the zone itself. Ignored in playground mode, which uses `stackit.run`."
+
+  validation {
+    condition     = var.playground_mode || var.dns_domain != null
+    error_message = "dns_domain is required unless playground_mode is set."
+  }
+
+  validation {
+    condition     = var.dns_domain == null || can(regex("^([a-z0-9]([a-z0-9-]{0,18}[a-z0-9])?\\.)?(stackit\\.(run|zone|rocks|gg)|runs\\.onstackit\\.cloud)$", var.dns_domain))
+    error_message = "dns_domain must be stackit.run, stackit.zone, stackit.rocks, stackit.gg or runs.onstackit.cloud, optionally with one label of at most 20 lowercase letters, digits or dashes in front."
+  }
 }
 
 variable "stages" {
-  type = map(object({
-    landingzone = optional(map(list(string)), {})
-    project     = optional(map(list(string)), {})
+  type = list(object({
+    name        = string
+    landingzone = list(object({ key = string, values = list(string) }))
+    project     = list(object({ key = string, values = list(string) }))
     quotas = optional(list(object({
       key   = string
       value = number
     })))
   }))
   nullable    = false
-  description = "Stages by name, each with one landing zone and one starter kit meshProject and namespace. Their `landingzone` and `project` tags are merged over `tags.landingzone` and `tags.starterkit_project`. `quotas` sets the landing zone's quotas; null keeps the defaults of the `kubernetes` hub module, the larger set for `prod`."
+  description = "Stages, each with one landing zone and one starter kit meshProject and namespace. Their `landingzone` and `project` tags are merged over `tags.landingzone` and `tags.starterkit_project`. `quotas` sets the landing zone's quotas; null keeps the defaults of the `kubernetes` hub module, the larger set for `prod`."
+
+  validation {
+    condition     = length(distinct([for stage in var.stages : stage.name])) == length(var.stages)
+    error_message = "Every stage needs a name of its own."
+  }
 }
 
 variable "quota_definitions" {
@@ -95,31 +133,43 @@ variable "quota_definitions" {
   description = "Quotas the meshPlatform offers, with their limits; null keeps the defaults of the `kubernetes` hub module. CPU in millicores (m), memory in mebibytes (Mi)."
 }
 
-variable "creator" {
+variable "tags" {
   type = object({
-    type        = string
-    identifier  = string
-    displayName = string
-    username    = optional(string)
-    email       = optional(string)
-    euid        = optional(string)
+    landingzone               = list(object({ key = string, values = list(string) }))
+    building_block            = list(object({ key = string, values = list(string) }))
+    starterkit_building_block = list(object({ key = string, values = list(string) }))
+    project                   = list(object({ key = string, values = list(string) }))
+    starterkit_project        = list(object({ key = string, values = list(string) }))
+    project_owner_tag_key     = optional(string)
   })
   nullable    = false
-  description = "Creator of the platform, injected by meshStack; its display name fills the `tags.project_owner_tag_key` tag."
+  description = <<-EOT
+  Tags shared by every stage, each map built in the meshPanel form as a list of {key, values} entries.
+  `landingzone` goes on the SKE landing zones, `building_block` on the definitions platform engineers order,
+  `starterkit_building_block` on those application teams order (Git repository, Forgejo connector, SKE starterkit),
+  `project` on the platform's meshProject and `starterkit_project` on the starter kit's meshProjects.
+  `project_owner_tag_key` names the tag on those meshProjects that gets the creator's display name; null sets none.
+  EOT
 }
 
-variable "workspace_members" {
-  type = list(object({
-    meshIdentifier = string
-    username       = string
-    firstName      = string
-    lastName       = string
-    email          = string
-    euid           = string
-    roles          = list(string)
-  }))
-  nullable    = false
-  description = "Members of the owning workspace, injected by meshStack. Owners and managers become Project Admin of the platform's project."
+variable "overrides" {
+  type = object({
+    cluster_name         = optional(string)
+    cluster_issuer_email = optional(string)
+    project_identifier   = optional(string)
+  })
+  default     = null
+  description = <<-EOT
+  Names and settings that replace the generated ones; null or a field left out keeps the default.
+  `cluster_name`: SKE cluster name, 2-11 chars, lowercase alphanumeric or dashes; the default derives from the platform identifier.
+  `cluster_issuer_email`: Let's Encrypt contact email of the ACME ClusterIssuer; the default is the platform's service account.
+  `project_identifier`: identifier of the platform's meshProject; the default is `<platform identifier>-ske`.
+  EOT
+
+  validation {
+    condition     = (var.overrides == null ? null : var.overrides.cluster_name) == null ? true : can(regex("^[a-z0-9][a-z0-9-]{0,9}[a-z0-9]$", var.overrides.cluster_name))
+    error_message = "overrides.cluster_name must be 2-11 characters, lowercase alphanumeric or dashes, and not start or end with a dash."
+  }
 }
 
 variable "approval_policies" {
@@ -130,8 +180,13 @@ variable "approval_policies" {
     manual_triggers         = bool
     version_upgrade         = bool
   })
-  nullable    = false
-  description = "Run triggers that need an operator's approval on the platform definitions this architecture registers."
+  default     = null
+  description = "Run triggers that need an operator's approval on the platform definitions this architecture registers. Ignored in playground mode, which gates nothing."
+
+  validation {
+    condition     = var.playground_mode || var.approval_policies != null
+    error_message = "approval_policies is required unless playground_mode is set."
+  }
 }
 
 variable "starterkit_approval_policies" {
@@ -142,102 +197,13 @@ variable "starterkit_approval_policies" {
     manual_triggers         = bool
     version_upgrade         = bool
   })
-  nullable    = false
-  description = "Run triggers that need an operator's approval on the application team definitions (Git repository, Forgejo connector, SKE starterkit) this architecture registers."
-}
-
-variable "starterkit_add_random_name_suffix" {
-  type        = bool
-  nullable    = false
-  description = "Append a random suffix to the projects the starterkit creates. Keep it as the adopted starterkit had it: an upgrade that changes it renames, and so replaces, every project and tenant it created."
-}
-
-variable "platform_engineer_role_mapping" {
-  type = object({
-    git                = optional(map(list(string)))
-    container_registry = optional(map(list(string)))
-    secrets_manager    = optional(map(list(string)))
-  })
-  nullable    = false
-  default     = {}
-  description = "Maps the meshStack project roles on the platform's project to roles on the Git instance (Forgejo `owner`, `writer`, `reader`), the container registry and the Secrets Manager (STACKIT project roles). A service left out keeps its module's default: Project Admins become Forgejo owners, registry admins and Secrets Manager readers."
-}
-
-variable "playground_mode" {
-  type        = bool
-  nullable    = false
-  description = "Deploy a throwaway platform that gets a random identifier suffix and stays destroyable."
-}
-
-variable "cluster_name" {
-  type        = string
-  nullable    = true
   default     = null
-  description = "Overrides the generated SKE cluster name. 2-11 chars, lowercase alphanumeric or dashes."
+  description = "Run triggers that need an operator's approval on the application team definitions (Git repository, Forgejo connector, SKE starterkit) this architecture registers. Ignored in playground mode, which gates nothing."
 
   validation {
-    condition     = var.cluster_name == null || var.cluster_name == "" || can(regex("^[a-z0-9][a-z0-9-]{0,9}[a-z0-9]$", var.cluster_name))
-    error_message = "cluster_name must be 2-11 characters, lowercase alphanumeric or dashes, and not start or end with a dash."
+    condition     = var.playground_mode || var.starterkit_approval_policies != null
+    error_message = "starterkit_approval_policies is required unless playground_mode is set."
   }
-}
-
-variable "cluster_issuer_email" {
-  type        = string
-  nullable    = true
-  default     = null
-  description = "Overrides the Let's Encrypt contact email registered for the ACME ClusterIssuer."
-}
-
-variable "dns_subdomain" {
-  type        = string
-  nullable    = true
-  default     = null
-  description = "Label the platform's DNS zone occupies under `dns_parent_domain`. Empty uses the platform identifier. Set it to adopt a zone that already carries a different name."
-}
-
-variable "dns_parent_domain" {
-  type        = string
-  nullable    = false
-  description = "Domain the platform's DNS zone is created under."
-}
-
-variable "phase2_completed" {
-  type        = bool
-  nullable    = false
-  default     = false
-  description = "Set to true once a Harbor robot is linked to the platform's service account, as the summary describes; the run fails while none is."
-}
-
-variable "ai_model" {
-  type        = string
-  nullable    = false
-  description = "Model applications default to. Must be one STACKIT Model Serving's `/v1/models` endpoint serves."
-}
-
-variable "starterkit_app_name" {
-  type        = string
-  nullable    = false
-  description = "Image name every application ordered from the starter kit builds under, set as APP_NAME."
-}
-
-variable "starterkit_repo_clone_addr" {
-  type        = string
-  nullable    = false
-  description = "Template repository the starter kit initialises an application repository from."
-}
-
-variable "hub" {
-  type = object({
-    git_ref   = optional(string, "main")
-    bbd_draft = optional(bool, true)
-  })
-  const   = true
-  default = { git_ref = "main", bbd_draft = true }
-
-  description = <<-EOT
-  `git_ref`: meshstack-hub reference the nested integrations are sourced from.
-  `bbd_draft`: Draft state of the application team definitions; the platform's own are always drafts.
-  EOT
 }
 
 variable "imports" {
@@ -246,7 +212,7 @@ variable "imports" {
       display_name   = optional(string)
       admin_bindings = optional(map(string), {})
     }))
-    ske = optional(object({}))
+    adopt_ske = optional(bool, false)
     git = optional(object({
       instance_id          = string
       instance_name        = string
@@ -256,7 +222,7 @@ variable "imports" {
       zone_id       = string
       record_set_id = string
     }))
-    ingress = optional(object({}))
+    adopt_ingress = optional(bool, false)
     secrets_manager = optional(object({
       instance_id = string
     }))
@@ -279,13 +245,13 @@ variable "imports" {
   description = "Existing resources and definitions to take over, by key; see Adopting Existing Resources in the README. `git` needs `import_secrets.git` on its first run; null creates everything."
 
   validation {
-    condition     = var.imports == null || var.imports.project != null || alltrue([for key, adopted in var.imports : adopted == null if key != "starterkit_definitions"])
+    condition     = var.imports == null || var.imports.project != null || alltrue([for key, adopted in var.imports : adopted == null || adopted == false if key != "starterkit_definitions"])
     error_message = "Every key of imports but starterkit_definitions needs imports.project, because what it names lives in that project."
   }
 
   validation {
-    condition     = var.imports == null || (var.imports.ingress == null && var.imports.kubernetes_platform == null) || var.imports.ske != null
-    error_message = "imports.ingress and imports.kubernetes_platform need imports.ske, because they live in that cluster."
+    condition     = var.imports == null || (!var.imports.adopt_ingress && var.imports.kubernetes_platform == null) || var.imports.adopt_ske
+    error_message = "imports.adopt_ingress and imports.kubernetes_platform need imports.adopt_ske, because they live in that cluster."
   }
 
   validation {
@@ -316,8 +282,54 @@ variable "import_secrets" {
       forgejo_api_token = string
     }))
   })
-  nullable    = false
-  default     = {}
   sensitive   = true
+  default     = null
   description = "Secrets of the resources in `imports`: `git.forgejo_api_token`, a token of an owner of the adopted Forgejo organization, needed until the organization is adopted."
+}
+
+variable "workspace" {
+  type        = string
+  nullable    = false
+  description = "Identifier of the meshStack workspace that owns the platform, location, landing zones, STACKIT project and the building block definitions this architecture registers."
+}
+
+variable "creator" {
+  type = object({
+    type        = string
+    identifier  = string
+    displayName = string
+    username    = optional(string)
+    email       = optional(string)
+    euid        = optional(string)
+  })
+  nullable    = false
+  description = "Creator of the platform, injected by meshStack; its display name fills the `tags.project_owner_tag_key` tag."
+}
+
+variable "workspace_members" {
+  type = list(object({
+    meshIdentifier = string
+    username       = string
+    firstName      = string
+    lastName       = string
+    email          = string
+    euid           = string
+    roles          = list(string)
+  }))
+  nullable    = false
+  description = "Members of the owning workspace, injected by meshStack. Owners and managers become Project Admin of the platform's project."
+}
+
+variable "hub" {
+  type = object({
+    git_ref   = optional(string, "main")
+    bbd_draft = optional(bool, true)
+  })
+  const   = true
+  default = { git_ref = "main", bbd_draft = true }
+
+  description = <<-EOT
+  `git_ref`: meshstack-hub reference the nested integrations are sourced from.
+  `bbd_draft`: Draft state of the application team definitions; the platform's own are always drafts.
+  EOT
 }

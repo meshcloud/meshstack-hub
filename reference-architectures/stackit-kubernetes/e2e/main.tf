@@ -9,8 +9,9 @@ variable "test_context" {
       can(var.test_context.hub_git_ref),
       can(var.test_context.meshstack.project_identifier_suffix),
       can(var.test_context.meshstack.tag_schema.mandatory.project),
+      can(var.test_context.meshstack.tag_schema.mandatory.payment_method),
     ])
-    error_message = "test_context must provide workspace, run_id, hub_git_ref, meshstack.project_identifier_suffix and meshstack.tag_schema.mandatory.project."
+    error_message = "test_context must provide workspace, run_id, hub_git_ref, meshstack.project_identifier_suffix and meshstack.tag_schema.mandatory.project and .payment_method."
   }
 
   validation {
@@ -44,12 +45,8 @@ locals {
   }
 
   # A landing zone has to offer every value a project assigned to it may carry.
-  starterkit_project_tags = {
-    confidentiality = ["Public"]
-  }
-  landingzone_tags = {
-    confidentiality = ["Public", "Internal", "Confidential"]
-  }
+  starterkit_project_tags = [{ key = "confidentiality", values = ["Public"] }]
+  landingzone_tags        = [{ key = "confidentiality", values = ["Public", "Internal", "Confidential"] }]
 }
 
 provider "stackit" {
@@ -91,13 +88,22 @@ module "service_account_federation" {
   stackit_service_account_name = "${var.test_context.run_id}-safb"
 }
 
+resource "meshstack_payment_method" "platform" {
+  metadata = {
+    name               = "${var.test_context.run_id}-ske-pm"
+    owned_by_workspace = var.test_context.workspace
+  }
+  spec = {
+    display_name = "${var.test_context.run_id} STACKIT Kubernetes Platform"
+    tags         = var.test_context.meshstack.tag_schema.mandatory.payment_method
+  }
+}
+
 module "stackit_kubernetes" {
   source = "../"
 
   meshstack = local.meshstack
   hub       = local.hub
-
-  playground_mode = true
 }
 
 resource "meshstack_building_block" "this" {
@@ -133,25 +139,30 @@ resource "meshstack_building_block" "this" {
       })) }
       landingzone_variant = { value = jsonencode("default") }
       platform_identifier = { value = jsonencode(var.test_context.run_id) }
-      project_identifier  = { value = jsonencode("${var.test_context.run_id}-ske${var.test_context.meshstack.project_identifier_suffix}") }
       use_global_location = { value = jsonencode(false) }
-      dns_parent_domain   = { value = jsonencode("stackit.run") }
-      ai_model            = { value = jsonencode("openai/gpt-oss-120b") }
+      payment_method      = { value = jsonencode(meshstack_payment_method.platform.ref) }
+      playground_mode     = { value = jsonencode(true) }
+      starterkit_demo = { value = jsonencode(jsonencode({
+        name          = "ai-summarizer"
+        template_repo = "https://github.com/likvid-bank/starterkit-template-stackit-ai-summarizer.git"
+        ai_model      = "openai/gpt-oss-120b"
+      })) }
+      phase2_completed = { value = jsonencode(false) }
 
-      starterkit_app_name        = { value = jsonencode("ai-summarizer") }
-      starterkit_repo_clone_addr = { value = jsonencode("https://github.com/likvid-bank/starterkit-template-stackit-ai-summarizer.git") }
+      overrides = { value = jsonencode(jsonencode({
+        project_identifier = "${var.test_context.run_id}-ske${var.test_context.meshstack.project_identifier_suffix}"
+      })) }
 
       tags = { value = jsonencode(jsonencode({
-        project                   = var.test_context.meshstack.tag_schema.mandatory.project
+        project                   = [for key, values in var.test_context.meshstack.tag_schema.mandatory.project : { key = key, values = values }]
         starterkit_project        = local.starterkit_project_tags
         landingzone               = local.landingzone_tags
-        building_block            = {}
-        starterkit_building_block = {}
-        project_owner_tag_key     = ""
+        building_block            = []
+        starterkit_building_block = []
       })) }
-      stages = { value = jsonencode(jsonencode({
-        dev = { landingzone = { environment = ["dev"] }, project = { environment = ["dev"] } }
-      })) }
+      stages = { value = jsonencode(jsonencode([
+        { name = "dev", landingzone = [{ key = "environment", values = ["dev"] }], project = [{ key = "environment", values = ["dev"] }] },
+      ])) }
     }
   }
 }

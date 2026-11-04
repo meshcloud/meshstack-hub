@@ -57,8 +57,8 @@ import {
 
 locals {
   # The definitions are registered only in phase 2.
-  adopted_starterkit_definitions = var.phase2_completed && var.imports.starterkit_definitions != null ? {
-    for key, uuid in var.imports.starterkit_definitions : key => uuid if uuid != null
+  adopted_starterkit_definitions = var.phase2_completed && local.imports.starterkit_definitions != null ? {
+    for key, uuid in local.imports.starterkit_definitions : key => uuid if uuid != null
   } : {}
 
   starterkit_definition_target_types = {
