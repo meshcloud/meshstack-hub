@@ -93,11 +93,11 @@ When a **network** configuration is provided, it additionally:
 
 ## Service Accounts
 
-You supply one account, as `stackit_service_account_key`, and the architecture creates one. The
-account you supply creates the folder, the foundation project and the meshStack objects, and its key
-is reused on every run rather than only the first. The account it creates lives in the foundation
-project and is what creates tenant projects; it authenticates through workload identity federation,
-so no key for it is ever stored.
+You supply the **deployment service account**, as `stackit_service_account_key`, and the
+architecture creates the **project-creation service account**. The deployment service account
+creates the folder, the foundation project and the meshStack objects, and its key is reused on every
+run. The project-creation service account lives in the foundation project and creates tenant
+projects; it authenticates through workload identity federation, so no key for it is ever stored.
 
 ### How composing architectures get an identity
 
@@ -113,8 +113,9 @@ landing zone refs, and the version refs of two definitions:
 
 Both are the latest versions. Another workspace may only order a released version that is
 published to the marketplace, so deploy the landing zone with `hub.bbd_draft = false` and publish
-both definitions in meshPanel. A new version gets a new uuid, so copy the block again after the
-definitions change.
+both definitions in meshPanel. `hub.bbd_draft` releases only the definitions this landing zone
+registers; its own definition is always a draft, so it stays in the owning workspace. A new version
+gets a new uuid, so copy the block again after the definitions change.
 
 A composing architecture orders the service account on a tenant it just created, with the roles it
 needs. It then orders the federation as a child of the service account, with the uuids of its own
@@ -136,14 +137,15 @@ not a new credential.
 `stackit_owner_email` owns the folder, the foundation project and every tenant project the platform
 creates. STACKIT applies it at creation only, so changing it later means recreating what it owns.
 
-The key you supply is expected to be an organization owner, which may name any address — a team
-mailbox, typically. A key holding only `resource-manager.admin` may create a project but not act
-inside one it does not own, so with such a key the owner has to be that account's own address, or
-the run fails with `POST /v2/projects/<id>/service-accounts -> 403`.
+The deployment service account is expected to be an organization owner, which may name any
+address — a team mailbox, typically. A deployment service account holding only
+`resource-manager.admin` may create a project but not act inside one it does not own, so the owner
+then has to be the deployment service account's own email, or the run fails with
+`POST /v2/projects/<id>/service-accounts -> 403`.
 
-Tenant projects are unaffected either way: the tenant-project account works through its
+Tenant projects are unaffected either way: the project-creation service account works through its
 organization-scoped roles, not through ownership. One of those roles is conditional — with
-`stackit_organization_onboarding_enabled` off it lacks `iam.member-admin` and cannot assign project
+`role_mapping.organization_onboarding` off it lacks `iam.member-admin` and cannot assign project
 roles to users.
 
 ## Getting Started
@@ -152,7 +154,7 @@ roles to users.
 
 | Requirement          | Description                                                                       |
 |----------------------|-----------------------------------------------------------------------------------|
-| STACKIT organization | With an organization-owner service account key. `resource-manager.admin` alone also works, but then constrains which `stackit_owner_email` values are valid — see [Service Accounts](#service-accounts). |
+| STACKIT organization | A key of the deployment service account, an organization owner. `resource-manager.admin` alone also works, but then constrains which `stackit_owner_email` values are valid — see [Service Accounts](#service-accounts). |
 | CIDR plan            | *(Only when enabling networking)* A non-overlapping IPv4 address plan chosen up front for the hub network ranges and transfer network. |
 
 ### Deployment Order
@@ -189,14 +191,15 @@ the tenant projects stay.
 
 ### Playground Mode
 
-`playground_mode` defaults to `true`, so an unconfigured deployment is a throwaway one. Two things
-change with it:
+**Playground Mode** deploys a throwaway platform. It is off by default, and four things change
+with it:
 
 | | `playground_mode = true` | `playground_mode = false` |
 |---|---|---|
 | Platform identifier | random suffix appended | taken exactly as given |
 | Root folder | always, `playground-<platform identifier>` unless named | only when named |
 | Folders and foundation project | destroyable | guarded with `prevent_destroy` |
+| Starterkit Approval Policies | hidden, no gates | as set |
 
 The suffix exists because a platform identifier is unique across the whole meshStack instance, and
 `modules/stackit` builds every landing zone name from it as `<platform_identifier>-<variant>`. A
@@ -206,15 +209,14 @@ playground deployment that took the plain name would occupy it for good, across 
 definitions it registers should be published to other workspaces: the platform can disappear at any
 time, and its name is not the one a real deployment will use.
 
-Set `playground_mode = false` for a platform that is actually used, as the `stackit-platform`
+Keep `playground_mode = false` for a platform that is actually used, as the `stackit-platform`
 workspace in likvid-cloudfoundation does. The guard is then a plan-time rule, so it also catches a
 teardown caused by a change that forces the folder to be replaced. It cannot catch a deletion that
 happens outside the Terraform run, such as someone removing the folder in the STACKIT portal.
 
-The flag belongs to whoever deploys the definition, not to whoever orders it. It reaches the
-building block as a `STATIC` input, so it does not appear as a choice in the order form and a
-consumer cannot turn a real platform into a playground one, or the reverse. Change it by setting
-`playground_mode` on the reference architecture module and deploying a new definition version.
+The flag is chosen in the order form and cannot be changed afterwards: a run that sees another
+value fails at plan time, so a real platform never turns into a playground one, or the reverse.
+Deleting the building block still works.
 
 ### Adopting an Existing Platform
 
@@ -226,7 +228,7 @@ false`, because nothing taken over is released on destroy.
 |---|---|
 | `folder = {container_id}` | the landing-zone folder, renamed to the platform identifier |
 | `foundation_project = {container_id}` | the foundation project, renamed to `<platform identifier>-foundation` |
-| `platform = {}` | the location (unless **Use Global Location**), the STACKIT platform `<platform identifier>` in it and its landing zones `<platform identifier>-default` and, with `hub&spoke`, `-networked` |
+| `adopt_platform = true` | the location (unless **Use Global Location**), the STACKIT platform `<platform identifier>` in it and its landing zones `<platform identifier>-default` and, with `hub&spoke`, `-networked` |
 | `project_definition = {uuid, service_account_name, service_account_email, federated_identity_provider_ids}` | the STACKIT Project definition and its backplane: the project-creation service account, its federated identity providers in the order of the subjects they trust, and its organization roles |
 | `service_account_definition = {uuid, service_account_email, federated_identity_provider_ids}` | the STACKIT Service Account definition and its backplane |
 | `service_account_federation_definition = {uuid, service_account_email, federated_identity_provider_ids}` | the STACKIT Service Account Federation definition and its backplane |
@@ -237,9 +239,9 @@ approval gates for the adoption and approve only a plan that replaces nothing.
 
 ### Approval Gates
 
-`approval_policies` sets which run triggers need an operator's approval before a run of this
-architecture is applied; `starterkit_approval_policies` does the same for the project starterkit
-definition it registers. Both default to no gate at all.
+The module variable `approval_policies` sets which run triggers need an operator's approval before
+a run of this architecture is applied. The order form input **Starterkit Approval Policies** does
+the same for the project starterkit definition it registers. Both default to no gate at all.
 
 ## Shared Responsibilities
 

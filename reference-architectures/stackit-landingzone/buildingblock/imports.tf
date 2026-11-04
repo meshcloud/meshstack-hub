@@ -2,7 +2,7 @@ locals {
   imports = var.imports != null ? var.imports : {
     folder                                = null
     foundation_project                    = null
-    platform                              = null
+    adopt_platform                        = false
     project_definition                    = null
     service_account_definition            = null
     service_account_federation_definition = null
@@ -49,7 +49,7 @@ data "stackit_resourcemanager_project" "adopted" {
 }
 
 import {
-  for_each = local.imports.platform == null || var.use_global_location ? toset([]) : toset([local.platform_identifier])
+  for_each = local.imports.adopt_platform && !var.use_global_location ? toset([local.platform_identifier]) : toset([])
   to       = meshstack_location.this
   id       = each.value
 }
@@ -58,11 +58,11 @@ import {
 # lookup fails unless both match.
 data "meshstack_platforms" "adopted" {
   lifecycle {
-    enabled = local.imports.platform != null
+    enabled = local.imports.adopt_platform
 
     postcondition {
       condition     = length(self.platforms) == 1
-      error_message = "imports.platform: workspace ${var.workspace} owns no STACKIT platform ${local.platform_identifier}.${local.adopted_location_name}."
+      error_message = "imports.adopt_platform: workspace ${var.workspace} owns no STACKIT platform ${local.platform_identifier}.${local.adopted_location_name}."
     }
   }
 
@@ -72,13 +72,13 @@ data "meshstack_platforms" "adopted" {
 }
 
 import {
-  for_each = local.imports.platform == null ? toset([]) : toset([local.platform_identifier])
+  for_each = local.imports.adopt_platform ? toset([local.platform_identifier]) : toset([])
   to       = module.stackit_integration.meshstack_platform.this
   id       = one(data.meshstack_platforms.adopted.platforms).metadata.uuid
 }
 
 import {
-  for_each = local.imports.platform == null ? toset([]) : toset(local.adopted_landingzone_variants)
+  for_each = local.imports.adopt_platform ? toset(local.adopted_landingzone_variants) : toset([])
   to       = module.stackit_integration.meshstack_landingzone.this[each.key]
   id       = "${local.platform_identifier}-${each.key}"
 }
@@ -123,7 +123,7 @@ import {
 }
 
 import {
-  for_each = { for key, adopted in local.adopted_definitions : key => adopted.service_account_email if key == "project_definition" && var.stackit_organization_onboarding_enabled }
+  for_each = { for key, adopted in local.adopted_definitions : key => adopted.service_account_email if key == "project_definition" && var.role_mapping.organization_onboarding }
   to       = module.stackit_integration.module.backplane.stackit_authorization_organization_role_assignment.member_admin
   id       = "${var.stackit_org},iam.member-admin,${each.value}"
 }

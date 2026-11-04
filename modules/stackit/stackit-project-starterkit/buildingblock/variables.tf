@@ -74,7 +74,7 @@ variable "network_static" {
 variable "tags" {
   type = object({
     project               = map(list(string))
-    project_owner_tag_key = string
+    project_owner_tag_key = optional(string)
   })
   nullable = false
 }

@@ -42,7 +42,9 @@ variable "hub" {
 
   description = <<-EOT
   `git_ref`: Hub release reference. Set to a tag (e.g. 'v1.2.3') or branch or commit sha of the meshstack-hub repo.
-  `bbd_draft`: If true, the building block definition version is kept in draft mode.
+  `bbd_draft`: If true, the definitions this landing zone registers (project starter kit, service account,
+  federation, networks) are kept in draft mode. This definition is always a draft, so it stays in the owning
+  workspace.
   EOT
 }
 
@@ -65,59 +67,6 @@ variable "approval_policies" {
   description = "Run triggers that need an operator's approval before a run of this architecture is applied. The defaults are the provider's own, and the provider asserts them whenever the definition sets no policies — so a gate switched on in meshPanel is turned off again by the next apply unless it is set here."
 }
 
-variable "starterkit_approval_policies" {
-  type = object({
-    building_block_creation = optional(bool, false)
-    user_input_changes      = optional(bool, false)
-    any_input_changes       = optional(bool, false)
-    manual_triggers         = optional(bool, false)
-    version_upgrade         = optional(bool, false)
-  })
-  nullable = false
-  default = {
-    building_block_creation = false
-    user_input_changes      = false
-    any_input_changes       = false
-    manual_triggers         = false
-    version_upgrade         = false
-  }
-  description = "The same, for the project starterkit definition this architecture registers. Set `building_block_creation` to have an operator approve every project an application team orders."
-}
-
-variable "playground_mode" {
-  type     = bool
-  nullable = false
-  default  = true
-
-  description = "Deploy a throwaway platform: the platform identifier gets a random suffix so it does not occupy a name for good, and the landing-zone folder and foundation project are left destroyable. Set to false for a platform that is actually used. Passed to the building block as a STATIC input, so whoever orders the architecture cannot choose. A playground platform and the building block definitions it registers are not meant to be published to other workspaces."
-}
-
-variable "default_tags" {
-  type = object({
-    landingzone           = optional(map(list(string)), {})
-    building_block        = optional(map(list(string)), {})
-    project               = optional(map(list(string)), {})
-    project_owner_tag_key = optional(string, "")
-  })
-  nullable = false
-
-  # Spelled out rather than left to the `optional()` defaults: this feeds an input's `json_schema`
-  # default, and a consumer that does not evaluate object-attribute defaulting would see unset
-  # fields. See .agents/references/meshstack-integration.md.
-  default = {
-    landingzone = {
-      LandingZoneFamily = ["sandbox"]
-      confidentiality   = ["internal", "public"]
-      environment       = ["dev"]
-    }
-    building_block        = {}
-    project               = {}
-    project_owner_tag_key = "projectOwner"
-  }
-
-  description = "Starter values pre-filling the Tags form, as maps of tag key to values. Ships with an example set; override per foundation to match the instance's own tag schema. The operator can still edit, extend or clear them when ordering."
-}
-
 output "building_block_definition" {
   description = "BBD is consumed in building block compositions."
   value = {
@@ -126,11 +75,8 @@ output "building_block_definition" {
   }
 }
 
-# The Tags input is a meshPanel form the operator fills from scratch: for each of the three tag maps
-# they add as many {key, values} entries as they need — nothing is read from the instance's tag
-# schema. A map of free-form keys has no form widget (meshPanel renders only declared properties), so
-# each map is modelled as a growable array of entries; buildingblock/ folds them back into the
-# map(list(string)) the nested integrations take.
+# meshPanel has no form widget for a map of free-form keys, so each tag map is a growable list of
+# {key, values} entries; buildingblock/ folds them back into maps.
 locals {
   tag_list_schema = {
     type = "array"
@@ -144,21 +90,13 @@ locals {
     }
   }
 
-  # The form's starter entries come from var.default_tags, so each foundation seeds keys matching its
-  # own tag schema instead of anything hard-coded here. Each map is turned into the {key, values}
-  # entry list the form (and the buildingblock variable) use.
-  tags_default_entries = {
-    for section, m in {
-      landingzone    = var.default_tags.landingzone
-      building_block = var.default_tags.building_block
-      project        = var.default_tags.project
-    } : section => [for tk, tv in m : { key = tk, values = tv }]
-  }
+  approval_gates            = ["building_block_creation", "user_input_changes", "any_input_changes", "manual_triggers", "version_upgrade"]
+  approval_policies_default = { for gate in local.approval_gates : gate => false }
 
   imports_definition_properties = {
-    uuid                            = { type = "string", title = "Definition UUID" }
-    service_account_email           = { type = "string", title = "Backplane Service Account Email" }
-    federated_identity_provider_ids = { type = "array", title = "Federated Identity Provider IDs", items = { type = "string" } }
+    uuid                            = { type = "string", title = "uuid" }
+    service_account_email           = { type = "string", title = "service_account_email" }
+    federated_identity_provider_ids = { type = "array", title = "federated_identity_provider_ids", items = { type = "string" } }
   }
 
   imports_definition_schema = {
@@ -167,15 +105,25 @@ locals {
     properties = local.imports_definition_properties
   }
 
+  imports_container_schema = {
+    type       = "object"
+    required   = ["container_id"]
+    properties = { container_id = { type = "string", title = "container_id" } }
+  }
+
   tags_json_schema = {
     "$schema" = "http://json-schema.org/draft-07/schema#"
     type      = "object"
-    required  = ["landingzone", "building_block", "project", "project_owner_tag_key"]
+    required  = ["landingzone", "building_block", "project"]
     properties = {
-      landingzone           = merge(local.tag_list_schema, { title = "Landing Zone Tags", default = local.tags_default_entries.landingzone })
-      building_block        = merge(local.tag_list_schema, { title = "Building Block Tags", default = local.tags_default_entries.building_block })
-      project               = merge(local.tag_list_schema, { title = "Project Tags", default = local.tags_default_entries.project })
-      project_owner_tag_key = { type = "string", title = "Project Owner Tag Key", default = var.default_tags.project_owner_tag_key }
+      landingzone    = merge(local.tag_list_schema, { title = "Landing Zone Tags" })
+      building_block = merge(local.tag_list_schema, { title = "Building Block Tags" })
+      project        = merge(local.tag_list_schema, { title = "Project Tags" })
+      project_owner_tag_key = {
+        type        = "string"
+        title       = "Project Owner Tag Key"
+        description = "Tag on the created meshProjects that gets the creator's display name. Leave out to set none."
+      }
     }
   }
 }
@@ -268,9 +216,8 @@ resource "meshstack_building_block_definition" "this" {
 
     ## 🧪 Playground mode
 
-    **Playground Mode** is fixed by whoever deployed this definition and cannot be chosen when
-    ordering. It defaults to `true`, which deploys a throwaway platform: the platform identifier gets
-    a random suffix, everything goes into a root folder named `playground-<platform identifier>`,
+    **Playground Mode** is chosen when ordering and cannot be changed afterwards. Turned on, it
+    deploys a throwaway platform: the platform identifier gets a random suffix, everything goes into a root folder named `playground-<platform identifier>`,
     and none of the folders nor the foundation project is protected against deletion, so the whole
     thing can be deleted again in one step.
 
@@ -279,20 +226,19 @@ resource "meshstack_building_block_definition" "this" {
     occupy the plain name for good. Such a platform and the building block definitions it registers
     are meant for the deploying workspace only — do not publish them to other workspaces.
 
-    A platform that is actually used is deployed from a definition with **Playground Mode** set to
-    `false`. The identifier is then taken as given, and the folder and foundation project are guarded
+    A platform that is actually used keeps **Playground Mode** off, the default. The identifier is then taken as given, and the folder and foundation project are guarded
     with `prevent_destroy`, so a deletion run fails rather than taking every tenant project with it.
 
     ## 🔑 Authentication
 
-    You provide the STACKIT organization UUID, owner email, tags, default role mapping and a service account key as inputs.
-    The building block authenticates to STACKIT with the service account key, which needs `resource-manager.admin` on the organization.
+    You provide the STACKIT organization UUID, owner email, tags, default role mapping and the key of the deployment service account as inputs.
+    The building block authenticates to STACKIT as the deployment service account, which needs `resource-manager.admin` on the organization.
 
     ## 📊 Shared responsibility
 
     | Responsibility | Platform Team | Application Team |
     |---|:---:|:---:|
-    | Provide the STACKIT service account key, organization details, tags and role mapping | ✅ | ❌ |
+    | Provide the deployment service account key, organization details, tags and role mapping | ✅ | ❌ |
     | Provision the location, folder and STACKIT Project platform | ✅ | ❌ |
     | Register the self-service `STACKIT Service Account` building block | ✅ | ❌ |
     | (Optional) Provide the network CIDR plan and provision the hub network area | ✅ | ❌ |
@@ -306,7 +252,7 @@ resource "meshstack_building_block_definition" "this" {
   }
 
   version_spec = {
-    draft         = var.hub.bbd_draft
+    draft         = true
     runner_ref    = var.meshstack.runner_ref
     deletion_mode = "DELETE"
 
@@ -337,23 +283,32 @@ resource "meshstack_building_block_definition" "this" {
     }
 
     inputs = {
-      stackit_service_account_key = {
-        display_name           = "STACKIT Service Account Key"
-        description            = "Full key JSON of the deployment service account, reused on every run. Needs `resource-manager.admin` on the organization, or organization owner to allow a different `stackit_owner_email`."
-        type                   = "CODE"
-        assignment_type        = "USER_INPUT"
-        updateable_by_consumer = true
-        sensitive              = {}
-        display_order          = 60
+      platform_identifier = {
+        display_name                   = "Platform Identifier"
+        description                    = "Identifier for the STACKIT sandbox platform created in meshStack (letters, digits and dashes only)."
+        type                           = "STRING"
+        assignment_type                = "USER_INPUT"
+        value_validation_regex         = "^[a-zA-Z0-9-]+$"
+        validation_regex_error_message = "platform_identifier must only contain letters, digits, and dashes."
+        display_order                  = 10
       }
 
-      hub = {
-        display_name    = "Hub"
-        description     = "HCL object with `git_ref` (meshstack-hub reference used to source the nested STACKIT integration modules) and `bbd_draft` (forwarded to those nested integrations' own building block definition draft state)."
-        type            = "CODE"
-        assignment_type = "STATIC"
-        argument        = jsonencode(jsonencode(var.hub))
-        display_order   = 120
+      playground_mode = {
+        display_name    = "Playground Mode"
+        description     = "Throwaway deployment: the identifier gets a random suffix and nothing is protected against deletion. Do not publish such a platform or its definitions to other workspaces. Cannot be changed after the order."
+        type            = "BOOLEAN"
+        assignment_type = "USER_INPUT"
+        default_value   = jsonencode(false)
+        display_order   = 15
+      }
+
+      use_global_location = {
+        display_name    = "Use Global Location"
+        description     = "If true, use the existing global meshStack location instead of creating a dedicated location for this platform."
+        type            = "BOOLEAN"
+        assignment_type = "USER_INPUT"
+        default_value   = jsonencode(true)
+        display_order   = 20
       }
 
       stackit_org = {
@@ -363,63 +318,35 @@ resource "meshstack_building_block_definition" "this" {
         assignment_type                = "USER_INPUT"
         value_validation_regex         = "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$"
         validation_regex_error_message = "STACKIT Organization UUID must be a valid UUID."
-        display_order                  = 40
+        display_order                  = 30
+      }
+
+      root_folder_name = {
+        display_name           = "Root Folder Name"
+        description            = "Folder at the organization root for the landing-zone folder and the foundation project, when the organization serves more than one meshStack. Left out: no root folder."
+        type                   = "STRING"
+        assignment_type        = "USER_INPUT"
+        is_optional            = true
+        updateable_by_consumer = true
+        display_order          = 35
+      }
+
+      stackit_service_account_key = {
+        display_name           = "STACKIT Service Account Key"
+        description            = "Full key JSON of the deployment service account, reused on every run. Needs `resource-manager.admin` on the organization, or organization owner to allow a different `stackit_owner_email`."
+        type                   = "CODE"
+        assignment_type        = "USER_INPUT"
+        updateable_by_consumer = true
+        sensitive              = {}
+        display_order          = 40
       }
 
       stackit_owner_email = {
         display_name    = "STACKIT Owner Email"
-        description     = "Owner of the STACKIT folder, foundation project, and every tenant project. Applied at creation only. Must be the deployment account's own address unless that account is an organization owner."
+        description     = "Owner of the STACKIT folder, foundation project, and every tenant project. Applied at creation only. Must be the deployment service account's own email unless the deployment service account is an organization owner."
         type            = "STRING"
         assignment_type = "USER_INPUT"
         display_order   = 50
-      }
-
-      # Keep this description under roughly 200 characters. meshStack answers a longer one with
-      # `500 InternalError` on the version update, not a 400 — the longest description any live
-      # definition here carries is 206, and 387 fails.
-      tags = {
-        display_name           = "Tags"
-        description            = "Tags forwarded to the nested integrations. Build them in the form: add {key, values} entries for landing zones, building blocks, and the created meshProjects, plus the project owner tag key."
-        type                   = "JSON"
-        assignment_type        = "USER_INPUT"
-        updateable_by_consumer = true
-        display_order          = 80
-
-        # meshStack decodes a JSON input into the buildingblock variable's declared object type (see
-        # commit 991343f0), so `var.tags` stays the typed object and needs no jsondecode.
-        json_schema = jsonencode(local.tags_json_schema)
-      }
-
-      role_mapping = {
-        display_name           = "STACKIT Project Role Mapping"
-        description            = "Maps each meshStack project role to the STACKIT project roles it grants. Values can be built-in STACKIT roles or custom STACKIT role names."
-        type                   = "JSON"
-        assignment_type        = "USER_INPUT"
-        updateable_by_consumer = true
-        display_order          = 70
-
-        # A JSON input decodes into var.role_mapping's map(list(string)); the three meshStack roles
-        # are fixed keys, so the form is one field per role holding its STACKIT role list.
-        json_schema = jsonencode({
-          "$schema" = "http://json-schema.org/draft-07/schema#"
-          type      = "object"
-          required  = ["admin", "user", "reader"]
-          properties = {
-            admin  = { type = "array", title = "admin", items = { type = "string" }, default = ["owner"] }
-            user   = { type = "array", title = "user", items = { type = "string" }, default = ["editor"] }
-            reader = { type = "array", title = "reader", items = { type = "string" }, default = ["reader"] }
-          }
-        })
-      }
-
-      stackit_organization_onboarding_enabled = {
-        display_name           = "STACKIT Organization Onboarding Enabled"
-        description            = "If true, the nested STACKIT Project integration adds meshStack project users to the STACKIT organization before applying project-level role assignments."
-        type                   = "BOOLEAN"
-        assignment_type        = "USER_INPUT"
-        updateable_by_consumer = true
-        default_value          = jsonencode(true)
-        display_order          = 90
       }
 
       topology = {
@@ -429,7 +356,7 @@ resource "meshstack_building_block_definition" "this" {
         assignment_type   = "USER_INPUT"
         selectable_values = ["sandbox", "hub&spoke"]
         default_value     = jsonencode(["sandbox"])
-        display_order     = 20
+        display_order     = 60
       }
 
       network = {
@@ -439,10 +366,9 @@ resource "meshstack_building_block_definition" "this" {
         assignment_type        = "USER_INPUT"
         updateable_by_consumer = true
         condition              = "\"hub&spoke\" in input.topology"
-        display_order          = 30
+        display_order          = 70
 
-        # Decodes into var.network's object; hidden for the sandbox topology, so var.network falls
-        # back to its null default and the buildingblock leaves networking off.
+        # Hidden for the sandbox topology, so var.network falls back to null and networking stays off.
         json_schema = jsonencode({
           "$schema" = "http://json-schema.org/draft-07/schema#"
           type      = "object"
@@ -460,102 +386,110 @@ resource "meshstack_building_block_definition" "this" {
         })
       }
 
-      workspace = {
-        display_name    = "Workspace Identifier"
-        description     = "Workspace that will own the created platform, location and landing zones."
-        type            = "STRING"
-        assignment_type = "WORKSPACE_IDENTIFIER"
-        display_order   = 110
-      }
-
-      platform_identifier = {
-        display_name                   = "Platform Identifier"
-        description                    = "Identifier for the STACKIT sandbox platform created in meshStack (letters, digits and dashes only)."
-        type                           = "STRING"
-        assignment_type                = "USER_INPUT"
-        value_validation_regex         = "^[a-zA-Z0-9-]+$"
-        validation_regex_error_message = "platform_identifier must only contain letters, digits, and dashes."
-        display_order                  = 10
-      }
-
-      root_folder_name = {
-        display_name           = "Root Folder Name"
-        description            = "Folder at the organization root for the landing-zone folder and the foundation project, when the organization serves more than one meshStack. Empty: no root folder."
-        type                   = "STRING"
+      role_mapping = {
+        display_name           = "STACKIT Project Role Mapping"
+        description            = "Maps each meshStack project role to the STACKIT project roles it grants. Values can be built-in STACKIT roles or custom STACKIT role names. organization_onboarding adds the users to the STACKIT organization first."
+        type                   = "JSON"
         assignment_type        = "USER_INPUT"
-        is_optional            = true
         updateable_by_consumer = true
-        display_order          = 45
+        display_order          = 80
+
+        json_schema = jsonencode({
+          "$schema" = "http://json-schema.org/draft-07/schema#"
+          type      = "object"
+          required  = ["admin", "user", "reader"]
+          properties = {
+            admin  = { type = "array", title = "admin", items = { type = "string" }, default = ["owner"] }
+            user   = { type = "array", title = "user", items = { type = "string" }, default = ["editor"] }
+            reader = { type = "array", title = "reader", items = { type = "string" }, default = ["reader"] }
+            organization_onboarding = {
+              type        = "boolean"
+              title       = "organization_onboarding"
+              default     = true
+              description = "Add meshStack project users to the STACKIT organization before the project roles are granted. Turn off if organization membership is managed outside this landing zone."
+            }
+          }
+        })
       }
 
-      use_global_location = {
-        display_name    = "Use Global Location"
-        description     = "If true, use the existing global meshStack location instead of creating a dedicated location for this platform."
-        type            = "BOOLEAN"
-        assignment_type = "USER_INPUT"
-        default_value   = jsonencode(false)
-        display_order   = 100
+      tags = {
+        display_name           = "Tags"
+        description            = "Tags forwarded to the nested integrations. Build them in the form: add {key, values} entries for landing zones, building blocks, and the created meshProjects, plus the project owner tag key."
+        type                   = "JSON"
+        assignment_type        = "USER_INPUT"
+        updateable_by_consumer = true
+        display_order          = 100
+
+        json_schema = jsonencode(local.tags_json_schema)
       }
 
       starterkit_approval_policies = {
-        display_name    = "Starterkit Approval Policies"
-        description     = "HCL object of approval gates applied to the project starterkit definition this registers. Fixed by whoever deployed this definition."
-        type            = "CODE"
-        assignment_type = "STATIC"
-        argument        = jsonencode(jsonencode(var.starterkit_approval_policies))
-        display_order   = 130
+        display_name           = "Starterkit Approval Policies"
+        description            = "Run triggers that need an operator's approval before a run of a project starterkit building block is applied."
+        type                   = "JSON"
+        assignment_type        = "USER_INPUT"
+        updateable_by_consumer = true
+        default_value          = jsonencode(jsonencode(local.approval_policies_default))
+        condition              = "!input.playground_mode"
+        display_order          = 105
+
+        json_schema = jsonencode({
+          type                 = "object"
+          additionalProperties = false
+          required             = local.approval_gates
+          properties           = { for gate, enabled in local.approval_policies_default : gate => { type = "boolean", title = gate, default = enabled } }
+        })
       }
 
       imports = {
         display_name    = "Imports"
-        description     = "Existing resources to take over when adopting a platform built before this architecture; see Adopting an Existing Platform in the README. Leave empty to create everything."
+        description     = "Existing resources to take over when adopting a platform built before this architecture; see Adopting an Existing Platform in the README. Leave out to create everything."
         type            = "JSON"
         assignment_type = "USER_INPUT"
         is_optional     = true
-        display_order   = 150
+        display_order   = 110
 
         json_schema = jsonencode({
           "$schema"            = "http://json-schema.org/draft-07/schema#"
           type                 = "object"
           additionalProperties = false
           properties = {
-            folder = {
-              type     = "object"
-              title    = "Landing-Zone Folder"
-              required = ["container_id"]
-              properties = {
-                container_id = { type = "string", title = "Container ID" }
-              }
+            folder             = merge(local.imports_container_schema, { title = "folder" })
+            foundation_project = merge(local.imports_container_schema, { title = "foundation_project" })
+            adopt_platform = {
+              type        = "boolean"
+              title       = "adopt_platform"
+              description = "Adopt the existing meshPlatform, location and landing zones named by Platform Identifier."
             }
-            foundation_project = {
-              type     = "object"
-              title    = "Foundation Project"
-              required = ["container_id"]
-              properties = {
-                container_id = { type = "string", title = "Container ID" }
-              }
-            }
-            platform = { type = "object", title = "Location, Platform and Landing Zones", properties = {} }
             project_definition = {
               type     = "object"
+              title    = "project_definition"
               required = concat(keys(local.imports_definition_properties), ["service_account_name"])
               properties = merge(local.imports_definition_properties, {
-                service_account_name = { type = "string", title = "Backplane Service Account Name" }
+                service_account_name = { type = "string", title = "service_account_name" }
               })
             }
-            service_account_definition            = local.imports_definition_schema
-            service_account_federation_definition = local.imports_definition_schema
+            service_account_definition            = merge(local.imports_definition_schema, { title = "service_account_definition" })
+            service_account_federation_definition = merge(local.imports_definition_schema, { title = "service_account_federation_definition" })
           }
         })
       }
 
-      playground_mode = {
-        display_name    = "Playground Mode"
-        description     = "Throwaway deployment: the identifier gets a random suffix and nothing is protected against deletion. Do not publish such a platform or its definitions to other workspaces. Set false for real use."
-        type            = "BOOLEAN"
+      workspace = {
+        display_name    = "Workspace Identifier"
+        description     = "Workspace that will own the created platform, location and landing zones."
+        type            = "STRING"
+        assignment_type = "WORKSPACE_IDENTIFIER"
+        display_order   = 900
+      }
+
+      hub = {
+        display_name    = "Hub"
+        description     = "HCL object with `git_ref` (meshstack-hub reference used to source the nested STACKIT integration modules) and `bbd_draft` (draft state of the definitions this landing zone registers)."
+        type            = "CODE"
         assignment_type = "STATIC"
-        argument        = jsonencode(var.playground_mode)
-        display_order   = 140
+        argument        = jsonencode(jsonencode(var.hub))
+        display_order   = 1000
       }
     }
 

@@ -1,7 +1,18 @@
-variable "workspace" {
+variable "platform_identifier" {
   type        = string
   nullable    = false
-  description = "Identifier of the meshStack workspace that will own the created platform, location, landing zones, and (when networking is enabled) the hub network-area instance."
+  description = "Identifier for the STACKIT sandbox platform created in meshStack (letters, digits and dashes only)."
+
+  validation {
+    condition     = can(regex("^[a-zA-Z0-9-]+$", var.platform_identifier))
+    error_message = "platform_identifier must only contain letters, digits, and dashes."
+  }
+}
+
+variable "playground_mode" {
+  type        = bool
+  nullable    = false
+  description = "Deploy a throwaway platform: the platform identifier gets a random suffix so it does not occupy a name for good, and the landing-zone folder and foundation project are left destroyable. Set to false for a platform that is actually used. Cannot change after the first run. A playground platform and the building block definitions it registers are not meant to be published to other workspaces."
 }
 
 variable "use_global_location" {
@@ -21,20 +32,6 @@ variable "stackit_org" {
   }
 }
 
-variable "stackit_owner_email" {
-  type        = string
-  nullable    = false
-  description = "Owner email assigned to the STACKIT resourcemanager folder, the foundation project, and every tenant project the platform creates."
-}
-
-variable "stackit_service_account_key" {
-  type        = string
-  sensitive   = true
-  ephemeral   = true
-  nullable    = false
-  description = "STACKIT service account key JSON with `resource-manager.admin` on the organization. Used to create the landing-zone folder and foundation project."
-}
-
 variable "root_folder_name" {
   type        = string
   default     = null
@@ -46,44 +43,18 @@ variable "root_folder_name" {
   }
 }
 
-variable "platform_identifier" {
+variable "stackit_service_account_key" {
+  type        = string
+  sensitive   = true
+  ephemeral   = true
+  nullable    = false
+  description = "Key JSON of the deployment service account, which needs `resource-manager.admin` on the organization. Used to create the landing-zone folder and foundation project."
+}
+
+variable "stackit_owner_email" {
   type        = string
   nullable    = false
-  description = "Identifier for the STACKIT sandbox platform created in meshStack (letters, digits and dashes only)."
-
-  validation {
-    condition     = can(regex("^[a-zA-Z0-9-]+$", var.platform_identifier))
-    error_message = "platform_identifier must only contain letters, digits, and dashes."
-  }
-}
-
-variable "tags" {
-  type = object({
-    landingzone           = list(object({ key = string, values = list(string) }))
-    building_block        = list(object({ key = string, values = list(string) }))
-    project               = list(object({ key = string, values = list(string) }))
-    project_owner_tag_key = string
-  })
-  nullable    = false
-  description = <<-EOT
-  Tags forwarded to the nested STACKIT integrations, each map built in the meshPanel form as a list of {key, values} entries.
-  `landingzone` tags are applied to the created landing zones.
-  `building_block` tags are applied to the nested building block definitions.
-  `project` tags are applied to the meshProjects the starterkit creates.
-  `project_owner_tag_key` names the tag that receives the creator's display name.
-  EOT
-}
-
-variable "role_mapping" {
-  type        = map(list(string))
-  nullable    = false
-  description = "Default mapping from meshStack roles to STACKIT project roles for the nested STACKIT Project integration. Values can be built-in STACKIT roles or custom STACKIT role names."
-}
-
-variable "stackit_organization_onboarding_enabled" {
-  type        = bool
-  nullable    = false
-  description = "Whether the nested STACKIT Project integration adds meshStack project users to the STACKIT organization before applying project-level role assignments. Disable if organization membership is managed outside this landing zone."
+  description = "Owner email assigned to the STACKIT resourcemanager folder, the foundation project, and every tenant project the platform creates. Must be the deployment service account's own email unless the deployment service account is an organization owner."
 }
 
 variable "topology" {
@@ -110,7 +81,38 @@ variable "network" {
     tenant_network_max_prefix_length = optional(number, 28)
   })
   default     = null
-  description = "Hub-and-spoke address plan, read only when `topology` includes `hub&spoke`. The input is hidden, and so not sent, otherwise."
+  description = "Hub-and-spoke address plan, read only when `topology` includes `hub&spoke`. Otherwise the input is hidden and meshStack sends no value."
+}
+
+variable "role_mapping" {
+  type = object({
+    admin                   = list(string)
+    user                    = list(string)
+    reader                  = list(string)
+    organization_onboarding = optional(bool, true)
+  })
+  nullable    = false
+  description = <<-EOT
+  Default mapping from meshStack roles to STACKIT project roles for the nested STACKIT Project integration. Values can be built-in STACKIT roles or custom STACKIT role names.
+  `organization_onboarding` adds meshStack project users to the STACKIT organization before the project roles are granted. Turn it off if organization membership is managed outside this landing zone.
+  EOT
+}
+
+variable "tags" {
+  type = object({
+    landingzone           = list(object({ key = string, values = list(string) }))
+    building_block        = list(object({ key = string, values = list(string) }))
+    project               = list(object({ key = string, values = list(string) }))
+    project_owner_tag_key = optional(string)
+  })
+  nullable    = false
+  description = <<-EOT
+  Tags forwarded to the nested STACKIT integrations, each map built in the meshPanel form as a list of {key, values} entries.
+  `landingzone` tags are applied to the created landing zones.
+  `building_block` tags are applied to the nested building block definitions.
+  `project` tags are applied to the meshProjects the starterkit creates.
+  `project_owner_tag_key` names the tag that receives the creator's display name; null or empty sets none.
+  EOT
 }
 
 variable "starterkit_approval_policies" {
@@ -121,28 +123,13 @@ variable "starterkit_approval_policies" {
     manual_triggers         = bool
     version_upgrade         = bool
   })
-  nullable    = false
-  description = "Run triggers that need an operator's approval before a run of the project starterkit is applied. The defaults are the provider's own, and the provider asserts them whenever the definition sets no policies — so a gate switched on in meshPanel is turned off again by the next run unless it is set here."
-}
+  default     = null
+  description = "Run triggers that need an operator's approval before a run of the project starterkit is applied. The defaults are the provider's own, and the provider asserts them whenever the definition sets no policies — so a gate switched on in meshPanel is turned off again by the next run unless it is set here. Ignored in playground mode, which gates nothing."
 
-variable "playground_mode" {
-  type        = bool
-  nullable    = false
-  description = "Deploy a throwaway platform: the platform identifier gets a random suffix so it does not occupy a name for good, and the landing-zone folder and foundation project are left destroyable. Set to false for a platform that is actually used. A playground platform and the building block definitions it registers are not meant to be published to other workspaces."
-}
-
-variable "hub" {
-  type = object({
-    git_ref   = optional(string, "main")
-    bbd_draft = optional(bool, true)
-  })
-  const   = true
-  default = { git_ref = "main", bbd_draft = true }
-
-  description = <<-EOT
-  `git_ref`: meshstack-hub reference used to source the nested foundation, network-area, and network integration modules. `const` so it can be interpolated into the module source at init time.
-  `bbd_draft`: Forwarded as-is to those nested integrations' own `hub.bbd_draft`, so their building block definition draft state tracks this building block's own release state.
-  EOT
+  validation {
+    condition     = var.playground_mode || var.starterkit_approval_policies != null
+    error_message = "starterkit_approval_policies is required unless playground_mode is set."
+  }
 }
 
 variable "imports" {
@@ -153,7 +140,7 @@ variable "imports" {
     foundation_project = optional(object({
       container_id = string
     }))
-    platform = optional(object({}))
+    adopt_platform = optional(bool, false)
     project_definition = optional(object({
       uuid                            = string
       service_account_name            = string
@@ -180,7 +167,27 @@ variable "imports" {
   }
 
   validation {
-    condition     = var.imports == null ? true : alltrue([for key, adopted in var.imports : adopted == null || key == "folder" || key == "platform" || var.imports.foundation_project != null])
+    condition     = var.imports == null ? true : alltrue([for key, adopted in var.imports : adopted == null || contains(["folder", "adopt_platform"], key) || var.imports.foundation_project != null])
     error_message = "imports.project_definition, service_account_definition and service_account_federation_definition need imports.foundation_project, because their service accounts live in it."
   }
+}
+
+variable "workspace" {
+  type        = string
+  nullable    = false
+  description = "Identifier of the meshStack workspace that will own the created platform, location, landing zones, and (when networking is enabled) the hub network-area instance."
+}
+
+variable "hub" {
+  type = object({
+    git_ref   = optional(string, "main")
+    bbd_draft = optional(bool, true)
+  })
+  const   = true
+  default = { git_ref = "main", bbd_draft = true }
+
+  description = <<-EOT
+  `git_ref`: meshstack-hub reference used to source the nested foundation, network-area, and network integration modules. `const` so it can be interpolated into the module source at init time.
+  `bbd_draft`: Draft state of the definitions this landing zone registers; the landing zone's own definition is always a draft.
+  EOT
 }

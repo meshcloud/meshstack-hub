@@ -3,6 +3,15 @@ locals {
   # name, so a playground deployment suffixes it instead of occupying the plain name.
   platform_identifier = var.playground_mode ? "${var.platform_identifier}-${random_string.playground_suffix.result}" : var.platform_identifier
 
+  # The order form hides the policies in playground mode, which gates nothing.
+  starterkit_approval_policies = var.playground_mode ? {
+    building_block_creation = false
+    user_input_changes      = false
+    any_input_changes       = false
+    manual_triggers         = false
+    version_upgrade         = false
+  } : var.starterkit_approval_policies
+
   # STACKIT caps a service account name at 20 characters and rejects one ending in a dash, so cutting
   # the identifier to length can produce an invalid name. Cut shorter instead, drop whatever dashes
   # the cut exposed, and end with a hash of the full identifier so two names sharing a prefix stay
@@ -35,6 +44,20 @@ locals {
     building_block        = { for e in var.tags.building_block : e.key => e.values }
     project               = { for e in var.tags.project : e.key => e.values }
     project_owner_tag_key = var.tags.project_owner_tag_key
+  }
+}
+
+# Flipping the flag on an existing platform would suffix or rename everything and change what may be destroyed.
+resource "terraform_data" "playground_mode" {
+  input = var.playground_mode
+
+  lifecycle {
+    ignore_changes = [input]
+
+    postcondition {
+      condition     = self.output == var.playground_mode
+      error_message = "playground_mode cannot change after the order."
+    }
   }
 }
 
@@ -114,8 +137,8 @@ module "stackit_integration" {
   stackit_parent_container_id             = stackit_resourcemanager_folder.this.container_id
   stackit_project_id                      = stackit_resourcemanager_project.foundation.project_id
   stackit_service_account_name            = local.imports.project_definition == null ? local.service_account_name : local.imports.project_definition.service_account_name
-  role_mapping                            = var.role_mapping
-  stackit_organization_onboarding_enabled = var.stackit_organization_onboarding_enabled
+  role_mapping                            = { admin = var.role_mapping.admin, user = var.role_mapping.user, reader = var.role_mapping.reader }
+  stackit_organization_onboarding_enabled = var.role_mapping.organization_onboarding
 
   # The networked project definition places its projects in the hub network area via a static
   # `networkArea` label, so no landing zone tag (and no tag definition) is involved.
@@ -144,7 +167,7 @@ module "stackit_project_starterkit" {
   )
 
   default_landing_zone = contains(var.topology, "sandbox") ? "sandbox" : "hub&spoke"
-  approval_policies    = var.starterkit_approval_policies
+  approval_policies    = local.starterkit_approval_policies
 
   # `hub&spoke` is the only landing zone attached to a network area, so it is the only one where the
   # starterkit creates a spoke network. Null — networking disabled — drops the `Network` input from the
