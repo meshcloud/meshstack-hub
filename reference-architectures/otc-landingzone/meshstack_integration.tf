@@ -406,8 +406,6 @@ resource "meshstack_building_block_definition" "this" {
         display_order          = 75
       }
 
-      # Keep this description under roughly 200 characters. meshStack answers a longer one with
-      # `500 InternalError` on the version update, not a 400.
       tags = {
         display_name           = "Tags"
         description            = "Tags forwarded to the nested integrations and the management meshProject. Build them in the form: add {key, values} entries, plus the project owner tag key."

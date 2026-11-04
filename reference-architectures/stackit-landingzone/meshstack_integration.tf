@@ -398,7 +398,6 @@ resource "meshstack_building_block_definition" "this" {
         })
       }
 
-      # meshStack fails the version update with a 500 when this description exceeds about 200 characters.
       tags = {
         display_name           = "Tags"
         description            = "Tags forwarded to the nested integrations. Build them in the form: add {key, values} entries for landing zones, building blocks, and the created meshProjects, plus the project owner tag key."
