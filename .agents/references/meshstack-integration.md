@@ -158,6 +158,16 @@ meshStack passes each input to the Terraform variable of the same name.
   `default_value`. meshStack then sends no value and the variable's default applies, so the default
   lives in one place. A BOOLEAN input cannot be optional and keeps its `default_value`.
 
+<!-- scorecard-checks: bbd_input_order, bbd_optional_input_default -->
+## Input Order and Optional Inputs
+
+- Declare the inputs by ascending `display_order`, and the `buildingblock/` variables they feed in
+  the same order, so the code reads like the order form.
+- meshStack sends nothing for an optional input left empty, so its variable has a default, usually
+  `default = null`, and the code checks only for null. Handling `""` as unset hides that contract.
+  The check finds `coalesce(var.x, "")`, `var.x == ""`, `var.x != ""` and `compact([var.x])`, and
+  misses the same handling through a local.
+
 <!-- scorecard-checks: wif_no_replicator -->
 ## Runner identity
 

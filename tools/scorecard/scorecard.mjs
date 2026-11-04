@@ -1598,6 +1598,56 @@ const detectors = [
       return listOffenders(offenders, "drop default_value and set is_optional = true, so the variable's default stays the only one");
     },
   },
+  {
+    id: "bbd_input_order",
+    category: "shared",
+    name: "BBD inputs and their variables are declared in display order",
+    emoji: "🔢",
+    targets: ["module", "refArch"],
+    needsCode: true,
+    fn: (target) => {
+      const offenders = [];
+      let checked = 0;
+      for (const { where, bbd, inputs, variables } of bbdsWithImplementation(target)) {
+        const orders = new Map(inputs.map(([key, entry]) => [key, displayOrder(entry)]).filter(([, n]) => !Number.isNaN(n)));
+        if (orders.size === 0) continue;
+        checked++;
+        if (!isAscending([...orders.values()])) offenders.push(`${where}: ${bbd} inputs`);
+        if (!isAscending([...variables.keys()].filter((key) => orders.has(key)).map((key) => orders.get(key)))) {
+          offenders.push(`${where}: ${bbd} buildingblock variables`);
+        }
+      }
+      if (checked === 0) return { pass: null, detail: "no definition inputs with a display_order" };
+      return listOffenders(offenders, "declare the inputs by ascending display_order and the variables they feed in the same order");
+    },
+  },
+  {
+    id: "bbd_optional_input_default",
+    category: "shared",
+    name: "Optional BBD inputs fall back to the variable's default, without empty-string handling",
+    emoji: "🕳️",
+    targets: ["module", "refArch"],
+    needsCode: true,
+    fn: (target) => {
+      const offenders = [];
+      let checked = 0;
+      for (const { where, bbd, inputs, variables, code } of bbdsWithImplementation(target)) {
+        for (const [key, entry] of inputs) {
+          const variable = variables.get(key);
+          if (!variable || !/^\s*is_optional\s*=\s*true\b/m.test(entry)) continue;
+          checked++;
+          if (!/^\s*default\s*=/m.test(variable)) offenders.push(`${where}: ${bbd} input "${key}" (variable has no default)`);
+          else if (/^\s*default\s*=\s*null\s*$/m.test(variable) && /^\s*nullable\s*=\s*false\b/m.test(variable)) {
+            offenders.push(`${where}: ${bbd} input "${key}" (nullable = false)`);
+          }
+          const emptyString = new RegExp(String.raw`coalesce\(\s*var\.${key}\s*,\s*""|var\.${key}\s*[!=]=\s*""|compact\(\s*\[\s*var\.${key}\b`);
+          if (emptyString.test(code)) offenders.push(`${where}: ${bbd} input "${key}" (handles "" as unset)`);
+        }
+      }
+      if (checked === 0) return { pass: null, detail: "no optional definition inputs backed by a variable" };
+      return listOffenders(offenders, "meshStack sends nothing for an empty optional input, so the variable's default applies; give it default = null and check only for null");
+    },
+  },
 
   // ─── Reference Architecture ─────────────────────────────────────────────
   {
@@ -2297,6 +2347,14 @@ function bbdEntries(bbdBlock, attribute) {
 // meshStack passes each input to the Terraform variable of the same name in the definition's
 // repository_path, which every definition in this repo sets as a literal.
 function bbdInputsWithVariables(target) {
+  return bbdsWithImplementation(target).flatMap(({ where, bbd, inputs, variables }) =>
+    inputs.filter(([key]) => variables.has(key)).map(([key, entry]) => ({ where, bbd, key, entry, variable: variables.get(key) }))
+  );
+}
+
+// Every definition whose repository_path is in this repo, with its inputs in source order and the
+// code of its implementation directory.
+function bbdsWithImplementation(target) {
   const found = [];
   for (const { file, content } of readCodeFiles(target)) {
     for (const [bbd, body] of extractResourceBlocks(content, "meshstack_building_block_definition")) {
@@ -2304,20 +2362,18 @@ function bbdInputsWithVariables(target) {
       if (!path) continue;
       const implementation = join(ROOT, path);
       if (!existsSync(implementation)) continue;
-      const variables = extractVariableBlocks(
-        readdirSync(implementation)
-          .filter((f) => f.endsWith(".tf"))
-          .map((f) => readFileSync(join(implementation, f), "utf-8"))
-          .join("\n")
-      );
-      for (const [key, entry] of bbdEntries(body, "inputs")) {
-        const variable = variables.get(key);
-        if (variable) found.push({ where: relative(target.path, file), bbd, key, entry, variable });
-      }
+      const code = readdirSync(implementation)
+        .filter((f) => f.endsWith(".tf"))
+        .map((f) => readFileSync(join(implementation, f), "utf-8"))
+        .join("\n");
+      found.push({ where: relative(target.path, file), bbd, inputs: bbdEntries(body, "inputs"), variables: extractVariableBlocks(code), code });
     }
   }
   return found;
 }
+
+const displayOrder = (entry) => Number(entry.match(/^\s*display_order\s*=\s*(\d+)/m)?.[1] ?? NaN);
+const isAscending = (numbers) => numbers.every((n, i) => i === 0 || numbers[i - 1] <= n);
 
 const isPlainLiteral = (text) => /^("([^"\\$]|\\.)*"|-?\d+(\.\d+)?|true|false|\[\s*\]|\{\s*\})$/.test(text.trim());
 const normalizeLiteral = (text) => text.replace(/\s+/g, "");
