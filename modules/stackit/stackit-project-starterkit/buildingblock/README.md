@@ -102,12 +102,12 @@ mandatory block's output. By the time the network block is ordered, the project 
 | <a name="input_add_random_name_suffix"></a> [add\_random\_name\_suffix](#input\_add\_random\_name\_suffix) | n/a | `bool` | n/a | yes |
 | <a name="input_creator"></a> [creator](#input\_creator) | n/a | <pre>object({<br/>    type        = string<br/>    identifier  = string<br/>    displayName = string<br/>    username    = optional(string)<br/>    email       = optional(string)<br/>    euid        = optional(string)<br/>  })</pre> | n/a | yes |
 | <a name="input_landing_zone"></a> [landing\_zone](#input\_landing\_zone) | n/a | `string` | n/a | yes |
-| <a name="input_landing_zone_refs"></a> [landing\_zone\_refs](#input\_landing\_zone\_refs) | n/a | <pre>map(object({<br/>    name = string<br/>    kind = string<br/>  }))</pre> | n/a | yes |
+| <a name="input_landing_zone_refs"></a> [landing\_zone\_refs](#input\_landing\_zone\_refs) | n/a | <pre>map(object({<br/>    name = string<br/>  }))</pre> | n/a | yes |
 | <a name="input_meshstack_building_block_id"></a> [meshstack\_building\_block\_id](#input\_meshstack\_building\_block\_id) | Written by the runner, not by the definition's inputs: it is the uuid of the building block this run belongs to. `terraform_data.self_purge` uses it to delete that block once the starterkit is done. | `string` | n/a | yes |
 | <a name="input_name"></a> [name](#input\_name) | n/a | `string` | n/a | yes |
 | <a name="input_network"></a> [network](#input\_network) | The only variable here that keeps a default. The definition hides this input unless the selected landing zone gets a spoke network, and a hidden input is not sent. | <pre>object({<br/>    prefix_length    = number<br/>    ipv4_nameservers = list(string)<br/>  })</pre> | `null` | no |
 | <a name="input_network_static"></a> [network\_static](#input\_network\_static) | n/a | <pre>object({<br/>    matching_landing_zones = set(string)<br/>    bbd_version_ref        = object({ uuid = string })<br/>  })</pre> | n/a | yes |
-| <a name="input_platform_ref"></a> [platform\_ref](#input\_platform\_ref) | n/a | <pre>object({<br/>    uuid = string<br/>    kind = string<br/>  })</pre> | n/a | yes |
+| <a name="input_platform_ref"></a> [platform\_ref](#input\_platform\_ref) | n/a | <pre>object({<br/>    uuid = string<br/>  })</pre> | n/a | yes |
 | <a name="input_tags"></a> [tags](#input\_tags) | n/a | <pre>object({<br/>    project               = map(list(string))<br/>    project_owner_tag_key = string<br/>  })</pre> | n/a | yes |
 | <a name="input_workspace_identifier"></a> [workspace\_identifier](#input\_workspace\_identifier) | n/a | `string` | n/a | yes |
 

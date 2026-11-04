@@ -1,7 +1,6 @@
 variable "platform_ref" {
   type = object({
     uuid = string
-    kind = string
   })
   nullable    = false
   description = "Reference (by uuid) to the meshPlatform tenants are created on — e.g. the `platform_ref` output of `modules/stackit`. Required since the meshTenant v4 API references platforms by ref."
@@ -10,7 +9,6 @@ variable "platform_ref" {
 variable "landing_zone_refs" {
   type = map(object({
     name = string
-    kind = string
   }))
   nullable    = false
   description = "Landing zones the application team can choose from, keyed by the label shown in the select — e.g. the `landingzone_refs` output of `modules/stackit`, relabelled. The definition builds its select from these keys and passes the whole map to the building block, which resolves the selected label against it."

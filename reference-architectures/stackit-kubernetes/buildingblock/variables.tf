@@ -1,7 +1,7 @@
 variable "landingzone" {
   type = object({
-    platform_ref                               = object({ uuid = string, kind = string })
-    landingzone_refs                           = map(object({ name = string, kind = string }))
+    platform_ref                               = object({ uuid = string })
+    landingzone_refs                           = map(object({ name = string }))
     service_account_bbd_version_ref            = object({ uuid = string })
     service_account_federation_bbd_version_ref = object({ uuid = string })
   })

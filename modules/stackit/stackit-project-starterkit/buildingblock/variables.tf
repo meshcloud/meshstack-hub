@@ -34,7 +34,6 @@ variable "workspace_identifier" {
 variable "platform_ref" {
   type = object({
     uuid = string
-    kind = string
   })
   nullable = false
 }
@@ -42,7 +41,6 @@ variable "platform_ref" {
 variable "landing_zone_refs" {
   type = map(object({
     name = string
-    kind = string
   }))
   nullable = false
 }

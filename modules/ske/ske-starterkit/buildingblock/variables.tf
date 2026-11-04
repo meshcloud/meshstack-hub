@@ -22,13 +22,12 @@ variable "workspace_identifier" {
 variable "platform_ref" {
   type = object({
     uuid = string
-    kind = optional(string, "meshPlatform")
   })
   description = "Reference (by uuid) to the meshPlatform the tenants are created on. Wired in as a static building block input from the platform/backplane that owns the meshPlatform (its `.ref` output). Required because the meshTenant v4 API references platforms by ref."
 }
 
 variable "landing_zone_refs" {
-  type        = map(object({ name = string, kind = optional(string, "meshLandingZone") }))
+  type        = map(object({ name = string }))
   description = "Landing zone references keyed by stage. The keys decide which stages this starter kit creates. Wired in as a static building block input from the platform/backplane that owns the meshLandingZones (their `.ref` outputs)."
 }
 

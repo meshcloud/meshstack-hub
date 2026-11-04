@@ -1,6 +1,6 @@
 variable "automation_identity" {
   type = object({
-    building_block_ref    = object({ kind = string, uuid = string })
+    building_block_ref    = object({ uuid = string })
     service_account_email = string
     service_account_id    = string
   })

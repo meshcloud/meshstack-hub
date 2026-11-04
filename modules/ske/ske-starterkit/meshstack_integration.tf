@@ -1,13 +1,12 @@
 variable "platform_ref" {
   type = object({
     uuid = string
-    kind = string
   })
   description = "The `.ref` of the meshPlatform the tenants are created on."
 }
 
 variable "landing_zone_refs" {
-  type        = map(object({ name = string, kind = string }))
+  type        = map(object({ name = string }))
   description = "Landing zone references keyed by stage. The keys decide which stages the starter kit creates, and the definition declares one app link output per key."
 }
 

@@ -50,10 +50,10 @@ value from this landing zone. Paste this block into its **STACKIT Landing Zone**
 %{ endif ~}
 ```hcl
 {
-  platform_ref = { uuid = "${platform_ref.uuid}", kind = "${platform_ref.kind}" }
+  platform_ref = { uuid = "${platform_ref.uuid}" }
   landingzone_refs = {
 %{ for key, ref in landingzone_refs ~}
-    ${key} = { name = "${ref.name}", kind = "${ref.kind}" }
+    ${key} = { name = "${ref.name}" }
 %{ endfor ~}
   }
   service_account_bbd_version_ref            = { uuid = "${service_account_bbd_version_uuid}" }

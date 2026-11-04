@@ -124,9 +124,9 @@ resource "meshstack_building_block" "this" {
     # service account.
     inputs = {
       landingzone = { value = jsonencode(jsonencode({
-        platform_ref = { uuid = local.stackit.platform_uuid, kind = "meshPlatform" }
+        platform_ref = { uuid = local.stackit.platform_uuid }
         landingzone_refs = {
-          default = { name = local.stackit.landing_zone_name, kind = "meshLandingZone" }
+          default = { name = local.stackit.landing_zone_name }
         }
         service_account_bbd_version_ref            = { uuid = module.service_account.building_block_definition.version_ref.uuid }
         service_account_federation_bbd_version_ref = { uuid = module.service_account_federation.building_block_definition.version_ref.uuid }
