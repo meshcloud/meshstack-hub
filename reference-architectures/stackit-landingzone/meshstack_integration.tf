@@ -530,10 +530,9 @@ resource "meshstack_building_block_definition" "this" {
             foundation_project = {
               type     = "object"
               title    = "Foundation Project"
-              required = ["container_id", "name"]
+              required = ["container_id"]
               properties = {
                 container_id = { type = "string", title = "Container ID" }
-                name         = { type = "string", title = "Name" }
               }
             }
             platform = { type = "object", title = "Location, Platform and Landing Zones", properties = {} }

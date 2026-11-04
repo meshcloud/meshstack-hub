@@ -151,7 +151,6 @@ variable "imports" {
     }))
     foundation_project = optional(object({
       container_id = string
-      name         = string
     }))
     platform = optional(object({}))
     project_definition = optional(object({
