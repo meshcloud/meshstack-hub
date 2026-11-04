@@ -58,6 +58,7 @@ func render(filename string, w io.Writer) error {
 	if err != nil {
 		return err
 	}
+	sortBlocksForReading(file.Body())
 	existingProviders := findExistingProviders(file, filename)
 
 	log.Printf("Found existing providers: %v\n", existingProviderKeys(existingProviders))
@@ -79,6 +80,72 @@ func render(filename string, w io.Writer) error {
 
 	_, err = file.WriteTo(w)
 	return err
+}
+
+// The source file keeps variables on top, but a reader of the website snippet wants to see the
+// building block definition first and the variables feeding it last.
+func sortBlocksForReading(body *hclwrite.Body) {
+	blocks := body.Blocks()
+	if !onlyBlocksWithTheirComments(body, blocks) {
+		log.Println("Keep source block order, the file has content outside of blocks")
+		return
+	}
+	slices.SortStableFunc(blocks, func(a, b *hclwrite.Block) int {
+		return readingRank(a) - readingRank(b)
+	})
+
+	for _, block := range blocks {
+		body.RemoveBlock(block)
+	}
+	body.Clear()
+	for i, block := range blocks {
+		if i > 0 {
+			body.AppendNewline()
+		}
+		body.AppendBlock(block)
+	}
+}
+
+// Reordering moves whole blocks, including the comment lines directly above each one. Anything
+// else, like a comment separated from the next block by a blank line, would get lost.
+func onlyBlocksWithTheirComments(body *hclwrite.Body, blocks []*hclwrite.Block) bool {
+	commentsInBlocks := 0
+	for _, block := range blocks {
+		commentsInBlocks += countComments(block.BuildTokens(nil))
+	}
+	return len(body.Attributes()) == 0 && commentsInBlocks == countComments(body.BuildTokens(nil))
+}
+
+func countComments(tokens hclwrite.Tokens) int {
+	count := 0
+	for _, token := range tokens {
+		if token.Type == hclsyntax.TokenComment {
+			count++
+		}
+	}
+	return count
+}
+
+func readingRank(block *hclwrite.Block) int {
+	switch block.Type() {
+	case "resource":
+		if block.Labels()[0] == "meshstack_building_block_definition" {
+			return 0
+		}
+		return 1
+	case "locals":
+		return 2
+	case "variable":
+		return 3
+	case "output":
+		return 4
+	case "terraform":
+		return 5
+	case "provider":
+		return 6
+	default: // module, data, and anything else that builds the integration
+		return 1
+	}
 }
 
 func findRequiredProviders(file *hclwrite.File, filename string) ([]providerConfig, error) {

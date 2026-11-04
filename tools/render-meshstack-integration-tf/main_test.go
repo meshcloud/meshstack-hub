@@ -105,3 +105,41 @@ func renderFromString(t *testing.T, input string) string {
 	}
 	return output.String()
 }
+
+func TestRenderShowsDefinitionFirstAndVariablesLast(t *testing.T) {
+	output := renderFromFixture(t, "reading_order.tf")
+
+	assertInOrder(t, output,
+		`resource "meshstack_building_block_definition" "this"`,
+		"# The backplane needs the definition's identity federation.\nmodule \"backplane\"",
+		`variable "hub"`,
+		`output "building_block_definition"`,
+		"terraform {",
+		`provider "meshstack"`,
+	)
+}
+
+func TestRenderKeepsSourceOrderWhenACommentIsDetached(t *testing.T) {
+	input := `variable "hub" {}
+
+# A note that belongs to no block.
+
+resource "meshstack_building_block_definition" "this" {}
+`
+	output := renderFromString(t, input)
+
+	assertInOrder(t, output, `variable "hub"`, "# A note that belongs to no block.", `resource "meshstack_building_block_definition"`)
+}
+
+func assertInOrder(t *testing.T, output string, parts ...string) {
+	t.Helper()
+
+	previous := -1
+	for _, part := range parts {
+		index := strings.Index(output, part)
+		if index <= previous {
+			t.Fatalf("expected %q after the previous part\n%s", part, output)
+		}
+		previous = index
+	}
+}
