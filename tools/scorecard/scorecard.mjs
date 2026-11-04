@@ -1525,6 +1525,35 @@ const detectors = [
     },
   },
   {
+    id: "sensitive_inputs_ephemeral",
+    category: "shared",
+    name: "Sensitive building block variables are ephemeral",
+    emoji: "🫥",
+    targets: ["module", "refArch"],
+    needsCode: true,
+    fn: (target) => {
+      const byDir = Map.groupBy(
+        readCodeFiles(target).filter(({ file }) => basename(dirname(file)) === "buildingblock"),
+        ({ file }) => dirname(file)
+      );
+      const offenders = [];
+      let sensitive = 0;
+      for (const [dir, files] of byDir) {
+        for (const { file, content } of files) {
+          for (const [name, body] of extractVariableBlocks(content)) {
+            if (!/^\s*sensitive\s*=\s*true\b/m.test(body)) continue;
+            sensitive++;
+            if (/^\s*ephemeral\s*=\s*true\b/m.test(body)) continue;
+            const verdict = ephemeralOnlyUses(files, name) ? "only in providers or *_wo, can be ephemeral" : "needs a rework first";
+            offenders.push(`${relative(target.path, file)}: variable "${name}" (${verdict})`);
+          }
+        }
+      }
+      if (sensitive === 0) return { pass: null, detail: "no sensitive building block variables" };
+      return listOffenders(offenders, "the runner uploads the plan file to meshStack, which keeps a sensitive value in plain text, so set ephemeral = true");
+    },
+  },
+  {
     id: "bbd_structured_inputs",
     category: "shared",
     name: "User-facing BBD inputs backed by an object or map variable are JSON with a json_schema",
@@ -2210,6 +2239,21 @@ function readCodeFiles(target) {
   return collectTfFilesRecursive(target.path)
     .filter((file) => !file.startsWith(e2e))
     .map((file) => ({ file, content: blankHeredocBodies(readFileSync(file, "utf-8")) }));
+}
+
+// True when every `var.<name>` sits in a provider or ephemeral block or feeds a write-only
+// argument, the places OpenTofu accepts an ephemeral value without more changes.
+function ephemeralOnlyUses(files, name) {
+  const reference = new RegExp(String.raw`\bvar\.${name}\b`);
+  return files.every(({ content }) => {
+    let rest = content;
+    for (const m of content.matchAll(/^(provider|ephemeral)\s+"[^"]+"(\s+"[^"]+")?\s*\{/gm)) {
+      const open = content.indexOf("{", m.index);
+      const close = findMatchingBrace(content, open);
+      if (close > open) rest = rest.slice(0, open) + " ".repeat(close - open) + rest.slice(close);
+    }
+    return rest.split("\n").every((line) => !reference.test(line) || /^\s*\w+_wo\s*=/.test(line));
+  });
 }
 
 function listOffenders(offenders, advice) {
