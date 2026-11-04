@@ -7,8 +7,8 @@ import { BreadcrumbComponent } from 'app/shared/breadcrumb';
 import { BreadCrumbService } from 'app/shared/breadcrumb/bread-crumb.service';
 import { BreadcrumbItem } from 'app/shared/breadcrumb/breadcrumb';
 import { CardComponent } from 'app/shared/card';
-import { HighlightDirective } from 'app/shared/directives';
 import { Platform, PlatformService } from 'app/shared/platform';
+import { TerraformSnippetComponent } from 'app/shared/terraform-snippet';
 import { extractLogoColor } from 'app/shared/util/logo-color.util';
 import { buildHubModuleCodeSnippet } from 'app/shared/util/module-source.util';
 import { SeoService } from 'app/core';
@@ -21,7 +21,7 @@ interface PlatformIntegrationVm extends Platform {
 
 @Component({
   selector: 'mst-platform-integration',
-  imports: [CommonModule, CardComponent, BreadcrumbComponent, RouterLink, HighlightDirective],
+  imports: [CommonModule, CardComponent, BreadcrumbComponent, RouterLink, TerraformSnippetComponent],
   templateUrl: './platform-integration.component.html',
   styleUrl: './platform-integration.component.scss',
   standalone: true
