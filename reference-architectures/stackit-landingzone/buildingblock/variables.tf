@@ -30,6 +30,7 @@ variable "stackit_owner_email" {
 variable "stackit_service_account_key" {
   type        = string
   sensitive   = true
+  ephemeral   = true
   nullable    = false
   description = "STACKIT service account key JSON with `resource-manager.admin` on the organization. Used to create the landing-zone folder and foundation project."
 }
