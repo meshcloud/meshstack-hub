@@ -296,23 +296,23 @@ resource "meshstack_building_block_definition" "this" {
     }
 
     inputs = {
-      stackit_service_account_key = {
-        display_name           = "STACKIT Service Account Key"
-        description            = "Full key JSON of the deployment service account, reused on every run. Needs `resource-manager.admin` on the organization, or organization owner to allow a different `stackit_owner_email`."
-        type                   = "CODE"
-        assignment_type        = "USER_INPUT"
-        updateable_by_consumer = true
-        sensitive              = {}
-        display_order          = 40
+      platform_identifier = {
+        display_name                   = "Platform Identifier"
+        description                    = "Identifier for the STACKIT sandbox platform created in meshStack (letters, digits and dashes only)."
+        type                           = "STRING"
+        assignment_type                = "USER_INPUT"
+        value_validation_regex         = "^[a-zA-Z0-9-]+$"
+        validation_regex_error_message = "platform_identifier must only contain letters, digits, and dashes."
+        display_order                  = 10
       }
 
-      hub = {
-        display_name    = "Hub"
-        description     = "HCL object with `git_ref` (meshstack-hub reference used to source the nested STACKIT integration modules) and `bbd_draft` (forwarded to those nested integrations' own building block definition draft state)."
-        type            = "CODE"
-        assignment_type = "STATIC"
-        argument        = jsonencode(jsonencode(var.hub))
-        display_order   = 130
+      use_global_location = {
+        display_name    = "Use Global Location"
+        description     = "If true, use the existing global meshStack location instead of creating a dedicated location for this platform."
+        type            = "BOOLEAN"
+        assignment_type = "USER_INPUT"
+        default_value   = jsonencode(true)
+        display_order   = 20
       }
 
       stackit_org = {
@@ -325,54 +325,32 @@ resource "meshstack_building_block_definition" "this" {
         display_order                  = 30
       }
 
+      root_folder_name = {
+        display_name           = "Root Folder Name"
+        description            = "Folder at the organization root for the landing-zone folder and the foundation project, when the organization serves more than one meshStack. Empty: no root folder."
+        type                   = "STRING"
+        assignment_type        = "USER_INPUT"
+        is_optional            = true
+        updateable_by_consumer = true
+        display_order          = 35
+      }
+
+      stackit_service_account_key = {
+        display_name           = "STACKIT Service Account Key"
+        description            = "Full key JSON of the deployment service account, reused on every run. Needs `resource-manager.admin` on the organization, or organization owner to allow a different `stackit_owner_email`."
+        type                   = "CODE"
+        assignment_type        = "USER_INPUT"
+        updateable_by_consumer = true
+        sensitive              = {}
+        display_order          = 40
+      }
+
       stackit_owner_email = {
         display_name    = "STACKIT Owner Email"
         description     = "Owner of the STACKIT folder, foundation project, and every tenant project. Applied at creation only. Must be the deployment service account's own email unless the deployment service account is an organization owner."
         type            = "STRING"
         assignment_type = "USER_INPUT"
         display_order   = 50
-      }
-
-      # Keep this description under roughly 200 characters. meshStack answers a longer one with
-      # `500 InternalError` on the version update, not a 400 — the longest description any live
-      # definition here carries is 206, and 387 fails.
-      tags = {
-        display_name           = "Tags"
-        description            = "Tags forwarded to the nested integrations. Build them in the form: add {key, values} entries for landing zones, building blocks, and the created meshProjects, plus the project owner tag key."
-        type                   = "JSON"
-        assignment_type        = "USER_INPUT"
-        updateable_by_consumer = true
-        display_order          = 100
-
-        # meshStack decodes a JSON input into the buildingblock variable's declared object type (see
-        # commit 991343f0), so `var.tags` stays the typed object and needs no jsondecode.
-        json_schema = jsonencode(local.tags_json_schema)
-      }
-
-      role_mapping = {
-        display_name           = "STACKIT Project Role Mapping"
-        description            = "Maps each meshStack project role to the STACKIT project roles it grants. Values can be built-in STACKIT roles or custom STACKIT role names. organization_onboarding adds the users to the STACKIT organization first."
-        type                   = "JSON"
-        assignment_type        = "USER_INPUT"
-        updateable_by_consumer = true
-        display_order          = 80
-
-        json_schema = jsonencode({
-          "$schema" = "http://json-schema.org/draft-07/schema#"
-          type      = "object"
-          required  = ["admin", "user", "reader"]
-          properties = {
-            admin  = { type = "array", title = "admin", items = { type = "string" }, default = ["owner"] }
-            user   = { type = "array", title = "user", items = { type = "string" }, default = ["editor"] }
-            reader = { type = "array", title = "reader", items = { type = "string" }, default = ["reader"] }
-            organization_onboarding = {
-              type        = "boolean"
-              title       = "organization_onboarding"
-              default     = true
-              description = "Add meshStack project users to the STACKIT organization before the project roles are granted. Turn off if organization membership is managed outside this landing zone."
-            }
-          }
-        })
       }
 
       topology = {
@@ -413,50 +391,46 @@ resource "meshstack_building_block_definition" "this" {
         })
       }
 
-      workspace = {
-        display_name    = "Workspace Identifier"
-        description     = "Workspace that will own the created platform, location and landing zones."
-        type            = "STRING"
-        assignment_type = "WORKSPACE_IDENTIFIER"
-        display_order   = 120
-      }
-
-      platform_identifier = {
-        display_name                   = "Platform Identifier"
-        description                    = "Identifier for the STACKIT sandbox platform created in meshStack (letters, digits and dashes only)."
-        type                           = "STRING"
-        assignment_type                = "USER_INPUT"
-        value_validation_regex         = "^[a-zA-Z0-9-]+$"
-        validation_regex_error_message = "platform_identifier must only contain letters, digits, and dashes."
-        display_order                  = 10
-      }
-
-      root_folder_name = {
-        display_name           = "Root Folder Name"
-        description            = "Folder at the organization root for the landing-zone folder and the foundation project, when the organization serves more than one meshStack. Empty: no root folder."
-        type                   = "STRING"
+      role_mapping = {
+        display_name           = "STACKIT Project Role Mapping"
+        description            = "Maps each meshStack project role to the STACKIT project roles it grants. Values can be built-in STACKIT roles or custom STACKIT role names. organization_onboarding adds the users to the STACKIT organization first."
+        type                   = "JSON"
         assignment_type        = "USER_INPUT"
-        is_optional            = true
         updateable_by_consumer = true
-        display_order          = 35
+        display_order          = 80
+
+        json_schema = jsonencode({
+          "$schema" = "http://json-schema.org/draft-07/schema#"
+          type      = "object"
+          required  = ["admin", "user", "reader"]
+          properties = {
+            admin  = { type = "array", title = "admin", items = { type = "string" }, default = ["owner"] }
+            user   = { type = "array", title = "user", items = { type = "string" }, default = ["editor"] }
+            reader = { type = "array", title = "reader", items = { type = "string" }, default = ["reader"] }
+            organization_onboarding = {
+              type        = "boolean"
+              title       = "organization_onboarding"
+              default     = true
+              description = "Add meshStack project users to the STACKIT organization before the project roles are granted. Turn off if organization membership is managed outside this landing zone."
+            }
+          }
+        })
       }
 
-      use_global_location = {
-        display_name    = "Use Global Location"
-        description     = "If true, use the existing global meshStack location instead of creating a dedicated location for this platform."
-        type            = "BOOLEAN"
-        assignment_type = "USER_INPUT"
-        default_value   = jsonencode(true)
-        display_order   = 20
-      }
+      # Keep this description under roughly 200 characters. meshStack answers a longer one with
+      # `500 InternalError` on the version update, not a 400 — the longest description any live
+      # definition here carries is 206, and 387 fails.
+      tags = {
+        display_name           = "Tags"
+        description            = "Tags forwarded to the nested integrations. Build them in the form: add {key, values} entries for landing zones, building blocks, and the created meshProjects, plus the project owner tag key."
+        type                   = "JSON"
+        assignment_type        = "USER_INPUT"
+        updateable_by_consumer = true
+        display_order          = 100
 
-      starterkit_approval_policies = {
-        display_name    = "Starterkit Approval Policies"
-        description     = "HCL object of approval gates applied to the project starterkit definition this registers. Fixed by whoever deployed this definition."
-        type            = "CODE"
-        assignment_type = "STATIC"
-        argument        = jsonencode(jsonencode(var.starterkit_approval_policies))
-        display_order   = 140
+        # meshStack decodes a JSON input into the buildingblock variable's declared object type (see
+        # commit 991343f0), so `var.tags` stays the typed object and needs no jsondecode.
+        json_schema = jsonencode(local.tags_json_schema)
       }
 
       imports = {
@@ -501,6 +475,32 @@ resource "meshstack_building_block_definition" "this" {
             }
           }
         })
+      }
+
+      workspace = {
+        display_name    = "Workspace Identifier"
+        description     = "Workspace that will own the created platform, location and landing zones."
+        type            = "STRING"
+        assignment_type = "WORKSPACE_IDENTIFIER"
+        display_order   = 120
+      }
+
+      hub = {
+        display_name    = "Hub"
+        description     = "HCL object with `git_ref` (meshstack-hub reference used to source the nested STACKIT integration modules) and `bbd_draft` (forwarded to those nested integrations' own building block definition draft state)."
+        type            = "CODE"
+        assignment_type = "STATIC"
+        argument        = jsonencode(jsonencode(var.hub))
+        display_order   = 130
+      }
+
+      starterkit_approval_policies = {
+        display_name    = "Starterkit Approval Policies"
+        description     = "HCL object of approval gates applied to the project starterkit definition this registers. Fixed by whoever deployed this definition."
+        type            = "CODE"
+        assignment_type = "STATIC"
+        argument        = jsonencode(jsonencode(var.starterkit_approval_policies))
+        display_order   = 140
       }
 
       playground_mode = {
