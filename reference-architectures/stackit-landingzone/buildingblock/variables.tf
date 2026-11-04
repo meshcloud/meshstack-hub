@@ -75,15 +75,17 @@ variable "tags" {
 }
 
 variable "role_mapping" {
-  type        = map(list(string))
+  type = object({
+    admin                   = list(string)
+    user                    = list(string)
+    reader                  = list(string)
+    organization_onboarding = optional(bool, true)
+  })
   nullable    = false
-  description = "Default mapping from meshStack roles to STACKIT project roles for the nested STACKIT Project integration. Values can be built-in STACKIT roles or custom STACKIT role names."
-}
-
-variable "stackit_organization_onboarding_enabled" {
-  type        = bool
-  nullable    = false
-  description = "Whether the nested STACKIT Project integration adds meshStack project users to the STACKIT organization before applying project-level role assignments. Disable if organization membership is managed outside this landing zone."
+  description = <<-EOT
+  Default mapping from meshStack roles to STACKIT project roles for the nested STACKIT Project integration. Values can be built-in STACKIT roles or custom STACKIT role names.
+  `organization_onboarding` adds meshStack project users to the STACKIT organization before the project roles are granted. Turn it off if organization membership is managed outside this landing zone.
+  EOT
 }
 
 variable "topology" {

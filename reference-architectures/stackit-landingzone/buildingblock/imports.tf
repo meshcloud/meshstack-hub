@@ -123,7 +123,7 @@ import {
 }
 
 import {
-  for_each = { for key, adopted in local.adopted_definitions : key => adopted.service_account_email if key == "project_definition" && var.stackit_organization_onboarding_enabled }
+  for_each = { for key, adopted in local.adopted_definitions : key => adopted.service_account_email if key == "project_definition" && var.role_mapping.organization_onboarding }
   to       = module.stackit_integration.module.backplane.stackit_authorization_organization_role_assignment.member_admin
   id       = "${var.stackit_org},iam.member-admin,${each.value}"
 }

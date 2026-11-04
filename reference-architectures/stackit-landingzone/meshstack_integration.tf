@@ -351,14 +351,12 @@ resource "meshstack_building_block_definition" "this" {
 
       role_mapping = {
         display_name           = "STACKIT Project Role Mapping"
-        description            = "Maps each meshStack project role to the STACKIT project roles it grants. Values can be built-in STACKIT roles or custom STACKIT role names."
+        description            = "Maps each meshStack project role to the STACKIT project roles it grants. Values can be built-in STACKIT roles or custom STACKIT role names. organization_onboarding adds the users to the STACKIT organization first."
         type                   = "JSON"
         assignment_type        = "USER_INPUT"
         updateable_by_consumer = true
         display_order          = 80
 
-        # A JSON input decodes into var.role_mapping's map(list(string)); the three meshStack roles
-        # are fixed keys, so the form is one field per role holding its STACKIT role list.
         json_schema = jsonencode({
           "$schema" = "http://json-schema.org/draft-07/schema#"
           type      = "object"
@@ -367,18 +365,14 @@ resource "meshstack_building_block_definition" "this" {
             admin  = { type = "array", title = "admin", items = { type = "string" }, default = ["owner"] }
             user   = { type = "array", title = "user", items = { type = "string" }, default = ["editor"] }
             reader = { type = "array", title = "reader", items = { type = "string" }, default = ["reader"] }
+            organization_onboarding = {
+              type        = "boolean"
+              title       = "organization_onboarding"
+              default     = true
+              description = "Add meshStack project users to the STACKIT organization before the project roles are granted. Turn off if organization membership is managed outside this landing zone."
+            }
           }
         })
-      }
-
-      stackit_organization_onboarding_enabled = {
-        display_name           = "STACKIT Organization Onboarding Enabled"
-        description            = "If true, the nested STACKIT Project integration adds meshStack project users to the STACKIT organization before applying project-level role assignments."
-        type                   = "BOOLEAN"
-        assignment_type        = "USER_INPUT"
-        updateable_by_consumer = true
-        default_value          = jsonencode(true)
-        display_order          = 90
       }
 
       topology = {

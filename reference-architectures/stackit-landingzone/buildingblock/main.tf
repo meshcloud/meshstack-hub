@@ -114,8 +114,8 @@ module "stackit_integration" {
   stackit_parent_container_id             = stackit_resourcemanager_folder.this.container_id
   stackit_project_id                      = stackit_resourcemanager_project.foundation.project_id
   stackit_service_account_name            = local.imports.project_definition == null ? local.service_account_name : local.imports.project_definition.service_account_name
-  role_mapping                            = var.role_mapping
-  stackit_organization_onboarding_enabled = var.stackit_organization_onboarding_enabled
+  role_mapping                            = { admin = var.role_mapping.admin, user = var.role_mapping.user, reader = var.role_mapping.reader }
+  stackit_organization_onboarding_enabled = var.role_mapping.organization_onboarding
 
   # The networked project definition places its projects in the hub network area via a static
   # `networkArea` label, so no landing zone tag (and no tag definition) is involved.

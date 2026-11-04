@@ -144,7 +144,7 @@ then has to be the deployment service account's own email, or the run fails with
 
 Tenant projects are unaffected either way: the project-creation service account works through its
 organization-scoped roles, not through ownership. One of those roles is conditional — with
-`stackit_organization_onboarding_enabled` off it lacks `iam.member-admin` and cannot assign project
+`role_mapping.organization_onboarding` off it lacks `iam.member-admin` and cannot assign project
 roles to users.
 
 ## Getting Started
