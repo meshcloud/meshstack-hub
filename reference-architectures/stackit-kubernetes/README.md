@@ -133,7 +133,7 @@ The main inputs:
 | Tags | Tags as `{key, values}` entries for landing zones, the definitions platform engineers order (`building_block`) and those application teams order (`starterkit_building_block`), the platform's project and the starter kit's projects |
 | Approval Policies, Starterkit Approval Policies | See Approval gates |
 | Phase 2 Completed | See below |
-| Imports, Import Secrets | See Adopting Existing Resources |
+| Imports | See Adopting Existing Resources |
 
 A tag that a tag policy pairs between a landing zone and a project belongs on both sides, in
 `tags.landingzone` and `tags.starterkit_project` or in a stage's `landingzone` and `project`;
@@ -195,20 +195,11 @@ Every key but `starterkit_definitions` needs `project`, because the resources li
 `kubernetes_platform` also need `adopt_ske`. Everything else is created new. Names the imports leave out
 derive from **Platform Identifier**, so a stage added later gets `<platform identifier>-namespace-<stage>`.
 
-`git` also needs a Forgejo API token of an owner of the organization, in the sensitive **Import
-Secrets** input:
+With `git`, the Git building block's technical user must be in the organization's `Owners` team,
+which only an owner can arrange: its first run fails until an owner adds that user, then run it
+again.
 
-```hcl
-{
-  git = { forgejo_api_token = "<token>" }
-}
-```
-
-The token only serves to make the Git building block's technical user an owner. Once the platform's
-first run succeeded, set **Import Secrets** to `{}`; later runs act as that user. Leaving the input
-out keeps the stored token, because meshStack keeps an input an update does not send.
-
-The order form shows **Imports** and **Import Secrets** only with playground mode off. Through the
+The order form shows **Imports** only with playground mode off. Through the
 API, a playground that takes something over leaves it in place on deletion; otherwise deletion
 deletes it. A meshPlatform and definitions can only be taken over with playground mode off.
 

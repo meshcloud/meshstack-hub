@@ -369,17 +369,6 @@ resource "meshstack_building_block_definition" "this" {
         display_order          = 220
       }
 
-      import_secrets = {
-        display_name           = "Import Secrets"
-        description            = "HCL object `{git = {forgejo_api_token}}` this run writes to the platform's Secrets Manager for the adopted Forgejo organization. Empty once the organization is adopted."
-        type                   = "CODE"
-        assignment_type        = "USER_INPUT"
-        sensitive              = {}
-        is_optional            = true
-        updateable_by_consumer = true
-        display_order          = 230
-      }
-
       starterkit_add_random_name_suffix = {
         display_name    = "Starterkit Random Name Suffix"
         description     = "Whether the starterkit appends a random suffix to the projects it creates."

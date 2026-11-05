@@ -53,7 +53,6 @@ value and registers it as a write-only input.
 | `<prefix>stackit/git` | `forgejo-api-token` | STACKIT Git Instance | Git repository and Forgejo connector runs |
 | `<prefix>stackit/container-registry` | `push-action-secrets`, `pull-kubernetes-secret` | STACKIT Container Registry | Git repository and Forgejo connector runs |
 | `<prefix>stackit/ai-llm` | `kubernetes-secret` | AI Model Serving | Forgejo connector runs (`stackit-ai`) |
-| `<prefix>imports/stackit/git` | `forgejo-api-token` | the nested run, from Import Secrets | the STACKIT Git Instance that adopts an organization |
 
 The registry and AI keys hold JSON objects, read from `data_json`. The phase 2 definitions get the
 reader login and the paths, and their runs read the secrets themselves. Git repository runs keep
@@ -100,8 +99,8 @@ block's `release_on_destroy` only in playground mode and only for adopted resour
 
 The Git block adopting an instance creates its own technical user with a random suffix, because
 the existing user's password is unknown, and orders no shared runner, because STACKIT allows one
-per instance. With the token from Import Secrets it adds that user to the organization's `Owners`
-team and removes it again on deletion; STACKIT refuses to delete a user who is still in an
+per instance. That user must be in the organization's `Owners` team, where the block keeps it and
+removes it again on deletion; STACKIT refuses to delete a user who is still in an
 organization. Its `writers` and `readers` teams carry the same suffix. The block never deletes the
 organization itself; it goes with the instance.
 

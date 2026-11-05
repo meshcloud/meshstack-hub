@@ -178,17 +178,6 @@ variable "imports" {
   description = "Existing resources the child building blocks of the same key take over, as in the STACKIT Kubernetes Platform's `imports`. Null takes over nothing."
 }
 
-variable "import_secrets" {
-  type = object({
-    git = optional(object({
-      forgejo_api_token = string
-    }))
-  })
-  sensitive   = true
-  default     = null
-  description = "Secrets of the resources in `imports`, written to the platform's Secrets Manager: `git.forgejo_api_token`, a token of an owner of the adopted Forgejo organization, needed until the Git building block's technical user is an owner."
-}
-
 variable "starterkit_add_random_name_suffix" {
   type        = bool
   nullable    = false

@@ -14,10 +14,7 @@ meshStack SKE platform with one landing zone per stage.
 With a key of `imports` set (`adopt_ske`, `git`, `dns`, `adopt_ingress`, `secrets_manager`,
 `container_registry` or `kubernetes_platform`), the building block of that name takes over what
 already exists instead of creating it. In playground mode it gets `release_on_destroy`, so deleting it leaves what it took
-over in place. The Git building block also takes over the Forgejo organization with the token in
-`import_secrets.git`, which this run writes to `<platform identifier>/imports/stackit/git` in the
-Secrets Manager with the writer user before it orders the Git building block. Once the Git building
-block succeeded, `import_secrets` can be dropped; this run then deletes that secret.
+over in place. The Git building block also takes over the Forgejo organization.
 
 Every block that writes a secret gets the prefix `<platform identifier>/` in `output_to_vault` and
 reports the secret's path and hash in its `vault_secret` output. This run reads every path from

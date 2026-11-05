@@ -60,23 +60,3 @@ resource "stackit_secretsmanager_user" "reader" {
   description   = "${var.platform_identifier} reader"
   write_enabled = false
 }
-
-locals {
-  import_secrets_git   = var.import_secrets == null ? null : var.import_secrets.git
-  import_git           = local.imports.git != null && nonsensitive(local.import_secrets_git != null)
-  import_git_data_json = local.import_secrets_git == null ? null : jsonencode({ "forgejo-api-token" = local.import_secrets_git.forgejo_api_token })
-}
-
-resource "vault_kv_secret_v2" "import_git" {
-  provider = vault.writer
-
-  lifecycle {
-    enabled = local.import_git
-  }
-
-  mount        = local.secrets_manager_instance_id
-  name         = "${local.secrets_path_prefix}imports/stackit/git"
-  data_json_wo = local.import_git_data_json
-  # The version must be a number, so the first 48 bits of the hash stand in for it.
-  data_json_wo_version = parseint(substr(nonsensitive(sha256(local.import_git_data_json)), 0, 12), 16)
-}

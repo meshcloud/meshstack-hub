@@ -98,9 +98,6 @@ module "git_integration" {
 resource "meshstack_building_block" "git" {
   wait_for_completion = true
 
-  # An adopted organization's existing token is read on every run, the delete run included.
-  depends_on = [vault_kv_secret_v2.import_git]
-
   lifecycle {
     postcondition {
       condition     = self.status.succeeded
@@ -129,10 +126,7 @@ resource "meshstack_building_block" "git" {
         release_on_destroy = { value = jsonencode(local.imports.git != null && var.playground_mode) }
       },
       local.imports.git == null ? {} : {
-        imports = { value = jsonencode(jsonencode(merge(
-          { instance_id = local.imports.git.instance_id },
-          local.import_git ? { existing_forgejo_api_token_path = vault_kv_secret_v2.import_git.name } : {},
-        ))) }
+        imports = { value = jsonencode(jsonencode({ instance_id = local.imports.git.instance_id })) }
       },
     )
   }

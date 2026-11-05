@@ -242,7 +242,7 @@ variable "imports" {
     }))
   })
   default     = null
-  description = "Existing resources and definitions to take over, by key; see Adopting Existing Resources in the README. `git` needs `import_secrets.git` on its first run; null creates everything."
+  description = "Existing resources and definitions to take over, by key; see Adopting Existing Resources in the README. Null creates everything."
 
   validation {
     condition     = var.imports == null || var.imports.project != null || alltrue([for key, adopted in var.imports : adopted == null || adopted == false if key != "starterkit_definitions"])
@@ -274,17 +274,6 @@ variable "imports" {
     condition     = !var.playground_mode || (var.imports == null ? null : var.imports.starterkit_definitions) == null
     error_message = "imports.starterkit_definitions needs playground_mode = false."
   }
-}
-
-variable "import_secrets" {
-  type = object({
-    git = optional(object({
-      forgejo_api_token = string
-    }))
-  })
-  sensitive   = true
-  default     = null
-  description = "Secrets of the resources in `imports`: `git.forgejo_api_token`, a token of an owner of the adopted Forgejo organization, needed until the organization is adopted."
 }
 
 variable "workspace" {

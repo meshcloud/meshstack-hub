@@ -603,19 +603,6 @@ resource "meshstack_building_block_definition" "this" {
         })
       }
 
-      # A sensitive input cannot be JSON.
-      import_secrets = {
-        display_name           = "Import Secrets"
-        description            = "HCL object `{git = {forgejo_api_token}}`: the token of an owner of the Forgejo organization that `imports.git` adopts. Set it to `{}` once the organization is adopted."
-        type                   = "CODE"
-        assignment_type        = "USER_INPUT"
-        sensitive              = {}
-        is_optional            = true
-        updateable_by_consumer = true
-        condition              = "!input.playground_mode && input.imports.git.instance_id != \"\""
-        display_order          = 220
-      }
-
       workspace = {
         display_name    = "Workspace Identifier"
         description     = "Workspace that will own the created platform, location, landing zones and hosting project."

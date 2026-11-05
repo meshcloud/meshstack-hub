@@ -80,13 +80,6 @@ resource "meshstack_building_block" "platform" {
       stages            = { value = jsonencode(jsonencode(local.stages)) }
       quota_definitions = { value = jsonencode(jsonencode(var.quota_definitions)) }
       imports           = { value = jsonencode(jsonencode(length(local.platform_imports) == 0 ? null : local.platform_imports)) }
-      # Sent even when empty: meshStack keeps the stored value of an input an update leaves out.
-      import_secrets = {
-        sensitive = {
-          secret_value   = jsonencode(var.import_secrets)
-          secret_version = nonsensitive(sha256(jsonencode(var.import_secrets)))
-        }
-      }
     }
   }
 }
