@@ -135,8 +135,8 @@ MARKDOWN
 
 output "debug_input_variables_json" {
   description = "JSON-encoded map of all input variables received, including sensitive values in plaintext."
-  sensitive   = true # For test only. Do not do this in production code.
-  value = jsonencode({
+  # Plain text on purpose: the e2e compares this output with the inputs it sent.
+  value = nonsensitive(jsonencode({
     flag                    = var.flag
     num                     = var.num
     text                    = var.text
@@ -158,16 +158,15 @@ output "debug_input_variables_json" {
     operator_text           = var.operator_text
     workspace_identifier    = var.workspace_identifier
     payment_method          = var.payment_method
-  })
+  }))
 }
 
 output "debug_input_files_json" {
   description = "JSON-encoded map of all input files received, including sensitive values in plaintext."
-  sensitive   = true # For test only. Do not do this in production code.
-  # Guarded like the file outputs above. A run that fails to deliver an input yields
-  # null here, which the e2e test catches by comparing this output to the input it sent.
-  value = jsonencode({
+  # Plain text on purpose: the e2e compares this output with the inputs it sent, and a
+  # missing input file shows up here as null.
+  value = nonsensitive(jsonencode({
     "some-file.yaml"      = fileexists("some-file.yaml") ? file("some-file.yaml") : null
     "sensitive-file.yaml" = fileexists("sensitive-file.yaml") ? file("sensitive-file.yaml") : null
-  })
+  }))
 }
