@@ -65,6 +65,16 @@ variable "add_random_name_suffix" {
   description = "Append a five-character random suffix to the project name the application team enters."
 }
 
+variable "project_tags" {
+  type = object({
+    tags          = map(list(string))
+    owner_tag_key = optional(string)
+  })
+  nullable    = false
+  default     = { tags = {} }
+  description = "Tags for the meshProject the starter kit creates. `owner_tag_key` names the tag that receives the creator's display name; null sets none."
+}
+
 variable "notification_subscribers" {
   type        = list(string)
   default     = []
@@ -105,11 +115,7 @@ variable "approval_policies" {
 variable "meshstack" {
   type = object({
     owning_workspace_identifier = string
-    tags = object({
-      building_block        = map(list(string))
-      project               = map(list(string))
-      project_owner_tag_key = optional(string)
-    })
+    tags                        = optional(map(list(string)), {})
     runner_ref = optional(object({
       kind = string
       uuid = string
@@ -158,7 +164,7 @@ locals {
 resource "meshstack_building_block_definition" "this" {
   metadata = {
     owned_by_workspace = var.meshstack.owning_workspace_identifier
-    tags               = var.meshstack.tags.building_block
+    tags               = var.meshstack.tags
   }
 
   spec = {
@@ -337,7 +343,10 @@ resource "meshstack_building_block_definition" "this" {
         display_name    = "Tags"
         description     = "HCL object of tags applied to the created meshProject."
         # jsonencode twice is correct, see landing_zone_refs note above.
-        argument = jsonencode(jsonencode(var.meshstack.tags))
+        argument = jsonencode(jsonencode({
+          project               = var.project_tags.tags
+          project_owner_tag_key = var.project_tags.owner_tag_key
+        }))
       }
 
       add_random_name_suffix = {

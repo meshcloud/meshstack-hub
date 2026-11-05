@@ -52,10 +52,10 @@ configuration a single flat map.
 
 ## Configuration the platform team owns
 
-`project_tags` and `owner_tag_key` exist because which meshProject tags are mandatory is a property of
-the meshStack instance, not of this module. The module default is an empty map, so **a deployment that
-sets no project tags will fail at project creation on any instance with mandatory project tags.** Set
-them in the deployment that registers this definition.
+`project_tags` exists because which meshProject tags are mandatory is a property of the meshStack
+instance. The module default sets no tags, so **a deployment that sets no project tags will fail at
+project creation on any instance with mandatory project tags.** Set them in the deployment that
+registers this definition.
 
 `landing_zone_refs` has to carry every landing zone the team may choose, not just one. The definition
 builds its select from the map's keys, and a `SINGLE_SELECT` input delivers only the chosen label — so

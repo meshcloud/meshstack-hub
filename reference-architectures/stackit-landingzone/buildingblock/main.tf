@@ -192,15 +192,13 @@ module "stackit_project_starterkit" {
     prefix_length_max = var.network.tenant_network_max_prefix_length
   } : null
 
-  meshstack = {
-    owning_workspace_identifier = var.workspace
-    tags = {
-      building_block        = local.tags.building_block
-      project               = local.tags.project
-      project_owner_tag_key = local.tags.project_owner_tag_key
-    }
+  project_tags = {
+    tags          = local.tags.project
+    owner_tag_key = local.tags.project_owner_tag_key
   }
-  hub = var.hub
+
+  meshstack = { owning_workspace_identifier = var.workspace, tags = local.tags.building_block }
+  hub       = var.hub
 }
 
 module "service_account_integration" {
