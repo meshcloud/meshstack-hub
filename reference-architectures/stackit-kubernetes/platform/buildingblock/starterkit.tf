@@ -7,7 +7,8 @@ locals {
   forgejo_instance_id  = jsondecode(meshstack_building_block.git.status.outputs["instance_id"].value)
   forgejo_organization = jsondecode(meshstack_building_block.git.status.outputs["forgejo_organization"].value)
 
-  dns_zone_name = jsondecode(meshstack_building_block.dns.status.outputs["zone_name"].value)
+  # Built like the DNS block builds it, so the starterkit does not wait for the DNS block.
+  dns_zone_name = "${var.dns_subdomain}.${var.dns_parent_domain}"
 
   git_vault_secret                = jsondecode(jsondecode(meshstack_building_block.git.status.outputs["vault_secret"].value))
   ai_llm_vault_secret             = var.ai_model == null ? null : jsondecode(jsondecode(meshstack_building_block.ai_llm.status.outputs["vault_secret"].value))
