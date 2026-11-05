@@ -4,7 +4,8 @@ description: >
   Create or update a meshstack-hub building block module. Covers the full lifecycle: module
   structure, backplane identity (per cloud provider), BBD readme, and scorecard compliance.
   Use when asked to create a new module, add or fix a backplane, write the readme, or resolve
-  scorecard violations.
+  scorecard violations. Not for using a hub module for a user's meshStack: read
+  https://docs.meshcloud.io/agent-context/index.md and skills/meshstack-hub instead.
 ---
 
 # Module Skill
