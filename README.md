@@ -58,10 +58,11 @@ Refer to each module's README.md for specific usage instructions such as needed 
 
 ## For AI agents
 
-To let an AI agent find a module and set it up in your meshStack, point it at the
-[`meshstack-hub` skill](skills/meshstack-hub/SKILL.md), for example from your repository's agent
-instructions. For everything else about meshStack, point it at
-[docs.meshcloud.io/llms.txt](https://docs.meshcloud.io/llms.txt).
+An AI agent that works with meshStack for you starts with the
+[meshStack agent context](https://docs.meshcloud.io/agent-context/index.md). It explains which
+login to use, the guardrails and every task. To let the agent find a module and set it up in your
+meshStack, point it at the [`meshstack-hub` skill](skills/meshstack-hub/SKILL.md) too, for example
+from your repository's agent instructions.
 
 ## Community, Discussion & Support
 
