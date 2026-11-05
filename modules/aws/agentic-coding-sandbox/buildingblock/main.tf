@@ -97,11 +97,6 @@ locals {
   }
 }
 
-moved {
-  from = meshstack_buildingblock.budget_alert
-  to   = meshstack_building_block.budget_alert
-}
-
 resource "meshstack_building_block" "budget_alert" {
   spec = {
     building_block_definition_version_ref = local.definition_versions[local.budget_alert_definition_uuid][local.budget_alert_definition_version]
@@ -129,11 +124,6 @@ resource "meshstack_building_block" "budget_alert" {
       error_message = "Building block ${self.metadata.uuid} did not succeed (health status ${self.status.health_status}, action ${self.status.action}). See its run in meshPanel."
     }
   }
-}
-
-moved {
-  from = meshstack_buildingblock.enable_eu_south_2_region
-  to   = meshstack_building_block.enable_eu_south_2_region
 }
 
 # enable spain region for the sandbox tenant because that's the only region where Anthropic's Sonnet 4 is available

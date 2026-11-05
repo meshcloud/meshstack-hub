@@ -139,14 +139,3 @@ resource "meshstack_building_block" "forgejo_connector" {
     }
   }
 }
-
-moved {
-  from = meshstack_building_block_v2.git_repository
-  to   = meshstack_building_block.git_repository
-}
-
-moved {
-  from = meshstack_building_block_v2.forgejo_connector
-  to   = meshstack_building_block.forgejo_connector
-}
-

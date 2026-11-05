@@ -152,28 +152,6 @@ resource "meshstack_building_block" "github_actions" {
   }
 }
 
-# --- State address migrations (no resource recreation) ---
-# The building block moves are chained: hop 1 is the resource-type migration
-# (meshstack_building_block_v2 -> meshstack_building_block), hop 2 is the dev/prod -> for_each address
-# change. Terraform follows the chain, so a deployed meshstack_building_block_v2.github_actions_dev
-# migrates v2 -> GA -> for_each in sequence without recreation.
-
-# Hop 1 — resource-type migrations.
-moved {
-  from = meshstack_building_block_v2.repo
-  to   = meshstack_building_block.repo
-}
-moved {
-  from = meshstack_building_block_v2.github_actions_dev
-  to   = meshstack_building_block.github_actions_dev
-}
-moved {
-  from = meshstack_building_block_v2.github_actions_prod
-  to   = meshstack_building_block.github_actions_prod
-}
-
-# Hop 2 — spelled-out dev/prod -> for_each keys (this refactor). Projects and bindings have no
-# hop-1 migration, so their move is the only hop.
 moved {
   from = meshstack_tenant.dev
   to   = meshstack_tenant.this["dev"]
