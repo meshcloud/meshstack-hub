@@ -88,6 +88,12 @@ locals {
   assignable_roles_pattern = join("|", [for role in var.stackit_assignable_roles : replace(role, ".", "\\.")])
 }
 
+data "meshstack_building_block_runner" "this" {
+  metadata = {
+    uuid = var.meshstack.runner_ref == null ? null : var.meshstack.runner_ref.uuid
+  }
+}
+
 module "backplane" {
   source = "github.com/meshcloud/meshstack-hub//modules/stackit/service-account/backplane?ref=${var.hub.git_ref}"
 
@@ -95,8 +101,10 @@ module "backplane" {
   organization_id      = var.stackit_organization_id
   service_account_name = coalesce(var.stackit_service_account_name, "mesh-service-account")
 
+  # STACKIT exchanges the token meshStack mounts for Azure.
   workload_identity_federation = {
-    issuer   = meshstack_building_block_definition.this.version_latest.workload_identity_federation.issuer
+    issuer   = data.meshstack_building_block_runner.this.spec.workload_identity_federation.issuer
+    audience = data.meshstack_building_block_runner.this.spec.workload_identity_federation.azure.audience
     subjects = [meshstack_building_block_definition.this.version_latest.workload_identity_federation.subject]
   }
 }
@@ -196,7 +204,7 @@ resource "meshstack_building_block_definition" "this" {
         type            = "STRING"
         assignment_type = "STATIC"
         is_environment  = true
-        argument        = jsonencode("/var/run/secrets/workload-identity/azure/token")
+        argument        = jsonencode(data.meshstack_building_block_runner.this.spec.workload_identity_federation.azure.token_path)
       }
 
       service_account_name = {
@@ -267,7 +275,7 @@ terraform {
   required_providers {
     meshstack = {
       source  = "meshcloud/meshstack"
-      version = ">= 0.27.0"
+      version = ">= 0.27.2"
     }
     stackit = {
       source  = "stackitcloud/stackit"
