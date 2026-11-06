@@ -174,6 +174,47 @@ export VAULT_TOKEN=$(stackit auth get-access-token)
 vault kv list -mount=<Secrets Manager instance id> <platform identifier>/
 ```
 
+## Shipping the Starter Kit to Application Teams
+
+The [application-team diagram](#application-teams) shows the three definitions and what an order
+creates.
+
+**Who registers it.** The nested **Platform Services** run registers the three definitions
+application teams use, in `platform/buildingblock/starterkit.tf`. It does so only in phase 2, once
+**Phase 2 Completed** is true, because their pipelines push images and their workloads pull them
+with the robots phase 2 mints:
+
+1. **STACKIT Git Repository** creates a repository in the platform's Forgejo organization and
+   reads the Forgejo token and the push robot from the Secrets Manager. The **Starter Kit Identity
+   Federation** lets its runs act as the platform's service account.
+2. **SKE Forgejo Connector** wires a repository to one namespace. It reads the admin kubeconfig,
+   the Forgejo token, the pull robot and the `stackit-ai` secret, and takes the repository from
+   the Git Repository building block it is a child of.
+3. **SKE Starterkit** orders the other two. It gets the SKE platform, one landing zone per stage,
+   the DNS zone, the template repository and the version of each of the other two definitions.
+
+**Where it lives.** All three are owned by the workspace that ordered **STACKIT Kubernetes
+Platform**, next to the platform's own definitions. They carry the `starterkit_building_block`
+tags and the **Starterkit Approval Policies**.
+
+**When it is released.** `hub.bbd_draft` of this definition decides it, and only for these three.
+With `true`, every Platform Services run updates their draft version, and only the owning
+workspace can order them. Use it to try a Hub ref. With `false`, the run releases them, and
+application teams see **SKE Starterkit** in the marketplace. A new Hub ref takes two runs: one with
+`true` adds a draft version on top of the released one, one with `false` releases it. Existing
+starter kits stay on their version until they are upgraded.
+
+**How an application team orders it.** The team orders **SKE Starterkit** in its own workspace
+and gives a project name and a payment method. The run creates:
+
+- the Git repository, cloned from the template repository,
+- one project per stage, each with a tenant on that stage's landing zone,
+- one Forgejo Connector per tenant, which runs the pipeline for its stage,
+- a Project Admin binding on every project for the user who ordered it.
+
+The app is served at `<name>.<DNS zone>` for `prod` and at `<name>-<stage>.<DNS zone>` for the
+other stages. The starter kit's summary links each stage and the repository.
+
 ## Adopting Existing Resources
 
 The optional **Imports** input takes over resources that already exist, for example a platform
