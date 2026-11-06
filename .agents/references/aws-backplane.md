@@ -15,17 +15,16 @@ Use WIF when the building block acts within a single AWS account (the backplane 
 - **No secrets rotation**: WIF tokens are short-lived JWTs issued by meshStack; no access keys to manage.
 - **BBD-scoped trust**: The IAM role trust policy is scoped to the specific building block definition UUID, preventing cross-BBD token reuse.
 - **OIDC-native**: AWS supports federated OIDC identities via `aws_iam_openid_connect_provider` out of the box.
-- **Shared OIDC provider**: every backplane in an account trusts the one provider `modules/aws/oidc-provider` registers, passed in as `oidc_provider_arn`.
+- **Shared OIDC provider**: every backplane in an account trusts the one provider `modules/aws/oidc-provider` registers for an issuer, and looks it up by that issuer.
 
 <!-- scorecard-checks: aws_wif_external_oidc_provider, aws_oidc_provider_notice -->
 ### The shared OIDC provider
 
-**A WIF backplane does not create its OIDC provider. It takes the ARN of one as an input.**
+**A WIF backplane looks up the shared OIDC provider of each issuer that it trusts.**
 
-AWS registers one OIDC provider per issuer URL per AWS account. The meshStack runner has one issuer,
-so an account has room for exactly one provider for it no matter how many building block backplanes
-federate through it. A backplane that creates its own is claiming shared infrastructure: the second
-backplane in the account fails with `EntityAlreadyExists`, and destroying whichever one owns it
+AWS registers one OIDC provider per issuer URL in each AWS account. All backplanes in the account
+that federate through that issuer share it. A backplane that creates its own is claiming shared
+infrastructure: the second backplane in the account fails with `EntityAlreadyExists`, and destroying whichever one owns it
 breaks every other backplane there.
 
 So it is deployed separately, once per AWS account that hosts backplanes:
@@ -39,9 +38,8 @@ module "meshstack_oidc_provider" {
 `modules/aws/oidc-provider` takes the runners' `issuer` and their `audiences` as its one input, copied
 from `version_latest.workload_identity_federation` of any definition that runs on that runner, and reads the
 thumbprint from the issuer's own TLS chain, so the issuer URL has to be reachable from wherever it
-runs. Pass its `arn` output to every backplane in that account. To register a self-hosted runner's
-issuer pass that runner's values, and then pass its reference as `meshstack.runner_ref` to every
-building block module running on it.
+runs. Apply it once per issuer. For a self-hosted runner, pass the values of that runner. Then pass
+its reference as `meshstack.runner_ref` to every building block module that runs on it.
 
 This is where AWS differs from the other providers, and why the repetition is not the same kind of
 repetition: an Azure federated identity credential is a child of its UAMI and a GCP workload
@@ -63,8 +61,7 @@ removed {
 }
 ```
 
-Then `import` the provider into the root that applies `modules/aws/oidc-provider`, and pass its ARN
-to the backplanes that used to create it.
+Then `import` the provider into the root that applies `modules/aws/oidc-provider`.
 
 <!-- scorecard-checks: aws_wif_subject_condition -->
 ### Implementation Pattern (WIF)
@@ -80,27 +77,37 @@ resource "random_string" "suffix" {
   upper   = false
 }
 
+data "aws_iam_openid_connect_provider" "trusted" {
+  for_each = { for index, identity in var.workload_identity_federations : index => identity }
+
+  url = each.value.issuer
+}
+
 data "aws_iam_policy_document" "workload_identity_federation" {
   version = "2012-10-17"
 
-  statement {
-    effect = "Allow"
-    principals {
-      type        = "Federated"
-      identifiers = [var.oidc_provider_arn]
-    }
-    actions = ["sts:AssumeRoleWithWebIdentity"]
+  dynamic "statement" {
+    for_each = var.workload_identity_federations
 
-    condition {
-      test     = "StringEquals"
-      variable = "${trimprefix(var.workload_identity_federation.issuer, "https://")}:aud"
-      values   = [var.workload_identity_federation.audience]
-    }
+    content {
+      effect = "Allow"
+      principals {
+        type        = "Federated"
+        identifiers = [data.aws_iam_openid_connect_provider.trusted[tostring(statement.key)].arn]
+      }
+      actions = ["sts:AssumeRoleWithWebIdentity"]
 
-    condition {
-      test     = "StringLike"
-      variable = "${trimprefix(var.workload_identity_federation.issuer, "https://")}:sub"
-      values   = var.workload_identity_federation.subjects
+      condition {
+        test     = "StringEquals"
+        variable = "${trimprefix(statement.value.issuer, "https://")}:aud"
+        values   = [statement.value.audience]
+      }
+
+      condition {
+        test     = "StringLike"
+        variable = "${trimprefix(statement.value.issuer, "https://")}:sub"
+        values   = [statement.value.subject]
+      }
     }
   }
 }
@@ -117,28 +124,24 @@ resource "aws_iam_role" "backplane" {
 ### Backplane Variables (WIF)
 
 ```hcl
-variable "workload_identity_federation" {
-  type = object({
+variable "workload_identity_federations" {
+  type = list(object({
     issuer   = string
     audience = string
-    subjects = list(string)
-  })
+    subject  = string
+  }))
   nullable    = false
-  description = "WIF issuer, audience, and subjects for federated authentication."
-}
-
-variable "oidc_provider_arn" {
-  type     = string
-  nullable = false
   description = <<-EOT
-  ARN of the IAM OIDC provider for the meshStack runner WIF token issuer in this AWS account.
+  meshStack identities the role trusts, one per building block runner. For more subjects of one
+  issuer, pass one entry per subject. The backplane looks up this account's OIDC provider for each issuer.
   See .agents/references/aws-backplane.md#the-shared-oidc-provider
   EOT
 }
 ```
 
-The `oidc_provider_arn` description is a fixed notice, copied verbatim into the matching
-`aws_oidc_provider_arn` variable in `meshstack_integration.tf`. The scorecard enforces both.
+The description links the shared provider, and the scorecard checks for that link. Older backplanes
+take one `workload_identity_federation` object and an `oidc_provider_arn` with a fixed notice, and
+the scorecard accepts that shape too.
 
 <!-- scorecard-checks: aws_wif_role_output -->
 ### Backplane Outputs (WIF)
@@ -343,25 +346,10 @@ No AWS backplane carries the fallback shape any more. `modules/aws/s3_bucket`,
 ### WIF pattern
 
 ```hcl
-variable "aws_oidc_provider_arn" {
-  type     = string
-  nullable = false
-  description = <<-EOT
-  ARN of the IAM OIDC provider for the meshStack runner WIF token issuer in this AWS account.
-  See .agents/references/aws-backplane.md#the-shared-oidc-provider
-  EOT
-}
-
 module "backplane" {
   source = "github.com/meshcloud/meshstack-hub//modules/aws/<service>/backplane?ref=${var.hub.git_ref}"
 
-  oidc_provider_arn = var.aws_oidc_provider_arn
-
-  workload_identity_federation = {
-    issuer   = meshstack_building_block_definition.this.version_latest.workload_identity_federation.issuer
-    audience = meshstack_building_block_definition.this.version_latest.workload_identity_federation.aws.audience
-    subjects = [meshstack_building_block_definition.this.version_latest.workload_identity_federation.subject]
-  }
+  workload_identity_federations = module.runner_identity.identities
 }
 
 # In the BBD inputs:
@@ -375,16 +363,12 @@ AWS_WEB_IDENTITY_TOKEN_FILE = {
   type            = "STRING"
   assignment_type = "STATIC"
   is_environment  = true
-  argument        = jsonencode("/var/run/secrets/workload-identity/aws/token")
+  argument        = jsonencode(module.runner_identity.token_path)
 }
 ```
 
-**Known limitation.** The role trusts the subject of the version the Terraform resource manages.
-A building block keeps running on the version it was created with, so moving the definition to a
-different runner breaks the blocks that still run on the old version until they upgrade.
-
-The status read and the `meshstack.runner_ref` behind it are the same in every cloud, see
-[meshstack-integration.md § Runner identity](meshstack-integration.md#runner-identity).
+`module.runner_identity`, `meshstack.runner_ref` and `meshstack.trusted_runner_refs` work the same
+in every cloud. See [meshstack-integration.md § Runner identity](meshstack-integration.md#runner-identity).
 
 ### Cross-account (StackSet) pattern
 
@@ -415,9 +399,9 @@ role_name = {
 ## Checklist for AWS Backplanes
 
 **WIF pattern (Pattern A):**
-- [ ] Creates no `aws_iam_openid_connect_provider` — takes `oidc_provider_arn` as a required, non-nullable input
-- [ ] `oidc_provider_arn` and the integration's `aws_oidc_provider_arn` carry the fixed notice verbatim
-- [ ] `workload_identity_federation` variable is non-nullable
+- [ ] Looks up the shared `aws_iam_openid_connect_provider` of each issuer
+- [ ] `workload_identity_federations` links the shared provider in its description
+- [ ] `workload_identity_federations` variable is non-nullable
 - [ ] Trust policy scopes `sub` condition to the specific BBD UUID via meshStack WIF subjects
 - [ ] Role ARN output is named `workload_identity_federation_role`
 - [ ] ARN is manually constructed (not from resource attribute) to avoid dependency cycles

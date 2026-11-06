@@ -282,6 +282,9 @@ then ask the user in one message for:
   environment variable or from the user's secret store, never in a committed file.
 - **The runner.** If the user runs their own building block runner, its `ref` goes into
   `meshstack.runner_ref`. Without it, the definition runs on the shared runner meshStack hosts.
+  When the user moves a definition to another runner, building blocks on older versions keep the
+  old runner. List the old runner in `meshstack.trusted_runner_refs` until all building blocks use
+  a version on the new runner.
 
 In the plan for the first apply, point out what it creates in the cloud: identities, role
 definitions and role assignments. They decide what the runner may do in the user's cloud, so the

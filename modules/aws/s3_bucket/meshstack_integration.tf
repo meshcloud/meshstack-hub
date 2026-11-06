@@ -5,11 +5,8 @@ variable "aws_region" {
 
 variable "aws_oidc_provider_arn" {
   type        = string
-  nullable    = false
-  description = <<-EOT
-  ARN of the IAM OIDC provider for the meshStack runner WIF token issuer in this AWS account.
-  See .agents/references/aws-backplane.md#the-shared-oidc-provider
-  EOT
+  default     = null
+  description = "Deprecated and unused. The backplane looks up the OIDC provider of each runner's issuer."
 }
 
 variable "backplane_name" {
@@ -44,6 +41,10 @@ variable "meshstack" {
       kind = string
       uuid = string
     }))
+    trusted_runner_refs = optional(list(object({
+      kind = string
+      uuid = string
+    })), [])
   })
   description = "Shared meshStack context, see docs."
 }
@@ -72,17 +73,20 @@ output "building_block_definition" {
   }
 }
 
+module "runner_identity" {
+  source = "github.com/meshcloud/meshstack-hub//modules/meshstack/runner-identity?ref=${var.hub.git_ref}"
+
+  cloud               = "aws"
+  runner_ref          = var.meshstack.runner_ref
+  trusted_runner_refs = var.meshstack.trusted_runner_refs
+  versions            = meshstack_building_block_definition.this.versions
+}
+
 module "backplane" {
   source = "github.com/meshcloud/meshstack-hub//modules/aws/s3_bucket/backplane?ref=${var.hub.git_ref}"
 
-  name              = var.backplane_name
-  oidc_provider_arn = var.aws_oidc_provider_arn
-
-  workload_identity_federation = {
-    issuer   = meshstack_building_block_definition.this.version_latest.workload_identity_federation.issuer
-    audience = meshstack_building_block_definition.this.version_latest.workload_identity_federation.aws.audience
-    subjects = [meshstack_building_block_definition.this.version_latest.workload_identity_federation.subject]
-  }
+  name                          = var.backplane_name
+  workload_identity_federations = module.runner_identity.identities
 }
 
 resource "meshstack_building_block_definition" "this" {
@@ -161,7 +165,7 @@ resource "meshstack_building_block_definition" "this" {
         display_name    = "AWS Web Identity Token File Path"
         description     = "The file path to the AWS web identity token for authentication"
         is_environment  = true
-        argument        = jsonencode("/var/run/secrets/workload-identity/aws/token")
+        argument        = jsonencode(module.runner_identity.token_path)
       }
       region = {
         type            = "STRING"
@@ -223,7 +227,7 @@ terraform {
     }
     meshstack = {
       source  = "meshcloud/meshstack"
-      version = ">= 0.27.0"
+      version = ">= 0.27.2"
     }
   }
 }
