@@ -1,7 +1,8 @@
 # The names below are cluster-global: `meshfed-service` and `meshfed-metering` are ClusterRoles, and
 # two of these deployed to one cluster would collide. That is fine while every cluster carries one
-# meshStack platform (the STACKIT Kubernetes Platform reference architecture gives each its own), and it is why
-# the upstream module's `name_suffix` / `existing_clusterrole_name` machinery is not carried over.
+# meshStack platform (the STACKIT Kubernetes Platform reference architecture gives each its own),
+# and it is why the upstream module's `name_suffix` / `existing_clusterrole_name` machinery is not
+# carried over.
 # Reintroduce it if a cluster ever has to carry more than one meshStack platform registration.
 locals {
   replicator_name = "meshfed-service"

@@ -29,8 +29,8 @@ is involved, so this runs on any conformant cluster.
 It does **not** register a meshPlatform. Deciding that a cluster becomes a meshStack platform — its
 identifier, location, landing zones and quota definitions — belongs to the composition that owns
 the cluster. The **STACKIT Kubernetes Platform** reference architecture, for example, does it in
-its own `platform.tf` using the two tokens this block outputs. With `output_to_vault` set, it writes them to
-the Vault KV v2 secret `<path_prefix>kubernetes/platform` under the keys `replicator-token` and
+its own `platform.tf` using the two tokens this block outputs. With `output_to_vault` set, it writes
+them to the Vault KV v2 secret `<path_prefix>kubernetes/platform` under the keys `replicator-token` and
 `metering-token` instead, and both outputs are empty.
 
 ## The kubeconfig is an input of the building block

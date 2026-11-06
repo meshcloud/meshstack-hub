@@ -426,8 +426,8 @@ resource "meshstack_building_block_definition" "this" {
 
       A platform team orders this once per cluster, as part of turning that cluster into a meshStack
       platform. The **STACKIT Kubernetes Platform** reference architecture, for example, does it right
-      after the cluster exists and feeds the tokens into the platform it registers. It reaches the cluster
-      through the kubeconfig the ordering composition passes as an input.
+      after the cluster exists and feeds the tokens into the platform it registers. It reaches the
+      cluster through the kubeconfig the ordering composition passes as an input.
 
       ## 📦 Resources created
 
