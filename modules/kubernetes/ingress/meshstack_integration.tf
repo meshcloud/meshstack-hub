@@ -60,7 +60,7 @@ variable "cluster_definition_ref" {
     uuid = string
   })
   default     = null
-  description = "Ref of the SKE cluster definition whose building blocks parent this definition's building blocks; null declares no dependency."
+  description = "Ref of the cluster definition (for example `ske/cluster`) whose building blocks parent this definition's building blocks; null declares no dependency."
 }
 
 variable "bbd_display_name" {

@@ -195,7 +195,7 @@ variable "cluster_definition_ref" {
     uuid = string
   })
   default     = null
-  description = "Ref of the SKE cluster definition whose building blocks parent this definition's building blocks; null declares no dependency."
+  description = "Ref of the cluster definition (for example `ske/cluster`) whose building blocks parent this definition's building blocks; null declares no dependency."
 }
 
 variable "bbd_display_name" {
@@ -425,8 +425,8 @@ resource "meshstack_building_block_definition" "this" {
       ## 🎯 When to use it
 
       A platform team orders this once per cluster, as part of turning that cluster into a meshStack
-      platform — the **STACKIT Kubernetes Platform** reference architecture does it right after the
-      cluster exists and feeds the tokens into the platform it registers. It reaches the cluster
+      platform. The **STACKIT Kubernetes Platform** reference architecture, for example, does it right
+      after the cluster exists and feeds the tokens into the platform it registers. It reaches the cluster
       through the kubeconfig the ordering composition passes as an input.
 
       ## 📦 Resources created

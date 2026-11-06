@@ -13,7 +13,8 @@ locals {
 
 provider "vault" {
   address = var.output_to_vault == null ? null : var.output_to_vault.address
-  # A Secrets Manager user may not create the child token the provider asks for by default.
+  # A Vault user without `auth/token/create`, such as a STACKIT Secrets Manager user, cannot create
+  # the child token the provider asks for by default.
   skip_child_token = true
 
   dynamic "auth_login_userpass" {

@@ -118,7 +118,7 @@ resource "meshstack_building_block_definition" "this" {
     symbol       = "https://raw.githubusercontent.com/meshcloud/meshstack-hub/${var.hub.git_ref}/modules/kubernetes/manifest/buildingblock/logo.svg"
     description  = coalesce(var.bbd_description, "Deploys arbitrary Kubernetes manifests into a tenant namespace via a local Helm chart, with operator-supplied templates and user-provided values.")
     target_type  = "TENANT_LEVEL"
-    # TODO Correct would be to depend on the specific SKE cluster deployed (not just platform type),
+    # TODO Correct would be to depend on the specific cluster deployed (not just platform type),
     # as the kubeconfig.yaml input only works for one specific cluster (representing the meshPlatform here)
     supported_platforms = [{ name = "KUBERNETES" }]
     run_transparency    = true
