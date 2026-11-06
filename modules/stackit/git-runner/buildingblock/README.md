@@ -71,4 +71,5 @@ No modules.
 | <a name="output_egress_ip"></a> [egress\_ip](#output\_egress\_ip) | Public SNAT IP of the runner's network router, for allowlisting. Empty on an existing network. |
 | <a name="output_runner_name"></a> [runner\_name](#output\_runner\_name) | Name the runner registered under in STACKIT Git. |
 | <a name="output_server_id"></a> [server\_id](#output\_server\_id) | ID of the STACKIT server hosting the runner. |
+| <a name="output_summary"></a> [summary](#output\_summary) | Markdown summary shown on the building block. |
 <!-- END_TF_DOCS -->
