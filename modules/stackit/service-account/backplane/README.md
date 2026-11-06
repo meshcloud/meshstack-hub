@@ -28,7 +28,7 @@ permissions.
 - A STACKIT project where the automation service account will be created.
 - A STACKIT service account with permissions to manage service accounts and organization-level role assignments.
 - The STACKIT organization ID under which target projects live.
-- The WIF issuer and subject meshStack resolves for the building block definition, read from `meshstack_building_block_definition.<name>.version_latest.workload_identity_federation`.
+- The WIF issuer and audience of the runner, read from `data.meshstack_building_block_runner.<name>.spec.workload_identity_federation`, and the subject meshStack resolves for the building block definition, read from `meshstack_building_block_definition.<name>.version_latest.workload_identity_federation`.
 
 ## Usage
 
@@ -40,7 +40,8 @@ module "service_account_backplane" {
   organization_id = "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
 
   workload_identity_federation = {
-    issuer   = meshstack_building_block_definition.this.version_latest.workload_identity_federation.issuer
+    issuer   = data.meshstack_building_block_runner.this.spec.workload_identity_federation.issuer
+    audience = data.meshstack_building_block_runner.this.spec.workload_identity_federation.azure.audience
     subjects = [meshstack_building_block_definition.this.version_latest.workload_identity_federation.subject]
   }
 }
@@ -74,7 +75,7 @@ No modules.
 | <a name="input_organization_id"></a> [organization\_id](#input\_organization\_id) | STACKIT organization ID where the service account will be granted permissions to manage service accounts and role assignments. | `string` | n/a | yes |
 | <a name="input_project_id"></a> [project\_id](#input\_project\_id) | STACKIT project ID where the backplane service account will be created. | `string` | n/a | yes |
 | <a name="input_service_account_name"></a> [service\_account\_name](#input\_service\_account\_name) | Name of the backplane service account created in the STACKIT project. Override when deploying multiple backplane instances in the same project. | `string` | `"mesh-service-account"` | no |
-| <a name="input_workload_identity_federation"></a> [workload\_identity\_federation](#input\_workload\_identity\_federation) | WIF issuer URL and subject list for the meshStack building block identity provider. | <pre>object({<br/>    issuer   = string<br/>    subjects = list(string)<br/>  })</pre> | n/a | yes |
+| <a name="input_workload_identity_federation"></a> [workload\_identity\_federation](#input\_workload\_identity\_federation) | WIF issuer URL, audience and subject list for the meshStack building block identity provider. | <pre>object({<br/>    issuer   = string<br/>    audience = string<br/>    subjects = list(string)<br/>  })</pre> | n/a | yes |
 
 ## Outputs
 

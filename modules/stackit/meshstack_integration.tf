@@ -111,6 +111,20 @@ variable "hub" {
   EOT
 }
 
+data "meshstack_building_block_runner" "this" {
+  metadata = {
+    uuid = var.meshstack.runner_ref == null ? null : var.meshstack.runner_ref.uuid
+  }
+
+  lifecycle {
+    postcondition {
+      # try: a runner without any workload identity federation has a null spec.workload_identity_federation.
+      condition     = try(self.spec.workload_identity_federation.azure, null) != null
+      error_message = "The building block runner offers no token for Azure. We use that token as a generic OIDC token for STACKIT, so pick a runner that offers one via var.meshstack.runner_ref."
+    }
+  }
+}
+
 module "backplane" {
   source = "github.com/meshcloud/meshstack-hub//modules/stackit/project/backplane?ref=${var.hub.git_ref}"
 
@@ -119,9 +133,10 @@ module "backplane" {
   service_account_name            = coalesce(var.stackit_service_account_name, "mesh-project")
   organization_onboarding_enabled = var.stackit_organization_onboarding_enabled
 
+  # The runner offers no STACKIT token, so we use the one offered for Azure as a generic OIDC token. The federation trusts its issuer and audience.
   workload_identity_federation = {
-    # Every variant runs on the same runner, so any one of them reports the issuer.
-    issuer   = meshstack_building_block_definition.this["default"].version_latest.workload_identity_federation.issuer
+    issuer   = data.meshstack_building_block_runner.this.spec.workload_identity_federation.issuer
+    audience = data.meshstack_building_block_runner.this.spec.workload_identity_federation.azure.audience
     subjects = [for bbd in meshstack_building_block_definition.this : bbd.version_latest.workload_identity_federation.subject]
   }
 }
@@ -326,7 +341,7 @@ resource "meshstack_building_block_definition" "this" {
         type            = "STRING"
         assignment_type = "STATIC"
         is_environment  = true
-        argument        = jsonencode("/var/run/secrets/workload-identity/azure/token")
+        argument        = jsonencode(data.meshstack_building_block_runner.this.spec.workload_identity_federation.azure.token_path)
       }
 
       STACKIT_SERVICE_ACCOUNT_EMAIL = {
@@ -444,7 +459,7 @@ terraform {
   required_providers {
     meshstack = {
       source  = "meshcloud/meshstack"
-      version = ">= 0.26.2"
+      version = ">= 0.27.2"
     }
     stackit = {
       source  = "stackitcloud/stackit"

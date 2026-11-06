@@ -13,10 +13,11 @@ variable "organization_id" {
 variable "workload_identity_federation" {
   type = object({
     issuer   = string
+    audience = string
     subjects = list(string)
   })
   nullable    = false
-  description = "WIF issuer URL and subject list for the meshStack building block identity provider."
+  description = "WIF issuer URL, audience and subject list for the meshStack building block identity provider."
 }
 
 variable "service_account_name" {
