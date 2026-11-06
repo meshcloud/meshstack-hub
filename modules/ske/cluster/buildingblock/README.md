@@ -70,7 +70,6 @@ place. `release_on_destroy` cannot change once the cluster is managed.
 | Name | Description |
 |------|-------------|
 | <a name="output_cluster_name"></a> [cluster\_name](#output\_cluster\_name) | Name of the SKE cluster. |
-| <a name="output_cluster_url"></a> [cluster\_url](#output\_cluster\_url) | Deep link to the STACKIT project the cluster lives in, in the STACKIT portal. |
 | <a name="output_kube_host"></a> [kube\_host](#output\_kube\_host) | Kubernetes API server URL of the cluster. |
 | <a name="output_summary"></a> [summary](#output\_summary) | Markdown summary shown on the building block. |
 | <a name="output_vault_secret"></a> [vault\_secret](#output\_vault\_secret) | `{path, secret_hash}` of the secret in Vault, where `secret_hash` changes with its content. |

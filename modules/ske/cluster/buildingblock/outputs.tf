@@ -3,15 +3,6 @@ output "cluster_name" {
   value       = module.cluster.cluster.name
 }
 
-locals {
-  cluster_url = "https://portal.stackit.cloud/projects/${var.stackit_project_id}/ske/clusters"
-}
-
-output "cluster_url" {
-  description = "Deep link to the STACKIT project the cluster lives in, in the STACKIT portal."
-  value       = local.cluster_url
-}
-
 output "kube_host" {
   description = "Kubernetes API server URL of the cluster."
   value       = terraform_data.kube_host.output
@@ -32,7 +23,7 @@ output "summary" {
 
     | Property | Value |
     |----------|-------|
-    | **Cluster** | [Open in STACKIT Portal](${local.cluster_url}) |
+    | **Cluster** | [Open in STACKIT Portal](https://portal.stackit.cloud/kubernetes/clusters/details/${module.cluster.cluster.name}/overview?project=${var.stackit_project_id}) |
     | **Kubernetes** | `${module.cluster.cluster.kubernetes_version_used}` |
     | **API Server** | `${terraform_data.kube_host.output}` |
     | **Node Pool** | `${var.node_pool.name}`: ${var.node_pool.minimum} to ${var.node_pool.maximum} × `${var.node_pool.machine_type}` in ${join(", ", var.node_pool.availability_zones)} |
