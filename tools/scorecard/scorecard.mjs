@@ -727,7 +727,7 @@ const detectors = [
     id: "summary_output",
     category: "integration",
     name: "Building block renders a summary",
-    emoji: "🧾",
+    emoji: "🗒️",
     fn: (mod) => {
       const content = readIntegrationTf(mod);
       if (!content) return { pass: null, detail: "no integration file" };
@@ -743,7 +743,7 @@ const detectors = [
     id: "summary_links_new_tab",
     category: "integration",
     name: "Summary links open in a new tab",
-    emoji: "🔗",
+    emoji: "↗️",
     fn: (mod) => {
       const body = summaryOutputBody(readAllBuildingBlockTf(mod) ?? "");
       if (body === null) return { pass: null, detail: "no summary output" };
