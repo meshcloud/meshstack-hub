@@ -12,18 +12,18 @@ output "summary" {
   value       = <<-EOT
     # Forgejo Connector: **${var.stage}**
 
-    The `${var.stage}` branch of [${var.repository_owner}/${var.repository_name}](${local.repository_url}) deploys
+    The `${var.stage}` branch of <a href="${local.repository_url}" target="_blank" rel="noopener">${var.repository_owner}/${var.repository_name}</a> deploys
     to the namespace `${var.namespace}`.
 
     | Property | Value |
     |----------|-------|
-    | **App** | [https://${var.app_hostname}](https://${var.app_hostname}) |
-    | **Pipeline** | [`pipeline.yaml` in Forgejo Actions](${local.repository_url}/actions?workflow=pipeline.yaml) |
+    | **App** | <a href="https://${var.app_hostname}" target="_blank" rel="noopener">https://${var.app_hostname}</a> |
+    | **Pipeline** | <a href="${local.repository_url}/actions?workflow=pipeline.yaml" target="_blank" rel="noopener"><code>pipeline.yaml</code> in Forgejo Actions</a> |
     | **Service Account** | `${kubernetes_service_account.forgejo_actions.metadata[0].name}`, `edit` on the namespace |
 
     ## Forgejo Actions secrets and variables
 
-    Set in the [repository settings](${local.repository_url}/settings/actions/secrets):
+    Set in the <a href="${local.repository_url}/settings/actions/secrets" target="_blank" rel="noopener">repository settings</a>:
 
     | Name | Kind | Holds |
     |------|------|-------|
