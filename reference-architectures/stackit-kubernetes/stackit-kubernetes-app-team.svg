@@ -1,186 +1,187 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN"
  "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
-<svg width="990pt" height="575pt"
- viewBox="0.00 0.00 990.00 575.00" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
-<g id="graph0" class="graph" transform="scale(1 1) rotate(0) translate(4 571.36)">
+<svg width="1007pt" height="582pt"
+ viewBox="0.00 0.00 1007.00 582.00" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+<g id="graph0" class="graph" transform="scale(1 1) rotate(0) translate(4 577.76)">
 <title>stackit_kubernetes_app_team</title>
-<polygon fill="white" stroke="none" points="-4,4 -4,-571.36 986,-571.36 986,4 -4,4"/>
+<polygon fill="white" stroke="none" points="-4,4 -4,-577.76 1003,-577.76 1003,4 -4,4"/>
 <g id="clust1" class="cluster">
 <title>cluster_catalog</title>
-<path fill="white" stroke="#d5dae0" d="M20,-350.72C20,-350.72 437,-350.72 437,-350.72 443,-350.72 449,-356.72 449,-362.72 449,-362.72 449,-547.36 449,-547.36 449,-553.36 443,-559.36 437,-559.36 437,-559.36 20,-559.36 20,-559.36 14,-559.36 8,-553.36 8,-547.36 8,-547.36 8,-362.72 8,-362.72 8,-356.72 14,-350.72 20,-350.72"/>
-<text xml:space="preserve" text-anchor="middle" x="103.36" y="-544.56" font-family="Helvetica,sans-Serif" font-size="12.00" fill="#697180"> &#160;meshStack — self&#45;service order</text>
+<path fill="white" stroke="#d5dae0" d="M30,-357.12C30,-357.12 447,-357.12 447,-357.12 453,-357.12 459,-363.12 459,-369.12 459,-369.12 459,-553.76 459,-553.76 459,-559.76 453,-565.76 447,-565.76 447,-565.76 30,-565.76 30,-565.76 24,-565.76 18,-559.76 18,-553.76 18,-553.76 18,-369.12 18,-369.12 18,-363.12 24,-357.12 30,-357.12"/>
+<text xml:space="preserve" text-anchor="middle" x="113.36" y="-550.96" font-family="Helvetica,sans-Serif" font-size="12.00" fill="#697180"> &#160;meshStack — self&#45;service order</text>
 </g>
 <g id="clust3" class="cluster">
 <title>cluster_team</title>
-<path fill="white" stroke="#d5dae0" d="M27,-122.24C27,-122.24 370,-122.24 370,-122.24 376,-122.24 382,-128.24 382,-134.24 382,-134.24 382,-325.12 382,-325.12 382,-331.12 376,-337.12 370,-337.12 370,-337.12 27,-337.12 27,-337.12 21,-337.12 15,-331.12 15,-325.12 15,-325.12 15,-134.24 15,-134.24 15,-128.24 21,-122.24 27,-122.24"/>
-<text xml:space="preserve" text-anchor="middle" x="83.69" y="-322.32" font-family="Helvetica,sans-Serif" font-size="12.00" fill="#697180"> &#160;Per Application Team</text>
+<path fill="white" stroke="#d5dae0" d="M20,-116.64C20,-116.64 421,-116.64 421,-116.64 427,-116.64 433,-122.64 433,-128.64 433,-128.64 433,-331.52 433,-331.52 433,-337.52 427,-343.52 421,-343.52 421,-343.52 20,-343.52 20,-343.52 14,-343.52 8,-337.52 8,-331.52 8,-331.52 8,-128.64 8,-128.64 8,-122.64 14,-116.64 20,-116.64"/>
+<text xml:space="preserve" text-anchor="middle" x="76.69" y="-328.72" font-family="Helvetica,sans-Serif" font-size="12.00" fill="#697180"> &#160;Per Application Team</text>
+</g>
+<g id="clust4" class="cluster">
+<title>cluster_ns</title>
+<path fill="#e5f2ea" stroke="#85bfa0" d="M259,-134.64C259,-134.64 403,-134.64 403,-134.64 409,-134.64 415,-140.64 415,-146.64 415,-146.64 415,-210.08 415,-210.08 415,-216.08 409,-222.08 403,-222.08 403,-222.08 259,-222.08 259,-222.08 253,-222.08 247,-216.08 247,-210.08 247,-210.08 247,-146.64 247,-146.64 247,-140.64 253,-134.64 259,-134.64"/>
+<text xml:space="preserve" text-anchor="middle" x="330.82" y="-208.18" font-family="Helvetica,sans-Serif" font-size="11.00" fill="#697180">☸️ Namespace ×{dev,prod,…}</text>
 </g>
 <g id="clust6" class="cluster">
 <title>cluster_shared</title>
-<path fill="white" stroke="#d5dae0" d="M215,-8C215,-8 962,-8 962,-8 968,-8 974,-14 974,-20 974,-20 974,-96.64 974,-96.64 974,-102.64 968,-108.64 962,-108.64 962,-108.64 215,-108.64 215,-108.64 209,-108.64 203,-102.64 203,-96.64 203,-96.64 203,-20 203,-20 203,-14 209,-8 215,-8"/>
-<text xml:space="preserve" text-anchor="middle" x="313.36" y="-93.84" font-family="Helvetica,sans-Serif" font-size="12.00" fill="#697180"> &#160;STACKIT platform — shared services</text>
+<path fill="white" stroke="#d5dae0" d="M258,-8C258,-8 979,-8 979,-8 985,-8 991,-14 991,-20 991,-20 991,-96.64 991,-96.64 991,-102.64 985,-108.64 979,-108.64 979,-108.64 258,-108.64 258,-108.64 252,-108.64 246,-102.64 246,-96.64 246,-96.64 246,-20 246,-20 246,-14 252,-8 258,-8"/>
+<text xml:space="preserve" text-anchor="middle" x="356.36" y="-93.84" font-family="Helvetica,sans-Serif" font-size="12.00" fill="#697180"> &#160;STACKIT platform — shared services</text>
 </g>
 <!-- BBD_S -->
 <g id="node1" class="node">
 <title>BBD_S</title>
-<path fill="#ecedfb" stroke="#9aa2e6" stroke-width="1.1" d="M290.44,-518.96C290.44,-518.96 161.56,-518.96 161.56,-518.96 155.56,-518.96 149.56,-512.96 149.56,-506.96 149.56,-506.96 149.56,-488.72 149.56,-488.72 149.56,-482.72 155.56,-476.72 161.56,-476.72 161.56,-476.72 290.44,-476.72 290.44,-476.72 296.44,-476.72 302.44,-482.72 302.44,-488.72 302.44,-488.72 302.44,-506.96 302.44,-506.96 302.44,-512.96 296.44,-518.96 290.44,-518.96"/>
-<text xml:space="preserve" text-anchor="middle" x="226" y="-501.14" font-family="Helvetica,sans-Serif" font-size="11.00">📦 ske/ske&#45;starterkit BBD</text>
-<text xml:space="preserve" text-anchor="middle" x="226" y="-487.94" font-family="Helvetica,sans-Serif" font-size="11.00">single catalog entry</text>
+<path fill="#ecedfb" stroke="#9aa2e6" stroke-width="1.1" d="M300.44,-525.36C300.44,-525.36 171.56,-525.36 171.56,-525.36 165.56,-525.36 159.56,-519.36 159.56,-513.36 159.56,-513.36 159.56,-495.12 159.56,-495.12 159.56,-489.12 165.56,-483.12 171.56,-483.12 171.56,-483.12 300.44,-483.12 300.44,-483.12 306.44,-483.12 312.44,-489.12 312.44,-495.12 312.44,-495.12 312.44,-513.36 312.44,-513.36 312.44,-519.36 306.44,-525.36 300.44,-525.36"/>
+<text xml:space="preserve" text-anchor="middle" x="236" y="-507.54" font-family="Helvetica,sans-Serif" font-size="11.00">📦 ske/ske&#45;starterkit BBD</text>
+<text xml:space="preserve" text-anchor="middle" x="236" y="-494.34" font-family="Helvetica,sans-Serif" font-size="11.00">single catalog entry</text>
 </g>
 <!-- BBD_R -->
 <g id="node2" class="node">
 <title>BBD_R</title>
-<path fill="#ecedfb" stroke="#9aa2e6" stroke-width="1.1" d="M181.78,-404.72C181.78,-404.72 38.22,-404.72 38.22,-404.72 32.22,-404.72 26.22,-398.72 26.22,-392.72 26.22,-392.72 26.22,-380.72 26.22,-380.72 26.22,-374.72 32.22,-368.72 38.22,-368.72 38.22,-368.72 181.78,-368.72 181.78,-368.72 187.78,-368.72 193.78,-374.72 193.78,-380.72 193.78,-380.72 193.78,-392.72 193.78,-392.72 193.78,-398.72 187.78,-404.72 181.78,-404.72"/>
-<text xml:space="preserve" text-anchor="middle" x="110" y="-383.42" font-family="Helvetica,sans-Serif" font-size="11.00">📦 stackit/git&#45;repository BBD</text>
+<path fill="#ecedfb" stroke="#9aa2e6" stroke-width="1.1" d="M191.78,-411.12C191.78,-411.12 48.22,-411.12 48.22,-411.12 42.22,-411.12 36.22,-405.12 36.22,-399.12 36.22,-399.12 36.22,-387.12 36.22,-387.12 36.22,-381.12 42.22,-375.12 48.22,-375.12 48.22,-375.12 191.78,-375.12 191.78,-375.12 197.78,-375.12 203.78,-381.12 203.78,-387.12 203.78,-387.12 203.78,-399.12 203.78,-399.12 203.78,-405.12 197.78,-411.12 191.78,-411.12"/>
+<text xml:space="preserve" text-anchor="middle" x="120" y="-389.82" font-family="Helvetica,sans-Serif" font-size="11.00">📦 stackit/git&#45;repository BBD</text>
 </g>
 <!-- BBD_S&#45;&gt;BBD_R -->
 <g id="edge2" class="edge">
 <title>BBD_S&#45;&gt;BBD_R</title>
-<path fill="none" stroke="#8b95a3" d="M171.67,-476.41C171.67,-476.41 171.67,-413.65 171.67,-413.65"/>
-<polygon fill="#8b95a3" stroke="#8b95a3" points="174.12,-413.65 171.67,-406.65 169.22,-413.65 174.12,-413.65"/>
-<text xml:space="preserve" text-anchor="middle" x="151.16" y="-447.73" font-family="Helvetica,sans-Serif" font-size="9.00" fill="#697180">composes</text>
+<path fill="none" stroke="#8b95a3" d="M181.67,-482.81C181.67,-482.81 181.67,-420.05 181.67,-420.05"/>
+<polygon fill="#8b95a3" stroke="#8b95a3" points="184.12,-420.05 181.67,-413.05 179.22,-420.05 184.12,-420.05"/>
+<text xml:space="preserve" text-anchor="middle" x="161.16" y="-454.13" font-family="Helvetica,sans-Serif" font-size="9.00" fill="#697180">composes</text>
 </g>
 <!-- BBD_C -->
 <g id="node3" class="node">
 <title>BBD_C</title>
-<path fill="#ecedfb" stroke="#9aa2e6" stroke-width="1.1" d="M418.77,-404.72C418.77,-404.72 267.23,-404.72 267.23,-404.72 261.23,-404.72 255.23,-398.72 255.23,-392.72 255.23,-392.72 255.23,-380.72 255.23,-380.72 255.23,-374.72 261.23,-368.72 267.23,-368.72 267.23,-368.72 418.77,-368.72 418.77,-368.72 424.77,-368.72 430.77,-374.72 430.77,-380.72 430.77,-380.72 430.77,-392.72 430.77,-392.72 430.77,-398.72 424.77,-404.72 418.77,-404.72"/>
-<text xml:space="preserve" text-anchor="middle" x="343" y="-383.42" font-family="Helvetica,sans-Serif" font-size="11.00">📦 ske/forgejo&#45;connector BBD</text>
+<path fill="#ecedfb" stroke="#9aa2e6" stroke-width="1.1" d="M428.77,-411.12C428.77,-411.12 277.23,-411.12 277.23,-411.12 271.23,-411.12 265.23,-405.12 265.23,-399.12 265.23,-399.12 265.23,-387.12 265.23,-387.12 265.23,-381.12 271.23,-375.12 277.23,-375.12 277.23,-375.12 428.77,-375.12 428.77,-375.12 434.77,-375.12 440.77,-381.12 440.77,-387.12 440.77,-387.12 440.77,-399.12 440.77,-399.12 440.77,-405.12 434.77,-411.12 428.77,-411.12"/>
+<text xml:space="preserve" text-anchor="middle" x="353" y="-389.82" font-family="Helvetica,sans-Serif" font-size="11.00">📦 ske/forgejo&#45;connector BBD</text>
 </g>
 <!-- BBD_S&#45;&gt;BBD_C -->
 <g id="edge3" class="edge">
 <title>BBD_S&#45;&gt;BBD_C</title>
-<path fill="none" stroke="#8b95a3" d="M278.84,-476.41C278.84,-476.41 278.84,-413.65 278.84,-413.65"/>
-<polygon fill="#8b95a3" stroke="#8b95a3" points="281.29,-413.65 278.84,-406.65 276.39,-413.65 281.29,-413.65"/>
+<path fill="none" stroke="#8b95a3" d="M288.84,-482.81C288.84,-482.81 288.84,-420.05 288.84,-420.05"/>
+<polygon fill="#8b95a3" stroke="#8b95a3" points="291.29,-420.05 288.84,-413.05 286.39,-420.05 291.29,-420.05"/>
 </g>
 <!-- PROJ -->
 <g id="node5" class="node">
 <title>PROJ</title>
-<path fill="#e5f2ea" stroke="#85bfa0" stroke-width="1.1" d="M339.3,-296.72C339.3,-296.72 258.7,-296.72 258.7,-296.72 252.7,-296.72 246.7,-290.72 246.7,-284.72 246.7,-284.72 246.7,-266.48 246.7,-266.48 246.7,-260.48 252.7,-254.48 258.7,-254.48 258.7,-254.48 339.3,-254.48 339.3,-254.48 345.3,-254.48 351.3,-260.48 351.3,-266.48 351.3,-266.48 351.3,-284.72 351.3,-284.72 351.3,-290.72 345.3,-296.72 339.3,-296.72"/>
-<text xml:space="preserve" text-anchor="middle" x="299" y="-278.9" font-family="Helvetica,sans-Serif" font-size="11.00">🗂️ Project ×N</text>
-<text xml:space="preserve" text-anchor="middle" x="299" y="-265.7" font-family="Helvetica,sans-Serif" font-size="11.00">one per stage</text>
+<path fill="#e5f2ea" stroke="#85bfa0" stroke-width="1.1" d="M402.52,-300C402.52,-300 267.48,-300 267.48,-300 261.48,-300 255.48,-294 255.48,-288 255.48,-288 255.48,-276 255.48,-276 255.48,-270 261.48,-264 267.48,-264 267.48,-264 402.52,-264 402.52,-264 408.52,-264 414.52,-270 414.52,-276 414.52,-276 414.52,-288 414.52,-288 414.52,-294 408.52,-300 402.52,-300"/>
+<text xml:space="preserve" text-anchor="middle" x="335" y="-278.7" font-family="Helvetica,sans-Serif" font-size="11.00">🗂️ Project ×{dev,prod,…}</text>
 </g>
 <!-- BBD_S&#45;&gt;PROJ -->
-<g id="edge12" class="edge">
+<g id="edge11" class="edge">
 <title>BBD_S&#45;&gt;PROJ</title>
-<path fill="none" stroke="#8b95a3" stroke-dasharray="1,5" d="M250.97,-476.53C250.97,-476.53 250.97,-305.68 250.97,-305.68"/>
-<polygon fill="#8b95a3" stroke="#8b95a3" points="253.42,-305.68 250.97,-298.68 248.52,-305.68 253.42,-305.68"/>
+<path fill="none" stroke="#8b95a3" stroke-dasharray="1,5" d="M260.36,-482.93C260.36,-482.93 260.36,-308.91 260.36,-308.91"/>
+<polygon fill="#8b95a3" stroke="#8b95a3" points="262.81,-308.91 260.36,-301.91 257.91,-308.91 262.81,-308.91"/>
 </g>
 <!-- BBD_R&#45;&gt;BBD_C -->
 <!-- REPO -->
 <g id="node4" class="node">
 <title>REPO</title>
-<path fill="#e5f2ea" stroke="#85bfa0" stroke-width="1.1" d="M172.93,-296.72C172.93,-296.72 47.07,-296.72 47.07,-296.72 41.07,-296.72 35.07,-290.72 35.07,-284.72 35.07,-284.72 35.07,-266.48 35.07,-266.48 35.07,-260.48 41.07,-254.48 47.07,-254.48 47.07,-254.48 172.93,-254.48 172.93,-254.48 178.93,-254.48 184.93,-260.48 184.93,-266.48 184.93,-266.48 184.93,-284.72 184.93,-284.72 184.93,-290.72 178.93,-296.72 172.93,-296.72"/>
-<text xml:space="preserve" text-anchor="middle" x="110" y="-278.9" font-family="Helvetica,sans-Serif" font-size="11.00">🔀 App repository ×1</text>
-<text xml:space="preserve" text-anchor="middle" x="110" y="-265.7" font-family="Helvetica,sans-Serif" font-size="11.00">cloned from the template</text>
+<path fill="#e5f2ea" stroke="#85bfa0" stroke-width="1.1" d="M182.93,-303.12C182.93,-303.12 57.07,-303.12 57.07,-303.12 51.07,-303.12 45.07,-297.12 45.07,-291.12 45.07,-291.12 45.07,-272.88 45.07,-272.88 45.07,-266.88 51.07,-260.88 57.07,-260.88 57.07,-260.88 182.93,-260.88 182.93,-260.88 188.93,-260.88 194.93,-266.88 194.93,-272.88 194.93,-272.88 194.93,-291.12 194.93,-291.12 194.93,-297.12 188.93,-303.12 182.93,-303.12"/>
+<text xml:space="preserve" text-anchor="middle" x="120" y="-285.3" font-family="Helvetica,sans-Serif" font-size="11.00">🔀 App repository ×1</text>
+<text xml:space="preserve" text-anchor="middle" x="120" y="-272.1" font-family="Helvetica,sans-Serif" font-size="11.00">cloned from the template</text>
 </g>
 <!-- BBD_R&#45;&gt;REPO -->
-<g id="edge11" class="edge">
+<g id="edge10" class="edge">
 <title>BBD_R&#45;&gt;REPO</title>
-<path fill="none" stroke="#8b95a3" stroke-dasharray="1,5" d="M110,-368.37C110,-368.37 110,-305.53 110,-305.53"/>
-<polygon fill="#8b95a3" stroke="#8b95a3" points="112.45,-305.53 110,-298.53 107.55,-305.53 112.45,-305.53"/>
-<text xml:space="preserve" text-anchor="middle" x="89.74" y="-339.65" font-family="Helvetica,sans-Serif" font-size="9.00" fill="#697180">provisions</text>
+<path fill="none" stroke="#8b95a3" stroke-dasharray="1,5" d="M120,-374.77C120,-374.77 120,-311.93 120,-311.93"/>
+<polygon fill="#8b95a3" stroke="#8b95a3" points="122.45,-311.93 120,-304.93 117.55,-311.93 122.45,-311.93"/>
+<text xml:space="preserve" text-anchor="middle" x="99.74" y="-346.05" font-family="Helvetica,sans-Serif" font-size="9.00" fill="#697180">provisions</text>
 </g>
 <!-- ACT -->
 <g id="node6" class="node">
 <title>ACT</title>
-<path fill="#e5f2ea" stroke="#85bfa0" stroke-width="1.1" d="M164.87,-182.48C164.87,-182.48 45.13,-182.48 45.13,-182.48 39.13,-182.48 33.13,-176.48 33.13,-170.48 33.13,-170.48 33.13,-152.24 33.13,-152.24 33.13,-146.24 39.13,-140.24 45.13,-140.24 45.13,-140.24 164.87,-140.24 164.87,-140.24 170.87,-140.24 176.87,-146.24 176.87,-152.24 176.87,-152.24 176.87,-170.48 176.87,-170.48 176.87,-176.48 170.87,-182.48 164.87,-182.48"/>
-<text xml:space="preserve" text-anchor="middle" x="105" y="-164.66" font-family="Helvetica,sans-Serif" font-size="11.00">⚙️ Forgejo Actions ×N</text>
-<text xml:space="preserve" text-anchor="middle" x="105" y="-151.46" font-family="Helvetica,sans-Serif" font-size="11.00">one pipeline per stage</text>
+<path fill="#e5f2ea" stroke="#85bfa0" stroke-width="1.1" d="M212.08,-185.76C212.08,-185.76 37.92,-185.76 37.92,-185.76 31.92,-185.76 25.92,-179.76 25.92,-173.76 25.92,-173.76 25.92,-161.76 25.92,-161.76 25.92,-155.76 31.92,-149.76 37.92,-149.76 37.92,-149.76 212.08,-149.76 212.08,-149.76 218.08,-149.76 224.08,-155.76 224.08,-161.76 224.08,-161.76 224.08,-173.76 224.08,-173.76 224.08,-179.76 218.08,-185.76 212.08,-185.76"/>
+<text xml:space="preserve" text-anchor="middle" x="125" y="-164.46" font-family="Helvetica,sans-Serif" font-size="11.00">⚙️ Forgejo Actions ×{dev,prod,…}</text>
 </g>
 <!-- BBD_C&#45;&gt;ACT -->
-<g id="edge13" class="edge">
+<g id="edge12" class="edge">
 <title>BBD_C&#45;&gt;ACT</title>
-<path fill="none" stroke="#8b95a3" stroke-dasharray="1,5" d="M254.77,-381C238.53,-381 226.59,-381 226.59,-381 226.59,-381 226.59,-174 226.59,-174 226.59,-174 185.65,-174 185.65,-174"/>
-<polygon fill="#8b95a3" stroke="#8b95a3" points="185.65,-171.55 178.65,-174 185.65,-176.45 185.65,-171.55"/>
+<path fill="none" stroke="#8b95a3" stroke-dasharray="1,5" d="M264.93,-387C237.33,-387 213.93,-387 213.93,-387 213.93,-387 213.93,-194.59 213.93,-194.59"/>
+<polygon fill="#8b95a3" stroke="#8b95a3" points="216.38,-194.59 213.93,-187.59 211.48,-194.59 216.38,-194.59"/>
 </g>
 <!-- REPO&#45;&gt;PROJ -->
 <!-- REPO&#45;&gt;ACT -->
-<g id="edge6" class="edge">
+<g id="edge5" class="edge">
 <title>REPO&#45;&gt;ACT</title>
-<path fill="none" stroke="#8b95a3" d="M105.97,-254.11C105.97,-254.11 105.97,-191.26 105.97,-191.26"/>
-<polygon fill="#8b95a3" stroke="#8b95a3" points="108.42,-191.26 105.97,-184.26 103.52,-191.26 108.42,-191.26"/>
-<text xml:space="preserve" text-anchor="middle" x="80.45" y="-225.39" font-family="Helvetica,sans-Serif" font-size="9.00" fill="#697180">runs pipeline</text>
+<path fill="none" stroke="#8b95a3" d="M120,-260.51C120,-260.51 120,-194.65 120,-194.65"/>
+<polygon fill="#8b95a3" stroke="#8b95a3" points="122.45,-194.65 120,-187.65 117.55,-194.65 122.45,-194.65"/>
+<text xml:space="preserve" text-anchor="middle" x="94.48" y="-230.28" font-family="Helvetica,sans-Serif" font-size="9.00" fill="#697180">runs pipeline</text>
 </g>
 <!-- NS -->
 <g id="node7" class="node">
 <title>NS</title>
-<path fill="#e5f2ea" stroke="#85bfa0" stroke-width="1.1" d="M352,-182.48C352,-182.48 250,-182.48 250,-182.48 244,-182.48 238,-176.48 238,-170.48 238,-170.48 238,-152.24 238,-152.24 238,-146.24 244,-140.24 250,-140.24 250,-140.24 352,-140.24 352,-140.24 358,-140.24 364,-146.24 364,-152.24 364,-152.24 364,-170.48 364,-170.48 364,-176.48 358,-182.48 352,-182.48"/>
-<text xml:space="preserve" text-anchor="middle" x="301" y="-164.66" font-family="Helvetica,sans-Serif" font-size="11.00">☸️ Namespace ×N</text>
-<text xml:space="preserve" text-anchor="middle" x="301" y="-151.46" font-family="Helvetica,sans-Serif" font-size="11.00">one per stage</text>
+<path fill="#ffffff" stroke="#85bfa0" stroke-width="1.1" d="M391.03,-188.88C391.03,-188.88 296.97,-188.88 296.97,-188.88 290.97,-188.88 284.97,-182.88 284.97,-176.88 284.97,-176.88 284.97,-158.64 284.97,-158.64 284.97,-152.64 290.97,-146.64 296.97,-146.64 296.97,-146.64 391.03,-146.64 391.03,-146.64 397.03,-146.64 403.03,-152.64 403.03,-158.64 403.03,-158.64 403.03,-176.88 403.03,-176.88 403.03,-182.88 397.03,-188.88 391.03,-188.88"/>
+<text xml:space="preserve" text-anchor="middle" x="344" y="-171.06" font-family="Helvetica,sans-Serif" font-size="11.00">🤖 ai&#45;summarizer</text>
+<text xml:space="preserve" text-anchor="middle" x="344" y="-157.86" font-family="Helvetica,sans-Serif" font-size="11.00">demo Deployment</text>
 </g>
 <!-- PROJ&#45;&gt;NS -->
-<g id="edge7" class="edge">
+<g id="edge6" class="edge">
 <title>PROJ&#45;&gt;NS</title>
-<path fill="none" stroke="#8b95a3" d="M299,-254.11C299,-254.11 299,-191.26 299,-191.26"/>
-<polygon fill="#8b95a3" stroke="#8b95a3" points="301.45,-191.26 299,-184.26 296.55,-191.26 301.45,-191.26"/>
-<text xml:space="preserve" text-anchor="middle" x="261.97" y="-225.39" font-family="Helvetica,sans-Serif" font-size="9.00" fill="#697180">tenant namespace</text>
+<path fill="none" stroke="#8b95a3" d="M344,-263.65C344,-263.65 344,-197.7 344,-197.7"/>
+<polygon fill="#8b95a3" stroke="#8b95a3" points="346.45,-197.7 344,-190.7 341.55,-197.7 346.45,-197.7"/>
+<text xml:space="preserve" text-anchor="middle" x="306.97" y="-233.37" font-family="Helvetica,sans-Serif" font-size="9.00" fill="#697180">tenant namespace</text>
 </g>
 <!-- ACT&#45;&gt;NS -->
-<!-- ACT&#45;&gt;NS -->
-<g id="edge16" class="edge">
+<g id="edge15" class="edge">
 <title>ACT&#45;&gt;NS</title>
-<path fill="none" stroke="#8b95a3" stroke-dasharray="5,2" d="M177.15,-157C177.15,-157 229.22,-157 229.22,-157"/>
-<polygon fill="#8b95a3" stroke="#8b95a3" points="229.22,-159.45 236.22,-157 229.22,-154.55 229.22,-159.45"/>
-<text xml:space="preserve" text-anchor="middle" x="213.44" y="-148.9" font-family="Helvetica,sans-Serif" font-size="9.00" fill="#697180">deploys to</text>
+<path fill="none" stroke="#8b95a3" stroke-dasharray="5,2" d="M224.57,-174C224.57,-174 275.92,-174 275.92,-174"/>
+<polygon fill="#8b95a3" stroke="#8b95a3" points="275.92,-176.45 282.92,-174 275.92,-171.55 275.92,-176.45"/>
+<text xml:space="preserve" text-anchor="middle" x="260.5" y="-165.9" font-family="Helvetica,sans-Serif" font-size="9.00" fill="#697180">deploys to</text>
 </g>
 <!-- HARBOR -->
 <g id="node8" class="node">
 <title>HARBOR</title>
-<path fill="#eef2f6" stroke="#93a7bb" stroke-width="1.1" d="M369.12,-68.24C369.12,-68.24 232.88,-68.24 232.88,-68.24 226.88,-68.24 220.88,-62.24 220.88,-56.24 220.88,-56.24 220.88,-38 220.88,-38 220.88,-32 226.88,-26 232.88,-26 232.88,-26 369.12,-26 369.12,-26 375.12,-26 381.12,-32 381.12,-38 381.12,-38 381.12,-56.24 381.12,-56.24 381.12,-62.24 375.12,-68.24 369.12,-68.24"/>
-<text xml:space="preserve" text-anchor="middle" x="301" y="-50.42" font-family="Helvetica,sans-Serif" font-size="11.00">🗄️ Container Registry</text>
-<text xml:space="preserve" text-anchor="middle" x="301" y="-37.22" font-family="Helvetica,sans-Serif" font-size="11.00">Harbor project per platform</text>
+<path fill="#eef2f6" stroke="#93a7bb" stroke-width="1.1" d="M412.12,-68.24C412.12,-68.24 275.88,-68.24 275.88,-68.24 269.88,-68.24 263.88,-62.24 263.88,-56.24 263.88,-56.24 263.88,-38 263.88,-38 263.88,-32 269.88,-26 275.88,-26 275.88,-26 412.12,-26 412.12,-26 418.12,-26 424.12,-32 424.12,-38 424.12,-38 424.12,-56.24 424.12,-56.24 424.12,-62.24 418.12,-68.24 412.12,-68.24"/>
+<text xml:space="preserve" text-anchor="middle" x="344" y="-50.42" font-family="Helvetica,sans-Serif" font-size="11.00">🗄️ Container Registry</text>
+<text xml:space="preserve" text-anchor="middle" x="344" y="-37.22" font-family="Helvetica,sans-Serif" font-size="11.00">Harbor project per platform</text>
 </g>
 <!-- ACT&#45;&gt;HARBOR -->
-<g id="edge15" class="edge">
+<g id="edge14" class="edge">
 <title>ACT&#45;&gt;HARBOR</title>
-<path fill="none" stroke="#8b95a3" stroke-dasharray="5,2" d="M177.2,-149C205.93,-149 232.29,-149 232.29,-149 232.29,-149 232.29,-77.24 232.29,-77.24"/>
-<polygon fill="#8b95a3" stroke="#8b95a3" points="234.74,-77.24 232.29,-70.24 229.84,-77.24 234.74,-77.24"/>
-<text xml:space="preserve" text-anchor="middle" x="202.03" y="-132.57" font-family="Helvetica,sans-Serif" font-size="9.00" fill="#697180">pushes images</text>
+<path fill="none" stroke="#8b95a3" stroke-dasharray="5,2" d="M224.25,-162C251.85,-162 274.42,-162 274.42,-162 274.42,-162 274.42,-77.24 274.42,-77.24"/>
+<polygon fill="#8b95a3" stroke="#8b95a3" points="276.87,-77.24 274.42,-70.24 271.97,-77.24 276.87,-77.24"/>
+<text xml:space="preserve" text-anchor="middle" x="244.16" y="-136.61" font-family="Helvetica,sans-Serif" font-size="9.00" fill="#697180">pushes images</text>
 </g>
 <!-- NS&#45;&gt;HARBOR -->
-<g id="edge14" class="edge">
+<g id="edge13" class="edge">
 <title>NS&#45;&gt;HARBOR</title>
-<path fill="none" stroke="#8b95a3" stroke-dasharray="5,2" d="M301,-139.87C301,-139.87 301,-77.02 301,-77.02"/>
-<polygon fill="#8b95a3" stroke="#8b95a3" points="303.45,-77.02 301,-70.02 298.55,-77.02 303.45,-77.02"/>
-<text xml:space="preserve" text-anchor="middle" x="275.99" y="-111.15" font-family="Helvetica,sans-Serif" font-size="9.00" fill="#697180">pulls images</text>
+<path fill="none" stroke="#8b95a3" stroke-dasharray="5,2" d="M344,-146.19C344,-146.19 344,-77.01 344,-77.01"/>
+<polygon fill="#8b95a3" stroke="#8b95a3" points="346.45,-77.01 344,-70.01 341.55,-77.01 346.45,-77.01"/>
+<text xml:space="preserve" text-anchor="middle" x="318.99" y="-114.3" font-family="Helvetica,sans-Serif" font-size="9.00" fill="#697180">pulls images</text>
 </g>
 <!-- MODEL -->
 <g id="node9" class="node">
 <title>MODEL</title>
-<path fill="#eef2f6" stroke="#93a7bb" stroke-width="1.1" d="M544.2,-68.24C544.2,-68.24 453.8,-68.24 453.8,-68.24 447.8,-68.24 441.8,-62.24 441.8,-56.24 441.8,-56.24 441.8,-38 441.8,-38 441.8,-32 447.8,-26 453.8,-26 453.8,-26 544.2,-26 544.2,-26 550.2,-26 556.2,-32 556.2,-38 556.2,-38 556.2,-56.24 556.2,-56.24 556.2,-62.24 550.2,-68.24 544.2,-68.24"/>
-<text xml:space="preserve" text-anchor="middle" x="499" y="-50.42" font-family="Helvetica,sans-Serif" font-size="11.00">🧠 Model Serving</text>
-<text xml:space="preserve" text-anchor="middle" x="499" y="-37.22" font-family="Helvetica,sans-Serif" font-size="11.00">LLM API</text>
+<path fill="#eef2f6" stroke="#93a7bb" stroke-width="1.1" d="M587.2,-68.24C587.2,-68.24 496.8,-68.24 496.8,-68.24 490.8,-68.24 484.8,-62.24 484.8,-56.24 484.8,-56.24 484.8,-38 484.8,-38 484.8,-32 490.8,-26 496.8,-26 496.8,-26 587.2,-26 587.2,-26 593.2,-26 599.2,-32 599.2,-38 599.2,-38 599.2,-56.24 599.2,-56.24 599.2,-62.24 593.2,-68.24 587.2,-68.24"/>
+<text xml:space="preserve" text-anchor="middle" x="542" y="-50.42" font-family="Helvetica,sans-Serif" font-size="11.00">🧠 Model Serving</text>
+<text xml:space="preserve" text-anchor="middle" x="542" y="-37.22" font-family="Helvetica,sans-Serif" font-size="11.00">LLM API</text>
 </g>
 <!-- NS&#45;&gt;MODEL -->
-<g id="edge17" class="edge">
+<g id="edge16" class="edge">
 <title>NS&#45;&gt;MODEL</title>
-<path fill="none" stroke="#8b95a3" stroke-dasharray="5,2" d="M364.47,-154C422.38,-154 499,-154 499,-154 499,-154 499,-77.26 499,-77.26"/>
-<polygon fill="#8b95a3" stroke="#8b95a3" points="501.45,-77.26 499,-70.26 496.55,-77.26 501.45,-77.26"/>
-<text xml:space="preserve" text-anchor="middle" x="426.83" y="-156.7" font-family="Helvetica,sans-Serif" font-size="9.00" fill="#697180">calls with injected key</text>
+<path fill="none" stroke="#8b95a3" stroke-dasharray="5,2" d="M403.41,-161C461.73,-161 542,-161 542,-161 542,-161 542,-77.05 542,-77.05"/>
+<polygon fill="#8b95a3" stroke="#8b95a3" points="544.45,-77.05 542,-70.05 539.55,-77.05 544.45,-77.05"/>
+<text xml:space="preserve" text-anchor="middle" x="471.41" y="-163.7" font-family="Helvetica,sans-Serif" font-size="9.00" fill="#697180">calls with injected key</text>
 </g>
 <!-- ING -->
 <g id="node10" class="node">
 <title>ING</title>
-<path fill="#eef2f6" stroke="#93a7bb" stroke-width="1.1" d="M763.05,-68.24C763.05,-68.24 628.95,-68.24 628.95,-68.24 622.95,-68.24 616.95,-62.24 616.95,-56.24 616.95,-56.24 616.95,-38 616.95,-38 616.95,-32 622.95,-26 628.95,-26 628.95,-26 763.05,-26 763.05,-26 769.05,-26 775.05,-32 775.05,-38 775.05,-38 775.05,-56.24 775.05,-56.24 775.05,-62.24 769.05,-68.24 763.05,-68.24"/>
-<text xml:space="preserve" text-anchor="middle" x="696" y="-50.42" font-family="Helvetica,sans-Serif" font-size="11.00">🔐 Ingress + cert&#45;manager</text>
-<text xml:space="preserve" text-anchor="middle" x="696" y="-37.22" font-family="Helvetica,sans-Serif" font-size="11.00">HAProxy LoadBalancer</text>
+<path fill="#eef2f6" stroke="#93a7bb" stroke-width="1.1" d="M806.05,-68.24C806.05,-68.24 671.95,-68.24 671.95,-68.24 665.95,-68.24 659.95,-62.24 659.95,-56.24 659.95,-56.24 659.95,-38 659.95,-38 659.95,-32 665.95,-26 671.95,-26 671.95,-26 806.05,-26 806.05,-26 812.05,-26 818.05,-32 818.05,-38 818.05,-38 818.05,-56.24 818.05,-56.24 818.05,-62.24 812.05,-68.24 806.05,-68.24"/>
+<text xml:space="preserve" text-anchor="middle" x="739" y="-50.42" font-family="Helvetica,sans-Serif" font-size="11.00">🔐 Ingress + cert&#45;manager</text>
+<text xml:space="preserve" text-anchor="middle" x="739" y="-37.22" font-family="Helvetica,sans-Serif" font-size="11.00">HAProxy LoadBalancer</text>
 </g>
 <!-- NS&#45;&gt;ING -->
-<g id="edge18" class="edge">
+<g id="edge17" class="edge">
 <title>NS&#45;&gt;ING</title>
-<path fill="none" stroke="#8b95a3" stroke-dasharray="5,2" d="M364.46,-168C476.12,-168 696,-168 696,-168 696,-168 696,-77.24 696,-77.24"/>
-<polygon fill="#8b95a3" stroke="#8b95a3" points="698.45,-77.24 696,-70.24 693.55,-77.24 698.45,-77.24"/>
-<text xml:space="preserve" text-anchor="middle" x="551.59" y="-170.7" font-family="Helvetica,sans-Serif" font-size="9.00" fill="#697180">exposed via</text>
+<path fill="none" stroke="#8b95a3" stroke-dasharray="5,2" d="M403.56,-175C513.91,-175 739,-175 739,-175 739,-175 739,-77.04 739,-77.04"/>
+<polygon fill="#8b95a3" stroke="#8b95a3" points="741.45,-77.04 739,-70.04 736.55,-77.04 741.45,-77.04"/>
+<text xml:space="preserve" text-anchor="middle" x="596.25" y="-177.7" font-family="Helvetica,sans-Serif" font-size="9.00" fill="#697180">exposed via</text>
 </g>
 <!-- HARBOR&#45;&gt;MODEL -->
 <!-- MODEL&#45;&gt;ING -->
 <!-- DNS -->
 <g id="node11" class="node">
 <title>DNS</title>
-<path fill="#eef2f6" stroke="#93a7bb" stroke-width="1.1" d="M944.26,-68.24C944.26,-68.24 847.74,-68.24 847.74,-68.24 841.74,-68.24 835.74,-62.24 835.74,-56.24 835.74,-56.24 835.74,-38 835.74,-38 835.74,-32 841.74,-26 847.74,-26 847.74,-26 944.26,-26 944.26,-26 950.26,-26 956.26,-32 956.26,-38 956.26,-38 956.26,-56.24 956.26,-56.24 956.26,-62.24 950.26,-68.24 944.26,-68.24"/>
-<text xml:space="preserve" text-anchor="middle" x="896" y="-50.42" font-family="Helvetica,sans-Serif" font-size="11.00">🧭 DNS zone</text>
-<text xml:space="preserve" text-anchor="middle" x="896" y="-37.22" font-family="Helvetica,sans-Serif" font-size="11.00">wildcard hostname</text>
+<path fill="#eef2f6" stroke="#93a7bb" stroke-width="1.1" d="M961.11,-65.12C961.11,-65.12 890.89,-65.12 890.89,-65.12 884.89,-65.12 878.89,-59.12 878.89,-53.12 878.89,-53.12 878.89,-41.12 878.89,-41.12 878.89,-35.12 884.89,-29.12 890.89,-29.12 890.89,-29.12 961.11,-29.12 961.11,-29.12 967.11,-29.12 973.11,-35.12 973.11,-41.12 973.11,-41.12 973.11,-53.12 973.11,-53.12 973.11,-59.12 967.11,-65.12 961.11,-65.12"/>
+<text xml:space="preserve" text-anchor="middle" x="926" y="-43.82" font-family="Helvetica,sans-Serif" font-size="11.00">🧭 DNS zone</text>
 </g>
 <!-- ING&#45;&gt;DNS -->
 </g>

@@ -41,12 +41,18 @@ digraph stackit_kubernetes_app_team {
     margin=18
 
     REPO [label="🔀 App repository ×1\ncloned from the template" fillcolor="#e5f2ea" color="#85bfa0"]
-    PROJ [label="🗂️ Project ×N\none per stage" fillcolor="#e5f2ea" color="#85bfa0"]
-    ACT  [label="⚙️ Forgejo Actions ×N\none pipeline per stage" fillcolor="#e5f2ea" color="#85bfa0"]
-    NS   [label="☸️ Namespace ×N\none per stage" fillcolor="#e5f2ea" color="#85bfa0"]
+    PROJ [label="🗂️ Project ×{dev,prod,…}" fillcolor="#e5f2ea" color="#85bfa0"]
+    ACT  [label="⚙️ Forgejo Actions ×{dev,prod,…}" fillcolor="#e5f2ea" color="#85bfa0"]
+    subgraph cluster_ns {
+      label="☸️ Namespace ×{dev,prod,…}"
+      fontname="Helvetica" fontsize=11
+      style="rounded,filled" fillcolor="#e5f2ea" color="#85bfa0"
+      margin=12
+
+      NS [label="🤖 ai-summarizer\ndemo Deployment" fillcolor="#ffffff" color="#85bfa0"]
+    }
 
     { rank=same; REPO -> PROJ [style=invis] }
-    { rank=same; ACT -> NS [style=invis] }
 
     REPO -> ACT [xlabel="runs pipeline"]
     PROJ -> NS  [xlabel="tenant namespace"]
@@ -62,7 +68,7 @@ digraph stackit_kubernetes_app_team {
     HARBOR [label="🗄️ Container Registry\nHarbor project per platform" fillcolor="#eef2f6" color="#93a7bb"]
     MODEL  [label="🧠 Model Serving\nLLM API" fillcolor="#eef2f6" color="#93a7bb"]
     ING    [label="🔐 Ingress + cert-manager\nHAProxy LoadBalancer" fillcolor="#eef2f6" color="#93a7bb"]
-    DNS    [label="🧭 DNS zone\nwildcard hostname" fillcolor="#eef2f6" color="#93a7bb"]
+    DNS    [label="🧭 DNS zone" fillcolor="#eef2f6" color="#93a7bb"]
 
     { rank=same; HARBOR -> MODEL -> ING -> DNS [style=invis] }
   }
