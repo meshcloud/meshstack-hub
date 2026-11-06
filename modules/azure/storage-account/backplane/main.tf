@@ -10,13 +10,13 @@ resource "azurerm_user_assigned_identity" "backplane" {
 }
 
 resource "azurerm_federated_identity_credential" "backplane" {
-  for_each = { for i, s in var.workload_identity_federation.subjects : tostring(i) => s }
+  for_each = { for index, identity in var.workload_identity_federations : tostring(index) => identity }
 
   name                      = "subject-${each.key}"
   user_assigned_identity_id = azurerm_user_assigned_identity.backplane.id
-  audience                  = ["api://AzureADTokenExchange"]
-  issuer                    = var.workload_identity_federation.issuer
-  subject                   = each.value
+  audience                  = [each.value.audience]
+  issuer                    = each.value.issuer
+  subject                   = each.value.subject
 }
 
 resource "azurerm_role_definition" "backplane" {

@@ -25,7 +25,7 @@ the cross-scope `LinkedAuthorizationFailed` error that a split spoke/hub identit
 creating the linked peering is avoided.
 
 The UAMI authenticates via **workload identity federation** (no secrets to rotate), federated against
-the meshStack replicator subject(s) passed in `var.workload_identity_federation`.
+the identities passed in `var.workload_identity_federations`.
 
 ## Operational notes
 
@@ -43,6 +43,14 @@ the meshStack replicator subject(s) passed in `var.workload_identity_federation`
   draw their address space from an IPAM pool there, e.g. one created by the `azure/ipam-pool`
   building block. Keep the pool inside `var.hub_scope`, and `var.scope` inside the scope of the
   pool's network manager.
+
+## Migrating from `workload_identity_federation`
+
+Earlier revisions took one `workload_identity_federation` object with an `issuer` and a `subjects`
+list, and gave every credential the audience `api://AzureADTokenExchange`. Pass one entry per
+subject in `workload_identity_federations`, with that subject as `subject` and
+`api://AzureADTokenExchange` as `audience`. The credentials keep their names and values, so the
+plan is empty.
 
 <!-- BEGIN_TF_DOCS -->
 ## Requirements
@@ -78,7 +86,7 @@ No modules.
 | <a name="input_name"></a> [name](#input\_name) | Name for the building block identity, resource group and role definitions. | `string` | n/a | yes |
 | <a name="input_scope"></a> [scope](#input\_scope) | Scope where the spoke network can be deployed (management group or subscription ID), typically the parent of all landing zones. | `string` | n/a | yes |
 | <a name="input_subscription_id"></a> [subscription\_id](#input\_subscription\_id) | Subscription (bare GUID) where the UAMI and its resource group are created. Typically the hub subscription so the identity lives in a stable, platform-owned place. Deploy the backplane once per hub environment (e.g. hub-dev, hub-prod) with the respective subscription. | `string` | n/a | yes |
-| <a name="input_workload_identity_federation"></a> [workload\_identity\_federation](#input\_workload\_identity\_federation) | WIF issuer and subjects for federated authentication of the automation identity. | <pre>object({<br/>    issuer   = string<br/>    subjects = list(string)<br/>  })</pre> | n/a | yes |
+| <a name="input_workload_identity_federations"></a> [workload\_identity\_federations](#input\_workload\_identity\_federations) | meshStack identities the automation identity trusts, one per building block runner. For more<br/>subjects of one issuer, pass one entry per subject. | <pre>list(object({<br/>    issuer   = string<br/>    audience = string<br/>    subject  = string<br/>  }))</pre> | n/a | yes |
 
 ## Outputs
 

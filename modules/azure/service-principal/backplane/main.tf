@@ -20,13 +20,13 @@ resource "azurerm_user_assigned_identity" "buildingblock_deploy" {
 }
 
 resource "azurerm_federated_identity_credential" "buildingblock_deploy" {
-  for_each = { for i, s in var.workload_identity_federation.subjects : tostring(i) => s }
+  for_each = { for index, identity in var.workload_identity_federations : tostring(index) => identity }
 
   name                      = "subject-${each.key}"
   user_assigned_identity_id = azurerm_user_assigned_identity.buildingblock_deploy.id
-  audience                  = ["api://AzureADTokenExchange"]
-  issuer                    = var.workload_identity_federation.issuer
-  subject                   = each.value
+  audience                  = [each.value.audience]
+  issuer                    = each.value.issuer
+  subject                   = each.value.subject
 }
 
 # -----------------------------------------------------------------------------

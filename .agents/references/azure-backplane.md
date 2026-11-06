@@ -42,14 +42,13 @@ resource "azurerm_user_assigned_identity" "backplane" {
 }
 
 resource "azurerm_federated_identity_credential" "backplane" {
-  for_each = { for i, s in var.workload_identity_federation.subjects : tostring(i) => s }
+  for_each = { for index, identity in var.workload_identity_federations : tostring(index) => identity }
 
-  name                = "subject-${each.key}"
-  resource_group_name = azurerm_resource_group.backplane.name
-  parent_id           = azurerm_user_assigned_identity.backplane.id
-  audience            = ["api://AzureADTokenExchange"]
-  issuer              = var.workload_identity_federation.issuer
-  subject             = each.value
+  name                      = "subject-${each.key}"
+  user_assigned_identity_id = azurerm_user_assigned_identity.backplane.id
+  audience                  = [each.value.audience]
+  issuer                    = each.value.issuer
+  subject                   = each.value.subject
 }
 
 resource "azurerm_role_definition" "backplane" {
@@ -89,13 +88,17 @@ variable "location" {
   description = "Azure region for the UAMI resource."
 }
 
-variable "workload_identity_federation" {
-  type = object({
+variable "workload_identity_federations" {
+  type = list(object({
     issuer   = string
-    subjects = list(string)
-  })
+    audience = string
+    subject  = string
+  }))
   nullable    = false
-  description = "WIF issuer and subjects for federated authentication."
+  description = <<-EOT
+  meshStack identities the automation identity trusts, one per building block runner. For more
+  subjects of one issuer, pass one entry per subject.
+  EOT
 }
 ```
 
@@ -126,6 +129,15 @@ output "identity" {
 In the integration file, pass the UAMI client ID as the `ARM_CLIENT_ID` environment variable:
 
 ```hcl
+module "runner_identity" {
+  source = "github.com/meshcloud/meshstack-hub//modules/meshstack/runner-identity?ref=${var.hub.git_ref}"
+
+  cloud               = "azure"
+  runner_ref          = var.meshstack.runner_ref
+  trusted_runner_refs = var.meshstack.trusted_runner_refs
+  versions            = meshstack_building_block_definition.this.versions
+}
+
 module "backplane" {
   source = "github.com/meshcloud/meshstack-hub//modules/azure/<service>/backplane?ref=${var.hub.git_ref}"
 
@@ -133,20 +145,18 @@ module "backplane" {
   scope    = var.azure_scope
   location = var.azure_location
 
-  workload_identity_federation = {
-    issuer   = meshstack_building_block_definition.this.version_latest.workload_identity_federation.issuer
-    subjects = [meshstack_building_block_definition.this.version_latest.workload_identity_federation.subject]
-  }
+  workload_identity_federations = module.runner_identity.identities
 }
 ```
 
-The status read and the `meshstack.runner_ref` behind it are the same in every cloud, see
-[meshstack-integration.md § Runner identity](meshstack-integration.md#runner-identity).
+The input `ARM_OIDC_TOKEN_FILE_PATH` reads `module.runner_identity.token_path`, see
+[meshstack-integration.md § Runner identity](meshstack-integration.md#runner-identity). Each
+runner has its own Azure audience, so the credentials take it from the identity.
 
-**Known limitation.** The federated credential trusts the subject of the version the Terraform
-resource manages. A building block keeps running on the version it was created with, so moving
-the definition to a different runner breaks the blocks that still run on the old version until
-they upgrade.
+The credentials are keyed by the index of the identity, so the current runner keeps `subject-0`.
+When the definition moves to another runner, `subject-0` changes to the new runner in place, and
+the old runner listed in `trusted_runner_refs` gets a new credential. Entra can take a few minutes
+before it accepts a new credential, so runs on the old runner can fail during that time.
 
 The `meshstack_integration.tf` must include `azure_location` variable (flat, provider-prefixed) for all resource placement.
 The resource group is derived from and managed by the backplane using `var.name`.
@@ -157,6 +167,6 @@ The resource group is derived from and managed by the backplane using `var.name`
 - [ ] Uses `azurerm_federated_identity_credential` (not `azuread_application_federated_identity_credential`)
 - [ ] No `azuread_application_password` resources
 - [ ] No `create_service_principal_name` / `existing_principal_ids` toggle
-- [ ] `workload_identity_federation` variable is non-nullable (always required)
+- [ ] `workload_identity_federations` variable is non-nullable (always required)
 - [ ] Outputs `identity.client_id`, `identity.principal_id`, `identity.tenant_id`
 - [ ] `meshstack_integration.tf` includes `azure_location` variable (no separate `azure_resource_group_name` — the backplane manages its own resource group named after `var.name`)

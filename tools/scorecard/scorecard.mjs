@@ -1085,10 +1085,10 @@ const detectors = [
     fn: (mod) => {
       const varsTf = readBackplaneFile(mod, "variables.tf");
       if (!varsTf) return { pass: false, detail: "no variables.tf" };
-      const hasWifVar = /variable\s+"workload_identity_federation"/.test(varsTf);
+      const hasWifVar = /variable\s+"workload_identity_federations?"/.test(varsTf);
       if (!hasWifVar) return { pass: false, detail: "variable not found" };
       const hasNullableFalse = /nullable\s*=\s*false/.test(varsTf);
-      const hasDefaultNull = /variable\s+"workload_identity_federation"[\s\S]*?default\s*=\s*null/.test(varsTf);
+      const hasDefaultNull = /variable\s+"workload_identity_federations?"[\s\S]*?default\s*=\s*null/.test(varsTf);
       return {
         pass: hasNullableFalse || !hasDefaultNull,
         detail: hasDefaultNull ? "default = null makes WIF optional" : undefined,

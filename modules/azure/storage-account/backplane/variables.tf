@@ -20,11 +20,25 @@ variable "location" {
   description = "Azure region for the UAMI resource."
 }
 
-variable "workload_identity_federation" {
-  type = object({
+variable "workload_identity_federations" {
+  type = list(object({
     issuer   = string
-    subjects = list(string)
-  })
+    audience = string
+    subject  = string
+  }))
   nullable    = false
-  description = "WIF issuer and subjects for federated authentication."
+  description = <<-EOT
+  meshStack identities the automation identity trusts, one per building block runner. For more
+  subjects of one issuer, pass one entry per subject.
+  EOT
+
+  validation {
+    condition     = length(var.workload_identity_federations) > 0
+    error_message = "The automation identity needs at least one identity to trust."
+  }
+
+  validation {
+    condition     = alltrue([for identity in var.workload_identity_federations : identity.subject != null])
+    error_message = "These identities need a subject: ${join(", ", [for identity in var.workload_identity_federations : identity.issuer if identity.subject == null])}."
+  }
 }

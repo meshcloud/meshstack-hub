@@ -76,6 +76,10 @@ variable "meshstack" {
       kind = string
       uuid = string
     }))
+    trusted_runner_refs = optional(list(object({
+      kind = string
+      uuid = string
+    })), [])
   })
   description = "Shared meshStack context, see docs."
 }
@@ -104,6 +108,15 @@ output "building_block_definition" {
   }
 }
 
+module "runner_identity" {
+  source = "github.com/meshcloud/meshstack-hub//modules/meshstack/runner-identity?ref=${var.hub.git_ref}"
+
+  cloud               = "azure"
+  runner_ref          = var.meshstack.runner_ref
+  trusted_runner_refs = var.meshstack.trusted_runner_refs
+  versions            = meshstack_building_block_definition.this.versions
+}
+
 module "backplane" {
   source = "github.com/meshcloud/meshstack-hub//modules/azure/ai-llm/backplane?ref=${var.hub.git_ref}"
 
@@ -111,10 +124,7 @@ module "backplane" {
   scope    = var.azure_scope
   location = var.azure_location
 
-  workload_identity_federation = {
-    issuer   = meshstack_building_block_definition.this.version_latest.workload_identity_federation.issuer
-    subjects = [meshstack_building_block_definition.this.version_latest.workload_identity_federation.subject]
-  }
+  workload_identity_federations = module.runner_identity.identities
 }
 
 resource "meshstack_building_block_definition" "this" {
@@ -217,7 +227,7 @@ resource "meshstack_building_block_definition" "this" {
         description     = "Path to the OIDC token file used for workload identity federation authentication."
         assignment_type = "STATIC"
         is_environment  = true
-        argument        = jsonencode("/var/run/secrets/workload-identity/azure/token")
+        argument        = jsonencode(module.runner_identity.token_path)
       }
       subscription_id = {
         type            = "STRING"
@@ -351,7 +361,7 @@ terraform {
   required_providers {
     meshstack = {
       source  = "meshcloud/meshstack"
-      version = ">= 0.27.0"
+      version = ">= 0.27.2"
     }
     azurerm = {
       source  = "hashicorp/azurerm"

@@ -7,6 +7,14 @@ This documentation is intended as a reference documentation for cloud foundation
 This is a very simple building block, which means we let the SPN have access to deploy budget alerts
 across all subscriptions underneath a management group (typically the top-level management group for landing zones).
 
+## Migrating from `workload_identity_federation`
+
+Earlier revisions took one `workload_identity_federation` object with an `issuer` and a `subjects`
+list, and gave every credential the audience `api://AzureADTokenExchange`. Pass one entry per
+subject in `workload_identity_federations`, with that subject as `subject` and
+`api://AzureADTokenExchange` as `audience`. The credentials keep their names and values, so the
+plan is empty.
+
 <!-- BEGIN_TF_DOCS -->
 ## Requirements
 
@@ -35,7 +43,7 @@ No modules.
 | <a name="input_location"></a> [location](#input\_location) | Azure region for the UAMI resource. | `string` | n/a | yes |
 | <a name="input_name"></a> [name](#input\_name) | Name for the building block identity and role definition. | `string` | `"budget-alert"` | no |
 | <a name="input_scope"></a> [scope](#input\_scope) | Scope for role assignment (management group or subscription ID). | `string` | n/a | yes |
-| <a name="input_workload_identity_federation"></a> [workload\_identity\_federation](#input\_workload\_identity\_federation) | WIF issuer and subjects for federated authentication. | <pre>object({<br/>    issuer   = string<br/>    subjects = list(string)<br/>  })</pre> | n/a | yes |
+| <a name="input_workload_identity_federations"></a> [workload\_identity\_federations](#input\_workload\_identity\_federations) | meshStack identities the automation identity trusts, one per building block runner. For more<br/>subjects of one issuer, pass one entry per subject. | <pre>list(object({<br/>    issuer   = string<br/>    audience = string<br/>    subject  = string<br/>  }))</pre> | n/a | yes |
 
 ## Outputs
 
