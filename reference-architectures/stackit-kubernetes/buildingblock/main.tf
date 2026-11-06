@@ -32,10 +32,7 @@ locals {
 
   project_identifier = coalesce(local.overrides.project_identifier, "${local.platform_identifier}-ske")
 
-  project_display_name = coalesce(
-    local.imports.project == null ? null : local.imports.project.display_name,
-    "STACKIT Kubernetes Platform ${local.platform_identifier}"
-  )
+  project_display_name = "STACKIT Kubernetes Platform ${local.platform_identifier}"
 
   # A production platform deletes what it adopted, like anything it created.
   release_imports_on_destroy = var.playground_mode && local.imports.project != null

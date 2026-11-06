@@ -523,7 +523,6 @@ resource "meshstack_building_block_definition" "this" {
               description          = "Adopt the hosting project. Every other import except starterkit_definitions needs it."
               additionalProperties = false
               properties = {
-                display_name   = { type = "string", title = "display_name" }
                 admin_bindings = { type = "object", title = "admin_bindings", description = "Existing Project Admin binding names by username.", additionalProperties = { type = "string" } }
               }
             }

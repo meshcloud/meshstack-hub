@@ -226,7 +226,7 @@ built before this architecture:
 
 | Key | Takes over |
 |---|---|
-| `project = {display_name, admin_bindings}` | the meshProject `overrides.project_identifier` and its tenant on the landing zone platform; `display_name` keeps the project's display name, `admin_bindings` maps a username to the name of its existing Project Admin binding |
+| `project = {admin_bindings}` | the meshProject `overrides.project_identifier` and its tenant on the landing zone platform, renamed to `STACKIT Kubernetes Platform <platform identifier>`; `admin_bindings` maps a username to the name of its existing Project Admin binding |
 | `adopt_ske = true` | the SKE cluster `overrides.cluster_name` |
 | `git = {instance_id, instance_name, forgejo_organization}` | the STACKIT Git instance and its Forgejo organization |
 | `dns = {zone_id, record_set_id}` | the DNS zone **DNS Domain** names and its wildcard record set |

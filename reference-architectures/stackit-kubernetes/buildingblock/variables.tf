@@ -209,7 +209,6 @@ variable "starterkit_approval_policies" {
 variable "imports" {
   type = object({
     project = optional(object({
-      display_name   = optional(string)
       admin_bindings = optional(map(string), {})
     }))
     adopt_ske = optional(bool, false)
