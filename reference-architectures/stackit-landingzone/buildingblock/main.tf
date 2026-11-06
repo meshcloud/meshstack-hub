@@ -1,4 +1,7 @@
 locals {
+  # The provider reads a ref without a uuid as unknown, not as the shared runner.
+  runner_ref = var.runner_ref.uuid == null ? null : var.runner_ref
+
   # The identifier is unique across the whole meshStack instance and lands in every landing zone
   # name, so a playground deployment suffixes it instead of occupying the plain name.
   platform_identifier = var.playground_mode ? "${var.platform_identifier}-${random_string.playground_suffix.result}" : var.platform_identifier
@@ -159,7 +162,7 @@ module "stackit_integration" {
 
   meshstack = {
     owning_workspace_identifier = var.workspace
-    runner_ref                  = var.runner_ref
+    runner_ref                  = local.runner_ref
     location_name               = local.location_name
     platform_identifier         = local.platform_identifier
     tags                        = local.tags
@@ -198,7 +201,7 @@ module "stackit_project_starterkit" {
     owner_tag_key = local.tags.project_owner_tag_key
   }
 
-  meshstack = { owning_workspace_identifier = var.workspace, tags = local.tags.building_block, runner_ref = var.runner_ref }
+  meshstack = { owning_workspace_identifier = var.workspace, tags = local.tags.building_block, runner_ref = local.runner_ref }
   hub       = var.hub
 }
 
@@ -212,7 +215,7 @@ module "service_account_integration" {
 
   stackit_federation_backplane_email = module.service_account_federation_integration.backplane_service_account_email
 
-  meshstack = { owning_workspace_identifier = var.workspace, tags = local.tags.building_block, runner_ref = var.runner_ref }
+  meshstack = { owning_workspace_identifier = var.workspace, tags = local.tags.building_block, runner_ref = local.runner_ref }
   hub       = var.hub
 }
 
@@ -225,7 +228,7 @@ module "service_account_federation_integration" {
 
   stackit_project_id = stackit_resourcemanager_project.foundation.project_id
 
-  meshstack = { owning_workspace_identifier = var.workspace, tags = local.tags.building_block, runner_ref = var.runner_ref }
+  meshstack = { owning_workspace_identifier = var.workspace, tags = local.tags.building_block, runner_ref = local.runner_ref }
   hub       = var.hub
 }
 
@@ -239,7 +242,7 @@ module "network_area_integration" {
   stackit_organization_id = var.stackit_org
   stackit_project_id      = stackit_resourcemanager_project.foundation.project_id
 
-  meshstack = { owning_workspace_identifier = var.workspace, tags = local.tags.building_block, runner_ref = var.runner_ref }
+  meshstack = { owning_workspace_identifier = var.workspace, tags = local.tags.building_block, runner_ref = local.runner_ref }
   hub       = var.hub
 }
 
@@ -255,7 +258,7 @@ module "network_integration" {
   stackit_network_min_prefix_length = var.network.tenant_network_min_prefix_length
   stackit_network_max_prefix_length = var.network.tenant_network_max_prefix_length
 
-  meshstack = { owning_workspace_identifier = var.workspace, tags = local.tags.building_block, runner_ref = var.runner_ref }
+  meshstack = { owning_workspace_identifier = var.workspace, tags = local.tags.building_block, runner_ref = local.runner_ref }
   hub       = var.hub
 }
 

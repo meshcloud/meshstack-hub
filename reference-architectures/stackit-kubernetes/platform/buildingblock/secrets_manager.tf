@@ -3,7 +3,7 @@ module "secrets_manager_integration" {
 
   approval_policies = var.approval_policies
 
-  meshstack = { owning_workspace_identifier = var.workspace, tags = var.tags.building_block, runner_ref = var.runner_ref }
+  meshstack = { owning_workspace_identifier = var.workspace, tags = var.tags.building_block, runner_ref = local.runner_ref }
   hub       = local.platform_hub
 }
 
