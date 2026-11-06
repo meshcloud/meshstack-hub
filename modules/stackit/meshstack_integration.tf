@@ -91,6 +91,10 @@ variable "meshstack" {
       kind = string
       uuid = string
     }))
+    trusted_runner_refs = optional(list(object({
+      kind = string
+      uuid = string
+    })), [])
   })
   description = "Shared meshStack context, see docs."
 }
@@ -111,6 +115,35 @@ variable "hub" {
   EOT
 }
 
+# The definitions read the token path from a call without for_each. A reference into a call with
+# for_each depends on all its outputs, which read the definitions and so form a cycle.
+module "runner" {
+  source = "github.com/meshcloud/meshstack-hub//modules/meshstack/runner-identity?ref=${var.hub.git_ref}"
+
+  cloud      = "azure"
+  runner_ref = var.meshstack.runner_ref
+  versions   = {}
+}
+
+module "runner_identity" {
+  source   = "github.com/meshcloud/meshstack-hub//modules/meshstack/runner-identity?ref=${var.hub.git_ref}"
+  for_each = local.project_variants
+
+  cloud               = "azure"
+  runner_ref          = var.meshstack.runner_ref
+  trusted_runner_refs = var.meshstack.trusted_runner_refs
+  versions            = meshstack_building_block_definition.this[each.key].versions
+}
+
+locals {
+  # Runner first, then variant: the current runner keeps keys "0" and "1" when a trusted runner is added.
+  runner_identities = flatten([
+    for index in range(length(module.runner_identity["default"].identities)) : [
+      for variant in keys(local.project_variants) : module.runner_identity[variant].identities[index]
+    ]
+  ])
+}
+
 module "backplane" {
   source = "github.com/meshcloud/meshstack-hub//modules/stackit/project/backplane?ref=${var.hub.git_ref}"
 
@@ -119,11 +152,7 @@ module "backplane" {
   service_account_name            = coalesce(var.stackit_service_account_name, "mesh-project")
   organization_onboarding_enabled = var.stackit_organization_onboarding_enabled
 
-  workload_identity_federation = {
-    # Every variant runs on the same runner, so any one of them reports the issuer.
-    issuer   = meshstack_building_block_definition.this["default"].version_latest.workload_identity_federation.issuer
-    subjects = [for bbd in meshstack_building_block_definition.this : bbd.version_latest.workload_identity_federation.subject]
-  }
+  workload_identity_federations = local.runner_identities
 }
 
 output "building_block_definition" {
@@ -326,7 +355,7 @@ resource "meshstack_building_block_definition" "this" {
         type            = "STRING"
         assignment_type = "STATIC"
         is_environment  = true
-        argument        = jsonencode("/var/run/secrets/workload-identity/azure/token")
+        argument        = jsonencode(module.runner.token_path)
       }
 
       STACKIT_SERVICE_ACCOUNT_EMAIL = {
@@ -444,7 +473,7 @@ terraform {
   required_providers {
     meshstack = {
       source  = "meshcloud/meshstack"
-      version = ">= 0.26.2"
+      version = ">= 0.27.2"
     }
     stackit = {
       source  = "stackitcloud/stackit"

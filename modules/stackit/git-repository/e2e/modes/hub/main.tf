@@ -118,7 +118,7 @@ resource "stackit_service_account_federated_identity_provider" "git_repository" 
     {
       item     = "aud"
       operator = "equals"
-      value    = "api://AzureADTokenExchange"
+      value    = module.stackit_git_repository.building_block_definition.version_ref.workload_identity_federation.azure.audience
     },
     {
       item     = "sub"
