@@ -56,7 +56,8 @@ it registers and what each provisions:
 
 ![STACKIT Kubernetes — platform-team bootstrap](stackit-kubernetes.svg)
 
-The building blocks STACKIT Kubernetes Platform Services orders, with their parents as meshPanel shows them:
+Every building block of the platform, with an arrow from each parent to its child as meshPanel shows
+them. The frames show which run orders them:
 
 ![STACKIT Kubernetes building block tree](stackit-kubernetes-building-blocks.svg)
 

@@ -1,67 +1,65 @@
 /*
- * Building block tree of the nested STACKIT Kubernetes Platform Services building block. The outer
- * layer that orders it is described in README.md, not drawn here.
+ * Building blocks of the STACKIT Kubernetes Platform, with their parents as meshPanel shows them.
+ * Every box is a building block and every arrow points from parent to child; the frames show which
+ * run orders the boxes inside them.
  * Conventions: .agents/references/diagrams.md — render with: task diagrams
  */
 digraph stackit_kubernetes_building_blocks {
   rankdir=TB
   splines=ortho
-  forcelabels=true
   bgcolor="white"
   nodesep=0.55
-  ranksep=0.85
+  ranksep=0.7
 
   node [shape=box style="rounded,filled" fontname="Helvetica" fontsize=11
-        fillcolor="#ffffff" color="#a2abb8" penwidth=1.1 margin="0.20,0.11"]
-  edge [fontname="Helvetica" fontsize=9 fontcolor="#697180" color="#8b95a3" arrowsize=0.7]
+        fillcolor="#e5f2ea" color="#85bfa0" penwidth=1.1 margin="0.20,0.11"]
+  edge [color="#8b95a3" arrowsize=0.7]
 
-  // Context only: the landing zone's definition and the outer run's identity.
-  BBD_FED [label="📦 stackit/service-account-federation BBD\nfrom the STACKIT Landing Zone"
-           style="rounded,filled,dashed" fillcolor="#f0f1f3" color="#cdd2d8" fontcolor="#99a1ac"]
-  SA      [label="🔑 Automation Identity\nordered by the outer run"
-           style="rounded,filled,dashed" fillcolor="#f0f1f3" color="#cdd2d8" fontcolor="#99a1ac"]
-
-  { rank=same; BBD_FED -> SA [style=invis] }
-
-  subgraph cluster_platform {
-    label="  STACKIT Kubernetes Platform Services building block — acts as the Automation Identity"
+  subgraph cluster_outer {
+    label="  ordered by STACKIT Kubernetes Platform <id>"
     labeljust=l
     fontname="Helvetica" fontsize=12 fontcolor="#697180"
     style="rounded" color="#d5dae0"
     margin=18
 
-    FED     [label="🤝 Automation Identity Federation\ntrusts the six STACKIT definitions" fillcolor="#e5f2ea" color="#85bfa0"]
-    SM      [label="🔒 Secrets Manager\nstackit/secrets-manager" fillcolor="#e5f2ea" color="#85bfa0"]
-    USERS   [label="🔒 Secrets Manager users\nwriter · reader" fillcolor="#eef2f6" color="#93a7bb"]
-    CLUSTER [label="☸️ SKE Cluster\nske/cluster · platform admin" fillcolor="#e5f2ea" color="#85bfa0"]
-    GIT     [label="🔀 STACKIT Git Instance\nstackit/git" fillcolor="#e5f2ea" color="#85bfa0"]
-    REG     [label="🗄️ STACKIT Container Registry\nstackit/container-registry" fillcolor="#e5f2ea" color="#85bfa0"]
-    AI      [label="🧠 AI Model Serving\nstackit/ai-llm" fillcolor="#e5f2ea" color="#85bfa0"]
-    CREDS   [label="🔑 Kubernetes meshPlatform Credentials\nkubernetes" fillcolor="#e5f2ea" color="#85bfa0"]
-    ING     [label="🔐 Kubernetes Ingress\nkubernetes/ingress" fillcolor="#e5f2ea" color="#85bfa0"]
-    DNS     [label="🧭 DNS Zone\nstackit/dns" fillcolor="#e5f2ea" color="#85bfa0"]
-    MP      [label="🛰️ meshStack SKE platform\nlanding zone per stage" fillcolor="#ecedfb" color="#9aa2e6"]
-    SKFED   [label="🤝 Starter Kit Identity Federation\nphase 2 · trusts stackit/git-repository"
-             style="rounded,filled,dashed" fillcolor="#e5f2ea" color="#85bfa0"]
+    SA    [label="🔑 Automation Identity\nstackit/service-account"]
+    BOOT  [label="🤝 Bootstrap Identity Federation\nstackit/service-account-federation"]
+    SVC   [label="📦 STACKIT Kubernetes Platform Services <id>" fillcolor="#ecedfb" color="#9aa2e6"]
+  }
+
+  subgraph cluster_platform {
+    label="  ordered by STACKIT Kubernetes Platform Services <id>"
+    labeljust=l
+    fontname="Helvetica" fontsize=12 fontcolor="#697180"
+    style="rounded" color="#d5dae0"
+    margin=18
+
+    FED     [label="🤝 Automation Identity Federation\nstackit/service-account-federation"]
+    SKFED   [label="🤝 Starter Kit Identity Federation\nphase 2" style="rounded,filled,dashed"]
+    SM      [label="🔒 Secrets Manager\nstackit/secrets-manager"]
+    CLUSTER [label="☸️ SKE Cluster\nske/cluster"]
+    GIT     [label="🔀 STACKIT Git Instance\nstackit/git"]
+    REG     [label="🗄️ STACKIT Container Registry\nstackit/container-registry"]
+    AI      [label="🧠 AI Model Serving\nstackit/ai-llm · optional" style="rounded,filled,dashed"]
+    CREDS   [label="🔑 Kubernetes meshPlatform Credentials\nkubernetes"]
+    ING     [label="🔐 Kubernetes Ingress\nkubernetes/ingress"]
+    DNS     [label="🧭 DNS Zone\nstackit/dns"]
 
     { rank=same; SM -> CLUSTER -> GIT -> REG -> AI [style=invis] }
     { rank=same; CREDS -> ING [style=invis] }
-
-    FED     -> CLUSTER [xlabel="parent of"]
-    FED     -> GIT
-    FED     -> REG
-    FED     -> AI
-    FED     -> SM
-    SM      -> USERS   [xlabel="instance"]
-    CLUSTER -> CREDS   [xlabel="admin kubeconfig via\nSecrets Manager"]
-    CLUSTER -> ING
-    ING     -> DNS     [xlabel="load balancer IP"]
-    FED     -> DNS     [constraint=false]
-    CREDS   -> MP      [xlabel="tokens via\nSecrets Manager" style=dashed]
   }
 
-  SA      -> FED   [xlabel="parent of"]
+  SA      -> BOOT
+  BOOT    -> SVC
+  SA      -> FED
   SA      -> SKFED
-  BBD_FED -> FED   [style=dotted]
-  BBD_FED -> SKFED [style=dotted]
+  FED     -> SM
+  FED     -> CLUSTER
+  FED     -> GIT
+  FED     -> REG
+  FED     -> AI
+  CLUSTER -> CREDS
+  CLUSTER -> ING
+  ING     -> DNS
+  FED     -> DNS [constraint=false]
 }
