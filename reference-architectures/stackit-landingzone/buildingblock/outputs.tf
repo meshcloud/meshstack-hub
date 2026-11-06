@@ -14,7 +14,7 @@ output "foundation_project_id" {
 }
 
 output "foundation_project_url" {
-  value       = "https://portal.stackit.cloud/projects/${stackit_resourcemanager_project.foundation.project_id}"
+  value       = "https://portal.stackit.cloud/dashboard?project=${stackit_resourcemanager_project.foundation.project_id}"
   description = "Deep link to the foundation project in the STACKIT portal."
 }
 
@@ -31,7 +31,7 @@ output "summary" {
     lz_folder_container_id = stackit_resourcemanager_folder.this.container_id
     lz_folder_url          = "https://portal.stackit.cloud/dashboard?organization=${var.stackit_org}&folder=${stackit_resourcemanager_folder.this.folder_id}"
     foundation_project_id  = stackit_resourcemanager_project.foundation.project_id
-    foundation_project_url = "https://portal.stackit.cloud/projects/${stackit_resourcemanager_project.foundation.project_id}"
+    foundation_project_url = "https://portal.stackit.cloud/dashboard?project=${stackit_resourcemanager_project.foundation.project_id}"
     service_account_email  = module.stackit_integration.service_account_email
     service_account_url    = "https://portal.stackit.cloud/service-accounts/${module.stackit_integration.service_account_email}/overview?project=${stackit_resourcemanager_project.foundation.project_id}"
 

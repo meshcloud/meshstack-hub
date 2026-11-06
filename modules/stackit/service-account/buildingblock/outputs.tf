@@ -9,8 +9,8 @@ output "service_account_id" {
 }
 
 output "service_account_url" {
-  value       = "https://portal.stackit.cloud/projects/${var.project_id}/service-accounts"
-  description = "Deep link to the service accounts overview of the project in the STACKIT portal."
+  value       = "https://portal.stackit.cloud/service-accounts/${stackit_service_account.this.email}/overview?project=${var.project_id}"
+  description = "Deep link to the service account in the STACKIT portal."
 }
 
 output "summary" {

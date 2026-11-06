@@ -9,14 +9,14 @@ output "zone_id" {
 }
 
 output "zone_url" {
-  value       = "https://portal.stackit.cloud/projects/${var.stackit_project_id}/dns/${module.zone.zone.zone_id}"
+  value       = "https://portal.stackit.cloud/dns/zones/${module.zone.zone.zone_id}/overview?project=${var.stackit_project_id}"
   description = "The zone in the STACKIT portal."
 }
 
 output "summary" {
   value = templatefile("${path.module}/SUMMARY.md.tftpl", {
     zone_name          = local.zone_name
-    zone_url           = "https://portal.stackit.cloud/projects/${var.stackit_project_id}/dns/${module.zone.zone.zone_id}"
+    zone_url           = "https://portal.stackit.cloud/dns/zones/${module.zone.zone.zone_id}/overview?project=${var.stackit_project_id}"
     wildcard_target_ip = var.wildcard_target_ip
     default_ttl        = var.default_ttl
   })

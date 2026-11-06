@@ -50,6 +50,6 @@ No modules.
 |------|-------------|
 | <a name="output_service_account_email"></a> [service\_account\_email](#output\_service\_account\_email) | Email of the created STACKIT service account. Use it as the principal in external federation configs and STACKIT role assignments. |
 | <a name="output_service_account_id"></a> [service\_account\_id](#output\_service\_account\_id) | Id of the created STACKIT service account. Forms asking for a service account often want this next to the email, e.g. linking a Harbor robot. |
-| <a name="output_service_account_url"></a> [service\_account\_url](#output\_service\_account\_url) | Deep link to the service accounts overview of the project in the STACKIT portal. |
+| <a name="output_service_account_url"></a> [service\_account\_url](#output\_service\_account\_url) | Deep link to the service account in the STACKIT portal. |
 | <a name="output_summary"></a> [summary](#output\_summary) | Summary of the created service account. |
 <!-- END_TF_DOCS -->

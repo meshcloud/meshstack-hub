@@ -14,7 +14,7 @@ output "project_name" {
 }
 
 output "project_url" {
-  value       = "https://portal.stackit.cloud/projects/${stackit_resourcemanager_project.project.project_id}"
+  value       = "https://portal.stackit.cloud/dashboard?project=${stackit_resourcemanager_project.project.project_id}"
   description = "The deep link URL to access the project in the StackIt portal."
 }
 
@@ -24,7 +24,7 @@ output "summary" {
     project_name       = stackit_resourcemanager_project.project.name
     project_id         = stackit_resourcemanager_project.project.project_id
     container_id       = stackit_resourcemanager_project.project.container_id
-    project_url        = "https://portal.stackit.cloud/projects/${stackit_resourcemanager_project.project.project_id}"
+    project_url        = "https://portal.stackit.cloud/dashboard?project=${stackit_resourcemanager_project.project.project_id}"
     unknown_users      = local.unknown_users
     membership_summary = fileexists("${path.module}/stackit_organization_membership_summary.md") ? file("${path.module}/stackit_organization_membership_summary.md") : "STACKIT organization membership summary was not generated."
   })

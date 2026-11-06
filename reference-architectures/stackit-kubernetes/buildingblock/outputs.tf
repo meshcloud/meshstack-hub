@@ -1,6 +1,6 @@
 output "ske_project_url" {
   description = "Deep link to the STACKIT project the SKE cluster and its assets run in."
-  value       = "https://portal.stackit.cloud/projects/${local.stackit_project_id}"
+  value       = "https://portal.stackit.cloud/dashboard?project=${local.stackit_project_id}"
 }
 
 output "summary" {

@@ -14,7 +14,7 @@ output "project_identifier" {
 
 output "stackit_project_url" {
   description = "Deep link to the created STACKIT project, once the tenant has replicated."
-  value       = local.stackit_project_id == null ? "https://portal.stackit.cloud" : "https://portal.stackit.cloud/projects/${local.stackit_project_id}"
+  value       = local.stackit_project_id == null ? "https://portal.stackit.cloud" : "https://portal.stackit.cloud/dashboard?project=${local.stackit_project_id}"
 }
 
 # `n/a` rather than null when there is no network. A declared building block definition output has to
@@ -41,7 +41,7 @@ output "summary" {
     )
     stackit_project = (local.stackit_project_id == null
       ? "provisioning — the STACKIT Project building block is still running"
-      : "[Open in STACKIT Portal](https://portal.stackit.cloud/projects/${local.stackit_project_id}) (`${local.stackit_project_id}`)"
+      : "[Open in STACKIT Portal](https://portal.stackit.cloud/dashboard?project=${local.stackit_project_id}) (`${local.stackit_project_id}`)"
     )
     project_admin = local.creator_is_user ? var.creator.displayName : "not assigned — the creator is a ${var.creator.type}, which has no user to bind"
   })
