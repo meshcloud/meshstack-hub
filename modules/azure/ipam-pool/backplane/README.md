@@ -27,6 +27,14 @@ The identity of every building block that draws address space from the pool need
 **IPAM Pool User** role on the pool. The spoke network backplane (`modules/azure/spoke-network`)
 grants it to its own identity at its hub scope, so keep the pool there.
 
+## Migrating from `workload_identity_federation`
+
+Earlier revisions took one `workload_identity_federation` object with an `issuer` and a `subjects`
+list, and gave every credential the audience `api://AzureADTokenExchange`. Pass one entry per
+subject in `workload_identity_federations`, with that subject as `subject` and
+`api://AzureADTokenExchange` as `audience`. The credentials keep their names and values, so the
+plan is empty.
+
 <!-- BEGIN_TF_DOCS -->
 ## Requirements
 
@@ -57,7 +65,7 @@ No modules.
 | <a name="input_name"></a> [name](#input\_name) | Name for the building block identity, resource group and role definition. | `string` | n/a | yes |
 | <a name="input_scope"></a> [scope](#input\_scope) | Scope the IPAM pool building block deploys into and the network manager governs (management group or subscription ID). Typically the parent of the platform subscription and all landing zones. | `string` | n/a | yes |
 | <a name="input_subscription_id"></a> [subscription\_id](#input\_subscription\_id) | Subscription (bare GUID) where the UAMI and its resource group are created. | `string` | n/a | yes |
-| <a name="input_workload_identity_federation"></a> [workload\_identity\_federation](#input\_workload\_identity\_federation) | WIF issuer and subjects for federated authentication of the automation identity. | <pre>object({<br/>    issuer   = string<br/>    subjects = list(string)<br/>  })</pre> | n/a | yes |
+| <a name="input_workload_identity_federations"></a> [workload\_identity\_federations](#input\_workload\_identity\_federations) | meshStack identities the automation identity trusts, one per building block runner. For more<br/>subjects of one issuer, pass one entry per subject. | <pre>list(object({<br/>    issuer   = string<br/>    audience = string<br/>    subject  = string<br/>  }))</pre> | n/a | yes |
 
 ## Outputs
 

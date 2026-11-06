@@ -4,103 +4,37 @@ This documentation is intended as a reference documentation for cloud foundation
 
 ## Permissions
 
-This is a very simple building block, which means we let the service principals have access to the Storage Account
-across all subscriptions underneath a management group (typically the top-level management group for landing zones).
+This backplane creates a user-assigned managed identity and gives it a role that manages storage
+accounts at `scope`, typically the top-level management group for landing zones. The identity has
+one federated identity credential per entry in `workload_identity_federations`, so it holds no
+secret.
 
-The module supports two modes of operation:
-
-1. **Existing Service Principals**: Use `existing_principal_ids` to grant permissions to already existing service principals
-2. **Create New Service Principal**: Use `create_service_principal_name` to create a single new service principal and automatically grant it permissions
-
-## Authentication Methods
-
-When creating a new service principal, you can choose between two authentication methods:
-
-- **Application Password** (default): A traditional client secret will be created
-- **Workload Identity Federation**: Configure federated identity credentials for passwordless authentication (e.g., from GitHub Actions, Azure DevOps, or other OIDC providers)
-
-## Usage Examples
-
-### Using Existing Service Principals
+## Usage
 
 ```hcl
 module "storage_account_backplane" {
-  source = "./modules/azure/storage-account/backplane"
+  source = "git::https://github.com/meshcloud/meshstack-hub.git//modules/azure/storage-account/backplane"
 
-  name  = "my-storage-account"
-  scope = "/providers/Microsoft.Management/managementGroups/my-mg"
+  name     = "my-storage-account"
+  scope    = "/providers/Microsoft.Management/managementGroups/my-mg"
+  location = "westeurope"
 
-  existing_principal_ids = [
-    "12345678-1234-1234-1234-123456789012",
-    "87654321-4321-4321-4321-210987654321"
-  ]
+  # See .agents/references/meshstack-integration.md#runner-identity for how the integration wires this.
+  workload_identity_federations = [{
+    issuer   = "https://your-oidc-issuer"
+    audience = "api://AzureADTokenExchange"
+    subject  = "system:serviceaccount:your-namespace:your-service-account-name"
+  }]
 }
 ```
 
-### Creating a New Service Principal
+## Migrating from `workload_identity_federation`
 
-```hcl
-module "storage_account_backplane" {
-  source = "./modules/azure/storage-account/backplane"
-
-  name  = "my-storage-account"
-  scope = "/providers/Microsoft.Management/managementGroups/my-mg"
-
-  create_service_principal_name = "deployment-sp"
-}
-```
-
-### Creating a New Service Principal with Workload Identity Federation
-
-```hcl
-module "storage_account_backplane" {
-  source = "./modules/azure/storage-account/backplane"
-
-  name  = "my-storage-account"
-  scope = "/providers/Microsoft.Management/managementGroups/my-mg"
-
-  create_service_principal_name = "deployment-sp"
-  workload_identity_federation = {
-    issuer = "https://token.actions.githubusercontent.com"
-    subjects = [
-      "repo:my-org/my-repo:ref:refs/heads/main",
-      "repo:my-org/my-repo:environment:production",
-    ]
-  }
-}
-```
-
-### Subject Matching
-
-**Only exact matching is supported for subjects.** Each subject in the `subjects` list will create a separate federated identity credential.
-
-When using Kubernetes service accounts, provide the full subject identifier:
-```hcl
-workload_identity_federation = {
-  issuer = "https://your-oidc-issuer"
-  subjects = [
-    "system:serviceaccount:namespace1:service-account-1",
-    "system:serviceaccount:namespace1:service-account-2",
-  ]
-}
-```
-
-### Mixed Usage (Both Existing and New)
-
-```hcl
-module "storage_account_backplane" {
-  source = "./modules/azure/storage-account/backplane"
-
-  name  = "my-storage-account"
-  scope = "/providers/Microsoft.Management/managementGroups/my-mg"
-
-  existing_principal_ids = [
-    "12345678-1234-1234-1234-123456789012"
-  ]
-
-  create_service_principal_name = "new-deployment-sp"
-}
-```
+Earlier revisions took one `workload_identity_federation` object with an `issuer` and a `subjects`
+list, and gave every credential the audience `api://AzureADTokenExchange`. Pass one entry per
+subject in `workload_identity_federations`, with that subject as `subject` and
+`api://AzureADTokenExchange` as `audience`. The credentials keep their names and values, so the
+plan is empty.
 
 <!-- BEGIN_TF_DOCS -->
 ## Requirements
@@ -131,7 +65,7 @@ No modules.
 | <a name="input_location"></a> [location](#input\_location) | Azure region for the UAMI resource. | `string` | n/a | yes |
 | <a name="input_name"></a> [name](#input\_name) | Name for the building block identity and role definition. | `string` | n/a | yes |
 | <a name="input_scope"></a> [scope](#input\_scope) | Scope for role assignment (management group or subscription ID). | `string` | n/a | yes |
-| <a name="input_workload_identity_federation"></a> [workload\_identity\_federation](#input\_workload\_identity\_federation) | WIF issuer and subjects for federated authentication. | <pre>object({<br/>    issuer   = string<br/>    subjects = list(string)<br/>  })</pre> | n/a | yes |
+| <a name="input_workload_identity_federations"></a> [workload\_identity\_federations](#input\_workload\_identity\_federations) | meshStack identities the automation identity trusts, one per building block runner. For more<br/>subjects of one issuer, pass one entry per subject. | <pre>list(object({<br/>    issuer   = string<br/>    audience = string<br/>    subject  = string<br/>  }))</pre> | n/a | yes |
 
 ## Outputs
 

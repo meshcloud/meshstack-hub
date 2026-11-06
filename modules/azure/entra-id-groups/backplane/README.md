@@ -32,3 +32,11 @@ The platform engineer running this backplane needs:
   or `Global Administrator`, or an automation principal holding `AppRoleAssignment.ReadWrite.All`.
 - No secrets are created; the UAMI authenticates via OIDC token exchange.
 - The backplane resource group is named after `var.name` and must be unique within the subscription.
+
+## Migrating from `workload_identity_federation`
+
+Earlier revisions took one `workload_identity_federation` object with an `issuer` and a `subjects`
+list, and gave every credential the audience `api://AzureADTokenExchange`. Pass one entry per
+subject in `workload_identity_federations`, with that subject as `subject` and
+`api://AzureADTokenExchange` as `audience`. The credentials keep their names and values, so the
+plan is empty.
