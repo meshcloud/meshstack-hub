@@ -37,10 +37,11 @@ output "instructions" {
   value       = "Copy kubeconfig value into a file, which can be directly used. e.g. `kubectl --kubeconfig kubeconfig get pods`"
 }
 
+# meshStack has no sensitive outputs, so this hands the token to everyone who can see the building
+# block; prefer `output_to_vault`. It is "" there, because meshStack fails a run whose output is missing.
 output "kubeconfig" {
   description = "Kubeconfig file content for authenticating with the Kubernetes cluster. Empty when `output_to_vault` is set."
-  sensitive   = true
-  value       = local.write_to_vault ? "" : yamlencode(local.kubeconfig)
+  value       = local.write_to_vault ? "" : nonsensitive(yamlencode(local.kubeconfig))
 }
 
 output "vault_secret" {
