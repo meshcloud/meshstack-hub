@@ -60,7 +60,7 @@ digraph stackit_kubernetes_platform {
     AGENT  [label="🔑 meshStack identities\nreplicator · metering" fillcolor="#eef2f6" color="#93a7bb"]
     GIT    [label="🔀 STACKIT Git\nForgejo instance and organization" fillcolor="#eef2f6" color="#93a7bb"]
     HARBOR [label="🗄️ Container Registry\nHarbor project · push and pull robots" fillcolor="#eef2f6" color="#93a7bb"]
-    DNS    [label="🧭 DNS zone\nwildcard to the load balancer" fillcolor="#eef2f6" color="#93a7bb"]
+    DNS    [label="🧭 DNS zone" fillcolor="#eef2f6" color="#93a7bb"]
     MODEL  [label="🧠 Model Serving\nAPI token" fillcolor="#eef2f6" color="#93a7bb"]
 
     // Keeps each resource level with its definition opposite the SKE Platform row.
