@@ -40,29 +40,39 @@ resource "aws_iam_policy" "buildingblock_route53_alias_record_policy" {
 
 # Workload Identity Federation
 
+data "aws_iam_openid_connect_provider" "trusted" {
+  for_each = { for index, identity in var.workload_identity_federations : index => identity }
+
+  url = each.value.issuer
+}
+
 data "aws_iam_policy_document" "workload_identity_federation" {
   version = "2012-10-17"
 
-  statement {
-    effect = "Allow"
-    principals {
-      type        = "Federated"
-      identifiers = [var.oidc_provider_arn]
-    }
-    actions = ["sts:AssumeRoleWithWebIdentity"]
+  dynamic "statement" {
+    for_each = var.workload_identity_federations
 
-    condition {
-      test     = "StringEquals"
-      variable = "${trimprefix(var.workload_identity_federation.issuer, "https://")}:aud"
+    content {
+      effect = "Allow"
+      principals {
+        type        = "Federated"
+        identifiers = [data.aws_iam_openid_connect_provider.trusted[tostring(statement.key)].arn]
+      }
+      actions = ["sts:AssumeRoleWithWebIdentity"]
 
-      values = [var.workload_identity_federation.audience]
-    }
+      condition {
+        test     = "StringEquals"
+        variable = "${trimprefix(statement.value.issuer, "https://")}:aud"
 
-    condition {
-      test     = "StringLike"
-      variable = "${trimprefix(var.workload_identity_federation.issuer, "https://")}:sub"
+        values = [statement.value.audience]
+      }
 
-      values = var.workload_identity_federation.subjects
+      condition {
+        test     = "StringLike"
+        variable = "${trimprefix(statement.value.issuer, "https://")}:sub"
+
+        values = [statement.value.subject]
+      }
     }
   }
 }

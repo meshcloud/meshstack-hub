@@ -28,11 +28,8 @@ variable "record_types" {
 
 variable "aws_oidc_provider_arn" {
   type        = string
-  nullable    = false
-  description = <<-EOT
-  ARN of the IAM OIDC provider for the meshStack runner WIF token issuer in this AWS account.
-  See .agents/references/aws-backplane.md#the-shared-oidc-provider
-  EOT
+  default     = null
+  description = "Deprecated and unused. The backplane looks up the OIDC provider of each runner's issuer."
 }
 
 variable "bbd_display_name" {
@@ -61,6 +58,10 @@ variable "meshstack" {
       kind = string
       uuid = string
     }))
+    trusted_runner_refs = optional(list(object({
+      kind = string
+      uuid = string
+    })), [])
   })
   description = "Shared meshStack context, see docs."
 }
@@ -89,17 +90,20 @@ output "building_block_definition" {
   }
 }
 
+module "runner_identity" {
+  source = "github.com/meshcloud/meshstack-hub//modules/meshstack/runner-identity?ref=${var.hub.git_ref}"
+
+  cloud               = "aws"
+  runner_ref          = var.meshstack.runner_ref
+  trusted_runner_refs = var.meshstack.trusted_runner_refs
+  versions            = meshstack_building_block_definition.this.versions
+}
+
 module "backplane" {
   source = "github.com/meshcloud/meshstack-hub//modules/aws/route53-dns-alias-record/backplane?ref=${var.hub.git_ref}"
 
-  hosted_zone_ids   = var.hosted_zone_ids
-  oidc_provider_arn = var.aws_oidc_provider_arn
-
-  workload_identity_federation = {
-    issuer   = meshstack_building_block_definition.this.version_latest.workload_identity_federation.issuer
-    audience = meshstack_building_block_definition.this.version_latest.workload_identity_federation.aws.audience
-    subjects = [meshstack_building_block_definition.this.version_latest.workload_identity_federation.subject]
-  }
+  hosted_zone_ids               = var.hosted_zone_ids
+  workload_identity_federations = module.runner_identity.identities
 }
 
 resource "meshstack_building_block_definition" "this" {
@@ -204,7 +208,7 @@ resource "meshstack_building_block_definition" "this" {
         description     = "File path to the AWS web identity token used for workload identity federation."
         assignment_type = "STATIC"
         is_environment  = true
-        argument        = jsonencode("/var/run/secrets/workload-identity/aws/token")
+        argument        = jsonencode(module.runner_identity.token_path)
       }
       region = {
         type            = "STRING"
@@ -261,7 +265,7 @@ terraform {
     }
     meshstack = {
       source  = "meshcloud/meshstack"
-      version = ">= 0.26.2"
+      version = ">= 0.27.2"
     }
   }
 }
