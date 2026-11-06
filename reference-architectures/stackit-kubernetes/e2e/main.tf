@@ -120,7 +120,7 @@ resource "meshstack_building_block" "this" {
   spec = {
     building_block_definition_version_ref = { uuid = module.stackit_kubernetes.building_block_definition.version_ref.uuid }
 
-    display_name = "${var.test_context.run_id} STACKIT Kubernetes Platform"
+    display_name = "${var.test_context.run_id} STACKIT Kubernetes Platform ${var.test_context.run_id}"
     target_ref = {
       kind = "meshWorkspace"
       name = var.test_context.workspace
