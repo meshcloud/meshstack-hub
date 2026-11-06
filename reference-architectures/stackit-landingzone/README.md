@@ -166,6 +166,10 @@ spoke `stackit/network` building block in the same apply. Application teams can 
 projects and — when networking is enabled — order `stackit/network` inside their own STACKIT
 projects once those projects exist.
 
+The definition's `display_name_template` names the building block `STACKIT Landing Zone <platform
+identifier>` in the order form. A foundation that orders it through the meshStack provider sets
+`display_name` to the same string.
+
 ### Root Folder
 
 One STACKIT organization can serve several meshStacks, for example a dev, a demo and a trial

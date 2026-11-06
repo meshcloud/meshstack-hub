@@ -135,13 +135,14 @@ resource "meshstack_building_block_definition" "this" {
   }
 
   spec = {
-    display_name      = coalesce(var.bbd_display_name, "STACKIT Landing Zone Reference Architecture")
-    symbol            = "https://raw.githubusercontent.com/meshcloud/meshstack-hub/${var.hub.git_ref}/reference-architectures/stackit-landingzone/buildingblock/logo.png"
-    description       = coalesce(var.bbd_description, "Onboards a STACKIT sandbox platform into meshStack: a location, resourcemanager folder and the STACKIT Project platform with its default landing zone. Optionally layers on a hub-and-spoke network topology when a network config is provided.")
-    support_url       = "https://portal.stackit.cloud"
-    target_type       = "WORKSPACE_LEVEL"
-    run_transparency  = true
-    approval_policies = var.approval_policies
+    display_name          = coalesce(var.bbd_display_name, "STACKIT Landing Zone Reference Architecture")
+    display_name_template = "STACKIT Landing Zone {{platform_identifier}}"
+    symbol                = "https://raw.githubusercontent.com/meshcloud/meshstack-hub/${var.hub.git_ref}/reference-architectures/stackit-landingzone/buildingblock/logo.png"
+    description           = coalesce(var.bbd_description, "Onboards a STACKIT sandbox platform into meshStack: a location, resourcemanager folder and the STACKIT Project platform with its default landing zone. Optionally layers on a hub-and-spoke network topology when a network config is provided.")
+    support_url           = "https://portal.stackit.cloud"
+    target_type           = "WORKSPACE_LEVEL"
+    run_transparency      = true
+    approval_policies     = var.approval_policies
 
     readme = coalesce(var.bbd_readme, chomp(<<-EOT
     The **STACKIT Landing Zone** building block bootstraps a complete STACKIT sandbox platform
