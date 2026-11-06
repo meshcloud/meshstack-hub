@@ -79,6 +79,14 @@ output "building_block_definition" {
   }
 }
 
+module "runner_identity" {
+  source = "github.com/meshcloud/meshstack-hub//modules/meshstack/runner-identity?ref=${var.hub.git_ref}"
+
+  cloud      = "azure"
+  runner_ref = var.meshstack.runner_ref
+  versions   = {}
+}
+
 resource "meshstack_building_block_definition" "this" {
   metadata = {
     owned_by_workspace = var.meshstack.owning_workspace_identifier
@@ -177,7 +185,7 @@ resource "meshstack_building_block_definition" "this" {
         type            = "STRING"
         assignment_type = "STATIC"
         is_environment  = true
-        argument        = jsonencode("/var/run/secrets/workload-identity/azure/token")
+        argument        = jsonencode(module.runner_identity.token_path)
       }
 
       stackit_region = {
@@ -245,9 +253,8 @@ terraform {
 
   required_providers {
     meshstack = {
-      source = "meshcloud/meshstack"
-      # 0.25.2 is the first release that accepts `spec.approval_policies`.
-      version = ">= 0.25.2"
+      source  = "meshcloud/meshstack"
+      version = ">= 0.27.2"
     }
   }
 }

@@ -77,6 +77,10 @@ variable "meshstack" {
       kind = string
       uuid = string
     }))
+    trusted_runner_refs = optional(list(object({
+      kind = string
+      uuid = string
+    })), [])
   })
   description = "Shared meshStack context, see docs."
 }
@@ -109,6 +113,15 @@ locals {
   create_backplane = var.stackit_organization_id != null
 }
 
+module "runner_identity" {
+  source = "github.com/meshcloud/meshstack-hub//modules/meshstack/runner-identity?ref=${var.hub.git_ref}"
+
+  cloud               = "azure"
+  runner_ref          = var.meshstack.runner_ref
+  trusted_runner_refs = var.meshstack.trusted_runner_refs
+  versions            = meshstack_building_block_definition.this.versions
+}
+
 module "backplane" {
   source = "github.com/meshcloud/meshstack-hub//modules/stackit/secrets-manager/backplane?ref=${var.hub.git_ref}"
 
@@ -121,10 +134,7 @@ module "backplane" {
   service_account_name = coalesce(var.stackit_service_account_name, "mesh-secrets-manager")
   custom_role_name     = coalesce(var.stackit_custom_role_name, "mesh-secrets-manager")
 
-  workload_identity_federation = {
-    issuer   = meshstack_building_block_definition.this.version_latest.workload_identity_federation.issuer
-    subjects = [meshstack_building_block_definition.this.version_latest.workload_identity_federation.subject]
-  }
+  workload_identity_federations = module.runner_identity.identities
 }
 
 resource "meshstack_building_block_definition" "this" {
@@ -233,7 +243,7 @@ resource "meshstack_building_block_definition" "this" {
         type            = "STRING"
         assignment_type = "STATIC"
         is_environment  = true
-        argument        = jsonencode("/var/run/secrets/workload-identity/azure/token")
+        argument        = jsonencode(module.runner_identity.token_path)
       }
 
       instance_name = {
@@ -316,7 +326,7 @@ terraform {
   required_providers {
     meshstack = {
       source  = "meshcloud/meshstack"
-      version = ">= 0.27.0"
+      version = ">= 0.27.2"
     }
   }
 }

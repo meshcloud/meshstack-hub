@@ -4,13 +4,24 @@ variable "project_id" {
   description = "STACKIT project the backplane service account is created in."
 }
 
-variable "workload_identity_federation" {
-  type = object({
+variable "workload_identity_federations" {
+  type = list(object({
     issuer   = string
-    subjects = list(string)
-  })
+    audience = string
+    subject  = string
+  }))
   nullable    = false
-  description = "WIF issuer URL and subjects of the meshStack building block runs."
+  description = "meshStack identities the service account trusts, one per building block runner. For more subjects of one issuer, pass one entry per subject."
+
+  validation {
+    condition     = length(var.workload_identity_federations) > 0
+    error_message = "The service account needs at least one identity to trust."
+  }
+
+  validation {
+    condition     = alltrue([for identity in var.workload_identity_federations : identity.subject != null])
+    error_message = "These identities need a subject: ${join(", ", [for identity in var.workload_identity_federations : identity.issuer if identity.subject == null])}."
+  }
 }
 
 variable "service_account_name" {

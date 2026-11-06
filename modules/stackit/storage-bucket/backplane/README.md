@@ -15,7 +15,7 @@ to apply bucket policies via the S3 API.
 
 - A STACKIT service account with permissions to manage service accounts, IAM, and Object Storage in the target project.
 - The STACKIT project must already exist.
-- A meshStack installation with Workload Identity Federation enabled (provides `issuer` and `subject`).
+- One identity per building block runner, read from [`modules/meshstack/runner-identity`](../../../meshstack/runner-identity) with `cloud = "azure"`.
 
 ## Usage
 
@@ -25,12 +25,20 @@ module "storage_bucket_backplane" {
 
   project_id = "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
 
-  workload_identity_federation = {
-    issuer   = meshstack_building_block_definition.this.version_latest.workload_identity_federation.issuer
-    subjects = [meshstack_building_block_definition.this.version_latest.workload_identity_federation.subject]
-  }
+  workload_identity_federations = module.runner_identity.identities
 }
 ```
+
+## Migrating from `workload_identity_federation`
+
+Earlier revisions took one `workload_identity_federation` object with an `issuer` and a `subjects`
+list, and trusted the audience `api://AzureADTokenExchange`. Pass one entry per subject in
+`workload_identity_federations`, with that issuer, the audience `api://AzureADTokenExchange` and
+the subject. The identity providers keep their keys, so the plan is empty.
+
+When a definition moves to another runner, list the old runner in `meshstack.trusted_runner_refs`.
+The apply replaces the identity providers of the current runner, so building blocks on the old
+runner cannot sign in until the apply is done.
 
 <!-- BEGIN_TF_DOCS -->
 ## Requirements
@@ -61,7 +69,7 @@ No modules.
 |------|-------------|------|---------|:--------:|
 | <a name="input_project_id"></a> [project\_id](#input\_project\_id) | STACKIT project ID where Object Storage buckets will be created. | `string` | n/a | yes |
 | <a name="input_service_account_name"></a> [service\_account\_name](#input\_service\_account\_name) | Name of the service account created in the STACKIT project. Override when deploying multiple backplane instances in the same project. | `string` | `"mesh-storage-bucket"` | no |
-| <a name="input_workload_identity_federation"></a> [workload\_identity\_federation](#input\_workload\_identity\_federation) | WIF issuer URL and subject list for the meshStack building block identity provider. | <pre>object({<br/>    issuer   = string<br/>    subjects = list(string)<br/>  })</pre> | n/a | yes |
+| <a name="input_workload_identity_federations"></a> [workload\_identity\_federations](#input\_workload\_identity\_federations) | meshStack identities the service account trusts, one per building block runner. For more subjects of one issuer, pass one entry per subject. | <pre>list(object({<br/>    issuer   = string<br/>    audience = string<br/>    subject  = string<br/>  }))</pre> | n/a | yes |
 
 ## Outputs
 

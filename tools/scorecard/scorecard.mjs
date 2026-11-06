@@ -1379,9 +1379,11 @@ const detectors = [
       const missing = STACKIT_WIF_ENV_VARS.filter(
         (v) => !new RegExp(`${v}\\s*=\\s*\\{`).test(integration)
       );
+      if (missing.length > 0)
+        return { pass: false, detail: `integration is missing env var input(s): ${missing.join(", ")}` };
       return {
-        pass: missing.length === 0,
-        detail: `integration is missing env var input(s): ${missing.join(", ")}`,
+        pass: !/STACKIT_FEDERATED_TOKEN_FILE\s*=\s*\{[^}]*argument\s*=\s*jsonencode\(\s*"/.test(integration),
+        detail: "STACKIT_FEDERATED_TOKEN_FILE is a fixed path; read it from modules/meshstack/runner-identity, because each runner writes its token to its own path",
       };
     },
   },
