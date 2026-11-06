@@ -55,6 +55,8 @@ landing zone. Provide a `network` object to additionally enable hub-and-spoke ne
 %{ if network_enabled ~}
 >
 > Set its **Landing Zone Variant** to `networked` to run the cluster inside the hub-and-spoke network.
+> Otherwise keep the default `default`, which puts the cluster in a **STACKIT Sandbox** project with
+> STACKIT's default flat networking.
 %{ endif ~}
 %{ if !identity_definitions_released ~}
 
