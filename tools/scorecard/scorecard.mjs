@@ -740,29 +740,6 @@ const detectors = [
     },
   },
   {
-    id: "summary_links_new_tab",
-    category: "integration",
-    name: "Summary links open in a new tab",
-    emoji: "↗️",
-    fn: (mod) => {
-      const body = summaryOutputBody(readAllBuildingBlockTf(mod) ?? "");
-      if (body === null) return { pass: null, detail: "no summary output" };
-      const sources = [["outputs", body]];
-      for (const name of summaryTemplateFiles(body)) {
-        const p = join(mod.path, "buildingblock", name);
-        if (existsSync(p)) sources.push([name, readFileSync(p, "utf-8")]);
-      }
-      const violations = sources.flatMap(([file, text]) => summaryLinkViolations(text).map((v) => `${file}: ${v}`));
-      if (violations.length === 0) return { pass: true };
-      const shown = violations.slice(0, 3).join(", ");
-      const more = violations.length > 3 ? `, +${violations.length - 3} more` : "";
-      return {
-        pass: false,
-        detail: `write links as <a href="…" target="_blank" rel="noopener">: ${shown}${more}`,
-      };
-    },
-  },
-  {
     id: "wif_no_replicator",
     category: "integration",
     name: "Trusts the runner's identity, not the replicator's",
@@ -1987,25 +1964,6 @@ export function summaryOutputBody(tfContent) {
   const open = masked.indexOf("{", m.index);
   const close = findMatchingBrace(masked, open);
   return close > open ? tfContent.slice(m.index, close + 1) : null;
-}
-
-export function summaryTemplateFiles(summaryBody) {
-  return [...summaryBody.matchAll(/templatefile\(\s*"\$\{path\.module\}\/([^"]+\.md\.tftpl)"/g)].map((m) => m[1]);
-}
-
-export function summaryLinkViolations(markdown) {
-  const prose = markdown.replace(/^\s*(```|~~~)[^\n]*\n[\s\S]*?^\s*\1\s*$/gm, "");
-  const violations = [];
-  for (const m of prose.matchAll(/\[[^\]\n]*\]\((?:https?:|\$\{)[^)\s]*\)/g)) {
-    violations.push(`Markdown link ${m[0]}`);
-  }
-  for (const m of prose.matchAll(/<a\s[^>]*>/gi)) {
-    const missing = [];
-    if (!/\btarget=\\?"_blank\\?"/.test(m[0])) missing.push('target="_blank"');
-    if (!/\brel=\\?"[^"\\]*\bnoopener\b/.test(m[0])) missing.push('rel="noopener"');
-    if (missing.length > 0) violations.push(`${m[0]} lacks ${missing.join(" and ")}`);
-  }
-  return violations;
 }
 
 export function explicitDefaultViolations(content) {
