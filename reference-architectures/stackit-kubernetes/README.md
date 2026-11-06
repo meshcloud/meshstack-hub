@@ -56,7 +56,7 @@ it registers and what each provisions:
 
 ![STACKIT Kubernetes — platform-team bootstrap](stackit-kubernetes.svg)
 
-The building blocks Platform Services orders, with their parents as meshPanel shows them:
+The building blocks STACKIT Kubernetes Platform Services orders, with their parents as meshPanel shows them:
 
 ![STACKIT Kubernetes building block tree](stackit-kubernetes-building-blocks.svg)
 
@@ -116,6 +116,10 @@ Once set up, it triggers the repository's workflow and waits for it to finish.
    STACKIT project is not protected against deletion. It cannot be changed after the order.
 3. Finish phase 2.
 
+The definition's `display_name_template` names the building block `STACKIT Kubernetes Platform
+<platform identifier>` in the order form. A foundation that orders it through the meshStack
+provider sets `display_name` to the same string.
+
 The main inputs:
 
 | Input | Purpose |
@@ -142,7 +146,7 @@ otherwise no tenant can be created on the landing zone.
 **Overrides** replaces generated values, each optional: `cluster_name`, `cluster_issuer_email` (the
 platform's service account by default) and `project_identifier` (`<platform identifier>-ske` by
 default). The building block outputs a link to the STACKIT project
-and the summary of Platform Services.
+and the summary of STACKIT Kubernetes Platform Services.
 
 ### Phase 2: link the Harbor robot
 
@@ -179,8 +183,8 @@ vault kv list -mount=<Secrets Manager instance id> <platform identifier>/
 The [application-team diagram](#application-teams) shows the three definitions and what an order
 creates.
 
-**Who registers it.** The nested **Platform Services** run registers the three definitions
-application teams use, in `platform/buildingblock/starterkit.tf`. It does so only in phase 2, once
+**Who registers it.** The nested **STACKIT Kubernetes Platform Services** run registers the three
+definitions application teams use, in `platform/buildingblock/starterkit.tf`. It does so only in phase 2, once
 **Phase 2 Completed** is true, because their pipelines push images and their workloads pull them
 with the robots phase 2 mints:
 
@@ -198,11 +202,11 @@ Platform**, next to the platform's own definitions. They carry the `starterkit_b
 tags and the **Starterkit Approval Policies**.
 
 **When it is released.** `hub.bbd_draft` of this definition decides it, and only for these three.
-With `true`, every Platform Services run updates their draft version, and only the owning
-workspace can order them. Use it to try a Hub ref. With `false`, the run releases them, and
-application teams see **SKE Starterkit** in the marketplace. A new Hub ref takes two runs: one with
-`true` adds a draft version on top of the released one, one with `false` releases it. Existing
-starter kits stay on their version until they are upgraded.
+With `true`, every STACKIT Kubernetes Platform Services run updates their draft version, and only
+the owning workspace can order them. Use it to try a Hub ref. With `false`, the run releases them,
+and application teams see **SKE Starterkit** in the marketplace. A new Hub ref takes two runs: one
+with `true` adds a draft version on top of the released one, one with `false` releases it.
+Existing starter kits stay on their version until they are upgraded.
 
 **How an application team orders it.** The team orders **SKE Starterkit** in its own workspace
 and gives a project name and a payment method. The run creates:

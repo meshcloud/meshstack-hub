@@ -111,7 +111,7 @@ resource "meshstack_building_block_definition" "this" {
 
   spec = {
     display_name          = "STACKIT Kubernetes Platform Reference Architecture"
-    display_name_template = "STACKIT Kubernetes Platform"
+    display_name_template = "STACKIT Kubernetes Platform {{platform_identifier}}"
     symbol                = "https://raw.githubusercontent.com/meshcloud/meshstack-hub/${var.hub.git_ref}/reference-architectures/stackit-kubernetes/buildingblock/logo.png"
     description           = "Bootstraps a Kubernetes platform on STACKIT on top of a STACKIT Landing Zone: SKE cluster, in-cluster platform services and the meshStack SKE platform with one landing zone per stage."
     support_url           = "https://portal.stackit.cloud/ske"
@@ -128,8 +128,8 @@ resource "meshstack_building_block_definition" "this" {
     - **Hosting project** – a STACKIT project (self-hosted as a meshStack tenant) that the cluster
       runs in.
     - **Service account** – ordered from the landing zone's STACKIT Service Account definition.
-    - **Platform Services** – one nested building block that orders everything below as the service
-      account.
+    - **STACKIT Kubernetes Platform Services** – one nested building block that orders everything
+      below as the service account.
     - **Secrets Manager** – a STACKIT Secrets Manager instance that holds every credential the
       building blocks below create, so no building block shows one as an output.
     - **SKE cluster** – a managed STACKIT Kubernetes Engine cluster with an admin kubeconfig.

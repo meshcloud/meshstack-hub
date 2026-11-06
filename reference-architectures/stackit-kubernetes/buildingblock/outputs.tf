@@ -5,7 +5,7 @@ output "ske_project_url" {
 
 output "summary" {
   description = "Summary of the platform, as the nested building block reports it."
-  # `try` because a Platform Services building block whose run failed has no outputs, and the
-  # destroy run that removes it still evaluates this.
+  # `try` because a STACKIT Kubernetes Platform Services building block whose run failed has no
+  # outputs, and the destroy run that removes it still evaluates this.
   value = try(jsondecode(meshstack_building_block.platform.status.outputs["summary"].value), "")
 }

@@ -34,7 +34,7 @@ locals {
 
   project_display_name = coalesce(
     local.imports.project == null ? null : local.imports.project.display_name,
-    "STACKIT Kubernetes Platform: ${local.platform_identifier}"
+    "STACKIT Kubernetes Platform ${local.platform_identifier}"
   )
 
   # A production platform deletes what it adopted, like anything it created.

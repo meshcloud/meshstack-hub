@@ -28,7 +28,7 @@ digraph stackit_kubernetes_platform {
     margin=18
 
     OUTER  [label="📦 STACKIT Kubernetes Platform BBD\nordered once by the platform team" fillcolor="#ecedfb" color="#9aa2e6"]
-    SVC    [label="📦 Platform Services BBD\nregisters and orders everything below" fillcolor="#ecedfb" color="#9aa2e6"]
+    SVC    [label="📦 STACKIT Kubernetes Platform Services BBD\nregisters and orders everything below" fillcolor="#ecedfb" color="#9aa2e6"]
     BBD_S  [label="📦 stackit/secrets-manager BBD" fillcolor="#ecedfb" color="#9aa2e6"]
     BBD_K  [label="📦 ske/cluster BBD" fillcolor="#ecedfb" color="#9aa2e6"]
     BBD_I  [label="📦 kubernetes/ingress BBD" fillcolor="#ecedfb" color="#9aa2e6"]

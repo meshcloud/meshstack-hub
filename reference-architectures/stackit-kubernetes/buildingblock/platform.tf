@@ -48,7 +48,7 @@ resource "meshstack_building_block" "platform" {
   spec = {
     parent_building_block_refs            = [meshstack_building_block.bootstrap_federation.ref]
     building_block_definition_version_ref = module.platform_integration.building_block_definition.version_ref
-    display_name                          = "Platform Services"
+    display_name                          = "STACKIT Kubernetes Platform Services ${local.platform_identifier}"
     target_ref                            = module.tenant.tenant.ref
 
     inputs = {

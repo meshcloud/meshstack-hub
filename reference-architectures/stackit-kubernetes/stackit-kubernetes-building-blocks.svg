@@ -9,7 +9,7 @@
 <g id="clust2" class="cluster">
 <title>cluster_platform</title>
 <path fill="white" stroke="#d5dae0" d="M20,-8C20,-8 1020,-8 1020,-8 1026,-8 1032,-14 1032,-20 1032,-20 1032,-406.36 1032,-406.36 1032,-412.36 1026,-418.36 1020,-418.36 1020,-418.36 20,-418.36 20,-418.36 14,-418.36 8,-412.36 8,-406.36 8,-406.36 8,-20 8,-20 8,-14 14,-8 20,-8"/>
-<text xml:space="preserve" text-anchor="middle" x="194.75" y="-403.56" font-family="Helvetica,sans-Serif" font-size="12.00" fill="#697180"> &#160;Platform Services building block — acts as the Automation Identity</text>
+<text xml:space="preserve" text-anchor="middle" x="254.11" y="-403.56" font-family="Helvetica,sans-Serif" font-size="12.00" fill="#697180"> &#160;STACKIT Kubernetes Platform Services building block — acts as the Automation Identity</text>
 </g>
 <!-- BBD_FED -->
 <g id="node1" class="node">

@@ -1,6 +1,6 @@
 /*
- * Building block tree of the nested Platform Services building block. The outer layer that orders
- * it is described in README.md, not drawn here.
+ * Building block tree of the nested STACKIT Kubernetes Platform Services building block. The outer
+ * layer that orders it is described in README.md, not drawn here.
  * Conventions: .agents/references/diagrams.md — render with: task diagrams
  */
 digraph stackit_kubernetes_building_blocks {
@@ -24,7 +24,7 @@ digraph stackit_kubernetes_building_blocks {
   { rank=same; BBD_FED -> SA [style=invis] }
 
   subgraph cluster_platform {
-    label="  Platform Services building block — acts as the Automation Identity"
+    label="  STACKIT Kubernetes Platform Services building block — acts as the Automation Identity"
     labeljust=l
     fontname="Helvetica" fontsize=12 fontcolor="#697180"
     style="rounded" color="#d5dae0"

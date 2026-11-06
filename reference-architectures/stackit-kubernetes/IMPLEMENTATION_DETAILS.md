@@ -11,11 +11,13 @@ no STACKIT identity and only bootstraps, in one apply:
    `editor` and `iam.member-admin` (the registry block grants members their role with it),
 3. the **Bootstrap Identity Federation**, its child, trusting only the nested **STACKIT
    Kubernetes Platform Services** definition,
-4. one **Platform Services** building block, with the account's email as a known input.
+4. one **STACKIT Kubernetes Platform Services** building block, with the account's email as a
+   known input.
 
-Platform Services acts as the account from its first run and orders the tree. The outer run waits
-for it and shows its summary. Every outer input the tree needs reaches it as a Platform Services
-input, so updating the outer building block is the only way to change the platform.
+STACKIT Kubernetes Platform Services acts as the account from its first run and orders the tree.
+The outer run waits for it and shows its summary. Every outer input the tree needs reaches it as a
+STACKIT Kubernetes Platform Services input, so updating the outer building block is the only way
+to change the platform.
 
 ## Federations and parents
 

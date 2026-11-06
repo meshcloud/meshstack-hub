@@ -78,7 +78,7 @@ resource "meshstack_building_block_definition" "this" {
 
   spec = {
     display_name          = "STACKIT Kubernetes Platform Services"
-    display_name_template = "Platform Services"
+    display_name_template = "STACKIT Kubernetes Platform Services"
     symbol                = "https://raw.githubusercontent.com/meshcloud/meshstack-hub/${var.hub.git_ref}/reference-architectures/stackit-kubernetes/buildingblock/logo.png"
     description           = "The nested part of the STACKIT Kubernetes Platform: the SKE cluster, its platform services and the meshStack SKE platform, ordered by the STACKIT Kubernetes Platform building block."
     support_url           = "https://portal.stackit.cloud/ske"
