@@ -1,4 +1,7 @@
 locals {
+  # The provider reads a ref without a uuid as unknown, not as the shared runner.
+  runner_ref = var.runner_ref.uuid == null ? null : var.runner_ref
+
   # The identifier is unique across the whole meshStack instance and lands in the landing zone name,
   # so a playground deployment suffixes it instead of occupying the plain name.
   platform_identifier = var.playground_mode ? "${var.platform_identifier}-${random_string.playground_suffix.result}" : var.platform_identifier
@@ -83,7 +86,7 @@ module "otc_integration" {
 
   meshstack = {
     owning_workspace_identifier = var.workspace
-    runner_ref                  = var.runner_ref
+    runner_ref                  = local.runner_ref
     location_name               = var.use_global_location ? "global" : meshstack_location.this.metadata.name
     platform_identifier         = local.platform_identifier
     tags = {
@@ -182,7 +185,7 @@ module "federation_mapping_integration" {
   function_name                         = "mesh-${local.platform_identifier}-idp-mapping"
   otc_platform_type                     = module.otc_integration.platform_type_name
 
-  meshstack = { owning_workspace_identifier = var.workspace, tags = local.tags.building_block, runner_ref = var.runner_ref }
+  meshstack = { owning_workspace_identifier = var.workspace, tags = local.tags.building_block, runner_ref = local.runner_ref }
   hub       = var.hub
 }
 
@@ -246,7 +249,7 @@ module "network_integration" {
 
   workload_identity_name = "mesh-${local.platform_identifier}-network"
 
-  meshstack = { owning_workspace_identifier = var.workspace, tags = local.tags.building_block, runner_ref = var.runner_ref }
+  meshstack = { owning_workspace_identifier = var.workspace, tags = local.tags.building_block, runner_ref = local.runner_ref }
   hub       = var.hub
 }
 
@@ -264,7 +267,7 @@ module "obs_bucket_integration" {
 
   workload_identity_name = "mesh-${local.platform_identifier}-obs-bucket"
 
-  meshstack = { owning_workspace_identifier = var.workspace, tags = local.tags.building_block, runner_ref = var.runner_ref }
+  meshstack = { owning_workspace_identifier = var.workspace, tags = local.tags.building_block, runner_ref = local.runner_ref }
   hub       = var.hub
 }
 
@@ -283,7 +286,7 @@ module "rds_integration" {
   workload_identity_name  = "mesh-${local.platform_identifier}-rds"
   network_definition_uuid = module.network_integration.building_block_definition.uuid
 
-  meshstack = { owning_workspace_identifier = var.workspace, tags = local.tags.building_block, runner_ref = var.runner_ref }
+  meshstack = { owning_workspace_identifier = var.workspace, tags = local.tags.building_block, runner_ref = local.runner_ref }
   hub       = var.hub
 }
 
@@ -303,6 +306,6 @@ module "cce_integration" {
   network_definition_uuid = module.network_integration.building_block_definition.uuid
   create_cce_admin_trust  = var.create_cce_admin_trust
 
-  meshstack = { owning_workspace_identifier = var.workspace, tags = local.tags.building_block, runner_ref = var.runner_ref }
+  meshstack = { owning_workspace_identifier = var.workspace, tags = local.tags.building_block, runner_ref = local.runner_ref }
   hub       = var.hub
 }

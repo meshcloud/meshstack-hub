@@ -186,11 +186,11 @@ variable "starterkit_add_random_name_suffix" {
 
 variable "runner_ref" {
   type = object({
-    kind = string
-    uuid = string
+    kind = optional(string)
+    uuid = optional(string)
   })
-  default     = null
-  description = "Runner to use for all definitions created by this building block. Set to `null` to use the default shared runner."
+  nullable    = false
+  description = "Runner to use for all definitions created by this building block. Set to `{}` to use the default shared runner."
 }
 
 variable "stackit_project_id" {

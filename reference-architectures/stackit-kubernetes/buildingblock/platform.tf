@@ -1,4 +1,7 @@
 locals {
+  # The provider reads a ref without a uuid as unknown, not as the shared runner.
+  runner_ref = var.runner_ref.uuid == null ? null : var.runner_ref
+
   cluster_name = coalesce(local.overrides.cluster_name, format(
     "%s-%s",
     replace(substr(local.platform_identifier, 0, 6), "/-+$/", ""),
@@ -24,7 +27,7 @@ module "platform_integration" {
 
   starterkit_add_random_name_suffix = local.starterkit_add_random_name_suffix
 
-  meshstack = { owning_workspace_identifier = var.workspace, tags = local.tag_maps.building_block, runner_ref = var.runner_ref }
+  meshstack = { owning_workspace_identifier = var.workspace, tags = local.tag_maps.building_block, runner_ref = local.runner_ref }
   hub       = var.hub
 }
 

@@ -1,4 +1,7 @@
 locals {
+  # The provider reads a ref without a uuid as unknown, not as the shared runner.
+  runner_ref = var.runner_ref.uuid == null ? null : var.runner_ref
+
   tenant_ref = { kind = "meshTenant", uuid = var.tenant_uuid }
 
   # A released definition can be published to every workspace; the platform's own stay in its workspace.

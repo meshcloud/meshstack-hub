@@ -9,7 +9,7 @@ module "cluster_integration" {
 
   approval_policies = var.approval_policies
 
-  meshstack = { owning_workspace_identifier = var.workspace, tags = var.tags.building_block, runner_ref = var.runner_ref }
+  meshstack = { owning_workspace_identifier = var.workspace, tags = var.tags.building_block, runner_ref = local.runner_ref }
   hub       = local.platform_hub
 }
 
@@ -109,7 +109,7 @@ module "kubernetes_integration" {
 
   meshstack = {
     owning_workspace_identifier = var.workspace
-    runner_ref                  = var.runner_ref
+    runner_ref                  = local.runner_ref
     location_name               = local.location_name
     platform_identifier         = local.platform_name
     tags = {
@@ -176,7 +176,7 @@ module "ingress_integration" {
 
   approval_policies = var.approval_policies
 
-  meshstack = { owning_workspace_identifier = var.workspace, tags = var.tags.building_block, runner_ref = var.runner_ref }
+  meshstack = { owning_workspace_identifier = var.workspace, tags = var.tags.building_block, runner_ref = local.runner_ref }
   hub       = local.platform_hub
 }
 
