@@ -2,9 +2,9 @@
 
 | Property | Value |
 |----------|-------|
-| **Forgejo** | <a href="${instance_url}" target="_blank" rel="noopener">${instance_url}</a> |
+| **Forgejo** | [${instance_url}](${instance_url}) |
 %{ if forgejo_organization != null ~}
-| **Organization** | <a href="${organization_url}" target="_blank" rel="noopener"><code>${forgejo_organization}</code></a> |
+| **Organization** | [`${forgejo_organization}`](${organization_url}) |
 %{ endif ~}
 | **Technical User** | `${local_user_username}` |
 | **Shared Runner** | ${length(shared_runner_labels) > 0 ? "`${join("`, `", shared_runner_labels)}`" : "none"} |
@@ -22,7 +22,7 @@
 %{ endfor ~}
 %{ if length([for member in members : member if member.username == ""]) > 0 ~}
 
-A member joins their team once they have signed in to <a href="${instance_url}" target="_blank" rel="noopener">${instance_url}</a> with their
+A member joins their team once they have signed in to [${instance_url}](${instance_url}) with their
 STACKIT account. After they have signed in, re-run this building block.
 %{ endif ~}
 %{ endif ~}

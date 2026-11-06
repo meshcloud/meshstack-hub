@@ -23,7 +23,7 @@ output "summary" {
 
     | Property | Value |
     |----------|-------|
-    | **Cluster** | <a href="https://portal.stackit.cloud/kubernetes/clusters/details/${module.cluster.cluster.name}/overview?project=${var.stackit_project_id}" target="_blank" rel="noopener">Open in STACKIT Portal</a> |
+    | **Cluster** | [Open in STACKIT Portal](https://portal.stackit.cloud/kubernetes/clusters/details/${module.cluster.cluster.name}/overview?project=${var.stackit_project_id}) |
     | **Kubernetes** | `${module.cluster.cluster.kubernetes_version_used}` |
     | **API Server** | `${terraform_data.kube_host.output}` |
     | **Node Pool** | `${var.node_pool.name}`: ${var.node_pool.minimum} to ${var.node_pool.maximum} × `${var.node_pool.machine_type}` in ${join(", ", var.node_pool.availability_zones)} |
