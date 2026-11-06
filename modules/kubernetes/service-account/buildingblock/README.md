@@ -71,7 +71,7 @@ No modules.
 | Name | Description |
 |------|-------------|
 | <a name="output_instructions"></a> [instructions](#output\_instructions) | Instructions for using the kubeconfig |
-| <a name="output_kubeconfig"></a> [kubeconfig](#output\_kubeconfig) | Kubeconfig file content for authenticating with the Kubernetes cluster. Empty when `output_to_vault` is set. |
+| <a name="output_kubeconfig"></a> [kubeconfig](#output\_kubeconfig) | Kubeconfig with the service account token. Sensitive, but in plain view to everyone who can see the building block; prefer `output_to_vault`, which leaves this empty. |
 | <a name="output_summary"></a> [summary](#output\_summary) | Markdown summary shown on the building block. |
 | <a name="output_vault_secret"></a> [vault\_secret](#output\_vault\_secret) | `{path, secret_hash}` of the secret in Vault, where `secret_hash` changes with its content; `{}` without `output_to_vault`. |
 <!-- END_TF_DOCS -->
