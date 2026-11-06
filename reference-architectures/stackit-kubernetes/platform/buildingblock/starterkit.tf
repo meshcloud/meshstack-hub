@@ -49,7 +49,7 @@ module "git_repository_integration" {
 
   approval_policies = var.starterkit_approval_policies
 
-  meshstack = { owning_workspace_identifier = var.workspace, tags = var.tags.starterkit_building_block }
+  meshstack = { owning_workspace_identifier = var.workspace, tags = var.tags.starterkit_building_block, runner_ref = var.runner_ref }
   hub       = var.hub
 }
 
@@ -107,7 +107,7 @@ module "forgejo_connector_integration" {
 
   approval_policies = var.starterkit_approval_policies
 
-  meshstack = { owning_workspace_identifier = var.workspace, tags = var.tags.starterkit_building_block }
+  meshstack = { owning_workspace_identifier = var.workspace, tags = var.tags.starterkit_building_block, runner_ref = var.runner_ref }
   hub       = var.hub
 }
 
@@ -142,6 +142,6 @@ module "ske_starterkit_integration" {
 
   approval_policies = var.starterkit_approval_policies
 
-  meshstack = { owning_workspace_identifier = var.workspace, tags = var.tags.starterkit_building_block }
+  meshstack = { owning_workspace_identifier = var.workspace, tags = var.tags.starterkit_building_block, runner_ref = var.runner_ref }
   hub       = var.hub
 }

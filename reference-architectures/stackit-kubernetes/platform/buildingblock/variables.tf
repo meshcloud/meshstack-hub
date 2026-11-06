@@ -184,6 +184,15 @@ variable "starterkit_add_random_name_suffix" {
   description = "Append a random suffix to the projects the starterkit creates. Keep it as the adopted starterkit had it: an upgrade that changes it renames, and so replaces, every project and tenant it created."
 }
 
+variable "runner_ref" {
+  type = object({
+    kind = string
+    uuid = string
+  })
+  default     = null
+  description = "Runner to use for all definitions created by this building block. Set to `null` to use the default shared runner."
+}
+
 variable "stackit_project_id" {
   type        = string
   nullable    = false

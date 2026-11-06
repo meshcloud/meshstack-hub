@@ -475,6 +475,16 @@ resource "meshstack_building_block_definition" "this" {
         })
       }
 
+      runner_ref = {
+        display_name    = "Runner"
+        description     = "Runner to use for all definitions created by this building block. Set to `null` to use the default shared runner."
+        type            = "CODE"
+        assignment_type = "STATIC"
+        argument        = jsonencode(jsonencode(var.meshstack.runner_ref))
+        is_optional     = true
+        display_order   = 120
+      }
+
       workspace = {
         display_name    = "Workspace Identifier"
         description     = "Workspace that will own the created platform, location and landing zones."

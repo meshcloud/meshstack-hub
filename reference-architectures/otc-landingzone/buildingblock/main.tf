@@ -83,6 +83,7 @@ module "otc_integration" {
 
   meshstack = {
     owning_workspace_identifier = var.workspace
+    runner_ref                  = var.runner_ref
     location_name               = var.use_global_location ? "global" : meshstack_location.this.metadata.name
     platform_identifier         = local.platform_identifier
     tags = {
@@ -181,7 +182,7 @@ module "federation_mapping_integration" {
   function_name                         = "mesh-${local.platform_identifier}-idp-mapping"
   otc_platform_type                     = module.otc_integration.platform_type_name
 
-  meshstack = { owning_workspace_identifier = var.workspace, tags = local.tags.building_block }
+  meshstack = { owning_workspace_identifier = var.workspace, tags = local.tags.building_block, runner_ref = var.runner_ref }
   hub       = var.hub
 }
 
@@ -245,7 +246,7 @@ module "network_integration" {
 
   workload_identity_name = "mesh-${local.platform_identifier}-network"
 
-  meshstack = { owning_workspace_identifier = var.workspace, tags = local.tags.building_block }
+  meshstack = { owning_workspace_identifier = var.workspace, tags = local.tags.building_block, runner_ref = var.runner_ref }
   hub       = var.hub
 }
 
@@ -263,7 +264,7 @@ module "obs_bucket_integration" {
 
   workload_identity_name = "mesh-${local.platform_identifier}-obs-bucket"
 
-  meshstack = { owning_workspace_identifier = var.workspace, tags = local.tags.building_block }
+  meshstack = { owning_workspace_identifier = var.workspace, tags = local.tags.building_block, runner_ref = var.runner_ref }
   hub       = var.hub
 }
 
@@ -282,7 +283,7 @@ module "rds_integration" {
   workload_identity_name  = "mesh-${local.platform_identifier}-rds"
   network_definition_uuid = module.network_integration.building_block_definition.uuid
 
-  meshstack = { owning_workspace_identifier = var.workspace, tags = local.tags.building_block }
+  meshstack = { owning_workspace_identifier = var.workspace, tags = local.tags.building_block, runner_ref = var.runner_ref }
   hub       = var.hub
 }
 
@@ -302,6 +303,6 @@ module "cce_integration" {
   network_definition_uuid = module.network_integration.building_block_definition.uuid
   create_cce_admin_trust  = var.create_cce_admin_trust
 
-  meshstack = { owning_workspace_identifier = var.workspace, tags = local.tags.building_block }
+  meshstack = { owning_workspace_identifier = var.workspace, tags = local.tags.building_block, runner_ref = var.runner_ref }
   hub       = var.hub
 }
