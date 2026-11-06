@@ -276,6 +276,15 @@ variable "imports" {
   }
 }
 
+variable "runner_ref" {
+  type = object({
+    kind = string
+    uuid = string
+  })
+  default     = null
+  description = "Runner to use for all definitions created by this building block. Set to `null` to use the default shared runner."
+}
+
 variable "workspace" {
   type        = string
   nullable    = false

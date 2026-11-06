@@ -24,7 +24,7 @@ module "platform_integration" {
 
   starterkit_add_random_name_suffix = local.starterkit_add_random_name_suffix
 
-  meshstack = { owning_workspace_identifier = var.workspace, tags = local.tag_maps.building_block }
+  meshstack = { owning_workspace_identifier = var.workspace, tags = local.tag_maps.building_block, runner_ref = var.runner_ref }
   hub       = var.hub
 }
 

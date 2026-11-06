@@ -176,6 +176,15 @@ variable "create_cce_admin_trust" {
   description = "Create the `cce_admin_trust` agency the CCE service building block needs. It is one per domain."
 }
 
+variable "runner_ref" {
+  type = object({
+    kind = string
+    uuid = string
+  })
+  default     = null
+  description = "Runner to use for all definitions created by this building block. Set to `null` to use the default shared runner."
+}
+
 variable "hub" {
   type = object({
     git_ref   = optional(string, "main")

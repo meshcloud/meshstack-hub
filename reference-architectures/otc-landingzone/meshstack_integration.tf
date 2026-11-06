@@ -487,6 +487,16 @@ resource "meshstack_building_block_definition" "this" {
         argument        = jsonencode(var.create_cce_admin_trust)
         display_order   = 130
       }
+
+      runner_ref = {
+        display_name    = "Runner"
+        description     = "Runner to use for all definitions created by this building block. Set to `null` to use the default shared runner."
+        type            = "CODE"
+        assignment_type = "STATIC"
+        argument        = jsonencode(jsonencode(var.meshstack.runner_ref))
+        is_optional     = true
+        display_order   = 135
+      }
     }
 
     outputs = {
