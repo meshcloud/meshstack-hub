@@ -94,6 +94,14 @@ The comment sits directly above the `try`, or above the attribute that owns the 
 `try` is nested inside it. Prefer not needing it: a variable default, `optional()` or an explicit
 `null` check says the same thing without hiding the next error too.
 
+<!-- scorecard-checks: summary_output, summary_links_new_tab -->
+## Summary Output
+
+Every building block with an integration has a `summary` output, declared in the BBD with
+`assignment_type = "SUMMARY"`, so meshPanel shows the result of a run. Write each link in it as
+`<a href="…" target="_blank" rel="noopener">…</a>`: meshPanel opens a Markdown link in the same tab,
+which takes the user out of the panel.
+
 ## Output Content: Inline Heredoc Over a Template File
 
 Write a markdown output's content — the `summary` output most of all — **inline with a `<<-EOT`
