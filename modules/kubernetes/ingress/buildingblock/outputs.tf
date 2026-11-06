@@ -35,3 +35,49 @@ output "wildcard_certificate_secret_name" {
 
   depends_on = [module.issuer]
 }
+
+output "summary" {
+  description = "Markdown summary shown on the building block."
+  value       = <<-EOT
+    # Kubernetes Ingress
+
+    | Property | Value |
+    |----------|-------|
+    | **Load Balancer IP** | `${data.kubernetes_service_v1.haproxy_controller.status[0].load_balancer[0].ingress[0].ip}` |
+    | **IngressClass** | `${var.ingress_class_name}` |
+    | **ClusterIssuer** | `${var.cluster_issuer_name}`, registered at `${var.acme_server}` |
+    | **Certificates** | ${local.dns01_enabled ? "wildcard `*.${local.dns01_certificate_domain}` in `${module.haproxy_namespace.name}/${var.wildcard_certificate_name}`, served by default" : "one per hostname, over HTTP-01"} |
+    | **HAProxy** | chart `${var.haproxy_version}`, ${var.haproxy_replica_count} replicas in `${module.haproxy_namespace.name}` |
+    | **cert-manager** | chart `${var.cert_manager_version}` in `${module.cert_manager_namespace.name}` |
+
+    Point the DNS records of your hostnames at the load balancer IP. An Ingress served by this
+    controller, with a certificate from Let's Encrypt:
+
+    ```yaml
+    apiVersion: networking.k8s.io/v1
+    kind: Ingress
+    metadata:
+      name: my-app
+      annotations:
+        cert-manager.io/cluster-issuer: ${var.cluster_issuer_name}
+    spec:
+      ingressClassName: ${var.ingress_class_name}
+      tls:
+        - hosts: [my-app.example.com]
+          secretName: my-app-tls
+      rules:
+        - host: my-app.example.com
+          http:
+            paths:
+              - path: /
+                pathType: Prefix
+                backend:
+                  service:
+                    name: my-app
+                    port:
+                      number: 80
+    ```
+  EOT
+
+  depends_on = [module.haproxy, module.issuer]
+}

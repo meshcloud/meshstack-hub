@@ -325,6 +325,12 @@ resource "meshstack_building_block_definition" "this" {
         display_name    = "Open App"
         type            = "STRING"
       }
+
+      "summary" = {
+        assignment_type = "SUMMARY"
+        display_name    = "Summary"
+        type            = "STRING"
+      }
     }
   }
 }

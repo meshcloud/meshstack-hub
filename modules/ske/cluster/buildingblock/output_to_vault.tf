@@ -1,4 +1,6 @@
 locals {
+  vault_address     = nonsensitive(var.output_to_vault.address)
+  vault_mount       = nonsensitive(var.output_to_vault.mount)
   vault_secret_path = "${nonsensitive(var.output_to_vault.path_prefix)}ske/cluster"
 
   vault_data_json = jsonencode({ kubeconfig = local.admin_kubeconfig })

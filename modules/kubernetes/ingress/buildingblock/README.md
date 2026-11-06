@@ -141,6 +141,7 @@ puts Helm's ownership label and annotations on the ClusterIssuer, so the release
 | <a name="output_haproxy_lb_ip"></a> [haproxy\_lb\_ip](#output\_haproxy\_lb\_ip) | External IP of the HAProxy LoadBalancer service. Point application DNS A records here before TLS provisioning can complete. |
 | <a name="output_haproxy_namespace"></a> [haproxy\_namespace](#output\_haproxy\_namespace) | Namespace of the HAProxy ingress controller and of the wildcard certificate secret. |
 | <a name="output_ingress_class_name"></a> [ingress\_class\_name](#output\_ingress\_class\_name) | Name of the IngressClass an application puts on its Ingress to be served by this controller. |
+| <a name="output_summary"></a> [summary](#output\_summary) | Markdown summary shown on the building block. |
 | <a name="output_wildcard_certificate_domain"></a> [wildcard\_certificate\_domain](#output\_wildcard\_certificate\_domain) | Domain the wildcard certificate `*.<domain>` covers; null without `dns01`. |
 | <a name="output_wildcard_certificate_secret_name"></a> [wildcard\_certificate\_secret\_name](#output\_wildcard\_certificate\_secret\_name) | Secret in `haproxy_namespace` holding the wildcard certificate; null without `dns01`. |
 <!-- END_TF_DOCS -->

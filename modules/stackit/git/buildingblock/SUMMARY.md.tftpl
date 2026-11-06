@@ -1,0 +1,28 @@
+# STACKIT Git: **${instance_name}**
+
+| Property | Value |
+|----------|-------|
+| **Forgejo** | [${instance_url}](${instance_url}) |
+%{ if forgejo_organization != null ~}
+| **Organization** | [`${forgejo_organization}`](${organization_url}) |
+%{ endif ~}
+| **Technical User** | `${local_user_username}` |
+| **Shared Runner** | ${length(shared_runner_labels) > 0 ? "`${join("`, `", shared_runner_labels)}`" : "none"} |
+%{ if vault_secret_path != null ~}
+| **API Token** | key `forgejo-api-token` of the Vault secret `${vault_secret_path}` on mount `${vault_mount}` |
+%{ endif ~}
+%{ if length(members) > 0 ~}
+
+## Organization members
+
+| Member | Role | Forgejo user |
+|--------|------|--------------|
+%{ for member in members ~}
+| `${member.email}` | `${member.role}` | ${member.username != "" ? "✅ `${member.username}`" : "⚠️ not signed in yet"} |
+%{ endfor ~}
+%{ if length([for member in members : member if member.username == ""]) > 0 ~}
+
+A member joins their team once they have signed in to [${instance_url}](${instance_url}) with their
+STACKIT account. After they have signed in, re-run this building block.
+%{ endif ~}
+%{ endif ~}

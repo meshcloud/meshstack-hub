@@ -347,6 +347,12 @@ resource "meshstack_building_block_definition" "this" {
         type            = "STRING"
         assignment_type = "NONE"
       }
+
+      summary = {
+        display_name    = "Summary"
+        type            = "STRING"
+        assignment_type = "SUMMARY"
+      }
     }
 
     permissions = []

@@ -1,6 +1,7 @@
 locals {
   write_to_vault    = nonsensitive(var.output_to_vault != null)
   vault_secret_path = local.write_to_vault ? "${nonsensitive(var.output_to_vault.path_prefix)}kubernetes/service-account" : null
+  vault_mount       = local.write_to_vault ? nonsensitive(var.output_to_vault.mount) : null
 
   vault_data_json = jsonencode({ kubeconfig = yamlencode(local.kubeconfig) })
 

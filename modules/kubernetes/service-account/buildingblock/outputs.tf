@@ -52,3 +52,19 @@ output "vault_secret" {
     } : key => value if local.write_to_vault
   }
 }
+
+output "summary" {
+  description = "Markdown summary shown on the building block."
+  value       = <<-EOT
+    # Kubernetes Service Account: **${kubernetes_service_account.this.metadata[0].name}**
+
+    | Property | Value |
+    |----------|-------|
+    | **Service Account** | `${var.namespace}/${kubernetes_service_account.this.metadata[0].name}` |
+    | **Role** | `${var.cluster_role}`, ${var.bind_cluster_wide ? "in every namespace" : "in `${var.namespace}`"} |
+    | **Cluster** | `${var.cluster_name}` at `${local.kubeconfig_cluster.server}` |
+    | **Kubeconfig** | ${local.write_to_vault ? "key `kubeconfig` of the Vault secret `${local.vault_secret_path}` on mount `${local.vault_mount}`" : "the **Kubeconfig** output of this building block"} |
+
+    Save the kubeconfig to a file and use it with `kubectl --kubeconfig kubeconfig get pods`.
+  EOT
+}
