@@ -299,6 +299,14 @@ resource "meshstack_building_block_definition" "this" {
         display_name    = "Open Registry"
         type            = "STRING"
         assignment_type = "RESOURCE_URL"
+        display_order   = 1
+      }
+
+      portal_url = {
+        display_name    = "Open Portal"
+        type            = "STRING"
+        assignment_type = "RESOURCE_URL"
+        display_order   = 2
       }
 
       registry_robot_url = {

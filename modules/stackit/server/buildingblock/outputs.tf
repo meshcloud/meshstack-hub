@@ -19,6 +19,15 @@ output "ssh_private_key" {
   description = "Generated OpenSSH private key to log into the VM. Save it to a file, chmod 600, and pass it with ssh -i."
 }
 
+locals {
+  server_url = "https://portal.stackit.cloud/server/servers/${stackit_server.this.server_id}/overview?project=${var.stackit_project_id}"
+}
+
+output "server_url" {
+  value       = local.server_url
+  description = "STACKIT portal page of the server."
+}
+
 output "server_id" {
   value       = stackit_server.this.server_id
   description = "ID of the STACKIT server."
@@ -29,7 +38,8 @@ output "summary" {
   value       = <<-EOT
     # STACKIT VM `${var.name}`
 
-    Your `${var.machine_type}` VM is up at **`${stackit_public_ip.this.ip}`**.
+    Your `${var.machine_type}` VM is up at **`${stackit_public_ip.this.ip}`**
+    ([Open in STACKIT Portal](${local.server_url})).
 
     Log in with the generated key (from the **SSH Private Key** output):
 

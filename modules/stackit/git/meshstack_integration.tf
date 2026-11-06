@@ -338,6 +338,13 @@ resource "meshstack_building_block_definition" "this" {
         display_order   = 2
       }
 
+      portal_url = {
+        display_name    = "Open Portal"
+        type            = "STRING"
+        assignment_type = "RESOURCE_URL"
+        display_order   = 3
+      }
+
       forgejo_organization = {
         display_name    = "Forgejo Organization"
         type            = "STRING"

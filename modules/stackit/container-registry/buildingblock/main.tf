@@ -31,6 +31,7 @@ locals {
   # project, so read-artifactory.sh waits for it.
   registry_url       = data.external.artifactory.result.url
   registry_robot_url = "${trimsuffix(local.registry_url, "/repositories")}/robot-account"
+  portal_url         = "https://portal.stackit.cloud/container-registry-lite?project=${var.stackit_project_id}"
 
   service_enablement_path = "/v2/projects/${var.stackit_project_id}/regions/${var.stackit_region}/services"
   artifactory_path        = "/v1/projects/${var.stackit_project_id}/regions/${var.stackit_region}/artifactories"

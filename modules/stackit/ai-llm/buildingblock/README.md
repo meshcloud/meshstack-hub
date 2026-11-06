@@ -80,5 +80,6 @@ No modules.
 | Name | Description |
 |------|-------------|
 | <a name="output_summary"></a> [summary](#output\_summary) | Markdown summary shown on the building block. |
+| <a name="output_token_url"></a> [token\_url](#output\_token\_url) | STACKIT portal page of the model serving token. |
 | <a name="output_vault_secret"></a> [vault\_secret](#output\_vault\_secret) | `{path, secret_hash}` of the secret in Vault, where `secret_hash` changes with its content. |
 <!-- END_TF_DOCS -->

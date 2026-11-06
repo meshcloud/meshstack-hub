@@ -18,6 +18,11 @@ output "registry_robot_url" {
   value       = local.registry_robot_url
 }
 
+output "portal_url" {
+  description = "Container registry page of the project in the STACKIT portal, which has no page for a single registry."
+  value       = local.portal_url
+}
+
 output "summary" {
   description = "Summary of the created registry and, until a robot is linked, the one manual step it still needs."
   value = templatefile("${path.module}/SUMMARY.md.tftpl", {
@@ -25,6 +30,7 @@ output "summary" {
     registry_host      = local.registry_host
     registry_url       = local.registry_url
     registry_robot_url = local.registry_robot_url
+    portal_url         = local.portal_url
     stackit_project_id = var.stackit_project_id
     user_assignments   = values(local.registry_role_assignments)
     unknown_users      = local.unknown_users

@@ -177,6 +177,7 @@ it in the registry. The default is an empty list, which mirrors nothing.
 
 | Name | Description |
 |------|-------------|
+| <a name="output_portal_url"></a> [portal\_url](#output\_portal\_url) | Container registry page of the project in the STACKIT portal, which has no page for a single registry. |
 | <a name="output_registry_host"></a> [registry\_host](#output\_registry\_host) | Host applications pull images from and `docker login` targets. |
 | <a name="output_registry_name"></a> [registry\_name](#output\_registry\_name) | Name of the STACKIT container registry created in the project. |
 | <a name="output_registry_robot_url"></a> [registry\_robot\_url](#output\_registry\_robot\_url) | Robot Accounts tab of the Harbor project, where the robot linked to the service account is created. |
