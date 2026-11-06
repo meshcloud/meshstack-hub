@@ -1,23 +1,25 @@
-variable "workload_identity_federation" {
-  type = object({
-    issuer   = string,
-    audience = string,
-    subjects = list(string)
-  })
+variable "workload_identity_federations" {
+  type = list(object({
+    issuer   = string
+    audience = string
+    subject  = string
+  }))
   nullable    = false
   description = <<-EOT
-  Trusted identity provider from meshStack that the building block runner federates into.
-  Supports multiple subjects and wildcard patterns (e.g., 'system:serviceaccount:namespace:*').
-  EOT
-}
-
-variable "oidc_provider_arn" {
-  type        = string
-  nullable    = false
-  description = <<-EOT
-  ARN of the IAM OIDC provider for the meshStack runner WIF token issuer in this AWS account.
+  meshStack identities the role trusts, one per building block runner. For more subjects of one
+  issuer, pass one entry per subject. The backplane looks up this account's OIDC provider for each issuer.
   See .agents/references/aws-backplane.md#the-shared-oidc-provider
   EOT
+
+  validation {
+    condition     = length(var.workload_identity_federations) > 0
+    error_message = "The role needs at least one identity to trust."
+  }
+
+  validation {
+    condition     = alltrue([for identity in var.workload_identity_federations : identity.subject != null])
+    error_message = "These identities need a subject: ${join(", ", [for identity in var.workload_identity_federations : identity.issuer if identity.subject == null])}."
+  }
 }
 
 variable "name" {

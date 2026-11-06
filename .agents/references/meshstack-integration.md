@@ -118,6 +118,8 @@ variable "meshstack" {
 }
 ```
 
+A module that federates also declares `trusted_runner_refs`, see [Runner identity](#runner-identity).
+
 Use both in the building block definition. Always forward `var.meshstack.tags` to `metadata.tags` so
 workspace-level tags propagate to the definition, `var.hub.bbd_draft` to the `draft` field of
 `version_spec`, and `var.meshstack.runner_ref` to `version_spec.runner_ref` and to the `runner_ref`
@@ -178,39 +180,57 @@ meshStack passes each input to the Terraform variable of the same name.
 ## Runner identity
 
 A building block run presents an identity a cloud backplane has to trust. The runner declares the
-scheme once, meshStack resolves it per definition, and the module reads the result from the
-definition's `version_latest`. It never builds a subject from strings.
+scheme once, and meshStack resolves it per definition version. A module gets the identities and the
+token path from [`modules/meshstack/runner-identity`](../../modules/meshstack/runner-identity).
 
 ```hcl
+module "runner_identity" {
+  source = "github.com/meshcloud/meshstack-hub//modules/meshstack/runner-identity?ref=${var.hub.git_ref}"
+
+  cloud               = "aws"
+  runner_ref          = var.meshstack.runner_ref
+  trusted_runner_refs = var.meshstack.trusted_runner_refs
+  versions            = meshstack_building_block_definition.this.versions
+}
+
 resource "meshstack_building_block_definition" "this" {
   version_spec = {
     runner_ref = var.meshstack.runner_ref
+    inputs = {
+      AWS_WEB_IDENTITY_TOKEN_FILE = {
+        # ...
+        argument = jsonencode(module.runner_identity.token_path)
+      }
+    }
     # ...
   }
 }
 
 module "backplane" {
   # ...
-  workload_identity_federation = {
-    issuer   = meshstack_building_block_definition.this.version_latest.workload_identity_federation.issuer
-    subjects = [meshstack_building_block_definition.this.version_latest.workload_identity_federation.subject]
-  }
+  workload_identity_federations = module.runner_identity.identities
 }
 ```
 
-- `version_latest.workload_identity_federation.subject` is the runner's subject template with every
-  placeholder filled in for this definition. It is the only place a subject comes from, and it is
-  known after apply, exactly as `metadata.uuid` already was.
-- `issuer` and the per-cloud `audience` describe the runner, and the definition reports them for the
-  runner its latest version runs on. AWS reads `.aws.audience`, GCP `.gcp.audience`;
-  Azure and STACKIT need none. A self-hosted runner declares its own values, so never hardcode them.
-- `var.meshstack.runner_ref` feeds `version_spec.runner_ref`, and the status follows it, so the
-  backplane always trusts the runner the definition actually runs on. Leave it null and the
-  definition runs on the shared runner meshStack hosts. Pass the `ref` of a
-  `meshstack_building_block_runner`; `kind` is required so that nobody builds the object by hand.
-- The whole status is known after apply. Where the definition consumes a backplane output that
-  depends on the same input, split the input; GCP does, see
+- `var.meshstack.runner_ref` goes to both `version_spec.runner_ref` and the module, so the
+  backplane trusts the runner the definition runs on. Leave it null and the definition runs on the
+  shared runner meshStack hosts. Pass the `ref` of a `meshstack_building_block_runner` resource or
+  data source.
+- A building block keeps running on the version it was created with. So when
+  `meshstack.runner_ref` changes, the blocks on older versions still present the old runner's
+  identity. List the old runner in `var.meshstack.trusted_runner_refs` until all building blocks
+  use a version on the new runner. Only a module that federates declares this field, as
+  `optional(list(object({ kind = string, uuid = string })), [])`.
+- Each identity has the runner's `issuer` and `audience` and the `subject` its versions present.
+  One identity per runner keeps the list length known at plan time, so a backplane can create one
+  trust resource per identity with `for_each`. A self-hosted runner declares its own values. Read
+  them and the token path from the module.
+- A subject is known only after apply, like `metadata.uuid`. Where the definition
+  consumes a backplane output that depends on the same input, split the input; GCP does, see
   [gcp-backplane.md](gcp-backplane.md#keeping-the-subject-out-of-the-credentials).
+
+Older modules read `version_latest.workload_identity_federation` of their definition. They trust
+only the runner of the latest version.
 
 `data.meshstack_integrations.….workload_identity_federation.replicator` is **not** a substitute.
 That entry describes the replicator's own identity, and using it here only ever worked because the
@@ -219,11 +239,6 @@ runner happens to share the replicator's cluster and namespace. Platform-level
 
 `modules/aws/oidc-provider` owns no definition, because it registers the issuer per AWS account
 before any definition exists, so it takes `issuer` and the `audiences` of every runner behind it as an input instead.
-
-**Known limitation.** The backplane trusts the identity of the version the Terraform resource
-manages, which is the newest one. A building block keeps running on the version it was created
-with, so moving a definition to a different runner breaks the blocks that still run on the old
-version until they upgrade.
 
 <!-- scorecard-checks: bbd_catalog_overrides -->
 ## Overridable Catalog Properties

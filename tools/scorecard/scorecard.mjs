@@ -141,6 +141,12 @@ const CATEGORIES = {
   },
 };
 
+// Two ways to get the runner identity:
+// 1. modules/meshstack/runner-identity: trusts several runners.
+// 2. version_latest of the definition: older modules, latest runner only.
+const LATEST_WIF = String.raw`version_latest(?:_release)?\.workload_identity_federation`;
+const RUNNER_IDENTITY_MODULE = /\/\/modules\/meshstack\/runner-identity\?/;
+
 // AWS backplanes come in two documented identity patterns, and most checks belong to exactly one:
 //   "wif"           — OIDC provider + IAM role, for a building block acting in a single account
 //   "cross_account" — IAM user + assumable role (usually distributed by a StackSet), for org-wide
@@ -153,7 +159,7 @@ function awsBackplanePattern(mod) {
   if (!allTf) return "none";
   const federated =
     /(resource|data)\s+"aws_iam_openid_connect_provider"/.test(allTf) ||
-    /^variable\s+"(workload_identity_federation|oidc_provider_arn)"/m.test(allTf);
+    /^variable\s+"(workload_identity_federations?|oidc_provider_arn)"/m.test(allTf);
   if (federated) return "wif";
   return /resource\s+"aws_iam_access_key"/.test(allTf) ? "cross_account" : "none";
 }
@@ -746,14 +752,12 @@ const detectors = [
           pass: false,
           detail: "derives the runner's trust from data.meshstack_integrations…replicator — that entry is the replicator's own identity and only ever matched because the runner shares its namespace",
         };
-      if (!/workload_identity_federation\s*=/.test(content)) return { pass: null, detail: "module does not federate" };
-      // The runner's resolved identity lives on the definition's version, exposed by the provider as
-      // version_latest / version_latest_release — there is no status.workload_identity_federation
-      // attribute. See meshstack-integration.md § Runner identity.
-      if (!/version_latest(?:_release)?\.workload_identity_federation\.issuer/.test(content))
+      if (!/workload_identity_federations?\s*=/.test(content)) return { pass: null, detail: "module does not federate" };
+      if (RUNNER_IDENTITY_MODULE.test(content)) return { pass: true };
+      if (!new RegExp(LATEST_WIF + String.raw`\.issuer`).test(content))
         return { pass: false, detail: "issuer is not taken from meshstack_building_block_definition.<name>.version_latest.workload_identity_federation.issuer, which follows the runner the definition runs on" };
       return {
-        pass: /version_latest(?:_release)?\.workload_identity_federation\.subject/.test(content),
+        pass: new RegExp(LATEST_WIF + String.raw`\.subject`).test(content),
         detail: "subjects are not taken from meshstack_building_block_definition.<name>.version_latest.workload_identity_federation.subject, so the backplane may trust something the runner never presents",
       };
     },
@@ -777,9 +781,10 @@ const detectors = [
           detail: "creates its own aws_iam_openid_connect_provider — AWS registers one per issuer URL per account, so it is shared platform infrastructure a backplane must be given, not claim",
         };
       }
+      if (/data\s+"aws_iam_openid_connect_provider"/.test(allTf)) return { pass: true };
       const varsTf = readBackplaneFile(mod, "variables.tf");
       const arnVar = varsTf ? extractVariableBlocks(varsTf).get("oidc_provider_arn") : null;
-      if (!arnVar) return { pass: false, detail: 'missing variable "oidc_provider_arn"' };
+      if (!arnVar) return { pass: false, detail: 'missing variable "oidc_provider_arn" or a data "aws_iam_openid_connect_provider" lookup' };
       if (/^\s*default\s*=/m.test(arnVar))
         return { pass: false, detail: "oidc_provider_arn has a default — the provider has to be deployed first, so there is nothing sensible to default to" };
       if (/^variable\s+"create_oidc_provider"/m.test(allTf))
@@ -802,6 +807,12 @@ const detectors = [
       // precondition, and terraform-docs renders backplane variables but not integration comments.
       // It is therefore copied verbatim into both variables and linted here.
       const varsTf = readBackplaneFile(mod, "variables.tf");
+      const lookupVar = varsTf ? extractVariableBlocks(varsTf).get("workload_identity_federations") : null;
+      if (lookupVar)
+        return {
+          pass: lookupVar.replace(/\s+/g, " ").includes(AWS_OIDC_PROVIDER_NOTICE[1]),
+          detail: `the description of workload_identity_federations must link the shared provider: "${AWS_OIDC_PROVIDER_NOTICE[1]}"`,
+        };
       const backplaneVar = varsTf ? extractVariableBlocks(varsTf).get("oidc_provider_arn") : null;
       if (!backplaneVar) return { pass: false, detail: 'missing variable "oidc_provider_arn"' };
       if (!hasOidcProviderNotice(backplaneVar))
@@ -840,7 +851,8 @@ const detectors = [
       if (awsBackplanePattern(mod) !== "wif") return NOT_WIF;
       const varsTf = readBackplaneFile(mod, "variables.tf");
       if (!varsTf) return { pass: false, detail: "no variables.tf" };
-      const wifVar = extractVariableBlocks(varsTf).get("workload_identity_federation");
+      const blocks = extractVariableBlocks(varsTf);
+      const wifVar = blocks.get("workload_identity_federations") ?? blocks.get("workload_identity_federation");
       if (!wifVar) return { pass: false, detail: 'variable "workload_identity_federation" not found' };
       const hasDefaultNull = /default\s*=\s*null/.test(wifVar);
       return {
@@ -863,7 +875,9 @@ const detectors = [
       // `"${trimprefix(var....issuer, "https://")}:sub"` — so match to end of line, not to the
       // next quote.
       const hasSubCondition = /^\s*variable\s*=.*:sub"/m.test(allTf);
-      const hasSubjects = /var\.workload_identity_federation\.subjects/.test(allTf);
+      const hasSubjects =
+        /var\.workload_identity_federation\.subjects/.test(allTf) ||
+        (/for_each\s*=\s*var\.workload_identity_federations\b/.test(allTf) && /values\s*=\s*\[statement\.value\.subject\]/.test(allTf));
       if (!hasSubCondition)
         return { pass: false, detail: "no :sub condition — the role is assumable by every subject the meshStack issuer signs" };
       if (!hasSubjects)
@@ -872,7 +886,7 @@ const detectors = [
       const integration = readIntegrationTf(mod);
       if (!integration) return { pass: true };
       return {
-        pass: /subjects\s*=\s*\[[^\]]*status\.workload_identity_federation\.subject/.test(integration),
+        pass: RUNNER_IDENTITY_MODULE.test(integration) || new RegExp(LATEST_WIF + String.raw`\.subject`).test(integration),
         detail: "the integration does not pass the definition's resolved subject — see .agents/references/meshstack-integration.md#runner-identity",
       };
     },
@@ -917,15 +931,12 @@ const detectors = [
       if (!hasRoleArn) return { pass: false, detail: "AWS_ROLE_ARN is not wired as an environment input" };
       if (!hasTokenFile)
         return { pass: false, detail: "AWS_WEB_IDENTITY_TOKEN_FILE is not wired — the AWS SDK has no token to exchange" };
-      // The AWS audience is namespace-specific and differs per self-hosted runner, so it is read
-      // from the definition's status, which follows its runner, rather than hardcoded or borrowed
-      // from another integration.
-      const runnerWif = "meshstack_building_block_definition\\.[\\w-]+\\.status\\.workload_identity_federation";
+      // Each runner has its own AWS audience.
       return {
         pass:
-          new RegExp(runnerWif + "\\.issuer").test(content) &&
-          new RegExp(runnerWif + "\\.aws\\.audience").test(content),
-        detail: "issuer and aws.audience do not come from meshstack_building_block_definition.<name>.status.workload_identity_federation",
+          RUNNER_IDENTITY_MODULE.test(content) ||
+          (new RegExp(LATEST_WIF + String.raw`\.issuer`).test(content) && new RegExp(LATEST_WIF + String.raw`\.aws\.audience`).test(content)),
+        detail: "issuer and aws.audience must come from modules/meshstack/runner-identity or from meshstack_building_block_definition.<name>.version_latest.workload_identity_federation",
       };
     },
   },

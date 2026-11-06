@@ -4,6 +4,11 @@ variable "test_context" {
     run_id      = string
     hub_git_ref = string
 
+    runner_ref = optional(object({
+      kind = string
+      uuid = string
+    }))
+
     # Set to order an already-deployed BBD version; null to build the BBD from hub source.
     bbd_version_ref = optional(object({
       uuid = string
@@ -15,10 +20,6 @@ variable "test_context" {
       aws = object({
         account_id = string
         region     = string
-
-        # The account's shared OIDC provider for the meshStack runner issuer. AWS permits one per
-        # issuer URL per account, so the harness owns it rather than each e2e run creating one.
-        oidc_provider_arn = string
       })
     }))
   })
@@ -40,6 +41,7 @@ module "aws_s3_bucket" {
   meshstack = {
     owning_workspace_identifier = var.test_context.workspace
     tags                        = {}
+    runner_ref                  = var.test_context.runner_ref
   }
   hub = {
     git_ref   = var.test_context.hub_git_ref
@@ -48,8 +50,7 @@ module "aws_s3_bucket" {
 
   bbd_display_name = "${var.test_context.run_id} AWS S3 Bucket"
 
-  aws_region            = var.test_context.fixtures.aws.region
-  aws_oidc_provider_arn = var.test_context.fixtures.aws.oidc_provider_arn
+  aws_region = var.test_context.fixtures.aws.region
 
   backplane_name = "${var.test_context.run_id}-s3"
 }
