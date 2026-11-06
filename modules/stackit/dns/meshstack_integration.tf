@@ -259,7 +259,7 @@ resource "meshstack_building_block_definition" "this" {
       }
 
       zone_url = {
-        display_name    = "Open Zone"
+        display_name    = "Open DNS Zone"
         type            = "STRING"
         assignment_type = "RESOURCE_URL"
       }

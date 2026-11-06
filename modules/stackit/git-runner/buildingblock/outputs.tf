@@ -13,6 +13,15 @@ output "egress_ip" {
   description = "Public SNAT IP of the runner's network router, for allowlisting. Empty on an existing network."
 }
 
+locals {
+  runners_url = "${var.git_base_url}/org/${var.git_organization}/settings/actions/runners"
+}
+
+output "runners_url" {
+  value       = local.runners_url
+  description = "Forgejo page of the organization's runners."
+}
+
 output "summary" {
   description = "Markdown summary shown on the building block."
   value       = <<-EOT
@@ -23,7 +32,7 @@ output "summary" {
 
     | Property | Value |
     |----------|-------|
-    | **Runners** | [Organization runners](${var.git_base_url}/org/${var.git_organization}/settings/actions/runners) |
+    | **Runners** | [Organization runners](${local.runners_url}) |
     | **Labels** | `${join("`, `", var.runner_labels)}` |
     | **Runner Version** | `${var.runner_version}` |
     | **Server** | `${stackit_server.this.server_id}`: `${var.machine_type}` with ${var.disk_size_gb} GB in ${var.availability_zone} |

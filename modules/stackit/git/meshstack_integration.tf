@@ -325,15 +325,17 @@ resource "meshstack_building_block_definition" "this" {
       }
 
       instance_url = {
-        display_name    = "Instance URL"
+        display_name    = "Open Forgejo"
         type            = "STRING"
-        assignment_type = "NONE"
+        assignment_type = "RESOURCE_URL"
+        display_order   = 1
       }
 
       organization_url = {
         display_name    = "Open Forgejo Org"
         type            = "STRING"
         assignment_type = "RESOURCE_URL"
+        display_order   = 2
       }
 
       forgejo_organization = {

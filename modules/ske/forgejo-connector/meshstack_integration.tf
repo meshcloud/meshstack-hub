@@ -326,6 +326,12 @@ resource "meshstack_building_block_definition" "this" {
         type            = "STRING"
       }
 
+      "actions_url" = {
+        assignment_type = "RESOURCE_URL"
+        display_name    = "Open Forgejo Actions"
+        type            = "STRING"
+      }
+
       "summary" = {
         assignment_type = "SUMMARY"
         display_name    = "Summary"

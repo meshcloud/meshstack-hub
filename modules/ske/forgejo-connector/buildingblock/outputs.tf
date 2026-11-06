@@ -1,10 +1,17 @@
-output "app_link" {
-  description = "Public URL for this stage application."
-  value       = "https://${var.app_hostname}"
+locals {
+  app_url        = "https://${var.app_hostname}"
+  repository_url = "${trimsuffix(data.external.env.result["FORGEJO_HOST"], "/")}/${var.repository_owner}/${var.repository_name}"
+  actions_url    = "${local.repository_url}/actions?workflow=pipeline.yaml"
 }
 
-locals {
-  repository_url = "${trimsuffix(data.external.env.result["FORGEJO_HOST"], "/")}/${var.repository_owner}/${var.repository_name}"
+output "app_link" {
+  description = "Public URL for this stage application."
+  value       = local.app_url
+}
+
+output "actions_url" {
+  description = "Forgejo Actions page of the repository's `pipeline.yaml` workflow."
+  value       = local.actions_url
 }
 
 output "summary" {
@@ -17,8 +24,8 @@ output "summary" {
 
     | Property | Value |
     |----------|-------|
-    | **App** | [https://${var.app_hostname}](https://${var.app_hostname}) |
-    | **Pipeline** | [`pipeline.yaml` in Forgejo Actions](${local.repository_url}/actions?workflow=pipeline.yaml) |
+    | **App** | [${local.app_url}](${local.app_url}) |
+    | **Pipeline** | [`pipeline.yaml` in Forgejo Actions](${local.actions_url}) |
     | **Service Account** | `${kubernetes_service_account.forgejo_actions.metadata[0].name}`, `edit` on the namespace |
 
     ## Forgejo Actions secrets and variables

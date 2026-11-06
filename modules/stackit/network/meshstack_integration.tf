@@ -223,7 +223,7 @@ resource "meshstack_building_block_definition" "this" {
 
     outputs = {
       network_url = {
-        display_name    = "Network URL"
+        display_name    = "Open Network"
         type            = "STRING"
         assignment_type = "RESOURCE_URL"
       }
