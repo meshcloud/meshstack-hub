@@ -268,6 +268,7 @@ resource "meshstack_building_block_definition" "this" {
         assignment_type = "NONE"
       }
 
+      # Carries the SA token in plain view, because BB outputs cannot be sensitive; output_to_vault leaves it "".
       kubeconfig = {
         display_name    = "Kubeconfig"
         type            = "STRING"

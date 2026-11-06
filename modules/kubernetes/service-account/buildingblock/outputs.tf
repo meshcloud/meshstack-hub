@@ -38,7 +38,6 @@ output "instructions" {
 }
 
 output "kubeconfig" {
-  description = "Kubeconfig with the service account token. Sensitive, but in plain view to everyone who can see the building block; prefer `output_to_vault`, which leaves this empty."
   # "" because meshStack fails a run whose declared output is missing.
   value = local.write_to_vault ? "" : nonsensitive(yamlencode(local.kubeconfig))
 }
