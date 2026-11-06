@@ -51,12 +51,13 @@ platform's STACKIT Secrets Manager.
 
 ### Platform team
 
-The platform team orders the **STACKIT Kubernetes Platform** building block once. The definitions
-it registers and what each provisions:
+The platform team orders the **STACKIT Kubernetes Platform** building block. The definitions it
+registers, and what each one provisions in the STACKIT project, which is the meshTenant of the
+**STACKIT Kubernetes Platform** meshProject on the landing zone's STACKIT meshPlatform:
 
 ![STACKIT Kubernetes — platform-team bootstrap](stackit-kubernetes.svg)
 
-Every building block of the platform, with an arrow from each parent to its child as meshPanel shows
+The same building blocks as a tree, with an arrow from each parent to its child as meshPanel shows
 them. The frames show which run orders them:
 
 ![STACKIT Kubernetes building block tree](stackit-kubernetes-building-blocks.svg)

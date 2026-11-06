@@ -27,13 +27,13 @@ digraph stackit_kubernetes_platform {
     style="rounded" color="#d5dae0"
     margin=18
 
-    OUTER  [label="📦 STACKIT Kubernetes Platform BBD\nordered once by the platform team" fillcolor="#ecedfb" color="#9aa2e6"]
-    SVC    [label="📦 STACKIT Kubernetes Platform Services BBD\nregisters and orders everything below" fillcolor="#ecedfb" color="#9aa2e6"]
+    OUTER  [label="📦 STACKIT Kubernetes Platform BBD" fillcolor="#ecedfb" color="#9aa2e6"]
+    SVC    [label="📦 STACKIT Kubernetes Platform Services BBD" fillcolor="#ecedfb" color="#9aa2e6"]
     BBD_S  [label="📦 stackit/secrets-manager BBD" fillcolor="#ecedfb" color="#9aa2e6"]
     BBD_K  [label="📦 ske/cluster BBD" fillcolor="#ecedfb" color="#9aa2e6"]
     BBD_I  [label="📦 kubernetes/ingress BBD" fillcolor="#ecedfb" color="#9aa2e6"]
     BBD_A  [label="📦 kubernetes BBD" fillcolor="#ecedfb" color="#9aa2e6"]
-    PLAT   [label="🛰️ SKE Platform\none landing zone per stage" fillcolor="#ecedfb" color="#9aa2e6"]
+    PLAT   [label="🛰️ SKE meshPlatform\nlanding zones ×{dev,prod,…}" fillcolor="#ecedfb" color="#9aa2e6"]
     BBD_G  [label="📦 stackit/git BBD" fillcolor="#ecedfb" color="#9aa2e6"]
     BBD_H  [label="📦 stackit/container-registry BBD" fillcolor="#ecedfb" color="#9aa2e6"]
     BBD_D  [label="📦 stackit/dns BBD" fillcolor="#ecedfb" color="#9aa2e6"]
@@ -45,13 +45,13 @@ digraph stackit_kubernetes_platform {
   }
 
   subgraph cluster_stackit {
-    label="  STACKIT — one project per platform"
+    label="  STACKIT Kubernetes Platform meshProject"
     labeljust=l
     fontname="Helvetica" fontsize=12 fontcolor="#697180"
     style="rounded" color="#d5dae0"
     margin=18
 
-    PROJ   [label="🗂️ STACKIT project\ntenant on the landing zone platform" fillcolor="#eef2f6" color="#93a7bb"]
+    PROJ   [label="🗂️ STACKIT project\nmeshTenant on the STACKIT meshPlatform" fillcolor="#eef2f6" color="#93a7bb"]
     SA     [label="🔑 Automation Identity\nthe platform's service account" fillcolor="#eef2f6" color="#93a7bb"]
     SM     [label="🔒 Secrets Manager\nevery platform credential" fillcolor="#eef2f6" color="#93a7bb"]
     SKE    [label="☸️ SKE cluster" fillcolor="#eef2f6" color="#93a7bb"]
