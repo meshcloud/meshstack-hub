@@ -138,7 +138,7 @@ resource "meshstack_building_block" "this" {
         service_account_federation_bbd_version_ref = { uuid = module.service_account_federation.building_block_definition.version_ref.uuid }
       })) }
       landingzone_variant = { value = jsonencode("default") }
-      stackit_region      = { value = jsonencode("eu01") }
+      stackit_region      = { value = jsonencode("eu02") }
       platform_identifier = { value = jsonencode(var.test_context.run_id) }
       use_global_location = { value = jsonencode(false) }
       payment_method      = { value = jsonencode(meshstack_payment_method.platform.ref) }
