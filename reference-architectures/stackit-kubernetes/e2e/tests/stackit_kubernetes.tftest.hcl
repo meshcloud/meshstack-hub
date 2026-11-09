@@ -7,7 +7,7 @@ run "stackit_kubernetes" {
   }
 
   assert {
-    condition     = can(regex("^https://portal\\.stackit\\.cloud/projects/[0-9a-f-]{36}$", try(jsondecode(meshstack_building_block.this.status.outputs["ske_project_url"].value), "")))
+    condition     = can(regex("^https://portal\\.stackit\\.cloud/dashboard\\?project=[0-9a-f-]{36}$", try(jsondecode(meshstack_building_block.this.status.outputs["ske_project_url"].value), "")))
     error_message = "Expected ske_project_url to deeplink the hosting STACKIT project, got ${try(meshstack_building_block.this.status.outputs["ske_project_url"].value, "no such output")}."
   }
 
