@@ -40,7 +40,10 @@ data "ionoscloud_user" "administrators" {
 
 # Create a group for readers (read-only access)
 resource "ionoscloud_group" "readers" {
-  count                          = length(local.readers) > 0 ? 1 : 0
+  lifecycle {
+    enabled = length(local.readers) > 0
+  }
+
   name                           = "${var.datacenter_name}-readers"
   create_datacenter              = false
   create_snapshot                = false
@@ -60,7 +63,10 @@ resource "ionoscloud_group" "readers" {
 
 # Create a group for standard users
 resource "ionoscloud_group" "users" {
-  count                          = length(local.users) > 0 ? 1 : 0
+  lifecycle {
+    enabled = length(local.users) > 0
+  }
+
   name                           = "${var.datacenter_name}-users"
   create_datacenter              = false
   create_snapshot                = true
@@ -80,7 +86,10 @@ resource "ionoscloud_group" "users" {
 
 # Create a group for administrators (same privileges as users)
 resource "ionoscloud_group" "administrators" {
-  count                          = length(local.administrators) > 0 ? 1 : 0
+  lifecycle {
+    enabled = length(local.administrators) > 0
+  }
+
   name                           = "${var.datacenter_name}-administrators"
   create_datacenter              = false
   create_snapshot                = true
@@ -100,24 +109,33 @@ resource "ionoscloud_group" "administrators" {
 
 # Grant group access to the datacenter
 resource "ionoscloud_share" "readers" {
-  count           = length(local.readers) > 0 ? 1 : 0
-  group_id        = ionoscloud_group.readers[0].id
+  lifecycle {
+    enabled = length(local.readers) > 0
+  }
+
+  group_id        = ionoscloud_group.readers.id
   resource_id     = ionoscloud_datacenter.main.id
   edit_privilege  = false
   share_privilege = false
 }
 
 resource "ionoscloud_share" "users" {
-  count           = length(local.users) > 0 ? 1 : 0
-  group_id        = ionoscloud_group.users[0].id
+  lifecycle {
+    enabled = length(local.users) > 0
+  }
+
+  group_id        = ionoscloud_group.users.id
   resource_id     = ionoscloud_datacenter.main.id
   edit_privilege  = true
   share_privilege = false
 }
 
 resource "ionoscloud_share" "administrators" {
-  count           = length(local.administrators) > 0 ? 1 : 0
-  group_id        = ionoscloud_group.administrators[0].id
+  lifecycle {
+    enabled = length(local.administrators) > 0
+  }
+
+  group_id        = ionoscloud_group.administrators.id
   resource_id     = ionoscloud_datacenter.main.id
   edit_privilege  = true
   share_privilege = false

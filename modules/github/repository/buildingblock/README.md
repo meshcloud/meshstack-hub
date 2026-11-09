@@ -15,6 +15,7 @@ This documentation is intended as a reference documentation for cloud foundation
 
 | Name | Version |
 |------|---------|
+| <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.11.0 |
 | <a name="requirement_github"></a> [github](#requirement\_github) | >= 6.6.0, < 7.0.0 |
 
 ## Modules

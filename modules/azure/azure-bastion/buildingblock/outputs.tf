@@ -30,27 +30,27 @@ output "bastion_nsg_id" {
 
 output "action_group_id" {
   description = "The ID of the central action group for notifications"
-  value       = var.enable_observability ? azurerm_monitor_action_group.sandbox_alerts[0].id : null
+  value       = var.enable_observability ? azurerm_monitor_action_group.sandbox_alerts.id : null
 }
 
 output "action_group_name" {
   description = "The name of the central action group for notifications"
-  value       = var.enable_observability ? azurerm_monitor_action_group.sandbox_alerts[0].name : null
+  value       = var.enable_observability ? azurerm_monitor_action_group.sandbox_alerts.name : null
 }
 
 output "service_health_alert_id" {
   description = "The ID of the service health alert"
-  value       = var.enable_observability ? azurerm_monitor_activity_log_alert.service_health[0].id : null
+  value       = var.enable_observability ? azurerm_monitor_activity_log_alert.service_health.id : null
 }
 
 output "bastion_resource_health_alert_id" {
   description = "The ID of the Bastion resource health alert"
-  value       = var.enable_observability ? azurerm_monitor_activity_log_alert.bastion_resource_health[0].id : null
+  value       = var.enable_observability ? azurerm_monitor_activity_log_alert.bastion_resource_health.id : null
 }
 
 output "subscription_resource_health_alert_id" {
   description = "The ID of the subscription resource health alert"
-  value       = var.enable_observability ? azurerm_monitor_activity_log_alert.subscription_resource_health[0].id : null
+  value       = var.enable_observability ? azurerm_monitor_activity_log_alert.subscription_resource_health.id : null
 }
 
 output "vnet_id" {

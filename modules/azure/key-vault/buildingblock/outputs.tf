@@ -25,7 +25,7 @@ output "key_vault_resource_group" {
 
 output "private_endpoint_ip" {
   description = "Private IP address of the Key Vault private endpoint"
-  value       = var.private_endpoint_enabled ? azurerm_private_endpoint.key_vault_pe[0].private_service_connection[0].private_ip_address : null
+  value       = var.private_endpoint_enabled ? azurerm_private_endpoint.key_vault_pe.private_service_connection[0].private_ip_address : null
 }
 
 output "vnet_id" {
@@ -40,5 +40,5 @@ output "subnet_id" {
 
 output "private_dns_zone_id" {
   description = "ID of the private DNS zone (when System-managed)"
-  value       = var.private_endpoint_enabled && var.private_dns_zone_id == "System" ? azurerm_private_dns_zone.key_vault_dns[0].id : null
+  value       = var.private_endpoint_enabled && var.private_dns_zone_id == "System" ? azurerm_private_dns_zone.key_vault_dns.id : null
 }

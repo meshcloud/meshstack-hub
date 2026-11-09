@@ -74,7 +74,9 @@ resource "github_actions_environment_variable" "additional" {
 # and variables are in place. Each connector instance targets one branch (dev→main,
 # prod→release), so this fires exactly once per connector per apply.
 resource "terraform_data" "workflow_dispatch" {
-  count = var.workflow_filename != "" ? 1 : 0
+  lifecycle {
+    enabled = var.workflow_filename != ""
+  }
 
   triggers_replace = [
     sha256(yamlencode(local.kubeconfig)),

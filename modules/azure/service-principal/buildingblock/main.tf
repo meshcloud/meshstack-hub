@@ -16,19 +16,23 @@ resource "azuread_service_principal" "main" {
 }
 
 resource "time_rotating" "secret_rotation" {
-  count = var.create_client_secret ? 1 : 0
+  lifecycle {
+    enabled = var.create_client_secret
+  }
 
   rotation_days = var.secret_rotation_days
 }
 
 resource "azuread_application_password" "main" {
-  count = var.create_client_secret ? 1 : 0
+  lifecycle {
+    enabled = var.create_client_secret
+  }
 
   application_id = azuread_application.main.id
   display_name   = "Terraform-managed secret"
 
   rotate_when_changed = {
-    rotation = time_rotating.secret_rotation[0].id
+    rotation = time_rotating.secret_rotation.id
   }
 }
 
@@ -38,7 +42,9 @@ resource "azuread_application_password" "main" {
 # -----------------------------------------------------------------------------
 
 resource "azurerm_role_definition" "custom" {
-  count = var.custom_role != null ? 1 : 0
+  lifecycle {
+    enabled = var.custom_role != null
+  }
 
   name        = var.custom_role.name
   scope       = data.azurerm_subscription.target.id
@@ -60,10 +66,12 @@ resource "azurerm_role_definition" "custom" {
 # -----------------------------------------------------------------------------
 
 resource "azurerm_role_assignment" "main" {
-  count = var.custom_role != null || var.azure_role != null ? 1 : 0
+  lifecycle {
+    enabled = var.custom_role != null || var.azure_role != null
+  }
 
   scope                = data.azurerm_subscription.target.id
-  role_definition_id   = var.custom_role != null ? azurerm_role_definition.custom[0].role_definition_resource_id : null
+  role_definition_id   = var.custom_role != null ? azurerm_role_definition.custom.role_definition_resource_id : null
   role_definition_name = var.custom_role == null ? var.azure_role : null
   principal_id         = azuread_service_principal.main.object_id
 }

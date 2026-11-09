@@ -23,21 +23,27 @@ resource "random_string" "resource_code" {
 }
 
 resource "azurerm_resource_group" "vm_rg" {
-  count    = local.create_resource_group ? 1 : 0
+  lifecycle {
+    enabled = local.create_resource_group
+  }
+
   name     = local.resource_group_name
   location = var.location
   tags     = var.tags
 }
 
 data "azurerm_resource_group" "vm_rg" {
-  count = local.create_resource_group ? 0 : 1
-  name  = local.resource_group_name
+  lifecycle {
+    enabled = !local.create_resource_group
+  }
+
+  name = local.resource_group_name
 }
 
 locals {
   # Get the actual resource group object (either created or existing)
-  rg_name     = local.create_resource_group ? azurerm_resource_group.vm_rg[0].name : data.azurerm_resource_group.vm_rg[0].name
-  rg_location = local.create_resource_group ? azurerm_resource_group.vm_rg[0].location : data.azurerm_resource_group.vm_rg[0].location
+  rg_name     = local.create_resource_group ? azurerm_resource_group.vm_rg.name : data.azurerm_resource_group.vm_rg.name
+  rg_location = local.create_resource_group ? azurerm_resource_group.vm_rg.location : data.azurerm_resource_group.vm_rg.location
 }
 
 # Virtual Network
@@ -68,7 +74,7 @@ resource "azurerm_network_interface" "vm_nic" {
     name                          = "internal"
     subnet_id                     = azurerm_subnet.vm_subnet.id
     private_ip_address_allocation = "Dynamic"
-    public_ip_address_id          = var.enable_public_ip ? azurerm_public_ip.vm_public_ip[0].id : null
+    public_ip_address_id          = var.enable_public_ip ? azurerm_public_ip.vm_public_ip.id : null
   }
 
   tags = var.tags
@@ -76,7 +82,10 @@ resource "azurerm_network_interface" "vm_nic" {
 
 # Public IP (optional)
 resource "azurerm_public_ip" "vm_public_ip" {
-  count               = var.enable_public_ip ? 1 : 0
+  lifecycle {
+    enabled = var.enable_public_ip
+  }
+
   name                = "${var.vm_name}-pip"
   location            = local.rg_location
   resource_group_name = local.rg_name
@@ -97,7 +106,10 @@ resource "azurerm_network_security_group" "vm_nsg" {
 
 # NSG Rule: Allow SSH for Linux VMs with public IP
 resource "azurerm_network_security_rule" "allow_ssh" {
-  count                       = var.os_type == "Linux" && var.enable_public_ip ? 1 : 0
+  lifecycle {
+    enabled = var.os_type == "Linux" && var.enable_public_ip
+  }
+
   name                        = "AllowSSH"
   priority                    = 1000
   direction                   = "Inbound"
@@ -113,7 +125,10 @@ resource "azurerm_network_security_rule" "allow_ssh" {
 
 # NSG Rule: Allow RDP for Windows VMs with public IP
 resource "azurerm_network_security_rule" "allow_rdp" {
-  count                       = var.os_type == "Windows" && var.enable_public_ip ? 1 : 0
+  lifecycle {
+    enabled = var.os_type == "Windows" && var.enable_public_ip
+  }
+
   name                        = "AllowRDP"
   priority                    = 1001
   direction                   = "Inbound"
@@ -135,7 +150,10 @@ resource "azurerm_network_interface_security_group_association" "vm_nsg_associat
 
 # Linux Virtual Machine
 resource "azurerm_linux_virtual_machine" "vm" {
-  count               = var.os_type == "Linux" ? 1 : 0
+  lifecycle {
+    enabled = var.os_type == "Linux"
+  }
+
   name                = var.vm_name
   location            = local.rg_location
   resource_group_name = local.rg_name
@@ -179,7 +197,10 @@ resource "azurerm_linux_virtual_machine" "vm" {
 
 # Windows Virtual Machine
 resource "azurerm_windows_virtual_machine" "vm" {
-  count               = var.os_type == "Windows" ? 1 : 0
+  lifecycle {
+    enabled = var.os_type == "Windows"
+  }
+
   name                = var.vm_name
   location            = local.rg_location
   resource_group_name = local.rg_name
@@ -217,7 +238,10 @@ resource "azurerm_windows_virtual_machine" "vm" {
 
 # Managed Data Disk (optional)
 resource "azurerm_managed_disk" "data_disk" {
-  count                = var.data_disk_size_gb > 0 ? 1 : 0
+  lifecycle {
+    enabled = var.data_disk_size_gb > 0
+  }
+
   name                 = "${var.vm_name}-data-disk"
   location             = local.rg_location
   resource_group_name  = local.rg_name
@@ -230,18 +254,24 @@ resource "azurerm_managed_disk" "data_disk" {
 
 # Attach Data Disk to Linux VM
 resource "azurerm_virtual_machine_data_disk_attachment" "linux_data_disk_attachment" {
-  count              = var.os_type == "Linux" && var.data_disk_size_gb > 0 ? 1 : 0
-  managed_disk_id    = azurerm_managed_disk.data_disk[0].id
-  virtual_machine_id = azurerm_linux_virtual_machine.vm[0].id
+  lifecycle {
+    enabled = var.os_type == "Linux" && var.data_disk_size_gb > 0
+  }
+
+  managed_disk_id    = azurerm_managed_disk.data_disk.id
+  virtual_machine_id = azurerm_linux_virtual_machine.vm.id
   lun                = 0
   caching            = "ReadWrite"
 }
 
 # Attach Data Disk to Windows VM
 resource "azurerm_virtual_machine_data_disk_attachment" "windows_data_disk_attachment" {
-  count              = var.os_type == "Windows" && var.data_disk_size_gb > 0 ? 1 : 0
-  managed_disk_id    = azurerm_managed_disk.data_disk[0].id
-  virtual_machine_id = azurerm_windows_virtual_machine.vm[0].id
+  lifecycle {
+    enabled = var.os_type == "Windows" && var.data_disk_size_gb > 0
+  }
+
+  managed_disk_id    = azurerm_managed_disk.data_disk.id
+  virtual_machine_id = azurerm_windows_virtual_machine.vm.id
   lun                = 0
   caching            = "ReadWrite"
 }

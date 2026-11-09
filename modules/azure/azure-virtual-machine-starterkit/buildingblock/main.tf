@@ -19,7 +19,9 @@ resource "meshstack_project" "vm_project" {
 }
 
 resource "meshstack_project_user_binding" "creator_admin" {
-  count = var.creator.type == "User" && var.creator.username != null ? 1 : 0
+  lifecycle {
+    enabled = var.creator.type == "User" && var.creator.username != null
+  }
 
   metadata = {
     name = uuid()

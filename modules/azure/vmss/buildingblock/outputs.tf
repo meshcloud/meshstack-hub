@@ -1,5 +1,5 @@
 output "vmss_id" {
-  value       = var.os_type == "Linux" ? azurerm_linux_virtual_machine_scale_set.vmss[0].id : azurerm_windows_virtual_machine_scale_set.vmss[0].id
+  value       = var.os_type == "Linux" ? azurerm_linux_virtual_machine_scale_set.vmss.id : azurerm_windows_virtual_machine_scale_set.vmss.id
   description = "The ID of the Virtual Machine Scale Set"
 }
 
@@ -34,22 +34,22 @@ output "subnet_id" {
 }
 
 output "load_balancer_id" {
-  value       = var.enable_load_balancer ? azurerm_lb.vmss_lb[0].id : null
+  value       = var.enable_load_balancer ? azurerm_lb.vmss_lb.id : null
   description = "The ID of the load balancer (if enabled)"
 }
 
 output "load_balancer_frontend_ip" {
-  value       = var.enable_load_balancer ? (var.enable_public_ip ? azurerm_public_ip.lb_public_ip[0].ip_address : azurerm_lb.vmss_lb[0].frontend_ip_configuration[0].private_ip_address) : null
+  value       = var.enable_load_balancer ? (var.enable_public_ip ? azurerm_public_ip.lb_public_ip.ip_address : azurerm_lb.vmss_lb.frontend_ip_configuration[0].private_ip_address) : null
   description = "The frontend IP address of the load balancer (public or private)"
 }
 
 output "public_ip_address" {
-  value       = var.enable_load_balancer && var.enable_public_ip ? azurerm_public_ip.lb_public_ip[0].ip_address : "no public IP assigned"
+  value       = var.enable_load_balancer && var.enable_public_ip ? azurerm_public_ip.lb_public_ip.ip_address : "no public IP assigned"
   description = "The public IP address of the load balancer (if enabled)"
 }
 
 output "vmss_identity_principal_id" {
-  value       = var.os_type == "Linux" ? azurerm_linux_virtual_machine_scale_set.vmss[0].identity[0].principal_id : azurerm_windows_virtual_machine_scale_set.vmss[0].identity[0].principal_id
+  value       = var.os_type == "Linux" ? azurerm_linux_virtual_machine_scale_set.vmss.identity[0].principal_id : azurerm_windows_virtual_machine_scale_set.vmss.identity[0].principal_id
   description = "The Principal ID of the system-assigned managed identity"
 }
 
@@ -92,7 +92,7 @@ ${var.enable_autoscaling ? "### Autoscaling Enabled ✅\n\n- **Min Instances**: 
 
 ## Load Balancer
 
-${var.enable_load_balancer ? "### Load Balancer Enabled ✅\n\n- **SKU**: ${var.load_balancer_sku}\n- **Frontend IP**: ${var.enable_public_ip ? azurerm_public_ip.lb_public_ip[0].ip_address : azurerm_lb.vmss_lb[0].frontend_ip_configuration[0].private_ip_address} ${var.enable_public_ip ? "(Public)" : "(Private)"}\n- **Frontend Port**: ${var.frontend_port}\n- **Backend Port**: ${var.backend_port}\n- **Health Probe**: ${var.health_probe_protocol}:${var.health_probe_port}${var.health_probe_protocol != "Tcp" ? var.health_probe_request_path : ""}\n\nTraffic is distributed across all healthy instances." : "### Load Balancer Disabled\n\nNo load balancer configured. Consider enabling for production workloads."}
+${var.enable_load_balancer ? "### Load Balancer Enabled ✅\n\n- **SKU**: ${var.load_balancer_sku}\n- **Frontend IP**: ${var.enable_public_ip ? azurerm_public_ip.lb_public_ip.ip_address : azurerm_lb.vmss_lb.frontend_ip_configuration[0].private_ip_address} ${var.enable_public_ip ? "(Public)" : "(Private)"}\n- **Frontend Port**: ${var.frontend_port}\n- **Backend Port**: ${var.backend_port}\n- **Health Probe**: ${var.health_probe_protocol}:${var.health_probe_port}${var.health_probe_protocol != "Tcp" ? var.health_probe_request_path : ""}\n\nTraffic is distributed across all healthy instances." : "### Load Balancer Disabled\n\nNo load balancer configured. Consider enabling for production workloads."}
 
 ## Network Configuration
 
@@ -121,7 +121,7 @@ ${length(var.zones) > 0 ? "### Availability Zones ✅\n\n- **Zones**: ${join(", 
 ## Managed Identity
 
 This scale set has a system-assigned managed identity enabled:
-- **Principal ID**: ${var.os_type == "Linux" ? azurerm_linux_virtual_machine_scale_set.vmss[0].identity[0].principal_id : azurerm_windows_virtual_machine_scale_set.vmss[0].identity[0].principal_id}
+- **Principal ID**: ${var.os_type == "Linux" ? azurerm_linux_virtual_machine_scale_set.vmss.identity[0].principal_id : azurerm_windows_virtual_machine_scale_set.vmss.identity[0].principal_id}
 
 Use this identity to grant VM instances access to other Azure resources without storing credentials.
 

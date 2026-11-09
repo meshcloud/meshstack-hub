@@ -1,23 +1,29 @@
 # Service Principal Creation
 resource "azuread_application" "buildingblock_deploy" {
-  count = var.create_service_principal_name != null ? 1 : 0
+  lifecycle {
+    enabled = var.create_service_principal_name != null
+  }
 
   display_name = "${var.name}-${var.create_service_principal_name}"
 }
 
 resource "azuread_service_principal" "buildingblock_deploy" {
-  count = var.create_service_principal_name != null ? 1 : 0
+  lifecycle {
+    enabled = var.create_service_principal_name != null
+  }
 
-  client_id                    = azuread_application.buildingblock_deploy[0].client_id
+  client_id                    = azuread_application.buildingblock_deploy.client_id
   app_role_assignment_required = false
 }
 
 
 # Create federated identity credentials
 resource "azuread_application_federated_identity_credential" "buildingblock_deploy" {
-  count = var.create_service_principal_name != null && var.workload_identity_federation != null ? 1 : 0
+  lifecycle {
+    enabled = var.create_service_principal_name != null && var.workload_identity_federation != null
+  }
 
-  application_id = azuread_application.buildingblock_deploy[0].id
+  application_id = azuread_application.buildingblock_deploy.id
   display_name   = var.create_service_principal_name
   audiences      = ["api://AzureADTokenExchange"]
   issuer         = var.workload_identity_federation.issuer
@@ -26,9 +32,11 @@ resource "azuread_application_federated_identity_credential" "buildingblock_depl
 
 # Create application password (when not using workload identity federation)
 resource "azuread_application_password" "buildingblock_deploy" {
-  count = var.create_service_principal_name != null && var.workload_identity_federation == null ? 1 : 0
+  lifecycle {
+    enabled = var.create_service_principal_name != null && var.workload_identity_federation == null
+  }
 
-  application_id = azuread_application.buildingblock_deploy[0].id
+  application_id = azuread_application.buildingblock_deploy.id
   display_name   = "${var.create_service_principal_name}-password"
 }
 
@@ -104,9 +112,11 @@ resource "azurerm_role_assignment" "existing_principals" {
 
 # Role Assignment for created service principal
 resource "azurerm_role_assignment" "created_principal" {
-  count = var.create_service_principal_name != null ? 1 : 0
+  lifecycle {
+    enabled = var.create_service_principal_name != null
+  }
 
   role_definition_id = azurerm_role_definition.buildingblock_deploy.role_definition_resource_id
-  principal_id       = azuread_service_principal.buildingblock_deploy[0].object_id
+  principal_id       = azuread_service_principal.buildingblock_deploy.object_id
   scope              = var.scope
 }

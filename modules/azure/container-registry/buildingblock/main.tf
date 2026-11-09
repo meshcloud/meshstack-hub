@@ -13,7 +13,10 @@ resource "azurerm_resource_group" "acr" {
 }
 
 resource "azurerm_virtual_network" "vnet" {
-  count               = var.private_endpoint_enabled && var.sku == "Premium" && var.vnet_name == null ? 1 : 0
+  lifecycle {
+    enabled = var.private_endpoint_enabled && var.sku == "Premium" && var.vnet_name == null
+  }
+
   name                = "${var.acr_name}-vnet"
   address_space       = [var.vnet_address_space]
   location            = var.location
@@ -24,18 +27,24 @@ resource "azurerm_virtual_network" "vnet" {
 }
 
 data "azurerm_virtual_network" "existing_vnet" {
-  count               = var.private_endpoint_enabled && var.sku == "Premium" && var.vnet_name != null ? 1 : 0
+  lifecycle {
+    enabled = var.private_endpoint_enabled && var.sku == "Premium" && var.vnet_name != null
+  }
+
   name                = var.vnet_name
   resource_group_name = var.existing_vnet_resource_group_name != null ? var.existing_vnet_resource_group_name : var.resource_group_name
 }
 
 locals {
-  vnet_id   = var.private_endpoint_enabled && var.sku == "Premium" ? (var.vnet_name != null ? data.azurerm_virtual_network.existing_vnet[0].id : azurerm_virtual_network.vnet[0].id) : null
-  vnet_name = var.private_endpoint_enabled && var.sku == "Premium" ? (var.vnet_name != null ? var.vnet_name : azurerm_virtual_network.vnet[0].name) : null
+  vnet_id   = var.private_endpoint_enabled && var.sku == "Premium" ? (var.vnet_name != null ? data.azurerm_virtual_network.existing_vnet.id : azurerm_virtual_network.vnet.id) : null
+  vnet_name = var.private_endpoint_enabled && var.sku == "Premium" ? (var.vnet_name != null ? var.vnet_name : azurerm_virtual_network.vnet.name) : null
 }
 
 resource "azurerm_subnet" "pe_subnet" {
-  count                = var.private_endpoint_enabled && var.sku == "Premium" && var.subnet_name == null ? 1 : 0
+  lifecycle {
+    enabled = var.private_endpoint_enabled && var.sku == "Premium" && var.subnet_name == null
+  }
+
   name                 = "${var.acr_name}-pe-subnet"
   resource_group_name  = azurerm_resource_group.acr.name
   virtual_network_name = local.vnet_name
@@ -47,14 +56,17 @@ resource "azurerm_subnet" "pe_subnet" {
 }
 
 data "azurerm_subnet" "existing_subnet" {
-  count                = var.private_endpoint_enabled && var.sku == "Premium" && var.subnet_name != null ? 1 : 0
+  lifecycle {
+    enabled = var.private_endpoint_enabled && var.sku == "Premium" && var.subnet_name != null
+  }
+
   name                 = var.subnet_name
   virtual_network_name = var.vnet_name
   resource_group_name  = var.existing_vnet_resource_group_name != null ? var.existing_vnet_resource_group_name : var.resource_group_name
 }
 
 locals {
-  subnet_id = var.private_endpoint_enabled && var.sku == "Premium" ? (var.subnet_name != null ? data.azurerm_subnet.existing_subnet[0].id : azurerm_subnet.pe_subnet[0].id) : null
+  subnet_id = var.private_endpoint_enabled && var.sku == "Premium" ? (var.subnet_name != null ? data.azurerm_subnet.existing_subnet.id : azurerm_subnet.pe_subnet.id) : null
 }
 
 resource "azurerm_container_registry" "acr" {
@@ -97,7 +109,10 @@ resource "azurerm_container_registry" "acr" {
 }
 
 resource "azurerm_private_endpoint" "acr_pe" {
-  count               = var.private_endpoint_enabled && var.sku == "Premium" ? 1 : 0
+  lifecycle {
+    enabled = var.private_endpoint_enabled && var.sku == "Premium"
+  }
+
   name                = "${var.acr_name}-pe"
   location            = var.location
   resource_group_name = azurerm_resource_group.acr.name
@@ -114,7 +129,7 @@ resource "azurerm_private_endpoint" "acr_pe" {
     for_each = var.private_dns_zone_id != null ? [1] : []
     content {
       name                 = "default"
-      private_dns_zone_ids = var.private_dns_zone_id == "System" ? [azurerm_private_dns_zone.acr_dns[0].id] : [var.private_dns_zone_id]
+      private_dns_zone_ids = var.private_dns_zone_id == "System" ? [azurerm_private_dns_zone.acr_dns.id] : [var.private_dns_zone_id]
     }
   }
 
@@ -124,7 +139,10 @@ resource "azurerm_private_endpoint" "acr_pe" {
 }
 
 resource "azurerm_private_dns_zone" "acr_dns" {
-  count               = var.private_endpoint_enabled && var.sku == "Premium" && var.private_dns_zone_id == "System" ? 1 : 0
+  lifecycle {
+    enabled = var.private_endpoint_enabled && var.sku == "Premium" && var.private_dns_zone_id == "System"
+  }
+
   name                = "privatelink.azurecr.io"
   resource_group_name = azurerm_resource_group.acr.name
   tags                = var.tags
@@ -133,10 +151,13 @@ resource "azurerm_private_dns_zone" "acr_dns" {
 }
 
 resource "azurerm_private_dns_zone_virtual_network_link" "acr_dns_link" {
-  count                 = var.private_endpoint_enabled && var.sku == "Premium" && var.private_dns_zone_id == "System" ? 1 : 0
+  lifecycle {
+    enabled = var.private_endpoint_enabled && var.sku == "Premium" && var.private_dns_zone_id == "System"
+  }
+
   name                  = "${var.acr_name}-dns-link"
   resource_group_name   = azurerm_resource_group.acr.name
-  private_dns_zone_name = azurerm_private_dns_zone.acr_dns[0].name
+  private_dns_zone_name = azurerm_private_dns_zone.acr_dns.name
   virtual_network_id    = local.vnet_id
   tags                  = var.tags
 
@@ -147,24 +168,33 @@ resource "azurerm_private_dns_zone_virtual_network_link" "acr_dns_link" {
 }
 
 data "azurerm_resource_group" "hub_rg" {
-  count    = var.private_endpoint_enabled && var.sku == "Premium" && var.hub_resource_group_name != null ? 1 : 0
+  lifecycle {
+    enabled = var.private_endpoint_enabled && var.sku == "Premium" && var.hub_resource_group_name != null
+  }
+
   provider = azurerm.hub
   name     = var.hub_resource_group_name
 }
 
 data "azurerm_virtual_network" "hub_vnet" {
-  count               = var.private_endpoint_enabled && var.sku == "Premium" && var.hub_vnet_name != null ? 1 : 0
+  lifecycle {
+    enabled = var.private_endpoint_enabled && var.sku == "Premium" && var.hub_vnet_name != null
+  }
+
   provider            = azurerm.hub
   name                = var.hub_vnet_name
-  resource_group_name = data.azurerm_resource_group.hub_rg[0].name
+  resource_group_name = data.azurerm_resource_group.hub_rg.name
 }
 
 resource "azurerm_virtual_network_peering" "acr_to_hub" {
-  count                     = var.private_endpoint_enabled && var.sku == "Premium" && var.vnet_name == null && var.hub_vnet_name != null ? 1 : 0
+  lifecycle {
+    enabled = var.private_endpoint_enabled && var.sku == "Premium" && var.vnet_name == null && var.hub_vnet_name != null
+  }
+
   name                      = "${var.acr_name}-to-hub"
   resource_group_name       = azurerm_resource_group.acr.name
   virtual_network_name      = local.vnet_name
-  remote_virtual_network_id = data.azurerm_virtual_network.hub_vnet[0].id
+  remote_virtual_network_id = data.azurerm_virtual_network.hub_vnet.id
 
   allow_virtual_network_access = true
   allow_forwarded_traffic      = true
@@ -173,11 +203,14 @@ resource "azurerm_virtual_network_peering" "acr_to_hub" {
 }
 
 resource "azurerm_virtual_network_peering" "hub_to_acr" {
-  count                     = var.private_endpoint_enabled && var.sku == "Premium" && var.vnet_name == null && var.hub_vnet_name != null ? 1 : 0
+  lifecycle {
+    enabled = var.private_endpoint_enabled && var.sku == "Premium" && var.vnet_name == null && var.hub_vnet_name != null
+  }
+
   provider                  = azurerm.hub
   name                      = "hub-to-${var.acr_name}"
-  resource_group_name       = data.azurerm_resource_group.hub_rg[0].name
-  virtual_network_name      = data.azurerm_virtual_network.hub_vnet[0].name
+  resource_group_name       = data.azurerm_resource_group.hub_rg.name
+  virtual_network_name      = data.azurerm_virtual_network.hub_vnet.name
   remote_virtual_network_id = local.vnet_id
 
   allow_virtual_network_access = true
@@ -187,7 +220,10 @@ resource "azurerm_virtual_network_peering" "hub_to_acr" {
 }
 
 resource "azurerm_role_assignment" "acr_pull" {
-  count                = var.aks_managed_identity_principal_id != null ? 1 : 0
+  lifecycle {
+    enabled = var.aks_managed_identity_principal_id != null
+  }
+
   scope                = azurerm_container_registry.acr.id
   role_definition_name = "AcrPull"
   principal_id         = var.aks_managed_identity_principal_id

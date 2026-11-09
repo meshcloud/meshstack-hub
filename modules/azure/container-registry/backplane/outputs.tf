@@ -11,7 +11,7 @@ output "role_definition_name" {
 output "role_assignment_ids" {
   value = concat(
     [for id in azurerm_role_assignment.existing_principals : id.id],
-    var.create_service_principal_name != null ? [azurerm_role_assignment.created_principal[0].id] : []
+    var.create_service_principal_name != null ? [azurerm_role_assignment.created_principal.id] : []
   )
   description = "The IDs of the role assignments for all service principals."
 }
@@ -19,16 +19,16 @@ output "role_assignment_ids" {
 output "role_assignment_principal_ids" {
   value = concat(
     [for id in azurerm_role_assignment.existing_principals : id.principal_id],
-    var.create_service_principal_name != null ? [azurerm_role_assignment.created_principal[0].principal_id] : []
+    var.create_service_principal_name != null ? [azurerm_role_assignment.created_principal.principal_id] : []
   )
   description = "The principal IDs of all service principals that have been assigned the role."
 }
 
 output "created_service_principal" {
   value = var.create_service_principal_name != null ? {
-    object_id    = azuread_service_principal.buildingblock_deploy[0].object_id
-    client_id    = azuread_service_principal.buildingblock_deploy[0].client_id
-    display_name = azuread_service_principal.buildingblock_deploy[0].display_name
+    object_id    = azuread_service_principal.buildingblock_deploy.object_id
+    client_id    = azuread_service_principal.buildingblock_deploy.client_id
+    display_name = azuread_service_principal.buildingblock_deploy.display_name
     name         = var.create_service_principal_name
   } : null
   description = "Information about the created service principal."
@@ -36,28 +36,28 @@ output "created_service_principal" {
 
 output "created_application" {
   value = var.create_service_principal_name != null ? {
-    object_id    = azuread_application.buildingblock_deploy[0].object_id
-    client_id    = azuread_application.buildingblock_deploy[0].client_id
-    display_name = azuread_application.buildingblock_deploy[0].display_name
+    object_id    = azuread_application.buildingblock_deploy.object_id
+    client_id    = azuread_application.buildingblock_deploy.client_id
+    display_name = azuread_application.buildingblock_deploy.display_name
   } : null
   description = "Information about the created Azure AD application."
 }
 
 output "workload_identity_federation" {
   value = var.create_service_principal_name != null && var.workload_identity_federation != null ? {
-    credential_id = azuread_application_federated_identity_credential.buildingblock_deploy[0].credential_id
-    display_name  = azuread_application_federated_identity_credential.buildingblock_deploy[0].display_name
-    issuer        = azuread_application_federated_identity_credential.buildingblock_deploy[0].issuer
-    subject       = azuread_application_federated_identity_credential.buildingblock_deploy[0].subject
-    audiences     = azuread_application_federated_identity_credential.buildingblock_deploy[0].audiences
+    credential_id = azuread_application_federated_identity_credential.buildingblock_deploy.credential_id
+    display_name  = azuread_application_federated_identity_credential.buildingblock_deploy.display_name
+    issuer        = azuread_application_federated_identity_credential.buildingblock_deploy.issuer
+    subject       = azuread_application_federated_identity_credential.buildingblock_deploy.subject
+    audiences     = azuread_application_federated_identity_credential.buildingblock_deploy.audiences
   } : null
   description = "Information about the created workload identity federation credential."
 }
 
 output "application_password" {
   value = var.create_service_principal_name != null && var.workload_identity_federation == null ? {
-    key_id       = azuread_application_password.buildingblock_deploy[0].key_id
-    display_name = azuread_application_password.buildingblock_deploy[0].display_name
+    key_id       = azuread_application_password.buildingblock_deploy.key_id
+    display_name = azuread_application_password.buildingblock_deploy.display_name
   } : null
   description = "Information about the created application password (excludes the actual password value for security)."
   sensitive   = true
@@ -86,7 +86,7 @@ output "hub_role_definition_name" {
 output "hub_role_assignment_ids" {
   value = concat(
     [for id in azurerm_role_assignment.existing_principals_hub : id.id],
-    var.create_hub_service_principal_name != null ? [azurerm_role_assignment.created_principal_hub[0].id] : []
+    var.create_hub_service_principal_name != null ? [azurerm_role_assignment.created_principal_hub.id] : []
   )
   description = "The IDs of the hub role assignments for all service principals."
 }
@@ -94,16 +94,16 @@ output "hub_role_assignment_ids" {
 output "hub_role_assignment_principal_ids" {
   value = concat(
     [for id in azurerm_role_assignment.existing_principals_hub : id.principal_id],
-    var.create_hub_service_principal_name != null ? [azurerm_role_assignment.created_principal_hub[0].principal_id] : []
+    var.create_hub_service_principal_name != null ? [azurerm_role_assignment.created_principal_hub.principal_id] : []
   )
   description = "The principal IDs of all service principals that have been assigned the hub role."
 }
 
 output "created_hub_service_principal" {
   value = var.create_hub_service_principal_name != null ? {
-    object_id    = azuread_service_principal.buildingblock_deploy_hub[0].object_id
-    client_id    = azuread_service_principal.buildingblock_deploy_hub[0].client_id
-    display_name = azuread_service_principal.buildingblock_deploy_hub[0].display_name
+    object_id    = azuread_service_principal.buildingblock_deploy_hub.object_id
+    client_id    = azuread_service_principal.buildingblock_deploy_hub.client_id
+    display_name = azuread_service_principal.buildingblock_deploy_hub.display_name
     name         = var.create_hub_service_principal_name
   } : null
   description = "Information about the created hub service principal."
@@ -111,28 +111,28 @@ output "created_hub_service_principal" {
 
 output "created_hub_application" {
   value = var.create_hub_service_principal_name != null ? {
-    object_id    = azuread_application.buildingblock_deploy_hub[0].object_id
-    client_id    = azuread_application.buildingblock_deploy_hub[0].client_id
-    display_name = azuread_application.buildingblock_deploy_hub[0].display_name
+    object_id    = azuread_application.buildingblock_deploy_hub.object_id
+    client_id    = azuread_application.buildingblock_deploy_hub.client_id
+    display_name = azuread_application.buildingblock_deploy_hub.display_name
   } : null
   description = "Information about the created hub Azure AD application."
 }
 
 output "hub_workload_identity_federation" {
   value = var.create_hub_service_principal_name != null && var.hub_workload_identity_federation != null ? {
-    credential_id = azuread_application_federated_identity_credential.buildingblock_deploy_hub[0].credential_id
-    display_name  = azuread_application_federated_identity_credential.buildingblock_deploy_hub[0].display_name
-    issuer        = azuread_application_federated_identity_credential.buildingblock_deploy_hub[0].issuer
-    subject       = azuread_application_federated_identity_credential.buildingblock_deploy_hub[0].subject
-    audiences     = azuread_application_federated_identity_credential.buildingblock_deploy_hub[0].audiences
+    credential_id = azuread_application_federated_identity_credential.buildingblock_deploy_hub.credential_id
+    display_name  = azuread_application_federated_identity_credential.buildingblock_deploy_hub.display_name
+    issuer        = azuread_application_federated_identity_credential.buildingblock_deploy_hub.issuer
+    subject       = azuread_application_federated_identity_credential.buildingblock_deploy_hub.subject
+    audiences     = azuread_application_federated_identity_credential.buildingblock_deploy_hub.audiences
   } : null
   description = "Information about the created hub workload identity federation credential."
 }
 
 output "hub_application_password" {
   value = var.create_hub_service_principal_name != null && var.hub_workload_identity_federation == null ? {
-    key_id       = azuread_application_password.buildingblock_deploy_hub[0].key_id
-    display_name = azuread_application_password.buildingblock_deploy_hub[0].display_name
+    key_id       = azuread_application_password.buildingblock_deploy_hub.key_id
+    display_name = azuread_application_password.buildingblock_deploy_hub.display_name
   } : null
   description = "Information about the created hub application password (excludes the actual password value for security)."
   sensitive   = true
@@ -144,8 +144,8 @@ output "provider_tf" {
       provider "azurerm" {
         features {}
 
-        client_id       = "${azuread_service_principal.buildingblock_deploy[0].client_id}"
-        client_secret   = "${azuread_application_password.buildingblock_deploy[0].value}"
+        client_id       = "${azuread_service_principal.buildingblock_deploy.client_id}"
+        client_secret   = "${azuread_application_password.buildingblock_deploy.value}"
         subscription_id = "<SUBSCRIPTION_ID>"
         tenant_id       = "${data.azurerm_subscription.current.tenant_id}"
       }
@@ -154,8 +154,8 @@ output "provider_tf" {
         alias = "hub"
         features {}
 
-        client_id       = "${azuread_service_principal.buildingblock_deploy_hub[0].client_id}"
-        client_secret   = "${azuread_application_password.buildingblock_deploy_hub[0].value}"
+        client_id       = "${azuread_service_principal.buildingblock_deploy_hub.client_id}"
+        client_secret   = "${azuread_application_password.buildingblock_deploy_hub.value}"
         subscription_id = "<HUB_SUBSCRIPTION_ID>"
         tenant_id       = "${data.azurerm_subscription.current.tenant_id}"
       }
@@ -173,7 +173,7 @@ output "provider_tf" {
       provider "azurerm" {
         features {}
 
-        client_id       = "${azuread_service_principal.buildingblock_deploy[0].client_id}"
+        client_id       = "${azuread_service_principal.buildingblock_deploy.client_id}"
         use_oidc        = true
         subscription_id = "<SUBSCRIPTION_ID>"
         tenant_id       = "${data.azurerm_subscription.current.tenant_id}"
@@ -183,7 +183,7 @@ output "provider_tf" {
         alias = "hub"
         features {}
 
-        client_id       = "${azuread_service_principal.buildingblock_deploy_hub[0].client_id}"
+        client_id       = "${azuread_service_principal.buildingblock_deploy_hub.client_id}"
         use_oidc        = true
         subscription_id = "<HUB_SUBSCRIPTION_ID>"
         tenant_id       = "${data.azurerm_subscription.current.tenant_id}"

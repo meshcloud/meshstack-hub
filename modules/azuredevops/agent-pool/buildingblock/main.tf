@@ -28,16 +28,20 @@ resource "azuredevops_elastic_pool" "main" {
 }
 
 resource "azuredevops_agent_queue" "main" {
-  count = var.project_id != null ? 1 : 0
+  lifecycle {
+    enabled = var.project_id != null
+  }
 
   project_id    = var.project_id
   agent_pool_id = azuredevops_elastic_pool.main.id
 }
 
 resource "azuredevops_pipeline_authorization" "main" {
-  count = var.project_id != null ? 1 : 0
+  lifecycle {
+    enabled = var.project_id != null
+  }
 
   project_id  = var.project_id
-  resource_id = azuredevops_agent_queue.main[0].id
+  resource_id = azuredevops_agent_queue.main.id
   type        = "queue"
 }

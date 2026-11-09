@@ -6,7 +6,10 @@ resource "azurerm_resource_group" "aks" {
 }
 
 resource "azurerm_virtual_network" "vnet" {
-  count               = var.vnet_name == null ? 1 : 0
+  lifecycle {
+    enabled = var.vnet_name == null
+  }
+
   name                = "${var.aks_cluster_name}-vnet"
   address_space       = [var.vnet_address_space]
   location            = var.location
@@ -17,18 +20,24 @@ resource "azurerm_virtual_network" "vnet" {
 }
 
 data "azurerm_virtual_network" "existing_vnet" {
-  count               = var.vnet_name != null ? 1 : 0
+  lifecycle {
+    enabled = var.vnet_name != null
+  }
+
   name                = var.vnet_name
   resource_group_name = var.existing_vnet_resource_group_name != null ? var.existing_vnet_resource_group_name : var.resource_group_name
 }
 
 locals {
-  vnet_id   = var.vnet_name != null ? data.azurerm_virtual_network.existing_vnet[0].id : azurerm_virtual_network.vnet[0].id
-  vnet_name = var.vnet_name != null ? var.vnet_name : azurerm_virtual_network.vnet[0].name
+  vnet_id   = var.vnet_name != null ? data.azurerm_virtual_network.existing_vnet.id : azurerm_virtual_network.vnet.id
+  vnet_name = var.vnet_name != null ? var.vnet_name : azurerm_virtual_network.vnet.name
 }
 
 resource "azurerm_subnet" "aks_subnet" {
-  count                = var.subnet_name == null ? 1 : 0
+  lifecycle {
+    enabled = var.subnet_name == null
+  }
+
   name                 = "${var.aks_cluster_name}-subnet"
   resource_group_name  = azurerm_resource_group.aks.name
   virtual_network_name = local.vnet_name
@@ -38,19 +47,25 @@ resource "azurerm_subnet" "aks_subnet" {
 }
 
 data "azurerm_subnet" "existing_subnet" {
-  count                = var.subnet_name != null ? 1 : 0
+  lifecycle {
+    enabled = var.subnet_name != null
+  }
+
   name                 = var.subnet_name
   virtual_network_name = var.vnet_name
   resource_group_name  = var.existing_vnet_resource_group_name != null ? var.existing_vnet_resource_group_name : var.resource_group_name
 }
 
 locals {
-  subnet_id = var.subnet_name != null ? data.azurerm_subnet.existing_subnet[0].id : azurerm_subnet.aks_subnet[0].id
+  subnet_id = var.subnet_name != null ? data.azurerm_subnet.existing_subnet.id : azurerm_subnet.aks_subnet.id
 }
 
 # Route table for UDR scenarios (private cluster with hub connectivity)
 resource "azurerm_route_table" "aks_rt" {
-  count               = var.private_cluster_enabled && var.hub_vnet_name != null && var.subnet_name == null ? 1 : 0
+  lifecycle {
+    enabled = var.private_cluster_enabled && var.hub_vnet_name != null && var.subnet_name == null
+  }
+
   name                = "${var.aks_cluster_name}-rt"
   location            = var.location
   resource_group_name = azurerm_resource_group.aks.name
@@ -58,9 +73,12 @@ resource "azurerm_route_table" "aks_rt" {
 }
 
 resource "azurerm_subnet_route_table_association" "aks_subnet_rt" {
-  count          = var.private_cluster_enabled && var.hub_vnet_name != null && var.subnet_name == null ? 1 : 0
-  subnet_id      = azurerm_subnet.aks_subnet[0].id
-  route_table_id = azurerm_route_table.aks_rt[0].id
+  lifecycle {
+    enabled = var.private_cluster_enabled && var.hub_vnet_name != null && var.subnet_name == null
+  }
+
+  subnet_id      = azurerm_subnet.aks_subnet.id
+  route_table_id = azurerm_route_table.aks_rt.id
 }
 
 resource "time_sleep" "wait_for_subnet" {
@@ -70,7 +88,10 @@ resource "time_sleep" "wait_for_subnet" {
 
 # Log Analytics
 resource "azurerm_log_analytics_workspace" "law" {
-  count               = var.log_analytics_workspace_name != null ? 1 : 0
+  lifecycle {
+    enabled = var.log_analytics_workspace_name != null
+  }
+
   name                = "${var.aks_cluster_name}-law"
   location            = var.location
   resource_group_name = azurerm_resource_group.aks.name
@@ -150,10 +171,13 @@ resource "azurerm_kubernetes_cluster" "aks" {
 }
 
 resource "azurerm_monitor_diagnostic_setting" "aks_monitoring" {
-  count                      = var.log_analytics_workspace_name != null ? 1 : 0
+  lifecycle {
+    enabled = var.log_analytics_workspace_name != null
+  }
+
   name                       = "${azurerm_kubernetes_cluster.aks.name}-diag"
   target_resource_id         = azurerm_kubernetes_cluster.aks.id
-  log_analytics_workspace_id = azurerm_log_analytics_workspace.law[0].id
+  log_analytics_workspace_id = azurerm_log_analytics_workspace.law.id
 
   enabled_log {
     category = "kube-apiserver"
@@ -177,24 +201,33 @@ resource "azurerm_monitor_diagnostic_setting" "aks_monitoring" {
 }
 
 data "azurerm_resource_group" "hub_rg" {
-  count    = var.private_cluster_enabled && var.hub_resource_group_name != null ? 1 : 0
+  lifecycle {
+    enabled = var.private_cluster_enabled && var.hub_resource_group_name != null
+  }
+
   provider = azurerm.hub
   name     = var.hub_resource_group_name
 }
 
 data "azurerm_virtual_network" "hub_vnet" {
-  count               = var.private_cluster_enabled && var.hub_vnet_name != null ? 1 : 0
+  lifecycle {
+    enabled = var.private_cluster_enabled && var.hub_vnet_name != null
+  }
+
   provider            = azurerm.hub
   name                = var.hub_vnet_name
-  resource_group_name = data.azurerm_resource_group.hub_rg[0].name
+  resource_group_name = data.azurerm_resource_group.hub_rg.name
 }
 
 resource "azurerm_virtual_network_peering" "aks_to_hub" {
-  count                     = var.private_cluster_enabled && var.vnet_name == null && var.hub_vnet_name != null ? 1 : 0
+  lifecycle {
+    enabled = var.private_cluster_enabled && var.vnet_name == null && var.hub_vnet_name != null
+  }
+
   name                      = "${var.aks_cluster_name}-to-hub"
   resource_group_name       = azurerm_resource_group.aks.name
   virtual_network_name      = local.vnet_name
-  remote_virtual_network_id = data.azurerm_virtual_network.hub_vnet[0].id
+  remote_virtual_network_id = data.azurerm_virtual_network.hub_vnet.id
 
   allow_virtual_network_access = true
   allow_forwarded_traffic      = true
@@ -203,11 +236,14 @@ resource "azurerm_virtual_network_peering" "aks_to_hub" {
 }
 
 resource "azurerm_virtual_network_peering" "hub_to_aks" {
-  count                     = var.private_cluster_enabled && var.vnet_name == null && var.hub_vnet_name != null ? 1 : 0
+  lifecycle {
+    enabled = var.private_cluster_enabled && var.vnet_name == null && var.hub_vnet_name != null
+  }
+
   provider                  = azurerm.hub
   name                      = "hub-to-${var.aks_cluster_name}"
-  resource_group_name       = data.azurerm_resource_group.hub_rg[0].name
-  virtual_network_name      = data.azurerm_virtual_network.hub_vnet[0].name
+  resource_group_name       = data.azurerm_resource_group.hub_rg.name
+  virtual_network_name      = data.azurerm_virtual_network.hub_vnet.name
   remote_virtual_network_id = local.vnet_id
 
   allow_virtual_network_access = true

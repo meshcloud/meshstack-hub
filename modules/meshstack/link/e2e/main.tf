@@ -32,7 +32,10 @@ locals {
 }
 
 module "meshstack_link" {
-  count  = var.test_context.bbd_version_ref == null ? 1 : 0
+  lifecycle {
+    enabled = var.test_context.bbd_version_ref == null
+  }
+
   source = "../"
 
   meshstack = {
@@ -51,7 +54,7 @@ module "meshstack_link" {
 }
 
 locals {
-  version_ref = var.test_context.bbd_version_ref != null ? var.test_context.bbd_version_ref : { uuid = module.meshstack_link[0].building_block_definition.version_ref.uuid }
+  version_ref = var.test_context.bbd_version_ref != null ? var.test_context.bbd_version_ref : { uuid = module.meshstack_link.building_block_definition.version_ref.uuid }
 }
 
 resource "meshstack_building_block" "this" {

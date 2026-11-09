@@ -16,6 +16,7 @@ Which OpenTofu a module actually gets at run time is set by its building block d
 `terraform_version` — see [meshstack-integration.md § Runtime version](meshstack-integration.md#runtime-version-terraform_version). Features used here must exist in the version
 pinned there.
 
+<!-- scorecard-checks: no_count_toggle, lifecycle_enabled_version -->
 ## Prefer `lifecycle.enabled` Over `count = condition ? 1 : 0`
 
 OpenTofu >= 1.11.0 supports a `lifecycle { enabled = <bool> }` meta-argument that conditionally
@@ -60,9 +61,12 @@ referencing it elsewhere doesn't need `[0]` indexing or a `try()`/`coalesce()` f
 "created" and "not created" resource/data-source pair.
 
 This applies to the "0 or 1" conditional-resource idiom only — not to genuine collections where
-`count`/`for_each` intentionally produce more than one instance. Existing `count = condition ? 1 : 0`
-examples elsewhere in this repo (e.g. `.agents/references/aws-backplane.md`) are not being
-retrofitted as part of introducing this convention; apply `lifecycle.enabled` going forward.
+`count`/`for_each` intentionally produce more than one instance. A `module` block takes
+`lifecycle.enabled` too, unless the module configures a provider of its own.
+
+Switching an existing `count` to `enabled` needs no `moved` block: OpenTofu moves `x[0]` to `x` in
+state on the next plan. Every module directory that uses `lifecycle.enabled`, nested ones included,
+sets `required_version = ">= 1.11.0"` or higher.
 
 <!-- scorecard-checks: provider_pinned -->
 ## Variable Conventions

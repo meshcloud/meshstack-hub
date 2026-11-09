@@ -1,5 +1,5 @@
 terraform {
-  required_version = ">= 1.3.0"
+  required_version = ">= 1.11.0"
   required_providers {
     # Held on azurerm 3.x: from 4.0 on, azurerm_monitor_activity_log_alert requires a
     # `location`, which the four alerts in main.tf do not set, so the module does not even

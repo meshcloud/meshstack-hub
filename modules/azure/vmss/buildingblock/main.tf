@@ -34,7 +34,10 @@ resource "azurerm_network_security_group" "vmss_nsg" {
 }
 
 resource "azurerm_network_security_rule" "allow_ssh" {
-  count                       = var.os_type == "Linux" && var.enable_ssh_access ? 1 : 0
+  lifecycle {
+    enabled = var.os_type == "Linux" && var.enable_ssh_access
+  }
+
   name                        = "AllowSSH"
   priority                    = 1000
   direction                   = "Inbound"
@@ -49,7 +52,10 @@ resource "azurerm_network_security_rule" "allow_ssh" {
 }
 
 resource "azurerm_network_security_rule" "allow_rdp" {
-  count                       = var.os_type == "Windows" && var.enable_rdp_access ? 1 : 0
+  lifecycle {
+    enabled = var.os_type == "Windows" && var.enable_rdp_access
+  }
+
   name                        = "AllowRDP"
   priority                    = 1001
   direction                   = "Inbound"
@@ -64,7 +70,10 @@ resource "azurerm_network_security_rule" "allow_rdp" {
 }
 
 resource "azurerm_network_security_rule" "allow_backend_port" {
-  count                       = var.enable_load_balancer ? 1 : 0
+  lifecycle {
+    enabled = var.enable_load_balancer
+  }
+
   name                        = "AllowBackendPort"
   priority                    = 1002
   direction                   = "Inbound"
@@ -84,7 +93,10 @@ resource "azurerm_subnet_network_security_group_association" "vmss_nsg_associati
 }
 
 resource "azurerm_public_ip" "lb_public_ip" {
-  count               = var.enable_load_balancer && var.enable_public_ip ? 1 : 0
+  lifecycle {
+    enabled = var.enable_load_balancer && var.enable_public_ip
+  }
+
   name                = "${var.vmss_name}-lb-pip"
   location            = azurerm_resource_group.vmss_rg.location
   resource_group_name = azurerm_resource_group.vmss_rg.name
@@ -95,7 +107,10 @@ resource "azurerm_public_ip" "lb_public_ip" {
 }
 
 resource "azurerm_lb" "vmss_lb" {
-  count               = var.enable_load_balancer ? 1 : 0
+  lifecycle {
+    enabled = var.enable_load_balancer
+  }
+
   name                = "${var.vmss_name}-lb"
   location            = azurerm_resource_group.vmss_rg.location
   resource_group_name = azurerm_resource_group.vmss_rg.name
@@ -103,7 +118,7 @@ resource "azurerm_lb" "vmss_lb" {
 
   frontend_ip_configuration {
     name                          = "PublicIPAddress"
-    public_ip_address_id          = var.enable_public_ip ? azurerm_public_ip.lb_public_ip[0].id : null
+    public_ip_address_id          = var.enable_public_ip ? azurerm_public_ip.lb_public_ip.id : null
     subnet_id                     = var.enable_public_ip ? null : data.azurerm_subnet.vmss_subnet.id
     private_ip_address_allocation = var.enable_public_ip ? null : "Dynamic"
   }
@@ -112,14 +127,20 @@ resource "azurerm_lb" "vmss_lb" {
 }
 
 resource "azurerm_lb_backend_address_pool" "vmss_backend_pool" {
-  count           = var.enable_load_balancer ? 1 : 0
-  loadbalancer_id = azurerm_lb.vmss_lb[0].id
+  lifecycle {
+    enabled = var.enable_load_balancer
+  }
+
+  loadbalancer_id = azurerm_lb.vmss_lb.id
   name            = "BackEndAddressPool"
 }
 
 resource "azurerm_lb_probe" "vmss_health_probe" {
-  count               = var.enable_load_balancer ? 1 : 0
-  loadbalancer_id     = azurerm_lb.vmss_lb[0].id
+  lifecycle {
+    enabled = var.enable_load_balancer
+  }
+
+  loadbalancer_id     = azurerm_lb.vmss_lb.id
   name                = "health-probe"
   protocol            = var.health_probe_protocol
   port                = var.health_probe_port
@@ -129,21 +150,27 @@ resource "azurerm_lb_probe" "vmss_health_probe" {
 }
 
 resource "azurerm_lb_rule" "vmss_lb_rule" {
-  count                          = var.enable_load_balancer ? 1 : 0
-  loadbalancer_id                = azurerm_lb.vmss_lb[0].id
+  lifecycle {
+    enabled = var.enable_load_balancer
+  }
+
+  loadbalancer_id                = azurerm_lb.vmss_lb.id
   name                           = "LBRule"
   protocol                       = "Tcp"
   frontend_port                  = var.frontend_port
   backend_port                   = var.backend_port
   frontend_ip_configuration_name = "PublicIPAddress"
-  backend_address_pool_ids       = [azurerm_lb_backend_address_pool.vmss_backend_pool[0].id]
-  probe_id                       = azurerm_lb_probe.vmss_health_probe[0].id
+  backend_address_pool_ids       = [azurerm_lb_backend_address_pool.vmss_backend_pool.id]
+  probe_id                       = azurerm_lb_probe.vmss_health_probe.id
   enable_floating_ip             = false
   idle_timeout_in_minutes        = 4
 }
 
 resource "azurerm_linux_virtual_machine_scale_set" "vmss" {
-  count               = var.os_type == "Linux" ? 1 : 0
+  lifecycle {
+    enabled = var.os_type == "Linux"
+  }
+
   name                = var.vmss_name
   location            = azurerm_resource_group.vmss_rg.location
   resource_group_name = azurerm_resource_group.vmss_rg.name
@@ -188,7 +215,7 @@ resource "azurerm_linux_virtual_machine_scale_set" "vmss" {
       name                                   = "internal"
       primary                                = true
       subnet_id                              = data.azurerm_subnet.vmss_subnet.id
-      load_balancer_backend_address_pool_ids = var.enable_load_balancer ? [azurerm_lb_backend_address_pool.vmss_backend_pool[0].id] : []
+      load_balancer_backend_address_pool_ids = var.enable_load_balancer ? [azurerm_lb_backend_address_pool.vmss_backend_pool.id] : []
     }
   }
 
@@ -221,7 +248,7 @@ resource "azurerm_linux_virtual_machine_scale_set" "vmss" {
     }
   }
 
-  health_probe_id = var.upgrade_mode == "Automatic" || var.upgrade_mode == "Rolling" ? azurerm_lb_probe.vmss_health_probe[0].id : null
+  health_probe_id = var.upgrade_mode == "Automatic" || var.upgrade_mode == "Rolling" ? azurerm_lb_probe.vmss_health_probe.id : null
 
   disable_password_authentication = true
 
@@ -229,7 +256,10 @@ resource "azurerm_linux_virtual_machine_scale_set" "vmss" {
 }
 
 resource "azurerm_windows_virtual_machine_scale_set" "vmss" {
-  count               = var.os_type == "Windows" ? 1 : 0
+  lifecycle {
+    enabled = var.os_type == "Windows"
+  }
+
   name                = var.vmss_name
   location            = azurerm_resource_group.vmss_rg.location
   resource_group_name = azurerm_resource_group.vmss_rg.name
@@ -270,7 +300,7 @@ resource "azurerm_windows_virtual_machine_scale_set" "vmss" {
       name                                   = "internal"
       primary                                = true
       subnet_id                              = data.azurerm_subnet.vmss_subnet.id
-      load_balancer_backend_address_pool_ids = var.enable_load_balancer ? [azurerm_lb_backend_address_pool.vmss_backend_pool[0].id] : []
+      load_balancer_backend_address_pool_ids = var.enable_load_balancer ? [azurerm_lb_backend_address_pool.vmss_backend_pool.id] : []
     }
   }
 
@@ -303,17 +333,20 @@ resource "azurerm_windows_virtual_machine_scale_set" "vmss" {
     }
   }
 
-  health_probe_id = var.upgrade_mode == "Automatic" || var.upgrade_mode == "Rolling" ? azurerm_lb_probe.vmss_health_probe[0].id : null
+  health_probe_id = var.upgrade_mode == "Automatic" || var.upgrade_mode == "Rolling" ? azurerm_lb_probe.vmss_health_probe.id : null
 
   tags = var.tags
 }
 
 resource "azurerm_monitor_autoscale_setting" "vmss_autoscale" {
-  count               = var.enable_autoscaling ? 1 : 0
+  lifecycle {
+    enabled = var.enable_autoscaling
+  }
+
   name                = "${var.vmss_name}-autoscale"
   location            = azurerm_resource_group.vmss_rg.location
   resource_group_name = azurerm_resource_group.vmss_rg.name
-  target_resource_id  = var.os_type == "Linux" ? azurerm_linux_virtual_machine_scale_set.vmss[0].id : azurerm_windows_virtual_machine_scale_set.vmss[0].id
+  target_resource_id  = var.os_type == "Linux" ? azurerm_linux_virtual_machine_scale_set.vmss.id : azurerm_windows_virtual_machine_scale_set.vmss.id
 
   profile {
     name = "defaultProfile"
@@ -327,7 +360,7 @@ resource "azurerm_monitor_autoscale_setting" "vmss_autoscale" {
     rule {
       metric_trigger {
         metric_name        = "Percentage CPU"
-        metric_resource_id = var.os_type == "Linux" ? azurerm_linux_virtual_machine_scale_set.vmss[0].id : azurerm_windows_virtual_machine_scale_set.vmss[0].id
+        metric_resource_id = var.os_type == "Linux" ? azurerm_linux_virtual_machine_scale_set.vmss.id : azurerm_windows_virtual_machine_scale_set.vmss.id
         time_grain         = "PT1M"
         statistic          = "Average"
         time_window        = "PT5M"
@@ -347,7 +380,7 @@ resource "azurerm_monitor_autoscale_setting" "vmss_autoscale" {
     rule {
       metric_trigger {
         metric_name        = "Percentage CPU"
-        metric_resource_id = var.os_type == "Linux" ? azurerm_linux_virtual_machine_scale_set.vmss[0].id : azurerm_windows_virtual_machine_scale_set.vmss[0].id
+        metric_resource_id = var.os_type == "Linux" ? azurerm_linux_virtual_machine_scale_set.vmss.id : azurerm_windows_virtual_machine_scale_set.vmss.id
         time_grain         = "PT1M"
         statistic          = "Average"
         time_window        = "PT5M"

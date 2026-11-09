@@ -80,7 +80,9 @@ data "azuredevops_users" "all_users" {
 
 # Add users to project groups based on their roles
 resource "azuredevops_group_membership" "readers" {
-  count = length(local.readers) > 0 ? 1 : 0
+  lifecycle {
+    enabled = length(local.readers) > 0
+  }
 
   group = data.azuredevops_group.project_readers.descriptor
   members = [
@@ -90,7 +92,9 @@ resource "azuredevops_group_membership" "readers" {
 }
 
 resource "azuredevops_group_membership" "contributors" {
-  count = length(local.contributors) > 0 ? 1 : 0
+  lifecycle {
+    enabled = length(local.contributors) > 0
+  }
 
   group = data.azuredevops_group.project_contributors.descriptor
   members = [
@@ -100,7 +104,9 @@ resource "azuredevops_group_membership" "contributors" {
 }
 
 resource "azuredevops_group_membership" "administrators" {
-  count = length(local.administrators) > 0 ? 1 : 0
+  lifecycle {
+    enabled = length(local.administrators) > 0
+  }
 
   group = data.azuredevops_group.project_administrators.descriptor
   members = [

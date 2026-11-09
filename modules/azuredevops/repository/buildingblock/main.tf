@@ -24,7 +24,9 @@ resource "azuredevops_git_repository" "main" {
 }
 
 resource "azuredevops_branch_policy_min_reviewers" "main" {
-  count = var.enable_branch_policies ? 1 : 0
+  lifecycle {
+    enabled = var.enable_branch_policies
+  }
 
   project_id = var.project_id
 
@@ -47,7 +49,9 @@ resource "azuredevops_branch_policy_min_reviewers" "main" {
 }
 
 resource "azuredevops_branch_policy_work_item_linking" "main" {
-  count = var.enable_branch_policies ? 1 : 0
+  lifecycle {
+    enabled = var.enable_branch_policies
+  }
 
   project_id = var.project_id
 
