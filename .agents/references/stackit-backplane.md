@@ -40,7 +40,7 @@ resource "stackit_service_account_federated_identity_provider" "backplane" {
     {
       item     = "aud"
       operator = "equals"
-      value    = "api://AzureADTokenExchange"
+      value    = var.workload_identity_federation.audience
     },
     {
       item     = "sub"
@@ -93,10 +93,11 @@ variable "project_id" {
 variable "workload_identity_federation" {
   type = object({
     issuer   = string
+    audience = optional(string, "api://AzureADTokenExchange")
     subjects = list(string)
   })
   nullable    = false
-  description = "WIF issuer URL and subject list for the meshStack building block identity provider."
+  description = "WIF issuer URL, audience and subject list for the meshStack building block identity provider. The audience defaults to the one meshStack runners use for Azure tokens."
 }
 ```
 
@@ -140,9 +141,15 @@ STACKIT project owner: reusing the automation identity there conflated two unrel
 
 ## `meshstack_integration.tf` Wiring (STACKIT)
 
-Take the issuer and the subject from the definition's resolved identity and pass both to the
-backplane. Register the WIF env vars as STATIC environment inputs so
+A runner offers no STACKIT token, so the module uses the token it offers for Azure as a generic
+OIDC token. Take the issuer, the Azure audience and the subject from the definition's resolved
+identity and pass them to the backplane. Register the WIF env vars as STATIC environment inputs so
 the buildingblock runtime can exchange the token automatically.
+
+The token path is an input of the definition itself, so it can't come from the definition's
+`version_latest`. Read it from the `meshstack_building_block_runner` data source for the same
+runner. The definition that applies the module then needs the `BUILDINGBLOCKRUNNER_LIST`
+permission; without it the data source reports that no runner matches.
 
 **Known limitation.** The identity provider trusts the subject of the version the Terraform
 resource manages. A building block keeps running on the version it was created with, so moving
@@ -150,6 +157,12 @@ the definition to a different runner breaks the blocks that still run on the old
 they upgrade.
 
 ```hcl
+data "meshstack_building_block_runner" "this" {
+  metadata = {
+    uuid = var.meshstack.runner_ref == null ? null : var.meshstack.runner_ref.uuid
+  }
+}
+
 module "backplane" {
   source = "github.com/meshcloud/meshstack-hub//modules/stackit/<service>/backplane?ref=${var.hub.git_ref}"
 
@@ -157,6 +170,7 @@ module "backplane" {
 
   workload_identity_federation = {
     issuer   = meshstack_building_block_definition.this.version_latest.workload_identity_federation.issuer
+    audience = meshstack_building_block_definition.this.version_latest.workload_identity_federation.azure.audience
     subjects = [meshstack_building_block_definition.this.version_latest.workload_identity_federation.subject]
   }
 }
@@ -186,7 +200,7 @@ STACKIT_FEDERATED_TOKEN_FILE = {
   type            = "STRING"
   assignment_type = "STATIC"
   is_environment  = true
-  argument        = jsonencode("/var/run/secrets/workload-identity/azure/token")
+  argument        = jsonencode(data.meshstack_building_block_runner.this.spec.workload_identity_federation.azure.token_path)
 }
 ```
 
@@ -201,19 +215,19 @@ The `stackit_service_account_federated_identity_provider` resource requires prov
 - ❌ `service_account_key_json` output — replace with `service_account_email`
 - ❌ `STACKIT_SERVICE_ACCOUNT_TOKEN` env var — deprecated
 - ❌ `service_account_email` or `use_oidc` in the buildingblock `provider.tf` — the env vars already carry both
-- ❌ A hardcoded or string-built `issuer` or `subject`: the runner declares the one, meshStack resolves the other
+- ❌ A hardcoded or string-built `issuer`, `audience`, `subject` or token path: the runner declares them, meshStack resolves the subject
 - ❌ Non-sensitive output for credentials — `service_account_email` is not sensitive, but any key would be
 
 ## Checklist for STACKIT Backplanes
 
 - [ ] `stackit_service_account` resource present
 - [ ] `stackit_service_account_federated_identity_provider` resource present (with `for_each` over subjects)
-- [ ] WIF assertions include `aud = "api://AzureADTokenExchange"` and `sub = each.value`
+- [ ] WIF assertions include `aud = var.workload_identity_federation.audience` and `sub = each.value`
 - [ ] Required role assignments present (`stackit_authorization_project_role_assignment` or `stackit_authorization_organization_role_assignment`)
 - [ ] `service_account_email` output present (not sensitive, not `service_account_key_json`)
-- [ ] `workload_identity_federation` variable present (`object({ issuer, subjects })`, `nullable = false`)
+- [ ] `workload_identity_federation` variable present (`object({ issuer, audience, subjects })`, `nullable = false`)
 - [ ] Backplane `versions.tf` uses `>= 0.98.0` for the STACKIT provider
 - [ ] Buildingblock `provider.tf` carries no auth arguments — no `service_account_email`, `use_oidc` or `service_account_key`
 - [ ] No `service_account_key_json` variable or output anywhere
-- [ ] `meshstack_integration.tf` follows [meshstack-integration.md § Runner identity](meshstack-integration.md#runner-identity) for issuer and subject
+- [ ] `meshstack_integration.tf` follows [meshstack-integration.md § Runner identity](meshstack-integration.md#runner-identity) for issuer, audience and subject
 - [ ] `meshstack_integration.tf` wires `STACKIT_SERVICE_ACCOUNT_EMAIL`, `STACKIT_USE_OIDC` and `STACKIT_FEDERATED_TOKEN_FILE` as STATIC env var inputs
