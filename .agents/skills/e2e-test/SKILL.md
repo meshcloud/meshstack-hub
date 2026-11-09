@@ -223,6 +223,11 @@ when the test orders from a workspace other than the one that owns the definitio
 visible to its owner alone, so such a test must set `bbd_draft = false`. All are static values a
 foundation can spell out in HCL, with no `dependency` on the deployment unit.
 
+A test that needs a payment method takes `payment_method_identifier`, the name of a payment method
+in `workspace` that the foundation keeps as a fixture. Only when it is null does the test create one
+of its own, with `lifecycle { enabled = … }`, because creating a payment method needs admin rights on
+the meshStack instance. `modules/ske/ske-starterkit/e2e` is the example.
+
 A provider that only one mode needs belongs in that mode module, not in the root — foundation mode
 then never installs it. A module holding a provider block may not take `count`, `for_each` or
 `depends_on`, so keep those off the `module "definition"` block.
