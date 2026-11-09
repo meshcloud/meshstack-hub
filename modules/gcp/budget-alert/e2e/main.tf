@@ -27,7 +27,10 @@ provider "google" {
 }
 
 module "gcp_budget_alert" {
-  count  = var.test_context.bbd_version_ref == null ? 1 : 0
+  lifecycle {
+    enabled = var.test_context.bbd_version_ref == null
+  }
+
   source = "../"
 
   meshstack = {
@@ -52,7 +55,7 @@ module "gcp_budget_alert" {
 }
 
 locals {
-  version_ref = var.test_context.bbd_version_ref != null ? var.test_context.bbd_version_ref : { uuid = module.gcp_budget_alert[0].building_block_definition.version_ref.uuid }
+  version_ref = var.test_context.bbd_version_ref != null ? var.test_context.bbd_version_ref : { uuid = module.gcp_budget_alert.building_block_definition.version_ref.uuid }
 
   budget_name = "${var.test_context.run_id}-budget"
 

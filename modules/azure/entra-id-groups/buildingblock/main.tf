@@ -24,7 +24,9 @@ locals {
 # invited) must not fail the whole building block. Unresolved members are reported through the
 # unresolved_users output and the run summary instead of aborting the run.
 data "azuread_users" "members" {
-  count = length(local.unique_user_euids) > 0 ? 1 : 0
+  lifecycle {
+    enabled = length(local.unique_user_euids) > 0
+  }
 
   ignore_missing = true
 
@@ -33,10 +35,9 @@ data "azuread_users" "members" {
 }
 
 locals {
-  # `try` because the lookup has no instance at all when there is no member to resolve, and
-  # `members[0]` then does not exist.
+  # `try` because the lookup is disabled, and so null, when there is no member to resolve.
   lookup_values = {
-    for u in try(data.azuread_users.members[0].users, []) :
+    for u in try(data.azuread_users.members.users, []) :
     lower(coalesce(var.user_lookup_attribute == "email" ? u.mail : u.user_principal_name, "")) => u.object_id
     if coalesce(var.user_lookup_attribute == "email" ? u.mail : u.user_principal_name, "") != ""
   }

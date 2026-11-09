@@ -31,7 +31,10 @@ provider "stackit" {
 }
 
 module "stackit_network_area" {
-  count  = var.test_context.bbd_version_ref == null ? 1 : 0
+  lifecycle {
+    enabled = var.test_context.bbd_version_ref == null
+  }
+
   source = "../"
   meshstack = {
     owning_workspace_identifier = var.test_context.workspace
@@ -50,7 +53,7 @@ module "stackit_network_area" {
 }
 
 locals {
-  version_ref = var.test_context.bbd_version_ref != null ? var.test_context.bbd_version_ref : { uuid = module.stackit_network_area[0].building_block_definition.version_ref.uuid }
+  version_ref = var.test_context.bbd_version_ref != null ? var.test_context.bbd_version_ref : { uuid = module.stackit_network_area.building_block_definition.version_ref.uuid }
 
   network_area_name = "${var.test_context.run_id}-na"
   # Ranges are picked from a block that is not used by any other network area in the test

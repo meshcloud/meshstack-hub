@@ -51,8 +51,8 @@ output "user_assignments" {
 output "group_memberships" {
   description = "Information about group memberships"
   value = {
-    readers_group_id        = length(local.readers) > 0 ? ionoscloud_group.readers[0].id : null
-    users_group_id          = length(local.users) > 0 ? ionoscloud_group.users[0].id : null
-    administrators_group_id = length(local.administrators) > 0 ? ionoscloud_group.administrators[0].id : null
+    readers_group_id        = length(local.readers) > 0 ? ionoscloud_group.readers.id : null
+    users_group_id          = length(local.users) > 0 ? ionoscloud_group.users.id : null
+    administrators_group_id = length(local.administrators) > 0 ? ionoscloud_group.administrators.id : null
   }
 }

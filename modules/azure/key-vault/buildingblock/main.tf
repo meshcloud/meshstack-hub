@@ -14,7 +14,10 @@ resource "azurerm_resource_group" "key_vault" {
 }
 
 resource "azurerm_virtual_network" "vnet" {
-  count               = var.private_endpoint_enabled && var.vnet_name == null ? 1 : 0
+  lifecycle {
+    enabled = var.private_endpoint_enabled && var.vnet_name == null
+  }
+
   name                = "${var.key_vault_name}-vnet"
   address_space       = [var.vnet_address_space]
   location            = var.location
@@ -25,18 +28,24 @@ resource "azurerm_virtual_network" "vnet" {
 }
 
 data "azurerm_virtual_network" "existing_vnet" {
-  count               = var.private_endpoint_enabled && var.vnet_name != null ? 1 : 0
+  lifecycle {
+    enabled = var.private_endpoint_enabled && var.vnet_name != null
+  }
+
   name                = var.vnet_name
   resource_group_name = var.existing_vnet_resource_group_name != null ? var.existing_vnet_resource_group_name : var.key_vault_resource_group_name
 }
 
 locals {
-  vnet_id   = var.private_endpoint_enabled ? (var.vnet_name != null ? data.azurerm_virtual_network.existing_vnet[0].id : azurerm_virtual_network.vnet[0].id) : null
-  vnet_name = var.private_endpoint_enabled ? (var.vnet_name != null ? var.vnet_name : azurerm_virtual_network.vnet[0].name) : null
+  vnet_id   = var.private_endpoint_enabled ? (var.vnet_name != null ? data.azurerm_virtual_network.existing_vnet.id : azurerm_virtual_network.vnet.id) : null
+  vnet_name = var.private_endpoint_enabled ? (var.vnet_name != null ? var.vnet_name : azurerm_virtual_network.vnet.name) : null
 }
 
 resource "azurerm_subnet" "pe_subnet" {
-  count                = var.private_endpoint_enabled && var.subnet_name == null ? 1 : 0
+  lifecycle {
+    enabled = var.private_endpoint_enabled && var.subnet_name == null
+  }
+
   name                 = "${var.key_vault_name}-pe-subnet"
   resource_group_name  = azurerm_resource_group.key_vault.name
   virtual_network_name = local.vnet_name
@@ -48,14 +57,17 @@ resource "azurerm_subnet" "pe_subnet" {
 }
 
 data "azurerm_subnet" "existing_subnet" {
-  count                = var.private_endpoint_enabled && var.subnet_name != null ? 1 : 0
+  lifecycle {
+    enabled = var.private_endpoint_enabled && var.subnet_name != null
+  }
+
   name                 = var.subnet_name
   virtual_network_name = var.vnet_name
   resource_group_name  = var.existing_vnet_resource_group_name != null ? var.existing_vnet_resource_group_name : var.key_vault_resource_group_name
 }
 
 locals {
-  subnet_id = var.private_endpoint_enabled ? (var.subnet_name != null ? data.azurerm_subnet.existing_subnet[0].id : azurerm_subnet.pe_subnet[0].id) : null
+  subnet_id = var.private_endpoint_enabled ? (var.subnet_name != null ? data.azurerm_subnet.existing_subnet.id : azurerm_subnet.pe_subnet.id) : null
 }
 
 resource "azurerm_key_vault" "key_vault" {
@@ -72,7 +84,10 @@ resource "azurerm_key_vault" "key_vault" {
 }
 
 resource "azurerm_private_endpoint" "key_vault_pe" {
-  count               = var.private_endpoint_enabled ? 1 : 0
+  lifecycle {
+    enabled = var.private_endpoint_enabled
+  }
+
   name                = "${var.key_vault_name}-pe"
   location            = var.location
   resource_group_name = azurerm_resource_group.key_vault.name
@@ -89,7 +104,7 @@ resource "azurerm_private_endpoint" "key_vault_pe" {
     for_each = var.private_dns_zone_id != null ? [1] : []
     content {
       name                 = "default"
-      private_dns_zone_ids = var.private_dns_zone_id == "System" ? [azurerm_private_dns_zone.key_vault_dns[0].id] : [var.private_dns_zone_id]
+      private_dns_zone_ids = var.private_dns_zone_id == "System" ? [azurerm_private_dns_zone.key_vault_dns.id] : [var.private_dns_zone_id]
     }
   }
 
@@ -99,7 +114,10 @@ resource "azurerm_private_endpoint" "key_vault_pe" {
 }
 
 resource "azurerm_private_dns_zone" "key_vault_dns" {
-  count               = var.private_endpoint_enabled && var.private_dns_zone_id == "System" ? 1 : 0
+  lifecycle {
+    enabled = var.private_endpoint_enabled && var.private_dns_zone_id == "System"
+  }
+
   name                = "privatelink.vaultcore.azure.net"
   resource_group_name = azurerm_resource_group.key_vault.name
   tags                = var.tags
@@ -108,10 +126,13 @@ resource "azurerm_private_dns_zone" "key_vault_dns" {
 }
 
 resource "azurerm_private_dns_zone_virtual_network_link" "key_vault_dns_link" {
-  count                 = var.private_endpoint_enabled && var.private_dns_zone_id == "System" ? 1 : 0
+  lifecycle {
+    enabled = var.private_endpoint_enabled && var.private_dns_zone_id == "System"
+  }
+
   name                  = "${var.key_vault_name}-dns-link"
   resource_group_name   = azurerm_resource_group.key_vault.name
-  private_dns_zone_name = azurerm_private_dns_zone.key_vault_dns[0].name
+  private_dns_zone_name = azurerm_private_dns_zone.key_vault_dns.name
   virtual_network_id    = local.vnet_id
   tags                  = var.tags
 
@@ -122,24 +143,33 @@ resource "azurerm_private_dns_zone_virtual_network_link" "key_vault_dns_link" {
 }
 
 data "azurerm_resource_group" "hub_rg" {
-  count    = var.private_endpoint_enabled && var.hub_resource_group_name != null ? 1 : 0
+  lifecycle {
+    enabled = var.private_endpoint_enabled && var.hub_resource_group_name != null
+  }
+
   provider = azurerm.hub
   name     = var.hub_resource_group_name
 }
 
 data "azurerm_virtual_network" "hub_vnet" {
-  count               = var.private_endpoint_enabled && var.hub_vnet_name != null ? 1 : 0
+  lifecycle {
+    enabled = var.private_endpoint_enabled && var.hub_vnet_name != null
+  }
+
   provider            = azurerm.hub
   name                = var.hub_vnet_name
-  resource_group_name = data.azurerm_resource_group.hub_rg[0].name
+  resource_group_name = data.azurerm_resource_group.hub_rg.name
 }
 
 resource "azurerm_virtual_network_peering" "key_vault_to_hub" {
-  count                     = var.private_endpoint_enabled && var.vnet_name == null && var.hub_vnet_name != null ? 1 : 0
+  lifecycle {
+    enabled = var.private_endpoint_enabled && var.vnet_name == null && var.hub_vnet_name != null
+  }
+
   name                      = "${var.key_vault_name}-to-hub"
   resource_group_name       = azurerm_resource_group.key_vault.name
   virtual_network_name      = local.vnet_name
-  remote_virtual_network_id = data.azurerm_virtual_network.hub_vnet[0].id
+  remote_virtual_network_id = data.azurerm_virtual_network.hub_vnet.id
 
   allow_virtual_network_access = true
   allow_forwarded_traffic      = true
@@ -148,11 +178,14 @@ resource "azurerm_virtual_network_peering" "key_vault_to_hub" {
 }
 
 resource "azurerm_virtual_network_peering" "hub_to_key_vault" {
-  count                     = var.private_endpoint_enabled && var.vnet_name == null && var.hub_vnet_name != null ? 1 : 0
+  lifecycle {
+    enabled = var.private_endpoint_enabled && var.vnet_name == null && var.hub_vnet_name != null
+  }
+
   provider                  = azurerm.hub
   name                      = "hub-to-${var.key_vault_name}"
-  resource_group_name       = data.azurerm_resource_group.hub_rg[0].name
-  virtual_network_name      = data.azurerm_virtual_network.hub_vnet[0].name
+  resource_group_name       = data.azurerm_resource_group.hub_rg.name
+  virtual_network_name      = data.azurerm_virtual_network.hub_vnet.name
   remote_virtual_network_id = local.vnet_id
 
   allow_virtual_network_access = true

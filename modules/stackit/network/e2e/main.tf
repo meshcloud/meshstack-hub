@@ -33,7 +33,10 @@ provider "stackit" {
 }
 
 module "stackit_network" {
-  count  = var.test_context.bbd_version_ref == null ? 1 : 0
+  lifecycle {
+    enabled = var.test_context.bbd_version_ref == null
+  }
+
   source = "../"
   meshstack = {
     owning_workspace_identifier = var.test_context.workspace
@@ -52,7 +55,7 @@ module "stackit_network" {
 }
 
 locals {
-  version_ref = var.test_context.bbd_version_ref != null ? var.test_context.bbd_version_ref : { uuid = module.stackit_network[0].building_block_definition.version_ref.uuid }
+  version_ref = var.test_context.bbd_version_ref != null ? var.test_context.bbd_version_ref : { uuid = module.stackit_network.building_block_definition.version_ref.uuid }
 
   network_name = "${var.test_context.run_id}-net"
   # Smallest prefix the module's default min/max range allows, to keep the address space this test

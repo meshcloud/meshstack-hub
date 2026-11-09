@@ -39,7 +39,9 @@ resource "azurerm_subnet" "bastion_subnet" {
 
 # Resource locks for VNet and workload subnets - applied after all subnets and associations are created
 resource "azurerm_management_lock" "vnet_lock" {
-  count = var.enable_resource_locks ? 1 : 0
+  lifecycle {
+    enabled = var.enable_resource_locks
+  }
 
   name       = "${var.name}-vnet-lock"
   scope      = azurerm_virtual_network.vnet.id
@@ -55,7 +57,9 @@ resource "azurerm_management_lock" "vnet_lock" {
 }
 
 resource "azurerm_management_lock" "workload_subnet_lock" {
-  count = var.enable_resource_locks ? 1 : 0
+  lifecycle {
+    enabled = var.enable_resource_locks
+  }
 
   name       = "${var.name}-workload-subnet-1-lock"
   scope      = azurerm_subnet.workload_subnet.id
@@ -213,7 +217,9 @@ resource "azurerm_bastion_host" "bastion" {
 
 # Create resource locks if enabled
 resource "azurerm_management_lock" "bastion_lock" {
-  count = var.enable_resource_locks ? 1 : 0
+  lifecycle {
+    enabled = var.enable_resource_locks
+  }
 
   name       = "${var.name}-bastion-lock"
   scope      = azurerm_bastion_host.bastion.id
@@ -222,7 +228,9 @@ resource "azurerm_management_lock" "bastion_lock" {
 }
 
 resource "azurerm_management_lock" "subnet_lock" {
-  count = var.enable_resource_locks ? 1 : 0
+  lifecycle {
+    enabled = var.enable_resource_locks
+  }
 
   name       = "${var.name}-bastion-subnet-lock"
   scope      = azurerm_subnet.bastion_subnet.id
@@ -236,7 +244,9 @@ resource "azurerm_management_lock" "subnet_lock" {
 
 # Action Group for centralized notifications
 resource "azurerm_monitor_action_group" "sandbox_alerts" {
-  count = var.enable_observability ? 1 : 0
+  lifecycle {
+    enabled = var.enable_observability
+  }
 
   name                = "${var.name}-sandbox-alerts"
   resource_group_name = azurerm_resource_group.bastion.name
@@ -264,7 +274,9 @@ resource "azurerm_monitor_action_group" "sandbox_alerts" {
 
 # Service Health Alerts for subscription-wide issues
 resource "azurerm_monitor_activity_log_alert" "service_health" {
-  count = var.enable_observability ? 1 : 0
+  lifecycle {
+    enabled = var.enable_observability
+  }
 
   name                = "${var.name}-service-health-alert"
   resource_group_name = var.resource_group_name
@@ -282,7 +294,7 @@ resource "azurerm_monitor_activity_log_alert" "service_health" {
   }
 
   action {
-    action_group_id    = azurerm_monitor_action_group.sandbox_alerts[0].id
+    action_group_id    = azurerm_monitor_action_group.sandbox_alerts.id
     webhook_properties = {}
   }
 
@@ -291,7 +303,9 @@ resource "azurerm_monitor_activity_log_alert" "service_health" {
 
 # Resource Health Alert for Bastion Host
 resource "azurerm_monitor_activity_log_alert" "bastion_resource_health" {
-  count = var.enable_observability ? 1 : 0
+  lifecycle {
+    enabled = var.enable_observability
+  }
 
   name                = "${var.name}-bastion-resource-health"
   resource_group_name = azurerm_resource_group.bastion.name
@@ -309,7 +323,7 @@ resource "azurerm_monitor_activity_log_alert" "bastion_resource_health" {
   }
 
   action {
-    action_group_id    = azurerm_monitor_action_group.sandbox_alerts[0].id
+    action_group_id    = azurerm_monitor_action_group.sandbox_alerts.id
     webhook_properties = {}
   }
 
@@ -318,7 +332,9 @@ resource "azurerm_monitor_activity_log_alert" "bastion_resource_health" {
 
 # Generic Resource Health Alert for all subscription resources
 resource "azurerm_monitor_activity_log_alert" "subscription_resource_health" {
-  count = var.enable_observability ? 1 : 0
+  lifecycle {
+    enabled = var.enable_observability
+  }
 
   name                = "${var.name}-subscription-resource-health"
   resource_group_name = azurerm_resource_group.bastion.name
@@ -336,7 +352,7 @@ resource "azurerm_monitor_activity_log_alert" "subscription_resource_health" {
   }
 
   action {
-    action_group_id    = azurerm_monitor_action_group.sandbox_alerts[0].id
+    action_group_id    = azurerm_monitor_action_group.sandbox_alerts.id
     webhook_properties = {}
   }
 
@@ -345,7 +361,9 @@ resource "azurerm_monitor_activity_log_alert" "subscription_resource_health" {
 
 # Administrative Activity Alert for deployment failures
 resource "azurerm_monitor_activity_log_alert" "admin_activity" {
-  count = var.enable_observability ? 1 : 0
+  lifecycle {
+    enabled = var.enable_observability
+  }
 
   name                = "${var.name}-admin-activity-alert"
   resource_group_name = azurerm_resource_group.bastion.name
@@ -360,7 +378,7 @@ resource "azurerm_monitor_activity_log_alert" "admin_activity" {
   }
 
   action {
-    action_group_id    = azurerm_monitor_action_group.sandbox_alerts[0].id
+    action_group_id    = azurerm_monitor_action_group.sandbox_alerts.id
     webhook_properties = {}
   }
 

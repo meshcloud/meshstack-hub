@@ -1,22 +1,28 @@
 data "azurerm_subscription" "current" {}
 
 resource "azuread_application" "buildingblock_deploy" {
-  count = var.create_service_principal_name != null ? 1 : 0
+  lifecycle {
+    enabled = var.create_service_principal_name != null
+  }
 
   display_name = "${var.name}-${var.create_service_principal_name}"
 }
 
 resource "azuread_service_principal" "buildingblock_deploy" {
-  count = var.create_service_principal_name != null ? 1 : 0
+  lifecycle {
+    enabled = var.create_service_principal_name != null
+  }
 
-  client_id                    = azuread_application.buildingblock_deploy[0].client_id
+  client_id                    = azuread_application.buildingblock_deploy.client_id
   app_role_assignment_required = false
 }
 
 resource "azuread_application_federated_identity_credential" "buildingblock_deploy" {
-  count = var.create_service_principal_name != null && var.workload_identity_federation != null ? 1 : 0
+  lifecycle {
+    enabled = var.create_service_principal_name != null && var.workload_identity_federation != null
+  }
 
-  application_id = azuread_application.buildingblock_deploy[0].id
+  application_id = azuread_application.buildingblock_deploy.id
   display_name   = var.create_service_principal_name
   audiences      = ["api://AzureADTokenExchange"]
   issuer         = var.workload_identity_federation.issuer
@@ -24,29 +30,37 @@ resource "azuread_application_federated_identity_credential" "buildingblock_depl
 }
 
 resource "azuread_application_password" "buildingblock_deploy" {
-  count = var.create_service_principal_name != null && var.workload_identity_federation == null ? 1 : 0
+  lifecycle {
+    enabled = var.create_service_principal_name != null && var.workload_identity_federation == null
+  }
 
-  application_id = azuread_application.buildingblock_deploy[0].id
+  application_id = azuread_application.buildingblock_deploy.id
   display_name   = "${var.create_service_principal_name}-password"
 }
 
 resource "azuread_application" "buildingblock_deploy_hub" {
-  count = var.create_hub_service_principal_name != null ? 1 : 0
+  lifecycle {
+    enabled = var.create_hub_service_principal_name != null
+  }
 
   display_name = "${var.name}-${var.create_hub_service_principal_name}"
 }
 
 resource "azuread_service_principal" "buildingblock_deploy_hub" {
-  count = var.create_hub_service_principal_name != null ? 1 : 0
+  lifecycle {
+    enabled = var.create_hub_service_principal_name != null
+  }
 
-  client_id                    = azuread_application.buildingblock_deploy_hub[0].client_id
+  client_id                    = azuread_application.buildingblock_deploy_hub.client_id
   app_role_assignment_required = false
 }
 
 resource "azuread_application_federated_identity_credential" "buildingblock_deploy_hub" {
-  count = var.create_hub_service_principal_name != null && var.hub_workload_identity_federation != null ? 1 : 0
+  lifecycle {
+    enabled = var.create_hub_service_principal_name != null && var.hub_workload_identity_federation != null
+  }
 
-  application_id = azuread_application.buildingblock_deploy_hub[0].id
+  application_id = azuread_application.buildingblock_deploy_hub.id
   display_name   = var.create_hub_service_principal_name
   audiences      = ["api://AzureADTokenExchange"]
   issuer         = var.hub_workload_identity_federation.issuer
@@ -54,9 +68,11 @@ resource "azuread_application_federated_identity_credential" "buildingblock_depl
 }
 
 resource "azuread_application_password" "buildingblock_deploy_hub" {
-  count = var.create_hub_service_principal_name != null && var.hub_workload_identity_federation == null ? 1 : 0
+  lifecycle {
+    enabled = var.create_hub_service_principal_name != null && var.hub_workload_identity_federation == null
+  }
 
-  application_id = azuread_application.buildingblock_deploy_hub[0].id
+  application_id = azuread_application.buildingblock_deploy_hub.id
   display_name   = "${var.create_hub_service_principal_name}-password"
 }
 
@@ -141,10 +157,12 @@ resource "azurerm_role_assignment" "existing_principals" {
 }
 
 resource "azurerm_role_assignment" "created_principal" {
-  count = var.create_service_principal_name != null ? 1 : 0
+  lifecycle {
+    enabled = var.create_service_principal_name != null
+  }
 
   role_definition_id = azurerm_role_definition.buildingblock_deploy.role_definition_resource_id
-  principal_id       = azuread_service_principal.buildingblock_deploy[0].object_id
+  principal_id       = azuread_service_principal.buildingblock_deploy.object_id
   scope              = var.scope
 }
 
@@ -202,11 +220,13 @@ resource "azurerm_role_assignment" "existing_principals_hub" {
 }
 
 resource "azurerm_role_assignment" "created_principal_hub" {
-  count = var.create_hub_service_principal_name != null ? 1 : 0
+  lifecycle {
+    enabled = var.create_hub_service_principal_name != null
+  }
 
   role_definition_id = azurerm_role_definition.buildingblock_deploy_hub.role_definition_resource_id
   description        = azurerm_role_definition.buildingblock_deploy_hub.description
-  principal_id       = azuread_service_principal.buildingblock_deploy_hub[0].object_id
+  principal_id       = azuread_service_principal.buildingblock_deploy_hub.object_id
   scope              = var.hub_scope
 }
 
@@ -219,10 +239,12 @@ resource "azurerm_role_assignment" "existing_principals_hub_to_landingzone" {
 }
 
 resource "azurerm_role_assignment" "created_principal_hub_to_landingzone" {
-  count = var.create_hub_service_principal_name != null ? 1 : 0
+  lifecycle {
+    enabled = var.create_hub_service_principal_name != null
+  }
 
   role_definition_id = azurerm_role_definition.buildingblock_hub_to_landingzone.role_definition_resource_id
-  principal_id       = azuread_service_principal.buildingblock_deploy_hub[0].object_id
+  principal_id       = azuread_service_principal.buildingblock_deploy_hub.object_id
   scope              = var.scope
 }
 
@@ -235,9 +257,11 @@ resource "azurerm_role_assignment" "existing_principals_landingzone_to_hub" {
 }
 
 resource "azurerm_role_assignment" "created_principal_landingzone_to_hub" {
-  count = var.create_service_principal_name != null ? 1 : 0
+  lifecycle {
+    enabled = var.create_service_principal_name != null
+  }
 
   role_definition_id = azurerm_role_definition.buildingblock_landingzone_to_hub.role_definition_resource_id
-  principal_id       = azuread_service_principal.buildingblock_deploy[0].object_id
+  principal_id       = azuread_service_principal.buildingblock_deploy.object_id
   scope              = var.hub_scope
 }

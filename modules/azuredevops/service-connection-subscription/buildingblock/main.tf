@@ -34,7 +34,9 @@ resource "azuredevops_serviceendpoint_azurerm" "main" {
 }
 
 resource "azuredevops_resource_authorization" "main" {
-  count = var.authorize_all_pipelines ? 1 : 0
+  lifecycle {
+    enabled = var.authorize_all_pipelines
+  }
 
   project_id  = var.project_id
   resource_id = azuredevops_serviceendpoint_azurerm.main.id

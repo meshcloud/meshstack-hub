@@ -30,7 +30,10 @@ provider "stackit" {
 }
 
 module "stackit_storage_bucket" {
-  count  = var.test_context.bbd_version_ref == null ? 1 : 0
+  lifecycle {
+    enabled = var.test_context.bbd_version_ref == null
+  }
+
   source = "../"
   meshstack = {
     owning_workspace_identifier = var.test_context.workspace
@@ -48,7 +51,7 @@ module "stackit_storage_bucket" {
 }
 
 locals {
-  version_ref = var.test_context.bbd_version_ref != null ? var.test_context.bbd_version_ref : { uuid = module.stackit_storage_bucket[0].building_block_definition.version_ref.uuid }
+  version_ref = var.test_context.bbd_version_ref != null ? var.test_context.bbd_version_ref : { uuid = module.stackit_storage_bucket.building_block_definition.version_ref.uuid }
 }
 
 resource "meshstack_building_block" "this" {

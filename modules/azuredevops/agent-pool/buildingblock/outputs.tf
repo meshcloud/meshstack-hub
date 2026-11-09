@@ -20,7 +20,7 @@ output "vmss_id" {
 
 output "agent_queue_id" {
   description = "ID of the agent queue in the project"
-  value       = var.project_id != null ? azuredevops_agent_queue.main[0].id : null
+  value       = var.project_id != null ? azuredevops_agent_queue.main.id : null
 }
 
 output "max_capacity" {
