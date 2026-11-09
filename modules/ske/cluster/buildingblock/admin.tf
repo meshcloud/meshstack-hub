@@ -1,10 +1,13 @@
-# Waits for pending cluster changes, so a new cluster exists before it is opened.
-ephemeral "stackit_ske_kubeconfig" "this" {
-  depends_on = [module.cluster]
+locals {
+  # The id is unknown only until a new cluster exists, so the kubeconfig waits for a new cluster and
+  # opens at plan time for an existing one, which a refresh of the admin resources needs.
+  cluster_id_parts = split(",", module.cluster.cluster.id)
+}
 
-  project_id   = var.stackit_project_id
-  region       = var.stackit_region
-  cluster_name = module.cluster.cluster.name
+ephemeral "stackit_ske_kubeconfig" "this" {
+  project_id   = local.cluster_id_parts[0]
+  region       = local.cluster_id_parts[1]
+  cluster_name = local.cluster_id_parts[2]
   expiration   = 3600
 }
 
@@ -20,7 +23,7 @@ locals {
   ])
 }
 
-# Read after the cluster changes, as the kubernetes provider is configured only then.
+# Read after the cluster changes, as a new cluster has no API server to read at plan time.
 data "kubernetes_config_map_v1" "shoot_info" {
   depends_on = [module.cluster]
 
