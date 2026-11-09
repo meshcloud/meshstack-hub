@@ -58,6 +58,17 @@ variable "landingzone_variant" {
   }
 }
 
+variable "stackit_region" {
+  type        = string
+  nullable    = false
+  description = "STACKIT region of the SKE cluster. Secrets Manager, Container Registry and AI Model Serving stay in eu01, because STACKIT offers them only there."
+
+  validation {
+    condition     = contains(["eu01", "eu02"], var.stackit_region)
+    error_message = "stackit_region must be either eu01 or eu02."
+  }
+}
+
 variable "starterkit_add_random_name_suffix" {
   type        = bool
   default     = null

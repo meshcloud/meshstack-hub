@@ -285,6 +285,16 @@ resource "meshstack_building_block_definition" "this" {
         display_order     = 28
       }
 
+      stackit_region = {
+        display_name      = "STACKIT Region"
+        description       = "Region the SKE cluster is placed in. Secrets Manager, Container Registry and AI Model Serving stay in eu01, because STACKIT offers them only there."
+        type              = "SINGLE_SELECT"
+        assignment_type   = "USER_INPUT"
+        selectable_values = ["eu01", "eu02"]
+        default_value     = jsonencode("eu01")
+        display_order     = 29
+      }
+
       starterkit_add_random_name_suffix = {
         display_name    = "Starterkit Random Name Suffix"
         description     = "Append a random suffix to the projects the starterkit creates. Keep it as the adopted starterkit had it: an upgrade that changes it renames, and so replaces, every project and tenant it created. Cannot be changed after the order."

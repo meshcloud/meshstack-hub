@@ -64,6 +64,7 @@ resource "meshstack_building_block" "platform" {
       playground_mode      = { value = jsonencode(var.playground_mode) }
       use_global_location  = { value = jsonencode(var.use_global_location) }
       cluster_name         = { value = jsonencode(local.cluster_name) }
+      stackit_region       = { value = jsonencode(var.stackit_region) }
       cluster_issuer_email = { value = jsonencode(local.cluster_issuer_email) }
       dns_subdomain        = { value = jsonencode(local.dns_subdomain) }
       dns_parent_domain    = { value = jsonencode(local.dns_domain_labels[1]) }

@@ -86,6 +86,13 @@ month. On draft definitions the daily run also applies changes of the Hub branch
 STATIC inputs carry only the reader login and paths, so a rotation changes no definition and works
 with released versions.
 
+## Regions
+
+`stackit_region` places only the SKE cluster. Its node pool runs in zone 1 of that region, on
+`c3i.2`, a machine type that `eu01` and `eu02` both offer. The nested run passes `eu01` to the
+Secrets Manager, Container Registry and AI Model Serving blocks, because STACKIT offers these
+services only in `eu01`. Git, DNS and service accounts have no region.
+
 ## Phase 2
 
 `phase2_completed` reaches the registry block as `require_robot_link`. Every registry run checks

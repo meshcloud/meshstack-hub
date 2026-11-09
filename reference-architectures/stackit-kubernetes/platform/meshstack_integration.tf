@@ -349,6 +349,16 @@ resource "meshstack_building_block_definition" "this" {
         display_order          = 200
       }
 
+      stackit_region = {
+        display_name           = "STACKIT Region"
+        description            = "STACKIT region of the SKE cluster."
+        type                   = "STRING"
+        assignment_type        = "USER_INPUT"
+        default_value          = jsonencode("eu01")
+        updateable_by_consumer = true
+        display_order          = 205
+      }
+
       quota_definitions = {
         display_name           = "Quota Definitions"
         description            = "Quotas the meshPlatform offers, as the STACKIT Kubernetes Platform takes them."

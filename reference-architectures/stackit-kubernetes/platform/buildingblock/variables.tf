@@ -129,6 +129,12 @@ variable "cluster_name" {
   description = "Name of the SKE cluster."
 }
 
+variable "stackit_region" {
+  type        = string
+  nullable    = false
+  description = "STACKIT region of the SKE cluster."
+}
+
 variable "quota_definitions" {
   type = list(object({
     quota_key               = string

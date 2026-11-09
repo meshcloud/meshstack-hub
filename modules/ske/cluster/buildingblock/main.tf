@@ -1,3 +1,7 @@
+locals {
+  availability_zones = coalesce(var.node_pool.availability_zones, ["${var.stackit_region}-1"])
+}
+
 module "cluster" {
   source = "./modules/ske-cluster"
 
@@ -13,7 +17,7 @@ module "cluster" {
       machine_type       = var.node_pool.machine_type
       minimum            = var.node_pool.minimum
       maximum            = var.node_pool.maximum
-      availability_zones = var.node_pool.availability_zones
+      availability_zones = local.availability_zones
       max_surge          = var.node_pool.max_surge
     }
   ]

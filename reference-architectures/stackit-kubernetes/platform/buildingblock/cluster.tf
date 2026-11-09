@@ -32,6 +32,7 @@ resource "meshstack_building_block" "cluster" {
     inputs = merge(
       {
         cluster_name                  = { value = jsonencode(var.cluster_name) }
+        stackit_region                = { value = jsonencode(var.stackit_region) }
         STACKIT_SERVICE_ACCOUNT_EMAIL = { value = jsonencode(local.service_account_email) }
         output_to_vault = {
           sensitive = {
