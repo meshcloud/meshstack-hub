@@ -135,8 +135,9 @@ module "backplane" {
 
   # The runner offers no STACKIT token, so we use the one offered for Azure as a generic OIDC token. The federation trusts its issuer and audience.
   workload_identity_federation = {
-    issuer   = data.meshstack_building_block_runner.this.spec.workload_identity_federation.issuer
-    audience = data.meshstack_building_block_runner.this.spec.workload_identity_federation.azure.audience
+    # Every variant runs on the same runner, so any one of them reports the issuer and audience.
+    issuer   = meshstack_building_block_definition.this["default"].version_latest.workload_identity_federation.issuer
+    audience = meshstack_building_block_definition.this["default"].version_latest.workload_identity_federation.azure.audience
     subjects = [for bbd in meshstack_building_block_definition.this : bbd.version_latest.workload_identity_federation.subject]
   }
 }
@@ -335,6 +336,7 @@ resource "meshstack_building_block_definition" "this" {
         argument        = jsonencode("1")
       }
 
+      # The token path comes from the runner, because the definition can't reference its own version_latest.
       STACKIT_FEDERATED_TOKEN_FILE = {
         display_name    = "STACKIT Federated Token File"
         description     = "Path to the WIF token file injected by meshStack."
