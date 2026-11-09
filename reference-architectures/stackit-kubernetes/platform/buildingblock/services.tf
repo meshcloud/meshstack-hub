@@ -48,6 +48,8 @@ module "ai_llm_integration" {
   source = "github.com/meshcloud/meshstack-hub//modules/stackit/ai-llm?ref=${var.hub.git_ref}"
 
   model = var.ai_model
+  # STACKIT offers AI Model Serving only in eu01.
+  stackit_region = "eu01"
 
   approval_policies = var.approval_policies
 
@@ -134,6 +136,9 @@ resource "meshstack_building_block" "git" {
 
 module "container_registry_integration" {
   source = "github.com/meshcloud/meshstack-hub//modules/stackit/container-registry?ref=${var.hub.git_ref}"
+
+  # STACKIT offers Container Registry only in eu01.
+  stackit_region = "eu01"
 
   approval_policies = var.approval_policies
 

@@ -31,14 +31,14 @@ variable "kubernetes_version_min" {
 variable "node_pool" {
   type = object({
     name               = optional(string, "pool-1")
-    machine_type       = optional(string, "g2i.2")
+    machine_type       = optional(string, "c3i.2")
     minimum            = optional(number, 1)
     maximum            = optional(number, 3)
-    availability_zones = optional(list(string), ["eu01-1"])
+    availability_zones = optional(list(string))
     max_surge          = optional(number, 1)
   })
   nullable    = false
-  description = "Single node pool the cluster starts with."
+  description = "Single node pool the cluster starts with. Null `availability_zones` places it in zone 1 of `stackit_region`."
 }
 
 variable "maintenance" {

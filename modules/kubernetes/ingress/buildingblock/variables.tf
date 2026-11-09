@@ -106,7 +106,7 @@ variable "haproxy_resources" {
   })
   nullable = false
   default = {
-    requests = { cpu = "100m", memory = "256Mi" }
+    requests = { cpu = "20m", memory = "64Mi" }
     limits   = { cpu = "500m", memory = "768Mi" }
   }
   description = "Resource requests and limits of the HAProxy ingress controller. The default fits a demonstration cluster; the README lists production values."
@@ -119,7 +119,7 @@ variable "haproxy_crdjob_resources" {
   })
   nullable = false
   default = {
-    requests = { cpu = "50m", memory = "64Mi" }
+    requests = { cpu = "10m", memory = "32Mi" }
     limits   = { cpu = "200m", memory = "256Mi" }
   }
   description = "Resource requests and limits of the Job that installs the HAProxy CRDs."

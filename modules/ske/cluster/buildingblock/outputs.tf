@@ -35,7 +35,7 @@ output "summary" {
     | **Cluster** | [Open in STACKIT Portal](${local.cluster_url}) |
     | **Kubernetes** | `${module.cluster.cluster.kubernetes_version_used}` |
     | **API Server** | `${terraform_data.kube_host.output}` |
-    | **Node Pool** | `${var.node_pool.name}`: ${var.node_pool.minimum} to ${var.node_pool.maximum} × `${var.node_pool.machine_type}` in ${join(", ", var.node_pool.availability_zones)} |
+    | **Node Pool** | `${var.node_pool.name}`: ${var.node_pool.minimum} to ${var.node_pool.maximum} × `${var.node_pool.machine_type}` in ${join(", ", local.availability_zones)} |
     | **Maintenance** | daily `${var.maintenance.start}` to `${var.maintenance.end}` |
 
     ## Platform admin kubeconfig

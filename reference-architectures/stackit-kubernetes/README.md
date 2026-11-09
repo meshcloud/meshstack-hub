@@ -128,6 +128,7 @@ The main inputs:
 |---|---|
 | STACKIT Landing Zone | Platform, landing zones and the service account and federation definitions of the landing zone |
 | Landing Zone Variant | `default` or `networked` (needs hub-and-spoke networking on the landing zone) |
+| STACKIT Region | Region of the SKE cluster, `eu01` (default) or `eu02`; fixed at the order. Secrets Manager, Container Registry and AI Model Serving stay in `eu01`, because STACKIT offers them only there. The node pool runs `c3i.2` machines, which both regions offer |
 | Platform Identifier | Name of the meshStack platform; the project, cluster, Git instance, registry and DNS zone are named after it |
 | Use Global Location | Put the platform into the global meshStack location, on by default; off creates a location for it |
 | Playground Mode | Throwaway deployment, on by default; turn it off for a platform that is used; fixed at the order. It hides Starterkit Random Name Suffix (always on), DNS Domain (always `<platform identifier>.stackit.run`) and both approval policies (no gates) |
