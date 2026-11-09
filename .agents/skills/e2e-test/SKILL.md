@@ -65,6 +65,13 @@ modules/<cloud-provider>/<service-name>/
         └── <cloud>_<service>.tftest.hcl   # assertions on the building block
 ```
 
+<!-- scorecard-checks: e2e_tofu_version -->
+### OpenTofu only
+
+e2e modules run on OpenTofu alone and keep no Terraform compatibility. Every one of them, mode
+modules included, sets `required_version = ">= 1.12.0"` and uses OpenTofu features such as
+`lifecycle.enabled` freely.
+
 ---
 
 ## Invocation protocol (single source of truth)

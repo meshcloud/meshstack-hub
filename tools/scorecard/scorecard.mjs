@@ -39,6 +39,12 @@ const byCodeUnits = (a, b) => (a < b ? -1 : Number(a > b));
 // ||, so anything below it faults on the common `var.x == null || var.x.attr` guard.
 const TERRAFORM_VERSION_FLOOR = "1.12.0";
 
+// The OpenTofu release that introduced `lifecycle { enabled = … }`.
+const LIFECYCLE_ENABLED_FLOOR = "1.11.0";
+
+// e2e modules run only on the OpenTofu of CI and the dev shell, so they may use all of it.
+const E2E_TOFU_FLOOR = "1.12.0";
+
 // Our own provider is still on 0.x, where a minor release is what carries breaking changes, so a
 // `< 1.0.0` bound would buy nothing. It is exempt from the upper-bound rule until it reaches 1.0.
 const MAJOR_UNSTABLE_PROVIDER = "meshcloud/meshstack";
@@ -1458,6 +1464,25 @@ const detectors = [
     },
   },
   {
+    id: "e2e_tofu_version",
+    category: "testing",
+    name: `e2e modules require OpenTofu >= ${E2E_TOFU_FLOOR}`,
+    emoji: "🔭",
+    targets: ["module", "refArch"],
+    fn: (target) => {
+      const modules = tfModuleDirs(join(target.path, "e2e"));
+      if (modules.size === 0) return { pass: null, detail: "no e2e module" };
+      const offenders = [];
+      for (const [dir, contents] of modules) {
+        const constraint = requiredVersion(contents);
+        if (!guaranteesVersion(constraint, E2E_TOFU_FLOOR)) {
+          offenders.push(`${relative(target.path, dir)} (${constraint ? `"${constraint}"` : "no required_version"})`);
+        }
+      }
+      return listOffenders(offenders, `set required_version = ">= ${E2E_TOFU_FLOOR}" in every e2e module`);
+    },
+  },
+  {
     id: "e2e_tftest",
     category: "testing",
     name: "e2e/ contains .tftest.hcl files",
@@ -1545,6 +1570,43 @@ const detectors = [
       }
       if (sensitive === 0) return { pass: null, detail: "no sensitive building block variables" };
       return listOffenders(offenders, "the runner uploads the plan file to meshStack, which keeps a sensitive value in plain text, so set ephemeral = true");
+    },
+  },
+  {
+    id: "no_count_toggle",
+    category: "shared",
+    name: "Optional resources and modules use lifecycle.enabled, never count = cond ? 1 : 0",
+    emoji: "🎚️",
+    targets: ["module", "refArch"],
+    fn: (target) => {
+      const offenders = [];
+      for (const file of collectTfFilesRecursive(target.path)) {
+        for (const line of countToggleLines(blankHeredocBodies(readFileSync(file, "utf-8")))) {
+          offenders.push(`${relative(target.path, file)}:${line}`);
+        }
+      }
+      return listOffenders(offenders, "replace `count = <cond> ? 1 : 0` with `lifecycle { enabled = <cond> }`");
+    },
+  },
+  {
+    id: "lifecycle_enabled_version",
+    category: "shared",
+    name: `Modules using lifecycle.enabled require OpenTofu >= ${LIFECYCLE_ENABLED_FLOOR}`,
+    emoji: "🏁",
+    targets: ["module", "refArch"],
+    fn: (target) => {
+      const offenders = [];
+      let users = 0;
+      for (const [dir, contents] of tfModuleDirs(target.path)) {
+        if (!contents.some(usesLifecycleEnabled)) continue;
+        users++;
+        const constraint = requiredVersion(contents);
+        if (!guaranteesVersion(constraint, LIFECYCLE_ENABLED_FLOOR)) {
+          offenders.push(`${relative(target.path, dir) || "."} (${constraint ? `"${constraint}"` : "no required_version"})`);
+        }
+      }
+      if (users === 0) return { pass: null, detail: "uses no lifecycle.enabled" };
+      return listOffenders(offenders, `set required_version = ">= ${LIFECYCLE_ENABLED_FLOOR}" where lifecycle.enabled is used`);
     },
   },
   {
@@ -2341,6 +2403,67 @@ function ephemeralOnlyUses(files, name) {
     }
     return rest.split("\n").every((line) => !reference.test(line) || /^\s*\w+_wo\s*=/.test(line));
   });
+}
+
+// Line numbers of every `count` on a resource, data source or module that toggles a single
+// instance with `? 1 : 0` or `? 0 : 1`, including one split over lines inside parentheses.
+export function countToggleLines(content) {
+  const lines = [];
+  for (const block of content.matchAll(/^(resource|data|module)\s+"[^"]+"(\s+"[^"]+")?\s*\{/gm)) {
+    const open = content.indexOf("{", block.index);
+    const close = findMatchingBrace(content, open);
+    if (close < open) continue;
+    const body = content.slice(open, close);
+    for (const count of body.matchAll(/^[ \t]*count[ \t]*=[ \t]*/gm)) {
+      const start = count.index + count[0].length;
+      const expression = body.slice(start, findExpressionEnd(body, start)).replace(/(#|\/\/).*$/gm, "");
+      if (/\?\s*[01]\s*:\s*[01][\s)]*$/.test(expression)) {
+        lines.push(content.slice(0, open + count.index).split("\n").length);
+      }
+    }
+  }
+  return lines;
+}
+
+export function usesLifecycleEnabled(content) {
+  for (const m of content.matchAll(/\blifecycle\s*\{/g)) {
+    const open = m.index + m[0].length - 1;
+    const close = findMatchingBrace(content, open);
+    if (close > open && /^\s*enabled\s*=/m.test(content.slice(open + 1, close))) return true;
+  }
+  return false;
+}
+
+// The highest lower bound among the clauses of a version constraint, or null when no clause
+// bounds it from below.
+export function versionFloor(constraint) {
+  const floors = (constraint ?? "")
+    .split(",")
+    .map((clause) => clause.trim().match(/^(?:>=|>|~>|=)?\s*v?(\d+(?:\.\d+)*)$/)?.[1])
+    .filter(Boolean);
+  return floors.length ? floors.reduce((a, b) => (compareVersions(a, b) >= 0 ? a : b)) : null;
+}
+
+export function guaranteesVersion(constraint, floor) {
+  const lowest = versionFloor(constraint);
+  return lowest !== null && compareVersions(lowest, floor) >= 0;
+}
+
+// Each directory of .tf files is a module of its own, and OpenTofu checks every module's
+// required_version.
+function tfModuleDirs(root) {
+  const byDir = Map.groupBy(collectTfFilesRecursive(root), (file) => dirname(file));
+  return new Map(
+    [...byDir].map(([dir, files]) => [dir, files.map((file) => blankHeredocBodies(readFileSync(file, "utf-8")))])
+  );
+}
+
+function requiredVersion(contents) {
+  for (const content of contents) {
+    const m = content.match(/^\s*required_version\s*=\s*"([^"]+)"/m);
+    if (m) return m[1];
+  }
+  return null;
 }
 
 function listOffenders(offenders, advice) {
