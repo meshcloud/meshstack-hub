@@ -118,6 +118,20 @@ output "building_block_definition" {
   }
 }
 
+data "meshstack_building_block_runner" "this" {
+  metadata = {
+    uuid = var.meshstack.runner_ref == null ? null : var.meshstack.runner_ref.uuid
+  }
+
+  lifecycle {
+    postcondition {
+      # try: a runner without any workload identity federation has a null spec.workload_identity_federation.
+      condition     = try(self.spec.workload_identity_federation.azure, null) != null
+      error_message = "The building block runner offers no token for Azure. We use that token as a generic OIDC token for STACKIT, so pick a runner that offers one via var.meshstack.runner_ref."
+    }
+  }
+}
+
 resource "meshstack_building_block_definition" "this" {
   metadata = {
     owned_by_workspace = var.meshstack.owning_workspace_identifier
@@ -199,13 +213,14 @@ resource "meshstack_building_block_definition" "this" {
         argument        = jsonencode(var.stackit_service_account_email)
       }
 
+      # The token path comes from the runner, because the definition can't reference its own version_latest.
       STACKIT_FEDERATED_TOKEN_FILE = {
         display_name    = "STACKIT Federated Token File"
         description     = "Path to the WIF token file injected by meshStack."
         type            = "STRING"
         assignment_type = "STATIC"
         is_environment  = true
-        argument        = jsonencode("/var/run/secrets/workload-identity/azure/token")
+        argument        = jsonencode(data.meshstack_building_block_runner.this.spec.workload_identity_federation.azure.token_path)
       }
 
       stackit_project_id = {
@@ -408,7 +423,7 @@ terraform {
   required_providers {
     meshstack = {
       source  = "meshcloud/meshstack"
-      version = ">= 0.27.0"
+      version = ">= 0.27.2"
     }
   }
 }
