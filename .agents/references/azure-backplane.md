@@ -47,7 +47,7 @@ resource "azurerm_federated_identity_credential" "backplane" {
   name                = "subject-${each.key}"
   resource_group_name = azurerm_resource_group.backplane.name
   parent_id           = azurerm_user_assigned_identity.backplane.id
-  audience            = ["api://AzureADTokenExchange"]
+  audience            = [var.workload_identity_federation.audience]
   issuer              = var.workload_identity_federation.issuer
   subject             = each.value
 }
@@ -92,10 +92,11 @@ variable "location" {
 variable "workload_identity_federation" {
   type = object({
     issuer   = string
+    audience = optional(string, "api://AzureADTokenExchange")
     subjects = list(string)
   })
   nullable    = false
-  description = "WIF issuer and subjects for federated authentication."
+  description = "WIF issuer, audience and subjects for federated authentication. The audience defaults to the one meshStack runners use for Azure tokens."
 }
 ```
 
@@ -134,13 +135,14 @@ module "backplane" {
   location = var.azure_location
 
   workload_identity_federation = {
-    issuer   = meshstack_building_block_definition.this.version_latest.workload_identity_federation.issuer
+    issuer   = data.meshstack_building_block_runner.this.spec.workload_identity_federation.issuer
+    audience = data.meshstack_building_block_runner.this.spec.workload_identity_federation.azure.audience
     subjects = [meshstack_building_block_definition.this.version_latest.workload_identity_federation.subject]
   }
 }
 ```
 
-The status read and the `meshstack.runner_ref` behind it are the same in every cloud, see
+The runner lookup and the pinned `runner_ref` are the same in every cloud, see
 [meshstack-integration.md § Runner identity](meshstack-integration.md#runner-identity).
 
 **Known limitation.** The federated credential trusts the subject of the version the Terraform

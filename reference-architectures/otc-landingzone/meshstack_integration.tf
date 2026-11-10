@@ -274,6 +274,7 @@ resource "meshstack_building_block_definition" "this" {
       "BUILDINGBLOCK_LIST",
       "BUILDINGBLOCK_SAVE",
       "BUILDINGBLOCK_DELETE",
+      "BUILDINGBLOCKRUNNER_LIST",
       "LANDINGZONE_LIST",
       "LANDINGZONE_SAVE",
       "LANDINGZONE_DELETE",

@@ -282,6 +282,8 @@ then ask the user in one message for:
   environment variable or from the user's secret store, never in a committed file.
 - **The runner.** If the user runs their own building block runner, its `ref` goes into
   `meshstack.runner_ref`. Without it, the definition runs on the shared runner meshStack hosts.
+  A module with workload identity federation looks the runner up to read its token settings, so
+  the meshStack API key that applies it needs the permission to list building block runners.
 
 In the plan for the first apply, point out what it creates in the cloud: identities, role
 definitions and role assignments. They decide what the runner may do in the user's cloud, so the

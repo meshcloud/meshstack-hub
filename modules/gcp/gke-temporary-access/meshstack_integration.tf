@@ -39,8 +39,7 @@ variable "gke_cleanup_image" {
 
 variable "workload_identity" {
   type = object({
-    pool_identifier         = optional(string, "meshstack-building-block-pool")
-    subject_token_file_path = optional(string, "/var/run/secrets/workload-identity/gcp/token")
+    pool_identifier = optional(string, "meshstack-building-block-pool")
   })
   default     = {}
   description = "Workload identity federation settings for GCP authentication. GCP retains soft-deleted pools for about 30 days, during which their identifiers cannot be reused. Use a fresh `pool_identifier` when recreating the backplane."
@@ -98,6 +97,21 @@ variable "hub" {
   EOT
 }
 
+# Lookup specified runner for workload identity federation info. Null results in the default hosted runner.
+data "meshstack_building_block_runner" "this" {
+  metadata = {
+    uuid = var.meshstack.runner_ref == null ? null : var.meshstack.runner_ref.uuid
+  }
+
+  lifecycle {
+    postcondition {
+      # try: a runner without any workload identity federation has a null spec.workload_identity_federation.
+      condition     = try(self.spec.workload_identity_federation.gcp, null) != null
+      error_message = "The building block runner offers no token for GCP. Pick a runner that offers one via var.meshstack.runner_ref."
+    }
+  }
+}
+
 output "building_block_definition" {
   description = "BBD is consumed in building block compositions."
   value = {
@@ -119,12 +133,12 @@ module "backplane" {
 
   workload_identity_federation = {
     workload_identity_pool_identifier = var.workload_identity.pool_identifier
-    subject_token_file_path           = var.workload_identity.subject_token_file_path
+    subject_token_file_path           = data.meshstack_building_block_runner.this.spec.workload_identity_federation.gcp.token_path
   }
 
   workload_identity_federation_trust = {
-    issuer   = meshstack_building_block_definition.this.version_latest.workload_identity_federation.issuer
-    audience = meshstack_building_block_definition.this.version_latest.workload_identity_federation.gcp.audience
+    issuer   = data.meshstack_building_block_runner.this.spec.workload_identity_federation.issuer
+    audience = data.meshstack_building_block_runner.this.spec.workload_identity_federation.gcp.audience
     subjects = [meshstack_building_block_definition.this.version_latest.workload_identity_federation.subject]
   }
 }
@@ -198,7 +212,7 @@ resource "meshstack_building_block_definition" "this" {
   version_spec = {
     draft         = var.hub.bbd_draft
     deletion_mode = "DELETE"
-    runner_ref    = var.meshstack.runner_ref
+    runner_ref    = data.meshstack_building_block_runner.this.ref
 
     implementation = {
       terraform = {
@@ -340,7 +354,7 @@ terraform {
   required_providers {
     meshstack = {
       source  = "meshcloud/meshstack"
-      version = ">= 0.26.2"
+      version = ">= 0.27.2"
     }
     google = {
       source  = "hashicorp/google"

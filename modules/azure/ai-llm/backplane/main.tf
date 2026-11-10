@@ -19,7 +19,7 @@ resource "azurerm_federated_identity_credential" "backplane" {
 
   name                      = "subject-${each.key}"
   user_assigned_identity_id = azurerm_user_assigned_identity.backplane.id
-  audience                  = ["api://AzureADTokenExchange"]
+  audience                  = [var.workload_identity_federation.audience]
   issuer                    = var.workload_identity_federation.issuer
   subject                   = each.value
 }

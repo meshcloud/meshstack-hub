@@ -122,6 +122,8 @@ Use both in the building block definition. Always forward `var.meshstack.tags` t
 workspace-level tags propagate to the definition, `var.hub.bbd_draft` to the `draft` field of
 `version_spec`, and `var.meshstack.runner_ref` to `version_spec.runner_ref` and to the `runner_ref`
 of any `meshstack_integration` config the definition uses, which meshStack encrypts its secrets for.
+A definition with workload identity federation pins the looked-up runner instead, see
+[Runner identity](#runner-identity).
 
 ```hcl
 resource "meshstack_building_block_definition" "this" {
@@ -178,40 +180,64 @@ meshStack passes each input to the Terraform variable of the same name.
 ## Runner identity
 
 A building block run presents an identity a cloud backplane has to trust. The runner declares the
-scheme once, meshStack resolves it per definition, and the module reads the result from the
-definition's `version_latest`. It never builds a subject from strings.
+issuer, the per-cloud audience and token path, and the subject scheme. meshStack resolves the
+subject per definition. The module never builds any of them from strings.
+
+A definition can't read its own `version_latest` for an input, and the token path is one. So every
+definition with workload identity federation looks its runner up and pins itself to it. The lookup
+then describes the runner every run uses, also when `var.meshstack.runner_ref` is null.
 
 ```hcl
+# Lookup specified runner for workload identity federation info. Null results in the default hosted runner.
+data "meshstack_building_block_runner" "this" {
+  metadata = {
+    uuid = var.meshstack.runner_ref == null ? null : var.meshstack.runner_ref.uuid
+  }
+
+  lifecycle {
+    postcondition {
+      # try: a runner without any workload identity federation has a null spec.workload_identity_federation.
+      condition     = try(self.spec.workload_identity_federation.<cloud>, null) != null
+      error_message = "The building block runner offers no token for <Cloud>. Pick a runner that offers one via var.meshstack.runner_ref."
+    }
+  }
+}
+
 resource "meshstack_building_block_definition" "this" {
   version_spec = {
-    runner_ref = var.meshstack.runner_ref
-    # ...
+    runner_ref = data.meshstack_building_block_runner.this.ref
+    inputs = {
+      # the cloud's token file env var, e.g. ARM_OIDC_TOKEN_FILE_PATH or AWS_WEB_IDENTITY_TOKEN_FILE
+      <TOKEN_FILE_ENV> = {
+        # ...
+        argument = jsonencode(data.meshstack_building_block_runner.this.spec.workload_identity_federation.<cloud>.token_path)
+      }
+    }
   }
 }
 
 module "backplane" {
   # ...
   workload_identity_federation = {
-    issuer   = meshstack_building_block_definition.this.version_latest.workload_identity_federation.issuer
+    issuer   = data.meshstack_building_block_runner.this.spec.workload_identity_federation.issuer
+    audience = data.meshstack_building_block_runner.this.spec.workload_identity_federation.<cloud>.audience
     subjects = [meshstack_building_block_definition.this.version_latest.workload_identity_federation.subject]
   }
 }
 ```
 
+- `<cloud>` is `aws`, `azure` or `gcp`. A cloud without its own token uses another one as a generic
+  OIDC token: STACKIT the `azure` one, OTC the `gcp` one.
 - `version_latest.workload_identity_federation.subject` is the runner's subject template with every
   placeholder filled in for this definition. It is the only place a subject comes from, and it is
   known after apply, exactly as `metadata.uuid` already was.
-- `issuer` and the per-cloud `audience` describe the runner, and the definition reports them for the
-  runner its latest version runs on. AWS reads `.aws.audience`, GCP `.gcp.audience`;
-  Azure needs none. A self-hosted runner declares its own values, so never hardcode them. STACKIT
-  pins a looked-up runner and reads issuer and audience from it instead, see
-  [stackit-backplane.md](stackit-backplane.md#meshstack_integrationtf-wiring-stackit).
-- `var.meshstack.runner_ref` feeds `version_spec.runner_ref`, and the status follows it, so the
-  backplane always trusts the runner the definition actually runs on. Leave it null and the
-  definition runs on the shared runner meshStack hosts. Pass the `ref` of a
-  `meshstack_building_block_runner`; `kind` is required so that nobody builds the object by hand.
-- The whole status is known after apply. Where the definition consumes a backplane output that
-  depends on the same input, split the input; GCP does, see
+- Leave `var.meshstack.runner_ref` null and the definition runs on the shared runner meshStack
+  hosts. Pass the `ref` of a `meshstack_building_block_runner`; `kind` is required so that nobody
+  builds the object by hand.
+- A definition applied with an ephemeral API key, as in a reference architecture, needs the
+  `BUILDINGBLOCKRUNNER_LIST` permission. Without it the data source reports that no runner matches.
+- The subject is known after apply. Where the definition consumes a backplane output that depends
+  on the same input, split the input; GCP does, see
   [gcp-backplane.md](gcp-backplane.md#keeping-the-subject-out-of-the-credentials).
 
 `data.meshstack_integrations.….workload_identity_federation.replicator` is **not** a substitute.

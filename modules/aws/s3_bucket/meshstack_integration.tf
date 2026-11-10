@@ -64,6 +64,21 @@ variable "hub" {
   EOT
 }
 
+# Lookup specified runner for workload identity federation info. Null results in the default hosted runner.
+data "meshstack_building_block_runner" "this" {
+  metadata = {
+    uuid = var.meshstack.runner_ref == null ? null : var.meshstack.runner_ref.uuid
+  }
+
+  lifecycle {
+    postcondition {
+      # try: a runner without any workload identity federation has a null spec.workload_identity_federation.
+      condition     = try(self.spec.workload_identity_federation.aws, null) != null
+      error_message = "The building block runner offers no token for AWS. Pick a runner that offers one via var.meshstack.runner_ref."
+    }
+  }
+}
+
 output "building_block_definition" {
   description = "BBD is consumed in building block compositions."
   value = {
@@ -79,8 +94,8 @@ module "backplane" {
   oidc_provider_arn = var.aws_oidc_provider_arn
 
   workload_identity_federation = {
-    issuer   = meshstack_building_block_definition.this.version_latest.workload_identity_federation.issuer
-    audience = meshstack_building_block_definition.this.version_latest.workload_identity_federation.aws.audience
+    issuer   = data.meshstack_building_block_runner.this.spec.workload_identity_federation.issuer
+    audience = data.meshstack_building_block_runner.this.spec.workload_identity_federation.aws.audience
     subjects = [meshstack_building_block_definition.this.version_latest.workload_identity_federation.subject]
   }
 }
@@ -134,7 +149,7 @@ resource "meshstack_building_block_definition" "this" {
   version_spec = {
     draft         = var.hub.bbd_draft
     deletion_mode = "DELETE"
-    runner_ref    = var.meshstack.runner_ref
+    runner_ref    = data.meshstack_building_block_runner.this.ref
 
     implementation = {
       terraform = {
@@ -161,7 +176,7 @@ resource "meshstack_building_block_definition" "this" {
         display_name    = "AWS Web Identity Token File Path"
         description     = "The file path to the AWS web identity token for authentication"
         is_environment  = true
-        argument        = jsonencode("/var/run/secrets/workload-identity/aws/token")
+        argument        = jsonencode(data.meshstack_building_block_runner.this.spec.workload_identity_federation.aws.token_path)
       }
       region = {
         type            = "STRING"
@@ -223,7 +238,7 @@ terraform {
     }
     meshstack = {
       source  = "meshcloud/meshstack"
-      version = ">= 0.27.0"
+      version = ">= 0.27.2"
     }
   }
 }
