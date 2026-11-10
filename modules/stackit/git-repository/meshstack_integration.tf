@@ -118,6 +118,7 @@ output "building_block_definition" {
   }
 }
 
+# Lookup specified runner for workload identity federation info. Null results in the default hosted runner.
 data "meshstack_building_block_runner" "this" {
   metadata = {
     uuid = var.meshstack.runner_ref == null ? null : var.meshstack.runner_ref.uuid
@@ -190,7 +191,7 @@ resource "meshstack_building_block_definition" "this" {
 
   version_spec = {
     draft         = var.hub.bbd_draft
-    runner_ref    = var.meshstack.runner_ref
+    runner_ref    = data.meshstack_building_block_runner.this.ref
     deletion_mode = "DELETE"
 
     implementation = {
@@ -213,7 +214,6 @@ resource "meshstack_building_block_definition" "this" {
         argument        = jsonencode(var.stackit_service_account_email)
       }
 
-      # The token path comes from the runner, because the definition can't reference its own version_latest.
       STACKIT_FEDERATED_TOKEN_FILE = {
         display_name    = "STACKIT Federated Token File"
         description     = "Path to the WIF token file injected by meshStack."

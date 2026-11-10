@@ -203,8 +203,9 @@ module "backplane" {
   known after apply, exactly as `metadata.uuid` already was.
 - `issuer` and the per-cloud `audience` describe the runner, and the definition reports them for the
   runner its latest version runs on. AWS reads `.aws.audience`, GCP `.gcp.audience`;
-  Azure needs none. STACKIT reads `.azure.audience`, because it uses the token offered for Azure,
-  see [stackit-backplane.md](stackit-backplane.md#meshstack_integrationtf-wiring-stackit). A self-hosted runner declares its own values, so never hardcode them.
+  Azure needs none. A self-hosted runner declares its own values, so never hardcode them. STACKIT
+  pins a looked-up runner and reads issuer and audience from it instead, see
+  [stackit-backplane.md](stackit-backplane.md#meshstack_integrationtf-wiring-stackit).
 - `var.meshstack.runner_ref` feeds `version_spec.runner_ref`, and the status follows it, so the
   backplane always trusts the runner the definition actually runs on. Leave it null and the
   definition runs on the shared runner meshStack hosts. Pass the `ref` of a

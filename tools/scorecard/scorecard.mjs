@@ -766,8 +766,12 @@ const detectors = [
       // The runner's resolved identity lives on the definition's version, exposed by the provider as
       // version_latest / version_latest_release — there is no status.workload_identity_federation
       // attribute. See meshstack-integration.md § Runner identity.
-      if (!/version_latest(?:_release)?\.workload_identity_federation\.issuer/.test(content))
-        return { pass: false, detail: "issuer is not taken from meshstack_building_block_definition.<name>.version_latest.workload_identity_federation.issuer, which follows the runner the definition runs on" };
+      // A runner lookup describes the runner the definition runs on only if the definition pins it.
+      const runnerIssuer = content.match(/data\.meshstack_building_block_runner\.(\w+)\.spec\.workload_identity_federation\.issuer/);
+      const issuerFromPinnedRunner =
+        runnerIssuer && new RegExp(`runner_ref\\s*=\\s*data\\.meshstack_building_block_runner\\.${runnerIssuer[1]}\\.ref\\b`).test(content);
+      if (!/version_latest(?:_release)?\.workload_identity_federation\.issuer/.test(content) && !issuerFromPinnedRunner)
+        return { pass: false, detail: "issuer is taken neither from meshstack_building_block_definition.<name>.version_latest.workload_identity_federation.issuer nor from a meshstack_building_block_runner the definition pins in version_spec.runner_ref" };
       return {
         pass: /version_latest(?:_release)?\.workload_identity_federation\.subject/.test(content),
         detail: "subjects are not taken from meshstack_building_block_definition.<name>.version_latest.workload_identity_federation.subject, so the backplane may trust something the runner never presents",

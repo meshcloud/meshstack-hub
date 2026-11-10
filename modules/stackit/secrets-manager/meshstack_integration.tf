@@ -109,6 +109,7 @@ locals {
   create_backplane = var.stackit_organization_id != null
 }
 
+# Lookup specified runner for workload identity federation info. Null results in the default hosted runner.
 data "meshstack_building_block_runner" "this" {
   metadata = {
     uuid = var.meshstack.runner_ref == null ? null : var.meshstack.runner_ref.uuid
@@ -136,7 +137,8 @@ module "backplane" {
   custom_role_name     = coalesce(var.stackit_custom_role_name, "mesh-secrets-manager")
 
   workload_identity_federation = {
-    issuer   = meshstack_building_block_definition.this.version_latest.workload_identity_federation.issuer
+    issuer   = data.meshstack_building_block_runner.this.spec.workload_identity_federation.issuer
+    audience = data.meshstack_building_block_runner.this.spec.workload_identity_federation.azure.audience
     subjects = [meshstack_building_block_definition.this.version_latest.workload_identity_federation.subject]
   }
 }
@@ -202,7 +204,7 @@ resource "meshstack_building_block_definition" "this" {
   version_spec = {
     draft         = var.hub.bbd_draft
     deletion_mode = "DELETE"
-    runner_ref    = var.meshstack.runner_ref
+    runner_ref    = data.meshstack_building_block_runner.this.ref
 
     implementation = {
       terraform = {
@@ -241,7 +243,6 @@ resource "meshstack_building_block_definition" "this" {
         argument        = jsonencode("1")
       }
 
-      # The token path comes from the runner, because the definition can't reference its own version_latest.
       STACKIT_FEDERATED_TOKEN_FILE = {
         display_name    = "STACKIT Federated Token File"
         description     = "Path to the WIF token file injected by meshStack."

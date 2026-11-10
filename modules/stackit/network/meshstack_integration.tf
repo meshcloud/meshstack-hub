@@ -84,6 +84,7 @@ locals {
   network_allowed_prefix_lengths = [for i in range(var.stackit_network_min_prefix_length, var.stackit_network_max_prefix_length + 1) : i]
 }
 
+# Lookup specified runner for workload identity federation info. Null results in the default hosted runner.
 data "meshstack_building_block_runner" "this" {
   metadata = {
     uuid = var.meshstack.runner_ref == null ? null : var.meshstack.runner_ref.uuid
@@ -107,8 +108,8 @@ module "backplane" {
 
   # The runner offers no STACKIT token, so we use the one offered for Azure as a generic OIDC token. The federation trusts its issuer and audience.
   workload_identity_federation = {
-    issuer   = meshstack_building_block_definition.this.version_latest.workload_identity_federation.issuer
-    audience = meshstack_building_block_definition.this.version_latest.workload_identity_federation.azure.audience
+    issuer   = data.meshstack_building_block_runner.this.spec.workload_identity_federation.issuer
+    audience = data.meshstack_building_block_runner.this.spec.workload_identity_federation.azure.audience
     subjects = [meshstack_building_block_definition.this.version_latest.workload_identity_federation.subject]
   }
 }
@@ -164,7 +165,7 @@ resource "meshstack_building_block_definition" "this" {
   version_spec = {
     draft         = var.hub.bbd_draft
     deletion_mode = "DELETE"
-    runner_ref    = var.meshstack.runner_ref
+    runner_ref    = data.meshstack_building_block_runner.this.ref
 
     implementation = {
       terraform = {
@@ -202,7 +203,6 @@ resource "meshstack_building_block_definition" "this" {
         argument        = jsonencode("1")
       }
 
-      # The token path comes from the runner, because the definition can't reference its own version_latest.
       STACKIT_FEDERATED_TOKEN_FILE = {
         display_name    = "STACKIT Federated Token File"
         description     = "Path to the WIF token file injected by meshStack."

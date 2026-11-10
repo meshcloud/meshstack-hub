@@ -142,14 +142,18 @@ STACKIT project owner: reusing the automation identity there conflated two unrel
 ## `meshstack_integration.tf` Wiring (STACKIT)
 
 A runner offers no STACKIT token, so the module uses the token it offers for Azure as a generic
-OIDC token. Take the issuer, the Azure audience and the subject from the definition's resolved
-identity and pass them to the backplane. Register the WIF env vars as STATIC environment inputs so
-the buildingblock runtime can exchange the token automatically.
+OIDC token. Register the WIF env vars as STATIC environment inputs so the buildingblock runtime can
+exchange the token automatically.
 
-The token path is an input of the definition itself, so it can't come from the definition's
-`version_latest`. Read it from the `meshstack_building_block_runner` data source for the same
-runner. The definition that applies the module then needs the `BUILDINGBLOCKRUNNER_LIST`
-permission; without it the data source reports that no runner matches.
+The token path is an input of the definition itself, and a definition can't reference its own
+`version_latest`. So look the runner up with the `meshstack_building_block_runner` data source and
+pin the definition to it with `version_spec.runner_ref = data.meshstack_building_block_runner.this.ref`.
+The lookup then describes the runner every run uses, also when `var.meshstack.runner_ref` is null.
+Take the issuer, the Azure audience and the token path from it. Only the subject comes from the
+definition, because meshStack fills it in per definition.
+
+The definition that applies the module needs the `BUILDINGBLOCKRUNNER_LIST` permission; without it
+the data source reports that no runner matches.
 
 **Known limitation.** The identity provider trusts the subject of the version the Terraform
 resource manages. A building block keeps running on the version it was created with, so moving
@@ -169,11 +173,14 @@ module "backplane" {
   project_id = var.stackit_project_id
 
   workload_identity_federation = {
-    issuer   = meshstack_building_block_definition.this.version_latest.workload_identity_federation.issuer
-    audience = meshstack_building_block_definition.this.version_latest.workload_identity_federation.azure.audience
+    issuer   = data.meshstack_building_block_runner.this.spec.workload_identity_federation.issuer
+    audience = data.meshstack_building_block_runner.this.spec.workload_identity_federation.azure.audience
     subjects = [meshstack_building_block_definition.this.version_latest.workload_identity_federation.subject]
   }
 }
+
+# Inside meshstack_building_block_definition version_spec:
+runner_ref = data.meshstack_building_block_runner.this.ref
 
 # Inside meshstack_building_block_definition version_spec.inputs — all three are env vars:
 STACKIT_SERVICE_ACCOUNT_EMAIL = {
