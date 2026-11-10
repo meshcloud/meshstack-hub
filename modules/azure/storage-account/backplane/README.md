@@ -131,7 +131,7 @@ No modules.
 | <a name="input_location"></a> [location](#input\_location) | Azure region for the UAMI resource. | `string` | n/a | yes |
 | <a name="input_name"></a> [name](#input\_name) | Name for the building block identity and role definition. | `string` | n/a | yes |
 | <a name="input_scope"></a> [scope](#input\_scope) | Scope for role assignment (management group or subscription ID). | `string` | n/a | yes |
-| <a name="input_workload_identity_federation"></a> [workload\_identity\_federation](#input\_workload\_identity\_federation) | WIF issuer and subjects for federated authentication. | <pre>object({<br/>    issuer   = string<br/>    subjects = list(string)<br/>  })</pre> | n/a | yes |
+| <a name="input_workload_identity_federation"></a> [workload\_identity\_federation](#input\_workload\_identity\_federation) | WIF issuer, audience and subjects for federated authentication. The audience defaults to the one meshStack runners use for Azure tokens. | <pre>object({<br/>    issuer   = string<br/>    audience = optional(string, "api://AzureADTokenExchange")<br/>    subjects = list(string)<br/>  })</pre> | n/a | yes |
 
 ## Outputs
 

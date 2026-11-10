@@ -24,7 +24,7 @@ resource "azurerm_federated_identity_credential" "buildingblock_deploy" {
 
   name                      = "subject-${each.key}"
   user_assigned_identity_id = azurerm_user_assigned_identity.buildingblock_deploy.id
-  audience                  = ["api://AzureADTokenExchange"]
+  audience                  = [var.workload_identity_federation.audience]
   issuer                    = var.workload_identity_federation.issuer
   subject                   = each.value
 }

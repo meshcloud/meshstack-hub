@@ -7,10 +7,10 @@ key. The `opentelekomcloud` provider cannot sign in with an OIDC token itself, s
   - an OIDC identity provider for programmatic access that trusts meshStack's run issuer. Its one
     mapping rule matches only the definition's subject, and signs it in as a virtual user;
   - an IAM group for that user, holding `domain_roles` and the custom `policies`.
-- **`prerun.sh`**, the definition's pre-run script. It exchanges the run token at the identity
-  provider in `OTC_IDENTITY_PROVIDER` for a federated IAM token, then that for a temporary access
-  key valid for one hour, and writes it to `otc_credentials.json`. The building block's provider
-  reads it from there.
+- **`prerun.sh`**, the definition's pre-run script. It exchanges the run token in
+  `OTC_FEDERATED_TOKEN_FILE` at the identity provider in `OTC_IDENTITY_PROVIDER` for a federated
+  IAM token, then that for a temporary access key valid for one hour, and writes it to
+  `otc_credentials.json`. The building block's provider reads it from there.
 
 ## Operational notes
 

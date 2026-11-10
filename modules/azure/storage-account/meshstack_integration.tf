@@ -83,6 +83,21 @@ variable "hub" {
   EOT
 }
 
+# Lookup specified runner for workload identity federation info. Null results in the default hosted runner.
+data "meshstack_building_block_runner" "this" {
+  metadata = {
+    uuid = var.meshstack.runner_ref == null ? null : var.meshstack.runner_ref.uuid
+  }
+
+  lifecycle {
+    postcondition {
+      # try: a runner without any workload identity federation has a null spec.workload_identity_federation.
+      condition     = try(self.spec.workload_identity_federation.azure, null) != null
+      error_message = "The building block runner offers no token for Azure. Pick a runner that offers one via var.meshstack.runner_ref."
+    }
+  }
+}
+
 output "building_block_definition" {
   description = "BBD is consumed in building block compositions."
   value = {
@@ -99,7 +114,8 @@ module "backplane" {
   location = var.azure_location
 
   workload_identity_federation = {
-    issuer   = meshstack_building_block_definition.this.version_latest.workload_identity_federation.issuer
+    issuer   = data.meshstack_building_block_runner.this.spec.workload_identity_federation.issuer
+    audience = data.meshstack_building_block_runner.this.spec.workload_identity_federation.azure.audience
     subjects = [meshstack_building_block_definition.this.version_latest.workload_identity_federation.subject]
   }
 }
@@ -143,7 +159,7 @@ resource "meshstack_building_block_definition" "this" {
     draft = var.hub.bbd_draft
 
     deletion_mode = "DELETE"
-    runner_ref    = var.meshstack.runner_ref
+    runner_ref    = data.meshstack_building_block_runner.this.ref
 
     implementation = {
       terraform = {
@@ -194,7 +210,7 @@ resource "meshstack_building_block_definition" "this" {
         description     = "Path to the OIDC token file used for workload identity federation authentication."
         assignment_type = "STATIC"
         is_environment  = true
-        argument        = jsonencode("/var/run/secrets/workload-identity/azure/token")
+        argument        = jsonencode(data.meshstack_building_block_runner.this.spec.workload_identity_federation.azure.token_path)
       }
       location = {
         type            = "STRING"
@@ -318,7 +334,7 @@ terraform {
   required_providers {
     meshstack = {
       source  = "meshcloud/meshstack"
-      version = ">= 0.27.0"
+      version = ">= 0.27.2"
     }
     azurerm = {
       source  = "hashicorp/azurerm"

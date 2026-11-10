@@ -145,20 +145,8 @@ A runner offers no STACKIT token, so the module uses the token it offers for Azu
 OIDC token. Register the WIF env vars as STATIC environment inputs so the buildingblock runtime can
 exchange the token automatically.
 
-The token path is an input of the definition itself, and a definition can't reference its own
-`version_latest`. So look the runner up with the `meshstack_building_block_runner` data source and
-pin the definition to it with `version_spec.runner_ref = data.meshstack_building_block_runner.this.ref`.
-The lookup then describes the runner every run uses, also when `var.meshstack.runner_ref` is null.
-Take the issuer, the Azure audience and the token path from it. Only the subject comes from the
-definition, because meshStack fills it in per definition.
-
-The definition that applies the module needs the `BUILDINGBLOCKRUNNER_LIST` permission; without it
-the data source reports that no runner matches.
-
-**Known limitation.** The identity provider trusts the subject of the version the Terraform
-resource manages. A building block keeps running on the version it was created with, so moving
-the definition to a different runner breaks the blocks that still run on the old version until
-they upgrade.
+Look the runner up and pin it as [meshstack-integration.md § Runner identity](meshstack-integration.md#runner-identity)
+describes, with `azure` as the cloud.
 
 ```hcl
 data "meshstack_building_block_runner" "this" {
