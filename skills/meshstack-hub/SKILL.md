@@ -281,7 +281,7 @@ then ask the user in one message for:
   ID, installation ID and private key of a GitHub App. Pass a secret as a `TF_VAR_<name>`
   environment variable or from the user's secret store, never in a committed file.
 - **The runner.** If the user runs their own building block runner, its `ref` goes into
-  `meshstack.runner_ref`. Without it, the definition runs on the shared runner meshStack hosts.
+  `meshstack.runner_ref`. Without it, the definition runs on the default runner.
   A module with workload identity federation looks the runner up to read its token settings, so
   the meshStack API key that applies it needs the permission to list building block runners.
 

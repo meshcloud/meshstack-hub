@@ -26,7 +26,8 @@ module "storage_bucket_backplane" {
   project_id = "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
 
   workload_identity_federation = {
-    issuer   = meshstack_building_block_definition.this.version_latest.workload_identity_federation.issuer
+    issuer   = data.meshstack_building_block_runner.this.spec.workload_identity_federation.issuer
+    audience = data.meshstack_building_block_runner.this.spec.workload_identity_federation.azure.audience
     subjects = [meshstack_building_block_definition.this.version_latest.workload_identity_federation.subject]
   }
 }

@@ -105,8 +105,8 @@ Each entry of `subjects` is trusted as an **exact match** on the token's `sub` c
 
 ```hcl
 workload_identity_federation_trust = {
-  issuer   = meshstack_building_block_definition.this.version_latest.workload_identity_federation.issuer
-  audience = meshstack_building_block_definition.this.version_latest.workload_identity_federation.gcp.audience
+  issuer   = data.meshstack_building_block_runner.this.spec.workload_identity_federation.issuer
+  audience = data.meshstack_building_block_runner.this.spec.workload_identity_federation.gcp.audience
   subjects = [meshstack_building_block_definition.this.version_latest.workload_identity_federation.subject]
 }
 ```
@@ -154,7 +154,7 @@ No modules.
 | <a name="input_project_id"></a> [project\_id](#input\_project\_id) | The GCP project ID | `string` | n/a | yes |
 | <a name="input_service_account_id"></a> [service\_account\_id](#input\_service\_account\_id) | The ID of the service account to create | `string` | `"buildingblock-storage-sa"` | no |
 | <a name="input_workload_identity_federation"></a> [workload\_identity\_federation](#input\_workload\_identity\_federation) | Workload identity federation settings describing the building block runner. | <pre>object({<br/>    workload_identity_pool_identifier = string // Identifier for the workload identity pool<br/>    subject_token_file_path           = string // Path to the file containing the OIDC token<br/>  })</pre> | n/a | yes |
-| <a name="input_workload_identity_federation_trust"></a> [workload\_identity\_federation\_trust](#input\_workload\_identity\_federation\_trust) | What the pool provider trusts: the runner's OIDC issuer and audience, and the subject claims it accepts, each matched exactly. Take them from `version_latest.workload_identity_federation` of the building block definitions that run here. | <pre>object({<br/>    issuer   = string<br/>    audience = string<br/>    subjects = list(string)<br/>  })</pre> | n/a | yes |
+| <a name="input_workload_identity_federation_trust"></a> [workload\_identity\_federation\_trust](#input\_workload\_identity\_federation\_trust) | What the pool provider trusts: the runner's OIDC issuer and audience, and the subject claims it accepts, each matched exactly. Take issuer and audience from the `meshstack_building_block_runner` the definitions run on, and the subjects from their `version_latest.workload_identity_federation`. | <pre>object({<br/>    issuer   = string<br/>    audience = string<br/>    subjects = list(string)<br/>  })</pre> | n/a | yes |
 
 ## Outputs
 

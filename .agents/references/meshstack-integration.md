@@ -231,8 +231,7 @@ module "backplane" {
 - `version_latest.workload_identity_federation.subject` is the runner's subject template with every
   placeholder filled in for this definition. It is the only place a subject comes from, and it is
   known after apply, exactly as `metadata.uuid` already was.
-- Leave `var.meshstack.runner_ref` null and the definition runs on the shared runner meshStack
-  hosts. Pass the `ref` of a `meshstack_building_block_runner`; `kind` is required so that nobody
+- Leave `var.meshstack.runner_ref` null and the definition runs on the default runner. Pass the `ref` of a `meshstack_building_block_runner`; `kind` is required so that nobody
   builds the object by hand.
 - A definition applied with an ephemeral API key, as in a reference architecture, needs the
   `BUILDINGBLOCKRUNNER_LIST` permission. Without it the data source reports that no runner matches.
