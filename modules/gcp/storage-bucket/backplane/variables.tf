@@ -24,7 +24,7 @@ variable "workload_identity_federation" {
   nullable = false
 }
 
-# Apart, because Terraform depends on a whole variable rather than the attribute read: these come
+# Apart, because Terraform depends on a whole variable rather than the attribute read: the subjects come
 # from the building block definition's `version_latest`, and reading them next to the pool identifier would
 # put `credentials_json` behind the definition that consumes it.
 variable "workload_identity_federation_trust" {
@@ -34,6 +34,6 @@ variable "workload_identity_federation_trust" {
     subjects = list(string)
   })
   nullable    = false
-  description = "What the pool provider trusts: the runner's OIDC issuer and audience, and the subject claims it accepts, each matched exactly. Take them from `version_latest.workload_identity_federation` of the building block definitions that run here."
+  description = "What the pool provider trusts: the runner's OIDC issuer and audience, and the subject claims it accepts, each matched exactly. Take issuer and audience from the `meshstack_building_block_runner` the definitions run on, and the subjects from their `version_latest.workload_identity_federation`."
 }
 

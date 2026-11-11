@@ -18,7 +18,7 @@ Authentication uses WIF (OIDC token exchange) — no long-lived service account 
 - A STACKIT project where the service account will be created.
 - A STACKIT service account with permissions to manage service accounts and organization-level role assignments.
 - The STACKIT organization ID under which projects will be created.
-- The WIF issuer and subject meshStack resolves for the building block definition, read from `meshstack_building_block_definition.<name>.version_latest.workload_identity_federation`.
+- The WIF issuer and audience of the building block runner (read from the `meshstack_building_block_runner` data source), and the subject meshStack assigns for the building block definition (read from `meshstack_building_block_definition.<name>.version_latest.workload_identity_federation`).
 
 ## Usage
 
@@ -30,7 +30,8 @@ module "project_backplane" {
   organization_id = "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
 
   workload_identity_federation = {
-    issuer   = meshstack_building_block_definition.this.version_latest.workload_identity_federation.issuer
+    issuer   = data.meshstack_building_block_runner.this.spec.workload_identity_federation.issuer
+    audience = data.meshstack_building_block_runner.this.spec.workload_identity_federation.azure.audience
     subjects = [meshstack_building_block_definition.this.version_latest.workload_identity_federation.subject]
   }
 }

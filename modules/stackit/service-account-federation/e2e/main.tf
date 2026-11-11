@@ -62,6 +62,13 @@ module "federation" {
   stackit_service_account_name = "${var.test_context.run_id}-fbp"
 }
 
+# The runner the modules under test pin when `meshstack.runner_ref` is null; the probe runs there too.
+data "meshstack_building_block_runner" "this" {
+  metadata = {
+    uuid = null
+  }
+}
+
 # The definition whose runs act as the federated account. Its run reads the tenant's project, which
 # succeeds only when the trust entry matches the token its runner presents.
 resource "meshstack_building_block_definition" "probe" {
@@ -79,6 +86,7 @@ resource "meshstack_building_block_definition" "probe" {
   version_spec = {
     draft         = true
     deletion_mode = "DELETE"
+    runner_ref    = data.meshstack_building_block_runner.this.ref
 
     implementation = {
       terraform = {
@@ -113,7 +121,7 @@ resource "meshstack_building_block_definition" "probe" {
         type            = "STRING"
         assignment_type = "STATIC"
         is_environment  = true
-        argument        = jsonencode("/var/run/secrets/workload-identity/azure/token")
+        argument        = jsonencode(data.meshstack_building_block_runner.this.spec.workload_identity_federation.azure.token_path)
       }
     }
 

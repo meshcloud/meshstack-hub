@@ -20,12 +20,19 @@ provider "aws" {
   region = "eu-central-1"
 }
 
+# A null uuid looks up the default runner.
+data "meshstack_building_block_runner" "this" {
+  metadata = {
+    uuid = "<runner uuid>"
+  }
+}
+
 module "meshstack_oidc_provider" {
   source = "github.com/meshcloud/meshstack-hub//modules/aws/oidc-provider?ref=main"
 
   workload_identity_federation = {
-    issuer    = "https://<the runners' issuer>"
-    audiences = ["<the AWS audience of each runner behind that issuer>"]
+    issuer    = data.meshstack_building_block_runner.this.spec.workload_identity_federation.issuer
+    audiences = [data.meshstack_building_block_runner.this.spec.workload_identity_federation.aws.audience]
   }
 }
 
@@ -34,22 +41,19 @@ module "s3_bucket" {
   source = "github.com/meshcloud/meshstack-hub//modules/aws/s3_bucket?ref=main"
 
   aws_oidc_provider_arn = module.meshstack_oidc_provider.arn
+  meshstack = {
+    # ...
+    runner_ref = data.meshstack_building_block_runner.this.ref
+  }
   # ...
 }
 ```
 
-`issuer` and `audiences` describe the runners. Every building block definition that runs on a
-runner reports them as `version_latest.workload_identity_federation.issuer` and
-`version_latest.workload_identity_federation.aws.audience`, so take them from a definition already deployed
-on each runner, in whichever cloud. AWS allows one provider per issuer and account, and each runner
-has its own audience, so runners that share an issuer, for example two run-controllers in one
-cluster, are all listed in `audiences`. For a self-hosted runner pass its values, and pass its reference
-as `meshstack.runner_ref` to every building block module that runs on it. The thumbprint
-comes from the issuer's own TLS chain, so no other input is needed.
+The `meshstack_building_block_runner` data source can be used to look up issuer and audience (`spec.workload_identity_federation.issuer` and `spec.workload_identity_federation.aws.audience`) for specific runners. Since AWS allows only one OIDC provider per issuer and account multiple runners that use the same issuer must share an OIDC provider by adding all audience values to the list.
+For a self-hosted runner make sure to pass a matching runner ref as `meshstack.runner_ref` to every building block module that uses a federated identity.
 
-The issuer URL has to be reachable from wherever this runs, because the thumbprint is read from it.
+The issuer URL has to be reachable from where the building block runs to check the thumbprint.
 
 ## Required permissions
 
-The identity applying this needs `iam:CreateOpenIDConnectProvider`, `iam:GetOpenIDConnectProvider`
-and `iam:TagOpenIDConnectProvider` in the target account.
+The identity applying this needs `iam:CreateOpenIDConnectProvider`, `iam:GetOpenIDConnectProvider` and `iam:TagOpenIDConnectProvider` in the target account.
