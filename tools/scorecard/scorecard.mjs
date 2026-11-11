@@ -766,12 +766,8 @@ const detectors = [
       // The runner's resolved identity lives on the definition's version, exposed by the provider as
       // version_latest / version_latest_release — there is no status.workload_identity_federation
       // attribute. See meshstack-integration.md § Runner identity.
-      // A runner lookup describes the runner the definition runs on only if the definition pins it.
-      const runnerIssuer = content.match(/data\.meshstack_building_block_runner\.(\w+)\.spec\.workload_identity_federation\.issuer/);
-      const issuerFromPinnedRunner =
-        runnerIssuer && new RegExp(`runner_ref\\s*=\\s*data\\.meshstack_building_block_runner\\.${runnerIssuer[1]}\\.ref\\b`).test(content);
-      if (!/version_latest(?:_release)?\.workload_identity_federation\.issuer/.test(content) && !issuerFromPinnedRunner)
-        return { pass: false, detail: "issuer is taken neither from meshstack_building_block_definition.<name>.version_latest.workload_identity_federation.issuer nor from a meshstack_building_block_runner the definition pins in version_spec.runner_ref" };
+      if (!/version_latest(?:_release)?\.workload_identity_federation\.issuer/.test(content) && !issuerFromPinnedRunner(content))
+        return { pass: false, detail: "issuer is taken neither from meshstack_building_block_definition.<name>.version_latest.workload_identity_federation.issuer nor from a runner lookup (modules/meshstack/runner-identity) that the definition pins in version_spec.runner_ref" };
       return {
         pass: /version_latest(?:_release)?\.workload_identity_federation\.subject/.test(content),
         detail: "subjects are not taken from meshstack_building_block_definition.<name>.version_latest.workload_identity_federation.subject, so the backplane may trust something the runner never presents",
@@ -1950,6 +1946,21 @@ function findExpressionEnd(text, startIndex) {
   }
 
   return text.length;
+}
+
+// A runner lookup describes the runner the definition runs on only if the definition pins it. So
+// every lookup the integration takes an issuer from must also be the one in version_spec.runner_ref.
+// A lookup is a call of modules/meshstack/runner-identity, or the data source that module wraps.
+export function issuerFromPinnedRunner(content) {
+  const moduleLookups = [...content.matchAll(/module\s+"(\w+)"\s*\{[^}]*?\bsource\s*=\s*"[^"]*\bmeshstack\/runner-identity[?"]/g)].map(
+    ([, name]) => ({ issuer: `module\\.${name}\\.issuer`, ref: `module\\.${name}\\.ref` }),
+  );
+  const dataLookups = [...content.matchAll(/data\s+"meshstack_building_block_runner"\s+"(\w+)"/g)].map(([, name]) => ({
+    issuer: `data\\.meshstack_building_block_runner\\.${name}\\.spec\\.workload_identity_federation\\.issuer`,
+    ref: `data\\.meshstack_building_block_runner\\.${name}\\.ref`,
+  }));
+  const issuers = [...moduleLookups, ...dataLookups].filter(({ issuer }) => new RegExp(`${issuer}\\b`).test(content));
+  return issuers.length > 0 && issuers.every(({ ref }) => new RegExp(`runner_ref\\s*=\\s*${ref}\\b`).test(content));
 }
 
 export function declaresSummaryOutput(integrationContent) {

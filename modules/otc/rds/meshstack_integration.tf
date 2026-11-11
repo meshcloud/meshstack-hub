@@ -79,18 +79,11 @@ variable "hub" {
 }
 
 # Lookup specified runner for workload identity federation info. Null results in the default hosted runner.
-data "meshstack_building_block_runner" "this" {
-  metadata = {
-    uuid = var.meshstack.runner_ref == null ? null : var.meshstack.runner_ref.uuid
-  }
+module "runner" {
+  source = "github.com/meshcloud/meshstack-hub//modules/meshstack/runner-identity?ref=${var.hub.git_ref}"
 
-  lifecycle {
-    postcondition {
-      # try: a runner without any workload identity federation has a null spec.workload_identity_federation.
-      condition     = try(self.spec.workload_identity_federation.gcp, null) != null
-      error_message = "The building block runner offers no token for GCP. We use that token as a generic OIDC token for OTC, so pick a runner that offers one via var.meshstack.runner_ref."
-    }
-  }
+  cloud      = "gcp" # OTC has no token of its own and takes this one as a generic OIDC token.
+  runner_ref = var.meshstack.runner_ref
 }
 
 # Runs sign in through workload identity federation, so the definition carries no access key. This
@@ -100,9 +93,9 @@ module "backplane" {
 
   name = var.workload_identity_name
   workload_identity_federation = {
-    issuer   = data.meshstack_building_block_runner.this.spec.workload_identity_federation.issuer
+    issuer   = module.runner.issuer
     subject  = meshstack_building_block_definition.this.version_latest.workload_identity_federation.subject
-    audience = data.meshstack_building_block_runner.this.spec.workload_identity_federation.gcp.audience
+    audience = module.runner.audience
   }
 }
 
@@ -176,7 +169,7 @@ resource "meshstack_building_block_definition" "this" {
     # while this block still sits in it, whose own deletion needs the network to look it up.
     dependency_refs = [{ uuid = var.network_definition_uuid }]
 
-    runner_ref = data.meshstack_building_block_runner.this.ref
+    runner_ref = module.runner.ref
 
     implementation = {
       terraform = {
@@ -279,7 +272,7 @@ resource "meshstack_building_block_definition" "this" {
         type            = "STRING"
         assignment_type = "STATIC"
         is_environment  = true
-        argument        = jsonencode(data.meshstack_building_block_runner.this.spec.workload_identity_federation.gcp.token_path)
+        argument        = jsonencode(module.runner.token_path)
       }
 
       OS_AUTH_URL = {

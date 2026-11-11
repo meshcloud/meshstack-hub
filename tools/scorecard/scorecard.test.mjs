@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 import {
   declaresSummaryOutput,
   explicitDefaultViolations,
+  issuerFromPinnedRunner,
   summaryOutputBody,
 } from "./scorecard.mjs";
 
@@ -72,4 +73,54 @@ output "after" {
 test("a SUMMARY assignment in the integration is detected", () => {
   assert.equal(declaresSummaryOutput('summary = {\n  assignment_type = "SUMMARY"\n}'), true);
   assert.equal(declaresSummaryOutput('url = {\n  assignment_type = "RESOURCE_URL"\n}'), false);
+});
+
+const runnerModule = (source = "github.com/meshcloud/meshstack-hub//modules/meshstack/runner-identity?ref=${var.hub.git_ref}") => `
+module "runner" {
+  source = "${source}"
+
+  cloud      = "aws"
+  runner_ref = var.meshstack.runner_ref
+}
+`;
+
+const federatedDefinition = ({ issuer, runnerRef }) => `
+module "backplane" {
+  workload_identity_federation = {
+    issuer   = ${issuer}
+    subjects = [meshstack_building_block_definition.this.version_latest.workload_identity_federation.subject]
+  }
+}
+
+resource "meshstack_building_block_definition" "this" {
+  version_spec = {
+    runner_ref = ${runnerRef}
+  }
+}
+`;
+
+test("an issuer from the runner-identity module the definition pins passes", () => {
+  const definition = federatedDefinition({ issuer: "module.runner.issuer", runnerRef: "module.runner.ref" });
+  assert.equal(issuerFromPinnedRunner(runnerModule() + definition), true);
+  assert.equal(issuerFromPinnedRunner(runnerModule("../../../meshstack/runner-identity") + definition), true);
+});
+
+test("an issuer from a runner-identity module the definition does not pin fails", () => {
+  const definition = federatedDefinition({ issuer: "module.runner.issuer", runnerRef: "var.meshstack.runner_ref" });
+  assert.equal(issuerFromPinnedRunner(runnerModule() + definition), false);
+});
+
+test("an issuer from a module that is not runner-identity fails", () => {
+  const definition = federatedDefinition({ issuer: "module.runner.issuer", runnerRef: "module.runner.ref" });
+  assert.equal(issuerFromPinnedRunner(runnerModule("./runner") + definition), false);
+});
+
+test("an issuer from the runner data source passes only when the definition pins that runner", () => {
+  const lookup = 'data "meshstack_building_block_runner" "this" {}\n';
+  const issuer = "data.meshstack_building_block_runner.this.spec.workload_identity_federation.issuer";
+  assert.equal(
+    issuerFromPinnedRunner(lookup + federatedDefinition({ issuer, runnerRef: "data.meshstack_building_block_runner.this.ref" })),
+    true,
+  );
+  assert.equal(issuerFromPinnedRunner(lookup + federatedDefinition({ issuer, runnerRef: "var.meshstack.runner_ref" })), false);
 });
