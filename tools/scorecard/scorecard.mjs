@@ -153,22 +153,12 @@ function awsBackplanePattern(mod) {
   if (!allTf) return "none";
   const federated =
     /(resource|data)\s+"aws_iam_openid_connect_provider"/.test(allTf) ||
-    /^variable\s+"(workload_identity_federation|oidc_provider_arn)"/m.test(allTf);
+    /^variable\s+"(runner_identities|workload_identity_federation|oidc_provider_arn)"/m.test(allTf);
   if (federated) return "wif";
   return /resource\s+"aws_iam_access_key"/.test(allTf) ? "cross_account" : "none";
 }
 
-// The fixed notice on `oidc_provider_arn` / `aws_oidc_provider_arn`. Deliberately two lines and
-// nothing more, so it can be copied verbatim into every meshstack_integration.tf.
-const AWS_OIDC_PROVIDER_NOTICE = [
-  "ARN of the IAM OIDC provider for the meshStack runner WIF token issuer in this AWS account.",
-  "See .agents/references/aws-backplane.md#the-shared-oidc-provider",
-];
-
-function hasOidcProviderNotice(variableBlock) {
-  const text = variableBlock.replace(/\s+/g, " ");
-  return AWS_OIDC_PROVIDER_NOTICE.every((line) => text.includes(line.replace(/\s+/g, " ")));
-}
+const AWS_OIDC_PROVIDER_NOTICE = "See .agents/references/aws-backplane.md#the-shared-oidc-provider";
 
 const NOT_WIF = { pass: null, detail: "not a workload identity federation backplane" };
 const NOT_CROSS_ACCOUNT = { pass: null, detail: "not a cross-account backplane" };
@@ -762,15 +752,15 @@ const detectors = [
           pass: false,
           detail: "derives the runner's trust from data.meshstack_integrations…replicator — that entry is the replicator's own identity and only ever matched because the runner shares its namespace",
         };
-      if (!/workload_identity_federation\s*=/.test(content)) return { pass: null, detail: "module does not federate" };
+      if (!/\b(workload_identity_federation|runner_identities)\s*=/.test(content)) return { pass: null, detail: "module does not federate" };
       // The runner's resolved identity lives on the definition's version, exposed by the provider as
       // version_latest / version_latest_release — there is no status.workload_identity_federation
       // attribute. See meshstack-integration.md § Runner identity.
       if (!/version_latest(?:_release)?\.workload_identity_federation\.issuer/.test(content) && !issuerFromPinnedRunner(content))
         return { pass: false, detail: "issuer is taken neither from meshstack_building_block_definition.<name>.version_latest.workload_identity_federation.issuer nor from a runner lookup (modules/meshstack/runner-identity) that the definition pins in version_spec.runner_ref" };
       return {
-        pass: /version_latest(?:_release)?\.workload_identity_federation\.subject/.test(content),
-        detail: "subjects are not taken from meshstack_building_block_definition.<name>.version_latest.workload_identity_federation.subject, so the backplane may trust something the runner never presents",
+        pass: /version_latest(?:_release)?\.workload_identity_federation\.subject/.test(content) || identitiesFromVersions(content),
+        detail: "subjects are taken neither from meshstack_building_block_definition.<name>.version_latest.workload_identity_federation.subject nor from `identities` of modules/meshstack/runner-identity called with the definition's `versions`, so the backplane may trust something the runner never presents",
       };
     },
   },
@@ -782,7 +772,7 @@ const detectors = [
   {
     id: "aws_wif_external_oidc_provider",
     category: "aws_backplane",
-    name: "Takes oidc_provider_arn instead of creating a provider",
+    name: "Looks up the OIDC provider of each issuer instead of creating one",
     emoji: "🔐",
     fn: (mod) => {
       if (awsBackplanePattern(mod) !== "wif") return NOT_WIF;
@@ -793,43 +783,27 @@ const detectors = [
           detail: "creates its own aws_iam_openid_connect_provider — AWS registers one per issuer URL per account, so it is shared platform infrastructure a backplane must be given, not claim",
         };
       }
-      const varsTf = readBackplaneFile(mod, "variables.tf");
-      const arnVar = varsTf ? extractVariableBlocks(varsTf).get("oidc_provider_arn") : null;
-      if (!arnVar) return { pass: false, detail: 'missing variable "oidc_provider_arn"' };
-      if (/^\s*default\s*=/m.test(arnVar))
-        return { pass: false, detail: "oidc_provider_arn has a default — the provider has to be deployed first, so there is nothing sensible to default to" };
       if (/^variable\s+"create_oidc_provider"/m.test(allTf))
         return { pass: false, detail: "leftover create_oidc_provider variable — the toggle is gone with the resource" };
       return {
-        pass: /nullable\s*=\s*false/.test(arnVar),
-        detail: "oidc_provider_arn is not nullable = false",
+        pass: /data\s+"aws_iam_openid_connect_provider"/.test(allTf),
+        detail: 'no data "aws_iam_openid_connect_provider" lookup — the backplane finds the provider of each issuer in runner_identities by its url',
       };
     },
   },
   {
     id: "aws_oidc_provider_notice",
     category: "aws_backplane",
-    name: "oidc_provider_arn carries the shared-provider notice",
+    name: "runner_identities links the shared-provider section",
     emoji: "📌",
     fn: (mod) => {
       if (awsBackplanePattern(mod) !== "wif") return NOT_WIF;
-      // The notice is the only signpost a first-time platform engineer gets: AWS has no plural
-      // OIDC-provider data source, so a missing provider cannot be turned into a friendly
-      // precondition, and terraform-docs renders backplane variables but not integration comments.
-      // It is therefore copied verbatim into both variables and linted here.
       const varsTf = readBackplaneFile(mod, "variables.tf");
-      const backplaneVar = varsTf ? extractVariableBlocks(varsTf).get("oidc_provider_arn") : null;
-      if (!backplaneVar) return { pass: false, detail: 'missing variable "oidc_provider_arn"' };
-      if (!hasOidcProviderNotice(backplaneVar))
-        return { pass: false, detail: "backplane oidc_provider_arn description is not the fixed notice — see AWS_OIDC_PROVIDER_NOTICE in this file" };
-
-      const integration = readIntegrationTf(mod);
-      if (!integration) return { pass: null, detail: "no integration file" };
-      const integrationVar = extractVariableBlocks(integration).get("aws_oidc_provider_arn");
-      if (!integrationVar) return { pass: false, detail: 'integration is missing variable "aws_oidc_provider_arn"' };
+      const identitiesVar = varsTf ? extractVariableBlocks(varsTf).get("runner_identities") : null;
+      if (!identitiesVar) return { pass: false, detail: 'missing variable "runner_identities"' };
       return {
-        pass: hasOidcProviderNotice(integrationVar),
-        detail: "integration aws_oidc_provider_arn description is not the fixed notice",
+        pass: identitiesVar.includes(AWS_OIDC_PROVIDER_NOTICE),
+        detail: `the runner_identities description does not hold the line "${AWS_OIDC_PROVIDER_NOTICE}"`,
       };
     },
   },
@@ -850,20 +824,17 @@ const detectors = [
   {
     id: "aws_wif_nonnullable",
     category: "aws_backplane",
-    name: "workload_identity_federation is non-nullable",
+    name: "runner_identities is non-nullable",
     emoji: "⚡",
     fn: (mod) => {
       if (awsBackplanePattern(mod) !== "wif") return NOT_WIF;
       const varsTf = readBackplaneFile(mod, "variables.tf");
       if (!varsTf) return { pass: false, detail: "no variables.tf" };
-      const wifVar = extractVariableBlocks(varsTf).get("workload_identity_federation");
-      if (!wifVar) return { pass: false, detail: 'variable "workload_identity_federation" not found' };
-      const hasDefaultNull = /default\s*=\s*null/.test(wifVar);
+      const identitiesVar = extractVariableBlocks(varsTf).get("runner_identities");
+      if (!identitiesVar) return { pass: false, detail: 'variable "runner_identities" not found' };
       return {
-        pass: /nullable\s*=\s*false/.test(wifVar) || !hasDefaultNull,
-        detail: hasDefaultNull
-          ? "default = null makes federation optional — the null branch is the access key path"
-          : undefined,
+        pass: /nullable\s*=\s*false/.test(identitiesVar),
+        detail: "runner_identities is not nullable = false",
       };
     },
   },
@@ -879,17 +850,17 @@ const detectors = [
       // `"${trimprefix(var....issuer, "https://")}:sub"` — so match to end of line, not to the
       // next quote.
       const hasSubCondition = /^\s*variable\s*=.*:sub"/m.test(allTf);
-      const hasSubjects = /var\.workload_identity_federation\.subjects/.test(allTf);
+      const hasSubjects = /var\.runner_identities\b/.test(allTf) && /\.subject\b/.test(allTf);
       if (!hasSubCondition)
         return { pass: false, detail: "no :sub condition — the role is assumable by every subject the meshStack issuer signs" };
       if (!hasSubjects)
-        return { pass: false, detail: "the :sub condition does not use var.workload_identity_federation.subjects, so it is not scoped to this building block definition" };
-      // A subject list the integration built from strings scopes nothing the runner guarantees.
+        return { pass: false, detail: "the :sub condition does not use the subject of each var.runner_identities entry, so it is not scoped to this building block definition" };
+      // A subject the integration built from strings scopes nothing the runner guarantees.
       const integration = readIntegrationTf(mod);
       if (!integration) return { pass: true };
       return {
-        pass: /subjects\s*=\s*\[[^\]]*status\.workload_identity_federation\.subject/.test(integration),
-        detail: "the integration does not pass the definition's resolved subject — see .agents/references/meshstack-integration.md#runner-identity",
+        pass: identitiesFromVersions(integration),
+        detail: "the integration does not pass `identities` of modules/meshstack/runner-identity, called with the definition's `versions` — see .agents/references/meshstack-integration.md#trusted-runners",
       };
     },
   },
@@ -933,15 +904,9 @@ const detectors = [
       if (!hasRoleArn) return { pass: false, detail: "AWS_ROLE_ARN is not wired as an environment input" };
       if (!hasTokenFile)
         return { pass: false, detail: "AWS_WEB_IDENTITY_TOKEN_FILE is not wired — the AWS SDK has no token to exchange" };
-      // The AWS audience is namespace-specific and differs per self-hosted runner, so it is read
-      // from the definition's status, which follows its runner, rather than hardcoded or borrowed
-      // from another integration.
-      const runnerWif = "meshstack_building_block_definition\\.[\\w-]+\\.status\\.workload_identity_federation";
       return {
-        pass:
-          new RegExp(runnerWif + "\\.issuer").test(content) &&
-          new RegExp(runnerWif + "\\.aws\\.audience").test(content),
-        detail: "issuer and aws.audience do not come from meshstack_building_block_definition.<name>.status.workload_identity_federation",
+        pass: issuerFromPinnedRunner(content),
+        detail: "issuer and audience do not come from a runner lookup (modules/meshstack/runner-identity) that the definition pins in version_spec.runner_ref",
       };
     },
   },
@@ -1952,15 +1917,30 @@ function findExpressionEnd(text, startIndex) {
 // every lookup the integration takes an issuer from must also be the one in version_spec.runner_ref.
 // A lookup is a call of modules/meshstack/runner-identity, or the data source that module wraps.
 export function issuerFromPinnedRunner(content) {
-  const moduleLookups = [...content.matchAll(/module\s+"(\w+)"\s*\{[^}]*?\bsource\s*=\s*"[^"]*\bmeshstack\/runner-identity[?"]/g)].map(
-    ([, name]) => ({ issuer: `module\\.${name}\\.issuer`, ref: `module\\.${name}\\.ref` }),
-  );
+  const moduleLookups = runnerIdentityModules(content).map(({ name }) => ({
+    issuer: `module\\.${name}\\.(?:issuer|identities)`,
+    ref: `module\\.${name}\\.ref`,
+  }));
   const dataLookups = [...content.matchAll(/data\s+"meshstack_building_block_runner"\s+"(\w+)"/g)].map(([, name]) => ({
     issuer: `data\\.meshstack_building_block_runner\\.${name}\\.spec\\.workload_identity_federation\\.issuer`,
     ref: `data\\.meshstack_building_block_runner\\.${name}\\.ref`,
   }));
   const issuers = [...moduleLookups, ...dataLookups].filter(({ issuer }) => new RegExp(`${issuer}\\b`).test(content));
   return issuers.length > 0 && issuers.every(({ ref }) => new RegExp(`runner_ref\\s*=\\s*${ref}\\b`).test(content));
+}
+
+function runnerIdentityModules(content) {
+  return [...content.matchAll(/module\s+"(\w+)"\s*\{/g)]
+    .map((m) => {
+      const open = content.indexOf("{", m.index);
+      return { name: m[1], body: content.slice(open, findMatchingBrace(content, open) + 1) };
+    })
+    .filter(({ body }) => /\bsource\s*=\s*"[^"]*\bmeshstack\/runner-identity[?"]/.test(body));
+}
+
+export function identitiesFromVersions(content) {
+  const read = runnerIdentityModules(content).filter(({ name }) => new RegExp(`module\\.${name}\\.identities\\b`).test(content));
+  return read.length > 0 && read.every(({ body }) => /\bversions\s*=\s*meshstack_building_block_definition\.[\w-]+\.versions\b/.test(body));
 }
 
 export function declaresSummaryOutput(integrationContent) {
