@@ -25,18 +25,46 @@ locals {
   assume_federated_role_name = "${var.name}-role"
 }
 
+data "aws_iam_openid_connect_provider" "runner" {
+  for_each = toset(var.runner_identities[*].issuer)
+
+  url = each.key
+}
+
 locals {
-  # One entry per statement of the trust policy.
-  trusted_identities = [{
-    oidc_provider_arn = var.oidc_provider_arn
-    issuer            = var.workload_identity_federation.issuer
-    audience          = var.workload_identity_federation.audience
-    subjects          = var.workload_identity_federation.subjects
-  }]
+  trusted_identities = concat(
+    var.workload_identity_federation == null ? [] : [{
+      oidc_provider_arn = var.oidc_provider_arn
+      issuer            = var.workload_identity_federation.issuer
+      audience          = var.workload_identity_federation.audience
+      subjects          = var.workload_identity_federation.subjects
+    }],
+    [
+      for identity in var.runner_identities : {
+        oidc_provider_arn = data.aws_iam_openid_connect_provider.runner[identity.issuer].arn
+        issuer            = identity.issuer
+        audience          = identity.audience
+        subjects          = [identity.subject]
+      }
+      if identity.subject != null
+    ],
+  )
 }
 
 data "aws_iam_policy_document" "workload_identity_federation" {
   version = "2012-10-17"
+
+  lifecycle {
+    precondition {
+      condition     = length(local.trusted_identities) > 0
+      error_message = "The role would trust no identity. Pass workload_identity_federation, or runner_identities with at least one subject. A subject is null when no version of the definition runs on that runner."
+    }
+
+    precondition {
+      condition     = var.workload_identity_federation == null || var.oidc_provider_arn != null
+      error_message = "workload_identity_federation needs oidc_provider_arn."
+    }
+  }
 
   dynamic "statement" {
     for_each = local.trusted_identities
