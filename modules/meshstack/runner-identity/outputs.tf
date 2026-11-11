@@ -17,3 +17,19 @@ output "audience" {
   description = "The audience of the runner's token for `cloud`, for the backplane to trust."
   value       = local.token.audience
 }
+
+output "identities" {
+  description = "One identity per runner to trust, for the backplane. `subject` is null for a runner that no version runs on."
+  value = [
+    for identity in local.identities : {
+      issuer   = identity.issuer
+      audience = identity.audience
+      subject  = length(identity.subjects) == 1 ? identity.subjects[0] : null
+    }
+  ]
+
+  precondition {
+    condition     = alltrue([for identity in local.identities : length(identity.subjects) <= 1])
+    error_message = "Versions with the same issuer and audience present different subjects, so the subject of a runner is not clear. This happens when two of the runners share issuer and audience but not the subject template."
+  }
+}
