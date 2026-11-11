@@ -44,11 +44,30 @@ variable "metering_kraken_url" {
   description = "Kraken API endpoint of the same meshStack, e.g. `https://kraken.example.meshcloud.io`."
 }
 
+variable "metering_platform_identifier" {
+  type        = string
+  nullable    = false
+  description = "Full identifier `<platform>.<location>` of the STACKIT meshPlatform whose tenants receive the usage reports, e.g. `stackit.global`."
+}
+
+variable "metering_api_user" {
+  type        = string
+  nullable    = false
+  description = "Username of the meshStack API user that lists meshTenants and imports usage reports. An organization admin creates it in meshPanel; the metering API accepts no API keys."
+}
+
+variable "metering_api_secret" {
+  type        = string
+  nullable    = false
+  sensitive   = true
+  description = "Password of the meshStack API user."
+}
+
 variable "metering_schedule" {
   type        = string
   nullable    = false
   default     = "0 * * * *"
-  description = "Cron schedule preselected on the order form."
+  description = "Cron schedule preselected on the order form. Each run re-submits the full current month."
 }
 
 variable "metering_image_tag" {
@@ -117,6 +136,12 @@ output "metering_service_account_email" {
   value       = module.backplane.metering_service_account_email
 }
 
+locals {
+  api_secret_version = nonsensitive(sha256(var.metering_api_secret))
+  # The kubernetes provider rewrites a write-only secret only when its revision changes.
+  credentials_revision = parseint(substr(local.api_secret_version, 0, 7), 16) + 1
+}
+
 # Lookup specified runner for workload identity federation info. Null results in the default hosted runner.
 data "meshstack_building_block_runner" "this" {
   metadata = {
@@ -175,16 +200,14 @@ resource "meshstack_building_block_definition" "this" {
     **Example 1: Hourly costs for the STACKIT platform**
     The platform team orders the metering in its operations namespace for the platform `stackit.global`. Every hour the CronJob re-submits the costs of the current month.
 
-    **Example 2: Rotate the API user password**
-    The team changes the password of the meshStack API user, enters it here and increases the credentials revision, so the next run writes it to the namespace.
+    **Example 2: Part of Platform Metering**
+    The Platform Metering building block orders this one in its metering namespace when the team ticks STACKIT, next to the metering of other clouds.
 
     ## 🔐 No STACKIT key
 
     The CronJob acts as a STACKIT service account with read access to the organization's costs through workload identity federation: STACKIT trusts the token of the CronJob's Kubernetes service account in your namespace. There is no STACKIT key to store or rotate.
 
-    ## 📋 Before you order
-
-    A meshStack **API user** that may list meshTenants and import usage reports. An organization admin creates it in meshPanel under Administration → Access Control → API Users. The metering API accepts no API keys.
+    The meshStack API user and the meshPlatform the reports go to are set by the platform team, so you only choose how often the job runs.
 
     ## 📊 Shared Responsibility
 
@@ -192,8 +215,8 @@ resource "meshstack_building_block_definition" "this" {
     |---|:---:|:---:|
     | Operate the Kubernetes cluster | ✅ | ❌ |
     | Provide the STACKIT identity with read access to the costs | ✅ | ❌ |
+    | Provide and rotate the meshStack API user | ✅ | ❌ |
     | Publish the metering image | ✅ | ❌ |
-    | Provide and rotate the meshStack API user | ❌ | ✅ |
     | Monitor failed metering runs | ❌ | ✅ |
     EOT
     ))
@@ -217,43 +240,6 @@ resource "meshstack_building_block_definition" "this" {
     dependency_refs = [var.kubernetes_service_account_definition_ref]
 
     inputs = {
-      platform_identifier = {
-        display_name    = "meshPlatform"
-        description     = "Full identifier `<platform>.<location>` of the STACKIT meshPlatform whose tenants receive the usage reports, e.g. `stackit.global`."
-        type            = "STRING"
-        assignment_type = "USER_INPUT"
-        display_order   = 1
-      }
-
-      meshstack_api_user = {
-        display_name           = "meshStack API User"
-        description            = "Username of the meshStack API user that lists meshTenants and imports usage reports."
-        type                   = "STRING"
-        assignment_type        = "USER_INPUT"
-        updateable_by_consumer = true
-        display_order          = 2
-      }
-
-      meshstack_api_secret = {
-        display_name           = "meshStack API User Password"
-        description            = "Password of the meshStack API user."
-        type                   = "STRING"
-        assignment_type        = "USER_INPUT"
-        sensitive              = {}
-        updateable_by_consumer = true
-        display_order          = 3
-      }
-
-      credentials_revision = {
-        display_name           = "Credentials Revision"
-        description            = "Increase after changing the API user password, so the run writes it to the Kubernetes secret."
-        type                   = "INTEGER"
-        assignment_type        = "USER_INPUT"
-        default_value          = jsonencode(1)
-        updateable_by_consumer = true
-        display_order          = 4
-      }
-
       schedule = {
         display_name           = "Schedule"
         description            = "Cron schedule of the metering job. Each run re-submits the full current month."
@@ -261,7 +247,7 @@ resource "meshstack_building_block_definition" "this" {
         assignment_type        = "USER_INPUT"
         default_value          = jsonencode(var.metering_schedule)
         updateable_by_consumer = true
-        display_order          = 5
+        display_order          = 1
       }
 
       kubeconfig = {
@@ -277,6 +263,41 @@ resource "meshstack_building_block_definition" "this" {
         description     = "Kubernetes namespace of the tenant the CronJob runs in."
         type            = "STRING"
         assignment_type = "PLATFORM_TENANT_ID"
+      }
+
+      platform_identifier = {
+        display_name    = "meshPlatform"
+        description     = "STACKIT meshPlatform whose tenants receive the usage reports."
+        type            = "STRING"
+        assignment_type = "STATIC"
+        argument        = jsonencode(var.metering_platform_identifier)
+      }
+
+      meshstack_api_user = {
+        display_name    = "meshStack API User"
+        type            = "STRING"
+        assignment_type = "STATIC"
+        argument        = jsonencode(var.metering_api_user)
+      }
+
+      meshstack_api_secret = {
+        display_name    = "meshStack API User Password"
+        type            = "STRING"
+        assignment_type = "STATIC"
+        sensitive = {
+          argument = {
+            secret_value   = var.metering_api_secret
+            secret_version = local.api_secret_version
+          }
+        }
+      }
+
+      credentials_revision = {
+        display_name    = "Credentials Revision"
+        description     = "Changes with the API user password, so a run writes a new password to the Kubernetes secret."
+        type            = "INTEGER"
+        assignment_type = "STATIC"
+        argument        = jsonencode(local.credentials_revision)
       }
 
       meshstack_meshfed_url = {

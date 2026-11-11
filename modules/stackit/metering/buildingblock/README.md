@@ -31,7 +31,7 @@ No modules.
 
 | Name | Description | Type | Default | Required |
 | ---- | ----------- | ---- | ------- | :------: |
-| <a name="input_credentials_revision"></a> [credentials\_revision](#input\_credentials\_revision) | Increase to write a changed API user password to the Kubernetes secret. | `number` | n/a | yes |
+| <a name="input_credentials_revision"></a> [credentials\_revision](#input\_credentials\_revision) | Changes with the API user password, so the run writes the new password to the Kubernetes secret. | `number` | n/a | yes |
 | <a name="input_image_tag"></a> [image\_tag](#input\_image\_tag) | Tag of the `ghcr.io/meshcloud/mesh-custom-metering/mesh-metering-stackit` image. | `string` | n/a | yes |
 | <a name="input_kubeconfig"></a> [kubeconfig](#input\_kubeconfig) | Kubeconfig (YAML) of a service account that may manage service accounts, Secrets and CronJobs in `namespace`. | `string` | n/a | yes |
 | <a name="input_kubernetes_oidc_issuer"></a> [kubernetes\_oidc\_issuer](#input\_kubernetes\_oidc\_issuer) | OIDC issuer of the cluster's service account tokens, which STACKIT must be able to reach. | `string` | n/a | yes |

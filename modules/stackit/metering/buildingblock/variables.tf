@@ -1,3 +1,23 @@
+variable "schedule" {
+  description = "Cron schedule of the metering job. Each run re-submits the full current month."
+  type        = string
+  nullable    = false
+}
+
+variable "kubeconfig" {
+  description = "Kubeconfig (YAML) of a service account that may manage service accounts, Secrets and CronJobs in `namespace`."
+  type        = string
+  sensitive   = true
+  ephemeral   = true
+  nullable    = false
+}
+
+variable "namespace" {
+  description = "Kubernetes namespace of the tenant the CronJob runs in."
+  type        = string
+  nullable    = false
+}
+
 variable "platform_identifier" {
   description = "Full identifier `<platform>.<location>` of the STACKIT meshPlatform whose tenants receive the usage reports, e.g. `stackit.global`."
   type        = string
@@ -19,7 +39,7 @@ variable "meshstack_api_secret" {
 }
 
 variable "credentials_revision" {
-  description = "Increase to write a changed API user password to the Kubernetes secret."
+  description = "Changes with the API user password, so the run writes the new password to the Kubernetes secret."
   type        = number
   nullable    = false
 
@@ -27,26 +47,6 @@ variable "credentials_revision" {
     condition     = var.credentials_revision >= 1
     error_message = "credentials_revision must be at least 1, or the kubernetes provider writes the secret empty."
   }
-}
-
-variable "schedule" {
-  description = "Cron schedule of the metering job. Each run re-submits the full current month."
-  type        = string
-  nullable    = false
-}
-
-variable "kubeconfig" {
-  description = "Kubeconfig (YAML) of a service account that may manage service accounts, Secrets and CronJobs in `namespace`."
-  type        = string
-  sensitive   = true
-  ephemeral   = true
-  nullable    = false
-}
-
-variable "namespace" {
-  description = "Kubernetes namespace of the tenant the CronJob runs in."
-  type        = string
-  nullable    = false
 }
 
 variable "meshstack_meshfed_url" {
