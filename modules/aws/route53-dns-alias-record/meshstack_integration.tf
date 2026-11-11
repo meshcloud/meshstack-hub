@@ -28,9 +28,9 @@ variable "record_types" {
 
 variable "aws_oidc_provider_arn" {
   type        = string
-  nullable    = false
+  default     = null
   description = <<-EOT
-  ARN of the IAM OIDC provider for the meshStack runner WIF token issuer in this AWS account.
+  No longer used. The backplane looks up the IAM OIDC provider of each runner's issuer in this AWS account.
   See .agents/references/aws-backplane.md#the-shared-oidc-provider
   EOT
 }
@@ -61,6 +61,10 @@ variable "meshstack" {
       kind = string
       uuid = string
     }))
+    trusted_runner_refs = optional(list(object({
+      kind = string
+      uuid = string
+    })), [])
   })
   description = "Shared meshStack context, see docs."
 }
@@ -85,8 +89,10 @@ variable "hub" {
 module "runner" {
   source = "github.com/meshcloud/meshstack-hub//modules/meshstack/runner-identity?ref=${var.hub.git_ref}"
 
-  cloud      = "aws"
-  runner_ref = var.meshstack.runner_ref
+  cloud               = "aws"
+  runner_ref          = var.meshstack.runner_ref
+  trusted_runner_refs = var.meshstack.trusted_runner_refs
+  versions            = meshstack_building_block_definition.this.versions
 }
 
 output "building_block_definition" {
@@ -101,13 +107,7 @@ module "backplane" {
   source = "github.com/meshcloud/meshstack-hub//modules/aws/route53-dns-alias-record/backplane?ref=${var.hub.git_ref}"
 
   hosted_zone_ids   = var.hosted_zone_ids
-  oidc_provider_arn = var.aws_oidc_provider_arn
-
-  workload_identity_federation = {
-    issuer   = module.runner.issuer
-    audience = module.runner.audience
-    subjects = [meshstack_building_block_definition.this.version_latest.workload_identity_federation.subject]
-  }
+  runner_identities = module.runner.identities
 }
 
 resource "meshstack_building_block_definition" "this" {
