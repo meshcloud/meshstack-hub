@@ -358,8 +358,8 @@ module "backplane" {
   oidc_provider_arn = var.aws_oidc_provider_arn
 
   workload_identity_federation = {
-    issuer   = data.meshstack_building_block_runner.this.spec.workload_identity_federation.issuer
-    audience = data.meshstack_building_block_runner.this.spec.workload_identity_federation.aws.audience
+    issuer   = module.runner.issuer
+    audience = module.runner.audience
     subjects = [meshstack_building_block_definition.this.version_latest.workload_identity_federation.subject]
   }
 }
@@ -375,7 +375,7 @@ AWS_WEB_IDENTITY_TOKEN_FILE = {
   type            = "STRING"
   assignment_type = "STATIC"
   is_environment  = true
-  argument        = jsonencode(data.meshstack_building_block_runner.this.spec.workload_identity_federation.aws.token_path)
+  argument        = jsonencode(module.runner.token_path)
 }
 ```
 
