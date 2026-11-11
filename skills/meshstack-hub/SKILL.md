@@ -274,9 +274,10 @@ then ask the user in one message for:
   example through `az login`, `aws sso login` or `gcloud auth application-default login`. If the
   user does not give you these rights, they run `tofu apply` themselves after you have shown them
   the plan.
-- **One-time steps the README names.** For example, an AWS module with `aws_oidc_provider_arn` needs
-  [`modules/aws/oidc-provider`](https://raw.githubusercontent.com/meshcloud/meshstack-hub/main/modules/aws/oidc-provider/README.md)
-  applied once per AWS account, and a GCP project may need an API turned on by its owner.
+- **One-time steps the README names.** For example, an AWS module with workload identity federation
+  needs [`modules/aws/oidc-provider`](https://raw.githubusercontent.com/meshcloud/meshstack-hub/main/modules/aws/oidc-provider/README.md)
+  applied once per runner issuer and AWS account, and a GCP project may need an API turned on by its
+  owner.
 - **Credentials for a module without a cloud backplane.** For example, `github/repository` takes the
   ID, installation ID and private key of a GitHub App. Pass a secret as a `TF_VAR_<name>`
   environment variable or from the user's secret store, never in a committed file.
@@ -284,6 +285,10 @@ then ask the user in one message for:
   `meshstack.runner_ref`. Without it, the definition runs on the default runner.
   A module with workload identity federation looks the runner up to read its token settings, so
   the meshStack API key that applies it needs the permission to list building block runners.
+  A building block keeps the runner of the definition version it was created with. So when a
+  definition moves to another runner and the module has `meshstack.trusted_runner_refs`, list the
+  old runner there until every building block uses a version on the new runner. The AWS modules
+  have it.
 
 In the plan for the first apply, point out what it creates in the cloud: identities, role
 definitions and role assignments. They decide what the runner may do in the user's cloud, so the

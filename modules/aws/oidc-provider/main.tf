@@ -2,9 +2,6 @@
 # can only be registered once in an account no matter how many building block backplanes federate
 # through it. That makes it platform infrastructure rather than something a backplane owns — see
 # .agents/references/aws-backplane.md#the-shared-oidc-provider.
-#
-# Apply this once per AWS account that hosts building block backplanes and pass its `arn` output to
-# every backplane in that account.
 
 variable "workload_identity_federation" {
   type = object({
