@@ -1,0 +1,69 @@
+/*
+ * Custom Platform Metering reference architecture.
+ * Conventions: .agents/references/diagrams.md — render with: task diagrams
+ */
+digraph custom_platform_metering {
+  rankdir=TB
+  splines=ortho
+  forcelabels=true
+  bgcolor="white"
+  nodesep=0.55
+  ranksep=0.85
+
+  node [shape=box style="rounded,filled" fontname="Helvetica" fontsize=11
+        fillcolor="#ffffff" color="#a2abb8" penwidth=1.1 margin="0.20,0.11"]
+  edge [fontname="Helvetica" fontsize=9 fontcolor="#697180" color="#8b95a3" arrowsize=0.7]
+
+  subgraph cluster_mesh {
+    label="  meshStack"
+    labeljust=l
+    fontname="Helvetica" fontsize=12 fontcolor="#697180"
+    style="rounded" color="#d5dae0"
+    margin=18
+
+    SETUP [label="📦 Custom Platform Metering\nordered once by the platform team" fillcolor="#ecedfb" color="#9aa2e6"]
+    PM    [label="📦 Platform Metering BBD\nordered by a workspace" fillcolor="#ecedfb" color="#9aa2e6"]
+    SA    [label="📦 Kubernetes Service Account BBD" fillcolor="#ecedfb" color="#9aa2e6"]
+    MET   [label="📦 STACKIT / T Cloud Metering BBD\none per cloud switched on" fillcolor="#ecedfb" color="#9aa2e6"]
+    PROJ  [label="🗂️ Metering project\nwith one namespace tenant" fillcolor="#e5f2ea" color="#85bfa0"]
+    REP   [label="📊 Usage reports\non the cloud's tenants" fillcolor="#e5f2ea" color="#85bfa0"]
+
+    { rank=same; SA -> MET [style=invis] }
+
+    SETUP -> PM  [xlabel="creates"]
+    SETUP -> SA  [xlabel="creates"]
+    SETUP -> MET [xlabel="creates"]
+    PM    -> PROJ [xlabel="creates"]
+  }
+
+  subgraph cluster_k8s {
+    label="  Kubernetes cluster"
+    labeljust=l
+    fontname="Helvetica" fontsize=12 fontcolor="#697180"
+    style="rounded" color="#d5dae0"
+    margin=18
+
+    DEP [label="🔑 Deployer service account\nset up by the backplane" fillcolor="#eef2f6" color="#93a7bb"]
+    NS  [label="☸️ Metering namespace" fillcolor="#e5f2ea" color="#85bfa0"]
+    JOB [label="⏱️ Metering CronJob\none per selected cloud" fillcolor="#e5f2ea" color="#85bfa0"]
+
+    NS -> JOB [xlabel="runs"]
+  }
+
+  subgraph cluster_clouds {
+    label="  Clouds"
+    labeljust=l
+    fontname="Helvetica" fontsize=12 fontcolor="#697180"
+    style="rounded" color="#d5dae0"
+    margin=18
+
+    STK [label="💶 STACKIT Cost API\nread through workload identity federation" fillcolor="#ffffff" color="#a2abb8"]
+    OTC [label="💶 T Cloud Financial Dashboard\nread with an API key" fillcolor="#ffffff" color="#a2abb8"]
+  }
+
+  SA   -> DEP [xlabel="deploys as" style=dotted]
+  PROJ -> NS  [xlabel="tenant" style=dotted]
+  JOB  -> STK [xlabel="reads costs" style=dashed]
+  JOB  -> OTC [xlabel="reads costs" style=dashed]
+  JOB  -> REP [xlabel="submits" style=dotted]
+}
