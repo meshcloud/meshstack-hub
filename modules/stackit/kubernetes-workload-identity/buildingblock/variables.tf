@@ -16,7 +16,7 @@ variable "stackit_project_id" {
   nullable    = false
 }
 
-variable "stackit_service_account_email" {
+variable "workload_service_account_email" {
   description = "STACKIT service account the Kubernetes workload acts as."
   type        = string
   nullable    = false

@@ -223,7 +223,8 @@ resource "meshstack_building_block_definition" "this" {
         display_order   = 3
       }
 
-      stackit_service_account_email = {
+      # Not `stackit_service_account_email`: input keys must differ from STACKIT_SERVICE_ACCOUNT_EMAIL regardless of casing.
+      workload_service_account_email = {
         display_name    = "STACKIT Service Account"
         type            = "STRING"
         assignment_type = "STATIC"
