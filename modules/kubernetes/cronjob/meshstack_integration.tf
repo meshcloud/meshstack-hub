@@ -179,20 +179,16 @@ resource "meshstack_building_block_definition" "this" {
         })
       }
 
+      # CODE, because meshStack only encrypts STRING, FILE and CODE inputs, so a sensitive one cannot be JSON.
       secret_env = {
         display_name           = "Secret Environment Variables"
-        description            = "Environment variables of the container that are kept in a Kubernetes secret, as name and value."
-        type                   = "JSON"
+        description            = "Environment variables of the container that are kept in a Kubernetes secret, as a JSON object of name and value, e.g. {\"API_TOKEN\": \"...\"}."
+        type                   = "CODE"
         assignment_type        = "USER_INPUT"
         is_optional            = true
         updateable_by_consumer = true
         sensitive              = {}
         display_order          = 5
-        json_schema = jsonencode({
-          "$schema"            = "http://json-schema.org/draft-07/schema#"
-          type                 = "object"
-          additionalProperties = { type = "string" }
-        })
       }
 
       secret_env_revision = {
