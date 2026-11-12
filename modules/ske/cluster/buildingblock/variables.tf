@@ -23,11 +23,6 @@ variable "cluster_name" {
   }
 }
 
-variable "kubernetes_version_min" {
-  type        = string
-  description = "Minimum Kubernetes minor version to run. Null lets STACKIT pick the current default."
-}
-
 variable "node_pool" {
   type = object({
     name               = optional(string, "pool-1")
