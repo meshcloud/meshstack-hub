@@ -16,13 +16,12 @@ variable "kubernetes" {
 
 variable "metering" {
   type = object({
-    meshfed_url = string
-    kraken_url  = string
-    api_user    = string
-    schedule    = optional(string, "0 * * * *")
+    api_user   = string
+    schedule   = optional(string, "0 * * * *")
+    kraken_url = optional(string)
   })
   nullable    = false
-  description = "meshStack endpoints the usage reports go to, the API user that submits them, and the cron schedule of every metering job."
+  description = "The meshStack API user that submits the usage reports, the cron schedule of every metering job, and the Kraken URL of this meshStack if it does not follow the API URL."
 }
 
 variable "metering_api_secret" {

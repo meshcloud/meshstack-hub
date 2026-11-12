@@ -12,12 +12,27 @@ locals {
     runner_ref                  = local.runner_ref
   }
 
+  # The reports go to the meshStack this run works against. Its Kraken API follows the meshfed URL on
+  # meshcloud-hosted instances, e.g. https://federation.example.meshcloud.io and
+  # https://kraken.example.meshcloud.io; `metering.kraken_url` overrides that.
+  meshfed_url = trimsuffix(data.meshstack_instance.this.endpoint, "/")
+  kraken_url  = var.metering.kraken_url != null ? var.metering.kraken_url : replace(local.meshfed_url, "://federation.", "://kraken.")
+
   # Keyed by the cloud name on the Platform Metering order form, which also names each metering
   # building block.
   metering_definitions = merge(
     var.stackit_enabled ? { STACKIT = module.stackit_metering[0].building_block_definition } : {},
     var.tcloud_enabled ? { "T Cloud" = module.tcloud_metering[0].building_block_definition } : {},
   )
+}
+
+data "meshstack_instance" "this" {
+  lifecycle {
+    postcondition {
+      condition     = var.metering.kraken_url != null || strcontains(self.endpoint, "://federation.")
+      error_message = "The meshStack API URL ${self.endpoint} does not start with federation., so its Kraken URL cannot be derived. Set metering.kraken_url."
+    }
+  }
 }
 
 # The filter matches the full `<platform>.<location>` identifier; `one()` fails loudly if it stops
@@ -57,8 +72,8 @@ module "stackit_metering" {
 
   kubernetes_service_account_definition_ref = module.service_account.building_block_definition.ref
 
-  metering_meshfed_url = var.metering.meshfed_url
-  metering_kraken_url  = var.metering.kraken_url
+  metering_meshfed_url = local.meshfed_url
+  metering_kraken_url  = local.kraken_url
   metering_api_user    = var.metering.api_user
   metering_api_secret  = var.metering_api_secret
   metering_schedule    = var.metering.schedule
@@ -78,8 +93,8 @@ module "tcloud_metering" {
 
   kubernetes_service_account_definition_ref = module.service_account.building_block_definition.ref
 
-  metering_meshfed_url = var.metering.meshfed_url
-  metering_kraken_url  = var.metering.kraken_url
+  metering_meshfed_url = local.meshfed_url
+  metering_kraken_url  = local.kraken_url
   metering_api_user    = var.metering.api_user
   metering_api_secret  = var.metering_api_secret
   metering_schedule    = var.metering.schedule

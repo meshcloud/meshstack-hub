@@ -204,7 +204,7 @@ resource "meshstack_building_block_definition" "this" {
 
       metering = {
         display_name           = "meshStack Metering API"
-        description            = "meshStack endpoints the usage reports go to, the API user that submits them, and the cron schedule of every metering job. An organization admin creates the API user in meshPanel; the metering API accepts no API keys."
+        description            = "The meshStack API user that submits the usage reports, and the cron schedule of every metering job. An organization admin creates the API user in meshPanel; the metering API accepts no API keys. The reports go to this meshStack."
         type                   = "JSON"
         assignment_type        = "USER_INPUT"
         updateable_by_consumer = true
@@ -213,12 +213,11 @@ resource "meshstack_building_block_definition" "this" {
         json_schema = jsonencode({
           "$schema" = "http://json-schema.org/draft-07/schema#"
           type      = "object"
-          required  = ["meshfed_url", "kraken_url", "api_user"]
+          required  = ["api_user"]
           properties = {
-            meshfed_url = { type = "string", title = "meshfed URL, e.g. https://federation.example.meshcloud.io" }
-            kraken_url  = { type = "string", title = "Kraken URL, e.g. https://kraken.example.meshcloud.io" }
-            api_user    = { type = "string", title = "API User" }
-            schedule    = { type = "string", title = "Cron Schedule", default = local.metering_default.schedule }
+            api_user   = { type = "string", title = "API User" }
+            schedule   = { type = "string", title = "Cron Schedule", default = local.metering_default.schedule }
+            kraken_url = { type = "string", title = "Kraken URL, only if it is not the API URL with kraken. instead of federation." }
           }
         })
       }
