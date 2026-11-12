@@ -361,7 +361,7 @@ resource "meshstack_building_block_definition" "this" {
   spec = {
     display_name     = coalesce(var.bbd_display_name, "Platform Metering")
     description      = coalesce(var.bbd_description, "Brings the costs of your clouds into meshStack: pick the clouds, and it sets up a metering job for each of them.")
-    symbol           = "https://raw.githubusercontent.com/meshcloud/meshstack-hub/${var.hub.git_ref}/modules/kubernetes/metering-starterkit/buildingblock/logo.png"
+    symbol           = "https://raw.githubusercontent.com/meshcloud/meshstack-hub/${var.hub.git_ref}/modules/meshstack/metering-starterkit/buildingblock/logo.png"
     target_type      = "WORKSPACE_LEVEL"
     run_transparency = true
 
@@ -412,7 +412,7 @@ resource "meshstack_building_block_definition" "this" {
       terraform = {
         terraform_version              = "1.12.5"
         repository_url                 = "https://github.com/meshcloud/meshstack-hub.git"
-        repository_path                = "modules/kubernetes/metering-starterkit/buildingblock"
+        repository_path                = "modules/meshstack/metering-starterkit/buildingblock"
         ref_name                       = var.hub.git_ref
         use_mesh_http_backend_fallback = true
       }

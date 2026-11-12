@@ -13,7 +13,7 @@ requiresBackplane: false
 `meshstack_integration.tf` sets up the whole custom metering of a meshStack in one apply. It creates
 **Platform Metering**, the definition workspaces order, and the definitions it orders:
 
-- [`kubernetes/service-account`](../../service-account), with a deployer identity on the cluster.
+- [`kubernetes/service-account`](../../../kubernetes/service-account), with a deployer identity on the cluster.
 - [`stackit/metering`](../../../stackit/metering) with `stackit_enabled`, with its STACKIT identities.
 - [`otc/metering`](../../../otc/metering) with `tcloud_enabled`.
 
@@ -79,7 +79,7 @@ data "meshstack_platforms" "kubernetes" {
 }
 
 module "metering_starterkit" {
-  source = "git::https://github.com/meshcloud/meshstack-hub.git//modules/kubernetes/metering-starterkit?ref=<hub ref>"
+  source = "git::https://github.com/meshcloud/meshstack-hub.git//modules/meshstack/metering-starterkit?ref=<hub ref>"
 
   kubernetes_platform_ref      = one(data.meshstack_platforms.kubernetes.platforms).ref
   kubernetes_landing_zone_name = "<landing zone>"
