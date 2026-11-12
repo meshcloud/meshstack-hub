@@ -1,7 +1,7 @@
 ---
 name: Platform Metering
 supportedPlatforms:
-  - kubernetes
+  - meshstack
 description: Sets up custom metering for the clouds a platform team selects, in one Kubernetes namespace with one metering CronJob per cloud.
 # A composition of other building blocks that authenticates with the run's ephemeral meshStack API
 # key, so there is nothing to set up cloud-side beforehand.
