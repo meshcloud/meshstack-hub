@@ -522,7 +522,8 @@ resource "meshstack_building_block_definition" "this" {
         description     = "`{}` without STACKIT."
         type            = "CODE"
         assignment_type = "STATIC"
-        argument        = jsonencode(jsonencode(var.stackit_enabled ? module.stackit_workload_identity[0].building_block_definition.version_ref : {}))
+        # try: without STACKIT the module has no instance, and a conditional cannot join the version ref with `{}`.
+        argument = jsonencode(jsonencode(try(module.stackit_workload_identity[0].building_block_definition.version_ref, {})))
       }
 
       metering_jobs = {
