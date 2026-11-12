@@ -106,6 +106,19 @@ variable "additional_api_key_permissions" {
   description = "Permissions to add to the ones the backplane grants its API key. See backplane/README.md."
 }
 
+variable "approval_policies" {
+  type = object({
+    building_block_creation = optional(bool, false)
+    user_input_changes      = optional(bool, false)
+    any_input_changes       = optional(bool, false)
+    manual_triggers         = optional(bool, false)
+    version_upgrade         = optional(bool, false)
+  })
+  nullable    = false
+  default     = {}
+  description = "Run triggers that need an operator's approval before the run is applied. The defaults are the provider's own, and the provider asserts them whenever the definition sets no policies — so a gate switched on in meshPanel is turned off again by the next apply unless it is set here."
+}
+
 variable "meshstack" {
   type = object({
     owning_workspace_identifier = string
@@ -236,6 +249,8 @@ resource "meshstack_building_block_definition" "this" {
       frequency          = "DAILY"
       automatic_approval = true
     }
+
+    approval_policies = var.approval_policies
 
     readme = coalesce(var.bbd_readme, local.default_readme)
   }
