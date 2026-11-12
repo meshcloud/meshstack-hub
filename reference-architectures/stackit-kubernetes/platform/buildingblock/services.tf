@@ -30,6 +30,7 @@ resource "meshstack_building_block" "dns" {
         subdomain                     = { value = jsonencode(var.dns_subdomain) }
         wildcard_target_ip            = { value = jsonencode(local.ingress_load_balancer_ip) }
         contact_email                 = { value = jsonencode(var.cluster_issuer_email) }
+        "kubeconfig.yaml"             = local.cluster_kubeconfig_input
         STACKIT_SERVICE_ACCOUNT_EMAIL = { value = jsonencode(local.service_account_email) }
         release_on_destroy            = { value = jsonencode(local.imports.dns != null && var.playground_mode) }
       },
