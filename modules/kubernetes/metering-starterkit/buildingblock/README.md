@@ -38,6 +38,7 @@ No modules.
 | <a name="input_metering_building_block_definition_version_refs"></a> [metering\_building\_block\_definition\_version\_refs](#input\_metering\_building\_block\_definition\_version\_refs) | Versions of the metering definitions, keyed by the cloud name offered in `clouds`. | <pre>map(object({<br/>    uuid = string<br/>  }))</pre> | n/a | yes |
 | <a name="input_payment_method"></a> [payment\_method](#input\_payment\_method) | Payment method of the metering project. | <pre>object({<br/>    kind = string<br/>    name = string<br/>  })</pre> | n/a | yes |
 | <a name="input_platform_ref"></a> [platform\_ref](#input\_platform\_ref) | Kubernetes meshPlatform the metering namespace is created on. | <pre>object({<br/>    uuid = string<br/>  })</pre> | n/a | yes |
+| <a name="input_project_display_name"></a> [project\_display\_name](#input\_project\_display\_name) | Display name of the metering project in meshPanel. | `string` | n/a | yes |
 | <a name="input_project_name"></a> [project\_name](#input\_project\_name) | Name of the metering project, and so part of its namespace. | `string` | n/a | yes |
 | <a name="input_project_tags"></a> [project\_tags](#input\_project\_tags) | Tags of the metering project. | `map(list(string))` | n/a | yes |
 | <a name="input_schedule"></a> [schedule](#input\_schedule) | Cron schedule of every metering job. | `string` | n/a | yes |

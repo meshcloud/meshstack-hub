@@ -25,6 +25,12 @@ variable "project_name" {
   description = "Name of the metering project, and so part of its namespace."
 }
 
+variable "project_display_name" {
+  type        = string
+  nullable    = false
+  description = "Display name of the metering project in meshPanel."
+}
+
 variable "project_tags" {
   type        = map(list(string))
   nullable    = false

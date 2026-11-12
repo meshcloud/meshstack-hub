@@ -1,7 +1,7 @@
 output "summary" {
   description = "Markdown summary shown in meshPanel after the run."
   value       = <<-EOT
-    # Platform Metering
+    # ${var.project_display_name}
 
     Project **`${meshstack_project.this.metadata.name}`** holds the metering namespace `${meshstack_tenant.this.spec.platform_tenant_id}`.
     %{~if length(local.clouds) == 0}

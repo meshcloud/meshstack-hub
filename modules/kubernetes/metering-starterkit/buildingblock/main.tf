@@ -13,7 +13,7 @@ resource "meshstack_project" "this" {
   }
 
   spec = {
-    display_name              = "Platform Metering"
+    display_name              = var.project_display_name
     payment_method_identifier = var.payment_method.name
     tags                      = var.project_tags
   }

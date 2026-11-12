@@ -41,6 +41,13 @@ variable "metering_project_name" {
   description = "Name of the meshProject every order creates. It is fixed, so a workspace holds one Platform Metering."
 }
 
+variable "metering_project_display_name" {
+  type        = string
+  nullable    = false
+  default     = "Platform Metering"
+  description = "Display name of the meshProject every order creates."
+}
+
 variable "metering_project_tags" {
   type        = map(list(string))
   nullable    = false
@@ -210,6 +217,13 @@ resource "meshstack_building_block_definition" "this" {
         type            = "STRING"
         assignment_type = "STATIC"
         argument        = jsonencode(var.metering_project_name)
+      }
+
+      project_display_name = {
+        display_name    = "Project Display Name"
+        type            = "STRING"
+        assignment_type = "STATIC"
+        argument        = jsonencode(var.metering_project_display_name)
       }
 
       project_tags = {
