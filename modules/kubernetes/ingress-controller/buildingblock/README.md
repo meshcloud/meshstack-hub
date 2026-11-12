@@ -1,5 +1,5 @@
 ---
-name: Kubernetes Ingress
+name: Kubernetes Ingress Controller
 supportedPlatforms:
   - kubernetes
 description: Installs cert-manager, the HAProxy ingress controller and a Let's Encrypt ClusterIssuer on any conformant Kubernetes cluster.
@@ -8,7 +8,7 @@ description: Installs cert-manager, the HAProxy ingress controller and a Let's E
 requiresBackplane: false
 ---
 
-# Kubernetes Ingress Building Block
+# Kubernetes Ingress Controller Building Block
 
 Turns a bare Kubernetes cluster into one that serves HTTPS: **cert-manager**, the **HAProxy ingress
 controller** behind a cloud LoadBalancer, a Let's Encrypt **ClusterIssuer**, and — when `dns01` is
@@ -18,6 +18,9 @@ Nothing here is cloud-specific. It runs on SKE, AKS, EKS or a cluster of your ow
 LoadBalancer annotations differ, and those are an input. AKS needs
 `service.beta.kubernetes.io/azure-load-balancer-health-probe-request-path = "/healthz"`; on STACKIT,
 `lb.stackit.cloud/internal-lb` keeps the load balancer off the public internet.
+
+An application team that wants to deploy an `Ingress` into a cluster uses the Kubernetes manifest
+building block, `modules/kubernetes/manifest`. This block installs the controller itself.
 
 ## The kubeconfig is an input of the building block
 
