@@ -50,12 +50,6 @@ variable "network_definition_uuid" {
   description = "UUID of the T Cloud Public Network building block definition whose blocks this one runs in."
 }
 
-variable "otc_platform_type" {
-  type        = string
-  default     = "OTC"
-  description = "Name of the custom meshStack platform type the projects' tenants live on."
-}
-
 variable "meshstack" {
   type = object({
     owning_workspace_identifier = string
@@ -64,6 +58,11 @@ variable "meshstack" {
       kind = string
       uuid = string
     }))
+    supported_platforms = optional(list(object({
+      kind = optional(string)
+      name = optional(string)
+      uuid = optional(string)
+    })), [{ name = "OTC" }])
   })
   description = "Shared meshStack context, see docs."
 }
@@ -138,7 +137,7 @@ resource "meshstack_building_block_definition" "this" {
     support_url         = "https://console.otc.t-systems.com/cce2.0/"
     target_type         = "TENANT_LEVEL"
     run_transparency    = true
-    supported_platforms = [{ name = var.otc_platform_type }]
+    supported_platforms = var.meshstack.supported_platforms
 
     readme = coalesce(var.bbd_readme, chomp(<<-EOT
     This building block creates a Cloud Container Engine (CCE) Kubernetes cluster in your T Cloud

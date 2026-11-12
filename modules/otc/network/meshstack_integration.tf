@@ -39,12 +39,6 @@ variable "workload_identity_name" {
   description = "Name of the identity provider and IAM group the building block signs in through. Unique across the domain."
 }
 
-variable "otc_platform_type" {
-  type        = string
-  default     = "OTC"
-  description = "Name of the custom meshStack platform type the application teams' tenants live on."
-}
-
 variable "meshstack" {
   type = object({
     owning_workspace_identifier = string
@@ -53,6 +47,11 @@ variable "meshstack" {
       kind = string
       uuid = string
     }))
+    supported_platforms = optional(list(object({
+      kind = optional(string)
+      name = optional(string)
+      uuid = optional(string)
+    })), [{ name = "OTC" }])
   })
   description = "Shared meshStack context, see docs."
 }
@@ -122,7 +121,7 @@ resource "meshstack_building_block_definition" "this" {
     support_url         = "https://console.otc.t-systems.com"
     target_type         = "TENANT_LEVEL"
     run_transparency    = true
-    supported_platforms = [{ name = var.otc_platform_type }]
+    supported_platforms = var.meshstack.supported_platforms
 
     readme = coalesce(var.bbd_readme, chomp(<<-EOT
     This building block creates a private network in your T Cloud Public project: a VPC with one
