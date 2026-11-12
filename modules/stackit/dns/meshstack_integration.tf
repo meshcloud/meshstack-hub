@@ -134,8 +134,9 @@ resource "meshstack_building_block_definition" "this" {
       ## 🔐 Certificates
 
       The zone is enough for HTTP-01 issuance: a hostname resolves to the load balancer, so the ACME
-      server reaches the challenge. A wildcard certificate needs DNS-01 instead, which needs a
-      credential for this zone inside the cluster — this building block creates none.
+      server reaches the challenge. Given a cluster's kubeconfig, the block also installs the STACKIT
+      cert-manager webhook there, with a service account that has `dns.admin` on the project, so
+      cert-manager can issue a wildcard certificate over DNS-01.
 
       ## 📊 Shared responsibility
 
@@ -164,6 +165,16 @@ resource "meshstack_building_block_definition" "this" {
     }
 
     inputs = {
+      "kubeconfig.yaml" = {
+        display_name           = "kubeconfig.yaml"
+        description            = "Kubeconfig of a cluster running cert-manager, to install the DNS-01 solver for this zone. Empty installs none."
+        type                   = "FILE"
+        assignment_type        = "USER_INPUT"
+        sensitive              = {}
+        is_optional            = true
+        updateable_by_consumer = true
+      }
+
       stackit_project_id = {
         display_name    = "STACKIT Project ID"
         description     = "STACKIT project the zone is created in."

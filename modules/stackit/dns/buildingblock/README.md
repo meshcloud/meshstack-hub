@@ -28,16 +28,19 @@ records elsewhere.
 
 ## Certificates
 
-The zone is enough for HTTP-01 certificate issuance, which is what the STACKIT Kubernetes Platform
-reference architecture uses: the hostname resolves to the load balancer, so the ACME server reaches
-the challenge. A wildcard certificate needs DNS-01 instead, which needs a credential for this zone
-inside the cluster — this building block does not create one.
+HTTP-01 works with the zone alone. For a wildcard certificate over DNS-01, pass the
+`kubeconfig.yaml` of a cluster running cert-manager: the block installs the
+[STACKIT cert-manager webhook](https://github.com/stackitcloud/stackit-cert-manager-webhook) there,
+with a service account that has `dns.admin` on the project and a key for it, the only credential
+the webhook accepts. The summary shows the solver for `dns01.solver` of
+`kubernetes/ingress-controller`.
 
 ## Permissions
 
 The run authenticates via Workload Identity Federation as the platform's STACKIT service account,
 which needs the `dns.zone.*` permissions. Both `editor` and the narrower `dns.admin` carry all of
-them.
+them. The ACME solver also needs to create a service account, its key and a role assignment, which
+`editor` together with `iam.member-admin` allows.
 
 ## Taking over a zone
 
@@ -52,12 +55,16 @@ With `imports = {zone_id, record_set_id}`, the building block takes over an exis
 | Name | Version |
 |------|---------|
 | <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.12.0 |
+| <a name="requirement_helm"></a> [helm](#requirement\_helm) | >= 3.0.0, < 4.0.0 |
+| <a name="requirement_kubernetes"></a> [kubernetes](#requirement\_kubernetes) | >= 3.0.0, < 4.0.0 |
 | <a name="requirement_stackit"></a> [stackit](#requirement\_stackit) | >= 0.98.0, < 1.0.0 |
+| <a name="requirement_time"></a> [time](#requirement\_time) | >= 0.11.0, < 1.0.0 |
 
 ## Modules
 
 | Name | Source | Version |
 |------|--------|---------|
+| <a name="module_k8s_acme_solver"></a> [k8s\_acme\_solver](#module\_k8s\_acme\_solver) | ./modules/k8s-acme-solver | n/a |
 | <a name="module_wildcard"></a> [wildcard](#module\_wildcard) | ./modules/record-set | n/a |
 | <a name="module_zone"></a> [zone](#module\_zone) | ./modules/zone | n/a |
 
@@ -69,6 +76,7 @@ No resources.
 
 | Name | Description | Type | Default | Required |
 |------|-------------|------|---------|:--------:|
+| <a name="input_cert_manager_namespace"></a> [cert\_manager\_namespace](#input\_cert\_manager\_namespace) | Namespace cert-manager runs in; used with `kubeconfig.yaml`. | `string` | `"cert-manager"` | no |
 | <a name="input_contact_email"></a> [contact\_email](#input\_contact\_email) | Address in the zone's SOA record, where a resolver problem is reported. | `string` | n/a | yes |
 | <a name="input_default_ttl"></a> [default\_ttl](#input\_default\_ttl) | Default TTL in seconds for records in this zone. | `number` | n/a | yes |
 | <a name="input_imports"></a> [imports](#input\_imports) | Existing zone `<subdomain>.<parent_domain>` and its wildcard record set to take over; null creates both. | <pre>object({<br/>    zone_id       = string<br/>    record_set_id = string<br/>  })</pre> | `null` | no |

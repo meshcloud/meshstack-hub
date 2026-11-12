@@ -14,6 +14,18 @@ module "zone" {
   default_ttl        = var.default_ttl
 }
 
+# Lets cert-manager in the cluster of `kubeconfig.yaml` solve DNS-01 challenges in this project's zones.
+module "k8s_acme_solver" {
+  source = "./modules/k8s-acme-solver"
+
+  lifecycle {
+    enabled = local.kubeconfig_given
+  }
+
+  project_id             = var.stackit_project_id
+  cert_manager_namespace = var.cert_manager_namespace
+}
+
 moved {
   from = stackit_dns_zone.this
   to   = module.zone.stackit_dns_zone.this

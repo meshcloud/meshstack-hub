@@ -71,3 +71,11 @@ variable "release_on_destroy" {
   default     = false
   description = "Leave the zone and its record set in place on destroy. Cannot change once they are managed."
 }
+
+variable "cert_manager_namespace" {
+  type        = string
+  nullable    = false
+  default     = "cert-manager"
+  description = "Namespace cert-manager runs in; used with `kubeconfig.yaml`."
+}
+
