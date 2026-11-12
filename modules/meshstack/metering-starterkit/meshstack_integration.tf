@@ -47,7 +47,7 @@ variable "stackit_enabled" {
   type        = bool
   nullable    = false
   default     = false
-  description = "Offer the metering of STACKIT, see `stackit/metering`. Needs the other `stackit_*` variables and the `stackit` provider configured with an identity that may create service accounts in `stackit_project_id` and assign roles on the organization."
+  description = "Offer the metering of STACKIT, with the `mesh-metering-stackit` image and `stackit/kubernetes-workload-identity`. Needs the other `stackit_*` variables and the `stackit` provider configured with an identity that may create service accounts in `stackit_project_id` and assign roles on the organization."
 }
 
 variable "stackit_platform_identifier" {
@@ -112,7 +112,7 @@ variable "tcloud_enabled" {
   type        = bool
   nullable    = false
   default     = false
-  description = "Offer the metering of T Cloud Public, see `otc/metering`. Needs `tcloud_platform_identifier` and `tcloud_api_token`."
+  description = "Offer the metering of T Cloud Public, with the `mesh-metering-tcloud` image. Needs `tcloud_platform_identifier` and `tcloud_api_token`."
 
   validation {
     condition     = var.stackit_enabled || var.tcloud_enabled
@@ -263,14 +263,14 @@ output "service_account_building_block_definition" {
   value       = module.service_account.building_block_definition
 }
 
-output "metering_building_block_definitions" {
-  description = "The cloud metering definitions on offer, keyed by the cloud name on the order form."
-  value       = local.metering_definitions
+output "cronjob_building_block_definition" {
+  description = "The Kubernetes CronJob definition, which teams can also order on their own namespaces."
+  value       = module.cronjob.building_block_definition
 }
 
 output "stackit_metering_service_account_email" {
   description = "STACKIT service account the STACKIT metering CronJobs act as; null without `stackit_enabled`."
-  value       = one(module.stackit_metering[*].metering_service_account_email)
+  value       = one(module.stackit_workload_identity[*].workload_service_account_email)
 }
 
 module "service_account" {
@@ -285,45 +285,28 @@ module "service_account" {
   hub       = var.hub
 }
 
-module "stackit_metering" {
-  source = "github.com/meshcloud/meshstack-hub//modules/stackit/metering?ref=${var.hub.git_ref}"
-  count  = var.stackit_enabled ? 1 : 0
-
-  stackit_organization_id      = var.stackit_organization_id
-  stackit_project_id           = var.stackit_project_id
-  stackit_service_account_name = var.stackit_service_account_name
-  kubernetes_oidc_issuer       = var.stackit_kubernetes_oidc_issuer
-  metering_platform_identifier = var.stackit_platform_identifier
-  metering_image_tag           = var.stackit_image_tag
+module "cronjob" {
+  source = "github.com/meshcloud/meshstack-hub//modules/kubernetes/cronjob?ref=${var.hub.git_ref}"
 
   kubernetes_service_account_definition_ref = module.service_account.building_block_definition.ref
-
-  metering_meshfed_url = local.meshfed_url
-  metering_kraken_url  = local.kraken_url
-  metering_api_user    = var.metering_api_user
-  metering_api_secret  = var.metering_api_secret
-  metering_schedule    = var.metering_schedule
 
   meshstack = var.meshstack
   hub       = var.hub
 }
 
-module "tcloud_metering" {
-  source = "github.com/meshcloud/meshstack-hub//modules/otc/metering?ref=${var.hub.git_ref}"
-  count  = var.tcloud_enabled ? 1 : 0
+# STACKIT trusts the token of the STACKIT metering CronJob's Kubernetes service account, so the job
+# reads the costs without a key.
+module "stackit_workload_identity" {
+  source = "github.com/meshcloud/meshstack-hub//modules/stackit/kubernetes-workload-identity?ref=${var.hub.git_ref}"
+  count  = var.stackit_enabled ? 1 : 0
 
-  tcloud_api_token             = var.tcloud_api_token
-  tcloud_contract_ids          = var.tcloud_contract_ids
-  metering_platform_identifier = var.tcloud_platform_identifier
-  metering_image_tag           = var.tcloud_image_tag
+  stackit_project_id           = var.stackit_project_id
+  stackit_service_account_name = var.stackit_service_account_name
+  stackit_organization_id      = var.stackit_organization_id
+  stackit_organization_roles   = ["cost-management.cost.reader"]
+  kubernetes_oidc_issuer       = var.stackit_kubernetes_oidc_issuer
 
-  kubernetes_service_account_definition_ref = module.service_account.building_block_definition.ref
-
-  metering_meshfed_url = local.meshfed_url
-  metering_kraken_url  = local.kraken_url
-  metering_api_user    = var.metering_api_user
-  metering_api_secret  = var.metering_api_secret
-  metering_schedule    = var.metering_schedule
+  bbd_display_name = "STACKIT Metering Workload Identity"
 
   meshstack = var.meshstack
   hub       = var.hub
@@ -343,13 +326,54 @@ locals {
   meshfed_url = trimsuffix(data.meshstack_instance.this.endpoint, "/")
   kraken_url  = var.metering_kraken_url != null ? var.metering_kraken_url : replace(local.meshfed_url, "://federation.", "://kraken.")
 
-  # Keyed by the cloud name on the order form, which also names each metering building block.
-  metering_definitions = merge(
-    !var.stackit_enabled ? {} : { STACKIT = module.stackit_metering[0].building_block_definition },
-    !var.tcloud_enabled ? {} : { "T Cloud" = module.tcloud_metering[0].building_block_definition },
+  meshstack_env = {
+    MESHSTACK_MESHFED_URL = local.meshfed_url
+    MESHSTACK_KRAKEN_URL  = local.kraken_url
+    MESHSTACK_API_USER    = var.metering_api_user
+  }
+
+  # The metering images of meshcloud/mesh-custom-metering and how each one runs, keyed by the cloud
+  # name on the order form, which also names each CronJob building block.
+  stackit_token_mount_path = "/var/run/secrets/stackit.cloud/serviceaccount"
+  metering_jobs = merge(
+    !var.stackit_enabled ? {} : {
+      STACKIT = {
+        name  = "mesh-metering-stackit"
+        image = "ghcr.io/meshcloud/mesh-custom-metering/mesh-metering-stackit:${var.stackit_image_tag}"
+        env = merge(local.meshstack_env, {
+          PLATFORM_ID                   = var.stackit_platform_identifier
+          CONTAINER_PARENT_IDS          = var.stackit_organization_id
+          STACKIT_SERVICE_ACCOUNT_EMAIL = module.stackit_workload_identity[0].workload_service_account_email
+          STACKIT_FEDERATED_TOKEN_FILE  = "${local.stackit_token_mount_path}/token"
+        })
+        # The audience the STACKIT SDKs request by default.
+        service_account_token     = { audience = "sts.accounts.stackit.cloud", mount_path = local.stackit_token_mount_path }
+        stackit_workload_identity = true
+      }
+    },
+    !var.tcloud_enabled ? {} : {
+      "T Cloud" = {
+        name  = "mesh-metering-tcloud"
+        image = "ghcr.io/meshcloud/mesh-custom-metering/mesh-metering-tcloud:${var.tcloud_image_tag}"
+        env = merge(local.meshstack_env, { PLATFORM_ID = var.tcloud_platform_identifier },
+          # Unset, the job reads every contract the API key sees in one request.
+          length(var.tcloud_contract_ids) == 0 ? {} : { TCLOUD_CONTRACT_IDS = join(",", var.tcloud_contract_ids) },
+        )
+        service_account_token     = null
+        stackit_workload_identity = false
+      }
+    },
   )
 
-  clouds = sort(keys(local.metering_definitions))
+  metering_secrets = merge(
+    !var.stackit_enabled ? {} : { STACKIT = { MESHSTACK_API_SECRET = var.metering_api_secret } },
+    !var.tcloud_enabled ? {} : { "T Cloud" = { MESHSTACK_API_SECRET = var.metering_api_secret, TCLOUD_API_TOKEN = var.tcloud_api_token } },
+  )
+  metering_secrets_version = nonsensitive(sha256(jsonencode(local.metering_secrets)))
+  # The kubernetes provider rewrites a write-only secret only when its revision changes.
+  credentials_revision = parseint(substr(local.metering_secrets_version, 0, 7), 16) + 1
+
+  clouds = sort(keys(local.metering_jobs))
 }
 
 resource "meshstack_building_block_definition" "this" {
@@ -386,7 +410,7 @@ resource "meshstack_building_block_definition" "this" {
 
     - The project `${var.metering_project_name}` in your workspace with one Kubernetes namespace.
     - A service account that may deploy only into that namespace.
-    - One metering job per selected cloud, running on `${var.metering_schedule}`.
+    - One metering CronJob per selected cloud, running on `${var.metering_schedule}`.
 
     The credentials for meshStack and for each cloud are set up by the platform team, so there is nothing to enter but the clouds.
 
@@ -486,11 +510,48 @@ resource "meshstack_building_block_definition" "this" {
         argument        = jsonencode(jsonencode(module.service_account.building_block_definition.version_ref))
       }
 
-      metering_building_block_definition_version_refs = {
-        display_name    = "Metering Definition Versions"
+      cronjob_definition_version_ref = {
+        display_name    = "CronJob Definition Version"
         type            = "CODE"
         assignment_type = "STATIC"
-        argument        = jsonencode(jsonencode({ for cloud, definition in local.metering_definitions : cloud => definition.version_ref }))
+        argument        = jsonencode(jsonencode(module.cronjob.building_block_definition.version_ref))
+      }
+
+      stackit_workload_identity_definition_version_ref = {
+        display_name    = "STACKIT Workload Identity Definition Version"
+        description     = "`{}` without STACKIT."
+        type            = "CODE"
+        assignment_type = "STATIC"
+        argument        = jsonencode(jsonencode(var.stackit_enabled ? module.stackit_workload_identity[0].building_block_definition.version_ref : {}))
+      }
+
+      metering_jobs = {
+        display_name    = "Metering Jobs"
+        description     = "Image, environment and service account token of each cloud's metering CronJob."
+        type            = "CODE"
+        assignment_type = "STATIC"
+        argument        = jsonencode(jsonencode(local.metering_jobs))
+      }
+
+      metering_secrets = {
+        display_name    = "Metering Secrets"
+        description     = "Secret environment variables of each cloud's metering CronJob."
+        type            = "CODE"
+        assignment_type = "STATIC"
+        sensitive = {
+          argument = {
+            secret_value   = jsonencode(local.metering_secrets)
+            secret_version = local.metering_secrets_version
+          }
+        }
+      }
+
+      credentials_revision = {
+        display_name    = "Credentials Revision"
+        description     = "Changes with the metering secrets, so a run writes them anew to the Kubernetes secrets."
+        type            = "INTEGER"
+        assignment_type = "STATIC"
+        argument        = jsonencode(local.credentials_revision)
       }
 
       schedule = {

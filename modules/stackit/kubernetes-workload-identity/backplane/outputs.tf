@@ -1,6 +1,6 @@
-output "metering_service_account_email" {
-  value       = stackit_service_account.metering.email
-  description = "Email of the service account the metering CronJobs act as."
+output "workload_service_account_email" {
+  value       = stackit_service_account.workload.email
+  description = "Email of the service account the Kubernetes workloads act as."
 }
 
 output "service_account_email" {

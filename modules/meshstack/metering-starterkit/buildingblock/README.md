@@ -14,12 +14,16 @@ requiresBackplane: false
 **Platform Metering**, the definition workspaces order, and the definitions it orders:
 
 - [`kubernetes/service-account`](../../../kubernetes/service-account), with a deployer identity on the cluster.
-- [`stackit/metering`](../../../stackit/metering) with `stackit_enabled`, with its STACKIT identities.
-- [`otc/metering`](../../../otc/metering) with `tcloud_enabled`.
+- [`kubernetes/cronjob`](../../../kubernetes/cronjob), which runs every metering job.
+- [`stackit/kubernetes-workload-identity`](../../../stackit/kubernetes-workload-identity) with
+  `stackit_enabled`, with a STACKIT service account that may read the organization's costs.
 
 A workspace then orders Platform Metering and ticks the clouds. That creates a project with one
-namespace, a service account allowed to deploy only into it, and one metering CronJob per cloud,
-which submits usage reports to the meshStack the starterkit was applied against.
+namespace, a service account allowed to deploy only into it, and per cloud a CronJob with the
+metering image of [mesh-custom-metering](https://github.com/meshcloud/mesh-custom-metering). For
+STACKIT it also federates that CronJob's Kubernetes service account, so the job reads the costs
+without a STACKIT key. The jobs submit usage reports to the meshStack the starterkit was applied
+against.
 
 ## Setting it up
 

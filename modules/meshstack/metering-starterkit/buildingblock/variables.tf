@@ -1,7 +1,7 @@
 variable "clouds" {
   type        = list(string)
   nullable    = false
-  description = "Clouds whose costs are metered, keys of `metering_building_block_definition_version_refs`."
+  description = "Clouds whose costs are metered, keys of `metering_jobs`."
 }
 
 variable "workspace_identifier" {
@@ -61,12 +61,49 @@ variable "service_account_definition_version_ref" {
   description = "Version of the Kubernetes Service Account definition the metering deploys with."
 }
 
-variable "metering_building_block_definition_version_refs" {
-  type = map(object({
+variable "cronjob_definition_version_ref" {
+  type = object({
     uuid = string
+  })
+  nullable    = false
+  description = "Version of the Kubernetes CronJob definition every metering job runs as."
+}
+
+variable "stackit_workload_identity_definition_version_ref" {
+  type = object({
+    uuid = optional(string)
+  })
+  nullable    = false
+  description = "Version of the STACKIT Kubernetes Workload Identity definition, `{}` without STACKIT."
+}
+
+variable "metering_jobs" {
+  type = map(object({
+    name  = string
+    image = string
+    env   = map(string)
+    service_account_token = optional(object({
+      audience   = string
+      mount_path = string
+    }))
+    stackit_workload_identity = bool
   }))
   nullable    = false
-  description = "Versions of the metering definitions, keyed by the cloud name offered in `clouds`."
+  description = "Image, environment and service account token of each cloud's metering CronJob, keyed by the cloud name offered in `clouds`."
+}
+
+variable "metering_secrets" {
+  type        = map(map(string))
+  nullable    = false
+  sensitive   = true
+  ephemeral   = true
+  description = "Secret environment variables of each cloud's metering CronJob."
+}
+
+variable "credentials_revision" {
+  type        = number
+  nullable    = false
+  description = "Changes with `metering_secrets`, so the CronJob building blocks write them anew to their Kubernetes secrets."
 }
 
 variable "schedule" {
