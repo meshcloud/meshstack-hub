@@ -1,68 +1,47 @@
-# Hub mode only: the case builds all three definitions from source, including the probe, which
-# exists for this test alone.
 variable "test_context" {
-  type = object({
-    workspace   = string
-    run_id      = string
-    hub_git_ref = string
-
-    fixtures = object({
-      stackit = object({
-        organization_id = string
-        project_id      = string
-        mesh_tenant_id  = string
-      })
-    })
-  })
+  type     = any
   nullable = false
-}
 
-provider "stackit" {
-  # Credentials come from the environment: a key file locally, WIF in CI.
-  experiments = ["iam"]
+  validation {
+    condition     = can(var.test_context.workspace) && can(var.test_context.run_id)
+    error_message = "test_context must provide workspace and run_id."
+  }
+
+  validation {
+    condition     = can(var.test_context.fixtures.stackit.mesh_tenant_id)
+    error_message = "test_context must provide fixtures.stackit.mesh_tenant_id, the tenant to order the building blocks for."
+  }
+
+  validation {
+    # Unlike most foundation smoke tests, this one also needs the hub ref in foundation mode: the
+    # probe definition runs code from the hub.
+    condition     = can(var.test_context.hub_git_ref)
+    error_message = "test_context must provide hub_git_ref, the hub commit the probe definition runs."
+  }
+
+  validation {
+    condition     = contains(["hub", "foundation"], try(var.test_context.mode, "hub"))
+    error_message = "test_context.mode must be \"hub\" (the default) or \"foundation\"."
+  }
 }
 
 locals {
-  meshstack = {
-    owning_workspace_identifier = var.test_context.workspace
-    tags                        = {}
-  }
-  hub = {
-    git_ref   = var.test_context.hub_git_ref
-    bbd_draft = true
-  }
+  mode = try(var.test_context.mode, "hub")
+
   tenant = {
     kind = "meshTenant"
     uuid = var.test_context.fixtures.stackit.mesh_tenant_id
   }
 }
 
-module "service_account" {
-  source = "../../service-account"
+module "definition" {
+  source = "./modes/${local.mode}"
 
-  meshstack                    = local.meshstack
-  hub                          = local.hub
-  bbd_display_name             = "${var.test_context.run_id} STACKIT Service Account"
-  stackit_organization_id      = var.test_context.fixtures.stackit.organization_id
-  stackit_project_id           = var.test_context.fixtures.stackit.project_id
-  stackit_service_account_name = "${var.test_context.run_id}-sabp"
-
-  stackit_federation_backplane_email = module.federation.backplane_service_account_email
+  test_context = var.test_context
 }
 
-module "federation" {
-  source = "../"
-
-  service_account_definition_ref = module.service_account.building_block_definition.ref
-
-  meshstack                    = local.meshstack
-  hub                          = local.hub
-  bbd_display_name             = "${var.test_context.run_id} STACKIT Service Account Federation"
-  stackit_project_id           = var.test_context.fixtures.stackit.project_id
-  stackit_service_account_name = "${var.test_context.run_id}-fbp"
-}
-
-# The runner the modules under test pin when `meshstack.runner_ref` is null; the probe runs there too.
+# The runner the definitions under test pin when `meshstack.runner_ref` is null; the probe runs there
+# too. A foundation that pins another runner fails the probe's login.
 data "meshstack_building_block_runner" "this" {
   metadata = {
     uuid = null
@@ -136,11 +115,18 @@ resource "meshstack_building_block_definition" "probe" {
 }
 
 resource "meshstack_building_block" "service_account" {
-  depends_on          = [module.service_account]
+  depends_on          = [module.definition]
   wait_for_completion = true
 
+  lifecycle {
+    postcondition {
+      condition     = self.status.succeeded
+      error_message = "Building block ${self.metadata.uuid} did not succeed (health status ${self.status.health_status}, action ${self.status.action}). See its run in meshPanel."
+    }
+  }
+
   spec = {
-    building_block_definition_version_ref = module.service_account.building_block_definition.version_ref
+    building_block_definition_version_ref = module.definition.service_account_version_ref
     display_name                          = "${var.test_context.run_id}-service-account"
     target_ref                            = local.tenant
 
@@ -156,11 +142,11 @@ locals {
 }
 
 resource "meshstack_building_block" "federation" {
-  depends_on          = [module.federation]
+  depends_on          = [module.definition]
   wait_for_completion = true
 
   spec = {
-    building_block_definition_version_ref = module.federation.building_block_definition.version_ref
+    building_block_definition_version_ref = module.definition.version_ref
     display_name                          = "${var.test_context.run_id}-federation"
     target_ref                            = local.tenant
     parent_building_block_refs            = [meshstack_building_block.service_account.ref]
