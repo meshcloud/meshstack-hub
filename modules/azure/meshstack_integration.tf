@@ -30,7 +30,7 @@ variable "meshstack" {
     platform_name               = optional(string, "azure")
     location_name               = optional(string, "global")
   })
-  description = "meshStack ownership and naming settings for this platform integration."
+  description = "Shared meshStack context, see docs."
 }
 
 data "meshstack_integrations" "integrations" {}
