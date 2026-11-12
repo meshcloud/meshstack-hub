@@ -18,22 +18,8 @@ output "cluster_issuer_name" {
 }
 
 output "haproxy_namespace" {
-  description = "Namespace of the HAProxy ingress controller and of the wildcard certificate secret."
+  description = "Namespace of the HAProxy ingress controller."
   value       = module.haproxy_namespace.name
-}
-
-output "wildcard_certificate_domain" {
-  description = "Domain the wildcard certificate `*.<domain>` covers; null without `dns01`."
-  value       = local.dns01_certificate_domain
-
-  depends_on = [module.issuer]
-}
-
-output "wildcard_certificate_secret_name" {
-  description = "Secret in `haproxy_namespace` holding the wildcard certificate; null without `dns01`."
-  value       = local.dns01_enabled ? var.wildcard_certificate_name : null
-
-  depends_on = [module.issuer]
 }
 
 output "summary" {
@@ -46,7 +32,7 @@ output "summary" {
     | **Load Balancer IP** | `${data.kubernetes_service_v1.haproxy_controller.status[0].load_balancer[0].ingress[0].ip}` |
     | **IngressClass** | `${var.ingress_class_name}` |
     | **ClusterIssuer** | `${var.cluster_issuer_name}`, registered at `${var.acme_server}` |
-    | **Certificates** | ${local.dns01_enabled ? "wildcard `*.${local.dns01_certificate_domain}` in `${module.haproxy_namespace.name}/${var.wildcard_certificate_name}`, served by default" : "one per hostname, over HTTP-01"} |
+    | **Certificates** | one per hostname, over HTTP-01 |
     | **HAProxy** | chart `${var.haproxy_version}`, ${var.haproxy_replica_count} replicas in `${module.haproxy_namespace.name}` |
     | **cert-manager** | chart `${var.cert_manager_version}` in `${module.cert_manager_namespace.name}` |
 

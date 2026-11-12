@@ -7,7 +7,7 @@ variable "cert_manager_version" {
 variable "cert_manager_namespace" {
   type        = string
   default     = "cert-manager"
-  description = "Namespace of cert-manager and of the STACKIT cert-manager webhook."
+  description = "Namespace of cert-manager."
 }
 
 variable "cert_manager_extra_args" {
@@ -84,7 +84,7 @@ variable "haproxy_version" {
 variable "haproxy_namespace" {
   type        = string
   default     = "haproxy-ingress"
-  description = "Namespace of the HAProxy ingress controller and the wildcard certificate."
+  description = "Namespace of the HAProxy ingress controller."
 }
 
 variable "haproxy_release_name" {
@@ -172,58 +172,6 @@ variable "acme_private_key_secret_name" {
   type        = string
   default     = "letsencrypt-prod-account-key"
   description = "Name of the secret in which cert-manager stores the ACME account private key."
-}
-
-variable "wildcard_certificate_name" {
-  type        = string
-  default     = "wildcard-tls"
-  description = "Name of the wildcard Certificate and its secret in `haproxy_namespace`; used with `dns01`."
-}
-
-variable "stackit_webhook_version" {
-  type        = string
-  default     = "0.4.9"
-  description = "Version of the stackit-cert-manager-webhook chart in https://stackitcloud.github.io/stackit-cert-manager-webhook; used with `dns01.stackit`."
-}
-
-variable "stackit_webhook_resources" {
-  type = object({
-    requests = optional(object({ cpu = optional(string), memory = optional(string) }), {})
-    limits   = optional(object({ cpu = optional(string), memory = optional(string) }), {})
-  })
-  nullable = false
-  default = {
-    requests = { cpu = "10m", memory = "64Mi" }
-    limits   = { cpu = "100m", memory = "128Mi" }
-  }
-  description = "Resource requests and limits of the STACKIT cert-manager webhook, used with `dns01.stackit`."
-}
-
-variable "dns01" {
-  description = "DNS-01 solver with exactly one provider, for a wildcard certificate on `certificate_domain` (default `zone_name`, must lie within it). Null issues certificates per hostname over HTTP-01."
-  type = object({
-    zone_name          = string
-    certificate_domain = optional(string)
-    stackit            = optional(object({ project_id = string, service_account_key = string }))
-    route53            = optional(object({ hosted_zone_id = string, access_key_id = string, secret_access_key = string, region = optional(string, "eu-central-1") }))
-  })
-  default   = null
-  sensitive = true
-
-  validation {
-    # Both `try`s swallow reading an attribute the caller left out, which means "not this provider".
-    condition = var.dns01 == null || (
-      (try(var.dns01.stackit, null) == null ? 0 : 1) + (try(var.dns01.route53, null) == null ? 0 : 1) == 1
-    )
-    error_message = "Set exactly one DNS-01 provider in var.dns01: either stackit or route53."
-  }
-
-  # No interpolation: an error message cannot print the sensitive var.dns01.
-  validation {
-    # try: swallows the absent `certificate_domain` attribute, which means "default to the zone".
-    condition     = var.dns01 == null || try(var.dns01.certificate_domain, null) == null || endswith(var.dns01.certificate_domain, var.dns01.zone_name)
-    error_message = "dns01.certificate_domain must be dns01.zone_name or a name below it, because the DNS-01 solver only answers for names inside the zone."
-  }
 }
 
 variable "imports" {
