@@ -16,7 +16,7 @@ buildingBlocks:
   - path: stackit/secrets-manager
     role: Creates the platform's Secrets Manager instance, which holds every credential the platform's building blocks create.
   - path: kubernetes/ingress-controller
-    role: Installs cert-manager, the HAProxy ingress controller and the Let's Encrypt ClusterIssuer on the cluster, with a wildcard certificate for the DNS zone that every application shares.
+    role: Installs cert-manager, the HAProxy ingress controller and the Let's Encrypt ClusterIssuer on the cluster, with a wildcard certificate for the DNS zone that all applications share.
   - path: kubernetes
     role: Registers the meshStack Kubernetes platform and its landing zones, and creates the in-cluster replicator and metering identities meshStack authenticates with.
   - path: stackit/git

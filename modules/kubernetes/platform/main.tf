@@ -1,4 +1,4 @@
-# The ClusterRole names are cluster-global, so a cluster carries one meshStack platform registration.
+# ClusterRole names are cluster-global, so a cluster can only have one meshStack platform registration.
 # Reintroduce the upstream module's `name_suffix` if a cluster ever has to carry more than one.
 locals {
   replicator_name = "meshfed-service"
