@@ -4,6 +4,13 @@ locals {
 
   issuer_release_name = "ingress-issuer"
 
+  # ingress-shim issues a certificate per `cert-manager.io/cluster-issuer` annotation; the wildcard replaces those.
+  ingress_shim_enabled = var.dns01 == null
+
+  letsencrypt_environment      = var.use_letsencrypt_staging ? "staging" : "prod"
+  acme_server                  = var.use_letsencrypt_staging ? "https://acme-staging-v02.api.letsencrypt.org/directory" : "https://acme-v02.api.letsencrypt.org/directory"
+  acme_private_key_secret_name = coalesce(var.acme_private_key_secret_name, "letsencrypt-${local.letsencrypt_environment}-account-key")
+
   # The API server rejects a null resource quantity.
   resources = {
     for name, spec in {
@@ -46,7 +53,7 @@ module "cert_manager" {
   namespace          = module.cert_manager_namespace.name
   repository         = "https://charts.jetstack.io"
   chart              = "cert-manager"
-  chart_version      = var.cert_manager_version
+  chart_version      = "v1.20.0"
   timeout            = 300
 
   values = [
@@ -55,7 +62,7 @@ module "cert_manager" {
         enabled = true
         keep    = var.cert_manager_crds_keep
       }
-      extraArgs = var.cert_manager_extra_args
+      extraArgs = concat(var.cert_manager_extra_args, local.ingress_shim_enabled ? [] : ["--controllers=*,-ingress-shim"])
 
       # The chart ships no resources for any of its four workloads.
       resources       = local.resources.cert_manager
@@ -93,10 +100,16 @@ module "issuer" {
       clusterIssuer = {
         name                 = var.cluster_issuer_name
         email                = var.acme_email
-        server               = var.acme_server
-        privateKeySecretName = var.acme_private_key_secret_name
+        server               = local.acme_server
+        privateKeySecretName = local.acme_private_key_secret_name
       }
       ingressClassName = var.ingress_class_name
+      dns01            = var.dns01
+      wildcardCertificate = var.dns01 == null ? null : {
+        domain    = var.dns01.domain
+        name      = var.wildcard_certificate_name
+        namespace = module.haproxy_namespace.name
+      }
     })
   ]
 
@@ -111,23 +124,27 @@ module "haproxy" {
   namespace          = module.haproxy_namespace.name
   repository         = "https://haproxytech.github.io/helm-charts"
   chart              = "kubernetes-ingress"
-  chart_version      = var.haproxy_version
+  chart_version      = "1.49.0"
   timeout            = var.haproxy_timeout
 
   values = [
     yamlencode({
       crdjob = { resources = local.resources.haproxy_crdjob }
 
-      controller = {
-        replicaCount         = var.haproxy_replica_count
-        ingressClass         = var.ingress_class_name
-        ingressClassResource = { name = var.ingress_class_name }
-        resources            = local.resources.haproxy
-        service = {
-          type        = var.haproxy_service_type
-          annotations = var.haproxy_service_annotations
-        }
-      }
+      controller = merge(
+        {
+          replicaCount         = var.haproxy_replica_count
+          ingressClass         = var.ingress_class_name
+          ingressClassResource = { name = var.ingress_class_name }
+          resources            = local.resources.haproxy
+          service = {
+            type        = var.haproxy_service_type
+            annotations = var.haproxy_service_annotations
+          }
+        },
+        # secretNamespace defaults to the release namespace, where the wildcard Certificate lives.
+        var.dns01 == null ? {} : { defaultTLSSecret = { secret = var.wildcard_certificate_name } }
+      )
     })
   ]
 
@@ -239,4 +256,34 @@ moved {
 moved {
   from = helm_release.haproxy
   to   = module.haproxy.helm_release.this
+}
+
+data "kubernetes_resource" "wildcard_certificate" {
+  lifecycle {
+    enabled = var.dns01 != null
+  }
+
+  api_version = "cert-manager.io/v1"
+  kind        = "Certificate"
+
+  metadata {
+    name      = var.wildcard_certificate_name
+    namespace = module.haproxy_namespace.name
+  }
+
+  depends_on = [module.issuer]
+}
+
+locals {
+  # try: a Certificate cert-manager has not processed yet has no status.conditions.
+  wildcard_certificate_ready = var.dns01 != null && anytrue([for c in try(data.kubernetes_resource.wildcard_certificate.object.status.conditions, []) : c.type == "Ready" && c.status == "True"])
+}
+
+# Issuance runs after this apply, and on a first install the DNS-01 solver may not exist yet, so a
+# certificate that is not ready only warns.
+check "wildcard_certificate_ready" {
+  assert {
+    condition     = var.dns01 == null || local.wildcard_certificate_ready
+    error_message = "The wildcard certificate ${module.haproxy_namespace.name}/${var.wildcard_certificate_name} is not Ready yet. Check its Challenge in that namespace if this persists."
+  }
 }

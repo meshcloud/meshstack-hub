@@ -1,9 +1,3 @@
-variable "cert_manager_version" {
-  type        = string
-  nullable    = false
-  description = "Version of the cert-manager Helm chart."
-}
-
 variable "cert_manager_namespace" {
   type        = string
   default     = "cert-manager"
@@ -75,16 +69,10 @@ variable "cert_manager_startupapicheck_resources" {
   description = "Resource requests and limits of the cert-manager startupapicheck Job."
 }
 
-variable "haproxy_version" {
-  type        = string
-  nullable    = false
-  description = "Version of the haproxytech/kubernetes-ingress Helm chart."
-}
-
 variable "haproxy_namespace" {
   type        = string
   default     = "haproxy-ingress"
-  description = "Namespace of the HAProxy ingress controller."
+  description = "Namespace of the HAProxy ingress controller and of the wildcard certificate."
 }
 
 variable "haproxy_release_name" {
@@ -156,10 +144,11 @@ variable "acme_email" {
   description = "Contact address Let's Encrypt uses for expiry warnings and account recovery."
 }
 
-variable "acme_server" {
-  type        = string
+variable "use_letsencrypt_staging" {
+  type        = bool
   nullable    = false
-  description = "ACME directory URL; use the Let's Encrypt staging directory while testing."
+  default     = false
+  description = "Issue from Let's Encrypt staging, for development and testing. No browser trusts its certificates."
 }
 
 variable "cluster_issuer_name" {
@@ -170,8 +159,24 @@ variable "cluster_issuer_name" {
 
 variable "acme_private_key_secret_name" {
   type        = string
-  default     = "letsencrypt-prod-account-key"
-  description = "Name of the secret in which cert-manager stores the ACME account private key."
+  default     = null
+  description = "Name of the secret in which cert-manager stores the ACME account private key. Null names it after the Let's Encrypt environment."
+}
+
+variable "dns01" {
+  type = object({
+    domain = string
+    solver = any
+  })
+  default     = null
+  description = "If null, cert-manager issues one certificate per Ingress over HTTP-01. If set, it issues the wildcard certificate `*.<domain>` over DNS-01 with `solver`, the `dns01` block of a cert-manager ACME solver, and HAProxy serves it as its default certificate to every Ingress."
+}
+
+variable "wildcard_certificate_name" {
+  type        = string
+  nullable    = false
+  default     = "wildcard-tls"
+  description = "Name of the wildcard Certificate and its secret in `haproxy_namespace`; used with `dns01`."
 }
 
 variable "imports" {

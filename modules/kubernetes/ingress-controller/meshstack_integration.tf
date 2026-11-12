@@ -1,17 +1,3 @@
-variable "cert_manager_version" {
-  type        = string
-  nullable    = false
-  default     = "v1.20.0"
-  description = "Version of the cert-manager Helm chart the definition installs."
-}
-
-variable "haproxy_version" {
-  type        = string
-  nullable    = false
-  default     = "1.49.0"
-  description = "Version of the haproxytech/kubernetes-ingress Helm chart the definition installs."
-}
-
 variable "haproxy_replica_count" {
   type        = number
   nullable    = false
@@ -40,17 +26,26 @@ variable "cluster_issuer_name" {
   description = "Name of the ClusterIssuer application teams put in their cert-manager.io/cluster-issuer annotation."
 }
 
-variable "acme_server" {
-  type        = string
+variable "use_letsencrypt_staging" {
+  type        = bool
   nullable    = false
-  default     = "https://acme-v02.api.letsencrypt.org/directory"
-  description = "ACME directory URL. Point this at the staging endpoint while testing — production has strict rate limits."
+  default     = false
+  description = "Issue from Let's Encrypt staging, for development and testing: its rate limits are far higher, but no browser trusts its certificates."
 }
 
 variable "acme_email" {
   type        = string
   nullable    = false
   description = "Contact address Let's Encrypt uses for expiry warnings and account recovery."
+}
+
+variable "dns01" {
+  type = object({
+    domain = string
+    solver = any
+  })
+  default     = null
+  description = "If null, cert-manager issues one certificate per Ingress over HTTP-01. If set, it issues the wildcard certificate `*.<domain>` over DNS-01 with `solver`, the `dns01` block of a cert-manager ACME solver such as the one `stackit/dns` shows, and HAProxy serves it as its default certificate to every Ingress."
 }
 
 variable "cluster_definition_ref" {
@@ -134,6 +129,20 @@ output "building_block_definition" {
   }
 }
 
+locals {
+  app_usage = var.dns01 == null ? chomp(<<-EOT
+    Set `ingressClassName: ${var.ingress_class_name}` and the annotation
+    `cert-manager.io/cluster-issuer: ${var.cluster_issuer_name}` on an Ingress, and cert-manager
+    issues a certificate for its hostname over HTTP-01.
+    EOT
+    ) : chomp(<<-EOT
+    Set `ingressClassName: ${var.ingress_class_name}` and a `tls` entry with the hostname on an
+    Ingress under `${var.dns01.domain}`, and HAProxy serves the wildcard certificate
+    `*.${var.dns01.domain}` for it. Ingress annotations create no certificates here.
+    EOT
+  )
+}
+
 resource "meshstack_building_block_definition" "this" {
   metadata = {
     owned_by_workspace = var.meshstack.owning_workspace_identifier
@@ -158,13 +167,10 @@ resource "meshstack_building_block_definition" "this" {
 
       ## 🎯 When to use it
 
-      This block is hidden from the marketplace. A platform team adds it through a landing zone or a
-      composition, once per cluster, for example the **STACKIT Kubernetes Platform** reference
-      architecture right after the cluster exists. It
-      reaches the cluster through the kubeconfig the ordering composition passes as an input.
-
-      An application team that wants to deploy an `Ingress` into a cluster uses the **Kubernetes
-      Manifest** building block instead; this block installs the controller that serves it.
+      This block is hidden from the marketplace. A platform team adds it once per cluster through a
+      landing zone or a composition, such as the **STACKIT Kubernetes Platform** reference
+      architecture, which passes the cluster's kubeconfig. Application teams deploy their `Ingress`
+      with the **Kubernetes Manifest** building block.
 
       ## 📦 Resources created
 
@@ -176,9 +182,7 @@ resource "meshstack_building_block_definition" "this" {
 
       ## 🔗 How an application uses it
 
-      Set `ingressClassName: ${var.ingress_class_name}` and the annotation
-      `cert-manager.io/cluster-issuer: ${var.cluster_issuer_name}` on an Ingress, and cert-manager
-      issues a certificate for its hostname over HTTP-01.
+      ${local.app_usage}
 
       ## 📊 Shared responsibility
 
@@ -187,7 +191,7 @@ resource "meshstack_building_block_definition" "this" {
       | Provide the cluster kubeconfig and the ACME contact address | ✅ | ❌ |
       | Install and maintain cert-manager and the ingress controller | ✅ | ❌ |
       | Point DNS at the reported LoadBalancer IP | ✅ | ❌ |
-      | Create Ingress resources and reference the ClusterIssuer | ❌ | ✅ |
+      | Create Ingress resources for their hostnames | ❌ | ✅ |
       EOT
     ))
   }
@@ -208,7 +212,7 @@ resource "meshstack_building_block_definition" "this" {
       }
     }
 
-    inputs = {
+    inputs = merge({
       "kubeconfig.yaml" = {
         display_name           = "kubeconfig.yaml"
         description            = "Kubeconfig of the cluster to install the ingress controller on."
@@ -226,12 +230,12 @@ resource "meshstack_building_block_definition" "this" {
         argument        = jsonencode(var.acme_email)
       }
 
-      acme_server = {
-        display_name    = "ACME Directory URL"
-        description     = "ACME directory URL the ClusterIssuer registers against."
-        type            = "STRING"
+      use_letsencrypt_staging = {
+        display_name    = "Use Let's Encrypt Staging"
+        description     = "Issue from Let's Encrypt staging, for development and testing. No browser trusts its certificates."
+        type            = "BOOLEAN"
         assignment_type = "STATIC"
-        argument        = jsonencode(var.acme_server)
+        argument        = jsonencode(var.use_letsencrypt_staging)
       }
 
       cluster_issuer_name = {
@@ -248,22 +252,6 @@ resource "meshstack_building_block_definition" "this" {
         type            = "STRING"
         assignment_type = "STATIC"
         argument        = jsonencode(var.ingress_class_name)
-      }
-
-      cert_manager_version = {
-        display_name    = "cert-manager Chart Version"
-        description     = "Version of the cert-manager Helm chart."
-        type            = "STRING"
-        assignment_type = "STATIC"
-        argument        = jsonencode(var.cert_manager_version)
-      }
-
-      haproxy_version = {
-        display_name    = "HAProxy Chart Version"
-        description     = "Version of the haproxytech/kubernetes-ingress Helm chart."
-        type            = "STRING"
-        assignment_type = "STATIC"
-        argument        = jsonencode(var.haproxy_version)
       }
 
       haproxy_replica_count = {
@@ -298,7 +286,15 @@ resource "meshstack_building_block_definition" "this" {
         default_value          = jsonencode(false)
         updateable_by_consumer = true
       }
-    }
+      }, var.dns01 == null ? {} : {
+      dns01 = {
+        display_name    = "DNS-01 Wildcard Certificate"
+        description     = "Domain of the wildcard certificate and the cert-manager DNS-01 solver that issues it."
+        type            = "CODE"
+        assignment_type = "STATIC"
+        argument        = jsonencode(jsonencode(var.dns01))
+      }
+    })
 
     outputs = {
       haproxy_lb_ip = {
