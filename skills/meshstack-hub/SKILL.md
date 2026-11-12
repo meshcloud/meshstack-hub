@@ -287,8 +287,8 @@ then ask the user in one message for:
 - **Where it can be ordered.** A tenant-level definition is offered on every platform of the type
   the module names. To offer it on one platform or landing zone only, pass that object's `ref` in
   `meshstack.supported_platforms`, for example `[meshstack_landingzone.dev.ref]`. A platform needs
-  meshStack 2026.40.0, a landing zone meshStack 2026.45.0 and meshstack provider 0.28.0. A
-  definition that only landing zones and compositions can use keeps a fixed value.
+  meshStack 2026.40.0, a landing zone meshStack 2026.45.0 and meshstack provider 0.28.0.
+  `kubernetes` and `kubernetes/ingress-controller` have no default: pass what hosts the cluster.
 
 In the plan for the first apply, point out what it creates in the cloud: identities, role
 definitions and role assignments. They decide what the runner may do in the user's cloud, so the

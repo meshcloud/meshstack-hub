@@ -493,7 +493,7 @@ const detectors = [
       const content = readIntegrationTf(mod);
       if (!content) return { pass: false, detail: "no integration file" };
       const violations = supportedPlatformsViolations(content);
-      if (violations === null) return { pass: null, detail: "no TENANT_LEVEL definition outside landing zones" };
+      if (violations === null) return { pass: null, detail: "no TENANT_LEVEL definition" };
       return listOffenders(violations, "let a consumer narrow the definition to a platform or landing zone");
     },
   },
@@ -2008,7 +2008,6 @@ export function explicitDefaultViolations(content) {
   return [...violations];
 }
 
-// A landing-zone-only definition is ordered by platform automation alone, so nobody needs to narrow it.
 export const MESHSTACK_DESCRIPTION = "Shared meshStack context, see docs.";
 
 export function meshstackVariableViolation(content) {
@@ -2021,9 +2020,7 @@ export function meshstackVariableViolation(content) {
 
 export function supportedPlatformsViolations(content) {
   const definitions = [...extractResourceBlocks(content, "meshstack_building_block_definition").values()].filter(
-    (body) =>
-      specAttributeValue(body, "target_type") === '"TENANT_LEVEL"' &&
-      specAttributeValue(body, "use_in_landing_zones_only") !== "true"
+    (body) => specAttributeValue(body, "target_type") === '"TENANT_LEVEL"'
   );
   if (definitions.length === 0) return null;
 
@@ -2034,7 +2031,11 @@ export function supportedPlatformsViolations(content) {
 
   if (type === null) {
     violations.push("variable meshstack declares no supported_platforms");
-  } else if (!hasOptionalDefault(type)) {
+  } else if (
+    /^\s*optional\s*\(/.test(type) &&
+    !hasOptionalDefault(type) &&
+    !expressions.every((e) => /^coalesce\(\s*var\.meshstack\.supported_platforms\s*,/.test(e))
+  ) {
     violations.push("meshstack.supported_platforms has no default");
   }
   if (!expressions.every((e) => /\bvar\.meshstack\.supported_platforms\b/.test(e))) {

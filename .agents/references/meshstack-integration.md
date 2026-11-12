@@ -118,9 +118,8 @@ variable "meshstack" {
 }
 ```
 
-The description of `variable "meshstack"` is always exactly `Shared meshStack context, see docs.`.
-Never change or extend it, also not when a module adds or uses a field such as
-`supported_platforms`. This file documents the fields.
+The description of `variable "meshstack"` is always exactly `Shared meshStack context, see docs.`,
+whatever fields a module adds. This file documents the fields.
 
 Use both in the building block definition. Always forward `var.meshstack.tags` to `metadata.tags` so
 workspace-level tags propagate to the definition, `var.hub.bbd_draft` to the `draft` field of
@@ -184,8 +183,10 @@ resource "meshstack_building_block_definition" "this" {
 }
 ```
 
-A definition with `use_in_landing_zones_only = true` keeps a fixed `supported_platforms`, because
-only landing zones and compositions order it.
+Landing-zone-only definitions follow the same rule. A default that depends on another input, such
+as the platform type a module registers, comes from
+`coalesce(var.meshstack.supported_platforms, [{ kind = null, name = ..., uuid = null }])` instead.
+A module with no natural default, such as one for any Kubernetes cluster, makes the field required.
 A `WORKSPACE_LEVEL` definition sets no `supported_platforms`; meshStack rejects even an empty set.
 
 A platform needs meshStack 2026.40.0 or later, a landing zone 2026.45.0 and meshstack provider
