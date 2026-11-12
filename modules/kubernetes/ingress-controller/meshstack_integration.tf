@@ -137,8 +137,8 @@ resource "meshstack_building_block_definition" "this" {
   }
 
   spec = {
-    display_name        = coalesce(var.bbd_display_name, "Kubernetes Ingress")
-    symbol              = "https://raw.githubusercontent.com/meshcloud/meshstack-hub/${var.hub.git_ref}/modules/kubernetes/ingress/buildingblock/logo.png"
+    display_name        = coalesce(var.bbd_display_name, "Kubernetes Ingress Controller")
+    symbol              = "https://raw.githubusercontent.com/meshcloud/meshstack-hub/${var.hub.git_ref}/modules/kubernetes/ingress-controller/buildingblock/logo.png"
     description         = coalesce(var.bbd_description, "Installs cert-manager, the HAProxy ingress controller and a Let's Encrypt ClusterIssuer on a Kubernetes cluster.")
     support_url         = "https://cert-manager.io/docs/"
     target_type         = "TENANT_LEVEL"
@@ -156,6 +156,9 @@ resource "meshstack_building_block_definition" "this" {
       This is a bootstrap block a platform team orders once per cluster — for example the **STACKIT
       Kubernetes Platform** reference architecture orders it right after the cluster exists. It
       reaches the cluster through the kubeconfig the ordering composition passes as an input.
+
+      An application team that wants to deploy an `Ingress` into a cluster uses the **Kubernetes
+      Manifest** building block instead; this block installs the controller that serves it.
 
       ## 📦 Resources created
 
@@ -193,7 +196,7 @@ resource "meshstack_building_block_definition" "this" {
       terraform = {
         terraform_version              = "1.12.5"
         repository_url                 = "https://github.com/meshcloud/meshstack-hub.git"
-        repository_path                = "modules/kubernetes/ingress/buildingblock"
+        repository_path                = "modules/kubernetes/ingress-controller/buildingblock"
         ref_name                       = var.hub.git_ref
         use_mesh_http_backend_fallback = true
       }
