@@ -118,6 +118,10 @@ variable "meshstack" {
 }
 ```
 
+The description of `variable "meshstack"` is always exactly `Shared meshStack context, see docs.`.
+Never change or extend it, also not when a module adds or uses a field such as
+`supported_platforms`. This file documents the fields.
+
 Use both in the building block definition. Always forward `var.meshstack.tags` to `metadata.tags` so
 workspace-level tags propagate to the definition, `var.hub.bbd_draft` to the `draft` field of
 `version_spec`, and `var.meshstack.runner_ref` to `version_spec.runner_ref` and to the `runner_ref`
