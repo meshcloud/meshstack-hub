@@ -16,7 +16,7 @@ buildingBlocks:
   - path: stackit/secrets-manager
     role: Creates the platform's Secrets Manager instance, which holds every credential the platform's building blocks create.
   - path: kubernetes/ingress-controller
-    role: Installs cert-manager, the HAProxy ingress controller and the Let's Encrypt ClusterIssuer on the cluster.
+    role: Installs cert-manager, the HAProxy ingress controller and the Let's Encrypt ClusterIssuer on the cluster, with a wildcard certificate for the DNS zone that every application shares.
   - path: kubernetes
     role: Registers the meshStack Kubernetes platform and its landing zones, and creates the in-cluster replicator and metering identities meshStack authenticates with.
   - path: stackit/git
@@ -26,7 +26,7 @@ buildingBlocks:
   - path: ske/forgejo-connector
     role: Registered for application teams so they can wire a repository to their namespace for Forgejo Actions CI/CD.
   - path: stackit/dns
-    role: Creates the DNS zone application hostnames are built under, with a wildcard record pointing at the ingress load balancer.
+    role: Creates the DNS zone application hostnames are built under, with a wildcard record pointing at the ingress load balancer, and the DNS-01 solver for the wildcard certificate.
   - path: stackit/ai-llm
     role: Mints the STACKIT Model Serving token that reaches every application namespace as the `stackit-ai` secret.
   - path: stackit/container-registry
