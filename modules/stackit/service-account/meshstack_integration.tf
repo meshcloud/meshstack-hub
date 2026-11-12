@@ -52,6 +52,11 @@ variable "meshstack" {
       kind = string
       uuid = string
     }))
+    supported_platforms = optional(list(object({
+      kind = optional(string)
+      name = optional(string)
+      uuid = optional(string)
+    })), [{ name = "STACKIT" }])
   })
   description = "Shared meshStack context, see docs."
 }
@@ -131,7 +136,7 @@ resource "meshstack_building_block_definition" "this" {
     support_url         = "https://portal.stackit.cloud"
     target_type         = "TENANT_LEVEL"
     run_transparency    = true
-    supported_platforms = [{ name = "STACKIT" }]
+    supported_platforms = var.meshstack.supported_platforms
     readme = coalesce(var.bbd_readme, chomp(<<-EOT
       This building block creates a **STACKIT service account** inside your existing STACKIT project,
       and grants it the project roles you choose. To let runs of your workspace's own building block

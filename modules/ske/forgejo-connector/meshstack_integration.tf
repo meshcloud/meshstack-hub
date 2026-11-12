@@ -105,6 +105,11 @@ variable "meshstack" {
       kind = string
       uuid = string
     }))
+    supported_platforms = optional(list(object({
+      kind = optional(string)
+      name = optional(string)
+      uuid = optional(string)
+    })), [{ name = "KUBERNETES" }])
   })
   description = "Shared meshStack context, see docs."
 }
@@ -149,7 +154,7 @@ resource "meshstack_building_block_definition" "this" {
     ))
     support_url         = "https://portal.stackit.cloud/git"
     target_type         = "TENANT_LEVEL"
-    supported_platforms = [{ name = "KUBERNETES" }]
+    supported_platforms = var.meshstack.supported_platforms
     run_transparency    = true
     approval_policies   = var.approval_policies
 

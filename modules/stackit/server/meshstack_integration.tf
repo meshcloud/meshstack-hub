@@ -89,6 +89,11 @@ variable "meshstack" {
       kind = string
       uuid = string
     }))
+    supported_platforms = optional(list(object({
+      kind = optional(string)
+      name = optional(string)
+      uuid = optional(string)
+    })), [{ name = "STACKIT" }])
   })
   description = "Shared meshStack context, see docs."
 }
@@ -162,7 +167,7 @@ resource "meshstack_building_block_definition" "this" {
     support_url         = "https://docs.stackit.cloud/stackit/en/virtual-machine-flavors-75137525.html"
     target_type         = "TENANT_LEVEL"
     run_transparency    = true
-    supported_platforms = [{ name = "STACKIT" }]
+    supported_platforms = var.meshstack.supported_platforms
 
     readme = coalesce(var.bbd_readme, chomp(<<-EOT
     The **STACKIT Server** building block provisions a single STACKIT VM an application team can SSH

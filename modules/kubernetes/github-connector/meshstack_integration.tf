@@ -72,6 +72,11 @@ variable "meshstack" {
       kind = string
       uuid = string
     }))
+    supported_platforms = optional(list(object({
+      kind = optional(string)
+      name = optional(string)
+      uuid = optional(string)
+    })), [{ name = "KUBERNETES" }])
   })
   description = "Shared meshStack context, see docs."
 }
@@ -120,7 +125,7 @@ resource "meshstack_building_block_definition" "this" {
     symbol                   = "https://raw.githubusercontent.com/meshcloud/meshstack-hub/${var.hub.git_ref}/modules/kubernetes/github-connector/buildingblock/logo.png"
     notification_subscribers = var.notification_subscribers
     target_type              = "TENANT_LEVEL"
-    supported_platforms      = [{ name = "KUBERNETES" }]
+    supported_platforms      = var.meshstack.supported_platforms
     run_transparency         = true
 
     readme = coalesce(var.bbd_readme, chomp(<<-EOT
