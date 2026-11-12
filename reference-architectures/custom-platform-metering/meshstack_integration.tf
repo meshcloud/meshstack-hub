@@ -67,8 +67,9 @@ output "building_block_definition" {
 
 # Each object input takes its field defaults from one local, which feeds both the input's
 # `default_value` and the `default` of each field in its schema, because the order form only shows
-# the latter. The optional `stackit` and `tcloud` may carry no `default_value`, so buildingblock/
-# repeats their field defaults.
+# the latter. A `default_value` must satisfy the whole schema, so inputs with required fields that have
+# no sane default, and the optional `stackit` and `tcloud`, carry their field defaults only in the
+# schema; buildingblock/ repeats those of the optional ones.
 locals {
   kubernetes_default = {
     cluster_roles = ["edit"]
@@ -175,7 +176,6 @@ resource "meshstack_building_block_definition" "this" {
         type                   = "JSON"
         assignment_type        = "USER_INPUT"
         updateable_by_consumer = true
-        default_value          = jsonencode(jsonencode(local.kubernetes_default))
         display_order          = 10
 
         json_schema = jsonencode({
@@ -207,7 +207,6 @@ resource "meshstack_building_block_definition" "this" {
         type                   = "JSON"
         assignment_type        = "USER_INPUT"
         updateable_by_consumer = true
-        default_value          = jsonencode(jsonencode(local.metering_default))
         display_order          = 30
 
         json_schema = jsonencode({
