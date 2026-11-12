@@ -69,7 +69,8 @@ output "building_block_definition" {
 # `default_value` and the `default` of each field in its schema, because the order form only shows
 # the latter. A `default_value` must satisfy the whole schema, so inputs with required fields that have
 # no sane default, and the optional `stackit` and `tcloud`, carry their field defaults only in the
-# schema; buildingblock/ repeats those of the optional ones.
+# schema. meshStack does not fill in schema defaults for a value sent through the API, so a field with
+# a default is never required, and buildingblock/ repeats the default with optional().
 locals {
   kubernetes_default = {
     cluster_roles = ["edit"]
@@ -181,7 +182,7 @@ resource "meshstack_building_block_definition" "this" {
         json_schema = jsonencode({
           "$schema" = "http://json-schema.org/draft-07/schema#"
           type      = "object"
-          required  = ["platform_identifier", "landing_zone_name", "cluster_roles"]
+          required  = ["platform_identifier", "landing_zone_name"]
           properties = {
             platform_identifier              = { type = "string", title = "Platform Identifier (<platform>.<location>)" }
             landing_zone_name                = { type = "string", title = "Landing Zone" }
@@ -212,7 +213,7 @@ resource "meshstack_building_block_definition" "this" {
         json_schema = jsonencode({
           "$schema" = "http://json-schema.org/draft-07/schema#"
           type      = "object"
-          required  = ["meshfed_url", "kraken_url", "api_user", "schedule"]
+          required  = ["meshfed_url", "kraken_url", "api_user"]
           properties = {
             meshfed_url = { type = "string", title = "meshfed URL, e.g. https://federation.example.meshcloud.io" }
             kraken_url  = { type = "string", title = "Kraken URL, e.g. https://kraken.example.meshcloud.io" }
@@ -288,7 +289,7 @@ resource "meshstack_building_block_definition" "this" {
         json_schema = jsonencode({
           "$schema" = "http://json-schema.org/draft-07/schema#"
           type      = "object"
-          required  = ["platform_identifier", "organization_id", "project_id", "kubernetes_oidc_issuer", "image_tag"]
+          required  = ["platform_identifier", "organization_id", "project_id", "kubernetes_oidc_issuer"]
           properties = {
             platform_identifier    = { type = "string", title = "STACKIT Platform Identifier (<platform>.<location>)" }
             organization_id        = { type = "string", title = "STACKIT Organization ID" }
@@ -334,7 +335,7 @@ resource "meshstack_building_block_definition" "this" {
         json_schema = jsonencode({
           "$schema" = "http://json-schema.org/draft-07/schema#"
           type      = "object"
-          required  = ["platform_identifier", "image_tag"]
+          required  = ["platform_identifier"]
           properties = {
             platform_identifier = { type = "string", title = "T Cloud Public Platform Identifier (<platform>.<location>)" }
             contract_ids        = { type = "array", title = "Contract Numbers", items = { type = "string" }, default = local.tcloud_default.contract_ids }

@@ -2,7 +2,7 @@ variable "kubernetes" {
   type = object({
     platform_identifier              = string
     landing_zone_name                = string
-    cluster_roles                    = list(string)
+    cluster_roles                    = optional(list(string), ["edit"])
     service_account_bbd_display_name = optional(string)
   })
   nullable    = false
@@ -19,7 +19,7 @@ variable "metering" {
     meshfed_url = string
     kraken_url  = string
     api_user    = string
-    schedule    = string
+    schedule    = optional(string, "0 * * * *")
   })
   nullable    = false
   description = "meshStack endpoints the usage reports go to, the API user that submits them, and the cron schedule of every metering job."
