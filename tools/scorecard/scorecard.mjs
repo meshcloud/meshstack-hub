@@ -484,6 +484,19 @@ const detectors = [
     },
   },
   {
+    id: "bbd_supported_platforms",
+    category: "integration",
+    name: "tenant-level BBD takes supported_platforms from var.meshstack",
+    emoji: "🧩",
+    fn: (mod) => {
+      const content = readIntegrationTf(mod);
+      if (!content) return { pass: false, detail: "no integration file" };
+      const violations = supportedPlatformsViolations(content);
+      if (violations === null) return { pass: null, detail: "no TENANT_LEVEL definition outside landing zones" };
+      return listOffenders(violations, "let a consumer narrow the definition to a platform or landing zone");
+    },
+  },
+  {
     id: "output_bbd",
     category: "integration",
     name: "building_block_definition output exposed",
@@ -1992,6 +2005,49 @@ export function explicitDefaultViolations(content) {
   }
 
   return [...violations];
+}
+
+// A landing-zone-only definition is ordered by platform automation alone, so nobody needs to narrow it.
+export function supportedPlatformsViolations(content) {
+  const definitions = [...extractResourceBlocks(content, "meshstack_building_block_definition").values()].filter(
+    (body) =>
+      specAttributeValue(body, "target_type") === '"TENANT_LEVEL"' &&
+      specAttributeValue(body, "use_in_landing_zones_only") !== "true"
+  );
+  if (definitions.length === 0) return null;
+
+  const meshstack = extractVariableBlocks(content).get("meshstack");
+  const type = meshstack === undefined ? null : objectAttributeType(meshstack, "supported_platforms");
+  const expressions = definitions.map((body) => specAttributeValue(body, "supported_platforms") ?? "");
+  const violations = [];
+
+  if (type === null) {
+    violations.push("variable meshstack declares no supported_platforms");
+  } else if (!hasOptionalDefault(type)) {
+    violations.push("meshstack.supported_platforms has no default");
+  }
+  if (!expressions.every((e) => /\bvar\.meshstack\.supported_platforms\b/.test(e))) {
+    violations.push("spec.supported_platforms does not read var.meshstack.supported_platforms");
+  }
+  return violations;
+}
+
+function specAttributeValue(resourceBlock, attribute) {
+  const rest = specAttributeExpression(resourceBlock, attribute);
+  return rest === null ? null : rest.slice(0, findExpressionEnd(rest, 0)).trim();
+}
+
+function hasOptionalDefault(type) {
+  const m = /^\s*optional\s*\(/.exec(type);
+  if (!m) return false;
+  let depth = 0;
+  for (const ch of type.slice(m[0].length)) {
+    if ("([{".includes(ch)) depth++;
+    else if (")]}".includes(ch)) depth--;
+    else if (ch === "," && depth === 0) return true;
+    if (depth < 0) return false;
+  }
+  return false;
 }
 
 function objectAttributeType(variableBlock, attribute) {

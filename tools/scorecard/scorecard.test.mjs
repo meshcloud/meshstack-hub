@@ -4,6 +4,7 @@ import {
   declaresSummaryOutput,
   explicitDefaultViolations,
   summaryOutputBody,
+  supportedPlatformsViolations,
 } from "./scorecard.mjs";
 
 const integration = (argument) => `
@@ -72,4 +73,78 @@ output "after" {
 test("a SUMMARY assignment in the integration is detected", () => {
   assert.equal(declaresSummaryOutput('summary = {\n  assignment_type = "SUMMARY"\n}'), true);
   assert.equal(declaresSummaryOutput('url = {\n  assignment_type = "RESOURCE_URL"\n}'), false);
+});
+
+const tenantLevel = ({ type = "", supportedPlatforms = "var.meshstack.supported_platforms", targetType = '"TENANT_LEVEL"' } = {}) => `
+variable "meshstack" {
+  type = object({
+    owning_workspace_identifier = string
+${type}
+  })
+}
+
+resource "meshstack_building_block_definition" "this" {
+  spec = {
+    target_type         = ${targetType}
+    supported_platforms = ${supportedPlatforms}
+  }
+}
+`;
+
+const withDefault = `    supported_platforms = optional(list(object({
+      kind = optional(string)
+      name = optional(string)
+      uuid = optional(string)
+    })), [{ name = "AZURE" }])`;
+
+const withoutDefault = `    supported_platforms = optional(list(object({
+      kind = optional(string)
+      name = optional(string)
+      uuid = optional(string)
+    })))`;
+
+test("a tenant-level definition reading a defaulted meshstack.supported_platforms passes", () => {
+  assert.deepEqual(supportedPlatformsViolations(tenantLevel({ type: withDefault })), []);
+});
+
+test("a hard-coded platform type fails and names the missing field", () => {
+  assert.deepEqual(supportedPlatformsViolations(tenantLevel({ supportedPlatforms: '[{ name = "AZURE" }]' })), [
+    "variable meshstack declares no supported_platforms",
+    "spec.supported_platforms does not read var.meshstack.supported_platforms",
+  ]);
+});
+
+test("meshstack.supported_platforms without a default fails", () => {
+  assert.deepEqual(supportedPlatformsViolations(tenantLevel({ type: withoutDefault })), [
+    "meshstack.supported_platforms has no default",
+  ]);
+});
+
+test("a landing-zone-only definition keeps a fixed value and is not checked", () => {
+  const tf = tenantLevel({ supportedPlatforms: '[{ name = "STACKIT" }]' }).replace(
+    "    supported_platforms =",
+    "    use_in_landing_zones_only = true\n    supported_platforms ="
+  );
+  assert.equal(supportedPlatformsViolations(tf), null);
+});
+
+test("next to a landing-zone-only definition, the other tenant-level definition is still checked", () => {
+  const tf = `${tenantLevel({ type: withDefault })}
+resource "meshstack_building_block_definition" "landing_zone" {
+  spec = {
+    target_type               = "TENANT_LEVEL"
+    use_in_landing_zones_only = true
+    supported_platforms       = [{ name = "STACKIT" }]
+  }
+}
+`;
+  assert.deepEqual(supportedPlatformsViolations(tf), []);
+  assert.deepEqual(supportedPlatformsViolations(tf.replace("var.meshstack.supported_platforms", '[{ name = "AZURE" }]')), [
+    "spec.supported_platforms does not read var.meshstack.supported_platforms",
+  ]);
+});
+
+test("a workspace-level definition is not checked", () => {
+  assert.equal(supportedPlatformsViolations(tenantLevel({ targetType: '"WORKSPACE_LEVEL"', supportedPlatforms: "null" })), null);
+  assert.equal(supportedPlatformsViolations(tenantLevel({ targetType: "var.link_target_type", supportedPlatforms: "null" })), null);
 });
