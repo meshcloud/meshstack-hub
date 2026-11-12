@@ -50,7 +50,6 @@ variable "acme_server" {
 variable "acme_email" {
   type        = string
   nullable    = false
-  default     = "platform@meshcloud.io"
   description = "Contact address Let's Encrypt uses for expiry warnings and account recovery."
 }
 
