@@ -19,6 +19,7 @@ output "summary" {
     zone_url           = "https://portal.stackit.cloud/dns/zones/${module.zone.zone.zone_id}/overview?project=${var.stackit_project_id}"
     wildcard_target_ip = var.wildcard_target_ip
     default_ttl        = var.default_ttl
+    acme_solver        = local.kubeconfig_given ? yamlencode({ dns01 = module.k8s_acme_solver.solver }) : null
   })
   description = "Markdown summary shown on the building block."
 }
