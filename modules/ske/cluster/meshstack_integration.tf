@@ -213,15 +213,6 @@ resource "meshstack_building_block_definition" "this" {
         updateable_by_consumer = true
       }
 
-      # STACKIT retires old minors; bump this when it drops the pinned one.
-      kubernetes_version_min = {
-        display_name    = "Minimum Kubernetes Version"
-        description     = "Minimum Kubernetes minor version to run."
-        type            = "STRING"
-        assignment_type = "STATIC"
-        argument        = jsonencode("1.36")
-      }
-
       node_pool = {
         display_name    = "Node Pool"
         description     = "HCL object describing the single node pool the cluster starts with."

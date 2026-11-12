@@ -5,11 +5,12 @@ locals {
 module "cluster" {
   source = "./modules/ske-cluster"
 
-  release_on_destroy     = var.release_on_destroy
-  project_id             = var.stackit_project_id
-  region                 = var.stackit_region
-  name                   = var.cluster_name
-  kubernetes_version_min = var.kubernetes_version_min
+  release_on_destroy = var.release_on_destroy
+  project_id         = var.stackit_project_id
+  region             = var.stackit_region
+  name               = var.cluster_name
+  # STACKIT retires old minors; bump this when it drops the pinned one.
+  kubernetes_version_min = "1.36"
 
   node_pools = [
     {
