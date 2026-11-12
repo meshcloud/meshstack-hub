@@ -153,6 +153,40 @@ the definition gains a required input, even one with a default. So a new input i
 without that flag, setting it on an existing block fails with 403 "You tried to edit input ...".
 A BOOLEAN input cannot be optional, so it always takes the second way.
 
+<!-- scorecard-checks: bbd_supported_platforms -->
+## Supported Platforms
+
+A `TENANT_LEVEL` definition takes `spec.supported_platforms` from `var.meshstack.supported_platforms`,
+so a consumer can narrow it to one platform or landing zone by passing that object's `ref`. The
+default is what the module supports, normally one platform type:
+
+```hcl
+variable "meshstack" {
+  type = object({
+    # ...
+    supported_platforms = optional(list(object({
+      kind = optional(string)
+      name = optional(string)
+      uuid = optional(string)
+    })), [{ name = "AZURE" }])
+  })
+}
+
+resource "meshstack_building_block_definition" "this" {
+  spec = {
+    target_type         = "TENANT_LEVEL"
+    supported_platforms = var.meshstack.supported_platforms
+  }
+}
+```
+
+A definition with `use_in_landing_zones_only = true` keeps a fixed `supported_platforms`, because
+only landing zones and compositions order it.
+A `WORKSPACE_LEVEL` definition sets no `supported_platforms`; meshStack rejects even an empty set.
+
+A platform needs meshStack 2026.40.0 or later, a landing zone 2026.45.0 and meshstack provider
+0.28.0.
+
 <!-- scorecard-checks: bbd_structured_inputs, bbd_input_order, bbd_input_defaults -->
 ## Input Types, Order and Defaults
 
