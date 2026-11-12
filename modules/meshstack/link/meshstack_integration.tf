@@ -61,17 +61,6 @@ variable "link_target_type" {
   }
 }
 
-variable "link_supported_platforms" {
-  type        = list(string)
-  default     = []
-  description = "Platform names the marketplace entry is offered for. Leave empty for workspace-level links; required for tenant-level ones."
-
-  validation {
-    condition     = var.link_target_type == "WORKSPACE_LEVEL" || length(var.link_supported_platforms) > 0
-    error_message = "link_supported_platforms must name at least one platform when link_target_type is TENANT_LEVEL."
-  }
-}
-
 variable "meshstack" {
   type = object({
     owning_workspace_identifier = string
@@ -80,8 +69,18 @@ variable "meshstack" {
       kind = string
       uuid = string
     }))
+    supported_platforms = optional(list(object({
+      kind = optional(string)
+      name = optional(string)
+      uuid = optional(string)
+    })), [])
   })
   description = "Shared meshStack context, see docs."
+
+  validation {
+    condition     = var.link_target_type == "WORKSPACE_LEVEL" || length(var.meshstack.supported_platforms) > 0
+    error_message = "meshstack.supported_platforms must name at least one platform when link_target_type is TENANT_LEVEL."
+  }
 }
 
 variable "hub" {
@@ -157,8 +156,8 @@ resource "meshstack_building_block_definition" "this" {
     run_transparency  = true
     support_url       = var.link_support_url
     documentation_url = var.link_documentation_url
-    # meshStack requires null rather than an empty set for workspace-level definitions.
-    supported_platforms = length(var.link_supported_platforms) > 0 ? [for name in var.link_supported_platforms : { name = name }] : null
+    # meshStack rejects a workspace-level definition that sets supported platforms, even an empty set.
+    supported_platforms = var.link_target_type == "TENANT_LEVEL" ? var.meshstack.supported_platforms : null
   }
 
   version_spec = {
