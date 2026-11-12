@@ -42,7 +42,7 @@ digraph stackit_kubernetes_building_blocks {
     REG     [label="🗄️ STACKIT Container Registry\nstackit/container-registry"]
     AI      [label="🧠 AI Model Serving\nstackit/ai-llm · optional" style="rounded,filled,dashed"]
     CREDS   [label="🔑 Kubernetes meshPlatform Credentials\nkubernetes"]
-    ING     [label="🔐 Kubernetes Ingress\nkubernetes/ingress"]
+    ING     [label="🔐 Kubernetes Ingress Controller\nkubernetes/ingress-controller"]
     DNS     [label="🧭 DNS Zone\nstackit/dns"]
 
     { rank=same; SM -> CLUSTER -> GIT -> REG -> AI [style=invis] }

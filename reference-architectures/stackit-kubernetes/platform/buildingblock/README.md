@@ -21,7 +21,7 @@ reports the secret's path and hash in its `vault_secret` output. This run reads 
 there.
 
 It **registers building block definitions of its own** — `stackit/secrets-manager`, `ske/cluster`,
-`kubernetes`, `kubernetes/ingress`, `stackit/git`,
+`kubernetes`, `kubernetes/ingress-controller`, `stackit/git`,
 `stackit/container-registry`, `stackit/dns` and `stackit/ai-llm` — and orders the landing zone's
 STACKIT Service Account Federation definition as a child of the Automation Identity, listing its
 STACKIT definitions in `federated_building_block_definitions`.

@@ -132,7 +132,7 @@
 <g id="node6" class="node">
 <title>BBD_I</title>
 <path fill="#ecedfb" stroke="#9aa2e6" stroke-width="1.1" d="M261.58,-437C261.58,-437 55.18,-437 55.18,-437 49.18,-437 43.18,-431 43.18,-425 43.18,-425 43.18,-413 43.18,-413 43.18,-407 49.18,-401 55.18,-401 55.18,-401 261.58,-401 261.58,-401 267.58,-401 273.58,-407 273.58,-413 273.58,-413 273.58,-425 273.58,-425 273.58,-431 267.58,-437 261.58,-437"/>
-<text xml:space="preserve" text-anchor="middle" x="158.38" y="-415.7" font-family="Helvetica,sans-Serif" font-size="11.00">📦 kubernetes/ingress BBD</text>
+<text xml:space="preserve" text-anchor="middle" x="158.38" y="-415.7" font-family="Helvetica,sans-Serif" font-size="11.00">📦 kubernetes/ingress&#45;controller BBD</text>
 </g>
 <!-- BBD_I&#45;&gt;BBD_K -->
 <!-- ING -->

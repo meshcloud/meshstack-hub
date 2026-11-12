@@ -168,8 +168,8 @@ ephemeral "vault_kv_secret_v2" "kubernetes_platform" {
 
 # No DNS-01: its solver needs a STACKIT service account key in the cluster, which WIF avoids. HTTP-01
 # works because every hostname in the zone resolves to the load balancer.
-module "ingress_integration" {
-  source = "github.com/meshcloud/meshstack-hub//modules/kubernetes/ingress?ref=${var.hub.git_ref}"
+module "ingress_controller_integration" {
+  source = "github.com/meshcloud/meshstack-hub//modules/kubernetes/ingress-controller?ref=${var.hub.git_ref}"
 
   cluster_definition_ref = module.cluster_integration.building_block_definition.ref
   acme_email             = var.cluster_issuer_email
@@ -181,7 +181,7 @@ module "ingress_integration" {
   hub       = local.platform_hub
 }
 
-resource "meshstack_building_block" "ingress" {
+resource "meshstack_building_block" "ingress_controller" {
   wait_for_completion = true
 
   lifecycle {
@@ -193,8 +193,8 @@ resource "meshstack_building_block" "ingress" {
 
   spec = {
     parent_building_block_refs            = [meshstack_building_block.cluster.ref]
-    building_block_definition_version_ref = module.ingress_integration.building_block_definition.version_ref
-    display_name                          = "Kubernetes Ingress"
+    building_block_definition_version_ref = module.ingress_controller_integration.building_block_definition.version_ref
+    display_name                          = "Kubernetes Ingress Controller"
     target_ref                            = local.tenant_ref
 
     inputs = merge(
@@ -207,6 +207,16 @@ resource "meshstack_building_block" "ingress" {
   }
 }
 
+moved {
+  from = module.ingress_integration
+  to   = module.ingress_controller_integration
+}
+
+moved {
+  from = meshstack_building_block.ingress
+  to   = meshstack_building_block.ingress_controller
+}
+
 locals {
-  ingress_load_balancer_ip = jsondecode(meshstack_building_block.ingress.status.outputs["haproxy_lb_ip"].value)
+  ingress_load_balancer_ip = jsondecode(meshstack_building_block.ingress_controller.status.outputs["haproxy_lb_ip"].value)
 }

@@ -20,7 +20,7 @@ resource "meshstack_building_block" "dns" {
   }
 
   spec = {
-    parent_building_block_refs            = [meshstack_building_block.ingress.ref, meshstack_building_block.platform_federation.ref]
+    parent_building_block_refs            = [meshstack_building_block.ingress_controller.ref, meshstack_building_block.platform_federation.ref]
     building_block_definition_version_ref = module.dns_integration.building_block_definition.version_ref
     display_name                          = "DNS Zone"
     target_ref                            = local.tenant_ref

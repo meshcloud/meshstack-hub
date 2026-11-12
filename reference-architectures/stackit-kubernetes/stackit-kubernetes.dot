@@ -31,7 +31,7 @@ digraph stackit_kubernetes_platform {
     SVC    [label="📦 STACKIT Kubernetes Platform Services BBD" fillcolor="#ecedfb" color="#9aa2e6"]
     BBD_S  [label="📦 stackit/secrets-manager BBD" fillcolor="#ecedfb" color="#9aa2e6"]
     BBD_K  [label="📦 ske/cluster BBD" fillcolor="#ecedfb" color="#9aa2e6"]
-    BBD_I  [label="📦 kubernetes/ingress BBD" fillcolor="#ecedfb" color="#9aa2e6"]
+    BBD_I  [label="📦 kubernetes/ingress-controller BBD" fillcolor="#ecedfb" color="#9aa2e6"]
     BBD_A  [label="📦 kubernetes BBD" fillcolor="#ecedfb" color="#9aa2e6"]
     PLAT   [label="🛰️ SKE meshPlatform\nlanding zones ×{dev,prod,…}" fillcolor="#ecedfb" color="#9aa2e6"]
     BBD_G  [label="📦 stackit/git BBD" fillcolor="#ecedfb" color="#9aa2e6"]
