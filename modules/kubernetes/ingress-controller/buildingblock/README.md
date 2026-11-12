@@ -19,8 +19,10 @@ LoadBalancer annotations differ, and those are an input. AKS needs
 `service.beta.kubernetes.io/azure-load-balancer-health-probe-request-path = "/healthz"`; on STACKIT,
 `lb.stackit.cloud/internal-lb` keeps the load balancer off the public internet.
 
-An application team that wants to deploy an `Ingress` into a cluster uses the Kubernetes manifest
-building block, `modules/kubernetes/manifest`. This block installs the controller itself.
+The definition is hidden from the marketplace. A platform team adds the block through a landing zone
+or a composition, such as the **STACKIT Kubernetes Platform** reference architecture. An application
+team that wants to deploy an `Ingress` into a cluster uses the Kubernetes manifest building block,
+`modules/kubernetes/manifest`. This block installs the controller itself.
 
 ## The kubeconfig is an input of the building block
 

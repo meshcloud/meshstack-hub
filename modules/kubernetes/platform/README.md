@@ -24,6 +24,9 @@ month before. The block returns the current tokens, so a composition that passes
 rotates them monthly while the previous tokens stay valid for another month. Nothing cloud-specific
 is involved, so this runs on any conformant cluster.
 
+The definition is hidden from the marketplace. A platform team adds the block through a landing zone
+or a composition, such as the **STACKIT Kubernetes Platform** reference architecture.
+
 ## What it is not
 
 It does **not** register a meshPlatform. Deciding that a cluster becomes a meshStack platform — its

@@ -242,6 +242,11 @@ variable "meshstack" {
       kind = string
       uuid = string
     }))
+    supported_platforms = list(object({
+      kind = optional(string)
+      name = optional(string)
+      uuid = optional(string)
+    }))
   })
   description = "Shared meshStack context, see docs."
 }
@@ -409,14 +414,15 @@ resource "meshstack_building_block_definition" "this" {
   }
 
   spec = {
-    display_name        = coalesce(var.bbd_display_name, "Kubernetes meshPlatform Credentials")
-    symbol              = "https://raw.githubusercontent.com/meshcloud/meshstack-hub/${var.hub.git_ref}/modules/kubernetes/platform/logo.png"
-    description         = coalesce(var.bbd_description, "Creates the in-cluster replicator and metering service accounts meshStack authenticates with, and returns their tokens.")
-    support_url         = "https://docs.meshcloud.io/docs/meshstack.kubernetes.index.html"
-    target_type         = "TENANT_LEVEL"
-    run_transparency    = true
-    approval_policies   = var.approval_policies
-    supported_platforms = [{ name = "STACKIT" }]
+    display_name              = coalesce(var.bbd_display_name, "Kubernetes meshPlatform Credentials")
+    symbol                    = "https://raw.githubusercontent.com/meshcloud/meshstack-hub/${var.hub.git_ref}/modules/kubernetes/platform/logo.png"
+    description               = coalesce(var.bbd_description, "Creates the in-cluster replicator and metering service accounts meshStack authenticates with, and returns their tokens.")
+    support_url               = "https://docs.meshcloud.io/docs/meshstack.kubernetes.index.html"
+    target_type               = "TENANT_LEVEL"
+    run_transparency          = true
+    approval_policies         = var.approval_policies
+    supported_platforms       = var.meshstack.supported_platforms
+    use_in_landing_zones_only = true
 
     readme = coalesce(var.bbd_readme, chomp(<<-EOT
       Creates the two in-cluster identities meshStack uses to drive a Kubernetes cluster, and hands
@@ -424,10 +430,10 @@ resource "meshstack_building_block_definition" "this" {
 
       ## 🎯 When to use it
 
-      A platform team orders this once per cluster, as part of turning that cluster into a meshStack
-      platform. The **STACKIT Kubernetes Platform** reference architecture, for example, does it right
-      after the cluster exists and feeds the tokens into the platform it registers. It reaches the
-      cluster through the kubeconfig the ordering composition passes as an input.
+      This block is hidden from the marketplace. A platform team adds it once per cluster through a
+      landing zone or a composition that turns the cluster into a meshStack platform, such as the
+      **STACKIT Kubernetes Platform** reference architecture. The composition passes the cluster's
+      kubeconfig and registers the platform with the tokens.
 
       ## 📦 Resources created
 

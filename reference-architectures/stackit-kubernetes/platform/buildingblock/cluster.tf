@@ -113,6 +113,7 @@ module "kubernetes_integration" {
     runner_ref                  = local.runner_ref
     location_name               = local.location_name
     platform_identifier         = local.platform_name
+    supported_platforms         = [{ name = "STACKIT" }]
     tags = {
       landingzone    = var.tags.landingzone
       building_block = var.tags.building_block
@@ -166,8 +167,6 @@ ephemeral "vault_kv_secret_v2" "kubernetes_platform" {
   name  = local.kubernetes_platform_vault_secret.path
 }
 
-# No DNS-01: its solver needs a STACKIT service account key in the cluster, which WIF avoids. HTTP-01
-# works because every hostname in the zone resolves to the load balancer.
 module "ingress_controller_integration" {
   source = "github.com/meshcloud/meshstack-hub//modules/kubernetes/ingress-controller?ref=${var.hub.git_ref}"
 
@@ -177,8 +176,13 @@ module "ingress_controller_integration" {
 
   approval_policies = var.approval_policies
 
-  meshstack = { owning_workspace_identifier = var.workspace, tags = var.tags.building_block, runner_ref = local.runner_ref }
-  hub       = local.platform_hub
+  meshstack = {
+    owning_workspace_identifier = var.workspace
+    tags                        = var.tags.building_block
+    runner_ref                  = local.runner_ref
+    supported_platforms         = [{ name = "STACKIT" }]
+  }
+  hub = local.platform_hub
 }
 
 resource "meshstack_building_block" "ingress_controller" {
