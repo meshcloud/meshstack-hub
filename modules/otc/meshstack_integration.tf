@@ -97,6 +97,11 @@ variable "meshstack" {
       kind = string
       uuid = string
     }))
+    supported_platforms = optional(list(object({
+      kind = optional(string)
+      name = optional(string)
+      uuid = optional(string)
+    })))
   })
   description = "Shared meshStack context, see docs."
 }
@@ -286,7 +291,7 @@ resource "meshstack_building_block_definition" "this" {
     support_url               = "https://console.otc.t-systems.com"
     target_type               = "TENANT_LEVEL"
     run_transparency          = true
-    supported_platforms       = [{ name = local.platform_type_ref.name }]
+    supported_platforms       = coalesce(var.meshstack.supported_platforms, [{ kind = null, name = local.platform_type_ref.name, uuid = null }])
     use_in_landing_zones_only = true
 
     readme = coalesce(var.bbd_readme, chomp(<<-EOT
