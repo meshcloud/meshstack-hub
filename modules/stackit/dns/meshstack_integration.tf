@@ -12,6 +12,14 @@ variable "parent_domain" {
   description = "Domain zones are created under. The default is the one STACKIT delegates to its customers."
 }
 
+variable "wildcard_certs" {
+  type = object({
+    cert_manager_namespace = optional(string, "cert-manager")
+  })
+  default     = null
+  description = "If set to null, building blocks install nothing into a cluster. If set, a building block installs the STACKIT cert-manager webhook into the cluster of its `kubeconfig.yaml`, so cert-manager can issue wildcard certificates for the zone."
+}
+
 variable "bbd_display_name" {
   type        = string
   default     = null
@@ -133,10 +141,10 @@ resource "meshstack_building_block_definition" "this" {
 
       ## 🔐 Certificates
 
-      The zone is enough for HTTP-01 issuance: a hostname resolves to the load balancer, so the ACME
-      server reaches the challenge. Given a cluster's kubeconfig, the block also installs the STACKIT
-      cert-manager webhook there, with a service account that has `dns.admin` on the project, so
-      cert-manager can issue a wildcard certificate over DNS-01.
+      Every hostname in the zone resolves to the load balancer, so cert-manager can issue a
+      certificate per application over HTTP-01. For one wildcard certificate over DNS-01 instead, the
+      definition sets `wildcard_certs`, and the block installs the STACKIT cert-manager webhook into
+      the cluster of `kubeconfig.yaml`.
 
       ## 📊 Shared responsibility
 
@@ -164,10 +172,10 @@ resource "meshstack_building_block_definition" "this" {
       }
     }
 
-    inputs = {
+    inputs = merge({
       "kubeconfig.yaml" = {
         display_name           = "kubeconfig.yaml"
-        description            = "Kubeconfig of a cluster running cert-manager, to install the DNS-01 solver for this zone. Empty installs none."
+        description            = "Kubeconfig of the cluster that runs cert-manager. Required when the definition sets `wildcard_certs`."
         type                   = "FILE"
         assignment_type        = "USER_INPUT"
         sensitive              = {}
@@ -274,7 +282,15 @@ resource "meshstack_building_block_definition" "this" {
         default_value          = jsonencode(false)
         updateable_by_consumer = true
       }
-    }
+      }, var.wildcard_certs == null ? {} : {
+      wildcard_certs = {
+        display_name    = "Wildcard Certificates"
+        description     = "Namespace of cert-manager in the cluster the STACKIT DNS-01 solver is installed into."
+        type            = "CODE"
+        assignment_type = "STATIC"
+        argument        = jsonencode(jsonencode(var.wildcard_certs))
+      }
+    })
 
     outputs = {
       zone_name = {

@@ -12,20 +12,6 @@ variable "haproxy_service_annotations" {
   description = "Annotations on the HAProxy controller Service, read by the cloud provider to configure the load balancer."
 }
 
-variable "ingress_class_name" {
-  type        = string
-  nullable    = false
-  default     = "haproxy"
-  description = "Name of the IngressClass the controller serves."
-}
-
-variable "cluster_issuer_name" {
-  type        = string
-  nullable    = false
-  default     = "letsencrypt-prod"
-  description = "Name of the ClusterIssuer application teams put in their cert-manager.io/cluster-issuer annotation."
-}
-
 variable "use_letsencrypt_staging" {
   type        = bool
   nullable    = false
@@ -39,13 +25,13 @@ variable "acme_email" {
   description = "Contact address Let's Encrypt uses for expiry warnings and account recovery."
 }
 
-variable "dns01" {
+variable "wildcard_certs" {
   type = object({
-    domain = string
-    solver = any
+    domain       = string
+    dns01_solver = any
   })
   default     = null
-  description = "If null, cert-manager issues one certificate per Ingress over HTTP-01. If set, it issues the wildcard certificate `*.<domain>` over DNS-01 with `solver`, the `dns01` block of a cert-manager ACME solver such as the one `stackit/dns` shows, and HAProxy serves it as its default certificate to every Ingress."
+  description = "If set to null, cert-manager issues an individual certificate per Ingress over HTTP-01. If set, cert-manager issues `*.<domain>` over DNS-01 with `dns01_solver`, the `dns01` block of a cert-manager ACME solver such as the one `stackit/dns` shows, and HAProxy serves it to every Ingress."
 }
 
 variable "cluster_definition_ref" {
@@ -130,15 +116,16 @@ output "building_block_definition" {
 }
 
 locals {
-  app_usage = var.dns01 == null ? chomp(<<-EOT
-    Set `ingressClassName: ${var.ingress_class_name}` and the annotation
-    `cert-manager.io/cluster-issuer: ${var.cluster_issuer_name}` on an Ingress, and cert-manager
+  cluster_issuer_name = var.use_letsencrypt_staging ? "letsencrypt-staging" : "letsencrypt-prod"
+
+  app_usage = var.wildcard_certs == null ? chomp(<<-EOT
+    Set `ingressClassName: haproxy` and the annotation
+    `cert-manager.io/cluster-issuer: ${local.cluster_issuer_name}` on an Ingress, and cert-manager
     issues a certificate for its hostname over HTTP-01.
     EOT
     ) : chomp(<<-EOT
-    Set `ingressClassName: ${var.ingress_class_name}` and a `tls` entry with the hostname on an
-    Ingress under `${var.dns01.domain}`, and HAProxy serves the wildcard certificate
-    `*.${var.dns01.domain}` for it. Ingress annotations create no certificates here.
+    Set `ingressClassName: haproxy` and list the hostname under `tls`. HAProxy serves
+    `*.${var.wildcard_certs.domain}` for it.
     EOT
   )
 }
@@ -167,9 +154,9 @@ resource "meshstack_building_block_definition" "this" {
 
       ## 🎯 When to use it
 
-      This block is hidden from the marketplace. A platform team adds it once per cluster through a
-      landing zone or a composition, such as the **STACKIT Kubernetes Platform** reference
-      architecture, which passes the cluster's kubeconfig. Application teams deploy their `Ingress`
+      This block is meant for landing zones and compositions, which add it once per cluster, such as
+      the **STACKIT Kubernetes Platform** reference architecture, which passes the cluster's
+      kubeconfig. Application teams deploy their `Ingress`
       with the **Kubernetes Manifest** building block.
 
       ## 📦 Resources created
@@ -238,22 +225,6 @@ resource "meshstack_building_block_definition" "this" {
         argument        = jsonencode(var.use_letsencrypt_staging)
       }
 
-      cluster_issuer_name = {
-        display_name    = "ClusterIssuer Name"
-        description     = "Name application teams reference from the cert-manager.io/cluster-issuer annotation."
-        type            = "STRING"
-        assignment_type = "STATIC"
-        argument        = jsonencode(var.cluster_issuer_name)
-      }
-
-      ingress_class_name = {
-        display_name    = "Ingress Class Name"
-        description     = "Name of the IngressClass the controller serves."
-        type            = "STRING"
-        assignment_type = "STATIC"
-        argument        = jsonencode(var.ingress_class_name)
-      }
-
       haproxy_replica_count = {
         display_name    = "HAProxy Replicas"
         description     = "Number of HAProxy ingress controller replicas."
@@ -286,13 +257,13 @@ resource "meshstack_building_block_definition" "this" {
         default_value          = jsonencode(false)
         updateable_by_consumer = true
       }
-      }, var.dns01 == null ? {} : {
-      dns01 = {
-        display_name    = "DNS-01 Wildcard Certificate"
+      }, var.wildcard_certs == null ? {} : {
+      wildcard_certs = {
+        display_name    = "Wildcard Certificates"
         description     = "Domain of the wildcard certificate and the cert-manager DNS-01 solver that issues it."
         type            = "CODE"
         assignment_type = "STATIC"
-        argument        = jsonencode(jsonencode(var.dns01))
+        argument        = jsonencode(jsonencode(var.wildcard_certs))
       }
     })
 

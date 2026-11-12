@@ -9,9 +9,9 @@ spec:
     privateKeySecretRef:
       name: {{ .Values.clusterIssuer.privateKeySecretName }}
     solvers:
-      {{- with .Values.dns01 }}
+      {{- with .Values.wildcardCerts }}
       - dns01:
-          {{- toYaml .solver | nindent 10 }}
+          {{- toYaml .dns01Solver | nindent 10 }}
         selector:
           dnsZones:
             - {{ .domain | quote }}

@@ -1,11 +1,11 @@
-{{- with .Values.wildcardCertificate }}
+{{- with .Values.wildcardCerts }}
 apiVersion: cert-manager.io/v1
 kind: Certificate
 metadata:
-  name: {{ .name }}
+  name: wildcard-tls
   namespace: {{ .namespace }}
 spec:
-  secretName: {{ .name }}
+  secretName: wildcard-tls
   dnsNames:
     - {{ printf "*.%s" .domain | quote }}
   issuerRef:
