@@ -15,7 +15,7 @@ buildingBlocks:
     role: Provisions the STACKIT Kubernetes Engine (SKE) cluster and the platform admin service account whose kubeconfig the blocks working inside the cluster use.
   - path: stackit/secrets-manager
     role: Creates the platform's Secrets Manager instance, which holds every credential the platform's building blocks create.
-  - path: kubernetes/ingress
+  - path: kubernetes/ingress-controller
     role: Installs cert-manager, the HAProxy ingress controller and the Let's Encrypt ClusterIssuer on the cluster.
   - path: kubernetes
     role: Registers the meshStack Kubernetes platform and its landing zones, and creates the in-cluster replicator and metering identities meshStack authenticates with.
