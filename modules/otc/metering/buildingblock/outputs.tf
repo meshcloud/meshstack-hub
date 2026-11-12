@@ -13,6 +13,10 @@ output "summary" {
     from the T Cloud Financial Dashboard for the current month (and the last month during the first five days) and
     submits it as usage reports to ${var.meshstack_meshfed_url}.
 
+    The Financial Dashboard API key expires after at most 90 days. When runs fail with HTTP 401
+    `Invalid or expired user api token`, ask the platform team for a new key; it reaches this CronJob on the next
+    run of this building block.
+
     Trigger a run right away and follow its logs:
 
     ```sh

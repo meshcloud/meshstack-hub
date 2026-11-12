@@ -11,7 +11,7 @@ variable "tcloud_api_token" {
   type        = string
   nullable    = false
   sensitive   = true
-  description = "API key of the T Cloud Financial Dashboard (Configuration > API Keys) with security level `Admin`. It is valid for at most 90 days; apply again with the new key to roll it out to every building block."
+  description = "API key of the T Cloud Financial Dashboard (Configuration > API Keys) with security level `Admin`. It is valid for at most 90 days. Note its expiry date at creation and apply again with a new key before then, which rolls it out to every building block."
 }
 
 variable "tcloud_contract_ids" {
@@ -160,7 +160,7 @@ resource "meshstack_building_block_definition" "this" {
 
     ## 🔑 Financial Dashboard API key
 
-    The Financial Dashboard offers no workload identity federation, so the job reads with an API key of security level `Admin`. The platform team provides it and rotates it at least every 90 days; each rotation reaches every building block on its next run.
+    The Financial Dashboard offers no workload identity federation, so the job reads with an API key of security level `Admin`. The platform team provides it and rotates it before it expires, at the latest after 90 days. Each rotation reaches every building block on its next run. An expired key makes every run fail with HTTP 401 `Invalid or expired user api token`.
 
     The meshStack API user and the meshPlatform the reports go to are set by the platform team as well, so you only choose how often the job runs.
 
