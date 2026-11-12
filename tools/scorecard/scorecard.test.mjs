@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 import {
   declaresSummaryOutput,
   explicitDefaultViolations,
+  identitiesFromVersions,
   issuerFromPinnedRunner,
   summaryOutputBody,
 } from "./scorecard.mjs";
@@ -123,4 +124,48 @@ test("an issuer from the runner data source passes only when the definition pins
     true,
   );
   assert.equal(issuerFromPinnedRunner(lookup + federatedDefinition({ issuer, runnerRef: "var.meshstack.runner_ref" })), false);
+});
+
+const trustedRunnersModule = (versions = "meshstack_building_block_definition.this.versions") => `
+module "runner" {
+  source = "github.com/meshcloud/meshstack-hub//modules/meshstack/runner-identity?ref=\${var.hub.git_ref}"
+
+  cloud               = "aws"
+  runner_ref          = var.meshstack.runner_ref
+  trusted_runner_refs = var.meshstack.trusted_runner_refs
+${versions ? `  versions            = ${versions}\n` : ""}}
+`;
+
+const trustedRunnersDefinition = ({ identities = "module.runner.identities", runnerRef = "module.runner.ref" } = {}) => `
+module "backplane" {
+  source = "github.com/meshcloud/meshstack-hub//modules/aws/s3_bucket/backplane?ref=\${var.hub.git_ref}"
+
+  runner_identities = ${identities}
+}
+
+resource "meshstack_building_block_definition" "this" {
+  version_spec = {
+    runner_ref = ${runnerRef}
+  }
+}
+`;
+
+test("identities from the runner-identity module the definition pins count as its issuer", () => {
+  assert.equal(issuerFromPinnedRunner(trustedRunnersModule() + trustedRunnersDefinition()), true);
+  assert.equal(
+    issuerFromPinnedRunner(trustedRunnersModule() + trustedRunnersDefinition({ runnerRef: "var.meshstack.runner_ref" })),
+    false,
+  );
+});
+
+test("identities pass only when the runner-identity module gets the definition's versions", () => {
+  assert.equal(identitiesFromVersions(trustedRunnersModule() + trustedRunnersDefinition()), true);
+  assert.equal(identitiesFromVersions(trustedRunnersModule(null) + trustedRunnersDefinition()), false);
+  assert.equal(identitiesFromVersions(trustedRunnersModule("{}") + trustedRunnersDefinition()), false);
+});
+
+test("identities that are not read from the runner-identity module fail", () => {
+  assert.equal(identitiesFromVersions(trustedRunnersModule() + trustedRunnersDefinition({ identities: "local.identities" })), false);
+  assert.equal(identitiesFromVersions(runnerModule("./runner") + trustedRunnersDefinition()), false);
+  assert.equal(identitiesFromVersions(runnerModule() + federatedDefinition({ issuer: "module.runner.issuer", runnerRef: "module.runner.ref" })), false);
 });

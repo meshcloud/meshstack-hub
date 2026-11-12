@@ -25,29 +25,71 @@ locals {
   assume_federated_role_name = "${var.name}-role"
 }
 
+data "aws_iam_openid_connect_provider" "runner" {
+  for_each = toset(var.runner_identities[*].issuer)
+
+  url = each.key
+}
+
+locals {
+  trusted_identities = concat(
+    var.workload_identity_federation == null ? [] : [{
+      oidc_provider_arn = var.oidc_provider_arn
+      issuer            = var.workload_identity_federation.issuer
+      audience          = var.workload_identity_federation.audience
+      subjects          = var.workload_identity_federation.subjects
+    }],
+    [
+      for identity in var.runner_identities : {
+        oidc_provider_arn = data.aws_iam_openid_connect_provider.runner[identity.issuer].arn
+        issuer            = identity.issuer
+        audience          = identity.audience
+        subjects          = [identity.subject]
+      }
+      if identity.subject != null
+    ],
+  )
+}
+
 data "aws_iam_policy_document" "workload_identity_federation" {
   version = "2012-10-17"
 
-  statement {
-    effect = "Allow"
-    principals {
-      type        = "Federated"
-      identifiers = [var.oidc_provider_arn]
-    }
-    actions = ["sts:AssumeRoleWithWebIdentity"]
-
-    condition {
-      test     = "StringEquals"
-      variable = "${trimprefix(var.workload_identity_federation.issuer, "https://")}:aud"
-
-      values = [var.workload_identity_federation.audience]
+  lifecycle {
+    precondition {
+      condition     = length(local.trusted_identities) > 0
+      error_message = "The role would trust no identity. Pass workload_identity_federation, or runner_identities with at least one subject. A subject is null when no version of the definition runs on that runner."
     }
 
-    condition {
-      test     = "StringLike"
-      variable = "${trimprefix(var.workload_identity_federation.issuer, "https://")}:sub"
+    precondition {
+      condition     = var.workload_identity_federation == null || var.oidc_provider_arn != null
+      error_message = "workload_identity_federation needs oidc_provider_arn."
+    }
+  }
 
-      values = var.workload_identity_federation.subjects
+  dynamic "statement" {
+    for_each = local.trusted_identities
+
+    content {
+      effect = "Allow"
+      principals {
+        type        = "Federated"
+        identifiers = [statement.value.oidc_provider_arn]
+      }
+      actions = ["sts:AssumeRoleWithWebIdentity"]
+
+      condition {
+        test     = "StringEquals"
+        variable = "${trimprefix(statement.value.issuer, "https://")}:aud"
+
+        values = [statement.value.audience]
+      }
+
+      condition {
+        test     = "StringLike"
+        variable = "${trimprefix(statement.value.issuer, "https://")}:sub"
+
+        values = statement.value.subjects
+      }
     }
   }
 }

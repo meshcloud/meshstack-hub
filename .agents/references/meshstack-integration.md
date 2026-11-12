@@ -113,6 +113,11 @@ variable "meshstack" {
       kind = string
       uuid = string
     }))
+    # Only in a module whose backplane trusts more than one runner, see "Trusted runners".
+    trusted_runner_refs = optional(list(object({
+      kind = string
+      uuid = string
+    })), [])
   })
   description = "Shared meshStack context, see docs."
 }
@@ -224,8 +229,8 @@ module "backplane" {
 - `<cloud>` is `aws`, `azure` or `gcp`. A cloud without its own token uses another one as a generic
   OIDC token: STACKIT the `azure` one, OTC the `gcp` one.
 - `version_latest.workload_identity_federation.subject` is the runner's subject template with every
-  placeholder filled in for this definition. It is the only place a subject comes from, and it is
-  known after apply, exactly as `metadata.uuid` already was.
+  placeholder filled in for this definition. A subject only ever comes from a version of the
+  definition, and it is known after apply, exactly as `metadata.uuid` already was.
 - Leave `var.meshstack.runner_ref` null and the definition runs on the default runner. Pass the `ref` of a `meshstack_building_block_runner`; `kind` is required so that nobody
   builds the object by hand.
 - A definition applied with an ephemeral API key, as in a reference architecture, needs the
@@ -245,7 +250,40 @@ before any definition exists, so it takes `issuer` and the `audiences` of every 
 **Known limitation.** The backplane trusts the identity of the version the Terraform resource
 manages, which is the newest one. A building block keeps running on the version it was created
 with, so moving a definition to a different runner breaks the blocks that still run on the old
-version until they upgrade.
+version until they upgrade. AWS modules no longer have this limitation, see
+[Trusted runners](#trusted-runners).
+
+### Trusted runners
+
+A module whose backplane can trust more than one runner takes `meshstack.trusted_runner_refs`. The
+platform engineer lists the old runner there before the definition moves, and removes it when every
+building block uses a version on the new runner. Only AWS modules do this so far.
+
+```hcl
+module "runner" {
+  source = "github.com/meshcloud/meshstack-hub//modules/meshstack/runner-identity?ref=${var.hub.git_ref}"
+
+  cloud               = "aws"
+  runner_ref          = var.meshstack.runner_ref
+  trusted_runner_refs = var.meshstack.trusted_runner_refs
+  versions            = meshstack_building_block_definition.this.versions
+}
+
+module "backplane" {
+  # ...
+  runner_identities = module.runner.identities
+}
+```
+
+- `module.runner.identities` has one `{ issuer, audience, subject }` per runner: the current runner
+  first, then each trusted runner. The subject of a runner comes from the versions that run on it,
+  so `versions` replaces the read of `version_latest`.
+- The definition still reads `module.runner.ref` and `module.runner.token_path`. Only `identities`
+  depends on `versions`, so the definition does not depend on itself.
+- A runner is trusted only when it is the current one or is listed. The hosted runner is not
+  trusted automatically.
+- The backplane keys every resource it creates per runner by the runner, never by the position in
+  the list. Otherwise a move renames the resources of the old runner.
 
 <!-- scorecard-checks: bbd_catalog_overrides -->
 ## Overridable Catalog Properties
