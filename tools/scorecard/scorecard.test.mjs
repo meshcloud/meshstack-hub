@@ -121,26 +121,27 @@ test("meshstack.supported_platforms without a default fails", () => {
   ]);
 });
 
-test("a landing-zone-only definition keeps a fixed value and is not checked", () => {
+test("a required meshstack.supported_platforms passes", () => {
+  const required = `    supported_platforms = list(object({
+      kind = optional(string)
+      name = optional(string)
+      uuid = optional(string)
+    }))`;
+  assert.deepEqual(supportedPlatformsViolations(tenantLevel({ type: required })), []);
+});
+
+test("a default computed with coalesce passes without a default in the type", () => {
+  const supportedPlatforms = "coalesce(var.meshstack.supported_platforms, [{ kind = null, name = local.platform_type, uuid = null }])";
+  assert.deepEqual(supportedPlatformsViolations(tenantLevel({ type: withoutDefault, supportedPlatforms })), []);
+});
+
+test("a landing-zone-only definition is checked like any other", () => {
   const tf = tenantLevel({ supportedPlatforms: '[{ name = "STACKIT" }]' }).replace(
     "    supported_platforms =",
     "    use_in_landing_zones_only = true\n    supported_platforms ="
   );
-  assert.equal(supportedPlatformsViolations(tf), null);
-});
-
-test("next to a landing-zone-only definition, the other tenant-level definition is still checked", () => {
-  const tf = `${tenantLevel({ type: withDefault })}
-resource "meshstack_building_block_definition" "landing_zone" {
-  spec = {
-    target_type               = "TENANT_LEVEL"
-    use_in_landing_zones_only = true
-    supported_platforms       = [{ name = "STACKIT" }]
-  }
-}
-`;
-  assert.deepEqual(supportedPlatformsViolations(tf), []);
-  assert.deepEqual(supportedPlatformsViolations(tf.replace("var.meshstack.supported_platforms", '[{ name = "AZURE" }]')), [
+  assert.deepEqual(supportedPlatformsViolations(tf), [
+    "variable meshstack declares no supported_platforms",
     "spec.supported_platforms does not read var.meshstack.supported_platforms",
   ]);
 });
