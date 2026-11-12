@@ -65,11 +65,6 @@ variable "vm_ssh_private_key_output" {
   description = "Output of the VM building block holding the OpenSSH private key of the login user."
 }
 
-variable "supported_platform_types" {
-  type        = list(string)
-  description = "meshStack platform types the VM building block runs on, e.g. `[\"STACKIT\"]`. The hardening definition is offered on the same tenants."
-}
-
 variable "summary_embeds_ssh_key" {
   type        = bool
   default     = false
@@ -108,6 +103,11 @@ variable "meshstack" {
       kind = string
       uuid = string
     }))
+    supported_platforms = optional(list(object({
+      kind = optional(string)
+      name = optional(string)
+      uuid = optional(string)
+    })), [{ name = "STACKIT" }])
   })
   description = "Shared meshStack context, see docs."
 }
@@ -196,7 +196,7 @@ resource "meshstack_building_block_definition" "this" {
     support_url         = "https://github.com/dev-sec/ansible-collection-hardening"
     target_type         = "TENANT_LEVEL"
     run_transparency    = true
-    supported_platforms = [for t in var.supported_platform_types : { name = t }]
+    supported_platforms = var.meshstack.supported_platforms
 
     readme = coalesce(var.bbd_readme, chomp(<<-EOT
     Hardens a VM you ordered as a building block in this tenant. A GitHub Actions workflow runs an
