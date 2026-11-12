@@ -59,6 +59,11 @@ variable "meshstack" {
       kind = string
       uuid = string
     }))
+    supported_platforms = optional(list(object({
+      kind = optional(string)
+      name = optional(string)
+      uuid = optional(string)
+    })), [{ name = "GCP" }])
   })
   description = "Shared meshStack context, see docs."
 }
@@ -134,7 +139,7 @@ resource "meshstack_building_block_definition" "this" {
     documentation_url   = ""
     symbol              = "https://raw.githubusercontent.com/meshcloud/meshstack-hub/main/modules/gcp/budget-alert/buildingblock/logo.png"
     target_type         = "TENANT_LEVEL"
-    supported_platforms = [{ name = "GCP" }]
+    supported_platforms = var.meshstack.supported_platforms
 
     readme = coalesce(var.bbd_readme, chomp(<<-EOT
       This building block creates a **GCP billing budget** for your project and an email notification

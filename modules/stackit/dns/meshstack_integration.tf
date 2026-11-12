@@ -51,6 +51,11 @@ variable "meshstack" {
       kind = string
       uuid = string
     }))
+    supported_platforms = optional(list(object({
+      kind = optional(string)
+      name = optional(string)
+      uuid = optional(string)
+    })), [{ name = "STACKIT" }])
   })
   description = "Shared meshStack context, see docs."
 }
@@ -108,7 +113,7 @@ resource "meshstack_building_block_definition" "this" {
     target_type         = "TENANT_LEVEL"
     run_transparency    = true
     approval_policies   = var.approval_policies
-    supported_platforms = [{ name = "STACKIT" }]
+    supported_platforms = var.meshstack.supported_platforms
 
     readme = coalesce(var.bbd_readme, chomp(<<-EOT
       Creates a **DNS zone** in this project, and a wildcard record inside it, so every application
