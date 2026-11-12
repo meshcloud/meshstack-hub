@@ -72,10 +72,10 @@ variable "release_on_destroy" {
   description = "Leave the zone and its record set in place on destroy. Cannot change once they are managed."
 }
 
-variable "cert_manager_namespace" {
-  type        = string
-  nullable    = false
-  default     = "cert-manager"
-  description = "Namespace cert-manager runs in; used with `kubeconfig.yaml`."
+variable "wildcard_certs" {
+  type = object({
+    cert_manager_namespace = optional(string, "cert-manager")
+  })
+  default     = null
+  description = "If set to null, the block installs nothing into a cluster. If set, it installs the STACKIT cert-manager webhook into the cluster of `kubeconfig.yaml`, so cert-manager can issue wildcard certificates for this zone. The summary shows the `dns01_solver` for `kubernetes/ingress-controller`."
 }
-

@@ -1,7 +1,8 @@
 module "dns_integration" {
   source = "github.com/meshcloud/meshstack-hub//modules/stackit/dns?ref=${var.hub.git_ref}"
 
-  parent_domain = var.dns_parent_domain
+  parent_domain  = var.dns_parent_domain
+  wildcard_certs = {}
 
   approval_policies = var.approval_policies
 

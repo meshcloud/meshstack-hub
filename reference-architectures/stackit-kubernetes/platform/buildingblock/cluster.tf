@@ -174,11 +174,11 @@ module "ingress_controller_integration" {
   acme_email             = var.cluster_issuer_email
   haproxy_replica_count  = var.playground_mode ? 1 : 2
 
-  # One wildcard certificate for every application keeps the platform under Let's Encrypt's rate limits.
-  # The DNS block installs the webhook of this solver.
-  dns01 = {
+  # One wildcard certificate for all applications, instead of one per application, keeps the platform
+  # under Let's Encrypt's rate limits. The DNS block installs the webhook of this solver.
+  wildcard_certs = {
     domain = local.dns_zone_name
-    solver = {
+    dns01_solver = {
       webhook = {
         groupName  = "acme.stackit.de"
         solverName = "stackit"

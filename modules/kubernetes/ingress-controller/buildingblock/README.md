@@ -26,14 +26,16 @@ The ClusterIssuer's CRD only exists once cert-manager is installed, and `kuberne
 the schema at plan time. An inline Helm chart (`chart/`) has no such lookup, so one run installs
 both.
 
-## A wildcard certificate over DNS-01
+## Certificates
 
-With `dns01`, the ClusterIssuer solves challenges for `domain` with the given cert-manager `dns01`
-solver, and the certificate `*.<domain>` becomes HAProxy's default certificate, shared by every
-Ingress under the domain. cert-manager then runs without ingress-shim, so a
-`cert-manager.io/cluster-issuer` annotation creates no certificate of its own. The solver's
-credential and webhook come from elsewhere, for example `stackit/dns`; on AKS or EKS the built-in
-`azureDNS` or `route53` solver can use workload identity.
+If `wildcard_certs` is null, cert-manager issues an individual certificate per Ingress over HTTP-01
+for the `cert-manager.io/cluster-issuer` annotation. If it is set, cert-manager issues `*.<domain>`
+over DNS-01 with `dns01_solver`, HAProxy serves it to every Ingress, and the annotation has no
+effect. The solver's credential and webhook come from elsewhere, for example `stackit/dns`; on AKS
+or EKS the built-in `azureDNS` or `route53` solver can use workload identity.
+
+`use_letsencrypt_staging` switches the ClusterIssuer to Let's Encrypt staging, whose certificates
+no browser trusts. It is meant for development and testing.
 
 ## Sizing for production
 
@@ -86,7 +88,6 @@ puts Helm's ownership label and annotations on the ClusterIssuer, so the release
 | Name | Description | Type | Default | Required |
 |------|-------------|------|---------|:--------:|
 | <a name="input_acme_email"></a> [acme\_email](#input\_acme\_email) | Contact address Let's Encrypt uses for expiry warnings and account recovery. | `string` | n/a | yes |
-| <a name="input_acme_private_key_secret_name"></a> [acme\_private\_key\_secret\_name](#input\_acme\_private\_key\_secret\_name) | Name of the secret in which cert-manager stores the ACME account private key. Null names it after the Let's Encrypt environment. | `string` | `null` | no |
 | <a name="input_cert_manager_cainjector_resources"></a> [cert\_manager\_cainjector\_resources](#input\_cert\_manager\_cainjector\_resources) | Resource requests and limits of the cert-manager cainjector. The default fits a demonstration cluster; the README lists production values. | <pre>object({<br/>    requests = optional(object({ cpu = optional(string), memory = optional(string) }), {})<br/>    limits   = optional(object({ cpu = optional(string), memory = optional(string) }), {})<br/>  })</pre> | <pre>{<br/>  "limits": {<br/>    "cpu": "200m",<br/>    "memory": "256Mi"<br/>  },<br/>  "requests": {<br/>    "cpu": "10m",<br/>    "memory": "64Mi"<br/>  }<br/>}</pre> | no |
 | <a name="input_cert_manager_crds_keep"></a> [cert\_manager\_crds\_keep](#input\_cert\_manager\_crds\_keep) | Keep the cert-manager CRDs, and with them every Certificate and ClusterIssuer, when the release is destroyed. | `bool` | `false` | no |
 | <a name="input_cert_manager_extra_args"></a> [cert\_manager\_extra\_args](#input\_cert\_manager\_extra\_args) | Extra command line arguments for the cert-manager controller. | `list(string)` | <pre>[<br/>  "--certificate-request-minimum-backoff-duration=1m"<br/>]</pre> | no |
@@ -94,8 +95,6 @@ puts Helm's ownership label and annotations on the ClusterIssuer, so the release
 | <a name="input_cert_manager_resources"></a> [cert\_manager\_resources](#input\_cert\_manager\_resources) | Resource requests and limits of the cert-manager controller. The default fits a demonstration cluster; the README lists production values. | <pre>object({<br/>    requests = optional(object({ cpu = optional(string), memory = optional(string) }), {})<br/>    limits   = optional(object({ cpu = optional(string), memory = optional(string) }), {})<br/>  })</pre> | <pre>{<br/>  "limits": {<br/>    "cpu": "200m",<br/>    "memory": "256Mi"<br/>  },<br/>  "requests": {<br/>    "cpu": "10m",<br/>    "memory": "64Mi"<br/>  }<br/>}</pre> | no |
 | <a name="input_cert_manager_startupapicheck_resources"></a> [cert\_manager\_startupapicheck\_resources](#input\_cert\_manager\_startupapicheck\_resources) | Resource requests and limits of the cert-manager startupapicheck Job. | <pre>object({<br/>    requests = optional(object({ cpu = optional(string), memory = optional(string) }), {})<br/>    limits   = optional(object({ cpu = optional(string), memory = optional(string) }), {})<br/>  })</pre> | <pre>{<br/>  "limits": {<br/>    "cpu": "100m",<br/>    "memory": "128Mi"<br/>  },<br/>  "requests": {<br/>    "cpu": "10m",<br/>    "memory": "32Mi"<br/>  }<br/>}</pre> | no |
 | <a name="input_cert_manager_webhook_resources"></a> [cert\_manager\_webhook\_resources](#input\_cert\_manager\_webhook\_resources) | Resource requests and limits of the cert-manager admission webhook. The default fits a demonstration cluster; the README lists production values. | <pre>object({<br/>    requests = optional(object({ cpu = optional(string), memory = optional(string) }), {})<br/>    limits   = optional(object({ cpu = optional(string), memory = optional(string) }), {})<br/>  })</pre> | <pre>{<br/>  "limits": {<br/>    "cpu": "100m",<br/>    "memory": "128Mi"<br/>  },<br/>  "requests": {<br/>    "cpu": "10m",<br/>    "memory": "32Mi"<br/>  }<br/>}</pre> | no |
-| <a name="input_cluster_issuer_name"></a> [cluster\_issuer\_name](#input\_cluster\_issuer\_name) | Name of the ClusterIssuer that application teams set in the `cert-manager.io/cluster-issuer` annotation. | `string` | n/a | yes |
-| <a name="input_dns01"></a> [dns01](#input\_dns01) | If null, cert-manager issues one certificate per Ingress over HTTP-01. If set, it issues the wildcard certificate `*.<domain>` over DNS-01 with `solver`, the `dns01` block of a cert-manager ACME solver, and HAProxy serves it as its default certificate to every Ingress. | <pre>object({<br/>    domain = string<br/>    solver = any<br/>  })</pre> | `null` | no |
 | <a name="input_haproxy_crdjob_resources"></a> [haproxy\_crdjob\_resources](#input\_haproxy\_crdjob\_resources) | Resource requests and limits of the Job that installs the HAProxy CRDs. | <pre>object({<br/>    requests = optional(object({ cpu = optional(string), memory = optional(string) }), {})<br/>    limits   = optional(object({ cpu = optional(string), memory = optional(string) }), {})<br/>  })</pre> | <pre>{<br/>  "limits": {<br/>    "cpu": "200m",<br/>    "memory": "256Mi"<br/>  },<br/>  "requests": {<br/>    "cpu": "10m",<br/>    "memory": "32Mi"<br/>  }<br/>}</pre> | no |
 | <a name="input_haproxy_namespace"></a> [haproxy\_namespace](#input\_haproxy\_namespace) | Namespace of the HAProxy ingress controller and of the wildcard certificate. | `string` | `"haproxy-ingress"` | no |
 | <a name="input_haproxy_release_name"></a> [haproxy\_release\_name](#input\_haproxy\_release\_name) | Helm release name of the HAProxy ingress controller. | `string` | `"haproxy"` | no |
@@ -105,10 +104,9 @@ puts Helm's ownership label and annotations on the ClusterIssuer, so the release
 | <a name="input_haproxy_service_type"></a> [haproxy\_service\_type](#input\_haproxy\_service\_type) | Service type of the HAProxy ingress controller. | `string` | `"LoadBalancer"` | no |
 | <a name="input_haproxy_timeout"></a> [haproxy\_timeout](#input\_haproxy\_timeout) | Seconds to wait for the HAProxy release, including its cloud load balancer, to become ready. | `number` | `1200` | no |
 | <a name="input_imports"></a> [imports](#input\_imports) | Set to `{}` to take over the namespaces, Helm releases and ClusterIssuer of an existing installation. | `object({})` | `null` | no |
-| <a name="input_ingress_class_name"></a> [ingress\_class\_name](#input\_ingress\_class\_name) | Name of the IngressClass the controller serves and the HTTP-01 solver uses. | `string` | n/a | yes |
 | <a name="input_release_on_destroy"></a> [release\_on\_destroy](#input\_release\_on\_destroy) | Leave the namespaces and Helm releases in place on destroy. Cannot change once they are managed. | `bool` | n/a | yes |
 | <a name="input_use_letsencrypt_staging"></a> [use\_letsencrypt\_staging](#input\_use\_letsencrypt\_staging) | Issue from Let's Encrypt staging, for development and testing. No browser trusts its certificates. | `bool` | `false` | no |
-| <a name="input_wildcard_certificate_name"></a> [wildcard\_certificate\_name](#input\_wildcard\_certificate\_name) | Name of the wildcard Certificate and its secret in `haproxy_namespace`; used with `dns01`. | `string` | `"wildcard-tls"` | no |
+| <a name="input_wildcard_certs"></a> [wildcard\_certs](#input\_wildcard\_certs) | If set to null, cert-manager issues an individual certificate per Ingress over HTTP-01. If set, cert-manager issues `*.<domain>` over DNS-01 with `dns01_solver`, the `dns01` block of a cert-manager ACME solver, and HAProxy serves it to every Ingress. | <pre>object({<br/>    domain       = string<br/>    dns01_solver = any<br/>  })</pre> | `null` | no |
 
 ## Outputs
 
@@ -119,5 +117,5 @@ puts Helm's ownership label and annotations on the ClusterIssuer, so the release
 | <a name="output_haproxy_namespace"></a> [haproxy\_namespace](#output\_haproxy\_namespace) | Namespace of the HAProxy ingress controller and of the wildcard certificate. |
 | <a name="output_ingress_class_name"></a> [ingress\_class\_name](#output\_ingress\_class\_name) | Name of the IngressClass an application puts on its Ingress to be served by this controller. |
 | <a name="output_summary"></a> [summary](#output\_summary) | Markdown summary shown on the building block. |
-| <a name="output_wildcard_certificate_domain"></a> [wildcard\_certificate\_domain](#output\_wildcard\_certificate\_domain) | Domain the wildcard certificate `*.<domain>` covers; null without `dns01`. |
+| <a name="output_wildcard_certificate_domain"></a> [wildcard\_certificate\_domain](#output\_wildcard\_certificate\_domain) | Domain the wildcard certificate `*.<domain>` covers; null without `wildcard_certs`. |
 <!-- END_TF_DOCS -->

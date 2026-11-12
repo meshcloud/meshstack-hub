@@ -5,14 +5,14 @@ output "haproxy_lb_ip" {
 
 output "ingress_class_name" {
   description = "Name of the IngressClass an application puts on its Ingress to be served by this controller."
-  value       = var.ingress_class_name
+  value       = local.ingress_class_name
 
   depends_on = [module.haproxy]
 }
 
 output "cluster_issuer_name" {
   description = "Name of the ClusterIssuer an application references from the cert-manager.io/cluster-issuer annotation on its Ingress."
-  value       = var.cluster_issuer_name
+  value       = local.cluster_issuer_name
 
   depends_on = [module.issuer]
 }
@@ -23,8 +23,8 @@ output "haproxy_namespace" {
 }
 
 output "wildcard_certificate_domain" {
-  description = "Domain the wildcard certificate `*.<domain>` covers; null without `dns01`."
-  value       = var.dns01 == null ? null : var.dns01.domain
+  description = "Domain the wildcard certificate `*.<domain>` covers; null without `wildcard_certs`."
+  value       = var.wildcard_certs == null ? null : var.wildcard_certs.domain
 
   depends_on = [module.issuer]
 }
@@ -37,27 +37,31 @@ output "summary" {
     | Property | Value |
     |----------|-------|
     | **Load Balancer IP** | `${data.kubernetes_service_v1.haproxy_controller.status[0].load_balancer[0].ingress[0].ip}` |
-    | **IngressClass** | `${var.ingress_class_name}` |
-    | **ClusterIssuer** | `${var.cluster_issuer_name}`, registered at `${local.acme_server}` |
-    | **Certificates** | ${var.dns01 == null ? "one per hostname, over HTTP-01" : "wildcard `*.${var.dns01.domain}` over DNS-01 (${local.wildcard_certificate_ready ? "ready" : "not ready yet"}), served by default; Ingress annotations create no certificates"} |
+    | **IngressClass** | `${local.ingress_class_name}` |
+    | **ClusterIssuer** | `${local.cluster_issuer_name}`, registered at `${local.acme_server}` |
+    | **Certificates** | ${var.wildcard_certs == null ? "one per Ingress, over HTTP-01" : "`*.${var.wildcard_certs.domain}` over DNS-01 (${local.wildcard_certificate_ready ? "ready" : "not ready yet"}), served to every Ingress"} |
     | **HAProxy** | chart `${module.haproxy.chart_version}`, ${var.haproxy_replica_count} replicas in `${module.haproxy_namespace.name}` |
     | **cert-manager** | chart `${module.cert_manager.chart_version}` in `${module.cert_manager_namespace.name}` |
 
     Point the DNS records of your hostnames at the load balancer IP. An Ingress served by this
-    controller, with a certificate from Let's Encrypt:
+    controller over HTTPS:
 
     ```yaml
     apiVersion: networking.k8s.io/v1
     kind: Ingress
     metadata:
       name: my-app
+    %{~if var.wildcard_certs == null~}
       annotations:
-        cert-manager.io/cluster-issuer: ${var.cluster_issuer_name}
+        cert-manager.io/cluster-issuer: ${local.cluster_issuer_name}
+    %{~endif~}
     spec:
-      ingressClassName: ${var.ingress_class_name}
+      ingressClassName: ${local.ingress_class_name}
       tls:
         - hosts: [my-app.example.com]
+    %{~if var.wildcard_certs == null~}
           secretName: my-app-tls
+    %{~endif~}
       rules:
         - host: my-app.example.com
           http:

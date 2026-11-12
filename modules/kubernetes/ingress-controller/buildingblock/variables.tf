@@ -132,12 +132,6 @@ variable "haproxy_timeout" {
   description = "Seconds to wait for the HAProxy release, including its cloud load balancer, to become ready."
 }
 
-variable "ingress_class_name" {
-  type        = string
-  nullable    = false
-  description = "Name of the IngressClass the controller serves and the HTTP-01 solver uses."
-}
-
 variable "acme_email" {
   type        = string
   nullable    = false
@@ -151,32 +145,13 @@ variable "use_letsencrypt_staging" {
   description = "Issue from Let's Encrypt staging, for development and testing. No browser trusts its certificates."
 }
 
-variable "cluster_issuer_name" {
-  type        = string
-  nullable    = false
-  description = "Name of the ClusterIssuer that application teams set in the `cert-manager.io/cluster-issuer` annotation."
-}
-
-variable "acme_private_key_secret_name" {
-  type        = string
-  default     = null
-  description = "Name of the secret in which cert-manager stores the ACME account private key. Null names it after the Let's Encrypt environment."
-}
-
-variable "dns01" {
+variable "wildcard_certs" {
   type = object({
-    domain = string
-    solver = any
+    domain       = string
+    dns01_solver = any
   })
   default     = null
-  description = "If null, cert-manager issues one certificate per Ingress over HTTP-01. If set, it issues the wildcard certificate `*.<domain>` over DNS-01 with `solver`, the `dns01` block of a cert-manager ACME solver, and HAProxy serves it as its default certificate to every Ingress."
-}
-
-variable "wildcard_certificate_name" {
-  type        = string
-  nullable    = false
-  default     = "wildcard-tls"
-  description = "Name of the wildcard Certificate and its secret in `haproxy_namespace`; used with `dns01`."
+  description = "If set to null, cert-manager issues an individual certificate per Ingress over HTTP-01. If set, cert-manager issues `*.<domain>` over DNS-01 with `dns01_solver`, the `dns01` block of a cert-manager ACME solver, and HAProxy serves it to every Ingress."
 }
 
 variable "imports" {

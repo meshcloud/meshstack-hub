@@ -15,12 +15,12 @@ own hostname and it works without anyone provisioning a record for it.
 %{ else ~}
 The zone is empty. Records are created by whoever needs them.
 %{ endif ~}
-%{ if acme_solver != null ~}
+%{ if dns01_solver != null ~}
 
 ## ACME DNS-01 solver
 
 A ClusterIssuer solves DNS-01 challenges in this zone with this solver.
 
 ```yaml
-${acme_solver}```
+${dns01_solver}```
 %{ endif ~}

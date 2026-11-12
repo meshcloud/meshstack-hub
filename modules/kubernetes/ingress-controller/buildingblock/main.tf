@@ -4,12 +4,10 @@ locals {
 
   issuer_release_name = "ingress-issuer"
 
-  # ingress-shim issues a certificate per `cert-manager.io/cluster-issuer` annotation; the wildcard replaces those.
-  ingress_shim_enabled = var.dns01 == null
+  ingress_class_name = "haproxy"
 
-  letsencrypt_environment      = var.use_letsencrypt_staging ? "staging" : "prod"
-  acme_server                  = var.use_letsencrypt_staging ? "https://acme-staging-v02.api.letsencrypt.org/directory" : "https://acme-v02.api.letsencrypt.org/directory"
-  acme_private_key_secret_name = coalesce(var.acme_private_key_secret_name, "letsencrypt-${local.letsencrypt_environment}-account-key")
+  cluster_issuer_name = var.use_letsencrypt_staging ? "letsencrypt-staging" : "letsencrypt-prod"
+  acme_server         = var.use_letsencrypt_staging ? "https://acme-staging-v02.api.letsencrypt.org/directory" : "https://acme-v02.api.letsencrypt.org/directory"
 
   # The API server rejects a null resource quantity.
   resources = {
@@ -62,7 +60,8 @@ module "cert_manager" {
         enabled = true
         keep    = var.cert_manager_crds_keep
       }
-      extraArgs = concat(var.cert_manager_extra_args, local.ingress_shim_enabled ? [] : ["--controllers=*,-ingress-shim"])
+      # ingress-shim creates the per-Ingress certificates.
+      extraArgs = concat(var.cert_manager_extra_args, var.wildcard_certs == null ? [] : ["--controllers=*,-ingress-shim"])
 
       # The chart ships no resources for any of its four workloads.
       resources       = local.resources.cert_manager
@@ -98,17 +97,16 @@ module "issuer" {
   values = [
     yamlencode({
       clusterIssuer = {
-        name                 = var.cluster_issuer_name
+        name                 = local.cluster_issuer_name
         email                = var.acme_email
         server               = local.acme_server
-        privateKeySecretName = local.acme_private_key_secret_name
+        privateKeySecretName = "${local.cluster_issuer_name}-account-key"
       }
-      ingressClassName = var.ingress_class_name
-      dns01            = var.dns01
-      wildcardCertificate = var.dns01 == null ? null : {
-        domain    = var.dns01.domain
-        name      = var.wildcard_certificate_name
-        namespace = module.haproxy_namespace.name
+      ingressClassName = local.ingress_class_name
+      wildcardCerts = var.wildcard_certs == null ? null : {
+        domain      = var.wildcard_certs.domain
+        dns01Solver = var.wildcard_certs.dns01_solver
+        namespace   = module.haproxy_namespace.name
       }
     })
   ]
@@ -134,8 +132,8 @@ module "haproxy" {
       controller = merge(
         {
           replicaCount         = var.haproxy_replica_count
-          ingressClass         = var.ingress_class_name
-          ingressClassResource = { name = var.ingress_class_name }
+          ingressClass         = local.ingress_class_name
+          ingressClassResource = { name = local.ingress_class_name }
           resources            = local.resources.haproxy
           service = {
             type        = var.haproxy_service_type
@@ -143,7 +141,7 @@ module "haproxy" {
           }
         },
         # secretNamespace defaults to the release namespace, where the wildcard Certificate lives.
-        var.dns01 == null ? {} : { defaultTLSSecret = { secret = var.wildcard_certificate_name } }
+        var.wildcard_certs == null ? {} : { defaultTLSSecret = { secret = "wildcard-tls" } }
       )
     })
   ]
@@ -260,14 +258,14 @@ moved {
 
 data "kubernetes_resource" "wildcard_certificate" {
   lifecycle {
-    enabled = var.dns01 != null
+    enabled = var.wildcard_certs != null
   }
 
   api_version = "cert-manager.io/v1"
   kind        = "Certificate"
 
   metadata {
-    name      = var.wildcard_certificate_name
+    name      = "wildcard-tls"
     namespace = module.haproxy_namespace.name
   }
 
@@ -276,14 +274,14 @@ data "kubernetes_resource" "wildcard_certificate" {
 
 locals {
   # try: a Certificate cert-manager has not processed yet has no status.conditions.
-  wildcard_certificate_ready = var.dns01 != null && anytrue([for c in try(data.kubernetes_resource.wildcard_certificate.object.status.conditions, []) : c.type == "Ready" && c.status == "True"])
+  wildcard_certificate_ready = var.wildcard_certs != null && anytrue([for c in try(data.kubernetes_resource.wildcard_certificate.object.status.conditions, []) : c.type == "Ready" && c.status == "True"])
 }
 
 # Issuance runs after this apply, and on a first install the DNS-01 solver may not exist yet, so a
 # certificate that is not ready only warns.
 check "wildcard_certificate_ready" {
   assert {
-    condition     = var.dns01 == null || local.wildcard_certificate_ready
-    error_message = "The wildcard certificate ${module.haproxy_namespace.name}/${var.wildcard_certificate_name} is not Ready yet. Check its Challenge in that namespace if this persists."
+    condition     = var.wildcard_certs == null || local.wildcard_certificate_ready
+    error_message = "The wildcard certificate ${module.haproxy_namespace.name}/wildcard-tls is not Ready yet. Check its Challenge in that namespace if this persists."
   }
 }
