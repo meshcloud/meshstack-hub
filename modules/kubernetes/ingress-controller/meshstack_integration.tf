@@ -118,7 +118,7 @@ variable "hub" {
   }
   description = <<-EOT
   `git_ref`: Hub release reference. Set to a tag (e.g. 'v1.2.3') or branch or commit sha of meshcloud/meshstack-hub repo.
-  `bbd_draft`: If true, allows changing the building block definition for upgrading dependent building blocks.
+  `bbd_draft`: If true, the building block definition version is kept in draft mode.
   EOT
 }
 
@@ -170,9 +170,9 @@ resource "meshstack_building_block_definition" "this" {
 
       ## 🔗 How an application uses it
 
-      Put `kubernetes.io/ingress.class: haproxy` and
-      `cert-manager.io/cluster-issuer: letsencrypt-prod` on an Ingress and cert-manager issues a
-      certificate for its hostname over HTTP-01.
+      Set `ingressClassName: ${var.ingress_class_name}` and the annotation
+      `cert-manager.io/cluster-issuer: ${var.cluster_issuer_name}` on an Ingress, and cert-manager
+      issues a certificate for its hostname over HTTP-01.
 
       ## 📊 Shared responsibility
 
@@ -205,7 +205,7 @@ resource "meshstack_building_block_definition" "this" {
     inputs = {
       "kubeconfig.yaml" = {
         display_name           = "kubeconfig.yaml"
-        description            = "Kubeconfig of the cluster to install ingress on."
+        description            = "Kubeconfig of the cluster to install the ingress controller on."
         type                   = "FILE"
         assignment_type        = "USER_INPUT"
         sensitive              = {}
