@@ -39,6 +39,11 @@ variable "meshstack" {
       kind = string
       uuid = string
     }))
+    supported_platforms = optional(list(object({
+      kind = optional(string)
+      name = optional(string)
+      uuid = optional(string)
+    })), [{ name = "STACKIT" }])
   })
   description = "Shared meshStack context, see docs."
 }
@@ -100,7 +105,7 @@ resource "meshstack_building_block_definition" "this" {
     target_type               = "TENANT_LEVEL"
     run_transparency          = true
     approval_policies         = var.approval_policies
-    supported_platforms       = [{ name = "STACKIT" }]
+    supported_platforms       = var.meshstack.supported_platforms
     use_in_landing_zones_only = true
 
     # The daily run rotates the cluster tokens at the turn of the month.

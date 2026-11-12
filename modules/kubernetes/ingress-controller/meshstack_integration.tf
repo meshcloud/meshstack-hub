@@ -101,6 +101,11 @@ variable "meshstack" {
       kind = string
       uuid = string
     }))
+    supported_platforms = list(object({
+      kind = optional(string)
+      name = optional(string)
+      uuid = optional(string)
+    }))
   })
   description = "Shared meshStack context, see docs."
 }
@@ -136,14 +141,15 @@ resource "meshstack_building_block_definition" "this" {
   }
 
   spec = {
-    display_name        = coalesce(var.bbd_display_name, "Kubernetes Ingress Controller")
-    symbol              = "https://raw.githubusercontent.com/meshcloud/meshstack-hub/${var.hub.git_ref}/modules/kubernetes/ingress-controller/buildingblock/logo.png"
-    description         = coalesce(var.bbd_description, "Installs cert-manager, the HAProxy ingress controller and a Let's Encrypt ClusterIssuer on a Kubernetes cluster.")
-    support_url         = "https://cert-manager.io/docs/"
-    target_type         = "TENANT_LEVEL"
-    run_transparency    = true
-    approval_policies   = var.approval_policies
-    supported_platforms = [{ name = "STACKIT" }]
+    display_name              = coalesce(var.bbd_display_name, "Kubernetes Ingress Controller")
+    symbol                    = "https://raw.githubusercontent.com/meshcloud/meshstack-hub/${var.hub.git_ref}/modules/kubernetes/ingress-controller/buildingblock/logo.png"
+    description               = coalesce(var.bbd_description, "Installs cert-manager, the HAProxy ingress controller and a Let's Encrypt ClusterIssuer on a Kubernetes cluster.")
+    support_url               = "https://cert-manager.io/docs/"
+    target_type               = "TENANT_LEVEL"
+    run_transparency          = true
+    approval_policies         = var.approval_policies
+    supported_platforms       = var.meshstack.supported_platforms
+    use_in_landing_zones_only = true
 
     readme = coalesce(var.bbd_readme, chomp(<<-EOT
       Makes a Kubernetes cluster serve HTTPS: **cert-manager**, the **HAProxy ingress controller**
@@ -152,8 +158,9 @@ resource "meshstack_building_block_definition" "this" {
 
       ## 🎯 When to use it
 
-      This is a bootstrap block a platform team orders once per cluster — for example the **STACKIT
-      Kubernetes Platform** reference architecture orders it right after the cluster exists. It
+      This block is hidden from the marketplace. A platform team adds it through a landing zone or a
+      composition, once per cluster, for example the **STACKIT Kubernetes Platform** reference
+      architecture right after the cluster exists. It
       reaches the cluster through the kubeconfig the ordering composition passes as an input.
 
       An application team that wants to deploy an `Ingress` into a cluster uses the **Kubernetes
