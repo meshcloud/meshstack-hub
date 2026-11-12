@@ -149,10 +149,11 @@ Look the runner up and pin it as [meshstack-integration.md § Runner identity](m
 describes, with `azure` as the cloud.
 
 ```hcl
-data "meshstack_building_block_runner" "this" {
-  metadata = {
-    uuid = var.meshstack.runner_ref == null ? null : var.meshstack.runner_ref.uuid
-  }
+module "runner" {
+  source = "github.com/meshcloud/meshstack-hub//modules/meshstack/runner-identity?ref=${var.hub.git_ref}"
+
+  cloud      = "azure" # STACKIT has no token of its own and takes this one as a generic OIDC token.
+  runner_ref = var.meshstack.runner_ref
 }
 
 module "backplane" {
@@ -161,14 +162,14 @@ module "backplane" {
   project_id = var.stackit_project_id
 
   workload_identity_federation = {
-    issuer   = data.meshstack_building_block_runner.this.spec.workload_identity_federation.issuer
-    audience = data.meshstack_building_block_runner.this.spec.workload_identity_federation.azure.audience
+    issuer   = module.runner.issuer
+    audience = module.runner.audience
     subjects = [meshstack_building_block_definition.this.version_latest.workload_identity_federation.subject]
   }
 }
 
 # Inside meshstack_building_block_definition version_spec:
-runner_ref = data.meshstack_building_block_runner.this.ref
+runner_ref = module.runner.ref
 
 # Inside meshstack_building_block_definition version_spec.inputs — all three are env vars:
 STACKIT_SERVICE_ACCOUNT_EMAIL = {
@@ -195,7 +196,7 @@ STACKIT_FEDERATED_TOKEN_FILE = {
   type            = "STRING"
   assignment_type = "STATIC"
   is_environment  = true
-  argument        = jsonencode(data.meshstack_building_block_runner.this.spec.workload_identity_federation.azure.token_path)
+  argument        = jsonencode(module.runner.token_path)
 }
 ```
 

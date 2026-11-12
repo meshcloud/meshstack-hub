@@ -186,31 +186,26 @@ subject per definition. The module never builds any of them from strings.
 A definition can't read its own `version_latest` for an input, and the token path is one. So every
 definition with workload identity federation looks its runner up and pins itself to it. The lookup
 then describes the runner every run uses, also when `var.meshstack.runner_ref` is null.
+`modules/meshstack/runner-identity` is the one place that does the lookup. It fails when the runner
+offers no token for `cloud`.
 
 ```hcl
 # Lookup specified runner for workload identity federation info. Null results in the default hosted runner.
-data "meshstack_building_block_runner" "this" {
-  metadata = {
-    uuid = var.meshstack.runner_ref == null ? null : var.meshstack.runner_ref.uuid
-  }
+module "runner" {
+  source = "github.com/meshcloud/meshstack-hub//modules/meshstack/runner-identity?ref=${var.hub.git_ref}"
 
-  lifecycle {
-    postcondition {
-      # try: a runner without any workload identity federation has a null spec.workload_identity_federation.
-      condition     = try(self.spec.workload_identity_federation.<cloud>, null) != null
-      error_message = "The building block runner offers no token for <Cloud>. Pick a runner that offers one via var.meshstack.runner_ref."
-    }
-  }
+  cloud      = "<cloud>"
+  runner_ref = var.meshstack.runner_ref
 }
 
 resource "meshstack_building_block_definition" "this" {
   version_spec = {
-    runner_ref = data.meshstack_building_block_runner.this.ref
+    runner_ref = module.runner.ref
     inputs = {
       # the cloud's token file env var, e.g. ARM_OIDC_TOKEN_FILE_PATH or AWS_WEB_IDENTITY_TOKEN_FILE
       <TOKEN_FILE_ENV> = {
         # ...
-        argument = jsonencode(data.meshstack_building_block_runner.this.spec.workload_identity_federation.<cloud>.token_path)
+        argument = jsonencode(module.runner.token_path)
       }
     }
   }
@@ -219,8 +214,8 @@ resource "meshstack_building_block_definition" "this" {
 module "backplane" {
   # ...
   workload_identity_federation = {
-    issuer   = data.meshstack_building_block_runner.this.spec.workload_identity_federation.issuer
-    audience = data.meshstack_building_block_runner.this.spec.workload_identity_federation.<cloud>.audience
+    issuer   = module.runner.issuer
+    audience = module.runner.audience
     subjects = [meshstack_building_block_definition.this.version_latest.workload_identity_federation.subject]
   }
 }
@@ -234,7 +229,7 @@ module "backplane" {
 - Leave `var.meshstack.runner_ref` null and the definition runs on the default runner. Pass the `ref` of a `meshstack_building_block_runner`; `kind` is required so that nobody
   builds the object by hand.
 - A definition applied with an ephemeral API key, as in a reference architecture, needs the
-  `BUILDINGBLOCKRUNNER_LIST` permission. Without it the data source reports that no runner matches.
+  `BUILDINGBLOCKRUNNER_LIST` permission. Without it the lookup reports that no runner matches.
 - The subject is known after apply. Where the definition consumes a backplane output that depends
   on the same input, split the input; GCP does, see
   [gcp-backplane.md](gcp-backplane.md#keeping-the-subject-out-of-the-credentials).

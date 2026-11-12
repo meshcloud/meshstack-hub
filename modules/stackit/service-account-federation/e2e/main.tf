@@ -63,10 +63,11 @@ module "federation" {
 }
 
 # The runner the modules under test pin when `meshstack.runner_ref` is null; the probe runs there too.
-data "meshstack_building_block_runner" "this" {
-  metadata = {
-    uuid = null
-  }
+module "runner" {
+  source = "../../../meshstack/runner-identity"
+
+  cloud      = "azure" # STACKIT has no token of its own and takes this one as a generic OIDC token.
+  runner_ref = null
 }
 
 # The definition whose runs act as the federated account. Its run reads the tenant's project, which
@@ -86,7 +87,7 @@ resource "meshstack_building_block_definition" "probe" {
   version_spec = {
     draft         = true
     deletion_mode = "DELETE"
-    runner_ref    = data.meshstack_building_block_runner.this.ref
+    runner_ref    = module.runner.ref
 
     implementation = {
       terraform = {
@@ -121,7 +122,7 @@ resource "meshstack_building_block_definition" "probe" {
         type            = "STRING"
         assignment_type = "STATIC"
         is_environment  = true
-        argument        = jsonencode(data.meshstack_building_block_runner.this.spec.workload_identity_federation.azure.token_path)
+        argument        = jsonencode(module.runner.token_path)
       }
     }
 

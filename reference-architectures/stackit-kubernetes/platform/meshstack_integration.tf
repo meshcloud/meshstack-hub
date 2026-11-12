@@ -71,18 +71,11 @@ output "building_block_definition" {
 }
 
 # Lookup specified runner for workload identity federation info. Null results in the default hosted runner.
-data "meshstack_building_block_runner" "this" {
-  metadata = {
-    uuid = var.meshstack.runner_ref == null ? null : var.meshstack.runner_ref.uuid
-  }
+module "runner" {
+  source = "github.com/meshcloud/meshstack-hub//modules/meshstack/runner-identity?ref=${var.hub.git_ref}"
 
-  lifecycle {
-    postcondition {
-      # try: a runner without any workload identity federation has a null spec.workload_identity_federation.
-      condition     = try(self.spec.workload_identity_federation.azure, null) != null
-      error_message = "The building block runner offers no token for Azure. We use that token as a generic OIDC token for STACKIT, so pick a runner that offers one via var.meshstack.runner_ref."
-    }
-  }
+  cloud      = "azure" # STACKIT has no token of its own and takes this one as a generic OIDC token.
+  runner_ref = var.meshstack.runner_ref
 }
 
 resource "meshstack_building_block_definition" "this" {
@@ -149,7 +142,7 @@ resource "meshstack_building_block_definition" "this" {
 
   version_spec = {
     draft         = true
-    runner_ref    = data.meshstack_building_block_runner.this.ref
+    runner_ref    = module.runner.ref
     deletion_mode = "DELETE"
 
     permissions = [
@@ -206,7 +199,7 @@ resource "meshstack_building_block_definition" "this" {
         type            = "STRING"
         assignment_type = "STATIC"
         is_environment  = true
-        argument        = jsonencode(data.meshstack_building_block_runner.this.spec.workload_identity_federation.azure.token_path)
+        argument        = jsonencode(module.runner.token_path)
         display_order   = 30
       }
 

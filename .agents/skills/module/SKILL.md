@@ -41,7 +41,7 @@ conventions, see the reference files in `.agents/references/`.
 
 6. **Write `meshstack_integration.tf`** — follow `.agents/references/meshstack-integration.md`
    - Always add `lifecycle { ignore_changes = [ availability ] }` to every `meshstack_platform` resource (see `.agents/references/meshstack-resources.md`)
-   - A backplane that federates takes issuer and audience from the pinned `meshstack_building_block_runner` lookup and its subject from `meshstack_building_block_definition.this.version_latest.workload_identity_federation`, never from the replicator entry of `meshstack_integrations` (see [Runner identity](../../references/meshstack-integration.md#runner-identity))
+   - A backplane that federates takes issuer and audience from `modules/meshstack/runner-identity`, whose `ref` the definition pins, and its subject from `meshstack_building_block_definition.this.version_latest.workload_identity_federation`, never from the replicator entry of `meshstack_integrations` (see [Runner identity](../../references/meshstack-integration.md#runner-identity))
 
 7. **Validate**:
    ```sh
