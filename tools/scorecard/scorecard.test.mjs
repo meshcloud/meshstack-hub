@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 import {
   declaresSummaryOutput,
   explicitDefaultViolations,
+  meshstackVariableViolation,
   summaryOutputBody,
   supportedPlatformsViolations,
 } from "./scorecard.mjs";
@@ -147,4 +148,27 @@ resource "meshstack_building_block_definition" "landing_zone" {
 test("a workspace-level definition is not checked", () => {
   assert.equal(supportedPlatformsViolations(tenantLevel({ targetType: '"WORKSPACE_LEVEL"', supportedPlatforms: "null" })), null);
   assert.equal(supportedPlatformsViolations(tenantLevel({ targetType: "var.link_target_type", supportedPlatforms: "null" })), null);
+});
+
+const meshstackVariable = (description) => `
+variable "meshstack" {
+  type = object({
+    owning_workspace_identifier = string
+  })
+  description = ${description}
+}
+`;
+
+test("the meshstack variable with the standard description passes", () => {
+  assert.equal(meshstackVariableViolation(meshstackVariable('"Shared meshStack context, see docs."')), null);
+});
+
+test("an extended or different meshstack description fails", () => {
+  const expected = 'description must be exactly "Shared meshStack context, see docs."';
+  assert.equal(meshstackVariableViolation(meshstackVariable('"Shared meshStack context, see docs. More."')), expected);
+  assert.equal(meshstackVariableViolation(meshstackVariable("<<-EOT\n  Shared meshStack context, see docs.\n  EOT")), expected);
+});
+
+test("a module without the meshstack variable fails", () => {
+  assert.equal(meshstackVariableViolation('variable "hub" {}'), "no variable meshstack");
 });

@@ -475,12 +475,13 @@ const detectors = [
   {
     id: "variable_meshstack",
     category: "integration",
-    name: 'variable "meshstack" in integration',
+    name: 'variable "meshstack" with the standard description',
     emoji: "🏢",
     fn: (mod) => {
       const content = readIntegrationTf(mod);
       if (!content) return { pass: false, detail: "no integration file" };
-      return { pass: /variable\s+"meshstack"/.test(content) };
+      const violation = meshstackVariableViolation(content);
+      return violation === null ? { pass: true } : { pass: false, detail: violation };
     },
   },
   {
@@ -2008,6 +2009,16 @@ export function explicitDefaultViolations(content) {
 }
 
 // A landing-zone-only definition is ordered by platform automation alone, so nobody needs to narrow it.
+export const MESHSTACK_DESCRIPTION = "Shared meshStack context, see docs.";
+
+export function meshstackVariableViolation(content) {
+  const meshstack = extractVariableBlocks(content).get("meshstack");
+  if (meshstack === undefined) return "no variable meshstack";
+  const description = /^\s*description\s*=\s*"((?:[^"\\]|\\.)*)"\s*$/m.exec(meshstack)?.[1];
+  if (description !== MESHSTACK_DESCRIPTION) return `description must be exactly "${MESHSTACK_DESCRIPTION}"`;
+  return null;
+}
+
 export function supportedPlatformsViolations(content) {
   const definitions = [...extractResourceBlocks(content, "meshstack_building_block_definition").values()].filter(
     (body) =>
