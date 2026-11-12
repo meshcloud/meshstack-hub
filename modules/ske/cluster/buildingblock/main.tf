@@ -9,7 +9,7 @@ module "cluster" {
   project_id         = var.stackit_project_id
   region             = var.stackit_region
   name               = var.cluster_name
-  # STACKIT retires old minors; bump this when it drops the pinned one.
+  # STACKIT supports only recent Kubernetes minor versions; raise this when it drops 1.36.
   kubernetes_version_min = "1.36"
 
   node_pools = [

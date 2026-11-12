@@ -430,10 +430,10 @@ resource "meshstack_building_block_definition" "this" {
 
       ## 🎯 When to use it
 
-      This block is hidden from the marketplace. A platform team adds it once per cluster through a
-      landing zone or a composition that turns the cluster into a meshStack platform, such as the
-      **STACKIT Kubernetes Platform** reference architecture. The composition passes the cluster's
-      kubeconfig and registers the platform with the tokens.
+      This block is meant for landing zones and compositions that turn a cluster into a meshStack
+      platform, once per cluster, such as the **STACKIT Kubernetes Platform** reference
+      architecture. The composition passes the cluster's kubeconfig and registers the platform with
+      the tokens.
 
       ## 📦 Resources created
 
