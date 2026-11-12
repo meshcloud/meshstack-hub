@@ -235,6 +235,5 @@ variable "imports" {
 variable "release_on_destroy" {
   type        = bool
   nullable    = false
-  default     = false
   description = "Leave the namespaces and Helm releases in place on destroy. Cannot change once they are managed."
 }
