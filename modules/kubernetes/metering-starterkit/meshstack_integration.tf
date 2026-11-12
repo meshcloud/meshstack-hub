@@ -1,64 +1,133 @@
-variable "kubernetes" {
+variable "kubernetes_platform_ref" {
   type = object({
-    platform_ref = object({
-      kind = string
-      uuid = string
-    })
-    landing_zone_name = string
-    cluster_name      = string
-    cluster_server    = string
-    cluster_roles     = optional(list(string), ["edit"])
-
-    service_account_bbd_display_name = optional(string)
+    kind = string
+    uuid = string
   })
   nullable    = false
-  description = <<-EOT
-  Kubernetes meshPlatform the metering namespace is created on, and its cluster. Configure the `kubernetes` provider with a cluster admin login for that cluster: it creates the deployer identity of the Kubernetes Service Account definition, and meshStack only gets the deployer's kubeconfig.
-  `cluster_roles`: ClusterRoles the Kubernetes Service Account definition offers. It must contain `edit`, which the metering orders.
-  `service_account_bbd_display_name`: Overrides the name of the Kubernetes Service Account definition.
-  EOT
+  description = "Ref of the Kubernetes meshPlatform the metering namespaces are created on."
+}
+
+variable "kubernetes_landing_zone_name" {
+  type        = string
+  nullable    = false
+  description = "Landing zone of the metering namespaces."
+}
+
+variable "kubernetes_cluster_name" {
+  type        = string
+  nullable    = false
+  description = "Name of that platform's cluster in the kubeconfigs the Kubernetes Service Account definition returns."
+}
+
+variable "kubernetes_cluster_server" {
+  type        = string
+  nullable    = false
+  description = "API server URL of that cluster, e.g. `https://api.example.com:6443`. Configure the `kubernetes` provider with a cluster admin login for it: it creates the deployer identity of the Kubernetes Service Account definition, and meshStack only gets the deployer's kubeconfig."
+}
+
+variable "kubernetes_cluster_roles" {
+  type        = list(string)
+  nullable    = false
+  default     = ["edit"]
+  description = "ClusterRoles the Kubernetes Service Account definition offers. It must contain `edit`, which the metering orders."
 
   validation {
-    condition     = contains(var.kubernetes.cluster_roles, "edit")
-    error_message = "kubernetes.cluster_roles must contain edit, which the metering service account is ordered with."
+    condition     = contains(var.kubernetes_cluster_roles, "edit")
+    error_message = "kubernetes_cluster_roles must contain edit, which the metering service account is ordered with."
   }
 }
 
-variable "stackit" {
-  type = object({
-    platform_identifier    = string
-    organization_id        = string
-    project_id             = string
-    kubernetes_oidc_issuer = string
-    service_account_name   = optional(string, "mesh-metering")
-    image_tag              = optional(string, "latest")
-  })
+variable "kubernetes_service_account_bbd_display_name" {
+  type        = string
   default     = null
-  description = <<-EOT
-  Offers the metering of STACKIT, see `stackit/metering`; null leaves it out. Configure the `stackit` provider with an identity that may create service accounts in `project_id` and assign roles on the organization.
-  `platform_identifier`: Full identifier `<platform>.<location>` of the STACKIT meshPlatform, e.g. `stackit.global`.
-  `organization_id`: STACKIT organization whose costs are read.
-  `project_id`: STACKIT project of the metering service accounts.
-  `kubernetes_oidc_issuer`: OIDC issuer of the cluster's service account tokens, as its `/.well-known/openid-configuration` reports it. STACKIT must reach it.
-  EOT
+  description = "Overrides the name of the Kubernetes Service Account definition."
 }
 
-variable "tcloud" {
-  type = object({
-    platform_identifier = string
-    contract_ids        = optional(list(string), [])
-    image_tag           = optional(string, "latest")
-  })
+variable "stackit_enabled" {
+  type        = bool
+  nullable    = false
+  default     = false
+  description = "Offer the metering of STACKIT, see `stackit/metering`. Needs the other `stackit_*` variables and the `stackit` provider configured with an identity that may create service accounts in `stackit_project_id` and assign roles on the organization."
+}
+
+variable "stackit_platform_identifier" {
+  type        = string
   default     = null
-  description = <<-EOT
-  Offers the metering of T Cloud Public, see `otc/metering`; null leaves it out. Needs `tcloud_api_token`.
-  `platform_identifier`: Full identifier `<platform>.<location>` of the T Cloud Public meshPlatform, e.g. `otc.global`.
-  `contract_ids`: T Cloud contract numbers to read. Empty reads every contract the API key sees.
-  EOT
+  description = "Full identifier `<platform>.<location>` of the STACKIT meshPlatform, e.g. `stackit.global`."
 
   validation {
-    condition     = var.stackit != null || var.tcloud != null
-    error_message = "Offer the metering of at least one cloud: set stackit, tcloud or both."
+    condition     = !var.stackit_enabled || var.stackit_platform_identifier != null
+    error_message = "stackit_enabled needs stackit_platform_identifier."
+  }
+}
+
+variable "stackit_organization_id" {
+  type        = string
+  default     = null
+  description = "STACKIT organization whose costs are read."
+
+  validation {
+    condition     = !var.stackit_enabled || var.stackit_organization_id != null
+    error_message = "stackit_enabled needs stackit_organization_id."
+  }
+}
+
+variable "stackit_project_id" {
+  type        = string
+  default     = null
+  description = "STACKIT project of the metering service accounts."
+
+  validation {
+    condition     = !var.stackit_enabled || var.stackit_project_id != null
+    error_message = "stackit_enabled needs stackit_project_id."
+  }
+}
+
+variable "stackit_kubernetes_oidc_issuer" {
+  type        = string
+  default     = null
+  description = "OIDC issuer of the cluster's service account tokens, as its `/.well-known/openid-configuration` reports it. STACKIT must reach it."
+
+  validation {
+    condition     = !var.stackit_enabled || var.stackit_kubernetes_oidc_issuer != null
+    error_message = "stackit_enabled needs stackit_kubernetes_oidc_issuer."
+  }
+}
+
+variable "stackit_service_account_name" {
+  type        = string
+  nullable    = false
+  default     = "mesh-metering"
+  description = "Name of the STACKIT metering service account; the building block runs get one named `<name>-bb`."
+}
+
+variable "stackit_image_tag" {
+  type        = string
+  nullable    = false
+  default     = "latest"
+  description = "Tag of the `mesh-metering-stackit` image. It must support workload identity federation."
+}
+
+variable "tcloud_enabled" {
+  type        = bool
+  nullable    = false
+  default     = false
+  description = "Offer the metering of T Cloud Public, see `otc/metering`. Needs `tcloud_platform_identifier` and `tcloud_api_token`."
+
+  validation {
+    condition     = var.stackit_enabled || var.tcloud_enabled
+    error_message = "Offer the metering of at least one cloud: set stackit_enabled, tcloud_enabled or both."
+  }
+}
+
+variable "tcloud_platform_identifier" {
+  type        = string
+  default     = null
+  description = "Full identifier `<platform>.<location>` of the T Cloud Public meshPlatform, e.g. `otc.global`."
+
+  validation {
+    condition     = !var.tcloud_enabled || var.tcloud_platform_identifier != null
+    error_message = "tcloud_enabled needs tcloud_platform_identifier."
   }
 }
 
@@ -69,9 +138,23 @@ variable "tcloud_api_token" {
   description = "API key of the T Cloud Financial Dashboard (Configuration > API Keys) with security level `Admin`. It is valid for at most 90 days; apply again with a new key before then."
 
   validation {
-    condition     = var.tcloud == null || var.tcloud_api_token != null
-    error_message = "tcloud needs tcloud_api_token."
+    condition     = !var.tcloud_enabled || var.tcloud_api_token != null
+    error_message = "tcloud_enabled needs tcloud_api_token."
   }
+}
+
+variable "tcloud_contract_ids" {
+  type        = list(string)
+  nullable    = false
+  default     = []
+  description = "T Cloud contract numbers to read. Empty reads every contract the API key sees."
+}
+
+variable "tcloud_image_tag" {
+  type        = string
+  nullable    = false
+  default     = "latest"
+  description = "Tag of the `mesh-metering-tcloud` image."
 }
 
 variable "metering_kraken_url" {
@@ -186,17 +269,17 @@ output "metering_building_block_definitions" {
 }
 
 output "stackit_metering_service_account_email" {
-  description = "STACKIT service account the STACKIT metering CronJobs act as; null without `stackit`."
+  description = "STACKIT service account the STACKIT metering CronJobs act as; null without `stackit_enabled`."
   value       = one(module.stackit_metering[*].metering_service_account_email)
 }
 
 module "service_account" {
   source = "github.com/meshcloud/meshstack-hub//modules/kubernetes/service-account?ref=${var.hub.git_ref}"
 
-  cluster_name     = var.kubernetes.cluster_name
-  cluster_server   = var.kubernetes.cluster_server
-  cluster_roles    = var.kubernetes.cluster_roles
-  bbd_display_name = var.kubernetes.service_account_bbd_display_name
+  cluster_name     = var.kubernetes_cluster_name
+  cluster_server   = var.kubernetes_cluster_server
+  cluster_roles    = var.kubernetes_cluster_roles
+  bbd_display_name = var.kubernetes_service_account_bbd_display_name
 
   meshstack = var.meshstack
   hub       = var.hub
@@ -204,14 +287,14 @@ module "service_account" {
 
 module "stackit_metering" {
   source = "github.com/meshcloud/meshstack-hub//modules/stackit/metering?ref=${var.hub.git_ref}"
-  count  = var.stackit == null ? 0 : 1
+  count  = var.stackit_enabled ? 1 : 0
 
-  stackit_organization_id      = var.stackit.organization_id
-  stackit_project_id           = var.stackit.project_id
-  stackit_service_account_name = var.stackit.service_account_name
-  kubernetes_oidc_issuer       = var.stackit.kubernetes_oidc_issuer
-  metering_platform_identifier = var.stackit.platform_identifier
-  metering_image_tag           = var.stackit.image_tag
+  stackit_organization_id      = var.stackit_organization_id
+  stackit_project_id           = var.stackit_project_id
+  stackit_service_account_name = var.stackit_service_account_name
+  kubernetes_oidc_issuer       = var.stackit_kubernetes_oidc_issuer
+  metering_platform_identifier = var.stackit_platform_identifier
+  metering_image_tag           = var.stackit_image_tag
 
   kubernetes_service_account_definition_ref = module.service_account.building_block_definition.ref
 
@@ -227,12 +310,12 @@ module "stackit_metering" {
 
 module "tcloud_metering" {
   source = "github.com/meshcloud/meshstack-hub//modules/otc/metering?ref=${var.hub.git_ref}"
-  count  = var.tcloud == null ? 0 : 1
+  count  = var.tcloud_enabled ? 1 : 0
 
   tcloud_api_token             = var.tcloud_api_token
-  tcloud_contract_ids          = var.tcloud.contract_ids
-  metering_platform_identifier = var.tcloud.platform_identifier
-  metering_image_tag           = var.tcloud.image_tag
+  tcloud_contract_ids          = var.tcloud_contract_ids
+  metering_platform_identifier = var.tcloud_platform_identifier
+  metering_image_tag           = var.tcloud_image_tag
 
   kubernetes_service_account_definition_ref = module.service_account.building_block_definition.ref
 
@@ -262,8 +345,8 @@ locals {
 
   # Keyed by the cloud name on the order form, which also names each metering building block.
   metering_definitions = merge(
-    var.stackit == null ? {} : { STACKIT = module.stackit_metering[0].building_block_definition },
-    var.tcloud == null ? {} : { "T Cloud" = module.tcloud_metering[0].building_block_definition },
+    !var.stackit_enabled ? {} : { STACKIT = module.stackit_metering[0].building_block_definition },
+    !var.tcloud_enabled ? {} : { "T Cloud" = module.tcloud_metering[0].building_block_definition },
   )
 
   clouds = sort(keys(local.metering_definitions))
@@ -386,14 +469,14 @@ resource "meshstack_building_block_definition" "this" {
         display_name    = "Kubernetes Platform"
         type            = "CODE"
         assignment_type = "STATIC"
-        argument        = jsonencode(jsonencode(var.kubernetes.platform_ref))
+        argument        = jsonencode(jsonencode(var.kubernetes_platform_ref))
       }
 
       landing_zone_ref = {
         display_name    = "Landing Zone"
         type            = "CODE"
         assignment_type = "STATIC"
-        argument        = jsonencode(jsonencode({ name = var.kubernetes.landing_zone_name }))
+        argument        = jsonencode(jsonencode({ name = var.kubernetes_landing_zone_name }))
       }
 
       service_account_definition_version_ref = {
@@ -440,7 +523,7 @@ resource "meshstack_building_block_definition" "this" {
   }
 }
 
-# Configure all three providers, the stackit one also without `stackit`: OpenTofu configures the providers
+# Configure all three providers, the stackit one also without `stackit_enabled`: OpenTofu configures the providers
 # of a module with count = 0 too. Without STACKIT a placeholder suffices, because the provider only exchanges
 # the token on its first API call:
 #   provider "stackit" {

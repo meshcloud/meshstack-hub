@@ -8,6 +8,118 @@ description: Sets up custom metering for the clouds a platform team selects, in 
 requiresBackplane: false
 ---
 
+# Metering Starterkit
+
+`meshstack_integration.tf` sets up the whole custom metering of a meshStack in one apply. It creates
+**Platform Metering**, the definition workspaces order, and the definitions it orders:
+
+- [`kubernetes/service-account`](../../service-account), with a deployer identity on the cluster.
+- [`stackit/metering`](../../../stackit/metering) with `stackit_enabled`, with its STACKIT identities.
+- [`otc/metering`](../../../otc/metering) with `tcloud_enabled`.
+
+A workspace then orders Platform Metering and ticks the clouds. That creates a project with one
+namespace, a service account allowed to deploy only into it, and one metering CronJob per cloud,
+which submits usage reports to the meshStack the starterkit was applied against.
+
+## Setting it up
+
+The starterkit configures no providers; the caller configures three:
+
+| Provider | Identity |
+|---|---|
+| `meshstack` | The meshStack the metering reports to, with a workspace that owns the definitions. |
+| `kubernetes` | A cluster admin login for the cluster of `kubernetes_platform_ref`. It only creates the deployer identity; meshStack gets the deployer's kubeconfig. |
+| `stackit` | With `stackit_enabled`, an identity that may create service accounts in `stackit_project_id` and assign roles on the organization. Without it, a placeholder, because OpenTofu configures the providers of a module with `count = 0` too. |
+
+How to get the cluster admin login depends on the cloud. On STACKIT Kubernetes Engine an ephemeral
+`stackit_ske_kubeconfig` keeps it out of the state:
+
+```hcl
+provider "meshstack" {
+  endpoint  = "https://federation.example.meshcloud.io"
+  workspace = "platform-team"
+}
+
+provider "stackit" {
+  service_account_key = var.stackit_org_service_account_key
+  default_region      = "eu01"
+  experiments         = ["iam"]
+}
+
+# A second login only for the SKE admin kubeconfig.
+provider "stackit" {
+  alias               = "ske"
+  service_account_key = var.stackit_ske_service_account_key
+  default_region      = "eu01"
+  experiments         = ["ske"]
+}
+
+ephemeral "stackit_ske_kubeconfig" "admin" {
+  provider     = stackit.ske
+  project_id   = "<SKE project id>"
+  cluster_name = "<SKE cluster name>"
+  expiration   = 1800
+}
+
+locals {
+  admin_kubeconfig = yamldecode(ephemeral.stackit_ske_kubeconfig.admin.kube_config)
+  admin_cluster    = one(local.admin_kubeconfig["clusters"])["cluster"]
+  admin_user       = one(local.admin_kubeconfig["users"])["user"]
+}
+
+provider "kubernetes" {
+  host                   = local.admin_cluster["server"]
+  cluster_ca_certificate = base64decode(local.admin_cluster["certificate-authority-data"])
+  client_certificate     = base64decode(local.admin_user["client-certificate-data"])
+  client_key             = base64decode(local.admin_user["client-key-data"])
+}
+
+data "meshstack_platforms" "kubernetes" {
+  identifier = "<kubernetes platform>.<location>"
+}
+
+module "metering_starterkit" {
+  source = "git::https://github.com/meshcloud/meshstack-hub.git//modules/kubernetes/metering-starterkit?ref=<hub ref>"
+
+  kubernetes_platform_ref      = one(data.meshstack_platforms.kubernetes.platforms).ref
+  kubernetes_landing_zone_name = "<landing zone>"
+  kubernetes_cluster_name      = "<SKE cluster name>"
+  # Written out, because the ephemeral admin kubeconfig cannot feed a module variable.
+  kubernetes_cluster_server = "https://api.<cluster>.<project>.s.ske.eu01.onstackit.cloud"
+
+  stackit_enabled                = true
+  stackit_platform_identifier    = "stackit.global"
+  stackit_organization_id        = "<STACKIT organization id>"
+  stackit_project_id             = "<STACKIT project of the metering service accounts>"
+  stackit_kubernetes_oidc_issuer = "<issuer from the cluster's /.well-known/openid-configuration>"
+
+  tcloud_enabled             = true
+  tcloud_platform_identifier = "otc.global"
+  tcloud_api_token           = var.tcloud_api_token
+
+  metering_api_user   = "<meshStack API user>"
+  metering_api_secret = var.metering_api_secret
+
+  meshstack = { owning_workspace_identifier = "platform-team" }
+  hub       = { git_ref = "<hub ref>" }
+}
+```
+
+On another cloud, replace the SKE kubeconfig with that cloud's admin login, e.g. the
+`azurerm_kubernetes_cluster` credentials on AKS. For T Cloud Public only, configure the `stackit`
+provider with a placeholder:
+
+```hcl
+provider "stackit" {
+  use_oidc                        = true
+  service_account_email           = "unused@sa.stackit.cloud"
+  service_account_federated_token = "unused"
+}
+```
+
+The meshStack API user comes from meshPanel, because the metering API accepts no API keys. The
+Financial Dashboard API key is valid for at most 90 days: apply again with a new one before then.
+
 <!-- BEGIN_TF_DOCS -->
 ## Requirements
 
