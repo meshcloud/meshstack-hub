@@ -175,7 +175,7 @@ resource "meshstack_building_block_definition" "this" {
         type                   = "JSON"
         assignment_type        = "USER_INPUT"
         updateable_by_consumer = true
-        default_value          = jsonencode(local.kubernetes_default)
+        default_value          = jsonencode(jsonencode(local.kubernetes_default))
         display_order          = 10
 
         json_schema = jsonencode({
@@ -207,7 +207,7 @@ resource "meshstack_building_block_definition" "this" {
         type                   = "JSON"
         assignment_type        = "USER_INPUT"
         updateable_by_consumer = true
-        default_value          = jsonencode(local.metering_default)
+        default_value          = jsonencode(jsonencode(local.metering_default))
         display_order          = 30
 
         json_schema = jsonencode({
@@ -238,7 +238,7 @@ resource "meshstack_building_block_definition" "this" {
         type                   = "JSON"
         assignment_type        = "USER_INPUT"
         updateable_by_consumer = true
-        default_value          = jsonencode(local.metering_project_default)
+        default_value          = jsonencode(jsonencode(local.metering_project_default))
         display_order          = 50
 
         json_schema = jsonencode({
