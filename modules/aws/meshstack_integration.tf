@@ -78,7 +78,7 @@ variable "meshstack" {
     location_name               = optional(string, "global")
     tags                        = optional(map(list(string)), {})
   })
-  description = "meshStack ownership and naming settings for this platform integration. Tags are propagated to landing zone metadata."
+  description = "Shared meshStack context, see docs."
 }
 
 data "meshstack_integrations" "integrations" {}
