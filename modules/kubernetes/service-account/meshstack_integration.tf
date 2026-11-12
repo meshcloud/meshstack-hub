@@ -43,13 +43,6 @@ variable "bind_cluster_wide" {
   description = "Bind the role in every namespace through a ClusterRoleBinding."
 }
 
-variable "supported_platforms" {
-  type        = list(string)
-  nullable    = false
-  default     = ["KUBERNETES"]
-  description = "Platform types whose tenants the building block can be ordered for."
-}
-
 variable "bbd_display_name" {
   type        = string
   default     = null
@@ -89,6 +82,11 @@ variable "meshstack" {
       kind = string
       uuid = string
     }))
+    supported_platforms = optional(list(object({
+      kind = optional(string)
+      name = optional(string)
+      uuid = optional(string)
+    })), [{ name = "KUBERNETES" }])
   })
   description = "Shared meshStack context, see docs."
 }
@@ -131,7 +129,7 @@ resource "meshstack_building_block_definition" "this" {
     target_type         = "TENANT_LEVEL"
     run_transparency    = true
     approval_policies   = var.approval_policies
-    supported_platforms = [for name in var.supported_platforms : { name = name }]
+    supported_platforms = var.meshstack.supported_platforms
 
     readme = coalesce(var.bbd_readme, chomp(<<-EOT
       Creates a Kubernetes service account bound to a ClusterRole, and a kubeconfig that
