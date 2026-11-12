@@ -18,8 +18,15 @@ output "cluster_issuer_name" {
 }
 
 output "haproxy_namespace" {
-  description = "Namespace of the HAProxy ingress controller."
+  description = "Namespace of the HAProxy ingress controller and of the wildcard certificate."
   value       = module.haproxy_namespace.name
+}
+
+output "wildcard_certificate_domain" {
+  description = "Domain the wildcard certificate `*.<domain>` covers; null without `dns01`."
+  value       = var.dns01 == null ? null : var.dns01.domain
+
+  depends_on = [module.issuer]
 }
 
 output "summary" {
@@ -31,10 +38,10 @@ output "summary" {
     |----------|-------|
     | **Load Balancer IP** | `${data.kubernetes_service_v1.haproxy_controller.status[0].load_balancer[0].ingress[0].ip}` |
     | **IngressClass** | `${var.ingress_class_name}` |
-    | **ClusterIssuer** | `${var.cluster_issuer_name}`, registered at `${var.acme_server}` |
-    | **Certificates** | one per hostname, over HTTP-01 |
-    | **HAProxy** | chart `${var.haproxy_version}`, ${var.haproxy_replica_count} replicas in `${module.haproxy_namespace.name}` |
-    | **cert-manager** | chart `${var.cert_manager_version}` in `${module.cert_manager_namespace.name}` |
+    | **ClusterIssuer** | `${var.cluster_issuer_name}`, registered at `${local.acme_server}` |
+    | **Certificates** | ${var.dns01 == null ? "one per hostname, over HTTP-01" : "wildcard `*.${var.dns01.domain}` over DNS-01 (${local.wildcard_certificate_ready ? "ready" : "not ready yet"}), served by default; Ingress annotations create no certificates"} |
+    | **HAProxy** | chart `${module.haproxy.chart_version}`, ${var.haproxy_replica_count} replicas in `${module.haproxy_namespace.name}` |
+    | **cert-manager** | chart `${module.cert_manager.chart_version}` in `${module.cert_manager_namespace.name}` |
 
     Point the DNS records of your hostnames at the load balancer IP. An Ingress served by this
     controller, with a certificate from Let's Encrypt:

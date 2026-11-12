@@ -9,6 +9,13 @@ spec:
     privateKeySecretRef:
       name: {{ .Values.clusterIssuer.privateKeySecretName }}
     solvers:
+      {{- with .Values.dns01 }}
+      - dns01:
+          {{- toYaml .solver | nindent 10 }}
+        selector:
+          dnsZones:
+            - {{ .domain | quote }}
+      {{- end }}
       - http01:
           ingress:
             ingressClassName: {{ .Values.ingressClassName }}

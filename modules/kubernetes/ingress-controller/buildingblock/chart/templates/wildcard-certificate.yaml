@@ -1,0 +1,15 @@
+{{- with .Values.wildcardCertificate }}
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: {{ .name }}
+  namespace: {{ .namespace }}
+spec:
+  secretName: {{ .name }}
+  dnsNames:
+    - {{ printf "*.%s" .domain | quote }}
+  issuerRef:
+    name: {{ $.Values.clusterIssuer.name }}
+    kind: ClusterIssuer
+    group: cert-manager.io
+{{- end }}
