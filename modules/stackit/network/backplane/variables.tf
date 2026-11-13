@@ -26,3 +26,15 @@ variable "service_account_name" {
   nullable    = false
   description = "Name of the service account created in the STACKIT project. Override when deploying multiple backplane instances in the same project."
 }
+
+variable "trusted_runner_identities" {
+  type = list(object({
+    runner_uuid = string
+    issuer      = string
+    audience    = string
+    subject     = string
+  }))
+  default     = []
+  nullable    = false
+  description = "Identities of other runners to trust besides the one in `workload_identity_federation`, one federated identity provider each. Pass `trusted_identities` of the [runner-identity module](../../../meshstack/runner-identity). The plan fails for an entry with a null subject."
+}
