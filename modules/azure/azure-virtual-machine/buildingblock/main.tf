@@ -95,9 +95,9 @@ resource "azurerm_network_security_group" "vm_nsg" {
   tags = var.tags
 }
 
-# NSG Rule: Allow SSH for Linux VMs with public IP
+# NSG Rule: Allow SSH when a public IP is assigned
 resource "azurerm_network_security_rule" "allow_ssh" {
-  count                       = var.os_type == "Linux" && var.enable_public_ip ? 1 : 0
+  count                       = var.enable_public_ip ? 1 : 0
   name                        = "AllowSSH"
   priority                    = 1000
   direction                   = "Inbound"
@@ -105,22 +105,6 @@ resource "azurerm_network_security_rule" "allow_ssh" {
   protocol                    = "Tcp"
   source_port_range           = "*"
   destination_port_range      = "22"
-  source_address_prefix       = "*"
-  destination_address_prefix  = "*"
-  resource_group_name         = local.rg_name
-  network_security_group_name = azurerm_network_security_group.vm_nsg.name
-}
-
-# NSG Rule: Allow RDP for Windows VMs with public IP
-resource "azurerm_network_security_rule" "allow_rdp" {
-  count                       = var.os_type == "Windows" && var.enable_public_ip ? 1 : 0
-  name                        = "AllowRDP"
-  priority                    = 1001
-  direction                   = "Inbound"
-  access                      = "Allow"
-  protocol                    = "Tcp"
-  source_port_range           = "*"
-  destination_port_range      = "3389"
   source_address_prefix       = "*"
   destination_address_prefix  = "*"
   resource_group_name         = local.rg_name
@@ -135,7 +119,6 @@ resource "azurerm_network_interface_security_group_association" "vm_nsg_associat
 
 # Linux Virtual Machine
 resource "azurerm_linux_virtual_machine" "vm" {
-  count               = var.os_type == "Linux" ? 1 : 0
   name                = var.vm_name
   location            = local.rg_location
   resource_group_name = local.rg_name
@@ -177,44 +160,6 @@ resource "azurerm_linux_virtual_machine" "vm" {
   tags = var.tags
 }
 
-# Windows Virtual Machine
-resource "azurerm_windows_virtual_machine" "vm" {
-  count               = var.os_type == "Windows" ? 1 : 0
-  name                = var.vm_name
-  location            = local.rg_location
-  resource_group_name = local.rg_name
-  size                = var.vm_size
-  admin_username      = var.admin_username
-  admin_password      = var.admin_password
-
-  network_interface_ids = [
-    azurerm_network_interface.vm_nic.id,
-  ]
-
-  os_disk {
-    caching              = "ReadWrite"
-    storage_account_type = var.os_disk_storage_type
-    disk_size_gb         = var.os_disk_size_gb
-  }
-
-  source_image_reference {
-    publisher = var.image_publisher
-    offer     = var.image_offer
-    sku       = var.image_sku
-    version   = var.image_version
-  }
-
-  identity {
-    type = "SystemAssigned"
-  }
-
-  priority        = var.enable_spot_instance ? "Spot" : "Regular"
-  eviction_policy = var.enable_spot_instance ? var.spot_eviction_policy : null
-  max_bid_price   = var.enable_spot_instance ? var.spot_max_bid_price : null
-
-  tags = var.tags
-}
-
 # Managed Data Disk (optional)
 resource "azurerm_managed_disk" "data_disk" {
   count                = var.data_disk_size_gb > 0 ? 1 : 0
@@ -228,20 +173,11 @@ resource "azurerm_managed_disk" "data_disk" {
   tags = var.tags
 }
 
-# Attach Data Disk to Linux VM
-resource "azurerm_virtual_machine_data_disk_attachment" "linux_data_disk_attachment" {
-  count              = var.os_type == "Linux" && var.data_disk_size_gb > 0 ? 1 : 0
+# Attach Data Disk to the VM
+resource "azurerm_virtual_machine_data_disk_attachment" "data_disk_attachment" {
+  count              = var.data_disk_size_gb > 0 ? 1 : 0
   managed_disk_id    = azurerm_managed_disk.data_disk[0].id
-  virtual_machine_id = azurerm_linux_virtual_machine.vm[0].id
-  lun                = 0
-  caching            = "ReadWrite"
-}
-
-# Attach Data Disk to Windows VM
-resource "azurerm_virtual_machine_data_disk_attachment" "windows_data_disk_attachment" {
-  count              = var.os_type == "Windows" && var.data_disk_size_gb > 0 ? 1 : 0
-  managed_disk_id    = azurerm_managed_disk.data_disk[0].id
-  virtual_machine_id = azurerm_windows_virtual_machine.vm[0].id
+  virtual_machine_id = azurerm_linux_virtual_machine.vm.id
   lun                = 0
   caching            = "ReadWrite"
 }
