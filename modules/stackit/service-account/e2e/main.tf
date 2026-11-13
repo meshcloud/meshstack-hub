@@ -185,29 +185,3 @@ resource "meshstack_building_block" "this" {
     }
   }
 }
-
-resource "meshstack_building_block" "on_new_runner" {
-  lifecycle {
-    enabled = local.moved
-  }
-
-  depends_on          = [module.stackit_service_account]
-  wait_for_completion = true
-
-  spec = {
-    building_block_definition_version_ref = {
-      uuid = module.stackit_service_account.building_block_definition.version_ref.uuid
-    }
-
-    display_name = "${var.test_context.run_id}-service-account-new"
-    target_ref = {
-      kind = "meshTenant"
-      uuid = var.test_context.fixtures.stackit.mesh_tenant_id
-    }
-
-    inputs = {
-      service_account_name = { value = jsonencode("${var.test_context.run_id}-san") }
-      roles                = { value = jsonencode(jsonencode(["reader"])) }
-    }
-  }
-}
