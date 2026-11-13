@@ -46,3 +46,15 @@ variable "workload_identity_federation" {
   nullable    = false
   description = "WIF issuer, audience and subjects for federated authentication of the automation identity. The audience defaults to the one meshStack runners use for Azure tokens."
 }
+
+variable "trusted_runner_identities" {
+  type = list(object({
+    runner_uuid = string
+    issuer      = string
+    audience    = string
+    subject     = string
+  }))
+  default     = []
+  nullable    = false
+  description = "Identities of other runners to trust besides the one in `workload_identity_federation`, one federated credential each. Pass `trusted_identities` of the [runner-identity module](../../../meshstack/runner-identity). The plan fails for an entry with a null subject."
+}

@@ -19,6 +19,25 @@ resource "azurerm_federated_identity_credential" "this" {
   subject                   = each.value
 }
 
+resource "azurerm_federated_identity_credential" "trusted_runner" {
+  for_each = { for identity in var.trusted_runner_identities : identity.runner_uuid => identity }
+
+  depends_on = [azurerm_federated_identity_credential.this]
+
+  lifecycle {
+    precondition {
+      condition     = each.value.subject != null
+      error_message = "The building block runner ${each.key} is a trusted runner, but no version of the definition runs on it, so there is nothing to trust. Remove it from meshstack.trusted_runner_refs."
+    }
+  }
+
+  name                      = "trusted-runner-${each.key}"
+  user_assigned_identity_id = azurerm_user_assigned_identity.this.id
+  audience                  = [each.value.audience]
+  issuer                    = each.value.issuer
+  subject                   = each.value.subject
+}
+
 # Grant Microsoft Graph app roles so the UAMI can read users, manage groups, and manage Administrative Unit members.
 data "azuread_service_principal" "msgraph" {
   client_id = "00000003-0000-0000-c000-000000000000" # Microsoft Graph

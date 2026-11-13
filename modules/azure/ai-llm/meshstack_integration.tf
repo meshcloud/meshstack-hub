@@ -76,6 +76,10 @@ variable "meshstack" {
       kind = string
       uuid = string
     }))
+    trusted_runner_refs = optional(list(object({
+      kind = string
+      uuid = string
+    })), [])
   })
   description = "Shared meshStack context, see docs."
 }
@@ -100,8 +104,10 @@ variable "hub" {
 module "runner" {
   source = "github.com/meshcloud/meshstack-hub//modules/meshstack/runner-identity?ref=${var.hub.git_ref}"
 
-  cloud      = "azure"
-  runner_ref = var.meshstack.runner_ref
+  cloud               = "azure"
+  runner_ref          = var.meshstack.runner_ref
+  trusted_runner_refs = var.meshstack.trusted_runner_refs
+  versions            = meshstack_building_block_definition.this.versions
 }
 
 output "building_block_definition" {
@@ -124,6 +130,8 @@ module "backplane" {
     audience = module.runner.audience
     subjects = [meshstack_building_block_definition.this.version_latest.workload_identity_federation.subject]
   }
+
+  trusted_runner_identities = module.runner.trusted_identities
 }
 
 resource "meshstack_building_block_definition" "this" {
