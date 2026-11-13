@@ -58,6 +58,14 @@ variable "meshstack" {
       kind = string
       uuid = string
     }))
+    trusted_runner_refs = optional(list(object({
+      kind = string
+      uuid = string
+    })), [])
+    original_runner_ref = optional(object({
+      kind = string
+      uuid = string
+    }))
   })
   description = "Shared meshStack context, see docs."
 }
@@ -82,8 +90,10 @@ variable "hub" {
 module "runner" {
   source = "github.com/meshcloud/meshstack-hub//modules/meshstack/runner-identity?ref=${var.hub.git_ref}"
 
-  cloud      = "gcp" # OTC has no token of its own and takes this one as a generic OIDC token.
-  runner_ref = var.meshstack.runner_ref
+  cloud               = "gcp" # OTC has no token of its own and takes this one as a generic OIDC token.
+  runner_ref          = var.meshstack.runner_ref
+  trusted_runner_refs = var.meshstack.trusted_runner_refs
+  versions            = meshstack_building_block_definition.this.versions
 }
 
 # Runs sign in through workload identity federation, so the definition carries no access key. This
@@ -97,6 +107,10 @@ module "backplane" {
     subject  = meshstack_building_block_definition.this.version_latest.workload_identity_federation.subject
     audience = module.runner.audience
   }
+
+  runner_uuid               = module.runner.ref.uuid
+  original_runner_uuid      = var.meshstack.original_runner_ref == null ? null : var.meshstack.original_runner_ref.uuid
+  trusted_runner_identities = module.runner.trusted_identities
 }
 
 output "building_block_definition" {
@@ -299,7 +313,7 @@ resource "meshstack_building_block_definition" "this" {
         type            = "STRING"
         assignment_type = "STATIC"
         is_environment  = true
-        argument        = jsonencode(var.workload_identity_name)
+        argument        = jsonencode(module.backplane.identity_provider_name)
       }
     }
 

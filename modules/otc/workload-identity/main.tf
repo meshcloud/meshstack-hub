@@ -1,17 +1,48 @@
+locals {
+  current_runner_uuid    = coalesce(var.runner_uuid, "current")
+  original_runner_uuid   = coalesce(var.original_runner_uuid, local.current_runner_uuid)
+  identity_provider_name = local.current_runner_uuid == local.original_runner_uuid ? var.name : "${var.name}-${substr(local.current_runner_uuid, 0, 8)}"
+
+  runner_trusts = merge(
+    {
+      for identity in var.trusted_runner_identities : identity.runner_uuid => {
+        issuer   = identity.issuer
+        audience = identity.audience
+        subject  = identity.subject
+      }
+    },
+    {
+      (local.current_runner_uuid) = {
+        issuer   = var.workload_identity_federation.issuer
+        audience = var.workload_identity_federation.audience
+        subject  = var.workload_identity_federation.subject
+      }
+    },
+  )
+
+  runner_issuers        = { for uuid, trust in local.runner_trusts : uuid => trust.issuer }
+  original_runner_trust = contains(keys(local.runner_trusts), local.original_runner_uuid) ? local.runner_trusts[local.original_runner_uuid] : null
+  other_runner_trusts   = { for uuid, trust in local.runner_trusts : uuid => trust if uuid != local.original_runner_uuid }
+}
+
 data "http" "discovery" {
-  url = "${trimsuffix(var.workload_identity_federation.issuer, "/")}/.well-known/openid-configuration"
+  for_each = local.runner_issuers
+
+  url = "${trimsuffix(each.value, "/")}/.well-known/openid-configuration"
 
   lifecycle {
     postcondition {
       # try: a body that is no JSON document, or one without an issuer, fails the check as well.
-      condition     = self.status_code == 200 && try(jsondecode(self.response_body).issuer, null) == var.workload_identity_federation.issuer
+      condition     = self.status_code == 200 && try(jsondecode(self.response_body).issuer, null) == each.value
       error_message = "The issuer's discovery document is unreachable or names a different issuer."
     }
   }
 }
 
 data "http" "jwks" {
-  url = jsondecode(data.http.discovery.response_body).jwks_uri
+  for_each = local.runner_issuers
+
+  url = jsondecode(data.http.discovery[each.key].response_body).jwks_uri
 
   lifecycle {
     postcondition {
@@ -110,6 +141,20 @@ resource "opentelekomcloud_identity_role_assignment_v3" "policy_all_projects" {
 # Programmatic access only. The one rule matches only runs of the definition whose subject it names,
 # and signs them in as one virtual user in the group above.
 resource "opentelekomcloud_identity_provider" "building_block" {
+  lifecycle {
+    enabled = local.original_runner_trust != null
+
+    precondition {
+      condition     = length(var.trusted_runner_identities) == 0 || var.original_runner_uuid != null
+      error_message = "A trusted runner needs meshstack.original_runner_ref. Set it to the runner that the definition ran on before it moved to another runner, and never remove it."
+    }
+
+    precondition {
+      condition     = local.original_runner_trust.subject != null
+      error_message = "The building block runner ${local.original_runner_uuid} is a trusted runner, but no version of the definition runs on it, so there is nothing to trust. Remove it from meshstack.trusted_runner_refs."
+    }
+  }
+
   name        = var.name
   protocol    = "oidc"
   description = "meshStack runs of one building block definition."
@@ -118,14 +163,49 @@ resource "opentelekomcloud_identity_provider" "building_block" {
   mapping_rules = jsonencode([
     {
       local  = [{ user = { name = var.name } }, { group = { name = opentelekomcloud_identity_group_v3.building_block.name } }]
-      remote = [{ type = "sub", any_one_of = [var.workload_identity_federation.subject] }]
+      remote = [{ type = "sub", any_one_of = [local.original_runner_trust.subject] }]
     }
   ])
 
   access_config {
     access_type  = "program"
-    provider_url = var.workload_identity_federation.issuer
-    client_id    = var.workload_identity_federation.audience
-    signing_key  = data.http.jwks.response_body
+    provider_url = local.original_runner_trust.issuer
+    client_id    = local.original_runner_trust.audience
+    signing_key  = data.http.jwks[local.original_runner_uuid].response_body
+  }
+}
+
+resource "opentelekomcloud_identity_provider" "runner" {
+  for_each = local.other_runner_trusts
+
+  lifecycle {
+    precondition {
+      condition     = length(var.trusted_runner_identities) == 0 || var.original_runner_uuid != null
+      error_message = "A trusted runner needs meshstack.original_runner_ref. Set it to the runner that the definition ran on before it moved to another runner, and never remove it."
+    }
+
+    precondition {
+      condition     = each.value.subject != null
+      error_message = "The building block runner ${each.key} is a trusted runner, but no version of the definition runs on it, so there is nothing to trust. Remove it from meshstack.trusted_runner_refs."
+    }
+  }
+
+  name        = "${var.name}-${substr(each.key, 0, 8)}"
+  protocol    = "oidc"
+  description = "meshStack runs of one building block definition on runner ${each.key}."
+  status      = true
+
+  mapping_rules = jsonencode([
+    {
+      local  = [{ user = { name = var.name } }, { group = { name = opentelekomcloud_identity_group_v3.building_block.name } }]
+      remote = [{ type = "sub", any_one_of = [each.value.subject] }]
+    }
+  ])
+
+  access_config {
+    access_type  = "program"
+    provider_url = each.value.issuer
+    client_id    = each.value.audience
+    signing_key  = data.http.jwks[each.key].response_body
   }
 }

@@ -250,14 +250,17 @@ before any definition exists, so it takes `issuer` and the `audiences` of every 
 **Known limitation.** The backplane trusts the identity of the version the Terraform resource
 manages, which is the newest one. A building block keeps running on the version it was created
 with, so moving a definition to a different runner breaks the blocks that still run on the old
-version until they upgrade. AWS modules no longer have this limitation, see
-[Trusted runners](#trusted-runners).
+version until they upgrade. Modules with [trusted runners](#trusted-runners) no longer have this
+limitation.
 
 ### Trusted runners
 
 A module whose backplane can trust more than one runner takes `meshstack.trusted_runner_refs`. The
 platform engineer lists the old runner there before the definition moves, and removes it when every
-building block uses a version on the new runner. Only AWS modules do this so far.
+building block uses a version on the new runner.
+
+Only a definition with a released version on the old runner needs it. A draft version changes in
+place, so a definition in draft mode moves to the new runner with all its building blocks.
 
 ```hcl
 module "runner" {
@@ -284,6 +287,36 @@ module "backplane" {
   trusted automatically.
 - The backplane keys every resource it creates per runner by the runner, never by the position in
   the list. Otherwise a move renames the resources of the old runner.
+- Runners that share issuer and audience give one identity.
+
+What a backplane does with the identities depends on the cloud:
+
+| Cloud | The backplane takes | It creates |
+|---|---|---|
+| AWS | `runner_identities = module.runner.identities` | one statement per runner in the trust policy of the role |
+| Azure, STACKIT | `trusted_runner_identities = module.runner.trusted_identities`, next to the unchanged `workload_identity_federation` of the current runner | one more federated credential per trusted runner |
+| GCP, OTC | the same, plus the uuid of the current runner and of `meshstack.original_runner_ref` | one identity provider per runner |
+
+A listed runner that no version of the definition runs on has no subject. AWS skips it. The other
+clouds fail the plan and name the runner, because they create one resource per runner and cannot
+skip one while the subject is not known yet. So list a runner only in the modules whose definition
+has a released version on it.
+
+#### `meshstack.original_runner_ref` (GCP and OTC)
+
+On GCP and OTC each definition version stores the name of the identity provider it signs in
+through, and a released version cannot change. So the provider of a runner must keep its name for
+as long as a version on that runner is in use.
+
+- Without `original_runner_ref`, the current runner has the provider with the configured name. This
+  is what every deployment has before its first move.
+- On the first move, set `original_runner_ref` to the runner that the definitions ran on so far.
+  That runner keeps the configured name, and every other runner gets a provider named after its
+  uuid.
+- Never remove it afterwards, also not when the old runner leaves `trusted_runner_refs`. Without
+  it, the current runner would take the configured name, and the versions that run on it would
+  stop working.
+- The plan fails when a runner is trusted and `original_runner_ref` is not set.
 
 <!-- scorecard-checks: bbd_catalog_overrides -->
 ## Overridable Catalog Properties

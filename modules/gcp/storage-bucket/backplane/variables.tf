@@ -20,6 +20,8 @@ variable "workload_identity_federation" {
   type = object({
     workload_identity_pool_identifier = string // Identifier for the workload identity pool
     subject_token_file_path           = string // Path to the file containing the OIDC token
+    runner_uuid                       = optional(string)
+    original_runner_uuid              = optional(string)
   })
   nullable = false
 }
@@ -37,3 +39,14 @@ variable "workload_identity_federation_trust" {
   description = "What the pool provider trusts: the runner's OIDC issuer and audience, and the subject claims it accepts, each matched exactly. Take issuer and audience from the `meshstack_building_block_runner` the definitions run on, and the subjects from their `version_latest.workload_identity_federation`."
 }
 
+variable "trusted_runner_identities" {
+  type = list(object({
+    runner_uuid = string
+    issuer      = string
+    audience    = string
+    subject     = string
+  }))
+  default     = []
+  nullable    = false
+  description = "Identities of other runners to trust besides the one in `workload_identity_federation_trust`, one pool provider each. Pass `trusted_identities` of the [runner-identity module](../../../meshstack/runner-identity). The plan fails for an entry with a null subject."
+}

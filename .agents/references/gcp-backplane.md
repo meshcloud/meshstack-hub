@@ -85,10 +85,10 @@ resource "google_project_iam_member" "buildingblock" {
 definition's resolved identity, never hardcoded. See
 [meshstack-integration.md § Runner identity](meshstack-integration.md#runner-identity).
 
-**Known limitation.** The pool provider trusts the identity of the version the Terraform resource
-manages. A building block keeps running on the version it was created with, so moving the
-definition to a different runner breaks the blocks that still run on the old version until they
-upgrade.
+A building block keeps running on the version it was created with. So that a move to another
+runner does not break those blocks, the backplane creates one pool provider per trusted runner,
+and `meshstack.original_runner_ref` says which runner keeps the provider with the configured name,
+see [meshstack-integration.md § Trusted runners](meshstack-integration.md#trusted-runners).
 
 The backplane's `credentials_json` output is then an
 [external account](https://cloud.google.com/iam/docs/workload-identity-federation) credential

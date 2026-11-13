@@ -145,10 +145,13 @@ module "backplane" {
 The runner lookup and the pinned `runner_ref` are the same in every cloud, see
 [meshstack-integration.md § Runner identity](meshstack-integration.md#runner-identity).
 
-**Known limitation.** The federated credential trusts the subject of the version the Terraform
-resource manages. A building block keeps running on the version it was created with, so moving
-the definition to a different runner breaks the blocks that still run on the old version until
-they upgrade.
+A building block keeps running on the version it was created with. So that a move to another
+runner does not break those blocks, the backplane also takes
+`trusted_runner_identities = module.runner.trusted_identities` and creates one more federated
+credential per trusted runner, see
+[meshstack-integration.md § Trusted runners](meshstack-integration.md#trusted-runners). That
+resource has `depends_on` on the credential of the current runner, because Azure rejects two
+credentials with the same issuer and subject on one identity.
 
 The `meshstack_integration.tf` must include `azure_location` variable (flat, provider-prefixed) for all resource placement.
 The resource group is derived from and managed by the backplane using `var.name`.

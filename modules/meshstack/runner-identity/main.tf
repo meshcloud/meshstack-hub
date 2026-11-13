@@ -48,14 +48,26 @@ locals {
     if version.workload_identity_federation != null && version.workload_identity_federation[var.cloud] != null
   ]
 
-  identities = [
+  runner_claims = [
     for runner in local.runners : {
-      issuer   = runner.spec.workload_identity_federation.issuer
-      audience = runner.spec.workload_identity_federation[var.cloud].audience
+      runner_uuid = runner.ref.uuid
+      issuer      = runner.spec.workload_identity_federation.issuer
+      audience    = runner.spec.workload_identity_federation[var.cloud].audience
+    }
+  ]
+
+  runner_claim_keys = [for claims in local.runner_claims : "${claims.issuer} ${claims.audience}"]
+
+  identities = [
+    for i, runner in local.runner_claims : {
+      runner_uuid = runner.runner_uuid
+      issuer      = runner.issuer
+      audience    = runner.audience
       subjects = distinct([
         for claims in local.version_claims : claims.subject
-        if claims.issuer == runner.spec.workload_identity_federation.issuer && claims.audience == runner.spec.workload_identity_federation[var.cloud].audience
+        if claims.issuer == runner.issuer && claims.audience == runner.audience
       ])
     }
+    if index(local.runner_claim_keys, local.runner_claim_keys[i]) == i
   ]
 }
