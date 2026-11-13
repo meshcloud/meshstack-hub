@@ -10,6 +10,15 @@ requiresBackplane: false
 
 # Metering Starterkit
 
+> ⚠️ **Experimental: set it up together with meshcloud.** The starterkit works and is built only from
+> supported parts: the [`kubernetes/service-account`](../../../kubernetes/service-account),
+> [`kubernetes/cronjob`](../../../kubernetes/cronjob) and
+> [`stackit/kubernetes-workload-identity`](../../../stackit/kubernetes-workload-identity) building
+> blocks and the metering images of
+> [mesh-custom-metering](https://github.com/meshcloud/mesh-custom-metering). Wiring it into a
+> meshStack still takes several credentials and cloud-specific settings, so expect to set it up with
+> help from your meshcloud contact rather than on your own.
+
 `meshstack_integration.tf` sets up the whole custom metering of a meshStack in one apply. It creates
 **Platform Metering**, the definition workspaces order, and the definitions it orders:
 

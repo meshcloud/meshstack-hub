@@ -392,6 +392,10 @@ resource "meshstack_building_block_definition" "this" {
     readme = coalesce(var.bbd_readme, chomp(<<-EOT
     **Platform Metering** brings the costs of your clouds into meshStack's chargeback and cost dashboards. Select the clouds, and it sets up everything their metering needs: a project with a Kubernetes namespace, a service account for it, and one metering job per cloud.
 
+    ## ⚠️ Experimental
+
+    Platform Metering works and is built only from supported parts: the Kubernetes Service Account and Kubernetes CronJob building blocks, STACKIT workload identity federation, and the metering images of [mesh-custom-metering](https://github.com/meshcloud/mesh-custom-metering). It is experimental because setting it up takes several credentials and cloud-specific settings, so platform teams usually set it up together with meshcloud.
+
     ## 🎯 When to use it
 
     Use this building block when you:
