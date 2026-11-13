@@ -44,6 +44,7 @@ No modules.
 | Name | Type |
 |------|------|
 | [azurerm_federated_identity_credential.backplane](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/federated_identity_credential) | resource |
+| [azurerm_federated_identity_credential.trusted_runner](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/federated_identity_credential) | resource |
 | [azurerm_resource_group.backplane](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/resource_group) | resource |
 | [azurerm_role_assignment.backplane](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/role_assignment) | resource |
 | [azurerm_role_definition.backplane](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/role_definition) | resource |
@@ -57,6 +58,7 @@ No modules.
 | <a name="input_name"></a> [name](#input\_name) | Name for the building block identity, resource group and role definition. | `string` | n/a | yes |
 | <a name="input_scope"></a> [scope](#input\_scope) | Scope the IPAM pool building block deploys into and the network manager governs (management group or subscription ID). Typically the parent of the platform subscription and all landing zones. | `string` | n/a | yes |
 | <a name="input_subscription_id"></a> [subscription\_id](#input\_subscription\_id) | Subscription (bare GUID) where the UAMI and its resource group are created. | `string` | n/a | yes |
+| <a name="input_trusted_runner_identities"></a> [trusted\_runner\_identities](#input\_trusted\_runner\_identities) | Identities of other runners to trust besides the one in `workload_identity_federation`, one federated credential each. Pass `trusted_identities` of the [runner-identity module](../../../meshstack/runner-identity). The plan fails for an entry with a null subject. | <pre>list(object({<br/>    runner_uuid = string<br/>    issuer      = string<br/>    audience    = string<br/>    subject     = string<br/>  }))</pre> | `[]` | no |
 | <a name="input_workload_identity_federation"></a> [workload\_identity\_federation](#input\_workload\_identity\_federation) | WIF issuer, audience and subjects for federated authentication of the automation identity. The audience defaults to the one meshStack runners use for Azure tokens. | <pre>object({<br/>    issuer   = string<br/>    audience = optional(string, "api://AzureADTokenExchange")<br/>    subjects = list(string)<br/>  })</pre> | n/a | yes |
 
 ## Outputs
