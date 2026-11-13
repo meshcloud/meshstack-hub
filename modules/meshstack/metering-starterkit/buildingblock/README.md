@@ -10,15 +10,6 @@ requiresBackplane: false
 
 # Metering Starterkit
 
-> ⚠️ **Experimental: set it up together with meshcloud.** The starterkit works and is built from
-> supported building blocks: [`kubernetes/service-account`](../../../kubernetes/service-account),
-> [`kubernetes/cronjob`](../../../kubernetes/cronjob) and
-> [`stackit/kubernetes-workload-identity`](../../../stackit/kubernetes-workload-identity). Wiring it
-> into a meshStack still takes several credentials and cloud-specific settings, so expect to set it
-> up with help from your meshcloud contact rather than on your own. The metering images themselves
-> come from [mesh-custom-metering](https://github.com/meshcloud/mesh-custom-metering), which is
-> maintained on its own and not covered by meshStack support.
-
 `meshstack_integration.tf` sets up the whole custom metering of a meshStack in one apply. It creates
 **Platform Metering**, the definition workspaces order, and the definitions it orders:
 
@@ -34,7 +25,15 @@ STACKIT it also federates that CronJob's Kubernetes service account, so the job 
 without a STACKIT key. The jobs submit usage reports to the meshStack the starterkit was applied
 against.
 
-## Setting it up
+## How to Use
+
+> ⚠️ **Experimental: set it up together with meshcloud.** The starterkit works and is built from
+> supported building blocks: `kubernetes/service-account`, `kubernetes/cronjob` and
+> `stackit/kubernetes-workload-identity`. Wiring it into a meshStack still takes several credentials
+> and cloud-specific settings, so expect to set it up with help from your meshcloud contact rather
+> than on your own. The metering images themselves come from
+> [mesh-custom-metering](https://github.com/meshcloud/mesh-custom-metering), which is maintained on
+> its own and not covered by meshStack support.
 
 The starterkit configures no providers; the caller configures three:
 
