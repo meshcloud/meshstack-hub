@@ -124,7 +124,7 @@ resource "meshstack_building_block" "this" {
   wait_for_completion = true
 
   spec = {
-    building_block_definition_version_ref = local.runner_move ? { uuid = data.meshstack_building_block_definition.this[0].version_latest_release.uuid } : module.resource_group.building_block_definition.version_ref
+    building_block_definition_version_ref = { uuid = local.runner_move ? data.meshstack_building_block_definition.this[0].version_latest_release.uuid : module.resource_group.building_block_definition.version_ref.uuid }
 
     display_name = "smoke-test-resource-group-${var.test_context.name_suffix}"
     target_ref = {

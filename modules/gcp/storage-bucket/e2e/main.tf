@@ -110,7 +110,7 @@ module "gcp_storage_bucket" {
   backplane_service_account_id = "${var.test_context.run_id}-storage-sa"
 
   workload_identity = {
-    pool_identifier = "${var.test_context.run_id}-wif"
+    pool_identifier = local.runner_move ? "${var.test_context.run_id}-wfm" : "${var.test_context.run_id}-wif"
   }
 }
 
