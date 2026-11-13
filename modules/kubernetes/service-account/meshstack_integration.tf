@@ -1,21 +1,27 @@
-variable "kubeconfig" {
-  type        = string
-  nullable    = false
-  ephemeral   = true
-  description = "Kubeconfig (YAML) of an identity that may create service accounts, secrets and role bindings on the cluster."
-}
-
-variable "kubeconfig_version" {
-  type        = string
-  nullable    = false
-  default     = "1"
-  description = "Increase to send a changed `kubeconfig` to meshStack."
-}
-
 variable "cluster_name" {
   type        = string
   nullable    = false
   description = "Name of the cluster in the kubeconfig each building block returns."
+}
+
+variable "cluster_server" {
+  type        = string
+  nullable    = false
+  description = "API server URL of the cluster the `kubernetes` provider points at, e.g. `https://api.example.com:6443`. Configure that provider with a cluster admin login; the backplane uses it only to create the deployer identity, and meshStack gets the deployer's kubeconfig."
+}
+
+variable "backplane_service_account_name" {
+  type        = string
+  nullable    = false
+  default     = "meshstack-service-account-bb"
+  description = "Name of the deployer service account the definition creates service accounts with."
+}
+
+variable "backplane_namespace" {
+  type        = string
+  nullable    = false
+  default     = "kube-system"
+  description = "Namespace of the deployer service account."
 }
 
 variable "namespace" {
@@ -111,8 +117,20 @@ output "building_block_definition" {
   description = "BBD is consumed in building block compositions."
   value = {
     uuid        = meshstack_building_block_definition.this.metadata.uuid
+    ref         = meshstack_building_block_definition.this.ref
     version_ref = meshstack_building_block_definition.this.version_latest
   }
+}
+
+module "backplane" {
+  source = "github.com/meshcloud/meshstack-hub//modules/kubernetes/service-account/backplane?ref=${var.hub.git_ref}"
+
+  cluster_name         = var.cluster_name
+  cluster_server       = var.cluster_server
+  cluster_roles        = var.cluster_roles
+  bind_cluster_wide    = var.bind_cluster_wide
+  service_account_name = var.backplane_service_account_name
+  namespace            = var.backplane_namespace
 }
 
 resource "meshstack_building_block_definition" "this" {
@@ -191,8 +209,8 @@ resource "meshstack_building_block_definition" "this" {
         assignment_type = "STATIC"
         sensitive = {
           argument = {
-            secret_value   = "data:application/yaml;base64,${base64encode(var.kubeconfig)}"
-            secret_version = var.kubeconfig_version
+            secret_value   = "data:application/yaml;base64,${base64encode(module.backplane.kubeconfig)}"
+            secret_version = module.backplane.kubeconfig_version
           }
         }
       }
@@ -298,6 +316,10 @@ terraform {
       source = "meshcloud/meshstack"
       # 0.25.2 is the first release that accepts `spec.approval_policies`.
       version = ">= 0.25.2"
+    }
+    kubernetes = {
+      source  = "hashicorp/kubernetes"
+      version = ">= 2.38.0, < 3.0.0"
     }
   }
 }
