@@ -36,7 +36,7 @@ No modules.
 
 | Name | Description | Type | Default | Required |
 |------|-------------|------|---------|:--------:|
-| <a name="input_apps_base_domain"></a> [apps\_base\_domain](#input\_apps\_base\_domain) | Base domain used for application URLs (e.g. 'likvid-k8s.msh.host'). The app subdomain will be prefixed to this value. | `string` | `"likvid-k8s.msh.host"` | no |
+| <a name="input_apps_base_domain"></a> [apps\_base\_domain](#input\_apps\_base\_domain) | Base domain used for application URLs (e.g. 'likvid-k8s.msh.host'). The app subdomain will be prefixed to this value. Also passed to the deploy workflow as the APPS\_BASE\_DOMAIN environment variable. | `string` | `"likvid-k8s.msh.host"` | no |
 | <a name="input_archive_repo_on_destroy"></a> [archive\_repo\_on\_destroy](#input\_archive\_repo\_on\_destroy) | Whether to archive github repository when destroying the terraform resource, or delete it. Defaults to true (archive). | `bool` | `true` | no |
 | <a name="input_building_block_definition_version_refs"></a> [building\_block\_definition\_version\_refs](#input\_building\_block\_definition\_version\_refs) | Building block definition versions this starter kit creates its child building blocks from, keyed by definition name (`git-repository` and `github-actions-connector`). | <pre>map(object({<br/>    uuid = string<br/>  }))</pre> | n/a | yes |
 | <a name="input_creator"></a> [creator](#input\_creator) | Information about the creator of the resources who will be assigned Project Admin role | <pre>object({<br/>    type        = string<br/>    identifier  = string<br/>    displayName = string<br/>    username    = optional(string)<br/>    email       = optional(string)<br/>    euid        = optional(string)<br/>  })</pre> | n/a | yes |

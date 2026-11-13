@@ -138,6 +138,7 @@ resource "meshstack_building_block" "github_actions" {
       additional_environment_variables = {
         value = jsonencode(jsonencode({
           "DOMAIN_NAME"        = each.key == "prod" ? local.identifier : "${local.identifier}-${each.key}"
+          "APPS_BASE_DOMAIN"   = var.apps_base_domain
           "AKS_NAMESPACE_NAME" = meshstack_tenant.this[each.key].spec.platform_tenant_id
         }))
       }
