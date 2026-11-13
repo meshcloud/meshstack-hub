@@ -1,5 +1,5 @@
 output "identity_provider_name" {
-  value       = opentelekomcloud_identity_provider.building_block.name
+  value       = local.identity_provider_name
   description = "Identity provider prerun.sh exchanges the run token at."
 }
 

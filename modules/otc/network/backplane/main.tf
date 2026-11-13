@@ -3,6 +3,9 @@ module "workload_identity" {
 
   name                         = var.name
   workload_identity_federation = var.workload_identity_federation
+  runner_uuid                  = var.runner_uuid
+  original_runner_uuid         = var.original_runner_uuid
+  trusted_runner_identities    = var.trusted_runner_identities
 
   # VPC, subnet, NAT gateway and its elastic IP, in whichever project the building block is ordered on.
   policies = {
