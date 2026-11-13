@@ -42,5 +42,5 @@ variable "versions" {
   }))
   default     = {}
   nullable    = false
-  description = "The `versions` attribute of the building block definition. The module takes the subject of each entry in `identities` from it. Omit it if you do not read `identities`."
+  description = "The `versions` attribute of the building block definition. The module takes the subject of each entry in `identities` from it. Omit it if you read neither `identities` nor `trusted_identities`."
 }
