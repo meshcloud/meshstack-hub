@@ -19,12 +19,30 @@ output "audience" {
 }
 
 output "identities" {
-  description = "One entry per runner with the issuer, audience and subject of its tokens. The runner in `runner_ref` comes first, then the runners in `trusted_runner_refs`, ordered by uuid. `subject` is null for a runner that no version uses."
+  description = "One entry per runner with the issuer, audience and subject of its tokens. The runner in `runner_ref` comes first, then the runners in `trusted_runner_refs`, ordered by uuid. Two runners with the same issuer and audience share one entry with the uuid of the first. `subject` is null for a runner that no version uses."
   value = [
     for identity in local.identities : {
-      issuer   = identity.issuer
-      audience = identity.audience
-      subject  = length(identity.subjects) == 1 ? identity.subjects[0] : null
+      runner_uuid = identity.runner_uuid
+      issuer      = identity.issuer
+      audience    = identity.audience
+      subject     = length(identity.subjects) == 1 ? identity.subjects[0] : null
+    }
+  ]
+
+  precondition {
+    condition     = alltrue([for identity in local.identities : length(identity.subjects) <= 1])
+    error_message = "Two of the runners in runner_ref and trusted_runner_refs have the same issuer and audience but different subject templates. The module cannot match the versions to one of the two, so it supports only one of them. If you remove one, the cloud rejects the tokens of its building blocks."
+  }
+}
+
+output "trusted_identities" {
+  description = "`identities` without its first entry. Use it if the backplane takes the runner in `runner_ref` in a separate variable."
+  value = [
+    for identity in slice(local.identities, 1, length(local.identities)) : {
+      runner_uuid = identity.runner_uuid
+      issuer      = identity.issuer
+      audience    = identity.audience
+      subject     = length(identity.subjects) == 1 ? identity.subjects[0] : null
     }
   ]
 

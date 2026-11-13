@@ -45,7 +45,8 @@ resource "meshstack_building_block_definition" "this" {
 ```
 
 The definition reads `ref` and `token_path` of the module. The module reads `versions` of the
-definition. OpenTofu sees no dependency cycle, because only `identities` depends on `versions`.
+definition. OpenTofu sees no dependency cycle, because only `identities` and `trusted_identities`
+depend on `versions`.
 
 A caller whose backplane takes no `identities` leaves out `trusted_runner_refs` and `versions`. It
 passes `issuer`, `audience` and the subject of `version_latest` to its backplane:
@@ -78,7 +79,8 @@ module "backplane" {
 | `token_path` | The path where the runner writes the token for `cloud`. |
 | `issuer` | The issuer of the runner's tokens. |
 | `audience` | The audience of the runner's token for `cloud`. |
-| `identities` | One `{ issuer, audience, subject }` per runner. The runner in `runner_ref` comes first, then the runners in `trusted_runner_refs`, ordered by uuid. |
+| `identities` | One `{ runner_uuid, issuer, audience, subject }` per runner. The runner in `runner_ref` comes first, then the runners in `trusted_runner_refs`, ordered by uuid. |
+| `trusted_identities` | `identities` without its first entry. Use it if the backplane takes the runner in `runner_ref` in a separate variable. |
 
 ## How `identities` finds the subject of a runner
 
@@ -91,6 +93,7 @@ audience. It takes the subject from the matching versions.
 - `subject` is null when no version uses a trusted runner, or when the caller omits `versions`. See
   [Trusted runners](../../../.agents/references/meshstack-integration.md#trusted-runners) for what
   a backplane does with such an entry.
+- Two runners with the same issuer and audience share one entry with the uuid of the first.
 - Two of the runners can have the same issuer and audience but different subject templates. The
   plan then fails, because the module cannot match the versions to one of the two.
 
