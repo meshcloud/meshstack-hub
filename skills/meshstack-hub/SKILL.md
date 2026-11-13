@@ -286,9 +286,14 @@ then ask the user in one message for:
   A module with workload identity federation looks the runner up to read its token settings, so
   the meshStack API key that applies it needs the permission to list building block runners.
   A building block keeps the runner of the definition version it was created with. So when a
-  definition moves to another runner and the module has `meshstack.trusted_runner_refs`, list the
-  old runner there until every building block uses a version on the new runner. The AWS modules
-  have it.
+  definition with a released version moves to another runner, list the old runner in
+  `meshstack.trusted_runner_refs` of that module until every building block uses a version on the
+  new runner. List it only for modules whose definition has a released version on the old runner:
+  outside AWS the plan fails for a listed runner that no version runs on. A definition in draft
+  mode needs no entry, because its one version moves with it.
+  For a GCP or OTC module, also set `meshstack.original_runner_ref` to the old runner on the first
+  move, and never remove it. Each definition version there stores the name of its identity
+  provider, and this value keeps the names stable.
 
 In the plan for the first apply, point out what it creates in the cloud: identities, role
 definitions and role assignments. They decide what the runner may do in the user's cloud, so the
