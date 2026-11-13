@@ -25,6 +25,37 @@ resource "stackit_service_account_federated_identity_provider" "building_block" 
   ]
 }
 
+resource "stackit_service_account_federated_identity_provider" "trusted_runner" {
+  for_each = { for identity in var.trusted_runner_identities : identity.runner_uuid => identity }
+
+  depends_on = [stackit_service_account_federated_identity_provider.building_block]
+
+  lifecycle {
+    precondition {
+      condition     = each.value.subject != null
+      error_message = "The building block runner ${each.key} is a trusted runner, but no version of the definition runs on it, so there is nothing to trust. Remove it from meshstack.trusted_runner_refs."
+    }
+  }
+
+  project_id            = var.project_id
+  service_account_email = stackit_service_account.building_block.email
+  name                  = "trusted-runner-${each.key}"
+  issuer                = each.value.issuer
+
+  assertions = [
+    {
+      item     = "aud"
+      operator = "equals"
+      value    = each.value.audience
+    },
+    {
+      item     = "sub"
+      operator = "equals"
+      value    = each.value.subject
+    }
+  ]
+}
+
 # iaas.network-area.admin (org scope) manages network areas; iaas.network.admin only covers project networks.
 resource "stackit_authorization_organization_role_assignment" "network_admin" {
   resource_id = var.organization_id
