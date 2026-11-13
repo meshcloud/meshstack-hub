@@ -19,6 +19,25 @@ resource "azurerm_federated_identity_credential" "backplane" {
   subject                   = each.value
 }
 
+resource "azurerm_federated_identity_credential" "trusted_runner" {
+  for_each = { for identity in var.trusted_runner_identities : identity.runner_uuid => identity }
+
+  depends_on = [azurerm_federated_identity_credential.backplane]
+
+  lifecycle {
+    precondition {
+      condition     = each.value.subject != null
+      error_message = "The building block runner ${each.key} is a trusted runner, but no version of the definition runs on it, so there is nothing to trust. Remove it from meshstack.trusted_runner_refs."
+    }
+  }
+
+  name                      = "trusted-runner-${each.key}"
+  user_assigned_identity_id = azurerm_user_assigned_identity.backplane.id
+  audience                  = [each.value.audience]
+  issuer                    = each.value.issuer
+  subject                   = each.value.subject
+}
+
 resource "azurerm_role_definition" "backplane" {
   name        = "${var.name}-deploy"
   description = "Enables deployment of the ${var.name} building block to landing zone subscriptions"
