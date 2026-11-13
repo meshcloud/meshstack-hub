@@ -79,7 +79,8 @@ module "backplane" {
 | `token_path` | The path where the runner writes the token for `cloud`. |
 | `issuer` | The issuer of the runner's tokens. |
 | `audience` | The audience of the runner's token for `cloud`. |
-| `identities` | A list with one `{ issuer, audience, subject }` per runner to trust. The current runner comes first, then each runner of `trusted_runner_refs`. |
+| `identities` | A list with one `{ runner_uuid, issuer, audience, subject }` per runner to trust. The current runner comes first, then each runner of `trusted_runner_refs`. |
+| `trusted_identities` | `identities` without the current runner, for a backplane that takes the current runner and the other trusted runners in separate variables. |
 
 ## How `identities` finds the subject of a runner
 
@@ -87,10 +88,12 @@ A version of a definition has the issuer, the audience and the subject that its 
 not the runner. So a version counts as running on a runner when it has the issuer and the audience
 of that runner. The subject of the runner is the subject of those versions.
 
-- `subject` is null when no version runs on the runner. A backplane skips such an entry.
+- `subject` is null when no version runs on the runner. An AWS backplane skips such an entry. The
+  other backplanes fail the plan, because they create one resource per runner.
 - `subject` is unknown in a plan that creates the definition or changes its runner. The list itself
   has a known length, because it has one entry per runner.
 - A trusted runner that is also the current runner appears once.
+- Runners that share issuer and audience give one identity, with the uuid of the first of them.
 - The module fails when two of the runners share issuer and audience but not the subject template,
   because the versions of the two can't be told apart.
 
