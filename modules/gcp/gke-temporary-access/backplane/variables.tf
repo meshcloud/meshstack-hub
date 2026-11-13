@@ -44,6 +44,8 @@ variable "workload_identity_federation" {
   type = object({
     workload_identity_pool_identifier = string
     subject_token_file_path           = string
+    runner_uuid                       = optional(string)
+    original_runner_uuid              = optional(string)
   })
   nullable = false
 }
@@ -57,4 +59,16 @@ variable "workload_identity_federation_trust" {
     subjects = list(string)
   })
   nullable = false
+}
+
+variable "trusted_runner_identities" {
+  type = list(object({
+    runner_uuid = string
+    issuer      = string
+    audience    = string
+    subject     = string
+  }))
+  default     = []
+  nullable    = false
+  description = "Identities of other runners to trust besides the one in `workload_identity_federation_trust`, one pool provider each. Pass `trusted_identities` of the [runner-identity module](../../../meshstack/runner-identity). The plan fails for an entry with a null subject."
 }

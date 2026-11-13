@@ -59,6 +59,14 @@ variable "meshstack" {
       kind = string
       uuid = string
     }))
+    trusted_runner_refs = optional(list(object({
+      kind = string
+      uuid = string
+    })), [])
+    original_runner_ref = optional(object({
+      kind = string
+      uuid = string
+    }))
     supported_platforms = optional(list(object({
       kind = optional(string)
       name = optional(string)
@@ -88,8 +96,10 @@ variable "hub" {
 module "runner" {
   source = "github.com/meshcloud/meshstack-hub//modules/meshstack/runner-identity?ref=${var.hub.git_ref}"
 
-  cloud      = "gcp"
-  runner_ref = var.meshstack.runner_ref
+  cloud               = "gcp"
+  runner_ref          = var.meshstack.runner_ref
+  trusted_runner_refs = var.meshstack.trusted_runner_refs
+  versions            = meshstack_building_block_definition.this.versions
 }
 
 output "building_block_definition" {
@@ -110,6 +120,8 @@ module "backplane" {
   workload_identity_federation = {
     workload_identity_pool_identifier = var.workload_identity.pool_identifier
     subject_token_file_path           = module.runner.token_path
+    runner_uuid                       = module.runner.ref.uuid
+    original_runner_uuid              = var.meshstack.original_runner_ref == null ? null : lookup(module.runner.entry_runner_uuids, var.meshstack.original_runner_ref.uuid, var.meshstack.original_runner_ref.uuid)
   }
 
   workload_identity_federation_trust = {
@@ -117,6 +129,8 @@ module "backplane" {
     audience = module.runner.audience
     subjects = [meshstack_building_block_definition.this.version_latest.workload_identity_federation.subject]
   }
+
+  trusted_runner_identities = module.runner.trusted_identities
 }
 
 resource "meshstack_building_block_definition" "this" {

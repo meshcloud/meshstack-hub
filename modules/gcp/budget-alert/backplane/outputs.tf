@@ -20,7 +20,7 @@ output "credentials_json" {
     type            = "external_account"
     # Built rather than read off google_iam_workload_identity_pool_provider.meshstack, whose
     # attribute_condition names the definition that consumes this output. The name is deterministic.
-    audience                          = "//iam.googleapis.com/projects/${data.google_project.backplane.number}/locations/global/workloadIdentityPools/${var.workload_identity_federation.workload_identity_pool_identifier}/providers/${var.workload_identity_federation.workload_identity_pool_identifier}"
+    audience                          = "//iam.googleapis.com/projects/${data.google_project.backplane.number}/locations/global/workloadIdentityPools/${local.pool_identifier}/providers/${local.current_provider_id}"
     subject_token_type                = "urn:ietf:params:oauth:token-type:jwt"
     token_url                         = "https://sts.googleapis.com/v1/token"
     service_account_impersonation_url = "https://iamcredentials.googleapis.com/v1/projects/-/serviceAccounts/${google_service_account.backplane.email}:generateAccessToken"
