@@ -5,7 +5,7 @@ output "credentials_json" {
     universe_domain = "googleapis.com"
     type            = "external_account"
     # Build the audience locally to avoid a dependency cycle through the definition's trust settings.
-    audience                          = "//iam.googleapis.com/projects/${data.google_project.this.number}/locations/global/workloadIdentityPools/${var.workload_identity_federation.workload_identity_pool_identifier}/providers/${var.workload_identity_federation.workload_identity_pool_identifier}"
+    audience                          = "//iam.googleapis.com/projects/${data.google_project.this.number}/locations/global/workloadIdentityPools/${local.pool_identifier}/providers/${local.current_provider_id}"
     subject_token_type                = "urn:ietf:params:oauth:token-type:jwt"
     token_url                         = "https://sts.googleapis.com/v1/token"
     service_account_impersonation_url = "https://iamcredentials.googleapis.com/v1/projects/-/serviceAccounts/${google_service_account.buildingblock.email}:generateAccessToken"
