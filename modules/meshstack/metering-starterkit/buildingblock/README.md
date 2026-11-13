@@ -20,7 +20,7 @@ requiresBackplane: false
 
 A workspace then orders Platform Metering and ticks the clouds. That creates a project with one
 namespace, a service account allowed to deploy only into it, and per cloud a CronJob with the
-metering image of [mesh-custom-metering](https://github.com/meshcloud/mesh-custom-metering). For
+metering image of `mesh-custom-metering`. For
 STACKIT it also federates that CronJob's Kubernetes service account, so the job reads the costs
 without a STACKIT key. The jobs submit usage reports to the meshStack the starterkit was applied
 against.
@@ -32,7 +32,7 @@ against.
 > `stackit/kubernetes-workload-identity`. Wiring it into a meshStack still takes several credentials
 > and cloud-specific settings, so expect to set it up with help from your meshcloud contact rather
 > than on your own. The metering images themselves come from
-> [mesh-custom-metering](https://github.com/meshcloud/mesh-custom-metering), which is maintained on
+> `mesh-custom-metering`, which is maintained on
 > its own and not covered by meshStack support.
 
 The starterkit configures no providers; the caller configures three:
