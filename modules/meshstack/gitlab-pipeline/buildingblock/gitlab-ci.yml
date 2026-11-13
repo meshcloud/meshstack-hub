@@ -102,9 +102,8 @@ echo-inputs:
         exit 0
       fi
 
-      # The canonical input values. The trigger payload carries them too, but a CI variable caps at
-      # 10,000 characters and renders lists and objects in a Kotlin-specific format, so anything
-      # large or structured is only trustworthy here.
+      # The canonical input values, typed. The trigger payload carries them too, as strings capped at
+      # 10,000 characters per CI variable.
       curl -sS --fail-with-body "$MESHSTACK_SELF_URL" \
         -H "Authorization: Bearer $RUN_TOKEN" \
         -H "Accept: $MESHSTACK_MEDIA_TYPE" > run.json

@@ -1,6 +1,7 @@
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import {
+  bbdOutputViolations,
   declaresSummaryOutput,
   explicitDefaultViolations,
   meshstackVariableViolation,
@@ -92,6 +93,19 @@ resource "meshstack_building_block_definition" "this" {
 }
 `;
 
+const definitionWithOutputs = (outputs) => `
+resource "meshstack_building_block_definition" "this" {
+  version_spec = {
+    inputs = {
+      name = {
+        assignment_type = "USER_INPUT"
+      }
+    }
+    outputs = ${outputs}
+  }
+}
+`;
+
 const withDefault = `    supported_platforms = optional(list(object({
       kind = optional(string)
       name = optional(string)
@@ -172,4 +186,51 @@ test("an extended or different meshstack description fails", () => {
 
 test("a module without the meshstack variable fails", () => {
   assert.equal(meshstackVariableViolation('variable "hub" {}'), "no variable meshstack");
+});
+
+const summaryAndUrl = `{
+      summary = {
+        assignment_type = "SUMMARY"
+      }
+      "console-url" = {
+        assignment_type = "RESOURCE_URL"
+      }
+    }`;
+
+test("BBD outputs declared as plain buildingblock outputs pass", () => {
+  const buildingBlock = `
+output "summary" {
+  value = "done"
+}
+
+output "console-url" {
+  value = "https://example.com"
+}
+`;
+  assert.deepEqual(bbdOutputViolations(definitionWithOutputs(summaryAndUrl), buildingBlock), []);
+});
+
+test("a BBD output missing from the buildingblock or marked sensitive fails", () => {
+  const buildingBlock = `
+output "summary" {
+  value     = "done"
+  sensitive = true
+}
+`;
+  assert.deepEqual(bbdOutputViolations(definitionWithOutputs(summaryAndUrl), buildingBlock), [
+    "summary (sensitive)",
+    "console-url (missing)",
+  ]);
+});
+
+test("BBD outputs inside merge() are found", () => {
+  const outputs = `merge(
+      {
+        summary = {
+          assignment_type = "SUMMARY"
+        }
+      },
+      var.extra_outputs,
+    )`;
+  assert.deepEqual(bbdOutputViolations(definitionWithOutputs(outputs), ""), ["summary (missing)"]);
 });
