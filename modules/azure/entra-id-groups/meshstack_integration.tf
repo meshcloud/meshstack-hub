@@ -169,7 +169,7 @@ resource "meshstack_building_block_definition" "this" {
   }
 
   spec = {
-    display_name             = coalesce(var.bbd_display_name, "Azure Entra ID Groups")
+    display_name             = coalesce(var.bbd_display_name, local.workspace_level ? "Azure Entra ID Workspace Group" : "Azure Entra ID Groups")
     description              = coalesce(var.bbd_description, local.workspace_level ? "Creates an Entra security group holding every member of a meshStack workspace, with optional Administrative Unit membership." : "Creates Entra security groups for meshStack project roles, with optional Administrative Unit membership.")
     support_url              = "mailto:support@meshcloud.io"
     documentation_url        = "https://hub.meshcloud.io/platforms/azure/definitions/azure-entra-id-groups"
