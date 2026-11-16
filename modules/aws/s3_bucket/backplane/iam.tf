@@ -57,12 +57,12 @@ data "aws_iam_policy_document" "workload_identity_federation" {
   lifecycle {
     precondition {
       condition     = length(local.trusted_identities) > 0
-      error_message = "The role would trust no identity. Pass workload_identity_federation, or runner_identities with at least one subject. A subject is null when no version of the definition runs on that runner."
+      error_message = "The trust policy of the role would be empty. Pass runner_identities with at least one subject, or workload_identity_federation. A subject is null when no version of the building block definition uses that runner."
     }
 
     precondition {
       condition     = var.workload_identity_federation == null || var.oidc_provider_arn != null
-      error_message = "workload_identity_federation needs oidc_provider_arn."
+      error_message = "Set oidc_provider_arn together with workload_identity_federation."
     }
   }
 

@@ -19,7 +19,7 @@ output "audience" {
 }
 
 output "identities" {
-  description = "One identity per runner to trust, for the backplane. `subject` is null for a runner that no version runs on."
+  description = "One entry per runner with the issuer, audience and subject of its tokens. The runner in `runner_ref` comes first, then the runners in `trusted_runner_refs`, ordered by uuid. `subject` is null for a runner that no version uses."
   value = [
     for identity in local.identities : {
       issuer   = identity.issuer
@@ -30,6 +30,6 @@ output "identities" {
 
   precondition {
     condition     = alltrue([for identity in local.identities : length(identity.subjects) <= 1])
-    error_message = "Versions with the same issuer and audience present different subjects, so the subject of a runner is not clear. This happens when two of the runners share issuer and audience but not the subject template."
+    error_message = "Two of the runners in runner_ref and trusted_runner_refs have the same issuer and audience but different subject templates. The module cannot match the versions to one of the two, so it supports only one of them. If you remove one, the cloud rejects the tokens of its building blocks."
   }
 }

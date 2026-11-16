@@ -12,50 +12,67 @@ Use WIF when the building block acts within a single AWS account (the backplane 
 
 ### Rationale
 
-- **No secrets rotation**: WIF tokens are short-lived JWTs issued by meshStack; no access keys to manage.
+- **No secrets rotation**: Each run gets a short-lived JWT from an OIDC issuer; no access keys to manage.
 - **BBD-scoped trust**: The IAM role trust policy is scoped to the specific building block definition UUID, preventing cross-BBD token reuse.
 - **OIDC-native**: AWS supports federated OIDC identities via `aws_iam_openid_connect_provider` out of the box.
-- **Shared OIDC provider**: every backplane in an account trusts the provider that `modules/aws/oidc-provider` registers for an issuer, and finds it by the issuer.
+- **Shared OIDC provider**: `modules/aws/oidc-provider` creates one IAM OIDC provider per issuer in an AWS account. Every backplane in the account looks it up by the issuer URL.
 
 <!-- scorecard-checks: aws_wif_external_oidc_provider, aws_oidc_provider_notice -->
 ### The shared OIDC provider
 
-**A WIF backplane does not create its OIDC provider. It looks up the provider of each issuer it
-trusts.**
+**A WIF backplane creates no IAM OIDC provider. It looks up one provider per issuer in
+`runner_identities`.**
 
-AWS registers one OIDC provider per issuer URL per AWS account. A meshStack runner has one issuer,
-so an account has room for exactly one provider for it no matter how many building block backplanes
-federate through it. A backplane that creates its own is claiming shared infrastructure: the second
-backplane in the account fails with `EntityAlreadyExists`, and destroying whichever one owns it
-breaks every other backplane there.
+AWS allows one OIDC provider per issuer URL in an AWS account. All backplanes in the account need
+the same provider for the same issuer. If each backplane created the provider, the second apply
+would fail with `EntityAlreadyExists`. A destroy of the first backplane would also delete the
+provider of all others.
 
-So it is deployed separately, once per issuer in each AWS account that hosts backplanes:
+So `modules/aws/oidc-provider` creates the provider. Apply it once per issuer in each AWS account
+that hosts backplanes:
 
 ```hcl
+data "meshstack_building_block_runner" "this" {
+  metadata = {
+    uuid = "<runner uuid>"
+  }
+}
+
 module "meshstack_oidc_provider" {
   source = "github.com/meshcloud/meshstack-hub//modules/aws/oidc-provider?ref=main"
+
+  workload_identity_federation = {
+    issuer    = data.meshstack_building_block_runner.this.spec.workload_identity_federation.issuer
+    audiences = [data.meshstack_building_block_runner.this.spec.workload_identity_federation.aws.audience]
+  }
 }
 ```
 
-`modules/aws/oidc-provider` takes the runners' `issuer` and their `audiences` as its one input, copied
-from that runner's `meshstack_building_block_runner` data source, and reads the
-thumbprint from the issuer's own TLS chain, so the issuer URL has to be reachable from wherever it
-runs. To register a self-hosted runner's issuer pass that runner's values, and then pass its
-reference as `meshstack.runner_ref` to every building block module running on it.
+`audiences` usually has one value, the AWS audience of the runner. It is a list because AWS allows
+several audiences per provider. Two runners whose tokens come from the same issuer share the
+provider, so add the audience of both. The
+module reads the thumbprint from the TLS certificate chain of the issuer. So the machine that
+applies the module must reach the issuer URL.
 
-A backplane trusts one identity per runner, see
-[Trusted runners](meshstack-integration.md#trusted-runners). It reads the provider of each issuer
-with `data "aws_iam_openid_connect_provider"`, keyed by the issuer, because the ARN of a provider
-follows from its issuer. So the caller passes no ARN, and a definition that moves to a runner with
-another issuer can't keep the provider of the old one.
+Each issuer needs its own OIDC provider. The tokens of another runner can come from another issuer.
+Then apply the module once more with the `issuer` and `aws.audience` of that runner. Also set
+`meshstack.runner_ref` to that runner in every hub module whose definition uses it.
 
-- The provider of every issuer must exist before the backplane is planned. Otherwise the plan fails
-  in the lookup. A root module that applies both adds `depends_on = [module.meshstack_oidc_provider]`
-  to the module that holds the backplane.
+Two runners can get their tokens from different issuers. For example, the meshStack identity
+provider issues the tokens of one runner. A Kubernetes cluster issues the tokens of another.
+One provider ARN identifies the provider of one issuer. So the backplane looks up one IAM OIDC
+provider per issuer in `runner_identities`. It uses `data "aws_iam_openid_connect_provider"` with
+the issuer as `url`. [Trusted runners](meshstack-integration.md#trusted-runners) explains when
+`runner_identities` has more than one entry.
+
+- Create the provider of every issuer before you plan the backplane. Otherwise the lookup fails the
+  plan. So apply `modules/aws/oidc-provider` first, from its own root module or with `-target`.
+- Do not set `depends_on` on the hub module. It makes the issuer unknown during the plan, and the
+  lookup then fails with "Invalid for_each argument".
 - The lookup needs `iam:ListOpenIDConnectProviders` and `iam:GetOpenIDConnectProvider`.
-- A caller that uses a backplane directly can still pass one identity in
-  `workload_identity_federation` together with `oidc_provider_arn`. The backplane then does no
-  lookup for it.
+- A caller can use a backplane without the `meshstack_integration.tf` of its module. This caller
+  passes one identity in `workload_identity_federation` and the provider ARN in `oidc_provider_arn`.
+  The backplane then looks up no provider for that identity.
 
 This is where AWS differs from the other providers, and why the repetition is not the same kind of
 repetition: an Azure federated identity credential is a child of its UAMI and a GCP workload
@@ -78,7 +95,7 @@ removed {
 ```
 
 Then `import` the provider into the root that applies `modules/aws/oidc-provider`. The backplanes
-that used to create it find it by its issuer.
+then find it by its issuer.
 
 <!-- scorecard-checks: aws_wif_subject_condition -->
 ### Implementation Pattern (WIF)
@@ -94,7 +111,7 @@ resource "random_string" "suffix" {
   upper   = false
 }
 
-# AWS has one OIDC provider per issuer in an account, so the lookup is keyed by the issuer.
+# AWS has one OIDC provider per issuer in an account, so the issuer URL identifies the provider.
 data "aws_iam_openid_connect_provider" "runner" {
   for_each = toset(var.runner_identities[*].issuer)
 
@@ -117,7 +134,7 @@ locals {
         audience          = identity.audience
         subjects          = [identity.subject]
       }
-      # No version of the definition runs on this runner, so no run presents its identity.
+      # Skip an entry without a subject. No version of the definition uses that runner.
       if identity.subject != null
     ],
   )
@@ -129,12 +146,12 @@ data "aws_iam_policy_document" "workload_identity_federation" {
   lifecycle {
     precondition {
       condition     = length(local.trusted_identities) > 0
-      error_message = "The role would trust no identity. Pass workload_identity_federation, or runner_identities with at least one subject. A subject is null when no version of the definition runs on that runner."
+      error_message = "The trust policy of the role would be empty. Pass runner_identities with at least one subject, or workload_identity_federation. A subject is null when no version of the building block definition uses that runner."
     }
 
     precondition {
       condition     = var.workload_identity_federation == null || var.oidc_provider_arn != null
-      error_message = "workload_identity_federation needs oidc_provider_arn."
+      error_message = "Set oidc_provider_arn together with workload_identity_federation."
     }
   }
 
@@ -172,9 +189,6 @@ resource "aws_iam_role" "backplane" {
 # Attach a service-specific policy to aws_iam_role.backplane
 ```
 
-The trust policy has one statement per identity. With one runner it is the same policy as before
-the list existed, so a deployment that sets no `meshstack.trusted_runner_refs` gets an empty plan.
-
 <!-- scorecard-checks: aws_wif_nonnullable -->
 ### Backplane Variables (WIF)
 
@@ -188,9 +202,10 @@ variable "runner_identities" {
   default     = []
   nullable    = false
   description = <<-EOT
-  The meshStack identities the role trusts, one per building block runner: the output `identities` of
-  modules/meshstack/runner-identity. An entry with a null subject is skipped.
-  The backplane looks up the IAM OIDC provider of each issuer in this AWS account.
+  AWS lets a run assume the role when its token matches one of these entries.
+  Pass the output `identities` of modules/meshstack/runner-identity.
+  The backplane skips an entry with a null subject, but still looks up the provider of its issuer.
+  Create the IAM OIDC provider of each issuer in this AWS account first.
   See .agents/references/aws-backplane.md#the-shared-oidc-provider
   EOT
 }
@@ -204,7 +219,7 @@ variable "workload_identity_federation" {
   })
   default     = null
   description = <<-EOT
-  One more identity the role trusts, for a caller that does not use `runner_identities`. It needs `oidc_provider_arn`.
+  One more entry like those in `runner_identities`, for a caller without modules/meshstack/runner-identity. Set `oidc_provider_arn` with it.
   Supports multiple subjects and wildcard patterns (e.g., 'system:serviceaccount:namespace:*').
   EOT
 }
@@ -219,8 +234,8 @@ variable "oidc_provider_arn" {
 }
 ```
 
-The last line of the `runner_identities` description is fixed. A missing provider fails the plan in
-the lookup, and this link tells the platform engineer what to apply first. The scorecard enforces it.
+The scorecard requires this exact line in the `runner_identities` description. Without the
+provider, the lookup fails the plan. The link shows the platform engineer what to apply first.
 
 <!-- scorecard-checks: aws_wif_role_output -->
 ### Backplane Outputs (WIF)
@@ -455,13 +470,15 @@ AWS_WEB_IDENTITY_TOKEN_FILE = {
 }
 ```
 
-The role trusts the current runner and every runner in `meshstack.trusted_runner_refs`, see
+Runs on the current runner and on every runner in `meshstack.trusted_runner_refs` can assume the
+role. See
 [meshstack-integration.md § Trusted runners](meshstack-integration.md#trusted-runners). The runner
 lookup and the pinned `runner_ref` are the same in every cloud, see
 [meshstack-integration.md § Runner identity](meshstack-integration.md#runner-identity).
 
-The three existing modules still declare `variable "aws_oidc_provider_arn"`, with a null default and
-no use, so that a caller that sets it does not fail. A new module does not declare it.
+`aws/s3_bucket`, `aws/route53-dns-record` and `aws/route53-dns-alias-record` declare an unused
+`variable "aws_oidc_provider_arn"`, so that a caller that sets it does not fail. A new module does
+not declare it.
 
 ### Cross-account (StackSet) pattern
 
@@ -493,7 +510,7 @@ role_name = {
 
 **WIF pattern (Pattern A):**
 - [ ] Creates no `aws_iam_openid_connect_provider` — looks up the provider of each issuer in `runner_identities`
-- [ ] The `runner_identities` description ends with the fixed link to the shared OIDC provider
+- [ ] The `runner_identities` description contains the link line to the shared OIDC provider
 - [ ] `runner_identities` is non-nullable
 - [ ] Trust policy has one statement per identity and scopes `sub` to the subject of that identity
 - [ ] Integration passes `module.runner.identities`, and gives the module `meshstack.trusted_runner_refs` and the definition's `versions`

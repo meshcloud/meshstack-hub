@@ -774,7 +774,7 @@ const detectors = [
         return { pass: false, detail: "issuer is taken neither from meshstack_building_block_definition.<name>.version_latest.workload_identity_federation.issuer nor from a call of modules/meshstack/runner-identity that every definition pins in version_spec.runner_ref" };
       return {
         pass: /version_latest(?:_release)?\.workload_identity_federation\.subject/.test(content) || identitiesFromVersions(content),
-        detail: "subjects are taken neither from meshstack_building_block_definition.<name>.version_latest.workload_identity_federation.subject nor from `identities` of modules/meshstack/runner-identity called with the definition's `versions`, so the backplane may trust something the runner never presents",
+        detail: "the subjects come neither from meshstack_building_block_definition.<name>.version_latest.workload_identity_federation.subject nor from `identities` of modules/meshstack/runner-identity with the definition's `versions`. So the cloud may accept a subject that no run presents",
       };
     },
   },
@@ -817,7 +817,7 @@ const detectors = [
       if (!identitiesVar) return { pass: false, detail: 'missing variable "runner_identities"' };
       return {
         pass: identitiesVar.includes(AWS_OIDC_PROVIDER_NOTICE),
-        detail: `the runner_identities description does not hold the line "${AWS_OIDC_PROVIDER_NOTICE}"`,
+        detail: `the runner_identities description does not contain the line "${AWS_OIDC_PROVIDER_NOTICE}"`,
       };
     },
   },
@@ -868,8 +868,8 @@ const detectors = [
       if (!hasSubCondition)
         return { pass: false, detail: "no :sub condition — the role is assumable by every subject the meshStack issuer signs" };
       if (!hasSubjects)
-        return { pass: false, detail: "the :sub condition does not use the subject of each var.runner_identities entry, so it is not scoped to this building block definition" };
-      // A subject the integration built from strings scopes nothing the runner guarantees.
+        return { pass: false, detail: "the :sub condition does not use the subject of each var.runner_identities entry. So runs of other building block definitions can assume the role" };
+      // The subject must come from meshStack, not from a string that the integration builds.
       const integration = readIntegrationTf(mod);
       if (!integration) return { pass: true };
       return {

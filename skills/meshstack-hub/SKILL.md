@@ -276,7 +276,7 @@ then ask the user in one message for:
   the plan.
 - **One-time steps the README names.** For example, an AWS module with workload identity federation
   needs [`modules/aws/oidc-provider`](https://raw.githubusercontent.com/meshcloud/meshstack-hub/main/modules/aws/oidc-provider/README.md)
-  applied once per runner issuer and AWS account, and a GCP project may need an API turned on by its
+  applied once per issuer and AWS account, and a GCP project may need an API turned on by its
   owner.
 - **Credentials for a module without a cloud backplane.** For example, `github/repository` takes the
   ID, installation ID and private key of a GitHub App. Pass a secret as a `TF_VAR_<name>`
@@ -285,10 +285,14 @@ then ask the user in one message for:
   `meshstack.runner_ref`. Without it, the definition runs on the default runner.
   A module with workload identity federation looks the runner up to read its token settings, so
   the meshStack API key that applies it needs the permission to list building block runners.
-  A building block keeps the runner of the definition version it was created with. So when a
-  definition moves to another runner and the module has `meshstack.trusted_runner_refs`, list the
-  old runner there until every building block uses a version on the new runner. The AWS modules
-  have it.
+  meshStack runs a building block with the definition version it was created with, until someone
+  upgrades it. Nobody can change the runner of a released version. So a definition with a released
+  version needs an entry before it gets another runner. Add the `ref` of the old runner to
+  `meshstack.trusted_runner_refs` of that module. Do this in the apply that sets `meshstack.runner_ref` to the new runner, or earlier.
+  Without the entry, the cloud rejects the tokens of the building blocks on older versions. Remove
+  the entry when no building block is on a version that uses the old runner.
+  Only a module whose `meshstack` variable has `trusted_runner_refs` supports this. A definition with
+  only a draft version needs no entry. meshStack changes the runner of a draft version in place.
 - **Where it can be ordered.** A tenant-level definition is offered on every platform of the type
   the module names. To offer it on one platform or landing zone only, pass that object's `ref` in
   `meshstack.supported_platforms`, for example `[meshstack_landingzone.dev.ref]`. A platform needs

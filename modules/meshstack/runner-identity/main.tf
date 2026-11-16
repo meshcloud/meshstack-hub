@@ -7,7 +7,7 @@ data "meshstack_building_block_runner" "this" {
     postcondition {
       # try: a runner without any workload identity federation has a null spec.workload_identity_federation.
       condition     = try(self.spec.workload_identity_federation[var.cloud], null) != null
-      error_message = "The building block runner offers no ${var.cloud} token. A STACKIT building block uses the azure token and an OTC building block uses the gcp token, each as a generic OIDC token. Pick a runner that offers one via var.meshstack.runner_ref."
+      error_message = "The building block runner has no ${var.cloud} settings for workload identity federation. A STACKIT building block presents the azure token as a generic OIDC token. An OTC building block does the same with the gcp token. Set var.meshstack.runner_ref to a runner that has these settings."
     }
   }
 }
@@ -23,7 +23,7 @@ data "meshstack_building_block_runner" "trusted" {
     postcondition {
       # try: a runner without any workload identity federation has a null spec.workload_identity_federation.
       condition     = try(self.spec.workload_identity_federation[var.cloud], null) != null
-      error_message = "The trusted building block runner ${each.key} offers no ${var.cloud} token. Remove it from var.meshstack.trusted_runner_refs."
+      error_message = "The trusted building block runner ${each.key} has no ${var.cloud} settings for workload identity federation. No version can use it for this cloud. Remove it from var.meshstack.trusted_runner_refs."
     }
   }
 }

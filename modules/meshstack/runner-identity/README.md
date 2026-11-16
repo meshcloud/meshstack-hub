@@ -4,12 +4,12 @@ Looks up the building block runner of a definition and returns what the definiti
 need for workload identity federation: the runner's `ref`, the token path, the issuer and the
 audience.
 
-It also returns `identities`: one identity per runner the backplane trusts. A building block keeps
-running on the definition version it was created with. After a definition moves to another runner,
-building blocks on older versions still present the identity of the old runner. List the old runner
-in `trusted_runner_refs` until every building block uses a version on the new runner.
+It also returns `identities`. Each entry has the issuer, audience and subject of the tokens of one
+runner. The list covers the runner in `runner_ref` and each runner in `trusted_runner_refs`. See
+[Trusted runners](../../../.agents/references/meshstack-integration.md#trusted-runners) for when a
+platform engineer lists a runner there.
 
-The module fails when a runner offers no token for `cloud`.
+The plan fails when a runner has no workload identity federation settings for `cloud`.
 
 See [Runner identity](../../../.agents/references/meshstack-integration.md#runner-identity) for why
 a definition pins the runner it looks up.
@@ -44,12 +44,11 @@ resource "meshstack_building_block_definition" "this" {
 }
 ```
 
-The definition reads `ref` and `token_path`, and the module reads the definition's `versions`. This
-is not a cycle, because OpenTofu evaluates each input and each output of a module separately, and
-only `identities` reads `versions`.
+The definition reads `ref` and `token_path` of the module. The module reads `versions` of the
+definition. OpenTofu sees no dependency cycle, because only `identities` depends on `versions`.
 
-A caller whose backplane does not take `identities` yet leaves out `trusted_runner_refs` and
-`versions`. It passes `issuer`, `audience` and the subject of `version_latest` to its backplane:
+A caller whose backplane takes no `identities` leaves out `trusted_runner_refs` and `versions`. It
+passes `issuer`, `audience` and the subject of `version_latest` to its backplane:
 
 ```hcl
 module "backplane" {
@@ -66,10 +65,10 @@ module "backplane" {
 
 | Name | Description |
 |---|---|
-| `cloud` | The token the building block signs in with: `aws`, `azure` or `gcp`. A STACKIT building block uses `azure` and an OTC building block uses `gcp`, each as a generic OIDC token. |
+| `cloud` | Which token the runs present: `aws`, `azure` or `gcp`. A STACKIT building block presents the `azure` token as a generic OIDC token. An OTC building block does the same with the `gcp` token. |
 | `runner_ref` | The runner to look up, as given in `var.meshstack.runner_ref`. Null looks up the default runner. |
-| `trusted_runner_refs` | Other runners to trust besides the current one, as given in `var.meshstack.trusted_runner_refs`. Default `[]`. |
-| `versions` | The `versions` of the building block definition. The module reads only `workload_identity_federation` of each version. Only `identities` reads it. Default `{}`. |
+| `trusted_runner_refs` | The runners in `var.meshstack.trusted_runner_refs`. List a runner while a building block is on an older version that uses it. Default `[]`. |
+| `versions` | The `versions` attribute of the building block definition. The module takes the subject of each entry in `identities` from it. Default `{}`. |
 
 ## Outputs
 
@@ -79,20 +78,19 @@ module "backplane" {
 | `token_path` | The path where the runner writes the token for `cloud`. |
 | `issuer` | The issuer of the runner's tokens. |
 | `audience` | The audience of the runner's token for `cloud`. |
-| `identities` | A list with one `{ issuer, audience, subject }` per runner to trust. The current runner comes first, then each runner of `trusted_runner_refs`. |
+| `identities` | One `{ issuer, audience, subject }` per runner. The runner in `runner_ref` comes first, then the runners in `trusted_runner_refs`, ordered by uuid. |
 
 ## How `identities` finds the subject of a runner
 
-A version of a definition has the issuer, the audience and the subject that its runs present, but
-not the runner. So a version counts as running on a runner when it has the issuer and the audience
-of that runner. The subject of the runner is the subject of those versions.
+The `versions` attribute of the definition contains the issuer, audience and subject of each
+version. It does not contain the runner. So the module matches a version to a runner by issuer and
+audience. It takes the subject from the matching versions.
 
-- `subject` is null when no version runs on the runner. A backplane skips such an entry.
-- `subject` is unknown in a plan that creates the definition or changes its runner. The list itself
-  has a known length, because it has one entry per runner.
-- A trusted runner that is also the current runner appears once.
-- The module fails when two of the runners share issuer and audience but not the subject template,
-  because the versions of the two can't be told apart.
+- `subject` is null when no version uses the runner, or when the caller omits `versions`. See
+  [Trusted runners](../../../.agents/references/meshstack-integration.md#trusted-runners) for what
+  a backplane does with such an entry.
+- Two of the runners can have the same issuer and audience but different subject templates. The
+  plan then fails, because the module cannot match the versions to one of the two.
 
 ## Required permissions
 
