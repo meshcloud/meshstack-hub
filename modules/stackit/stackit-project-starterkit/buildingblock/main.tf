@@ -8,6 +8,7 @@ module "this" {
 
   creator              = var.creator
   workspace_identifier = var.workspace_identifier
+  payment_method       = var.payment_method
   tags                 = var.tags
 
   name         = var.name

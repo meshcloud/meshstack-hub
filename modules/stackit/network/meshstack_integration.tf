@@ -44,18 +44,21 @@ variable "bbd_readme" {
   description = "Overrides the markdown readme shown in the marketplace before ordering."
 }
 
-variable "building_block_runner_uuid" {
-  type        = string
-  default     = null
-  description = "Runs this building block on the given meshStack building block runner instead of the shared one meshStack hosts."
-}
-
 variable "meshstack" {
   type = object({
     owning_workspace_identifier = string
     tags                        = optional(map(list(string)), {})
+    runner_ref = optional(object({
+      kind = string
+      uuid = string
+    }))
+    supported_platforms = optional(list(object({
+      kind = optional(string)
+      name = optional(string)
+      uuid = optional(string)
+    })), [{ name = "STACKIT" }])
   })
-  description = "Shared meshStack context."
+  description = "Shared meshStack context, see docs."
 }
 
 variable "hub" {
@@ -86,6 +89,14 @@ locals {
   network_allowed_prefix_lengths = [for i in range(var.stackit_network_min_prefix_length, var.stackit_network_max_prefix_length + 1) : i]
 }
 
+# Lookup specified runner for workload identity federation info. Null results in the default hosted runner.
+module "runner" {
+  source = "github.com/meshcloud/meshstack-hub//modules/meshstack/runner-identity?ref=${var.hub.git_ref}"
+
+  cloud      = "azure"
+  runner_ref = var.meshstack.runner_ref
+}
+
 module "backplane" {
   source = "github.com/meshcloud/meshstack-hub//modules/stackit/network/backplane?ref=${var.hub.git_ref}"
 
@@ -93,8 +104,10 @@ module "backplane" {
   organization_id      = var.stackit_organization_id
   service_account_name = coalesce(var.stackit_service_account_name, "mesh-network")
 
+  # The runner offers no STACKIT token, so we use the one offered for Azure as a generic OIDC token. The federation trusts its issuer and audience.
   workload_identity_federation = {
-    issuer   = meshstack_building_block_definition.this.version_latest.workload_identity_federation.issuer
+    issuer   = module.runner.issuer
+    audience = module.runner.audience
     subjects = [meshstack_building_block_definition.this.version_latest.workload_identity_federation.subject]
   }
 }
@@ -112,7 +125,7 @@ resource "meshstack_building_block_definition" "this" {
     support_url         = "https://portal.stackit.cloud"
     target_type         = "TENANT_LEVEL"
     run_transparency    = true
-    supported_platforms = [{ name = "STACKIT" }]
+    supported_platforms = var.meshstack.supported_platforms
     readme = coalesce(var.bbd_readme, chomp(<<-EOT
       This building block creates a **routed STACKIT network** inside your existing STACKIT
       project, so your application can use a dedicated IPv4 subnet without any manual network
@@ -150,10 +163,7 @@ resource "meshstack_building_block_definition" "this" {
   version_spec = {
     draft         = var.hub.bbd_draft
     deletion_mode = "DELETE"
-    runner_ref = var.building_block_runner_uuid == null ? null : {
-      kind = "meshBuildingBlockRunner"
-      uuid = var.building_block_runner_uuid
-    }
+    runner_ref    = module.runner.ref
 
     implementation = {
       terraform = {
@@ -197,7 +207,7 @@ resource "meshstack_building_block_definition" "this" {
         type            = "STRING"
         assignment_type = "STATIC"
         is_environment  = true
-        argument        = jsonencode("/var/run/secrets/workload-identity/azure/token")
+        argument        = jsonencode(module.runner.token_path)
       }
 
       network_name = {
@@ -228,7 +238,7 @@ resource "meshstack_building_block_definition" "this" {
 
     outputs = {
       network_url = {
-        display_name    = "Network URL"
+        display_name    = "Open Network"
         type            = "STRING"
         assignment_type = "RESOURCE_URL"
       }
@@ -260,7 +270,7 @@ terraform {
   required_providers {
     meshstack = {
       source  = "meshcloud/meshstack"
-      version = ">= 0.27.0"
+      version = ">= 0.27.2"
     }
     stackit = {
       source  = "stackitcloud/stackit"

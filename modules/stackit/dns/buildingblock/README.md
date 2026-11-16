@@ -26,18 +26,20 @@ decides what answers.
 Leaving `wildcard_target_ip` null creates the zone and nothing else, for a platform that manages its
 records elsewhere.
 
-## Certificates
+## Wildcard certificates
 
-The zone is enough for HTTP-01 certificate issuance, which is what the STACKIT Kubernetes Platform
-reference architecture uses: the hostname resolves to the load balancer, so the ACME server reaches
-the challenge. A wildcard certificate needs DNS-01 instead, which needs a credential for this zone
-inside the cluster — this building block does not create one.
+To serve every application under the zone with one certificate `*.<zone>`, set `wildcard_certs` and
+pass the `kubeconfig.yaml` of the cluster that runs cert-manager. The block installs the
+[STACKIT cert-manager webhook](https://github.com/stackitcloud/stackit-cert-manager-webhook) there,
+with a service account key that has `dns.admin` on the project. Pass the `dns01_solver` from the
+summary to `wildcard_certs` of `kubernetes/ingress-controller`.
 
 ## Permissions
 
 The run authenticates via Workload Identity Federation as the platform's STACKIT service account,
 which needs the `dns.zone.*` permissions. Both `editor` and the narrower `dns.admin` carry all of
-them.
+them. With `wildcard_certs`, the run also creates a service account with a key and a role
+assignment, which needs `iam.member-admin` as well.
 
 ## Taking over a zone
 
@@ -52,18 +54,24 @@ With `imports = {zone_id, record_set_id}`, the building block takes over an exis
 | Name | Version |
 |------|---------|
 | <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.12.0 |
+| <a name="requirement_helm"></a> [helm](#requirement\_helm) | >= 3.0.0, < 4.0.0 |
+| <a name="requirement_kubernetes"></a> [kubernetes](#requirement\_kubernetes) | >= 3.0.0, < 4.0.0 |
 | <a name="requirement_stackit"></a> [stackit](#requirement\_stackit) | >= 0.98.0, < 1.0.0 |
+| <a name="requirement_time"></a> [time](#requirement\_time) | >= 0.11.0, < 1.0.0 |
 
 ## Modules
 
 | Name | Source | Version |
 |------|--------|---------|
+| <a name="module_k8s_acme_solver"></a> [k8s\_acme\_solver](#module\_k8s\_acme\_solver) | ./modules/k8s-acme-solver | n/a |
 | <a name="module_wildcard"></a> [wildcard](#module\_wildcard) | ./modules/record-set | n/a |
 | <a name="module_zone"></a> [zone](#module\_zone) | ./modules/zone | n/a |
 
 ## Resources
 
-No resources.
+| Name | Type |
+|------|------|
+| [terraform_data.kubeconfig](https://registry.terraform.io/providers/hashicorp/terraform/latest/docs/resources/data) | resource |
 
 ## Inputs
 
@@ -77,6 +85,7 @@ No resources.
 | <a name="input_stackit_project_id"></a> [stackit\_project\_id](#input\_stackit\_project\_id) | STACKIT project the zone is created in. | `string` | n/a | yes |
 | <a name="input_stackit_region"></a> [stackit\_region](#input\_stackit\_region) | STACKIT region the zone is placed in. | `string` | n/a | yes |
 | <a name="input_subdomain"></a> [subdomain](#input\_subdomain) | Label this zone occupies under `parent_domain`, e.g. `my-platform` for `my-platform.stackit.run`. | `string` | n/a | yes |
+| <a name="input_wildcard_certs"></a> [wildcard\_certs](#input\_wildcard\_certs) | If set to null, the block installs nothing into a cluster. If set, it installs the STACKIT cert-manager webhook into the cluster of `kubeconfig.yaml`, so cert-manager can issue wildcard certificates for this zone. The summary shows the `dns01_solver` for `kubernetes/ingress-controller`. | <pre>object({<br/>    cert_manager_namespace = optional(string, "cert-manager")<br/>  })</pre> | `null` | no |
 | <a name="input_wildcard_target_ip"></a> [wildcard\_target\_ip](#input\_wildcard\_target\_ip) | IPv4 address the `*.<zone>` A record points at. Null creates no record. | `string` | `null` | no |
 
 ## Outputs

@@ -33,7 +33,17 @@ variable "meshstack" {
   type = object({
     owning_workspace_identifier = string
     tags                        = optional(map(list(string)), {})
+    runner_ref = optional(object({
+      kind = string
+      uuid = string
+    }))
+    supported_platforms = optional(list(object({
+      kind = optional(string)
+      name = optional(string)
+      uuid = optional(string)
+    })), [{ name = "STACKIT" }])
   })
+  description = "Shared meshStack context, see docs."
 }
 
 variable "hub" {
@@ -61,6 +71,14 @@ output "building_block_definition" {
   }
 }
 
+# Lookup specified runner for workload identity federation info. Null results in the default hosted runner.
+module "runner" {
+  source = "github.com/meshcloud/meshstack-hub//modules/meshstack/runner-identity?ref=${var.hub.git_ref}"
+
+  cloud      = "azure"
+  runner_ref = var.meshstack.runner_ref
+}
+
 resource "meshstack_building_block_definition" "this" {
   metadata = {
     owned_by_workspace = var.meshstack.owning_workspace_identifier
@@ -75,7 +93,7 @@ resource "meshstack_building_block_definition" "this" {
     target_type         = "TENANT_LEVEL"
     run_transparency    = true
     approval_policies   = var.approval_policies
-    supported_platforms = [{ name = "STACKIT" }]
+    supported_platforms = var.meshstack.supported_platforms
 
     readme = coalesce(var.bbd_readme, chomp(<<-EOT
       Provisions a **STACKIT Kubernetes Engine (SKE)** cluster with a single node pool and a nightly
@@ -91,7 +109,8 @@ resource "meshstack_building_block_definition" "this" {
       ## 📦 Resources created
 
       - **SKE cluster** – a managed Kubernetes cluster in the given STACKIT project, with one node
-        pool (default: `g2i.2`, 1-3 nodes) and automatic Kubernetes/machine-image updates.
+        pool (default: `c3i.2`, 1-3 nodes, in zone 1 of the region) and automatic
+        Kubernetes/machine-image updates.
       - **Platform admin service account** – `meshstack-admin` in `kube-system`, bound to
         `cluster-admin`. Its token kubeconfig is written to a Vault KV v2 secret. The token rotates
         with the input `admin_token_generation`; the token of the generation before stays valid.
@@ -118,6 +137,7 @@ resource "meshstack_building_block_definition" "this" {
 
   version_spec = {
     draft         = var.hub.bbd_draft
+    runner_ref    = module.runner.ref
     deletion_mode = "DELETE"
 
     implementation = {
@@ -157,7 +177,7 @@ resource "meshstack_building_block_definition" "this" {
         type            = "STRING"
         assignment_type = "STATIC"
         is_environment  = true
-        argument        = jsonencode("/var/run/secrets/workload-identity/azure/token")
+        argument        = jsonencode(module.runner.token_path)
       }
 
       stackit_project_id = {
@@ -176,21 +196,14 @@ resource "meshstack_building_block_definition" "this" {
         validation_regex_error_message = "Cluster name must be 2-11 characters, lowercase alphanumeric or dashes, and not start or end with a dash."
       }
 
+      # Updateable, so a cluster ordered before this input existed takes the value its parent sends.
       stackit_region = {
-        display_name    = "STACKIT Region"
-        description     = "STACKIT region the cluster and its node pool are placed in."
-        type            = "STRING"
-        assignment_type = "STATIC"
-        argument        = jsonencode("eu01")
-      }
-
-      # STACKIT retires old minors; bump this when it drops the pinned one.
-      kubernetes_version_min = {
-        display_name    = "Minimum Kubernetes Version"
-        description     = "Minimum Kubernetes minor version to run."
-        type            = "STRING"
-        assignment_type = "STATIC"
-        argument        = jsonencode("1.36")
+        display_name           = "STACKIT Region"
+        description            = "STACKIT region the cluster and its node pool are placed in."
+        type                   = "STRING"
+        assignment_type        = "USER_INPUT"
+        default_value          = jsonencode("eu01")
+        updateable_by_consumer = true
       }
 
       node_pool = {
@@ -199,12 +212,11 @@ resource "meshstack_building_block_definition" "this" {
         type            = "CODE"
         assignment_type = "STATIC"
         argument = jsonencode(jsonencode({
-          name               = "pool-1"
-          machine_type       = "g2i.2"
-          minimum            = 1
-          maximum            = 3
-          availability_zones = ["eu01-1"]
-          max_surge          = 1
+          name         = "pool-1"
+          machine_type = "c3i.2"
+          minimum      = 1
+          maximum      = 3
+          max_surge    = 1
         }))
       }
 
@@ -283,6 +295,12 @@ resource "meshstack_building_block_definition" "this" {
         type            = "STRING"
         assignment_type = "RESOURCE_URL"
       }
+
+      summary = {
+        display_name    = "Summary"
+        type            = "STRING"
+        assignment_type = "SUMMARY"
+      }
     }
 
     permissions = []
@@ -294,9 +312,8 @@ terraform {
 
   required_providers {
     meshstack = {
-      source = "meshcloud/meshstack"
-      # 0.25.2 is the first release that accepts `spec.approval_policies`.
-      version = ">= 0.25.2"
+      source  = "meshcloud/meshstack"
+      version = ">= 0.27.2"
     }
   }
 }

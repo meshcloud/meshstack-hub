@@ -14,6 +14,30 @@ module "zone" {
   default_ttl        = var.default_ttl
 }
 
+module "k8s_acme_solver" {
+  source = "./modules/k8s-acme-solver"
+
+  lifecycle {
+    enabled = var.wildcard_certs != null
+  }
+
+  depends_on = [terraform_data.kubeconfig]
+
+  project_id             = var.stackit_project_id
+  cert_manager_namespace = var.wildcard_certs.cert_manager_namespace
+}
+
+resource "terraform_data" "kubeconfig" {
+  lifecycle {
+    enabled = var.wildcard_certs != null
+
+    precondition {
+      condition     = local.kubeconfig_given
+      error_message = "wildcard_certs needs kubeconfig.yaml of the cluster that runs cert-manager. meshStack writes it from the FILE input of the building block."
+    }
+  }
+}
+
 moved {
   from = stackit_dns_zone.this
   to   = module.zone.stackit_dns_zone.this

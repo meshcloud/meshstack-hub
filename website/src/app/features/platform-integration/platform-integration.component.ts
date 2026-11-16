@@ -7,33 +7,26 @@ import { BreadcrumbComponent } from 'app/shared/breadcrumb';
 import { BreadCrumbService } from 'app/shared/breadcrumb/bread-crumb.service';
 import { BreadcrumbItem } from 'app/shared/breadcrumb/breadcrumb';
 import { CardComponent } from 'app/shared/card';
-import { HighlightDirective } from 'app/shared/directives';
 import { Platform, PlatformService } from 'app/shared/platform';
+import { TerraformSnippetComponent } from 'app/shared/terraform-snippet';
 import { extractLogoColor } from 'app/shared/util/logo-color.util';
-import { buildHubModuleCodeSnippet } from 'app/shared/util/module-source.util';
 import { SeoService } from 'app/core';
 
 const DEFAULT_HEADER_BG_COLOR = 'rgba(203,213,225,0.3)';
 
-interface PlatformIntegrationVm extends Platform {
-  moduleCodeSnippet: string | null;
-}
-
 @Component({
   selector: 'mst-platform-integration',
-  imports: [CommonModule, CardComponent, BreadcrumbComponent, RouterLink, HighlightDirective],
+  imports: [CommonModule, CardComponent, BreadcrumbComponent, RouterLink, TerraformSnippetComponent],
   templateUrl: './platform-integration.component.html',
   styleUrl: './platform-integration.component.scss',
   standalone: true
 })
 export class PlatformIntegrationComponent implements OnInit {
-  public platform$!: Observable<PlatformIntegrationVm>;
+  public platform$!: Observable<Platform>;
 
   public breadcrumbs$!: Observable<BreadcrumbItem[]>;
 
   public copiedTerraform = false;
-
-  public copiedModuleCode = false;
 
   public headerBgColor$!: Observable<string>;
 
@@ -62,10 +55,7 @@ export class PlatformIntegrationComponent implements OnInit {
                 throw new Error('Platform not found');
               }
 
-              return {
-                ...platform,
-                moduleCodeSnippet: buildHubModuleCodeSnippet(platform.integrationSourceUrl)
-              };
+              return platform;
             })
           );
       })
@@ -101,20 +91,6 @@ export class PlatformIntegrationComponent implements OnInit {
         setTimeout(() => this.copiedTerraform = false, 2000);
         const plausible = (window as Window & { plausible?: (eventName: string) => void }).plausible;
         plausible?.('Copy Platform Terraform');
-      });
-  }
-
-  public copyModuleCode(moduleCodeSnippet: string | null): void {
-    if (!moduleCodeSnippet) {
-      return;
-    }
-
-    navigator.clipboard.writeText(moduleCodeSnippet)
-      .then(() => {
-        this.copiedModuleCode = true;
-        setTimeout(() => {
-          this.copiedModuleCode = false;
-        }, 2000);
       });
   }
 

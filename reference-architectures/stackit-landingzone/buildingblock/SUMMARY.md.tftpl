@@ -12,6 +12,9 @@
 | Property | Value |
 |----------|-------|
 | **Organization** | [Open in STACKIT Portal](${organization_url}) (`${organization_id}`) |
+%{ if root_folder_name != "" ~}
+| **Root Folder** | [Open in STACKIT Portal](${root_folder_url}) (`${root_folder_name}`) |
+%{ endif ~}
 | **Landing Zone Folder** | [Open in STACKIT Portal](${lz_folder_url}) (`${lz_folder_container_id}`) |
 | **Foundation Project** | [Open in STACKIT Portal](${foundation_project_url}) (`${foundation_project_id}`) |
 | **Foundation Project Service Account** | [Open in STACKIT Portal](${service_account_url}) (`${service_account_email}`) |
@@ -32,32 +35,34 @@ landing zone. Provide a `network` object to additionally enable hub-and-spoke ne
 
 > [!TIP]
 > ## Build a Kubernetes platform on top
-
-The [STACKIT Kubernetes Platform](https://hub.meshcloud.io/reference-architectures/stackit-kubernetes)
-reference architecture runs a full SKE developer platform on top of this landing zone. It takes one
-value from this landing zone. Paste this block into its **STACKIT Landing Zone** input:
-
+>
+> The [STACKIT Kubernetes Platform](https://hub.meshcloud.io/reference-architectures/stackit-kubernetes)
+> reference architecture runs a full SKE developer platform on top of this landing zone. It takes one
+> value from this landing zone. Paste this block into its **STACKIT Landing Zone** input:
+>
+> ```hcl
+> {
+>   platform_ref = { uuid = "${platform_ref.uuid}" }
+>   landingzone_refs = {
+%{ for key, ref in landingzone_refs ~}
+>     ${key} = { name = "${ref.name}" }
+%{ endfor ~}
+>   }
+>   service_account_bbd_version_ref            = { uuid = "${service_account_bbd_version_uuid}" }
+>   service_account_federation_bbd_version_ref = { uuid = "${service_account_federation_bbd_version_uuid}" }
+> }
+> ```
+%{ if network_enabled ~}
+>
+> Set its **Landing Zone Variant** to `networked` to run the cluster inside the hub-and-spoke network.
+> Otherwise keep the default `default`, which puts the cluster in a **STACKIT Sandbox** project with
+> STACKIT's default flat networking.
+%{ endif ~}
 %{ if !identity_definitions_released ~}
+
 > [!WARNING]
 > The latest versions of the **STACKIT Service Account** and the **STACKIT Service Account
 > Federation** definitions are drafts, and another workspace may only order released versions.
 > Deploy this landing zone with `hub.bbd_draft = false`, publish both definitions to the
 > marketplace, then run this building block again.
-
-%{ endif ~}
-```hcl
-{
-  platform_ref = { uuid = "${platform_ref.uuid}", kind = "${platform_ref.kind}" }
-  landingzone_refs = {
-%{ for key, ref in landingzone_refs ~}
-    ${key} = { name = "${ref.name}", kind = "${ref.kind}" }
-%{ endfor ~}
-  }
-  service_account_bbd_version_ref            = { uuid = "${service_account_bbd_version_uuid}" }
-  service_account_federation_bbd_version_ref = { uuid = "${service_account_federation_bbd_version_uuid}" }
-}
-```
-%{ if network_enabled ~}
-
-Set its **Landing Zone Variant** to `networked` to run the cluster inside the hub-and-spoke network.
 %{ endif ~}

@@ -1,17 +1,3 @@
-variable "cert_manager_version" {
-  type        = string
-  nullable    = false
-  default     = "v1.20.0"
-  description = "Version of the cert-manager Helm chart the definition installs."
-}
-
-variable "haproxy_version" {
-  type        = string
-  nullable    = false
-  default     = "1.49.0"
-  description = "Version of the haproxytech/kubernetes-ingress Helm chart the definition installs."
-}
-
 variable "haproxy_replica_count" {
   type        = number
   nullable    = false
@@ -26,32 +12,26 @@ variable "haproxy_service_annotations" {
   description = "Annotations on the HAProxy controller Service, read by the cloud provider to configure the load balancer."
 }
 
-variable "ingress_class_name" {
-  type        = string
+variable "use_letsencrypt_staging" {
+  type        = bool
   nullable    = false
-  default     = "haproxy"
-  description = "Name of the IngressClass the controller serves."
-}
-
-variable "cluster_issuer_name" {
-  type        = string
-  nullable    = false
-  default     = "letsencrypt-prod"
-  description = "Name of the ClusterIssuer application teams put in their cert-manager.io/cluster-issuer annotation."
-}
-
-variable "acme_server" {
-  type        = string
-  nullable    = false
-  default     = "https://acme-v02.api.letsencrypt.org/directory"
-  description = "ACME directory URL. Point this at the staging endpoint while testing — production has strict rate limits."
+  default     = false
+  description = "Issue from Let's Encrypt staging, for development and testing: its rate limits are far higher, but no browser trusts its certificates."
 }
 
 variable "acme_email" {
   type        = string
   nullable    = false
-  default     = "platform@meshcloud.io"
   description = "Contact address Let's Encrypt uses for expiry warnings and account recovery."
+}
+
+variable "wildcard_certs" {
+  type = object({
+    domain       = string
+    dns01_solver = any
+  })
+  default     = null
+  description = "If set to null, cert-manager issues an individual certificate per Ingress over HTTP-01. If set, cert-manager issues `*.<domain>` over DNS-01 with `dns01_solver`, the `dns01` block of a cert-manager ACME solver such as the one `stackit/dns` shows, and HAProxy serves it to every Ingress."
 }
 
 variable "cluster_definition_ref" {
@@ -60,7 +40,7 @@ variable "cluster_definition_ref" {
     uuid = string
   })
   default     = null
-  description = "Ref of the SKE cluster definition whose building blocks parent this definition's building blocks; null declares no dependency."
+  description = "Ref of the cluster definition (for example `ske/cluster`) whose building blocks parent this definition's building blocks; null declares no dependency."
 }
 
 variable "bbd_display_name" {
@@ -98,8 +78,17 @@ variable "meshstack" {
   type = object({
     owning_workspace_identifier = string
     tags                        = optional(map(list(string)), {})
+    runner_ref = optional(object({
+      kind = string
+      uuid = string
+    }))
+    supported_platforms = list(object({
+      kind = optional(string)
+      name = optional(string)
+      uuid = optional(string)
+    }))
   })
-  description = "Shared meshStack context. Tags are optional and propagated to building block definition metadata."
+  description = "Shared meshStack context, see docs."
 }
 
 variable "hub" {
@@ -114,7 +103,7 @@ variable "hub" {
   }
   description = <<-EOT
   `git_ref`: Hub release reference. Set to a tag (e.g. 'v1.2.3') or branch or commit sha of meshcloud/meshstack-hub repo.
-  `bbd_draft`: If true, allows changing the building block definition for upgrading dependent building blocks.
+  `bbd_draft`: If true, the building block definition version is kept in draft mode.
   EOT
 }
 
@@ -126,6 +115,21 @@ output "building_block_definition" {
   }
 }
 
+locals {
+  cluster_issuer_name = var.use_letsencrypt_staging ? "letsencrypt-staging" : "letsencrypt-prod"
+
+  app_usage = var.wildcard_certs == null ? chomp(<<-EOT
+    Set `ingressClassName: haproxy` and the annotation
+    `cert-manager.io/cluster-issuer: ${local.cluster_issuer_name}` on an Ingress, and cert-manager
+    issues a certificate for its hostname over HTTP-01.
+    EOT
+    ) : chomp(<<-EOT
+    Set `ingressClassName: haproxy` and list the hostname under `tls`. HAProxy serves
+    `*.${var.wildcard_certs.domain}` for it.
+    EOT
+  )
+}
+
 resource "meshstack_building_block_definition" "this" {
   metadata = {
     owned_by_workspace = var.meshstack.owning_workspace_identifier
@@ -133,14 +137,15 @@ resource "meshstack_building_block_definition" "this" {
   }
 
   spec = {
-    display_name        = coalesce(var.bbd_display_name, "Kubernetes Ingress")
-    symbol              = "https://raw.githubusercontent.com/meshcloud/meshstack-hub/${var.hub.git_ref}/modules/kubernetes/ingress/buildingblock/logo.png"
-    description         = coalesce(var.bbd_description, "Installs cert-manager, the HAProxy ingress controller and a Let's Encrypt ClusterIssuer on a Kubernetes cluster.")
-    support_url         = "https://cert-manager.io/docs/"
-    target_type         = "TENANT_LEVEL"
-    run_transparency    = true
-    approval_policies   = var.approval_policies
-    supported_platforms = [{ name = "STACKIT" }]
+    display_name              = coalesce(var.bbd_display_name, "Kubernetes Ingress Controller")
+    symbol                    = "https://raw.githubusercontent.com/meshcloud/meshstack-hub/${var.hub.git_ref}/modules/kubernetes/ingress-controller/buildingblock/logo.png"
+    description               = coalesce(var.bbd_description, "Installs cert-manager, the HAProxy ingress controller and a Let's Encrypt ClusterIssuer on a Kubernetes cluster.")
+    support_url               = "https://cert-manager.io/docs/"
+    target_type               = "TENANT_LEVEL"
+    run_transparency          = true
+    approval_policies         = var.approval_policies
+    supported_platforms       = var.meshstack.supported_platforms
+    use_in_landing_zones_only = true
 
     readme = coalesce(var.bbd_readme, chomp(<<-EOT
       Makes a Kubernetes cluster serve HTTPS: **cert-manager**, the **HAProxy ingress controller**
@@ -149,9 +154,10 @@ resource "meshstack_building_block_definition" "this" {
 
       ## 🎯 When to use it
 
-      This is a bootstrap block a platform team orders once per cluster — for example the **STACKIT
-      Kubernetes Platform** reference architecture orders it right after the cluster exists. It
-      reaches the cluster through the kubeconfig the ordering composition passes as an input.
+      This block is meant for landing zones and compositions, which add it once per cluster, such as
+      the **STACKIT Kubernetes Platform** reference architecture, which passes the cluster's
+      kubeconfig. Application teams deploy their `Ingress`
+      with the **Kubernetes Manifest** building block.
 
       ## 📦 Resources created
 
@@ -163,9 +169,7 @@ resource "meshstack_building_block_definition" "this" {
 
       ## 🔗 How an application uses it
 
-      Put `kubernetes.io/ingress.class: haproxy` and
-      `cert-manager.io/cluster-issuer: letsencrypt-prod` on an Ingress and cert-manager issues a
-      certificate for its hostname over HTTP-01.
+      ${local.app_usage}
 
       ## 📊 Shared responsibility
 
@@ -174,13 +178,14 @@ resource "meshstack_building_block_definition" "this" {
       | Provide the cluster kubeconfig and the ACME contact address | ✅ | ❌ |
       | Install and maintain cert-manager and the ingress controller | ✅ | ❌ |
       | Point DNS at the reported LoadBalancer IP | ✅ | ❌ |
-      | Create Ingress resources and reference the ClusterIssuer | ❌ | ✅ |
+      | Create Ingress resources for their hostnames | ❌ | ✅ |
       EOT
     ))
   }
 
   version_spec = {
     draft           = var.hub.bbd_draft
+    runner_ref      = var.meshstack.runner_ref
     deletion_mode   = "DELETE"
     dependency_refs = var.cluster_definition_ref == null ? null : [var.cluster_definition_ref]
 
@@ -188,16 +193,16 @@ resource "meshstack_building_block_definition" "this" {
       terraform = {
         terraform_version              = "1.12.5"
         repository_url                 = "https://github.com/meshcloud/meshstack-hub.git"
-        repository_path                = "modules/kubernetes/ingress/buildingblock"
+        repository_path                = "modules/kubernetes/ingress-controller/buildingblock"
         ref_name                       = var.hub.git_ref
         use_mesh_http_backend_fallback = true
       }
     }
 
-    inputs = {
+    inputs = merge({
       "kubeconfig.yaml" = {
         display_name           = "kubeconfig.yaml"
-        description            = "Kubeconfig of the cluster to install ingress on."
+        description            = "Kubeconfig of the cluster to install the ingress controller on."
         type                   = "FILE"
         assignment_type        = "USER_INPUT"
         sensitive              = {}
@@ -212,44 +217,12 @@ resource "meshstack_building_block_definition" "this" {
         argument        = jsonencode(var.acme_email)
       }
 
-      acme_server = {
-        display_name    = "ACME Directory URL"
-        description     = "ACME directory URL the ClusterIssuer registers against."
-        type            = "STRING"
+      use_letsencrypt_staging = {
+        display_name    = "Use Let's Encrypt Staging"
+        description     = "Issue from Let's Encrypt staging, for development and testing. No browser trusts its certificates."
+        type            = "BOOLEAN"
         assignment_type = "STATIC"
-        argument        = jsonencode(var.acme_server)
-      }
-
-      cluster_issuer_name = {
-        display_name    = "ClusterIssuer Name"
-        description     = "Name application teams reference from the cert-manager.io/cluster-issuer annotation."
-        type            = "STRING"
-        assignment_type = "STATIC"
-        argument        = jsonencode(var.cluster_issuer_name)
-      }
-
-      ingress_class_name = {
-        display_name    = "Ingress Class Name"
-        description     = "Name of the IngressClass the controller serves."
-        type            = "STRING"
-        assignment_type = "STATIC"
-        argument        = jsonencode(var.ingress_class_name)
-      }
-
-      cert_manager_version = {
-        display_name    = "cert-manager Chart Version"
-        description     = "Version of the cert-manager Helm chart."
-        type            = "STRING"
-        assignment_type = "STATIC"
-        argument        = jsonencode(var.cert_manager_version)
-      }
-
-      haproxy_version = {
-        display_name    = "HAProxy Chart Version"
-        description     = "Version of the haproxytech/kubernetes-ingress Helm chart."
-        type            = "STRING"
-        assignment_type = "STATIC"
-        argument        = jsonencode(var.haproxy_version)
+        argument        = jsonencode(var.use_letsencrypt_staging)
       }
 
       haproxy_replica_count = {
@@ -284,7 +257,15 @@ resource "meshstack_building_block_definition" "this" {
         default_value          = jsonencode(false)
         updateable_by_consumer = true
       }
-    }
+      }, var.wildcard_certs == null ? {} : {
+      wildcard_certs = {
+        display_name    = "Wildcard Certificates"
+        description     = "Domain of the wildcard certificate and the cert-manager DNS-01 solver that issues it."
+        type            = "CODE"
+        assignment_type = "STATIC"
+        argument        = jsonencode(jsonencode(var.wildcard_certs))
+      }
+    })
 
     outputs = {
       haproxy_lb_ip = {
@@ -303,6 +284,12 @@ resource "meshstack_building_block_definition" "this" {
         display_name    = "ClusterIssuer Name"
         type            = "STRING"
         assignment_type = "NONE"
+      }
+
+      summary = {
+        display_name    = "Summary"
+        type            = "STRING"
+        assignment_type = "SUMMARY"
       }
     }
 

@@ -7,7 +7,7 @@ description: Onboards a STACKIT sandbox platform into meshStack (location, resou
 
 This building block bootstraps a complete STACKIT sandbox platform integration inside a meshStack
 workspace. It creates a meshStack location, a dedicated STACKIT resourcemanager folder and a
-foundation project hosting the landing-zone core assets, then sources the
+foundation project hosting the landing-zone core assets, optionally inside a root folder, then sources the
 [`modules/stackit`](../../../modules/stackit) project integration to provision the STACKIT Project
 platform together with its default landing zone.
 
@@ -27,10 +27,11 @@ The summary shows the platform ref, the landing zone refs and the version refs o
 account definitions as a code block. You paste it into a composing architecture such as the STACKIT
 Kubernetes Platform, so that architecture can build on this one without reading this building block.
 
-It authenticates to STACKIT with a service account key you paste as a secret input. You also
-provide the STACKIT organization UUID, owner email, nested integration tags and default role mapping
-as user inputs. The service account needs `resource-manager.admin` on the organization. The nested
-integrations are pinned to the same `git_ref` as this building block's implementation.
+It authenticates to STACKIT as the deployment service account, whose key you paste as a secret
+input. You also provide the STACKIT organization UUID, owner email, nested integration tags and
+default role mapping as user inputs. The deployment service account needs `resource-manager.admin`
+on the organization. The nested integrations are pinned to the same `git_ref` as this building
+block's implementation.
 
 The user-facing readme is maintained inline in the `readme` field of the
 `meshstack_building_block_definition` in

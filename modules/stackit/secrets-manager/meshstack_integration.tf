@@ -69,17 +69,21 @@ variable "approval_policies" {
   description = "Run triggers that need an operator's approval on this definition."
 }
 
-variable "building_block_runner_uuid" {
-  type        = string
-  default     = null
-  description = "Runs this building block on the given meshStack building block runner instead of the shared one meshStack hosts."
-}
-
 variable "meshstack" {
   type = object({
     owning_workspace_identifier = string
     tags                        = optional(map(list(string)), {})
+    runner_ref = optional(object({
+      kind = string
+      uuid = string
+    }))
+    supported_platforms = optional(list(object({
+      kind = optional(string)
+      name = optional(string)
+      uuid = optional(string)
+    })), [{ name = "STACKIT" }])
   })
+  description = "Shared meshStack context, see docs."
 }
 
 variable "hub" {
@@ -110,6 +114,14 @@ locals {
   create_backplane = var.stackit_organization_id != null
 }
 
+# Lookup specified runner for workload identity federation info. Null results in the default hosted runner.
+module "runner" {
+  source = "github.com/meshcloud/meshstack-hub//modules/meshstack/runner-identity?ref=${var.hub.git_ref}"
+
+  cloud      = "azure"
+  runner_ref = var.meshstack.runner_ref
+}
+
 module "backplane" {
   source = "github.com/meshcloud/meshstack-hub//modules/stackit/secrets-manager/backplane?ref=${var.hub.git_ref}"
 
@@ -123,7 +135,8 @@ module "backplane" {
   custom_role_name     = coalesce(var.stackit_custom_role_name, "mesh-secrets-manager")
 
   workload_identity_federation = {
-    issuer   = meshstack_building_block_definition.this.version_latest.workload_identity_federation.issuer
+    issuer   = module.runner.issuer
+    audience = module.runner.audience
     subjects = [meshstack_building_block_definition.this.version_latest.workload_identity_federation.subject]
   }
 }
@@ -141,7 +154,7 @@ resource "meshstack_building_block_definition" "this" {
     target_type         = "TENANT_LEVEL"
     run_transparency    = true
     approval_policies   = var.approval_policies
-    supported_platforms = [{ name = "STACKIT" }]
+    supported_platforms = var.meshstack.supported_platforms
     readme = coalesce(var.bbd_readme, chomp(<<-EOT
       This building block provisions a **STACKIT Secrets Manager** instance in your STACKIT project.
       It is a Vault-compatible key-value store for passwords, API keys and certificates.
@@ -189,10 +202,7 @@ resource "meshstack_building_block_definition" "this" {
   version_spec = {
     draft         = var.hub.bbd_draft
     deletion_mode = "DELETE"
-    runner_ref = var.building_block_runner_uuid == null ? null : {
-      kind = "meshBuildingBlockRunner"
-      uuid = var.building_block_runner_uuid
-    }
+    runner_ref    = module.runner.ref
 
     implementation = {
       terraform = {
@@ -237,7 +247,7 @@ resource "meshstack_building_block_definition" "this" {
         type            = "STRING"
         assignment_type = "STATIC"
         is_environment  = true
-        argument        = jsonencode("/var/run/secrets/workload-identity/azure/token")
+        argument        = jsonencode(module.runner.token_path)
       }
 
       instance_name = {
@@ -320,7 +330,7 @@ terraform {
   required_providers {
     meshstack = {
       source  = "meshcloud/meshstack"
-      version = ">= 0.27.0"
+      version = ">= 0.27.2"
     }
   }
 }

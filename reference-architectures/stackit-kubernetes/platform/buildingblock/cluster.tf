@@ -9,7 +9,7 @@ module "cluster_integration" {
 
   approval_policies = var.approval_policies
 
-  meshstack = { owning_workspace_identifier = var.workspace, tags = var.tags.building_block }
+  meshstack = { owning_workspace_identifier = var.workspace, tags = var.tags.building_block, runner_ref = local.runner_ref }
   hub       = local.platform_hub
 }
 
@@ -32,6 +32,7 @@ resource "meshstack_building_block" "cluster" {
     inputs = merge(
       {
         cluster_name                  = { value = jsonencode(var.cluster_name) }
+        stackit_region                = { value = jsonencode(var.stackit_region) }
         STACKIT_SERVICE_ACCOUNT_EMAIL = { value = jsonencode(local.service_account_email) }
         output_to_vault = {
           sensitive = {
@@ -40,11 +41,9 @@ resource "meshstack_building_block" "cluster" {
           }
         }
         admin_token_generation = { value = jsonencode(local.token_generation) }
-        release_on_destroy     = { value = jsonencode(var.imports.ske != null && var.playground_mode) }
+        release_on_destroy     = { value = jsonencode(local.imports.adopt_ske && var.playground_mode) }
       },
-      var.imports.ske == null ? {} : {
-        imports = { value = jsonencode(jsonencode(var.imports.ske)) }
-      },
+      local.imports.adopt_ske ? { imports = { value = jsonencode(jsonencode({})) } } : {},
     )
   }
 }
@@ -111,8 +110,10 @@ module "kubernetes_integration" {
 
   meshstack = {
     owning_workspace_identifier = var.workspace
+    runner_ref                  = local.runner_ref
     location_name               = local.location_name
     platform_identifier         = local.platform_name
+    supported_platforms         = [{ name = "STACKIT" }]
     tags = {
       landingzone    = var.tags.landingzone
       building_block = var.tags.building_block
@@ -147,9 +148,9 @@ resource "meshstack_building_block" "kubernetes_platform" {
             secret_version = nonsensitive(sha256(local.output_to_vault))
           }
         }
-        release_on_destroy = { value = jsonencode(var.imports.kubernetes_platform != null && var.playground_mode) }
+        release_on_destroy = { value = jsonencode(local.imports.kubernetes_platform != null && var.playground_mode) }
       },
-      var.imports.kubernetes_platform == null ? {} : {
+      local.imports.kubernetes_platform == null ? {} : {
         # The meshPlatform and its landing zones are this run's own; the child adopts what is in the cluster.
         imports = { value = jsonencode(jsonencode({})) }
       },
@@ -166,22 +167,38 @@ ephemeral "vault_kv_secret_v2" "kubernetes_platform" {
   name  = local.kubernetes_platform_vault_secret.path
 }
 
-# No DNS-01: its solver needs a STACKIT service account key in the cluster, which WIF avoids. HTTP-01
-# works because every hostname in the zone resolves to the load balancer.
-module "ingress_integration" {
-  source = "github.com/meshcloud/meshstack-hub//modules/kubernetes/ingress?ref=${var.hub.git_ref}"
+module "ingress_controller_integration" {
+  source = "github.com/meshcloud/meshstack-hub//modules/kubernetes/ingress-controller?ref=${var.hub.git_ref}"
 
   cluster_definition_ref = module.cluster_integration.building_block_definition.ref
   acme_email             = var.cluster_issuer_email
   haproxy_replica_count  = var.playground_mode ? 1 : 2
 
+  # One wildcard certificate for all applications, instead of one per application, keeps the platform
+  # under Let's Encrypt's rate limits. The DNS block installs the webhook of this solver.
+  wildcard_certs = {
+    domain = local.dns_zone_name
+    dns01_solver = {
+      webhook = {
+        groupName  = "acme.stackit.de"
+        solverName = "stackit"
+        config     = { projectId = var.stackit_project_id }
+      }
+    }
+  }
+
   approval_policies = var.approval_policies
 
-  meshstack = { owning_workspace_identifier = var.workspace, tags = var.tags.building_block }
-  hub       = local.platform_hub
+  meshstack = {
+    owning_workspace_identifier = var.workspace
+    tags                        = var.tags.building_block
+    runner_ref                  = local.runner_ref
+    supported_platforms         = [{ name = "STACKIT" }]
+  }
+  hub = local.platform_hub
 }
 
-resource "meshstack_building_block" "ingress" {
+resource "meshstack_building_block" "ingress_controller" {
   wait_for_completion = true
 
   lifecycle {
@@ -193,20 +210,30 @@ resource "meshstack_building_block" "ingress" {
 
   spec = {
     parent_building_block_refs            = [meshstack_building_block.cluster.ref]
-    building_block_definition_version_ref = module.ingress_integration.building_block_definition.version_ref
-    display_name                          = "Kubernetes Ingress"
+    building_block_definition_version_ref = module.ingress_controller_integration.building_block_definition.version_ref
+    display_name                          = "Kubernetes Ingress Controller"
     target_ref                            = local.tenant_ref
 
     inputs = merge(
       {
         "kubeconfig.yaml"  = local.cluster_kubeconfig_input
-        release_on_destroy = { value = jsonencode(var.imports.ingress != null && var.playground_mode) }
+        release_on_destroy = { value = jsonencode(local.imports.adopt_ingress && var.playground_mode) }
       },
-      var.imports.ingress == null ? {} : { imports = { value = jsonencode(jsonencode(var.imports.ingress)) } },
+      local.imports.adopt_ingress ? { imports = { value = jsonencode(jsonencode({})) } } : {},
     )
   }
 }
 
+moved {
+  from = module.ingress_integration
+  to   = module.ingress_controller_integration
+}
+
+moved {
+  from = meshstack_building_block.ingress
+  to   = meshstack_building_block.ingress_controller
+}
+
 locals {
-  ingress_load_balancer_ip = jsondecode(meshstack_building_block.ingress.status.outputs["haproxy_lb_ip"].value)
+  ingress_load_balancer_ip = jsondecode(meshstack_building_block.ingress_controller.status.outputs["haproxy_lb_ip"].value)
 }

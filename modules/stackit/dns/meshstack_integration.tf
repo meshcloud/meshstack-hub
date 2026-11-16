@@ -12,6 +12,14 @@ variable "parent_domain" {
   description = "Domain zones are created under. The default is the one STACKIT delegates to its customers."
 }
 
+variable "wildcard_certs" {
+  type = object({
+    cert_manager_namespace = optional(string, "cert-manager")
+  })
+  default     = null
+  description = "If set to null, building blocks install nothing into a cluster. If set, a building block installs the STACKIT cert-manager webhook into the cluster of its `kubeconfig.yaml`, so cert-manager can issue wildcard certificates for the zone."
+}
+
 variable "bbd_display_name" {
   type        = string
   default     = null
@@ -47,8 +55,17 @@ variable "meshstack" {
   type = object({
     owning_workspace_identifier = string
     tags                        = optional(map(list(string)), {})
+    runner_ref = optional(object({
+      kind = string
+      uuid = string
+    }))
+    supported_platforms = optional(list(object({
+      kind = optional(string)
+      name = optional(string)
+      uuid = optional(string)
+    })), [{ name = "STACKIT" }])
   })
-  description = "Shared meshStack context. Tags are optional and propagated to building block definition metadata."
+  description = "Shared meshStack context, see docs."
 }
 
 variable "hub" {
@@ -75,6 +92,14 @@ output "building_block_definition" {
   }
 }
 
+# Lookup specified runner for workload identity federation info. Null results in the default hosted runner.
+module "runner" {
+  source = "github.com/meshcloud/meshstack-hub//modules/meshstack/runner-identity?ref=${var.hub.git_ref}"
+
+  cloud      = "azure"
+  runner_ref = var.meshstack.runner_ref
+}
+
 resource "meshstack_building_block_definition" "this" {
   metadata = {
     owned_by_workspace = var.meshstack.owning_workspace_identifier
@@ -89,7 +114,7 @@ resource "meshstack_building_block_definition" "this" {
     target_type         = "TENANT_LEVEL"
     run_transparency    = true
     approval_policies   = var.approval_policies
-    supported_platforms = [{ name = "STACKIT" }]
+    supported_platforms = var.meshstack.supported_platforms
 
     readme = coalesce(var.bbd_readme, chomp(<<-EOT
       Creates a **DNS zone** in this project, and a wildcard record inside it, so every application
@@ -109,9 +134,10 @@ resource "meshstack_building_block_definition" "this" {
 
       ## 🔐 Certificates
 
-      The zone is enough for HTTP-01 issuance: a hostname resolves to the load balancer, so the ACME
-      server reaches the challenge. A wildcard certificate needs DNS-01 instead, which needs a
-      credential for this zone inside the cluster — this building block creates none.
+      Every hostname in the zone resolves to the load balancer, so cert-manager can issue a
+      certificate per application over HTTP-01. For one wildcard certificate over DNS-01 instead, the
+      definition sets `wildcard_certs`, and the block installs the STACKIT cert-manager webhook into
+      the cluster of `kubeconfig.yaml`.
 
       ## 📊 Shared responsibility
 
@@ -126,6 +152,7 @@ resource "meshstack_building_block_definition" "this" {
 
   version_spec = {
     draft         = var.hub.bbd_draft
+    runner_ref    = module.runner.ref
     deletion_mode = "DELETE"
 
     implementation = {
@@ -138,7 +165,17 @@ resource "meshstack_building_block_definition" "this" {
       }
     }
 
-    inputs = {
+    inputs = merge({
+      "kubeconfig.yaml" = {
+        display_name           = "kubeconfig.yaml"
+        description            = "Kubeconfig of the cluster that runs cert-manager. Required when the definition sets `wildcard_certs`."
+        type                   = "FILE"
+        assignment_type        = "USER_INPUT"
+        sensitive              = {}
+        is_optional            = true
+        updateable_by_consumer = true
+      }
+
       stackit_project_id = {
         display_name    = "STACKIT Project ID"
         description     = "STACKIT project the zone is created in."
@@ -170,7 +207,7 @@ resource "meshstack_building_block_definition" "this" {
         type            = "STRING"
         assignment_type = "STATIC"
         is_environment  = true
-        argument        = jsonencode("/var/run/secrets/workload-identity/azure/token")
+        argument        = jsonencode(module.runner.token_path)
       }
 
       stackit_region = {
@@ -238,7 +275,15 @@ resource "meshstack_building_block_definition" "this" {
         default_value          = jsonencode(false)
         updateable_by_consumer = true
       }
-    }
+      }, var.wildcard_certs == null ? {} : {
+      wildcard_certs = {
+        display_name    = "Wildcard Certificates"
+        description     = "Namespace of cert-manager in the cluster the STACKIT DNS-01 solver is installed into."
+        type            = "CODE"
+        assignment_type = "STATIC"
+        argument        = jsonencode(jsonencode(var.wildcard_certs))
+      }
+    })
 
     outputs = {
       zone_name = {
@@ -254,7 +299,7 @@ resource "meshstack_building_block_definition" "this" {
       }
 
       zone_url = {
-        display_name    = "Open Zone"
+        display_name    = "Open DNS Zone"
         type            = "STRING"
         assignment_type = "RESOURCE_URL"
       }
@@ -276,7 +321,7 @@ terraform {
   required_providers {
     meshstack = {
       source  = "meshcloud/meshstack"
-      version = ">= 0.25.2"
+      version = ">= 0.27.2"
     }
   }
 }

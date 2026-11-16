@@ -114,4 +114,5 @@ Secret of its own service account.
 | Name | Description |
 |------|-------------|
 | <a name="output_app_link"></a> [app\_link](#output\_app\_link) | Public URL for this stage application. |
+| <a name="output_summary"></a> [summary](#output\_summary) | Markdown summary shown on the building block. |
 <!-- END_TF_DOCS -->

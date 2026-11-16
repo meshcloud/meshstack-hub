@@ -88,18 +88,21 @@ variable "bbd_schedule" {
   EOT
 }
 
-variable "building_block_runner_uuid" {
-  type        = string
-  default     = null
-  description = "Runs this building block on the given meshStack building block runner instead of the shared one meshStack hosts."
-}
-
 variable "meshstack" {
   type = object({
     owning_workspace_identifier = string
     tags                        = optional(map(list(string)), {})
+    runner_ref = optional(object({
+      kind = string
+      uuid = string
+    }))
+    supported_platforms = optional(list(object({
+      kind = optional(string)
+      name = optional(string)
+      uuid = optional(string)
+    })), [{ name = "AZURE" }])
   })
-  description = "Shared meshStack context. Tags are optional and propagated to building block definition metadata."
+  description = "Shared meshStack context, see docs."
 }
 
 variable "hub" {
@@ -116,6 +119,14 @@ variable "hub" {
   `git_ref`: Hub release reference. Set to a tag (e.g. 'v1.2.3') or branch or commit sha of the meshstack-hub repo.
   `bbd_draft`: If true, the building block definition version is kept in draft mode.
   EOT
+}
+
+# Lookup specified runner for workload identity federation info. Null results in the default hosted runner.
+module "runner" {
+  source = "github.com/meshcloud/meshstack-hub//modules/meshstack/runner-identity?ref=${var.hub.git_ref}"
+
+  cloud      = "azure"
+  runner_ref = var.meshstack.runner_ref
 }
 
 output "building_block_definition" {
@@ -142,7 +153,8 @@ module "backplane" {
   location  = var.azure_location
 
   workload_identity_federation = {
-    issuer   = meshstack_building_block_definition.this.version_latest.workload_identity_federation.issuer
+    issuer   = module.runner.issuer
+    audience = module.runner.audience
     subjects = [meshstack_building_block_definition.this.version_latest.workload_identity_federation.subject]
   }
 }
@@ -161,7 +173,7 @@ resource "meshstack_building_block_definition" "this" {
     notification_subscribers = var.notification_subscribers
     symbol                   = "https://raw.githubusercontent.com/meshcloud/meshstack-hub/${var.hub.git_ref}/modules/azure/key-vault/buildingblock/logo.png"
     target_type              = "TENANT_LEVEL"
-    supported_platforms      = [{ name = "AZURE" }]
+    supported_platforms      = var.meshstack.supported_platforms
     run_transparency         = true
     schedule                 = var.bbd_schedule
 
@@ -207,10 +219,7 @@ resource "meshstack_building_block_definition" "this" {
     draft = var.hub.bbd_draft
 
     deletion_mode = "DELETE"
-    runner_ref = var.building_block_runner_uuid == null ? null : {
-      kind = "meshBuildingBlockRunner"
-      uuid = var.building_block_runner_uuid
-    }
+    runner_ref    = module.runner.ref
 
     implementation = {
       terraform = {
@@ -253,7 +262,7 @@ resource "meshstack_building_block_definition" "this" {
         description     = "Path to the OIDC token file used for workload identity federation authentication."
         assignment_type = "STATIC"
         is_environment  = true
-        argument        = jsonencode("/var/run/secrets/workload-identity/azure/token")
+        argument        = jsonencode(module.runner.token_path)
       }
       subscription_id = {
         type            = "STRING"
@@ -384,7 +393,7 @@ terraform {
   required_providers {
     meshstack = {
       source  = "meshcloud/meshstack"
-      version = ">= 0.27.0"
+      version = ">= 0.27.2"
     }
     azurerm = {
       source  = "hashicorp/azurerm"

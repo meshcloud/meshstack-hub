@@ -11,7 +11,7 @@
 
 | Property | Value |
 |----------|-------|
-| **STACKIT Project** | [Open in STACKIT Portal](https://portal.stackit.cloud/projects/${stackit_project_id}) (`${stackit_project_id}`) |
+| **STACKIT Project** | [Open in STACKIT Portal](https://portal.stackit.cloud/dashboard?project=${stackit_project_id}) (`${stackit_project_id}`) |
 | **Secrets Manager** | [Open in STACKIT Portal](https://portal.stackit.cloud/secrets-manager/instances/${secrets_manager_instance_id}/overview?project=${stackit_project_id}) |
 | **SKE Cluster** | `${cluster_name}` — @buildingblock[${cluster_bb_uuid}] |
 | **Ingress & Certificates** | `${ingress_load_balancer_ip}` — @buildingblock[${ingress_bb_uuid}] |
@@ -20,7 +20,9 @@
 | **Forgejo Organization** | [`${forgejo_organization}`](${forgejo_instance_url}/${forgejo_organization}) |
 | **Container Registry** | [${registry_host}/${registry_name}](${registry_url}) — @buildingblock[${container_registry_bb_uuid}] |
 | **DNS Zone** | `${dns_zone_name}` — @buildingblock[${dns_bb_uuid}] |
+%{ if ai_model != null ~}
 | **AI Model Serving** | `${ai_model}` — @buildingblock[${ai_bb_uuid}] |
+%{ endif ~}
 | **meshStack Platform** | `${platform_identifier}` |
 
 %{ if !phase2_completed ~}

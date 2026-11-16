@@ -8,10 +8,9 @@ import { BreadCrumbService } from 'app/shared/breadcrumb/bread-crumb.service';
 import { BreadcrumbItem } from 'app/shared/breadcrumb/breadcrumb';
 import { BreadcrumbComponent } from 'app/shared/breadcrumb/breadcrumb.component';
 import { CardComponent } from 'app/shared/card';
-import { HighlightDirective } from 'app/shared/directives';
 import { TemplateService } from 'app/shared/template';
+import { TerraformSnippetComponent, TerraformSnippetSection } from 'app/shared/terraform-snippet';
 import { extractLogoColor } from 'app/shared/util/logo-color.util';
-import { buildHubModuleCodeSnippet } from 'app/shared/util/module-source.util';
 import { SeoService } from 'app/core';
 
 import { ImportDialogComponent } from './import-dialog/import-dialog.component';
@@ -25,14 +24,14 @@ interface TemplateDetailsVm {
   description: string;
   howToUse: string;
   source: string;
-  moduleCodeSnippet: string | null;
   backplaneUrl: string | null;
   terraformSnippet?: string;
+  terraformSnippetSections?: TerraformSnippetSection[];
 }
 
 @Component({
   selector: 'mst-template-details',
-  imports: [CommonModule, BreadcrumbComponent, CardComponent, RouterLink, HighlightDirective],
+  imports: [CommonModule, BreadcrumbComponent, CardComponent, RouterLink, TerraformSnippetComponent],
   templateUrl: './template-details.component.html',
   styleUrl: './template-details.component.scss',
   standalone: true
@@ -47,8 +46,6 @@ export class TemplateDetailsComponent implements OnInit, OnDestroy {
   public copyLabel = 'Copy';
 
   public copiedTerraform = false;
-
-  public copiedModuleCode = false;
 
   public headerBgColor$!: Observable<string>;
 
@@ -105,20 +102,6 @@ export class TemplateDetailsComponent implements OnInit, OnDestroy {
       });
   }
 
-  public copyModuleCode(moduleCodeSnippet: string | null): void {
-    if (!moduleCodeSnippet) {
-      return;
-    }
-
-    navigator.clipboard.writeText(moduleCodeSnippet)
-      .then(() => {
-        this.copiedModuleCode = true;
-        setTimeout(() => {
-          this.copiedModuleCode = false;
-        }, 2000);
-      });
-  }
-
   public scrollToTerraform(): void {
     const terraformCard = document.querySelector('mst-card');
 
@@ -166,7 +149,6 @@ export class TemplateDetailsComponent implements OnInit, OnDestroy {
               ...template,
               imageUrl: template.logo,
               source: template.buildingBlockUrl,
-              moduleCodeSnippet: buildHubModuleCodeSnippet(template.buildingBlockUrl),
               howToUse: template.howToUse,
               terraformSnippet: template.terraformSnippet
             };

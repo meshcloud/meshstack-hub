@@ -1,0 +1,21 @@
+apiVersion: cert-manager.io/v1
+kind: ClusterIssuer
+metadata:
+  name: {{ .Values.clusterIssuer.name }}
+spec:
+  acme:
+    email: {{ .Values.clusterIssuer.email | quote }}
+    server: {{ .Values.clusterIssuer.server | quote }}
+    privateKeySecretRef:
+      name: {{ .Values.clusterIssuer.privateKeySecretName }}
+    solvers:
+      {{- with .Values.wildcardCerts }}
+      - dns01:
+          {{- toYaml .dns01Solver | nindent 10 }}
+        selector:
+          dnsZones:
+            - {{ .domain | quote }}
+      {{- end }}
+      - http01:
+          ingress:
+            ingressClassName: {{ .Values.ingressClassName }}

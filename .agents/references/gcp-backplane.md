@@ -81,8 +81,8 @@ resource "google_project_iam_member" "buildingblock" {
 }
 ```
 
-`issuer`, `audience` and each subject come from a definition's resolved identity, never hardcoded.
-See
+`issuer`, `audience` and the token path come from the looked-up runner, each subject from a
+definition's resolved identity, never hardcoded. See
 [meshstack-integration.md § Runner identity](meshstack-integration.md#runner-identity).
 
 **Known limitation.** The pool provider trusts the identity of the version the Terraform resource
@@ -110,8 +110,8 @@ definition consumes `credentials_json`:
    ```
 
 2. **What the pool provider trusts lives in its own variable.** Terraform tracks a dependency on a
-   whole variable, not on the attribute actually read, so an issuer, audience or subject from the
-   definition's `version_latest.workload_identity_federation` would put the pool, the
+   whole variable, not on the attribute actually read, so a subject from the definition's
+   `version_latest.workload_identity_federation` would put the pool, the
    `roles/iam.workloadIdentityUser` binding and `credentials_json` behind the definition. Hence
    `variable "workload_identity_federation_trust"`, read by nothing but the pool provider.
 

@@ -126,7 +126,7 @@ function findPlatforms(): Platform[] {
       const platformLogo = getPlatformLogoOrThrow(platformDir, dir.name);
       const platformReadme = getPlatformReadmeOrThrow(platformDir);
       const { name, description, category, benefits, content, official } = extractReadmeFrontMatter(platformReadme);
-      const terraformSnippet = getTerraformSnippet(platformDir);
+      const snippet = getTerraformSnippet(platformDir);
       const integrationSourceUrl = getPlatformIntegrationSourceUrl(platformDir);
 
       return {
@@ -138,7 +138,7 @@ function findPlatforms(): Platform[] {
         logo: platformLogo,
         readme: localizeMarkdownImages(content, platformDir, `platforms/${dir.name}`),
         integrationSourceUrl,
-        terraformSnippet,
+        ...snippet,
         official
       };
     });
@@ -202,16 +202,17 @@ function extractReadmeFrontMatter(platformReadme: string): { name: string; descr
   }
 }
 
-function getTerraformSnippet(platformDir: string): string | null {
+function getTerraformSnippet(platformDir: string): Pick<Platform, "terraformSnippet" | "terraformSnippetSections"> {
   const tfFile = path.join(platformDir, "meshstack_integration.tf");
-  if (!fs.existsSync(tfFile)) return null;
+  if (!fs.existsSync(tfFile)) return {};
 
   try {
     const renderTool = path.resolve(__dirname, "tools/render-meshstack-integration-tf/render-meshstack-integration-tf");
-    return execSync(`${renderTool} ${tfFile}`, { encoding: "utf-8" });
+    const { code, sections } = JSON.parse(execSync(`${renderTool} --sections ${tfFile}`, { encoding: "utf-8" }));
+    return { terraformSnippet: code, terraformSnippetSections: sections };
   } catch (error) {
     console.error(`Error rendering terraform snippet for ${platformDir}:`, error.message);
-    return null;
+    return {};
   }
 }
 
@@ -248,7 +249,7 @@ function parseReadme(filePath) {
       : null;
 
   const terraformSnippetDir = path.join(buildingBlockDir, "..");
-  const terraformSnippet = getTerraformSnippet(terraformSnippetDir);
+  const snippet = getTerraformSnippet(terraformSnippetDir);
 
   return {
     id,
@@ -256,7 +257,7 @@ function parseReadme(filePath) {
     logo: buildingBlockLogoPath,
     buildingBlockUrl,
     backplaneUrl,
-    terraformSnippet,
+    ...snippet,
     ...data,
     howToUse: extractSection(/## How to Use([\s\S]*?)(##|$)/),
   };
@@ -416,5 +417,6 @@ export interface Platform {
   benefits?: string[];
   integrationSourceUrl?: string | null;
   terraformSnippet?: string;
+  terraformSnippetSections?: { title: string; collapsed: boolean; code: string }[];
   official?: boolean;
 }

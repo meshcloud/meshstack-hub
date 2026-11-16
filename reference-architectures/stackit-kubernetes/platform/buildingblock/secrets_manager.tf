@@ -1,10 +1,9 @@
 module "secrets_manager_integration" {
   source = "github.com/meshcloud/meshstack-hub//modules/stackit/secrets-manager?ref=${var.hub.git_ref}"
 
-  role_mapping      = var.platform_engineer_role_mapping.secrets_manager
   approval_policies = var.approval_policies
 
-  meshstack = { owning_workspace_identifier = var.workspace, tags = var.tags.building_block }
+  meshstack = { owning_workspace_identifier = var.workspace, tags = var.tags.building_block, runner_ref = local.runner_ref }
   hub       = local.platform_hub
 }
 
@@ -28,10 +27,10 @@ resource "meshstack_building_block" "secrets_manager" {
       {
         instance_name                 = { value = jsonencode(var.platform_identifier) }
         STACKIT_SERVICE_ACCOUNT_EMAIL = { value = jsonencode(local.service_account_email) }
-        release_on_destroy            = { value = jsonencode(var.imports.secrets_manager != null && var.playground_mode) }
+        release_on_destroy            = { value = jsonencode(local.imports.secrets_manager != null && var.playground_mode) }
       },
-      var.imports.secrets_manager == null ? {} : {
-        imports = { value = jsonencode(jsonencode(var.imports.secrets_manager)) }
+      local.imports.secrets_manager == null ? {} : {
+        imports = { value = jsonencode(jsonencode(local.imports.secrets_manager)) }
       },
     )
   }
@@ -60,23 +59,4 @@ resource "stackit_secretsmanager_user" "reader" {
   instance_id   = local.secrets_manager_instance_id
   description   = "${var.platform_identifier} reader"
   write_enabled = false
-}
-
-locals {
-  import_git           = var.imports.git != null && nonsensitive(var.import_secrets.git != null)
-  import_git_data_json = var.import_secrets.git == null ? null : jsonencode({ "forgejo-api-token" = var.import_secrets.git.forgejo_api_token })
-}
-
-resource "vault_kv_secret_v2" "import_git" {
-  provider = vault.writer
-
-  lifecycle {
-    enabled = local.import_git
-  }
-
-  mount        = local.secrets_manager_instance_id
-  name         = "${local.secrets_path_prefix}imports/stackit/git"
-  data_json_wo = local.import_git_data_json
-  # The version must be a number, so the first 48 bits of the hash stand in for it.
-  data_json_wo_version = parseint(substr(nonsensitive(sha256(local.import_git_data_json)), 0, 12), 16)
 }

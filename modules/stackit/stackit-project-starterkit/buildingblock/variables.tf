@@ -26,6 +26,14 @@ variable "landing_zone" {
   nullable = false
 }
 
+variable "payment_method" {
+  type = object({
+    kind = string
+    name = string
+  })
+  nullable = false
+}
+
 variable "workspace_identifier" {
   type     = string
   nullable = false
@@ -34,7 +42,6 @@ variable "workspace_identifier" {
 variable "platform_ref" {
   type = object({
     uuid = string
-    kind = string
   })
   nullable = false
 }
@@ -42,7 +49,6 @@ variable "platform_ref" {
 variable "landing_zone_refs" {
   type = map(object({
     name = string
-    kind = string
   }))
   nullable = false
 }
@@ -68,7 +74,7 @@ variable "network_static" {
 variable "tags" {
   type = object({
     project               = map(list(string))
-    project_owner_tag_key = string
+    project_owner_tag_key = optional(string)
   })
   nullable = false
 }

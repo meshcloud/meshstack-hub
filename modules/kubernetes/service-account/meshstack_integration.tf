@@ -43,13 +43,6 @@ variable "bind_cluster_wide" {
   description = "Bind the role in every namespace through a ClusterRoleBinding."
 }
 
-variable "supported_platforms" {
-  type        = list(string)
-  nullable    = false
-  default     = ["KUBERNETES"]
-  description = "Platform types whose tenants the building block can be ordered for."
-}
-
 variable "bbd_display_name" {
   type        = string
   default     = null
@@ -85,8 +78,17 @@ variable "meshstack" {
   type = object({
     owning_workspace_identifier = string
     tags                        = optional(map(list(string)), {})
+    runner_ref = optional(object({
+      kind = string
+      uuid = string
+    }))
+    supported_platforms = optional(list(object({
+      kind = optional(string)
+      name = optional(string)
+      uuid = optional(string)
+    })), [{ name = "KUBERNETES" }])
   })
-  description = "Shared meshStack context. Tags are optional and propagated to building block definition metadata."
+  description = "Shared meshStack context, see docs."
 }
 
 variable "hub" {
@@ -127,7 +129,7 @@ resource "meshstack_building_block_definition" "this" {
     target_type         = "TENANT_LEVEL"
     run_transparency    = true
     approval_policies   = var.approval_policies
-    supported_platforms = [for name in var.supported_platforms : { name = name }]
+    supported_platforms = var.meshstack.supported_platforms
 
     readme = coalesce(var.bbd_readme, chomp(<<-EOT
       Creates a Kubernetes service account bound to a ClusterRole, and a kubeconfig that
@@ -168,6 +170,7 @@ resource "meshstack_building_block_definition" "this" {
 
   version_spec = {
     draft         = var.hub.bbd_draft
+    runner_ref    = var.meshstack.runner_ref
     deletion_mode = "DELETE"
 
     implementation = {
@@ -263,6 +266,7 @@ resource "meshstack_building_block_definition" "this" {
         assignment_type = "NONE"
       }
 
+      # Carries the SA token in plain view, because BB outputs cannot be sensitive; output_to_vault leaves it "".
       kubeconfig = {
         display_name    = "Kubeconfig"
         type            = "STRING"
@@ -273,6 +277,12 @@ resource "meshstack_building_block_definition" "this" {
         display_name    = "Instructions"
         type            = "STRING"
         assignment_type = "NONE"
+      }
+
+      summary = {
+        display_name    = "Summary"
+        type            = "STRING"
+        assignment_type = "SUMMARY"
       }
     }
 

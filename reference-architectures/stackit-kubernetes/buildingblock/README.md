@@ -8,7 +8,7 @@ architecture. It holds no STACKIT credential and declares no `stackit` provider.
 - the **Automation Identity**, from the landing zone's STACKIT Service Account definition,
 - the **Bootstrap Identity Federation**, its child, trusting only the nested **STACKIT Kubernetes
   Platform Services** definition,
-- one **Platform Services** building block from that definition. Its run is in
+- one **STACKIT Kubernetes Platform Services** building block from that definition. Its run is in
   [`../platform/buildingblock`](../platform/buildingblock/README.md).
 
 `imports.project` takes over the existing meshProject and its tenant. The architecture and adoption

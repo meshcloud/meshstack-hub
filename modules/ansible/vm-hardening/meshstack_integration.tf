@@ -65,11 +65,6 @@ variable "vm_ssh_private_key_output" {
   description = "Output of the VM building block holding the OpenSSH private key of the login user."
 }
 
-variable "supported_platform_types" {
-  type        = list(string)
-  description = "meshStack platform types the VM building block runs on, e.g. `[\"STACKIT\"]`. The hardening definition is offered on the same tenants."
-}
-
 variable "summary_embeds_ssh_key" {
   type        = bool
   default     = false
@@ -104,8 +99,17 @@ variable "meshstack" {
   type = object({
     owning_workspace_identifier = string
     tags                        = optional(map(list(string)), {})
+    runner_ref = optional(object({
+      kind = string
+      uuid = string
+    }))
+    supported_platforms = optional(list(object({
+      kind = optional(string)
+      name = optional(string)
+      uuid = optional(string)
+    })), [{ name = "STACKIT" }])
   })
-  description = "Shared meshStack context. Tags are optional and propagated to building block definition metadata."
+  description = "Shared meshStack context, see docs."
 }
 
 variable "hub" {
@@ -173,6 +177,7 @@ resource "meshstack_integration" "github" {
           secret_value   = var.github_app_private_key
           secret_version = nonsensitive(sha256(var.github_app_private_key))
         }
+        runner_ref = var.meshstack.runner_ref
       }
     }
   }
@@ -191,7 +196,7 @@ resource "meshstack_building_block_definition" "this" {
     support_url         = "https://github.com/dev-sec/ansible-collection-hardening"
     target_type         = "TENANT_LEVEL"
     run_transparency    = true
-    supported_platforms = [for t in var.supported_platform_types : { name = t }]
+    supported_platforms = var.meshstack.supported_platforms
 
     readme = coalesce(var.bbd_readme, chomp(<<-EOT
     Hardens a VM you ordered as a building block in this tenant. A GitHub Actions workflow runs an
@@ -266,7 +271,8 @@ resource "meshstack_building_block_definition" "this" {
   }
 
   version_spec = {
-    draft = var.hub.bbd_draft
+    draft      = var.hub.bbd_draft
+    runner_ref = var.meshstack.runner_ref
     # PURGE: removing the block runs no workflow. There is nothing to tear down, since hardening
     # stays on the VM and the VM belongs to its own building block, and meshStack refuses DELETE
     # without a destroy workflow.

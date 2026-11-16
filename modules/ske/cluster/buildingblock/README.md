@@ -57,9 +57,8 @@ place. `release_on_destroy` cannot change once the cluster is managed.
 | <a name="input_admin_token_generation"></a> [admin\_token\_generation](#input\_admin\_token\_generation) | Month `YYYY-MM` of the current platform admin token. | `string` | n/a | yes |
 | <a name="input_cluster_name"></a> [cluster\_name](#input\_cluster\_name) | Name of the SKE cluster. | `string` | n/a | yes |
 | <a name="input_imports"></a> [imports](#input\_imports) | Set to `{}` to take over the existing SKE cluster `cluster_name`. | `object({})` | `null` | no |
-| <a name="input_kubernetes_version_min"></a> [kubernetes\_version\_min](#input\_kubernetes\_version\_min) | Minimum Kubernetes minor version to run. Null lets STACKIT pick the current default. | `string` | n/a | yes |
 | <a name="input_maintenance"></a> [maintenance](#input\_maintenance) | SKE maintenance window. | <pre>object({<br/>    enable_kubernetes_version_updates    = optional(bool, true)<br/>    enable_machine_image_version_updates = optional(bool, true)<br/>    start                                = optional(string, "01:00:00Z")<br/>    end                                  = optional(string, "02:00:00Z")<br/>  })</pre> | n/a | yes |
-| <a name="input_node_pool"></a> [node\_pool](#input\_node\_pool) | Single node pool the cluster starts with. | <pre>object({<br/>    name               = optional(string, "pool-1")<br/>    machine_type       = optional(string, "g2i.2")<br/>    minimum            = optional(number, 1)<br/>    maximum            = optional(number, 3)<br/>    availability_zones = optional(list(string), ["eu01-1"])<br/>    max_surge          = optional(number, 1)<br/>  })</pre> | n/a | yes |
+| <a name="input_node_pool"></a> [node\_pool](#input\_node\_pool) | Single node pool the cluster starts with. Null `availability_zones` places it in zone 1 of `stackit_region`. | <pre>object({<br/>    name               = optional(string, "pool-1")<br/>    machine_type       = optional(string, "c3i.2")<br/>    minimum            = optional(number, 1)<br/>    maximum            = optional(number, 3)<br/>    availability_zones = optional(list(string))<br/>    max_surge          = optional(number, 1)<br/>  })</pre> | n/a | yes |
 | <a name="input_output_to_vault"></a> [output\_to\_vault](#input\_output\_to\_vault) | Vault KV v2 userpass login that writes the platform admin kubeconfig to `<path_prefix>ske/cluster`. | <pre>object({<br/>    address     = string<br/>    mount       = string<br/>    username    = string<br/>    password    = string<br/>    path_prefix = optional(string, "")<br/>  })</pre> | n/a | yes |
 | <a name="input_release_on_destroy"></a> [release\_on\_destroy](#input\_release\_on\_destroy) | Leave the cluster in place on destroy. Cannot change once the cluster is managed. | `bool` | `false` | no |
 | <a name="input_stackit_project_id"></a> [stackit\_project\_id](#input\_stackit\_project\_id) | STACKIT project UUID the SKE cluster is created in. | `string` | n/a | yes |
@@ -70,7 +69,8 @@ place. `release_on_destroy` cannot change once the cluster is managed.
 | Name | Description |
 |------|-------------|
 | <a name="output_cluster_name"></a> [cluster\_name](#output\_cluster\_name) | Name of the SKE cluster. |
-| <a name="output_cluster_url"></a> [cluster\_url](#output\_cluster\_url) | Deep link to the STACKIT project the cluster lives in, in the STACKIT portal. |
+| <a name="output_cluster_url"></a> [cluster\_url](#output\_cluster\_url) | Deep link to the cluster in the STACKIT portal. |
 | <a name="output_kube_host"></a> [kube\_host](#output\_kube\_host) | Kubernetes API server URL of the cluster. |
+| <a name="output_summary"></a> [summary](#output\_summary) | Markdown summary shown on the building block. |
 | <a name="output_vault_secret"></a> [vault\_secret](#output\_vault\_secret) | `{path, secret_hash}` of the secret in Vault, where `secret_hash` changes with its content. |
 <!-- END_TF_DOCS -->

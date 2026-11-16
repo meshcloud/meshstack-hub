@@ -1,13 +1,12 @@
 variable "platform_ref" {
   type = object({
     uuid = string
-    kind = string
   })
   description = "The `.ref` of the meshPlatform the tenants are created on."
 }
 
 variable "landing_zone_refs" {
-  type        = map(object({ name = string, kind = string }))
+  type        = map(object({ name = string }))
   description = "Landing zone references keyed by stage. The keys decide which stages the starter kit creates, and the definition declares one app link output per key."
 }
 
@@ -89,7 +88,12 @@ variable "meshstack" {
     owning_workspace_identifier = string
 
     tags = optional(map(list(string)), {})
+    runner_ref = optional(object({
+      kind = string
+      uuid = string
+    }))
   })
+  description = "Shared meshStack context, see docs."
 }
 
 variable "hub" {
@@ -181,7 +185,8 @@ resource "meshstack_building_block_definition" "this" {
   }
 
   version_spec = {
-    draft = var.hub.bbd_draft
+    draft      = var.hub.bbd_draft
+    runner_ref = var.meshstack.runner_ref
 
     implementation = {
       terraform = {
@@ -208,6 +213,13 @@ resource "meshstack_building_block_definition" "this" {
         description                    = "This name will be used for the created meshProjects and Kubernetes namespaces (SKE meshTenants) and Git repository."
         value_validation_regex         = local.name_regex
         validation_regex_error_message = "Does not match ${local.name_regex} (no underscore/dots allowed). A maximum length of 25 characters is allowed."
+      }
+      "payment_method" = {
+        assignment_type        = "PAYMENT_METHOD"
+        type                   = "CODE"
+        display_name           = "Payment Method"
+        description            = "Payment method of the created meshProjects, one of your workspace's payment methods."
+        updateable_by_consumer = true
       }
       "workspace_identifier" = {
         assignment_type = "WORKSPACE_IDENTIFIER"

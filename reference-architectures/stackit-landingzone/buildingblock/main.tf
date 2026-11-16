@@ -1,7 +1,19 @@
 locals {
+  # The provider reads a ref without a uuid as unknown, not as the shared runner.
+  runner_ref = var.runner_ref.uuid == null ? null : var.runner_ref
+
   # The identifier is unique across the whole meshStack instance and lands in every landing zone
   # name, so a playground deployment suffixes it instead of occupying the plain name.
   platform_identifier = var.playground_mode ? "${var.platform_identifier}-${random_string.playground_suffix.result}" : var.platform_identifier
+
+  # The order form hides the policies in playground mode, which gates nothing.
+  starterkit_approval_policies = var.playground_mode ? {
+    building_block_creation = false
+    user_input_changes      = false
+    any_input_changes       = false
+    manual_triggers         = false
+    version_upgrade         = false
+  } : var.starterkit_approval_policies
 
   # STACKIT caps a service account name at 20 characters and rejects one ending in a dash, so cutting
   # the identifier to length can produce an invalid name. Cut shorter instead, drop whatever dashes
@@ -25,12 +37,40 @@ locals {
 
   location_name = var.use_global_location ? "global" : meshstack_location.this.metadata.name
 
+  # A playground gets a root folder too, so its leftovers are easy to find and remove.
+  root_folder_name  = var.root_folder_name != null ? var.root_folder_name : var.playground_mode ? "playground-${local.platform_identifier}" : null
+  root_container_id = local.root_folder_name == null ? var.stackit_org : stackit_resourcemanager_folder.root.container_id
+
   # The meshPanel Tags form sends each tag map as a list of {key, values} entries.
   tags = {
     landingzone           = { for e in var.tags.landingzone : e.key => e.values }
     building_block        = { for e in var.tags.building_block : e.key => e.values }
     project               = { for e in var.tags.project : e.key => e.values }
     project_owner_tag_key = var.tags.project_owner_tag_key
+  }
+}
+
+# Flipping the flag on an existing platform would suffix or rename everything and change what may be destroyed.
+resource "terraform_data" "playground_mode" {
+  input = var.playground_mode
+
+  lifecycle {
+    ignore_changes = [input]
+
+    postcondition {
+      condition     = self.output == var.playground_mode
+      error_message = "playground_mode cannot change after the order."
+    }
+  }
+}
+
+# Pinned at the first run, so a later run without imports keeps the service account every tenant
+# project names as its owner. Read `input`: `output` is unknown at the first plan and would replace it.
+resource "terraform_data" "project_service_account_name" {
+  input = local.imports.project_definition == null ? local.service_account_name : local.imports.project_definition.service_account_name
+
+  lifecycle {
+    ignore_changes = [input]
   }
 }
 
@@ -60,20 +100,32 @@ resource "meshstack_location" "this" {
   }
 }
 
-resource "stackit_resourcemanager_folder" "this" {
-  name                = local.imports.folder == null ? local.platform_identifier : local.imports.folder.name
+resource "stackit_resourcemanager_folder" "root" {
+  name                = local.root_folder_name
   owner_email         = var.stackit_owner_email
   parent_container_id = var.stackit_org
+
+  lifecycle {
+    enabled         = local.root_folder_name != null
+    prevent_destroy = !var.playground_mode
+  }
+}
+
+resource "stackit_resourcemanager_folder" "this" {
+  name                = local.platform_identifier
+  owner_email         = var.stackit_owner_email
+  parent_container_id = local.root_container_id
 
   lifecycle {
     prevent_destroy = !var.playground_mode
   }
 }
 
+# Next to the landing-zone folder when there is a root folder, so that folder holds only tenants.
 resource "stackit_resourcemanager_project" "foundation" {
-  name                = local.imports.foundation_project == null ? "${local.platform_identifier}-foundation" : local.imports.foundation_project.name
+  name                = "${local.platform_identifier}-foundation"
   owner_email         = var.stackit_owner_email
-  parent_container_id = local.imports.foundation_project == null ? var.stackit_org : local.imports.foundation_project.parent_container_id
+  parent_container_id = local.root_folder_name == null ? stackit_resourcemanager_folder.this.container_id : local.root_container_id
 
   lifecycle {
     prevent_destroy = !var.playground_mode
@@ -97,9 +149,9 @@ module "stackit_integration" {
   stackit_project_owner_email             = var.stackit_owner_email
   stackit_parent_container_id             = stackit_resourcemanager_folder.this.container_id
   stackit_project_id                      = stackit_resourcemanager_project.foundation.project_id
-  stackit_service_account_name            = local.imports.project_definition == null ? local.service_account_name : local.imports.project_definition.service_account_name
-  role_mapping                            = var.role_mapping
-  stackit_organization_onboarding_enabled = var.stackit_organization_onboarding_enabled
+  stackit_service_account_name            = terraform_data.project_service_account_name.input
+  role_mapping                            = { admin = var.role_mapping.admin, user = var.role_mapping.user, reader = var.role_mapping.reader }
+  stackit_organization_onboarding_enabled = var.role_mapping.organization_onboarding
 
   # The networked project definition places its projects in the hub network area via a static
   # `networkArea` label, so no landing zone tag (and no tag definition) is involved.
@@ -110,6 +162,7 @@ module "stackit_integration" {
 
   meshstack = {
     owning_workspace_identifier = var.workspace
+    runner_ref                  = local.runner_ref
     location_name               = local.location_name
     platform_identifier         = local.platform_identifier
     tags                        = local.tags
@@ -128,7 +181,7 @@ module "stackit_project_starterkit" {
   )
 
   default_landing_zone = contains(var.topology, "sandbox") ? "sandbox" : "hub&spoke"
-  approval_policies    = var.starterkit_approval_policies
+  approval_policies    = local.starterkit_approval_policies
 
   # `hub&spoke` is the only landing zone attached to a network area, so it is the only one where the
   # starterkit creates a spoke network. Null — networking disabled — drops the `Network` input from the
@@ -143,15 +196,13 @@ module "stackit_project_starterkit" {
     prefix_length_max = var.network.tenant_network_max_prefix_length
   } : null
 
-  meshstack = {
-    owning_workspace_identifier = var.workspace
-    tags = {
-      building_block        = local.tags.building_block
-      project               = local.tags.project
-      project_owner_tag_key = local.tags.project_owner_tag_key
-    }
+  project_tags = {
+    tags          = local.tags.project
+    owner_tag_key = local.tags.project_owner_tag_key
   }
-  hub = var.hub
+
+  meshstack = { owning_workspace_identifier = var.workspace, tags = local.tags.building_block, runner_ref = local.runner_ref }
+  hub       = var.hub
 }
 
 module "service_account_integration" {
@@ -164,7 +215,7 @@ module "service_account_integration" {
 
   stackit_federation_backplane_email = module.service_account_federation_integration.backplane_service_account_email
 
-  meshstack = { owning_workspace_identifier = var.workspace, tags = local.tags.building_block }
+  meshstack = { owning_workspace_identifier = var.workspace, tags = local.tags.building_block, runner_ref = local.runner_ref }
   hub       = var.hub
 }
 
@@ -177,7 +228,7 @@ module "service_account_federation_integration" {
 
   stackit_project_id = stackit_resourcemanager_project.foundation.project_id
 
-  meshstack = { owning_workspace_identifier = var.workspace, tags = local.tags.building_block }
+  meshstack = { owning_workspace_identifier = var.workspace, tags = local.tags.building_block, runner_ref = local.runner_ref }
   hub       = var.hub
 }
 
@@ -191,7 +242,7 @@ module "network_area_integration" {
   stackit_organization_id = var.stackit_org
   stackit_project_id      = stackit_resourcemanager_project.foundation.project_id
 
-  meshstack = { owning_workspace_identifier = var.workspace, tags = local.tags.building_block }
+  meshstack = { owning_workspace_identifier = var.workspace, tags = local.tags.building_block, runner_ref = local.runner_ref }
   hub       = var.hub
 }
 
@@ -207,7 +258,7 @@ module "network_integration" {
   stackit_network_min_prefix_length = var.network.tenant_network_min_prefix_length
   stackit_network_max_prefix_length = var.network.tenant_network_max_prefix_length
 
-  meshstack = { owning_workspace_identifier = var.workspace, tags = local.tags.building_block }
+  meshstack = { owning_workspace_identifier = var.workspace, tags = local.tags.building_block, runner_ref = local.runner_ref }
   hub       = var.hub
 }
 

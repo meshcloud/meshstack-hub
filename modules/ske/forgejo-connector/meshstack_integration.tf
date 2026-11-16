@@ -101,7 +101,17 @@ variable "meshstack" {
   type = object({
     owning_workspace_identifier = string
     tags                        = optional(map(list(string)), {})
+    runner_ref = optional(object({
+      kind = string
+      uuid = string
+    }))
+    supported_platforms = optional(list(object({
+      kind = optional(string)
+      name = optional(string)
+      uuid = optional(string)
+    })), [{ name = "KUBERNETES" }])
   })
+  description = "Shared meshStack context, see docs."
 }
 
 variable "hub" {
@@ -144,7 +154,7 @@ resource "meshstack_building_block_definition" "this" {
     ))
     support_url         = "https://portal.stackit.cloud/git"
     target_type         = "TENANT_LEVEL"
-    supported_platforms = [{ name = "KUBERNETES" }]
+    supported_platforms = var.meshstack.supported_platforms
     run_transparency    = true
     approval_policies   = var.approval_policies
 
@@ -180,6 +190,7 @@ resource "meshstack_building_block_definition" "this" {
 
   version_spec = {
     draft         = var.hub.bbd_draft
+    runner_ref    = var.meshstack.runner_ref
     deletion_mode = "DELETE"
 
     implementation = {
@@ -317,6 +328,18 @@ resource "meshstack_building_block_definition" "this" {
       "app_link" = {
         assignment_type = "RESOURCE_URL"
         display_name    = "Open App"
+        type            = "STRING"
+      }
+
+      "actions_url" = {
+        assignment_type = "RESOURCE_URL"
+        display_name    = "Open Forgejo Actions"
+        type            = "STRING"
+      }
+
+      "summary" = {
+        assignment_type = "SUMMARY"
+        display_name    = "Summary"
         type            = "STRING"
       }
     }

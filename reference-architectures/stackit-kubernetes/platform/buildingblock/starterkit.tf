@@ -7,19 +7,20 @@ locals {
   forgejo_instance_id  = jsondecode(meshstack_building_block.git.status.outputs["instance_id"].value)
   forgejo_organization = jsondecode(meshstack_building_block.git.status.outputs["forgejo_organization"].value)
 
-  dns_zone_name = jsondecode(meshstack_building_block.dns.status.outputs["zone_name"].value)
+  # Built like the DNS block builds it, so the starterkit does not wait for the DNS block.
+  dns_zone_name = "${var.dns_subdomain}.${var.dns_parent_domain}"
 
   git_vault_secret                = jsondecode(jsondecode(meshstack_building_block.git.status.outputs["vault_secret"].value))
-  ai_llm_vault_secret             = jsondecode(jsondecode(meshstack_building_block.ai_llm.status.outputs["vault_secret"].value))
+  ai_llm_vault_secret             = var.ai_model == null ? null : jsondecode(jsondecode(meshstack_building_block.ai_llm.status.outputs["vault_secret"].value))
   container_registry_vault_secret = jsondecode(jsondecode(meshstack_building_block.container_registry.status.outputs["vault_secret"].value))
 
   # The registry reports its secret only once the robots exist, and a disabled module still evaluates
   # its arguments.
   container_registry_secret_path = var.phase2_completed ? local.container_registry_vault_secret.path : ""
-  connector_secrets_revision = var.phase2_completed ? parseint(substr(sha256(jsonencode([
-    local.container_registry_vault_secret.secret_hash,
-    local.ai_llm_vault_secret.secret_hash,
-  ])), 0, 12), 16) : 1
+  connector_secrets_revision = var.phase2_completed ? parseint(substr(sha256(jsonencode(concat(
+    [local.container_registry_vault_secret.secret_hash],
+    var.ai_model == null ? [] : [local.ai_llm_vault_secret.secret_hash],
+  ))), 0, 12), 16) : 1
 }
 
 module "git_repository_integration" {
@@ -48,7 +49,7 @@ module "git_repository_integration" {
 
   approval_policies = var.starterkit_approval_policies
 
-  meshstack = { owning_workspace_identifier = var.workspace, tags = var.tags.starterkit_building_block }
+  meshstack = { owning_workspace_identifier = var.workspace, tags = var.tags.starterkit_building_block, runner_ref = local.runner_ref }
   hub       = var.hub
 }
 
@@ -99,14 +100,14 @@ module "forgejo_connector_integration" {
   registry_secret_path   = local.container_registry_secret_path
 
   # The starter kit's demo application reads its inference configuration from `stackit-ai`.
-  additional_kubernetes_secrets = {
+  additional_kubernetes_secrets = var.ai_model == null ? {} : {
     "stackit-ai" = local.ai_llm_vault_secret.path
   }
   secrets_revision = local.connector_secrets_revision
 
   approval_policies = var.starterkit_approval_policies
 
-  meshstack = { owning_workspace_identifier = var.workspace, tags = var.tags.starterkit_building_block }
+  meshstack = { owning_workspace_identifier = var.workspace, tags = var.tags.starterkit_building_block, runner_ref = local.runner_ref }
   hub       = var.hub
 }
 
@@ -136,11 +137,11 @@ module "ske_starterkit_integration" {
 
   project_tags = {
     stages        = local.stage_project_tags
-    owner_tag_key = var.tags.project_owner_tag_key == "" ? null : var.tags.project_owner_tag_key
+    owner_tag_key = var.tags.project_owner_tag_key
   }
 
   approval_policies = var.starterkit_approval_policies
 
-  meshstack = { owning_workspace_identifier = var.workspace, tags = var.tags.starterkit_building_block }
+  meshstack = { owning_workspace_identifier = var.workspace, tags = var.tags.starterkit_building_block, runner_ref = local.runner_ref }
   hub       = var.hub
 }

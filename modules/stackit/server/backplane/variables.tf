@@ -20,8 +20,9 @@ variable "service_account_name" {
 variable "workload_identity_federation" {
   type = object({
     issuer   = string
+    audience = optional(string, "api://AzureADTokenExchange")
     subjects = list(string)
   })
   nullable    = false
-  description = "WIF issuer URL and subject list for the meshStack building block identity provider."
+  description = "WIF issuer URL, audience and subject list for the meshStack building block identity provider. The audience defaults to the one meshStack runners use for Azure tokens."
 }

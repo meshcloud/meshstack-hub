@@ -83,7 +83,7 @@ No modules.
 | <a name="input_location"></a> [location](#input\_location) | Azure region for the backplane resource group and managed identity. | `string` | n/a | yes |
 | <a name="input_name"></a> [name](#input\_name) | Name of the building block, used for naming the resource group, the managed identity and the role definition. | `string` | `"service-principal"` | no |
 | <a name="input_scope"></a> [scope](#input\_scope) | Scope where the building block should be deployable (management group or subscription), typically the parent of all Landing Zones. | `string` | n/a | yes |
-| <a name="input_workload_identity_federation"></a> [workload\_identity\_federation](#input\_workload\_identity\_federation) | WIF issuer and subjects for federated authentication from the meshStack replicator. | <pre>object({<br/>    issuer   = string<br/>    subjects = list(string)<br/>  })</pre> | n/a | yes |
+| <a name="input_workload_identity_federation"></a> [workload\_identity\_federation](#input\_workload\_identity\_federation) | WIF issuer, audience and subjects for federated authentication from the meshStack replicator. The audience defaults to the one meshStack runners use for Azure tokens. | <pre>object({<br/>    issuer   = string<br/>    audience = optional(string, "api://AzureADTokenExchange")<br/>    subjects = list(string)<br/>  })</pre> | n/a | yes |
 
 ## Outputs
 

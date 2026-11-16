@@ -4,7 +4,8 @@ description: >
   Create or update a meshstack-hub building block module. Covers the full lifecycle: module
   structure, backplane identity (per cloud provider), BBD readme, and scorecard compliance.
   Use when asked to create a new module, add or fix a backplane, write the readme, or resolve
-  scorecard violations.
+  scorecard violations. Not for using a hub module for a user's meshStack: read
+  https://docs.meshcloud.io/agent-context/index.md and skills/meshstack-hub instead.
 ---
 
 # Module Skill
@@ -28,6 +29,7 @@ conventions, see the reference files in `.agents/references/`.
    ```
 
 3. **Implement `buildingblock/`** — `main.tf`, `variables.tf`, `outputs.tf`, `versions.tf`, `provider.tf`, `README.md` (with YAML front-matter), `logo.png` or `logo.svg`
+   - `outputs.tf` has a `summary` output (see [Summary Output](../../references/terraform-conventions.md#summary-output))
 
 4. **Implement `backplane/`** (if needed) — read the provider-specific reference:
    - AWS → `.agents/references/aws-backplane.md`
@@ -39,7 +41,7 @@ conventions, see the reference files in `.agents/references/`.
 
 6. **Write `meshstack_integration.tf`** — follow `.agents/references/meshstack-integration.md`
    - Always add `lifecycle { ignore_changes = [ availability ] }` to every `meshstack_platform` resource (see `.agents/references/meshstack-resources.md`)
-   - A backplane that federates takes its subject, issuer and audience from `meshstack_building_block_definition.this.version_latest.workload_identity_federation`, never from the replicator entry of `meshstack_integrations` (see [Runner identity](../../references/meshstack-integration.md#runner-identity))
+   - A backplane that federates takes issuer and audience from `modules/meshstack/runner-identity`, whose `ref` the definition pins, and its subject from `meshstack_building_block_definition.this.version_latest.workload_identity_federation`, never from the replicator entry of `meshstack_integrations` (see [Runner identity](../../references/meshstack-integration.md#runner-identity))
 
 7. **Validate**:
    ```sh

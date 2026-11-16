@@ -105,3 +105,64 @@ func renderFromString(t *testing.T, input string) string {
 	}
 	return output.String()
 }
+
+func TestRenderSectionsGroupsBlocksByKind(t *testing.T) {
+	snippet := snippetFromFixture(t, "sections.tf")
+
+	want := []struct {
+		title     string
+		collapsed bool
+	}{
+		{"Provider Setup", true},
+		{"Variables", true},
+		{"Building Block Definition", false},
+		{"Backplane", false},
+		{"Outputs", true},
+	}
+	sections := snippet.Sections
+	if len(sections) != len(want) {
+		t.Fatalf("unexpected sections: got %+v", sections)
+	}
+	for i, w := range want {
+		if sections[i].Title != w.title || sections[i].Collapsed != w.collapsed {
+			t.Fatalf("section %d: got %q collapsed=%v, want %q collapsed=%v", i, sections[i].Title, sections[i].Collapsed, w.title, w.collapsed)
+		}
+	}
+	if !strings.HasPrefix(sections[0].Code, "terraform {") || !strings.Contains(sections[0].Code, `provider "meshstack"`) {
+		t.Fatalf("expected the terraform block and the rendered provider in the provider setup\n%s", sections[0].Code)
+	}
+	assertInOrder(t, sections[1].Code, `variable "aws_region"`, `variable "hub"`, `variable "late"`)
+	if !strings.HasPrefix(sections[3].Code, "# The backplane needs") {
+		t.Fatalf("expected the comment to stay with its block\n%s", sections[3].Code)
+	}
+	assertInOrder(t, snippet.Code, "terraform {", `variable "aws_region"`, `resource "meshstack_building_block_definition"`, `module "backplane"`, `output "building_block_definition"`)
+}
+
+func TestRenderSectionsFallsBackWhenACommentIsDetached(t *testing.T) {
+	input := "variable \"hub\" {}\n\n# A note that belongs to no block.\n\nresource \"meshstack_building_block_definition\" \"this\" {}\n"
+
+	snippet := snippetOf([]byte(input), "detached.tf")
+
+	if snippet.Code != input || len(snippet.Sections) != 1 || snippet.Sections[0].Code != input || snippet.Sections[0].Collapsed {
+		t.Fatalf("expected the whole file in one expanded section, got %+v", snippet)
+	}
+}
+
+func snippetFromFixture(t *testing.T, fixture string) snippet {
+	t.Helper()
+
+	return snippetOf([]byte(renderFromFixture(t, fixture)), fixture)
+}
+
+func assertInOrder(t *testing.T, output string, parts ...string) {
+	t.Helper()
+
+	previous := -1
+	for _, part := range parts {
+		index := strings.Index(output, part)
+		if index <= previous {
+			t.Fatalf("expected %q after the previous part\n%s", part, output)
+		}
+		previous = index
+	}
+}

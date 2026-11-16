@@ -35,7 +35,7 @@ resource "meshstack_building_block_definition" "env_audit" {
         ref_name          = var.test_context.hub_git_ref
         repository_path   = "modules/meshstack/noop/e2e/env-audit/buildingblock"
         repository_url    = "https://github.com/meshcloud/meshstack-hub.git"
-        terraform_version = "1.11.0"
+        terraform_version = "1.12.5"
         pre_run_script    = file("${path.module}/buildingblock/prerun.sh")
       }
     }

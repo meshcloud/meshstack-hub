@@ -109,14 +109,24 @@ variable "meshstack" {
   type = object({
     owning_workspace_identifier = string
     tags                        = optional(map(list(string)), {})
+    runner_ref = optional(object({
+      kind = string
+      uuid = string
+    }))
   })
-  description = "Shared meshStack context. Tags are optional and propagated to building block definition metadata."
+  description = "Shared meshStack context, see docs."
 }
 ```
 
+The description of `variable "meshstack"` is always exactly `Shared meshStack context, see docs.`,
+whatever fields a module adds. This file documents the fields.
+
 Use both in the building block definition. Always forward `var.meshstack.tags` to `metadata.tags` so
-workspace-level tags propagate to the definition, and `var.hub.bbd_draft` to the `draft` field of
-`version_spec`.
+workspace-level tags propagate to the definition, `var.hub.bbd_draft` to the `draft` field of
+`version_spec`, and `var.meshstack.runner_ref` to `version_spec.runner_ref` and to the `runner_ref`
+of any `meshstack_integration` config the definition uses, which meshStack encrypts its secrets for.
+A definition with workload identity federation pins the looked-up runner instead, see
+[Runner identity](#runner-identity).
 
 ```hcl
 resource "meshstack_building_block_definition" "this" {
@@ -146,62 +156,121 @@ the definition gains a required input, even one with a default. So a new input i
 without that flag, setting it on an existing block fails with 403 "You tried to edit input ...".
 A BOOLEAN input cannot be optional, so it always takes the second way.
 
-<!-- scorecard-checks: bbd_structured_inputs, bbd_optional_over_default -->
-## Input Types and Defaults
+<!-- scorecard-checks: bbd_supported_platforms -->
+## Supported Platforms
+
+A `TENANT_LEVEL` definition takes `spec.supported_platforms` from `var.meshstack.supported_platforms`,
+so a consumer can narrow it to one platform or landing zone by passing that object's `ref`. The
+default is what the module supports, normally one platform type:
+
+```hcl
+variable "meshstack" {
+  type = object({
+    # ...
+    supported_platforms = optional(list(object({
+      kind = optional(string)
+      name = optional(string)
+      uuid = optional(string)
+    })), [{ name = "AZURE" }])
+  })
+}
+
+resource "meshstack_building_block_definition" "this" {
+  spec = {
+    target_type         = "TENANT_LEVEL"
+    supported_platforms = var.meshstack.supported_platforms
+  }
+}
+```
+
+Landing-zone-only definitions follow the same rule. A default that depends on another input, such
+as the platform type a module registers, comes from
+`coalesce(var.meshstack.supported_platforms, [{ kind = null, name = ..., uuid = null }])` instead.
+A module with no natural default, such as one for any Kubernetes cluster, makes the field required.
+A `WORKSPACE_LEVEL` definition sets no `supported_platforms`; meshStack rejects even an empty set.
+
+A platform needs meshStack 2026.40.0 or later, a landing zone 2026.45.0 and meshstack provider
+0.28.0.
+
+<!-- scorecard-checks: bbd_structured_inputs, bbd_input_order, bbd_input_defaults -->
+## Input Types, Order and Defaults
 
 meshStack passes each input to the Terraform variable of the same name.
 
 - An input whose variable is an `object` or a `map` is `type = "JSON"` with a `json_schema`: meshPanel
   renders a form from the schema, and meshStack rejects a value the schema does not allow. `CODE`
   stays right for free text such as YAML, HCL or a script.
-- An input whose default only repeats the variable's `default` is `is_optional = true` with no
-  `default_value`. meshStack then sends no value and the variable's default applies, so the default
-  lives in one place. A BOOLEAN input cannot be optional and keeps its `default_value`.
+- Declare the inputs by ascending `display_order`, and the `buildingblock/` variables they feed in
+  the same order, so the code reads like the order form. Inputs meshStack fills in, such as the
+  workspace identifier, come after those a person sets, and the STATIC `hub` comes last.
+- The definition owns every value, so a `buildingblock/` variable fed by a required input has no
+  `default` and is `nullable = false`. A `const = true` variable keeps a default, because `tofu init`
+  and `validate` outside a run need it.
+- An input with a sane default is required and carries it in `default_value`. A JSON object input
+  also puts each field's default into its schema as `default`, because the order form shows only
+  those; derive both from one local.
+- `is_optional = true` is for a value that is really absent, with no sane default. The code checks
+  only for null. Handling `""` as unset hides that contract. The check finds `coalesce(var.x, "")`,
+  `var.x == ""`, `var.x != ""` and `compact([var.x])`, and misses the same handling through a local.
+- meshStack currently sends no value for an input whose value is null, whether it is optional or
+  hidden by a `condition`. So the variable of an optional or conditional input has `default = null`.
 
 <!-- scorecard-checks: wif_no_replicator -->
 ## Runner identity
 
 A building block run presents an identity a cloud backplane has to trust. The runner declares the
-scheme once, meshStack resolves it per definition, and the module reads the result from the
-definition's `version_latest`. It never builds a subject from strings.
+issuer, the per-cloud audience and token path, and the subject scheme. meshStack resolves the
+subject per definition. The module never builds any of them from strings.
+
+A definition can't read its own `version_latest` for an input, and the token path is one. So every
+definition with workload identity federation looks its runner up and pins itself to it. The lookup
+then describes the runner every run uses, also when `var.meshstack.runner_ref` is null.
+`modules/meshstack/runner-identity` is the one place that does the lookup. It fails when the runner
+offers no token for `cloud`.
 
 ```hcl
-variable "building_block_runner_uuid" {
-  type        = string
-  default     = null
-  description = "Runs this building block on the given meshStack building block runner instead of the shared one meshStack hosts."
+# Lookup specified runner for workload identity federation info. Null results in the default hosted runner.
+module "runner" {
+  source = "github.com/meshcloud/meshstack-hub//modules/meshstack/runner-identity?ref=${var.hub.git_ref}"
+
+  cloud      = "<cloud>"
+  runner_ref = var.meshstack.runner_ref
 }
 
 resource "meshstack_building_block_definition" "this" {
   version_spec = {
-    runner_ref = var.building_block_runner_uuid == null ? null : {
-      kind = "meshBuildingBlockRunner"
-      uuid = var.building_block_runner_uuid
+    runner_ref = module.runner.ref
+    inputs = {
+      # the cloud's token file env var, e.g. ARM_OIDC_TOKEN_FILE_PATH or AWS_WEB_IDENTITY_TOKEN_FILE
+      <TOKEN_FILE_ENV> = {
+        # ...
+        argument = jsonencode(module.runner.token_path)
+      }
     }
-    # ...
   }
 }
 
 module "backplane" {
   # ...
   workload_identity_federation = {
-    issuer   = meshstack_building_block_definition.this.version_latest.workload_identity_federation.issuer
+    issuer   = module.runner.issuer
+    audience = module.runner.audience
     subjects = [meshstack_building_block_definition.this.version_latest.workload_identity_federation.subject]
   }
 }
 ```
 
+- `<cloud>` is `aws`, `azure` or `gcp`. A cloud without its own token uses another one as a generic
+  OIDC token: STACKIT the `azure` one, OTC the `gcp` one.
 - `version_latest.workload_identity_federation.subject` is the runner's subject template with every
   placeholder filled in for this definition. It is the only place a subject comes from, and it is
   known after apply, exactly as `metadata.uuid` already was.
-- `issuer` and the per-cloud `audience` describe the runner, and the definition reports them for the
-  runner its latest version runs on. AWS reads `.aws.audience`, GCP `.gcp.audience`;
-  Azure and STACKIT need none. A self-hosted runner declares its own values, so never hardcode them.
-- `building_block_runner_uuid` feeds `version_spec.runner_ref`, and the status follows it, so the
-  backplane always trusts the runner the definition actually runs on. Omit it and the definition
-  runs on the shared runner meshStack hosts.
-- The whole status is known after apply. Where the definition consumes a backplane output that
-  depends on the same input, split the input; GCP does, see
+- Leave `var.meshstack.runner_ref` null and the definition runs on the default runner. Pass the `ref` of a `meshstack_building_block_runner`; `kind` is required so that nobody
+  builds the object by hand.
+- A definition applied with an ephemeral API key, as in a reference architecture, needs the
+  `BUILDINGBLOCKRUNNER_LIST` permission. Without it the lookup reports that no runner matches.
+- The subject is known after apply. Where the definition consumes a backplane output that depends
+  on the same input, split the input; GCP does, see
   [gcp-backplane.md](gcp-backplane.md#keeping-the-subject-out-of-the-credentials).
 
 `data.meshstack_integrations.….workload_identity_federation.replicator` is **not** a substitute.

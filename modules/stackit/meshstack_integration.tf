@@ -78,12 +78,6 @@ variable "stackit_network_area_id" {
   description = "STACKIT network area ID applied as the `networkArea` label to projects created through the `networked` landing zone. Only used when `stackit_networked_projects_enabled` is true."
 }
 
-variable "building_block_runner_uuid" {
-  type        = string
-  default     = null
-  description = "Runs this building block on the given meshStack building block runner instead of the shared one meshStack hosts."
-}
-
 variable "meshstack" {
   type = object({
     owning_workspace_identifier = string
@@ -93,14 +87,17 @@ variable "meshstack" {
     }), { landingzone = {}, building_block = {} })
     location_name       = optional(string, "global")
     platform_identifier = optional(string, "stackit")
+    runner_ref = optional(object({
+      kind = string
+      uuid = string
+    }))
+    supported_platforms = optional(list(object({
+      kind = optional(string)
+      name = optional(string)
+      uuid = optional(string)
+    })), [{ name = "STACKIT" }])
   })
-  description = <<-EOT
-  Shared meshStack context.
-  `owning_workspace_identifier`: Identifier of the meshStack workspace that owns the managed resources.
-  `tags`: Optional tags propagated to building block definition and landing zone metadata.
-  `location_name`: meshStack location name for the platform. Defaults to "global".
-  `platform_identifier`: Identifier for the platform in meshStack. Defaults to "stackit".
-  EOT
+  description = "Shared meshStack context, see docs."
 }
 
 variable "hub" {
@@ -119,6 +116,14 @@ variable "hub" {
   EOT
 }
 
+# Lookup specified runner for workload identity federation info. Null results in the default hosted runner.
+module "runner" {
+  source = "github.com/meshcloud/meshstack-hub//modules/meshstack/runner-identity?ref=${var.hub.git_ref}"
+
+  cloud      = "azure"
+  runner_ref = var.meshstack.runner_ref
+}
+
 module "backplane" {
   source = "github.com/meshcloud/meshstack-hub//modules/stackit/project/backplane?ref=${var.hub.git_ref}"
 
@@ -127,9 +132,11 @@ module "backplane" {
   service_account_name            = coalesce(var.stackit_service_account_name, "mesh-project")
   organization_onboarding_enabled = var.stackit_organization_onboarding_enabled
 
+  # The runner offers no STACKIT token, so we use the one offered for Azure as a generic OIDC token. The federation trusts its issuer and audience.
   workload_identity_federation = {
-    # Every variant runs on the same runner, so any one of them reports the issuer.
-    issuer   = meshstack_building_block_definition.this["default"].version_latest.workload_identity_federation.issuer
+    # Every variant runs on the same runner, so any one of them reports the issuer and audience.
+    issuer   = module.runner.issuer
+    audience = module.runner.audience
     subjects = [for bbd in meshstack_building_block_definition.this : bbd.version_latest.workload_identity_federation.subject]
   }
 }
@@ -270,17 +277,14 @@ resource "meshstack_building_block_definition" "this" {
     support_url               = "https://portal.stackit.cloud"
     target_type               = "TENANT_LEVEL"
     run_transparency          = true
-    supported_platforms       = [{ name = "STACKIT" }]
+    supported_platforms       = var.meshstack.supported_platforms
     use_in_landing_zones_only = true
   }
 
   version_spec = {
     draft         = var.hub.bbd_draft
     deletion_mode = "DELETE"
-    runner_ref = var.building_block_runner_uuid == null ? null : {
-      kind = "meshBuildingBlockRunner"
-      uuid = var.building_block_runner_uuid
-    }
+    runner_ref    = module.runner.ref
 
     implementation = {
       terraform = {
@@ -337,7 +341,7 @@ resource "meshstack_building_block_definition" "this" {
         type            = "STRING"
         assignment_type = "STATIC"
         is_environment  = true
-        argument        = jsonencode("/var/run/secrets/workload-identity/azure/token")
+        argument        = jsonencode(module.runner.token_path)
       }
 
       STACKIT_SERVICE_ACCOUNT_EMAIL = {
@@ -455,7 +459,7 @@ terraform {
   required_providers {
     meshstack = {
       source  = "meshcloud/meshstack"
-      version = ">= 0.26.2"
+      version = ">= 0.27.2"
     }
     stackit = {
       source  = "stackitcloud/stackit"

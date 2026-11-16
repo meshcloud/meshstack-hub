@@ -44,24 +44,21 @@ variable "network_definition_uuid" {
   description = "UUID of the T Cloud Public Network building block definition whose blocks this one runs in."
 }
 
-variable "otc_platform_type" {
-  type        = string
-  default     = "OTC"
-  description = "Name of the custom meshStack platform type the application teams' tenants live on."
-}
-
-variable "building_block_runner_uuid" {
-  type        = string
-  default     = null
-  description = "Runs this building block on the given meshStack building block runner instead of the shared one meshStack hosts."
-}
-
 variable "meshstack" {
   type = object({
     owning_workspace_identifier = string
     tags                        = optional(map(list(string)), {})
+    runner_ref = optional(object({
+      kind = string
+      uuid = string
+    }))
+    supported_platforms = optional(list(object({
+      kind = optional(string)
+      name = optional(string)
+      uuid = optional(string)
+    })), [{ name = "OTC" }])
   })
-  description = "Shared meshStack context. Tags are optional and propagated to building block definition metadata."
+  description = "Shared meshStack context, see docs."
 }
 
 variable "hub" {
@@ -80,6 +77,14 @@ variable "hub" {
   EOT
 }
 
+# Lookup specified runner for workload identity federation info. Null results in the default hosted runner.
+module "runner" {
+  source = "github.com/meshcloud/meshstack-hub//modules/meshstack/runner-identity?ref=${var.hub.git_ref}"
+
+  cloud      = "gcp"
+  runner_ref = var.meshstack.runner_ref
+}
+
 # Runs sign in through workload identity federation, so the definition carries no access key. This
 # module's own provider credentials only set up the identity provider and its group.
 module "backplane" {
@@ -87,9 +92,9 @@ module "backplane" {
 
   name = var.workload_identity_name
   workload_identity_federation = {
-    issuer   = meshstack_building_block_definition.this.version_latest.workload_identity_federation.issuer
+    issuer   = module.runner.issuer
     subject  = meshstack_building_block_definition.this.version_latest.workload_identity_federation.subject
-    audience = meshstack_building_block_definition.this.version_latest.workload_identity_federation.gcp.audience
+    audience = module.runner.audience
   }
 }
 
@@ -114,7 +119,7 @@ resource "meshstack_building_block_definition" "this" {
     support_url         = "https://console.otc.t-systems.com"
     target_type         = "TENANT_LEVEL"
     run_transparency    = true
-    supported_platforms = [{ name = var.otc_platform_type }]
+    supported_platforms = var.meshstack.supported_platforms
 
     readme = coalesce(var.bbd_readme, chomp(<<-EOT
     This building block creates a managed relational database (RDS) in your T Cloud Public project:
@@ -163,10 +168,7 @@ resource "meshstack_building_block_definition" "this" {
     # while this block still sits in it, whose own deletion needs the network to look it up.
     dependency_refs = [{ uuid = var.network_definition_uuid }]
 
-    runner_ref = var.building_block_runner_uuid == null ? null : {
-      kind = "meshBuildingBlockRunner"
-      uuid = var.building_block_runner_uuid
-    }
+    runner_ref = module.runner.ref
 
     implementation = {
       terraform = {
@@ -263,6 +265,15 @@ resource "meshstack_building_block_definition" "this" {
         argument        = jsonencode(var.otc_region)
       }
 
+      OTC_FEDERATED_TOKEN_FILE = {
+        display_name    = "OTC Federated Token File"
+        description     = "Path to the run token the pre-run script exchanges for temporary credentials."
+        type            = "STRING"
+        assignment_type = "STATIC"
+        is_environment  = true
+        argument        = jsonencode(module.runner.token_path)
+      }
+
       OS_AUTH_URL = {
         display_name    = "OTC Auth URL"
         description     = "IAM endpoint the provider authenticates against."
@@ -338,7 +349,7 @@ terraform {
   required_providers {
     meshstack = {
       source  = "meshcloud/meshstack"
-      version = ">= 0.26.2"
+      version = ">= 0.27.2"
     }
     opentelekomcloud = {
       source  = "opentelekomcloud/opentelekomcloud"

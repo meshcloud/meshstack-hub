@@ -24,7 +24,7 @@ variable "meshstack" {
     platform_identifier         = optional(string, "aks")
     location_identifier         = optional(string, "global")
   })
-  description = "meshStack ownership and naming settings for this platform integration."
+  description = "Shared meshStack context, see docs."
 }
 
 module "aks_meshplatform" {

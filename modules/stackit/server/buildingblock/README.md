@@ -64,6 +64,7 @@ No modules.
 |------|-------------|
 | <a name="output_public_ip"></a> [public\_ip](#output\_public\_ip) | Public IP the VM is reachable on over SSH. |
 | <a name="output_server_id"></a> [server\_id](#output\_server\_id) | ID of the STACKIT server. |
+| <a name="output_server_url"></a> [server\_url](#output\_server\_url) | STACKIT portal page of the server. |
 | <a name="output_ssh_command"></a> [ssh\_command](#output\_ssh\_command) | Ready-to-use SSH command once the generated private key is on disk (see ssh\_private\_key). |
 | <a name="output_ssh_private_key"></a> [ssh\_private\_key](#output\_ssh\_private\_key) | Generated OpenSSH private key to log into the VM. Save it to a file, chmod 600, and pass it with ssh -i. |
 | <a name="output_ssh_username"></a> [ssh\_username](#output\_ssh\_username) | Login user for the VM, as shipped by the chosen image. |

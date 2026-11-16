@@ -1,11 +1,12 @@
 module "dns_integration" {
   source = "github.com/meshcloud/meshstack-hub//modules/stackit/dns?ref=${var.hub.git_ref}"
 
-  parent_domain = var.dns_parent_domain
+  parent_domain  = var.dns_parent_domain
+  wildcard_certs = {}
 
   approval_policies = var.approval_policies
 
-  meshstack = { owning_workspace_identifier = var.workspace, tags = var.tags.building_block }
+  meshstack = { owning_workspace_identifier = var.workspace, tags = var.tags.building_block, runner_ref = local.runner_ref }
   hub       = local.platform_hub
 }
 
@@ -20,7 +21,7 @@ resource "meshstack_building_block" "dns" {
   }
 
   spec = {
-    parent_building_block_refs            = [meshstack_building_block.ingress.ref, meshstack_building_block.platform_federation.ref]
+    parent_building_block_refs            = [meshstack_building_block.ingress_controller.ref, meshstack_building_block.platform_federation.ref]
     building_block_definition_version_ref = module.dns_integration.building_block_definition.version_ref
     display_name                          = "DNS Zone"
     target_ref                            = local.tenant_ref
@@ -30,24 +31,31 @@ resource "meshstack_building_block" "dns" {
         subdomain                     = { value = jsonencode(var.dns_subdomain) }
         wildcard_target_ip            = { value = jsonencode(local.ingress_load_balancer_ip) }
         contact_email                 = { value = jsonencode(var.cluster_issuer_email) }
+        "kubeconfig.yaml"             = local.cluster_kubeconfig_input
         STACKIT_SERVICE_ACCOUNT_EMAIL = { value = jsonencode(local.service_account_email) }
-        release_on_destroy            = { value = jsonencode(var.imports.dns != null && var.playground_mode) }
+        release_on_destroy            = { value = jsonencode(local.imports.dns != null && var.playground_mode) }
       },
-      var.imports.dns == null ? {} : {
-        imports = { value = jsonencode(jsonencode(var.imports.dns)) }
+      local.imports.dns == null ? {} : {
+        imports = { value = jsonencode(jsonencode(local.imports.dns)) }
       },
     )
   }
 }
 
 module "ai_llm_integration" {
+  lifecycle {
+    enabled = var.ai_model != null
+  }
+
   source = "github.com/meshcloud/meshstack-hub//modules/stackit/ai-llm?ref=${var.hub.git_ref}"
 
   model = var.ai_model
+  # STACKIT offers AI Model Serving only in eu01.
+  stackit_region = "eu01"
 
   approval_policies = var.approval_policies
 
-  meshstack = { owning_workspace_identifier = var.workspace, tags = var.tags.building_block }
+  meshstack = { owning_workspace_identifier = var.workspace, tags = var.tags.building_block, runner_ref = local.runner_ref }
   hub       = local.platform_hub
 }
 
@@ -55,6 +63,8 @@ resource "meshstack_building_block" "ai_llm" {
   wait_for_completion = true
 
   lifecycle {
+    enabled = var.ai_model != null
+
     postcondition {
       condition     = self.status.succeeded
       error_message = "Building block ${self.metadata.uuid} did not succeed (health status ${self.status.health_status}, action ${self.status.action}). See its run in meshPanel."
@@ -83,18 +93,14 @@ resource "meshstack_building_block" "ai_llm" {
 module "git_integration" {
   source = "github.com/meshcloud/meshstack-hub//modules/stackit/git?ref=${var.hub.git_ref}"
 
-  role_mapping      = var.platform_engineer_role_mapping.git
   approval_policies = var.approval_policies
 
-  meshstack = { owning_workspace_identifier = var.workspace, tags = var.tags.building_block }
+  meshstack = { owning_workspace_identifier = var.workspace, tags = var.tags.building_block, runner_ref = local.runner_ref }
   hub       = local.platform_hub
 }
 
 resource "meshstack_building_block" "git" {
   wait_for_completion = true
-
-  # An adopted organization's existing token is read on every run, the delete run included.
-  depends_on = [vault_kv_secret_v2.import_git]
 
   lifecycle {
     postcondition {
@@ -111,8 +117,8 @@ resource "meshstack_building_block" "git" {
 
     inputs = merge(
       {
-        instance_name                 = { value = jsonencode(var.imports.git != null ? var.imports.git.instance_name : var.platform_identifier) }
-        forgejo_organization          = { value = jsonencode(var.imports.git != null ? var.imports.git.forgejo_organization : var.platform_identifier) }
+        instance_name                 = { value = jsonencode(local.imports.git != null ? local.imports.git.instance_name : var.platform_identifier) }
+        forgejo_organization          = { value = jsonencode(local.imports.git != null ? local.imports.git.forgejo_organization : var.platform_identifier) }
         shared_runner_labels          = { value = jsonencode(jsonencode(["stackit-ubuntu-22"])) }
         STACKIT_SERVICE_ACCOUNT_EMAIL = { value = jsonencode(local.service_account_email) }
         output_to_vault = {
@@ -121,13 +127,10 @@ resource "meshstack_building_block" "git" {
             secret_version = nonsensitive(sha256(local.output_to_vault))
           }
         }
-        release_on_destroy = { value = jsonencode(var.imports.git != null && var.playground_mode) }
+        release_on_destroy = { value = jsonencode(local.imports.git != null && var.playground_mode) }
       },
-      var.imports.git == null ? {} : {
-        imports = { value = jsonencode(jsonencode(merge(
-          { instance_id = var.imports.git.instance_id },
-          local.import_git ? { existing_forgejo_api_token_path = vault_kv_secret_v2.import_git.name } : {},
-        ))) }
+      local.imports.git == null ? {} : {
+        imports = { value = jsonencode(jsonencode({ instance_id = local.imports.git.instance_id })) }
       },
     )
   }
@@ -136,10 +139,12 @@ resource "meshstack_building_block" "git" {
 module "container_registry_integration" {
   source = "github.com/meshcloud/meshstack-hub//modules/stackit/container-registry?ref=${var.hub.git_ref}"
 
-  role_mapping      = var.platform_engineer_role_mapping.container_registry
+  # STACKIT offers Container Registry only in eu01.
+  stackit_region = "eu01"
+
   approval_policies = var.approval_policies
 
-  meshstack = { owning_workspace_identifier = var.workspace, tags = var.tags.building_block }
+  meshstack = { owning_workspace_identifier = var.workspace, tags = var.tags.building_block, runner_ref = local.runner_ref }
   hub       = local.platform_hub
 }
 
@@ -162,7 +167,7 @@ resource "meshstack_building_block" "container_registry" {
     inputs = merge(
       {
         # A Harbor project name is lowercase only, while the platform identifier also allows capitals.
-        registry_name                 = { value = jsonencode(var.imports.container_registry != null ? var.imports.container_registry.registry_name : lower(var.platform_identifier)) }
+        registry_name                 = { value = jsonencode(local.imports.container_registry != null ? local.imports.container_registry.registry_name : lower(var.platform_identifier)) }
         STACKIT_SERVICE_ACCOUNT_EMAIL = { value = jsonencode(local.service_account_email) }
 
         require_robot_link   = { value = jsonencode(var.phase2_completed) }
@@ -173,10 +178,10 @@ resource "meshstack_building_block" "container_registry" {
             secret_version = nonsensitive(sha256(local.output_to_vault))
           }
         }
-        release_on_destroy = { value = jsonencode(var.imports.container_registry != null && var.playground_mode) }
+        release_on_destroy = { value = jsonencode(local.imports.container_registry != null && var.playground_mode) }
       },
-      var.imports.container_registry == null ? {} : {
-        imports = { value = jsonencode(jsonencode({ artifactory_id = var.imports.container_registry.artifactory_id })) }
+      local.imports.container_registry == null ? {} : {
+        imports = { value = jsonencode(jsonencode({ artifactory_id = local.imports.container_registry.artifactory_id })) }
       },
     )
   }

@@ -22,6 +22,7 @@ digraph stackit_landingzone {
     margin=18
 
     ORG    [label="🏢 STACKIT Organization" fillcolor="#ffffff" color="#a2abb8"]
+    ROOT   [label="📁 Root Folder\noptional · one per meshStack" fillcolor="#ffffff" color="#a2abb8"]
     FOUND  [label="🔑 Foundation Project\nhosts the project-creation service account" fillcolor="#ffffff" color="#a2abb8"]
     FOLDER [label="📁 Resourcemanager Folder\ntenant projects are created here" fillcolor="#ffffff" color="#a2abb8"]
     NA     [label="🌐 Network Area ×1\nshared IPv4 address plan · hub" fillcolor="#e5f2ea" color="#85bfa0"]
@@ -31,8 +32,9 @@ digraph stackit_landingzone {
 
     { rank=same; FOUND -> FOLDER -> NA [style=invis] }
 
-    ORG    -> FOUND
-    ORG    -> FOLDER
+    ORG    -> ROOT
+    ROOT   -> FOUND
+    ROOT   -> FOLDER
     ORG    -> NA
     FOLDER -> PRJ   [xlabel="holds"]
     PRJ    -> SA    [xlabel="contains"]

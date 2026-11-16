@@ -84,12 +84,6 @@ variable "role_mapping" {
   }
 }
 
-variable "building_block_runner_uuid" {
-  type        = string
-  default     = null
-  description = "Runs this building block on the given meshStack building block runner instead of the shared one meshStack hosts."
-}
-
 variable "meshstack" {
   type = object({
     owning_workspace_identifier = string
@@ -99,14 +93,17 @@ variable "meshstack" {
     }), { landingzone = {}, building_block = {} })
     location_name       = optional(string, "global")
     platform_identifier = optional(string, "otc")
+    runner_ref = optional(object({
+      kind = string
+      uuid = string
+    }))
+    supported_platforms = optional(list(object({
+      kind = optional(string)
+      name = optional(string)
+      uuid = optional(string)
+    })))
   })
-  description = <<-EOT
-  Shared meshStack context.
-  `owning_workspace_identifier`: Identifier of the meshStack workspace that owns the managed resources.
-  `tags`: Optional tags propagated to building block definition and landing zone metadata.
-  `location_name`: meshStack location name for the platform. Defaults to "global".
-  `platform_identifier`: Identifier for the platform in meshStack. Defaults to "otc".
-  EOT
+  description = "Shared meshStack context, see docs."
 }
 
 variable "hub" {
@@ -294,7 +291,7 @@ resource "meshstack_building_block_definition" "this" {
     support_url               = "https://console.otc.t-systems.com"
     target_type               = "TENANT_LEVEL"
     run_transparency          = true
-    supported_platforms       = [{ name = local.platform_type_ref.name }]
+    supported_platforms       = coalesce(var.meshstack.supported_platforms, [{ kind = null, name = local.platform_type_ref.name, uuid = null }])
     use_in_landing_zones_only = true
 
     readme = coalesce(var.bbd_readme, chomp(<<-EOT
@@ -338,10 +335,7 @@ resource "meshstack_building_block_definition" "this" {
   version_spec = {
     draft         = var.hub.bbd_draft
     deletion_mode = "DELETE"
-    runner_ref = var.building_block_runner_uuid == null ? null : {
-      kind = "meshBuildingBlockRunner"
-      uuid = var.building_block_runner_uuid
-    }
+    runner_ref    = var.meshstack.runner_ref
 
     implementation = {
       terraform = {

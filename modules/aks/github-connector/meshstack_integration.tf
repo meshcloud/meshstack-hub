@@ -43,7 +43,17 @@ variable "meshstack" {
   type = object({
     owning_workspace_identifier = string
     tags                        = optional(map(list(string)), {})
+    runner_ref = optional(object({
+      kind = string
+      uuid = string
+    }))
+    supported_platforms = optional(list(object({
+      kind = optional(string)
+      name = optional(string)
+      uuid = optional(string)
+    })), [{ name = "AZURE_KUBERNETES_SERVICE" }])
   })
+  description = "Shared meshStack context, see docs."
 }
 
 variable "hub" {
@@ -86,7 +96,7 @@ resource "meshstack_building_block_definition" "aks_github_connector" {
     notification_subscribers = var.notification_subscribers
     symbol                   = "https://raw.githubusercontent.com/meshcloud/meshstack-hub/${var.hub.git_ref}/modules/aks/github-connector/buildingblock/logo.png"
     target_type              = "TENANT_LEVEL"
-    supported_platforms      = [{ name = "AZURE_KUBERNETES_SERVICE" }]
+    supported_platforms      = var.meshstack.supported_platforms
 
     readme = coalesce(var.bbd_readme, chomp(<<EOT
 The **GitHub Actions AKS Connector** integrates a GitHub repository with an Azure Kubernetes Service (AKS) namespace. It sets up the necessary service accounts, secrets, and workflows so that GitHub Actions can build, push, and deploy container images to your AKS namespace automatically.
@@ -127,7 +137,8 @@ EOT
   }
 
   version_spec = {
-    draft = var.hub.bbd_draft
+    draft      = var.hub.bbd_draft
+    runner_ref = var.meshstack.runner_ref
     implementation = {
       terraform = {
         repository_url                 = "https://github.com/meshcloud/meshstack-hub.git"

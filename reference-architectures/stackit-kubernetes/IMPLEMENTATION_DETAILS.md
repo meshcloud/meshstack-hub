@@ -11,17 +11,20 @@ no STACKIT identity and only bootstraps, in one apply:
    `editor` and `iam.member-admin` (the registry block grants members their role with it),
 3. the **Bootstrap Identity Federation**, its child, trusting only the nested **STACKIT
    Kubernetes Platform Services** definition,
-4. one **Platform Services** building block, with the account's email as a known input.
+4. one **STACKIT Kubernetes Platform Services** building block, with the account's email as a
+   known input.
 
-Platform Services acts as the account from its first run and orders the tree. The outer run waits
-for it and shows its summary. Every outer input the tree needs reaches it as a Platform Services
-input, so updating the outer building block is the only way to change the platform.
+STACKIT Kubernetes Platform Services acts as the account from its first run and orders the tree.
+The outer run waits for it and shows its summary. Every outer input the tree needs reaches it as a
+STACKIT Kubernetes Platform Services input, so updating the outer building block is the only way
+to change the platform.
 
 ## Federations and parents
 
 - **Automation Identity Federation**, a child of the Automation Identity, trusts the six
   definitions whose runs act as the account: Secrets Manager, SKE cluster, Git, container
-  registry, AI Model Serving and DNS. Those six building blocks are its children.
+  registry, AI Model Serving and DNS. Those six building blocks are its children. Without an AI
+  model there is no AI Model Serving block, and the federation trusts the other five.
 - **Starter Kit Identity Federation** (phase 2) trusts the Git repository definition, whose runs
   list the Git instance's users through the STACKIT Git API to match workspace members by email.
   The Forgejo token's technical user is restricted and cannot see them.
@@ -52,7 +55,6 @@ value and registers it as a write-only input.
 | `<prefix>stackit/git` | `forgejo-api-token` | STACKIT Git Instance | Git repository and Forgejo connector runs |
 | `<prefix>stackit/container-registry` | `push-action-secrets`, `pull-kubernetes-secret` | STACKIT Container Registry | Git repository and Forgejo connector runs |
 | `<prefix>stackit/ai-llm` | `kubernetes-secret` | AI Model Serving | Forgejo connector runs (`stackit-ai`) |
-| `<prefix>imports/stackit/git` | `forgejo-api-token` | the nested run, from Import Secrets | the STACKIT Git Instance that adopts an organization |
 
 The registry and AI keys hold JSON objects, read from `data_json`. The phase 2 definitions get the
 reader login and the paths, and their runs read the secrets themselves. Git repository runs keep
@@ -62,7 +64,7 @@ An ephemeral value has no version meshStack could compare, so the nested run pas
 `secret_hash` on as the version of the write-only value it fills: the `kubeconfig.yaml` input of
 the `kubernetes` and ingress blocks, and the platform's tokens. A rotated secret reaches them in
 the same nested run. The Forgejo connector gets one hash of the pull robot and the
-AI secret as `secrets_revision`, so its runs rewrite the Kubernetes secrets when either changes.
+AI secret, if any, as `secrets_revision`, so its runs rewrite the Kubernetes secrets when either changes.
 
 The Forgejo token has no human owner: the Git block creates a technical user through the STACKIT
 Git API and exchanges its password for a personal access token.
@@ -84,6 +86,13 @@ month. On draft definitions the daily run also applies changes of the Hub branch
 STATIC inputs carry only the reader login and paths, so a rotation changes no definition and works
 with released versions.
 
+## Regions
+
+`stackit_region` places only the SKE cluster. Its node pool runs in zone 1 of that region, on
+`c3i.2`, a machine type that `eu01` and `eu02` both offer. The nested run passes `eu01` to the
+Secrets Manager, Container Registry and AI Model Serving blocks, because STACKIT offers these
+services only in `eu01`. Git, DNS and service accounts have no region.
+
 ## Phase 2
 
 `phase2_completed` reaches the registry block as `require_robot_link`. Every registry run checks
@@ -99,8 +108,8 @@ block's `release_on_destroy` only in playground mode and only for adopted resour
 
 The Git block adopting an instance creates its own technical user with a random suffix, because
 the existing user's password is unknown, and orders no shared runner, because STACKIT allows one
-per instance. With the token from Import Secrets it adds that user to the organization's `Owners`
-team and removes it again on deletion; STACKIT refuses to delete a user who is still in an
+per instance. That user must be in the organization's `Owners` team, where the block keeps it and
+removes it again on deletion; STACKIT refuses to delete a user who is still in an
 organization. Its `writers` and `readers` teams carry the same suffix. The block never deletes the
 organization itself; it goes with the instance.
 

@@ -32,18 +32,16 @@ variable "bbd_readme" {
   description = "Overrides the markdown readme shown in the marketplace before ordering."
 }
 
-variable "building_block_runner_uuid" {
-  type        = string
-  default     = null
-  description = "Runs this building block on the given meshStack building block runner instead of the shared one meshStack hosts."
-}
-
 variable "meshstack" {
   type = object({
     owning_workspace_identifier = string
     tags                        = optional(map(list(string)), {})
+    runner_ref = optional(object({
+      kind = string
+      uuid = string
+    }))
   })
-  description = "Shared meshStack context."
+  description = "Shared meshStack context, see docs."
 }
 
 variable "hub" {
@@ -70,6 +68,14 @@ output "building_block_definition" {
   }
 }
 
+# Lookup specified runner for workload identity federation info. Null results in the default hosted runner.
+module "runner" {
+  source = "github.com/meshcloud/meshstack-hub//modules/meshstack/runner-identity?ref=${var.hub.git_ref}"
+
+  cloud      = "azure"
+  runner_ref = var.meshstack.runner_ref
+}
+
 module "backplane" {
   source = "github.com/meshcloud/meshstack-hub//modules/stackit/network-area/backplane?ref=${var.hub.git_ref}"
 
@@ -77,8 +83,10 @@ module "backplane" {
   organization_id      = var.stackit_organization_id
   service_account_name = var.stackit_service_account_name
 
+  # The runner offers no STACKIT token, so we use the one offered for Azure as a generic OIDC token. The federation trusts its issuer and audience.
   workload_identity_federation = {
-    issuer   = meshstack_building_block_definition.this.version_latest.workload_identity_federation.issuer
+    issuer   = module.runner.issuer
+    audience = module.runner.audience
     subjects = [meshstack_building_block_definition.this.version_latest.workload_identity_federation.subject]
   }
 }
@@ -135,10 +143,7 @@ resource "meshstack_building_block_definition" "this" {
   version_spec = {
     draft         = var.hub.bbd_draft
     deletion_mode = "DELETE"
-    runner_ref = var.building_block_runner_uuid == null ? null : {
-      kind = "meshBuildingBlockRunner"
-      uuid = var.building_block_runner_uuid
-    }
+    runner_ref    = module.runner.ref
 
     implementation = {
       terraform = {
@@ -183,7 +188,7 @@ resource "meshstack_building_block_definition" "this" {
         type            = "STRING"
         assignment_type = "STATIC"
         is_environment  = true
-        argument        = jsonencode("/var/run/secrets/workload-identity/azure/token")
+        argument        = jsonencode(module.runner.token_path)
       }
 
       network_area_name = {
@@ -252,7 +257,7 @@ resource "meshstack_building_block_definition" "this" {
 
     outputs = {
       network_area_url = {
-        display_name    = "Network Area URL"
+        display_name    = "Open Network Area"
         type            = "STRING"
         assignment_type = "RESOURCE_URL"
       }
@@ -296,7 +301,7 @@ terraform {
   required_providers {
     meshstack = {
       source  = "meshcloud/meshstack"
-      version = ">= 0.27.0"
+      version = ">= 0.27.2"
     }
     stackit = {
       source  = "stackitcloud/stackit"

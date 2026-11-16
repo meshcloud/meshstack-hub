@@ -4,8 +4,8 @@ variable "test_context" {
   nullable = false
 
   validation {
-    condition     = can(var.test_context.workspace) && can(var.test_context.run_id)
-    error_message = "test_context must provide workspace and run_id."
+    condition     = can(var.test_context.workspace) && can(var.test_context.run_id) && (can(var.test_context.payment_method_identifier) || can(var.test_context.meshstack.tag_schema.mandatory.payment_method))
+    error_message = "test_context must provide workspace, run_id and either payment_method_identifier or meshstack.tag_schema.mandatory.payment_method."
   }
 
   validation {
@@ -28,6 +28,29 @@ module "definition" {
   test_context = var.test_context
 }
 
+locals {
+  # A foundation hands in a payment method of its smoke workspace, because creating one needs
+  # admin rights on the meshStack instance.
+  payment_method_identifier = try(var.test_context.payment_method_identifier, null)
+
+  payment_method_ref = local.payment_method_identifier != null ? { kind = "meshPaymentMethod", name = local.payment_method_identifier } : meshstack_payment_method.this.ref
+}
+
+resource "meshstack_payment_method" "this" {
+  lifecycle {
+    enabled = local.payment_method_identifier == null
+  }
+
+  metadata = {
+    name               = "${var.test_context.run_id}-ske-starterkit-pm"
+    owned_by_workspace = var.test_context.workspace
+  }
+  spec = {
+    display_name = "${var.test_context.run_id} SKE Starterkit"
+    tags         = var.test_context.meshstack.tag_schema.mandatory.payment_method
+  }
+}
+
 resource "meshstack_building_block" "this" {
   depends_on = [module.definition]
 
@@ -42,7 +65,8 @@ resource "meshstack_building_block" "this" {
     }
 
     inputs = {
-      name = { value = jsonencode(var.test_context.run_id) }
+      name           = { value = jsonencode(var.test_context.run_id) }
+      payment_method = { value = jsonencode(local.payment_method_ref) }
     }
   }
 }

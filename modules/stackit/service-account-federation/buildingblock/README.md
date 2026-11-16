@@ -71,5 +71,6 @@ No modules.
 | Name | Description |
 |------|-------------|
 | <a name="output_service_account_email"></a> [service\_account\_email](#output\_service\_account\_email) | Email of the federated service account. Children of this block authenticate as it. |
+| <a name="output_service_account_url"></a> [service\_account\_url](#output\_service\_account\_url) | STACKIT portal page of the federated service account. |
 | <a name="output_summary"></a> [summary](#output\_summary) | Summary of the federation. |
 <!-- END_TF_DOCS -->

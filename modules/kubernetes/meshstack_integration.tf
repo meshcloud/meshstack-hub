@@ -195,7 +195,7 @@ variable "cluster_definition_ref" {
     uuid = string
   })
   default     = null
-  description = "Ref of the SKE cluster definition whose building blocks parent this definition's building blocks; null declares no dependency."
+  description = "Ref of the cluster definition (for example `ske/cluster`) whose building blocks parent this definition's building blocks; null declares no dependency."
 }
 
 variable "bbd_display_name" {
@@ -238,14 +238,17 @@ variable "meshstack" {
     }), { landingzone = {}, building_block = {} })
     location_name       = optional(string, "global")
     platform_identifier = optional(string, "kubernetes")
+    runner_ref = optional(object({
+      kind = string
+      uuid = string
+    }))
+    supported_platforms = list(object({
+      kind = optional(string)
+      name = optional(string)
+      uuid = optional(string)
+    }))
   })
-  description = <<-EOT
-  Shared meshStack context.
-  `owning_workspace_identifier`: Identifier of the meshStack workspace that owns the managed resources.
-  `tags`: Optional tags propagated to building block definition and landing zone metadata. A landing zone's own `tags` win over `landingzone`.
-  `location_name`: meshStack location name for the platform. Defaults to "global".
-  `platform_identifier`: Identifier for the platform in meshStack. Defaults to "kubernetes".
-  EOT
+  description = "Shared meshStack context, see docs."
 }
 
 variable "hub" {
@@ -411,14 +414,15 @@ resource "meshstack_building_block_definition" "this" {
   }
 
   spec = {
-    display_name        = coalesce(var.bbd_display_name, "Kubernetes meshPlatform Credentials")
-    symbol              = "https://raw.githubusercontent.com/meshcloud/meshstack-hub/${var.hub.git_ref}/modules/kubernetes/platform/logo.png"
-    description         = coalesce(var.bbd_description, "Creates the in-cluster replicator and metering service accounts meshStack authenticates with, and returns their tokens.")
-    support_url         = "https://docs.meshcloud.io/docs/meshstack.kubernetes.index.html"
-    target_type         = "TENANT_LEVEL"
-    run_transparency    = true
-    approval_policies   = var.approval_policies
-    supported_platforms = [{ name = "STACKIT" }]
+    display_name              = coalesce(var.bbd_display_name, "Kubernetes meshPlatform Credentials")
+    symbol                    = "https://raw.githubusercontent.com/meshcloud/meshstack-hub/${var.hub.git_ref}/modules/kubernetes/platform/logo.png"
+    description               = coalesce(var.bbd_description, "Creates the in-cluster replicator and metering service accounts meshStack authenticates with, and returns their tokens.")
+    support_url               = "https://docs.meshcloud.io/docs/meshstack.kubernetes.index.html"
+    target_type               = "TENANT_LEVEL"
+    run_transparency          = true
+    approval_policies         = var.approval_policies
+    supported_platforms       = var.meshstack.supported_platforms
+    use_in_landing_zones_only = true
 
     readme = coalesce(var.bbd_readme, chomp(<<-EOT
       Creates the two in-cluster identities meshStack uses to drive a Kubernetes cluster, and hands
@@ -426,10 +430,10 @@ resource "meshstack_building_block_definition" "this" {
 
       ## 🎯 When to use it
 
-      A platform team orders this once per cluster, as part of turning that cluster into a meshStack
-      platform — the **STACKIT Kubernetes Platform** reference architecture does it right after the
-      cluster exists and feeds the tokens into the platform it registers. It reaches the cluster
-      through the kubeconfig the ordering composition passes as an input.
+      This block is meant for landing zones and compositions that turn a cluster into a meshStack
+      platform, once per cluster, such as the **STACKIT Kubernetes Platform** reference
+      architecture. The composition passes the cluster's kubeconfig and registers the platform with
+      the tokens.
 
       ## 📦 Resources created
 
@@ -460,6 +464,7 @@ resource "meshstack_building_block_definition" "this" {
 
   version_spec = {
     draft           = var.hub.bbd_draft
+    runner_ref      = var.meshstack.runner_ref
     deletion_mode   = "DELETE"
     dependency_refs = var.cluster_definition_ref == null ? null : [var.cluster_definition_ref]
 

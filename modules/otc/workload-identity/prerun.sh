@@ -4,7 +4,6 @@
 # from the file written here.
 set -euo pipefail
 
-token_path=/var/run/secrets/workload-identity/gcp/token
 credentials_file=otc_credentials.json
 
 run_json=$(cat)
@@ -15,6 +14,7 @@ fail() {
   exit 1
 }
 
+token_path=${OTC_FEDERATED_TOKEN_FILE:-$(input OTC_FEDERATED_TOKEN_FILE)}
 [ -f "$token_path" ] || fail "meshStack mounted no run token at $token_path."
 command -v curl >/dev/null || nix profile add nixpkgs#curl
 

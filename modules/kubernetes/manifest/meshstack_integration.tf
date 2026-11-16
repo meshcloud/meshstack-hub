@@ -63,8 +63,17 @@ variable "meshstack" {
   type = object({
     owning_workspace_identifier = string
     tags                        = optional(map(list(string)), {})
+    runner_ref = optional(object({
+      kind = string
+      uuid = string
+    }))
+    supported_platforms = optional(list(object({
+      kind = optional(string)
+      name = optional(string)
+      uuid = optional(string)
+    })), [{ name = "KUBERNETES" }])
   })
-  description = "Shared meshStack context. Tags are optional and propagated to building block definition metadata."
+  description = "Shared meshStack context, see docs."
 }
 
 variable "hub" {
@@ -114,9 +123,9 @@ resource "meshstack_building_block_definition" "this" {
     symbol       = "https://raw.githubusercontent.com/meshcloud/meshstack-hub/${var.hub.git_ref}/modules/kubernetes/manifest/buildingblock/logo.svg"
     description  = coalesce(var.bbd_description, "Deploys arbitrary Kubernetes manifests into a tenant namespace via a local Helm chart, with operator-supplied templates and user-provided values.")
     target_type  = "TENANT_LEVEL"
-    # TODO Correct would be to depend on the specific SKE cluster deployed (not just platform type),
+    # TODO Correct would be to depend on the specific cluster deployed (not just platform type),
     # as the kubeconfig.yaml input only works for one specific cluster (representing the meshPlatform here)
-    supported_platforms = [{ name = "KUBERNETES" }]
+    supported_platforms = var.meshstack.supported_platforms
     run_transparency    = true
 
     readme = coalesce(var.bbd_readme, chomp(<<-EOT
@@ -140,6 +149,7 @@ resource "meshstack_building_block_definition" "this" {
 
   version_spec = {
     draft         = var.hub.bbd_draft
+    runner_ref    = var.meshstack.runner_ref
     deletion_mode = "DELETE"
 
     implementation = {

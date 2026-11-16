@@ -26,6 +26,7 @@
 import { execFileSync } from "node:child_process";
 import { readFileSync, writeFileSync, existsSync, readdirSync, statSync } from "node:fs";
 import { basename, dirname, join, relative } from "node:path";
+import { fileURLToPath } from "node:url";
 
 const ROOT = new URL("../../", import.meta.url).pathname.replace(/\/$/, "");
 const MODULES_DIR = join(ROOT, "modules");
@@ -474,12 +475,26 @@ const detectors = [
   {
     id: "variable_meshstack",
     category: "integration",
-    name: 'variable "meshstack" in integration',
+    name: 'variable "meshstack" with the standard description',
     emoji: "🏢",
     fn: (mod) => {
       const content = readIntegrationTf(mod);
       if (!content) return { pass: false, detail: "no integration file" };
-      return { pass: /variable\s+"meshstack"/.test(content) };
+      const violation = meshstackVariableViolation(content);
+      return violation === null ? { pass: true } : { pass: false, detail: violation };
+    },
+  },
+  {
+    id: "bbd_supported_platforms",
+    category: "integration",
+    name: "tenant-level BBD takes supported_platforms from var.meshstack",
+    emoji: "🧩",
+    fn: (mod) => {
+      const content = readIntegrationTf(mod);
+      if (!content) return { pass: false, detail: "no integration file" };
+      const violations = supportedPlatformsViolations(content);
+      if (violations === null) return { pass: null, detail: "no TENANT_LEVEL definition" };
+      return listOffenders(violations, "let a consumer narrow the definition to a platform or landing zone");
     },
   },
   {
@@ -603,30 +618,7 @@ const detectors = [
         return { pass: null, detail: "no meshstack_building_block_definition resource" };
       }
 
-      const referencedVars = collectBBDInputArgumentVariableReferences(content);
-      if (referencedVars.size === 0) {
-        return { pass: true, detail: "no var.* references in BBD input arguments" };
-      }
-
-      const variableBlocks = extractVariableBlocks(content);
-      const violations = [];
-
-      for (const varName of referencedVars) {
-        const variableBlock = variableBlocks.get(varName);
-        if (!variableBlock) continue;
-
-        const hasOptional = /optional\s*\(/.test(variableBlock);
-        if (!hasOptional) continue;
-
-        const hasDefault = /^\s*default\s*=/m.test(variableBlock);
-        const hasBareObjectDefault = /default\s*=\s*\{\s*\}/s.test(variableBlock);
-
-        if (!hasDefault || hasBareObjectDefault) {
-          const reason = !hasDefault ? "missing default" : "bare default = {}";
-          violations.push(`${varName} (${reason})`);
-        }
-      }
-
+      const violations = explicitDefaultViolations(content);
       if (violations.length === 0) return { pass: true };
 
       const shown = violations.slice(0, 5).join(", ");
@@ -746,6 +738,22 @@ const detectors = [
     },
   },
   {
+    id: "summary_output",
+    category: "integration",
+    name: "Building block renders a summary",
+    emoji: "🗒️",
+    fn: (mod) => {
+      const content = readIntegrationTf(mod);
+      if (!content) return { pass: null, detail: "no integration file" };
+      if (!runsTerraform(mod)) return { pass: null, detail: "not applicable — non-terraform implementation" };
+      const missing = [];
+      if (!declaresSummaryOutput(content)) missing.push('a BBD output with assignment_type = "SUMMARY"');
+      if (summaryOutputBody(readAllBuildingBlockTf(mod) ?? "") === null) missing.push('output "summary" in buildingblock/');
+      if (missing.length === 0) return { pass: true };
+      return { pass: false, detail: `add ${missing.join(" and ")}` };
+    },
+  },
+  {
     id: "wif_no_replicator",
     category: "integration",
     name: "Trusts the runner's identity, not the replicator's",
@@ -772,8 +780,8 @@ const detectors = [
       // The runner's resolved identity lives on the definition's version, exposed by the provider as
       // version_latest / version_latest_release — there is no status.workload_identity_federation
       // attribute. See meshstack-integration.md § Runner identity.
-      if (!/version_latest(?:_release)?\.workload_identity_federation\.issuer/.test(content))
-        return { pass: false, detail: "issuer is not taken from meshstack_building_block_definition.<name>.version_latest.workload_identity_federation.issuer, which follows the runner the definition runs on" };
+      if (!/version_latest(?:_release)?\.workload_identity_federation\.issuer/.test(content) && !issuerFromPinnedRunner(content))
+        return { pass: false, detail: "issuer is taken neither from meshstack_building_block_definition.<name>.version_latest.workload_identity_federation.issuer nor from a call of modules/meshstack/runner-identity that every definition pins in version_spec.runner_ref" };
       return {
         pass: /version_latest(?:_release)?\.workload_identity_federation\.subject/.test(content),
         detail: "subjects are not taken from meshstack_building_block_definition.<name>.version_latest.workload_identity_federation.subject, so the backplane may trust something the runner never presents",
@@ -1525,6 +1533,35 @@ const detectors = [
     },
   },
   {
+    id: "sensitive_inputs_ephemeral",
+    category: "shared",
+    name: "Sensitive building block variables are ephemeral",
+    emoji: "🫥",
+    targets: ["module", "refArch"],
+    needsCode: true,
+    fn: (target) => {
+      const byDir = Map.groupBy(
+        readCodeFiles(target).filter(({ file }) => basename(dirname(file)) === "buildingblock"),
+        ({ file }) => dirname(file)
+      );
+      const offenders = [];
+      let sensitive = 0;
+      for (const [dir, files] of byDir) {
+        for (const { file, content } of files) {
+          for (const [name, body] of extractVariableBlocks(content)) {
+            if (!/^\s*sensitive\s*=\s*true\b/m.test(body)) continue;
+            sensitive++;
+            if (/^\s*ephemeral\s*=\s*true\b/m.test(body)) continue;
+            const verdict = ephemeralOnlyUses(files, name) ? "only in providers or *_wo, can be ephemeral" : "needs a rework first";
+            offenders.push(`${relative(target.path, file)}: variable "${name}" (${verdict})`);
+          }
+        }
+      }
+      if (sensitive === 0) return { pass: null, detail: "no sensitive building block variables" };
+      return listOffenders(offenders, "the runner uploads the plan file to meshStack, which keeps a sensitive value in plain text, so set ephemeral = true");
+    },
+  },
+  {
     id: "bbd_structured_inputs",
     category: "shared",
     name: "User-facing BBD inputs backed by an object or map variable are JSON with a json_schema",
@@ -1547,9 +1584,37 @@ const detectors = [
     },
   },
   {
-    id: "bbd_optional_over_default",
+    id: "bbd_input_order",
     category: "shared",
-    name: "BBD inputs do not repeat the variable's default in default_value",
+    name: "BBD inputs and their variables are declared in display order",
+    emoji: "🔢",
+    targets: ["module", "refArch"],
+    needsCode: true,
+    fn: (target) => {
+      const offenders = [];
+      let checked = 0;
+      for (const { where, bbd, inputs, variables } of bbdsWithImplementation(target)) {
+        const orders = new Map(inputs.map(([key, entry]) => [key, displayOrder(entry)]).filter(([, n]) => !Number.isNaN(n)));
+        if (orders.size === 0) continue;
+        checked++;
+        if (!isAscending([...orders.values()])) offenders.push(`${where}: ${bbd} inputs`);
+        const tail = inputs
+          .filter(([key]) => orders.has(key))
+          .toSorted(([a], [b]) => orders.get(a) - orders.get(b))
+          .map(([key, entry]) => (key === "hub" ? 2 : /^(USER_INPUT|PAYMENT_METHOD|PLATFORM_OPERATOR_MANUAL_INPUT|STATIC)$/.test(inputAttribute(entry, "assignment_type")) ? 0 : 1));
+        if (!isAscending(tail)) offenders.push(`${where}: ${bbd} generated inputs and hub are not last`);
+        if (!isAscending([...variables.keys()].filter((key) => orders.has(key)).map((key) => orders.get(key)))) {
+          offenders.push(`${where}: ${bbd} buildingblock variables`);
+        }
+      }
+      if (checked === 0) return { pass: null, detail: "no definition inputs with a display_order" };
+      return listOffenders(offenders, "declare the inputs by ascending display_order, generated inputs and then hub last, and the variables they feed in the same order");
+    },
+  },
+  {
+    id: "bbd_input_defaults",
+    category: "shared",
+    name: "The definition owns input defaults: variables fed by required inputs have no default and are not nullable, no \"\" as unset",
     emoji: "🪞",
     targets: ["module", "refArch"],
     needsCode: true,
@@ -1557,16 +1622,20 @@ const detectors = [
       const offenders = [];
       let checked = 0;
       for (const { where, bbd, key, entry, variable } of bbdInputsWithVariables(target)) {
-        const inputDefault = entry.match(/^\s*default_value\s*=\s*jsonencode\((.*)\)\s*$/m)?.[1];
-        if (inputDefault === undefined || inputAttribute(entry, "type") === "BOOLEAN") continue;
         checked++;
-        const variableDefault = variable.match(/^\s*default\s*=\s*(.+?)\s*$/m)?.[1];
-        if (isPlainLiteral(inputDefault) && normalizeLiteral(inputDefault) === normalizeLiteral(variableDefault ?? "")) {
-          offenders.push(`${where}: ${bbd} input "${key}"`);
+        if (/^\s*(is_optional\s*=\s*true\b|condition\s*=)/m.test(entry)) continue;
+        if (/^\s*const\s*=\s*true\b/m.test(variable)) continue;
+        if (/^\s*default\s*=/m.test(variable)) offenders.push(`${where}: ${bbd} input "${key}" (required, but the variable has a default)`);
+        if (!/^\s*nullable\s*=\s*false\b/m.test(variable)) offenders.push(`${where}: ${bbd} input "${key}" (required, but the variable is nullable)`);
+      }
+      for (const { where, bbd, inputs, code } of bbdsWithImplementation(target)) {
+        for (const [key] of inputs) {
+          const emptyString = new RegExp(String.raw`coalesce\(\s*var\.${key}\s*,\s*""|var\.${key}\s*[!=]=\s*""|compact\(\s*\[\s*var\.${key}\b`);
+          if (emptyString.test(code)) offenders.push(`${where}: ${bbd} input "${key}" (handles "" as unset)`);
         }
       }
-      if (checked === 0) return { pass: null, detail: "no non-BOOLEAN inputs with a default_value backed by a variable" };
-      return listOffenders(offenders, "drop default_value and set is_optional = true, so the variable's default stays the only one");
+      if (checked === 0) return { pass: null, detail: "no definition inputs backed by a variable" };
+      return listOffenders(offenders, "put a sane default into default_value and give the variable of a required input no default and nullable = false, or make the input optional and check only for null");
     },
   },
 
@@ -1893,6 +1962,140 @@ function findExpressionEnd(text, startIndex) {
   return text.length;
 }
 
+// A runner lookup describes the runner the definitions run on only if they pin it. So every call of
+// modules/meshstack/runner-identity that the integration takes an issuer from must be the runner_ref
+// of a definition, and every definition must pin one of these calls.
+export function issuerFromPinnedRunner(content) {
+  const lookups = [...extractNamedBlocks(content, "module")]
+    .filter(([, body]) => /\bsource\s*=\s*"[^"]*\bmeshstack\/runner-identity\/?[?"]/.test(body))
+    .map(([name]) => name)
+    .filter((name) => new RegExp(`\\bmodule\\.${name}\\.issuer\\b`).test(content));
+  const pinned = [...extractBBDResourceBlocks(content).values()].map(
+    (body) => body.match(/\brunner_ref\s*=\s*module\.([\w-]+)\.ref\b/)?.[1],
+  );
+  return (
+    lookups.length > 0 &&
+    pinned.length > 0 &&
+    pinned.every((name) => lookups.includes(name)) &&
+    lookups.every((name) => pinned.includes(name))
+  );
+}
+
+export function declaresSummaryOutput(integrationContent) {
+  return /assignment_type\s*=\s*"SUMMARY"/.test(integrationContent);
+}
+
+// Heredoc bodies are masked while matching braces, because Markdown in them may hold an unpaired
+// quote or `#` that the HCL scanner would misread.
+export function summaryOutputBody(tfContent) {
+  const masked = tfContent.replace(/<<-?\s*([A-Za-z_]\w*)\r?\n[\s\S]*?^\s*\1\s*$/gm, (heredoc) => {
+    const bodyStart = heredoc.indexOf("\n");
+    return heredoc.slice(0, bodyStart) + heredoc.slice(bodyStart).replace(/[^\n]/g, " ");
+  });
+  const m = /^output\s+"summary"\s*\{/m.exec(masked);
+  if (!m) return null;
+  const open = masked.indexOf("{", m.index);
+  const close = findMatchingBrace(masked, open);
+  return close > open ? tfContent.slice(m.index, close + 1) : null;
+}
+
+export function explicitDefaultViolations(content) {
+  const variableBlocks = extractVariableBlocks(content);
+  const violations = new Set();
+
+  for (const ref of collectBBDInputArgumentVariableReferences(content)) {
+    const [varName, attribute] = ref.split(".");
+    const variableBlock = variableBlocks.get(varName);
+    if (!variableBlock) continue;
+
+    const readType = (attribute && objectAttributeType(variableBlock, attribute)) ?? variableBlock;
+    if (!/optional\s*\(/.test(readType)) continue;
+
+    const hasDefault = /^\s*default\s*=/m.test(variableBlock);
+    const hasBareObjectDefault = /default\s*=\s*\{\s*\}/s.test(variableBlock);
+
+    if (!hasDefault || hasBareObjectDefault) {
+      const reason = !hasDefault ? "missing default" : "bare default = {}";
+      violations.add(`${varName} (${reason})`);
+    }
+  }
+
+  return [...violations];
+}
+
+export const MESHSTACK_DESCRIPTION = "Shared meshStack context, see docs.";
+
+export function meshstackVariableViolation(content) {
+  const meshstack = extractVariableBlocks(content).get("meshstack");
+  if (meshstack === undefined) return "no variable meshstack";
+  const description = /^\s*description\s*=\s*"((?:[^"\\]|\\.)*)"\s*$/m.exec(meshstack)?.[1];
+  if (description !== MESHSTACK_DESCRIPTION) return `description must be exactly "${MESHSTACK_DESCRIPTION}"`;
+  return null;
+}
+
+export function supportedPlatformsViolations(content) {
+  const definitions = [...extractResourceBlocks(content, "meshstack_building_block_definition").values()].filter(
+    (body) => specAttributeValue(body, "target_type") === '"TENANT_LEVEL"'
+  );
+  if (definitions.length === 0) return null;
+
+  const meshstack = extractVariableBlocks(content).get("meshstack");
+  const type = meshstack === undefined ? null : objectAttributeType(meshstack, "supported_platforms");
+  const expressions = definitions.map((body) => specAttributeValue(body, "supported_platforms") ?? "");
+  const violations = [];
+
+  if (type === null) {
+    violations.push("variable meshstack declares no supported_platforms");
+  } else if (
+    /^\s*optional\s*\(/.test(type) &&
+    !hasOptionalDefault(type) &&
+    !expressions.every((e) => /^coalesce\(\s*var\.meshstack\.supported_platforms\s*,/.test(e))
+  ) {
+    violations.push("meshstack.supported_platforms has no default");
+  }
+  if (!expressions.every((e) => /\bvar\.meshstack\.supported_platforms\b/.test(e))) {
+    violations.push("spec.supported_platforms does not read var.meshstack.supported_platforms");
+  }
+  return violations;
+}
+
+function specAttributeValue(resourceBlock, attribute) {
+  const rest = specAttributeExpression(resourceBlock, attribute);
+  return rest === null ? null : rest.slice(0, findExpressionEnd(rest, 0)).trim();
+}
+
+function hasOptionalDefault(type) {
+  const m = /^\s*optional\s*\(/.exec(type);
+  if (!m) return false;
+  let depth = 0;
+  for (const ch of type.slice(m[0].length)) {
+    if ("([{".includes(ch)) depth++;
+    else if (")]}".includes(ch)) depth--;
+    else if (ch === "," && depth === 0) return true;
+    if (depth < 0) return false;
+  }
+  return false;
+}
+
+function objectAttributeType(variableBlock, attribute) {
+  const objectMatch = /\btype\s*=\s*object\s*\(\s*\{/.exec(variableBlock);
+  if (!objectMatch) return null;
+
+  const open = objectMatch.index + objectMatch[0].length - 1;
+  const close = findMatchingBrace(variableBlock, open);
+  if (close === -1) return null;
+
+  const body = variableBlock.slice(open + 1, close);
+  for (const m of body.matchAll(new RegExp(String.raw`\b${attribute}\s*=`, "g"))) {
+    const prefix = body.slice(0, m.index);
+    const depth = (prefix.match(/[({[]/g) ?? []).length - (prefix.match(/[)}\]]/g) ?? []).length;
+    if (depth !== 0) continue;
+    const start = m.index + m[0].length;
+    return body.slice(start, findExpressionEnd(body, start));
+  }
+  return null;
+}
+
 function collectBBDInputArgumentVariableReferences(content) {
   const refs = new Set();
   const resources = extractBBDResourceBlocks(content);
@@ -1922,8 +2125,8 @@ function collectBBDInputArgumentVariableReferences(content) {
         }
 
         const expression = inputsBody.slice(exprStart, exprEnd);
-        for (const varMatch of expression.matchAll(/\bvar\.([A-Za-z_][A-Za-z0-9_]*)\b/g)) {
-          refs.add(varMatch[1]);
+        for (const varMatch of expression.matchAll(/\bvar\.([A-Za-z_]\w*)(?:\.([A-Za-z_]\w*))?/g)) {
+          refs.add(varMatch[2] ? `${varMatch[1]}.${varMatch[2]}` : varMatch[1]);
         }
       }
     }
@@ -2212,6 +2415,21 @@ function readCodeFiles(target) {
     .map((file) => ({ file, content: blankHeredocBodies(readFileSync(file, "utf-8")) }));
 }
 
+// True when every `var.<name>` sits in a provider or ephemeral block or feeds a write-only
+// argument, the places OpenTofu accepts an ephemeral value without more changes.
+function ephemeralOnlyUses(files, name) {
+  const reference = new RegExp(String.raw`\bvar\.${name}\b`);
+  return files.every(({ content }) => {
+    let rest = content;
+    for (const m of content.matchAll(/^(provider|ephemeral)\s+"[^"]+"(\s+"[^"]+")?\s*\{/gm)) {
+      const open = content.indexOf("{", m.index);
+      const close = findMatchingBrace(content, open);
+      if (close > open) rest = rest.slice(0, open) + " ".repeat(close - open) + rest.slice(close);
+    }
+    return rest.split("\n").every((line) => !reference.test(line) || /^\s*\w+_wo\s*=/.test(line));
+  });
+}
+
 function listOffenders(offenders, advice) {
   if (offenders.length === 0) return { pass: true };
   const shown = offenders.slice(0, 5).join("; ");
@@ -2253,6 +2471,14 @@ function bbdEntries(bbdBlock, attribute) {
 // meshStack passes each input to the Terraform variable of the same name in the definition's
 // repository_path, which every definition in this repo sets as a literal.
 function bbdInputsWithVariables(target) {
+  return bbdsWithImplementation(target).flatMap(({ where, bbd, inputs, variables }) =>
+    inputs.filter(([key]) => variables.has(key)).map(([key, entry]) => ({ where, bbd, key, entry, variable: variables.get(key) }))
+  );
+}
+
+// Every definition whose repository_path is in this repo, with its inputs in source order and the
+// code of its implementation directory.
+function bbdsWithImplementation(target) {
   const found = [];
   for (const { file, content } of readCodeFiles(target)) {
     for (const [bbd, body] of extractResourceBlocks(content, "meshstack_building_block_definition")) {
@@ -2260,23 +2486,18 @@ function bbdInputsWithVariables(target) {
       if (!path) continue;
       const implementation = join(ROOT, path);
       if (!existsSync(implementation)) continue;
-      const variables = extractVariableBlocks(
-        readdirSync(implementation)
-          .filter((f) => f.endsWith(".tf"))
-          .map((f) => readFileSync(join(implementation, f), "utf-8"))
-          .join("\n")
-      );
-      for (const [key, entry] of bbdEntries(body, "inputs")) {
-        const variable = variables.get(key);
-        if (variable) found.push({ where: relative(target.path, file), bbd, key, entry, variable });
-      }
+      const code = readdirSync(implementation)
+        .filter((f) => f.endsWith(".tf"))
+        .map((f) => readFileSync(join(implementation, f), "utf-8"))
+        .join("\n");
+      found.push({ where: relative(target.path, file), bbd, inputs: bbdEntries(body, "inputs"), variables: extractVariableBlocks(code), code });
     }
   }
   return found;
 }
 
-const isPlainLiteral = (text) => /^("([^"\\$]|\\.)*"|-?\d+(\.\d+)?|true|false|\[\s*\]|\{\s*\})$/.test(text.trim());
-const normalizeLiteral = (text) => text.replace(/\s+/g, "");
+const displayOrder = (entry) => Number(entry.match(/^\s*display_order\s*=\s*(\d+)/m)?.[1] ?? NaN);
+const isAscending = (numbers) => numbers.every((n, i) => i === 0 || numbers[i - 1] <= n);
 
 function moduleSourceDirs(file, content) {
   const dirs = [];
@@ -2816,4 +3037,4 @@ function main() {
   else process.stdout.write(report);
 }
 
-main();
+if (process.argv[1] === fileURLToPath(import.meta.url)) main();

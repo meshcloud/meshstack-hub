@@ -20,8 +20,12 @@ variable "meshstack" {
   type = object({
     owning_workspace_identifier = string
     tags                        = optional(map(list(string)), {})
+    runner_ref = optional(object({
+      kind = string
+      uuid = string
+    }))
   })
-  description = "Shared meshStack context. Tags are optional and propagated to building block definition metadata."
+  description = "Shared meshStack context, see docs."
 }
 
 variable "hub" {
@@ -259,6 +263,7 @@ resource "meshstack_building_block_definition" "this" {
 
   version_spec = {
     draft         = var.hub.bbd_draft
+    runner_ref    = var.meshstack.runner_ref
     deletion_mode = "DELETE"
 
     permissions = [
@@ -269,6 +274,7 @@ resource "meshstack_building_block_definition" "this" {
       "BUILDINGBLOCK_LIST",
       "BUILDINGBLOCK_SAVE",
       "BUILDINGBLOCK_DELETE",
+      "BUILDINGBLOCKRUNNER_LIST",
       "LANDINGZONE_LIST",
       "LANDINGZONE_SAVE",
       "LANDINGZONE_DELETE",
@@ -406,8 +412,6 @@ resource "meshstack_building_block_definition" "this" {
         display_order          = 75
       }
 
-      # Keep this description under roughly 200 characters. meshStack answers a longer one with
-      # `500 InternalError` on the version update, not a 400.
       tags = {
         display_name           = "Tags"
         description            = "Tags forwarded to the nested integrations and the management meshProject. Build them in the form: add {key, values} entries, plus the project owner tag key."
@@ -483,6 +487,15 @@ resource "meshstack_building_block_definition" "this" {
         assignment_type = "STATIC"
         argument        = jsonencode(var.create_cce_admin_trust)
         display_order   = 130
+      }
+
+      runner_ref = {
+        display_name    = "Runner"
+        description     = "Runner to use for all definitions created by this building block. Set to `{}` to use the default shared runner."
+        type            = "CODE"
+        assignment_type = "STATIC"
+        argument        = jsonencode(jsonencode(coalesce(var.meshstack.runner_ref, {})))
+        display_order   = 135
       }
     }
 

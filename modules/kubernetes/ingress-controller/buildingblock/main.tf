@@ -1,24 +1,13 @@
 locals {
-  # lifecycle.enabled, names and outputs reject a sensitive value, so the plain facts of var.dns01
-  # are unmarked while its credentials keep the mark.
-  # try: nonsensitive() rejects a value without the mark, which is the case when var.dns01 is null.
-  dns01_enabled = try(nonsensitive(var.dns01 != null), var.dns01 != null)
-  # try: as above.
-  dns01_stackit_enabled = local.dns01_enabled ? try(nonsensitive(var.dns01.stackit != null), var.dns01.stackit != null) : false
-  # try: as above.
-  dns01_route53_enabled = local.dns01_enabled ? try(nonsensitive(var.dns01.route53 != null), var.dns01.route53 != null) : false
-  # try: as above.
-  dns01_zone_name = local.dns01_enabled ? try(nonsensitive(var.dns01.zone_name), var.dns01.zone_name) : null
-  # try: as above.
-  dns01_certificate_domain = local.dns01_enabled ? coalesce(
-    try(nonsensitive(var.dns01.certificate_domain), var.dns01.certificate_domain),
-    local.dns01_zone_name
-  ) : null
-
   # The chart derives the controller Service name from the release name.
   haproxy_service_name = "${var.haproxy_release_name}-kubernetes-ingress"
 
   issuer_release_name = "ingress-issuer"
+
+  ingress_class_name = "haproxy"
+
+  cluster_issuer_name = var.use_letsencrypt_staging ? "letsencrypt-staging" : "letsencrypt-prod"
+  acme_server         = var.use_letsencrypt_staging ? "https://acme-staging-v02.api.letsencrypt.org/directory" : "https://acme-v02.api.letsencrypt.org/directory"
 
   # The API server rejects a null resource quantity.
   resources = {
@@ -27,7 +16,6 @@ locals {
       cert_manager_webhook         = var.cert_manager_webhook_resources
       cert_manager_cainjector      = var.cert_manager_cainjector_resources
       cert_manager_startupapicheck = var.cert_manager_startupapicheck_resources
-      stackit_webhook              = var.stackit_webhook_resources
       haproxy                      = var.haproxy_resources
       haproxy_crdjob               = var.haproxy_crdjob_resources
       } : name => {
@@ -63,7 +51,7 @@ module "cert_manager" {
   namespace          = module.cert_manager_namespace.name
   repository         = "https://charts.jetstack.io"
   chart              = "cert-manager"
-  chart_version      = var.cert_manager_version
+  chart_version      = "v1.20.0"
   timeout            = 300
 
   values = [
@@ -72,7 +60,8 @@ module "cert_manager" {
         enabled = true
         keep    = var.cert_manager_crds_keep
       }
-      extraArgs = var.cert_manager_extra_args
+      # ingress-shim creates the per-Ingress certificates.
+      extraArgs = concat(var.cert_manager_extra_args, var.wildcard_certs == null ? [] : ["--controllers=*,-ingress-shim"])
 
       # The chart ships no resources for any of its four workloads.
       resources       = local.resources.cert_manager
@@ -81,71 +70,6 @@ module "cert_manager" {
       startupapicheck = { resources = local.resources.cert_manager_startupapicheck }
     })
   ]
-}
-
-# The webhook mounts the key from a secret in its own namespace.
-resource "kubernetes_secret_v1" "stackit_dns01" {
-  lifecycle {
-    enabled = local.dns01_stackit_enabled
-  }
-
-  metadata {
-    name      = "stackit-sa-authentication"
-    namespace = module.cert_manager_namespace.name
-  }
-
-  data = {
-    "sa.json" = var.dns01.stackit.service_account_key
-  }
-}
-
-# cert-manager has no built-in solver for STACKIT DNS.
-resource "helm_release" "stackit_cert_manager_webhook" {
-  lifecycle {
-    enabled = local.dns01_stackit_enabled
-  }
-
-  name       = "stackit-cert-manager-webhook"
-  namespace  = module.cert_manager_namespace.name
-  repository = "https://stackitcloud.github.io/stackit-cert-manager-webhook"
-  chart      = "stackit-cert-manager-webhook"
-  version    = var.stackit_webhook_version
-
-  create_namespace = false
-  wait             = true
-  timeout          = 300
-
-  values = [
-    yamlencode({
-      groupName = "acme.stackit.de"
-      certManager = {
-        namespace          = module.cert_manager_namespace.name
-        serviceAccountName = "cert-manager"
-      }
-      stackitSaAuthentication = {
-        enabled    = true
-        secretName = kubernetes_secret_v1.stackit_dns01.metadata[0].name
-      }
-      resources = local.resources.stackit_webhook
-    })
-  ]
-
-  depends_on = [module.cert_manager]
-}
-
-resource "kubernetes_secret_v1" "route53_dns01" {
-  lifecycle {
-    enabled = local.dns01_route53_enabled
-  }
-
-  metadata {
-    name      = "route53-dns01-credentials"
-    namespace = module.cert_manager_namespace.name
-  }
-
-  data = {
-    "secret-access-key" = var.dns01.route53.secret_access_key
-  }
 }
 
 module "haproxy_namespace" {
@@ -173,39 +97,21 @@ module "issuer" {
   values = [
     yamlencode({
       clusterIssuer = {
-        name                 = var.cluster_issuer_name
+        name                 = local.cluster_issuer_name
         email                = var.acme_email
-        server               = var.acme_server
-        privateKeySecretName = var.acme_private_key_secret_name
+        server               = local.acme_server
+        privateKeySecretName = "${local.cluster_issuer_name}-account-key"
       }
-      ingressClassName = var.ingress_class_name
-      dns01 = {
-        zoneName = local.dns01_zone_name
-        stackit = local.dns01_stackit_enabled ? {
-          projectId = var.dns01.stackit.project_id
-        } : null
-        route53 = local.dns01_route53_enabled ? {
-          region                    = var.dns01.route53.region
-          hostedZoneID              = var.dns01.route53.hosted_zone_id
-          accessKeyID               = var.dns01.route53.access_key_id
-          secretAccessKeySecretName = kubernetes_secret_v1.route53_dns01.metadata[0].name
-          secretAccessKeySecretKey  = "secret-access-key"
-        } : null
-      }
-      wildcardCertificate = {
-        enabled    = local.dns01_enabled
-        domain     = local.dns01_certificate_domain
-        name       = var.wildcard_certificate_name
-        namespace  = module.haproxy_namespace.name
-        secretName = var.wildcard_certificate_name
+      ingressClassName = local.ingress_class_name
+      wildcardCerts = var.wildcard_certs == null ? null : {
+        domain      = var.wildcard_certs.domain
+        dns01Solver = var.wildcard_certs.dns01_solver
+        namespace   = module.haproxy_namespace.name
       }
     })
   ]
 
-  depends_on = [
-    module.cert_manager,
-    helm_release.stackit_cert_manager_webhook,
-  ]
+  depends_on = [module.cert_manager]
 }
 
 module "haproxy" {
@@ -216,7 +122,7 @@ module "haproxy" {
   namespace          = module.haproxy_namespace.name
   repository         = "https://haproxytech.github.io/helm-charts"
   chart              = "kubernetes-ingress"
-  chart_version      = var.haproxy_version
+  chart_version      = "1.49.0"
   timeout            = var.haproxy_timeout
 
   values = [
@@ -226,17 +132,16 @@ module "haproxy" {
       controller = merge(
         {
           replicaCount         = var.haproxy_replica_count
-          ingressClass         = var.ingress_class_name
-          ingressClassResource = { name = var.ingress_class_name }
+          ingressClass         = local.ingress_class_name
+          ingressClassResource = { name = local.ingress_class_name }
           resources            = local.resources.haproxy
           service = {
             type        = var.haproxy_service_type
             annotations = var.haproxy_service_annotations
           }
         },
-        # defaultTLSSecret.secretNamespace defaults to the release namespace, where the wildcard
-        # Certificate writes its secret.
-        local.dns01_enabled ? { defaultTLSSecret = { secret = var.wildcard_certificate_name } } : {}
+        # secretNamespace defaults to the release namespace, where the wildcard Certificate lives.
+        var.wildcard_certs == null ? {} : { defaultTLSSecret = { secret = "wildcard-tls" } }
       )
     })
   ]
@@ -302,21 +207,6 @@ import {
 }
 
 moved {
-  from = kubernetes_secret_v1.stackit_dns01[0]
-  to   = kubernetes_secret_v1.stackit_dns01
-}
-
-moved {
-  from = helm_release.stackit_cert_manager_webhook[0]
-  to   = helm_release.stackit_cert_manager_webhook
-}
-
-moved {
-  from = kubernetes_secret_v1.route53_dns01[0]
-  to   = kubernetes_secret_v1.route53_dns01
-}
-
-moved {
   from = module.ingress.kubernetes_namespace_v1.cert_manager
   to   = kubernetes_namespace_v1.cert_manager
 }
@@ -334,21 +224,6 @@ moved {
 moved {
   from = helm_release.cert_manager
   to   = module.cert_manager.helm_release.this
-}
-
-moved {
-  from = module.ingress.kubernetes_secret_v1.stackit_dns01
-  to   = kubernetes_secret_v1.stackit_dns01
-}
-
-moved {
-  from = module.ingress.helm_release.stackit_cert_manager_webhook
-  to   = helm_release.stackit_cert_manager_webhook
-}
-
-moved {
-  from = module.ingress.kubernetes_secret_v1.route53_dns01
-  to   = kubernetes_secret_v1.route53_dns01
 }
 
 moved {
@@ -379,4 +254,34 @@ moved {
 moved {
   from = helm_release.haproxy
   to   = module.haproxy.helm_release.this
+}
+
+data "kubernetes_resource" "wildcard_certificate" {
+  lifecycle {
+    enabled = var.wildcard_certs != null
+  }
+
+  api_version = "cert-manager.io/v1"
+  kind        = "Certificate"
+
+  metadata {
+    name      = "wildcard-tls"
+    namespace = module.haproxy_namespace.name
+  }
+
+  depends_on = [module.issuer]
+}
+
+locals {
+  # try: a Certificate cert-manager has not processed yet has no status.conditions.
+  wildcard_certificate_ready = var.wildcard_certs != null && anytrue([for c in try(data.kubernetes_resource.wildcard_certificate.object.status.conditions, []) : c.type == "Ready" && c.status == "True"])
+}
+
+# Issuance runs after this apply, and on a first install the DNS-01 solver may not exist yet, so a
+# certificate that is not ready only warns.
+check "wildcard_certificate_ready" {
+  assert {
+    condition     = var.wildcard_certs == null || local.wildcard_certificate_ready
+    error_message = "The wildcard certificate ${module.haproxy_namespace.name}/wildcard-tls is not Ready yet. Check its Challenge in that namespace if this persists."
+  }
 }

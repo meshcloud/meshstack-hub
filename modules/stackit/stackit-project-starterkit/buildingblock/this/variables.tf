@@ -28,19 +28,24 @@ variable "landing_zone" {
   }
 }
 
+variable "payment_method" {
+  type = object({
+    kind = string
+    name = string
+  })
+  nullable    = false
+  description = "Payment method of the created meshProject."
+}
+
 variable "workspace_identifier" {
   type        = string
   nullable    = false
   description = "Identifier of the meshStack workspace the created project belongs to."
 }
 
-# `kind` is required rather than optional on this variable and on `landing_zone_refs` so that neither
-# type contains `optional()`. Both are genuinely required inputs, and giving them a default purely to
-# satisfy a convention would hide a misconfiguration behind a value nobody chose.
 variable "platform_ref" {
   type = object({
     uuid = string
-    kind = string
   })
   nullable    = false
   description = "Reference to the meshPlatform the tenant is created on. Required because the meshTenant v4 API references platforms by ref."
@@ -52,7 +57,6 @@ variable "platform_ref" {
 variable "landing_zone_refs" {
   type = map(object({
     name = string
-    kind = string
   }))
   nullable    = false
   description = "Landing zones the application team can choose from, keyed by the label shown in the select."
@@ -101,10 +105,10 @@ variable "network_static" {
 variable "tags" {
   type = object({
     project               = map(list(string))
-    project_owner_tag_key = string
+    project_owner_tag_key = optional(string)
   })
   nullable    = false
-  description = "`project` tags are applied to the created meshProject; `project_owner_tag_key` names the tag that receives the creator's display name, empty to set none."
+  description = "`project` tags are applied to the created meshProject; `project_owner_tag_key` names the tag that receives the creator's display name, null or empty to set none."
 }
 
 variable "add_random_name_suffix" {

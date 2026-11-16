@@ -1,5 +1,10 @@
 # meshstack-hub — Agent Instructions
 
+**Using hub modules for a user's meshStack, not changing this repository? Stop here.** Read the
+[meshStack agent context](https://docs.meshcloud.io/agent-context/index.md) first, then the
+[`meshstack-hub` skill](skills/meshstack-hub/SKILL.md). The rest of this file is for changing this
+repository.
+
 The canonical registry of OpenTofu building blocks for meshStack — an Artifactory-like catalog with
 a UI at hub.meshcloud.io, and the monorepo for every IaC building block importable into any
 meshStack instance.

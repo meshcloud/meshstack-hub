@@ -1,7 +1,6 @@
 variable "platform_ref" {
   type = object({
     uuid = string
-    kind = string
   })
   nullable    = false
   description = "Reference (by uuid) to the meshPlatform tenants are created on — e.g. the `platform_ref` output of `modules/stackit`. Required since the meshTenant v4 API references platforms by ref."
@@ -10,7 +9,6 @@ variable "platform_ref" {
 variable "landing_zone_refs" {
   type = map(object({
     name = string
-    kind = string
   }))
   nullable    = false
   description = "Landing zones the application team can choose from, keyed by the label shown in the select — e.g. the `landingzone_refs` output of `modules/stackit`, relabelled. The definition builds its select from these keys and passes the whole map to the building block, which resolves the selected label against it."
@@ -67,6 +65,16 @@ variable "add_random_name_suffix" {
   description = "Append a five-character random suffix to the project name the application team enters."
 }
 
+variable "project_tags" {
+  type = object({
+    tags          = map(list(string))
+    owner_tag_key = optional(string)
+  })
+  nullable    = false
+  default     = { tags = {} }
+  description = "Tags for the meshProject the starter kit creates. `owner_tag_key` names the tag that receives the creator's display name; null sets none."
+}
+
 variable "notification_subscribers" {
   type        = list(string)
   default     = []
@@ -107,14 +115,14 @@ variable "approval_policies" {
 variable "meshstack" {
   type = object({
     owning_workspace_identifier = string
-    tags = object({
-      building_block        = map(list(string))
-      project               = map(list(string))
-      project_owner_tag_key = string
-    })
+    tags                        = optional(map(list(string)), {})
+    runner_ref = optional(object({
+      kind = string
+      uuid = string
+    }))
   })
   nullable    = false
-  description = "Shared meshStack context. `tags.building_block` goes on the definition's own metadata; `tags.project` and `tags.project_owner_tag_key` are passed through to the meshProjects the starterkit creates."
+  description = "Shared meshStack context, see docs."
 }
 
 variable "hub" {
@@ -156,7 +164,7 @@ locals {
 resource "meshstack_building_block_definition" "this" {
   metadata = {
     owned_by_workspace = var.meshstack.owning_workspace_identifier
-    tags               = var.meshstack.tags.building_block
+    tags               = var.meshstack.tags
   }
 
   spec = {
@@ -227,7 +235,8 @@ resource "meshstack_building_block_definition" "this" {
   }
 
   version_spec = {
-    draft = var.hub.bbd_draft
+    draft      = var.hub.bbd_draft
+    runner_ref = var.meshstack.runner_ref
 
     # PURGE, not DELETE, because the block deletes itself at the end of its own run — see
     # `terraform_data.self_purge` in the building block. Under PURGE meshStack runs no teardown, so
@@ -283,6 +292,14 @@ resource "meshstack_building_block_definition" "this" {
         default_value     = jsonencode(var.default_landing_zone)
       }
 
+      payment_method = {
+        assignment_type        = "PAYMENT_METHOD"
+        type                   = "CODE"
+        display_name           = "Payment Method"
+        description            = "Payment method of the created meshProject, one of your workspace's payment methods."
+        updateable_by_consumer = true
+      }
+
       # ── Set by the platform team ──
 
       platform_ref = {
@@ -326,7 +343,10 @@ resource "meshstack_building_block_definition" "this" {
         display_name    = "Tags"
         description     = "HCL object of tags applied to the created meshProject."
         # jsonencode twice is correct, see landing_zone_refs note above.
-        argument = jsonencode(jsonencode(var.meshstack.tags))
+        argument = jsonencode(jsonencode({
+          project               = var.project_tags.tags
+          project_owner_tag_key = var.project_tags.owner_tag_key
+        }))
       }
 
       add_random_name_suffix = {

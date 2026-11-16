@@ -1,4 +1,7 @@
 locals {
+  # The provider reads a ref without a uuid as unknown, not as the shared runner.
+  runner_ref = var.runner_ref.uuid == null ? null : var.runner_ref
+
   # The identifier is unique across the whole meshStack instance and lands in the landing zone name,
   # so a playground deployment suffixes it instead of occupying the plain name.
   platform_identifier = var.playground_mode ? "${var.platform_identifier}-${random_string.playground_suffix.result}" : var.platform_identifier
@@ -83,6 +86,7 @@ module "otc_integration" {
 
   meshstack = {
     owning_workspace_identifier = var.workspace
+    runner_ref                  = local.runner_ref
     location_name               = var.use_global_location ? "global" : meshstack_location.this.metadata.name
     platform_identifier         = local.platform_identifier
     tags = {
@@ -179,9 +183,8 @@ module "federation_mapping_integration" {
   otc_identity_provider_email_attribute = module.otc_integration.federation.email_attribute
   otc_identity_provider_base_group      = module.otc_integration.federation.base_group
   function_name                         = "mesh-${local.platform_identifier}-idp-mapping"
-  otc_platform_type                     = module.otc_integration.platform_type_name
 
-  meshstack = { owning_workspace_identifier = var.workspace, tags = local.tags.building_block }
+  meshstack = local.service_meshstack
   hub       = var.hub
 }
 
@@ -224,10 +227,16 @@ locals {
   }
 
   service_integration = {
-    otc_domain_name   = var.otc_domain_name
-    otc_region        = var.otc_region
-    otc_auth_url      = local.auth_url
-    otc_platform_type = module.otc_integration.platform_type_name
+    otc_domain_name = var.otc_domain_name
+    otc_region      = var.otc_region
+    otc_auth_url    = local.auth_url
+  }
+
+  service_meshstack = {
+    owning_workspace_identifier = var.workspace
+    tags                        = local.tags.building_block
+    runner_ref                  = local.runner_ref
+    supported_platforms         = [{ name = module.otc_integration.platform_type_name }]
   }
 }
 
@@ -238,14 +247,13 @@ module "network_integration" {
 
   source = "github.com/meshcloud/meshstack-hub//modules/otc/network?ref=${var.hub.git_ref}"
 
-  otc_domain_name   = local.service_integration.otc_domain_name
-  otc_region        = local.service_integration.otc_region
-  otc_auth_url      = local.service_integration.otc_auth_url
-  otc_platform_type = local.service_integration.otc_platform_type
+  otc_domain_name = local.service_integration.otc_domain_name
+  otc_region      = local.service_integration.otc_region
+  otc_auth_url    = local.service_integration.otc_auth_url
 
   workload_identity_name = "mesh-${local.platform_identifier}-network"
 
-  meshstack = { owning_workspace_identifier = var.workspace, tags = local.tags.building_block }
+  meshstack = local.service_meshstack
   hub       = var.hub
 }
 
@@ -256,14 +264,13 @@ module "obs_bucket_integration" {
 
   source = "github.com/meshcloud/meshstack-hub//modules/otc/obs-bucket?ref=${var.hub.git_ref}"
 
-  otc_domain_name   = local.service_integration.otc_domain_name
-  otc_region        = local.service_integration.otc_region
-  otc_auth_url      = local.service_integration.otc_auth_url
-  otc_platform_type = local.service_integration.otc_platform_type
+  otc_domain_name = local.service_integration.otc_domain_name
+  otc_region      = local.service_integration.otc_region
+  otc_auth_url    = local.service_integration.otc_auth_url
 
   workload_identity_name = "mesh-${local.platform_identifier}-obs-bucket"
 
-  meshstack = { owning_workspace_identifier = var.workspace, tags = local.tags.building_block }
+  meshstack = local.service_meshstack
   hub       = var.hub
 }
 
@@ -274,15 +281,14 @@ module "rds_integration" {
 
   source = "github.com/meshcloud/meshstack-hub//modules/otc/rds?ref=${var.hub.git_ref}"
 
-  otc_domain_name   = local.service_integration.otc_domain_name
-  otc_region        = local.service_integration.otc_region
-  otc_auth_url      = local.service_integration.otc_auth_url
-  otc_platform_type = local.service_integration.otc_platform_type
+  otc_domain_name = local.service_integration.otc_domain_name
+  otc_region      = local.service_integration.otc_region
+  otc_auth_url    = local.service_integration.otc_auth_url
 
   workload_identity_name  = "mesh-${local.platform_identifier}-rds"
   network_definition_uuid = module.network_integration.building_block_definition.uuid
 
-  meshstack = { owning_workspace_identifier = var.workspace, tags = local.tags.building_block }
+  meshstack = local.service_meshstack
   hub       = var.hub
 }
 
@@ -293,15 +299,14 @@ module "cce_integration" {
 
   source = "github.com/meshcloud/meshstack-hub//modules/otc/cce?ref=${var.hub.git_ref}"
 
-  otc_domain_name   = local.service_integration.otc_domain_name
-  otc_region        = local.service_integration.otc_region
-  otc_auth_url      = local.service_integration.otc_auth_url
-  otc_platform_type = local.service_integration.otc_platform_type
+  otc_domain_name = local.service_integration.otc_domain_name
+  otc_region      = local.service_integration.otc_region
+  otc_auth_url    = local.service_integration.otc_auth_url
 
   workload_identity_name  = "mesh-${local.platform_identifier}-cce"
   network_definition_uuid = module.network_integration.building_block_definition.uuid
   create_cce_admin_trust  = var.create_cce_admin_trust
 
-  meshstack = { owning_workspace_identifier = var.workspace, tags = local.tags.building_block }
+  meshstack = local.service_meshstack
   hub       = var.hub
 }

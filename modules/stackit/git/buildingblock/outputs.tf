@@ -13,11 +13,21 @@ output "instance_url" {
   value       = module.instance.instance.url
 }
 
-output "organization_url" {
-  description = "URL of the Forgejo organization. Falls back to the instance URL when no organization was asked for."
-  value = local.create_forgejo_organization ? format(
+locals {
+  organization_url = local.create_forgejo_organization ? format(
     "%s/%s", trimsuffix(module.instance.instance.url, "/"), var.forgejo_organization
   ) : module.instance.instance.url
+  portal_url = "https://portal.stackit.cloud/git/instances/${module.instance.instance.instance_id}/overview?project=${var.stackit_project_id}"
+}
+
+output "organization_url" {
+  description = "URL of the Forgejo organization. Falls back to the instance URL when no organization was asked for."
+  value       = local.organization_url
+}
+
+output "portal_url" {
+  description = "STACKIT portal page of the Git instance."
+  value       = local.portal_url
 }
 
 output "forgejo_organization" {
@@ -41,4 +51,22 @@ output "vault_secret" {
       secret_hash = local.vault_secret_hash
     } : key => value if local.write_to_vault
   }
+}
+
+output "summary" {
+  description = "Markdown summary shown on the building block."
+  value = templatefile("${path.module}/SUMMARY.md.tftpl", {
+    instance_name        = module.instance.instance.name
+    instance_url         = module.instance.instance.url
+    portal_url           = local.portal_url
+    forgejo_organization = local.create_forgejo_organization ? var.forgejo_organization : null
+    organization_url     = local.organization_url
+    local_user_username  = local.local_user_username
+    shared_runner_labels = var.shared_runner_labels
+    vault_secret_path    = local.vault_secret_path
+    vault_mount          = local.vault_mount
+    members = [
+      for email, role in local.member_roles : { email = email, role = role, username = lookup(local.forgejo_usernames, email, "") }
+    ]
+  })
 }

@@ -1,0 +1,32 @@
+name: sonar
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+concurrency:
+  group: sonar-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+permissions:
+  contents: read
+
+jobs:
+  scan:
+    runs-on: ubuntu-latest
+    # A step condition cannot read secrets, only the environment of the job.
+    env:
+      SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          # SonarQube Cloud reads the history to find new code and to blame issues.
+          fetch-depth: 0
+
+      # Pull requests from forks and from Dependabot get no secrets.
+      - if: env.SONAR_TOKEN != ''
+        uses: SonarSource/sonarqube-scan-action@4d1dc0c91ee400dcf8a6dddf2f705ac36542e304 # v8.4.0
+        with:
+          # Keeps a properties file on a branch from sending the token to another host.
+          args: -Dsonar.host.url=https://sonarcloud.io

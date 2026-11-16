@@ -1,4 +1,7 @@
 locals {
+  # The provider reads a ref without a uuid as unknown, not as the shared runner.
+  runner_ref = var.runner_ref.uuid == null ? null : var.runner_ref
+
   tenant_ref = { kind = "meshTenant", uuid = var.tenant_uuid }
 
   # A released definition can be published to every workspace; the platform's own stay in its workspace.
@@ -6,7 +9,18 @@ locals {
 
   service_account_email = var.automation_identity.service_account_email
 
-  kubernetes_platform_imports = var.imports.kubernetes_platform != null ? var.imports.kubernetes_platform : {
+  imports = var.imports != null ? var.imports : {
+    adopt_ske              = false
+    git                    = null
+    dns                    = null
+    adopt_ingress          = false
+    secrets_manager        = null
+    container_registry     = null
+    kubernetes_platform    = null
+    starterkit_definitions = null
+  }
+
+  kubernetes_platform_imports = local.imports.kubernetes_platform != null ? local.imports.kubernetes_platform : {
     platform_name     = null
     location_name     = null
     landingzone_names = {}
@@ -95,14 +109,18 @@ resource "meshstack_building_block" "platform_federation" {
     inputs = {
       service_account_email = { value = jsonencode(local.service_account_email) }
       federated_building_block_definitions = {
-        value = jsonencode(jsonencode(concat([
-          module.cluster_integration.building_block_definition.uuid,
-          module.git_integration.building_block_definition.uuid,
-          module.container_registry_integration.building_block_definition.uuid,
-          module.ai_llm_integration.building_block_definition.uuid,
-          module.secrets_manager_integration.building_block_definition.uuid,
-          module.dns_integration.building_block_definition.uuid,
-        ])))
+        value = jsonencode(jsonencode(concat(
+          [
+            module.cluster_integration.building_block_definition.uuid,
+            module.git_integration.building_block_definition.uuid,
+            module.container_registry_integration.building_block_definition.uuid,
+          ],
+          var.ai_model == null ? [] : [module.ai_llm_integration.building_block_definition.uuid],
+          [
+            module.secrets_manager_integration.building_block_definition.uuid,
+            module.dns_integration.building_block_definition.uuid,
+          ],
+        )))
       }
     }
   }

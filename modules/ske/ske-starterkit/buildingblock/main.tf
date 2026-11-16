@@ -54,7 +54,8 @@ resource "meshstack_project" "this" {
     owned_by_workspace = var.workspace_identifier
   }
   spec = {
-    display_name = "${var.name} ${title(each.key)}"
+    display_name              = "${var.name} ${title(each.key)}"
+    payment_method_identifier = var.payment_method.name
     tags = merge(
       lookup(var.project_tags.stages, each.key, {}),
       var.project_tags.owner_tag_key == null ? {} : {
@@ -138,14 +139,3 @@ resource "meshstack_building_block" "forgejo_connector" {
     }
   }
 }
-
-moved {
-  from = meshstack_building_block_v2.git_repository
-  to   = meshstack_building_block.git_repository
-}
-
-moved {
-  from = meshstack_building_block_v2.forgejo_connector
-  to   = meshstack_building_block.forgejo_connector
-}
-
