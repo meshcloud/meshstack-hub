@@ -87,7 +87,7 @@ variable "hub" {
 module "runner" {
   source = "github.com/meshcloud/meshstack-hub//modules/meshstack/runner-identity?ref=${var.hub.git_ref}"
 
-  cloud      = "gcp" # OTC has no token of its own and takes this one as a generic OIDC token.
+  cloud      = "gcp"
   runner_ref = var.meshstack.runner_ref
 }
 

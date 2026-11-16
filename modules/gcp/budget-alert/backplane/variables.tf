@@ -33,7 +33,7 @@ variable "workload_identity_federation_trust" {
     subjects = list(string)
   })
   nullable    = false
-  description = "What the pool provider trusts: the runner's OIDC issuer and audience, and the subject claims it accepts, each matched exactly. Take issuer and audience from the `meshstack_building_block_runner` the definitions run on, and the subjects from their `version_latest.workload_identity_federation`."
+  description = "What the pool provider trusts: the runner's OIDC issuer and audience, and the subject claims it accepts, each matched exactly. Take issuer and audience from `modules/meshstack/runner-identity`, which looks up the runner the definitions run on, and the subjects from their `version_latest.workload_identity_federation`."
 }
 
 variable "iam_propagation_delay_seconds" {

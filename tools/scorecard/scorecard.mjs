@@ -781,7 +781,7 @@ const detectors = [
       // version_latest / version_latest_release — there is no status.workload_identity_federation
       // attribute. See meshstack-integration.md § Runner identity.
       if (!/version_latest(?:_release)?\.workload_identity_federation\.issuer/.test(content) && !issuerFromPinnedRunner(content))
-        return { pass: false, detail: "issuer is taken neither from meshstack_building_block_definition.<name>.version_latest.workload_identity_federation.issuer nor from a runner lookup (modules/meshstack/runner-identity) that the definition pins in version_spec.runner_ref" };
+        return { pass: false, detail: "issuer is taken neither from meshstack_building_block_definition.<name>.version_latest.workload_identity_federation.issuer nor from a call of modules/meshstack/runner-identity that every definition pins in version_spec.runner_ref" };
       return {
         pass: /version_latest(?:_release)?\.workload_identity_federation\.subject/.test(content),
         detail: "subjects are not taken from meshstack_building_block_definition.<name>.version_latest.workload_identity_federation.subject, so the backplane may trust something the runner never presents",
@@ -1962,19 +1962,23 @@ function findExpressionEnd(text, startIndex) {
   return text.length;
 }
 
-// A runner lookup describes the runner the definition runs on only if the definition pins it. So
-// every lookup the integration takes an issuer from must also be the one in version_spec.runner_ref.
-// A lookup is a call of modules/meshstack/runner-identity, or the data source that module wraps.
+// A runner lookup describes the runner the definitions run on only if they pin it. So every call of
+// modules/meshstack/runner-identity that the integration takes an issuer from must be the runner_ref
+// of a definition, and every definition must pin one of these calls.
 export function issuerFromPinnedRunner(content) {
-  const moduleLookups = [...content.matchAll(/module\s+"(\w+)"\s*\{[^}]*?\bsource\s*=\s*"[^"]*\bmeshstack\/runner-identity[?"]/g)].map(
-    ([, name]) => ({ issuer: `module\\.${name}\\.issuer`, ref: `module\\.${name}\\.ref` }),
+  const lookups = [...extractNamedBlocks(content, "module")]
+    .filter(([, body]) => /\bsource\s*=\s*"[^"]*\bmeshstack\/runner-identity\/?[?"]/.test(body))
+    .map(([name]) => name)
+    .filter((name) => new RegExp(`\\bmodule\\.${name}\\.issuer\\b`).test(content));
+  const pinned = [...extractBBDResourceBlocks(content).values()].map(
+    (body) => body.match(/\brunner_ref\s*=\s*module\.([\w-]+)\.ref\b/)?.[1],
   );
-  const dataLookups = [...content.matchAll(/data\s+"meshstack_building_block_runner"\s+"(\w+)"/g)].map(([, name]) => ({
-    issuer: `data\\.meshstack_building_block_runner\\.${name}\\.spec\\.workload_identity_federation\\.issuer`,
-    ref: `data\\.meshstack_building_block_runner\\.${name}\\.ref`,
-  }));
-  const issuers = [...moduleLookups, ...dataLookups].filter(({ issuer }) => new RegExp(`${issuer}\\b`).test(content));
-  return issuers.length > 0 && issuers.every(({ ref }) => new RegExp(`runner_ref\\s*=\\s*${ref}\\b`).test(content));
+  return (
+    lookups.length > 0 &&
+    pinned.length > 0 &&
+    pinned.every((name) => lookups.includes(name)) &&
+    lookups.every((name) => pinned.includes(name))
+  );
 }
 
 export function declaresSummaryOutput(integrationContent) {

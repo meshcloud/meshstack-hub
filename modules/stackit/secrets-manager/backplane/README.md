@@ -25,8 +25,8 @@ module "secrets_manager_backplane" {
   organization_id = "xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
 
   workload_identity_federation = {
-    issuer   = data.meshstack_building_block_runner.this.spec.workload_identity_federation.issuer
-    audience = data.meshstack_building_block_runner.this.spec.workload_identity_federation.azure.audience
+    issuer   = module.runner.issuer
+    audience = module.runner.audience
     subjects = [meshstack_building_block_definition.this.version_latest.workload_identity_federation.subject]
   }
 }

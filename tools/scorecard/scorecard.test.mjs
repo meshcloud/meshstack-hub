@@ -215,12 +215,49 @@ test("an issuer from a module that is not runner-identity fails", () => {
   assert.equal(issuerFromPinnedRunner(runnerModule("./runner") + definition), false);
 });
 
-test("an issuer from the runner data source passes only when the definition pins that runner", () => {
+test("an issuer from a runner data source in the integration fails, also when the definition pins it", () => {
   const lookup = 'data "meshstack_building_block_runner" "this" {}\n';
   const issuer = "data.meshstack_building_block_runner.this.spec.workload_identity_federation.issuer";
   assert.equal(
     issuerFromPinnedRunner(lookup + federatedDefinition({ issuer, runnerRef: "data.meshstack_building_block_runner.this.ref" })),
-    true,
+    false,
   );
-  assert.equal(issuerFromPinnedRunner(lookup + federatedDefinition({ issuer, runnerRef: "var.meshstack.runner_ref" })), false);
+});
+
+test("a second definition that does not pin the runner fails", () => {
+  const definition = federatedDefinition({ issuer: "module.runner.issuer", runnerRef: "module.runner.ref" });
+  const unpinned = `
+resource "meshstack_building_block_definition" "other" {
+  version_spec = {
+    runner_ref = var.meshstack.runner_ref
+  }
+}
+`;
+  assert.equal(issuerFromPinnedRunner(runnerModule() + definition + unpinned), false);
+});
+
+test("a runner_ref outside a definition does not count as a pin", () => {
+  const definition = federatedDefinition({ issuer: "module.runner.issuer", runnerRef: "var.meshstack.runner_ref" });
+  const other = `
+module "child" {
+  runner_ref = module.runner.ref
+}
+`;
+  assert.equal(issuerFromPinnedRunner(runnerModule() + definition + other), false);
+});
+
+test("a runner-identity call with a hyphen in its name and a block before source passes", () => {
+  const lookup = `
+module "runner-identity" {
+  providers = {
+    meshstack = meshstack
+  }
+  source = "../../../meshstack/runner-identity/"
+
+  cloud      = "aws"
+  runner_ref = var.meshstack.runner_ref
+}
+`;
+  const definition = federatedDefinition({ issuer: "module.runner-identity.issuer", runnerRef: "module.runner-identity.ref" });
+  assert.equal(issuerFromPinnedRunner(lookup + definition), true);
 });
