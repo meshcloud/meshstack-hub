@@ -66,7 +66,7 @@ module "federation" {
 module "runner" {
   source = "../../../meshstack/runner-identity"
 
-  cloud      = "azure" # STACKIT has no token of its own and takes this one as a generic OIDC token.
+  cloud      = "azure"
   runner_ref = null
 }
 

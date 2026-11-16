@@ -75,7 +75,7 @@ output "building_block_definition" {
 module "runner" {
   source = "github.com/meshcloud/meshstack-hub//modules/meshstack/runner-identity?ref=${var.hub.git_ref}"
 
-  cloud      = "azure" # STACKIT has no token of its own and takes this one as a generic OIDC token.
+  cloud      = "azure"
   runner_ref = var.meshstack.runner_ref
 }
 
