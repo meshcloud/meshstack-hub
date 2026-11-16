@@ -12,9 +12,10 @@ variable "runner_identities" {
   default     = []
   nullable    = false
   description = <<-EOT
-  The meshStack identities the role trusts, one per building block runner: the output `identities` of
-  modules/meshstack/runner-identity. An entry with a null subject is skipped.
-  The backplane looks up the IAM OIDC provider of each issuer in this AWS account.
+  AWS lets a run assume the role when its token matches one of these entries.
+  Pass the output `identities` of modules/meshstack/runner-identity.
+  The backplane skips an entry with a null subject, but still looks up the provider of its issuer.
+  Create the IAM OIDC provider of each issuer in this AWS account first.
   See .agents/references/aws-backplane.md#the-shared-oidc-provider
   EOT
 }
@@ -27,7 +28,7 @@ variable "workload_identity_federation" {
   })
   default     = null
   description = <<-EOT
-  One more identity the role trusts, for a caller that does not use `runner_identities`. It needs `oidc_provider_arn`.
+  One more entry like those in `runner_identities`, for a caller without modules/meshstack/runner-identity. Set `oidc_provider_arn` with it.
   Supports multiple subjects and wildcard patterns (e.g., 'system:serviceaccount:namespace:*').
   EOT
 }

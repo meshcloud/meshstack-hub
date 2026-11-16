@@ -1,7 +1,7 @@
 variable "cloud" {
   type        = string
   nullable    = false
-  description = "The token the building block signs in with: `aws`, `azure` or `gcp`. A STACKIT building block uses `azure` and an OTC building block uses `gcp`, each as a generic OIDC token."
+  description = "Which token the runs present: `aws`, `azure` or `gcp`. A STACKIT building block presents the `azure` token as a generic OIDC token. An OTC building block does the same with the `gcp` token."
 
   validation {
     condition     = contains(["aws", "azure", "gcp"], var.cloud)
@@ -25,7 +25,7 @@ variable "trusted_runner_refs" {
   }))
   default     = []
   nullable    = false
-  description = "Other runners to trust besides the current one, as given in `var.meshstack.trusted_runner_refs`. List the previous runner here while building blocks still use a version that runs on it."
+  description = "The runners in `var.meshstack.trusted_runner_refs`. List a runner while a building block is on an older version that uses it."
 }
 
 variable "versions" {
@@ -40,5 +40,5 @@ variable "versions" {
   }))
   default     = {}
   nullable    = false
-  description = "The `versions` of the building block definition. The module reads only `workload_identity_federation` of each version, which has the subject that its runs present. Only the output `identities` reads it."
+  description = "The `versions` attribute of the building block definition. The module takes the subject of each entry in `identities` from it. Omit it if you do not read `identities`."
 }

@@ -30,7 +30,7 @@ variable "aws_oidc_provider_arn" {
   type        = string
   default     = null
   description = <<-EOT
-  No longer used. The backplane looks up the IAM OIDC provider of each runner's issuer in this AWS account.
+  No longer used. The backplane looks up one IAM OIDC provider per issuer in `runner_identities`.
   See .agents/references/aws-backplane.md#the-shared-oidc-provider
   EOT
 }

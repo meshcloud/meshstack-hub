@@ -9,7 +9,7 @@ variable "workload_identity_federation" {
     audiences = list(string)
   })
   nullable    = false
-  description = "OIDC issuer URL of the meshStack building block runners and the AWS audience of each runner that shares it. AWS registers one provider per issuer and account, so every runner behind that issuer is listed here. Take `issuer` and `aws.audience` from `version_latest.workload_identity_federation` of a building block definition that runs on each runner."
+  description = "`issuer` is the URL of the issuer of the runner tokens. `audiences` usually has one value, the AWS audience of the runner. AWS allows one provider per issuer and account. Two runners whose tokens come from the same issuer share the provider, so add the audience of both. The `meshstack_building_block_runner` data source returns both values in `spec.workload_identity_federation`."
 }
 
 data "tls_certificate" "issuer" {
