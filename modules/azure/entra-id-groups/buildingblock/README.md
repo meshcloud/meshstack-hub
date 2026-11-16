@@ -14,6 +14,8 @@ Use this building block when you want to:
 - Enforce a standard naming scheme across all projects in your platform.
 - Optionally scope groups inside a dedicated Entra Administrative Unit to isolate tenant-level identities from the rest of the directory.
 
+Set `target_type = "WORKSPACE_LEVEL"` in the integration to offer it as a workspace building block instead: it then creates a single group `<prefix>.<workspace>` holding every workspace member, whatever their workspace role.
+
 ## Usage examples
 
 **Default meshStack roles (admin / user / reader):**
