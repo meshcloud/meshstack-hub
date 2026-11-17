@@ -86,8 +86,8 @@ The `versions` attribute of the definition contains the issuer, audience and sub
 version. It does not contain the runner. So the module matches a version to a runner by issuer and
 audience. It takes the subject from the matching versions.
 
-- The plan fails when `versions` has no version that uses the runner in `runner_ref`. This happens
-  when the runner changes while the latest version is released. Set `hub.bbd_draft = true` first.
+- The plan fails when the latest version is released and uses another runner than `runner_ref`. A
+  released version cannot change its runner. Set `hub.bbd_draft = true` to create a draft version.
 - `subject` is null when no version uses a trusted runner, or when the caller omits `versions`. See
   [Trusted runners](../../../.agents/references/meshstack-integration.md#trusted-runners) for what
   a backplane does with such an entry.

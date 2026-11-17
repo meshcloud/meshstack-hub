@@ -34,7 +34,7 @@ output "identities" {
   }
 
   precondition {
-    condition     = length(var.versions) == 0 || length(local.identities[0].subjects) > 0
-    error_message = "No version of the building block definition uses the runner in runner_ref. A released version cannot change its runner. If the latest version is released, set hub.bbd_draft = true in the hub module. The apply then creates a draft version that uses this runner."
+    condition     = local.latest_version_fits_runner
+    error_message = "Version ${coalesce(local.latest_version_number, 0)} of the building block definition is released and uses another runner than meshstack.runner_ref. Set hub.bbd_draft = true to create a draft version with the new runner."
   }
 }

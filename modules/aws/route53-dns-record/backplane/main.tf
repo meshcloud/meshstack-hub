@@ -72,7 +72,7 @@ data "aws_iam_policy_document" "workload_identity_federation" {
   lifecycle {
     precondition {
       condition     = length(local.trusted_identities) > 0
-      error_message = "The trust policy of the role would be empty. The backplane input runner_identities has no entry with a subject, and the input workload_identity_federation is not set. A subject is null when no version of the building block definition uses that runner."
+      error_message = "runner_identities has no entry with a subject, so no run could assume the role. Pass at least one entry with a subject, or set workload_identity_federation together with oidc_provider_arn."
     }
 
     precondition {

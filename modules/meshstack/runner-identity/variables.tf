@@ -30,6 +30,8 @@ variable "trusted_runner_refs" {
 
 variable "versions" {
   type = map(object({
+    number = number
+    state  = string
     workload_identity_federation = object({
       issuer  = string
       subject = string
