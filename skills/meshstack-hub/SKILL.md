@@ -295,6 +295,9 @@ then ask the user in one message for:
   List the runner only for a module whose definition has a released version that uses it. Outside
   AWS the plan or the apply fails for a listed runner that no version uses. A definition with only a draft
   version needs no entry. meshStack changes the runner of a draft version in place.
+  For a GCP module, also set `meshstack.original_runner_ref` to the old runner with the
+  first switch. Never remove it. The released versions contain the names of the identity
+  providers. The backplane changes these names when you remove `original_runner_ref`.
 - **Where it can be ordered.** A tenant-level definition is offered on every platform of the type
   the module names. To offer it on one platform or landing zone only, pass that object's `ref` in
   `meshstack.supported_platforms`, for example `[meshstack_landingzone.dev.ref]`. A platform needs

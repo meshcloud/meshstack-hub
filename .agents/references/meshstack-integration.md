@@ -353,6 +353,7 @@ What a backplane does with the identities depends on the cloud:
 |---|---|---|
 | AWS | `runner_identities = module.runner.identities` | one statement per runner in the trust policy of the role |
 | Azure, STACKIT | `trusted_runner_identities = module.runner.trusted_identities`, next to `workload_identity_federation` for the current runner | one federated credential per trusted runner |
+| GCP | `trusted_runner_identities`, the identity of the current runner in `workload_identity_federation_trust`, the uuid of the current runner and of `meshstack.original_runner_ref` | one identity provider per runner |
 
 The module takes the subject of an entry from a version. So the entry of a trusted runner has a
 null subject if no version uses the runner. The AWS backplane then omits the entry from the trust
@@ -361,6 +362,35 @@ other backplanes fail and show the uuid of the runner. They fail in the plan, or
 same apply changes the runner.
 So list a runner only for a module whose definition has a released version that uses it. Do not
 pass one list to all modules.
+
+#### `meshstack.original_runner_ref` (GCP)
+
+On GCP the backplane creates one identity provider per runner, as a pool provider. A static input
+of each version contains the name of the identity provider for the runner of that version. This
+input is `CREDENTIALS_FILE`. Nobody can edit a released version. So the backplane must not rename
+an identity provider while a building block is on such a version.
+
+The *base name* is the name of the identity provider in a module without trusted runners. On GCP it
+is `workload_identity.pool_identifier`.
+
+- While `original_runner_ref` is null, the backplane gives the base name to the identity provider
+  for the current runner. Every deployment is in this state before its first switch.
+- With the first apply that lists a trusted runner, set `original_runner_ref` to the runner whose
+  identity provider has the base name at that time. That is the runner that the definition used
+  at the apply before. The backplane keeps the base name for its identity provider. For every other
+  runner, the name contains the first 8 characters of the runner uuid.
+- Never remove `original_runner_ref`, even after you remove the old runner from
+  `trusted_runner_refs`. Without it, the backplane gives the base name to the identity provider for
+  the current runner. The released versions that use the current runner contain the name with the
+  uuid. So the cloud rejects the tokens of their runs.
+- The plan fails when the backplane gets a trusted runner and `original_runner_ref` is null.
+- A wrong `original_runner_ref` gives no error. The backplane then changes the identity provider
+  with the base name to another runner, and the cloud rejects the tokens of the older versions.
+- The runner in `original_runner_ref` can share its entry in `identities` with another runner. Then
+  keep it in `trusted_runner_refs`. The integration finds the shared entry through
+  `module.runner.entry_runner_uuids`.
+- GCP keeps a deleted pool provider for about 30 days and refuses its id in that time. So a runner
+  that you removed from `trusted_runner_refs` cannot return to the list in that time.
 
 <!-- scorecard-checks: bbd_catalog_overrides -->
 ## Overridable Catalog Properties
