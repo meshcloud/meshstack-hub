@@ -324,8 +324,9 @@ The following fields only exist for building block integrations:
   trusted automatically, you can also add runners whose identities should be trusted. This is
   useful for migrating building block definitions between runners without disrupting existing
   building blocks, e.g. by temporarily preserving trust for the old runner.
-- **`original_runner_ref`** (optional, GCP only): the federated identity trust setup on GCP requires
-  us to preserve the original runner ref even after it no longer needs to be trusted. The identity
+- **`original_runner_ref`** (optional, GCP and OTC only): the federated identity trust setup on GCP
+  and OTC requires us to preserve the original runner ref even after it no longer needs to be
+  trusted. The identity
   of this runner will not be trusted but `tofu` needs to keep the ID for resource bookkeeping.
 - **`supported_platforms`** (optional, tenant-level): restricts tenant-level building blocks to
   specific platform types. Usually has a useful default, e.g. the K8s Service Account

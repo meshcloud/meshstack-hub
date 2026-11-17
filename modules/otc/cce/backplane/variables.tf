@@ -25,13 +25,13 @@ variable "create_cce_admin_trust" {
 variable "runner_uuid" {
   type        = string
   default     = null
-  description = "The uuid of the runner that `workload_identity_federation` describes. It names the identity provider of that runner when the runner is not the original one."
+  description = "The uuid of the runner that `workload_identity_federation` describes. If it differs from `original_runner_uuid`, the identity provider name ends with the first 8 characters of this uuid."
 }
 
 variable "original_runner_uuid" {
   type        = string
   default     = null
-  description = "The uuid of the runner whose identity provider has the name `name`, as given in `var.meshstack.original_runner_ref`. Null means the runner in `runner_uuid`."
+  description = "The uuid of the runner in `meshstack.original_runner_ref`. The identity provider for this runner gets the name `name` without a suffix. Null means the runner in `runner_uuid`."
 }
 
 variable "trusted_runner_identities" {
@@ -43,5 +43,5 @@ variable "trusted_runner_identities" {
   }))
   default     = []
   nullable    = false
-  description = "Identities of other runners to trust besides the one in `workload_identity_federation`, one identity provider each. Pass `trusted_identities` of the [runner-identity module](../../../meshstack/runner-identity). The plan fails for an entry with a null subject."
+  description = "One entry per trusted runner, with the issuer, audience and subject of its tokens. The backplane creates one identity provider for each. Pass `trusted_identities` of the [runner-identity module](../../../meshstack/runner-identity). The plan fails for a runner that no version uses. If the same apply changes the runner, the apply fails instead."
 }

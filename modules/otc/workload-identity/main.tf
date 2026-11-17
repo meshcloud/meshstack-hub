@@ -146,12 +146,12 @@ resource "opentelekomcloud_identity_provider" "building_block" {
 
     precondition {
       condition     = length(var.trusted_runner_identities) == 0 || var.original_runner_uuid != null
-      error_message = "A trusted runner needs meshstack.original_runner_ref. Set it to the runner that the definition ran on before it moved to another runner, and never remove it."
+      error_message = "Set meshstack.original_runner_ref, because the backplane gets a trusted runner. Use the runner that the building block definition used before you set a trusted runner."
     }
 
     precondition {
       condition     = local.original_runner_trust.subject != null
-      error_message = "The building block runner ${local.original_runner_uuid} is a trusted runner, but no version of the definition runs on it, so there is nothing to trust. Remove it from meshstack.trusted_runner_refs."
+      error_message = "No version of the building block definition uses the trusted runner ${local.original_runner_uuid}. So the subject of its tokens is unknown. Remove the runner from meshstack.additional_trusted_runner_refs for this definition. Either the definition has only a draft version, whose runner meshStack changes in place. Or other modules get the same list, and this definition never used the runner."
     }
   }
 
@@ -181,12 +181,12 @@ resource "opentelekomcloud_identity_provider" "runner" {
   lifecycle {
     precondition {
       condition     = length(var.trusted_runner_identities) == 0 || var.original_runner_uuid != null
-      error_message = "A trusted runner needs meshstack.original_runner_ref. Set it to the runner that the definition ran on before it moved to another runner, and never remove it."
+      error_message = "Set meshstack.original_runner_ref, because the backplane gets a trusted runner. Use the runner that the building block definition used before you set a trusted runner."
     }
 
     precondition {
       condition     = each.value.subject != null
-      error_message = "The building block runner ${each.key} is a trusted runner, but no version of the definition runs on it, so there is nothing to trust. Remove it from meshstack.trusted_runner_refs."
+      error_message = "No version of the building block definition uses the trusted runner ${each.key}. So the subject of its tokens is unknown. Remove the runner from meshstack.additional_trusted_runner_refs for this definition. Either the definition has only a draft version, whose runner meshStack changes in place. Or other modules get the same list, and this definition never used the runner."
     }
   }
 
