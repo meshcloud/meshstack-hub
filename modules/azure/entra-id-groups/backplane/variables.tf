@@ -34,5 +34,5 @@ variable "trusted_runner_identities" {
   }))
   default     = []
   nullable    = false
-  description = "Identities of other runners to trust besides the one in `workload_identity_federation`, one federated credential each. Pass `trusted_identities` of the [runner-identity module](../../../meshstack/runner-identity). The plan fails for an entry with a null subject."
+  description = "One entry per trusted runner, with the issuer, audience and subject of its tokens. The backplane creates one federated credential for each. Pass `trusted_identities` of the [runner-identity module](../../../meshstack/runner-identity). The plan fails for a runner that no version uses. If the same apply changes the runner, the apply fails instead."
 }
