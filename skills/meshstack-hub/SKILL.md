@@ -291,8 +291,10 @@ then ask the user in one message for:
   `meshstack.trusted_runner_refs` of that module. Do this in the apply that sets `meshstack.runner_ref` to the new runner, or earlier.
   Without the entry, the cloud rejects the tokens of the building blocks on older versions. Remove
   the entry when no building block is on a version that uses the old runner.
-  Only a module whose `meshstack` variable has `trusted_runner_refs` supports this. A definition with
-  only a draft version needs no entry. meshStack changes the runner of a draft version in place.
+  Only a module whose `meshstack` variable has `trusted_runner_refs` supports this.
+  List the runner only for a module whose definition has a released version that uses it. Outside
+  AWS the plan or the apply fails for a listed runner that no version uses. A definition with only a draft
+  version needs no entry. meshStack changes the runner of a draft version in place.
 - **Where it can be ordered.** A tenant-level definition is offered on every platform of the type
   the module names. To offer it on one platform or landing zone only, pass that object's `ref` in
   `meshstack.supported_platforms`, for example `[meshstack_landingzone.dev.ref]`. A platform needs

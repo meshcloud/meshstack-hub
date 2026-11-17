@@ -338,17 +338,29 @@ module "backplane" {
 }
 ```
 
-- `module.runner.identities` has one `{ issuer, audience, subject }` per runner. The
+- `module.runner.identities` has one `{ runner_uuid, issuer, audience, subject }` per runner. The
   current runner comes first, then the trusted runners, ordered by uuid. The module takes each
   subject from `versions`. So the integration does not read `version_latest` for the subject.
 - A backplane resource that exists once per runner uses the runner uuid as its `for_each` key. With
   the list position as key, a switch would replace the resources of the old runner. OpenTofu must
   know the uuid during the plan. So create a runner in an earlier apply than the one that uses it.
+- Two runners can have the same issuer, audience and subject template in their settings. Their
+  runs then present the same token for a definition, and `identities` has one entry for both.
+
+What a backplane does with the identities depends on the cloud:
+
+| Cloud | The backplane takes | It creates |
+|---|---|---|
+| AWS | `runner_identities = module.runner.identities` | one statement per runner in the trust policy of the role |
+| Azure, STACKIT | `trusted_runner_identities = module.runner.trusted_identities`, next to `workload_identity_federation` for the current runner | one federated credential per trusted runner |
 
 The module takes the subject of an entry from a version. So the entry of a trusted runner has a
-null subject if no version uses the runner. The backplane then omits the entry from the trust
-policy and shows no message. It still looks up the OIDC provider for the issuer of the entry. So
-list a runner only for a module whose definition has a released version that uses it.
+null subject if no version uses the runner. The AWS backplane then omits the entry from the trust
+policy and shows no message. It still looks up the OIDC provider for the issuer of the entry. The
+other backplanes fail and show the uuid of the runner. They fail in the plan, or in the apply if the
+same apply changes the runner.
+So list a runner only for a module whose definition has a released version that uses it. Do not
+pass one list to all modules.
 
 <!-- scorecard-checks: bbd_catalog_overrides -->
 ## Overridable Catalog Properties
