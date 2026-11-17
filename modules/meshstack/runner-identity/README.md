@@ -80,6 +80,7 @@ module "backplane" {
 | `issuer` | The issuer of the runner's tokens. |
 | `audience` | The audience of the runner's token for `cloud`. |
 | `identities` | One `{ runner_uuid, issuer, audience, subject }` per runner. The runner in `runner_ref` comes first, then the runners in `trusted_runner_refs`, ordered by uuid. |
+| `entry_runner_uuids` | A map from the uuid of each looked-up runner to the `runner_uuid` of its entry in `identities`. The two differ for a runner that shares its entry with another runner. |
 | `trusted_identities` | `identities` without its first entry. Use it if the backplane takes the runner in `runner_ref` in a separate variable. |
 
 ## How `identities` finds the subject of a runner

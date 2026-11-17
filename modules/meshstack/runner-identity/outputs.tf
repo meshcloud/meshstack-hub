@@ -61,3 +61,11 @@ output "trusted_identities" {
     error_message = "Version ${coalesce(local.latest_version_number, 0)} of the building block definition is released and uses another runner than meshstack.runner_ref. Set hub.bbd_draft = true to create a draft version with the new runner."
   }
 }
+
+output "entry_runner_uuids" {
+  description = "A map from the uuid of each looked-up runner to the `runner_uuid` of its entry in `identities`. The two differ for a runner that shares its entry with another runner."
+  value = {
+    for i, claims in local.runner_claims :
+    claims.runner_uuid => local.runner_claims[index(local.runner_claim_keys, local.runner_claim_keys[i])].runner_uuid
+  }
+}
