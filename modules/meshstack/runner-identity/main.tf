@@ -59,3 +59,16 @@ locals {
     }
   ]
 }
+
+locals {
+  latest_version_number = length(var.versions) == 0 ? null : max([for version in var.versions : version.number]...)
+  latest_version        = one([for version in var.versions : version if version.number == local.latest_version_number])
+
+  latest_version_fits_runner = (
+    local.latest_version == null ? true :
+    local.latest_version.state != "RELEASED" ? true :
+    local.latest_version.workload_identity_federation == null ? true :
+    local.latest_version.workload_identity_federation[var.cloud] == null ? true :
+    local.latest_version.workload_identity_federation.issuer == data.meshstack_building_block_runner.this.spec.workload_identity_federation.issuer && local.latest_version.workload_identity_federation[var.cloud].audience == local.token.audience
+  )
+}
