@@ -32,4 +32,9 @@ output "identities" {
     condition     = alltrue([for identity in local.identities : length(identity.subjects) <= 1])
     error_message = "Two of the runners in runner_ref and trusted_runner_refs have the same issuer and audience but different subject templates. The module cannot match the versions to one of the two, so it supports only one of them. If you remove one, the cloud rejects the tokens of its building blocks."
   }
+
+  precondition {
+    condition     = length(var.versions) == 0 || length(local.identities[0].subjects) > 0
+    error_message = "No version of the building block definition uses the runner in runner_ref. A released version cannot change its runner. If the latest version is released, set hub.bbd_draft = true in the hub module. The apply then creates a draft version that uses this runner."
+  }
 }
