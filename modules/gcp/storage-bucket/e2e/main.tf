@@ -20,14 +20,14 @@ variable "test_context" {
   nullable = false
 }
 
-variable "runner_move" {
+variable "runner_switch" {
   type        = string
   default     = null
-  description = "Null runs the plain test. `released_on_old_runner` releases the definition on `old_runner`. `moved` moves it to `new_runner` and lists `old_runner` as trusted. See tests/gcp_storage_bucket_runner_move.tftest.hcl."
+  description = "A step of the runner switch test in tests/gcp_storage_bucket_runner_switch.tftest.hcl. `released_on_old_runner` releases version 1 with `old_runner`. `switched` creates a draft version 2 that uses `new_runner` and lists `old_runner` as trusted. Null runs the other tests, which set no runner."
 
   validation {
-    condition     = var.runner_move == null || contains(["released_on_old_runner", "moved"], coalesce(var.runner_move, "-"))
-    error_message = "runner_move must be null, released_on_old_runner or moved."
+    condition     = var.runner_switch == null || contains(["released_on_old_runner", "switched"], coalesce(var.runner_switch, "-"))
+    error_message = "runner_switch must be null, released_on_old_runner or switched."
   }
 }
 
@@ -40,7 +40,7 @@ variable "old_runner" {
     owned_by_workspace = "admin-customer"
     display_name       = "meshcloud-hosted Runner (deprecated)"
   }
-  description = "The runner the definition starts on in the runner move test. It must offer the GCP token."
+  description = "The runner of version 1 in the runner switch test."
 }
 
 variable "new_runner" {
@@ -52,16 +52,16 @@ variable "new_runner" {
     owned_by_workspace = "admin-customer"
     display_name       = "meshcloud-hosted Runner (meshStack identity)"
   }
-  description = "The runner the definition moves to in the runner move test. It must offer the GCP token and have another issuer than `old_runner`."
+  description = "The runner of version 2 in the runner switch test."
 }
 
 locals {
-  runner_move = var.runner_move != null
-  moved       = var.runner_move == "moved"
+  runner_switch = var.runner_switch != null
+  switched      = var.runner_switch == "switched"
 }
 
 data "meshstack_building_block_runner" "old" {
-  count = local.runner_move ? 1 : 0
+  count = local.runner_switch ? 1 : 0
 
   metadata = {
     owned_by_workspace = var.old_runner.owned_by_workspace
@@ -72,7 +72,7 @@ data "meshstack_building_block_runner" "old" {
 }
 
 data "meshstack_building_block_runner" "new" {
-  count = local.runner_move ? 1 : 0
+  count = local.runner_switch ? 1 : 0
 
   metadata = {
     owned_by_workspace = var.new_runner.owned_by_workspace
@@ -94,13 +94,13 @@ module "gcp_storage_bucket" {
   meshstack = {
     owning_workspace_identifier = var.test_context.workspace
     tags                        = {}
-    runner_ref                  = !local.runner_move ? null : local.moved ? data.meshstack_building_block_runner.new[0].ref : data.meshstack_building_block_runner.old[0].ref
-    trusted_runner_refs         = local.moved ? [data.meshstack_building_block_runner.old[0].ref] : []
-    original_runner_ref         = local.moved ? data.meshstack_building_block_runner.old[0].ref : null
+    runner_ref                  = !local.runner_switch ? null : local.switched ? data.meshstack_building_block_runner.new[0].ref : data.meshstack_building_block_runner.old[0].ref
+    trusted_runner_refs         = local.switched ? [data.meshstack_building_block_runner.old[0].ref] : []
+    original_runner_ref         = local.switched ? data.meshstack_building_block_runner.old[0].ref : null
   }
   hub = {
     git_ref   = var.test_context.hub_git_ref
-    bbd_draft = var.runner_move != "released_on_old_runner"
+    bbd_draft = var.runner_switch != "released_on_old_runner"
   }
 
   bbd_display_name = "${var.test_context.run_id} GCP Storage Bucket"
@@ -110,12 +110,12 @@ module "gcp_storage_bucket" {
   backplane_service_account_id = "${var.test_context.run_id}-storage-sa"
 
   workload_identity = {
-    pool_identifier = local.runner_move ? "${var.test_context.run_id}-wfm" : "${var.test_context.run_id}-wif"
+    pool_identifier = local.runner_switch ? "${var.test_context.run_id}-wfm" : "${var.test_context.run_id}-wif"
   }
 }
 
 data "meshstack_building_block_definition" "this" {
-  count = local.runner_move ? 1 : 0
+  count = local.runner_switch ? 1 : 0
 
   metadata = {
     uuid = module.gcp_storage_bucket[0].building_block_definition.uuid
@@ -123,7 +123,7 @@ data "meshstack_building_block_definition" "this" {
 }
 
 locals {
-  hub_version_ref = local.runner_move ? { uuid = data.meshstack_building_block_definition.this[0].version_latest_release.uuid } : { uuid = one(module.gcp_storage_bucket[*].building_block_definition.version_ref.uuid) }
+  hub_version_ref = local.runner_switch ? { uuid = data.meshstack_building_block_definition.this[0].version_latest_release.uuid } : { uuid = one(module.gcp_storage_bucket[*].building_block_definition.version_ref.uuid) }
   version_ref     = var.test_context.bbd_version_ref != null ? var.test_context.bbd_version_ref : local.hub_version_ref
 
   bucket_name = "${var.test_context.run_id}-bucket"
@@ -149,7 +149,7 @@ resource "meshstack_building_block" "this" {
       bucket_name = { value = jsonencode(local.bucket_name) }
       location    = { value = jsonencode(local.location) }
       # CODE inputs are parsed as HCL by the runner, so the value is encoded twice.
-      labels = { value = jsonencode(jsonencode(local.moved ? ["env:hub-e2e", "team:smoke-test", "runner:moved"] : ["env:hub-e2e", "team:smoke-test"])) }
+      labels = { value = jsonencode(jsonencode(local.switched ? ["env:hub-e2e", "team:smoke-test", "runner:switched"] : ["env:hub-e2e", "team:smoke-test"])) }
     }
   }
 }
