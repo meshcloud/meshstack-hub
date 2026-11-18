@@ -32,6 +32,58 @@ now serves that landing zone too.
   definition, and may already have removed the backplane's trust in it, so those tenants' runs,
   their deletion included, can no longer authenticate.
 
+## Project roles
+
+`role_mapping` maps each meshStack role in `users[*].roles` to STACKIT project roles. The
+integration's default:
+
+| meshStack role | STACKIT project roles |
+|---|---|
+| `admin` | `owner` |
+| `user` | `editor` |
+| `reader` | `reader` |
+
+Values can be built-in or custom STACKIT roles. A user with several meshStack roles gets each
+mapped STACKIT role once, and meshStack roles missing from the mapping are ignored.
+
+```hcl
+role_mapping = {
+  admin   = ["owner"]
+  user    = ["editor", "network.admin"]
+  reader  = ["reader"]
+  auditor = ["reader", "audit-log.viewer"]
+}
+```
+
+## STACKIT organization membership
+
+STACKIT can reject a project role for a user who is not a member of the organization. With
+`stackit_organization_onboarding_enabled` (on by default), the pre-run script first adds every
+project user to the organization with `stackit_organization_member_role` (default
+`organization.viewer`):
+
+- It is best effort: a failed request is a warning in the run, not a failure. The role
+  assignment for that user may then fail.
+- It never removes a membership, not even on destroy, because a user may be in several projects.
+- The summary marks each user with ✅ once the organization role is assigned, and otherwise says
+  what went wrong.
+
+Turn it off where organization membership is managed outside meshStack.
+
+## Parent container per environment
+
+The integration always creates projects in `parent_container_id`. Using the module directly, you
+can set `environment` and `parent_container_ids` instead: the project goes to the container of
+that environment, or to `parent_container_id` when the environment has none.
+
+```hcl
+environment = "production"
+parent_container_ids = {
+  production  = "organization-prod-123"
+  development = "organization-dev-789"
+}
+```
+
 ## Requirements
 
 - Terraform `>= 1.11.0`
