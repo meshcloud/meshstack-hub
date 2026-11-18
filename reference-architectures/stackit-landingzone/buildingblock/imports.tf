@@ -100,7 +100,7 @@ data "meshstack_building_block_definition" "adopted" {
 
 import {
   for_each = { for key, adopted in local.adopted_definitions : key => adopted if key == "project_definition" }
-  to       = module.stackit_integration.meshstack_building_block_definition.this["default"]
+  to       = module.stackit_integration.meshstack_building_block_definition.this
   id       = data.meshstack_building_block_definition.adopted[each.key].metadata.uuid
 }
 

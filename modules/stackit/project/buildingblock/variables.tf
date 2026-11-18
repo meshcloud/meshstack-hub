@@ -38,7 +38,19 @@ variable "project_owner_email" {
 variable "labels" {
   type        = map(string)
   nullable    = false
-  description = "Labels to apply to the project. Includes the `networkArea` label when the building block definition is wired to a network area."
+  description = "Labels to apply to the project. The `networkArea` label is added from `network_area_ids`."
+}
+
+variable "landing_zone" {
+  type        = string
+  nullable    = false
+  description = "Identifier of the landing zone of the tenant the project is created for."
+}
+
+variable "network_area_ids" {
+  type        = map(string)
+  nullable    = false
+  description = "STACKIT network area ID per landing zone identifier. A project in one of these landing zones is placed in its network area."
 }
 
 variable "users" {

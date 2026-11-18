@@ -63,6 +63,7 @@ digraph stackit_landingzone {
     PLAT  -> DEFLZ
     PLAT  -> NETLZ
     DEFLZ -> PRJBBD   [xlabel="requests"]
+    NETLZ -> PRJBBD   [xlabel="requests"]
     PLAT  -> SABBD    [xlabel="offers to tenants"]
     NETLZ -> SPOKEBBD [xlabel="offers to tenants"]
   }
@@ -72,5 +73,5 @@ digraph stackit_landingzone {
   SABBD    -> SA    [xlabel="provisions" style=dotted constraint=false]
   NABBD    -> NA    [xlabel="provisions" style=dotted constraint=false]
   SPOKEBBD -> SPOKE [xlabel="provisions" style=dotted constraint=false]
-  NETLZ    -> NA    [xlabel="tagged with area id" style=dotted constraint=false]
+  NETLZ    -> NA    [xlabel="projects placed in" style=dotted constraint=false]
 }

@@ -210,10 +210,10 @@ resource "meshstack_building_block_definition" "this" {
     - **STACKIT Service Account building block** – the `STACKIT Service Account` building block
       definition (`TENANT_LEVEL`), so application teams can self-service create a service account
       with project roles and optional workload identity federation inside their own projects.
-    - **Hub network area + spoke network building block + networked project definition and landing
-      zone** *(only when a network configuration is provided)* – the shared hub address plan, the
-      self-service `STACKIT Network` building block, and a second `STACKIT Networked Project`
-      building block definition plus landing zone that places projects into the hub network area.
+    - **Hub network area + spoke network building block + networked landing zone** *(only when a
+      network configuration is provided)* – the shared hub address plan, the self-service `STACKIT
+      Network` building block, and a second landing zone whose projects the `STACKIT Project`
+      building block places into the hub network area.
 
     ## 🧪 Playground mode
 

@@ -11,6 +11,10 @@ locals {
     }
   ]
 
+  network_area_id = lookup(var.network_area_ids, var.landing_zone, null)
+
+  labels = merge(var.labels, local.network_area_id == null ? {} : { networkArea = local.network_area_id })
+
   users_to_check = var.organization_id == "" ? [] : [for user in local.users_with_stackit_roles : user.email if length(setsubtract(user.roles, ["owner"])) > 0]
   memberships    = length(local.users_to_check) > 0 ? data.external.stackit_users.result : {}
   unknown_users  = [for email in local.users_to_check : email if local.memberships[email] == "unknown"]
@@ -51,7 +55,7 @@ resource "stackit_resourcemanager_project" "project" {
   owner_email         = var.project_owner_email
 
   # Only set labels if there are actually labels to set
-  labels = length(var.labels) > 0 ? var.labels : null
+  labels = length(local.labels) > 0 ? local.labels : null
 }
 
 # User role assignments (experimental IAM feature)
