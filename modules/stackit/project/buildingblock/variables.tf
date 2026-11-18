@@ -50,7 +50,42 @@ variable "landing_zone" {
 variable "network_area_ids" {
   type        = map(string)
   nullable    = false
-  description = "STACKIT network area ID per landing zone identifier. A project in one of these landing zones is placed in its network area."
+  description = "STACKIT network area ID per landing zone identifier. A project in one of these landing zones is placed in its network area, and a STACKIT Network building block is ordered for it."
+}
+
+# The definition hides this input outside the landing zones of `network_area_ids`, and a hidden input
+# is not sent.
+variable "network" {
+  type = object({
+    prefix_length    = optional(number, 25)
+    ipv4_nameservers = optional(list(string), [])
+  })
+  default     = {}
+  nullable    = false
+  description = "Routed network ordered for the project when its landing zone has a network area. An empty `ipv4_nameservers` inherits the network area's default nameservers."
+
+  validation {
+    # meshStack rejects `format` in the input's json_schema, so the form cannot check this.
+    condition     = alltrue([for ns in var.network.ipv4_nameservers : can(cidrnetmask("${ns}/32"))])
+    error_message = "network.ipv4_nameservers must only contain IPv4 addresses."
+  }
+}
+
+variable "tenant_uuid" {
+  type        = string
+  nullable    = false
+  description = "UUID of the meshStack tenant the project is created for. The network building block is ordered on it."
+}
+
+# Only declared on the definition when a landing zone has a network area. `content_hash` changes with
+# a draft version's content, so the network re-runs on it.
+variable "network_definition_version_ref" {
+  type = object({
+    uuid         = string
+    content_hash = optional(string)
+  })
+  default     = null
+  description = "Version of the STACKIT Network definition the project's network is ordered from."
 }
 
 variable "users" {

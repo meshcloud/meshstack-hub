@@ -69,7 +69,7 @@ variable "stackit_project_labels" {
 variable "stackit_networked_projects_enabled" {
   type        = bool
   default     = false
-  description = "Whether to create a second, `networked` landing zone, whose projects are placed in `stackit_network_area_id`. Must be known at plan time (`stackit_network_area_id` itself may only resolve during apply)."
+  description = "Whether to create a second, `networked` landing zone, whose projects are placed in `stackit_network_area_id` and order a routed network from `stackit_network_definition_version_ref`. Must be known at plan time (`stackit_network_area_id` itself may only resolve during apply)."
 }
 
 variable "stackit_network_area_id" {
@@ -80,6 +80,39 @@ variable "stackit_network_area_id" {
   validation {
     condition     = !var.stackit_networked_projects_enabled || var.stackit_network_area_id != null
     error_message = "stackit_network_area_id is required when stackit_networked_projects_enabled is true."
+  }
+}
+
+variable "stackit_network_min_prefix_length" {
+  type        = number
+  default     = 24
+  nullable    = false
+  description = "Smallest IPv4 prefix length an application team may choose for the routed network of a `networked` project. Keep it within the bounds of the `STACKIT Network` definition."
+}
+
+variable "stackit_network_max_prefix_length" {
+  type        = number
+  default     = 28
+  nullable    = false
+  description = "Largest IPv4 prefix length an application team may choose for the routed network of a `networked` project. Keep it within the bounds of the `STACKIT Network` definition."
+}
+
+variable "stackit_network_definition_version_ref" {
+  type = object({
+    uuid         = string
+    content_hash = optional(string)
+  })
+  default     = null
+  description = <<-EOT
+  Version of the `STACKIT Network` definition a `networked` project orders its network from, usually
+  `building_block_definition.version_ref` of `modules/stackit/network`. The definition must be
+  published to the marketplace and the version released. Required when
+  `stackit_networked_projects_enabled` is true.
+  EOT
+
+  validation {
+    condition     = !var.stackit_networked_projects_enabled || var.stackit_network_definition_version_ref != null
+    error_message = "stackit_network_definition_version_ref is required when stackit_networked_projects_enabled is true."
   }
 }
 
@@ -199,13 +232,16 @@ locals {
     var.stackit_networked_projects_enabled ? {
       networked = {
         display_name = "STACKIT Networked"
-        description  = "STACKIT projects placed in the shared hub network area, with project roles mapped from meshStack project roles. Order the STACKIT Network building block inside the project to get a routed subnet drawn from the hub's address plan."
+        description  = "STACKIT projects in the shared hub network area, with project roles mapped from meshStack project roles and a routed network drawn from the hub's address plan."
       }
     } : {}
   )
 
   # Built from the name rather than read from meshstack_landingzone.this, which depends on the definition.
   network_area_ids = var.stackit_networked_projects_enabled ? { "${var.meshstack.platform_identifier}-networked" = var.stackit_network_area_id } : {}
+
+  # Pre-filled subnet size, so that a networked order needs no input.
+  default_network_prefix_length = 25
 }
 
 moved {
@@ -281,6 +317,15 @@ resource "meshstack_landingzone" "this" {
 }
 
 resource "meshstack_building_block_definition" "this" {
+  lifecycle {
+    precondition {
+      # The form pre-fills the default prefix length, so bounds that exclude it would fail every order
+      # that leaves the field alone.
+      condition     = var.stackit_network_min_prefix_length <= local.default_network_prefix_length && local.default_network_prefix_length <= var.stackit_network_max_prefix_length
+      error_message = "The network prefix length bounds must include the default of /${local.default_network_prefix_length}."
+    }
+  }
+
   metadata = {
     owned_by_workspace = var.meshstack.owning_workspace_identifier
     tags               = var.meshstack.tags.building_block
@@ -289,7 +334,7 @@ resource "meshstack_building_block_definition" "this" {
   spec = {
     display_name              = coalesce(var.bbd_display_name, "STACKIT Project")
     symbol                    = "https://raw.githubusercontent.com/meshcloud/meshstack-hub/${var.hub.git_ref}/modules/stackit/project/buildingblock/logo.png"
-    description               = coalesce(var.bbd_description, "Creates a STACKIT project with your project members' roles. On a networked landing zone, the project is placed in the hub network area.")
+    description               = coalesce(var.bbd_description, "Creates a STACKIT project with your project members' roles. On a networked landing zone, the project is placed in the hub network area and gets a routed network.")
     support_url               = "https://portal.stackit.cloud"
     target_type               = "TENANT_LEVEL"
     run_transparency          = true
@@ -301,11 +346,14 @@ resource "meshstack_building_block_definition" "this" {
     ])
 
     readme = coalesce(var.bbd_readme, chomp(<<-EOT
-    This building block creates the **STACKIT project** and gives your meshStack project members access to it. On a networked landing zone it places the project in the hub network area.
+    This building block creates the **STACKIT project** and gives your meshStack project members access to it. On a networked landing zone it also places the project in the hub network area and orders a routed **STACKIT Network** for it.
+
 
     Add it from the marketplace to a STACKIT tenant:
     1. Pick your meshStack project and its STACKIT tenant. No tenant yet? Create one there and pick its landing zone, which decides whether the project is networked.
-    2. A tenant takes only one: the tenant is linked to the project it creates.
+    2. On a networked tenant, set the size of the network in the **Network** input. Other tenants don't show it.
+
+    A tenant takes only one: the tenant is linked to the project it creates.
 
     ## 💡 Usage examples
 
@@ -313,16 +361,16 @@ resource "meshstack_building_block_definition" "this" {
     A team uses a tenant on the sandbox landing zone. They get a STACKIT project with STACKIT's default flat networking, and their project members get the STACKIT roles mapped from their meshStack roles.
 
     **Example 2: a routed project**
-    A team that needs private connectivity uses a tenant on the networked landing zone. Their project is placed in the hub network area, where they order **STACKIT Network** building blocks for routed networks.
+    A team that needs private connectivity uses a tenant on the networked landing zone. Their project is placed in the hub network area and gets a routed `/${local.default_network_prefix_length}` network unless they pick another size. To resize it, change **Network** here; order more **STACKIT Network** building blocks for more networks.
 
     ## 📊 Shared Responsibility
 
     | Responsibility | Platform Team | Application Team |
     |---|:---:|:---:|
     | Provide the landing zones and the hub network area | ✅ | ❌ |
-    | Create the STACKIT project | ✅ | ❌ |
+    | Create the STACKIT project and order its network | ✅ | ❌ |
     | Map meshStack roles to STACKIT project roles | ✅ | ❌ |
-    | Pick the landing zone | ❌ | ✅ |
+    | Pick the landing zone and the network size | ❌ | ✅ |
     | Manage project members in meshStack | ❌ | ✅ |
     | Manage resources inside the STACKIT project | ❌ | ✅ |
     EOT
@@ -349,7 +397,7 @@ resource "meshstack_building_block_definition" "this" {
       }
     }
 
-    inputs = {
+    inputs = merge({
       parent_container_id = {
         display_name    = "Parent Container ID"
         description     = "Default parent container ID (organization or folder) where the project will be created."
@@ -450,6 +498,13 @@ resource "meshstack_building_block_definition" "this" {
         argument        = jsonencode(jsonencode(var.stackit_project_labels))
       }
 
+      tenant_uuid = {
+        display_name    = "Tenant UUID"
+        description     = "UUID of the meshStack tenant the project is created for. The network building block is ordered on it."
+        type            = "STRING"
+        assignment_type = "MESHSTACK_TENANT_UUID"
+      }
+
       landing_zone = {
         display_name    = "Landing Zone"
         description     = "Identifier of the landing zone of the tenant the project is created for."
@@ -457,7 +512,7 @@ resource "meshstack_building_block_definition" "this" {
         assignment_type = "LANDING_ZONE_IDENTIFIER"
       }
 
-      # Declared even with no networked landing zone: an empty map places no project in a network area.
+      # Declared even with no networked landing zone: an empty map means no project gets a network.
       network_area_ids = {
         display_name    = "Network Area IDs"
         description     = "HCL object mapping each landing zone identifier with a network area to the STACKIT network area ID its projects are placed in."
@@ -465,7 +520,52 @@ resource "meshstack_building_block_definition" "this" {
         assignment_type = "STATIC"
         argument        = jsonencode(jsonencode(local.network_area_ids))
       }
-    }
+      },
+      # Declared unconditionally, these would be a field the application team fills in and nothing
+      # reads, and a definition version nothing orders.
+      var.stackit_networked_projects_enabled ? {
+        network_definition_version_ref = {
+          display_name    = "Network Definition Version"
+          description     = "Version of the STACKIT Network definition the network of a networked project is ordered from."
+          type            = "CODE"
+          assignment_type = "STATIC"
+          argument        = jsonencode(jsonencode(var.stackit_network_definition_version_ref))
+        }
+
+        network = {
+          display_name           = "Network"
+          description            = "Routed network ordered for the project as a STACKIT Network building block."
+          type                   = "JSON"
+          assignment_type        = "USER_INPUT"
+          updateable_by_consumer = true
+          # Optional, so that a tenant or building block created through the API needs no value: the
+          # building block then falls back to its own defaults, the same as the form's.
+          is_optional = true
+          condition   = "input.landing_zone in ${jsonencode(keys(local.network_area_ids))}"
+
+          json_schema = jsonencode({
+            "$schema" = "http://json-schema.org/draft-07/schema#"
+            type      = "object"
+            properties = {
+              prefix_length = {
+                type        = "integer"
+                title       = "Prefix Length"
+                description = "Subnet size as an IPv4 prefix length."
+                minimum     = var.stackit_network_min_prefix_length
+                maximum     = var.stackit_network_max_prefix_length
+                default     = local.default_network_prefix_length
+              }
+              ipv4_nameservers = {
+                type        = "array"
+                title       = "IPv4 Nameservers"
+                description = "Leave empty to inherit the network area's default nameservers."
+                items       = { type = "string" }
+                default     = []
+              }
+            }
+          })
+        }
+    } : {})
 
     outputs = {
       project_url = {
@@ -498,6 +598,15 @@ resource "meshstack_building_block_definition" "this" {
         assignment_type = "SUMMARY"
       }
     }
+
+    # The building block orders the network building block of a networked project with the run's
+    # ephemeral API key. Granted on every landing zone, because the meshStack provider needs
+    # credentials to plan even where no network is ordered.
+    permissions = [
+      "BUILDINGBLOCK_LIST",
+      "BUILDINGBLOCK_SAVE",
+      "BUILDINGBLOCK_DELETE",
+    ]
   }
 }
 

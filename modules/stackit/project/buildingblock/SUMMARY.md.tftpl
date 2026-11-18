@@ -8,6 +8,9 @@
 | **Container ID** | `${container_id}` |
 | **Portal** | [Open in STACKIT Portal](${project_url}) |
 | **Landing Zone** | `${landing_zone}` |
+%{ if network_ordered ~}
+| **Network** | Ordered as the **Network ${project_name}** building block of this tenant |
+%{ endif ~}
 
 ${membership_summary}
 %{ if length(unknown_users) > 0 ~}

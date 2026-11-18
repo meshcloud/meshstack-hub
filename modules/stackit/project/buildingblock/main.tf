@@ -58,6 +58,36 @@ resource "stackit_resourcemanager_project" "project" {
   labels = length(local.labels) > 0 ? local.labels : null
 }
 
+# `depends_on` makes a destroy delete the network before the project.
+resource "meshstack_building_block" "network" {
+  lifecycle {
+    enabled = local.network_area_id != null
+
+    # Create and update wait for the run, so PENDING and IN_PROGRESS only show on a refresh: a
+    # re-run of this block, such as a user change, while the network's first run is still going.
+    postcondition {
+      condition     = self.status.succeeded || contains(["WAITING_FOR_DEPENDENCY", "PENDING", "IN_PROGRESS"], self.status.action)
+      error_message = "Building block ${self.metadata.uuid} did not succeed (health status ${self.status.health_status}, action ${self.status.action}). See its run in meshPanel."
+    }
+  }
+
+  spec = {
+    building_block_definition_version_ref = var.network_definition_version_ref
+    display_name                          = "Network ${var.project_name}"
+    target_ref                            = { kind = "meshTenant", uuid = var.tenant_uuid }
+
+    inputs = {
+      network_name          = { value = jsonencode(var.project_name) }
+      network_prefix_length = { value = jsonencode(var.network.prefix_length) }
+      ipv4_nameservers      = { value = jsonencode(jsonencode(var.network.ipv4_nameservers)) }
+    }
+  }
+
+  wait_for_completion = true
+
+  depends_on = [stackit_resourcemanager_project.project]
+}
+
 # User role assignments (experimental IAM feature)
 resource "stackit_authorization_project_role_assignment" "role_assignments" {
   for_each = local.user_role_assignments
