@@ -3,12 +3,34 @@ name: STACKIT Project
 supportedPlatforms:
   - stackit
 description: |
-  Creates a new STACKIT project and manages user access permissions with configurable role-based access control.
+  Creates a new STACKIT project and manages user access permissions with configurable role-based access control. On a spoke landing zone, the project is placed in a STACKIT network area.
 ---
 
 # STACKIT Project Building Block
 
 This Terraform module provisions a STACKIT project with user access control. meshStack roles from the `users` input are mapped to STACKIT project roles via the configurable `role_mapping` input. When used through the meshStack integration, a pre-run script performs best-effort STACKIT organization onboarding for all assigned users before project-level role assignments are applied and writes a summary that marks users with ✅ when the required organization role is currently assigned.
+
+## Landing zones
+
+One definition serves every landing zone: the building block reads its tenant's landing zone
+through a `LANDING_ZONE_IDENTIFIER` input and looks it up in `network_area_ids`. On a match the
+project gets the `networkArea` label, which places it in that STACKIT network area.
+
+- Do not move a tenant onto or off a spoke landing zone. STACKIT sets the network area only at
+  project creation, so the re-run fails on the `networkArea` label.
+
+### Upgrading from the spoke definition
+
+Earlier hub releases registered a second definition with `stackit_networked_projects_enabled`,
+`STACKIT Spoke Project`, for the `spoke` landing zone. It is gone: the `STACKIT Project` definition
+now serves that landing zone too.
+
+- Tenants on the `default` landing zone need nothing: their building blocks get a new version of
+  the same definition.
+- Tenants on the `spoke` landing zone run on the removed definition. Delete them before you
+  upgrade, or stay on the previous hub release. Otherwise the apply fails on deleting the
+  definition, and may already have removed the backplane's trust in it, so those tenants' runs,
+  their deletion included, can no longer authenticate.
 
 ## Requirements
 
@@ -64,7 +86,9 @@ No modules.
 | Name | Description | Type | Default | Required |
 |------|-------------|------|---------|:--------:|
 | <a name="input_environment"></a> [environment](#input\_environment) | The environment type (production, staging, development). If not set, uses parent\_container\_id directly. | `string` | `null` | no |
-| <a name="input_labels"></a> [labels](#input\_labels) | Labels to apply to the project. Includes the `networkArea` label when the building block definition is wired to a network area. | `map(string)` | n/a | yes |
+| <a name="input_labels"></a> [labels](#input\_labels) | Labels to apply to the project. The `networkArea` label is added from `network_area_ids`. | `map(string)` | n/a | yes |
+| <a name="input_landing_zone"></a> [landing\_zone](#input\_landing\_zone) | Identifier of the landing zone of the tenant the project is created for. | `string` | n/a | yes |
+| <a name="input_network_area_ids"></a> [network\_area\_ids](#input\_network\_area\_ids) | STACKIT network area ID per landing zone identifier. A project in one of these landing zones is placed in its network area. | `map(string)` | n/a | yes |
 | <a name="input_organization_id"></a> [organization\_id](#input\_organization\_id) | STACKIT organization where project users are looked up before their roles are granted; users STACKIT does not know are skipped and listed in the summary. Needs `iam.member.get` on the organization. Empty grants every user's roles without a lookup. | `string` | `""` | no |
 | <a name="input_parent_container_id"></a> [parent\_container\_id](#input\_parent\_container\_id) | The parent container ID (organization or folder) where the project will be created. | `string` | n/a | yes |
 | <a name="input_parent_container_ids"></a> [parent\_container\_ids](#input\_parent\_container\_ids) | Parent container IDs for different environments. If environment is set, the corresponding container ID will be used. | <pre>object({<br/>    production  = optional(string)<br/>    staging     = optional(string)<br/>    development = optional(string)<br/>  })</pre> | `{}` | no |

@@ -26,6 +26,7 @@ output "summary" {
     container_id       = stackit_resourcemanager_project.project.container_id
     project_url        = "https://portal.stackit.cloud/dashboard?project=${stackit_resourcemanager_project.project.project_id}"
     unknown_users      = local.unknown_users
+    landing_zone       = var.landing_zone
     membership_summary = fileexists("${path.module}/stackit_organization_membership_summary.md") ? file("${path.module}/stackit_organization_membership_summary.md") : "STACKIT organization membership summary was not generated."
   })
 }

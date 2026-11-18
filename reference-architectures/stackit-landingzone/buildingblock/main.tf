@@ -153,8 +153,8 @@ module "stackit_integration" {
   role_mapping                            = { admin = var.role_mapping.admin, user = var.role_mapping.user, reader = var.role_mapping.reader }
   stackit_organization_onboarding_enabled = var.role_mapping.organization_onboarding
 
-  # The networked project definition places its projects in the hub network area via a static
-  # `networkArea` label, so no landing zone tag (and no tag definition) is involved.
+  # The project definition places projects of the spoke landing zone in the hub network area
+  # via the `networkArea` label, so no landing zone tag (and no tag definition) is involved.
   stackit_networked_projects_enabled = local.network_enabled
   stackit_network_area_id            = local.network_area_id
 

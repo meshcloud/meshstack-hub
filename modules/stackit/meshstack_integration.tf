@@ -69,13 +69,36 @@ variable "stackit_project_labels" {
 variable "stackit_networked_projects_enabled" {
   type        = bool
   default     = false
-  description = "Whether to create a second, `networked` STACKIT Project building block definition and landing zone whose projects are placed in `stackit_network_area_id`. Must be known at plan time (`stackit_network_area_id` itself may only resolve during apply)."
+  description = "Whether to create a second, `spoke` landing zone, whose projects are placed in `stackit_network_area_id`. Must be known at plan time (`stackit_network_area_id` itself may only resolve during apply)."
 }
 
 variable "stackit_network_area_id" {
   type        = string
   default     = null
-  description = "STACKIT network area ID applied as the `networkArea` label to projects created through the `networked` landing zone. Only used when `stackit_networked_projects_enabled` is true."
+  description = "STACKIT network area the projects of the `spoke` landing zone are placed in, through the `networkArea` label. Required when `stackit_networked_projects_enabled` is true."
+
+  validation {
+    condition     = !var.stackit_networked_projects_enabled || var.stackit_network_area_id != null
+    error_message = "stackit_network_area_id is required when stackit_networked_projects_enabled is true."
+  }
+}
+
+variable "bbd_display_name" {
+  type        = string
+  default     = null
+  description = "Overrides the name of the marketplace entry application teams see in the catalog."
+}
+
+variable "bbd_description" {
+  type        = string
+  default     = null
+  description = "Overrides the one-line description shown next to the marketplace entry."
+}
+
+variable "bbd_readme" {
+  type        = string
+  default     = null
+  description = "Overrides the markdown readme shown in the marketplace before ordering."
 }
 
 variable "meshstack" {
@@ -134,18 +157,17 @@ module "backplane" {
 
   # The runner offers no STACKIT token, so we use the one offered for Azure as a generic OIDC token. The federation trusts its issuer and audience.
   workload_identity_federation = {
-    # Every variant runs on the same runner, so any one of them reports the issuer and audience.
     issuer   = module.runner.issuer
     audience = module.runner.audience
-    subjects = [for bbd in meshstack_building_block_definition.this : bbd.version_latest.workload_identity_federation.subject]
+    subjects = [meshstack_building_block_definition.this.version_latest.workload_identity_federation.subject]
   }
 }
 
 output "building_block_definition" {
   description = "BBD is consumed in building block compositions."
   value = {
-    uuid        = meshstack_building_block_definition.this["default"].metadata.uuid
-    version_ref = var.hub.bbd_draft ? meshstack_building_block_definition.this["default"].version_latest : meshstack_building_block_definition.this["default"].version_latest_release
+    uuid        = meshstack_building_block_definition.this.metadata.uuid
+    version_ref = var.hub.bbd_draft ? meshstack_building_block_definition.this.version_latest : meshstack_building_block_definition.this.version_latest_release
   }
 }
 
@@ -160,34 +182,30 @@ output "platform_ref" {
 }
 
 output "landingzone_refs" {
-  description = "References to the created landing zones, keyed by project variant (`default`, and `networked` when `stackit_networked_projects_enabled` is true)."
+  description = "References to the created landing zones, keyed `default`, and `spoke` when `stackit_networked_projects_enabled` is true."
   value = {
     for key, lz in meshstack_landingzone.this : key => lz.ref
   }
 }
 
-# One STACKIT Project building block definition plus landing zone per project variant. The
-# `networked` variant carries the `networkArea` label as a static building block input, so projects
-# are placed in the network area without any landing zone tag lookup at run time.
 locals {
-  project_variants = merge(
+  landing_zones = merge(
     {
       default = {
-        bbd_display_name         = "STACKIT Project"
-        landingzone_display_name = "STACKIT Sandbox"
-        landingzone_description  = "Creates a STACKIT project in the landing zone folder, with project roles mapped from meshStack project roles. The project is not attached to a network area, so it uses STACKIT's default flat networking."
-        network_area_id          = null
+        display_name = "STACKIT Sandbox"
+        description  = "Creates a STACKIT project in the landing zone folder, with project roles mapped from meshStack project roles. The project is not attached to a network area, so it uses STACKIT's default flat networking."
       }
     },
     var.stackit_networked_projects_enabled ? {
-      networked = {
-        bbd_display_name         = "STACKIT Networked Project"
-        landingzone_display_name = "STACKIT Networked"
-        landingzone_description  = "Creates a STACKIT project placed in the shared hub network area, with project roles mapped from meshStack project roles. Order the STACKIT Network building block inside the project to get a routed subnet drawn from the hub's address plan."
-        network_area_id          = var.stackit_network_area_id
+      spoke = {
+        display_name = "STACKIT Spoke"
+        description  = "Creates a STACKIT project placed in the shared hub network area, with project roles mapped from meshStack project roles. Order the STACKIT Network building block inside the project to get a spoke network drawn from the hub's address plan."
       }
     } : {}
   )
+
+  # Built from the name rather than read from meshstack_landingzone.this, which depends on the definition.
+  network_area_ids = var.stackit_networked_projects_enabled ? { "${var.meshstack.platform_identifier}-spoke" = var.stackit_network_area_id } : {}
 }
 
 moved {
@@ -237,7 +255,7 @@ resource "meshstack_platform" "this" {
 }
 
 resource "meshstack_landingzone" "this" {
-  for_each = local.project_variants
+  for_each = local.landing_zones
 
   metadata = {
     name               = "${var.meshstack.platform_identifier}-${each.key}"
@@ -246,8 +264,8 @@ resource "meshstack_landingzone" "this" {
   }
 
   spec = {
-    display_name                  = each.value.landingzone_display_name
-    description                   = each.value.landingzone_description
+    display_name                  = each.value.display_name
+    description                   = each.value.description
     info_link                     = "https://hub.meshcloud.io/reference-architectures/stackit-landingzone"
     automate_deletion_approval    = true
     automate_deletion_replication = true
@@ -258,27 +276,51 @@ resource "meshstack_landingzone" "this" {
       custom = {}
     }
 
-    mandatory_building_block_refs = [meshstack_building_block_definition.this[each.key].ref]
+    mandatory_building_block_refs = [meshstack_building_block_definition.this.ref]
   }
 }
 
 resource "meshstack_building_block_definition" "this" {
-  for_each = local.project_variants
-
   metadata = {
     owned_by_workspace = var.meshstack.owning_workspace_identifier
     tags               = var.meshstack.tags.building_block
   }
 
   spec = {
-    display_name              = each.value.bbd_display_name
+    display_name              = coalesce(var.bbd_display_name, "STACKIT Project")
     symbol                    = "https://raw.githubusercontent.com/meshcloud/meshstack-hub/${var.hub.git_ref}/modules/stackit/project/buildingblock/logo.png"
-    description               = "Creates a new STACKIT project and manages user access permissions with configurable role-based access control."
+    description               = coalesce(var.bbd_description, "Creates a STACKIT project with your project members' roles. On a spoke landing zone, the project is placed in the hub network area.")
     support_url               = "https://portal.stackit.cloud"
     target_type               = "TENANT_LEVEL"
     run_transparency          = true
     supported_platforms       = var.meshstack.supported_platforms
     use_in_landing_zones_only = true
+
+    readme = coalesce(var.bbd_readme, chomp(<<-EOT
+    This building block creates the **STACKIT project** and gives your meshStack project members access to it. On a spoke landing zone it places the project in the hub network area.
+
+    meshStack runs this building block for you whenever you create a STACKIT tenant. You pick the landing zone of the tenant, which decides whether the project is a spoke project.
+
+    ## 💡 Usage examples
+
+    **Example 1: a sandbox project**
+    A team uses a tenant on the sandbox landing zone. They get a STACKIT project with STACKIT's default flat networking, and their project members get the STACKIT roles mapped from their meshStack roles.
+
+    **Example 2: a spoke project**
+    A team that needs private connectivity uses a tenant on the spoke landing zone. Their project is placed in the hub network area, where they order **STACKIT Network** building blocks for spoke networks.
+
+    ## 📊 Shared Responsibility
+
+    | Responsibility | Platform Team | Application Team |
+    |---|:---:|:---:|
+    | Provide the landing zones and the hub network area | ✅ | ❌ |
+    | Create the STACKIT project | ✅ | ❌ |
+    | Map meshStack roles to STACKIT project roles | ✅ | ❌ |
+    | Pick the landing zone | ❌ | ✅ |
+    | Manage project members in meshStack | ❌ | ✅ |
+    | Manage resources inside the STACKIT project | ❌ | ✅ |
+    EOT
+    ))
   }
 
   version_spec = {
@@ -395,13 +437,26 @@ resource "meshstack_building_block_definition" "this" {
 
       labels = {
         display_name    = "Labels"
-        description     = "Labels applied to the STACKIT project, including the `networkArea` label for the networked variant."
+        description     = "Labels applied to the STACKIT project. The building block adds the `networkArea` label from Network Area IDs."
         type            = "CODE"
         assignment_type = "STATIC"
-        argument = jsonencode(jsonencode(merge(
-          var.stackit_project_labels,
-          each.value.network_area_id != null ? { networkArea = each.value.network_area_id } : {}
-        )))
+        argument        = jsonencode(jsonencode(var.stackit_project_labels))
+      }
+
+      landing_zone = {
+        display_name    = "Landing Zone"
+        description     = "Identifier of the landing zone of the tenant the project is created for."
+        type            = "STRING"
+        assignment_type = "LANDING_ZONE_IDENTIFIER"
+      }
+
+      # Declared even with no spoke landing zone: an empty map places no project in a network area.
+      network_area_ids = {
+        display_name    = "Network Area IDs"
+        description     = "HCL object mapping each landing zone identifier with a network area to the STACKIT network area ID its projects are placed in."
+        type            = "CODE"
+        assignment_type = "STATIC"
+        argument        = jsonencode(jsonencode(local.network_area_ids))
       }
     }
 
@@ -440,17 +495,16 @@ resource "meshstack_building_block_definition" "this" {
 }
 
 # --- State address migrations (no resource recreation) ---
-# Both resources gained `for_each = local.project_variants` when the `networked` project variant was
-# added. The `default` key holds what the single, unkeyed resource used to hold. Without these moves
-# a deployed integration destroys the landing zone its tenants are assigned to, and the `STACKIT
-# Project` definition that every tenant project building block instantiates.
+# Without these moves a deployed integration destroys the landing zone its tenants are assigned to,
+# and the `STACKIT Project` definition that every tenant project building block instantiates.
 moved {
   from = meshstack_landingzone.stackit_default
   to   = meshstack_landingzone.this["default"]
 }
+# The `networked` definition has no successor; the module README says how to retire it.
 moved {
-  from = meshstack_building_block_definition.this
-  to   = meshstack_building_block_definition.this["default"]
+  from = meshstack_building_block_definition.this["default"]
+  to   = meshstack_building_block_definition.this
 }
 
 terraform {
@@ -459,7 +513,7 @@ terraform {
   required_providers {
     meshstack = {
       source  = "meshcloud/meshstack"
-      version = ">= 0.27.2"
+      version = ">= 0.28.1"
     }
     stackit = {
       source  = "stackitcloud/stackit"
