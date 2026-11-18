@@ -25,7 +25,7 @@
 
 import { execFileSync } from "node:child_process";
 import { readFileSync, writeFileSync, existsSync, readdirSync, statSync } from "node:fs";
-import { basename, dirname, join, relative } from "node:path";
+import { basename, dirname, join, relative, sep } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const ROOT = new URL("../../", import.meta.url).pathname.replace(/\/$/, "");
@@ -306,7 +306,8 @@ const detectors = [
             for (const handRolled of handRolledRefs(expression, iterated)) {
               offenders.push(`${where} reads ${handRolled}`);
             }
-            for (const literal of uuidRefLiterals(expression)) {
+            const inBuildingBlock = relative(mod.path, file).split(sep).includes("buildingblock");
+            for (const literal of uuidRefLiterals(expression, inBuildingBlock)) {
               offenders.push(`${where} builds ${literal} from a uuid`);
             }
           }
@@ -2254,7 +2255,7 @@ function handRolledRefs(expression, iteratedType) {
 
 // Nobody types a uuid, so a ref holding one arrives whole. A name ref may be built from a variable
 // or a literal, because a building block input from meshStack is a plain string.
-function uuidRefLiterals(expression) {
+export function uuidRefLiterals(expression, inBuildingBlock = false) {
   const literals = [];
   for (let open = expression.indexOf("{"); open >= 0; open = expression.indexOf("{", open + 1)) {
     const close = findMatchingBrace(expression, open);
@@ -2263,10 +2264,13 @@ function uuidRefLiterals(expression) {
     const topLevel = literal.slice(1, -1).replace(/\{[^{}]*\}|\[[^[\]]*\]/g, "");
     const keys = new Set([...topLevel.matchAll(/(?:^|[\s,])([a-z_]+)\s*=/g)].map((m) => m[1]));
     const compact = literal.replace(/\s+/g, " ");
-    if (keys.has("uuid")) literals.push(compact);
+    if (keys.has("uuid") && !(inBuildingBlock && isTenantRefFromInput(compact))) literals.push(compact);
   }
   return literals;
 }
+
+// Only a buildingblock/ tier receives inputs; everywhere else the tenant has a ref to point at.
+const isTenantRefFromInput = (literal) => /^\{ ?kind ?= ?"meshTenant" ?,? ?uuid ?= ?var\.\w+ ?\}$/.test(literal);
 
 const isRefShaped = ({ type, path }) =>
   path === ".ref" ||

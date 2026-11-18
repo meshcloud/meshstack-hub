@@ -8,6 +8,7 @@ import {
   meshstackVariableViolation,
   summaryOutputBody,
   supportedPlatformsViolations,
+  uuidRefLiterals,
 } from "./scorecard.mjs";
 
 const integration = (argument) => `
@@ -261,6 +262,14 @@ module "runner-identity" {
 `;
   const definition = federatedDefinition({ issuer: "module.runner-identity.issuer", runnerRef: "module.runner-identity.ref" });
   assert.equal(issuerFromPinnedRunner(lookup + definition), true);
+});
+
+test("only a building block may build its own tenant's ref from a variable", () => {
+  const tenantRef = '{ kind = "meshTenant", uuid = var.tenant_uuid }';
+  assert.deepEqual(uuidRefLiterals(tenantRef, true), []);
+  assert.equal(uuidRefLiterals(tenantRef, false).length, 1);
+  assert.equal(uuidRefLiterals('{ kind = "meshWorkspace", uuid = var.workspace_uuid }', true).length, 1);
+  assert.equal(uuidRefLiterals('{ kind = "meshTenant", uuid = meshstack_tenant.this.metadata.uuid }', true).length, 1);
 });
 
 const trustedRunnersModule = (versions = "meshstack_building_block_definition.this.versions") => `
