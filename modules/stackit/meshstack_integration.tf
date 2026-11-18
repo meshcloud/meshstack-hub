@@ -66,6 +66,22 @@ variable "stackit_project_labels" {
   description = "Additional labels applied to every STACKIT project created by this building block."
 }
 
+variable "stackit_project_in_marketplace" {
+  type        = bool
+  default     = false
+  nullable    = false
+  description = <<-EOT
+  Offer `STACKIT Project` in the marketplace, where application teams add it to their STACKIT
+  tenants, instead of running it on every new tenant as the mandatory building block of the landing
+  zones. Leave it off where tenants are created by something that expects their STACKIT project to
+  follow, such as the `stackit-kubernetes` reference architecture.
+
+  It also hides the STACKIT platform from the marketplace, so teams add the project instead of
+  ordering a bare tenant. This takes effect only when the platform is created: on an existing
+  platform, hide it in meshPanel.
+  EOT
+}
+
 variable "stackit_networked_projects_enabled" {
   type        = bool
   default     = false
@@ -193,19 +209,26 @@ locals {
     {
       default = {
         display_name = "STACKIT Sandbox"
-        description  = "Creates a STACKIT project in the landing zone folder, with project roles mapped from meshStack project roles. The project is not attached to a network area, so it uses STACKIT's default flat networking."
+        description  = "STACKIT projects with STACKIT's default flat networking, and project roles mapped from meshStack project roles."
       }
     },
     var.stackit_networked_projects_enabled ? {
       networked = {
         display_name = "STACKIT Networked"
-        description  = "Creates a STACKIT project placed in the shared hub network area, with project roles mapped from meshStack project roles. Order the STACKIT Network building block inside the project to get a routed subnet drawn from the hub's address plan."
+        description  = "STACKIT projects placed in the shared hub network area, with project roles mapped from meshStack project roles. Order the STACKIT Network building block inside the project to get a routed subnet drawn from the hub's address plan."
       }
     } : {}
   )
 
   # Built from the name rather than read from meshstack_landingzone.this, which depends on the definition.
   network_area_ids = var.stackit_networked_projects_enabled ? { "${var.meshstack.platform_identifier}-networked" = var.stackit_network_area_id } : {}
+
+  readme_when_to_use = var.stackit_project_in_marketplace ? chomp(<<-EOT
+    Add it from the marketplace to a STACKIT tenant:
+    1. Pick your meshStack project and its STACKIT tenant. No tenant yet? Create one there and pick its landing zone, which decides whether the project is networked.
+    2. Add it once per tenant: the tenant is linked to the project it creates.
+    EOT
+  ) : "meshStack runs this building block for you whenever you create a STACKIT tenant. You pick the landing zone of the tenant, which decides whether the project is networked."
 }
 
 moved {
@@ -238,6 +261,7 @@ resource "meshstack_platform" "this" {
       restriction              = "PRIVATE"
       publication_state        = "UNPUBLISHED"
       restricted_to_workspaces = [var.meshstack.owning_workspace_identifier]
+      hidden_in_marketplace    = var.stackit_project_in_marketplace
     }
 
     config = {
@@ -276,7 +300,7 @@ resource "meshstack_landingzone" "this" {
       custom = {}
     }
 
-    mandatory_building_block_refs = [meshstack_building_block_definition.this.ref]
+    mandatory_building_block_refs = var.stackit_project_in_marketplace ? [] : [meshstack_building_block_definition.this.ref]
   }
 }
 
@@ -294,12 +318,12 @@ resource "meshstack_building_block_definition" "this" {
     target_type               = "TENANT_LEVEL"
     run_transparency          = true
     supported_platforms       = var.meshstack.supported_platforms
-    use_in_landing_zones_only = true
+    use_in_landing_zones_only = !var.stackit_project_in_marketplace
 
     readme = coalesce(var.bbd_readme, chomp(<<-EOT
     This building block creates the **STACKIT project** and gives your meshStack project members access to it. On a networked landing zone it places the project in the hub network area.
 
-    meshStack runs this building block for you whenever you create a STACKIT tenant. You pick the landing zone of the tenant, which decides whether the project is networked.
+    ${local.readme_when_to_use}
 
     ## 💡 Usage examples
 
