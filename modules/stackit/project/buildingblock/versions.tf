@@ -6,8 +6,9 @@ terraform {
       version = ">= 0.98.0, < 1.0.0"
     }
     meshstack = {
-      source  = "meshcloud/meshstack"
-      version = ">= 0.27.0"
+      source = "meshcloud/meshstack"
+      # 0.27.1 is the first release whose create returns at once when the run waits for a dependency.
+      version = ">= 0.27.1"
     }
     external = {
       source  = "hashicorp/external"

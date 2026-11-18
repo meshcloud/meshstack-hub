@@ -60,7 +60,7 @@ variable "stackit_owner_email" {
 variable "topology" {
   type        = list(string)
   nullable    = false
-  description = "Landing zone labels to deploy and offer application teams. `sandbox` deploys the sandbox landing zone; `hub&spoke` also provisions the hub&spoke networking. The starterkit defaults to `sandbox` when selected, else `hub&spoke`."
+  description = "Landing zones to offer application teams. The sandbox landing zone is always deployed, so `sandbox` alone adds nothing; `hub&spoke` adds the spoke landing zone and provisions the hub&spoke networking."
 
   validation {
     condition     = length(var.topology) > 0 && alltrue([for t in var.topology : contains(["sandbox", "hub&spoke"], t)])
@@ -100,36 +100,15 @@ variable "role_mapping" {
 
 variable "tags" {
   type = object({
-    landingzone           = list(object({ key = string, values = list(string) }))
-    building_block        = list(object({ key = string, values = list(string) }))
-    project               = list(object({ key = string, values = list(string) }))
-    project_owner_tag_key = optional(string)
+    landingzone    = list(object({ key = string, values = list(string) }))
+    building_block = list(object({ key = string, values = list(string) }))
   })
   nullable    = false
   description = <<-EOT
   Tags forwarded to the nested STACKIT integrations, each map built in the meshPanel form as a list of {key, values} entries.
   `landingzone` tags are applied to the created landing zones.
   `building_block` tags are applied to the nested building block definitions.
-  `project` tags are applied to the meshProjects the starterkit creates.
-  `project_owner_tag_key` names the tag that receives the creator's display name; null or empty sets none.
   EOT
-}
-
-variable "starterkit_approval_policies" {
-  type = object({
-    building_block_creation = bool
-    user_input_changes      = bool
-    any_input_changes       = bool
-    manual_triggers         = bool
-    version_upgrade         = bool
-  })
-  default     = null
-  description = "Run triggers that need an operator's approval before a run of the project starterkit is applied. The defaults are the provider's own, and the provider asserts them whenever the definition sets no policies — so a gate switched on in meshPanel is turned off again by the next run unless it is set here. Ignored in playground mode, which gates nothing."
-
-  validation {
-    condition     = var.playground_mode || var.starterkit_approval_policies != null
-    error_message = "starterkit_approval_policies is required unless playground_mode is set."
-  }
 }
 
 variable "imports" {

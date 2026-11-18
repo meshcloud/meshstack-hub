@@ -86,9 +86,10 @@ When a **network** configuration is provided, it additionally:
 6. Registers the [`stackit/network`](../../modules/stackit/network) building block definition
    (`TENANT_LEVEL`) so application teams can self-service order spoke networks inside
    their STACKIT projects, drawing from the hub's address plan.
-7. Provisions an additional **spoke landing zone**. The `STACKIT Project` building block reads
-   the landing zone of its tenant and labels projects on this one with the hub's network area ID,
-   so they are placed in the hub's network area.
+7. Provisions an additional **spoke landing zone**. A `STACKIT Project` on it is placed in the
+   hub's network area and orders a spoke network from the `stackit/network` definition, sized by
+   its **Network** input. meshStack only lets that order through once that definition is published
+   and released, which needs `hub.bbd_draft = false`.
 
 ## Service Accounts
 
@@ -194,7 +195,7 @@ the tenant projects stay.
 
 ### Playground Mode
 
-**Playground Mode** deploys a throwaway platform. It is off by default, and four things change
+**Playground Mode** deploys a throwaway platform. It is off by default, and three things change
 with it:
 
 | | `playground_mode = true` | `playground_mode = false` |
@@ -202,7 +203,6 @@ with it:
 | Platform identifier | random suffix appended | taken exactly as given |
 | Root folder | always, `playground-<platform identifier>` unless named | only when named |
 | Folders and foundation project | destroyable | guarded with `prevent_destroy` |
-| Starterkit Approval Policies | hidden, no gates | as set |
 
 The suffix exists because a platform identifier is unique across the whole meshStack instance, and
 `modules/stackit` builds every landing zone name from it as `<platform_identifier>-<variant>`. A
@@ -250,8 +250,14 @@ succeeded, **Imports** can be set back to null without renaming or replacing any
 ### Approval Gates
 
 The module variable `approval_policies` sets which run triggers need an operator's approval before
-a run of this architecture is applied. The order form input **Starterkit Approval Policies** does
-the same for the project starterkit definition it registers. Both default to no gate at all.
+a run of this architecture is applied. It defaults to no gate at all.
+
+### Upgrading from a Version with the Project Starterkit
+
+The upgrade removes the `STACKIT Project Starterkit` and `STACKIT Spoke Project` definitions,
+the **Starterkit Approval Policies** input and the `project` and `project_owner_tag_key` tags. Delete
+the tenants on the spoke landing zone first; see the
+[STACKIT Project migration notes](../../modules/stackit/project/buildingblock/README.md#migrating-from-the-stackit-project-starterkit).
 
 ## Shared Responsibilities
 

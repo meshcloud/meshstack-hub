@@ -6,15 +6,6 @@ locals {
   # name, so a playground deployment suffixes it instead of occupying the plain name.
   platform_identifier = var.playground_mode ? "${var.platform_identifier}-${random_string.playground_suffix.result}" : var.platform_identifier
 
-  # The order form hides the policies in playground mode, which gates nothing.
-  starterkit_approval_policies = var.playground_mode ? {
-    building_block_creation = false
-    user_input_changes      = false
-    any_input_changes       = false
-    manual_triggers         = false
-    version_upgrade         = false
-  } : var.starterkit_approval_policies
-
   # STACKIT caps a service account name at 20 characters and rejects one ending in a dash, so cutting
   # the identifier to length can produce an invalid name. Cut shorter instead, drop whatever dashes
   # the cut exposed, and end with a hash of the full identifier so two names sharing a prefix stay
@@ -43,10 +34,8 @@ locals {
 
   # The meshPanel Tags form sends each tag map as a list of {key, values} entries.
   tags = {
-    landingzone           = { for e in var.tags.landingzone : e.key => e.values }
-    building_block        = { for e in var.tags.building_block : e.key => e.values }
-    project               = { for e in var.tags.project : e.key => e.values }
-    project_owner_tag_key = var.tags.project_owner_tag_key
+    landingzone    = { for e in var.tags.landingzone : e.key => e.values }
+    building_block = { for e in var.tags.building_block : e.key => e.values }
   }
 }
 
@@ -153,10 +142,13 @@ module "stackit_integration" {
   role_mapping                            = { admin = var.role_mapping.admin, user = var.role_mapping.user, reader = var.role_mapping.reader }
   stackit_organization_onboarding_enabled = var.role_mapping.organization_onboarding
 
-  # The project definition places projects of the spoke landing zone in the hub network area
-  # via the `networkArea` label, so no landing zone tag (and no tag definition) is involved.
-  stackit_networked_projects_enabled = local.network_enabled
-  stackit_network_area_id            = local.network_area_id
+  # The same bounds as the `STACKIT Network` definition the projects order from. Null keeps the
+  # integration's defaults.
+  stackit_networked_projects_enabled     = local.network_enabled
+  stackit_network_area_id                = local.network_area_id
+  stackit_network_definition_version_ref = local.network_enabled ? module.network_integration.building_block_definition.version_ref : null
+  stackit_network_min_prefix_length      = local.network_enabled ? var.network.tenant_network_min_prefix_length : null
+  stackit_network_max_prefix_length      = local.network_enabled ? var.network.tenant_network_max_prefix_length : null
 
   hub = var.hub
 
@@ -167,42 +159,6 @@ module "stackit_integration" {
     platform_identifier         = local.platform_identifier
     tags                        = local.tags
   }
-}
-
-# The select the application team sees is built from the landing zones that actually exist, so no
-# configuration is needed to keep the two in step.
-module "stackit_project_starterkit" {
-  source = "github.com/meshcloud/meshstack-hub//modules/stackit/stackit-project-starterkit?ref=${var.hub.git_ref}"
-
-  platform_ref = module.stackit_integration.platform_ref
-  landing_zone_refs = merge(
-    contains(var.topology, "sandbox") ? { "sandbox" = module.stackit_integration.landingzone_refs["default"] } : {},
-    local.network_enabled ? { "hub&spoke" = module.stackit_integration.landingzone_refs["spoke"] } : {}
-  )
-
-  default_landing_zone = contains(var.topology, "sandbox") ? "sandbox" : "hub&spoke"
-  approval_policies    = local.starterkit_approval_policies
-
-  # `hub&spoke` is the only landing zone attached to a network area, so it is the only one where the
-  # starterkit creates a spoke network. Null — networking disabled — drops the `Network` input from the
-  # definition rather than showing a field nothing reads.
-  network = local.network_enabled ? {
-    matching_landing_zones = ["hub&spoke"]
-    bbd_version_ref        = module.network_integration.building_block_definition.version_ref
-
-    # The same bounds the `STACKIT Network` definition validates against, so the starterkit renders the
-    # allowed range into its `network` default and rejects a default the area would refuse.
-    prefix_length_min = var.network.tenant_network_min_prefix_length
-    prefix_length_max = var.network.tenant_network_max_prefix_length
-  } : null
-
-  project_tags = {
-    tags          = local.tags.project
-    owner_tag_key = local.tags.project_owner_tag_key
-  }
-
-  meshstack = { owning_workspace_identifier = var.workspace, tags = local.tags.building_block, runner_ref = local.runner_ref }
-  hub       = var.hub
 }
 
 module "service_account_integration" {

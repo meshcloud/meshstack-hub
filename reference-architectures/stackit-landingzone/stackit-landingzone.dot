@@ -73,5 +73,6 @@ digraph stackit_landingzone {
   SABBD    -> SA    [xlabel="provisions" style=dotted constraint=false]
   NABBD    -> NA    [xlabel="provisions" style=dotted constraint=false]
   SPOKEBBD -> SPOKE [xlabel="provisions" style=dotted constraint=false]
+  PRJBBD   -> SPOKEBBD [xlabel="orders one on the spoke LZ" style=dashed constraint=false]
   NETLZ    -> NA    [xlabel="projects placed in" style=dotted constraint=false]
 }

@@ -90,9 +90,6 @@ locals {
     }
   }
 
-  approval_gates            = ["building_block_creation", "user_input_changes", "any_input_changes", "manual_triggers", "version_upgrade"]
-  approval_policies_default = { for gate in local.approval_gates : gate => false }
-
   imports_definition_properties = {
     uuid                            = { type = "string", title = "uuid" }
     service_account_email           = { type = "string", title = "service_account_email" }
@@ -114,16 +111,10 @@ locals {
   tags_json_schema = {
     "$schema" = "http://json-schema.org/draft-07/schema#"
     type      = "object"
-    required  = ["landingzone", "building_block", "project"]
+    required  = ["landingzone", "building_block"]
     properties = {
       landingzone    = merge(local.tag_list_schema, { title = "Landing Zone Tags" })
       building_block = merge(local.tag_list_schema, { title = "Building Block Tags" })
-      project        = merge(local.tag_list_schema, { title = "Project Tags" })
-      project_owner_tag_key = {
-        type        = "string"
-        title       = "Project Owner Tag Key"
-        description = "Tag on the created meshProjects that gets the creator's display name. Leave out to set none."
-      }
     }
   }
 }
@@ -174,9 +165,10 @@ resource "meshstack_building_block_definition" "this" {
     **Example 2: Bootstrap with hub&spoke networking**
     A platform engineer provides a **network** configuration (CIDR plan, prefix bounds). In addition
     to the sandbox platform, the building block provisions the hub network area with the chosen
-    address plan, registers the **STACKIT Network** building block, and adds a dedicated `spoke`
-    STACKIT Project building block definition plus landing zone whose projects are placed in the hub
-    network area. Application teams can then self-service order spoke networks inside their projects.
+    address plan, registers the **STACKIT Network** building block, and adds a `spoke` landing
+    zone. A project on it is placed in the hub network area and orders a **STACKIT Network** building
+    block for its spoke network, sized through the **Network** input that only this landing zone
+    shows. Application teams can order more spoke networks inside their projects.
 
     A **network** configuration looks like this (sensible example values shown — adapt them to your
     own address plan):
@@ -212,8 +204,8 @@ resource "meshstack_building_block_definition" "this" {
       with project roles and optional workload identity federation inside their own projects.
     - **Hub network area + spoke network building block + spoke landing zone** *(only when a
       network configuration is provided)* – the shared hub address plan, the self-service `STACKIT
-      Network` building block, and a second landing zone whose projects the `STACKIT Project`
-      building block places into the hub network area.
+      Network` building block, and a second landing zone whose projects are placed in the hub
+      network area and order a spoke network.
 
     ## 🧪 Playground mode
 
@@ -353,7 +345,7 @@ resource "meshstack_building_block_definition" "this" {
 
       topology = {
         display_name      = "Topology"
-        description       = "Landing zones to deploy and offer application teams: `sandbox` and/or `hub&spoke` (the latter also provisions hub&spoke networking and reveals the Network form). The starterkit defaults to `sandbox` when selected, else `hub&spoke`."
+        description       = "Landing zones to offer application teams. The sandbox landing zone is always deployed; `hub&spoke` adds the spoke landing zone, provisions hub&spoke networking and reveals the Network form."
         type              = "MULTI_SELECT"
         assignment_type   = "USER_INPUT"
         selectable_values = ["sandbox", "hub&spoke"]
@@ -416,31 +408,13 @@ resource "meshstack_building_block_definition" "this" {
 
       tags = {
         display_name           = "Tags"
-        description            = "Tags forwarded to the nested integrations. Build them in the form: add {key, values} entries for landing zones, building blocks, and the created meshProjects, plus the project owner tag key."
+        description            = "Tags forwarded to the nested integrations. Build them in the form: add {key, values} entries for landing zones and building blocks."
         type                   = "JSON"
         assignment_type        = "USER_INPUT"
         updateable_by_consumer = true
         display_order          = 100
 
         json_schema = jsonencode(local.tags_json_schema)
-      }
-
-      starterkit_approval_policies = {
-        display_name           = "Starterkit Approval Policies"
-        description            = "Run triggers that need an operator's approval before a run of a project starterkit building block is applied."
-        type                   = "JSON"
-        assignment_type        = "USER_INPUT"
-        updateable_by_consumer = true
-        default_value          = jsonencode(jsonencode(local.approval_policies_default))
-        condition              = "!input.playground_mode"
-        display_order          = 105
-
-        json_schema = jsonencode({
-          type                 = "object"
-          additionalProperties = false
-          required             = local.approval_gates
-          properties           = { for gate, enabled in local.approval_policies_default : gate => { type = "boolean", title = gate, default = enabled } }
-        })
       }
 
       imports = {

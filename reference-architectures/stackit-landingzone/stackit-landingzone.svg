@@ -192,7 +192,7 @@
 <text xml:space="preserve" text-anchor="middle" x="839.61" y="-307.46" font-family="Helvetica,sans-Serif" font-size="9.00" fill="#697180">offers to tenants</text>
 </g>
 <!-- NETLZ&#45;&gt;NA -->
-<g id="edge26" class="edge">
+<g id="edge27" class="edge">
 <title>NETLZ&#45;&gt;NA</title>
 <path fill="none" stroke="#8b95a3" stroke-dasharray="1,5" d="M1019.15,-329.31C1019.15,-319.08 1019.15,-309 1019.15,-309 1019.15,-309 594.01,-309 594.01,-309 594.01,-309 594.01,-277.43 594.01,-277.43"/>
 <polygon fill="#8b95a3" stroke="#8b95a3" points="596.46,-277.43 594.01,-270.43 591.56,-277.43 596.46,-277.43"/>
@@ -201,8 +201,8 @@
 <!-- NETLZ&#45;&gt;PRJBBD -->
 <g id="edge18" class="edge">
 <title>NETLZ&#45;&gt;PRJBBD</title>
-<path fill="none" stroke="#8b95a3" d="M961.11,-345C948.53,-345 939.72,-345 939.72,-345 939.72,-345 939.72,-247 939.72,-247 939.72,-247 930.64,-247 930.64,-247"/>
-<polygon fill="#8b95a3" stroke="#8b95a3" points="930.64,-244.55 923.64,-247 930.64,-249.45 930.64,-244.55"/>
+<path fill="none" stroke="#8b95a3" d="M961.11,-345C948.53,-345 939.72,-345 939.72,-345 939.72,-345 939.72,-254 939.72,-254 939.72,-254 930.64,-254 930.64,-254"/>
+<polygon fill="#8b95a3" stroke="#8b95a3" points="930.64,-251.55 923.64,-254 930.64,-256.45 930.64,-251.55"/>
 </g>
 <!-- SPOKEBBD -->
 <g id="node15" class="node">
@@ -226,6 +226,13 @@
 <text xml:space="preserve" text-anchor="middle" x="539.3" y="-149.7" font-family="Helvetica,sans-Serif" font-size="9.00" fill="#697180">provisions</text>
 </g>
 <!-- PRJBBD&#45;&gt;SABBD -->
+<!-- PRJBBD&#45;&gt;SPOKEBBD -->
+<g id="edge26" class="edge">
+<title>PRJBBD&#45;&gt;SPOKEBBD</title>
+<path fill="none" stroke="#8b95a3" stroke-dasharray="5,2" d="M922.22,-240C922.22,-240 952.62,-240 952.62,-240"/>
+<polygon fill="#8b95a3" stroke="#8b95a3" points="952.62,-242.45 959.62,-240 952.62,-237.55 952.62,-242.45"/>
+<text xml:space="preserve" text-anchor="middle" x="937.42" y="-231.9" font-family="Helvetica,sans-Serif" font-size="9.00" fill="#697180">orders one on the spoke LZ</text>
+</g>
 <!-- SABBD&#45;&gt;SA -->
 <g id="edge23" class="edge">
 <title>SABBD&#45;&gt;SA</title>

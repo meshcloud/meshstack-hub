@@ -3,7 +3,7 @@ name: STACKIT Project
 supportedPlatforms:
   - stackit
 description: |
-  Creates a new STACKIT project and manages user access permissions with configurable role-based access control. On a spoke landing zone, the project is placed in a STACKIT network area.
+  Creates a new STACKIT project and manages user access permissions with configurable role-based access control. On a spoke landing zone, the project is placed in a STACKIT network area and gets a spoke network.
 ---
 
 # STACKIT Project Building Block
@@ -14,15 +14,25 @@ This Terraform module provisions a STACKIT project with user access control. mes
 
 One definition serves every landing zone: the building block reads its tenant's landing zone
 through a `LANDING_ZONE_IDENTIFIER` input and looks it up in `network_area_ids`. On a match the
-project gets the `networkArea` label, which places it in that STACKIT network area.
+project gets the `networkArea` label and orders a `STACKIT Network` building block on the same
+tenant, sized by the `network` input, which the definition shows only on those landing zones.
 
 Application teams add the definition from the marketplace to their tenants. Add it once per
 tenant, because it reports the project as the tenant's Platform
 Tenant ID. The STACKIT platform is hidden from the
 marketplace, so teams add this building block rather than order a bare tenant.
 
+- The network runs right after this run succeeds, because it reads the project from the tenant's
+  Platform Tenant ID. This run does not wait for it.
+- Resize the network through `network` here. The next run reverts a change made on the network
+  building block itself.
+- meshStack refuses the order unless the `STACKIT Network` definition is published to the
+  marketplace and its version is released (`hub.bbd_draft = false` on `modules/stackit/network`).
+- While the network needs attention, such as a failed run or an approval, every run here fails
+  too, a user sync included.
 - Do not move a tenant onto or off a spoke landing zone. STACKIT sets the network area only at
-  project creation, so the re-run fails on the `networkArea` label.
+  project creation, so the re-run fails on the `networkArea` label, after deleting the network
+  when the move was off the spoke landing zone.
 
 ## Project roles
 
@@ -76,32 +86,33 @@ parent_container_ids = {
 }
 ```
 
-## Requirements
+## Migrating from the STACKIT Project Starterkit
 
-- Terraform `>= 1.11.0`
-- STACKIT Provider `>= 0.98.0`
+The `stackit/stackit-project-starterkit` module is removed. Application teams create a meshProject
+and a STACKIT tenant the usual way and pick the landing zone there. To move a foundation repository
+over:
+
+1. Remove the `stackit-project-starterkit` module. Applying deletes its definition; the
+   meshProjects, tenants and networks it created stay. Starterkit building blocks that are still
+   there block the deletion: purge them in meshPanel. Deleting them tears down the meshProject and
+   tenant they created.
+2. Pass the prefix-length bounds you gave the starterkit's `network` as
+   `stackit_network_min_prefix_length` and `stackit_network_max_prefix_length`, and the
+   `version_ref` of your `STACKIT Network` definition as `stackit_network_definition_version_ref`,
+   to the `stackit/project` integration.
+3. Coming from before the single definition, follow
+   [Upgrading from the spoke definition](#upgrading-from-the-spoke-definition).
 
 ## Providers
 
-Authentication uses Workload Identity Federation (OIDC token exchange) — no long-lived
-service account key, and no auth arguments in the provider block. meshStack injects the
-federated token file and sets `STACKIT_SERVICE_ACCOUNT_EMAIL`, `STACKIT_USE_OIDC` and
-`STACKIT_FEDERATED_TOKEN_FILE` in the environment.
+Neither provider block has auth arguments:
 
-```hcl
-terraform {
-  required_providers {
-    stackit = {
-      source  = "stackitcloud/stackit"
-      version = ">= 0.98.0"
-    }
-  }
-}
-
-provider "stackit" {
-  experiments = ["iam"] # Required for authorization resources
-}
-```
+- **STACKIT** uses Workload Identity Federation (OIDC token exchange), with no long-lived service
+  account key. meshStack injects the federated token file and sets `STACKIT_SERVICE_ACCOUNT_EMAIL`,
+  `STACKIT_USE_OIDC` and `STACKIT_FEDERATED_TOKEN_FILE` in the environment.
+- **meshStack** uses the ephemeral API key of the run, from `MESHSTACK_ENDPOINT` and
+  `MESHSTACK_API_TOKEN`. It needs those on every landing zone, because the provider is configured
+  even where no network is ordered.
 
 <!-- BEGIN_TF_DOCS -->
 ## Requirements
@@ -110,7 +121,7 @@ provider "stackit" {
 |------|---------|
 | <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.11.0 |
 | <a name="requirement_external"></a> [external](#requirement\_external) | >= 2.3.0, < 3.0.0 |
-| <a name="requirement_meshstack"></a> [meshstack](#requirement\_meshstack) | >= 0.27.0 |
+| <a name="requirement_meshstack"></a> [meshstack](#requirement\_meshstack) | >= 0.27.1 |
 | <a name="requirement_stackit"></a> [stackit](#requirement\_stackit) | >= 0.98.0, < 1.0.0 |
 
 ## Modules
@@ -121,6 +132,7 @@ No modules.
 
 | Name | Type |
 |------|------|
+| [meshstack_building_block.network](https://registry.terraform.io/providers/meshcloud/meshstack/latest/docs/resources/building_block) | resource |
 | [stackit_authorization_project_role_assignment.role_assignments](https://registry.terraform.io/providers/stackitcloud/stackit/latest/docs/resources/authorization_project_role_assignment) | resource |
 | [stackit_resourcemanager_project.project](https://registry.terraform.io/providers/stackitcloud/stackit/latest/docs/resources/resourcemanager_project) | resource |
 | [external_external.stackit_users](https://registry.terraform.io/providers/hashicorp/external/latest/docs/data-sources/external) | data source |
@@ -132,13 +144,16 @@ No modules.
 | <a name="input_environment"></a> [environment](#input\_environment) | The environment type (production, staging, development). If not set, uses parent\_container\_id directly. | `string` | `null` | no |
 | <a name="input_labels"></a> [labels](#input\_labels) | Labels to apply to the project. The `networkArea` label is added from `network_area_ids`. | `map(string)` | n/a | yes |
 | <a name="input_landing_zone"></a> [landing\_zone](#input\_landing\_zone) | Identifier of the landing zone of the tenant the project is created for. | `string` | n/a | yes |
-| <a name="input_network_area_ids"></a> [network\_area\_ids](#input\_network\_area\_ids) | STACKIT network area ID per landing zone identifier. A project in one of these landing zones is placed in its network area. | `map(string)` | n/a | yes |
+| <a name="input_network"></a> [network](#input\_network) | Spoke network ordered for the project when its landing zone has a network area. An empty `ipv4_nameservers` inherits the network area's default nameservers. | <pre>object({<br/>    prefix_length    = optional(number, 25)<br/>    ipv4_nameservers = optional(list(string), [])<br/>  })</pre> | `{}` | no |
+| <a name="input_network_area_ids"></a> [network\_area\_ids](#input\_network\_area\_ids) | STACKIT network area ID per landing zone identifier. A project in one of these landing zones is placed in its network area, and a STACKIT Network building block is ordered for it. | `map(string)` | n/a | yes |
+| <a name="input_network_definition_version_ref"></a> [network\_definition\_version\_ref](#input\_network\_definition\_version\_ref) | Version of the STACKIT Network definition the project's network is ordered from. | <pre>object({<br/>    uuid         = string<br/>    content_hash = optional(string)<br/>  })</pre> | `null` | no |
 | <a name="input_organization_id"></a> [organization\_id](#input\_organization\_id) | STACKIT organization where project users are looked up before their roles are granted; users STACKIT does not know are skipped and listed in the summary. Needs `iam.member.get` on the organization. Empty grants every user's roles without a lookup. | `string` | `""` | no |
 | <a name="input_parent_container_id"></a> [parent\_container\_id](#input\_parent\_container\_id) | The parent container ID (organization or folder) where the project will be created. | `string` | n/a | yes |
 | <a name="input_parent_container_ids"></a> [parent\_container\_ids](#input\_parent\_container\_ids) | Parent container IDs for different environments. If environment is set, the corresponding container ID will be used. | <pre>object({<br/>    production  = optional(string)<br/>    staging     = optional(string)<br/>    development = optional(string)<br/>  })</pre> | `{}` | no |
 | <a name="input_project_name"></a> [project\_name](#input\_project\_name) | The name of the StackIt project to create. | `string` | n/a | yes |
 | <a name="input_project_owner_email"></a> [project\_owner\_email](#input\_project\_owner\_email) | Email of the initial owner of the created project. STACKIT applies this only at creation, as a<br/>`members` entry with the `owner` role, and ignores any later change. | `string` | n/a | yes |
 | <a name="input_role_mapping"></a> [role\_mapping](#input\_role\_mapping) | Maps meshStack roles from `users[*].roles` to STACKIT project roles. Values can be built-in STACKIT roles or custom STACKIT role names. Unknown meshStack roles are ignored. | `map(list(string))` | n/a | yes |
+| <a name="input_tenant_uuid"></a> [tenant\_uuid](#input\_tenant\_uuid) | UUID of the meshStack tenant the project is created for. The network building block is ordered on it. | `string` | n/a | yes |
 | <a name="input_users"></a> [users](#input\_users) | List of users from the authoritative system. Each user's `roles` are meshStack roles that are mapped to STACKIT project roles via `role_mapping`. | <pre>list(object({<br/>    meshIdentifier = string<br/>    username       = string<br/>    firstName      = string<br/>    lastName       = string<br/>    email          = string<br/>    euid           = string<br/>    roles          = list(string)<br/>  }))</pre> | n/a | yes |
 
 ## Outputs

@@ -15,13 +15,11 @@ When a `network` object is supplied, it additionally composes two more Hub modul
 offering: it registers [`modules/stackit/network-area`](../../../modules/stackit/network-area) and
 immediately orders one instance of it as the hub address plan, and registers
 [`modules/stackit/network`](../../../modules/stackit/network) so application teams can self-service
-order spoke networks inside their STACKIT projects. New STACKIT projects are then placed in
-the hub's network area through an additional `spoke` project definition and landing zone, which
-set the network area as a static label on the project. Leaving `network` unset (`null`) deploys only
-the sandbox landing zone.
+order spoke networks inside their STACKIT projects. New STACKIT projects on an additional
+`spoke` landing zone are then placed in the hub's network area, and each orders a spoke network
+from `modules/stackit/network`. Leaving `network` unset (`null`) deploys only the sandbox landing zone.
 
-It always registers [`modules/stackit/stackit-project-starterkit`](../../../modules/stackit/stackit-project-starterkit),
-[`modules/stackit/service-account`](../../../modules/stackit/service-account) and
+It always registers [`modules/stackit/service-account`](../../../modules/stackit/service-account) and
 [`modules/stackit/service-account-federation`](../../../modules/stackit/service-account-federation).
 The summary shows the platform ref, the landing zone refs and the version refs of the two service
 account definitions as a code block. You paste it into a composing architecture such as the STACKIT

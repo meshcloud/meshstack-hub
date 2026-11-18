@@ -160,8 +160,10 @@ re-run. The provider reads the run through `status.action`; the
   `succeeded` stays known, and the postcondition **fails the plan**, not just the apply. That is the
   intended signal: no apply will fix this by itself, so someone has to supply the input or approve
   the run in meshPanel. A child block that is *meant* to park — one whose definition requires an
-  approval — is the one case for a looser condition, e.g.
-  `self.status.succeeded || self.status.action == "APPROVE_RUN"`.
+  approval — is one case for a looser condition, e.g.
+  `self.status.succeeded || self.status.action == "APPROVE_RUN"`. The other is a child that needs
+  the Platform Tenant ID its parent's run sets (`stackit/project` ordering its network):
+  `self.status.succeeded || self.status.action == "WAITING_FOR_DEPENDENCY"`.
 
 
 ## Reading a Child's Outputs
