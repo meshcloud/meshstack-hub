@@ -2,9 +2,10 @@
 
 %{ if playground_mode ~}
 > **Playground mode.** The platform identifier carries a random suffix so this deployment does not
-> occupy a name for good, and nothing here is protected against deletion. Do not publish this
-> platform or the building block definitions it registered to other workspaces. Redeploy with
-> `playground_mode` set to false for a platform that is actually used.
+> occupy a name for good, and nothing here is protected against deletion. Publish this platform
+> or the building block definitions it registered to other workspaces only to test that path, and
+> delete the playground afterwards. Redeploy with `playground_mode` set to false for a platform
+> that is actually used.
 
 %{ endif ~}
 ## Details
