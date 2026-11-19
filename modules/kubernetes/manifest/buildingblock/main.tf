@@ -6,7 +6,7 @@ resource "helm_release" "this" {
   atomic  = true
   timeout = 300
 
-  values = [var.values_yaml]
+  values = [var.values_yaml, var.secret_values_yaml]
 
   lifecycle {
     precondition {

@@ -13,3 +13,10 @@ variable "values_yaml" {
   type        = string
   default     = "{}"
 }
+
+variable "secret_values_yaml" {
+  description = "Helm values that hold secrets, merged after `values_yaml` so they override it."
+  type        = string
+  default     = "{}"
+  sensitive   = true
+}

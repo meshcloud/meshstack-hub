@@ -133,7 +133,7 @@ resource "meshstack_building_block_definition" "this" {
 
     ## 🚀 When to use it
 
-    This building block is for application teams that need to deploy custom Kubernetes workloads (Deployments, Services, Ingresses, ConfigMaps, …) into their namespace without maintaining a full Helm chart themselves. The platform team provides the chart templates; the application team supplies a `values.yaml` to customise behaviour.
+    This building block is for application teams that need to deploy custom Kubernetes workloads (Deployments, Services, Ingresses, ConfigMaps, …) into their namespace without maintaining a full Helm chart themselves. The platform team provides the chart templates; the application team supplies a `values.yaml` to customise behaviour, and a secret `values.yaml` for passwords, tokens and other secrets, which meshStack stores encrypted and merges over the plain one.
 
     ## 🤝 Shared Responsibility
 
@@ -143,6 +143,7 @@ resource "meshstack_building_block_definition" "this" {
     | Provide Helm chart templates (`templates/`) | ✅ | ❌ |
     | Configure `release_name` and `kubeconfig` | ✅ | ❌ |
     | Supply `values.yaml` to customise the deployment | ❌ | ✅ |
+    | Put secrets into the secret `values.yaml` only | ❌ | ✅ |
     EOT
     ))
   }
@@ -199,6 +200,16 @@ resource "meshstack_building_block_definition" "this" {
         updateable_by_consumer = true
         default_value          = jsonencode(yamlencode(var.helm_default_values_yaml))
       }
+
+      secret_values_yaml = {
+        display_name           = "Secret values.yaml"
+        description            = "Helm values that hold secrets, such as passwords or tokens. meshStack stores them encrypted. They override values.yaml."
+        type                   = "CODE"
+        assignment_type        = "USER_INPUT"
+        updateable_by_consumer = true
+        is_optional            = true
+        sensitive              = {}
+      }
       },
       { for filename, content in var.helm_template_files : "templates/${filename}" => {
         display_name    = "templates/${filename}"
@@ -232,7 +243,7 @@ terraform {
   required_providers {
     meshstack = {
       source  = "meshcloud/meshstack"
-      version = ">= 0.21.0"
+      version = ">= 0.25.2"
     }
   }
 }
