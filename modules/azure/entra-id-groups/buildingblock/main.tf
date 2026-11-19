@@ -5,24 +5,30 @@ locals {
 
   # Without roles there is one group, keyed "members", that takes every member whatever their role.
   # This is what a workspace-level building block gets, where the roles are the workspace roles.
-  group_display_names = length(local.roles) > 0 ? {
-    for role in local.roles : role => join(".", concat(local.name_parts, [role]))
-  } : { members = join(".", local.name_parts) }
+  default_groups = length(local.roles) > 0 ? {
+    for role in local.roles : role => { display_name = join(".", concat(local.name_parts, [role])), roles = tolist([role]) }
+  } : { members = { display_name = join(".", local.name_parts), roles = null } }
 
-  unique_user_euids = toset([for user in var.users : user.euid])
+  groups = var.groups == null ? local.default_groups : {
+    for key, group in var.groups : key => {
+      display_name = replace(replace(group.name, "{workspace}", var.workspace_identifier), "{project}", var.project_identifier)
+      roles        = group.roles
+    }
+  }
 
-  user_role_assignments = length(local.roles) > 0 ? {
-    for pair in flatten([
-      for user in var.users : [
-        for role in user.roles : {
-          key  = "${user.euid}-${role}"
-          euid = user.euid
-          role = role
-        }
-      ]
-    ]) : pair.key => pair
-    if contains(local.roles, pair.role)
-  } : { for euid in local.unique_user_euids : euid => { euid = euid, role = "members" } }
+  # Earlier versions keyed the members of the single default group by euid alone. Keeping that key
+  # lets an upgrade leave existing memberships in place: azuread refuses to create one that exists.
+  single_default_group = var.groups == null && length(local.roles) == 0
+
+  group_memberships = merge([
+    for key, group in local.groups : {
+      for user in var.users :
+      (local.single_default_group ? user.euid : "${user.euid}-${key}") => { euid = user.euid, group = key }
+      if group.roles == null || length(setintersection(group.roles, user.roles)) > 0
+    }
+  ]...)
+
+  unique_user_euids = toset([for membership in values(local.group_memberships) : membership.euid])
 }
 
 # One bulk lookup with ignore_missing, rather than a data source per member: a project member who
@@ -56,9 +62,9 @@ locals {
 }
 
 resource "azuread_group" "project_role" {
-  for_each = local.group_display_names
+  for_each = local.groups
 
-  display_name            = each.value
+  display_name            = each.value.display_name
   security_enabled        = true
   mail_enabled            = false
   administrative_unit_ids = local.au_id != null ? [local.au_id] : []
@@ -66,10 +72,10 @@ resource "azuread_group" "project_role" {
 
 resource "azuread_group_member" "project_role" {
   for_each = {
-    for key, assignment in local.user_role_assignments : key => assignment
-    if contains(keys(local.lookup_values), lower(assignment.euid))
+    for key, membership in local.group_memberships : key => membership
+    if contains(keys(local.lookup_values), lower(membership.euid))
   }
 
-  group_object_id  = azuread_group.project_role[each.value.role].object_id
+  group_object_id  = azuread_group.project_role[each.value.group].object_id
   member_object_id = local.lookup_values[lower(each.value.euid)]
 }

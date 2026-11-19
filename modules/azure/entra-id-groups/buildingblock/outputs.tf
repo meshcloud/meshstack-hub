@@ -1,11 +1,11 @@
 output "group_object_ids" {
-  description = "Map of project role name to Entra group object ID; the single group is keyed \"members\"."
-  value       = { for role, g in azuread_group.project_role : role => g.object_id }
+  description = "Map of group key to Entra group object ID. Without `groups`, the key is the project role name, or \"members\" for the single group."
+  value       = { for key, g in azuread_group.project_role : key => g.object_id }
 }
 
 output "group_display_names" {
-  description = "Map of project role name to Entra group display name; the single group is keyed \"members\"."
-  value       = { for role, g in azuread_group.project_role : role => g.display_name }
+  description = "Map of group key to Entra group display name. Without `groups`, the key is the project role name, or \"members\" for the single group."
+  value       = { for key, g in azuread_group.project_role : key => g.display_name }
 }
 
 output "unresolved_users" {
@@ -17,7 +17,8 @@ output "unresolved_users" {
 # indentation, and four leading spaces turn a table row or list item into a markdown code block.
 locals {
   summary_group_rows = [
-    for role, g in azuread_group.project_role : "| `${role}` | `${g.display_name}` |"
+    for key, g in azuread_group.project_role :
+    "| `${key}` | `${g.display_name}` | ${local.groups[key].roles == null ? "every member" : join(", ", local.groups[key].roles)} |"
   ]
 
   user_names = { for user in var.users : user.euid => trimspace("${user.firstName} ${user.lastName}") }
@@ -32,7 +33,7 @@ locals {
     ],
     sort([
       for key, m in azuread_group_member.project_role :
-      "| ${local.user_names[local.user_role_assignments[key].euid]} | `${local.user_role_assignments[key].euid}` | `${azuread_group.project_role[local.user_role_assignments[key].role].display_name}` |"
+      "| ${local.user_names[local.group_memberships[key].euid]} | `${local.group_memberships[key].euid}` | `${azuread_group.project_role[local.group_memberships[key].group].display_name}` |"
     ])
   )
 
@@ -58,10 +59,10 @@ output "summary" {
     [
       "# Entra ID Groups",
       "",
-      var.project_identifier == "" ? "${length(local.group_display_names)} security group(s) for workspace `${var.workspace_identifier}`." : "${length(local.group_display_names)} security group(s) for project `${var.project_identifier}` in workspace `${var.workspace_identifier}`.",
+      var.project_identifier == "" ? "${length(local.groups)} security group(s) for workspace `${var.workspace_identifier}`." : "${length(local.groups)} security group(s) for project `${var.project_identifier}` in workspace `${var.workspace_identifier}`.",
       "",
-      "| Role | Entra group |",
-      "|---|---|",
+      "| Group | Entra group | Members with role |",
+      "|---|---|---|",
     ],
     local.summary_group_rows,
     [
