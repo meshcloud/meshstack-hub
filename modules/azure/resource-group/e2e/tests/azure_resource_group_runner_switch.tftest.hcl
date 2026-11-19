@@ -1,5 +1,5 @@
 # Version 2 of the definition uses a different building block runner than version 1. A building
-# block on version 1 must still run, because `meshstack.trusted_runner_refs` lists the old runner.
+# block on version 1 must still run, because `meshstack.additional_trusted_runner_refs` lists the old runner.
 #
 # The two run blocks use one state:
 #   1. The test releases version 1 with the old runner and creates a building block on it.

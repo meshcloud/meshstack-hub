@@ -77,7 +77,7 @@ variable "meshstack" {
       kind = string
       uuid = string
     }))
-    trusted_runner_refs = optional(list(object({
+    additional_trusted_runner_refs = optional(list(object({
       kind = string
       uuid = string
     })), [])
@@ -109,10 +109,10 @@ variable "hub" {
 module "runner" {
   source = "github.com/meshcloud/meshstack-hub//modules/meshstack/runner-identity?ref=${var.hub.git_ref}"
 
-  cloud               = "gcp"
-  runner_ref          = var.meshstack.runner_ref
-  trusted_runner_refs = var.meshstack.trusted_runner_refs
-  versions            = meshstack_building_block_definition.this.versions
+  cloud                          = "gcp"
+  runner_ref                     = var.meshstack.runner_ref
+  additional_trusted_runner_refs = var.meshstack.additional_trusted_runner_refs
+  versions                       = meshstack_building_block_definition.this.versions
 }
 
 output "building_block_definition" {

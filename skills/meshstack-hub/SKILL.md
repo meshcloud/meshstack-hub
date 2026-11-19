@@ -288,10 +288,10 @@ then ask the user in one message for:
   meshStack runs a building block with the definition version it was created with, until someone
   upgrades it. Nobody can change the runner of a released version. So a definition with a released
   version needs an entry before it gets another runner. Add the `ref` of the old runner to
-  `meshstack.trusted_runner_refs` of that module. Do this in the apply that sets `meshstack.runner_ref` to the new runner, or earlier.
+  `meshstack.additional_trusted_runner_refs` of that module. Do this in the apply that sets `meshstack.runner_ref` to the new runner, or earlier.
   Without the entry, the cloud rejects the tokens of the building blocks on older versions. Remove
   the entry when no building block is on a version that uses the old runner.
-  Only a module whose `meshstack` variable has `trusted_runner_refs` supports this.
+  Only a module whose `meshstack` variable has `additional_trusted_runner_refs` supports this.
   List the runner only for a module whose definition has a released version that uses it. Outside
   AWS the plan or the apply fails for a listed runner that no version uses. A definition with only a draft
   version needs no entry. meshStack changes the runner of a draft version in place.

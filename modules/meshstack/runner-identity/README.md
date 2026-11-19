@@ -5,7 +5,7 @@ need for workload identity federation: the runner's `ref`, the token path, the i
 audience.
 
 It also returns `identities`. Each entry has the issuer, audience and subject of the tokens of one
-runner. The list covers the runner in `runner_ref` and each runner in `trusted_runner_refs`. See
+runner. The list covers the runner in `runner_ref` and each runner in `additional_trusted_runner_refs`. See
 [Trusted runners](../../../.agents/references/meshstack-integration.md#trusted-runners) for when a
 platform engineer lists a runner there.
 
@@ -20,10 +20,10 @@ a definition pins the runner it looks up.
 module "runner" {
   source = "github.com/meshcloud/meshstack-hub//modules/meshstack/runner-identity?ref=${var.hub.git_ref}"
 
-  cloud               = "aws"
-  runner_ref          = var.meshstack.runner_ref
-  trusted_runner_refs = var.meshstack.trusted_runner_refs
-  versions            = meshstack_building_block_definition.this.versions
+  cloud                          = "aws"
+  runner_ref                     = var.meshstack.runner_ref
+  additional_trusted_runner_refs = var.meshstack.additional_trusted_runner_refs
+  versions                       = meshstack_building_block_definition.this.versions
 }
 
 module "backplane" {
@@ -48,7 +48,7 @@ The definition reads `ref` and `token_path` of the module. The module reads `ver
 definition. OpenTofu sees no dependency cycle, because only `identities` and `trusted_identities`
 depend on `versions`.
 
-A caller whose backplane takes no `identities` leaves out `trusted_runner_refs` and `versions`. It
+A caller whose backplane takes no `identities` leaves out `additional_trusted_runner_refs` and `versions`. It
 passes `issuer`, `audience` and the subject of `version_latest` to its backplane:
 
 ```hcl
@@ -68,7 +68,7 @@ module "backplane" {
 |---|---|
 | `cloud` | Which token the runs present: `aws`, `azure` or `gcp`. A STACKIT building block presents the `azure` token as a generic OIDC token. An OTC building block does the same with the `gcp` token. |
 | `runner_ref` | The runner to look up, as given in `var.meshstack.runner_ref`. Null looks up the default runner. |
-| `trusted_runner_refs` | The runners in `var.meshstack.trusted_runner_refs`. List a runner while a building block is on an older version that uses it. Default `[]`. |
+| `additional_trusted_runner_refs` | The runners in `var.meshstack.additional_trusted_runner_refs`. List a runner while a building block is on an older version that uses it. Default `[]`. |
 | `versions` | The `versions` attribute of the building block definition. The module takes the subject of each entry in `identities` from it. Default `{}`. |
 
 ## Outputs
@@ -79,7 +79,7 @@ module "backplane" {
 | `token_path` | The path where the runner writes the token for `cloud`. |
 | `issuer` | The issuer of the runner's tokens. |
 | `audience` | The audience of the runner's token for `cloud`. |
-| `identities` | One `{ runner_uuid, issuer, audience, subject }` per runner. The runner in `runner_ref` comes first, then the runners in `trusted_runner_refs`, ordered by uuid. |
+| `identities` | One `{ runner_uuid, issuer, audience, subject }` per runner. The runner in `runner_ref` comes first, then the runners in `additional_trusted_runner_refs`, ordered by uuid. |
 | `entry_runner_uuids` | A map from the uuid of each looked-up runner to the `runner_uuid` of its entry in `identities`. The two differ for a runner that shares its entry with another runner. |
 | `trusted_identities` | `identities` without its first entry. Use it if the backplane takes the runner in `runner_ref` in a separate variable. |
 

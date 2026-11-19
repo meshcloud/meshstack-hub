@@ -13,7 +13,7 @@ The backplane returns the role ARN as `workload_identity_federation_role`. The m
 long-lived credential.
 
 `runner_identities` has one entry per building block runner: the runner of the latest version and
-each runner in `meshstack.trusted_runner_refs`. Building blocks on older versions need the trusted
+each runner in `meshstack.additional_trusted_runner_refs`. Building blocks on older versions need the trusted
 runners. Without them, AWS rejects the tokens of these building blocks after a new version uses
 another runner. See
 [Trusted runners](../../../../.agents/references/meshstack-integration.md#trusted-runners).

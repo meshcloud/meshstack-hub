@@ -101,10 +101,10 @@ module "stackit_service_account" {
     enabled = var.test_context.bbd_version_ref == null
   }
   meshstack = {
-    owning_workspace_identifier = var.test_context.workspace
-    tags                        = {}
-    runner_ref                  = !local.runner_switch ? null : local.switched ? data.meshstack_building_block_runner.new[0].ref : data.meshstack_building_block_runner.old[0].ref
-    trusted_runner_refs         = local.switched ? [data.meshstack_building_block_runner.old[0].ref] : []
+    owning_workspace_identifier    = var.test_context.workspace
+    tags                           = {}
+    runner_ref                     = !local.runner_switch ? null : local.switched ? data.meshstack_building_block_runner.new[0].ref : data.meshstack_building_block_runner.old[0].ref
+    additional_trusted_runner_refs = local.switched ? [data.meshstack_building_block_runner.old[0].ref] : []
   }
   hub = {
     git_ref   = var.test_context.hub_git_ref
