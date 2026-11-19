@@ -244,7 +244,7 @@ resource "meshstack_building_block_definition" "this" {
     | Register the self-service `STACKIT Service Account` building block | ✅ | ❌ |
     | (Optional) Provide the network CIDR plan and provision the hub network area | ✅ | ❌ |
     | (Optional) Register the spoke `STACKIT Network` building block for self-service | ✅ | ❌ |
-    | Request STACKIT projects through the landing zone | ❌ | ✅ |
+    | Add STACKIT Project from the marketplace to their tenants | ❌ | ✅ |
     | Create service accounts inside their STACKIT projects | ❌ | ✅ |
     | (Optional) Order spoke networks inside their STACKIT projects | ❌ | ✅ |
     | Manage workloads inside the provisioned STACKIT projects | ❌ | ✅ |
