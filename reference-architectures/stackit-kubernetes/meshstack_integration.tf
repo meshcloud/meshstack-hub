@@ -533,10 +533,18 @@ resource "meshstack_building_block_definition" "this" {
               title                = "project"
               description          = "Adopt the hosting project. Every other import except starterkit_definitions needs it."
               additionalProperties = false
+              properties = {
+                admin_bindings = { type = "object", title = "admin_bindings", description = "Existing Project Admin binding names by username.", additionalProperties = { type = "string" } }
+              }
+            }
+            stackit_project = {
+              type                 = "object"
+              title                = "stackit_project"
+              description          = "Adopt the STACKIT Project building block on the hosting tenant. A tenant created by an earlier version has one from its landing zone."
+              additionalProperties = false
               required             = ["building_block_uuid"]
               properties = {
-                building_block_uuid = { type = "string", title = "building_block_uuid", description = "UUID of the STACKIT Project building block on the hosting tenant." }
-                admin_bindings      = { type = "object", title = "admin_bindings", description = "Existing Project Admin binding names by username.", additionalProperties = { type = "string" } }
+                building_block_uuid = { type = "string", title = "building_block_uuid" }
               }
             }
             adopt_ske = {

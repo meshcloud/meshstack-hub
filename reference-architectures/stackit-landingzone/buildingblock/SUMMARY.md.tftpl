@@ -25,9 +25,9 @@
 %{ endif ~}
 
 %{ if network_enabled ~}
-Hub&spoke networking is enabled. Application teams can order the **STACKIT Network** building
-block inside their own projects in the `${spoke_landingzone_name}` landing zone to get a
-spoke network drawn from the hub's address plan.
+Hub&spoke networking is enabled. Application teams can now add **STACKIT Project** from the
+marketplace to their tenants. On the `${spoke_landingzone_name}` landing zone it also orders a
+spoke **STACKIT Network**, drawn from the hub's address plan.
 %{ else ~}
 Application teams can now add **STACKIT Project** from the marketplace to their tenants on the
 `${platform_identifier}-default` landing zone. Provide a `network` object to additionally enable

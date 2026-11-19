@@ -163,7 +163,8 @@ re-run. The provider reads the run through `status.action`; the
   approval — is one case for a looser condition, e.g.
   `self.status.succeeded || self.status.action == "APPROVE_RUN"`. The other is a child that needs
   the Platform Tenant ID its parent's run sets (`stackit/project` ordering its network):
-  `self.status.succeeded || self.status.action == "WAITING_FOR_DEPENDENCY"`.
+  `self.status.succeeded || self.status.action == "WAITING_FOR_DEPENDENCY"`, plus `PENDING` and
+  `IN_PROGRESS` when a refresh may catch the child's first run still going.
 
 
 ## A Tenant Whose Project Comes From a Building Block
@@ -189,8 +190,7 @@ from them may force a replacement: an argument that requires replacement, a `for
   an existing configuration is unknown on its first plan, like any resource being created, so it
   does not guard an upgrade;
 - an attribute meshStack derives from the output: the tenant's `spec.platform_tenant_id` for a
-  `PLATFORM_TENANT_ID` output, falling back to the output only while the tenant has none
-  (`stackit-kubernetes` reading its STACKIT project).
+  `PLATFORM_TENANT_ID` output, falling back to the output only while the tenant has none.
 
 An output that only feeds another building block's input needs no guard: that block runs once more
 with the same value.
