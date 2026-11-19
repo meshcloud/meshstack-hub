@@ -16,6 +16,24 @@ Use this building block when you want to:
 
 Set `target_type = "WORKSPACE_LEVEL"` in the integration to offer it as a workspace building block instead: it then creates a single group `<prefix>.<workspace>` holding every workspace member, whatever their workspace role.
 
+## Purpose-specific groups
+
+Set `groups` in the integration when every workspace or project needs groups of your own design. One building block then creates all of them, and each group only takes the members holding one of its roles:
+
+```hcl
+target_type = "WORKSPACE_LEVEL"
+groups = {
+  finops_admin  = { name = "{workspace}.cldy-finops.admin", roles = ["Workspace Owner", "Workspace Manager"] }
+  service_admin = { name = "{workspace}.service.admin", roles = ["Workspace Owner"] }
+}
+```
+
+- `{workspace}` and `{project}` in a name are replaced by the identifiers of the building block's workspace and project. Every name must contain `{workspace}`, and with `TENANT_LEVEL` also `{project}`.
+- `roles` are workspace role names (`Workspace Owner`, `Workspace Manager`, `Workspace Member`) or project role identifiers (such as `admin`). Leave `roles` out to add every member.
+- Application teams no longer set a prefix or project roles: the platform team owns the names.
+- Adding a group creates a new definition version. Existing building blocks get the group when they are upgraded to it.
+- The key, such as `finops_admin`, identifies the group. Change `name` to rename a group in place. Changing the key deletes the group and creates a new one with another object ID, which loses every role assignment made to the old one.
+
 ## Usage examples
 
 **Default meshStack roles (admin / user / reader):**
@@ -47,7 +65,7 @@ Such a member keeps their meshStack project roles, but they will not inherit any
 | Responsibility | Platform Team | Application Team |
 |---|:---:|:---:|
 | Deploy and configure the backplane identity | ✅ | ❌ |
-| Define the group naming prefix | ✅ | ❌ |
+| Define the group naming convention | ✅ | ❌ |
 | Create and delete Entra groups | ✅ | ❌ |
 | Add the Administrative Unit (optional) | ✅ | ❌ |
 | Choose which project roles get groups | ❌ | ✅ |
