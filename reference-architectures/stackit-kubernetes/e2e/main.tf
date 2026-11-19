@@ -18,10 +18,9 @@ variable "test_context" {
     condition = alltrue([
       can(var.test_context.fixtures.stackit.organization_id),
       can(var.test_context.fixtures.stackit.project_id),
-      can(var.test_context.fixtures.stackit.platform_uuid),
-      can(var.test_context.fixtures.stackit.landing_zone_name),
+      can(var.test_context.fixtures.stackit.parent_container_id),
     ])
-    error_message = "test_context must provide fixtures.stackit.organization_id, .project_id, .platform_uuid and .landing_zone_name."
+    error_message = "test_context must provide fixtures.stackit.organization_id, .project_id and .parent_container_id."
   }
 
   validation {
@@ -54,8 +53,34 @@ provider "stackit" {
   experiments = ["iam"]
 }
 
-# The STACKIT Landing Zone this architecture is built on: the static STACKIT platform and landing zone,
-# and the two definitions the landing zone would offer.
+# The STACKIT Landing Zone this architecture is built on: a STACKIT platform with the STACKIT Project
+# definition, and the two identity definitions the landing zone would offer. The platform is this
+# run's own, because the architecture orders STACKIT Project from this workspace, which may only use
+# a draft definition it owns.
+module "stackit" {
+  source = "../../../modules/stackit"
+
+  meshstack = {
+    owning_workspace_identifier = var.test_context.workspace
+    tags = {
+      # A landing zone has to offer every value the hosting project carries.
+      landingzone    = var.test_context.meshstack.tag_schema.mandatory.project
+      building_block = {}
+    }
+    # A platform identifier can never be reused in meshStack, so it is unique per run.
+    platform_identifier = "${var.test_context.run_id}-skestk"
+  }
+  hub = local.hub
+
+  bbd_display_name = "${var.test_context.run_id} STACKIT Project"
+
+  stackit_organization_id      = local.stackit.organization_id
+  stackit_project_owner_email  = "stackit@meshcloud.io"
+  stackit_project_id           = local.stackit.project_id
+  stackit_parent_container_id  = local.stackit.parent_container_id
+  stackit_service_account_name = "${var.test_context.run_id}-skep"
+}
+
 module "service_account" {
   source = "../../../modules/stackit/service-account"
 
@@ -108,7 +133,7 @@ module "stackit_kubernetes" {
 
 resource "meshstack_building_block" "this" {
   # Also orders teardown: the delete run must finish before the backplanes' WIF trust is destroyed.
-  depends_on = [module.service_account, module.service_account_federation, module.stackit_kubernetes]
+  depends_on = [module.stackit, module.service_account, module.service_account_federation, module.stackit_kubernetes]
 
   wait_for_completion = true
 
@@ -130,10 +155,11 @@ resource "meshstack_building_block" "this" {
     # service account.
     inputs = {
       landingzone = { value = jsonencode(jsonencode({
-        platform_ref = { uuid = local.stackit.platform_uuid }
+        platform_ref = { uuid = module.stackit.platform_ref.uuid }
         landingzone_refs = {
-          default = { name = local.stackit.landing_zone_name }
+          default = { name = module.stackit.landingzone_refs["default"].name }
         }
+        project_bbd_version_ref                    = { uuid = module.stackit.building_block_definition.version_ref.uuid }
         service_account_bbd_version_ref            = { uuid = module.service_account.building_block_definition.version_ref.uuid }
         service_account_federation_bbd_version_ref = { uuid = module.service_account_federation.building_block_definition.version_ref.uuid }
       })) }

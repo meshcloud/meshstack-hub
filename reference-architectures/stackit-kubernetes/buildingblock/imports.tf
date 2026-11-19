@@ -16,6 +16,8 @@ locals {
 
   project_import_ids = local.imports.project == null ? toset([]) : toset(["${var.workspace}.${local.project_identifier}"])
 
+  stackit_project_import_ids = local.imports.project == null ? toset([]) : toset([local.imports.project.building_block_uuid])
+
   admin_binding_imports = local.imports.project == null ? {} : local.imports.project.admin_bindings
 }
 
@@ -64,5 +66,17 @@ import {
 import {
   for_each = local.release_imports_on_destroy ? local.admin_binding_imports : {}
   to       = module.project_admin_bindings.meshstack_project_user_binding.released[each.key]
+  id       = each.value
+}
+
+import {
+  for_each = local.release_imports_on_destroy ? toset([]) : local.stackit_project_import_ids
+  to       = module.stackit_project.meshstack_building_block.this
+  id       = each.value
+}
+
+import {
+  for_each = local.release_imports_on_destroy ? local.stackit_project_import_ids : toset([])
+  to       = module.stackit_project.meshstack_building_block.released
   id       = each.value
 }

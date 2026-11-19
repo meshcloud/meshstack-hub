@@ -40,6 +40,7 @@ variable "landingzone" {
   type = object({
     platform_ref                               = object({ uuid = string })
     landingzone_refs                           = map(object({ name = string }))
+    project_bbd_version_ref                    = object({ uuid = string })
     service_account_bbd_version_ref            = object({ uuid = string })
     service_account_federation_bbd_version_ref = object({ uuid = string })
   })
@@ -220,7 +221,8 @@ variable "starterkit_approval_policies" {
 variable "imports" {
   type = object({
     project = optional(object({
-      admin_bindings = optional(map(string), {})
+      building_block_uuid = string
+      admin_bindings      = optional(map(string), {})
     }))
     adopt_ske = optional(bool, false)
     git = optional(object({

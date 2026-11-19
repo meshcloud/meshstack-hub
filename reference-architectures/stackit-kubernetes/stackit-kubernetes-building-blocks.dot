@@ -22,6 +22,7 @@ digraph stackit_kubernetes_building_blocks {
     style="rounded" color="#d5dae0"
     margin=18
 
+    PRJ   [label="🗂️ STACKIT Project\nstackit/project"]
     SA    [label="🔑 Automation Identity\nstackit/service-account"]
     BOOT  [label="🤝 Bootstrap Identity Federation\nstackit/service-account-federation"]
     SVC   [label="📦 STACKIT Kubernetes Platform Services <id>" fillcolor="#ecedfb" color="#9aa2e6"]
