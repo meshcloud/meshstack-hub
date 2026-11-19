@@ -79,10 +79,11 @@ resource "meshstack_tenant" "this" {
     enabled = !local.expired
   }
 
-  # Already the default, spelled out because the destroy depends on it: deleting the tenant is what
-  # deprovisions the landing zone's own building block, and meshStack refuses the delete while that
-  # block is not in a final state.
-  wait_for_completion = true
+  # Without a building block ordered below, deleting the tenant is what deprovisions the landing
+  # zone's own building block, and meshStack refuses the delete while that block is not in a final
+  # state. With one, the tenant only gets its Platform Tenant ID from that block's run, which creation
+  # would wait for forever; the block is deleted, and waited for, before the tenant.
+  wait_for_completion = var.tenant_building_block == null
 
   # Destroy runs this edge backwards, which is the point: the tenant goes before the bindings.
   # A project user binding is a tenant-determined input of the landing zone's building block, so
@@ -98,6 +99,26 @@ resource "meshstack_tenant" "this" {
   spec = {
     platform_ref     = var.platform_ref
     landing_zone_ref = var.landing_zone_ref
+  }
+}
+
+resource "meshstack_building_block" "tenant" {
+  lifecycle {
+    enabled = !local.expired && var.tenant_building_block != null
+
+    postcondition {
+      condition     = self.status.succeeded
+      error_message = "Building block ${self.metadata.uuid} did not succeed (health status ${self.status.health_status}, action ${self.status.action}). See its run in meshPanel."
+    }
+  }
+
+  wait_for_completion = true
+
+  spec = {
+    building_block_definition_version_ref = var.tenant_building_block.definition_version_ref
+    display_name                          = var.tenant_building_block.display_name
+    target_ref                            = meshstack_tenant.this.ref
+    inputs                                = {}
   }
 }
 

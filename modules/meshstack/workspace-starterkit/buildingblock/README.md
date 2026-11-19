@@ -29,6 +29,15 @@ Both of these surface as a `409 TagValidation` from the workspace the run tried 
 - **Mandatory tags must be supplied** through `var.meshstack.tags.*`, which are merged onto what
   this block creates. A missing one answers `Mandatory tag(s) ... must be provided`.
 
+## A building block on the tenant
+
+Where the landing zone offers its platform's main building block in the marketplace instead of
+running it on tenant creation, as the STACKIT Landing Zone does with `STACKIT Project`, set
+`tenant_building_block` in `meshstack_integration.tf`. The block orders it on the tenant, waits for
+its run, and deletes it before the tenant. The backplane's key then also gets
+`ADM_BUILDINGBLOCK_LIST`, `_SAVE` and `_DELETE`, which let it order a draft or unpublished
+definition of another workspace.
+
 ## Self-destructs after its TTL
 
 You set `workspace_ttl_days`, not a date. The block tracks its own creation time and computes the
@@ -74,6 +83,7 @@ No modules.
 
 | Name | Type |
 |------|------|
+| [meshstack_building_block.tenant](https://registry.terraform.io/providers/meshcloud/meshstack/latest/docs/resources/building_block) | resource |
 | [meshstack_payment_method.this](https://registry.terraform.io/providers/meshcloud/meshstack/latest/docs/resources/payment_method) | resource |
 | [meshstack_project.this](https://registry.terraform.io/providers/meshcloud/meshstack/latest/docs/resources/project) | resource |
 | [meshstack_project_user_binding.admin](https://registry.terraform.io/providers/meshcloud/meshstack/latest/docs/resources/project_user_binding) | resource |
@@ -94,6 +104,7 @@ No modules.
 | <a name="input_project_identifier"></a> [project\_identifier](#input\_project\_identifier) | Identifier for the project created inside the new workspace. | `string` | n/a | yes |
 | <a name="input_project_role_name"></a> [project\_role\_name](#input\_project\_role\_name) | meshStack project role granted to `workspace_owner_username`. | `string` | n/a | yes |
 | <a name="input_tags"></a> [tags](#input\_tags) | Additional tags merged onto the workspace (alongside the expiry tag, if `workspace_ttl_days` is set), the payment method and the project. | <pre>object({<br/>    workspace      = map(list(string))<br/>    payment_method = map(list(string))<br/>    project        = map(list(string))<br/>  })</pre> | n/a | yes |
+| <a name="input_tenant_building_block"></a> [tenant\_building\_block](#input\_tenant\_building\_block) | Building block ordered on the tenant. Null orders none. | <pre>object({<br/>    definition_version_ref = object({ uuid = string })<br/>    display_name           = string<br/>  })</pre> | `null` | no |
 | <a name="input_workspace_display_name"></a> [workspace\_display\_name](#input\_workspace\_display\_name) | Display name for the new workspace. | `string` | n/a | yes |
 | <a name="input_workspace_expiry_tag_key"></a> [workspace\_expiry\_tag\_key](#input\_workspace\_expiry\_tag\_key) | Tag key the computed expiry date is written under on the new workspace. | `string` | n/a | yes |
 | <a name="input_workspace_identifier"></a> [workspace\_identifier](#input\_workspace\_identifier) | Identifier for the new meshStack workspace. | `string` | n/a | yes |
