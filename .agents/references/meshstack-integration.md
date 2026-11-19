@@ -124,7 +124,9 @@ variable "meshstack" {
 ```
 
 The description of `variable "meshstack"` is always exactly `Shared meshStack context, see docs.`,
-whatever fields a module adds. This file documents the fields.
+whatever fields a module adds. The docs are
+[meshStack integration variables](../../skills/meshstack-hub/SKILL.md#meshstack-integration-variables),
+which the hub website links from its setup steps. A new field gets an entry there.
 
 Use both in the building block definition. Always forward `var.meshstack.tags` to `metadata.tags` so
 workspace-level tags propagate to the definition, `var.hub.bbd_draft` to the `draft` field of
