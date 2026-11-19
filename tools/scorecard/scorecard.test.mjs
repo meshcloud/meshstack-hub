@@ -269,7 +269,7 @@ module "runner" {
 
   cloud               = "aws"
   runner_ref          = var.meshstack.runner_ref
-  trusted_runner_refs = var.meshstack.trusted_runner_refs
+  additional_trusted_runner_refs = var.meshstack.additional_trusted_runner_refs
 ${versions ? `  versions            = ${versions}\n` : ""}}
 `;
 

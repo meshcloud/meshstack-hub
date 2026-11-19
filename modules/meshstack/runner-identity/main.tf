@@ -13,7 +13,7 @@ data "meshstack_building_block_runner" "this" {
 }
 
 data "meshstack_building_block_runner" "trusted" {
-  for_each = toset(var.trusted_runner_refs[*].uuid)
+  for_each = toset(var.additional_trusted_runner_refs[*].uuid)
 
   metadata = {
     uuid = each.key
@@ -23,7 +23,7 @@ data "meshstack_building_block_runner" "trusted" {
     postcondition {
       # try: a runner without any workload identity federation has a null spec.workload_identity_federation.
       condition     = try(self.spec.workload_identity_federation[var.cloud], null) != null
-      error_message = "The trusted building block runner ${each.key} has no ${var.cloud} settings for workload identity federation. No version can use it for this cloud. Remove it from var.meshstack.trusted_runner_refs."
+      error_message = "The trusted building block runner ${each.key} has no ${var.cloud} settings for workload identity federation. No version can use it for this cloud. Remove it from var.meshstack.additional_trusted_runner_refs."
     }
   }
 }

@@ -90,10 +90,10 @@ module "resource_group" {
   source = "../"
 
   meshstack = {
-    owning_workspace_identifier = var.test_context.workspace
-    tags                        = {}
-    runner_ref                  = !local.runner_switch ? null : local.switched ? data.meshstack_building_block_runner.new[0].ref : data.meshstack_building_block_runner.old[0].ref
-    trusted_runner_refs         = local.switched ? [data.meshstack_building_block_runner.old[0].ref] : []
+    owning_workspace_identifier    = var.test_context.workspace
+    tags                           = {}
+    runner_ref                     = !local.runner_switch ? null : local.switched ? data.meshstack_building_block_runner.new[0].ref : data.meshstack_building_block_runner.old[0].ref
+    additional_trusted_runner_refs = local.switched ? [data.meshstack_building_block_runner.old[0].ref] : []
   }
 
   hub = {

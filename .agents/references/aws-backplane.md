@@ -443,10 +443,10 @@ No AWS backplane carries the fallback shape any more. `modules/aws/s3_bucket`,
 module "runner" {
   source = "github.com/meshcloud/meshstack-hub//modules/meshstack/runner-identity?ref=${var.hub.git_ref}"
 
-  cloud               = "aws"
-  runner_ref          = var.meshstack.runner_ref
-  trusted_runner_refs = var.meshstack.trusted_runner_refs
-  versions            = meshstack_building_block_definition.this.versions
+  cloud                          = "aws"
+  runner_ref                     = var.meshstack.runner_ref
+  additional_trusted_runner_refs = var.meshstack.additional_trusted_runner_refs
+  versions                       = meshstack_building_block_definition.this.versions
 }
 
 module "backplane" {
@@ -470,7 +470,7 @@ AWS_WEB_IDENTITY_TOKEN_FILE = {
 }
 ```
 
-Runs on the current runner and on every runner in `meshstack.trusted_runner_refs` can assume the
+Runs on the current runner and on every runner in `meshstack.additional_trusted_runner_refs` can assume the
 role. See
 [meshstack-integration.md § Trusted runners](meshstack-integration.md#trusted-runners). The runner
 lookup and the pinned `runner_ref` are the same in every cloud, see
@@ -513,7 +513,7 @@ role_name = {
 - [ ] The `runner_identities` description contains the link line to the shared OIDC provider
 - [ ] `runner_identities` is non-nullable
 - [ ] Trust policy has one statement per identity and scopes `sub` to the subject of that identity
-- [ ] Integration passes `module.runner.identities`, and gives the module `meshstack.trusted_runner_refs` and the definition's `versions`
+- [ ] Integration passes `module.runner.identities`, and gives the module `meshstack.additional_trusted_runner_refs` and the definition's `versions`
 - [ ] Role ARN output is named `workload_identity_federation_role`
 - [ ] ARN is manually constructed (not from resource attribute) to avoid dependency cycles
 - [ ] Integration wires `AWS_ROLE_ARN` and `AWS_WEB_IDENTITY_TOKEN_FILE` as environment inputs

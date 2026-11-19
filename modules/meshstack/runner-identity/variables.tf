@@ -18,14 +18,14 @@ variable "runner_ref" {
   description = "The runner to look up, as given in `var.meshstack.runner_ref`. Null looks up the default runner."
 }
 
-variable "trusted_runner_refs" {
+variable "additional_trusted_runner_refs" {
   type = list(object({
     kind = string
     uuid = string
   }))
   default     = []
   nullable    = false
-  description = "The runners in `var.meshstack.trusted_runner_refs`. List a runner while a building block is on an older version that uses it."
+  description = "The runners in `var.meshstack.additional_trusted_runner_refs`. List a runner while a building block is on an older version that uses it."
 }
 
 variable "versions" {

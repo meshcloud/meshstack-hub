@@ -204,7 +204,7 @@ The backplane also takes `trusted_runner_identities = module.runner.trusted_iden
 one federated identity provider per trusted runner. STACKIT then accepts the tokens of building
 blocks on older versions, see
 [meshstack-integration.md § Trusted runners](meshstack-integration.md#trusted-runners). For this
-the integration also passes `trusted_runner_refs` and the `versions` of the definition to
+the integration also passes `additional_trusted_runner_refs` and the `versions` of the definition to
 `module "runner"`. `stackit/project` and the modules without a backplane do not take the list.
 
 ## Provider Version

@@ -114,7 +114,7 @@ variable "meshstack" {
       uuid = string
     }))
     # See "Trusted runners".
-    trusted_runner_refs = optional(list(object({
+    additional_trusted_runner_refs = optional(list(object({
       kind = string
       uuid = string
     })), [])
@@ -299,16 +299,16 @@ another runner, building blocks on older versions still run on the old runner. T
 contain the issuer and the subject that belong to the old runner. The cloud rejects these tokens if
 the backplane configured it for the latest version only.
 
-`meshstack.trusted_runner_refs` lists more runners for the backplane. The backplane then configures
+`meshstack.additional_trusted_runner_refs` lists more runners for the backplane. The backplane then configures
 the cloud to accept the tokens of this definition from these runners too. In this file, the
 *current runner* is the runner of the latest version. A *trusted runner* is a runner in that list.
 The cloud still checks the subject. The subject contains the uuid of the definition if the subject
 template of the runner has that placeholder. The cloud then rejects the tokens of other definitions.
-A module supports this if its `meshstack` variable has `trusted_runner_refs`.
+A module supports this if its `meshstack` variable has `additional_trusted_runner_refs`.
 
 The platform engineer:
 
-1. adds the `ref` of the old runner to `meshstack.trusted_runner_refs`. This happens in the apply
+1. adds the `ref` of the old runner to `meshstack.additional_trusted_runner_refs`. This happens in the apply
    that sets `meshstack.runner_ref` to the new runner, or earlier. A
    `meshstack_building_block_runner` data source returns the `ref`. If `meshstack.runner_ref` was
    null, the old runner is the default runner of meshStack at the last apply. The plan shows its
@@ -326,10 +326,10 @@ draft version in place. The building blocks on the draft use the new runner in t
 module "runner" {
   source = "github.com/meshcloud/meshstack-hub//modules/meshstack/runner-identity?ref=${var.hub.git_ref}"
 
-  cloud               = "aws"
-  runner_ref          = var.meshstack.runner_ref
-  trusted_runner_refs = var.meshstack.trusted_runner_refs
-  versions            = meshstack_building_block_definition.this.versions
+  cloud                          = "aws"
+  runner_ref                     = var.meshstack.runner_ref
+  additional_trusted_runner_refs = var.meshstack.additional_trusted_runner_refs
+  versions                       = meshstack_building_block_definition.this.versions
 }
 
 module "backplane" {
@@ -380,17 +380,17 @@ is `workload_identity.pool_identifier`.
   at the apply before. The backplane keeps the base name for its identity provider. For every other
   runner, the name contains the first 8 characters of the runner uuid.
 - Never remove `original_runner_ref`, even after you remove the old runner from
-  `trusted_runner_refs`. Without it, the backplane gives the base name to the identity provider for
+  `additional_trusted_runner_refs`. Without it, the backplane gives the base name to the identity provider for
   the current runner. The released versions that use the current runner contain the name with the
   uuid. So the cloud rejects the tokens of their runs.
 - The plan fails when the backplane gets a trusted runner and `original_runner_ref` is null.
 - A wrong `original_runner_ref` gives no error. The backplane then changes the identity provider
   with the base name to another runner, and the cloud rejects the tokens of the older versions.
 - The runner in `original_runner_ref` can share its entry in `identities` with another runner. Then
-  keep it in `trusted_runner_refs`. The integration finds the shared entry through
+  keep it in `additional_trusted_runner_refs`. The integration finds the shared entry through
   `module.runner.entry_runner_uuids`.
 - GCP keeps a deleted pool provider for about 30 days and refuses its id in that time. So a runner
-  that you removed from `trusted_runner_refs` cannot return to the list in that time.
+  that you removed from `additional_trusted_runner_refs` cannot return to the list in that time.
 
 <!-- scorecard-checks: bbd_catalog_overrides -->
 ## Overridable Catalog Properties
