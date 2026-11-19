@@ -166,6 +166,14 @@ re-run. The provider reads the run through `status.action`; the
   `self.status.succeeded || self.status.action == "WAITING_FOR_DEPENDENCY"`.
 
 
+## A Tenant Whose Project Comes From a Building Block
+
+`meshstack_tenant` creation with `wait_for_completion = true` waits for `spec.platform_tenant_id`.
+On a landing zone without a mandatory building block, only a building block ordered on the tenant
+afterwards reports that id (a `PLATFORM_TENANT_ID` output, such as `STACKIT Project`), so such a
+tenant is created with `wait_for_completion = false`. Its building block references it, so it is
+deleted, and waited for, before the tenant.
+
 ## Reading a Child's Outputs
 
 A child's `status.outputs` are unknown for one plan whenever the child re-runs: its definition
@@ -177,7 +185,12 @@ from them may force a replacement: an argument that requires replacement, a `for
   (the Secrets Manager users and their `instance_id`);
 - a value this configuration already knows: a variable, a constant, or a naming convention such as
   the Secrets Manager path prefix;
-- a `terraform_data` pin with `ignore_changes = [input]`, read through its `output`.
+- a `terraform_data` pin with `ignore_changes = [input]`, read through its `output`. A pin added to
+  an existing configuration is unknown on its first plan, like any resource being created, so it
+  does not guard an upgrade;
+- an attribute meshStack derives from the output: the tenant's `spec.platform_tenant_id` for a
+  `PLATFORM_TENANT_ID` output, falling back to the output only while the tenant has none
+  (`stackit-kubernetes` reading its STACKIT project).
 
 An output that only feeds another building block's input needs no guard: that block runs once more
 with the same value.
