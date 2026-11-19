@@ -56,9 +56,9 @@ Network** building block, which takes its subnet from the hub's network area. Ev
 
 ![STACKIT Landing Zone reference architecture](stackit-landingzone.svg)
 
-When networking is enabled, application teams order a routed network into their own project via the
-self-service `stackit/network` building block; each order draws its subnet from the hub's address
-plan, so no two spokes can accidentally collide on CIDR ranges.
+When networking is enabled, STACKIT Project orders a routed network for each project on the
+networked landing zone, from the `stackit/network` building block; each order draws its subnet from
+the hub's address plan, so no two spokes can accidentally collide on CIDR ranges.
 
 ## How It Works
 
@@ -70,7 +70,8 @@ Running this reference architecture always:
    landing-zone core assets. It sits in the root folder, or in the landing-zone folder without one.
 3. Sources the [`modules/stackit`](../../modules/stackit) platform integration to register the
    **STACKIT Project** platform and its default landing zone in meshStack, wired to the foundation
-   service account.
+   service account. The platform starts private to the owning workspace and hidden in the
+   marketplace; publish it in meshPanel so that tenants of other workspaces can use it.
 4. Registers the [`stackit/service-account`](../../modules/stackit/service-account) and
    [`stackit/service-account-federation`](../../modules/stackit/service-account-federation) building
    block definitions (`TENANT_LEVEL`), so application teams can self-service create a STACKIT service
