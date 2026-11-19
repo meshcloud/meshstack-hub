@@ -6,6 +6,9 @@ locals {
 resource "meshstack_building_block" "platform_service_account" {
   wait_for_completion = true
 
+  # Its run creates the service account in the STACKIT project, which the tenant does not reference.
+  depends_on = [module.stackit_project]
+
   lifecycle {
     postcondition {
       condition     = self.status.succeeded

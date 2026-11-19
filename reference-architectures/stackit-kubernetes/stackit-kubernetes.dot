@@ -51,7 +51,7 @@ digraph stackit_kubernetes_platform {
     style="rounded" color="#d5dae0"
     margin=18
 
-    PROJ   [label="🗂️ STACKIT project\nmeshTenant on the STACKIT meshPlatform" fillcolor="#eef2f6" color="#93a7bb"]
+    PROJ   [label="🗂️ STACKIT project\nstackit/project on a meshTenant\nof the STACKIT meshPlatform" fillcolor="#eef2f6" color="#93a7bb"]
     SA     [label="🔑 Automation Identity\nthe platform's service account" fillcolor="#eef2f6" color="#93a7bb"]
     SM     [label="🔒 Secrets Manager\nevery platform credential" fillcolor="#eef2f6" color="#93a7bb"]
     SKE    [label="☸️ SKE cluster" fillcolor="#eef2f6" color="#93a7bb"]

@@ -113,7 +113,9 @@ Once set up, it triggers the repository's workflow and waits for it to finish.
 
 1. Register the definition from `meshstack_integration.tf` in your foundation repository.
 2. Order **STACKIT Kubernetes Platform** in the workspace that will own the platform, and paste
-   the landing zone's code block into **STACKIT Landing Zone**. Turn **Playground Mode** off for a
+   the landing zone's code block into **STACKIT Landing Zone**. The platform orders STACKIT Project
+   on its own tenant, so in a workspace other than the landing zone's that definition must be
+   published and its version released, like the identity definitions. Turn **Playground Mode** off for a
    platform that is used: in playground mode the platform identifier gets a random suffix and the
    STACKIT project is not protected against deletion. It cannot be changed after the order.
 3. Finish phase 2.
@@ -126,7 +128,7 @@ The main inputs:
 
 | Input | Purpose |
 |---|---|
-| STACKIT Landing Zone | Platform, landing zones and the service account and federation definitions of the landing zone |
+| STACKIT Landing Zone | Platform, landing zones and the STACKIT Project, service account and federation definitions of the landing zone |
 | Landing Zone Variant | `default` or `networked` (needs hub-and-spoke networking on the landing zone) |
 | STACKIT Region | Region of the SKE cluster, `eu01` (default) or `eu02`; fixed at the order. Secrets Manager, Container Registry and AI Model Serving stay in `eu01`, because STACKIT offers them only there. The node pool runs `c3i.2` machines, which both regions offer |
 | Platform Identifier | Name of the meshStack platform; the project, cluster, Git instance, registry and DNS zone are named after it |
@@ -229,7 +231,7 @@ built before this architecture:
 
 | Key | Takes over |
 |---|---|
-| `project = {admin_bindings}` | the meshProject `overrides.project_identifier` and its tenant on the landing zone platform, renamed to `STACKIT Kubernetes Platform <platform identifier>`; `admin_bindings` maps a username to the name of its existing Project Admin binding |
+| `project = {building_block_uuid, admin_bindings}` | the meshProject `overrides.project_identifier`, its tenant on the landing zone platform and the STACKIT Project building block `building_block_uuid` on that tenant, renamed to `STACKIT Kubernetes Platform <platform identifier>`; `admin_bindings` maps a username to the name of its existing Project Admin binding |
 | `adopt_ske = true` | the SKE cluster `overrides.cluster_name` |
 | `git = {instance_id, instance_name, forgejo_organization}` | the STACKIT Git instance and its Forgejo organization |
 | `dns = {zone_id, record_set_id}` | the DNS zone **DNS Domain** names and its wildcard record set |

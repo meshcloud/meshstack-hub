@@ -67,7 +67,11 @@ locals {
     )
   }, local.admin_binding_imports)
 
-  stackit_project_id = module.tenant.tenant.spec.platform_tenant_id
+  # The tenant gets the project as its Platform Tenant ID once the project block has run, and stays
+  # known while a run of that block is planned, when its outputs are not. A tenant created in this
+  # run has none yet.
+  tenant_project_id  = module.tenant.tenant.spec.platform_tenant_id
+  stackit_project_id = local.tenant_project_id != null && local.tenant_project_id != "" ? local.tenant_project_id : jsondecode(module.stackit_project.building_block.status.outputs["project_id"].value)
 }
 
 # Flipping the flag on an existing platform would suffix or rename everything and change what may be destroyed.
@@ -158,8 +162,6 @@ moved {
   to   = module.project_admin_bindings.meshstack_project_user_binding.this
 }
 
-# Provisions the STACKIT project through the landing zone platform's replication. wait_for_completion makes
-# the run block until the project exists, so spec.platform_tenant_id (the STACKIT project id) is set.
 module "tenant" {
   source = "./modules/tenant"
 
@@ -169,7 +171,9 @@ module "tenant" {
   # deployment against an accidental replacement; a playground stays destroyable.
   prevent_destroy = !var.playground_mode
 
-  wait_for_completion = true
+  # The tenant's Platform Tenant ID is the STACKIT project, which only the building block below
+  # creates.
+  wait_for_completion = false
 
   metadata = {
     owned_by_workspace = var.workspace
@@ -185,4 +189,16 @@ module "tenant" {
 moved {
   from = meshstack_tenant.stackit_project
   to   = module.tenant.meshstack_tenant.this
+}
+
+# Destroying this building block deletes the STACKIT project the whole platform runs in.
+module "stackit_project" {
+  source = "./modules/stackit-project"
+
+  release_on_destroy = local.release_imports_on_destroy
+  prevent_destroy    = !var.playground_mode
+
+  definition_version_ref = var.landingzone.project_bbd_version_ref
+  display_name           = "STACKIT Project"
+  target_ref             = module.tenant.tenant.ref
 }

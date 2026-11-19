@@ -29,8 +29,9 @@ Hub-and-spoke networking is enabled. Application teams can order the **STACKIT N
 block inside their own projects in the `${networked_landingzone_name}` landing zone to get a routed
 spoke network drawn from the hub's address plan.
 %{ else ~}
-Application teams can now request STACKIT projects against the `${platform_identifier}-default`
-landing zone. Provide a `network` object to additionally enable hub-and-spoke networking.
+Application teams can now add **STACKIT Project** from the marketplace to their tenants on the
+`${platform_identifier}-default` landing zone. Provide a `network` object to additionally enable
+hub-and-spoke networking.
 %{ endif ~}
 
 > [!TIP]
@@ -48,6 +49,7 @@ landing zone. Provide a `network` object to additionally enable hub-and-spoke ne
 >     ${key} = { name = "${ref.name}" }
 %{ endfor ~}
 >   }
+>   project_bbd_version_ref                    = { uuid = "${project_bbd_version_uuid}" }
 >   service_account_bbd_version_ref            = { uuid = "${service_account_bbd_version_uuid}" }
 >   service_account_federation_bbd_version_ref = { uuid = "${service_account_federation_bbd_version_uuid}" }
 > }
@@ -58,11 +60,11 @@ landing zone. Provide a `network` object to additionally enable hub-and-spoke ne
 > Otherwise keep the default `default`, which puts the cluster in a **STACKIT Sandbox** project with
 > STACKIT's default flat networking.
 %{ endif ~}
-%{ if !identity_definitions_released ~}
+%{ if !composed_definitions_released ~}
 
 > [!WARNING]
-> The latest versions of the **STACKIT Service Account** and the **STACKIT Service Account
-> Federation** definitions are drafts, and another workspace may only order released versions.
-> Deploy this landing zone with `hub.bbd_draft = false`, publish both definitions to the
-> marketplace, then run this building block again.
+> The latest versions of the **STACKIT Project**, **STACKIT Service Account** and **STACKIT Service
+> Account Federation** definitions are drafts, and another workspace may only order released
+> versions. Deploy this landing zone with `hub.bbd_draft = false`, publish the three definitions to
+> the marketplace, then run this building block again.
 %{ endif ~}

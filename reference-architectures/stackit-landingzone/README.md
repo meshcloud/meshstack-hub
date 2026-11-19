@@ -104,19 +104,20 @@ registers its own building block definitions when it is ordered, and those defin
 identity to deploy as. This landing zone publishes no credential for that, and it has no outputs a
 composing architecture reads. Its summary shows a code block instead, which you paste into the
 composing architecture's **STACKIT Landing Zone** input. The block holds the platform ref, the
-landing zone refs, and the version refs of two definitions:
+landing zone refs, and the version refs of three definitions:
 
+- the **STACKIT Project** definition,
 - the **STACKIT Service Account** definition, and
 - the **STACKIT Service Account Federation** definition.
 
-Both are the latest versions. Another workspace may only order a released version that is
+All are the latest versions. Another workspace may only order a released version that is
 published to the marketplace, so deploy the landing zone with `hub.bbd_draft = false` and publish
-both definitions in meshPanel. `hub.bbd_draft` releases only the definitions this landing zone
+the three definitions in meshPanel. `hub.bbd_draft` releases only the definitions this landing zone
 registers; its own definition is always a draft, so it stays in the owning workspace. A new version
 gets a new uuid, so copy the block again after the definitions change.
 
-A composing architecture orders the service account on a tenant it just created, with the roles it
-needs. It then orders the federation as a child of the service account, with the uuids of its own
+A composing architecture orders STACKIT Project on a tenant it just created, then the service
+account on the same tenant, with the roles it needs. It then orders the federation as a child of the service account, with the uuids of its own
 definitions in `federated_building_block_definitions`, and orders the blocks that act as the account
 as children of the federation. Every run of those definitions may then act as that account through
 workload identity federation; each building block names the account in its
