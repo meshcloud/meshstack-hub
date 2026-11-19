@@ -86,8 +86,8 @@ When a **network** configuration is provided, it additionally:
    their STACKIT projects, drawing from the hub's address plan.
 7. Provisions an additional **networked landing zone**. A `STACKIT Project` on it is placed in the
    hub's network area and orders a routed network from the `stackit/network` definition, sized by
-   its **Network** input. meshStack only lets that order through once that definition is published
-   and released, which needs `hub.bbd_draft = false`.
+   its **Network** input. For tenants of other workspaces, meshStack only lets that order through
+   once that definition is published and released, which needs `hub.bbd_draft = false`.
 
 ## Service Accounts
 
@@ -112,7 +112,9 @@ landing zone refs, and the version refs of three definitions:
 
 All are the latest versions. Another workspace may only order a released version that is
 published to the marketplace, so deploy the landing zone with `hub.bbd_draft = false` and publish
-the three definitions in meshPanel. `hub.bbd_draft` releases only the definitions this landing zone
+the three definitions in meshPanel. Releasing a definition's first version requests its
+marketplace review, which a meshStack admin approves: in a workspace without admin rights the first
+run fails until then, so run it again after the approval. `hub.bbd_draft` releases only the definitions this landing zone
 registers; its own definition is always a draft, so it stays in the owning workspace. A new version
 gets a new uuid, so copy the block again after the definitions change.
 
