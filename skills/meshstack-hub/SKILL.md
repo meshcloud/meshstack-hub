@@ -132,8 +132,8 @@ no such change, they can call the module from the hub instead; see
 
 5. Run `tofu init` and `tofu plan`, and show the plan to the user.
 
-`owning_workspace_identifier` is the identifier of the workspace that will own the definition, not
-its display name. Set up the `meshstack` provider as
+[meshStack integration variables](#meshstack-integration-variables) explains the fields of
+`meshstack`. Set up the `meshstack` provider as
 [Log in](https://raw.githubusercontent.com/meshcloud/terraform-provider-meshstack/main/skills/terraform-provider-meshstack/SKILL.md#log-in)
 shows. After `tofu init`, `tofu providers` lists every provider the directory needs, including the
 ones the backplane needs. Hub modules need OpenTofu 1.12 or newer (or Terraform 1.15 or newer),
@@ -281,28 +281,11 @@ then ask the user in one message for:
 - **Credentials for a module without a cloud backplane.** For example, `github/repository` takes the
   ID, installation ID and private key of a GitHub App. Pass a secret as a `TF_VAR_<name>`
   environment variable or from the user's secret store, never in a committed file.
-- **The runner.** If the user runs their own building block runner, its `ref` goes into
-  `meshstack.runner_ref`. Without it, the definition runs on the default runner.
-  A module with workload identity federation looks the runner up to read its token settings, so
-  the meshStack API key that applies it needs the permission to list building block runners.
-  meshStack runs a building block with the definition version it was created with, until someone
-  upgrades it. Nobody can change the runner of a released version. So a definition with a released
-  version needs an entry before it gets another runner. Add the `ref` of the old runner to
-  `meshstack.additional_trusted_runner_refs` of that module. Do this in the apply that sets `meshstack.runner_ref` to the new runner, or earlier.
-  Without the entry, the cloud rejects the tokens of the building blocks on older versions. Remove
-  the entry when no building block is on a version that uses the old runner.
-  Only a module whose `meshstack` variable has `additional_trusted_runner_refs` supports this.
-  List the runner only for a module whose definition has a released version that uses it. Outside
-  AWS the plan or the apply fails for a listed runner that no version uses. A definition with only a draft
-  version needs no entry. meshStack changes the runner of a draft version in place.
-  For a GCP module, also set `meshstack.original_runner_ref` to the old runner with the
-  first switch. Never remove it. The released versions contain the names of the identity
-  providers. The backplane changes these names when you remove `original_runner_ref`.
-- **Where it can be ordered.** A tenant-level definition is offered on every platform of the type
-  the module names. To offer it on one platform or landing zone only, pass that object's `ref` in
-  `meshstack.supported_platforms`, for example `[meshstack_landingzone.dev.ref]`. A platform needs
-  meshStack 2026.40.0, a landing zone meshStack 2026.45.0 and meshstack provider 0.28.0.
-  `kubernetes` and `kubernetes/ingress-controller` have no default: pass what hosts the cluster.
+- **The runner.** Whether the user runs their own building block runner. See `runner_ref` in
+  [meshStack integration variables](#meshstack-integration-variables).
+- **Where it can be ordered.** Whether to offer a tenant-level definition on one platform or landing
+  zone only. See `supported_platforms` in
+  [meshStack integration variables](#meshstack-integration-variables).
 
 In the plan for the first apply, point out what it creates in the cloud: identities, role
 definitions and role assignments. They decide what the runner may do in the user's cloud, so the
@@ -312,6 +295,46 @@ A building block needs its backplane for every run, including the run that delet
 delete the copy or apply a plan that destroys its backplane, check with the
 [meshStack CLI skill](https://raw.githubusercontent.com/meshcloud/meshstack-cli/main/skills/meshstack-cli/SKILL.md)
 whether building blocks of the definition still exist, and ask the user.
+
+## meshStack integration variables
+
+Every `meshstack_integration.tf` has a variable `meshstack` which configures different aspects
+of the target meshStack. Only `owning_workspace_identifier` is required.
+
+```hcl
+meshstack = {
+  owning_workspace_identifier = "<workspace>"
+  tags                        = { environment = ["prod"] }
+  runner_ref                  = data.meshstack_building_block_runner.own.ref
+}
+```
+
+The following fields exist for both platform and building block integrations:
+
+- **`owning_workspace_identifier`**: identifier of the workspace where the resources should be
+  managed.
+- **`tags`** (optional): tags which meshStack will apply to the managed resources.
+
+The following fields only exist for building block integrations:
+
+- **`runner_ref`** (optional): `ref` of a building block runner which will execute building block
+  runs. Without it, the default (hosted) runner will be used. If the module uses workload identity
+  federation, it queries the meshStack API for the runner's identity information.
+- **`additional_trusted_runner_refs`** (optional): while the runner from `runner_ref` will be
+  trusted automatically, you can also add runners whose identities should be trusted. This is
+  useful for migrating building block definitions between runners without disrupting existing
+  building blocks, e.g. by temporarily preserving trust for the old runner.
+- **`original_runner_ref`** (optional, GCP only): the federated identity trust setup on GCP requires
+  us to preserve the original runner ref even after it no longer needs to be trusted. The identity
+  of this runner will not be trusted but `tofu` needs to keep the ID for resource bookkeeping.
+- **`supported_platforms`** (optional, tenant-level): restricts tenant-level building blocks to
+  specific platform types. Usually has a useful default, e.g. the K8s Service Account
+  module creates a building block definition that supports K8s platforms.
+
+The following fields exist only for platform or reference architecture integrations:
+
+- **`platform_name`, `platform_identifier`, `location_name`, `location_identifier`**: the names and
+  identifiers of the platform and location the module creates in meshStack.
 
 ## Next steps
 
