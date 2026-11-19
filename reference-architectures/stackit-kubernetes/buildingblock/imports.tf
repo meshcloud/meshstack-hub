@@ -1,6 +1,7 @@
 locals {
   imports = var.imports != null ? var.imports : {
     project                = null
+    stackit_project        = null
     adopt_ske              = false
     git                    = null
     dns                    = null
@@ -16,7 +17,7 @@ locals {
 
   project_import_ids = local.imports.project == null ? toset([]) : toset(["${var.workspace}.${local.project_identifier}"])
 
-  stackit_project_import_ids = local.imports.project == null ? toset([]) : toset([local.imports.project.building_block_uuid])
+  stackit_project_import_ids = local.imports.stackit_project == null ? toset([]) : toset([local.imports.stackit_project.building_block_uuid])
 
   admin_binding_imports = local.imports.project == null ? {} : local.imports.project.admin_bindings
 }

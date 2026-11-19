@@ -67,11 +67,11 @@ locals {
     )
   }, local.admin_binding_imports)
 
-  # The tenant gets the project as its Platform Tenant ID once the project block has run, and stays
-  # known while a run of that block is planned, when its outputs are not. A tenant created in this
-  # run has none yet.
+  # The tenant gets the project as its Platform Tenant ID once the project block has run; a tenant
+  # created in this run has none yet. `try` because a project block whose first run failed has no
+  # outputs, and the destroy run that removes it still evaluates `ske_project_url`.
   tenant_project_id  = module.tenant.tenant.spec.platform_tenant_id
-  stackit_project_id = local.tenant_project_id != null && local.tenant_project_id != "" ? local.tenant_project_id : jsondecode(module.stackit_project.building_block.status.outputs["project_id"].value)
+  stackit_project_id = local.tenant_project_id != null && local.tenant_project_id != "" ? local.tenant_project_id : try(jsondecode(module.stackit_project.building_block.status.outputs["project_id"].value), "")
 }
 
 # Flipping the flag on an existing platform would suffix or rename everything and change what may be destroyed.
@@ -201,4 +201,8 @@ module "stackit_project" {
   definition_version_ref = var.landingzone.project_bbd_version_ref
   display_name           = "STACKIT Project"
   target_ref             = module.tenant.tenant.ref
+
+  # meshStack fills the block's USER_PERMISSIONS input from the project's members when its run
+  # starts, so the admins have to be members first.
+  depends_on = [module.project_admin_bindings]
 }

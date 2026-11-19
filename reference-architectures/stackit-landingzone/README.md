@@ -28,19 +28,19 @@ self-service-ready meshStack platform in one step using its own Terraform code.
 
 The **always-on** foundation is a sandbox landing zone: a dedicated STACKIT resourcemanager
 folder, a foundation project hosting the project-creation service account, and the **STACKIT
-Project** platform with its default landing zone. Application teams can immediately request
-STACKIT projects against it.
+Project** platform with its default landing zone. Application teams can immediately add STACKIT
+Project from the marketplace to their tenants on it.
 
 Optionally, by providing a **network** configuration, the same building block layers on a
 hub-and-spoke network topology with IPAM built in: a shared network-area address plan (the hub)
-that all tenant projects draw from, and a self-service routed-network building block (the spoke)
-application teams can order inside their own projects. Leaving the network configuration unset
+that all tenant projects draw from, and a routed-network building block (the spoke) that STACKIT
+Project orders for every project on the networked landing zone. Leaving the network configuration unset
 deploys only the sandbox foundation.
 
 **Target audience:**
 
 - **Platform engineers** onboarding a new STACKIT organization into meshStack who want a sandbox
-  environment application teams can request projects from immediately — optionally with network
+  environment application teams can add STACKIT projects from immediately — optionally with network
   segmentation from day one, without hand-wiring a network area and its address plan separately.
 - **Application teams** who need a dedicated IPv4 subnet inside their STACKIT project without
   manually coordinating CIDR ranges with the platform team (when networking is enabled).
@@ -117,9 +117,10 @@ registers; its own definition is always a draft, so it stays in the owning works
 gets a new uuid, so copy the block again after the definitions change.
 
 A composing architecture orders STACKIT Project on a tenant it just created, then the service
-account on the same tenant, with the roles it needs. It then orders the federation as a child of the service account, with the uuids of its own
-definitions in `federated_building_block_definitions`, and orders the blocks that act as the account
-as children of the federation. Every run of those definitions may then act as that account through
+account on the same tenant, with the roles it needs. It then orders the federation as a child of
+the service account, with the uuids of its own definitions in
+`federated_building_block_definitions`, and orders the blocks that act as the account as children
+of the federation. Every run of those definitions may then act as that account through
 workload identity federation; each building block names the account in its
 `STACKIT_SERVICE_ACCOUNT_EMAIL` input.
 
@@ -161,9 +162,9 @@ roles to users.
 Order the **STACKIT Landing Zone** building block once per workspace. Without a network
 configuration it creates the platform and default landing zone. With a network configuration it
 additionally creates the hub network area instance and the networked landing zone, and registers the
-spoke `stackit/network` building block in the same apply. Application teams can then request
-projects and — when networking is enabled — order `stackit/network` inside their own STACKIT
-projects once those projects exist.
+spoke `stackit/network` building block in the same apply. Application teams then add STACKIT
+Project from the marketplace to their tenants; on the networked landing zone it also orders the
+project's network.
 
 The definition's `display_name_template` names the building block `STACKIT Landing Zone <platform
 identifier>` in the order form. A foundation that orders it through the meshStack provider sets

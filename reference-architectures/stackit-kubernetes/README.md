@@ -231,7 +231,8 @@ built before this architecture:
 
 | Key | Takes over |
 |---|---|
-| `project = {building_block_uuid, admin_bindings}` | the meshProject `overrides.project_identifier`, its tenant on the landing zone platform and the STACKIT Project building block `building_block_uuid` on that tenant, renamed to `STACKIT Kubernetes Platform <platform identifier>`; `admin_bindings` maps a username to the name of its existing Project Admin binding |
+| `project = {admin_bindings}` | the meshProject `overrides.project_identifier` and its tenant on the landing zone platform, renamed to `STACKIT Kubernetes Platform <platform identifier>`; `admin_bindings` maps a username to the name of its existing Project Admin binding |
+| `stackit_project = {building_block_uuid}` | the STACKIT Project building block on the tenant. A tenant created by an earlier version got it from its landing zone, a playground's too: without this key the platform orders a second |
 | `adopt_ske = true` | the SKE cluster `overrides.cluster_name` |
 | `git = {instance_id, instance_name, forgejo_organization}` | the STACKIT Git instance and its Forgejo organization |
 | `dns = {zone_id, record_set_id}` | the DNS zone **DNS Domain** names and its wildcard record set |
@@ -241,7 +242,7 @@ built before this architecture:
 | `kubernetes_platform = {platform_name, location_name, landingzone_names}` | the namespace `meshcloud` and the identities `meshfed-service` and `meshfed-metering` of an earlier meshStack platform registration; `platform_name` also takes over the KUBERNETES meshPlatform of that name, and `landingzone_names` maps a stage to the name of its existing landing zone on it. `location_name` references an existing location instead of creating one; `platform_name` needs it or **Use Global Location**. All three are optional; `{}` takes over only what is in the cluster |
 | `starterkit_definitions = {starterkit, git_repository, forgejo_connector}` | the existing definitions application teams order, by uuid, each optional; the platform registers its definition as a new version of each, so their building blocks upgrade to it |
 
-Every key but `starterkit_definitions` needs `project`, because the resources live in its STACKIT project. `adopt_ingress` and
+Every key but `starterkit_definitions` and `stackit_project` needs `project`, because the resources live in its STACKIT project. `adopt_ingress` and
 `kubernetes_platform` also need `adopt_ske`. Everything else is created new. Names the imports leave out
 derive from **Platform Identifier**, so a stage added later gets `<platform identifier>-namespace-<stage>`.
 
