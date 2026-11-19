@@ -44,8 +44,14 @@ module "budget_alert" {
   backplane_name = "hub-e2e-budget-${var.test_context.name_suffix}"
 }
 
-resource "meshstack_building_block" "this" {
+resource "time_sleep" "role_assignment_propagation" {
   depends_on = [module.budget_alert]
+
+  create_duration = "5m"
+}
+
+resource "meshstack_building_block" "this" {
+  depends_on = [time_sleep.role_assignment_propagation]
 
   wait_for_completion = true
 
