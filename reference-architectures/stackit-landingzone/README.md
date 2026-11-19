@@ -195,7 +195,7 @@ the tenant projects stay.
 
 ### Playground Mode
 
-**Playground Mode** deploys a throwaway platform. It is off by default, and three things change
+**Playground Mode** deploys a throwaway platform. It is off by default, and four things change
 with it:
 
 | | `playground_mode = true` | `playground_mode = false` |
@@ -203,14 +203,16 @@ with it:
 | Platform identifier | random suffix appended | taken exactly as given |
 | Root folder | always, `playground-<platform identifier>` unless named | only when named |
 | Folders and foundation project | destroyable | guarded with `prevent_destroy` |
+| Names of the registered definitions | ` (<platform identifier>)` appended | the modules' names |
 
 The suffix exists because a platform identifier is unique across the whole meshStack instance, and
 `modules/stackit` builds every landing zone name from it as `<platform_identifier>-<variant>`. A
 playground deployment that took the plain name would occupy it for good, across the instance.
 
-**A playground platform is for the deploying workspace only.** Neither it nor the building block
-definitions it registers should be published to other workspaces: the platform can disappear at any
-time, and its name is not the one a real deployment will use.
+**A playground platform is for the deploying workspace only.** Publish it or the building block
+definitions it registers to other workspaces only to test that path, and delete the playground
+afterwards: the platform can disappear at any time, and its name is not the one a real deployment
+will use. The suffixed definition names keep a published test apart from the real definitions.
 
 Keep `playground_mode = false` for a platform that is actually used, as the `stackit-platform`
 workspace in likvid-cloudfoundation does. The guard is then a plan-time rule, so it also catches a

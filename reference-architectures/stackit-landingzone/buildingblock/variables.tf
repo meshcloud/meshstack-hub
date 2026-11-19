@@ -12,7 +12,7 @@ variable "platform_identifier" {
 variable "playground_mode" {
   type        = bool
   nullable    = false
-  description = "Deploy a throwaway platform: the platform identifier gets a random suffix so it does not occupy a name for good, and the landing-zone folder and foundation project are left destroyable. Set to false for a platform that is actually used. Cannot change after the first run. A playground platform and the building block definitions it registers are not meant to be published to other workspaces."
+  description = "Deploy a throwaway platform: the platform identifier gets a random suffix so it does not occupy a name for good, and the landing-zone folder and foundation project are left destroyable. Set to false for a platform that is actually used. Cannot change after the first run. The definitions it registers get the platform identifier appended to their names. Publish a playground platform or its definitions only to test, and delete the playground afterwards."
 }
 
 variable "use_global_location" {

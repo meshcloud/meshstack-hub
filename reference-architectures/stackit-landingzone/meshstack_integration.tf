@@ -289,7 +289,7 @@ resource "meshstack_building_block_definition" "this" {
 
       playground_mode = {
         display_name    = "Playground Mode"
-        description     = "Throwaway deployment: the identifier gets a random suffix and nothing is protected against deletion. Do not publish such a platform or its definitions to other workspaces. Cannot be changed after the order."
+        description     = "Throwaway deployment: the identifier gets a random suffix, the registered definitions are named after it, and nothing is protected against deletion. Publish such a platform or its definitions only to test. Cannot be changed after the order."
         type            = "BOOLEAN"
         assignment_type = "USER_INPUT"
         default_value   = jsonencode(false)
