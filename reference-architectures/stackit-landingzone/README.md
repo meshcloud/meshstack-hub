@@ -252,13 +252,6 @@ succeeded, **Imports** can be set back to null without renaming or replacing any
 The module variable `approval_policies` sets which run triggers need an operator's approval before
 a run of this architecture is applied. It defaults to no gate at all.
 
-### Upgrading from a Version with the Project Starterkit
-
-The upgrade removes the `STACKIT Project Starterkit` and `STACKIT Networked Project` definitions,
-the **Starterkit Approval Policies** input and the `project` and `project_owner_tag_key` tags. Delete
-the tenants on the networked landing zone first; see the
-[STACKIT Project migration notes](../../modules/stackit/project/buildingblock/README.md#migrating-from-the-stackit-project-starterkit).
-
 ## Shared Responsibilities
 
 | Responsibility                                                                | Platform Team | Application Team |

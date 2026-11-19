@@ -42,7 +42,7 @@ variable "hub" {
 
   description = <<-EOT
   `git_ref`: Hub release reference. Set to a tag (e.g. 'v1.2.3') or branch or commit sha of the meshstack-hub repo.
-  `bbd_draft`: If true, the definitions this landing zone registers (project starter kit, service account,
+  `bbd_draft`: If true, the definitions this landing zone registers (STACKIT Project, service account,
   federation, networks) are kept in draft mode. This definition is always a draft, so it stays in the owning
   workspace.
   EOT

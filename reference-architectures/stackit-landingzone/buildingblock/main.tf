@@ -142,13 +142,13 @@ module "stackit_integration" {
   role_mapping                            = { admin = var.role_mapping.admin, user = var.role_mapping.user, reader = var.role_mapping.reader }
   stackit_organization_onboarding_enabled = var.role_mapping.organization_onboarding
 
-  # The same bounds as the `STACKIT Network` definition the projects order from. Null keeps the
-  # integration's defaults.
-  stackit_networked_projects_enabled     = local.network_enabled
-  stackit_network_area_id                = local.network_area_id
-  stackit_network_definition_version_ref = local.network_enabled ? module.network_integration.building_block_definition.version_ref : null
-  stackit_network_min_prefix_length      = local.network_enabled ? var.network.tenant_network_min_prefix_length : null
-  stackit_network_max_prefix_length      = local.network_enabled ? var.network.tenant_network_max_prefix_length : null
+  # The same bounds as the `STACKIT Network` definition the projects order from.
+  stackit_network = local.network_enabled ? {
+    network_area_id        = local.network_area_id
+    definition_version_ref = module.network_integration.building_block_definition.version_ref
+    min_prefix_length      = var.network.tenant_network_min_prefix_length
+    max_prefix_length      = var.network.tenant_network_max_prefix_length
+  } : null
 
   hub = var.hub
 

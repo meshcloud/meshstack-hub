@@ -58,7 +58,6 @@ resource "stackit_resourcemanager_project" "project" {
   labels = length(local.labels) > 0 ? local.labels : null
 }
 
-# `depends_on` makes a destroy delete the network before the project.
 resource "meshstack_building_block" "network" {
   lifecycle {
     enabled = local.network_area_id != null
@@ -85,6 +84,7 @@ resource "meshstack_building_block" "network" {
 
   wait_for_completion = true
 
+  # Makes a destroy delete the network before the project.
   depends_on = [stackit_resourcemanager_project.project]
 }
 
