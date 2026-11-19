@@ -1,5 +1,9 @@
+locals {
+  release_name = var.release_name_suffix == "" ? var.release_name : "${var.release_name}-${var.release_name_suffix}"
+}
+
 resource "helm_release" "this" {
-  name      = var.release_name
+  name      = local.release_name
   namespace = var.namespace
   chart     = path.module
 

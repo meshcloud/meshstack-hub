@@ -17,7 +17,7 @@ variable "kubernetes_service_account_name" {
 }
 
 variable "helm_release_name" {
-  description = "Helm release name used for every deployed instance of this building block (example: `my-app`)."
+  description = "Helm release name used for every deployed instance of this building block (example: `my-app`). An instance's optional `release_name_suffix` is appended as `<name>-<suffix>`."
   type        = string
 }
 
@@ -177,6 +177,15 @@ resource "meshstack_building_block_definition" "this" {
         type            = "STRING"
         assignment_type = "STATIC"
         argument        = jsonencode(var.helm_release_name)
+      }
+
+      release_name_suffix = {
+        display_name           = "Release suffix"
+        description            = "Appended to the release name as `${var.helm_release_name}-<suffix>`, so several instances can share one namespace. Fixed once the building block exists."
+        type                   = "STRING"
+        assignment_type        = "USER_INPUT"
+        updateable_by_consumer = false
+        is_optional            = true
       }
 
       "kubeconfig.yaml" = {

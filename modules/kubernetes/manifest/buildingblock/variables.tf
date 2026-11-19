@@ -8,6 +8,13 @@ variable "release_name" {
   type        = string
 }
 
+variable "release_name_suffix" {
+  description = "Appended to `release_name` as `<release_name>-<suffix>`, so several instances can share one namespace."
+  type        = string
+  default     = ""
+  nullable    = false
+}
+
 variable "values_yaml" {
   description = "Helm values as a JSON-encoded string (YAML is also accepted by Helm)."
   type        = string
