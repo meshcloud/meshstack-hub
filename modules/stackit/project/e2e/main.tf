@@ -11,10 +11,9 @@ variable "test_context" {
     # Mode discriminator: set in foundation mode to order an already-deployed BBD version;
     # null in build-from-source mode, which builds the BBD from hub source.
     #
-    # Only build-from-source mode is supported here: the STACKIT Project definition is
-    # `use_in_landing_zones_only`, so it can only be exercised through the meshStack platform and
-    # landing zone that the integration module provisions, and the invocation protocol has no way
-    # to hand a foundation's platform and landing zone to the test.
+    # Only build-from-source mode is supported here: a tenant for the definition has to be on the
+    # platform and landing zone the integration module provisions, and the invocation protocol has
+    # no way to hand a foundation's platform and landing zone to the test.
     bbd_version_ref = optional(object({
       uuid = string
     }))
@@ -97,13 +96,8 @@ module "stackit_project" {
     platform_identifier = local.platform_identifier
   }
   hub = {
-    git_ref = var.test_context.hub_git_ref
-    # Released, not draft — unlike every other e2e test. Nothing here orders the building block with
-    # an explicit version ref: meshStack instantiates it itself as the landing zone's mandatory
-    # building block, and resolving a definition's latest *released* version is the documented way
-    # that happens. Releasing it takes one variable out of the picture; on its own it did not make
-    # the mandatory building block run (see the PR description).
-    bbd_draft = false
+    git_ref   = var.test_context.hub_git_ref
+    bbd_draft = true
   }
 
   stackit_organization_id      = var.test_context.fixtures.stackit.organization_id
@@ -137,14 +131,10 @@ resource "meshstack_project" "this" {
 # and writes its summary, but grants nothing. The membership-add and project-role-assignment paths
 # are consequently not covered here.
 
+# The STACKIT project is created by the building block, so the tenant has no platform tenant id to
+# wait for until then.
 resource "meshstack_tenant" "this" {
-  # Deleting the tenant is what deprovisions the mandatory building block, and that delete run
-  # hard-deletes the STACKIT project. It has to finish while the backplane's WIF identity providers
-  # still exist, or the run cannot authenticate and the project is orphaned with no way back.
-  # `depends_on` keeps the backplane alive until the tenant is gone, and `wait_for_completion` makes
-  # the provider block on the deletion (and, on create, until the project id has replicated back).
-  depends_on          = [module.stackit_project]
-  wait_for_completion = true
+  wait_for_completion = false
 
   metadata = {
     owned_by_workspace = var.test_context.workspace
@@ -157,19 +147,43 @@ resource "meshstack_tenant" "this" {
   }
 }
 
-# The building block is instantiated by meshStack as the landing zone's mandatory building block,
-# not by OpenTofu, so its outputs are read back rather than owned.
-data "meshstack_building_blocks" "tenant" {
-  depends_on  = [meshstack_tenant.this]
-  tenant_uuid = meshstack_tenant.this.metadata.uuid
+# Destroyed before the integration, whose federation it authenticates with: the delete run
+# hard-deletes the STACKIT project, and without the backplane it could not, orphaning the project.
+resource "meshstack_building_block" "project" {
+  wait_for_completion = true
+
+  lifecycle {
+    postcondition {
+      condition     = self.status.succeeded
+      error_message = "Building block ${self.metadata.uuid} did not succeed (health status ${self.status.health_status}, action ${self.status.action}). See its run in meshPanel."
+    }
+  }
+
+  spec = {
+    building_block_definition_version_ref = local.integration.building_block_definition.version_ref
+    display_name                          = "STACKIT Project"
+    target_ref                            = meshstack_tenant.this.ref
+    inputs                                = {}
+  }
+}
+
+# Read after the run, which reports the project as the tenant's platform tenant id.
+data "meshstack_tenant" "this" {
+  depends_on = [meshstack_building_block.project]
+
+  metadata = {
+    owned_by_workspace  = var.test_context.workspace
+    owned_by_project    = meshstack_project.this.metadata.name
+    platform_identifier = "${local.platform_identifier}.global"
+  }
 }
 
 output "project_building_block" {
-  description = "The STACKIT Project building block meshStack instantiated for the test tenant."
-  value       = one(data.meshstack_building_blocks.tenant.building_blocks)
+  description = "The STACKIT Project building block the test ordered on its tenant."
+  value       = meshstack_building_block.project
 }
 
 output "platform_tenant_id" {
   description = "STACKIT project id the building block reported back to meshStack as the tenant's platform tenant id."
-  value       = meshstack_tenant.this.spec.platform_tenant_id
+  value       = data.meshstack_tenant.this.spec.platform_tenant_id
 }

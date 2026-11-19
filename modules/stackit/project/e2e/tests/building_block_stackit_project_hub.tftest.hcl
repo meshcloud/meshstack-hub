@@ -10,7 +10,7 @@ run "building_block_stackit_project_hub" {
   }
 
   # The project id is a PLATFORM_TENANT_ID output, so meshStack writing it back onto the tenant is
-  # what proves the whole landing zone round trip worked.
+  # what proves the round trip from the building block to the tenant worked.
   assert {
     condition     = jsondecode(output.project_building_block.status.outputs["project_id"].value) == output.platform_tenant_id
     error_message = "stackit project hub building block expected the tenant's platform tenant id to be the created STACKIT project id ${jsondecode(output.project_building_block.status.outputs["project_id"].value)}, got ${output.platform_tenant_id}"

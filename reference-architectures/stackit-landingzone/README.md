@@ -261,7 +261,7 @@ the same for the project starterkit definition it registers. Both default to no 
 | Register the self-service `stackit/service-account` building block            | ✅ | ❌ |
 | *(Optional)* Provision the hub network area and choose its address plan       | ✅ | ❌ |
 | *(Optional)* Register the spoke `stackit/network` building block              | ✅ | ❌ |
-| Request STACKIT projects through the landing zone                             | ❌ | ✅ |
+| Add STACKIT Project from the marketplace to their tenants                     | ❌ | ✅ |
 | Create service accounts inside their STACKIT projects                         | ❌ | ✅ |
 | *(Optional)* Order spoke networks inside their STACKIT projects               | ❌ | ✅ |
 | Use the assigned subnet and manage workloads inside their projects            | ❌ | ✅ |
