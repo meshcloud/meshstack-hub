@@ -86,23 +86,6 @@ parent_container_ids = {
 }
 ```
 
-## Migrating from the STACKIT Project Starterkit
-
-The `stackit/stackit-project-starterkit` module is removed. Application teams create a meshProject
-and a STACKIT tenant the usual way and pick the landing zone there. To move a foundation repository
-over:
-
-1. Remove the `stackit-project-starterkit` module. Applying deletes its definition; the
-   meshProjects, tenants and networks it created stay. Starterkit building blocks that are still
-   there block the deletion: purge them in meshPanel. Deleting them tears down the meshProject and
-   tenant they created.
-2. Pass the prefix-length bounds you gave the starterkit's `network` as
-   `stackit_network_min_prefix_length` and `stackit_network_max_prefix_length`, and the
-   `version_ref` of your `STACKIT Network` definition as `stackit_network_definition_version_ref`,
-   to the `stackit/project` integration.
-3. Coming from before the single definition, follow
-   [Upgrading from the spoke definition](#upgrading-from-the-spoke-definition).
-
 ## Providers
 
 Neither provider block has auth arguments:

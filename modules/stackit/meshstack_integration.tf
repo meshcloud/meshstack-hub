@@ -66,37 +66,26 @@ variable "stackit_project_labels" {
   description = "Additional labels applied to every STACKIT project created by this building block."
 }
 
-variable "stackit_networked_projects_enabled" {
-  type        = bool
-  default     = false
-  description = "Whether to create a second, `spoke` landing zone, whose projects are placed in `stackit_network_area_id` and order a spoke network from `stackit_network_definition_version_ref`. Must be known at plan time (`stackit_network_area_id` itself may only resolve during apply)."
-}
-
-variable "stackit_network_area_id" {
-  type        = string
+variable "stackit_network" {
+  type = object({
+    network_area_id   = string
+    min_prefix_length = optional(number, 24)
+    max_prefix_length = optional(number, 28)
+  })
   default     = null
-  description = "STACKIT network area the projects of the `spoke` landing zone are placed in, through the `networkArea` label. Required when `stackit_networked_projects_enabled` is true."
+  description = <<-EOT
+  Adds a second, `spoke` landing zone. Its projects are placed in `network_area_id`, through the
+  `networkArea` label, and order a spoke network from `stackit_network_definition_version_ref`. Null
+  offers the `default` landing zone only.
 
-  validation {
-    condition     = !var.stackit_networked_projects_enabled || var.stackit_network_area_id != null
-    error_message = "stackit_network_area_id is required when stackit_networked_projects_enabled is true."
-  }
+  - Whether it is null must be known at plan time; its attributes may resolve during apply.
+  - `min_prefix_length` and `max_prefix_length` bound the network size an application team may pick.
+    Keep them within the bounds of the `STACKIT Network` definition.
+  EOT
 }
 
-variable "stackit_network_min_prefix_length" {
-  type        = number
-  default     = 24
-  nullable    = false
-  description = "Smallest IPv4 prefix length an application team may choose for the spoke network of a `spoke` project. Keep it within the bounds of the `STACKIT Network` definition."
-}
-
-variable "stackit_network_max_prefix_length" {
-  type        = number
-  default     = 28
-  nullable    = false
-  description = "Largest IPv4 prefix length an application team may choose for the spoke network of a `spoke` project. Keep it within the bounds of the `STACKIT Network` definition."
-}
-
+# Separate from stackit_network, because the landing zones must exist before the network definition
+# that supports the spoke landing zone.
 variable "stackit_network_definition_version_ref" {
   type = object({
     uuid         = string
@@ -105,14 +94,17 @@ variable "stackit_network_definition_version_ref" {
   default     = null
   description = <<-EOT
   Version of the `STACKIT Network` definition a `spoke` project orders its network from, usually
-  `building_block_definition.version_ref` of `modules/stackit/network`. The definition must be
-  published to the marketplace and the version released. Required when
-  `stackit_networked_projects_enabled` is true.
+  `building_block_definition.version_ref` of `modules/stackit/network`. Required when
+  `stackit_network` is set.
+
+  The network is ordered with the key of the application team's workspace. Publish the `STACKIT
+  Network` definition and release the version once tenants of other workspaces use the spoke landing
+  zone. `content_hash` only matters for a draft version: a change re-runs the networks.
   EOT
 
   validation {
-    condition     = !var.stackit_networked_projects_enabled || var.stackit_network_definition_version_ref != null
-    error_message = "stackit_network_definition_version_ref is required when stackit_networked_projects_enabled is true."
+    condition     = var.stackit_network == null || var.stackit_network_definition_version_ref != null
+    error_message = "stackit_network_definition_version_ref is required when stackit_network is set."
   }
 }
 
@@ -215,7 +207,7 @@ output "platform_ref" {
 }
 
 output "landingzone_refs" {
-  description = "References to the created landing zones, keyed `default`, and `spoke` when `stackit_networked_projects_enabled` is true."
+  description = "References to the created landing zones, keyed `default`, and `spoke` when `stackit_network` is set."
   value = {
     for key, lz in meshstack_landingzone.this : key => lz.ref
   }
@@ -229,7 +221,7 @@ locals {
         description  = "STACKIT projects with STACKIT's default flat networking, and project roles mapped from meshStack project roles."
       }
     },
-    var.stackit_networked_projects_enabled ? {
+    var.stackit_network != null ? {
       spoke = {
         display_name = "STACKIT Spoke"
         description  = "STACKIT projects in the shared hub network area, with project roles mapped from meshStack project roles and a spoke network drawn from the hub's address plan."
@@ -238,7 +230,7 @@ locals {
   )
 
   # Built from the name rather than read from meshstack_landingzone.this, which depends on the definition.
-  network_area_ids = var.stackit_networked_projects_enabled ? { "${var.meshstack.platform_identifier}-spoke" = var.stackit_network_area_id } : {}
+  network_area_ids = var.stackit_network != null ? { "${var.meshstack.platform_identifier}-spoke" = var.stackit_network.network_area_id } : {}
 
   # Pre-filled subnet size, so that an order on the spoke landing zone needs no input.
   default_network_prefix_length = 25
@@ -321,7 +313,7 @@ resource "meshstack_building_block_definition" "this" {
     precondition {
       # The form pre-fills the default prefix length, so bounds that exclude it would fail every order
       # that leaves the field alone.
-      condition     = var.stackit_network_min_prefix_length <= local.default_network_prefix_length && local.default_network_prefix_length <= var.stackit_network_max_prefix_length
+      condition     = var.stackit_network == null || (var.stackit_network.min_prefix_length <= local.default_network_prefix_length && local.default_network_prefix_length <= var.stackit_network.max_prefix_length)
       error_message = "The network prefix length bounds must include the default of /${local.default_network_prefix_length}."
     }
   }
@@ -522,7 +514,7 @@ resource "meshstack_building_block_definition" "this" {
       },
       # Declared unconditionally, these would be a field the application team fills in and nothing
       # reads, and a definition version nothing orders.
-      var.stackit_networked_projects_enabled ? {
+      var.stackit_network != null ? {
         network_definition_version_ref = {
           display_name    = "Network Definition Version"
           description     = "Version of the STACKIT Network definition the network of a spoke project is ordered from."
@@ -550,8 +542,8 @@ resource "meshstack_building_block_definition" "this" {
                 type        = "integer"
                 title       = "Prefix Length"
                 description = "Subnet size as an IPv4 prefix length."
-                minimum     = var.stackit_network_min_prefix_length
-                maximum     = var.stackit_network_max_prefix_length
+                minimum     = var.stackit_network.min_prefix_length
+                maximum     = var.stackit_network.max_prefix_length
                 default     = local.default_network_prefix_length
               }
               ipv4_nameservers = {
