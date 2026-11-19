@@ -19,19 +19,6 @@ project gets the `networkArea` label, which places it in that STACKIT network ar
 - Do not move a tenant onto or off a networked landing zone. STACKIT sets the network area only at
   project creation, so the re-run fails on the `networkArea` label.
 
-### Upgrading from the networked definition
-
-Earlier hub releases registered a second definition with `stackit_networked_projects_enabled`,
-`STACKIT Networked Project`, for the `networked` landing zone. It is gone: the `STACKIT Project` definition
-now serves that landing zone too.
-
-- Tenants on the `default` landing zone need nothing: their building blocks get a new version of
-  the same definition.
-- Tenants on the `networked` landing zone run on the removed definition. Delete them before you
-  upgrade, or stay on the previous hub release. Otherwise the apply fails on deleting the
-  definition, and may already have removed the backplane's trust in it, so those tenants' runs,
-  their deletion included, can no longer authenticate.
-
 ## Project roles
 
 `role_mapping` maps each meshStack role in `users[*].roles` to STACKIT project roles. The

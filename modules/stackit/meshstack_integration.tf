@@ -501,7 +501,7 @@ moved {
   from = meshstack_landingzone.stackit_default
   to   = meshstack_landingzone.this["default"]
 }
-# The `networked` definition has no successor; the module README says how to retire it.
+# The `networked` definition has no successor and is deleted, which fails while a tenant still uses it.
 moved {
   from = meshstack_building_block_definition.this["default"]
   to   = meshstack_building_block_definition.this
