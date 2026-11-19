@@ -196,6 +196,14 @@ projects of the meshStack there, such as a bootstrap or metering project. Settin
 root folder later moves the landing-zone folder and the foundation project in place; their ids and
 the tenant projects stay.
 
+### Tags
+
+meshStack checks its tag definitions and tag policies when this building block registers the
+landing zones and when application teams create tenants on them. If your meshStack makes a landing
+zone tag mandatory, or has a policy that matches landing zone tags against project tags, set those
+tags in **Tags**, as `landingzone = [{ key = "...", values = ["..."] }]`. Otherwise the run fails
+to create the landing zones, or meshStack refuses the tenants.
+
 ### Playground Mode
 
 **Playground Mode** deploys a throwaway platform. It is off by default, and four things change
