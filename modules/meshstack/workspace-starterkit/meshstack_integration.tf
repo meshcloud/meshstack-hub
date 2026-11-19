@@ -86,6 +86,15 @@ variable "project_identifier_error_message" {
   description = "Message shown when the project identifier does not match `project_identifier_pattern`."
 }
 
+variable "tenant_building_block" {
+  type = object({
+    definition_version_ref = object({ uuid = string })
+    display_name           = string
+  })
+  default     = null
+  description = "Building block to order on the tenant, for a landing zone that offers its platform's main building block in the marketplace rather than running it on tenant creation, such as `STACKIT Project`. It may be a draft of another workspace: the backplane's API key is admin-scoped. Null orders none."
+}
+
 variable "bbd_readme" {
   type        = string
   default     = null
@@ -214,7 +223,10 @@ module "backplane" {
   meshstack_workspace_identifier = var.meshstack.owning_workspace_identifier
   api_key_display_name           = var.bbd_display_name
   api_key_lifetime_days          = var.api_key_lifetime_days
-  additional_api_key_permissions = var.additional_api_key_permissions
+  additional_api_key_permissions = concat(
+    var.additional_api_key_permissions,
+    var.tenant_building_block == null ? [] : ["ADM_BUILDINGBLOCK_LIST", "ADM_BUILDINGBLOCK_SAVE", "ADM_BUILDINGBLOCK_DELETE"],
+  )
 }
 
 resource "meshstack_building_block_definition" "this" {
@@ -300,6 +312,14 @@ resource "meshstack_building_block_definition" "this" {
         type            = "CODE"
         assignment_type = "STATIC"
         argument        = jsonencode(jsonencode(local.landing_zone_ref))
+      }
+
+      tenant_building_block = {
+        display_name    = "Tenant Building Block"
+        description     = "HCL object with the definition version and display name of the building block ordered on the tenant, or null."
+        type            = "CODE"
+        assignment_type = "STATIC"
+        argument        = jsonencode(jsonencode(var.tenant_building_block))
       }
 
       workspace_expiry_tag_key = {

@@ -67,6 +67,15 @@ variable "platform_ref" {
   description = "Reference (by uuid) to the meshPlatform the tenant is created on."
 }
 
+variable "tenant_building_block" {
+  type = object({
+    definition_version_ref = object({ uuid = string })
+    display_name           = string
+  })
+  default     = null
+  description = "Building block ordered on the tenant. Null orders none."
+}
+
 variable "landing_zone_ref" {
   type = object({
     name = string
