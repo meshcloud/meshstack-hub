@@ -50,6 +50,37 @@ resource "stackit_service_account_federated_identity_provider" "building_block" 
   ]
 }
 
+resource "stackit_service_account_federated_identity_provider" "trusted_runner" {
+  for_each = { for identity in var.trusted_runner_identities : identity.runner_uuid => identity }
+
+  depends_on = [stackit_service_account_federated_identity_provider.building_block]
+
+  lifecycle {
+    precondition {
+      condition     = each.value.subject != null
+      error_message = "No version of the building block definition uses the trusted runner ${each.key}. So the subject of its tokens is unknown. Remove the runner from meshstack.additional_trusted_runner_refs for this definition. Either the definition has only a draft version, whose runner meshStack changes in place. Or other modules get the same list, and this definition never used the runner."
+    }
+  }
+
+  project_id            = var.project_id
+  service_account_email = stackit_service_account.building_block.email
+  name                  = "trusted-runner-${each.key}"
+  issuer                = each.value.issuer
+
+  assertions = [
+    {
+      item     = "aud"
+      operator = "equals"
+      value    = each.value.audience
+    },
+    {
+      item     = "sub"
+      operator = "equals"
+      value    = each.value.subject
+    }
+  ]
+}
+
 # `editor` on the service account itself carries the `iam.service-account-federation.*` permissions
 # for that account only, where `editor` on the project would cover the whole project.
 resource "stackit_authorization_service_account_role_assignment" "federation_admin" {

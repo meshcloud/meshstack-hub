@@ -69,6 +69,15 @@ variable "meshstack" {
       kind = string
       uuid = string
     }))
+    additional_trusted_runner_refs = optional(list(object({
+      kind = string
+      uuid = string
+    })), [])
+    supported_platforms = optional(list(object({
+      kind = optional(string)
+      name = optional(string)
+      uuid = optional(string)
+    })), [{ name = "KUBERNETES" }])
   })
   description = "Shared meshStack context, see docs."
 }
@@ -104,18 +113,13 @@ output "workload_service_account_email" {
 }
 
 # Lookup specified runner for workload identity federation info. Null results in the default hosted runner.
-data "meshstack_building_block_runner" "this" {
-  metadata = {
-    uuid = var.meshstack.runner_ref == null ? null : var.meshstack.runner_ref.uuid
-  }
+module "runner" {
+  source = "github.com/meshcloud/meshstack-hub//modules/meshstack/runner-identity?ref=${var.hub.git_ref}"
 
-  lifecycle {
-    postcondition {
-      # try: a runner without any workload identity federation has a null spec.workload_identity_federation.
-      condition     = try(self.spec.workload_identity_federation.azure, null) != null
-      error_message = "The building block runner offers no token for Azure. We use that token as a generic OIDC token for STACKIT, so pick a runner that offers one via var.meshstack.runner_ref."
-    }
-  }
+  cloud                          = "azure"
+  runner_ref                     = var.meshstack.runner_ref
+  additional_trusted_runner_refs = var.meshstack.additional_trusted_runner_refs
+  versions                       = meshstack_building_block_definition.this.versions
 }
 
 module "backplane" {
@@ -129,10 +133,12 @@ module "backplane" {
 
   # The runner offers no STACKIT token, so we use the one offered for Azure as a generic OIDC token. The federation trusts its issuer and audience.
   workload_identity_federation = {
-    issuer   = data.meshstack_building_block_runner.this.spec.workload_identity_federation.issuer
-    audience = data.meshstack_building_block_runner.this.spec.workload_identity_federation.azure.audience
+    issuer   = module.runner.issuer
+    audience = module.runner.audience
     subjects = [meshstack_building_block_definition.this.version_latest.workload_identity_federation.subject]
   }
+
+  trusted_runner_identities = module.runner.trusted_identities
 }
 
 resource "meshstack_building_block_definition" "this" {
@@ -146,7 +152,7 @@ resource "meshstack_building_block_definition" "this" {
     description         = coalesce(var.bbd_description, "Lets a Kubernetes service account in your namespace act as a STACKIT service account, so your workload reaches STACKIT without a key.")
     symbol              = "https://raw.githubusercontent.com/meshcloud/meshstack-hub/${var.hub.git_ref}/modules/stackit/kubernetes-workload-identity/buildingblock/logo.png"
     target_type         = "TENANT_LEVEL"
-    supported_platforms = [{ name = "KUBERNETES" }]
+    supported_platforms = var.meshstack.supported_platforms
     run_transparency    = true
 
     readme = coalesce(var.bbd_readme, chomp(<<-EOT
@@ -180,7 +186,7 @@ resource "meshstack_building_block_definition" "this" {
 
   version_spec = {
     draft         = var.hub.bbd_draft
-    runner_ref    = data.meshstack_building_block_runner.this.ref
+    runner_ref    = module.runner.ref
     deletion_mode = "DELETE"
 
     implementation = {
@@ -272,7 +278,7 @@ resource "meshstack_building_block_definition" "this" {
         type            = "STRING"
         assignment_type = "STATIC"
         is_environment  = true
-        argument        = jsonencode(data.meshstack_building_block_runner.this.spec.workload_identity_federation.azure.token_path)
+        argument        = jsonencode(module.runner.token_path)
       }
     }
 

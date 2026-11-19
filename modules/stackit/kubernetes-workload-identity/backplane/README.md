@@ -12,13 +12,15 @@ has a key.
   through workload identity federation with the meshStack runner. It holds `editor` on the workload
   service account only, which carries the permissions to add and remove that account's federations
   and nothing in the rest of the project.
+- **One more federation per trusted runner** (`trusted_runner_identities`) on the building block
+  service account, so building blocks on older definition versions keep running after the runner changes.
 
 ## Running it
 
 The caller configures the `stackit` provider with the `iam` experiment and an identity that may
 create service accounts in `project_id` and assign the requested roles, for example an organization
-owner for organization roles. Run it from `meshstack_integration.tf`, which wires the runner's
-issuer, audience and subject.
+owner for organization roles. Run it from `meshstack_integration.tf`, which resolves the runners'
+issuer, audience and subject with the `meshstack/runner-identity` module.
 
 Role assignments in STACKIT take effect asynchronously, so the first building block run right after
 the backplane may still see a 403 and needs a retry.

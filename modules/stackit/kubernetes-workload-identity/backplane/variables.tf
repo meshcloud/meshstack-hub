@@ -42,3 +42,15 @@ variable "workload_identity_federation" {
   nullable    = false
   description = "WIF issuer URL, audience and subjects of the meshStack building block runs. The audience defaults to the one meshStack runners use for Azure tokens."
 }
+
+variable "trusted_runner_identities" {
+  type = list(object({
+    runner_uuid = string
+    issuer      = string
+    audience    = string
+    subject     = string
+  }))
+  default     = []
+  nullable    = false
+  description = "One entry per trusted runner, with the issuer, audience and subject of its tokens. The backplane creates one federated identity provider for each on the building block service account. Pass `trusted_identities` of the [runner-identity module](../../../meshstack/runner-identity). The plan fails for a runner that no version uses. If the same apply changes the runner, the apply fails instead."
+}
