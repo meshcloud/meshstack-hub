@@ -6,6 +6,10 @@ locals {
   # name, so a playground deployment suffixes it instead of occupying the plain name.
   platform_identifier = var.playground_mode ? "${var.platform_identifier}-${random_string.playground_suffix.result}" : var.platform_identifier
 
+  # A playground may publish its definitions to test another workspace ordering them; the suffix
+  # tells them apart from the real ones in the marketplace.
+  playground_suffix = var.playground_mode ? " (${local.platform_identifier})" : ""
+
   # STACKIT caps a service account name at 20 characters and rejects one ending in a dash, so cutting
   # the identifier to length can produce an invalid name. Cut shorter instead, drop whatever dashes
   # the cut exposed, and end with a hash of the full identifier so two names sharing a prefix stay
@@ -150,7 +154,8 @@ module "stackit_integration" {
     max_prefix_length      = var.network.tenant_network_max_prefix_length
   } : null
 
-  hub = var.hub
+  bbd_display_name = local.playground_suffix == "" ? null : "STACKIT Project${local.playground_suffix}"
+  hub              = var.hub
 
   meshstack = {
     owning_workspace_identifier = var.workspace
@@ -171,8 +176,9 @@ module "service_account_integration" {
 
   stackit_federation_backplane_email = module.service_account_federation_integration.backplane_service_account_email
 
-  meshstack = { owning_workspace_identifier = var.workspace, tags = local.tags.building_block, runner_ref = local.runner_ref }
-  hub       = var.hub
+  meshstack        = { owning_workspace_identifier = var.workspace, tags = local.tags.building_block, runner_ref = local.runner_ref }
+  bbd_display_name = local.playground_suffix == "" ? null : "STACKIT Service Account${local.playground_suffix}"
+  hub              = var.hub
 }
 
 module "service_account_federation_integration" {
@@ -184,8 +190,9 @@ module "service_account_federation_integration" {
 
   stackit_project_id = stackit_resourcemanager_project.foundation.project_id
 
-  meshstack = { owning_workspace_identifier = var.workspace, tags = local.tags.building_block, runner_ref = local.runner_ref }
-  hub       = var.hub
+  meshstack        = { owning_workspace_identifier = var.workspace, tags = local.tags.building_block, runner_ref = local.runner_ref }
+  bbd_display_name = local.playground_suffix == "" ? null : "STACKIT Service Account Federation${local.playground_suffix}"
+  hub              = var.hub
 }
 
 module "network_area_integration" {
@@ -198,8 +205,9 @@ module "network_area_integration" {
   stackit_organization_id = var.stackit_org
   stackit_project_id      = stackit_resourcemanager_project.foundation.project_id
 
-  meshstack = { owning_workspace_identifier = var.workspace, tags = local.tags.building_block, runner_ref = local.runner_ref }
-  hub       = var.hub
+  meshstack        = { owning_workspace_identifier = var.workspace, tags = local.tags.building_block, runner_ref = local.runner_ref }
+  bbd_display_name = local.playground_suffix == "" ? null : "STACKIT Network Area${local.playground_suffix}"
+  hub              = var.hub
 }
 
 module "network_integration" {
@@ -220,7 +228,8 @@ module "network_integration" {
     runner_ref                  = local.runner_ref
     supported_platforms         = [{ kind = "meshLandingZone", name = "${local.platform_identifier}-networked" }]
   }
-  hub = var.hub
+  bbd_display_name = local.playground_suffix == "" ? null : "STACKIT Network${local.playground_suffix}"
+  hub              = var.hub
 }
 
 resource "meshstack_building_block" "network_area_hub" {
