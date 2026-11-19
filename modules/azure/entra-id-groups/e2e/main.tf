@@ -16,6 +16,12 @@ variable "test_context" {
   nullable = false
 }
 
+variable "configured_groups" {
+  type        = bool
+  default     = false
+  description = "Exercise groups the platform team configures instead of the default layout."
+}
+
 locals {
   # backplane_name must match ^[-a-z0-9]+$ and names both the backplane resource group and the UAMI.
   # UAMI names are limited to 24 characters, so keep the prefix short: "hub-e2e-eig-" (12) plus the
@@ -26,6 +32,13 @@ locals {
   # from the meshStack tenant context and are the same on every run, so uniqueness has to come from
   # the prefix — otherwise a leaked group from an earlier run is indistinguishable from this one's.
   group_prefix = "hub-e2e-${var.test_context.name_suffix}"
+
+  # No project member holds the role of "nobody", so its group stays empty. That shows the role
+  # filter applied, whatever roles the fixture project gives its members.
+  configured_groups = {
+    everyone = { name = "${local.group_prefix}.{workspace}.{project}.everyone", roles = null }
+    nobody   = { name = "${local.group_prefix}.{workspace}.{project}.nobody", roles = ["hub-e2e-no-such-role"] }
+  }
 }
 
 module "entra_id_groups" {
@@ -49,6 +62,8 @@ module "entra_id_groups" {
   # Their mail attribute keeps the original address, which is what "email" matches on.
   azure_user_lookup_attribute = "email"
 
+  groups = var.configured_groups ? local.configured_groups : null
+
   backplane_name = local.backplane_name
 }
 
@@ -70,16 +85,16 @@ resource "meshstack_building_block" "this" {
       uuid = var.test_context.fixtures.azure.mesh_tenant_id
     }
 
-    inputs = {
+    inputs = merge({
+      # Empty on purpose: the fixtures tenant has no Administrative Unit, and creating one per run
+      # would leave directory-level litter behind on a failed teardown.
+      administrative_unit_id = { value = jsonencode("") }
+      }, var.configured_groups ? {} : {
       prefix = { value = jsonencode(local.group_prefix) }
 
       # Exercise the default meshStack role set so the test covers the same group layout real
       # platforms get. workspace_identifier, project_identifier and users are injected by meshStack.
       project_roles = { value = jsonencode("admin,user,reader") }
-
-      # Empty on purpose: the fixtures tenant has no Administrative Unit, and creating one per run
-      # would leave directory-level litter behind on a failed teardown.
-      administrative_unit_id = { value = jsonencode("") }
-    }
+    })
   }
 }
