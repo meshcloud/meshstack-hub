@@ -196,6 +196,10 @@ as the platform type a module registers, comes from
 A module with no natural default, such as one for any Kubernetes cluster, makes the field required.
 A `WORKSPACE_LEVEL` definition sets no `supported_platforms`; meshStack rejects even an empty set.
 
+A `ref` created in the same apply makes the runner lookup, which reads `var.meshstack`, wait for
+apply. A backplane keyed by `trusted_identities` then plans only without trusted runners, and one
+keyed by `identities` (AWS) fails, so pass such a ref only to a module whose backplane allows it.
+
 A platform needs meshStack 2026.40.0 or later, a landing zone 2026.45.0 and meshstack provider
 0.28.0.
 

@@ -42,7 +42,9 @@ output "identities" {
 
 output "trusted_identities" {
   description = "`identities` without its first entry. Use it if the backplane takes the runner in `runner_ref` in a separate variable."
-  value = [
+  # Known at plan time when no runner is trusted, so a backplane can key resources by it while the
+  # runner lookup waits for apply, as it does for a `meshstack` value created in the same apply.
+  value = length(var.additional_trusted_runner_refs) == 0 ? [] : [
     for identity in slice(local.identities, 1, length(local.identities)) : {
       runner_uuid = identity.runner_uuid
       issuer      = identity.issuer
