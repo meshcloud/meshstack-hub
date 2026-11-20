@@ -25,6 +25,15 @@ variable "project_roles" {
   description = "Comma-separated list of project role name suffixes. One Entra group is created per role. Empty creates a single group, without a role suffix, holding every member."
 }
 
+variable "groups" {
+  type = map(object({
+    name  = string
+    roles = optional(list(string))
+  }))
+  default     = null
+  description = "Groups to create, keyed by a stable key. `{workspace}` and `{project}` in `name` are replaced by the identifiers. Only members holding one of `roles` join a group; null `roles` adds every member. Null creates the default layout from `prefix` and `project_roles` instead."
+}
+
 variable "administrative_unit_id" {
   type        = string
   nullable    = false
