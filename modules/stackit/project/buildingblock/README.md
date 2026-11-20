@@ -16,8 +16,9 @@ One definition serves every landing zone: the building block reads its tenant's 
 through a `LANDING_ZONE_IDENTIFIER` input and looks it up in `network_area_ids`. On a match the
 project gets the `networkArea` label, which places it in that STACKIT network area.
 
-Application teams add the definition from the marketplace to their tenants, once per tenant: it
-reports the project as the tenant's Platform Tenant ID. The STACKIT platform is hidden from the
+Application teams add the definition from the marketplace to their tenants. meshStack allows one
+per tenant (`only_apply_once_per_tenant`), because it reports the project as the tenant's Platform
+Tenant ID. The STACKIT platform is hidden from the
 marketplace, so teams add this building block rather than order a bare tenant. That applies to a
 newly created platform only; hide an existing one in meshPanel.
 

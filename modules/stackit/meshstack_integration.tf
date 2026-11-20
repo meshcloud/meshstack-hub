@@ -305,7 +305,7 @@ resource "meshstack_building_block_definition" "this" {
 
     Add it from the marketplace to a STACKIT tenant:
     1. Pick your meshStack project and its STACKIT tenant. No tenant yet? Create one there and pick its landing zone, which decides whether the project is a spoke project.
-    2. Add it once per tenant: the tenant is linked to the project it creates.
+    2. A tenant takes only one: the tenant is linked to the project it creates.
 
     ## 💡 Usage examples
 
@@ -330,9 +330,10 @@ resource "meshstack_building_block_definition" "this" {
   }
 
   version_spec = {
-    draft         = var.hub.bbd_draft
-    deletion_mode = "DELETE"
-    runner_ref    = module.runner.ref
+    draft                      = var.hub.bbd_draft
+    deletion_mode              = "DELETE"
+    runner_ref                 = module.runner.ref
+    only_apply_once_per_tenant = true
 
     implementation = {
       terraform = {
