@@ -62,7 +62,9 @@ resource "meshstack_building_block" "network" {
   lifecycle {
     enabled = local.network_area_id != null
 
-    ignore_changes = [spec.inputs]
+    # Only the network definition's owning workspace may move the block to a new version; this run's
+    # key would get a 403 once a hub bump creates one.
+    ignore_changes = [spec.inputs, spec.building_block_definition_version_ref]
 
     # Create and update wait for the run, so PENDING and IN_PROGRESS only show on a refresh: a
     # re-run of this block, such as a user change, while the network's first run is still going.
