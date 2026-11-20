@@ -56,6 +56,47 @@ The easiest option is to directly import the module from the [meshStack Hub](htt
 
 Refer to each module's README.md for specific usage instructions such as needed input variables.
 
+## Change the Runner of a Definition
+
+A module with workload identity federation makes your cloud trust the tokens of one building block
+runner. meshStack runs a building block with the definition version it was created with, and a
+released version keeps its runner. So after a runner change, the building blocks on older versions
+still present the tokens of the old runner. The module must trust both runners until you have
+upgraded them.
+
+1. Update the module to a Hub commit in which its `meshstack` variable has
+   `additional_trusted_runner_refs`. A module without this field does not support the steps below.
+2. Add the old runner to `meshstack.additional_trusted_runner_refs`, in the apply that changes the
+   runner or earlier:
+
+   ```hcl
+   meshstack = {
+     owning_workspace_identifier    = "my-platform-team"
+     runner_ref                     = { kind = "meshBuildingBlockRunner", uuid = "<uuid of the new runner>" }
+     additional_trusted_runner_refs = [{ kind = "meshBuildingBlockRunner", uuid = "<uuid of the old runner>" }]
+   }
+   ```
+
+   For a GCP module, also set `original_runner_ref` to the old runner, and never remove it. The
+   released versions contain the name of the identity provider of their runner, and the backplane
+   changes these names when you remove `original_runner_ref`.
+3. Apply. Your cloud now trusts both runners, and the new version of the definition uses the new
+   runner.
+4. Release the new version. Then upgrade the building blocks in the Admin Area under
+   **Marketplace** > **Building Blocks**.
+5. Remove the old runner from `additional_trusted_runner_refs` when no building block is on a
+   version that uses it.
+
+Without `meshstack.runner_ref`, a definition uses the default runner of your meshStack. When that
+default changes, the next apply moves the definition to the new default. Add the old runner to
+`additional_trusted_runner_refs` before that apply. The plan shows its uuid in the change of
+`version_spec.runner_ref`.
+
+Some STACKIT modules log in as a service account that already exists, and their backplane creates
+no trust for a runner. The STACKIT Service Account Federation building block creates this trust.
+After you change the runner of such a module, run that building block again, so that STACKIT trusts
+the new runner.
+
 ## For AI agents
 
 An AI agent that works with meshStack for you starts with the
