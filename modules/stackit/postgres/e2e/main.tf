@@ -33,7 +33,7 @@ module "definition" {
 }
 
 resource "meshstack_building_block" "this" {
-  # Also orders teardown: the delete run must finish before the backplane's WIF trust is destroyed.
+  # Also orders teardown: the delete run must finish before the service account's WIF trust is destroyed.
   depends_on = [module.definition]
 
   wait_for_completion = true
