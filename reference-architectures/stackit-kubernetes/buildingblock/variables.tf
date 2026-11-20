@@ -40,6 +40,7 @@ variable "landingzone" {
   type = object({
     platform_ref                               = object({ uuid = string })
     landingzone_refs                           = map(object({ name = string }))
+    project_bbd_ref                            = object({ uuid = string })
     project_bbd_version_ref                    = object({ uuid = string })
     service_account_bbd_version_ref            = object({ uuid = string })
     service_account_federation_bbd_version_ref = object({ uuid = string })
@@ -223,9 +224,6 @@ variable "imports" {
     project = optional(object({
       admin_bindings = optional(map(string), {})
     }))
-    stackit_project = optional(object({
-      building_block_uuid = string
-    }))
     adopt_ske = optional(bool, false)
     git = optional(object({
       instance_id          = string
@@ -259,8 +257,8 @@ variable "imports" {
   description = "Existing resources and definitions to take over, by key; see Adopting Existing Resources in the README. Null creates everything."
 
   validation {
-    condition     = var.imports == null || var.imports.project != null || alltrue([for key, adopted in var.imports : adopted == null || adopted == false if !contains(["starterkit_definitions", "stackit_project"], key)])
-    error_message = "Every key of imports but starterkit_definitions and stackit_project needs imports.project, because what it names lives in that project."
+    condition     = var.imports == null || var.imports.project != null || alltrue([for key, adopted in var.imports : adopted == null || adopted == false if key != "starterkit_definitions"])
+    error_message = "Every key of imports but starterkit_definitions needs imports.project, because what it names lives in that project."
   }
 
   validation {
