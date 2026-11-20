@@ -79,7 +79,8 @@ variable "stackit_network" {
   offers the `default` landing zone only.
 
   - Whether it is null must be known at plan time; its attributes may resolve during apply.
-  - `min_prefix_length` and `max_prefix_length` bound the network size an application team may pick.
+  - `min_prefix_length` and `max_prefix_length` bound the network size an application team picks at
+    order time.
     Keep them within the bounds of the `STACKIT Network` definition.
   EOT
 }
@@ -343,7 +344,7 @@ resource "meshstack_building_block_definition" "this" {
 
     Add it from the marketplace to a STACKIT tenant:
     1. Pick your meshStack project and its STACKIT tenant. No tenant yet? Create one there and pick its landing zone, which decides whether the project is a spoke project.
-    2. On a spoke tenant, set the size of the network in the **Network** input. Other tenants don't show it.
+    2. On a spoke tenant, pick the size of the network in the **Network** input. It cannot change after the order. Other tenants don't show it.
 
     A tenant takes only one: the tenant is linked to the project it creates.
 
@@ -353,7 +354,7 @@ resource "meshstack_building_block_definition" "this" {
     A team uses a tenant on the sandbox landing zone. They get a STACKIT project with STACKIT's default flat networking, and their project members get the STACKIT roles mapped from their meshStack roles.
 
     **Example 2: a spoke project**
-    A team that needs private connectivity uses a tenant on the spoke landing zone. Their project is placed in the hub network area and gets a spoke `/${local.default_network_prefix_length}` network unless they pick another size. To resize it, change **Network** here; order more **STACKIT Network** building blocks for more networks.
+    A team that needs private connectivity uses a tenant on the spoke landing zone. Their project is placed in the hub network area and gets a spoke `/${local.default_network_prefix_length}` network unless they pick another size. For more networks, order more **STACKIT Network** building blocks.
 
     ## 📊 Shared Responsibility
 
@@ -524,11 +525,10 @@ resource "meshstack_building_block_definition" "this" {
         }
 
         network = {
-          display_name           = "Network"
-          description            = "Spoke network ordered for the project as a STACKIT Network building block."
-          type                   = "JSON"
-          assignment_type        = "USER_INPUT"
-          updateable_by_consumer = true
+          display_name    = "Network"
+          description     = "Spoke network ordered for the project as a STACKIT Network building block. Fixed at order time."
+          type            = "JSON"
+          assignment_type = "USER_INPUT"
           # Optional, so that a tenant or building block created through the API needs no value: the
           # building block then falls back to its own defaults, the same as the form's.
           is_optional = true
