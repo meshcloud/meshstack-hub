@@ -164,6 +164,9 @@ resource "meshstack_building_block_definition" "this" {
     STACKIT credential is entered or held: every STACKIT building block authenticates as the
     platform's service account through workload identity federation.
 
+    To run in a project of the STACKIT Landing Zone Accelerator instead, set **STACKIT Accelerator**
+    to that project and a service account owning it; see Accelerator Mode in the hub README.
+
     ## 📊 Shared responsibility
 
     | Responsibility | Platform Team | Application Team |
@@ -267,9 +270,18 @@ resource "meshstack_building_block_definition" "this" {
         display_order   = 25
       }
 
+      stackit_accelerator = {
+        display_name    = "STACKIT Accelerator"
+        description     = "HCL object `{ project_id, service_account_email, service_account_id }` of a STACKIT Landing Zone Accelerator project and a service account owning it, to run the platform in that project. Leave out to create the project from the STACKIT Landing Zone input."
+        type            = "CODE"
+        assignment_type = "USER_INPUT"
+        is_optional     = true
+        display_order   = 26
+      }
+
       landingzone = {
         display_name    = "STACKIT Landing Zone"
-        description     = "HCL object of refs this platform is built on. Copy it from the summary of the STACKIT Landing Zone building block."
+        description     = "HCL object of refs this platform is built on. Copy it from the summary of the STACKIT Landing Zone building block. With STACKIT Accelerator set, only `service_account_federation_bbd_version_ref` is needed."
         type            = "CODE"
         assignment_type = "USER_INPUT"
         display_order   = 27
@@ -277,7 +289,7 @@ resource "meshstack_building_block_definition" "this" {
 
       landingzone_variant = {
         display_name    = "Landing Zone Variant"
-        description     = "Landing zone the hosting project is created in. `networked` requires hub-and-spoke networking enabled on the STACKIT Landing Zone."
+        description     = "Landing zone the hosting project is created in. `networked` requires hub-and-spoke networking enabled on the STACKIT Landing Zone. Ignored with STACKIT Accelerator set."
         type            = "SINGLE_SELECT"
         assignment_type = "USER_INPUT"
         # TODO only include 'networked' if enabled in stackit lz ref arch (add 'network_enabled' variable here, default false?)

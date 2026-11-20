@@ -1,12 +1,14 @@
 locals {
-  platform_service_account_email = jsondecode(meshstack_building_block.platform_service_account.status.outputs["service_account_email"].value)
-  platform_service_account_id    = jsondecode(meshstack_building_block.platform_service_account.status.outputs["service_account_id"].value)
+  platform_service_account_email = local.accelerator ? var.stackit_accelerator.service_account_email : jsondecode(meshstack_building_block.platform_service_account.status.outputs["service_account_email"].value)
+  platform_service_account_id    = local.accelerator ? var.stackit_accelerator.service_account_id : jsondecode(meshstack_building_block.platform_service_account.status.outputs["service_account_id"].value)
 }
 
 resource "meshstack_building_block" "platform_service_account" {
   wait_for_completion = true
 
   lifecycle {
+    enabled = !local.accelerator
+
     postcondition {
       condition     = self.status.succeeded
       error_message = "Building block ${self.metadata.uuid} did not succeed (health status ${self.status.health_status}, action ${self.status.action}). See its run in meshPanel."
@@ -43,7 +45,7 @@ resource "meshstack_building_block" "bootstrap_federation" {
   }
 
   spec = {
-    parent_building_block_refs            = [meshstack_building_block.platform_service_account.ref]
+    parent_building_block_refs            = local.accelerator ? [] : [meshstack_building_block.platform_service_account.ref]
     building_block_definition_version_ref = var.landingzone.service_account_federation_bbd_version_ref
     display_name                          = "Bootstrap Identity Federation"
     target_ref                            = module.tenant.tenant.ref

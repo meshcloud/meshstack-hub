@@ -211,7 +211,7 @@ resource "meshstack_building_block_definition" "this" {
 
       automation_identity = {
         display_name           = "Automation Identity"
-        description            = "HCL object with the `building_block_ref` of the Automation Identity building block and the `service_account_email` and `service_account_id` it created."
+        description            = "HCL object with the `building_block_ref` of the Automation Identity building block, null for an account no building block created, and the `service_account_email` and `service_account_id` of the account."
         type                   = "CODE"
         assignment_type        = "USER_INPUT"
         updateable_by_consumer = true

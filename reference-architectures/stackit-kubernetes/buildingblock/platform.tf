@@ -54,7 +54,7 @@ resource "meshstack_building_block" "platform" {
     inputs = {
       STACKIT_SERVICE_ACCOUNT_EMAIL = { value = jsonencode(local.platform_service_account_email) }
       automation_identity = { value = jsonencode(jsonencode({
-        building_block_ref    = meshstack_building_block.platform_service_account.ref
+        building_block_ref    = local.accelerator ? null : meshstack_building_block.platform_service_account.ref
         service_account_email = local.platform_service_account_email
         service_account_id    = local.platform_service_account_id
       })) }

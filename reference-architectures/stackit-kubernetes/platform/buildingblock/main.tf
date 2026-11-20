@@ -101,7 +101,7 @@ resource "meshstack_building_block" "platform_federation" {
   }
 
   spec = {
-    parent_building_block_refs            = [var.automation_identity.building_block_ref]
+    parent_building_block_refs            = var.automation_identity.building_block_ref == null ? [] : [var.automation_identity.building_block_ref]
     building_block_definition_version_ref = var.service_account_federation_bbd_version_ref
     display_name                          = "Automation Identity Federation"
     target_ref                            = local.tenant_ref

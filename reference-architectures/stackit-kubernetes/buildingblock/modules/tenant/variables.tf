@@ -25,8 +25,9 @@ variable "metadata" {
 
 variable "spec" {
   type = object({
-    platform_ref     = object({ uuid = string })
-    landing_zone_ref = object({ name = string })
+    platform_ref       = object({ uuid = string })
+    landing_zone_ref   = object({ name = string })
+    platform_tenant_id = optional(string)
   })
   nullable = false
 }

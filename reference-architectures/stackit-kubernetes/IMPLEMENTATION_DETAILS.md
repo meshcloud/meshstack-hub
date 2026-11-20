@@ -19,6 +19,11 @@ The outer run waits for it and shows its summary. Every outer input the tree nee
 STACKIT Kubernetes Platform Services input, so updating the outer building block is the only way
 to change the platform.
 
+In [accelerator mode](README.md#accelerator-mode) step 1 registers a `STACKIT`-type custom
+meshPlatform with one landing zone and creates the tenant with `platform_tenant_id` set, which
+meshStack takes as an import and which completes at once. Step 2 is skipped: the account comes from
+the `stackit_accelerator` input, and the federations it parents have no parent.
+
 ## Federations and parents
 
 - **Automation Identity Federation**, a child of the Automation Identity, trusts the six
@@ -125,8 +130,8 @@ organization itself; it goes with the instance.
 - **The service account depends on no definition it federates**, or a definition that reads the
   account's email and its child definition would form a cycle. That is why the federation is a
   building block of its own.
-- Outside playground mode the outer tenant has `prevent_destroy`: destroying it deletes the STACKIT
-  project and everything in it.
+- Outside playground and accelerator mode the outer tenant has `prevent_destroy`: destroying it
+  deletes the STACKIT project and everything in it.
 
 ## Updates
 

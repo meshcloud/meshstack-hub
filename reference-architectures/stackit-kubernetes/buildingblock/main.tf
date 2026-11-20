@@ -1,4 +1,6 @@
 locals {
+  accelerator = var.stackit_accelerator != null
+
   overrides = coalesce(var.overrides, { cluster_name = null, cluster_issuer_email = null, project_identifier = null })
 
   # The order form hides these inputs in playground mode, which fixes their values.
@@ -160,14 +162,16 @@ moved {
 
 # Provisions the STACKIT project through the landing zone platform's replication. wait_for_completion makes
 # the run block until the project exists, so spec.platform_tenant_id (the STACKIT project id) is set.
+# An accelerator project already exists, so meshStack imports it as the tenant.
 module "tenant" {
   source = "./modules/tenant"
 
   release_on_destroy = local.release_imports_on_destroy
 
   # Destroying this tenant deletes the STACKIT project the whole platform runs in. Guard a real
-  # deployment against an accidental replacement; a playground stays destroyable.
-  prevent_destroy = !var.playground_mode
+  # deployment against an accidental replacement; a playground stays destroyable, and so does an
+  # accelerator tenant, whose project no building block of this platform deletes.
+  prevent_destroy = !var.playground_mode && !local.accelerator
 
   wait_for_completion = true
 
@@ -177,8 +181,9 @@ module "tenant" {
   }
 
   spec = {
-    platform_ref     = var.landingzone.platform_ref
-    landing_zone_ref = var.landingzone.landingzone_refs[var.landingzone_variant]
+    platform_ref       = local.accelerator ? meshstack_platform.accelerator.ref : var.landingzone.platform_ref
+    landing_zone_ref   = local.accelerator ? meshstack_landingzone.accelerator.ref : var.landingzone.landingzone_refs[var.landingzone_variant]
+    platform_tenant_id = local.accelerator ? var.stackit_accelerator.project_id : null
   }
 }
 

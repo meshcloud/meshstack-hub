@@ -106,7 +106,7 @@ Once set up, it triggers the repository's workflow and waits for it to finish.
 | Requirement          | Description |
 |----------------------|-------------|
 | meshStack instance   | With the OpenTofu IaC runtime. |
-| STACKIT Landing Zone | A deployed STACKIT Landing Zone building block. Its summary shows the code block for the **STACKIT Landing Zone** input. |
+| STACKIT Landing Zone | A deployed STACKIT Landing Zone building block. Its summary shows the code block for the **STACKIT Landing Zone** input. In [Accelerator Mode](#accelerator-mode) only its federation definition is used. |
 | STACKIT portal       | Access to the platform's Harbor project, to link one robot account in phase 2. |
 
 ### Install
@@ -127,6 +127,7 @@ The main inputs:
 | Input | Purpose |
 |---|---|
 | STACKIT Landing Zone | Platform, landing zones and the service account and federation definitions of the landing zone |
+| STACKIT Accelerator | Optional; runs the platform in a STACKIT Landing Zone Accelerator project, see [Accelerator Mode](#accelerator-mode) |
 | Landing Zone Variant | `default` or `networked` (needs hub-and-spoke networking on the landing zone) |
 | STACKIT Region | Region of the SKE cluster, `eu01` (default) or `eu02`; fixed at the order. Secrets Manager, Container Registry and AI Model Serving stay in `eu01`, because STACKIT offers them only there. The node pool runs `c3i.2` machines, which both regions offer |
 | Platform Identifier | Name of the meshStack platform; the project, cluster, Git instance, registry and DNS zone are named after it |
@@ -180,6 +181,51 @@ export VAULT_ADDR=https://prod.sm.eu01.stackit.cloud
 export VAULT_TOKEN=$(stackit auth get-access-token)
 vault kv list -mount=<Secrets Manager instance id> <platform identifier>/
 ```
+
+## Accelerator Mode
+
+The platform can also run in a STACKIT project that the
+[STACKIT Landing Zone Accelerator](https://github.com/stackitcloud/stackit-landing-zone) created.
+Set the optional **STACKIT Accelerator** input:
+
+```hcl
+{
+  project_id            = "<accelerator project id>"
+  service_account_email = "<service account email>"
+  service_account_id    = "<service account id>"
+}
+```
+
+and give **STACKIT Landing Zone** only the federation definition of a STACKIT Landing Zone:
+
+```hcl
+{
+  service_account_federation_bbd_version_ref = { uuid = "<uuid>" }
+}
+```
+
+The architecture then registers a meshStack platform `<platform identifier>-stackit` of the
+`STACKIT` platform type, with one landing zone and, unless **Use Global Location** is on, a location
+of the same name. The meshProject's tenant on it imports the accelerator project, and the platform
+acts as the given service account. **Landing Zone Variant** is ignored, and no Automation Identity
+is ordered. Nothing of this is protected against deletion, playground mode or not; deleting the
+building block leaves the accelerator project and its service account in place.
+
+The accelerator side has to grant, in its project:
+
+- the service account `owner`, or at least `editor` and `iam.member-admin`;
+- the federation backplane service account `editor`, which the STACKIT Service Account building
+  block grants in the default mode. Its email is the `STACKIT_SERVICE_ACCOUNT_EMAIL` input of the
+  **STACKIT Service Account Federation** definition in meshPanel, the account `mesh-sa-federation`
+  in the STACKIT Landing Zone's foundation project.
+
+Limitations:
+
+- No STACKIT project roles reach the Project Admins: in the default mode the landing zone's STACKIT
+  Project building block maps meshStack project roles to STACKIT roles. The service roles the
+  platform's building blocks grant (Forgejo `Owners`, registry admin, `secrets-manager.reader`)
+  still apply, if the users are members of the STACKIT organization.
+- **Imports** cannot adopt the project.
 
 ## Shipping the Starter Kit to Application Teams
 

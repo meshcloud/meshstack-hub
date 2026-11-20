@@ -11,6 +11,10 @@ architecture. It holds no STACKIT credential and declares no `stackit` provider.
 - one **STACKIT Kubernetes Platform Services** building block from that definition. Its run is in
   [`../platform/buildingblock`](../platform/buildingblock/README.md).
 
+With `stackit_accelerator` set, it orders no Automation Identity: it registers a STACKIT-type
+meshPlatform with one landing zone, creates the tenant on it with the accelerator project as its
+platform tenant id, and federates the given service account.
+
 `imports.project` takes over the existing meshProject and its tenant. The architecture and adoption
 are in the [reference architecture README](../README.md), the internals in
 [`../IMPLEMENTATION_DETAILS.md`](../IMPLEMENTATION_DETAILS.md), the registration in

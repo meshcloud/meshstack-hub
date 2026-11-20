@@ -36,21 +36,36 @@ variable "playground_mode" {
   description = "Deploy a throwaway platform that gets a random identifier suffix and stays destroyable. Cannot change after the first run."
 }
 
+variable "stackit_accelerator" {
+  type = object({
+    project_id            = string
+    service_account_email = string
+    service_account_id    = string
+  })
+  default     = null
+  description = "Existing STACKIT project, created by the STACKIT Landing Zone Accelerator, and a service account owning it. Set, the platform runs in that project as that account and registers a meshStack platform of its own for the project's tenant; null creates the project through `landingzone`."
+}
+
 variable "landingzone" {
   type = object({
-    platform_ref                               = object({ uuid = string })
-    landingzone_refs                           = map(object({ name = string }))
-    service_account_bbd_version_ref            = object({ uuid = string })
+    platform_ref                               = optional(object({ uuid = string }))
+    landingzone_refs                           = optional(map(object({ name = string })))
+    service_account_bbd_version_ref            = optional(object({ uuid = string }))
     service_account_federation_bbd_version_ref = object({ uuid = string })
   })
   nullable    = false
-  description = "Refs from the summary of the STACKIT Landing Zone building block this platform is built on."
+  description = "Refs from the summary of the STACKIT Landing Zone building block this platform is built on. With `stackit_accelerator` only `service_account_federation_bbd_version_ref` is read."
+
+  validation {
+    condition     = var.stackit_accelerator != null || (var.landingzone.platform_ref != null && var.landingzone.landingzone_refs != null && var.landingzone.service_account_bbd_version_ref != null)
+    error_message = "landingzone needs platform_ref, landingzone_refs and service_account_bbd_version_ref unless stackit_accelerator is set."
+  }
 }
 
 variable "landingzone_variant" {
   type        = string
   nullable    = false
-  description = "Key into `landingzone.landingzone_refs`. `networked` requires hub-and-spoke networking enabled on the landing zone."
+  description = "Key into `landingzone.landingzone_refs`. `networked` requires hub-and-spoke networking enabled on the landing zone. Ignored with `stackit_accelerator`."
 
   validation {
     condition     = contains(["default", "networked"], var.landingzone_variant)
@@ -257,6 +272,11 @@ variable "imports" {
   validation {
     condition     = var.imports == null || var.imports.project != null || alltrue([for key, adopted in var.imports : adopted == null || adopted == false if key != "starterkit_definitions"])
     error_message = "Every key of imports but starterkit_definitions needs imports.project, because what it names lives in that project."
+  }
+
+  validation {
+    condition     = var.stackit_accelerator == null || (var.imports == null ? null : var.imports.project) == null
+    error_message = "imports.project needs stackit_accelerator = null, because the accelerator's project is a tenant of a platform this building block creates."
   }
 
   validation {

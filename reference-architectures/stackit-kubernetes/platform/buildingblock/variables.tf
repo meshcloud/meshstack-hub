@@ -1,11 +1,11 @@
 variable "automation_identity" {
   type = object({
-    building_block_ref    = object({ uuid = string })
+    building_block_ref    = optional(object({ uuid = string }))
     service_account_email = string
     service_account_id    = string
   })
   nullable    = false
-  description = "Automation Identity building block and the STACKIT service account it created."
+  description = "Automation Identity building block and the STACKIT service account it created. `building_block_ref` is null for a service account no building block created, such as one of the STACKIT Landing Zone Accelerator."
 }
 
 variable "service_account_federation_bbd_version_ref" {
