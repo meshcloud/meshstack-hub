@@ -99,6 +99,7 @@ in one diagram to a box in another without reading the label.
 | ⚙️ | CI/CD wiring |
 | 🔀 | git repository |
 | 🧠 | model serving / AI API |
+| 🐘 | database |
 | 🛰️ | meshStack platform |
 | 🛬 | landing zone |
 | 📦 | building block definition |

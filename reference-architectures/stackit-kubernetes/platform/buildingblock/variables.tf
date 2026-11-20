@@ -111,6 +111,16 @@ variable "ai_model" {
   description = "Model applications default to. Must be one STACKIT Model Serving's `/v1/models` endpoint serves. Null sets up no Model Serving token and no `stackit-ai` secret."
 }
 
+variable "postgres" {
+  type = object({
+    ha_stages    = optional(list(string), ["prod"])
+    flavor       = optional(string, "2.4")
+    storage_size = optional(number, 5)
+  })
+  default     = null
+  description = "Shared PostgreSQL Flex instances, one per stage: three nodes for the stages in `ha_stages`, a single node for every other. Null orders none."
+}
+
 variable "starterkit_app_name" {
   type        = string
   nullable    = false

@@ -17,6 +17,11 @@ output "kube_host" {
   value       = terraform_data.kube_host.output
 }
 
+output "egress_address_ranges" {
+  description = "CIDR ranges that outgoing traffic of the cluster's workloads comes from."
+  value       = module.cluster.cluster.egress_address_ranges
+}
+
 output "vault_secret" {
   description = "`{path, secret_hash}` of the secret in Vault, where `secret_hash` changes with its content."
   value = {

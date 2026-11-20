@@ -17,6 +17,11 @@ run "stackit_kubernetes" {
   }
 
   assert {
+    condition     = can(regex("^[0-9a-f-]{36}$", try(jsondecode(jsondecode(meshstack_building_block.this.status.outputs["postgres"].value)).instances.dev.instance_id, "")))
+    error_message = "Expected the postgres output to name the shared instance of stage dev, got ${try(meshstack_building_block.this.status.outputs["postgres"].value, "no such output")}."
+  }
+
+  assert {
     condition     = strcontains(try(jsondecode(meshstack_building_block.this.status.outputs["summary"].value), ""), "One step left: create the Harbor robot account")
     error_message = "Expected the summary of a phase 1 order to ask for the Harbor robot."
   }

@@ -8,8 +8,9 @@ federation.
 It creates the platform's Secrets Manager instance with a writer and a reader user, an SKE cluster
 with a platform admin service account, in-cluster ingress (cert-manager, HAProxy and a Let's Encrypt
 ClusterIssuer), the meshStack replicator and metering identities, a DNS zone, a STACKIT Model
-Serving token when `ai_model` is set, a STACKIT Git instance, a container registry, and the
-meshStack SKE platform with one landing zone per stage.
+Serving token when `ai_model` is set, a STACKIT Git instance, a container registry, one shared
+PostgreSQL Flex instance per stage when `postgres` is set, and the meshStack SKE platform with one
+landing zone per stage.
 
 With a key of `imports` set (`adopt_ske`, `git`, `dns`, `adopt_ingress`, `secrets_manager`,
 `container_registry` or `kubernetes_platform`), the building block of that name takes over what
@@ -22,9 +23,9 @@ there.
 
 It **registers building block definitions of its own** — `stackit/secrets-manager`, `ske/cluster`,
 `kubernetes`, `kubernetes/ingress-controller`, `stackit/git`,
-`stackit/container-registry`, `stackit/dns` and `stackit/ai-llm` — and orders the landing zone's
-STACKIT Service Account Federation definition as a child of the Automation Identity, listing its
-STACKIT definitions in `federated_building_block_definitions`.
+`stackit/container-registry`, `stackit/dns`, `stackit/ai-llm` and `stackit/postgres` — and orders
+the landing zone's STACKIT Service Account Federation definition as a child of the Automation
+Identity, listing its STACKIT definitions in `federated_building_block_definitions`.
 
 No building block it orders outputs a secret. Each one that creates a credential writes it to the
 Secrets Manager with the writer user, through its `output_to_vault` input. This run reads what a

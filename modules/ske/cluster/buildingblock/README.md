@@ -27,7 +27,7 @@ place. `release_on_destroy` cannot change once the cluster is managed.
 ## Requirements
 
 | Name | Version |
-|------|---------|
+| ---- | ------- |
 | <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.12.0 |
 | <a name="requirement_kubernetes"></a> [kubernetes](#requirement\_kubernetes) | >= 3.0.0, < 4.0.0 |
 | <a name="requirement_stackit"></a> [stackit](#requirement\_stackit) | >= 0.113.0, < 1.0.0 |
@@ -36,13 +36,13 @@ place. `release_on_destroy` cannot change once the cluster is managed.
 ## Modules
 
 | Name | Source | Version |
-|------|--------|---------|
+| ---- | ------ | ------- |
 | <a name="module_cluster"></a> [cluster](#module\_cluster) | ./modules/ske-cluster | n/a |
 
 ## Resources
 
 | Name | Type |
-|------|------|
+| ---- | ---- |
 | [kubernetes_cluster_role_binding_v1.admin](https://registry.terraform.io/providers/hashicorp/kubernetes/latest/docs/resources/cluster_role_binding_v1) | resource |
 | [kubernetes_secret_v1.admin_token](https://registry.terraform.io/providers/hashicorp/kubernetes/latest/docs/resources/secret_v1) | resource |
 | [kubernetes_service_account_v1.admin](https://registry.terraform.io/providers/hashicorp/kubernetes/latest/docs/resources/service_account_v1) | resource |
@@ -53,7 +53,7 @@ place. `release_on_destroy` cannot change once the cluster is managed.
 ## Inputs
 
 | Name | Description | Type | Default | Required |
-|------|-------------|------|---------|:--------:|
+| ---- | ----------- | ---- | ------- | :------: |
 | <a name="input_admin_token_generation"></a> [admin\_token\_generation](#input\_admin\_token\_generation) | Month `YYYY-MM` of the current platform admin token. | `string` | n/a | yes |
 | <a name="input_cluster_name"></a> [cluster\_name](#input\_cluster\_name) | Name of the SKE cluster. | `string` | n/a | yes |
 | <a name="input_imports"></a> [imports](#input\_imports) | Set to `{}` to take over the existing SKE cluster `cluster_name`. | `object({})` | `null` | no |
@@ -67,9 +67,10 @@ place. `release_on_destroy` cannot change once the cluster is managed.
 ## Outputs
 
 | Name | Description |
-|------|-------------|
+| ---- | ----------- |
 | <a name="output_cluster_name"></a> [cluster\_name](#output\_cluster\_name) | Name of the SKE cluster. |
 | <a name="output_cluster_url"></a> [cluster\_url](#output\_cluster\_url) | Deep link to the cluster in the STACKIT portal. |
+| <a name="output_egress_address_ranges"></a> [egress\_address\_ranges](#output\_egress\_address\_ranges) | CIDR ranges that outgoing traffic of the cluster's workloads comes from. |
 | <a name="output_kube_host"></a> [kube\_host](#output\_kube\_host) | Kubernetes API server URL of the cluster. |
 | <a name="output_summary"></a> [summary](#output\_summary) | Markdown summary shown on the building block. |
 | <a name="output_vault_secret"></a> [vault\_secret](#output\_vault\_secret) | `{path, secret_hash}` of the secret in Vault, where `secret_hash` changes with its content. |

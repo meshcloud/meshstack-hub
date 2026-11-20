@@ -120,6 +120,7 @@ resource "meshstack_building_block" "platform_federation" {
             module.secrets_manager_integration.building_block_definition.uuid,
             module.dns_integration.building_block_definition.uuid,
           ],
+          var.postgres == null ? [] : [module.postgres_integration.building_block_definition.uuid],
         )))
       }
     }

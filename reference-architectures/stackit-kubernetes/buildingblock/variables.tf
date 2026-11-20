@@ -96,6 +96,21 @@ variable "starterkit_demo" {
   EOT
 }
 
+variable "postgres" {
+  type = object({
+    ha_stages    = optional(list(string))
+    flavor       = optional(string)
+    storage_size = optional(number)
+  })
+  default     = null
+  description = <<-EOT
+  Shared PostgreSQL Flex instances, one per stage; null orders none.
+  `ha_stages`: stages whose instance runs on three nodes, every other stage gets a single node; the default is `prod`.
+  `flavor`: size of each node as `<vCPU>.<RAM in GB>`; the default is `2.4`.
+  `storage_size`: storage in GB; the default is 5.
+  EOT
+}
+
 variable "dns_domain" {
   type        = string
   default     = null

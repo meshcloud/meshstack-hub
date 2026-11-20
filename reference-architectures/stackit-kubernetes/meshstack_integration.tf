@@ -139,6 +139,8 @@ resource "meshstack_building_block_definition" "this" {
       balancer.
     - **AI Model Serving** – a STACKIT Model Serving token every application namespace receives,
       unless Starter Kit Demo names no AI model.
+    - **Shared PostgreSQL** – one STACKIT PostgreSQL Flex instance per stage that only the cluster
+      reaches, if Shared PostgreSQL is set.
     - **STACKIT Git instance** – a managed Forgejo with its organization and a STACKIT-hosted shared
       runner.
     - **Container registry** – a Harbor project for the platform's application images, with the
@@ -339,6 +341,43 @@ resource "meshstack_building_block_definition" "this" {
               title       = "AI Model"
               default     = local.starterkit_demo_default.ai_model
               description = "Model applications default to; must be one STACKIT Model Serving's `/v1/models` endpoint serves. Leave it out to set up no Model Serving token and no `stackit-ai` secret in the namespaces."
+            }
+          }
+        })
+      }
+
+      postgres = {
+        display_name           = "Shared PostgreSQL"
+        description            = "Set it to get one STACKIT PostgreSQL Flex instance per stage in the hosting project, reachable from the cluster only. Leave out for none."
+        type                   = "JSON"
+        assignment_type        = "USER_INPUT"
+        is_optional            = true
+        updateable_by_consumer = true
+        display_order          = 40
+
+        json_schema = jsonencode({
+          "$schema"            = "http://json-schema.org/draft-07/schema#"
+          type                 = "object"
+          additionalProperties = false
+          properties = {
+            ha_stages = {
+              type        = "array"
+              title       = "Highly Available Stages"
+              description = "Stages whose instance runs on three nodes; every other stage gets a single node. Left out, `prod`."
+              items       = { type = "string" }
+            }
+            flavor = {
+              type        = "string"
+              title       = "Flavor"
+              description = "Size of each node as <vCPU>.<RAM in GB>. Left out, `2.4`."
+              enum        = ["2.4", "2.16", "4.8", "4.32", "8.16", "8.32", "16.32", "16.64", "16.128", "30.240"]
+            }
+            storage_size = {
+              type        = "integer"
+              title       = "Storage Size (GB)"
+              description = "Can grow, never shrink. Left out, 5."
+              minimum     = 5
+              maximum     = 4000
             }
           }
         })
@@ -661,6 +700,13 @@ resource "meshstack_building_block_definition" "this" {
         display_name    = "Open Hosting Project"
         type            = "STRING"
         assignment_type = "RESOURCE_URL"
+      }
+
+      postgres = {
+        display_name    = "Shared PostgreSQL"
+        description     = "JSON of the shared PostgreSQL instances by stage and what a database definition on them needs."
+        type            = "CODE"
+        assignment_type = "NONE"
       }
 
       summary = {

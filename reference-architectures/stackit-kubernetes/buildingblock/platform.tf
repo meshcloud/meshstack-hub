@@ -73,6 +73,7 @@ resource "meshstack_building_block" "platform" {
       starterkit_app_name        = { value = jsonencode(var.starterkit_demo.name) }
       starterkit_repo_clone_addr = { value = jsonencode(var.starterkit_demo.template_repo) }
       ai_model                   = { value = jsonencode(var.starterkit_demo.ai_model) }
+      postgres                   = { value = jsonencode(jsonencode(var.postgres)) }
 
       tags = { value = jsonencode(jsonencode({
         landingzone               = local.tag_maps.landingzone

@@ -35,12 +35,7 @@ variable "stackit_existing_instance_id" {
 variable "stackit_acl" {
   type        = list(string)
   default     = []
-  description = "Required for the instance variant. Default of the Allowed Sources input: IPv4 CIDR ranges allowed to connect, for example the egress address of the cluster the workloads run on (`stackit ske cluster describe <name>`, `status.egressAddressRanges`)."
-
-  validation {
-    condition     = var.database_only || length(var.stackit_acl) > 0
-    error_message = "The instance variant needs stackit_acl."
-  }
+  description = "Default of the Allowed Sources input of the instance variant: IPv4 CIDR ranges allowed to connect, for example the egress address of the cluster the workloads run on (`stackit ske cluster describe <name>`, `status.egressAddressRanges`). Empty gives the input no default, so every order names its sources."
 }
 
 variable "bbd_display_name" {
@@ -98,7 +93,7 @@ output "building_block_definition" {
   description = "BBD is consumed in building block compositions."
   value = {
     uuid        = meshstack_building_block_definition.this.metadata.uuid
-    version_ref = var.hub.bbd_draft ? meshstack_building_block_definition.this.version_latest : meshstack_building_block_definition.this.version_latest_release
+    version_ref = meshstack_building_block_definition.this.version_latest
   }
 }
 
@@ -196,7 +191,7 @@ locals {
       description            = "HCL list of IPv4 CIDR ranges allowed to connect. The instance accepts no other source."
       type                   = "CODE"
       assignment_type        = "USER_INPUT"
-      default_value          = jsonencode(jsonencode(var.stackit_acl))
+      default_value          = length(var.stackit_acl) == 0 ? null : jsonencode(jsonencode(var.stackit_acl))
       updateable_by_consumer = true
       display_order          = 9
     }

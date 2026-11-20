@@ -29,6 +29,8 @@ buildingBlocks:
     role: Creates the DNS zone application hostnames are built under, with a wildcard record pointing at the ingress load balancer, and the DNS-01 solver for the wildcard certificate.
   - path: stackit/ai-llm
     role: Mints the STACKIT Model Serving token that reaches every application namespace as the `stackit-ai` secret.
+  - path: stackit/postgres
+    role: Optional. Provides one shared PostgreSQL Flex instance per stage that only the cluster reaches, for a database definition per landing zone to build on.
   - path: stackit/container-registry
     role: Creates the platform's Harbor project, mirrors the template's base images into it and mints the push and pull robots.
   - path: ske/ske-starterkit
@@ -121,6 +123,7 @@ The main inputs:
 | Playground Mode | Throwaway deployment, on by default; turn it off for a platform that is used; fixed at the order. It hides Starterkit Random Name Suffix (always on), DNS Domain (always `<platform identifier>.stackit.run`) and both approval policies (no gates) |
 | Payment Method | One of the workspace's payment methods, for the platform's own project |
 | Starter Kit Demo | What the starter kit builds: image `name`, `template_repo` and `ai_model`, `ai-summarizer` from the likvid-bank template on `openai/gpt-oss-120b` by default. Without `ai_model` the platform sets up no Model Serving token and no `stackit-ai` secret |
+| Shared PostgreSQL | Optional; see [Shared PostgreSQL](#shared-postgresql) |
 | DNS Domain | The platform's DNS zone under a free STACKIT domain (`stackit.run`, `stackit.zone`, `stackit.rocks`, `stackit.gg`, `runs.onstackit.cloud`): a bare one gives `<platform identifier>.stackit.run`, one label more such as `likvid.stackit.run` is the zone itself; `stackit.run` by default |
 | Stages | One landing zone per named stage, with stage-specific tags and optional quotas; `dev` and `prod` by default |
 | Quota Definitions | The quotas the meshPlatform offers; a stage's `quotas` entry names one by its `quota_key` |
@@ -135,8 +138,9 @@ otherwise no tenant can be created on the landing zone.
 
 **Overrides** replaces generated values, each optional: `cluster_name`, `cluster_issuer_email` (the
 platform's service account by default) and `project_identifier` (`<platform identifier>-ske` by
-default). The building block outputs a link to the STACKIT project
-and the summary of STACKIT Kubernetes Platform Services.
+default). The building block outputs a link to the STACKIT project, the summary of STACKIT
+Kubernetes Platform Services and, as `postgres`, the [shared PostgreSQL](#shared-postgresql)
+instances.
 
 ### Landing zone
 
@@ -167,6 +171,18 @@ management permissions and link it to the platform's service account. Then set *
 Completed** to true. The next run mints the push and pull robots and registers the **STACKIT Git
 Repository**, **SKE Forgejo Connector** and **SKE Starterkit** definitions. The run fails while no
 robot is linked.
+
+### Shared PostgreSQL
+
+With the optional **Shared PostgreSQL** input set, `{}` for the defaults, the platform registers
+the instance variant of [`stackit/postgres`](../../modules/stackit/postgres/buildingblock/README.md)
+and orders one instance per stage in its project: three nodes for the stages in `ha_stages` (`prod`
+by default), a single node for every other, of the smallest `flavor` and `storage_size` unless set.
+The instances are in `eu01`, and only the cluster's egress address ranges may connect. They hold
+no database. Databases come from the module's database variant, which a foundation registers once
+per landing zone on that stage's instance, as a connector that writes the credentials into the
+namespace. The summary and the `postgres` output list the instance IDs, the project and the service
+account that definition needs. **Imports** takes over no existing instance.
 
 ### Approval gates
 

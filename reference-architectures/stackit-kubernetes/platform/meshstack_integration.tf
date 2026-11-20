@@ -122,6 +122,7 @@ resource "meshstack_building_block_definition" "this" {
     - **Platform services** – HAProxy ingress, cert-manager and the meshStack replication and
       metering service accounts.
     - **DNS zone**, **AI Model Serving** token, **STACKIT Git instance** and **container registry**.
+    - **Shared PostgreSQL** – one PostgreSQL Flex instance per stage, if Shared PostgreSQL is set.
     - **meshStack SKE platform** – a Kubernetes platform with one landing zone per stage.
 
     ## 🔑 Authentication
@@ -337,6 +338,16 @@ resource "meshstack_building_block_definition" "this" {
         display_order          = 170
       }
 
+      postgres = {
+        display_name           = "Shared PostgreSQL"
+        description            = "HCL object `{ha_stages?, flavor?, storage_size?}` that orders one PostgreSQL Flex instance per stage. Null orders none."
+        type                   = "CODE"
+        assignment_type        = "USER_INPUT"
+        is_optional            = true
+        updateable_by_consumer = true
+        display_order          = 175
+      }
+
       starterkit_app_name = {
         display_name           = "Starter Kit Image Name"
         description            = "Image name every application ordered from the starter kit builds under."
@@ -447,6 +458,13 @@ resource "meshstack_building_block_definition" "this" {
     }
 
     outputs = {
+      postgres = {
+        display_name    = "Shared PostgreSQL"
+        description     = "JSON of the shared PostgreSQL instances by stage and what a database definition on them needs."
+        type            = "CODE"
+        assignment_type = "NONE"
+      }
+
       summary = {
         display_name    = "Summary"
         type            = "STRING"
