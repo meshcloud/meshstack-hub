@@ -355,7 +355,7 @@ What a backplane does with the identities depends on the cloud:
 |---|---|---|
 | AWS | `runner_identities = module.runner.identities` | one statement per runner in the trust policy of the role |
 | Azure, STACKIT | `trusted_runner_identities = module.runner.trusted_identities`, next to `workload_identity_federation` for the current runner | one federated credential per trusted runner |
-| GCP | `trusted_runner_identities`, the identity of the current runner in `workload_identity_federation_trust`, the uuid of the current runner and of `meshstack.original_runner_ref` | one identity provider per runner |
+| GCP, OTC | `trusted_runner_identities`, the identity of the current runner (GCP: `workload_identity_federation_trust`, OTC: `workload_identity_federation`), the uuid of the current runner and of `meshstack.original_runner_ref` | one identity provider per runner |
 
 The module takes the subject of an entry from a version. So the entry of a trusted runner has a
 null subject if no version uses the runner. The AWS backplane then omits the entry from the trust
@@ -365,15 +365,16 @@ same apply changes the runner.
 So list a runner only for a module whose definition has a released version that uses it. Do not
 pass one list to all modules.
 
-#### `meshstack.original_runner_ref` (GCP)
+#### `meshstack.original_runner_ref` (GCP and OTC)
 
-On GCP the backplane creates one identity provider per runner, as a pool provider. A static input
-of each version contains the name of the identity provider for the runner of that version. This
-input is `CREDENTIALS_FILE`. Nobody can edit a released version. So the backplane must not rename
-an identity provider while a building block is on such a version.
+On GCP and OTC the backplane creates one identity provider per runner. A static input of each
+version contains the name of the identity provider for the runner of that version. On GCP this
+input is `CREDENTIALS_FILE`, on OTC it is `OTC_IDENTITY_PROVIDER`. Nobody can edit a released
+version. So the backplane must not rename an identity provider while a building block is on such a
+version.
 
 The *base name* is the name of the identity provider in a module without trusted runners. On GCP it
-is `workload_identity.pool_identifier`.
+is `workload_identity.pool_identifier`, on OTC it is the `name` of the backplane.
 
 - While `original_runner_ref` is null, the backplane gives the base name to the identity provider
   for the current runner. Every deployment is in this state before its first switch.
