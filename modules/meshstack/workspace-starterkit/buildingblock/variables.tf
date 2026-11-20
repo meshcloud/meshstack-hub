@@ -69,12 +69,11 @@ variable "platform_ref" {
 
 variable "tenant_building_block" {
   type = object({
-    definition_ref         = object({ uuid = string })
     definition_version_ref = object({ uuid = string })
     display_name           = string
   })
   default     = null
-  description = "Building block ordered on the tenant, or adopted when the tenant has one of `definition_ref` already. Null orders none."
+  description = "Building block ordered on the tenant. Null orders none."
 }
 
 variable "landing_zone_ref" {

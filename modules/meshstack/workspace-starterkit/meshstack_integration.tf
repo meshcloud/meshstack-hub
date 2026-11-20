@@ -88,12 +88,11 @@ variable "project_identifier_error_message" {
 
 variable "tenant_building_block" {
   type = object({
-    definition_ref         = object({ uuid = string })
     definition_version_ref = object({ uuid = string })
     display_name           = string
   })
   default     = null
-  description = "Building block to order on the tenant, for a landing zone that offers its platform's main building block in the marketplace rather than running it on tenant creation, such as `STACKIT Project`. A tenant that has a block of `definition_ref` already, from the time it was a mandatory building block, keeps it. It may be a draft of another workspace: the backplane's API key is admin-scoped. Null orders none."
+  description = "Building block to order on the tenant, for a landing zone that offers its platform's main building block in the marketplace rather than running it on tenant creation, such as `STACKIT Project`. It may be a draft of another workspace: the backplane's API key is admin-scoped. Null orders none."
 }
 
 variable "bbd_readme" {
