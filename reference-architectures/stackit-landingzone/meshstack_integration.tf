@@ -119,9 +119,8 @@ locals {
       schema_version  = { type = "integer", title = "schema_version", enum = [1] }
       organization_id = { type = "string", title = "organization_id" }
       targets = {
-        type          = "object"
-        title         = "targets"
-        minProperties = 1
+        type  = "object"
+        title = "targets"
         additionalProperties = {
           type     = "object"
           required = ["folder_id", "region", "corporate"]
