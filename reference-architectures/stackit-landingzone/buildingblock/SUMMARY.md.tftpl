@@ -21,16 +21,16 @@
 %{ if network_enabled ~}
 | **Hub Network Area** | [Open in STACKIT Portal](${network_area_url}) (`${network_area_id}`) |
 | **Hub Network Area Building Block** | @buildingblock[${network_area_hub_uuid}] |
-| **Networked Landing Zone** | `${networked_landingzone_name}` |
+| **Spoke Landing Zone** | `${spoke_landingzone_name}` |
 %{ endif ~}
 
 %{ if network_enabled ~}
-Hub-and-spoke networking is enabled. Application teams can order the **STACKIT Network** building
-block inside their own projects in the `${networked_landingzone_name}` landing zone to get a routed
+Hub&spoke networking is enabled. Application teams can order the **STACKIT Network** building
+block inside their own projects in the `${spoke_landingzone_name}` landing zone to get a
 spoke network drawn from the hub's address plan.
 %{ else ~}
 Application teams can now request STACKIT projects against the `${platform_identifier}-default`
-landing zone. Provide a `network` object to additionally enable hub-and-spoke networking.
+landing zone. Provide a `network` object to additionally enable hub&spoke networking.
 %{ endif ~}
 
 > [!TIP]
@@ -54,7 +54,7 @@ landing zone. Provide a `network` object to additionally enable hub-and-spoke ne
 > ```
 %{ if network_enabled ~}
 >
-> Set its **Landing Zone Variant** to `networked` to run the cluster inside the hub-and-spoke network.
+> Set its **Landing Zone Variant** to `spoke` to run the cluster inside the hub&spoke network.
 > Otherwise keep the default `default`, which puts the cluster in a **STACKIT Sandbox** project with
 > STACKIT's default flat networking.
 %{ endif ~}

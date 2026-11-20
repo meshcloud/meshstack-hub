@@ -3,8 +3,8 @@ name: STACKIT Landing Zone
 description: >
   Bootstraps a self-service-ready STACKIT platform: a dedicated STACKIT resourcemanager folder,
   a foundation project with a service account, and the STACKIT Project platform with a default
-  landing zone. Optionally layers on a hub-and-spoke network topology — a shared network-area
-  address plan (hub) and a self-service routed-network building block (spoke) — when a network
+  landing zone. Optionally layers on a hub&spoke network topology — a shared network-area
+  address plan (hub) and a self-service spoke network building block — when a network
   configuration is provided.
 cloudProviders:
   - stackit
@@ -16,7 +16,7 @@ buildingBlocks:
   - path: stackit/network-area
     role: (Optional) Provisions the hub network area with the shared IPv4 address plan.
   - path: stackit/network
-    role: (Optional) Lets application teams self-service order routed spoke networks inside their projects.
+    role: (Optional) Lets application teams self-service order spoke networks inside their projects.
 ---
 
 # STACKIT Landing Zone
@@ -32,8 +32,8 @@ Project** platform with its default landing zone. Application teams can immediat
 STACKIT projects against it.
 
 Optionally, by providing a **network** configuration, the same building block layers on a
-hub-and-spoke network topology with IPAM built in: a shared network-area address plan (the hub)
-that all tenant projects draw from, and a self-service routed-network building block (the spoke)
+hub&spoke network topology with IPAM built in: a shared network-area address plan (the hub)
+that all tenant projects draw from, and a self-service spoke network building block
 application teams can order inside their own projects. Leaving the network configuration unset
 deploys only the sandbox foundation.
 
@@ -58,7 +58,7 @@ teams. Everything marked *optional* only appears when a network configuration is
 
 ![STACKIT Landing Zone reference architecture](stackit-landingzone.svg)
 
-When networking is enabled, application teams order a routed network into their own project via the
+When networking is enabled, application teams order a spoke network into their own project via the
 self-service `stackit/network` building block; each order draws its subnet from the hub's address
 plan, so no two spokes can accidentally collide on CIDR ranges.
 
@@ -84,7 +84,7 @@ When a **network** configuration is provided, it additionally:
    definition and immediately orders **one instance** of it in the platform team's own workspace —
    this is the hub's IPv4 address plan.
 6. Registers the [`stackit/network`](../../modules/stackit/network) building block definition
-   (`TENANT_LEVEL`) so application teams can self-service order routed networks (spokes) inside
+   (`TENANT_LEVEL`) so application teams can self-service order spoke networks inside
    their STACKIT projects, drawing from the hub's address plan.
 7. Provisions an additional **spoke landing zone**. The `STACKIT Project` building block reads
    the landing zone of its tenant and labels projects on this one with the hub's network area ID,
@@ -234,7 +234,7 @@ false`, because nothing taken over is released on destroy.
 |---|---|
 | `folder = {container_id}` | the landing-zone folder, renamed to the platform identifier |
 | `foundation_project = {container_id}` | the foundation project, renamed to `<platform identifier>-foundation` |
-| `adopt_platform = true` | the location (unless **Use Global Location**), the STACKIT platform `<platform identifier>` in it and its landing zones `<platform identifier>-default` and, with `hub&spoke`, `-networked` |
+| `adopt_platform = true` | the location (unless **Use Global Location**), the STACKIT platform `<platform identifier>` in it and its landing zones `<platform identifier>-default` and, with `hub&spoke`, `-spoke` |
 | `project_definition = {uuid, service_account_name, service_account_email, federated_identity_provider_ids}` | the STACKIT Project definition and its backplane: the project-creation service account, its federated identity providers in the order of the subjects they trust, and its organization roles |
 | `service_account_definition = {uuid, service_account_email, federated_identity_provider_ids}` | the STACKIT Service Account definition and its backplane |
 | `service_account_federation_definition = {uuid, service_account_email, federated_identity_provider_ids}` | the STACKIT Service Account Federation definition and its backplane |

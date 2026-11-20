@@ -2,7 +2,7 @@
 name: STACKIT Landing Zone
 supportedPlatforms:
   - stackit
-description: Onboards a STACKIT sandbox platform into meshStack (location, resourcemanager folder and STACKIT Project platform with its default landing zone), and optionally layers on a hub-and-spoke network topology.
+description: Onboards a STACKIT sandbox platform into meshStack (location, resourcemanager folder and STACKIT Project platform with its default landing zone), and optionally layers on a hub&spoke network topology.
 ---
 
 This building block bootstraps a complete STACKIT sandbox platform integration inside a meshStack
@@ -15,8 +15,8 @@ When a `network` object is supplied, it additionally composes two more Hub modul
 offering: it registers [`modules/stackit/network-area`](../../../modules/stackit/network-area) and
 immediately orders one instance of it as the hub address plan, and registers
 [`modules/stackit/network`](../../../modules/stackit/network) so application teams can self-service
-order routed spoke networks inside their STACKIT projects. New STACKIT projects are then placed in
-the hub's network area through an additional `networked` project definition and landing zone, which
+order spoke networks inside their STACKIT projects. New STACKIT projects are then placed in
+the hub's network area through an additional `spoke` project definition and landing zone, which
 set the network area as a static label on the project. Leaving `network` unset (`null`) deploys only
 the sandbox landing zone.
 

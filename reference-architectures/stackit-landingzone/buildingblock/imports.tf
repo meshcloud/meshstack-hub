@@ -11,7 +11,7 @@ locals {
   # Spelled out because the location resource's own name would defer the platform lookup to apply.
   adopted_location_name = var.use_global_location ? "global" : local.platform_identifier
 
-  adopted_landingzone_variants = concat(["default"], local.network_enabled ? ["networked"] : [])
+  adopted_landingzone_variants = concat(["default"], local.network_enabled ? ["spoke"] : [])
 
   adopted_foundation_project_id = local.imports.foundation_project == null ? null : data.stackit_resourcemanager_project.adopted.project_id
 

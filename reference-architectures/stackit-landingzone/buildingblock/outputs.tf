@@ -35,11 +35,11 @@ output "summary" {
     service_account_email  = module.stackit_integration.service_account_email
     service_account_url    = "https://portal.stackit.cloud/service-accounts/${module.stackit_integration.service_account_email}/overview?project=${stackit_resourcemanager_project.foundation.project_id}"
 
-    network_enabled            = local.network_enabled
-    networked_landingzone_name = local.network_enabled ? module.stackit_integration.landingzone_refs["networked"].name : ""
-    network_area_hub_uuid      = local.network_enabled ? meshstack_building_block.network_area_hub.metadata.uuid : ""
-    network_area_id            = local.network_enabled ? local.network_area_id : ""
-    network_area_url           = local.network_enabled ? "https://portal.stackit.cloud/network-area/network-areas/${local.network_area_id}/overview?organization=${var.stackit_org}" : ""
+    network_enabled        = local.network_enabled
+    spoke_landingzone_name = local.network_enabled ? module.stackit_integration.landingzone_refs["spoke"].name : ""
+    network_area_hub_uuid  = local.network_enabled ? meshstack_building_block.network_area_hub.metadata.uuid : ""
+    network_area_id        = local.network_enabled ? local.network_area_id : ""
+    network_area_url       = local.network_enabled ? "https://portal.stackit.cloud/network-area/network-areas/${local.network_area_id}/overview?organization=${var.stackit_org}" : ""
 
     platform_ref                                = module.stackit_integration.platform_ref
     landingzone_refs                            = module.stackit_integration.landingzone_refs

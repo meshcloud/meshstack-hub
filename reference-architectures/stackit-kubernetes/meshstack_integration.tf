@@ -277,11 +277,11 @@ resource "meshstack_building_block_definition" "this" {
 
       landingzone_variant = {
         display_name    = "Landing Zone Variant"
-        description     = "Landing zone the hosting project is created in. `networked` requires hub-and-spoke networking enabled on the STACKIT Landing Zone."
+        description     = "Landing zone the hosting project is created in. `spoke` requires hub&spoke networking enabled on the STACKIT Landing Zone."
         type            = "SINGLE_SELECT"
         assignment_type = "USER_INPUT"
-        # TODO only include 'networked' if enabled in stackit lz ref arch (add 'network_enabled' variable here, default false?)
-        selectable_values = ["default", "networked"]
+        # TODO only include 'spoke' if enabled in stackit lz ref arch (add 'network_enabled' variable here, default false?)
+        selectable_values = ["default", "spoke"]
         default_value     = jsonencode("default")
         display_order     = 28
       }

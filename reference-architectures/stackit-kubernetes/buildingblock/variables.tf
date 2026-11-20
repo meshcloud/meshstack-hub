@@ -50,11 +50,11 @@ variable "landingzone" {
 variable "landingzone_variant" {
   type        = string
   nullable    = false
-  description = "Key into `landingzone.landingzone_refs`. `networked` requires hub-and-spoke networking enabled on the landing zone."
+  description = "Key into `landingzone.landingzone_refs`. `spoke` requires hub&spoke networking enabled on the landing zone."
 
   validation {
-    condition     = contains(["default", "networked"], var.landingzone_variant)
-    error_message = "landingzone_variant must be either default or networked."
+    condition     = contains(["default", "spoke"], var.landingzone_variant)
+    error_message = "landingzone_variant must be either default or spoke."
   }
 }
 

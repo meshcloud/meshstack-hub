@@ -138,7 +138,7 @@ resource "meshstack_building_block_definition" "this" {
     display_name          = coalesce(var.bbd_display_name, "STACKIT Landing Zone Reference Architecture")
     display_name_template = "STACKIT Landing Zone {{platform_identifier}}"
     symbol                = "https://raw.githubusercontent.com/meshcloud/meshstack-hub/${var.hub.git_ref}/reference-architectures/stackit-landingzone/buildingblock/logo.png"
-    description           = coalesce(var.bbd_description, "Onboards a STACKIT sandbox platform into meshStack: a location, resourcemanager folder and the STACKIT Project platform with its default landing zone. Optionally layers on a hub-and-spoke network topology when a network config is provided.")
+    description           = coalesce(var.bbd_description, "Onboards a STACKIT sandbox platform into meshStack: a location, resourcemanager folder and the STACKIT Project platform with its default landing zone. Optionally layers on a hub&spoke network topology when a network config is provided.")
     support_url           = "https://portal.stackit.cloud"
     target_type           = "WORKSPACE_LEVEL"
     run_transparency      = true
@@ -152,8 +152,8 @@ resource "meshstack_building_block_definition" "this" {
     together with its default landing zone.
 
     Optionally, when you provide a **network** configuration, it additionally layers on a
-    hub-and-spoke network topology: a shared network-area address plan (the hub) and a self-service
-    routed-network building block (the spoke) that application teams can order inside their own
+    hub&spoke network topology: a shared network-area address plan (the hub) and a self-service
+    spoke network building block that application teams can order inside their own
     STACKIT projects.
 
     ## 🎯 When to use it
@@ -162,7 +162,7 @@ resource "meshstack_building_block_definition" "this" {
     - want to onboard STACKIT in meshStack without manually creating locations, folders and project platform wiring.
     - need a reusable setup for sandbox environments where application teams can request STACKIT projects self-service.
     - (optionally) want all tenant projects to draw from a single, non-overlapping IPv4 address plan
-      and let application teams self-service order routed subnets — enable this by providing the
+      and let application teams self-service order spoke networks — enable this by providing the
       **network** configuration.
 
     ## 💡 Usage examples
@@ -171,12 +171,12 @@ resource "meshstack_building_block_definition" "this" {
     A platform engineer runs this building block once for a workspace to bootstrap the STACKIT location, landing-zone folder
     and default `STACKIT Project` platform so teams can start requesting projects immediately.
 
-    **Example 2: Bootstrap with hub-and-spoke networking**
+    **Example 2: Bootstrap with hub&spoke networking**
     A platform engineer provides a **network** configuration (CIDR plan, prefix bounds). In addition
     to the sandbox platform, the building block provisions the hub network area with the chosen
-    address plan, registers the **STACKIT Network** building block, and adds a dedicated `networked`
+    address plan, registers the **STACKIT Network** building block, and adds a dedicated `spoke`
     STACKIT Project building block definition plus landing zone whose projects are placed in the hub
-    network area. Application teams can then self-service order routed spoke networks inside their projects.
+    network area. Application teams can then self-service order spoke networks inside their projects.
 
     A **network** configuration looks like this (sensible example values shown — adapt them to your
     own address plan):
@@ -353,7 +353,7 @@ resource "meshstack_building_block_definition" "this" {
 
       topology = {
         display_name      = "Topology"
-        description       = "Landing zones to deploy and offer application teams: `sandbox` and/or `hub&spoke` (the latter also provisions hub-and-spoke networking and reveals the Network form). The starterkit defaults to `sandbox` when selected, else `hub&spoke`."
+        description       = "Landing zones to deploy and offer application teams: `sandbox` and/or `hub&spoke` (the latter also provisions hub&spoke networking and reveals the Network form). The starterkit defaults to `sandbox` when selected, else `hub&spoke`."
         type              = "MULTI_SELECT"
         assignment_type   = "USER_INPUT"
         selectable_values = ["sandbox", "hub&spoke"]
@@ -362,8 +362,8 @@ resource "meshstack_building_block_definition" "this" {
       }
 
       network = {
-        display_name           = "Network (Hub-and-Spoke)"
-        description            = "Hub-and-spoke address plan. Shown only when `hub&spoke` is selected; every field defaults to a sensible plan the operator can adjust."
+        display_name           = "Network (hub&spoke)"
+        description            = "Hub&spoke address plan. Shown only when `hub&spoke` is selected; every field defaults to a sensible plan the operator can adjust."
         type                   = "JSON"
         assignment_type        = "USER_INPUT"
         updateable_by_consumer = true

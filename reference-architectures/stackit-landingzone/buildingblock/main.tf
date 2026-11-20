@@ -28,7 +28,7 @@ locals {
     substr(sha256(local.platform_identifier), 0, 4)
   )
 
-  # Selecting `hub&spoke` deploys hub-and-spoke networking. The `network` input is hidden (and so
+  # Selecting `hub&spoke` deploys hub&spoke networking. The `network` input is hidden (and so
   # unset) unless it is selected, so the topology — not the presence of a network object — gates it.
   network_enabled = contains(var.topology, "hub&spoke")
 
@@ -132,7 +132,7 @@ resource "stackit_resourcemanager_project" "foundation" {
   }
 }
 
-# The sandbox landing zone called this project `backplane`. Unifying the sandbox and hub-and-spoke
+# The sandbox landing zone called this project `backplane`. Unifying the sandbox and hub&spoke
 # architectures renamed it to `foundation`, because it now holds more than the backplane service
 # account. Without this move a deployed landing zone destroys the project, and with it the
 # project-creation service account the platform runs as.
@@ -177,7 +177,7 @@ module "stackit_project_starterkit" {
   platform_ref = module.stackit_integration.platform_ref
   landing_zone_refs = merge(
     contains(var.topology, "sandbox") ? { "sandbox" = module.stackit_integration.landingzone_refs["default"] } : {},
-    local.network_enabled ? { "hub&spoke" = module.stackit_integration.landingzone_refs["networked"] } : {}
+    local.network_enabled ? { "hub&spoke" = module.stackit_integration.landingzone_refs["spoke"] } : {}
   )
 
   default_landing_zone = contains(var.topology, "sandbox") ? "sandbox" : "hub&spoke"

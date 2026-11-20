@@ -28,7 +28,7 @@ digraph stackit_landingzone {
     NA     [label="🌐 Network Area ×1\nshared IPv4 address plan · hub" fillcolor="#e5f2ea" color="#85bfa0"]
     PRJ    [label="🗂️ STACKIT Project ×N" fillcolor="#e5f2ea" color="#85bfa0"]
     SA     [label="🤖 Service Account ×N\nproject roles · WIF" fillcolor="#e5f2ea" color="#85bfa0"]
-    SPOKE  [label="🔌 Routed Network ×N\nspoke subnet" fillcolor="#e5f2ea" color="#85bfa0"]
+    SPOKE  [label="🔌 Spoke Network ×N\nsubnet" fillcolor="#e5f2ea" color="#85bfa0"]
 
     { rank=same; FOUND -> FOLDER -> NA [style=invis] }
 
@@ -51,7 +51,7 @@ digraph stackit_landingzone {
 
     PLAT     [label="🛰️ STACKIT Project Platform" fillcolor="#ecedfb" color="#9aa2e6"]
     DEFLZ    [label="🛬 Default Landing Zone" fillcolor="#ecedfb" color="#9aa2e6"]
-    NETLZ    [label="🛬 Networked Landing Zone\noptional · with network config" fillcolor="#ecedfb" color="#9aa2e6"]
+    NETLZ    [label="🛬 Spoke Landing Zone\noptional · with network config" fillcolor="#ecedfb" color="#9aa2e6"]
     PRJBBD   [label="📦 stackit/project BBD" fillcolor="#ecedfb" color="#9aa2e6"]
     SABBD    [label="📦 stackit/service-account BBD\ntenant-level self-service" fillcolor="#ecedfb" color="#9aa2e6"]
     NABBD    [label="📦 stackit/network-area BBD\noptional · platform team orders it once" fillcolor="#ecedfb" color="#9aa2e6"]

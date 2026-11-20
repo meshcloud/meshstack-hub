@@ -60,7 +60,7 @@ variable "stackit_owner_email" {
 variable "topology" {
   type        = list(string)
   nullable    = false
-  description = "Landing zone labels to deploy and offer application teams. `sandbox` deploys the sandbox landing zone; `hub&spoke` also provisions the hub-and-spoke networking. The starterkit defaults to `sandbox` when selected, else `hub&spoke`."
+  description = "Landing zone labels to deploy and offer application teams. `sandbox` deploys the sandbox landing zone; `hub&spoke` also provisions the hub&spoke networking. The starterkit defaults to `sandbox` when selected, else `hub&spoke`."
 
   validation {
     condition     = length(var.topology) > 0 && alltrue([for t in var.topology : contains(["sandbox", "hub&spoke"], t)])
@@ -81,7 +81,7 @@ variable "network" {
     tenant_network_max_prefix_length = optional(number, 28)
   })
   default     = null
-  description = "Hub-and-spoke address plan, read only when `topology` includes `hub&spoke`. Otherwise the input is hidden and meshStack sends no value."
+  description = "Hub&spoke address plan, read only when `topology` includes `hub&spoke`. Otherwise the input is hidden and meshStack sends no value."
 }
 
 variable "role_mapping" {

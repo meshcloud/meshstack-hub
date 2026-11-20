@@ -105,16 +105,16 @@
 <!-- SPOKE -->
 <g id="node8" class="node">
 <title>SPOKE</title>
-<path fill="#e5f2ea" stroke="#85bfa0" stroke-width="1.1" d="M345.03,-68.24C345.03,-68.24 228.97,-68.24 228.97,-68.24 222.97,-68.24 216.97,-62.24 216.97,-56.24 216.97,-56.24 216.97,-38 216.97,-38 216.97,-32 222.97,-26 228.97,-26 228.97,-26 345.03,-26 345.03,-26 351.03,-26 357.03,-32 357.03,-38 357.03,-38 357.03,-56.24 357.03,-56.24 357.03,-62.24 351.03,-68.24 345.03,-68.24"/>
-<text xml:space="preserve" text-anchor="middle" x="287" y="-50.42" font-family="Helvetica,sans-Serif" font-size="11.00">🔌 Routed Network ×N</text>
-<text xml:space="preserve" text-anchor="middle" x="287" y="-37.22" font-family="Helvetica,sans-Serif" font-size="11.00">spoke subnet</text>
+<path fill="#e5f2ea" stroke="#85bfa0" stroke-width="1.1" d="M340.89,-68.24C340.89,-68.24 229.11,-68.24 229.11,-68.24 223.11,-68.24 217.11,-62.24 217.11,-56.24 217.11,-56.24 217.11,-38 217.11,-38 217.11,-32 223.11,-26 229.11,-26 229.11,-26 340.89,-26 340.89,-26 346.89,-26 352.89,-32 352.89,-38 352.89,-38 352.89,-56.24 352.89,-56.24 352.89,-62.24 346.89,-68.24 340.89,-68.24"/>
+<text xml:space="preserve" text-anchor="middle" x="285" y="-50.42" font-family="Helvetica,sans-Serif" font-size="11.00">🔌 Spoke Network ×N</text>
+<text xml:space="preserve" text-anchor="middle" x="285" y="-37.22" font-family="Helvetica,sans-Serif" font-size="11.00">subnet</text>
 </g>
 <!-- NA&#45;&gt;SPOKE -->
 <g id="edge10" class="edge">
 <title>NA&#45;&gt;SPOKE</title>
-<path fill="none" stroke="#8b95a3" stroke-dasharray="5,2" d="M614,-225.93C614,-175.58 614,-54 614,-54 614,-54 366.07,-54 366.07,-54"/>
-<polygon fill="#8b95a3" stroke="#8b95a3" points="366.07,-51.55 359.07,-54 366.07,-56.45 366.07,-51.55"/>
-<text xml:space="preserve" text-anchor="middle" x="543.49" y="-56.7" font-family="Helvetica,sans-Serif" font-size="9.00" fill="#697180">assigns CIDR to</text>
+<path fill="none" stroke="#8b95a3" stroke-dasharray="5,2" d="M614,-225.93C614,-175.58 614,-54 614,-54 614,-54 361.68,-54 361.68,-54"/>
+<polygon fill="#8b95a3" stroke="#8b95a3" points="361.68,-51.55 354.68,-54 361.68,-56.45 361.68,-51.55"/>
+<text xml:space="preserve" text-anchor="middle" x="541.29" y="-56.7" font-family="Helvetica,sans-Serif" font-size="9.00" fill="#697180">assigns CIDR to</text>
 </g>
 <!-- SA -->
 <g id="node7" class="node">
@@ -133,9 +133,9 @@
 <!-- PRJ&#45;&gt;SPOKE -->
 <g id="edge9" class="edge">
 <title>PRJ&#45;&gt;SPOKE</title>
-<path fill="none" stroke="#8b95a3" d="M186.19,-128.85C186.19,-99.92 186.19,-47 186.19,-47 186.19,-47 207.93,-47 207.93,-47"/>
-<polygon fill="#8b95a3" stroke="#8b95a3" points="207.93,-49.45 214.93,-47 207.93,-44.55 207.93,-49.45"/>
-<text xml:space="preserve" text-anchor="middle" x="169.43" y="-79.76" font-family="Helvetica,sans-Serif" font-size="9.00" fill="#697180">contains</text>
+<path fill="none" stroke="#8b95a3" d="M186.19,-128.85C186.19,-99.92 186.19,-47 186.19,-47 186.19,-47 208.13,-47 208.13,-47"/>
+<polygon fill="#8b95a3" stroke="#8b95a3" points="208.13,-49.45 215.13,-47 208.13,-44.55 208.13,-49.45"/>
+<text xml:space="preserve" text-anchor="middle" x="169.43" y="-79.66" font-family="Helvetica,sans-Serif" font-size="9.00" fill="#697180">contains</text>
 </g>
 <!-- DEFLZ -->
 <g id="node10" class="node">
@@ -153,7 +153,7 @@
 <g id="node11" class="node">
 <title>NETLZ</title>
 <path fill="#ecedfb" stroke="#9aa2e6" stroke-width="1.1" d="M1100.55,-371.72C1100.55,-371.72 951.45,-371.72 951.45,-371.72 945.45,-371.72 939.45,-365.72 939.45,-359.72 939.45,-359.72 939.45,-341.48 939.45,-341.48 939.45,-335.48 945.45,-329.48 951.45,-329.48 951.45,-329.48 1100.55,-329.48 1100.55,-329.48 1106.55,-329.48 1112.55,-335.48 1112.55,-341.48 1112.55,-341.48 1112.55,-359.72 1112.55,-359.72 1112.55,-365.72 1106.55,-371.72 1100.55,-371.72"/>
-<text xml:space="preserve" text-anchor="middle" x="1026" y="-353.9" font-family="Helvetica,sans-Serif" font-size="11.00">🛬 Networked Landing Zone</text>
+<text xml:space="preserve" text-anchor="middle" x="1026" y="-353.9" font-family="Helvetica,sans-Serif" font-size="11.00">🛬 Spoke Landing Zone</text>
 <text xml:space="preserve" text-anchor="middle" x="1026" y="-340.7" font-family="Helvetica,sans-Serif" font-size="11.00">optional · with network config</text>
 </g>
 <!-- PLAT&#45;&gt;NETLZ -->
@@ -251,9 +251,9 @@
 <!-- SPOKEBBD&#45;&gt;SPOKE -->
 <g id="edge25" class="edge">
 <title>SPOKEBBD&#45;&gt;SPOKE</title>
-<path fill="none" stroke="#8b95a3" stroke-dasharray="1,5" d="M1025,-225.95C1025,-172.97 1025,-40 1025,-40 1025,-40 365.94,-40 365.94,-40"/>
-<polygon fill="#8b95a3" stroke="#8b95a3" points="365.94,-37.55 358.94,-40 365.94,-42.45 365.94,-37.55"/>
-<text xml:space="preserve" text-anchor="middle" x="768.19" y="-42.7" font-family="Helvetica,sans-Serif" font-size="9.00" fill="#697180">provisions</text>
+<path fill="none" stroke="#8b95a3" stroke-dasharray="1,5" d="M1025,-225.95C1025,-172.97 1025,-40 1025,-40 1025,-40 361.8,-40 361.8,-40"/>
+<polygon fill="#8b95a3" stroke="#8b95a3" points="361.8,-37.55 354.8,-40 361.8,-42.45 361.8,-37.55"/>
+<text xml:space="preserve" text-anchor="middle" x="766.12" y="-42.7" font-family="Helvetica,sans-Serif" font-size="9.00" fill="#697180">provisions</text>
 </g>
 <!-- SPOKEBBD&#45;&gt;NABBD -->
 </g>
