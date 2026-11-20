@@ -13,7 +13,7 @@ module "postgres_integration" {
 }
 
 resource "meshstack_building_block" "postgres" {
-  for_each = var.postgres == null ? {} : var.stages
+  for_each = var.postgres == null ? {} : var.postgres
 
   wait_for_completion = true
 
@@ -32,11 +32,11 @@ resource "meshstack_building_block" "postgres" {
 
     inputs = {
       instance_name         = { value = jsonencode("shared-${each.key}") }
-      flavor                = { value = jsonencode(var.postgres.flavor) }
-      replicas              = { value = jsonencode(contains(var.postgres.ha_stages, each.key) ? "3" : "1") }
-      storage_class         = { value = jsonencode("premium-perf2-stackit") }
-      storage_size          = { value = jsonencode(var.postgres.storage_size) }
-      postgres_version      = { value = jsonencode("17") }
+      flavor                = { value = jsonencode(each.value.flavor) }
+      replicas              = { value = jsonencode(tostring(each.value.replicas)) }
+      storage_class         = { value = jsonencode(each.value.storage_class) }
+      storage_size          = { value = jsonencode(each.value.storage_size_in_gb) }
+      postgres_version      = { value = jsonencode(each.value.postgres_version) }
       backup_schedule       = { value = jsonencode("0 2 * * *") }
       backup_retention_days = { value = jsonencode(32) }
       acl                   = { value = jsonencode(jsonencode(local.cluster_egress_address_ranges)) }

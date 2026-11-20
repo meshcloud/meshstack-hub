@@ -174,7 +174,7 @@ resource "meshstack_building_block" "this" {
         template_repo = "https://github.com/likvid-bank/starterkit-template-stackit-ai-summarizer.git"
         ai_model      = "openai/gpt-oss-120b"
       })) }
-      postgres         = { value = jsonencode(jsonencode({})) }
+      postgres         = { value = jsonencode(jsonencode({ dev = {} })) }
       phase2_completed = { value = jsonencode(false) }
 
       overrides = { value = jsonencode(jsonencode({

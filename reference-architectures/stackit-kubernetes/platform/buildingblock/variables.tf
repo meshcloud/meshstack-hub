@@ -112,13 +112,20 @@ variable "ai_model" {
 }
 
 variable "postgres" {
-  type = object({
-    ha_stages    = optional(list(string), ["prod"])
-    flavor       = optional(string, "2.4")
-    storage_size = optional(number, 5)
-  })
+  type = map(object({
+    replicas           = optional(number, 1)
+    flavor             = optional(string, "2.4")
+    storage_size_in_gb = optional(number, 5)
+    storage_class      = optional(string, "premium-perf2-stackit")
+    postgres_version   = optional(string, "17")
+  }))
   default     = null
-  description = "Shared PostgreSQL Flex instances, one per stage: three nodes for the stages in `ha_stages`, a single node for every other. Null orders none."
+  description = "Shared PostgreSQL Flex instances by stage name, one per key, with the settings of each. Null orders none."
+
+  validation {
+    condition     = var.postgres == null ? true : length(setsubtract(keys(var.postgres), keys(var.stages))) == 0
+    error_message = "Every key of postgres must be the name of a stage in stages: ${join(", ", keys(var.stages))}."
+  }
 }
 
 variable "starterkit_app_name" {

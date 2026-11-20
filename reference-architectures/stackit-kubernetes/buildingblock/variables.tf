@@ -97,18 +97,20 @@ variable "starterkit_demo" {
 }
 
 variable "postgres" {
-  type = object({
-    ha_stages    = optional(list(string))
-    flavor       = optional(string)
-    storage_size = optional(number)
-  })
+  type = map(object({
+    replicas           = optional(number)
+    flavor             = optional(string)
+    storage_size_in_gb = optional(number)
+    storage_class      = optional(string)
+    postgres_version   = optional(string)
+  }))
   default     = null
-  description = <<-EOT
-  Shared PostgreSQL Flex instances, one per stage; null orders none.
-  `ha_stages`: stages whose instance runs on three nodes, every other stage gets a single node; the default is `prod`.
-  `flavor`: size of each node as `<vCPU>.<RAM in GB>`; the default is `2.4`.
-  `storage_size`: storage in GB; the default is 5.
-  EOT
+  description = "Shared PostgreSQL Flex instances by stage name, one per key, with the settings of each; null orders none. A setting left out takes the default: `replicas` 1 (or 3), `flavor` `2.4`, `storage_size_in_gb` 5, `storage_class` `premium-perf2-stackit`, `postgres_version` `17`."
+
+  validation {
+    condition     = var.postgres == null ? true : length(setsubtract(keys(var.postgres), var.stages[*].name)) == 0
+    error_message = "Every key of postgres must be the name of a stage in stages: ${join(", ", var.stages[*].name)}."
+  }
 }
 
 variable "dns_domain" {

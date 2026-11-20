@@ -90,7 +90,7 @@ Neither is registered yet.
 
 ## Shared PostgreSQL
 
-Each stage has a PostgreSQL Flex instance without databases, which accepts connections from the
+Each stage below has a PostgreSQL Flex instance without databases, which accepts connections from the
 cluster's egress ${postgres_acl} only. To hand out databases, register the database variant of
 [`stackit/postgres`](https://github.com/meshcloud/meshstack-hub/tree/main/modules/stackit/postgres)
 once per landing zone and federate it into the platform's service account:

@@ -9,7 +9,7 @@ It creates the platform's Secrets Manager instance with a writer and a reader us
 with a platform admin service account, in-cluster ingress (cert-manager, HAProxy and a Let's Encrypt
 ClusterIssuer), the meshStack replicator and metering identities, a DNS zone, a STACKIT Model
 Serving token when `ai_model` is set, a STACKIT Git instance, a container registry, one shared
-PostgreSQL Flex instance per stage when `postgres` is set, and the meshStack SKE platform with one
+PostgreSQL Flex instance per stage `postgres` names, and the meshStack SKE platform with one
 landing zone per stage.
 
 With a key of `imports` set (`adopt_ske`, `git`, `dns`, `adopt_ingress`, `secrets_manager`,
