@@ -92,7 +92,7 @@ No modules.
 | [meshstack_project.sandbox](https://registry.terraform.io/providers/meshcloud/meshstack/latest/docs/resources/project) | resource |
 | [meshstack_tenant.sandbox](https://registry.terraform.io/providers/meshcloud/meshstack/latest/docs/resources/tenant) | resource |
 | [random_string.suffix](https://registry.terraform.io/providers/hashicorp/random/latest/docs/resources/string) | resource |
-| [meshstack_building_block_definitions.composed](https://registry.terraform.io/providers/meshcloud/meshstack/latest/docs/data-sources/building_block_definitions) | data source |
+| [meshstack_building_block_definition.composed](https://registry.terraform.io/providers/meshcloud/meshstack/latest/docs/data-sources/building_block_definition) | data source |
 | [meshstack_landingzone.sandbox](https://registry.terraform.io/providers/meshcloud/meshstack/latest/docs/data-sources/landingzone) | data source |
 | [meshstack_platforms.sandbox](https://registry.terraform.io/providers/meshcloud/meshstack/latest/docs/data-sources/platforms) | data source |
 

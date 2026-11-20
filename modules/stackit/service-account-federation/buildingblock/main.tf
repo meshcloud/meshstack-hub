@@ -1,18 +1,18 @@
-data "meshstack_building_block_definitions" "federated" {
-  workspace_identifier = var.workspace_identifier
-  uuids                = var.federated_building_block_definitions
+data "meshstack_building_block_definition" "federated" {
+  for_each = toset(var.federated_building_block_definitions)
+
+  metadata = {
+    uuid               = each.key
+    owned_by_workspace = var.workspace_identifier
+  }
 
   lifecycle {
     postcondition {
       condition = alltrue([
-        for uuid in var.federated_building_block_definitions : anytrue([
-          for definition in self.building_block_definitions : definition.metadata.uuid == uuid && alltrue([
-            # try() turns every missing step of the lookup into null, so one comparison covers them all.
-            for version in [definition.version_latest, definition.version_latest_release] : version == null || try(version.workload_identity_federation.azure.audience, null) != null
-          ])
-        ])
+        # try() turns every missing step of the lookup into null, so one comparison covers them all.
+        for version in [self.version_latest, self.version_latest_release] : version == null || try(version.workload_identity_federation.azure.audience, null) != null
       ])
-      error_message = "Every federated building block definition must be owned by workspace ${var.workspace_identifier}, and its latest and latest released versions must run on a runner whose workload identity federation includes an Azure audience."
+      error_message = "The latest and latest released versions of building block definition ${each.key} must run on a runner whose workload identity federation includes an Azure audience."
     }
   }
 }
@@ -22,13 +22,13 @@ locals {
   # on another runner present different identities.
   federated_identities = {
     for identity in distinct(flatten([
-      for definition in data.meshstack_building_block_definitions.federated.building_block_definitions : [
+      for uuid, definition in data.meshstack_building_block_definition.federated : [
         for version in [definition.version_latest, definition.version_latest_release] : {
-          definition_uuid = definition.metadata.uuid
+          definition_uuid = uuid
           issuer          = version.workload_identity_federation.issuer
           subject         = version.workload_identity_federation.subject
           audience        = version.workload_identity_federation.azure.audience
-        } if version != null && contains(var.federated_building_block_definitions, definition.metadata.uuid)
+        } if version != null
       ]
     ])) : "meshstack-${substr(identity.definition_uuid, 0, 8)}-${substr(sha256(join(" ", [identity.issuer, identity.subject, identity.audience])), 0, 8)}" => identity
   }

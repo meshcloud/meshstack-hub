@@ -86,14 +86,18 @@ resource "meshstack_tenant" "sandbox" {
   }
 }
 
-data "meshstack_building_block_definitions" "composed" {
-  uuids = [local.budget_alert_definition_uuid, local.enable_eu_south_2_region_definition_uuid]
+data "meshstack_building_block_definition" "composed" {
+  for_each = toset([local.budget_alert_definition_uuid, local.enable_eu_south_2_region_definition_uuid])
+
+  metadata = {
+    uuid = each.key
+  }
 }
 
 locals {
   definition_versions = {
-    for definition in data.meshstack_building_block_definitions.composed.building_block_definitions :
-    definition.metadata.uuid => { for version in definition.versions : version.number => { uuid = version.uuid } }
+    for uuid, definition in data.meshstack_building_block_definition.composed :
+    uuid => { for version in definition.versions : version.number => { uuid = version.uuid } }
   }
 }
 

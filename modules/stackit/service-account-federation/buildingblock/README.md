@@ -55,7 +55,7 @@ No modules.
 |------|------|
 | [stackit_service_account_federated_identity_provider.this](https://registry.terraform.io/providers/stackitcloud/stackit/latest/docs/resources/service_account_federated_identity_provider) | resource |
 | [terraform_data.federation_access](https://registry.terraform.io/providers/hashicorp/terraform/latest/docs/resources/data) | resource |
-| [meshstack_building_block_definitions.federated](https://registry.terraform.io/providers/meshcloud/meshstack/latest/docs/data-sources/building_block_definitions) | data source |
+| [meshstack_building_block_definition.federated](https://registry.terraform.io/providers/meshcloud/meshstack/latest/docs/data-sources/building_block_definition) | data source |
 
 ## Inputs
 
