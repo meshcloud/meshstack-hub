@@ -147,23 +147,17 @@ summary. Copy it again whenever the landing zone's definitions get a new version
 | Key | Used for |
 |---|---|
 | `platform_ref`, `landingzone_refs` | the tenant of the platform's project, on the landing zone that **Landing Zone Variant** picks |
-| `project_bbd_ref` | finding a STACKIT Project building block the project already has |
-| `project_bbd_version_ref` | ordering STACKIT Project on the tenant when there is none |
+| `project_bbd_version_ref` | ordering STACKIT Project on the tenant |
 | `service_account_bbd_version_ref`, `service_account_federation_bbd_version_ref` | the platform's service account and its federation |
 
 The platform orders STACKIT Project on its tenant, and reads the STACKIT project id from the
-tenant's Platform Tenant ID. If the project already has a STACKIT Project block, for example from
-the time it was a mandatory block of the landing zone, the platform adopts it instead. The block's
-version is left to the platform team that owns the definition.
+tenant's Platform Tenant ID. The block's version is left to the platform team that owns the
+definition.
 
 In a workspace other than the landing zone's, these definitions must be published and their
 versions released; on the `spoke` variant, the STACKIT Network definition too. The
 landing zone README explains
 [how](https://hub.meshcloud.io/reference-architectures/stackit-landingzone#other-workspaces).
-
-A playground looks up an existing block only with `overrides.project_identifier`, because its
-generated identifier is unknown before the first run. A playground whose tenant already has a
-STACKIT Project block fails without it; deploy that playground again.
 
 ### Phase 2: link the Harbor robot
 
@@ -242,8 +236,6 @@ built before this architecture:
 Every key but `starterkit_definitions` needs `project`, because the resources live in its STACKIT project. `adopt_ingress` and
 `kubernetes_platform` also need `adopt_ske`. Everything else is created new. Names the imports leave out
 derive from **Platform Identifier**, so a stage added later gets `<platform identifier>-namespace-<stage>`.
-
-The STACKIT Project building block needs no key; see [Landing zone](#landing-zone).
 
 With `git`, the Git building block's technical user must be in the organization's `Owners` team,
 which only an owner can arrange: its first run fails until an owner adds that user, then run it

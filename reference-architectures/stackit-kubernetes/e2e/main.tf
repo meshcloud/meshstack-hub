@@ -159,7 +159,6 @@ resource "meshstack_building_block" "this" {
         landingzone_refs = {
           default = { name = module.stackit.landingzone_refs["default"].name }
         }
-        project_bbd_ref                            = { uuid = module.stackit.building_block_definition.uuid }
         project_bbd_version_ref                    = { uuid = module.stackit.building_block_definition.version_ref.uuid }
         service_account_bbd_version_ref            = { uuid = module.service_account.building_block_definition.version_ref.uuid }
         service_account_federation_bbd_version_ref = { uuid = module.service_account_federation.building_block_definition.version_ref.uuid }

@@ -43,7 +43,6 @@ output "summary" {
 
     platform_ref                                = module.stackit_integration.platform_ref
     landingzone_refs                            = module.stackit_integration.landingzone_refs
-    project_bbd_uuid                            = module.stackit_integration.building_block_definition.uuid
     project_bbd_version_uuid                    = module.stackit_integration.building_block_definition.version_ref.uuid
     service_account_bbd_version_uuid            = module.service_account_integration.building_block_definition.version_ref.uuid
     service_account_federation_bbd_version_uuid = module.service_account_federation_integration.building_block_definition.version_ref.uuid
