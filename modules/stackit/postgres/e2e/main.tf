@@ -11,21 +11,10 @@ variable "test_context" {
     condition     = can(var.test_context.fixtures.stackit.mesh_tenant_id)
     error_message = "test_context must provide fixtures.stackit.mesh_tenant_id, the tenant to order the building block for."
   }
-
-  validation {
-    # `try` because `test_context` is untyped, so a hub run need not set `mode` at all.
-    condition     = contains(["hub", "foundation"], try(var.test_context.mode, "hub"))
-    error_message = "test_context.mode must be \"hub\" (the default) or \"foundation\"."
-  }
-}
-
-locals {
-  # `try` because `test_context` is untyped, so a hub run need not set `mode` at all.
-  mode = try(var.test_context.mode, "hub")
 }
 
 module "definition" {
-  source = "./modes/${local.mode}"
+  source = "./modes/hub"
 
   test_context         = var.test_context
   database_only        = false
@@ -64,7 +53,7 @@ resource "meshstack_building_block" "this" {
 
 # A second module call, because the instance block depends on all of `module.definition`.
 module "database_definition" {
-  source = "./modes/${local.mode}"
+  source = "./modes/hub"
 
   test_context         = var.test_context
   database_only        = true

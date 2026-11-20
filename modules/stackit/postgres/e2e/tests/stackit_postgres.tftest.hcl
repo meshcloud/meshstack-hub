@@ -47,14 +47,13 @@ run "stackit_postgres" {
     error_message = "Unexpected jdbc_url: ${try(meshstack_building_block.database.status.outputs["jdbc_url"].value, "no such output")}."
   }
 
-  # A foundation's database definition names its own instance, so only a hub run shares one.
   assert {
-    condition     = try(var.test_context.mode, "hub") != "hub" || try(jsondecode(meshstack_building_block.database.status.outputs["instance_id"].value), null) == try(jsondecode(meshstack_building_block.this.status.outputs["instance_id"].value), "")
+    condition     = try(jsondecode(meshstack_building_block.database.status.outputs["instance_id"].value), null) == try(jsondecode(meshstack_building_block.this.status.outputs["instance_id"].value), "")
     error_message = "Expected the database on the instance of the first building block, got ${try(meshstack_building_block.database.status.outputs["instance_id"].value, "no such output")}."
   }
 
   assert {
-    condition     = try(var.test_context.mode, "hub") != "hub" || try(jsondecode(meshstack_building_block.database.status.outputs["host"].value), null) == try(jsondecode(meshstack_building_block.this.status.outputs["host"].value), "")
+    condition     = try(jsondecode(meshstack_building_block.database.status.outputs["host"].value), null) == try(jsondecode(meshstack_building_block.this.status.outputs["host"].value), "")
     error_message = "Expected the host of the first building block, got ${try(meshstack_building_block.database.status.outputs["host"].value, "no such output")}."
   }
 }
