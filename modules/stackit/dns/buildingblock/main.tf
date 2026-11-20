@@ -21,9 +21,11 @@ module "k8s_acme_solver" {
     enabled = var.wildcard_certs != null
   }
 
-  depends_on = [terraform_data.kubeconfig]
+  # The challenge cleanup on destroy removes its records from the zone.
+  depends_on = [terraform_data.kubeconfig, module.zone]
 
   project_id             = var.stackit_project_id
+  zone_name              = local.zone_name
   cert_manager_namespace = var.wildcard_certs.cert_manager_namespace
 }
 

@@ -10,3 +10,9 @@ variable "cert_manager_namespace" {
   description = "Namespace cert-manager runs in. The webhook and its key secret go there."
 }
 
+
+variable "zone_name" {
+  type        = string
+  nullable    = false
+  description = "DNS name of the zone. Destroy cleans up only the Challenges for names in it."
+}

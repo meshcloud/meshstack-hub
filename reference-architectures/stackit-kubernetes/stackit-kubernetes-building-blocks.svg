@@ -91,8 +91,8 @@
 <!-- FED&#45;&gt;SM -->
 <g id="edge10" class="edge">
 <title>FED&#45;&gt;SM</title>
-<path fill="none" stroke="#8b95a3" d="M552.86,-302.43C552.86,-277.3 552.86,-239 552.86,-239 552.86,-239 541.68,-239 541.68,-239"/>
-<polygon fill="#8b95a3" stroke="#8b95a3" points="541.68,-236.55 534.68,-239 541.68,-241.45 541.68,-236.55"/>
+<path fill="none" stroke="#8b95a3" d="M552.86,-302.34C552.86,-278.09 552.86,-242 552.86,-242 552.86,-242 541.68,-242 541.68,-242"/>
+<polygon fill="#8b95a3" stroke="#8b95a3" points="541.68,-239.55 534.68,-242 541.68,-244.45 541.68,-239.55"/>
 </g>
 <!-- CLUSTER -->
 <g id="node8" class="node">
@@ -117,8 +117,8 @@
 <!-- FED&#45;&gt;GIT -->
 <g id="edge12" class="edge">
 <title>FED&#45;&gt;GIT</title>
-<path fill="none" stroke="#8b95a3" d="M725.31,-324C737.16,-324 745.19,-324 745.19,-324 745.19,-324 745.19,-261.54 745.19,-261.54"/>
-<polygon fill="#8b95a3" stroke="#8b95a3" points="747.64,-261.54 745.19,-254.54 742.74,-261.54 747.64,-261.54"/>
+<path fill="none" stroke="#8b95a3" d="M725.35,-324C740.86,-324 751.93,-324 751.93,-324 751.93,-324 751.93,-261.54 751.93,-261.54"/>
+<polygon fill="#8b95a3" stroke="#8b95a3" points="754.38,-261.54 751.93,-254.54 749.48,-261.54 754.38,-261.54"/>
 </g>
 <!-- REG -->
 <g id="node10" class="node">
@@ -130,8 +130,8 @@
 <!-- FED&#45;&gt;REG -->
 <g id="edge13" class="edge">
 <title>FED&#45;&gt;REG</title>
-<path fill="none" stroke="#8b95a3" d="M690.42,-302.48C690.42,-287.08 690.42,-269 690.42,-269 690.42,-269 933.83,-269 933.83,-269 933.83,-269 933.83,-261.44 933.83,-261.44"/>
-<polygon fill="#8b95a3" stroke="#8b95a3" points="936.28,-261.44 933.83,-254.44 931.38,-261.44 936.28,-261.44"/>
+<path fill="none" stroke="#8b95a3" d="M690.42,-302.46C690.42,-292.58 690.42,-283 690.42,-283 690.42,-283 940.08,-283 940.08,-283 940.08,-283 940.08,-261.61 940.08,-261.61"/>
+<polygon fill="#8b95a3" stroke="#8b95a3" points="942.53,-261.61 940.08,-254.61 937.63,-261.61 942.53,-261.61"/>
 </g>
 <!-- AI -->
 <g id="node11" class="node">
@@ -143,8 +143,8 @@
 <!-- FED&#45;&gt;AI -->
 <g id="edge14" class="edge">
 <title>FED&#45;&gt;AI</title>
-<path fill="none" stroke="#8b95a3" d="M697.79,-302.27C697.79,-293.77 697.79,-286 697.79,-286 697.79,-286 1219,-286 1219,-286 1219,-286 1219,-261.61 1219,-261.61"/>
-<polygon fill="#8b95a3" stroke="#8b95a3" points="1221.45,-261.61 1219,-254.61 1216.55,-261.61 1221.45,-261.61"/>
+<path fill="none" stroke="#8b95a3" d="M697.79,-302.42C697.79,-297.16 697.79,-293 697.79,-293 697.79,-293 1219,-293 1219,-293 1219,-293 1219,-261.59 1219,-261.59"/>
+<polygon fill="#8b95a3" stroke="#8b95a3" points="1221.45,-261.59 1219,-254.59 1216.55,-261.59 1221.45,-261.59"/>
 </g>
 <!-- DNS -->
 <g id="node14" class="node">
@@ -154,12 +154,36 @@
 <text xml:space="preserve" text-anchor="middle" x="815" y="-37.22" font-family="Helvetica,sans-Serif" font-size="11.00">stackit/dns</text>
 </g>
 <!-- FED&#45;&gt;DNS -->
-<g id="edge18" class="edge">
+<g id="edge22" class="edge">
 <title>FED&#45;&gt;DNS</title>
 <path fill="none" stroke="#8b95a3" d="M705.16,-302.58C705.16,-237.75 705.16,-47 705.16,-47 705.16,-47 758.31,-47 758.31,-47"/>
 <polygon fill="#8b95a3" stroke="#8b95a3" points="758.31,-49.45 765.31,-47 758.31,-44.55 758.31,-49.45"/>
 </g>
 <!-- SM&#45;&gt;CLUSTER -->
+<!-- SM&#45;&gt;CLUSTER -->
+<g id="edge15" class="edge">
+<title>SM&#45;&gt;CLUSTER</title>
+<path fill="none" stroke="#8b95a3" d="M533.2,-232C533.2,-232 563.97,-232 563.97,-232"/>
+<polygon fill="#8b95a3" stroke="#8b95a3" points="563.97,-234.45 570.97,-232 563.97,-229.55 563.97,-234.45"/>
+</g>
+<!-- SM&#45;&gt;GIT -->
+<g id="edge16" class="edge">
+<title>SM&#45;&gt;GIT</title>
+<path fill="none" stroke="#8b95a3" d="M483.11,-253.06C483.11,-258.58 483.11,-263 483.11,-263 483.11,-263 738.44,-263 738.44,-263 738.44,-263 738.44,-261.58 738.44,-261.58"/>
+<polygon fill="#8b95a3" stroke="#8b95a3" points="740.89,-261.58 738.44,-254.58 735.99,-261.58 740.89,-261.58"/>
+</g>
+<!-- SM&#45;&gt;REG -->
+<g id="edge17" class="edge">
+<title>SM&#45;&gt;REG</title>
+<path fill="none" stroke="#8b95a3" d="M435.16,-253.27C435.16,-263.29 435.16,-273 435.16,-273 435.16,-273 927.58,-273 927.58,-273 927.58,-273 927.58,-261.78 927.58,-261.78"/>
+<polygon fill="#8b95a3" stroke="#8b95a3" points="930.03,-261.78 927.58,-254.78 925.13,-261.78 930.03,-261.78"/>
+</g>
+<!-- SM&#45;&gt;AI -->
+<g id="edge18" class="edge">
+<title>SM&#45;&gt;AI</title>
+<path fill="none" stroke="#8b95a3" d="M491.4,-209.94C491.4,-197.77 491.4,-185 491.4,-185 491.4,-185 1219,-185 1219,-185 1219,-185 1219,-201.42 1219,-201.42"/>
+<polygon fill="#8b95a3" stroke="#8b95a3" points="1216.55,-201.42 1219,-208.42 1221.45,-201.42 1216.55,-201.42"/>
+</g>
 <!-- CLUSTER&#45;&gt;GIT -->
 <!-- CREDS -->
 <g id="node12" class="node">
@@ -169,7 +193,7 @@
 <text xml:space="preserve" text-anchor="middle" x="565" y="-129.46" font-family="Helvetica,sans-Serif" font-size="11.00">kubernetes</text>
 </g>
 <!-- CLUSTER&#45;&gt;CREDS -->
-<g id="edge15" class="edge">
+<g id="edge19" class="edge">
 <title>CLUSTER&#45;&gt;CREDS</title>
 <path fill="none" stroke="#8b95a3" d="M626.46,-210.21C626.46,-210.21 626.46,-169.47 626.46,-169.47"/>
 <polygon fill="#8b95a3" stroke="#8b95a3" points="628.91,-169.47 626.46,-162.47 624.01,-169.47 628.91,-169.47"/>
@@ -182,7 +206,7 @@
 <text xml:space="preserve" text-anchor="middle" x="815" y="-129.46" font-family="Helvetica,sans-Serif" font-size="11.00">kubernetes/ingress&#45;controller</text>
 </g>
 <!-- CLUSTER&#45;&gt;ING -->
-<g id="edge16" class="edge">
+<g id="edge20" class="edge">
 <title>CLUSTER&#45;&gt;ING</title>
 <path fill="none" stroke="#8b95a3" d="M683.44,-239C699.37,-239 712.53,-239 712.53,-239 712.53,-239 712.53,-132 712.53,-132 712.53,-132 713.23,-132 713.23,-132"/>
 <polygon fill="#8b95a3" stroke="#8b95a3" points="711.06,-134.45 718.06,-132 711.06,-129.55 711.06,-134.45"/>
@@ -191,7 +215,7 @@
 <!-- REG&#45;&gt;AI -->
 <!-- CREDS&#45;&gt;ING -->
 <!-- ING&#45;&gt;DNS -->
-<g id="edge17" class="edge">
+<g id="edge21" class="edge">
 <title>ING&#45;&gt;DNS</title>
 <path fill="none" stroke="#8b95a3" d="M815,-117.97C815,-117.97 815,-77.23 815,-77.23"/>
 <polygon fill="#8b95a3" stroke="#8b95a3" points="817.45,-77.23 815,-70.23 812.55,-77.23 817.45,-77.23"/>

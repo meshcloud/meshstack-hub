@@ -59,6 +59,10 @@ digraph stackit_kubernetes_building_blocks {
   FED     -> GIT
   FED     -> REG
   FED     -> AI
+  SM      -> CLUSTER
+  SM      -> GIT [constraint=false]
+  SM      -> REG [constraint=false]
+  SM      -> AI [constraint=false]
   CLUSTER -> CREDS
   CLUSTER -> ING
   ING     -> DNS
