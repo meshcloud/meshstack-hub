@@ -4,7 +4,7 @@ terraform {
   required_providers {
     meshstack = {
       source  = "meshcloud/meshstack"
-      version = ">= 0.27.2"
+      version = ">= 0.28.2"
     }
     random = {
       source  = "hashicorp/random"

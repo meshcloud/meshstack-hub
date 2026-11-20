@@ -5,6 +5,7 @@ resource "meshstack_tenant" "this" {
   }
 
   wait_for_completion = var.wait_for_completion
+  wait_for_deletion   = true
   metadata            = var.metadata
   spec                = var.spec
 }

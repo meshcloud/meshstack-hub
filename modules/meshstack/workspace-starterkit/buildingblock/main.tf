@@ -84,6 +84,7 @@ resource "meshstack_tenant" "this" {
   # state. With one, the tenant only gets its Platform Tenant ID from that block's run, which creation
   # would wait for forever; the block is deleted, and waited for, before the tenant.
   wait_for_completion = var.tenant_building_block == null
+  wait_for_deletion   = true
 
   # Destroy runs this edge backwards, which is the point: the tenant goes before the bindings.
   # A project user binding is a tenant-determined input of the landing zone's building block, so
