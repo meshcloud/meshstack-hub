@@ -216,8 +216,9 @@ resource "meshstack_building_block" "ingress_controller" {
 
     inputs = merge(
       {
-        "kubeconfig.yaml"  = local.cluster_kubeconfig_input
-        release_on_destroy = { value = jsonencode(local.imports.adopt_ingress && var.playground_mode) }
+        "kubeconfig.yaml" = local.cluster_kubeconfig_input
+        # A cluster this run created is deleted right after, so tearing down its contents is wasted work.
+        release_on_destroy = { value = jsonencode(var.playground_mode && (local.imports.adopt_ingress || !local.imports.adopt_ske)) }
       },
       local.imports.adopt_ingress ? { imports = { value = jsonencode(jsonencode({})) } } : {},
     )

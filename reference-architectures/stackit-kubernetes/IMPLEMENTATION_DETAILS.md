@@ -104,7 +104,9 @@ secret only once the robots exist.
 
 Each adopting block imports in its own state: a `this` resource that is deleted with the block
 and a `released` one that is dropped from the state (`destroy = false`). The nested run sets a
-block's `release_on_destroy` only in playground mode and only for adopted resources.
+block's `release_on_destroy` only in playground mode and only for adopted resources. The one
+exception is the ingress controller: it is also released when the run created the cluster, because
+the cluster is deleted right after it.
 
 The Git block adopting an instance creates its own technical user with a random suffix, because
 the existing user's password is unknown, and orders no shared runner, because STACKIT allows one
