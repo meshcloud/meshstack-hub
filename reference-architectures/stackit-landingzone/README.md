@@ -47,14 +47,12 @@ deploys only the sandbox foundation.
 
 ## Architecture Diagram
 
-The left half of the diagram is the **STACKIT resource hierarchy** — the organization, the
-resourcemanager folder tenant projects land in, the foundation project holding the project-creation
-service account, and the org-level network area. The right half is **meshStack**: the platform, its
-landing zones and the building block **definitions** (BBDs). Dotted edges across the boundary show
-how each meshStack construct maps onto a STACKIT one. Definitions (blue) are registered once;
-**instances** (green) are ordered against them — the hub network area is a single instance the
-platform team orders, while STACKIT projects and spoke networks are ordered `N` times by application
-teams. Everything marked *optional* only appears when a network configuration is provided.
+The diagram below shows meshStack on top and STACKIT below. In meshStack, the platform has a
+default landing zone and, with a network configuration, a networked one. Both offer the same
+**STACKIT Project** definition (blue). Each STACKIT Project building block creates one project
+(green) in the landing-zone folder. On the networked landing zone, it also orders a **STACKIT
+Network** building block, which takes its subnet from the hub's network area. Everything marked
+*optional* only exists with a network configuration.
 
 ![STACKIT Landing Zone reference architecture](stackit-landingzone.svg)
 

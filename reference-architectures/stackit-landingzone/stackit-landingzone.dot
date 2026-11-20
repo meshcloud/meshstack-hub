@@ -14,34 +14,6 @@ digraph stackit_landingzone {
         fillcolor="#ffffff" color="#a2abb8" penwidth=1.1 margin="0.20,0.11"]
   edge [fontname="Helvetica" fontsize=9 fontcolor="#697180" color="#8b95a3" arrowsize=0.7]
 
-  subgraph cluster_stackit {
-    label="  STACKIT"
-    labeljust=l
-    fontname="Helvetica" fontsize=12 fontcolor="#697180"
-    style="rounded" color="#d5dae0"
-    margin=18
-
-    ORG    [label="🏢 STACKIT Organization" fillcolor="#ffffff" color="#a2abb8"]
-    ROOT   [label="📁 Root Folder\noptional · one per meshStack" fillcolor="#ffffff" color="#a2abb8"]
-    FOUND  [label="🔑 Foundation Project\nhosts the project-creation service account" fillcolor="#ffffff" color="#a2abb8"]
-    FOLDER [label="📁 Resourcemanager Folder\ntenant projects are created here" fillcolor="#ffffff" color="#a2abb8"]
-    NA     [label="🌐 Network Area ×1\nshared IPv4 address plan · hub" fillcolor="#e5f2ea" color="#85bfa0"]
-    PRJ    [label="🗂️ STACKIT Project ×N" fillcolor="#e5f2ea" color="#85bfa0"]
-    SA     [label="🤖 Service Account ×N\nproject roles · WIF" fillcolor="#e5f2ea" color="#85bfa0"]
-    SPOKE  [label="🔌 Routed Network ×N\nspoke subnet" fillcolor="#e5f2ea" color="#85bfa0"]
-
-    { rank=same; FOUND -> FOLDER -> NA [style=invis] }
-
-    ORG    -> ROOT
-    ROOT   -> FOUND
-    ROOT   -> FOLDER
-    ORG    -> NA
-    FOLDER -> PRJ   [xlabel="holds"]
-    PRJ    -> SA    [xlabel="contains"]
-    PRJ    -> SPOKE [xlabel="contains"]
-    NA     -> SPOKE [xlabel="assigns CIDR to" style=dashed constraint=false]
-  }
-
   subgraph cluster_mesh {
     label="  meshStack"
     labeljust=l
@@ -49,30 +21,54 @@ digraph stackit_landingzone {
     style="rounded" color="#d5dae0"
     margin=18
 
-    PLAT     [label="🛰️ STACKIT Project Platform" fillcolor="#ecedfb" color="#9aa2e6"]
-    DEFLZ    [label="🛬 Default Landing Zone" fillcolor="#ecedfb" color="#9aa2e6"]
-    NETLZ    [label="🛬 Networked Landing Zone\noptional · with network config" fillcolor="#ecedfb" color="#9aa2e6"]
-    PRJBBD   [label="📦 stackit/project BBD\nmarketplace · one per tenant" fillcolor="#ecedfb" color="#9aa2e6"]
-    SABBD    [label="📦 stackit/service-account BBD\ntenant-level self-service" fillcolor="#ecedfb" color="#9aa2e6"]
-    NABBD    [label="📦 stackit/network-area BBD\noptional · platform team orders it once" fillcolor="#ecedfb" color="#9aa2e6"]
-    SPOKEBBD [label="📦 stackit/network BBD\noptional · tenant-level self-service" fillcolor="#ecedfb" color="#9aa2e6"]
+    node [fillcolor="#ecedfb" color="#9aa2e6"]
+
+    PLAT   [label="🛰️ STACKIT Platform"]
+    DEFLZ  [label="🛬 Default Landing Zone\nsandbox"]
+    NETLZ  [label="🛬 Networked Landing Zone\noptional · hub&spoke"]
+    PRJBBD [label="📦 STACKIT Project\nmarketplace · one per tenant"]
+    NETBBD [label="📦 STACKIT Network\nnetworked landing zone"]
+    SABBD  [label="📦 STACKIT Service Account\nself-service"]
 
     { rank=same; DEFLZ -> NETLZ [style=invis] }
-    { rank=same; PRJBBD -> SABBD -> SPOKEBBD -> NABBD [style=invis] }
+    { rank=same; PRJBBD -> NETBBD -> SABBD [style=invis] }
 
     PLAT  -> DEFLZ
     PLAT  -> NETLZ
-    DEFLZ -> PRJBBD   [xlabel="offers to tenants"]
+    DEFLZ -> PRJBBD [xlabel="offers"]
     NETLZ -> PRJBBD
-    PLAT  -> SABBD    [xlabel="offers to tenants"]
-    NETLZ -> SPOKEBBD [xlabel="offers to tenants"]
+    NETLZ -> NETBBD [xlabel="offers"]
+    PRJBBD -> NETBBD [xlabel="orders one" style=dashed]
   }
 
-  FOUND    -> PLAT  [xlabel="authenticates" style=dotted constraint=false]
-  PRJBBD   -> PRJ   [xlabel="provisions" style=dotted constraint=false]
-  SABBD    -> SA    [xlabel="provisions" style=dotted constraint=false]
-  NABBD    -> NA    [xlabel="provisions" style=dotted constraint=false]
-  SPOKEBBD -> SPOKE [xlabel="provisions" style=dotted constraint=false]
-  PRJBBD   -> SPOKEBBD [xlabel="orders one on the networked LZ" style=dashed constraint=false]
-  NETLZ    -> NA    [xlabel="projects placed in" style=dotted constraint=false]
+  subgraph cluster_stackit {
+    label="  STACKIT"
+    labeljust=l
+    fontname="Helvetica" fontsize=12 fontcolor="#697180"
+    style="rounded" color="#d5dae0"
+    margin=18
+
+    FOUND  [label="🔑 Foundation Project\nproject-creation service account"]
+    FOLDER [label="📁 Landing Zone Folder"]
+    NA     [label="🌐 Network Area ×1\noptional · hub" fillcolor="#e5f2ea" color="#85bfa0"]
+    PRJ    [label="🗂️ STACKIT Project ×N" fillcolor="#e5f2ea" color="#85bfa0"]
+    SA     [label="🔑 Service Account ×N" fillcolor="#e5f2ea" color="#85bfa0"]
+    NET    [label="🔌 Network ×N\nspoke" fillcolor="#e5f2ea" color="#85bfa0"]
+
+    { rank=same; FOLDER -> NA -> FOUND [style=invis] }
+    { rank=same; NET -> SA [style=invis] }
+
+    FOLDER -> PRJ [xlabel="holds"]
+    PRJ    -> SA
+    PRJ    -> NET
+    NA     -> NET [xlabel="assigns CIDR" style=dashed]
+  }
+
+  PRJBBD -> FOLDER [style=invis]
+  NETBBD -> NA     [style=invis]
+  SABBD  -> FOUND  [style=invis]
+
+  PRJBBD -> PRJ [style=dotted]
+  NETBBD -> NET [style=dotted]
+  SABBD  -> SA  [xlabel="creates" style=dotted]
 }
