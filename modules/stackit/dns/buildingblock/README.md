@@ -34,6 +34,11 @@ pass the `kubeconfig.yaml` of the cluster that runs cert-manager. The block inst
 with a service account key that has `dns.admin` on the project. Pass the `dns01_solver` from the
 summary to `wildcard_certs` of `kubernetes/ingress-controller`.
 
+Before destroy removes the webhook, it deletes every Certificate with an open Challenge for this
+solver and waits up to five minutes until cert-manager has cleaned the Challenges up. Without the
+webhook, the finalizer of an open Challenge blocks its namespace forever. This step runs `kubectl`
+through `nix shell`, so it needs `nix` on the runner, and it never fails the destroy.
+
 ## Permissions
 
 The run authenticates via Workload Identity Federation as the platform's STACKIT service account,
