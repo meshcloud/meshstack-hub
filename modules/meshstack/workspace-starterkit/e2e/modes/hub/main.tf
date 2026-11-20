@@ -32,6 +32,14 @@ variable "ttl_optional" {
   nullable = false
 }
 
+# The fixture's landing zone offers STACKIT Project in the marketplace, so its tenant gets a project
+# only from this building block. The definition is another workspace's, so the release is ordered.
+data "meshstack_building_block_definition" "stackit_project" {
+  spec = {
+    display_name = "STACKIT Project"
+  }
+}
+
 module "workspace_starterkit" {
   source = "../../../"
 
@@ -52,6 +60,12 @@ module "workspace_starterkit" {
 
   platform_uuid     = var.test_context.fixtures.stackit.platform_uuid
   landing_zone_name = var.test_context.fixtures.stackit.landing_zone_name
+
+  tenant_building_block = {
+    definition_ref         = data.meshstack_building_block_definition.stackit_project.ref
+    definition_version_ref = data.meshstack_building_block_definition.stackit_project.version_latest_release
+    display_name           = "STACKIT Project"
+  }
 
   # The module's default `expiry` only works on an instance whose tag schema defines it.
   workspace_expiry_tag_key = var.test_context.meshstack.tag_schema.expiry_key

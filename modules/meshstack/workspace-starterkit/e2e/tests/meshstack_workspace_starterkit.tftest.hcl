@@ -25,11 +25,11 @@ run "meshstack_workspace_starterkit" {
     error_message = "Reported project identifier is not the one that was ordered."
   }
 
-  # Whether the landing zone's own building block is final by now decides whether the tenant can be
-  # deleted at all — see the destroy failures in the PR.
+  # Whether the tenant's STACKIT Project is final by now decides whether the tenant can be deleted at
+  # all — see the destroy failures in the PR.
   assert {
-    condition     = alltrue([for bb in output.landing_zone_building_blocks : bb.succeeded])
-    error_message = "The landing zone's building blocks on the new tenant are not all SUCCEEDED: ${jsonencode(output.landing_zone_building_blocks)}."
+    condition     = length(output.tenant_building_blocks) == 1 && alltrue([for bb in output.tenant_building_blocks : bb.succeeded])
+    error_message = "The new tenant does not have exactly one SUCCEEDED building block, its STACKIT Project: ${jsonencode(output.tenant_building_blocks)}."
   }
 
   # The date is the ordered TTL counted from the block's own creation time — nobody passed a date in.
