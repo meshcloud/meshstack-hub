@@ -106,25 +106,25 @@ import {
 
 import {
   for_each = { for key, adopted in local.adopted_definitions : key => adopted if key == "project_definition" }
-  to       = module.stackit_integration.module.backplane.stackit_service_account.building_block
+  to       = module.stackit_integration.module.backplane[0].stackit_service_account.building_block
   id       = "${local.adopted_foundation_project_id},${each.value.service_account_email}"
 }
 
 import {
   for_each = local.adopted_federated_identity_providers["project_definition"]
-  to       = module.stackit_integration.module.backplane.stackit_service_account_federated_identity_provider.building_block[each.key]
+  to       = module.stackit_integration.module.backplane[0].stackit_service_account_federated_identity_provider.building_block[each.key]
   id       = each.value
 }
 
 import {
   for_each = { for key, adopted in local.adopted_definitions : key => adopted.service_account_email if key == "project_definition" }
-  to       = module.stackit_integration.module.backplane.stackit_authorization_organization_role_assignment.project_admin
+  to       = module.stackit_integration.module.backplane[0].stackit_authorization_organization_role_assignment.project_admin
   id       = "${var.stackit_org},resource-manager.admin,${each.value}"
 }
 
 import {
   for_each = { for key, adopted in local.adopted_definitions : key => adopted.service_account_email if key == "project_definition" && var.role_mapping.organization_onboarding }
-  to       = module.stackit_integration.module.backplane.stackit_authorization_organization_role_assignment.member_admin
+  to       = module.stackit_integration.module.backplane[0].stackit_authorization_organization_role_assignment.member_admin
   id       = "${var.stackit_org},iam.member-admin,${each.value}"
 }
 
@@ -166,12 +166,12 @@ import {
 
 import {
   for_each = { for key, adopted in local.adopted_definitions : key => adopted if key == "service_account_federation_definition" }
-  to       = module.service_account_federation_integration.module.backplane.stackit_service_account.building_block
+  to       = module.service_account_federation_integration.module.backplane[0].stackit_service_account.building_block
   id       = "${local.adopted_foundation_project_id},${each.value.service_account_email}"
 }
 
 import {
   for_each = local.adopted_federated_identity_providers["service_account_federation_definition"]
-  to       = module.service_account_federation_integration.module.backplane.stackit_service_account_federated_identity_provider.building_block[each.key]
+  to       = module.service_account_federation_integration.module.backplane[0].stackit_service_account_federated_identity_provider.building_block[each.key]
   id       = each.value
 }

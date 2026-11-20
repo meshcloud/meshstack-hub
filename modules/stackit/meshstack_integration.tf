@@ -1,6 +1,18 @@
 variable "stackit_project_id" {
   type        = string
-  description = "STACKIT project ID where the backplane service account will be created."
+  default     = null
+  description = "STACKIT project ID where the backplane service account will be created. Required unless `backplane_service_account_email` is set."
+
+  validation {
+    condition     = var.stackit_project_id != null || var.backplane_service_account_email != null
+    error_message = "stackit_project_id is required unless backplane_service_account_email is set."
+  }
+}
+
+variable "backplane_service_account_email" {
+  type        = string
+  default     = null
+  description = "Existing backplane service account, for a STACKIT organization this module cannot reach. Its owner adds one federated identity provider per subject of the `workload_identity_federation` output and grants it `resource-manager.admin` on the organization, plus `iam.member-admin` with `stackit_organization_onboarding_enabled`."
 }
 
 variable "stackit_organization_id" {
@@ -41,6 +53,12 @@ variable "stackit_project_owner_email" {
 variable "stackit_parent_container_id" {
   type        = string
   description = "Default parent container ID (organization or folder) for project creation."
+}
+
+variable "stackit_networked_parent_container_id" {
+  type        = string
+  default     = null
+  description = "Parent container ID (organization or folder) for projects of the `networked` variant. Null uses `stackit_parent_container_id`."
 }
 
 variable "stackit_service_account_name" {
@@ -124,7 +142,17 @@ module "runner" {
   runner_ref = var.meshstack.runner_ref
 }
 
+locals {
+  backplane_service_account_email = var.backplane_service_account_email != null ? var.backplane_service_account_email : module.backplane[0].service_account_email
+}
+
+moved {
+  from = module.backplane
+  to   = module.backplane[0]
+}
+
 module "backplane" {
+  count  = var.backplane_service_account_email == null ? 1 : 0
   source = "github.com/meshcloud/meshstack-hub//modules/stackit/project/backplane?ref=${var.hub.git_ref}"
 
   project_id                      = var.stackit_project_id
@@ -151,7 +179,16 @@ output "building_block_definition" {
 
 output "service_account_email" {
   description = "Email of the backplane STACKIT service account that creates and manages tenant projects."
-  value       = module.backplane.service_account_email
+  value       = local.backplane_service_account_email
+}
+
+output "workload_identity_federation" {
+  description = "Issuer, audience and, by project variant, the subject that a federated identity provider on the backplane service account must match."
+  value = {
+    issuer   = module.runner.issuer
+    audience = module.runner.audience
+    subjects = { for key, bbd in meshstack_building_block_definition.this : key => bbd.version_latest.workload_identity_federation.subject }
+  }
 }
 
 output "platform_ref" {
@@ -177,6 +214,7 @@ locals {
         landingzone_display_name = "STACKIT Sandbox"
         landingzone_description  = "Creates a STACKIT project in the landing zone folder, with project roles mapped from meshStack project roles. The project is not attached to a network area, so it uses STACKIT's default flat networking."
         network_area_id          = null
+        parent_container_id      = var.stackit_parent_container_id
       }
     },
     var.stackit_networked_projects_enabled ? {
@@ -185,6 +223,7 @@ locals {
         landingzone_display_name = "STACKIT Networked"
         landingzone_description  = "Creates a STACKIT project placed in the shared hub network area, with project roles mapped from meshStack project roles. Order the STACKIT Network building block inside the project to get a routed subnet drawn from the hub's address plan."
         network_area_id          = var.stackit_network_area_id
+        parent_container_id      = coalesce(var.stackit_networked_parent_container_id, var.stackit_parent_container_id)
       }
     } : {}
   )
@@ -306,7 +345,7 @@ resource "meshstack_building_block_definition" "this" {
         description     = "Default parent container ID (organization or folder) where the project will be created."
         type            = "STRING"
         assignment_type = "STATIC"
-        argument        = jsonencode(var.stackit_parent_container_id)
+        argument        = jsonencode(each.value.parent_container_id)
       }
 
       project_owner_email = {
@@ -350,7 +389,7 @@ resource "meshstack_building_block_definition" "this" {
         type            = "STRING"
         assignment_type = "STATIC"
         is_environment  = true
-        argument        = jsonencode(module.backplane.service_account_email)
+        argument        = jsonencode(local.backplane_service_account_email)
       }
 
       STACKIT_ORGANIZATION_ID = {
