@@ -15,8 +15,13 @@ Point every `*_ref` attribute at the target resource's `ref` output. Never build
 ```hcl
 resource "meshstack_landingzone" "this" {
   spec = {
-    platform_ref                  = meshstack_platform.this.ref # not { uuid = ...metadata.uuid }
-    mandatory_building_block_refs = [meshstack_building_block_definition.platform_tenant_id.ref]
+    platform_ref = meshstack_platform.this.ref # not { uuid = ...metadata.uuid }
+  }
+}
+
+resource "meshstack_building_block_definition" "this" {
+  spec = {
+    supported_platforms = [meshstack_landingzone.this.ref]
   }
 }
 ```
@@ -162,18 +167,24 @@ re-run. The provider reads the run through `status.action`; the
   the run in meshPanel. A child block that is *meant* to park — one whose definition requires an
   approval — is one case for a looser condition, e.g.
   `self.status.succeeded || self.status.action == "APPROVE_RUN"`. The other is a child that needs
-  the Platform Tenant ID its parent's run sets (`stackit/project` ordering its network):
+  the Platform Tenant ID its parent's run sets, such as a network ordered by the block that
+  allocates the project:
   `self.status.succeeded || self.status.action == "WAITING_FOR_DEPENDENCY"`, plus `PENDING` and
   `IN_PROGRESS` when a refresh may catch the child's first run still going.
 
 
-## A Tenant Whose Project Comes From a Building Block
+## A Tenant Whose Resource Comes From a Building Block
 
-`meshstack_tenant` creation with `wait_for_completion = true` waits for `spec.platform_tenant_id`.
-On a landing zone without a mandatory building block, only a building block ordered on the tenant
-afterwards reports that id (a `PLATFORM_TENANT_ID` output, such as `STACKIT Project`), so such a
-tenant is created with `wait_for_completion = false`. Its building block references it, so it is
-deleted, and waited for, before the tenant.
+A meshTenant can stand for any resource a platform hands out: a STACKIT project, a Kubernetes
+namespace, a database on a shared server. When a building block ordered on the tenant allocates
+that resource, the tenant only takes over its identifier: the block's `PLATFORM_TENANT_ID` output
+becomes the tenant's `spec.platform_tenant_id`, for example a STACKIT project uuid.
+
+- Create such a tenant with `wait_for_completion = false`. It gets its id only after the block on
+  it has run, and the block can only be ordered once the tenant exists.
+- Set `wait_for_deletion = true`, so destroy waits until meshStack has deleted the tenant. The
+  block references the tenant, so OpenTofu deletes the block first.
+- Read the id from the tenant, as [Reading a Child's Outputs](#reading-a-childs-outputs) describes.
 
 ## Reading a Child's Outputs
 
