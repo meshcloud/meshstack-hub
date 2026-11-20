@@ -135,6 +135,7 @@ resource "meshstack_project" "this" {
 # wait for until then.
 resource "meshstack_tenant" "this" {
   wait_for_completion = false
+  wait_for_deletion   = true
 
   metadata = {
     owned_by_workspace = var.test_context.workspace
