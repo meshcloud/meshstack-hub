@@ -103,9 +103,36 @@ resource "meshstack_tenant" "this" {
   }
 }
 
+# A tenant created while the building block was a mandatory one of its landing zone has it already.
+# The filters must be known at plan time, also for a tenant created in this run, so they leave out
+# the tenant: a project has one tenant per platform.
+data "meshstack_building_blocks" "tenant" {
+  lifecycle {
+    enabled = !local.expired && var.tenant_building_block != null
+
+    postcondition {
+      condition     = length(self.building_blocks) <= 1
+      error_message = "Project ${var.project_identifier} has ${length(self.building_blocks)} building blocks of definition ${var.tenant_building_block.definition_ref.uuid}; delete all but one."
+    }
+  }
+
+  workspace_identifier = var.workspace_identifier
+  project_identifier   = var.project_identifier
+  definition_uuid      = var.tenant_building_block.definition_ref.uuid
+}
+
+import {
+  for_each = data.meshstack_building_blocks.tenant == null ? toset([]) : toset(data.meshstack_building_blocks.tenant.building_blocks[*].metadata.uuid)
+  to       = meshstack_building_block.tenant
+  id       = each.value
+}
+
 resource "meshstack_building_block" "tenant" {
   lifecycle {
     enabled = !local.expired && var.tenant_building_block != null
+
+    # An adopted block stays on its version; the platform team upgrades all blocks of the definition.
+    ignore_changes = [spec.building_block_definition_version_ref]
 
     postcondition {
       condition     = self.status.succeeded
