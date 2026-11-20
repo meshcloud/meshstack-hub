@@ -258,8 +258,13 @@ module "network_integration" {
   stackit_network_min_prefix_length = var.network.tenant_network_min_prefix_length
   stackit_network_max_prefix_length = var.network.tenant_network_max_prefix_length
 
-  meshstack = { owning_workspace_identifier = var.workspace, tags = local.tags.building_block, runner_ref = local.runner_ref }
-  hub       = var.hub
+  meshstack = {
+    owning_workspace_identifier = var.workspace
+    tags                        = local.tags.building_block
+    runner_ref                  = local.runner_ref
+    supported_platforms         = [{ kind = "meshLandingZone", name = "${local.platform_identifier}-networked" }]
+  }
+  hub = var.hub
 }
 
 resource "meshstack_building_block" "network_area_hub" {
