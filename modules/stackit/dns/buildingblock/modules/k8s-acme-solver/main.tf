@@ -56,15 +56,18 @@ resource "helm_release" "webhook" {
 }
 
 locals {
-  group_name = "acme.stackit.de"
+  group_name  = "acme.stackit.de"
+  solver_name = "stackit"
 }
 
 # Without the webhook and its RBAC, cert-manager can no longer clean up an open Challenge, so its
 # finalizer blocks the namespace of the Certificate forever.
 resource "terraform_data" "delete_challenges" {
   input = {
-    module_dir = path.module
-    group_name = local.group_name
+    module_dir  = path.module
+    group_name  = local.group_name
+    solver_name = local.solver_name
+    zone_name   = var.zone_name
   }
 
   provisioner "local-exec" {
@@ -74,6 +77,8 @@ resource "terraform_data" "delete_challenges" {
     command     = "export KUBECONFIG=\"$PWD/kubeconfig.yaml\" && cd '${self.input.module_dir}' && timeout 360 nix shell ./nix#kubectl ./nix#jq --command bash ./delete-challenges.sh"
     environment = {
       GROUP_NAME      = self.input.group_name
+      SOLVER_NAME     = self.input.solver_name
+      ZONE_NAME       = self.input.zone_name
       TIMEOUT_SECONDS = "300"
     }
   }

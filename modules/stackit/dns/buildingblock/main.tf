@@ -25,6 +25,7 @@ module "k8s_acme_solver" {
   depends_on = [terraform_data.kubeconfig, module.zone]
 
   project_id             = var.stackit_project_id
+  zone_name              = local.zone_name
   cert_manager_namespace = var.wildcard_certs.cert_manager_namespace
 }
 

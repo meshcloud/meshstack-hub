@@ -1,14 +1,30 @@
 #!/usr/bin/env bash
-# Deletes the open cert-manager Challenges that GROUP_NAME solves and waits until cert-manager has
-# cleaned them up, for at most TIMEOUT_SECONDS. Never fails.
+# shellcheck disable=SC2016 # $names in single quotes are jq variables.
+# Deletes the open cert-manager Challenges this solver serves (webhook GROUP_NAME/SOLVER_NAME, a name
+# in ZONE_NAME) and waits until cert-manager has cleaned them up, for at most TIMEOUT_SECONDS.
+# Never fails.
 set -uo pipefail
 
 deadline=$((SECONDS + ${TIMEOUT_SECONDS:-300}))
 
+get() {
+  kubectl get "$1" --all-namespaces --output json
+}
+
+# For a wildcard, cert-manager sets dnsName to the name without "*.".
+served='
+  def served:
+    .spec.solver.dns01.webhook.groupName == $group
+    and .spec.solver.dns01.webhook.solverName == $solver
+    and ((.spec.dnsName | rtrimstr(".")) as $name | $name == $zone or ($name | endswith("." + $zone)));'
+
+jq_served() {
+  jq "$@" --arg group "$GROUP_NAME" --arg solver "$SOLVER_NAME" --arg zone "${ZONE_NAME%.}"
+}
+
 open_challenges() {
-  kubectl get challenges.acme.cert-manager.io --all-namespaces --output json |
-    jq --raw-output --arg group "$GROUP_NAME" \
-      '.items[] | select(.spec.solver.dns01.webhook.groupName == $group) | "\(.metadata.namespace) \(.metadata.name)"'
+  get challenges.acme.cert-manager.io |
+    jq_served --raw-output "$served"'.items[] | select(served) | "\(.metadata.namespace) \(.metadata.name)"'
 }
 
 if ! challenges=$(open_challenges); then
@@ -16,26 +32,31 @@ if ! challenges=$(open_challenges); then
   exit 0
 fi
 if [[ -z "$challenges" ]]; then
-  echo "No open Challenges for $GROUP_NAME."
+  echo "No open Challenges for $SOLVER_NAME in $ZONE_NAME."
   exit 0
 fi
 
-# A pending Order recreates a deleted Challenge right away, so delete the Certificates that ordered them.
+# A pending Order recreates a deleted Challenge right away, so delete the Certificates that ordered
+# them. A Ready one keeps serving and is left alone.
 certificates=$(
-  jq --null-input --raw-output --arg group "$GROUP_NAME" \
-    --argjson challenges "$(kubectl get challenges.acme.cert-manager.io --all-namespaces --output json)" \
-    --argjson orders "$(kubectl get orders.acme.cert-manager.io --all-namespaces --output json)" \
-    --argjson requests "$(kubectl get certificaterequests.cert-manager.io --all-namespaces --output json)" '
+  jq_served --null-input --raw-output \
+    --argjson challenges "$(get challenges.acme.cert-manager.io)" \
+    --argjson orders "$(get orders.acme.cert-manager.io)" \
+    --argjson requests "$(get certificaterequests.cert-manager.io)" \
+    --argjson certificates "$(get certificates.cert-manager.io)" "$served"'
     def index_by_name: map({key: "\(.metadata.namespace)/\(.metadata.name)", value: .}) | from_entries;
     def owner($kind): .metadata.ownerReferences[]? | select(.kind == $kind) | .name;
     ($orders.items | index_by_name) as $orders
     | ($requests.items | index_by_name) as $requests
+    | ($certificates.items | index_by_name) as $certificates
     | $challenges.items[]
-    | select(.spec.solver.dns01.webhook.groupName == $group)
+    | select(served)
     | .metadata.namespace as $ns
     | $orders["\($ns)/\(owner("Order"))"] // empty
     | $requests["\($ns)/\(owner("CertificateRequest"))"] // empty
-    | "\($ns) \(owner("Certificate"))"' | sort -u
+    | $certificates["\($ns)/\(owner("Certificate"))"] // empty
+    | select(any(.status.conditions[]?; .type == "Ready" and .status == "True") | not)
+    | "\($ns) \(.metadata.name)"' | sort -u
 )
 
 while read -r namespace name; do

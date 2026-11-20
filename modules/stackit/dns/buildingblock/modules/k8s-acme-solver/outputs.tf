@@ -8,7 +8,7 @@ output "solver" {
   value = {
     webhook = {
       groupName  = local.group_name
-      solverName = "stackit"
+      solverName = local.solver_name
       config     = { projectId = var.project_id }
     }
   }
