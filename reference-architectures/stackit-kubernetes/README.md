@@ -51,9 +51,10 @@ platform's STACKIT Secrets Manager.
 
 ### Platform team
 
-The platform team orders the **STACKIT Kubernetes Platform** building block. The definitions it
-registers, and what each one provisions in the STACKIT project, which is the meshTenant of the
-**STACKIT Kubernetes Platform** meshProject on the landing zone's STACKIT meshPlatform:
+The platform team orders the **STACKIT Kubernetes Platform** building block. It creates a
+meshProject with a tenant on the STACKIT landing zone, and orders **STACKIT Project** on that tenant
+to get the STACKIT project the platform runs in. The diagram below shows the definitions it
+registers and what each one provisions in that project:
 
 ![STACKIT Kubernetes — platform-team bootstrap](stackit-kubernetes.svg)
 
@@ -79,25 +80,10 @@ The one definition application teams order. It creates:
 3. one Forgejo connector (`ske/forgejo-connector`) per stage,
 4. a Project Admin binding on every project for the user who ordered it.
 
-### Git repository — `stackit/git-repository`
-
-- Forgejo teams from the workspace members: Workspace Owner → `admins`, Workspace Manager →
-  `writers`, everyone else → `readers`.
-- Actions secrets `HARBOR_REGISTRY`, `HARBOR_USERNAME` and `HARBOR_PASSWORD`: the push robot.
-- Actions variables `HARBOR_REGISTRY` and `HARBOR_PROJECT`.
-
-### Forgejo connector — `ske/forgejo-connector`
-
-Per stage:
-
-- a Kubernetes service account with RBAC on the namespace and read access to ClusterIssuers,
-- a Harbor image pull secret on the namespace's `default` service account,
-- a `stackit-ai` secret with `STACKIT_AI_BASE_URL`, `STACKIT_AI_API_KEY` and `STACKIT_AI_MODEL`,
-  unless **Starter Kit Demo** names no `ai_model`,
-- the Actions secret `KUBECONFIG_<STAGE>` and the Actions variables `K8S_NAMESPACE_<STAGE>` and
-  `APP_HOSTNAME_<STAGE>`.
-
-Once set up, it triggers the repository's workflow and waits for it to finish.
+The [Git repository](../../modules/stackit/git-repository) and
+[Forgejo connector](../../modules/ske/forgejo-connector) readmes list the secrets, variables and
+permissions each one sets up. The connector then triggers the repository's workflow and waits for
+it to finish.
 
 ## Getting Started
 
@@ -113,12 +99,11 @@ Once set up, it triggers the repository's workflow and waits for it to finish.
 
 1. Register the definition from `meshstack_integration.tf` in your foundation repository.
 2. Order **STACKIT Kubernetes Platform** in the workspace that will own the platform, and paste
-   the landing zone's code block into **STACKIT Landing Zone**. The platform orders STACKIT Project
-   on its own tenant, so in a workspace other than the landing zone's that definition must be
-   published and its version released, like the identity definitions. Turn **Playground Mode** off for a
-   platform that is used: in playground mode the platform identifier gets a random suffix and the
-   STACKIT project is not protected against deletion. It cannot be changed after the order.
-3. Finish phase 2.
+   the landing zone's code block into **STACKIT Landing Zone** (see [Landing zone](#landing-zone)).
+   Turn **Playground Mode** off for a platform that is used: in playground mode the platform
+   identifier gets a random suffix and the STACKIT project is not protected against deletion. It
+   cannot be changed after the order.
+3. Finish [phase 2](#phase-2-link-the-harbor-robot).
 
 The definition's `display_name_template` names the building block `STACKIT Kubernetes Platform
 <platform identifier>` in the order form. A foundation that orders it through the meshStack
@@ -128,8 +113,8 @@ The main inputs:
 
 | Input | Purpose |
 |---|---|
-| STACKIT Landing Zone | Platform, landing zones and the STACKIT Project, service account and federation definitions of the landing zone |
-| Landing Zone Variant | `default` or `spoke` (needs hub&spoke networking on the landing zone) |
+| STACKIT Landing Zone | The code block from the landing zone's summary; see [Landing zone](#landing-zone) |
+| Landing Zone Variant | `default` or `spoke` (needs the `hub&spoke` topology on the landing zone) |
 | STACKIT Region | Region of the SKE cluster, `eu01` (default) or `eu02`; fixed at the order. Secrets Manager, Container Registry and AI Model Serving stay in `eu01`, because STACKIT offers them only there. The node pool runs `c3i.2` machines, which both regions offer |
 | Platform Identifier | Name of the meshStack platform; the project, cluster, Git instance, registry and DNS zone are named after it |
 | Use Global Location | Put the platform into the global meshStack location, on by default; off creates a location for it |
@@ -152,6 +137,33 @@ otherwise no tenant can be created on the landing zone.
 platform's service account by default) and `project_identifier` (`<platform identifier>-ske` by
 default). The building block outputs a link to the STACKIT project
 and the summary of STACKIT Kubernetes Platform Services.
+
+### Landing zone
+
+The **STACKIT Landing Zone** input is the code block from the
+[STACKIT Landing Zone](https://hub.meshcloud.io/reference-architectures/stackit-landingzone)
+summary. Copy it again whenever the landing zone's definitions get a new version.
+
+| Key | Used for |
+|---|---|
+| `platform_ref`, `landingzone_refs` | the tenant of the platform's project, on the landing zone that **Landing Zone Variant** picks |
+| `project_bbd_ref` | finding a STACKIT Project building block the project already has |
+| `project_bbd_version_ref` | ordering STACKIT Project on the tenant when there is none |
+| `service_account_bbd_version_ref`, `service_account_federation_bbd_version_ref` | the platform's service account and its federation |
+
+The platform orders STACKIT Project on its tenant, and reads the STACKIT project id from the
+tenant's Platform Tenant ID. If the project already has a STACKIT Project block, for example from
+the time it was a mandatory block of the landing zone, the platform adopts it instead. The block's
+version is left to the platform team that owns the definition.
+
+In a workspace other than the landing zone's, these definitions must be published and their
+versions released; on the `spoke` variant, the STACKIT Network definition too. The
+landing zone README explains
+[how](https://hub.meshcloud.io/reference-architectures/stackit-landingzone#other-workspaces).
+
+A playground looks up an existing block only with `overrides.project_identifier`, because its
+generated identifier is unknown before the first run. A playground whose tenant already has a
+STACKIT Project block fails without it; deploy that playground again.
 
 ### Phase 2: link the Harbor robot
 
@@ -189,18 +201,10 @@ The [application-team diagram](#application-teams) shows the three definitions a
 creates.
 
 **Who registers it.** The nested **STACKIT Kubernetes Platform Services** run registers the three
-definitions application teams use, in `platform/buildingblock/starterkit.tf`. It does so only in phase 2, once
-**Phase 2 Completed** is true, because their pipelines push images and their workloads pull them
-with the robots phase 2 mints:
-
-1. **STACKIT Git Repository** creates a repository in the platform's Forgejo organization and
-   reads the Forgejo token and the push robot from the Secrets Manager. The **Starter Kit Identity
-   Federation** lets its runs act as the platform's service account.
-2. **SKE Forgejo Connector** wires a repository to one namespace. It reads the admin kubeconfig,
-   the Forgejo token, the pull robot and the `stackit-ai` secret, and takes the repository from
-   the Git Repository building block it is a child of.
-3. **SKE Starterkit** orders the other two. It gets the SKE platform, one landing zone per stage,
-   the DNS zone, the template repository and the version of each of the other two definitions.
+definitions in `platform/buildingblock/starterkit.tf`, only once **Phase 2 Completed** is true:
+their pipelines push images and their workloads pull them with the robots phase 2 mints. The
+**Starter Kit Identity Federation** lets the Git repository runs act as the platform's service
+account.
 
 **Where it lives.** All three are owned by the workspace that ordered **STACKIT Kubernetes
 Platform**, next to the platform's own definitions. They carry the `starterkit_building_block`
@@ -214,14 +218,8 @@ with `true` adds a draft version on top of the released one, one with `false` re
 Existing starter kits stay on their version until they are upgraded.
 
 **How an application team orders it.** The team orders **SKE Starterkit** in its own workspace
-and gives a project name and a payment method. The run creates:
-
-- the Git repository, cloned from the template repository,
-- one project per stage, each with a tenant on that stage's landing zone,
-- one Forgejo Connector per tenant, which runs the pipeline for its stage,
-- a Project Admin binding on every project for the user who ordered it.
-
-The app is served at `<name>.<DNS zone>` for `prod` and at `<name>-<stage>.<DNS zone>` for the
+and gives a project name and a payment method. The run creates what
+[Starter kit](#starter-kit--skeske-starterkit) lists. The app is served at `<name>.<DNS zone>` for `prod` and at `<name>-<stage>.<DNS zone>` for the
 other stages. The starter kit's summary links each stage and the repository.
 
 ## Adopting Existing Resources
@@ -245,12 +243,7 @@ Every key but `starterkit_definitions` needs `project`, because the resources li
 `kubernetes_platform` also need `adopt_ske`. Everything else is created new. Names the imports leave out
 derive from **Platform Identifier**, so a stage added later gets `<platform identifier>-namespace-<stage>`.
 
-The STACKIT Project building block needs no key: the platform adopts the one its project already
-has, which a tenant created while STACKIT Project was a mandatory building block of its landing
-zone got from there. It looks the block up by `landingzone.project_bbd_ref`. A playground does so
-only with `overrides.project_identifier`, because its generated identifier is unknown before the
-first run. Without one, the run of a playground deployed before fails, because meshStack refuses
-a second STACKIT Project on its tenant; deploy such a playground again.
+The STACKIT Project building block needs no key; see [Landing zone](#landing-zone).
 
 With `git`, the Git building block's technical user must be in the organization's `Owners` team,
 which only an owner can arrange: its first run fails until an owner adds that user, then run it
@@ -270,8 +263,7 @@ replaces, every project and tenant the starterkit created, so it cannot be chang
 `repository_name` input against the latest released Git repository version, so release the Git
 repository's new draft by hand before the connector can be saved.
 
-`hub.bbd_draft` decides only whether the three application team definitions are released. This
-definition and the platform's own definitions are always drafts, so they stay in the owning
+This definition and the platform's own definitions are always drafts, so they stay in the owning
 workspace.
 
 The first run may change what it takes over to match this architecture's settings. To review it,
