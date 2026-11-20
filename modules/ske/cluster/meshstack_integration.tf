@@ -290,6 +290,13 @@ resource "meshstack_building_block_definition" "this" {
         assignment_type = "NONE"
       }
 
+      egress_address_ranges = {
+        display_name    = "Egress Address Ranges"
+        description     = "JSON list of the CIDR ranges that outgoing traffic of the cluster's workloads comes from."
+        type            = "CODE"
+        assignment_type = "NONE"
+      }
+
       cluster_url = {
         display_name    = "Open Cluster"
         type            = "STRING"

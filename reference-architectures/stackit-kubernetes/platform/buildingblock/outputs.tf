@@ -30,5 +30,19 @@ output "summary" {
     phase2_completed               = var.phase2_completed
     platform_service_account_email = local.service_account_email
     platform_service_account_id    = var.automation_identity.service_account_id
+    postgres_instances             = local.postgres_instances
+    postgres_acl                   = join(", ", [for cidr in local.cluster_egress_address_ranges : "`${cidr}`"])
   })
+}
+
+output "postgres" {
+  description = "Shared PostgreSQL instances by stage, and what a database definition on them and its federation need."
+  value = {
+    stackit_project_id                     = var.stackit_project_id
+    stackit_service_account_email          = local.service_account_email
+    tenant_uuid                            = var.tenant_uuid
+    automation_identity_building_block_ref = var.automation_identity.building_block_ref
+    instance_definition_uuid               = var.postgres == null ? null : module.postgres_integration.building_block_definition.uuid
+    instances                              = local.postgres_instances
+  }
 }
