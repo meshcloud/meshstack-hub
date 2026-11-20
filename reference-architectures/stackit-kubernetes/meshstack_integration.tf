@@ -363,21 +363,24 @@ resource "meshstack_building_block_definition" "this" {
             ha_stages = {
               type        = "array"
               title       = "Highly Available Stages"
-              description = "Stages whose instance runs on three nodes; every other stage gets a single node. Left out, `prod`."
+              description = "Stages whose instance runs on three nodes; every other stage gets a single node."
               items       = { type = "string" }
+              default     = ["prod"]
             }
             flavor = {
               type        = "string"
               title       = "Flavor"
-              description = "Size of each node as <vCPU>.<RAM in GB>. Left out, `2.4`."
+              description = "Size of each node as <vCPU>.<RAM in GB>."
               enum        = ["2.4", "2.16", "4.8", "4.32", "8.16", "8.32", "16.32", "16.64", "16.128", "30.240"]
+              default     = "2.4"
             }
             storage_size = {
               type        = "integer"
               title       = "Storage Size (GB)"
-              description = "Can grow, never shrink. Left out, 5."
+              description = "Can grow, never shrink."
               minimum     = 5
               maximum     = 4000
+              default     = 5
             }
           }
         })
