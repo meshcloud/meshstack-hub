@@ -274,6 +274,11 @@ resource "meshstack_building_block" "network_area_hub" {
 
   wait_for_completion = true
 
+  # The block's delete run authenticates through the backplane's workload identity federation, which
+  # the definition version alone doesn't order after this block — without this, destroy removes the
+  # federation and its role assignment in parallel and the run fails with 401.
+  depends_on = [module.network_area_integration]
+
   spec = {
     building_block_definition_version_ref = {
       uuid = module.network_area_integration.building_block_definition.version_ref.uuid

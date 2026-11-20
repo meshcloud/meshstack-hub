@@ -222,6 +222,9 @@ The flag is chosen in the order form and cannot be changed afterwards: a run tha
 value fails at plan time, so a real platform never turns into a playground one, or the reverse.
 Deleting the building block still works.
 
+STACKIT keeps deleted projects as hidden children of their folder for up to 7 days. Until then,
+deleting the playground fails with a 409 on the folder, so re-run the delete after that.
+
 ### Adopting an Existing Platform
 
 The optional **Imports** input takes over a STACKIT platform built before this architecture, so
