@@ -19,14 +19,15 @@ tenant, sized by the `network` input, which the definition shows only on those l
 
 Application teams add the definition from the marketplace to their tenants. meshStack allows one
 per tenant (`only_apply_once_per_tenant`), because it reports the project as the tenant's Platform
-Tenant ID. The STACKIT platform is hidden from the
-marketplace, so teams add this building block rather than order a bare tenant. That applies to a
-newly created platform only; hide an existing one in meshPanel.
+Tenant ID. The STACKIT platform is hidden from the marketplace, so teams add this building block
+rather than order a bare tenant. That applies to a newly created platform only; hide an existing
+one in meshPanel.
 
 - The network runs right after this run succeeds, because it reads the project from the tenant's
   Platform Tenant ID. This run does not wait for it.
-- Resize the network through `network` here. The next run reverts a change made on the network
-  building block itself.
+- `network` is fixed at order time, and later runs leave the network's inputs alone: STACKIT
+  replaces a network whose prefix length changes, and the application team's key may not edit the
+  network's inputs.
 - meshStack refuses the order unless the `STACKIT Network` definition is published to the
   marketplace and its version is released (`hub.bbd_draft = false` on `modules/stackit/network`).
 - While the network needs attention, such as a failed run or an approval, every run here fails

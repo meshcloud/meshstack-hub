@@ -62,6 +62,8 @@ resource "meshstack_building_block" "network" {
   lifecycle {
     enabled = local.network_area_id != null
 
+    ignore_changes = [spec.inputs]
+
     # Create and update wait for the run, so PENDING and IN_PROGRESS only show on a refresh: a
     # re-run of this block, such as a user change, while the network's first run is still going.
     postcondition {

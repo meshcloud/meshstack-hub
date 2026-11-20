@@ -87,7 +87,8 @@ variable "stackit_network" {
   - The network is ordered with the key of the application team's workspace. Publish the `STACKIT
     Network` definition and release the version once tenants of other workspaces use the networked
     landing zone. `content_hash` only matters for a draft version: a change re-runs the networks.
-  - `min_prefix_length` and `max_prefix_length` bound the network size an application team may pick.
+  - `min_prefix_length` and `max_prefix_length` bound the network size an application team picks at
+    order time.
     Keep them within the bounds of the `STACKIT Network` definition.
   EOT
 }
@@ -327,7 +328,7 @@ resource "meshstack_building_block_definition" "this" {
 
     Add it from the marketplace to a STACKIT tenant:
     1. Pick your meshStack project and its STACKIT tenant. No tenant yet? Create one there and pick its landing zone, which decides whether the project is networked.
-    2. On a networked tenant, set the size of the network in the **Network** input. Other tenants don't show it.
+    2. On a networked tenant, pick the size of the network in the **Network** input. It cannot change after the order. Other tenants don't show it.
 
     A tenant takes only one: the tenant is linked to the project it creates.
 
@@ -337,7 +338,7 @@ resource "meshstack_building_block_definition" "this" {
     A team uses a tenant on the sandbox landing zone. They get a STACKIT project with STACKIT's default flat networking, and their project members get the STACKIT roles mapped from their meshStack roles.
 
     **Example 2: a routed project**
-    A team that needs private connectivity uses a tenant on the networked landing zone. Their project is placed in the hub network area and gets a routed `/${local.default_network_prefix_length}` network unless they pick another size. To resize it, change **Network** here; order more **STACKIT Network** building blocks for more networks.
+    A team that needs private connectivity uses a tenant on the networked landing zone. Their project is placed in the hub network area and gets a routed `/${local.default_network_prefix_length}` network unless they pick another size. For more networks, order more **STACKIT Network** building blocks.
 
     ## 📊 Shared Responsibility
 
@@ -509,11 +510,10 @@ resource "meshstack_building_block_definition" "this" {
         }
 
         network = {
-          display_name           = "Network"
-          description            = "Routed network ordered for the project as a STACKIT Network building block."
-          type                   = "JSON"
-          assignment_type        = "USER_INPUT"
-          updateable_by_consumer = true
+          display_name    = "Network"
+          description     = "Routed network ordered for the project as a STACKIT Network building block. Fixed at order time."
+          type            = "JSON"
+          assignment_type = "USER_INPUT"
           # Optional, so that a tenant or building block created through the API needs no value: the
           # building block then falls back to its own defaults, the same as the form's.
           is_optional = true
