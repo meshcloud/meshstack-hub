@@ -5,7 +5,19 @@ variable "stackit_organization_id" {
 
 variable "stackit_project_id" {
   type        = string
-  description = "STACKIT project ID where the backplane service account will be created."
+  default     = null
+  description = "STACKIT project ID where the backplane service account will be created. Required unless `backplane_service_account_email` is set."
+
+  validation {
+    condition     = var.stackit_project_id != null || var.backplane_service_account_email != null
+    error_message = "stackit_project_id is required unless backplane_service_account_email is set."
+  }
+}
+
+variable "backplane_service_account_email" {
+  type        = string
+  default     = null
+  description = "Existing backplane service account, for a STACKIT organization this module cannot reach. Its owner adds a federated identity provider for the `workload_identity_federation` output and grants it `iam.service-account-admin` and `iam.member-admin` on the organization."
 }
 
 variable "stackit_service_account_name" {
@@ -90,7 +102,18 @@ output "building_block_definition" {
   }
 }
 
+output "workload_identity_federation" {
+  description = "Issuer, audience and subject that a federated identity provider on the backplane service account must match."
+  value = {
+    issuer   = module.runner.issuer
+    audience = module.runner.audience
+    subject  = meshstack_building_block_definition.this.version_latest.workload_identity_federation.subject
+  }
+}
+
 locals {
+  backplane_service_account_email = var.backplane_service_account_email != null ? var.backplane_service_account_email : module.backplane[0].service_account_email
+
   # STACKIT role names may contain dots — `ske.admin` is the first one that does. The roles are
   # joined into the catalog's `roles` validation alternation, where an unescaped dot matches any
   # character, so `skeXadmin` would pass validation for a role nobody granted.
@@ -107,7 +130,13 @@ module "runner" {
   versions                       = meshstack_building_block_definition.this.versions
 }
 
+moved {
+  from = module.backplane
+  to   = module.backplane[0]
+}
+
 module "backplane" {
+  count  = var.backplane_service_account_email == null ? 1 : 0
   source = "github.com/meshcloud/meshstack-hub//modules/stackit/service-account/backplane?ref=${var.hub.git_ref}"
 
   project_id           = var.stackit_project_id
@@ -201,7 +230,7 @@ resource "meshstack_building_block_definition" "this" {
         type            = "STRING"
         assignment_type = "STATIC"
         is_environment  = true
-        argument        = jsonencode(module.backplane.service_account_email)
+        argument        = jsonencode(local.backplane_service_account_email)
       }
 
       STACKIT_USE_OIDC = {

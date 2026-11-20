@@ -12,6 +12,39 @@
 | Property | Value |
 |----------|-------|
 | **Organization** | [Open in STACKIT Portal](${organization_url}) (`${organization_id}`) |
+%{ if platform_contract_mode ~}
+| **Backplane Service Account** | `${service_account_email}` |
+%{ for key, lz in contract_landing_zones ~}
+| **Landing Zone `${lz.name}`** | ${lz.display_name}, folder `${lz.parent_container_id}`%{ if lz.network_area_id != null }, network area `${lz.network_area_id}`%{ endif } |
+%{ endfor ~}
+
+This platform runs on the platform contract of a STACKIT Landing Zone Accelerator: it created no
+STACKIT resources, and every definition it registered acts as `${service_account_email}`.
+
+### Set up the service account in the STACKIT portal
+
+Until these steps are done, every run of a definition below fails to authenticate.
+
+1. Open the service account `${service_account_email}` in the STACKIT portal.
+2. Under **Federated identity providers**, add one provider per definition, each with:
+   - **Issuer**: `${workload_identity_federation.issuer}`
+   - **Assertions**: `aud` equals `${workload_identity_federation.audience}`, and `sub` equals the
+     subject below.
+
+   | Definition | Subject (`sub equals`) |
+   |------------|------------------------|
+%{ for key, subject in workload_identity_federation.subjects ~}
+   | `${key}` | `${subject}` |
+%{ endfor ~}
+
+3. Grant the service account these roles on the organization `${organization_id}`:
+   - `resource-manager.admin`, to create the tenant projects in the target folders,
+   - `iam.member-admin`, to grant project roles and add project users to the organization,
+   - `iam.service-account-admin`, to create service accounts in tenant projects.
+
+The building block output `workload_identity_federation` holds the same issuer, audience and
+subjects, to set this up as code. A subject changes when a definition moves to another runner.
+%{ else ~}
 %{ if root_folder_name != "" ~}
 | **Root Folder** | [Open in STACKIT Portal](${root_folder_url}) (`${root_folder_name}`) |
 %{ endif ~}
@@ -23,7 +56,11 @@
 | **Hub Network Area Building Block** | @buildingblock[${network_area_hub_uuid}] |
 | **Networked Landing Zone** | `${networked_landingzone_name}` |
 %{ endif ~}
+%{ endif ~}
 
+%{ if platform_contract_mode ~}
+Application teams can now request STACKIT projects against the landing zones above.
+%{ else ~}
 %{ if network_enabled ~}
 Hub-and-spoke networking is enabled. Application teams can order the **STACKIT Network** building
 block inside their own projects in the `${networked_landingzone_name}` landing zone to get a routed
@@ -31,6 +68,7 @@ spoke network drawn from the hub's address plan.
 %{ else ~}
 Application teams can now request STACKIT projects against the `${platform_identifier}-default`
 landing zone. Provide a `network` object to additionally enable hub-and-spoke networking.
+%{ endif ~}
 %{ endif ~}
 
 > [!TIP]
@@ -40,6 +78,17 @@ landing zone. Provide a `network` object to additionally enable hub-and-spoke ne
 > reference architecture runs a full SKE developer platform on top of this landing zone. It takes one
 > value from this landing zone. Paste this block into its **STACKIT Landing Zone** input:
 >
+%{ if platform_contract_mode ~}
+> ```hcl
+> {
+>   service_account_federation_bbd_version_ref = { uuid = "${service_account_federation_bbd_version_uuid}" }
+> }
+> ```
+>
+> Set its **STACKIT Accelerator** input to an accelerator project and a service account owning it.
+> The service account federation runs as `${service_account_email}`, which needs `editor` on that
+> project.
+%{ else ~}
 > ```hcl
 > {
 >   platform_ref = { uuid = "${platform_ref.uuid}" }
@@ -57,6 +106,7 @@ landing zone. Provide a `network` object to additionally enable hub-and-spoke ne
 > Set its **Landing Zone Variant** to `networked` to run the cluster inside the hub-and-spoke network.
 > Otherwise keep the default `default`, which puts the cluster in a **STACKIT Sandbox** project with
 > STACKIT's default flat networking.
+%{ endif ~}
 %{ endif ~}
 %{ if !identity_definitions_released ~}
 

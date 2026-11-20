@@ -21,13 +21,57 @@ variable "use_global_location" {
   description = "Use the global location instead of creating a dedicated location for this platform."
 }
 
-variable "stackit_org" {
-  type        = string
+variable "platform_contract_mode" {
+  type        = bool
   nullable    = false
-  description = "STACKIT organization UUID under which the landing-zone folder, foundation project and tenant projects are created."
+  description = "Register the targets of a STACKIT Landing Zone Accelerator platform contract, in an organization this building block cannot reach, and create no STACKIT resources. Cannot change after the first run."
+}
+
+variable "platform_contract" {
+  type = object({
+    schema_version  = number
+    organization_id = string
+    targets = map(object({
+      folder_id            = string
+      region               = string
+      corporate            = bool
+      network_area_id      = optional(string)
+      firewall_next_hop_ip = optional(string)
+      ipv4_nameservers     = optional(list(string))
+    }))
+  })
+  default     = null
+  description = "Platform contract output by the STACKIT Landing Zone Accelerator. Each target becomes a landing zone. Required in platform contract mode."
 
   validation {
-    condition     = can(regex("^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$", var.stackit_org))
+    condition     = !var.platform_contract_mode || var.platform_contract != null
+    error_message = "platform_contract is required in platform contract mode."
+  }
+
+  validation {
+    condition     = var.platform_contract == null ? true : var.platform_contract.schema_version == 1 && length(var.platform_contract.targets) > 0
+    error_message = "platform_contract must have schema_version 1 and at least one target."
+  }
+}
+
+variable "backplane_service_account_email" {
+  type        = string
+  default     = null
+  description = "STACKIT service account in the contract's organization that every definition this building block registers acts as. Required in platform contract mode."
+
+  validation {
+    condition     = !var.platform_contract_mode || var.backplane_service_account_email != null
+    error_message = "backplane_service_account_email is required in platform contract mode."
+  }
+}
+
+variable "stackit_org" {
+  type        = string
+  default     = null
+  description = "STACKIT organization UUID under which the landing-zone folder, foundation project and tenant projects are created. Required unless in platform contract mode."
+
+  validation {
+    condition     = var.platform_contract_mode || can(regex("^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$", var.stackit_org))
     error_message = "stackit_org must be a valid UUID."
   }
 }
@@ -47,23 +91,28 @@ variable "stackit_service_account_key" {
   type        = string
   sensitive   = true
   ephemeral   = true
-  nullable    = false
-  description = "Key JSON of the deployment service account, which needs `resource-manager.admin` on the organization. Used to create the landing-zone folder and foundation project."
+  default     = null
+  description = "Key JSON of the deployment service account, which needs `resource-manager.admin` on the organization. Used to create the landing-zone folder and foundation project. Required unless in platform contract mode."
+
+  validation {
+    condition     = var.platform_contract_mode || var.stackit_service_account_key != null
+    error_message = "stackit_service_account_key is required unless in platform contract mode."
+  }
 }
 
 variable "stackit_owner_email" {
   type        = string
   nullable    = false
-  description = "Owner email assigned to the STACKIT resourcemanager folder, the foundation project, and every tenant project the platform creates. Must be the deployment service account's own email unless the deployment service account is an organization owner."
+  description = "Owner email assigned to the STACKIT resourcemanager folder, the foundation project, and every tenant project the platform creates. Must be the deployment service account's own email unless the deployment service account is an organization owner; in platform contract mode, the same holds for `backplane_service_account_email`."
 }
 
 variable "topology" {
   type        = list(string)
-  nullable    = false
-  description = "Landing zone labels to deploy and offer application teams. `sandbox` deploys the sandbox landing zone; `hub&spoke` also provisions the hub-and-spoke networking. The starterkit defaults to `sandbox` when selected, else `hub&spoke`."
+  default     = null
+  description = "Landing zone labels to deploy and offer application teams. `sandbox` deploys the sandbox landing zone; `hub&spoke` also provisions the hub-and-spoke networking. The starterkit defaults to `sandbox` when selected, else `hub&spoke`. Ignored in platform contract mode, where the contract's targets are the landing zones."
 
   validation {
-    condition     = length(var.topology) > 0 && alltrue([for t in var.topology : contains(["sandbox", "hub&spoke"], t)])
+    condition     = var.platform_contract_mode || (var.topology == null ? false : length(var.topology) > 0 && alltrue([for t in var.topology : contains(["sandbox", "hub&spoke"], t)]))
     error_message = "topology must be a non-empty subset of [\"sandbox\", \"hub&spoke\"]."
   }
 }
@@ -160,6 +209,11 @@ variable "imports" {
   })
   default     = null
   description = "Existing resources to take over, by key; see Adopting an Existing Platform in the README. Null creates everything."
+
+  validation {
+    condition     = var.imports == null || !var.platform_contract_mode
+    error_message = "imports needs platform_contract_mode = false: the contract mode creates no STACKIT resources to take over."
+  }
 
   validation {
     condition     = var.imports == null || !var.playground_mode

@@ -111,6 +111,33 @@ locals {
     properties = { container_id = { type = "string", title = "container_id" } }
   }
 
+  platform_contract_schema = {
+    "$schema" = "http://json-schema.org/draft-07/schema#"
+    type      = "object"
+    required  = ["schema_version", "organization_id", "targets"]
+    properties = {
+      schema_version  = { type = "integer", title = "schema_version", enum = [1] }
+      organization_id = { type = "string", title = "organization_id" }
+      targets = {
+        type          = "object"
+        title         = "targets"
+        minProperties = 1
+        additionalProperties = {
+          type     = "object"
+          required = ["folder_id", "region", "corporate"]
+          properties = {
+            folder_id            = { type = "string", title = "folder_id" }
+            region               = { type = "string", title = "region" }
+            corporate            = { type = "boolean", title = "corporate" }
+            network_area_id      = { type = ["string", "null"], title = "network_area_id" }
+            firewall_next_hop_ip = { type = ["string", "null"], title = "firewall_next_hop_ip" }
+            ipv4_nameservers     = { type = ["array", "null"], title = "ipv4_nameservers", items = { type = "string" } }
+          }
+        }
+      }
+    }
+  }
+
   tags_json_schema = {
     "$schema" = "http://json-schema.org/draft-07/schema#"
     type      = "object"
@@ -230,6 +257,15 @@ resource "meshstack_building_block_definition" "this" {
     A platform that is actually used keeps **Playground Mode** off, the default. The identifier is then taken as given, and the folder and foundation project are guarded
     with `prevent_destroy`, so a deletion run fails rather than taking every tenant project with it.
 
+    ## 📜 Platform contract mode
+
+    For a STACKIT organization built by the STACKIT Landing Zone Accelerator, turn on **Platform
+    Contract Mode** and paste the accelerator's platform contract. The building block then creates
+    no STACKIT resources: it registers the STACKIT Project platform with one landing zone per
+    target of the contract, and every definition it registers acts as the given **Backplane
+    Service Account Email**. The summary lists the federated identity providers and organization
+    roles that account needs; set them up in the STACKIT portal.
+
     ## 🔑 Authentication
 
     You provide the STACKIT organization UUID, owner email, tags, default role mapping and the key of the deployment service account as inputs.
@@ -313,6 +349,36 @@ resource "meshstack_building_block_definition" "this" {
         display_order   = 20
       }
 
+      platform_contract_mode = {
+        display_name    = "Platform Contract Mode"
+        description     = "Register the targets of a STACKIT Landing Zone Accelerator platform contract, in an organization this building block cannot reach, and create no STACKIT resources. Cannot be changed after the order."
+        type            = "BOOLEAN"
+        assignment_type = "USER_INPUT"
+        default_value   = jsonencode(false)
+        display_order   = 25
+      }
+
+      platform_contract = {
+        display_name           = "Platform Contract"
+        description            = "Platform contract output by the STACKIT Landing Zone Accelerator, pasted as is. Each target becomes a landing zone."
+        type                   = "JSON"
+        assignment_type        = "USER_INPUT"
+        updateable_by_consumer = true
+        condition              = "input.platform_contract_mode"
+        display_order          = 26
+        json_schema            = jsonencode(local.platform_contract_schema)
+      }
+
+      backplane_service_account_email = {
+        display_name           = "Backplane Service Account Email"
+        description            = "STACKIT service account in the contract's organization that every definition this building block registers acts as. The summary lists the federation and roles it needs."
+        type                   = "STRING"
+        assignment_type        = "USER_INPUT"
+        updateable_by_consumer = true
+        condition              = "input.platform_contract_mode"
+        display_order          = 27
+      }
+
       stackit_org = {
         display_name                   = "STACKIT Organization UUID"
         description                    = "STACKIT organization UUID under which the landing-zone folder, foundation project and tenant projects are created."
@@ -320,6 +386,7 @@ resource "meshstack_building_block_definition" "this" {
         assignment_type                = "USER_INPUT"
         value_validation_regex         = "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$"
         validation_regex_error_message = "STACKIT Organization UUID must be a valid UUID."
+        condition                      = "!input.platform_contract_mode"
         display_order                  = 30
       }
 
@@ -330,6 +397,7 @@ resource "meshstack_building_block_definition" "this" {
         assignment_type        = "USER_INPUT"
         is_optional            = true
         updateable_by_consumer = true
+        condition              = "!input.platform_contract_mode"
         display_order          = 35
       }
 
@@ -340,12 +408,13 @@ resource "meshstack_building_block_definition" "this" {
         assignment_type        = "USER_INPUT"
         updateable_by_consumer = true
         sensitive              = {}
+        condition              = "!input.platform_contract_mode"
         display_order          = 40
       }
 
       stackit_owner_email = {
         display_name    = "STACKIT Owner Email"
-        description     = "Owner of the STACKIT folder, foundation project, and every tenant project. Applied at creation only. Must be the deployment service account's own email unless the deployment service account is an organization owner."
+        description     = "Owner of the STACKIT folder, foundation project, and every tenant project. Applied at creation only. Must be the email of the deployment, or in contract mode the backplane, service account unless it is an organization owner."
         type            = "STRING"
         assignment_type = "USER_INPUT"
         display_order   = 50
@@ -358,6 +427,7 @@ resource "meshstack_building_block_definition" "this" {
         assignment_type   = "USER_INPUT"
         selectable_values = ["sandbox", "hub&spoke"]
         default_value     = jsonencode(["sandbox"])
+        condition         = "!input.platform_contract_mode"
         display_order     = 60
       }
 
@@ -367,7 +437,7 @@ resource "meshstack_building_block_definition" "this" {
         type                   = "JSON"
         assignment_type        = "USER_INPUT"
         updateable_by_consumer = true
-        condition              = "\"hub&spoke\" in input.topology"
+        condition              = "!input.platform_contract_mode && \"hub&spoke\" in input.topology"
         display_order          = 70
 
         # Hidden for the sandbox topology, so var.network falls back to null and networking stays off.
@@ -449,6 +519,7 @@ resource "meshstack_building_block_definition" "this" {
         type            = "JSON"
         assignment_type = "USER_INPUT"
         is_optional     = true
+        condition       = "!input.platform_contract_mode"
         display_order   = 110
 
         json_schema = jsonencode({
@@ -527,6 +598,12 @@ resource "meshstack_building_block_definition" "this" {
         display_name    = "Open Foundation Project"
         type            = "STRING"
         assignment_type = "RESOURCE_URL"
+      }
+
+      workload_identity_federation = {
+        display_name    = "Workload Identity Federation"
+        type            = "CODE"
+        assignment_type = "NONE"
       }
 
       summary = {

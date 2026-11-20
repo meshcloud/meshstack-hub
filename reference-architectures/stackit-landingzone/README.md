@@ -245,6 +245,38 @@ The first run keeps the project-creation service account's name in its state, th
 `service_account_name` or else one derived from the platform identifier. Once the adoption has
 succeeded, **Imports** can be set back to null without renaming or replacing anything.
 
+### Platform Contract Mode
+
+For a STACKIT organization built by the
+[STACKIT Landing Zone Accelerator](https://github.com/stackitcloud/stackit-landing-zone), which
+this building block cannot reach, turn on **Platform Contract Mode**. It takes two inputs:
+
+- **Platform Contract**, the JSON the accelerator outputs, pasted as is. Only `schema_version = 1`
+  is accepted. Its `organization_id` replaces **STACKIT Organization UUID**.
+- **Backplane Service Account Email**, an existing service account in that organization, usually
+  one of the accelerator's automation accounts.
+
+The run then creates no STACKIT resources and needs no STACKIT credentials: no folder, foundation
+project, backplane service account or hub network area. It registers the STACKIT platform with one
+landing zone per target, `<platform identifier>-<target key>`, whose projects go into the target's
+`folder_id` and, with a `network_area_id`, into that network area. The project starterkit offers
+these landing zones by target key and preselects the first public one. Every definition it
+registers, the STACKIT Project definitions, STACKIT Service Account and STACKIT Service Account
+Federation, acts as the backplane service account. **Topology**, **Network**, **Root Folder Name**,
+**Imports** and the service account key are hidden.
+
+Its owner sets it up once, in the STACKIT portal or as code; the summary lists the values:
+
+- one federated identity provider per definition, with the issuer, `aud` equals the audience and
+  `sub` equals the definition's subject, from the `workload_identity_federation` output;
+- the organization roles `resource-manager.admin`, `iam.member-admin` and
+  `iam.service-account-admin`.
+
+**STACKIT Owner Email** must be the backplane service account's email unless that account is an
+organization owner. The mode cannot be changed after the order. The accelerator's
+`firewall_next_hop_ip` and `ipv4_nameservers` are not used, and no STACKIT Network definition is
+registered.
+
 ### Approval Gates
 
 The module variable `approval_policies` sets which run triggers need an operator's approval before

@@ -30,7 +30,41 @@ locals {
 
   # Selecting `hub&spoke` deploys hub-and-spoke networking. The `network` input is hidden (and so
   # unset) unless it is selected, so the topology — not the presence of a network object — gates it.
-  network_enabled = contains(var.topology, "hub&spoke")
+  network_enabled = !var.platform_contract_mode && contains(var.topology == null ? [] : var.topology, "hub&spoke")
+
+  organization_id = var.platform_contract_mode ? var.platform_contract.organization_id : var.stackit_org
+
+  contract_landing_zones = var.platform_contract_mode ? {
+    for key, target in var.platform_contract.targets : key => {
+      display_name        = "STACKIT ${target.corporate ? "Corporate" : "Public"} ${target.region}"
+      description         = "Creates a STACKIT project in the ${target.corporate ? "corporate" : "public"} ${target.region} folder `${target.folder_id}` of the STACKIT Landing Zone Accelerator (target `${key}`)${target.network_area_id == null ? "" : ", attached to its network area"}, with project roles mapped from meshStack project roles."
+      parent_container_id = target.folder_id
+      network_area_id     = target.network_area_id
+    }
+  } : null
+
+  starterkit_landing_zone_refs = var.platform_contract_mode ? module.stackit_integration.landingzone_refs : merge(
+    contains(var.topology, "sandbox") ? { "sandbox" = module.stackit_integration.landingzone_refs["default"] } : {},
+    local.network_enabled ? { "hub&spoke" = module.stackit_integration.landingzone_refs["networked"] } : {}
+  )
+
+  starterkit_default_landing_zone = var.platform_contract_mode ? concat(
+    sort([for key, target in var.platform_contract.targets : key if !target.corporate]),
+    sort(keys(var.platform_contract.targets)),
+  )[0] : contains(var.topology, "sandbox") ? "sandbox" : "hub&spoke"
+
+  # Every definition runs on the same runner, so they share the issuer and audience.
+  workload_identity_federation = {
+    issuer   = module.stackit_integration.workload_identity_federation.issuer
+    audience = module.stackit_integration.workload_identity_federation.audience
+    subjects = merge(
+      { for key, subject in module.stackit_integration.workload_identity_federation.subjects : "project-${key}" => subject },
+      {
+        service-account            = module.service_account_integration.workload_identity_federation.subject
+        service-account-federation = module.service_account_federation_integration.workload_identity_federation.subject
+      },
+    )
+  }
 
   # Only resolvable once the hub network area building block has completed.
   network_area_id = local.network_enabled ? jsondecode(meshstack_building_block.network_area_hub.status.outputs["network_area_id"].value) : null
@@ -38,7 +72,7 @@ locals {
   location_name = var.use_global_location ? "global" : meshstack_location.this.metadata.name
 
   # A playground gets a root folder too, so its leftovers are easy to find and remove.
-  root_folder_name  = var.root_folder_name != null ? var.root_folder_name : var.playground_mode ? "playground-${local.platform_identifier}" : null
+  root_folder_name  = var.platform_contract_mode ? null : var.root_folder_name != null ? var.root_folder_name : var.playground_mode ? "playground-${local.platform_identifier}" : null
   root_container_id = local.root_folder_name == null ? var.stackit_org : stackit_resourcemanager_folder.root.container_id
 
   # The meshPanel Tags form sends each tag map as a list of {key, values} entries.
@@ -71,6 +105,20 @@ resource "terraform_data" "project_service_account_name" {
 
   lifecycle {
     ignore_changes = [input]
+  }
+}
+
+# Flipping the flag would delete the folders or the landing zones every tenant is assigned to.
+resource "terraform_data" "platform_contract_mode" {
+  input = var.platform_contract_mode
+
+  lifecycle {
+    ignore_changes = [input]
+
+    postcondition {
+      condition     = self.output == var.platform_contract_mode
+      error_message = "platform_contract_mode cannot change after the order."
+    }
   }
 }
 
@@ -117,6 +165,7 @@ resource "stackit_resourcemanager_folder" "this" {
   parent_container_id = local.root_container_id
 
   lifecycle {
+    enabled         = !var.platform_contract_mode
     prevent_destroy = !var.playground_mode
   }
 }
@@ -128,6 +177,7 @@ resource "stackit_resourcemanager_project" "foundation" {
   parent_container_id = local.root_folder_name == null ? stackit_resourcemanager_folder.this.container_id : local.root_container_id
 
   lifecycle {
+    enabled         = !var.platform_contract_mode
     prevent_destroy = !var.playground_mode
   }
 }
@@ -145,10 +195,12 @@ moved {
 module "stackit_integration" {
   source = "github.com/meshcloud/meshstack-hub//modules/stackit?ref=${var.hub.git_ref}"
 
-  stackit_organization_id                 = var.stackit_org
+  stackit_organization_id                 = local.organization_id
   stackit_project_owner_email             = var.stackit_owner_email
-  stackit_parent_container_id             = stackit_resourcemanager_folder.this.container_id
-  stackit_project_id                      = stackit_resourcemanager_project.foundation.project_id
+  stackit_parent_container_id             = var.platform_contract_mode ? null : stackit_resourcemanager_folder.this.container_id
+  stackit_project_id                      = var.platform_contract_mode ? null : stackit_resourcemanager_project.foundation.project_id
+  backplane_service_account_email         = var.backplane_service_account_email
+  landing_zones                           = local.contract_landing_zones
   stackit_service_account_name            = terraform_data.project_service_account_name.input
   role_mapping                            = { admin = var.role_mapping.admin, user = var.role_mapping.user, reader = var.role_mapping.reader }
   stackit_organization_onboarding_enabled = var.role_mapping.organization_onboarding
@@ -174,13 +226,10 @@ module "stackit_integration" {
 module "stackit_project_starterkit" {
   source = "github.com/meshcloud/meshstack-hub//modules/stackit/stackit-project-starterkit?ref=${var.hub.git_ref}"
 
-  platform_ref = module.stackit_integration.platform_ref
-  landing_zone_refs = merge(
-    contains(var.topology, "sandbox") ? { "sandbox" = module.stackit_integration.landingzone_refs["default"] } : {},
-    local.network_enabled ? { "hub&spoke" = module.stackit_integration.landingzone_refs["networked"] } : {}
-  )
+  platform_ref      = module.stackit_integration.platform_ref
+  landing_zone_refs = local.starterkit_landing_zone_refs
 
-  default_landing_zone = contains(var.topology, "sandbox") ? "sandbox" : "hub&spoke"
+  default_landing_zone = local.starterkit_default_landing_zone
   approval_policies    = local.starterkit_approval_policies
 
   # `hub&spoke` is the only landing zone attached to a network area, so it is the only one where the
@@ -208,8 +257,9 @@ module "stackit_project_starterkit" {
 module "service_account_integration" {
   source = "github.com/meshcloud/meshstack-hub//modules/stackit/service-account?ref=${var.hub.git_ref}"
 
-  stackit_organization_id = var.stackit_org
-  stackit_project_id      = stackit_resourcemanager_project.foundation.project_id
+  stackit_organization_id         = local.organization_id
+  stackit_project_id              = var.platform_contract_mode ? null : stackit_resourcemanager_project.foundation.project_id
+  backplane_service_account_email = var.backplane_service_account_email
 
   stackit_assignable_roles = ["reader", "editor", "iam.member-admin", "ske.admin", "git.admin", "container-registry.admin", "dns.admin"]
 
@@ -226,7 +276,8 @@ module "service_account_federation_integration" {
   # requires.
   service_account_definition_ref = module.service_account_integration.building_block_definition.ref
 
-  stackit_project_id = stackit_resourcemanager_project.foundation.project_id
+  stackit_project_id              = var.platform_contract_mode ? null : stackit_resourcemanager_project.foundation.project_id
+  backplane_service_account_email = var.backplane_service_account_email
 
   meshstack = { owning_workspace_identifier = var.workspace, tags = local.tags.building_block, runner_ref = local.runner_ref }
   hub       = var.hub

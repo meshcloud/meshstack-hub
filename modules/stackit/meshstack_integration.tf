@@ -52,7 +52,13 @@ variable "stackit_project_owner_email" {
 
 variable "stackit_parent_container_id" {
   type        = string
-  description = "Default parent container ID (organization or folder) for project creation."
+  default     = null
+  description = "Default parent container ID (organization or folder) for project creation. Required unless `landing_zones` is set."
+
+  validation {
+    condition     = var.stackit_parent_container_id != null || var.landing_zones != null
+    error_message = "stackit_parent_container_id is required unless landing_zones is set."
+  }
 }
 
 variable "stackit_networked_parent_container_id" {
@@ -88,6 +94,22 @@ variable "stackit_networked_projects_enabled" {
   type        = bool
   default     = false
   description = "Whether to create a second, `networked` STACKIT Project building block definition and landing zone whose projects are placed in `stackit_network_area_id`. Must be known at plan time (`stackit_network_area_id` itself may only resolve during apply)."
+}
+
+variable "landing_zones" {
+  type = map(object({
+    display_name        = string
+    description         = string
+    parent_container_id = string
+    network_area_id     = optional(string)
+  }))
+  default     = null
+  description = "Landing zones by key, each with its own STACKIT Project definition, replacing the `default` and `networked` variants. `network_area_id` places its projects in that network area. Null keeps the variants."
+
+  validation {
+    condition     = var.landing_zones == null ? true : length(var.landing_zones) > 0
+    error_message = "landing_zones must name at least one landing zone, or be null."
+  }
 }
 
 variable "stackit_network_area_id" {
@@ -170,10 +192,10 @@ module "backplane" {
 }
 
 output "building_block_definition" {
-  description = "BBD is consumed in building block compositions."
+  description = "BBD is consumed in building block compositions. With `landing_zones`, the definition of the first key."
   value = {
-    uuid        = meshstack_building_block_definition.this["default"].metadata.uuid
-    version_ref = var.hub.bbd_draft ? meshstack_building_block_definition.this["default"].version_latest : meshstack_building_block_definition.this["default"].version_latest_release
+    uuid        = meshstack_building_block_definition.this[local.primary_variant].metadata.uuid
+    version_ref = var.hub.bbd_draft ? meshstack_building_block_definition.this[local.primary_variant].version_latest : meshstack_building_block_definition.this[local.primary_variant].version_latest_release
   }
 }
 
@@ -197,7 +219,7 @@ output "platform_ref" {
 }
 
 output "landingzone_refs" {
-  description = "References to the created landing zones, keyed by project variant (`default`, and `networked` when `stackit_networked_projects_enabled` is true)."
+  description = "References to the created landing zones, keyed by project variant (`default`, and `networked` when `stackit_networked_projects_enabled` is true) or by `landing_zones` key."
   value = {
     for key, lz in meshstack_landingzone.this : key => lz.ref
   }
@@ -207,7 +229,15 @@ output "landingzone_refs" {
 # `networked` variant carries the `networkArea` label as a static building block input, so projects
 # are placed in the network area without any landing zone tag lookup at run time.
 locals {
-  project_variants = merge(
+  project_variants = var.landing_zones != null ? {
+    for key, lz in var.landing_zones : key => {
+      bbd_display_name         = "STACKIT Project (${lz.display_name})"
+      landingzone_display_name = lz.display_name
+      landingzone_description  = lz.description
+      network_area_id          = lz.network_area_id
+      parent_container_id      = lz.parent_container_id
+    }
+    } : merge(
     {
       default = {
         bbd_display_name         = "STACKIT Project"
@@ -227,6 +257,8 @@ locals {
       }
     } : {}
   )
+
+  primary_variant = var.landing_zones != null ? sort(keys(var.landing_zones))[0] : "default"
 }
 
 moved {
