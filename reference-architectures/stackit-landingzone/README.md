@@ -1,155 +1,117 @@
 ---
 name: STACKIT Landing Zone
 description: >
-  Bootstraps a self-service-ready STACKIT platform: a dedicated STACKIT resourcemanager folder,
-  a foundation project with a service account, and the STACKIT Project platform with a default
-  landing zone. Optionally layers on a hub-and-spoke network topology — a shared network-area
-  address plan (hub) and a self-service routed-network building block (spoke) — when a network
-  configuration is provided.
+  Turns a STACKIT organization into a meshStack platform: a landing-zone folder, a foundation
+  project, and a STACKIT platform whose STACKIT Project building block application teams add from
+  the marketplace. The optional hub-and-spoke topology adds a shared network area and a networked
+  landing zone, whose projects each get a routed network.
 cloudProviders:
   - stackit
 buildingBlocks:
   - path: stackit/project
-    role: Provisions a STACKIT Project with role assignments.
+    role: Creates a tenant's STACKIT project with its members' roles, and orders its network on the networked landing zone.
   - path: stackit/service-account
-    role: Lets application teams self-service create a STACKIT service account with project roles and workload identity federation inside their projects.
+    role: Lets application teams create STACKIT service accounts with project roles inside their projects.
+  - path: stackit/service-account-federation
+    role: Lets building block definitions act as such a service account through workload identity federation.
   - path: stackit/network-area
-    role: (Optional) Provisions the hub network area with the shared IPv4 address plan.
+    role: (Optional) The hub network area with the shared IPv4 address plan.
   - path: stackit/network
-    role: (Optional) Lets application teams self-service order routed spoke networks inside their projects.
+    role: (Optional) A routed network in the hub network area, ordered by STACKIT Project on the networked landing zone.
 ---
 
 # STACKIT Landing Zone
 
 ## Overview
 
-The **STACKIT Landing Zone** reference architecture turns a bare STACKIT organization into a
-self-service-ready meshStack platform in one step using its own Terraform code.
+This reference architecture turns a STACKIT organization into a meshStack platform in one run.
+Application teams then add **STACKIT Project** from the marketplace to their tenants, and get a
+STACKIT project with roles for their project members. Automation, such as a composing architecture,
+may order it the same way.
 
-The **always-on** foundation is a sandbox landing zone: a dedicated STACKIT resourcemanager
-folder, a foundation project hosting the project-creation service account, and the **STACKIT
-Project** platform with its default landing zone. Application teams can immediately add STACKIT
-Project from the marketplace to their tenants on it.
+The platform has up to two landing zones:
 
-Optionally, by providing a **network** configuration, the same building block layers on a
-hub-and-spoke network topology with IPAM built in: a shared network-area address plan (the hub)
-that all tenant projects draw from, and a routed-network building block (the spoke) that STACKIT
-Project orders for every project on the networked landing zone. Leaving the network configuration unset
-deploys only the sandbox foundation.
+- **Sandbox** (`<platform identifier>-default`), always. Projects use STACKIT's default flat
+  networking.
+- **Networked** (`<platform identifier>-networked`), with the `hub&spoke` topology. Projects sit in
+  a shared hub network area, and each gets a routed network from the hub's address plan, so no two
+  networks overlap.
 
-**Target audience:**
-
-- **Platform engineers** onboarding a new STACKIT organization into meshStack who want a sandbox
-  environment application teams can add STACKIT projects from immediately — optionally with network
-  segmentation from day one, without hand-wiring a network area and its address plan separately.
-- **Application teams** who need a dedicated IPv4 subnet inside their STACKIT project without
-  manually coordinating CIDR ranges with the platform team (when networking is enabled).
+One STACKIT Project definition serves both. It reads its tenant's landing zone and, on the
+networked one, orders a **STACKIT Network** building block for the project. The
+[STACKIT Project readme](../../modules/stackit/project/buildingblock/README.md#landing-zones) has
+the details.
 
 ## Architecture Diagram
 
-The diagram below shows meshStack on top and STACKIT below. In meshStack, the platform has a
-default landing zone and, with a network configuration, a networked one. Both offer the same
-**STACKIT Project** definition (blue). Each STACKIT Project building block creates one project
-(green) in the landing-zone folder. On the networked landing zone, it also orders a **STACKIT
-Network** building block, which takes its subnet from the hub's network area. Everything marked
-*optional* only exists with a network configuration.
+The diagram below shows meshStack on top and STACKIT below. Both landing zones offer the same
+STACKIT Project definition (blue). Each STACKIT Project building block creates one project (green)
+in the landing-zone folder. On the networked landing zone, it also orders a STACKIT Network
+building block, which takes its subnet from the hub network area. Everything marked *optional*
+exists only with the `hub&spoke` topology.
 
 ![STACKIT Landing Zone reference architecture](stackit-landingzone.svg)
 
-When networking is enabled, STACKIT Project orders a routed network for each project on the
-networked landing zone, from the `stackit/network` building block; each order draws its subnet from
-the hub's address plan, so no two spokes can accidentally collide on CIDR ranges.
-
 ## How It Works
 
-Running this reference architecture always:
+Every run:
 
-1. Creates a **STACKIT resourcemanager folder** in the [root folder](#root-folder), or under the
-   organization without one — new STACKIT projects are created inside this folder.
-2. Creates a **STACKIT foundation project** to host the project-creation service account and other
-   landing-zone core assets. It sits in the root folder, or in the landing-zone folder without one.
-3. Sources the [`modules/stackit`](../../modules/stackit) platform integration to register the
-   **STACKIT Project** platform and its default landing zone in meshStack, wired to the foundation
-   service account. The platform starts private to the owning workspace and hidden in the
-   marketplace; publish it in meshPanel so that tenants of other workspaces can use it.
-4. Registers the [`stackit/service-account`](../../modules/stackit/service-account) and
-   [`stackit/service-account-federation`](../../modules/stackit/service-account-federation) building
-   block definitions (`TENANT_LEVEL`), so application teams can self-service create a STACKIT service
-   account with project roles inside their own projects, and let their own definitions act as it.
+1. Creates the **landing-zone folder**, which holds the tenant projects, and the **foundation
+   project**, which holds the project-creation service account. [Root Folder](#root-folder) says
+   where they go.
+2. Registers the STACKIT platform, its landing zones and the STACKIT Project definition through
+   [`modules/stackit`](../../modules/stackit). A new platform is hidden in the marketplace, so
+   teams add STACKIT Project instead of ordering a bare tenant.
+3. Registers [`stackit/service-account`](../../modules/stackit/service-account) and
+   [`stackit/service-account-federation`](../../modules/stackit/service-account-federation).
 
-When a **network** configuration is provided, it additionally:
+With the `hub&spoke` topology, it also:
 
-5. Registers the [`stackit/network-area`](../../modules/stackit/network-area) building block
-   definition and immediately orders **one instance** of it in the platform team's own workspace —
-   this is the hub's IPv4 address plan.
-6. Registers the [`stackit/network`](../../modules/stackit/network) building block definition
-   (`TENANT_LEVEL`) so application teams can self-service order routed networks (spokes) inside
-   their STACKIT projects, drawing from the hub's address plan.
-7. Provisions an additional **networked landing zone**. A `STACKIT Project` on it is placed in the
-   hub's network area and orders a routed network from the `stackit/network` definition, sized by
-   its **Network** input. For tenants of other workspaces, meshStack only lets that order through
-   once that definition is published and released, which needs `hub.bbd_draft = false`.
+4. Registers [`stackit/network-area`](../../modules/stackit/network-area) and orders one building
+   block of it in the owning workspace: the hub network area, with the address plan from the
+   **Network** input.
+5. Adds the networked landing zone, and registers
+   [`stackit/network`](../../modules/stackit/network) for it only.
 
 ## Service Accounts
 
-You supply the **deployment service account**, as `stackit_service_account_key`, and the
-architecture creates the **project-creation service account**. The deployment service account
-creates the folder, the foundation project and the meshStack objects, and its key is reused on every
-run. The project-creation service account lives in the foundation project and creates tenant
-projects; it authenticates through workload identity federation, so no key for it is ever stored.
+You supply the **deployment service account** as **STACKIT Service Account Key**. It creates the
+folders, the foundation project and the meshStack objects. The architecture creates the
+**project-creation service account** in the foundation project. It creates the tenant projects and
+authenticates through workload identity federation, so no key for it is stored.
 
-### How composing architectures get an identity
+**STACKIT Owner Email** owns the folders, the foundation project and every tenant project. STACKIT
+sets it at creation only, so changing it later means recreating what it owns. If the deployment
+service account is an organization owner, the owner may be any address, typically a team mailbox.
+If it only holds `resource-manager.admin`, the owner must be the deployment service account's own
+email, or the run fails with `POST /v2/projects/<id>/service-accounts -> 403`.
+
+### Composing architectures
 
 The [STACKIT Kubernetes Platform](https://hub.meshcloud.io/reference-architectures/stackit-kubernetes)
-registers its own building block definitions when it is ordered, and those definitions need a STACKIT
-identity to deploy as. This landing zone publishes no credential for that, and it has no outputs a
-composing architecture reads. Its summary shows a code block instead, which you paste into the
-composing architecture's **STACKIT Landing Zone** input. The block holds the platform ref, the
-landing zone refs, and the version refs of three definitions:
+builds on this landing zone. This building block's summary shows a code block to paste into its
+**STACKIT Landing Zone** input: the platform and landing zone refs, and the STACKIT Project, STACKIT
+Service Account and STACKIT Service Account Federation definitions.
 
-- the **STACKIT Project** definition,
-- the **STACKIT Service Account** definition, and
-- the **STACKIT Service Account Federation** definition.
+A composing architecture orders STACKIT Project on its tenant, then a service account there with the
+roles it needs, then the federation as a child of the account, with its own definitions in
+`federated_building_block_definitions`. Runs of those definitions then act as the account through
+workload identity federation, and no credential crosses the boundary. A new STACKIT capability
+therefore needs only its role in `stackit_assignable_roles` and its definition in
+`federated_building_block_definitions`.
 
-All are the latest versions. Another workspace may only order a released version that is
-published to the marketplace, so deploy the landing zone with `hub.bbd_draft = false` and publish
-the three definitions in meshPanel. Releasing a definition's first version requests its
-marketplace review, which a meshStack admin approves: in a workspace without admin rights the first
-run fails until then, so run it again after the approval. `hub.bbd_draft` releases only the definitions this landing zone
-registers; its own definition is always a draft, so it stays in the owning workspace. A new version
-gets a new uuid, so copy the block again after the definitions change.
+### Other workspaces
 
-A composing architecture orders STACKIT Project on a tenant it just created, then the service
-account on the same tenant, with the roles it needs. It then orders the federation as a child of
-the service account, with the uuids of its own definitions in
-`federated_building_block_definitions`, and orders the blocks that act as the account as children
-of the federation. Every run of those definitions may then act as that account through
-workload identity federation; each building block names the account in its
-`STACKIT_SERVICE_ACCOUNT_EMAIL` input.
+Another workspace may only order a released definition version that is published to the
+marketplace. Deploy with `hub.bbd_draft = false`. Then publish in meshPanel the platform and the
+STACKIT Project, STACKIT Service Account and STACKIT Service Account Federation definitions, plus
+STACKIT Network with `hub&spoke`.
 
-The two are separate so that the service account does not depend on the definitions it federates.
-Otherwise no definition could read the account's email, and the account could not be the parent of
-the blocks that act as it. Nothing long-lived crosses the
-boundary, so [`stackit-backplane.md`](../../.agents/references/stackit-backplane.md) holds
-throughout.
-
-A new STACKIT capability added to a composing architecture therefore needs its role in
-`stackit_assignable_roles` and its definition's uuid in `federated_building_block_definitions` —
-not a new credential.
-
-`stackit_owner_email` owns the folder, the foundation project and every tenant project the platform
-creates. STACKIT applies it at creation only, so changing it later means recreating what it owns.
-
-The deployment service account is expected to be an organization owner, which may name any
-address — a team mailbox, typically. A deployment service account holding only
-`resource-manager.admin` may create a project but not act inside one it does not own, so the owner
-then has to be the deployment service account's own email, or the run fails with
-`POST /v2/projects/<id>/service-accounts -> 403`.
-
-Tenant projects are unaffected either way: the project-creation service account works through its
-organization-scoped roles, not through ownership. One of those roles is conditional — with
-`role_mapping.organization_onboarding` off it lacks `iam.member-admin` and cannot assign project
-roles to users.
+- A definition's first release waits for a meshStack admin to approve its marketplace review. In a
+  workspace without admin rights, the run fails until then; run it again after the approval.
+- A new version has a new uuid, so copy the summary block again after the definitions change.
+- `hub.bbd_draft` does not apply to this landing zone's own definition, which stays a draft in the
+  owning workspace.
 
 ## Getting Started
 
@@ -157,27 +119,20 @@ roles to users.
 
 | Requirement          | Description                                                                       |
 |----------------------|-----------------------------------------------------------------------------------|
-| STACKIT organization | A key of the deployment service account, an organization owner. `resource-manager.admin` alone also works, but then constrains which `stackit_owner_email` values are valid — see [Service Accounts](#service-accounts). |
-| CIDR plan            | *(Only when enabling networking)* A non-overlapping IPv4 address plan chosen up front for the hub network ranges and transfer network. |
+| STACKIT organization | A key of the deployment service account, an organization owner. `resource-manager.admin` alone also works, but limits **STACKIT Owner Email**; see [Service Accounts](#service-accounts). |
+| CIDR plan            | *(Only with `hub&spoke`)* A non-overlapping IPv4 address plan for the hub network ranges and the transfer network. |
 
 ### Deployment Order
 
-Order the **STACKIT Landing Zone** building block once per workspace. Without a network
-configuration it creates the platform and default landing zone. With a network configuration it
-additionally creates the hub network area instance and the networked landing zone, and registers the
-spoke `stackit/network` building block in the same apply. Application teams then add STACKIT
-Project from the marketplace to their tenants; on the networked landing zone it also orders the
-project's network.
-
-The definition's `display_name_template` names the building block `STACKIT Landing Zone <platform
-identifier>` in the order form. A foundation that orders it through the meshStack provider sets
-`display_name` to the same string.
+Order the **STACKIT Landing Zone** building block once per platform. Its display name is
+`STACKIT Landing Zone <platform identifier>`; a foundation that orders it through the meshStack
+provider sets `display_name` to the same string.
 
 ### Root Folder
 
-One STACKIT organization can serve several meshStacks, for example a dev, a demo and a trial
-instance. **Root Folder Name** then creates a folder at the organization root that holds everything
-of this landing zone:
+One STACKIT organization can serve several meshStacks, for example dev, demo and trial.
+**Root Folder Name** then creates a folder at the organization root for everything of this
+landing zone:
 
 ```
 <organization>
@@ -187,27 +142,23 @@ of this landing zone:
     └── projects of the meshStack that are no tenants
 ```
 
-Leave it empty for an organization that serves one meshStack: the landing-zone folder then sits at
-the organization root and holds the foundation project. Playground mode always creates a root folder,
-named `playground-<platform identifier>`.
-
-The output `root_container_id` is the root folder, or the organization without one. Place other
-projects of the meshStack there, such as a bootstrap or metering project. Setting or renaming the
-root folder later moves the landing-zone folder and the foundation project in place; their ids and
-the tenant projects stay.
+Leave it empty for an organization that serves one meshStack. The landing-zone folder then sits at
+the organization root and holds the foundation project. The output `root_container_id` is the root
+folder, or the organization without one; put other projects of the meshStack there, such as a
+metering project. Setting or renaming the root folder later moves the landing-zone folder and the
+foundation project in place.
 
 ### Tags
 
-meshStack checks its tag definitions and tag policies when this building block registers the
-landing zones and when application teams create tenants on them. If your meshStack makes a landing
-zone tag mandatory, or has a policy that matches landing zone tags against project tags, set those
-tags in **Tags**, as `landingzone = [{ key = "...", values = ["..."] }]`. Otherwise the run fails
-to create the landing zones, or meshStack refuses the tenants.
+meshStack checks its tag definitions and policies when this building block creates the landing
+zones and when teams create tenants on them. If your meshStack requires a landing zone tag, or
+matches landing zone tags against project tags, set them in **Tags**, as
+`landingzone = [{ key = "...", values = ["..."] }]`.
 
 ### Playground Mode
 
-**Playground Mode** deploys a throwaway platform. It is off by default, and four things change
-with it:
+**Playground Mode** deploys a throwaway platform for the deploying workspace. It is off by default
+and cannot change after the order.
 
 | | `playground_mode = true` | `playground_mode = false` |
 |---|---|---|
@@ -216,64 +167,42 @@ with it:
 | Folders and foundation project | destroyable | guarded with `prevent_destroy` |
 | Names of the registered definitions | ` (<platform identifier>)` appended | the modules' names |
 
-The suffix exists because a platform identifier is unique across the whole meshStack instance, and
-`modules/stackit` builds every landing zone name from it as `<platform_identifier>-<variant>`. A
-playground deployment that took the plain name would occupy it for good, across the instance.
-
-**A playground platform is for the deploying workspace only.** Publish it or the building block
-definitions it registers to other workspaces only to test that path, and delete the playground
-afterwards: the platform can disappear at any time, and its name is not the one a real deployment
-will use. The suffixed definition names keep a published test apart from the real definitions.
-
-Keep `playground_mode = false` for a platform that is actually used, as the `stackit-platform`
-workspace in likvid-cloudfoundation does. The guard is then a plan-time rule, so it also catches a
-teardown caused by a change that forces the folder to be replaced. It cannot catch a deletion that
-happens outside the Terraform run, such as someone removing the folder in the STACKIT portal.
-
-The flag is chosen in the order form and cannot be changed afterwards: a run that sees another
-value fails at plan time, so a real platform never turns into a playground one, or the reverse.
-Deleting the building block still works.
-
-STACKIT keeps deleted projects as hidden children of their folder for up to 7 days. Until then,
-deleting the playground fails with a 409 on the folder, so re-run the delete after that.
+A platform identifier is unique across the meshStack instance, so the suffix keeps a playground
+from occupying the real name. Publish a playground or its definitions only to test that path, and
+delete it afterwards. STACKIT keeps deleted projects in their folder for up to 7 days, so deleting
+a playground fails with a 409 on the folder until then; run the delete again later.
 
 ### Adopting an Existing Platform
 
 The optional **Imports** input takes over a STACKIT platform built before this architecture, so
-nothing that tenants depend on is replaced. Every key is optional and needs `playground_mode =
-false`, because nothing taken over is released on destroy.
+nothing that tenants depend on is replaced. It needs `playground_mode = false`.
 
 | Key | Takes over |
 |---|---|
 | `folder = {container_id}` | the landing-zone folder, renamed to the platform identifier |
 | `foundation_project = {container_id}` | the foundation project, renamed to `<platform identifier>-foundation` |
-| `adopt_platform = true` | the location (unless **Use Global Location**), the STACKIT platform `<platform identifier>` in it and its landing zones `<platform identifier>-default` and, with `hub&spoke`, `-networked` |
-| `project_definition = {uuid, service_account_name, service_account_email, federated_identity_provider_ids}` | the STACKIT Project definition and its backplane: the project-creation service account, its federated identity providers in the order of the subjects they trust, and its organization roles |
+| `adopt_platform = true` | the location (unless **Use Global Location**), the platform and its landing zones |
+| `project_definition = {uuid, service_account_name, service_account_email, federated_identity_provider_ids}` | the STACKIT Project definition and its backplane |
 | `service_account_definition = {uuid, service_account_email, federated_identity_provider_ids}` | the STACKIT Service Account definition and its backplane |
 | `service_account_federation_definition = {uuid, service_account_email, federated_identity_provider_ids}` | the STACKIT Service Account Federation definition and its backplane |
 
-The three definition keys need `foundation_project`, where their service accounts live. A
-definition gets a new version and its building blocks stay on theirs until upgraded. Turn on the
-approval gates for the adoption and approve only a plan that replaces nothing.
-
-The first run keeps the project-creation service account's name in its state, the adopted
-`service_account_name` or else one derived from the platform identifier. Once the adoption has
-succeeded, **Imports** can be set back to null without renaming or replacing anything.
+The three definition keys need `foundation_project`, where their service accounts live. Turn on the
+approval gates and approve only a plan that replaces nothing. After the first successful run,
+**Imports** can go back to null.
 
 ### Approval Gates
 
-The module variable `approval_policies` sets which run triggers need an operator's approval before
-a run of this architecture is applied. It defaults to no gate at all.
+The module variable `approval_policies` sets which run triggers need an operator's approval. It
+defaults to none.
 
 ## Shared Responsibilities
 
-| Responsibility                                                                | Platform Team | Application Team |
-|-------------------------------------------------------------------------------|:---:|:---:|
-| Provision the STACKIT platform and default landing zone                       | ✅ | ❌ |
-| Register the self-service `stackit/service-account` building block            | ✅ | ❌ |
-| *(Optional)* Provision the hub network area and choose its address plan       | ✅ | ❌ |
-| *(Optional)* Register the spoke `stackit/network` building block              | ✅ | ❌ |
-| Add STACKIT Project from the marketplace to their tenants                     | ❌ | ✅ |
-| Create service accounts inside their STACKIT projects                         | ❌ | ✅ |
-| *(Optional)* Order spoke networks inside their STACKIT projects               | ❌ | ✅ |
-| Use the assigned subnet and manage workloads inside their projects            | ❌ | ✅ |
+| Responsibility                                                          | Platform Team | Application Team |
+|-------------------------------------------------------------------------|:---:|:---:|
+| Provide the STACKIT platform and its landing zones                      | ✅ | ❌ |
+| Register STACKIT Project and the service account definitions            | ✅ | ❌ |
+| *(Optional)* Provide the hub network area and choose its address plan   | ✅ | ❌ |
+| Publish the platform and definitions for other workspaces               | ✅ | ❌ |
+| Add STACKIT Project to their tenants and pick the landing zone          | ❌ | ✅ |
+| Create service accounts inside their STACKIT projects                   | ❌ | ✅ |
+| Manage workloads inside their projects                                  | ❌ | ✅ |
