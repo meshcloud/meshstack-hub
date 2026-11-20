@@ -33,10 +33,17 @@ Both of these surface as a `409 TagValidation` from the workspace the run tried 
 
 Where the landing zone offers its platform's main building block in the marketplace instead of
 running it on tenant creation, as the STACKIT Landing Zone does with `STACKIT Project`, set
-`tenant_building_block` in `meshstack_integration.tf`. The block orders it on the tenant, waits for
-its run, and deletes it before the tenant. The backplane's key then also gets
-`ADM_BUILDINGBLOCK_LIST`, `_SAVE` and `_DELETE`, which let it order a draft or unpublished
-definition of another workspace.
+`tenant_building_block` in `meshstack_integration.tf`. Without it, a tenant on such a landing zone
+never gets its Platform Tenant ID. The block orders the building block on the tenant, waits for its
+run, and deletes it before the tenant. A tenant that has a building block of that definition
+already, because it was a mandatory one of its landing zone when the tenant was created, keeps it:
+the run imports it and leaves its version to the platform team.
+
+The backplane's key then also gets `ADM_BUILDINGBLOCK_LIST`, `_SAVE` and `_DELETE`. Admin scope is
+needed: the block lives in the workspace the run creates, and meshStack lets only an admin key or
+that workspace's own key create a building block there. `MANAGED_BUILDINGBLOCK_SAVE` only updates
+existing blocks of the key's own definitions. With admin scope, the definition may be a draft or
+unpublished definition of another workspace.
 
 ## Self-destructs after its TTL
 
@@ -92,6 +99,7 @@ No modules.
 | [meshstack_workspace_user_binding.owner](https://registry.terraform.io/providers/meshcloud/meshstack/latest/docs/resources/workspace_user_binding) | resource |
 | [random_uuid.project_admin_binding](https://registry.terraform.io/providers/hashicorp/random/latest/docs/resources/uuid) | resource |
 | [time_static.created](https://registry.terraform.io/providers/hashicorp/time/latest/docs/resources/static) | resource |
+| [meshstack_building_blocks.tenant](https://registry.terraform.io/providers/meshcloud/meshstack/latest/docs/data-sources/building_blocks) | data source |
 
 ## Inputs
 
@@ -104,7 +112,7 @@ No modules.
 | <a name="input_project_identifier"></a> [project\_identifier](#input\_project\_identifier) | Identifier for the project created inside the new workspace. | `string` | n/a | yes |
 | <a name="input_project_role_name"></a> [project\_role\_name](#input\_project\_role\_name) | meshStack project role granted to `workspace_owner_username`. | `string` | n/a | yes |
 | <a name="input_tags"></a> [tags](#input\_tags) | Additional tags merged onto the workspace (alongside the expiry tag, if `workspace_ttl_days` is set), the payment method and the project. | <pre>object({<br/>    workspace      = map(list(string))<br/>    payment_method = map(list(string))<br/>    project        = map(list(string))<br/>  })</pre> | n/a | yes |
-| <a name="input_tenant_building_block"></a> [tenant\_building\_block](#input\_tenant\_building\_block) | Building block ordered on the tenant. Null orders none. | <pre>object({<br/>    definition_version_ref = object({ uuid = string })<br/>    display_name           = string<br/>  })</pre> | `null` | no |
+| <a name="input_tenant_building_block"></a> [tenant\_building\_block](#input\_tenant\_building\_block) | Building block ordered on the tenant, or adopted when the tenant has one of `definition_ref` already. Null orders none. | <pre>object({<br/>    definition_ref         = object({ uuid = string })<br/>    definition_version_ref = object({ uuid = string })<br/>    display_name           = string<br/>  })</pre> | `null` | no |
 | <a name="input_workspace_display_name"></a> [workspace\_display\_name](#input\_workspace\_display\_name) | Display name for the new workspace. | `string` | n/a | yes |
 | <a name="input_workspace_expiry_tag_key"></a> [workspace\_expiry\_tag\_key](#input\_workspace\_expiry\_tag\_key) | Tag key the computed expiry date is written under on the new workspace. | `string` | n/a | yes |
 | <a name="input_workspace_identifier"></a> [workspace\_identifier](#input\_workspace\_identifier) | Identifier for the new meshStack workspace. | `string` | n/a | yes |
