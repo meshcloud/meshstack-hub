@@ -52,7 +52,7 @@ digraph stackit_landingzone {
     PLAT     [label="🛰️ STACKIT Project Platform" fillcolor="#ecedfb" color="#9aa2e6"]
     DEFLZ    [label="🛬 Default Landing Zone" fillcolor="#ecedfb" color="#9aa2e6"]
     NETLZ    [label="🛬 Spoke Landing Zone\noptional · with network config" fillcolor="#ecedfb" color="#9aa2e6"]
-    PRJBBD   [label="📦 stackit/project BBD" fillcolor="#ecedfb" color="#9aa2e6"]
+    PRJBBD   [label="📦 stackit/project BBD\nmarketplace · one per tenant" fillcolor="#ecedfb" color="#9aa2e6"]
     SABBD    [label="📦 stackit/service-account BBD\ntenant-level self-service" fillcolor="#ecedfb" color="#9aa2e6"]
     NABBD    [label="📦 stackit/network-area BBD\noptional · platform team orders it once" fillcolor="#ecedfb" color="#9aa2e6"]
     SPOKEBBD [label="📦 stackit/network BBD\noptional · tenant-level self-service" fillcolor="#ecedfb" color="#9aa2e6"]
@@ -62,8 +62,8 @@ digraph stackit_landingzone {
 
     PLAT  -> DEFLZ
     PLAT  -> NETLZ
-    DEFLZ -> PRJBBD   [xlabel="requests"]
-    NETLZ -> PRJBBD   [xlabel="requests"]
+    DEFLZ -> PRJBBD   [xlabel="offers to tenants"]
+    NETLZ -> PRJBBD
     PLAT  -> SABBD    [xlabel="offers to tenants"]
     NETLZ -> SPOKEBBD [xlabel="offers to tenants"]
   }
