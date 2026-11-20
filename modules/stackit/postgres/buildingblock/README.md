@@ -52,7 +52,7 @@ The building block cannot do that, because the STACKIT API runs no SQL.
 ## Identity
 
 The building block authenticates as a STACKIT service account via workload identity federation.
-The module creates none by default. Use the account of your platform, as the STACKIT Kubernetes
+The module creates none. Use the account of your platform, as the STACKIT Kubernetes
 reference architecture does with the `stackit/service-account` and
 `stackit/service-account-federation` building blocks:
 
@@ -68,9 +68,6 @@ reference architecture does with the `stackit/service-account` and
 |---|---|---|
 | null | each order, in the input `STACKIT_SERVICE_ACCOUNT_EMAIL` | a composition that orders the building block |
 | set | the platform team, once | a definition application teams order from the marketplace |
-
-`create_backplane = true` creates a service account of the definition's own instead, see
-[backplane](../backplane/README.md).
 
 ## Where the instance lives
 

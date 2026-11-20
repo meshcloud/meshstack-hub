@@ -10,23 +10,6 @@ variable "stackit_service_account_email" {
   description = "Service account the runs act as via WIF. It must federate this definition, as the `stackit/service-account-federation` building block does, and hold `postgres-flex.admin` on the project of the instances, or on the folder of the tenant projects. Null makes `STACKIT_SERVICE_ACCOUNT_EMAIL` an input each building block names its service account in, for a composition that orders the building block."
 }
 
-variable "create_backplane" {
-  type        = bool
-  default     = false
-  description = "Creates a service account of this definition's own in `stackit_project_id`, with `postgres-flex.admin` on that project, for a meshStack without the `stackit/service-account` building blocks."
-
-  validation {
-    condition     = !var.create_backplane || (var.stackit_project_id != null && var.stackit_service_account_email == null)
-    error_message = "The backplane needs stackit_project_id and replaces stackit_service_account_email."
-  }
-}
-
-variable "stackit_service_account_name" {
-  type        = string
-  default     = null
-  description = "Name of the backplane service account. Defaults to 'mesh-postgres', and to 'mesh-postgres-db' for the database variant. Override when deploying multiple backplane instances in the same STACKIT project."
-}
-
 variable "database_only" {
   type        = bool
   default     = false
@@ -86,10 +69,6 @@ variable "meshstack" {
       kind = string
       uuid = string
     }))
-    additional_trusted_runner_refs = optional(list(object({
-      kind = string
-      uuid = string
-    })), [])
     supported_platforms = optional(list(object({
       kind = optional(string)
       name = optional(string)
@@ -125,7 +104,7 @@ output "building_block_definition" {
 
 locals {
   instance_in_tenant_project = var.stackit_project_id == null
-  fixed_service_account      = var.create_backplane || var.stackit_service_account_email != null
+  fixed_service_account      = var.stackit_service_account_email != null
 
   instance_inputs = {
     instance_name = {
@@ -281,29 +260,8 @@ locals {
 module "runner" {
   source = "github.com/meshcloud/meshstack-hub//modules/meshstack/runner-identity?ref=${var.hub.git_ref}"
 
-  cloud                          = "azure"
-  runner_ref                     = var.meshstack.runner_ref
-  additional_trusted_runner_refs = var.meshstack.additional_trusted_runner_refs
-  versions                       = meshstack_building_block_definition.this.versions
-}
-
-module "backplane" {
-  source = "github.com/meshcloud/meshstack-hub//modules/stackit/postgres/backplane?ref=${var.hub.git_ref}"
-
-  lifecycle {
-    enabled = var.create_backplane
-  }
-
-  project_id           = var.stackit_project_id
-  service_account_name = coalesce(var.stackit_service_account_name, var.database_only ? "mesh-postgres-db" : "mesh-postgres")
-
-  workload_identity_federation = {
-    issuer   = module.runner.issuer
-    audience = module.runner.audience
-    subjects = [meshstack_building_block_definition.this.version_latest.workload_identity_federation.subject]
-  }
-
-  trusted_runner_identities = module.runner.trusted_identities
+  cloud      = "azure"
+  runner_ref = var.meshstack.runner_ref
 }
 
 resource "meshstack_building_block_definition" "this" {
@@ -444,7 +402,7 @@ resource "meshstack_building_block_definition" "this" {
           type                   = "STRING"
           assignment_type        = local.fixed_service_account ? "STATIC" : "USER_INPUT"
           is_environment         = true
-          argument               = var.create_backplane ? jsonencode(module.backplane.service_account_email) : var.stackit_service_account_email == null ? null : jsonencode(var.stackit_service_account_email)
+          argument               = local.fixed_service_account ? jsonencode(var.stackit_service_account_email) : null
           updateable_by_consumer = !local.fixed_service_account
         }
 
