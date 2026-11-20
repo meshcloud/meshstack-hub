@@ -1,16 +1,6 @@
-output "instance_id" {
-  value       = local.instance_id
-  description = "ID of the instance the database is on."
-}
-
 output "instance_name" {
-  value       = local.create_instance ? stackit_postgresflex_instance.this.name : data.stackit_postgresflex_instance.existing.name
+  value       = data.stackit_postgresflex_instance.this.name
   description = "Name of the instance the database is on."
-}
-
-output "instance_created" {
-  value       = local.create_instance
-  description = "False when the database is on an existing instance."
 }
 
 output "host" {
@@ -42,4 +32,9 @@ output "password" {
 output "jdbc_url" {
   value       = "jdbc:postgresql://${local.host}:${local.port}/${stackit_postgresflex_database.this.name}?sslmode=require"
   description = "JDBC URL of the database, without credentials."
+}
+
+output "uri" {
+  value       = "postgresql://${stackit_postgresflex_user.this.username}@${local.host}:${local.port}/${stackit_postgresflex_database.this.name}?sslmode=require"
+  description = "Connection URI of the database, without the password."
 }

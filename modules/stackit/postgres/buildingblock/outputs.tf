@@ -1,58 +1,63 @@
-locals {
-  uri = "postgresql://${module.database.username}@${module.database.host}:${module.database.port}/${module.database.database}?sslmode=require"
-}
-
 output "instance_id" {
-  value       = module.database.instance_id
-  description = "ID of the PostgreSQL Flex instance the database is on."
+  value       = local.create_instance ? stackit_postgresflex_instance.this.instance_id : var.existing_instance_id
+  description = "ID of the PostgreSQL Flex instance: the one created, or the one the database is on."
 }
 
 output "host" {
-  value       = module.database.host
+  value       = local.create_instance ? stackit_postgresflex_instance.this.connection_info.write.host : module.database.host
   description = "DNS name of the instance's write endpoint."
 }
 
 output "port" {
-  value       = module.database.port
+  value       = local.create_instance ? stackit_postgresflex_instance.this.connection_info.write.port : module.database.port
   description = "TCP port of the instance's write endpoint."
 }
 
 output "database" {
-  value       = module.database.database
-  description = "Name of the database."
+  value       = local.create_instance ? null : module.database.database
+  description = "Name of the database. Only with `existing_instance_id`."
 }
 
 output "username" {
-  value       = module.database.username
-  description = "Name of the database user that owns the database."
+  value       = local.create_instance ? null : module.database.username
+  description = "Name of the database user that owns the database. Only with `existing_instance_id`."
 }
 
 output "jdbc_url" {
-  value       = module.database.jdbc_url
-  description = "JDBC URL of the database, without credentials."
+  value       = local.create_instance ? null : module.database.jdbc_url
+  description = "JDBC URL of the database, without credentials. Only with `existing_instance_id`."
 }
 
 output "uri" {
-  value       = local.uri
-  description = "Connection URI of the database, without the password."
-}
-
-output "vault_secret" {
-  description = "`{path, secret_hash}` of the secret in Vault, where `secret_hash` changes with its content; `{}` without `output_to_vault`. Its key `kubernetes-secret` holds `host`, `port`, `database`, `username`, `password`, `jdbc_url` and `uri` with the password."
-  value = {
-    for key, value in {
-      path        = local.vault_secret_path
-      secret_hash = local.vault_secret_hash
-    } : key => value if local.write_to_vault
-  }
+  value       = local.create_instance ? null : module.database.uri
+  description = "Connection URI of the database, without the password. Only with `existing_instance_id`."
 }
 
 output "summary" {
   description = "Markdown summary shown in meshPanel after the run."
-  value       = <<-EOT
+  value       = local.create_instance ? local.instance_summary : local.database_summary
+}
+
+locals {
+  instance_summary = !local.create_instance ? null : <<-EOT
+    # PostgreSQL instance `${var.instance_name}`
+
+    PostgreSQL ${var.postgres_version} on ${var.replicas == 3 ? "3 nodes" : "a single node"} of flavor `${var.flavor}` with ${var.storage_size} GB `${var.storage_class}` storage.
+
+    | | |
+    |---|---|
+    | **Instance ID** | `${stackit_postgresflex_instance.this.instance_id}` |
+    | **Host** | `${stackit_postgresflex_instance.this.connection_info.write.host}` |
+    | **Port** | `${stackit_postgresflex_instance.this.connection_info.write.port}` |
+    | **Allowed sources** | ${join(", ", [for cidr in var.acl : "`${cidr}`"])} |
+
+    This building block creates no database. To add databases, publish the database definition of this module with `stackit_existing_instance_id` set to the instance ID above; each of its building blocks creates one database and its owner user here.
+  EOT
+
+  database_summary = local.create_instance ? null : <<-EOT
     # PostgreSQL database `${module.database.database}`
 
-    ${local.create_instance ? "On its own instance `${module.database.instance_name}`: PostgreSQL ${var.postgres_version} on ${var.replicas == 3 ? "3 nodes" : "a single node"} of flavor `${var.flavor}` with ${var.storage_size} GB `${var.storage_class}` storage, reachable from ${join(", ", [for cidr in coalesce(var.acl, []) : "`${cidr}`"])}." : "On the shared instance `${module.database.instance_name}`. Its other users cannot read or change the data in this database, but they can connect to it and see table names until you run `REVOKE CONNECT ON DATABASE ${module.database.database} FROM PUBLIC`."}
+    On the shared instance `${module.database.instance_name}`.
 
     | | |
     |---|---|
@@ -62,10 +67,8 @@ output "summary" {
     | **Username** | `${module.database.username}` |
     | **JDBC URL** | `${module.database.jdbc_url}` |
 
-    ```sh
-    psql "${local.uri}"
-    ```
+    This definition hands out no password: it is the base for connector definitions, which pass the credentials on, for example into a Kubernetes Secret. Without a connector, reset the password of user `${module.database.username}` in the STACKIT portal.
 
-    ${local.write_to_vault ? "The password is in the secret `${local.vault_secret_path}` of the secrets manager, next to the full connection URI." : "This definition hands out no password. Reset it for user `${module.database.username}` in the STACKIT portal to get one."}
+    Other users of the instance cannot read or change the data in this database, but they can connect to it and see table names until its owner runs `REVOKE CONNECT ON DATABASE ${module.database.database} FROM PUBLIC`.
   EOT
 }

@@ -2,22 +2,21 @@
 name: STACKIT PostgreSQL
 supportedPlatforms:
   - stackit
-description: Provisions a managed PostgreSQL database on STACKIT PostgreSQL Flex, with a database and its owner user.
+description: Provisions a managed STACKIT PostgreSQL Flex instance, or a database and its owner user on an existing one.
 ---
 
 # STACKIT PostgreSQL Building Block
 
-This building block module creates a STACKIT PostgreSQL Flex instance, one database and the user
-that owns it.
+This building block module creates a STACKIT PostgreSQL Flex instance, or a database and its owner
+user on an existing instance.
 
 ## Two modes
 
-- **Instance mode** (`existing_instance_id` null): creates an instance, one database and its owner
-  user. Takes about three minutes.
-- **Database mode** (`existing_instance_id` set): creates only a database and its owner user on
-  that instance. Takes a few seconds. The instance settings are ignored, host and port come from the
-  existing instance, and database and user are named `<workspace>_<project>` unless
-  `database_name` and `username` are set.
+- **Instance mode** (`existing_instance_id` null): creates an instance and nothing else. Takes
+  about three minutes. Outputs `instance_id`, `host` and `port`.
+- **Database mode** (`existing_instance_id` set): creates a database and its owner user on that
+  instance, both named `<workspace>_<project>`. Takes a few seconds. Adds the outputs `database`,
+  `username`, `jdbc_url` and `uri`, none of which holds the password.
 
 `meshstack_integration.tf` registers one variant per deployment: `database_only = true` with
 `stackit_existing_instance_id` registers "STACKIT PostgreSQL Database", the default registers
@@ -29,8 +28,9 @@ that owns it.
    for prod. Its `instance_id` output is the ID to share.
 2. Deploy the database variant once per stage, each with the instance of that stage and
    `meshstack.supported_platforms` set to the landing zone of that stage.
-3. To hand the credentials to workloads, wrap `buildingblock/modules/database` in a building block
-   of your own, see [Wrapping the database module](#wrapping-the-database-module).
+3. To hand the credentials to workloads, publish a connector instead of step 2: a building block
+   of your own that wraps `buildingblock/modules/database`, see
+   [Credentials and connectors](#credentials-and-connectors).
 
 ### Isolation on a shared instance
 
@@ -89,24 +89,16 @@ Workloads on an SKE cluster leave through the cluster's egress address, which
 `stackit ske cluster describe <name> -o json` reports as `status.egressAddressRanges`. Set it as
 `stackit_acl`, the default of the input.
 
-## Credentials
+## Credentials and connectors
 
-The building block has no output that holds the password. With the inputs `output_to_vault` and
-`output_to_vault_password` it writes one secret to a Vault KV v2 store, such as a STACKIT Secrets
-Manager instance, at `<path_prefix>stackit/postgres/<instance id>`, in database mode at
-`<path_prefix>stackit/postgres/<instance id>/<database>`. The object under its key
-`kubernetes-secret` has the entries `host`, `port`, `database`, `username`, `password`, `jdbc_url`
-and `uri`. The `vault_secret` output names the path, so a composing building block can read the
-secret and create a Kubernetes Secret from it; `ske/forgejo-connector` does so for every path in
-its `additional_kubernetes_secrets`.
+No building block output holds the password, so the database variant on its own hands out none. It
+is the base for connector definitions; without one, a project member resets the user's password in
+the STACKIT portal.
 
-Without these inputs nobody gets the password, and a project member resets it in the STACKIT portal.
-
-## Wrapping the database module
-
-`buildingblock/modules/database` holds the resources and configures no provider. Unlike the
-building block, it has a `password` output, so a wrapping building block can pass the password on
-inside its own run, for example into a Kubernetes Secret a Spring Boot pod reads with `envFrom`:
+A connector is a building block of your own that wraps `buildingblock/modules/database`. That
+module configures no provider and, unlike the building block, has a `password` output, which the
+connector passes on inside its own run, for example into a Kubernetes Secret a Spring Boot pod
+reads with `envFrom`:
 
 ```hcl
 provider "stackit" {
@@ -128,10 +120,10 @@ provider "kubernetes" {
 module "database" {
   source = "github.com/meshcloud/meshstack-hub//modules/stackit/postgres/buildingblock/modules/database?ref=main"
 
-  project_id           = var.stackit_project_id
-  existing_instance_id = var.existing_instance_id
-  database_name        = local.name
-  username             = local.name
+  project_id    = var.stackit_project_id
+  instance_id   = var.existing_instance_id
+  database_name = local.name
+  username      = local.name
 }
 
 resource "kubernetes_secret_v1" "datasource" {
@@ -164,13 +156,10 @@ resource "meshstack_building_block" "postgres" {
     target_ref                            = { kind = "meshTenant", uuid = var.tenant_uuid }
 
     inputs = {
-      instance_name = { value = jsonencode("petclinic-prod") }
+      instance_name = { value = jsonencode("shared-prod") }
       flavor        = { value = jsonencode("4.8") }
       replicas      = { value = jsonencode("3") }
       storage_size  = { value = jsonencode(20) }
-
-      output_to_vault          = { value = jsonencode(jsonencode(var.output_to_vault)) }
-      output_to_vault_password = { sensitive = { secret_value = var.output_to_vault_password, secret_version = nonsensitive(sha256(var.output_to_vault_password)) } }
     }
   }
 
@@ -190,7 +179,6 @@ resource "meshstack_building_block" "postgres" {
 | ---- | ------- |
 | <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.12.0 |
 | <a name="requirement_stackit"></a> [stackit](#requirement\_stackit) | >= 0.110.0, < 1.0.0 |
-| <a name="requirement_vault"></a> [vault](#requirement\_vault) | >= 5.12.0, < 6.0.0 |
 
 ## Modules
 
@@ -202,7 +190,7 @@ resource "meshstack_building_block" "postgres" {
 
 | Name | Type |
 | ---- | ---- |
-| [vault_kv_secret_v2.this](https://registry.terraform.io/providers/hashicorp/vault/latest/docs/resources/kv_secret_v2) | resource |
+| [stackit_postgresflex_instance.this](https://registry.terraform.io/providers/stackitcloud/stackit/latest/docs/resources/postgresflex_instance) | resource |
 
 ## Inputs
 
@@ -211,32 +199,27 @@ resource "meshstack_building_block" "postgres" {
 | <a name="input_acl"></a> [acl](#input\_acl) | IPv4 CIDR ranges allowed to connect. The instance has a public endpoint and accepts no other source. Workloads on an SKE cluster connect from the cluster's egress address. | `list(string)` | `null` | no |
 | <a name="input_backup_retention_days"></a> [backup\_retention\_days](#input\_backup\_retention\_days) | Number of days STACKIT keeps backups. | `number` | `null` | no |
 | <a name="input_backup_schedule"></a> [backup\_schedule](#input\_backup\_schedule) | Cron expression in UTC for the backup, with numeric minute and hour, for example `0 2 * * *`. | `string` | `null` | no |
-| <a name="input_database_name"></a> [database\_name](#input\_database\_name) | Name of the database. Null derives it from `workspace_identifier` and `project_identifier`. | `string` | `null` | no |
-| <a name="input_existing_instance_id"></a> [existing\_instance\_id](#input\_existing\_instance\_id) | ID of a PostgreSQL Flex instance in `project_id`. The building block then creates only a database and its owner user on it. Null creates an instance. | `string` | `null` | no |
+| <a name="input_existing_instance_id"></a> [existing\_instance\_id](#input\_existing\_instance\_id) | ID of a PostgreSQL Flex instance in `project_id`. The building block then creates a database and its owner user on it. Null creates an instance and nothing else. | `string` | `null` | no |
 | <a name="input_flavor"></a> [flavor](#input\_flavor) | Size of each node as `<vCPU>.<RAM in GB>`, for example `2.4`. | `string` | `null` | no |
-| <a name="input_instance_name"></a> [instance\_name](#input\_instance\_name) | Name of the PostgreSQL Flex instance. This and the other instance settings are ignored with `existing_instance_id`. | `string` | `null` | no |
-| <a name="input_output_to_vault"></a> [output\_to\_vault](#input\_output\_to\_vault) | Vault KV v2 userpass login that writes the connection data, password included, to `<path_prefix>stackit/postgres/<instance id>`, with `existing_instance_id` to `<path_prefix>stackit/postgres/<instance id>/<database>`. Null hands out no password. | <pre>object({<br/>    address     = string<br/>    mount       = string<br/>    username    = string<br/>    path_prefix = optional(string, "")<br/>  })</pre> | `null` | no |
-| <a name="input_output_to_vault_password"></a> [output\_to\_vault\_password](#input\_output\_to\_vault\_password) | Password of the `output_to_vault` user. | `string` | `null` | no |
+| <a name="input_instance_name"></a> [instance\_name](#input\_instance\_name) | Name of the PostgreSQL Flex instance. This and the other instance settings are required without `existing_instance_id` and ignored with it. | `string` | `null` | no |
 | <a name="input_postgres_version"></a> [postgres\_version](#input\_postgres\_version) | PostgreSQL major version. | `string` | `null` | no |
-| <a name="input_project_id"></a> [project\_id](#input\_project\_id) | STACKIT project ID the instance is created in. | `string` | n/a | yes |
-| <a name="input_project_identifier"></a> [project\_identifier](#input\_project\_identifier) | meshStack project of the building block, for the derived database name. | `string` | `null` | no |
+| <a name="input_project_id"></a> [project\_id](#input\_project\_id) | STACKIT project ID of the instance. | `string` | n/a | yes |
+| <a name="input_project_identifier"></a> [project\_identifier](#input\_project\_identifier) | meshStack project of the building block. Database and user are named `<workspace>_<project>`. | `string` | `null` | no |
 | <a name="input_replicas"></a> [replicas](#input\_replicas) | Number of nodes: 1 for a single node, 3 for a highly available replica set. | `number` | `null` | no |
 | <a name="input_storage_class"></a> [storage\_class](#input\_storage\_class) | Storage performance class, from `premium-perf2-stackit` (1000 IOPS) to `premium-perf12-stackit` (20000 IOPS). Cannot change after creation. | `string` | `null` | no |
 | <a name="input_storage_size"></a> [storage\_size](#input\_storage\_size) | Storage size in GB. Can grow, never shrink. | `number` | `null` | no |
-| <a name="input_username"></a> [username](#input\_username) | Name of the database user that owns the database. Null derives it like `database_name`. | `string` | `null` | no |
-| <a name="input_workspace_identifier"></a> [workspace\_identifier](#input\_workspace\_identifier) | meshStack workspace of the building block, for the derived database name. | `string` | `null` | no |
+| <a name="input_workspace_identifier"></a> [workspace\_identifier](#input\_workspace\_identifier) | meshStack workspace of the building block. Database and user are named `<workspace>_<project>`. | `string` | `null` | no |
 
 ## Outputs
 
 | Name | Description |
 | ---- | ----------- |
-| <a name="output_database"></a> [database](#output\_database) | Name of the database. |
+| <a name="output_database"></a> [database](#output\_database) | Name of the database. Only with `existing_instance_id`. |
 | <a name="output_host"></a> [host](#output\_host) | DNS name of the instance's write endpoint. |
-| <a name="output_instance_id"></a> [instance\_id](#output\_instance\_id) | ID of the PostgreSQL Flex instance the database is on. |
-| <a name="output_jdbc_url"></a> [jdbc\_url](#output\_jdbc\_url) | JDBC URL of the database, without credentials. |
+| <a name="output_instance_id"></a> [instance\_id](#output\_instance\_id) | ID of the PostgreSQL Flex instance: the one created, or the one the database is on. |
+| <a name="output_jdbc_url"></a> [jdbc\_url](#output\_jdbc\_url) | JDBC URL of the database, without credentials. Only with `existing_instance_id`. |
 | <a name="output_port"></a> [port](#output\_port) | TCP port of the instance's write endpoint. |
 | <a name="output_summary"></a> [summary](#output\_summary) | Markdown summary shown in meshPanel after the run. |
-| <a name="output_uri"></a> [uri](#output\_uri) | Connection URI of the database, without the password. |
-| <a name="output_username"></a> [username](#output\_username) | Name of the database user that owns the database. |
-| <a name="output_vault_secret"></a> [vault\_secret](#output\_vault\_secret) | `{path, secret_hash}` of the secret in Vault, where `secret_hash` changes with its content; `{}` without `output_to_vault`. Its key `kubernetes-secret` holds `host`, `port`, `database`, `username`, `password`, `jdbc_url` and `uri` with the password. |
+| <a name="output_uri"></a> [uri](#output\_uri) | Connection URI of the database, without the password. Only with `existing_instance_id`. |
+| <a name="output_username"></a> [username](#output\_username) | Name of the database user that owns the database. Only with `existing_instance_id`. |
 <!-- END_TF_DOCS -->

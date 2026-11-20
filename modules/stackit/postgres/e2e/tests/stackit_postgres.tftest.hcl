@@ -18,13 +18,13 @@ run "stackit_postgres" {
   }
 
   assert {
-    condition     = try(jsondecode(meshstack_building_block.this.status.outputs["jdbc_url"].value), null) == "jdbc:postgresql://${try(jsondecode(meshstack_building_block.this.status.outputs["host"].value), "")}:${try(jsondecode(meshstack_building_block.this.status.outputs["port"].value), "")}/app?sslmode=require"
-    error_message = "Unexpected jdbc_url: ${try(meshstack_building_block.this.status.outputs["jdbc_url"].value, "no such output")}."
+    condition     = try(jsondecode(meshstack_building_block.this.status.outputs["port"].value), null) == 5432
+    error_message = "Unexpected port: ${try(meshstack_building_block.this.status.outputs["port"].value, "no such output")}."
   }
 
   assert {
-    condition     = try(jsondecode(meshstack_building_block.this.status.outputs["username"].value), null) == "app"
-    error_message = "Unexpected username: ${try(meshstack_building_block.this.status.outputs["username"].value, "no such output")}."
+    condition     = length(setintersection(keys(meshstack_building_block.this.status.outputs), ["database", "username", "jdbc_url", "uri"])) == 0
+    error_message = "The instance building block reports database outputs: ${join(", ", keys(meshstack_building_block.this.status.outputs))}."
   }
 
   assert {
@@ -33,13 +33,18 @@ run "stackit_postgres" {
   }
 
   assert {
-    condition     = can(regex("^[a-z_][a-z0-9_]*$", try(jsondecode(meshstack_building_block.database.status.outputs["database"].value), ""))) && try(jsondecode(meshstack_building_block.database.status.outputs["database"].value), null) != "app"
+    condition     = can(regex("^[a-z_][a-z0-9_]*$", try(jsondecode(meshstack_building_block.database.status.outputs["database"].value), "")))
     error_message = "Expected a database named after workspace and project, got ${try(meshstack_building_block.database.status.outputs["database"].value, "no such output")}."
   }
 
   assert {
     condition     = try(jsondecode(meshstack_building_block.database.status.outputs["username"].value), null) == try(jsondecode(meshstack_building_block.database.status.outputs["database"].value), "")
     error_message = "Expected the database user to be named like its database, got ${try(meshstack_building_block.database.status.outputs["username"].value, "no such output")}."
+  }
+
+  assert {
+    condition     = try(jsondecode(meshstack_building_block.database.status.outputs["jdbc_url"].value), null) == "jdbc:postgresql://${try(jsondecode(meshstack_building_block.database.status.outputs["host"].value), "")}:5432/${try(jsondecode(meshstack_building_block.database.status.outputs["database"].value), "")}?sslmode=require"
+    error_message = "Unexpected jdbc_url: ${try(meshstack_building_block.database.status.outputs["jdbc_url"].value, "no such output")}."
   }
 
   # A foundation's database definition names its own instance, so only a hub run shares one.

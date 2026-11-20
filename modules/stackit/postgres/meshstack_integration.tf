@@ -30,7 +30,7 @@ variable "stackit_service_account_name" {
 variable "database_only" {
   type        = bool
   default     = false
-  description = "Registers the database variant: each building block creates a database and its owner user on the instance `stackit_existing_instance_id`. False registers the instance variant, where each building block creates its own instance."
+  description = "Registers the database variant: each building block creates a database and its owner user on the instance `stackit_existing_instance_id`. False registers the instance variant, where each building block creates an instance and nothing else."
 
   validation {
     condition     = !var.database_only || var.stackit_project_id != null
@@ -221,28 +221,6 @@ locals {
       updateable_by_consumer = true
       display_order          = 9
     }
-
-    database_name = {
-      display_name                   = "Database Name"
-      description                    = "Name of the database created on the instance."
-      type                           = "STRING"
-      assignment_type                = "USER_INPUT"
-      default_value                  = jsonencode("app")
-      value_validation_regex         = "^[a-z_][a-z0-9_]{0,62}$"
-      validation_regex_error_message = "At most 63 lowercase letters, digits and underscores, not starting with a digit."
-      display_order                  = 10
-    }
-
-    username = {
-      display_name                   = "Username"
-      description                    = "Name of the database user that owns the database."
-      type                           = "STRING"
-      assignment_type                = "USER_INPUT"
-      default_value                  = jsonencode("app")
-      value_validation_regex         = "^[a-z_][a-z0-9_]{0,62}$"
-      validation_regex_error_message = "At most 63 lowercase letters, digits and underscores, not starting with a digit."
-      display_order                  = 11
-    }
   }
 
   database_inputs = {
@@ -252,7 +230,7 @@ locals {
       type            = "STRING"
       assignment_type = "STATIC"
       argument        = jsonencode(var.stackit_existing_instance_id)
-      display_order   = 14
+      display_order   = 10
     }
 
     workspace_identifier = {
@@ -260,7 +238,7 @@ locals {
       description     = "Database and user are named `<workspace>_<project>`, with `_` for `-`."
       type            = "STRING"
       assignment_type = "WORKSPACE_IDENTIFIER"
-      display_order   = 16
+      display_order   = 12
     }
 
     project_identifier = {
@@ -268,7 +246,33 @@ locals {
       description     = "Database and user are named `<workspace>_<project>`, with `_` for `-`."
       type            = "STRING"
       assignment_type = "PROJECT_IDENTIFIER"
-      display_order   = 17
+      display_order   = 13
+    }
+  }
+
+  database_outputs = {
+    database = {
+      display_name    = "Database"
+      type            = "STRING"
+      assignment_type = "NONE"
+    }
+
+    username = {
+      display_name    = "Username"
+      type            = "STRING"
+      assignment_type = "NONE"
+    }
+
+    jdbc_url = {
+      display_name    = "JDBC URL"
+      type            = "STRING"
+      assignment_type = "NONE"
+    }
+
+    uri = {
+      display_name    = "Connection URI"
+      type            = "STRING"
+      assignment_type = "NONE"
     }
   }
 }
@@ -311,19 +315,17 @@ resource "meshstack_building_block_definition" "this" {
   spec = {
     display_name        = coalesce(var.bbd_display_name, var.database_only ? "STACKIT PostgreSQL Database" : "STACKIT PostgreSQL")
     symbol              = "https://raw.githubusercontent.com/meshcloud/meshstack-hub/${var.hub.git_ref}/modules/stackit/postgres/buildingblock/logo.png"
-    description         = coalesce(var.bbd_description, var.database_only ? "Provisions a database and its owner user on a shared STACKIT PostgreSQL Flex instance." : "Provisions a managed PostgreSQL database on STACKIT PostgreSQL Flex, with a database and its owner user.")
+    description         = coalesce(var.bbd_description, var.database_only ? "Provisions a database and its owner user on a shared STACKIT PostgreSQL Flex instance." : "Provisions a managed STACKIT PostgreSQL Flex instance that databases are added to.")
     target_type         = "TENANT_LEVEL"
     run_transparency    = true
     supported_platforms = var.meshstack.supported_platforms
     readme = coalesce(var.bbd_readme, chomp(<<-EOT
-      This building block provisions a **managed PostgreSQL database** on STACKIT PostgreSQL Flex.
-      STACKIT runs the server, patches it and takes the backups. It comes in two variants:
+      This building block provisions **managed PostgreSQL** on STACKIT PostgreSQL Flex. STACKIT
+      runs the server, patches it and takes the backups. It comes in two variants:
 
-      - **STACKIT PostgreSQL** creates an instance of its own with one database and its owner user.
-        This takes about three minutes.
-      - **STACKIT PostgreSQL Database** creates only a database and its owner user on an instance
-        the platform team shares. This takes a few seconds. Database and user are named
-        `<workspace>_<project>`.
+      - **STACKIT PostgreSQL** creates an instance and nothing else. This takes about three minutes.
+      - **STACKIT PostgreSQL Database** creates a database and its owner user on an instance the
+        platform team shares. This takes a few seconds. Both are named `<workspace>_<project>`.
 
       ## 🎯 When to use it
 
@@ -335,19 +337,22 @@ resource "meshstack_building_block_definition" "this" {
       ## 💡 Usage examples
 
       **Example 1: Database for a service on Kubernetes**
-      A developer orders the building block for a Spring Boot service and sets `SPRING_DATASOURCE_URL`
-      to the JDBC URL from the summary. Username and password come from the secrets manager.
+      A developer orders a database for a Spring Boot service on the namespace of each stage. A
+      connector definition of the platform team puts URL, username and password into a Kubernetes
+      Secret there.
 
-      **Example 2: Production database**
-      A team orders the instance variant with three replicas and a larger flavor, so the database
-      survives the loss of a node.
+      **Example 2: Production instance**
+      The platform team orders the instance variant with three replicas and a larger flavor, so
+      the databases on it survive the loss of a node.
 
       ## 🔌 Connecting
 
-      The instance has a public endpoint that requires TLS and only accepts the sources the
-      platform team allowed. The summary shows host, port, database, username and JDBC URL. The
-      password is never shown: the summary names the secret that holds it, if the platform team
-      configured a secrets manager.
+      An instance has a public endpoint that requires TLS and only accepts the sources the
+      platform team allowed. The summary shows host and port, and for a database its name,
+      username and JDBC URL.
+
+      The database variant hands out no password. It is the base for connector definitions, which
+      pass the credentials on. Without a connector, reset the user's password in the STACKIT portal.
 
       On a shared instance your user owns your database and cannot create others. Users of other
       databases cannot read or change your data, but they can connect and see table names until you
@@ -356,21 +361,21 @@ resource "meshstack_building_block_definition" "this" {
       ## 🧩 A shared instance per stage
 
       1. The platform team orders **STACKIT PostgreSQL** once per stage and notes each **Instance ID**.
-      2. It publishes one **STACKIT PostgreSQL Database** definition per landing zone, each with
-         the instance of that stage (`database_only = true`, `stackit_existing_instance_id`) and
-         the platform's service account (`stackit_service_account_email`), so the order form asks
-         for nothing.
-      3. To hand the credentials to workloads, it wraps the database module in a building block
-         of its own that also writes a Kubernetes Secret into the tenant's namespace:
+      2. It publishes one database definition per landing zone, each with the instance of that
+         stage (`database_only = true`, `stackit_existing_instance_id`) and the platform's service
+         account (`stackit_service_account_email`), so the order form asks for nothing.
+      3. To hand the credentials to workloads, it publishes a connector instead: a building block
+         of its own that wraps the database module and writes a Kubernetes Secret into the
+         tenant's namespace:
 
       ```hcl
       module "database" {
         source = "github.com/meshcloud/meshstack-hub//modules/stackit/postgres/buildingblock/modules/database?ref=main"
 
-        project_id           = var.stackit_project_id   # STATIC
-        existing_instance_id = var.existing_instance_id # STATIC, per landing zone
-        database_name        = local.name               # from workspace and project identifier
-        username             = local.name
+        project_id    = var.stackit_project_id   # STATIC
+        instance_id   = var.existing_instance_id # STATIC, per landing zone
+        database_name = local.name               # from workspace and project identifier
+        username      = local.name
       }
 
       resource "kubernetes_secret_v1" "datasource" {
@@ -394,11 +399,11 @@ resource "meshstack_building_block_definition" "this" {
 
       | Responsibility | Platform Team | Application Team |
       |---|:---:|:---:|
-      | Provision the instance, the database and its owner | ✅ | ❌ |
+      | Provision instances, databases and their owners | ✅ | ❌ |
       | Decide which networks may connect | ✅ | ❌ |
       | Operate the server, patch it and take backups (STACKIT) | ✅ | ❌ |
       | Size and availability of a shared instance | ✅ | ❌ |
-      | Size, replicas, storage and version of an instance of your own | ❌ | ✅ |
+      | Hand the credentials to workloads through a connector | ✅ | ❌ |
       | Schema, migrations and query performance | ❌ | ✅ |
       | Keep the credentials secret and restore from backups when needed | ❌ | ✅ |
       EOT
@@ -424,44 +429,13 @@ resource "meshstack_building_block_definition" "this" {
       { for key, input in local.instance_inputs : key => input if !var.database_only },
       { for key, input in local.database_inputs : key => input if var.database_only },
       {
-        output_to_vault = {
-          display_name           = "Output to Vault"
-          description            = "Vault KV v2 userpass login that writes the connection data and password to `<path_prefix>stackit/postgres/<instance id>`, and the database variant to `<path_prefix>stackit/postgres/<instance id>/<database>`. Empty hands out no password."
-          type                   = "JSON"
-          assignment_type        = "USER_INPUT"
-          is_optional            = true
-          updateable_by_consumer = true
-          display_order          = 12
-          json_schema = jsonencode({
-            type     = "object"
-            required = ["address", "mount", "username"]
-            properties = {
-              address     = { type = "string", title = "Address", description = "For STACKIT Secrets Manager: https://prod.sm.eu01.stackit.cloud" }
-              mount       = { type = "string", title = "KV v2 Mount", description = "For STACKIT Secrets Manager: the instance ID." }
-              username    = { type = "string", title = "Username" }
-              path_prefix = { type = "string", title = "Path Prefix", default = "" }
-            }
-          })
-        }
-
-        output_to_vault_password = {
-          display_name           = "Output to Vault Password"
-          description            = "Password of the Output to Vault user."
-          type                   = "STRING"
-          assignment_type        = "USER_INPUT"
-          sensitive              = {}
-          is_optional            = true
-          updateable_by_consumer = true
-          display_order          = 13
-        }
-
         project_id = {
           display_name    = "STACKIT Project ID"
           description     = "STACKIT project ID the instance is created in."
           type            = "STRING"
           assignment_type = local.instance_in_tenant_project ? "PLATFORM_TENANT_ID" : "STATIC"
           argument        = local.instance_in_tenant_project ? null : jsonencode(var.stackit_project_id)
-          display_order   = 15
+          display_order   = 11
         }
 
         STACKIT_SERVICE_ACCOUNT_EMAIL = {
@@ -494,62 +468,34 @@ resource "meshstack_building_block_definition" "this" {
       }
     )
 
-    outputs = {
-      host = {
-        display_name    = "Host"
-        type            = "STRING"
-        assignment_type = "NONE"
-      }
+    outputs = merge(
+      {
+        instance_id = {
+          display_name    = "Instance ID"
+          type            = "STRING"
+          assignment_type = "NONE"
+        }
 
-      port = {
-        display_name    = "Port"
-        type            = "INTEGER"
-        assignment_type = "NONE"
-      }
+        host = {
+          display_name    = "Host"
+          type            = "STRING"
+          assignment_type = "NONE"
+        }
 
-      database = {
-        display_name    = "Database"
-        type            = "STRING"
-        assignment_type = "NONE"
-      }
+        port = {
+          display_name    = "Port"
+          type            = "INTEGER"
+          assignment_type = "NONE"
+        }
 
-      username = {
-        display_name    = "Username"
-        type            = "STRING"
-        assignment_type = "NONE"
-      }
-
-      jdbc_url = {
-        display_name    = "JDBC URL"
-        type            = "STRING"
-        assignment_type = "NONE"
-      }
-
-      uri = {
-        display_name    = "Connection URI"
-        type            = "STRING"
-        assignment_type = "NONE"
-      }
-
-      instance_id = {
-        display_name    = "Instance ID"
-        type            = "STRING"
-        assignment_type = "NONE"
-      }
-
-      vault_secret = {
-        display_name    = "Vault Secret"
-        description     = "JSON `{path, secret_hash}` of the secret in Vault that holds the connection data and password; `{}` without a secrets manager."
-        type            = "CODE"
-        assignment_type = "NONE"
-      }
-
-      summary = {
-        display_name    = "Summary"
-        type            = "STRING"
-        assignment_type = "SUMMARY"
-      }
-    }
+        summary = {
+          display_name    = "Summary"
+          type            = "STRING"
+          assignment_type = "SUMMARY"
+        }
+      },
+      { for key, output in local.database_outputs : key => output if var.database_only }
+    )
   }
 }
 
