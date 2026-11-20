@@ -330,10 +330,9 @@ resource "meshstack_building_block_definition" "this" {
   }
 
   version_spec = {
-    draft                      = var.hub.bbd_draft
-    deletion_mode              = "DELETE"
-    runner_ref                 = module.runner.ref
-    only_apply_once_per_tenant = true
+    draft         = var.hub.bbd_draft
+    deletion_mode = "DELETE"
+    runner_ref    = module.runner.ref
 
     implementation = {
       terraform = {
