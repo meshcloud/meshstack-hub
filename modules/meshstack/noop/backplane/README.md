@@ -10,7 +10,7 @@ runner than the built-in meshStack runner.
 |------------------------------------|-----------------------------------------------------------------------------------------------------|
 | `tls_private_key` (RSA 4096)       | Runner identity key pair — public key registered in meshStack, private key stored in Secret Manager |
 | `meshstack_api_key`                | meshStack credentials the runner uses to poll and update building block runs                        |
-| `google_secret_manager_secret` × 3 | Stores the RSA private key, runner config YAML, and meshStack client secret                         |
+| `google_secret_manager_secret` × 2 | Stores the RSA private key and the runner config YAML with the API key                              |
 | `google_cloud_run_v2_service`      | Runs the meshStack runner container                                                                 |
 | `meshstack_building_block_runner`  | Registers the runner in meshStack with `TERRAFORM` implementation type                              |
 
@@ -18,11 +18,10 @@ runner than the built-in meshStack runner.
 
 The Cloud Run service mounts the following secrets into the container:
 
-| Mount path                          | Content                                                                                                            |
-|-------------------------------------|--------------------------------------------------------------------------------------------------------------------|
-| `/config/runner-config.yml`         | Rendered from `runner-config.yml` with `RUNNER_UUID`, `RUNNER_API_URL`, and `RUNNER_API_KEY_CLIENT_ID` substituted |
-| `/keys/runner-private.pem`          | RSA 4096 private key (PEM)                                                                                         |
-| `$RUNNER_API_CLIENT_SECRET` env var | meshStack API client secret                                                                                        |
+| Mount path                  | Content                                                           |
+|-----------------------------|-------------------------------------------------------------------|
+| `/config/runner-config.yml` | Runner config with the runner uuid, the endpoint and the API key  |
+| `/keys/runner-private.pem`  | RSA 4096 private key (PEM)                                        |
 
 Adjust the mount paths in `main.tf` if your runner image expects a different layout.
 

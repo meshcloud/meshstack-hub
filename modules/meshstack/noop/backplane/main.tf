@@ -22,7 +22,6 @@ resource "meshstack_api_key" "runner" {
     display_name = var.runner_display_name
     permissions = [
       "MANAGED_BUILDINGBLOCKRUNSOURCE_SAVE",
-      "MANAGED_BUILDINGBLOCKRUN_LIST",
       "MANAGED_BUILDINGBLOCKRUN_SAVE"
     ]
     expires_at = formatdate("YYYY-MM-DD", timeadd(time_static.runner_key_expiry.rfc3339, "168h"))
@@ -61,28 +60,17 @@ resource "google_secret_manager_secret" "runner_config" {
 
 resource "google_secret_manager_secret_version" "runner_config" {
   secret = google_secret_manager_secret.runner_config.id
-  secret_data = templatefile("${path.module}/runner-config.yml", {
-    RUNNER_UUID              = meshstack_building_block_runner.this.metadata.uuid
-    RUNNER_API_URL           = var.meshstack_endpoint
-    RUNNER_API_KEY_CLIENT_ID = meshstack_api_key.runner.status.client_id
-  })
-}
-
-resource "google_secret_manager_secret" "client_secret" {
-  project   = var.gcp_project_id
-  secret_id = "${local.resource_prefix}-client-secret"
-  replication {
-    user_managed {
-      replicas {
-        location = var.gcp_region
+  secret_data = yamlencode({
+    uuid = meshstack_building_block_runner.this.metadata.uuid
+    meshstack = {
+      endpoint = var.meshstack_endpoint
+      apiKey = {
+        clientId     = meshstack_api_key.runner.status.client_id
+        clientSecret = meshstack_api_key.runner.status.client_secret
       }
     }
-  }
-}
-
-resource "google_secret_manager_secret_version" "client_secret" {
-  secret      = google_secret_manager_secret.client_secret.id
-  secret_data = meshstack_api_key.runner.status.client_secret
+    dispatcher = { maxConcurrentJobs = 1 }
+  })
 }
 
 resource "google_secret_manager_secret_iam_member" "runner_private_key_accessor" {
@@ -95,13 +83,6 @@ resource "google_secret_manager_secret_iam_member" "runner_private_key_accessor"
 resource "google_secret_manager_secret_iam_member" "runner_config_accessor" {
   project   = var.gcp_project_id
   secret_id = google_secret_manager_secret.runner_config.secret_id
-  role      = "roles/secretmanager.secretAccessor"
-  member    = "serviceAccount:${local.cloud_run_service_account}"
-}
-
-resource "google_secret_manager_secret_iam_member" "client_secret_accessor" {
-  project   = var.gcp_project_id
-  secret_id = google_secret_manager_secret.client_secret.secret_id
   role      = "roles/secretmanager.secretAccessor"
   member    = "serviceAccount:${local.cloud_run_service_account}"
 }
@@ -134,18 +115,13 @@ resource "google_cloud_run_v2_service" "runner" {
       }
 
       env {
-        name  = "RUNNER_PRIVATE_KEY_FILE"
-        value = "/keys/runner-private.pem"
+        name  = "RUNNER_METRICS_PORT"
+        value = "8080"
       }
 
       env {
-        name = "RUNNER_API_CLIENT_SECRET"
-        value_source {
-          secret_key_ref {
-            secret  = google_secret_manager_secret.client_secret.secret_id
-            version = "latest"
-          }
-        }
+        name  = "RUNNER_PRIVATE_KEY_FILE"
+        value = "/keys/runner-private.pem"
       }
 
       volume_mounts {
@@ -204,10 +180,8 @@ resource "google_cloud_run_v2_service" "runner" {
   depends_on = [
     google_secret_manager_secret_iam_member.runner_private_key_accessor,
     google_secret_manager_secret_iam_member.runner_config_accessor,
-    google_secret_manager_secret_iam_member.client_secret_accessor,
     google_secret_manager_secret_version.runner_private_key,
     google_secret_manager_secret_version.runner_config,
-    google_secret_manager_secret_version.client_secret,
   ]
 }
 
