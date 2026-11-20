@@ -69,6 +69,6 @@ locals {
 
     This definition hands out no password: it is the base for connector definitions, which pass the credentials on, for example into a Kubernetes Secret. Without a connector, reset the password of user `${module.database.username}` in the STACKIT portal.
 
-    Other users of the instance cannot read or change the data in this database, but they can connect to it and see table names until its owner runs `REVOKE CONNECT ON DATABASE ${module.database.database} FROM PUBLIC`.
+    This definition alone does not close the database to other users of the instance: they cannot read or change its data, but they can connect to it and see table names. A connector completes the isolation with `REVOKE ALL ON DATABASE ${module.database.database} FROM PUBLIC`, run from a network the instance accepts.
   EOT
 }

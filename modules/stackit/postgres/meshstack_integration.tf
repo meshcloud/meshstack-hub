@@ -308,8 +308,8 @@ resource "meshstack_building_block_definition" "this" {
       pass the credentials on. Without a connector, reset the user's password in the STACKIT portal.
 
       On a shared instance your user owns your database and cannot create others. Users of other
-      databases cannot read or change your data, but they can connect and see table names until you
-      run `REVOKE CONNECT ON DATABASE <database> FROM PUBLIC`.
+      databases can never read or change your data. A connector also stops them from connecting to
+      your database at all; without one they can connect and see table names.
 
       ## 🧩 A shared instance per stage
 
@@ -346,7 +346,9 @@ resource "meshstack_building_block_definition" "this" {
       ```
 
       The password goes from the module straight into the Secret and is no building block output.
-      A pod reads all three keys with `envFrom`.
+      A pod reads all three keys with `envFrom`. The connector also runs a Job in the namespace
+      that executes `REVOKE ALL ON DATABASE <database> FROM PUBLIC` as the owner, which closes the
+      database to the other users of the instance. The module's README has the complete example.
 
       ## 📊 Shared Responsibility
 

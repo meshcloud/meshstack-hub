@@ -34,20 +34,26 @@ user on an existing instance.
 
 ### Isolation on a shared instance
 
-STACKIT offers the user roles `login` and `createdb`. A user in database mode gets `login` only. It
-owns its database, and tested against a live instance:
+STACKIT offers the user roles `login` and `createdb`. A user in database mode gets `login` only and
+owns its database. PostgreSQL grants `CONNECT` and `TEMPORARY` on every database to everyone, so
+the isolation has two levels, both tested against a live instance:
 
-| User A on database B | Result |
-|---|---|
-| Connect | allowed, PostgreSQL grants `CONNECT` to everyone |
-| List table names | allowed |
-| Read or write a table | denied |
-| Create a table or a schema | denied |
-| Create a temporary table | allowed |
-| Create a database | denied |
+| User A on database B | Building block alone | After the connector's revoke |
+|---|---|---|
+| Connect | allowed | **denied** |
+| List table names | allowed | denied |
+| Create a temporary table | allowed | denied |
+| Read or write a table | denied | denied |
+| Create a table or a schema | denied | denied |
+| Create a database | denied | denied |
 
-The owner closes its database to other users with `REVOKE CONNECT ON DATABASE <name> FROM PUBLIC`.
-The building block cannot do that, because the STACKIT API runs no SQL.
+The second level needs `REVOKE ALL ON DATABASE <name> FROM PUBLIC`, run by the owner. The building
+block cannot run it: the STACKIT API runs no SQL, and the instance accepts connections only from
+its ACL, which as a rule does not hold the building block runner. A connector runs it from inside
+the cluster, see
+[Credentials and connectors](#credentials-and-connectors). The owner keeps all rights on its own
+database. Every user can still connect to the `postgres` database and list the names of the
+databases and users of the instance.
 
 ## Identity
 
@@ -135,7 +141,94 @@ resource "kubernetes_secret_v1" "datasource" {
     SPRING_DATASOURCE_PASSWORD = module.database.password
   }
 }
+
+# PostgreSQL lets every user of the instance connect to every database. Only the owner can end
+# that, and only clients in the instance ACL reach it, so the statement runs in the cluster.
+resource "kubernetes_job_v1" "revoke_public" {
+  metadata {
+    name      = "postgres-revoke-public"
+    namespace = var.namespace
+  }
+
+  wait_for_completion = true
+
+  timeouts {
+    create = "5m"
+  }
+
+  spec {
+    backoff_limit = 3
+
+    template {
+      metadata {}
+
+      spec {
+        restart_policy = "Never"
+
+        security_context {
+          run_as_non_root = true
+          run_as_user     = 70
+          seccomp_profile {
+            type = "RuntimeDefault"
+          }
+        }
+
+        container {
+          name    = "psql"
+          image   = "postgres:17.12-alpine"
+          command = ["psql", "-v", "ON_ERROR_STOP=1", "-c", "REVOKE ALL ON DATABASE \"${module.database.database}\" FROM PUBLIC"]
+
+          env {
+            name  = "PGHOST"
+            value = module.database.host
+          }
+          env {
+            name  = "PGPORT"
+            value = module.database.port
+          }
+          env {
+            name  = "PGDATABASE"
+            value = module.database.database
+          }
+          env {
+            name  = "PGUSER"
+            value = module.database.username
+          }
+          env {
+            name  = "PGSSLMODE"
+            value = "require"
+          }
+          env {
+            name = "PGPASSWORD"
+            value_from {
+              secret_key_ref {
+                name = kubernetes_secret_v1.datasource.metadata[0].name
+                key  = "SPRING_DATASOURCE_PASSWORD"
+              }
+            }
+          }
+
+          resources {
+            requests = { cpu = "10m", memory = "32Mi" }
+            limits   = { cpu = "100m", memory = "64Mi" }
+          }
+
+          security_context {
+            allow_privilege_escalation = false
+            capabilities {
+              drop = ["ALL"]
+            }
+          }
+        }
+      }
+    }
+  }
+}
 ```
+
+The Job closes the database to the other users of the instance. It stays in the namespace until
+the building block is deleted, so a later run does not repeat it. The cluster's egress address must
+be in the instance ACL.
 
 Its definition assigns `namespace` from `PLATFORM_TENANT_ID`, the two identifiers from
 `WORKSPACE_IDENTIFIER` and `PROJECT_IDENTIFIER`, and the rest as `STATIC` inputs. Its service
