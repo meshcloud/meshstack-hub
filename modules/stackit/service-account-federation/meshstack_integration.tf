@@ -1,6 +1,13 @@
 variable "stackit_project_id" {
   type        = string
-  description = "STACKIT project ID where the backplane service account will be created."
+  default     = null
+  description = "STACKIT project ID where the backplane service account will be created. Required unless `backplane_service_account_email` is set."
+}
+
+variable "backplane_service_account_email" {
+  type        = string
+  default     = null
+  description = "Existing backplane service account, for a STACKIT organization this module cannot reach. Its owner adds federated identity providers for the `workload_identity_federation` output and grants it `editor` on the projects it federates in."
 }
 
 variable "stackit_service_account_name" {
@@ -81,9 +88,18 @@ output "building_block_definition" {
   }
 }
 
+output "workload_identity_federation" {
+  description = "Issuer, audience and subject that a federated identity provider on the backplane service account must match."
+  value = {
+    issuer   = module.runner.issuer
+    audience = module.runner.audience
+    subject  = meshstack_building_block_definition.this.version_latest.workload_identity_federation.subject
+  }
+}
+
 output "backplane_service_account_email" {
   description = "Email of the backplane service account the runs act as; pass it to the STACKIT Service Account integration as `stackit_federation_backplane_email`."
-  value       = module.backplane.service_account_email
+  value       = local.backplane_service_account_email
 }
 
 # Lookup specified runner for workload identity federation info. Null results in the default hosted runner.
@@ -96,7 +112,17 @@ module "runner" {
   versions                       = meshstack_building_block_definition.this.versions
 }
 
+locals {
+  backplane_service_account_email = var.backplane_service_account_email != null ? var.backplane_service_account_email : module.backplane[0].service_account_email
+}
+
+moved {
+  from = module.backplane
+  to   = module.backplane[0]
+}
+
 module "backplane" {
+  count  = var.backplane_service_account_email == null ? 1 : 0
   source = "github.com/meshcloud/meshstack-hub//modules/stackit/service-account-federation/backplane?ref=${var.hub.git_ref}"
 
   project_id           = var.stackit_project_id
@@ -189,7 +215,7 @@ resource "meshstack_building_block_definition" "this" {
         type            = "STRING"
         assignment_type = "STATIC"
         is_environment  = true
-        argument        = jsonencode(module.backplane.service_account_email)
+        argument        = jsonencode(local.backplane_service_account_email)
       }
 
       STACKIT_USE_OIDC = {
