@@ -19,8 +19,7 @@ project gets the `networkArea` label, which places it in that STACKIT network ar
 Application teams add the definition from the marketplace to their tenants. meshStack allows one
 per tenant (`only_apply_once_per_tenant`), because it reports the project as the tenant's Platform
 Tenant ID. The STACKIT platform is hidden from the
-marketplace, so teams add this building block rather than order a bare tenant. That applies to a
-newly created platform only; hide an existing one in meshPanel.
+marketplace, so teams add this building block rather than order a bare tenant.
 
 - Do not move a tenant onto or off a spoke landing zone. STACKIT sets the network area only at
   project creation, so the re-run fails on the `networkArea` label.
