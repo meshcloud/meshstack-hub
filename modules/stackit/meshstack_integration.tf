@@ -118,7 +118,7 @@ variable "meshstack" {
       kind = optional(string)
       name = optional(string)
       uuid = optional(string)
-    })), [{ name = "STACKIT" }])
+    })))
   })
   description = "Shared meshStack context, see docs."
 }
@@ -293,8 +293,12 @@ resource "meshstack_building_block_definition" "this" {
     support_url               = "https://portal.stackit.cloud"
     target_type               = "TENANT_LEVEL"
     run_transparency          = true
-    supported_platforms       = var.meshstack.supported_platforms
     use_in_landing_zones_only = false
+
+    # Every STACKIT platform of a meshStack would otherwise offer every STACKIT Project definition.
+    supported_platforms = coalesce(var.meshstack.supported_platforms, [
+      for lz in meshstack_landingzone.this : { kind = lz.ref.kind, name = lz.ref.name, uuid = null }
+    ])
 
     readme = coalesce(var.bbd_readme, chomp(<<-EOT
     This building block creates the **STACKIT project** and gives your meshStack project members access to it. On a spoke landing zone it places the project in the hub network area.
