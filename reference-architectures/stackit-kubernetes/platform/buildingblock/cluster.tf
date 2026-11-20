@@ -24,7 +24,7 @@ resource "meshstack_building_block" "cluster" {
   }
 
   spec = {
-    parent_building_block_refs            = [meshstack_building_block.platform_federation.ref]
+    parent_building_block_refs            = [meshstack_building_block.platform_federation.ref, meshstack_building_block.secrets_manager.ref]
     building_block_definition_version_ref = module.cluster_integration.building_block_definition.version_ref
     display_name                          = "SKE Cluster"
     target_ref                            = local.tenant_ref

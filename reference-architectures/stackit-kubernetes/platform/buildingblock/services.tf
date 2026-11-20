@@ -72,7 +72,7 @@ resource "meshstack_building_block" "ai_llm" {
   }
 
   spec = {
-    parent_building_block_refs            = [meshstack_building_block.platform_federation.ref]
+    parent_building_block_refs            = [meshstack_building_block.platform_federation.ref, meshstack_building_block.secrets_manager.ref]
     building_block_definition_version_ref = module.ai_llm_integration.building_block_definition.version_ref
     display_name                          = "AI Model Serving"
     target_ref                            = local.tenant_ref
@@ -110,7 +110,7 @@ resource "meshstack_building_block" "git" {
   }
 
   spec = {
-    parent_building_block_refs            = [meshstack_building_block.platform_federation.ref]
+    parent_building_block_refs            = [meshstack_building_block.platform_federation.ref, meshstack_building_block.secrets_manager.ref]
     building_block_definition_version_ref = module.git_integration.building_block_definition.version_ref
     display_name                          = "STACKIT Git Instance"
     target_ref                            = local.tenant_ref
@@ -159,7 +159,7 @@ resource "meshstack_building_block" "container_registry" {
   }
 
   spec = {
-    parent_building_block_refs            = [meshstack_building_block.platform_federation.ref]
+    parent_building_block_refs            = [meshstack_building_block.platform_federation.ref, meshstack_building_block.secrets_manager.ref]
     building_block_definition_version_ref = module.container_registry_integration.building_block_definition.version_ref
     display_name                          = "STACKIT Container Registry"
     target_ref                            = local.tenant_ref

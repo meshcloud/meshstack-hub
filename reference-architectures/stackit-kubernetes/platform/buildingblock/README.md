@@ -27,8 +27,9 @@ STACKIT Service Account Federation definition as a child of the Automation Ident
 STACKIT definitions in `federated_building_block_definitions`.
 
 No building block it orders outputs a secret. Each one that creates a credential writes it to the
-Secrets Manager with the writer user, through its `output_to_vault` input. This run reads what a
-block needs with the reader user, as an ephemeral value, and passes it as a write-only value: the
+Secrets Manager with the writer user, through its `output_to_vault` input, and has the Secrets
+Manager block as a second parent, so meshStack deletes the Secrets Manager only after every block
+that writes to it. This run reads what a block needs with the reader user, as an ephemeral value, and passes it as a write-only value: the
 admin kubeconfig as the `kubeconfig.yaml` input of the `kubernetes` and ingress blocks, the
 replicator and metering tokens to the meshStack platform. Its version is the `secret_hash` the
 writing block reports in its `vault_secret` output, so a changed secret arrives in the same run.
