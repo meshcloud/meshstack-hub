@@ -64,9 +64,10 @@ hub&spoke networking.
 %{ endif ~}
 %{ if !composed_definitions_released ~}
 
-> [!WARNING]
-> The latest versions of the **STACKIT Project**, **STACKIT Service Account** and **STACKIT Service
-> Account Federation** definitions are drafts, and another workspace may only order released
-> versions. Deploy this landing zone with `hub.bbd_draft = false`, publish the three definitions to
-> the marketplace, then run this building block again.
+> [!NOTE]
+> Not all latest versions of the **STACKIT Project**, **STACKIT Service Account** and **STACKIT
+> Service Account Federation** definitions are released, so only this workspace can order them. To
+> order them from another workspace, deploy this landing zone with `hub.bbd_draft = false` and
+> `release_service_account_bbds = true`, publish the three definitions to the marketplace, then run
+> this building block again.
 %{ endif ~}

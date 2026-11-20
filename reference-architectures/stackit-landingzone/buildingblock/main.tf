@@ -23,6 +23,11 @@ locals {
     substr(sha256(local.platform_identifier), 0, 4)
   )
 
+  # A release by a key without admin rights requests a marketplace publication. Network Area is only
+  # ordered here, and the service account definitions only by a platform in another workspace.
+  draft_hub           = merge(var.hub, { bbd_draft = true })
+  service_account_hub = var.release_service_account_bbds ? var.hub : local.draft_hub
+
   # Selecting `hub&spoke` deploys hub&spoke networking. The `network` input is hidden (and so
   # unset) unless it is selected, so the topology — not the presence of a network object — gates it.
   network_enabled = contains(var.topology, "hub&spoke")
@@ -178,7 +183,7 @@ module "service_account_integration" {
 
   meshstack        = { owning_workspace_identifier = var.workspace, tags = local.tags.building_block, runner_ref = local.runner_ref }
   bbd_display_name = local.playground_suffix == "" ? null : "STACKIT Service Account${local.playground_suffix}"
-  hub              = var.hub
+  hub              = local.service_account_hub
 }
 
 module "service_account_federation_integration" {
@@ -192,7 +197,7 @@ module "service_account_federation_integration" {
 
   meshstack        = { owning_workspace_identifier = var.workspace, tags = local.tags.building_block, runner_ref = local.runner_ref }
   bbd_display_name = local.playground_suffix == "" ? null : "STACKIT Service Account Federation${local.playground_suffix}"
-  hub              = var.hub
+  hub              = local.service_account_hub
 }
 
 module "network_area_integration" {
@@ -207,7 +212,7 @@ module "network_area_integration" {
 
   meshstack        = { owning_workspace_identifier = var.workspace, tags = local.tags.building_block, runner_ref = local.runner_ref }
   bbd_display_name = local.playground_suffix == "" ? null : "STACKIT Network Area${local.playground_suffix}"
-  hub              = var.hub
+  hub              = local.draft_hub
 }
 
 module "network_integration" {

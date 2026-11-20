@@ -16,6 +16,13 @@ variable "bbd_readme" {
   description = "Overrides the markdown readme shown in the marketplace before ordering."
 }
 
+variable "release_service_account_bbds" {
+  type        = bool
+  default     = false
+  nullable    = false
+  description = "Release the STACKIT Service Account and STACKIT Service Account Federation definitions together with `hub.bbd_draft = false`. Set it when a platform in another workspace, such as the STACKIT Kubernetes Platform, orders them. Otherwise they stay drafts in the owning workspace."
+}
+
 variable "meshstack" {
   type = object({
     owning_workspace_identifier = string
@@ -42,9 +49,9 @@ variable "hub" {
 
   description = <<-EOT
   `git_ref`: Hub release reference. Set to a tag (e.g. 'v1.2.3') or branch or commit sha of the meshstack-hub repo.
-  `bbd_draft`: If true, the definitions this landing zone registers (STACKIT Project, service account,
-  federation, networks) are kept in draft mode. This definition is always a draft, so it stays in the owning
-  workspace.
+  `bbd_draft`: If true, the STACKIT Project and STACKIT Network definitions are kept in draft mode, and the
+  service account and federation definitions with `release_service_account_bbds`. This definition and
+  STACKIT Network Area are always drafts, so they stay in the owning workspace.
   EOT
 }
 
@@ -460,6 +467,15 @@ resource "meshstack_building_block_definition" "this" {
         display_order   = 120
       }
 
+      release_service_account_bbds = {
+        display_name    = "Release Service Account BBDs"
+        description     = "Whether `hub.bbd_draft = false` also releases the STACKIT Service Account and STACKIT Service Account Federation definitions. Set by the platform team."
+        type            = "BOOLEAN"
+        assignment_type = "STATIC"
+        argument        = jsonencode(var.release_service_account_bbds)
+        display_order   = 130
+      }
+
       workspace = {
         display_name    = "Workspace Identifier"
         description     = "Workspace that will own the created platform, location and landing zones."
@@ -470,7 +486,7 @@ resource "meshstack_building_block_definition" "this" {
 
       hub = {
         display_name    = "Hub"
-        description     = "HCL object with `git_ref` (meshstack-hub reference used to source the nested STACKIT integration modules) and `bbd_draft` (draft state of the definitions this landing zone registers)."
+        description     = "HCL object with `git_ref` (meshstack-hub reference used to source the nested STACKIT integration modules) and `bbd_draft` (draft state of the STACKIT Project and STACKIT Network definitions)."
         type            = "CODE"
         assignment_type = "STATIC"
         argument        = jsonencode(jsonencode(var.hub))

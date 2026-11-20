@@ -160,6 +160,14 @@ variable "runner_ref" {
   description = "Runner to use for all definitions created by this building block. Set to `{}` to use the default shared runner."
 }
 
+variable "release_service_account_bbds" {
+  type        = bool
+  nullable    = false
+  const       = true
+  default     = false
+  description = "Whether `hub.bbd_draft` also applies to the service account and federation definitions. Without it they stay drafts. `const` because it feeds the `hub` of nested modules."
+}
+
 variable "workspace" {
   type        = string
   nullable    = false
@@ -176,6 +184,6 @@ variable "hub" {
 
   description = <<-EOT
   `git_ref`: meshstack-hub reference used to source the nested foundation, network-area, and network integration modules. `const` so it can be interpolated into the module source at init time.
-  `bbd_draft`: Draft state of the definitions this landing zone registers; the landing zone's own definition is always a draft.
+  `bbd_draft`: Draft state of the STACKIT Project and STACKIT Network definitions, see `release_service_account_bbds` for the service account ones; the landing zone's own definition and STACKIT Network Area are always drafts.
   EOT
 }

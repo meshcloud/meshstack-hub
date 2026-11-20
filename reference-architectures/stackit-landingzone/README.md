@@ -103,15 +103,20 @@ therefore needs only its role in `stackit_assignable_roles` and its definition i
 ### Other workspaces
 
 Another workspace may only order a released definition version that is published to the
-marketplace. Deploy with `hub.bbd_draft = false`. Then publish in meshPanel the platform and the
-STACKIT Project, STACKIT Service Account and STACKIT Service Account Federation definitions, plus
-STACKIT Network with `hub&spoke`.
+marketplace. Deploy with `hub.bbd_draft = false` to release STACKIT Project, plus STACKIT Network
+with `hub&spoke`, and publish them and the platform in meshPanel.
+
+The STACKIT Service Account and STACKIT Service Account Federation definitions stay drafts unless
+`release_service_account_bbds = true`. Set it when a composing architecture such as the STACKIT
+Kubernetes Platform lives in another workspace, and publish the two definitions as well. A
+composing architecture in the same workspace orders the drafts, so these platform-internal
+definitions stay out of the marketplace.
 
 - A definition's first release waits for a meshStack admin to approve its marketplace review. In a
   workspace without admin rights, the run fails until then; run it again after the approval.
 - A new version has a new uuid, so copy the summary block again after the definitions change.
-- `hub.bbd_draft` does not apply to this landing zone's own definition, which stays a draft in the
-  owning workspace.
+- This landing zone's own definition and STACKIT Network Area, which only this landing zone orders,
+  always stay drafts in the owning workspace.
 
 ## Getting Started
 
