@@ -201,11 +201,10 @@ resource "meshstack_building_block" "federation_mapping" {
   wait_for_completion = true
 
   spec = {
-    building_block_definition_version_ref = {
-      uuid = module.federation_mapping_integration.building_block_definition.version_ref.uuid
-    }
-    display_name = "Federation Mapping"
-    target_ref   = meshstack_tenant.management.ref
+    # Its content_hash re-runs the block when a draft version changes, such as a static input.
+    building_block_definition_version_ref = module.federation_mapping_integration.building_block_definition.version_ref
+    display_name                          = "Federation Mapping"
+    target_ref                            = meshstack_tenant.management.ref
 
     # The definition sets every input itself, from the management tenant and as static arguments.
     inputs = {}
