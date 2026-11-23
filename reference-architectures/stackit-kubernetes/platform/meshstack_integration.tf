@@ -386,7 +386,7 @@ resource "meshstack_building_block_definition" "this" {
 
       additional_federated_building_block_definitions = {
         display_name           = "Additional Federated Definitions"
-        description            = "HCL list of building block definition refs `{kind, uuid}` the Automation Identity Federation trusts besides the platform's own."
+        description            = "HCL set of building block definition refs `{kind, uuid}` the Automation Identity Federation trusts besides the platform's own."
         type                   = "CODE"
         assignment_type        = "USER_INPUT"
         is_optional            = true

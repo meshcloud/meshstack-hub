@@ -146,7 +146,7 @@ variable "quota_definitions" {
 }
 
 variable "additional_federated_building_block_definitions" {
-  type = list(object({
+  type = set(object({
     kind = string
     uuid = string
   }))
