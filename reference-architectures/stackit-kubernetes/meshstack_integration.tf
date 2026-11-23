@@ -444,7 +444,7 @@ resource "meshstack_building_block_definition" "this" {
             required             = ["kind", "uuid"]
             properties = {
               kind = { type = "string", const = "meshBuildingBlockDefinition" }
-              uuid = { type = "string", format = "uuid" }
+              uuid = { type = "string", pattern = "^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$" }
             }
           }
         })
