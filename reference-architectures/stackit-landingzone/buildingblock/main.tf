@@ -255,11 +255,10 @@ resource "meshstack_building_block" "network_area_hub" {
   depends_on = [module.network_area_integration]
 
   spec = {
-    building_block_definition_version_ref = {
-      uuid = module.network_area_integration.building_block_definition.version_ref.uuid
-    }
-    display_name = "Hub Network Area"
-    target_ref   = { kind = "meshWorkspace", name = var.workspace }
+    # Its content_hash re-runs the block when a draft version changes, such as a static input.
+    building_block_definition_version_ref = module.network_area_integration.building_block_definition.version_ref
+    display_name                          = "Hub Network Area"
+    target_ref                            = { kind = "meshWorkspace", name = var.workspace }
 
     inputs = {
       network_area_name = {
