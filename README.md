@@ -30,8 +30,6 @@ In a platform's directory, you will find all modules that are available for that
 Additionally, you might also find a `meshstack_integration.tf` and `README.md` file in a platform
 directory. These allow you to integrate a given platform directly with meshStack.
 
-```
-
 A single module is structured as follows:
 
 ```
