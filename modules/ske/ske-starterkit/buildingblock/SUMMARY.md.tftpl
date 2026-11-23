@@ -1,8 +1,6 @@
 # SKE Starter Kit
 
-✅ **Your environment is ready!**
-
-This starter kit has set up the following resources in workspace `${workspace_identifier}`:
+✅ **Your application `${app_name}` is set up and deployed in workspace `${workspace_identifier}`.**
 
 @buildingblock[${git_repository_uuid}]
 %{ for stage in stages ~}
@@ -14,45 +12,53 @@ This starter kit has set up the following resources in workspace `${workspace_id
 
 ---
 
-## What's Included
+## What you have
 
-Your [Forgejo repository](${repo_html_url}) on STACKIT Git was initialized from `${repo_clone_addr}`.
-Its Forgejo Actions pipeline builds the `${app_name}` image and deploys it to the SKE namespace of each stage.
+- **Git repository** [${repo_name}](${repo_html_url}) on STACKIT Git (Forgejo), initialized from
+  `${repo_clone_addr}`.
+- **One project per stage**, each with one namespace on the SKE cluster.
+- **One Forgejo Connector per stage**. It gives the repository's pipeline access to that stage's
+  namespace and shows the links **Application** and **Pipeline**.
 
-Each stage's Forgejo Connector wired the repository to that stage's namespace with the Actions
-secrets and variables `KUBECONFIG_<STAGE>`, `K8S_NAMESPACE_<STAGE>` and `APP_HOSTNAME_<STAGE>`.
-
----
-
-## Deployments
-
-Each stage deploys from the branch of the same name. The Forgejo Connector already ran the
-`pipeline.yaml` workflow once per stage, so your app is live:
-
+| Stage | Project | Application | Pipeline |
+|-------|---------|-------------|----------|
 %{ for stage in stages ~}
-- **${title(stage.name)}**: [${stage.app_hostname}](https://${stage.app_hostname})
+| **${title(stage.name)}** | `${stage.project_name}` | [${stage.app_hostname}](https://${stage.app_hostname}) | [`pipeline.yaml`](${pipeline_url}) |
 %{ endfor ~}
 
-View deployment status: [Forgejo Actions](${repo_html_url}/actions?workflow=pipeline.yaml)
+## How deployment works
 
----
+Each stage deploys from the branch of the same name. A push to a branch runs the pipeline, which
+builds the `${app_name}` image and deploys it to the namespace of that stage:
 
-## Next Steps
-
-### 1. Develop
 %{ for stage in stages ~}
-- Push changes to **${stage.name}** → deploys to **${stage.name}**
+- Push to **${stage.name}** → deploys to **${title(stage.name)}**
 %{ endfor ~}
 
-### 2. Monitor
-- Check workflow status in the [Actions tab](<${repo_html_url}/actions>)
+The pipeline already ran once per stage, so the application is live.
 
-### 3. Manage Access
-- Invite team members via meshStack:
+## Git access
+
+Your access to the repository follows your role in the workspace:
+
+| Workspace role | Repository permission |
+|----------------|-----------------------|
+| Workspace Owner | admin |
+| Workspace Manager | write |
+| Other members | read |
+
+1. **Sign in once** to [STACKIT Git](${forgejo_host}) with SSO. The next run of the
+   @buildingblock[${git_repository_uuid}] building block adds you to your team. Its summary
+   lists who has access.
+2. **Add your SSH public key once** in [your Forgejo settings](${forgejo_host}/user/settings/keys).
+3. **Clone** the repository:
+   ```bash
+   git clone ${repo_ssh_url}
+   ```
+
+## Manage access
+
+Invite team members in meshStack:
 %{ for stage in stages ~}
-  - [${title(stage.name)} Access](#/w/${workspace_identifier}/p/${stage.project_name}/access-management/role-mapping)
+- [${title(stage.name)} access](#/w/${workspace_identifier}/p/${stage.project_name}/access-management/role-mapping)
 %{ endfor ~}
-
----
-
-🎉 Happy coding!

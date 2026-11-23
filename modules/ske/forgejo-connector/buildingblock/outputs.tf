@@ -24,7 +24,7 @@ output "summary" {
 
     | Property | Value |
     |----------|-------|
-    | **App** | [${local.app_url}](${local.app_url}) |
+    | **Application** | [${local.app_url}](${local.app_url}) |
     | **Pipeline** | [`pipeline.yaml` in Forgejo Actions](${local.actions_url}) |
     | **Service Account** | `${kubernetes_service_account.forgejo_actions.metadata[0].name}`, `edit` on the namespace |
 

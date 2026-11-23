@@ -284,7 +284,7 @@ resource "meshstack_building_block_definition" "this" {
       {
         for stage in keys(var.landing_zone_refs) : "app_link_${stage}" => {
           assignment_type = "RESOURCE_URL"
-          display_name    = "Open App ${title(stage)}"
+          display_name    = "Application ${title(stage)}"
           type            = "STRING"
         }
       },

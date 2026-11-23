@@ -1,5 +1,9 @@
 # The `app_link_<stage>` outputs are written by prerun.sh, one per stage.
 
+locals {
+  repo_html_url = jsondecode(meshstack_building_block.git_repository.status.outputs.repository_html_url.value)
+}
+
 output "summary" {
   description = "Summary with next steps and insights into created resources"
   value = templatefile("${path.module}/SUMMARY.md.tftpl", {
@@ -7,7 +11,11 @@ output "summary" {
     app_name             = var.app_name
     repo_clone_addr      = var.repo_clone_addr
     git_repository_uuid  = meshstack_building_block.git_repository.metadata.uuid
-    repo_html_url        = jsondecode(meshstack_building_block.git_repository.status.outputs.repository_html_url.value)
+    repo_html_url        = local.repo_html_url
+    repo_name            = jsondecode(meshstack_building_block.git_repository.status.outputs.repository_name.value)
+    repo_ssh_url         = jsondecode(meshstack_building_block.git_repository.status.outputs.repository_ssh_url.value)
+    forgejo_host         = regex("^https?://[^/]+", local.repo_html_url)
+    pipeline_url         = "${local.repo_html_url}/actions?workflow=pipeline.yaml"
 
     stages = [
       for stage in sort(keys(meshstack_project.this)) : {

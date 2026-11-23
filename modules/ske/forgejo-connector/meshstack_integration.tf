@@ -327,13 +327,13 @@ resource "meshstack_building_block_definition" "this" {
     outputs = {
       "app_link" = {
         assignment_type = "RESOURCE_URL"
-        display_name    = "Open App"
+        display_name    = "Application"
         type            = "STRING"
       }
 
       "actions_url" = {
         assignment_type = "RESOURCE_URL"
-        display_name    = "Open Forgejo Actions"
+        display_name    = "Pipeline"
         type            = "STRING"
       }
 
