@@ -21,6 +21,7 @@ variable "test_context" {
       stackit = object({
         platform_uuid     = string
         landing_zone_name = string
+        project_bbd_uuid  = string
       })
     })
   })
@@ -35,8 +36,8 @@ variable "ttl_optional" {
 # The fixture's landing zone offers STACKIT Project in the marketplace, so its tenant gets a project
 # only from this building block. The definition is another workspace's, so the release is ordered.
 data "meshstack_building_block_definition" "stackit_project" {
-  spec = {
-    display_name = "STACKIT Project"
+  metadata = {
+    uuid = var.test_context.fixtures.stackit.project_bbd_uuid
   }
 }
 
