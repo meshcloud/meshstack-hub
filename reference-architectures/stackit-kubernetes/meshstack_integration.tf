@@ -95,14 +95,6 @@ locals {
     ai_model      = "openai/gpt-oss-120b"
   }
 
-  postgres_stage_default = {
-    replicas           = 1
-    flavor             = "2.4"
-    storage_size_in_gb = 5
-    storage_class      = "premium-perf2-stackit"
-    postgres_version   = "17"
-  }
-
   stages_default = [
     { name = "dev", landingzone = [], project = [] },
     { name = "prod", landingzone = [], project = [] },
@@ -147,8 +139,6 @@ resource "meshstack_building_block_definition" "this" {
       balancer.
     - **AI Model Serving** – a STACKIT Model Serving token every application namespace receives,
       unless Starter Kit Demo names no AI model.
-    - **Shared PostgreSQL** – one STACKIT PostgreSQL Flex instance that only the cluster reaches,
-      for every stage Shared PostgreSQL names.
     - **STACKIT Git instance** – a managed Forgejo with its organization and a STACKIT-hosted shared
       runner.
     - **Container registry** – a Harbor project for the platform's application images, with the
@@ -354,63 +344,6 @@ resource "meshstack_building_block_definition" "this" {
         })
       }
 
-      postgres = {
-        display_name           = "Shared PostgreSQL"
-        description            = "One STACKIT PostgreSQL Flex instance in the hosting project per key, reachable from the cluster only. Each key is the name of a stage, its value the settings of that stage's instance. Leave out for none."
-        type                   = "JSON"
-        assignment_type        = "USER_INPUT"
-        is_optional            = true
-        updateable_by_consumer = true
-        display_order          = 40
-
-        json_schema = jsonencode({
-          "$schema" = "http://json-schema.org/draft-07/schema#"
-          type      = "object"
-          additionalProperties = {
-            type                 = "object"
-            additionalProperties = false
-            properties = {
-              replicas = {
-                type        = "integer"
-                title       = "replicas"
-                description = "1 for a single node, 3 for a highly available replica set."
-                enum        = [1, 3]
-                default     = local.postgres_stage_default.replicas
-              }
-              flavor = {
-                type        = "string"
-                title       = "flavor"
-                description = "Size of each node as <vCPU>.<RAM in GB>."
-                enum        = ["2.4", "2.16", "4.8", "4.32", "8.16", "8.32", "16.32", "16.64", "16.128", "30.240"]
-                default     = local.postgres_stage_default.flavor
-              }
-              storage_size_in_gb = {
-                type        = "integer"
-                title       = "storage_size_in_gb"
-                description = "Can grow, never shrink."
-                minimum     = 5
-                maximum     = 4000
-                default     = local.postgres_stage_default.storage_size_in_gb
-              }
-              storage_class = {
-                type        = "string"
-                title       = "storage_class"
-                description = "From premium-perf2-stackit (1000 IOPS) to premium-perf12-stackit (20000 IOPS). Cannot change after creation."
-                enum        = ["premium-perf2-stackit", "premium-perf4-stackit", "premium-perf6-stackit", "premium-perf8-stackit", "premium-perf10-stackit", "premium-perf12-stackit"]
-                default     = local.postgres_stage_default.storage_class
-              }
-              postgres_version = {
-                type        = "string"
-                title       = "postgres_version"
-                description = "PostgreSQL major version. 18 is in beta at STACKIT."
-                enum        = ["15", "16", "17", "18"]
-                default     = local.postgres_stage_default.postgres_version
-              }
-            }
-          }
-        })
-      }
-
       dns_domain = {
         display_name                   = "DNS Domain"
         description                    = "DNS zone of the platform, under one of the free domains STACKIT delegates to its customers. A bare free domain such as `stackit.run` gives `<platform identifier>.stackit.run`; one label more, such as `likvid.stackit.run`, is the zone itself."
@@ -490,6 +423,23 @@ resource "meshstack_building_block_definition" "this" {
               auto_approval_threshold = { type = "number", title = "auto_approval_threshold" }
             }
           }
+        })
+      }
+
+      additional_federated_building_block_definitions = {
+        display_name           = "Additional Federated Definitions"
+        description            = "Building block definition UUIDs the Automation Identity Federation trusts besides the platform's own, so their runs act as the platform's service account. For definitions a foundation registers on top of the platform. Leave out for none."
+        type                   = "JSON"
+        assignment_type        = "USER_INPUT"
+        is_optional            = true
+        updateable_by_consumer = true
+        display_order          = 87
+
+        json_schema = jsonencode({
+          "$schema"   = "http://json-schema.org/draft-07/schema#"
+          type        = "array"
+          uniqueItems = true
+          items       = { type = "string", format = "uuid" }
         })
       }
 
@@ -728,13 +678,6 @@ resource "meshstack_building_block_definition" "this" {
         display_name    = "Open Hosting Project"
         type            = "STRING"
         assignment_type = "RESOURCE_URL"
-      }
-
-      postgres = {
-        display_name    = "Shared PostgreSQL"
-        description     = "JSON of the shared PostgreSQL instances by stage and what a database definition on them needs."
-        type            = "CODE"
-        assignment_type = "NONE"
       }
 
       summary = {

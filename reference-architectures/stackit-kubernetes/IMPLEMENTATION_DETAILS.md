@@ -24,10 +24,9 @@ to change the platform.
 - **Automation Identity Federation**, a child of the Automation Identity, trusts the six
   definitions whose runs act as the account: Secrets Manager, SKE cluster, Git, container
   registry, AI Model Serving and DNS. Those six building blocks are its children. Without an AI
-  model there is no AI Model Serving block, and the federation trusts the other five. With Shared
-  PostgreSQL set it also trusts the `stackit/postgres` instance definition, which runs as the
-  account in the platform's project. The instances are children of the federation and of the
-  cluster, whose `egress_address_ranges` output is their ACL.
+  model there is no AI Model Serving block, and the federation trusts the other five. It also
+  trusts the definitions in Additional Federated Definitions, whose building blocks are no children
+  of it.
 - **Starter Kit Identity Federation** (phase 2) trusts the Git repository definition, whose runs
   list the Git instance's users through the STACKIT Git API to match workspace members by email.
   The Forgejo token's technical user is restricted and cannot see them.

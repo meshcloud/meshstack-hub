@@ -67,6 +67,8 @@ reference architecture does with the `stackit/service-account` and
   `editor` has the same permissions except `postgres-flex.instance.force-delete`.
 - The account federates the definition: list the definition's uuid in
   `federated_building_block_definitions` of a `stackit/service-account-federation` building block.
+  On a STACKIT Kubernetes reference architecture platform, add it to the input Additional
+  Federated Definitions, and the platform's Automation Identity Federation lists it.
 
 `meshstack_integration.tf` then takes the account in one of two ways:
 
@@ -89,8 +91,9 @@ reference architecture does with the `stackit/service-account` and
 
 An instance has a public endpoint and accepts connections only from the CIDR ranges in `acl`.
 Workloads on an SKE cluster leave through the cluster's egress address, which
-`stackit ske cluster describe <name> -o json` reports as `status.egressAddressRanges`. Set it as
-`stackit_acl`, the default of the input.
+`stackit ske cluster describe <name> -o json` reports as `status.egressAddressRanges` and the
+`ske/cluster` building block outputs as `egress_address_ranges`. Set it as `stackit_acl`, the
+default of the input.
 
 ## Credentials and connectors
 

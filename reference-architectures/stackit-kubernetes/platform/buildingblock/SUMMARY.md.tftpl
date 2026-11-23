@@ -23,9 +23,6 @@
 %{ if ai_model != null ~}
 | **AI Model Serving** | `${ai_model}` — @buildingblock[${ai_bb_uuid}] |
 %{ endif ~}
-%{ for stage, instance in postgres_instances ~}
-| **Shared PostgreSQL ${stage}** | `${instance.instance_id}` at `${instance.host}:${instance.port}` — @buildingblock[${instance.building_block_uuid}] |
-%{ endfor ~}
 | **meshStack Platform** | `${platform_identifier}` |
 
 %{ if !phase2_completed ~}
@@ -85,21 +82,4 @@ Nobody orders the connector directly.
 Application hostnames are built under `${dns_zone_name}`.
 %{ else ~}
 Neither is registered yet.
-%{ endif ~}
-%{ if length(postgres_instances) > 0 ~}
-
-## Shared PostgreSQL
-
-Each stage below has a PostgreSQL Flex instance without databases, which accepts connections from the
-cluster's egress ${postgres_acl} only. To hand out databases, register the database variant of
-[`stackit/postgres`](https://github.com/meshcloud/meshstack-hub/tree/main/modules/stackit/postgres)
-once per landing zone and federate it into the platform's service account:
-
-| Variable | Value |
-|---|---|
-| `stackit_project_id` | `${stackit_project_id}` |
-| `stackit_service_account_email` | `${platform_service_account_email}` |
-%{ for stage, instance in postgres_instances ~}
-| `stackit_existing_instance_id` for **${stage}** | `${instance.instance_id}` |
-%{ endfor ~}
 %{ endif ~}

@@ -96,23 +96,6 @@ variable "starterkit_demo" {
   EOT
 }
 
-variable "postgres" {
-  type = map(object({
-    replicas           = optional(number)
-    flavor             = optional(string)
-    storage_size_in_gb = optional(number)
-    storage_class      = optional(string)
-    postgres_version   = optional(string)
-  }))
-  default     = null
-  description = "Shared PostgreSQL Flex instances by stage name, one per key, with the settings of each; null orders none. A setting left out takes the default: `replicas` 1 (or 3), `flavor` `2.4`, `storage_size_in_gb` 5, `storage_class` `premium-perf2-stackit`, `postgres_version` `17`."
-
-  validation {
-    condition     = var.postgres == null ? true : length(setsubtract(keys(var.postgres), var.stages[*].name)) == 0
-    error_message = "Every key of postgres must be the name of a stage in stages: ${join(", ", var.stages[*].name)}."
-  }
-}
-
 variable "dns_domain" {
   type        = string
   default     = null
@@ -160,6 +143,13 @@ variable "quota_definitions" {
   }))
   default     = null
   description = "Quotas the meshPlatform offers, with their limits; null keeps the defaults of the `kubernetes` hub module. CPU in millicores (m), memory in mebibytes (Mi)."
+}
+
+variable "additional_federated_building_block_definitions" {
+  type        = list(string)
+  default     = []
+  nullable    = false
+  description = "Building block definition UUIDs the Automation Identity Federation trusts besides the platform's own, so their runs act as the platform's service account. For definitions a foundation registers on top of the platform."
 }
 
 variable "tags" {

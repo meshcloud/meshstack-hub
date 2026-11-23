@@ -111,23 +111,6 @@ variable "ai_model" {
   description = "Model applications default to. Must be one STACKIT Model Serving's `/v1/models` endpoint serves. Null sets up no Model Serving token and no `stackit-ai` secret."
 }
 
-variable "postgres" {
-  type = map(object({
-    replicas           = optional(number, 1)
-    flavor             = optional(string, "2.4")
-    storage_size_in_gb = optional(number, 5)
-    storage_class      = optional(string, "premium-perf2-stackit")
-    postgres_version   = optional(string, "17")
-  }))
-  default     = null
-  description = "Shared PostgreSQL Flex instances by stage name, one per key, with the settings of each. Null orders none."
-
-  validation {
-    condition     = var.postgres == null ? true : length(setsubtract(keys(var.postgres), keys(var.stages))) == 0
-    error_message = "Every key of postgres must be the name of a stage in stages: ${join(", ", keys(var.stages))}."
-  }
-}
-
 variable "starterkit_app_name" {
   type        = string
   nullable    = false
@@ -164,6 +147,13 @@ variable "quota_definitions" {
   }))
   default     = null
   description = "Quotas the meshPlatform offers, with their limits; null keeps the defaults of the `kubernetes` hub module. CPU in millicores (m), memory in mebibytes (Mi)."
+}
+
+variable "additional_federated_building_block_definitions" {
+  type        = list(string)
+  default     = []
+  nullable    = false
+  description = "Building block definition UUIDs the Automation Identity Federation trusts besides the platform's own."
 }
 
 variable "imports" {
