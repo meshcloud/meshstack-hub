@@ -145,7 +145,7 @@ resource "meshstack_building_block_definition" "this" {
     notification_subscribers = var.notification_subscribers
 
     readme = coalesce(var.bbd_readme, chomp(<<-EOT
-    The **SKE Starterkit** provides application teams with a pre-configured Kubernetes environment on STACKIT Kubernetes Engine (SKE) following best practices. It creates one project with a dedicated SKE tenant per stage this platform offers: ${local.stage_list}.
+    The **SKE Starterkit** provides application teams with a pre-configured Kubernetes environment on STACKIT Kubernetes Engine (SKE) following best practices. It creates a dedicated SKE namespace per stage (${local.stage_list}) on a shared cluster managed by the platform team.
 
     ## 🎯 When to use it
 
