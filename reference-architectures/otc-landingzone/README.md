@@ -171,6 +171,17 @@ building block definition to other workspaces. Set `playground_mode = false` for
 actually used. The flag reaches the building block as a `STATIC` input, so whoever orders the
 architecture cannot change it.
 
+### Taking Over Existing Admin Bindings
+
+Every Workspace Owner and Workspace Manager gets Project Admin on the management project. meshStack
+allows only one binding per user and role on a project, so the run fails with HTTP 409 when a user
+already has Project Admin there, for example from meshPanel. Name that binding in the `imports`
+input, and the run takes it over:
+
+```json
+{ "management_admin_bindings": { "jane@example.com": "7b5f250d-c38b-42c6-a441-2c2497dc4c47" } }
+```
+
 ### Approval Gates
 
 `approval_policies` sets which run triggers need an operator's approval before a run of this

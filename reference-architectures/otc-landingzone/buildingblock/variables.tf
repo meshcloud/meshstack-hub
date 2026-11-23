@@ -176,6 +176,14 @@ variable "create_cce_admin_trust" {
   description = "Create the `cce_admin_trust` agency the CCE service building block needs. It is one per domain."
 }
 
+variable "imports" {
+  type = object({
+    management_admin_bindings = optional(map(string), {})
+  })
+  default     = null
+  description = "Existing resources to take over. `management_admin_bindings` maps a username to the name of its existing Project Admin binding on the management project."
+}
+
 variable "runner_ref" {
   type = object({
     kind = optional(string)

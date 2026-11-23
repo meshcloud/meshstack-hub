@@ -25,6 +25,18 @@ locals {
     if contains(member.roles, "Workspace Owner") || contains(member.roles, "Workspace Manager")
   ])
 
+  admin_binding_imports = var.imports == null ? {} : var.imports.management_admin_bindings
+
+  # A binding name is capped at 45 characters and unique across the whole meshStack; the hash keeps
+  # two platforms sharing a truncated prefix apart.
+  management_admin_binding_names = merge({
+    for username in local.platform_admins : username => format(
+      "%s-mgmt-%s",
+      substr(local.platform_identifier, 0, 20),
+      substr(sha256("${local.platform_identifier}:${username}"), 0, 12),
+    )
+  }, local.admin_binding_imports)
+
   # The form is flat so that meshPanel can render it; the integration takes the nested shape.
   federation_enabled = var.identity_provider != null && var.identity_provider.protocol != null
 
@@ -113,16 +125,10 @@ resource "meshstack_project" "management" {
 }
 
 resource "meshstack_project_user_binding" "management_admin" {
-  for_each = local.platform_admins
+  for_each = local.management_admin_binding_names
 
-  # A binding name is capped at 45 characters and unique across the whole meshStack; the hash keeps
-  # two platforms sharing a truncated prefix apart.
   metadata = {
-    name = format(
-      "%s-mgmt-%s",
-      substr(local.platform_identifier, 0, 20),
-      substr(sha256("${local.platform_identifier}:${each.value}"), 0, 12),
-    )
+    name = each.value
   }
 
   role_ref = {
@@ -135,8 +141,16 @@ resource "meshstack_project_user_binding" "management_admin" {
   }
 
   subject = {
-    name = each.value
+    name = each.key
   }
+}
+
+# meshStack allows one binding per user and role on a project, so a user who already has Project Admin
+# there, for example from meshPanel, needs that binding taken over.
+import {
+  for_each = local.admin_binding_imports
+  to       = meshstack_project_user_binding.management_admin[each.key]
+  id       = each.value
 }
 
 resource "meshstack_tenant" "management" {

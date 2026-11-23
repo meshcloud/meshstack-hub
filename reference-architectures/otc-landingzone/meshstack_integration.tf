@@ -497,6 +497,29 @@ resource "meshstack_building_block_definition" "this" {
         argument        = jsonencode(jsonencode(coalesce(var.meshstack.runner_ref, {})))
         display_order   = 135
       }
+
+      imports = {
+        display_name    = "Imports"
+        description     = "Existing resources to take over; see Taking Over Existing Admin Bindings in the README. Leave out to create everything."
+        type            = "JSON"
+        assignment_type = "USER_INPUT"
+        is_optional     = true
+        display_order   = 140
+
+        json_schema = jsonencode({
+          "$schema"            = "http://json-schema.org/draft-07/schema#"
+          type                 = "object"
+          additionalProperties = false
+          properties = {
+            management_admin_bindings = {
+              type                 = "object"
+              title                = "management_admin_bindings"
+              description          = "Existing Project Admin binding names on the management project, by username."
+              additionalProperties = { type = "string" }
+            }
+          }
+        })
+      }
     }
 
     outputs = {
