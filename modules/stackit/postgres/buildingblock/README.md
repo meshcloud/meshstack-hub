@@ -67,8 +67,8 @@ reference architecture does with the `stackit/service-account` and
   `editor` has the same permissions except `postgres-flex.instance.force-delete`.
 - The account federates the definition: list the definition's uuid in
   `federated_building_block_definitions` of a `stackit/service-account-federation` building block.
-  On a STACKIT Kubernetes reference architecture platform, add it to the input Additional
-  Federated Definitions, and the platform's Automation Identity Federation lists it.
+  On a STACKIT Kubernetes reference architecture platform, add it to the platform operator input
+  Additional Federated Definitions, and the platform's Automation Identity Federation lists it.
 
 `meshstack_integration.tf` then takes the account in one of two ways:
 
