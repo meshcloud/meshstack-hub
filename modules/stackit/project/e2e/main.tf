@@ -105,6 +105,9 @@ module "stackit_project" {
   stackit_project_id           = var.test_context.fixtures.stackit.project_id
   stackit_parent_container_id  = var.test_context.fixtures.stackit.parent_container_id
   stackit_service_account_name = "${var.test_context.run_id}-prj"
+
+  # The default name would collide with the STACKIT Project definition other tests look up by name.
+  bbd_display_name = "${var.test_context.run_id} STACKIT Project"
 }
 
 locals {
