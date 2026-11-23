@@ -428,7 +428,7 @@ resource "meshstack_building_block_definition" "this" {
 
       additional_federated_building_block_definitions = {
         display_name    = "Additional Federated Definitions"
-        description     = "Building block definition UUIDs the Automation Identity Federation trusts besides the platform's own, so their runs act as the platform's service account. For definitions a foundation registers on top of the platform. Leave out for none."
+        description     = "Refs `{kind, uuid}` of building block definitions the Automation Identity Federation trusts besides the platform's own, so their runs act as the platform's service account. For definitions a foundation registers on top of the platform. Leave out for none."
         type            = "JSON"
         assignment_type = "PLATFORM_OPERATOR_MANUAL_INPUT"
         is_optional     = true
@@ -438,7 +438,15 @@ resource "meshstack_building_block_definition" "this" {
           "$schema"   = "http://json-schema.org/draft-07/schema#"
           type        = "array"
           uniqueItems = true
-          items       = { type = "string", format = "uuid" }
+          items = {
+            type                 = "object"
+            additionalProperties = false
+            required             = ["kind", "uuid"]
+            properties = {
+              kind = { type = "string", const = "meshBuildingBlockDefinition" }
+              uuid = { type = "string", format = "uuid" }
+            }
+          }
         })
       }
 

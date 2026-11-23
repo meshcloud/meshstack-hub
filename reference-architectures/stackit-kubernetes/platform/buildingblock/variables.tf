@@ -150,10 +150,18 @@ variable "quota_definitions" {
 }
 
 variable "additional_federated_building_block_definitions" {
-  type        = list(string)
+  type = list(object({
+    kind = string
+    uuid = string
+  }))
   default     = []
   nullable    = false
-  description = "Building block definition UUIDs the Automation Identity Federation trusts besides the platform's own."
+  description = "Refs `{kind, uuid}` of building block definitions the Automation Identity Federation trusts besides the platform's own."
+
+  validation {
+    condition     = alltrue([for ref in var.additional_federated_building_block_definitions : ref.kind == "meshBuildingBlockDefinition"])
+    error_message = "Every entry of additional_federated_building_block_definitions must be a building block definition ref with kind meshBuildingBlockDefinition."
+  }
 }
 
 variable "imports" {

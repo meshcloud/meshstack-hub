@@ -124,7 +124,7 @@ The main inputs:
 | DNS Domain | The platform's DNS zone under a free STACKIT domain (`stackit.run`, `stackit.zone`, `stackit.rocks`, `stackit.gg`, `runs.onstackit.cloud`): a bare one gives `<platform identifier>.stackit.run`, one label more such as `likvid.stackit.run` is the zone itself; `stackit.run` by default |
 | Stages | One landing zone per named stage, with stage-specific tags and optional quotas; `dev` and `prod` by default |
 | Quota Definitions | The quotas the meshPlatform offers; a stage's `quotas` entry names one by its `quota_key` |
-| Additional Federated Definitions | Set by a platform operator, in meshPanel or through the API. UUIDs of definitions a foundation registers on top of the platform, such as a [`stackit/postgres`](../../modules/stackit/postgres/buildingblock/README.md) instance or database connector; the Automation Identity Federation trusts them, so their runs act as the platform's service account. None by default |
+| Additional Federated Definitions | Set by a platform operator, in meshPanel or through the API. Refs `{kind, uuid}` of definitions a foundation registers on top of the platform, such as a [`stackit/postgres`](../../modules/stackit/postgres/buildingblock/README.md) instance or database connector; the Automation Identity Federation trusts them, so their runs act as the platform's service account. None by default; see [Federating foundation definitions](#federating-foundation-definitions) |
 | Tags | Tags as `{key, values}` entries for landing zones, the definitions platform engineers order (`building_block`) and those application teams order (`starterkit_building_block`), the platform's project and the starter kit's projects |
 | Approval Policies, Starterkit Approval Policies | See Approval gates |
 | Phase 2 Completed | See below |
@@ -138,6 +138,20 @@ otherwise no tenant can be created on the landing zone.
 platform's service account by default) and `project_identifier` (`<platform identifier>-ske` by
 default). The building block outputs a link to the STACKIT project
 and the summary of STACKIT Kubernetes Platform Services.
+
+### Federating foundation definitions
+
+A foundation that registers definitions on top of the platform passes their `ref` attributes, as
+`meshstack_building_block_definition` (resource and data source) has them:
+
+```hcl
+additional_federated_building_block_definitions = { value = jsonencode(jsonencode([
+  meshstack_building_block_definition.postgres_database.ref,
+  { kind = "meshBuildingBlockDefinition", uuid = module.postgres.building_block_definition.uuid },
+])) }
+```
+
+A hub module's `building_block_definition` output has no `ref`, so its entry is built from `uuid`.
 
 ### Landing zone
 

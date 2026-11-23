@@ -120,7 +120,7 @@ resource "meshstack_building_block" "platform_federation" {
             module.secrets_manager_integration.building_block_definition.uuid,
             module.dns_integration.building_block_definition.uuid,
           ],
-          var.additional_federated_building_block_definitions,
+          var.additional_federated_building_block_definitions[*].uuid,
         )))
       }
     }
