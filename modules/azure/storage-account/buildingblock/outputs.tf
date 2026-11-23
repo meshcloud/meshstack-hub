@@ -15,7 +15,7 @@ output "storage_account_url" {
 }
 
 output "tags" {
-  value = azurerm_storage_account.storage_account.tags
+  value = coalesce(azurerm_storage_account.storage_account.tags, {})
 }
 
 output "network_default_action" {
