@@ -50,17 +50,7 @@ resource "ionoscloud_user" "new_users" {
   }
 }
 
-# Combine existing and newly created users
 locals {
-  all_users = merge(
-    # Convert existing users data to same format
-    {
-      for k, v in data.ionoscloud_user.existing : k => v
-    },
-    # New users are already in the right format
-    ionoscloud_user.new_users
-  )
-
   # Create a list format for outputs (maintaining backward compatibility)
   all_users_list = concat(
     values(data.ionoscloud_user.existing),

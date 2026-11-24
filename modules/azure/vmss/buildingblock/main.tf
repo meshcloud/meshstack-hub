@@ -1,7 +1,3 @@
-data "azurerm_subscription" "current" {}
-
-data "azurerm_client_config" "current" {}
-
 data "azurerm_virtual_network" "spoke_vnet" {
   name                = var.vnet_name
   resource_group_name = var.vnet_resource_group_name

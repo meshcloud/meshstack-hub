@@ -56,7 +56,6 @@ No modules.
 | [github_repository_file.provider_tf](https://registry.terraform.io/providers/integrations/github/latest/docs/resources/repository_file) | resource |
 | [random_string.resource_code](https://registry.terraform.io/providers/hashicorp/random/latest/docs/resources/string) | resource |
 | [time_sleep.wait](https://registry.terraform.io/providers/hashicorp/time/latest/docs/resources/sleep) | resource |
-| [azuread_client_config.current](https://registry.terraform.io/providers/hashicorp/azuread/latest/docs/data-sources/client_config) | data source |
 | [azuread_group.project_admins](https://registry.terraform.io/providers/hashicorp/azuread/latest/docs/data-sources/group) | data source |
 | [azurerm_subscription.current](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/subscription) | data source |
 | [github_repository.repository](https://registry.terraform.io/providers/integrations/github/latest/docs/data-sources/repository) | data source |

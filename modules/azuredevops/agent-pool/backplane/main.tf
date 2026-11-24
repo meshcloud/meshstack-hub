@@ -1,7 +1,5 @@
 data "azurerm_client_config" "current" {}
 
-data "azurerm_subscription" "current" {}
-
 resource "azuread_application" "azure_devops" {
   display_name = var.service_principal_name
   description  = "Service principal for managing Azure DevOps agent pools"

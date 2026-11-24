@@ -2,8 +2,6 @@
 resource "time_static" "start_date" {
 }
 
-data "aws_caller_identity" "current" {}
-
 resource "aws_budgets_budget" "account_budget" {
   name              = var.budget_name
   budget_type       = "COST"

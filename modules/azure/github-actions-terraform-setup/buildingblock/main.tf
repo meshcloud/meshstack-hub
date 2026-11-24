@@ -5,7 +5,6 @@
 # there is pre_role_assignemnt Building Block which is expected to be executed before this BB
 
 data "azurerm_subscription" "current" {}
-data "azuread_client_config" "current" {}
 
 #
 # configure developer access

@@ -1,5 +1,3 @@
-data "azurerm_subscription" "current" {}
-
 resource "random_password" "administrator_password" {
   length      = 24
   min_lower   = 1
