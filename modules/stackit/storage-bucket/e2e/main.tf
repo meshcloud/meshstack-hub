@@ -4,6 +4,13 @@ variable "test_context" {
     run_id      = string
     hub_git_ref = string
 
+    meshstack = optional(object({
+      runner_ref = optional(object({
+        kind = string
+        uuid = string
+      }))
+    }))
+
     # Mode discriminator: set in foundation mode to order an already-deployed BBD version;
     # null in build-from-source mode, which builds the BBD from hub source.
     bbd_version_ref = optional(object({
@@ -22,6 +29,10 @@ variable "test_context" {
   nullable = false
 }
 
+locals {
+  context_runner_ref = var.test_context.meshstack == null ? null : var.test_context.meshstack.runner_ref
+}
+
 provider "stackit" {
   # Credentials are picked up from the environment: STACKIT_SERVICE_ACCOUNT_KEY_PATH for local
   # development (see meshstack-smoke-test/setup-env.sh), WIF in CI. Do not set service_account_key
@@ -35,6 +46,7 @@ module "stackit_storage_bucket" {
   meshstack = {
     owning_workspace_identifier = var.test_context.workspace
     tags                        = {}
+    runner_ref                  = local.context_runner_ref
   }
   hub = {
     git_ref   = var.test_context.hub_git_ref

@@ -4,6 +4,13 @@ variable "test_context" {
     workspace   = string
     name_suffix = string
 
+    meshstack = optional(object({
+      runner_ref = optional(object({
+        kind = string
+        uuid = string
+      }))
+    }))
+
     fixtures = object({
       azure = object({
         subscription_uuid = string
@@ -13,6 +20,10 @@ variable "test_context" {
   })
 
   nullable = false
+}
+
+locals {
+  context_runner_ref = var.test_context.meshstack == null ? null : var.test_context.meshstack.runner_ref
 }
 
 locals {
@@ -30,6 +41,7 @@ module "storage_account" {
   meshstack = {
     owning_workspace_identifier = var.test_context.workspace
     tags                        = {}
+    runner_ref                  = local.context_runner_ref
   }
 
   hub = {
