@@ -50,20 +50,3 @@ rule "terraform_documented_outputs" {
 rule "azurerm_resources_missing_prevent_destroy" {
   enabled = false
 }
-
-# These fail to evaluate modules/aws/alternate-contacts, whose contacts default to null.
-rule "aws_account_alternate_contact_invalid_email_address" {
-  enabled = false
-}
-
-rule "aws_account_alternate_contact_invalid_name" {
-  enabled = false
-}
-
-rule "aws_account_alternate_contact_invalid_phone_number" {
-  enabled = false
-}
-
-rule "aws_account_alternate_contact_invalid_title" {
-  enabled = false
-}
