@@ -38,7 +38,7 @@ The Azure VM Starterkit building block automates the creation of a complete Azur
 ## Requirements
 
 | Name | Version |
-| ---- | ------- |
+|------|---------|
 | <a name="requirement_meshstack"></a> [meshstack](#requirement\_meshstack) | >= 0.27.0 |
 
 ## Modules
@@ -48,7 +48,7 @@ No modules.
 ## Resources
 
 | Name | Type |
-| ---- | ---- |
+|------|------|
 | [meshstack_building_block.azure_vm](https://registry.terraform.io/providers/meshcloud/meshstack/latest/docs/resources/building_block) | resource |
 | [meshstack_project.vm_project](https://registry.terraform.io/providers/meshcloud/meshstack/latest/docs/resources/project) | resource |
 | [meshstack_project_user_binding.creator_admin](https://registry.terraform.io/providers/meshcloud/meshstack/latest/docs/resources/project_user_binding) | resource |
@@ -59,7 +59,7 @@ No modules.
 ## Inputs
 
 | Name | Description | Type | Default | Required |
-| ---- | ----------- | ---- | ------- | :------: |
+|------|-------------|------|---------|:--------:|
 | <a name="input_azure_vm_definition_version_uuid"></a> [azure\_vm\_definition\_version\_uuid](#input\_azure\_vm\_definition\_version\_uuid) | UUID of the Azure Virtual Machine building block definition version. | `string` | n/a | yes |
 | <a name="input_creator"></a> [creator](#input\_creator) | Information about the creator of the resources who will be assigned Project Admin role | <pre>object({<br/>    type        = string<br/>    identifier  = string<br/>    displayName = string<br/>    username    = optional(string)<br/>    email       = optional(string)<br/>    euid        = optional(string)<br/>  })</pre> | n/a | yes |
 | <a name="input_full_platform_identifier"></a> [full\_platform\_identifier](#input\_full\_platform\_identifier) | Full platform identifier of the Azure platform. | `string` | n/a | yes |
@@ -78,7 +78,7 @@ No modules.
 ## Outputs
 
 | Name | Description |
-| ---- | ----------- |
+|------|-------------|
 | <a name="output_project_name"></a> [project\_name](#output\_project\_name) | Name of the created meshStack project |
 | <a name="output_summary"></a> [summary](#output\_summary) | Summary with next steps and insights into created resources |
 | <a name="output_tenant_uuid"></a> [tenant\_uuid](#output\_tenant\_uuid) | UUID of the created Azure tenant |
