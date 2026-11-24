@@ -29,7 +29,7 @@ resource "kubernetes_secret" "meshfed_service_secret" {
   type = "kubernetes.io/service-account-token"
 }
 
-resource "kubernetes_cluster_role" "meshfed-service" {
+resource "kubernetes_cluster_role" "meshfed_service" {
 
   metadata {
     name = "${var.run_id}-meshfed-service"
@@ -71,8 +71,13 @@ resource "kubernetes_cluster_role" "meshfed-service" {
   }
 }
 
+moved {
+  from = kubernetes_cluster_role.meshfed-service
+  to   = kubernetes_cluster_role.meshfed_service
+}
+
 # meshfed_service role binding (unique per instance)
-resource "kubernetes_cluster_role_binding" "meshfed-service" {
+resource "kubernetes_cluster_role_binding" "meshfed_service" {
   subject {
     kind      = "ServiceAccount"
     name      = kubernetes_service_account.meshfed_service.metadata[0].name
@@ -81,7 +86,7 @@ resource "kubernetes_cluster_role_binding" "meshfed-service" {
   role_ref {
     api_group = "rbac.authorization.k8s.io"
     kind      = "ClusterRole"
-    name      = kubernetes_cluster_role.meshfed-service.metadata[0].name
+    name      = kubernetes_cluster_role.meshfed_service.metadata[0].name
   }
   metadata {
     name = "${var.run_id}-meshfed-service"
@@ -89,6 +94,11 @@ resource "kubernetes_cluster_role_binding" "meshfed-service" {
       "io.meshcloud/meshstack.replicator-kubernetes.version" = "1.0"
     }
   }
+}
+
+moved {
+  from = kubernetes_cluster_role_binding.meshfed-service
+  to   = kubernetes_cluster_role_binding.meshfed_service
 }
 
 # meshPlatform

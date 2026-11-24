@@ -9,7 +9,7 @@ data "external" "resolve_forgejo_users" {
 }
 
 locals {
-  _resolved_users = data.external.resolve_forgejo_users.result
+  resolved_users = data.external.resolve_forgejo_users.result
 
   member_team_type = {
     for member in var.workspace_members : member.username => (
@@ -19,7 +19,7 @@ locals {
     )
   }
 
-  _member_email_team = {
+  member_email_team = {
     for member in var.workspace_members : member.email => (
       contains(member.roles, "Workspace Owner") ? "admins" : (
         contains(member.roles, "Workspace Manager") ? "writers" : "readers"
@@ -27,17 +27,17 @@ locals {
     )
   }
 
-  _resolved_members = {
-    for email, username in local._resolved_users : email => {
-      team_type = local._member_email_team[email]
+  resolved_members = {
+    for email, username in local.resolved_users : email => {
+      team_type = local.member_email_team[email]
       username  = username
     } if username != "" && !startswith(email, "error:")
   }
 
   active_teams = {
     for type in ["admins", "writers", "readers"] : type => [
-      for email, team_type in local._member_email_team : email if team_type == type
-    ] if length([for email, team_type in local._member_email_team : email if team_type == type]) > 0
+      for email, team_type in local.member_email_team : email if team_type == type
+    ] if length([for email, team_type in local.member_email_team : email if team_type == type]) > 0
   }
 
   team_permissions = {
@@ -57,7 +57,7 @@ locals {
   }
 
   member_assignments = merge([
-    for email, info in local._resolved_members : {
+    for email, info in local.resolved_members : {
       "${info.team_type}/${info.username}" = {
         team_type = info.team_type
         username  = info.username
@@ -92,7 +92,7 @@ moved {
 }
 
 locals {
-  _team_ids = module.teams.team_ids
+  team_ids = module.teams.team_ids
 }
 
 resource "restapi_object" "team_repo" {
@@ -100,7 +100,7 @@ resource "restapi_object" "team_repo" {
 
   provider = restapi.without_returned_object
 
-  path           = "/api/v1/teams/${local._team_ids[each.key]}/repos/${var.forgejo_organization}/{id}"
+  path           = "/api/v1/teams/${local.team_ids[each.key]}/repos/${var.forgejo_organization}/{id}"
   object_id      = forgejo_repository.this.name
   create_method  = "PUT"
   destroy_method = "DELETE"
