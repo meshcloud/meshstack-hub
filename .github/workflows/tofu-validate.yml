@@ -3,6 +3,10 @@ on:
   pull_request:
   merge_group:
 
+concurrency:
+  group: tofu-validate-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
 permissions:
   contents: read
 
@@ -10,14 +14,14 @@ permissions:
 # whole repo, never at a diff.
 jobs:
   validate:
+    name: Validate all modules
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
 
-      # Not the nix shell the other jobs use: entering it costs 42s, half this
-      # job's budget. Keep the version in step with flake.nix.
+      # Entering the nix shell would cost half this job's time. Keep the version in step with flake.nix.
       - uses: opentofu/setup-opentofu@a1320f892987e89d278cc92dc5adc984fb93aca4 # v2.0.2
         with:
           tofu_version: 1.13.9

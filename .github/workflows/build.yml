@@ -10,4 +10,4 @@ permissions:
 
 jobs:
   build:
-    uses: meshcloud/shared-workflows/.github/workflows/terraform-meshplatform-modules-build-workflow.yml@main # zizmor: ignore[unpinned-uses]
+    uses: meshcloud/shared-workflows/.github/workflows/terraform-meshplatform-modules-build-workflow.yml@main # zizmor: ignore[unpinned-uses] follows main on purpose

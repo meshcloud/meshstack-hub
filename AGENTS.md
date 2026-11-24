@@ -105,5 +105,6 @@ the docs.
   back to the hub GitHub URL first.
 - No trailing whitespace.
 - Run `task lint` inside `nix develop` before you push a change to a shell script, a Python script or
-  a workflow. It runs shellcheck, ruff, ty, actionlint and zizmor on every shell and Python script and
-  every workflow in the repo, module scripts included. CI runs it on every PR.
+  a workflow. It runs shellcheck, ruff, ty and actionlint on every shell and Python script and every
+  workflow in the repo, module scripts included. CI runs it on every PR and also checks the workflows
+  with `zizmor --offline --persona=auditor .`, which you can run in `nix develop` too.

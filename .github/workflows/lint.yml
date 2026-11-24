@@ -6,15 +6,20 @@ on:
   pull_request:
   merge_group:
 
+concurrency:
+  group: lint-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
 permissions:
   contents: read
 
 jobs:
   lint:
+    name: Lint scripts and workflows
     runs-on: ubuntu-latest
     defaults:
       run:
-        shell: nix develop .#github_actions --command bash -euo pipefail {0}
+        shell: nix develop .#github_actions --command bash -euo pipefail {0} # zizmor: ignore[misfeature] every step runs in the nix shell
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -25,3 +30,17 @@ jobs:
           nix_on_tmpfs: true
 
       - run: task lint
+
+  zizmor:
+    name: Workflow Security Check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - uses: nixbuild/nix-quick-install-action@9f63be77f412a248c9d9a65a4c82cf066cdf8f0c # v35
+        with:
+          nix_on_tmpfs: true
+
+      - run: nix develop .#github_actions --command zizmor --offline --persona=auditor --format=github .

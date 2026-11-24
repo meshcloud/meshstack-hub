@@ -13,10 +13,11 @@ permissions:
 
 jobs:
   scan:
+    name: SonarQube Cloud scan
     runs-on: ubuntu-latest
     # A step condition cannot read secrets, only the environment of the job.
     env:
-      SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+      SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }} # zizmor: ignore[secrets-outside-env] an organization secret, no environment of this repo holds it
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
