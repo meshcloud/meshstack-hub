@@ -1,64 +1,28 @@
-# Azure Virtual Machine Building Block - Backplane
+# Azure Virtual Machine — Backplane
 
-This directory contains the "backplane" configuration for the Azure Virtual Machine Building Block. The backplane sets up the necessary permissions and service principals required to deploy Virtual Machines in Azure subscriptions.
+Sets up the identity the Azure Virtual Machine building block runs with.
 
-## Overview
+## What it provisions
 
-The backplane creates:
-- Custom Azure RBAC role definition with VM deployment permissions
-- Optional service principal for automated deployments
-- Role assignments for the service principal or existing principals
-- Support for workload identity federation or application passwords
+- A resource group named after `var.name`, holding a **user-assigned managed identity**.
+- A **federated identity credential** per building block runner subject, so runs authenticate
+  through workload identity federation. No client secret exists.
+- A custom **deploy role** on `scope`, typically the management group above all landing zones:
+  virtual machine, disk, network and resource group permissions in the tenant subscription.
 
-## Required Permissions
+## Required permissions to deploy
 
-The role definition grants the following permissions:
+- `Managed Identity Contributor` on the subscription the identity lives in.
+- `User Access Administrator` (or `Owner`) on `scope`, to create the role definition and the role
+  assignment.
 
-### Virtual Machines
-- Read, write, and delete virtual machines
-- Manage VM disks
+## Migrating from the service principal backplane
 
-### Networking
-- Create and manage network interfaces
-- Create and manage public IPs (optional)
-- Create and manage network security groups
-- Read and join virtual networks and subnets
-
-### Resource Management
-- Create, read, and delete resource groups
-- Assign managed identities
-
-## Usage
-
-```hcl
-module "vm_backplane" {
-  source = "./backplane"
-
-  name  = "azure-vm"
-  scope = "/subscriptions/your-subscription-id"
-
-  # Option 1: Use existing service principal
-  existing_principal_ids = ["existing-sp-object-id"]
-
-  # Option 2: Create new service principal with workload identity federation
-  create_service_principal_name = "vm-deployer"
-  workload_identity_federation = {
-    issuer  = "https://token.actions.githubusercontent.com"
-    subject = "repo:your-org/your-repo:ref:refs/heads/main"
-  }
-
-  # Option 3: Create new service principal with password
-  create_service_principal_name = "vm-deployer"
-  # Omit workload_identity_federation to use password authentication
-}
-```
-
-## Security Considerations
-
-- The role definition follows the principle of least privilege
-- Service principals should use workload identity federation when possible
-- Passwords are marked as sensitive and not exposed in outputs
-- Review the permissions before deploying to production environments
+Earlier versions created an Entra application and service principal with a client secret or a
+federated credential, or granted the role to `existing_principal_ids`. This version replaces them
+with a managed identity. Applying it destroys the service principal and its role assignments, and
+the building block definition must switch its `ARM_CLIENT_ID` to the new identity.
+`meshstack_integration.tf` does that for you.
 
 <!-- BEGIN_TF_DOCS -->
 ## Requirements

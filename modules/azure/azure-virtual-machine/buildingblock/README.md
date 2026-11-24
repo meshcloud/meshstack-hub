@@ -23,25 +23,12 @@ This Terraform module provisions an Azure Virtual Machine along with necessary n
 - Customizable OS images
 
 ## Requirements
-- Terraform `>= 1.0`
-- AzureRM Provider `>= 4.18.0`
 
-## Providers
+- OpenTofu `>= 1.12.0`
+- AzureRM Provider `>= 4.50.0, < 5.0.0`
 
-```hcl
-terraform {
-  required_providers {
-    azurerm = {
-      source  = "hashicorp/azurerm"
-      version = "4.18.0"
-    }
-  }
-}
-
-provider "azurerm" {
-  features {}
-}
-```
+The module configures the `azurerm` provider for `subscription_id`. Credentials come from the
+`ARM_*` environment variables.
 
 ## Usage Examples
 
@@ -51,6 +38,7 @@ provider "azurerm" {
 module "linux_vm" {
   source = "./buildingblock"
 
+  subscription_id     = "00000000-0000-0000-0000-000000000000"
   vm_name             = "my-linux-vm"
   resource_group_name = "my-rg"
   location            = "West Europe"
@@ -77,6 +65,7 @@ module "linux_vm" {
 module "windows_vm" {
   source = "./buildingblock"
 
+  subscription_id     = "00000000-0000-0000-0000-000000000000"
   vm_name             = "my-windows-vm"
   resource_group_name = "my-rg"
   location            = "West Europe"
@@ -104,10 +93,12 @@ module "windows_vm" {
 module "vm_with_data_disk" {
   source = "./buildingblock"
 
+  subscription_id        = "00000000-0000-0000-0000-000000000000"
   vm_name                = "my-vm-with-disk"
   resource_group_name    = "my-rg"
   location               = "West Europe"
   os_type                = "Linux"
+  vm_size                = "Standard_B2ts_v2"
   admin_username         = "azureuser"
   ssh_public_key         = file("~/.ssh/id_rsa.pub")
 
@@ -122,10 +113,12 @@ module "vm_with_data_disk" {
 module "spot_vm" {
   source = "./buildingblock"
 
+  subscription_id        = "00000000-0000-0000-0000-000000000000"
   vm_name                = "my-spot-vm"
   resource_group_name    = "my-rg"
   location               = "West Europe"
   os_type                = "Linux"
+  vm_size                = "Standard_B2ts_v2"
   admin_username         = "azureuser"
   ssh_public_key         = file("~/.ssh/id_rsa.pub")
 
