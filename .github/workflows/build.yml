@@ -7,8 +7,6 @@ on:
 
 permissions:
   contents: read
-  # The shared workflow requests it.
-  id-token: write
 
 jobs:
   build:
