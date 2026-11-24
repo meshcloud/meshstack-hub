@@ -11,26 +11,32 @@ import os
 import sys
 import urllib.parse
 import urllib.request
+from pathlib import Path
+from typing import Any
 
 NOT_FOUND = "no account found — member must sign in to Forgejo first"
 
 
-def request(url: str, headers: dict, data: bytes | None = None):
-    req = urllib.request.Request(url, headers=headers, data=data)
-    with urllib.request.urlopen(req, timeout=30) as resp:
+def request(url: str, headers: dict, data: bytes | None = None) -> dict[str, Any]:
+    req = urllib.request.Request(url, headers=headers, data=data)  # noqa: S310
+    with urllib.request.urlopen(req, timeout=30) as resp:  # noqa: S310
         return json.loads(resp.read().decode("utf-8"))
 
 
 def stackit_access_token() -> str:
-    with open(os.environ.get("STACKIT_FEDERATED_TOKEN_FILE", "/var/run/secrets/stackit.cloud/serviceaccount/token")) as f:
-        assertion = f.read().strip()
+    token_file = Path(
+        os.environ.get("STACKIT_FEDERATED_TOKEN_FILE", "/var/run/secrets/stackit.cloud/serviceaccount/token")
+    )
+    assertion = token_file.read_text().strip()
 
-    form = urllib.parse.urlencode({
-        "grant_type": "client_credentials",
-        "client_assertion_type": "urn:schwarz:params:oauth:client-assertion-type:workload-jwt",
-        "client_assertion": assertion,
-        "client_id": os.environ["STACKIT_SERVICE_ACCOUNT_EMAIL"],
-    }).encode()
+    form = urllib.parse.urlencode(
+        {
+            "grant_type": "client_credentials",
+            "client_assertion_type": "urn:schwarz:params:oauth:client-assertion-type:workload-jwt",
+            "client_assertion": assertion,
+            "client_id": os.environ["STACKIT_SERVICE_ACCOUNT_EMAIL"],
+        }
+    ).encode()
     endpoint = os.environ.get("STACKIT_IDP_TOKEN_ENDPOINT", "https://accounts.stackit.cloud/oauth/v2/token")
     return request(endpoint, {"Content-Type": "application/x-www-form-urlencoded"}, form)["access_token"]
 

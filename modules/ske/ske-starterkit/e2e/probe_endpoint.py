@@ -29,15 +29,15 @@ POLL_INTERVAL_SECONDS = 10
 REQUEST_TIMEOUT_SECONDS = 15
 
 
-def probe(url):
+def probe(url: str) -> str:
     """Return "200" once the URL serves 200 over verified TLS, else the last status/error."""
     ctx = ssl.create_default_context()  # verifies hostname + chain against the system trust store
     deadline = time.monotonic() + DEADLINE_SECONDS
     last = "error: no attempt made"
     while True:
         try:
-            with urllib.request.urlopen(
-                urllib.request.Request(url, method="GET"),
+            with urllib.request.urlopen(  # noqa: S310
+                urllib.request.Request(url, method="GET"),  # noqa: S310
                 timeout=REQUEST_TIMEOUT_SECONDS,
                 context=ctx,
             ) as resp:
@@ -62,7 +62,7 @@ def probe(url):
         time.sleep(POLL_INTERVAL_SECONDS)
 
 
-def main():
+def main() -> None:
     query = json.load(sys.stdin)
     print(json.dumps({"status": probe(query["url"])}))
 

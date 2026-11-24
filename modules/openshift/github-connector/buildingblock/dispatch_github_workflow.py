@@ -27,9 +27,10 @@ import json
 import os
 import time
 import urllib.request
+from typing import Any
 
 from cryptography.hazmat.primitives import hashes, serialization
-from cryptography.hazmat.primitives.asymmetric import padding
+from cryptography.hazmat.primitives.asymmetric import padding, rsa
 
 
 def b64url(data: bytes) -> str:
@@ -39,19 +40,17 @@ def b64url(data: bytes) -> str:
 def make_app_jwt(app_id: str, pem: str) -> str:
     now = int(time.time())
     header = b64url(json.dumps({"alg": "RS256", "typ": "JWT"}).encode())
-    payload = b64url(
-        json.dumps({"iat": now - 60, "exp": now + 600, "iss": app_id}).encode()
-    )
+    payload = b64url(json.dumps({"iat": now - 60, "exp": now + 600, "iss": app_id}).encode())
     key = serialization.load_pem_private_key(pem.encode(), password=None)
-    signature = key.sign(
-        f"{header}.{payload}".encode(), padding.PKCS1v15(), hashes.SHA256()
-    )
+    if not isinstance(key, rsa.RSAPrivateKey):
+        raise TypeError("GITHUB_APP_PEM_FILE must hold an RSA private key")
+    signature = key.sign(f"{header}.{payload}".encode(), padding.PKCS1v15(), hashes.SHA256())
     return f"{header}.{payload}.{b64url(signature)}"
 
 
-def github_request(token: str, method: str, url: str, payload: dict | None = None):
+def github_request(token: str, method: str, url: str, payload: dict | None = None) -> tuple[int, Any]:
     body = None if payload is None else json.dumps(payload).encode()
-    req = urllib.request.Request(
+    req = urllib.request.Request(  # noqa: S310
         url,
         headers={
             "Authorization": f"Bearer {token}",
@@ -62,7 +61,7 @@ def github_request(token: str, method: str, url: str, payload: dict | None = Non
         method=method,
         data=body,
     )
-    with urllib.request.urlopen(req, timeout=30) as resp:
+    with urllib.request.urlopen(req, timeout=30) as resp:  # noqa: S310
         raw = resp.read().decode()
         status = resp.status
     return status, json.loads(raw) if raw else {}
@@ -125,22 +124,16 @@ def main() -> None:
 
         state = (status_val, conclusion)
         if state != last_state:
-            print(
-                f"  Run {run_id} [{ref}]: status={status_val} conclusion={conclusion}"
-            )
+            print(f"  Run {run_id} [{ref}]: status={status_val} conclusion={conclusion}")
             last_state = state
 
         if status_val == "completed":
             if conclusion == "success":
                 print(f"Run {run_id} [{ref}] completed successfully.")
                 return
-            raise SystemExit(
-                f"Run {run_id} [{ref}] failed with conclusion='{conclusion}': {html_url}"
-            )
+            raise SystemExit(f"Run {run_id} [{ref}] failed with conclusion='{conclusion}': {html_url}")
 
-    raise SystemExit(
-        f"Timed out after {timeout}s waiting for '{workflow_filename}' on '{ref}' to complete."
-    )
+    raise SystemExit(f"Timed out after {timeout}s waiting for '{workflow_filename}' on '{ref}' to complete.")
 
 
 if __name__ == "__main__":

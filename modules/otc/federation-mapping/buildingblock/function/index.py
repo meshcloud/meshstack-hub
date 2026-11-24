@@ -23,8 +23,11 @@ import urllib.error
 import urllib.parse
 import urllib.request
 import xml.etree.ElementTree as ET
-from email.message import Message
 from email.utils import formatdate
+from typing import TYPE_CHECKING, Any
+
+if TYPE_CHECKING:
+    from email.message import Message
 
 PREFIX = "mappings/"
 
@@ -36,16 +39,18 @@ def log(message: str) -> None:
 def send(req: urllib.request.Request) -> tuple[bytes, Message]:
     # The status alone does not say why a call was refused; OBS and IAM explain it in the body.
     try:
-        with urllib.request.urlopen(req, timeout=30) as resp:
+        with urllib.request.urlopen(req, timeout=30) as resp:  # noqa: S310
             return resp.read(), resp.headers
     except urllib.error.HTTPError as e:
-        raise RuntimeError(f"{req.get_method()} {req.full_url} answered {e.code}: {e.read().decode(errors='replace')}") from e
+        raise RuntimeError(
+            f"{req.get_method()} {req.full_url} answered {e.code}: {e.read().decode(errors='replace')}"
+        ) from e
 
 
 class Obs:
     """Just enough of the OBS API to list and read objects, signed with OBS signature V2."""
 
-    def __init__(self, context, region: str, bucket: str):
+    def __init__(self, context: Any, region: str, bucket: str) -> None:  # noqa: ANN401
         self.ak = context.getSecurityAccessKey()
         self.sk = context.getSecuritySecretKey()
         self.token = context.getSecurityToken()
@@ -56,22 +61,28 @@ class Obs:
         date = formatdate(usegmt=True)
         resource = f"/{self.bucket}/{urllib.parse.quote(key)}"
         string_to_sign = f"GET\n\n\n{date}\nx-obs-security-token:{self.token}\n{resource}"
-        signature = base64.b64encode(hmac.new(self.sk.encode(), string_to_sign.encode(), hashlib.sha1).digest()).decode()
+        signature = base64.b64encode(
+            hmac.new(self.sk.encode(), string_to_sign.encode(), hashlib.sha1).digest()
+        ).decode()
         url = f"https://{self.host}/{urllib.parse.quote(key)}"
         if query:
             url += "?" + urllib.parse.urlencode(query)
-        req = urllib.request.Request(url, headers={
-            "Date": date,
-            "x-obs-security-token": self.token,
-            "Authorization": f"OBS {self.ak}:{signature}",
-        })
+        req = urllib.request.Request(  # noqa: S310
+            url,
+            headers={
+                "Date": date,
+                "x-obs-security-token": self.token,
+                "Authorization": f"OBS {self.ak}:{signature}",
+            },
+        )
         return send(req)[0]
 
-    def keys(self) -> list[str]:
-        keys, marker = [], ""
+    def list_keys(self) -> list[str]:
+        keys: list[str] = []
+        marker = ""
         while True:
-            root = ET.fromstring(self._get("", {"prefix": PREFIX, "marker": marker}))
-            page = [e.text for e in root.iter() if _tag(e) == "Key"]
+            root = ET.fromstring(self._get("", {"prefix": PREFIX, "marker": marker}))  # noqa: S314
+            page = [e.text or "" for e in root.iter() if _tag(e) == "Key"]
             keys += page
             truncated = next((e.text for e in root.iter() if _tag(e) == "IsTruncated"), "false")
             if truncated != "true" or not page:
@@ -87,15 +98,21 @@ def _tag(element: ET.Element) -> str:
     return element.tag.rsplit("}", 1)[-1]
 
 
-def iam(method: str, path: str, token: str, body: dict | None = None,
-        headers: dict[str, str] | None = None) -> tuple[dict, Message]:
+def iam(
+    method: str, path: str, token: str, body: dict | None = None, headers: dict[str, str] | None = None
+) -> tuple[dict, Message]:
     url = os.environ["IAM_ENDPOINT"].rstrip("/") + path
     data = json.dumps(body).encode() if body is not None else None
-    req = urllib.request.Request(url, data=data, method=method, headers={
-        "X-Auth-Token": token,
-        "Content-Type": "application/json;charset=utf8",
-        **(headers or {}),
-    })
+    req = urllib.request.Request(  # noqa: S310
+        url,
+        data=data,
+        method=method,
+        headers={
+            "X-Auth-Token": token,
+            "Content-Type": "application/json;charset=utf8",
+            **(headers or {}),
+        },
+    )
     raw, response_headers = send(req)
     return (json.loads(raw) if raw else {}), response_headers
 
@@ -108,37 +125,48 @@ def domain_token(token: str) -> str:
     """
     info, _ = iam("GET", "/auth/tokens", token, headers={"X-Subject-Token": token})
     domain_id = info["token"]["project"]["domain"]["id"]
-    _, headers = iam("POST", "/auth/tokens", token, {"auth": {
-        "identity": {"methods": ["token"], "token": {"id": token}},
-        "scope": {"domain": {"id": domain_id}},
-    }})
+    _, headers = iam(
+        "POST",
+        "/auth/tokens",
+        token,
+        {
+            "auth": {
+                "identity": {"methods": ["token"], "token": {"id": token}},
+                "scope": {"domain": {"id": domain_id}},
+            }
+        },
+    )
     return headers["X-Subject-Token"]
 
 
 def rules(records: list[dict], email_attribute: str, base_group: str) -> list[dict]:
     # Lets any federated user sign in as a virtual user named after their email. Sign-in fails when
     # no rule assigns a group, so this one assigns the base group, which holds no role.
-    result = [{
-        "local": [{"user": {"name": "{0}"}}, {"group": {"name": base_group}}],
-        "remote": [{"type": email_attribute}],
-    }]
+    result: list[dict[str, Any]] = [
+        {
+            "local": [{"user": {"name": "{0}"}}, {"group": {"name": base_group}}],
+            "remote": [{"type": email_attribute}],
+        }
+    ]
     for record in sorted(records, key=lambda r: r["project"]):
         for group, emails in sorted(record["groups"].items()):
             if not emails:
                 continue
-            result.append({
-                "local": [{"user": {"name": "{0}"}}, {"groups": json.dumps([group])}],
-                "remote": [
-                    {"type": email_attribute},
-                    {"type": email_attribute, "any_one_of": sorted(emails)},
-                ],
-            })
+            result.append(
+                {
+                    "local": [{"user": {"name": "{0}"}}, {"groups": json.dumps([group])}],
+                    "remote": [
+                        {"type": email_attribute},
+                        {"type": email_attribute, "any_one_of": sorted(emails)},
+                    ],
+                }
+            )
     return result
 
 
-def handler(event, context):
+def handler(event: dict[str, Any], context: Any) -> dict[str, int]:  # noqa: ARG001, ANN401
     obs = Obs(context, os.environ["REGION"], os.environ["MAPPING_BUCKET"])
-    records = [obs.json(key) for key in obs.keys()]
+    records = [obs.json(key) for key in obs.list_keys()]
 
     token = domain_token(context.getToken())
     idp = os.environ["IDENTITY_PROVIDER"]

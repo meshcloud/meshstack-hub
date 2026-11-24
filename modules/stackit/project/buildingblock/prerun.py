@@ -13,9 +13,9 @@ from pathlib import Path
 
 SUMMARY_FILE = Path("stackit_organization_membership_summary.md")
 AUTHORIZATION_ENDPOINT = "https://authorization.api.stackit.cloud"
-TOKEN_ENDPOINT = "https://accounts.stackit.cloud/oauth/v2/token"
+TOKEN_ENDPOINT = "https://accounts.stackit.cloud/oauth/v2/token"  # noqa: S105
 DEFAULT_ORGANIZATION_ROLE = "organization.viewer"
-DEFAULT_FEDERATED_TOKEN_FILE = "/var/run/secrets/stackit.cloud/serviceaccount/token"
+DEFAULT_FEDERATED_TOKEN_FILE = "/var/run/secrets/stackit.cloud/serviceaccount/token"  # noqa: S105
 WIF_CLIENT_ASSERTION_TYPE = "urn:schwarz:params:oauth:client-assertion-type:workload-jwt"
 
 
@@ -26,7 +26,7 @@ def info(message: str) -> None:
 def warn(message: str) -> None:
     print(f"[stackit-org-membership] WARN: {message}", file=sys.stderr)
     if user_message_file := os.environ.get("MESHSTACK_USER_MESSAGE"):
-        with open(user_message_file, "a", encoding="utf-8") as handle:
+        with Path(user_message_file).open("a", encoding="utf-8") as handle:
             handle.write(f"STACKIT organization membership warning: {message}\n")
 
 
@@ -53,8 +53,8 @@ def request(
         data = urllib.parse.urlencode(form_body).encode("utf-8")
 
     try:
-        req = urllib.request.Request(url, data=data, headers=headers, method=method)
-        with urllib.request.urlopen(req, timeout=30) as response:
+        req = urllib.request.Request(url, data=data, headers=headers, method=method)  # noqa: S310
+        with urllib.request.urlopen(req, timeout=30) as response:  # noqa: S310
             return response.status, response.read().decode("utf-8", errors="replace")
     except urllib.error.HTTPError as error:
         return error.code, error.read().decode("utf-8", errors="replace")
@@ -131,11 +131,7 @@ def get_assignment(organization_id: str, role: str, email: str, token: str) -> d
         }
 
     roles = sorted(
-        {
-            member["role"]
-            for member in json.loads(body).get("members", [])
-            if member["subject"].lower() == email
-        }
+        {member["role"] for member in json.loads(body).get("members", []) if member["subject"].lower() == email}
     )
 
     if role in roles:
@@ -154,21 +150,14 @@ def get_assignment(organization_id: str, role: str, email: str, token: str) -> d
     }
 
 
-def make_row(
-    email: str,
-    role: str,
-    add_status: str,
-    add_details: str,
-    assignment_status: str,
-    assignment_details: str,
-) -> dict[str, str]:
+def make_row(email: str, role: str, add: dict[str, str], assignment: dict[str, str]) -> dict[str, str]:
     return {
         "email": email,
         "role": role,
-        "add_status": add_status,
-        "add_details": add_details,
-        "assignment_status": assignment_status,
-        "assignment_details": assignment_details,
+        "add_status": add["status"],
+        "add_details": add["details"],
+        "assignment_status": assignment["status"],
+        "assignment_details": assignment["details"],
     }
 
 
@@ -236,10 +225,11 @@ def main() -> None:
                 make_row(
                     email,
                     role,
-                    "skipped",
-                    "Could not obtain a STACKIT access token, so no add request was made.",
-                    "unknown",
-                    "Membership could not be checked.",
+                    {
+                        "status": "skipped",
+                        "details": "Could not obtain a STACKIT access token, so no add request was made.",
+                    },
+                    {"status": "unknown", "details": "Membership could not be checked."},
                 )
                 for email in emails
             ],
@@ -250,16 +240,7 @@ def main() -> None:
     for email in emails:
         add = add_member(organization_id, role, email, token)
         assignment = get_assignment(organization_id, role, email, token)
-        rows.append(
-            make_row(
-                email,
-                role,
-                add["status"],
-                add["details"],
-                assignment["status"],
-                assignment["details"],
-            )
-        )
+        rows.append(make_row(email, role, add, assignment))
 
     write_summary(organization_id, role, rows)
 
@@ -267,6 +248,6 @@ def main() -> None:
 if __name__ == "__main__":
     try:
         main()
-    except Exception as exc:  # best-effort pre-run must not block apply
+    except Exception as exc:  # noqa: BLE001  # best-effort pre-run must not block apply
         warn(f"unexpected pre-run failure: {exc}")
         sys.exit(0)

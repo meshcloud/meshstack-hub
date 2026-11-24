@@ -3,9 +3,11 @@
 # Both tools enable all their rules. Fix a finding; an accepted exception sits on its line as `# noqa: <code>`.
 
 [tool.ruff]
-# The python3 of the nix dev shell.
-target-version = "py313"
+# The python3 of the building block runner image (alpine 3.22).
+target-version = "py312"
 line-length = 120
+# The OpenTelekomCloud FunctionGraph runtime set in its main.tf.
+per-file-target-version = { "modules/otc/federation-mapping/buildingblock/function/index.py" = "py310" }
 
 [tool.ruff.lint]
 select = ["ALL"]
@@ -35,7 +37,7 @@ ignore = [
 convention = "pep257"
 
 [tool.ty.environment]
-python-version = "3.13"
+python-version = "3.12"
 
 [tool.ty.rules]
 all = "error"

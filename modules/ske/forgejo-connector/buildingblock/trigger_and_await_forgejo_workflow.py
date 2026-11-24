@@ -30,16 +30,16 @@ a runner starts them, so even there prefer the run-level status over re-deriving
 completion from the per-job list.
 
 Required environment variables:
-  FORGEJO_HOST       – Forgejo instance URL (from provider)
-  FORGEJO_API_TOKEN  – API token with repo action scope (from provider)
-  REPOSITORY_OWNER   – owner of the repository
-  REPOSITORY_NAME    – name of the repository
-  BRANCH             – branch to dispatch on (e.g. "dev" or "prod")
-  EXPECTED_JOBS      – comma-separated job names that must all succeed
+  FORGEJO_HOST       - Forgejo instance URL (from provider)
+  FORGEJO_API_TOKEN  - API token with repo action scope (from provider)
+  REPOSITORY_OWNER   - owner of the repository
+  REPOSITORY_NAME    - name of the repository
+  BRANCH             - branch to dispatch on (e.g. "dev" or "prod")
+  EXPECTED_JOBS      - comma-separated job names that must all succeed
                        (as they appear in /actions/tasks, e.g. "build_image,deploy")
 
 Optional:
-  WORKFLOW_NAME      – workflow file name (default: pipeline.yaml)
+  WORKFLOW_NAME      - workflow file name (default: pipeline.yaml)
 
 A failed run is dispatched once more, and only a second failure fails the
 script: a job can fail on the shared runner for reasons of its own, such as a
@@ -50,11 +50,12 @@ provisioner wraps this in `timeout 900` (15 minutes).
 """
 
 import datetime as dt
+import json
 import os
 import time
 import urllib.error
 import urllib.request
-import json
+from typing import Any
 
 COINCIDENCE_WINDOW_SECONDS = 5
 TERMINAL_STATUSES = {"success", "failure", "cancelled", "skipped"}
@@ -68,10 +69,12 @@ RETRY_MAX_DELAY_SECONDS = 30
 RETRYABLE_HTTP_STATUSES = {429, 500, 502, 503, 504}
 
 
-def as_int(value, default: int = 0) -> int:
+def as_int(value: str | int | None, default: int = 0) -> int:
+    if value is None:
+        return default
     try:
         return int(value)
-    except (TypeError, ValueError):
+    except ValueError:
         return default
 
 
@@ -82,22 +85,22 @@ def normalize_host(raw_host: str) -> str:
     return host.rstrip("/")
 
 
-def request_once(host: str, token: str, method: str, path: str, payload: dict | None = None):
+def request_once(host: str, token: str, method: str, path: str, payload: dict | None = None) -> tuple[int, Any]:
     body = None if payload is None else json.dumps(payload).encode("utf-8")
-    req = urllib.request.Request(
+    req = urllib.request.Request(  # noqa: S310
         f"{host}{path}",
         headers={"Authorization": f"token {token}", "Content-Type": "application/json"},
         method=method,
         data=body,
     )
-    with urllib.request.urlopen(req, timeout=REQUEST_TIMEOUT_SECONDS) as resp:
+    with urllib.request.urlopen(req, timeout=REQUEST_TIMEOUT_SECONDS) as resp:  # noqa: S310
         raw = resp.read().decode("utf-8")
         status = resp.status
     data = json.loads(raw) if raw else {}
     return status, data
 
 
-def get_json(host: str, token: str, path: str):
+def get_json(host: str, token: str, path: str) -> tuple[int, Any]:
     """GET a Forgejo endpoint, retrying transient failures with capped backoff.
 
     Only GETs retry, because only they are safe to repeat. The dispatch POST
@@ -125,10 +128,10 @@ def get_json(host: str, token: str, path: str):
         delay = min(delay * 2, RETRY_MAX_DELAY_SECONDS)
 
 
-def parse_timestamp(ts: str | None):
+def parse_timestamp(ts: str | None) -> dt.datetime | None:
     if not ts:
         return None
-    return dt.datetime.fromisoformat(ts.replace("Z", "+00:00"))
+    return dt.datetime.fromisoformat(ts)
 
 
 def identify_run_tasks(tasks: list[dict], branch: str, dispatch_at: dt.datetime) -> list[dict]:
@@ -183,8 +186,11 @@ def evaluate_run(tasks: list[dict], expected_jobs: set[str], seen_job_status: di
 
     # Fail fast: a failed job means dependent jobs will never be scheduled, so
     # there is no point waiting for the rest of the expected jobs to appear.
-    failed = {n: str(t.get("status")) for n, t in by_job.items()
-              if str(t.get("status")) in TERMINAL_STATUSES and str(t.get("status")) not in SUCCESS_STATUSES}
+    failed = {
+        n: str(t.get("status"))
+        for n, t in by_job.items()
+        if str(t.get("status")) in TERMINAL_STATUSES and str(t.get("status")) not in SUCCESS_STATUSES
+    }
     if failed:
         return "failure", ", ".join(f"{n}={s}" for n, s in failed.items())
 
@@ -197,10 +203,11 @@ def evaluate_run(tasks: list[dict], expected_jobs: set[str], seen_job_status: di
     return "success", ""
 
 
-def dispatch_and_await(host: str, token: str, owner: str, repo_name: str, workflow_name: str,
-                       branch: str, expected_jobs: set[str]) -> str | None:
+def dispatch_and_await(  # noqa: PLR0913
+    host: str, token: str, owner: str, repo_name: str, workflow_name: str, branch: str, expected_jobs: set[str]
+) -> str | None:
     """Return None when the run succeeds, else the failure message."""
-    dispatch_at = dt.datetime.now(dt.timezone.utc)
+    dispatch_at = dt.datetime.now(dt.UTC)
     dispatch_path = f"/api/v1/repos/{owner}/{repo_name}/actions/workflows/{workflow_name}/dispatches"
     status, _ = request_once(host, token, "POST", dispatch_path, {"ref": branch})
     if status not in (200, 201, 202, 204):
@@ -224,9 +231,11 @@ def dispatch_and_await(host: str, token: str, owner: str, repo_name: str, workfl
                 return f"Workflow run {run_id} on {branch} failed: {detail}: {url}"
         else:
             # print alternative info so we can distinguish between a job not running or a job timeout
-            elapsed = int((dt.datetime.now(dt.timezone.utc) - dispatch_at).total_seconds())
-            print(f"  Still no task for branch {branch} matching our dispatch ({elapsed}s elapsed) — "
-                  f"no runner may have picked up the job yet")
+            elapsed = int((dt.datetime.now(dt.UTC) - dispatch_at).total_seconds())
+            print(
+                f"  Still no task for branch {branch} matching our dispatch ({elapsed}s elapsed) — "
+                f"no runner may have picked up the job yet"
+            )
 
         time.sleep(POLL_INTERVAL_SECONDS)
 
@@ -253,6 +262,7 @@ def main() -> None:
     failure = dispatch_and_await(host, token, owner, repo_name, workflow_name, branch, expected_jobs)
     if failure is not None:
         raise SystemExit(failure)
+
 
 if __name__ == "__main__":
     main()

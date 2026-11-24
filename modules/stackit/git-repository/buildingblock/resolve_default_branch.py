@@ -11,6 +11,7 @@ def resolve_default_branch(clone_addr: str) -> str:
         result = subprocess.run(
             ["git", "ls-remote", "--symref", clone_addr, "HEAD"],
             capture_output=True,
+            check=False,
             text=True,
             timeout=30,
         )
