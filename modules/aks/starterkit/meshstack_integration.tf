@@ -288,7 +288,7 @@ EOT
       }
     }
     outputs = {
-      "dev-link" = {
+      "dev_link" = {
         assignment_type = "RESOURCE_URL"
         display_name    = "Open Dev App"
         type            = "STRING"
@@ -298,7 +298,7 @@ EOT
         display_name    = "GitHub"
         type            = "STRING"
       }
-      "prod-link" = {
+      "prod_link" = {
         assignment_type = "RESOURCE_URL"
         display_name    = "Open Prod App"
         type            = "STRING"

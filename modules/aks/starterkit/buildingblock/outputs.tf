@@ -1,12 +1,10 @@
 
-# tflint-ignore: terraform_naming_convention
-output "dev-link" {
+output "dev_link" {
   description = "Link to the dev environment Angular app"
   value       = "https://${local.identifier}-dev.${var.apps_base_domain}"
 }
 
-# tflint-ignore: terraform_naming_convention
-output "prod-link" {
+output "prod_link" {
   description = "Link to the prod environment Angular app"
   value       = "https://${local.identifier}.${var.apps_base_domain}"
 }
