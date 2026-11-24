@@ -1,13 +1,26 @@
-variable "group_name" {
+variable "group_identifier" {
   type        = string
   nullable    = false
-  description = "Name of the meshStack group every building block of this definition binds to the workspace it is ordered in. Deploy the module once per group."
+  description = "Identifier of the meshStack group every building block of this definition binds to the workspace it is ordered in, not its display name. Deploy the module once per group."
+}
+
+variable "group_display_name" {
+  type        = string
+  default     = null
+  description = "Name of the group shown in the marketplace texts. Defaults to `group_identifier`."
+}
+
+variable "allowed_workspace_identifiers" {
+  type        = list(string)
+  nullable    = false
+  default     = []
+  description = "Workspaces that may order this building block. The definition stays visible in every workspace's marketplace, but a run in any other workspace fails before anything is bound. Empty allows every workspace."
 }
 
 variable "workspace_role_name" {
   type        = string
   nullable    = false
-  default     = "Workspace Member"
+  default     = "Workspace Manager"
   description = "meshStack workspace role the group gets on the workspace."
 }
 
@@ -86,6 +99,10 @@ output "building_block_definition" {
   }
 }
 
+locals {
+  group_label = coalesce(var.group_display_name, var.group_identifier)
+}
+
 module "backplane" {
   source = "github.com/meshcloud/meshstack-hub//modules/meshstack/temporary-group-access/backplane?ref=${var.hub.git_ref}"
 
@@ -103,20 +120,20 @@ resource "meshstack_building_block_definition" "this" {
   }
 
   spec = {
-    display_name = coalesce(var.bbd_display_name, "Temporary access for ${var.group_name}")
-    description  = coalesce(var.bbd_description, "Gives the group ${var.group_name} the role ${var.workspace_role_name} on your workspace for a number of days, then removes it.")
+    display_name = coalesce(var.bbd_display_name, "Temporary access for ${local.group_label}")
+    description  = coalesce(var.bbd_description, "Gives the group ${local.group_label} the role ${var.workspace_role_name} on your workspace for a number of days, then removes it.")
     symbol       = "https://raw.githubusercontent.com/meshcloud/meshstack-hub/${var.hub.git_ref}/modules/meshstack/temporary-group-access/buildingblock/logo.png"
     target_type  = "WORKSPACE_LEVEL"
 
     readme = coalesce(var.bbd_readme, chomp(<<-EOT
-      Gives the meshStack group **${var.group_name}** the role **${var.workspace_role_name}** on your
+      Gives the meshStack group **${local.group_label}** the role **${var.workspace_role_name}** on your
       workspace for the number of days you choose, at most ${var.max_duration_days}. When that time is
       up, the access ends and this building block deletes itself — nobody has to remember to revoke it.
 
       ## 🎯 When to use it
 
       Order this building block when you:
-      - Need ${var.group_name} to work in your workspace for a limited time, e.g. to support you or to
+      - Need ${local.group_label} to work in your workspace for a limited time, e.g. to support you or to
         review it.
       - Want the access to end on its own, without opening a second request to remove it.
 
@@ -173,7 +190,7 @@ resource "meshstack_building_block_definition" "this" {
     inputs = {
       duration_days = {
         display_name    = "Duration (Days)"
-        description     = "How many days ${var.group_name} keeps access to your workspace, at most ${var.max_duration_days}."
+        description     = "How many days ${local.group_label} keeps access to your workspace, at most ${var.max_duration_days}."
         type            = "INTEGER"
         assignment_type = "USER_INPUT"
         default_value   = jsonencode(var.duration_days_default)
@@ -187,12 +204,12 @@ resource "meshstack_building_block_definition" "this" {
         assignment_type = "WORKSPACE_IDENTIFIER"
       }
 
-      group_name = {
-        display_name    = "Group"
-        description     = "meshStack group that gets the role."
+      group_identifier = {
+        display_name    = "Group Identifier"
+        description     = "Identifier of the meshStack group that gets the role."
         type            = "STRING"
         assignment_type = "STATIC"
-        argument        = jsonencode(var.group_name)
+        argument        = jsonencode(var.group_identifier)
       }
 
       workspace_role_name = {
@@ -209,6 +226,14 @@ resource "meshstack_building_block_definition" "this" {
         type            = "INTEGER"
         assignment_type = "STATIC"
         argument        = jsonencode(var.max_duration_days)
+      }
+
+      allowed_workspace_identifiers = {
+        display_name    = "Allowed Workspaces"
+        description     = "Workspaces that may order this building block. Empty allows every workspace."
+        type            = "CODE"
+        assignment_type = "STATIC"
+        argument        = jsonencode(jsonencode(var.allowed_workspace_identifiers))
       }
     }
 

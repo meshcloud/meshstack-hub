@@ -31,6 +31,12 @@ resource "meshstack_workspace_group_binding" "this" {
       condition     = var.duration_days >= 1 && var.duration_days <= var.max_duration_days
       error_message = "duration_days must be between 1 and ${var.max_duration_days}, got ${var.duration_days}."
     }
+
+    # meshStack cannot hide a definition from some workspaces, so the run itself refuses them.
+    precondition {
+      condition     = length(var.allowed_workspace_identifiers) == 0 || contains(var.allowed_workspace_identifiers, var.workspace_identifier)
+      error_message = "Workspace ${var.workspace_identifier} may not order this building block. Ask your platform team to allow it."
+    }
   }
 
   metadata = {
@@ -46,7 +52,7 @@ resource "meshstack_workspace_group_binding" "this" {
   }
 
   subject = {
-    name = var.group_name
+    name = var.group_identifier
   }
 
   # Lets meshStack end the access on its own as well, so access does not outlive its duration when

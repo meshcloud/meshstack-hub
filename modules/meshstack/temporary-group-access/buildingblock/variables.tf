@@ -10,10 +10,10 @@ variable "workspace_identifier" {
   description = "Identifier of the workspace the group is bound to. meshStack fills it in with the workspace the building block is ordered in."
 }
 
-variable "group_name" {
+variable "group_identifier" {
   type        = string
   nullable    = false
-  description = "Name of the meshStack group that gets the role on the workspace."
+  description = "Identifier of the meshStack group that gets the role on the workspace. Not its display name."
 }
 
 variable "workspace_role_name" {
@@ -26,4 +26,10 @@ variable "max_duration_days" {
   type        = number
   nullable    = false
   description = "Longest duration an orderer may ask for. A longer one fails the run before anything is bound."
+}
+
+variable "allowed_workspace_identifiers" {
+  type        = list(string)
+  nullable    = false
+  description = "Workspaces this building block may grant access to. A run in any other workspace fails before anything is bound. Empty allows every workspace."
 }
