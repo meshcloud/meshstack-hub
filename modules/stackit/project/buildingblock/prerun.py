@@ -10,6 +10,7 @@ import urllib.error
 import urllib.parse
 import urllib.request
 from pathlib import Path
+from typing import Any
 
 SUMMARY_FILE = Path("stackit_organization_membership_summary.md")
 AUTHORIZATION_ENDPOINT = "https://authorization.api.stackit.cloud"
@@ -25,7 +26,7 @@ def info(message: str) -> None:
 
 def warn(message: str) -> None:
     print(f"[stackit-org-membership] WARN: {message}", file=sys.stderr)
-    if user_message_file := os.environ.get("MESHSTACK_USER_MESSAGE"):
+    if user_message_file := os.environ.get("MESHSTACK_USER_MESSAGE", ""):
         with Path(user_message_file).open("a", encoding="utf-8") as handle:
             handle.write(f"STACKIT organization membership warning: {message}\n")
 
@@ -34,9 +35,9 @@ def request(
     method: str,
     url: str,
     *,
-    token: str | None = None,
-    json_body: dict | None = None,
-    form_body: dict | None = None,
+    token: str = "",
+    json_body: dict[str, Any] | None = None,
+    form_body: dict[str, str] | None = None,
 ) -> tuple[int, str]:
     headers = {}
     data = None
@@ -71,7 +72,7 @@ def extract_emails(run_input: str) -> list[str]:
 
 
 def get_access_token() -> str:
-    if token := os.environ.get("STACKIT_ACCESS_TOKEN"):
+    if token := os.environ.get("STACKIT_ACCESS_TOKEN", ""):
         return token
 
     token_file = Path(os.environ.get("STACKIT_FEDERATED_TOKEN_FILE", DEFAULT_FEDERATED_TOKEN_FILE))

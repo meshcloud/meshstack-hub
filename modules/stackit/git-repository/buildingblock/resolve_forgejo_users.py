@@ -17,7 +17,7 @@ from typing import Any
 NOT_FOUND = "no account found — member must sign in to Forgejo first"
 
 
-def request(url: str, headers: dict, data: bytes | None = None) -> dict[str, Any]:
+def request(url: str, headers: dict[str, str], data: bytes | None = None) -> dict[str, Any]:
     req = urllib.request.Request(url, headers=headers, data=data)  # noqa: S310
     with urllib.request.urlopen(req, timeout=30) as resp:  # noqa: S310
         return json.loads(resp.read().decode("utf-8"))

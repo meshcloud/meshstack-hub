@@ -93,12 +93,12 @@ def main() -> None:
     existing = github.find_comment(issue_number)
 
     if not diff:
-        if existing:
+        if existing is not None:
             github.request("DELETE", f"/issues/comments/{existing['id']}")
             print(f"Deleted terraform-docs comment {existing['id']}")
         return
 
-    if existing:
+    if existing is not None:
         github.request("PATCH", f"/issues/comments/{existing['id']}", {"body": body})
         print(f"Updated terraform-docs comment {existing['id']}")
     else:

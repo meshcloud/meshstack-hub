@@ -65,7 +65,7 @@ class Obs:
             hmac.new(self.sk.encode(), string_to_sign.encode(), hashlib.sha1).digest()
         ).decode()
         url = f"https://{self.host}/{urllib.parse.quote(key)}"
-        if query:
+        if query is not None:
             url += "?" + urllib.parse.urlencode(query)
         req = urllib.request.Request(  # noqa: S310
             url,
@@ -89,7 +89,7 @@ class Obs:
                 return [k for k in keys if k.endswith(".json")]
             marker = page[-1]
 
-    def json(self, key: str) -> dict:
+    def json(self, key: str) -> dict[str, Any]:
         return json.loads(self._get(key))
 
 
@@ -99,8 +99,8 @@ def _tag(element: ET.Element) -> str:
 
 
 def iam(
-    method: str, path: str, token: str, body: dict | None = None, headers: dict[str, str] | None = None
-) -> tuple[dict, Message]:
+    method: str, path: str, token: str, body: dict[str, Any] | None = None, headers: dict[str, str] | None = None
+) -> tuple[dict[str, Any], Message]:
     url = os.environ["IAM_ENDPOINT"].rstrip("/") + path
     data = json.dumps(body).encode() if body is not None else None
     req = urllib.request.Request(  # noqa: S310
@@ -139,7 +139,7 @@ def domain_token(token: str) -> str:
     return headers["X-Subject-Token"]
 
 
-def rules(records: list[dict], email_attribute: str, base_group: str) -> list[dict]:
+def rules(records: list[dict[str, Any]], email_attribute: str, base_group: str) -> list[dict[str, Any]]:
     # Lets any federated user sign in as a virtual user named after their email. Sign-in fails when
     # no rule assigns a group, so this one assigns the base group, which holds no role.
     result: list[dict[str, Any]] = [

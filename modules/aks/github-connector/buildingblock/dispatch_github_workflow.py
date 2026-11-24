@@ -48,7 +48,7 @@ def make_app_jwt(app_id: str, pem: str) -> str:
     return f"{header}.{payload}.{b64url(signature)}"
 
 
-def github_request(token: str, method: str, url: str, payload: dict | None = None) -> tuple[int, Any]:
+def github_request(token: str, method: str, url: str, payload: dict[str, Any] | None = None) -> tuple[int, Any]:
     body = None if payload is None else json.dumps(payload).encode()
     req = urllib.request.Request(  # noqa: S310
         url,
@@ -112,7 +112,7 @@ def main() -> None:
     # ── Poll the specific run by ID ───────────────────────────────────────────
     run_url = f"https://api.github.com/repos/{repo}/actions/runs/{run_id}"
     deadline = time.time() + timeout
-    last_state: tuple | None = None
+    last_state: tuple[Any, Any] | None = None
 
     while time.time() < deadline:
         time.sleep(poll_interval)

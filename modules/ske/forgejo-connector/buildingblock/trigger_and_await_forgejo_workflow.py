@@ -85,7 +85,9 @@ def normalize_host(raw_host: str) -> str:
     return host.rstrip("/")
 
 
-def request_once(host: str, token: str, method: str, path: str, payload: dict | None = None) -> tuple[int, Any]:
+def request_once(
+    host: str, token: str, method: str, path: str, payload: dict[str, Any] | None = None
+) -> tuple[int, Any]:
     body = None if payload is None else json.dumps(payload).encode("utf-8")
     req = urllib.request.Request(  # noqa: S310
         f"{host}{path}",
@@ -129,12 +131,12 @@ def get_json(host: str, token: str, path: str) -> tuple[int, Any]:
 
 
 def parse_timestamp(ts: str | None) -> dt.datetime | None:
-    if not ts:
+    if ts in (None, ""):
         return None
     return dt.datetime.fromisoformat(ts)
 
 
-def identify_run_tasks(tasks: list[dict], branch: str, dispatch_at: dt.datetime) -> list[dict]:
+def identify_run_tasks(tasks: list[dict[str, Any]], branch: str, dispatch_at: dt.datetime) -> list[dict[str, Any]]:
     """Return the tasks of our dispatched run.
 
     /actions/tasks returns one entry per job across all recent runs. We select
@@ -152,7 +154,7 @@ def identify_run_tasks(tasks: list[dict], branch: str, dispatch_at: dt.datetime)
         if created_at and created_at >= dispatch_at - dt.timedelta(seconds=COINCIDENCE_WINDOW_SECONDS):
             candidates.append(task)
 
-    by_run: dict[int, list[dict]] = {}
+    by_run: dict[int, list[dict[str, Any]]] = {}
     for task in candidates:
         rn = as_int(task.get("run_number"), -1)
         if rn >= 0:
@@ -161,9 +163,9 @@ def identify_run_tasks(tasks: list[dict], branch: str, dispatch_at: dt.datetime)
     return by_run[max(by_run)] if by_run else []
 
 
-def latest_task_per_job(tasks: list[dict]) -> dict[str, dict]:
+def latest_task_per_job(tasks: list[dict[str, Any]]) -> dict[str, dict[str, Any]]:
     """Collapse to the newest task per job name (handles re-runs)."""
-    by_job: dict[str, dict] = {}
+    by_job: dict[str, dict[str, Any]] = {}
     for task in tasks:
         name = str(task.get("name") or "").strip()
         if not name:
@@ -174,7 +176,9 @@ def latest_task_per_job(tasks: list[dict]) -> dict[str, dict]:
     return by_job
 
 
-def evaluate_run(tasks: list[dict], expected_jobs: set[str], seen_job_status: dict[str, str]) -> tuple[str, str]:
+def evaluate_run(
+    tasks: list[dict[str, Any]], expected_jobs: set[str], seen_job_status: dict[str, str]
+) -> tuple[str, str]:
     """Return (verdict, detail) where verdict is 'success', 'failure' or 'pending'."""
     by_job = latest_task_per_job(tasks)
 
