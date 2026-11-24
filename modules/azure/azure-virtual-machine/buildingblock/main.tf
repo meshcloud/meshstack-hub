@@ -139,7 +139,7 @@ resource "azurerm_linux_virtual_machine" "vm" {
   name                = var.vm_name
   location            = local.rg_location
   resource_group_name = local.rg_name
-  size                = var.vm_size
+  size                = var.vm_size # tflint-ignore: azurerm_linux_virtual_machine_retired_size
   admin_username      = var.admin_username
 
   network_interface_ids = [
