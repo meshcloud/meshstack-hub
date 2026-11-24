@@ -3,10 +3,12 @@ terraform {
 
   required_providers {
     meshstack = {
-      source = "meshcloud/meshstack"
+      source  = "meshcloud/meshstack"
+      version = ">= 0.27.0"
     }
     azuredevops = {
-      source = "microsoft/azuredevops"
+      source  = "microsoft/azuredevops"
+      version = ">= 1.1.1, < 2.0.0"
     }
   }
 }

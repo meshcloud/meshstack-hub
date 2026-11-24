@@ -3,10 +3,12 @@ terraform {
 
   required_providers {
     meshstack = {
-      source = "meshcloud/meshstack"
+      source  = "meshcloud/meshstack"
+      version = ">= 0.27.0"
     }
     kubernetes = {
-      source = "hashicorp/kubernetes"
+      source  = "hashicorp/kubernetes"
+      version = ">= 3.0.0, < 4.0.0"
     }
   }
 }

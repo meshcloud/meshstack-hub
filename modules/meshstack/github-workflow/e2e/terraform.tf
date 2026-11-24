@@ -3,10 +3,12 @@ terraform {
 
   required_providers {
     meshstack = {
-      source = "meshcloud/meshstack"
+      source  = "meshcloud/meshstack"
+      version = ">= 0.27.0"
     }
     github = {
-      source = "integrations/github"
+      source  = "integrations/github"
+      version = ">= 6.0.0, < 7.0.0"
     }
   }
 }

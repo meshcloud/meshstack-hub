@@ -19,6 +19,7 @@ This Landing Zone restricts access to only the AWS Bedrock service and necessary
 | Name | Version |
 |------|---------|
 | <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.3.0 |
+| <a name="requirement_aws"></a> [aws](#requirement\_aws) | >= 6.32, < 7.0.0 |
 
 ## Modules
 

@@ -3,7 +3,8 @@ terraform {
 
   required_providers {
     meshstack = {
-      source = "meshcloud/meshstack"
+      source  = "meshcloud/meshstack"
+      version = ">= 0.27.2"
     }
     aws = {
       source  = "hashicorp/aws"

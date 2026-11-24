@@ -3,8 +3,8 @@ terraform {
 
   required_providers {
     meshstack = {
-      # Needs >= 0.25.0 for the `meshstack_building_block_definitions` data source.
-      source = "meshcloud/meshstack"
+      source  = "meshcloud/meshstack"
+      version = ">= 0.27.2"
     }
   }
 }

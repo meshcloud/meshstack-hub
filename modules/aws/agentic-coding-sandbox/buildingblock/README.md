@@ -79,6 +79,7 @@ End users provide:
 |------|---------|
 | <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.3.0 |
 | <a name="requirement_meshstack"></a> [meshstack](#requirement\_meshstack) | >= 0.27.0 |
+| <a name="requirement_random"></a> [random](#requirement\_random) | >= 3.6.0, < 4.0.0 |
 
 ## Modules
 

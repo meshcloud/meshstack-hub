@@ -57,7 +57,7 @@ which means any bug surfaces as a production incident instead of PR feedback.
 modules/<cloud-provider>/<service-name>/
 └── e2e/
     ├── main.tf        # the building block and what probes it — mode-agnostic
-    ├── terraform.tf   # required_providers block (no version pins needed here)
+    ├── terraform.tf   # required_providers block, each with the constraint the module declares
     ├── modes/
     │   ├── hub/        # builds the BBD from hub source with an ephemeral backplane
     │   └── foundation/ # passes through the BBD version the foundation deployed

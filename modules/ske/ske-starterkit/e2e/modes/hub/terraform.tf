@@ -6,7 +6,8 @@ terraform {
       source = "meshcloud/meshstack"
     }
     kubernetes = {
-      source = "hashicorp/kubernetes"
+      source  = "hashicorp/kubernetes"
+      version = ">= 3.0.0, < 4.0.0"
     }
     stackit = {
       source  = "stackitcloud/stackit"
