@@ -34,6 +34,7 @@
         # run by `task lint`
         shellcheck
         actionlint
+        unstable_pkgs.zizmor
         unstable_pkgs.ruff
         unstable_pkgs.ty
         # the github-connector scripts import cryptography, and ty resolves it from here

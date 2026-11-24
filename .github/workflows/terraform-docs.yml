@@ -25,7 +25,7 @@ jobs:
     steps:
       # The deploy key may push to main past the branch ruleset. Its own push starts this
       # workflow again, which then finds nothing to regenerate.
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1 # zizmor: ignore[artipacked]
         with:
           ref: main
           ssh-key: ${{ secrets.REPO_DEPLOY_KEY }}
@@ -67,6 +67,8 @@ jobs:
       pull-requests: write
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
 
       - uses: nixbuild/nix-quick-install-action@9f63be77f412a248c9d9a65a4c82cf066cdf8f0c # v35
         with:

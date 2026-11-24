@@ -157,7 +157,7 @@ pre-commit run --all-files
 
 They include checks like `terraform fmt`, shellcheck and `ci/validate_modules.sh`.
 
-`task lint` runs shellcheck, ruff, ty and actionlint on every shell and Python script and every
+`task lint` runs shellcheck, ruff, ty, actionlint and zizmor on every shell and Python script and every
 workflow in the repo, module scripts included. CI runs it on every PR; run it inside `nix develop`
 before you push.
 

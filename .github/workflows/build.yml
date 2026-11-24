@@ -5,6 +5,11 @@ on:
   pull_request:
   merge_group:
 
+permissions:
+  contents: read
+  # The shared workflow requests it.
+  id-token: write
+
 jobs:
   build:
-    uses: meshcloud/shared-workflows/.github/workflows/terraform-meshplatform-modules-build-workflow.yml@main
+    uses: meshcloud/shared-workflows/.github/workflows/terraform-meshplatform-modules-build-workflow.yml@main # zizmor: ignore[unpinned-uses]

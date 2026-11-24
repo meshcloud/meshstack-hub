@@ -22,6 +22,7 @@ jobs:
         with:
           # SonarQube Cloud reads the history to find new code and to blame issues.
           fetch-depth: 0
+          persist-credentials: false
 
       # Pull requests from forks and from Dependabot get no secrets.
       - if: env.SONAR_TOKEN != ''

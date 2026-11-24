@@ -3,6 +3,9 @@ on:
   pull_request:
   merge_group:
 
+permissions:
+  contents: read
+
 # A rebase can combine two green PRs into a broken tree, so this looks at the
 # whole repo, never at a diff.
 jobs:
@@ -10,6 +13,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
 
       # Not the nix shell the other jobs use: entering it costs 42s, half this
       # job's budget. Keep the version in step with flake.nix.
