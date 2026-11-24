@@ -125,7 +125,7 @@ When using an existing VNet:
 
 | Name | Version |
 |------|---------|
-| <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.3.0 |
+| <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.12.0 |
 | <a name="requirement_azurerm"></a> [azurerm](#requirement\_azurerm) | >= 4.36.0, < 5.0.0 |
 | <a name="requirement_random"></a> [random](#requirement\_random) | >= 3.6.0, < 4.0.0 |
 
@@ -148,6 +148,7 @@ No modules.
 | [azurerm_virtual_network_peering.acr_to_hub](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/virtual_network_peering) | resource |
 | [azurerm_virtual_network_peering.hub_to_acr](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/resources/virtual_network_peering) | resource |
 | [random_string.suffix](https://registry.terraform.io/providers/hashicorp/random/latest/docs/resources/string) | resource |
+| [azurerm_client_config.current](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/client_config) | data source |
 | [azurerm_resource_group.hub_rg](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/resource_group) | data source |
 | [azurerm_subnet.existing_subnet](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/subnet) | data source |
 | [azurerm_virtual_network.existing_vnet](https://registry.terraform.io/providers/hashicorp/azurerm/latest/docs/data-sources/virtual_network) | data source |
@@ -157,8 +158,8 @@ No modules.
 
 | Name | Description | Type | Default | Required |
 |------|-------------|------|---------|:--------:|
-| <a name="input_acr_name"></a> [acr\_name](#input\_acr\_name) | Name of the Azure Container Registry (must be globally unique, alphanumeric only) | `string` | n/a | yes |
-| <a name="input_admin_enabled"></a> [admin\_enabled](#input\_admin\_enabled) | Enable admin user for basic authentication (not recommended for production) | `bool` | `false` | no |
+| <a name="input_acr_name"></a> [acr\_name](#input\_acr\_name) | Name prefix of the Azure Container Registry, alphanumeric only. A random 4-character suffix is appended for global uniqueness. | `string` | n/a | yes |
+| <a name="input_admin_enabled"></a> [admin\_enabled](#input\_admin\_enabled) | Enable the admin user for basic authentication (not recommended for production). Read its credentials with `az acr credential show`. | `bool` | `false` | no |
 | <a name="input_aks_managed_identity_principal_id"></a> [aks\_managed\_identity\_principal\_id](#input\_aks\_managed\_identity\_principal\_id) | Principal ID of the AKS managed identity to grant AcrPull access. If provided, AcrPull role will be assigned automatically. | `string` | `null` | no |
 | <a name="input_allow_gateway_transit_from_hub"></a> [allow\_gateway\_transit\_from\_hub](#input\_allow\_gateway\_transit\_from\_hub) | Allow gateway transit from hub to spoke. Set to true if hub has a gateway and you want spoke to use it. | `bool` | `false` | no |
 | <a name="input_allowed_ip_ranges"></a> [allowed\_ip\_ranges](#input\_allowed\_ip\_ranges) | List of IP ranges (CIDR) allowed to access the ACR | `list(string)` | `[]` | no |
@@ -166,17 +167,19 @@ No modules.
 | <a name="input_data_endpoint_enabled"></a> [data\_endpoint\_enabled](#input\_data\_endpoint\_enabled) | Enable dedicated data endpoints (Premium SKU only) | `bool` | `false` | no |
 | <a name="input_existing_vnet_resource_group_name"></a> [existing\_vnet\_resource\_group\_name](#input\_existing\_vnet\_resource\_group\_name) | Resource group name of the existing VNet. Only used when vnet\_name is provided. Defaults to the ACR resource group if not specified. | `string` | `null` | no |
 | <a name="input_hub_resource_group_name"></a> [hub\_resource\_group\_name](#input\_hub\_resource\_group\_name) | Resource group name of the hub virtual network. Required when private\_endpoint\_enabled is true and connecting to a hub. | `string` | `null` | no |
+| <a name="input_hub_subscription_id"></a> [hub\_subscription\_id](#input\_hub\_subscription\_id) | Subscription ID of the hub network. Required when private\_endpoint\_enabled is true and connecting to a hub. | `string` | `null` | no |
 | <a name="input_hub_vnet_name"></a> [hub\_vnet\_name](#input\_hub\_vnet\_name) | Name of the hub virtual network to peer with. Required when private\_endpoint\_enabled is true and connecting to a hub. | `string` | `null` | no |
-| <a name="input_location"></a> [location](#input\_location) | Azure region where resources will be deployed | `string` | `"Germany West Central"` | no |
+| <a name="input_location"></a> [location](#input\_location) | Azure region where resources will be deployed | `string` | n/a | yes |
 | <a name="input_network_rule_bypass_option"></a> [network\_rule\_bypass\_option](#input\_network\_rule\_bypass\_option) | Whether to allow trusted Azure services to bypass network rules (AzureServices or None) | `string` | `"AzureServices"` | no |
 | <a name="input_private_dns_zone_id"></a> [private\_dns\_zone\_id](#input\_private\_dns\_zone\_id) | Private DNS Zone ID for private endpoint. Use 'System' for Azure-managed zone, or provide custom zone ID. Only used when private\_endpoint\_enabled is true. | `string` | `"System"` | no |
-| <a name="input_private_endpoint_enabled"></a> [private\_endpoint\_enabled](#input\_private\_endpoint\_enabled) | Enable private endpoint for ACR (Premium SKU required) | `bool` | `false` | no |
+| <a name="input_private_endpoint_enabled"></a> [private\_endpoint\_enabled](#input\_private\_endpoint\_enabled) | Enable private endpoint for ACR (Premium SKU required) | `bool` | n/a | yes |
 | <a name="input_public_network_access_enabled"></a> [public\_network\_access\_enabled](#input\_public\_network\_access\_enabled) | Enable public network access to the ACR | `bool` | `true` | no |
-| <a name="input_resource_group_name"></a> [resource\_group\_name](#input\_resource\_group\_name) | Name of the resource group to create for the ACR | `string` | `"acr-rg"` | no |
+| <a name="input_resource_group_name"></a> [resource\_group\_name](#input\_resource\_group\_name) | Name of the resource group to create for the ACR. It is deleted with the building block. | `string` | n/a | yes |
 | <a name="input_retention_days"></a> [retention\_days](#input\_retention\_days) | Number of days to retain untagged manifests (Premium SKU only, 0 to disable) | `number` | `7` | no |
-| <a name="input_sku"></a> [sku](#input\_sku) | SKU tier for the ACR (Basic, Standard, Premium). Premium required for private endpoints. | `string` | `"Premium"` | no |
+| <a name="input_sku"></a> [sku](#input\_sku) | SKU tier for the ACR (Basic, Standard, Premium). Premium required for private endpoints. | `string` | n/a | yes |
 | <a name="input_subnet_address_prefix"></a> [subnet\_address\_prefix](#input\_subnet\_address\_prefix) | Address prefix for the private endpoint subnet (only used if subnet\_name is not provided) | `string` | `"10.250.1.0/24"` | no |
 | <a name="input_subnet_name"></a> [subnet\_name](#input\_subnet\_name) | Name of the subnet for private endpoint. If not provided, a new subnet will be created. | `string` | `null` | no |
+| <a name="input_subscription_id"></a> [subscription\_id](#input\_subscription\_id) | The Azure subscription the ACR is created in, the tenant's landing zone. | `string` | n/a | yes |
 | <a name="input_tags"></a> [tags](#input\_tags) | Tags to apply to all resources | `map(string)` | `{}` | no |
 | <a name="input_trust_policy_enabled"></a> [trust\_policy\_enabled](#input\_trust\_policy\_enabled) | Enable content trust policy (Premium SKU only) | `bool` | `false` | no |
 | <a name="input_use_remote_gateways"></a> [use\_remote\_gateways](#input\_use\_remote\_gateways) | Use remote gateways from hub VNet. Set to true only if hub has a VPN/ExpressRoute gateway configured. | `bool` | `false` | no |
@@ -191,11 +194,11 @@ No modules.
 | <a name="output_acr_id"></a> [acr\_id](#output\_acr\_id) | The ID of the Azure Container Registry |
 | <a name="output_acr_login_server"></a> [acr\_login\_server](#output\_acr\_login\_server) | The login server URL for the Azure Container Registry |
 | <a name="output_acr_name"></a> [acr\_name](#output\_acr\_name) | The name of the Azure Container Registry |
-| <a name="output_admin_password"></a> [admin\_password](#output\_admin\_password) | Admin password for the Azure Container Registry (only available when admin\_enabled is true) |
-| <a name="output_admin_username"></a> [admin\_username](#output\_admin\_username) | Admin username for the Azure Container Registry (only available when admin\_enabled is true) |
+| <a name="output_acr_portal_url"></a> [acr\_portal\_url](#output\_acr\_portal\_url) | Azure Portal URL of the Azure Container Registry |
 | <a name="output_private_dns_zone_id"></a> [private\_dns\_zone\_id](#output\_private\_dns\_zone\_id) | ID of the private DNS zone (when System-managed) |
 | <a name="output_private_endpoint_ip"></a> [private\_endpoint\_ip](#output\_private\_endpoint\_ip) | Private IP address of the ACR private endpoint |
 | <a name="output_resource_group_name"></a> [resource\_group\_name](#output\_resource\_group\_name) | Name of the resource group containing the ACR |
 | <a name="output_subnet_id"></a> [subnet\_id](#output\_subnet\_id) | ID of the subnet used for private endpoint |
+| <a name="output_summary"></a> [summary](#output\_summary) | Markdown summary shown in meshPanel after the run. |
 | <a name="output_vnet_id"></a> [vnet\_id](#output\_vnet\_id) | ID of the virtual network used for private endpoint |
 <!-- END_TF_DOCS -->
