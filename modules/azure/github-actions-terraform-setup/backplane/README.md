@@ -192,7 +192,6 @@ No modules.
 | Name | Description | Type | Default | Required |
 |------|-------------|------|---------|:--------:|
 | <a name="input_application_name"></a> [application\_name](#input\_application\_name) | n/a | `string` | n/a | yes |
-| <a name="input_location"></a> [location](#input\_location) | Azure location for deploying the building block terraform state storage account | `string` | n/a | yes |
 | <a name="input_scope"></a> [scope](#input\_scope) | Scope where the building block should be deployable, typically a Sandbox Landing Zone Management Group | `string` | n/a | yes |
 
 ## Outputs

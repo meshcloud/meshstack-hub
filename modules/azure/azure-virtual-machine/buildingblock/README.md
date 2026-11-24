@@ -197,7 +197,7 @@ No modules.
 | <a name="input_subnet_address_prefix"></a> [subnet\_address\_prefix](#input\_subnet\_address\_prefix) | The address prefix for the subnet | `string` | `"10.0.1.0/24"` | no |
 | <a name="input_tags"></a> [tags](#input\_tags) | Tags to apply to all resources | `map(string)` | `{}` | no |
 | <a name="input_vm_name"></a> [vm\_name](#input\_vm\_name) | The name of the virtual machine | `string` | n/a | yes |
-| <a name="input_vm_size"></a> [vm\_size](#input\_vm\_size) | The size of the virtual machine | `string` | `"Standard_B1s"` | no |
+| <a name="input_vm_size"></a> [vm\_size](#input\_vm\_size) | The size of the virtual machine | `string` | `"Standard_B2ts_v2"` | no |
 | <a name="input_vnet_address_space"></a> [vnet\_address\_space](#input\_vnet\_address\_space) | The address space for the virtual network | `string` | `"10.0.0.0/16"` | no |
 
 ## Outputs

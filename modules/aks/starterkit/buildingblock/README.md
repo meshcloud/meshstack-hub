@@ -56,8 +56,8 @@ No modules.
 
 | Name | Description |
 |------|-------------|
-| <a name="output_dev-link"></a> [dev-link](#output\_dev-link) | Link to the dev environment Angular app |
+| <a name="output_dev_link"></a> [dev\_link](#output\_dev\_link) | Link to the dev environment Angular app |
 | <a name="output_github_repo_url"></a> [github\_repo\_url](#output\_github\_repo\_url) | URL of the created GitHub repository |
-| <a name="output_prod-link"></a> [prod-link](#output\_prod-link) | Link to the prod environment Angular app |
+| <a name="output_prod_link"></a> [prod\_link](#output\_prod\_link) | Link to the prod environment Angular app |
 | <a name="output_summary"></a> [summary](#output\_summary) | Summary with next steps and insights into created resources |
 <!-- END_TF_DOCS -->

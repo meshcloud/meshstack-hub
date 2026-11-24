@@ -61,7 +61,6 @@ No modules.
 |------|-------------|------|---------|:--------:|
 | <a name="input_group_name"></a> [group\_name](#input\_group\_name) | Name of the IONOS group for DCD management | `string` | `"DCD-Managers"` | no |
 | <a name="input_initial_password"></a> [initial\_password](#input\_initial\_password) | Initial password for the IONOS service user | `string` | n/a | yes |
-| <a name="input_ionos_token"></a> [ionos\_token](#input\_ionos\_token) | IONOS API token for authentication | `string` | n/a | yes |
 | <a name="input_service_user_email"></a> [service\_user\_email](#input\_service\_user\_email) | Email address for the IONOS service user | `string` | n/a | yes |
 
 ## Outputs

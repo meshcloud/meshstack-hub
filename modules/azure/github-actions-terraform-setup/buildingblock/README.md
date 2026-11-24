@@ -64,7 +64,6 @@ No modules.
 
 | Name | Description | Type | Default | Required |
 |------|-------------|------|---------|:--------:|
-| <a name="input_deploy_role_definition_id"></a> [deploy\_role\_definition\_id](#input\_deploy\_role\_definition\_id) | Role definition ID to assign to the GitHub Actions App Service Managed Identity. This is used to deploy resources via Terraform. | `string` | n/a | yes |
 | <a name="input_location"></a> [location](#input\_location) | n/a | `string` | `"westeurope"` | no |
 | <a name="input_project_identifier"></a> [project\_identifier](#input\_project\_identifier) | n/a | `string` | n/a | yes |
 | <a name="input_repo_name"></a> [repo\_name](#input\_repo\_name) | Name of the repository to connect. | `string` | n/a | yes |

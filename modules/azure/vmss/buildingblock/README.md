@@ -365,7 +365,7 @@ No modules.
 | <a name="input_scale_in_cpu_threshold"></a> [scale\_in\_cpu\_threshold](#input\_scale\_in\_cpu\_threshold) | CPU percentage threshold to trigger scale in | `number` | `25` | no |
 | <a name="input_scale_out_cpu_threshold"></a> [scale\_out\_cpu\_threshold](#input\_scale\_out\_cpu\_threshold) | CPU percentage threshold to trigger scale out | `number` | `75` | no |
 | <a name="input_single_placement_group"></a> [single\_placement\_group](#input\_single\_placement\_group) | Limit scale set to single placement group (max 100 instances) | `bool` | `true` | no |
-| <a name="input_sku"></a> [sku](#input\_sku) | The SKU of the Virtual Machine Scale Set (instance size) | `string` | `"Standard_B2s"` | no |
+| <a name="input_sku"></a> [sku](#input\_sku) | The SKU of the Virtual Machine Scale Set (instance size) | `string` | `"Standard_B2ls_v2"` | no |
 | <a name="input_spot_eviction_policy"></a> [spot\_eviction\_policy](#input\_spot\_eviction\_policy) | Eviction policy for spot instances (Deallocate or Delete) | `string` | `"Deallocate"` | no |
 | <a name="input_spot_max_bid_price"></a> [spot\_max\_bid\_price](#input\_spot\_max\_bid\_price) | Maximum price per hour for spot instances. -1 means pay up to on-demand price | `number` | `-1` | no |
 | <a name="input_ssh_public_key"></a> [ssh\_public\_key](#input\_ssh\_public\_key) | SSH public key for Linux VM authentication (required for Linux) | `string` | `null` | no |

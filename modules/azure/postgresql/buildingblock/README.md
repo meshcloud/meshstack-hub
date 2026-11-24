@@ -51,7 +51,6 @@ No modules.
 | <a name="input_ssl_enforcement_enabled"></a> [ssl\_enforcement\_enabled](#input\_ssl\_enforcement\_enabled) | Enforce SSL connection | `bool` | `true` | no |
 | <a name="input_ssl_minimal_tls_version_enforced"></a> [ssl\_minimal\_tls\_version\_enforced](#input\_ssl\_minimal\_tls\_version\_enforced) | Minimum TLS version | `string` | `"TLS1_2"` | no |
 | <a name="input_storage_mb"></a> [storage\_mb](#input\_storage\_mb) | Storage size in MB | `number` | `5120` | no |
-| <a name="input_subscription_id"></a> [subscription\_id](#input\_subscription\_id) | the Azure subscription id | `string` | n/a | yes |
 
 ## Outputs
 

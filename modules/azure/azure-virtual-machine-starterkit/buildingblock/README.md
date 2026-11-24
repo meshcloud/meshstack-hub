@@ -72,7 +72,7 @@ No modules.
 | <a name="input_vm_enable_public_ip"></a> [vm\_enable\_public\_ip](#input\_vm\_enable\_public\_ip) | Whether to create and assign a public IP address to the VM. | `bool` | `false` | no |
 | <a name="input_vm_location"></a> [vm\_location](#input\_vm\_location) | The Azure region where the VM will be deployed. | `string` | `"westeurope"` | no |
 | <a name="input_vm_os_type"></a> [vm\_os\_type](#input\_vm\_os\_type) | The operating system type (Linux or Windows). | `string` | `"Linux"` | no |
-| <a name="input_vm_size"></a> [vm\_size](#input\_vm\_size) | The size of the virtual machine. | `string` | `"Standard_B1s"` | no |
+| <a name="input_vm_size"></a> [vm\_size](#input\_vm\_size) | The size of the virtual machine. | `string` | `"Standard_B2ts_v2"` | no |
 | <a name="input_vm_ssh_public_key"></a> [vm\_ssh\_public\_key](#input\_vm\_ssh\_public\_key) | SSH public key for Linux VM authentication (required for Linux). | `string` | `null` | no |
 | <a name="input_workspace_identifier"></a> [workspace\_identifier](#input\_workspace\_identifier) | The identifier of the meshStack workspace | `string` | n/a | yes |
 
