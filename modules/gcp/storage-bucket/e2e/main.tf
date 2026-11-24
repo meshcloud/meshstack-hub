@@ -4,6 +4,13 @@ variable "test_context" {
     run_id      = string
     hub_git_ref = string
 
+    meshstack = optional(object({
+      runner_ref = optional(object({
+        kind = string
+        uuid = string
+      }))
+    }))
+
     # Set to order an already-deployed BBD version; null to build the BBD from hub source.
     bbd_version_ref = optional(object({
       uuid = string
@@ -20,10 +27,14 @@ variable "test_context" {
   nullable = false
 }
 
+locals {
+  context_runner_ref = var.test_context.meshstack == null ? null : var.test_context.meshstack.runner_ref
+}
+
 variable "runner_switch" {
   type        = string
   default     = null
-  description = "A step of the runner switch test in tests/gcp_storage_bucket_runner_switch.tftest.hcl. `released_on_old_runner` releases version 1 with `old_runner`. `switched` creates a draft version 2 that uses `new_runner` and lists `old_runner` as trusted. Null runs the other tests, which set no runner."
+  description = "A step of the runner switch test in tests/gcp_storage_bucket_runner_switch.tftest.hcl. `released_on_old_runner` releases version 1 with `old_runner`. `switched` creates a draft version 2 that uses `new_runner` and lists `old_runner` as trusted. Null runs the other tests, which use the runner in `test_context.meshstack.runner_ref`."
 
   validation {
     condition     = var.runner_switch == null || contains(["released_on_old_runner", "switched"], coalesce(var.runner_switch, "-"))
@@ -94,7 +105,7 @@ module "gcp_storage_bucket" {
   meshstack = {
     owning_workspace_identifier    = var.test_context.workspace
     tags                           = {}
-    runner_ref                     = !local.runner_switch ? null : local.switched ? data.meshstack_building_block_runner.new[0].ref : data.meshstack_building_block_runner.old[0].ref
+    runner_ref                     = !local.runner_switch ? local.context_runner_ref : local.switched ? data.meshstack_building_block_runner.new[0].ref : data.meshstack_building_block_runner.old[0].ref
     additional_trusted_runner_refs = local.switched ? [data.meshstack_building_block_runner.old[0].ref] : []
     original_runner_ref            = local.switched ? data.meshstack_building_block_runner.old[0].ref : null
   }
