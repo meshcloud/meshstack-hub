@@ -25,8 +25,8 @@ To successfully work across these repositories, always read their AGENTS.md file
 ## Where Terraform Tests Live
 
 **`e2e/` is the only place a `*.tftest.hcl` file runs.** Nothing in this repo runs `tofu test`
-anywhere else: CI runs `pre-commit run --all-files` — `terraform-docs`, `terraform fmt`,
-trailing whitespace and `ci/validate_modules.sh` — and the scorecard's Testing category scores
+anywhere else: CI runs `pre-commit run --all-files` — `terraform fmt`, trailing whitespace,
+shellcheck and `ci/validate_modules.sh` — and the scorecard's Testing category scores
 `e2e/` coverage exclusively.
 
 **Every test runs against real infrastructure.** No `mock_provider`, no `override_resource`,
@@ -40,7 +40,7 @@ The scorecard reports a module that breaks either rule (`no_buildingblock_tftest
 ## Verify Before Merging
 
 CI never applies an `e2e/` test — a merge gate in meshstack-hub only catches
-`tf validate`/`terraform-docs`/scorecard issues, not whether the module actually works against a
+`tf validate`/`terraform fmt`/scorecard issues, not whether the module actually works against a
 live meshStack instance. A PR that adds or changes an `e2e/`-covered module should therefore
 include a link to an e2e verification run in its description where possible, dispatched against
 the PR's branch — see [Running tests](#running-tests). Posting a private

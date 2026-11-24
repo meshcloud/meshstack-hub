@@ -20,10 +20,14 @@ re-implements its logic. meshcloud maintains two public ones:
 - [meshcloud/trial-cloudfoundation](https://github.com/meshcloud/trial-cloudfoundation) — the
   foundation behind shared meshStack trials
 
-**CI in this repo is linting only.** It runs `pre-commit run --all-files` (`terraform-docs`,
-`terraform fmt`, trailing whitespace, `ci/validate_modules.sh`) and the scorecard, a report in a PR
-comment — never `plan` or `apply`. Only an
+**CI in this repo never runs `plan` or `apply`.** It runs `pre-commit run --all-files` (`terraform fmt`,
+trailing whitespace, shellcheck, `ci/validate_modules.sh`) and the scorecard, a report in a PR
+comment. Only an
 [e2e run](.agents/skills/e2e-test/SKILL.md#verify-before-merging) shows a module works.
+
+**CI owns the `BEGIN_TF_DOCS` sections of module READMEs.** After a merge, it runs
+`ci/terraform_docs.sh` and pushes the result to `main`. Leave these sections as they are and do not
+run terraform-docs. A PR comment shows what CI will change.
 
 ## Domain concepts
 
@@ -100,3 +104,4 @@ the docs.
   (`../../../meshstack-hub/modules/<provider>/<service>/buildingblock`). Never commit that — switch
   back to the hub GitHub URL first.
 - No trailing whitespace.
+- `task lint` runs the local linters inside `nix develop`: shellcheck, ruff, ty and actionlint.

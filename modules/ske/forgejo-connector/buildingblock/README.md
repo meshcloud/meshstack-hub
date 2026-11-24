@@ -53,7 +53,7 @@ service account, read from the same engine at `kubeconfig_path` on every run.
 The namespace's `KUBECONFIG_<STAGE>` is built from `kube_host` and the token
 Secret of its own service account.
 
-<!-- terraform-docs is disabled for this directory (see .pre-commit-config.yaml), so the block below is maintained by hand. -->
+<!-- terraform-docs is disabled for this directory (see ci/terraform_docs.sh), so the block below is maintained by hand. -->
 <!-- BEGIN_TF_DOCS -->
 ## Requirements
 

@@ -20,7 +20,7 @@ reference-architectures/<cloud>-<capability>/
 └── buildingblock/             # optional — Terraform for the importable architecture
 ```
 
-`buildingblock/README.md` is maintained by hand. terraform-docs only runs on the `backplane/` and
+`buildingblock/README.md` is maintained by hand. `ci/terraform_docs.sh` only runs on the `backplane/` and
 `buildingblock/` folders of hub modules, so a ref arch readme has no generated section.
 
 The folder name is the architecture id used in website URLs. A folder without a `README.md` is
