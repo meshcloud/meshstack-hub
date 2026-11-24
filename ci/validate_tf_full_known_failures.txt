@@ -5,7 +5,6 @@
 modules/aks/github-connector/buildingblock           # local.acr never declared
 modules/aks/postgresql/buildingblock                 # local.resource_group_name, .location, .subnet_id, .private_dns_zone_id never declared
 modules/azure/aks/buildingblock                      # resources point at a provider configuration the module does not declare
-modules/azure/container-registry/buildingblock       # resources point at a provider configuration the module does not declare
 modules/gcp                                          # terraform-gcp-meshplatform has no tag 0.3.0
 modules/ionos/dcd/backplane                          # required arguments missing, plus arguments the provider rejects
 modules/otc/project                                  # logo.png, which the platform type icon reads, does not exist

@@ -8,11 +8,7 @@ description: |
 
 # Azure Container Registry Building Block
 
-This Terraform module provisions an Azure Container Registry with optional private endpoint networking, VNet peering to hub networks, and AKS integration.
-
-## Requirements
-- Terraform >= 1.3.0
-- Azure RM Provider `>= 4.36.0, < 5.0.0`
+This Terraform module provisions an Azure Container Registry in the tenant's subscription, with optional private endpoint networking, VNet peering to hub networks, and AKS integration.
 
 ## Architecture
 
@@ -29,7 +25,8 @@ VNet peering to hub is **automatically determined**:
 - **Created** when `vnet_name == null` (creating new VNet) AND `hub_vnet_name` is set
 - **Skipped** when `vnet_name` is set (using existing VNet, assumes already connected to hub)
 
-This automatic approach simplifies configuration by inferring intent from VNet creation vs. usage.
+`meshstack_integration.tf` offers scenarios 1, 3 and 4: the hub peering is offered when the
+platform team configures a hub.
 
 ## Permissions
 
@@ -43,30 +40,11 @@ Key permissions include:
 - `Microsoft.Network/privateDnsZones/join/action` - DNS zone association
 - Hub subscription permissions for VNet peering (when applicable)
 
-## Provider Configuration
+## Providers
 
-This module requires two provider configurations when using hub peering:
-
-```hcl
-provider "azurerm" {
-  alias           = "hub"
-  subscription_id = "hub-subscription-id"
-  features {}
-}
-
-module "acr" {
-  source = "./buildingblock"
-
-  providers = {
-    azurerm     = azurerm
-    azurerm.hub = azurerm.hub
-  }
-
-  # ... configuration
-}
-```
-
-When not using hub peering, only the default provider is needed.
+Both `azurerm` providers authenticate as the backplane's managed identity through workload identity
+federation. The default one targets `subscription_id`, the tenant's landing zone. The `hub` alias
+targets `hub_subscription_id`, or `subscription_id` when no hub is set.
 
 ## Advanced Configuration
 

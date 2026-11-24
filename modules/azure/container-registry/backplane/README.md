@@ -1,125 +1,32 @@
-# Azure Container Registry Building Block - Backplane
+# Azure Container Registry — Backplane
 
-This directory contains the "backplane" configuration for the Azure Container Registry Building Block. The backplane sets up the necessary permissions and service principals required to deploy Azure Container Registries in Azure subscriptions.
+Sets up the identity the Azure Container Registry building block runs with.
 
-## Overview
+## What it provisions
 
-The backplane creates:
-- Custom Azure RBAC role definitions with ACR deployment permissions
-- Optional service principal for automated deployments (main scope)
-- **Optional separate service principal for hub VNet peering (least privilege)**
-- Role assignments for the service principals or existing principals
-- Support for workload identity federation or application passwords
-- Separate scopes: main scope (subscription or management group) and hub scope (subscription or management group)
+- A resource group named after `var.name`, holding a **user-assigned managed identity**.
+- A **federated identity credential** per building block runner subject, so runs authenticate
+  through workload identity federation. No client secret exists.
+- A custom **deploy role** on `scope`, typically the management group above all landing zones:
+  container registry, private endpoint, private DNS, vnet, resource group and role assignment
+  permissions in the tenant subscription. The role assignment permissions let the building block
+  grant `AcrPull` to an AKS cluster's managed identity.
+- When `hub_scope` is set, a **hub peering role** on it, so private registries can peer their vnet
+  into the hub vnet. The same identity peers both sides.
 
-## Required Permissions
+## Required permissions to deploy
 
-The backplane creates two role definitions:
+- `Managed Identity Contributor` on the subscription the identity lives in.
+- `User Access Administrator` (or `Owner`) on `scope` and, if set, `hub_scope`, to create the role
+  definitions and assignments.
 
-### Main Deployment Role (`buildingblock_deploy`)
+## Migrating from the service principal backplane
 
-Grants the following permissions:
-
-#### Container Registry
-- Full CRUD operations on registries
-- Manage credentials, webhooks, replications, scope maps, and tokens
-- Import images
-
-#### Networking
-- Create and manage private endpoints
-- Create and manage private DNS zones and records
-- Create and manage virtual networks, subnets, and VNet peerings
-- Join subnets and peer VNets
-
-#### Resource Management
-- Create, read, and delete resource groups
-- Manage deployments
-- Assign roles (for AKS integration)
-
-### Hub Deployment Role (`buildingblock_deploy_hub`)
-
-Limited permissions for hub VNet peering:
-- Read resource groups and virtual networks
-- Manage virtual network peerings
-
-## Usage
-
-Choose ONE of the following authentication methods:
-
-### Option 1: Workload Identity Federation (Recommended)
-
-Best for GitHub Actions, Azure DevOps, and other OIDC-capable CI/CD systems. No secrets to manage.
-
-```hcl
-module "acr_backplane" {
-  source = "./backplane"
-
-  name      = "container-registry"
-  scope     = "/providers/Microsoft.Management/managementGroups/landing-zones"
-  hub_scope = "/subscriptions/00000000-0000-0000-0000-000000000000"
-
-  # Create main service principal with WIF
-  create_service_principal_name = "acr-deployer"
-  workload_identity_federation = {
-    issuer  = "https://token.actions.githubusercontent.com"
-    subject = "repo:your-org/your-repo:ref:refs/heads/main"
-  }
-
-  # Create separate hub service principal with WIF (least privilege)
-  create_hub_service_principal_name = "acr-hub-peering"
-  hub_workload_identity_federation = {
-    issuer  = "https://token.actions.githubusercontent.com"
-    subject = "repo:your-org/your-repo:ref:refs/heads/main"
-  }
-}
-```
-
-### Option 2: Using Existing Service Principals
-
-Use this when you already have service principals created and managed externally.
-
-```hcl
-module "acr_backplane" {
-  source = "./backplane"
-
-  name      = "container-registry"
-  scope     = "/providers/Microsoft.Management/managementGroups/landing-zones"
-  hub_scope = "/subscriptions/00000000-0000-0000-0000-000000000000"
-
-  # Provide object IDs of existing service principals
-  existing_principal_ids     = ["00000000-0000-0000-0000-000000000001"]
-  existing_hub_principal_ids = ["00000000-0000-0000-0000-000000000002"]
-}
-```
-
-### Option 3: Password Authentication (Not Recommended)
-
-Only use when WIF is not available. Requires secure password management.
-
-```hcl
-module "acr_backplane" {
-  source = "./backplane"
-
-  name      = "container-registry"
-  scope     = "/providers/Microsoft.Management/managementGroups/landing-zones"
-  hub_scope = "/subscriptions/00000000-0000-0000-0000-000000000000"
-
-  # Create service principals with password authentication
-  create_service_principal_name     = "acr-deployer"
-  create_hub_service_principal_name = "acr-hub-peering"
-
-  # Do NOT set workload_identity_federation - passwords will be auto-generated
-  # Retrieve passwords from Terraform state or Azure portal
-}
-```
-
-## Security Considerations
-
-- The role definitions follow the principle of least privilege
-- Service principals should use workload identity federation when possible
-- Passwords are marked as sensitive and not exposed in outputs
-- Review the permissions before deploying to production environments
-- The hub role has minimal permissions for VNet peering only
+Earlier versions created Entra applications and service principals with a client secret or a
+federated credential, one for the landing zones and one for the hub. This version replaces them
+with one managed identity. Applying it destroys the service principals and their role assignments.
+The building block definition must then use the new identity as `ARM_CLIENT_ID`;
+`meshstack_integration.tf` does that.
 
 <!-- BEGIN_TF_DOCS -->
 ## Requirements
