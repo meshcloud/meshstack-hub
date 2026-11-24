@@ -65,7 +65,7 @@ resource "kubernetes_secret" "image_pull" {
   data = {
     ".dockerconfigjson" = jsonencode({
       auths = {
-        "${local.acr.host}" = {
+        (local.acr.host) = {
           username = local.acr.username
           password = local.acr.password
           auth     = base64encode("${local.acr.username}:${local.acr.password}")
