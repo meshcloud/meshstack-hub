@@ -23,8 +23,9 @@ module "k8s_acme_solver" {
 
   depends_on = [terraform_data.kubeconfig]
 
-  project_id             = var.stackit_project_id
-  cert_manager_namespace = var.wildcard_certs.cert_manager_namespace
+  project_id = var.stackit_project_id
+  # Splat because tflint evaluates the arguments of a disabled module too.
+  cert_manager_namespace = one(var.wildcard_certs[*].cert_manager_namespace)
 }
 
 resource "terraform_data" "kubeconfig" {
