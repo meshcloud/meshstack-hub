@@ -1,0 +1,87 @@
+name: terraform-docs
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+    types: [opened, synchronize, reopened]
+
+concurrency:
+  group: terraform-docs-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+permissions: {}
+
+jobs:
+  regenerate:
+    if: github.event_name == 'push'
+    runs-on: ubuntu-latest
+    environment: main
+    permissions:
+      contents: read
+    steps:
+      # The deploy key may push to main past the branch ruleset. Its own push starts this
+      # workflow again, which then finds nothing to regenerate.
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: main
+          ssh-key: ${{ secrets.REPO_DEPLOY_KEY }}
+
+      - uses: nixbuild/nix-quick-install-action@2c9db80fb984ceb1bcaa77cdda3fdf8cfba92035 # v34
+        with:
+          nix_on_tmpfs: true
+
+      - uses: rrbutani/use-nix-shell-action@59a52b2b9bbfe3cc0e7deb8f9059abe37a439edf # v1.1.0
+        with:
+          devShell: .#github_actions
+
+      - name: Regenerate and push
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          for attempt in 1 2 3 4 5; do
+            git fetch origin main
+            git reset --hard origin/main
+            ci/terraform_docs.sh
+            if git diff --quiet; then
+              echo "READMEs are up to date"
+              exit 0
+            fi
+            git --no-pager diff --stat
+            git commit -am "docs: regenerate terraform-docs"
+            if git push origin HEAD:main; then
+              exit 0
+            fi
+            echo "Push rejected on attempt $attempt, retrying on the new main"
+            sleep $((attempt * 5))
+          done
+          exit 1
+
+  preview:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - uses: nixbuild/nix-quick-install-action@2c9db80fb984ceb1bcaa77cdda3fdf8cfba92035 # v34
+        with:
+          nix_on_tmpfs: true
+
+      - uses: rrbutani/use-nix-shell-action@59a52b2b9bbfe3cc0e7deb8f9059abe37a439edf # v1.1.0
+        with:
+          devShell: .#github_actions
+
+      - name: Regenerate
+        run: |
+          ci/terraform_docs.sh
+          git --no-pager diff --stat > "$RUNNER_TEMP/terraform-docs.stat"
+          git --no-pager diff > "$RUNNER_TEMP/terraform-docs.diff"
+
+      - name: Post, update or delete PR comment
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: ci/terraform_docs_pr_comment.py "$RUNNER_TEMP/terraform-docs.stat" "$RUNNER_TEMP/terraform-docs.diff"

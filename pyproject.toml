@@ -1,0 +1,41 @@
+# Configures ruff and ty for the python scripts in this repo. It is not a python package.
+#
+# Both tools enable all their rules. Fix a finding; an accepted exception sits on its line as `# noqa: <code>`.
+
+[tool.ruff]
+# The python3 of the nix dev shell.
+target-version = "py313"
+line-length = 120
+
+[tool.ruff.lint]
+select = ["ALL"]
+ignore = [
+    # The formatter owns layout; these rules conflict with it, see https://docs.astral.sh/ruff/formatter/#conflicting-lint-rules
+    "COM812",
+    "ISC001",
+    "E501",
+    "Q",
+    "W191",
+    "D206",
+    "D300",
+    # The scripts are command line tools: print is their output, and subprocess calls run tools from PATH.
+    "T20",
+    "S603",
+    "S607",
+    "D1",
+    # Scripts are not packages.
+    "INP001",
+    # An inline exception message is the readable choice in a script.
+    "EM",
+    "TRY003",
+    "PLR2004",
+]
+
+[tool.ruff.lint.pydocstyle]
+convention = "pep257"
+
+[tool.ty.environment]
+python-version = "3.13"
+
+[tool.ty.rules]
+all = "error"

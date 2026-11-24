@@ -33,9 +33,14 @@
         shellcheck
       ];
 
-    dev_packages = pkgs:
+    dev_packages = pkgs: unstable_pkgs:
       with pkgs;
       [
+        # local linters, run by `task lint`
+        actionlint
+        unstable_pkgs.ruff
+        unstable_pkgs.ty
+
         # Go toolchain for tools/ development
         go
         golangci-lint
@@ -59,12 +64,12 @@
       in {
         default = pkgs.mkShell {
           name = "meshstack-hub";
-          packages = (github_actions_preinstalled pkgs) ++ (core_packages pkgs unstable_pkgs) ++ (dev_packages pkgs);
+          packages = (github_actions_preinstalled pkgs) ++ (core_packages pkgs unstable_pkgs) ++ (dev_packages pkgs unstable_pkgs);
         };
 
         website = pkgs.mkShell {
           name = "Website Development Shell";
-          packages = (core_packages pkgs unstable_pkgs) ++ (dev_packages pkgs) ++ [
+          packages = (core_packages pkgs unstable_pkgs) ++ (dev_packages pkgs unstable_pkgs) ++ [
             pkgs.nodejs_20
             pkgs.yarn
           ];
