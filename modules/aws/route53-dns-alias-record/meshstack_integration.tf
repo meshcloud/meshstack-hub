@@ -26,16 +26,6 @@ variable "record_types" {
   description = "List of DNS record types offered in the record type selector. Alias records only support A and AAAA."
 }
 
-# tflint-ignore: terraform_unused_declarations
-variable "aws_oidc_provider_arn" {
-  type        = string
-  default     = null
-  description = <<-EOT
-  No longer used. The backplane looks up one IAM OIDC provider per issuer in `runner_identities`.
-  See .agents/references/aws-backplane.md#the-shared-oidc-provider
-  EOT
-}
-
 variable "bbd_display_name" {
   type        = string
   default     = null

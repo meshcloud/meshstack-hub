@@ -3,13 +3,6 @@ variable "github_owner" {
   description = "GitHub organization or user that owns the repository."
 }
 
-# tflint-ignore: terraform_unused_declarations
-variable "github_base_url" {
-  type        = string
-  default     = "https://github.com"
-  description = "Base URL of the GitHub instance. Override for GitHub Enterprise Server."
-}
-
 variable "github_app_id" {
   type        = string
   description = "GitHub App ID used to authenticate the GitHub provider."
@@ -66,4 +59,3 @@ variable "workflow_name_prefix" {
   default     = "meshstack"
   description = "Prefix for generated workflow display names."
 }
-

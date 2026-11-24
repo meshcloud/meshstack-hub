@@ -3,13 +3,6 @@ variable "application_name" {
   nullable = false
 }
 
-# tflint-ignore: terraform_unused_declarations
-variable "location" {
-  type        = string
-  nullable    = false
-  description = "Azure location for deploying the building block terraform state storage account"
-}
-
 variable "scope" {
   type        = string
   nullable    = false

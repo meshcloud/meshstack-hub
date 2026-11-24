@@ -225,13 +225,6 @@ variable "private_cluster_public_fqdn_enabled" {
   default     = false
 }
 
-# tflint-ignore: terraform_unused_declarations
-variable "hub_subscription_id" {
-  type        = string
-  description = "Subscription ID of the hub network. Required when private_cluster_enabled is true and connecting to a hub."
-  default     = null
-}
-
 variable "hub_resource_group_name" {
   type        = string
   description = "Resource group name of the hub virtual network. Required when private_cluster_enabled is true and connecting to a hub."

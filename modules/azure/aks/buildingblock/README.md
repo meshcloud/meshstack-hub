@@ -63,7 +63,6 @@ module "aks" {
   subnet_address_prefix = "10.240.0.0/20"
 
   # Hub connectivity (creates bi-directional peering)
-  hub_subscription_id            = "hub-subscription-id"
   hub_resource_group_name        = "hub-network-rg"
   hub_vnet_name                  = "hub-vnet"
   allow_gateway_transit_from_hub = true
@@ -145,7 +144,6 @@ module "aks" {
   # No hub connectivity
   hub_vnet_name           = null
   hub_resource_group_name = null
-  hub_subscription_id     = null
 
   # Azure AD and monitoring
   aks_admin_group_object_id    = "12345678-1234-1234-1234-123456789012"

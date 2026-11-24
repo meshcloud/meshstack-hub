@@ -3,16 +3,6 @@ variable "aws_region" {
   description = "AWS region where the S3 bucket will be created (e.g. 'eu-central-1')."
 }
 
-# tflint-ignore: terraform_unused_declarations
-variable "aws_oidc_provider_arn" {
-  type        = string
-  default     = null
-  description = <<-EOT
-  No longer used. The backplane looks up one IAM OIDC provider per issuer in `runner_identities`.
-  See .agents/references/aws-backplane.md#the-shared-oidc-provider
-  EOT
-}
-
 variable "backplane_name" {
   type        = string
   default     = "aws-s3-bucket"

@@ -123,8 +123,7 @@ module "aws_s3_bucket" {
 
   bbd_display_name = "${var.test_context.run_id} AWS S3 Bucket"
 
-  aws_region            = var.test_context.fixtures.aws.region
-  aws_oidc_provider_arn = var.test_context.fixtures.aws.oidc_provider_arn
+  aws_region = var.test_context.fixtures.aws.region
 
   backplane_name = "${var.test_context.run_id}-s3"
 }

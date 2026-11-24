@@ -476,10 +476,6 @@ role. See
 lookup and the pinned `runner_ref` are the same in every cloud, see
 [meshstack-integration.md § Runner identity](meshstack-integration.md#runner-identity).
 
-`aws/s3_bucket`, `aws/route53-dns-record` and `aws/route53-dns-alias-record` declare an unused
-`variable "aws_oidc_provider_arn"`, so that a caller that sets it does not fail. A new module does
-not declare it.
-
 ### Cross-account (StackSet) pattern
 
 ```hcl

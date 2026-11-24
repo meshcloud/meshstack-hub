@@ -96,7 +96,6 @@ This building block is for application teams that need to deploy containerized a
 
 | Variable | Description | Required | Default |
 |----------|-------------|----------|---------|
-| `hub_subscription_id` | Subscription ID of hub network. Required for hub peering. | Conditional | `null` |
 | `hub_resource_group_name` | Resource group of hub VNet. Required for hub peering. | Conditional | `null` |
 | `hub_vnet_name` | Name of hub VNet to peer with. Set to `null` to disable peering. | No | `null` |
 

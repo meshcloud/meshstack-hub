@@ -56,24 +56,6 @@ variable "aws_reader_permission_set_arn" {
   description = "ARN of the AWS IAM Identity Center permission set assigned to reader project members."
 }
 
-# tflint-ignore: terraform_unused_declarations
-variable "aws_management_account_id" {
-  type        = string
-  description = "AWS account ID of the Organizations management account."
-}
-
-# tflint-ignore: terraform_unused_declarations
-variable "aws_meshcloud_account_id" {
-  type        = string
-  description = "AWS account ID of the dedicated meshcloud account for IAM users."
-}
-
-# tflint-ignore: terraform_unused_declarations
-variable "aws_automation_account_id" {
-  type        = string
-  description = "AWS account ID of the automation account hosting StackSets."
-}
-
 variable "meshstack" {
   type = object({
     owning_workspace_identifier = string

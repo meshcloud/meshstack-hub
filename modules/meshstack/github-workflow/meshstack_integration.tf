@@ -142,7 +142,6 @@ module "backplane" {
   source = "github.com/meshcloud/meshstack-hub//modules/meshstack/github-workflow/backplane?ref=${var.hub.git_ref}"
 
   github_owner                  = var.github_owner
-  github_base_url               = var.github_base_url
   github_app_id                 = var.github_app_id
   github_app_installation_id    = var.github_app_installation_id
   github_app_private_key        = var.github_app_private_key

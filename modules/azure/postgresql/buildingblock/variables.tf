@@ -1,9 +1,3 @@
-# tflint-ignore: terraform_unused_declarations
-variable "subscription_id" {
-  description = "the Azure subscription id"
-  type        = string
-}
-
 variable "resource_group_name" {
   description = "Name of the Azure resource group"
   type        = string
