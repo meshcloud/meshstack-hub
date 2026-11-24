@@ -144,7 +144,7 @@ resource "azurerm_linux_virtual_machine_scale_set" "vmss" {
   location            = azurerm_resource_group.vmss_rg.location
   resource_group_name = azurerm_resource_group.vmss_rg.name
   sku                 = var.sku
-  instances           = var.enable_autoscaling ? null : var.instances
+  instances           = var.instances
   admin_username      = var.admin_username
   custom_data         = var.custom_data != null ? base64encode(var.custom_data) : null
 
@@ -230,7 +230,7 @@ resource "azurerm_windows_virtual_machine_scale_set" "vmss" {
   location            = azurerm_resource_group.vmss_rg.location
   resource_group_name = azurerm_resource_group.vmss_rg.name
   sku                 = var.sku
-  instances           = var.enable_autoscaling ? null : var.instances
+  instances           = var.instances
   admin_username      = var.admin_username
   admin_password      = var.admin_password
   custom_data         = var.custom_data != null ? base64encode(var.custom_data) : null

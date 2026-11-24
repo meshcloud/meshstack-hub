@@ -27,211 +27,44 @@ This Terraform module provisions an Azure Virtual Machine Scale Set (VMSS) with 
 
 ## Prerequisites
 
-This module requires an existing spoke VNet and subnet. You can create these using the [spoke-network module](../../spoke-network).
+This module needs an existing VNet and subnet in the same region, for example from the [spoke-network module](../../spoke-network). It attaches its own network security group to the subnet and replaces the one the subnet had, so give the scale set a subnet of its own.
 
 ## Usage
 
-### Basic Linux Scale Set
+[`meshstack_integration.tf`](../meshstack_integration.tf) deploys the backplane and the building block definition to meshStack. Application teams then order a scale set in their Azure tenant.
+
+To use the module directly:
 
 ```hcl
 module "vmss" {
   source = "./modules/azure/vmss/buildingblock"
 
-  vmss_name           = "my-app-vmss"
-  resource_group_name = "my-resource-group"
-  location            = "eastus"
-  os_type             = "Linux"
-  sku                 = "Standard_B2ls_v2"
-  instances           = 3
-  ssh_public_key      = file("~/.ssh/id_rsa.pub")
-
-  # Existing spoke network
+  vmss_name                = "web-app"
+  resource_group_name      = "web-app-rg"
+  vnet_resource_group_name = "network-rg"
   vnet_name                = "spoke-vnet"
-  vnet_resource_group_name = "network-rg"
-  subnet_name              = "workload-subnet"
+  subnet_name              = "web-app"
+  ssh_public_key           = file("~/.ssh/id_rsa.pub")
+  sku                      = "Standard_B2ls_v2"
+  instances                = 2
+  enable_autoscaling       = true
+  min_instances            = 2
+  max_instances            = 10
+  enable_load_balancer     = true
+  enable_public_ip         = false
+  enable_ssh_access        = false
+  subscription_id          = "00000000-0000-0000-0000-000000000000"
+  location                 = "germanywestcentral"
 
-  tags = {
-    Environment = "Production"
-    Application = "WebApp"
-  }
-}
-```
-
-### Auto-scaling Web Application
-
-```hcl
-module "web_vmss" {
-  source = "./modules/azure/vmss/buildingblock"
-
-  vmss_name           = "web-app-vmss"
-  resource_group_name = "web-rg"
-  location            = "westeurope"
-
-  os_type             = "Linux"
-  sku                 = "Standard_D2s_v5"
-  instances           = 2
-  ssh_public_key      = var.ssh_public_key
-
-  # Existing spoke network
-  vnet_name                = "spoke-vnet-prod"
-  vnet_resource_group_name = "network-rg"
-  subnet_name              = "web-tier-subnet"
-
-  enable_autoscaling        = true
-  min_instances             = 2
-  max_instances             = 10
-  scale_out_cpu_threshold   = 75
-  scale_in_cpu_threshold    = 25
-
-  enable_load_balancer      = true
-  enable_public_ip          = true
-  frontend_port             = 80
-  backend_port              = 80
-  health_probe_protocol     = "Http"
-  health_probe_port         = 80
-  health_probe_request_path = "/health"
-
-  upgrade_mode              = "Rolling"
-
-  zones = ["1", "2", "3"]
-
-  custom_data = <<-EOF
+  custom_data = <<-EOT
     #!/bin/bash
     apt-get update
     apt-get install -y nginx
-    systemctl start nginx
-    systemctl enable nginx
-  EOF
-
-  tags = {
-    Environment = "Production"
-    Application = "WebApp"
-  }
+  EOT
 }
 ```
 
-### Windows Scale Set
-
-```hcl
-module "windows_vmss" {
-  source = "./modules/azure/vmss/buildingblock"
-
-  vmss_name           = "win-app-vmss"
-  resource_group_name = "windows-rg"
-  location            = "eastus"
-
-  os_type             = "Windows"
-  sku                 = "Standard_D2s_v5"
-  instances           = 2
-  admin_username      = "azureadmin"
-  admin_password      = var.admin_password
-
-  # Existing spoke network
-  vnet_name                = "spoke-vnet"
-  vnet_resource_group_name = "network-rg"
-  subnet_name              = "app-subnet"
-
-  image_publisher     = "MicrosoftWindowsServer"
-  image_offer         = "WindowsServer"
-  image_sku           = "2022-Datacenter"
-  image_version       = "latest"
-
-  enable_load_balancer = true
-  backend_port         = 80
-  frontend_port        = 80
-
-  enable_rdp_access   = false
-
-  tags = {
-    Environment = "Production"
-    OS          = "Windows"
-  }
-}
-```
-
-### Spot Instance Scale Set (Cost-Optimized)
-
-```hcl
-module "spot_vmss" {
-  source = "./modules/azure/vmss/buildingblock"
-
-  vmss_name           = "spot-compute-vmss"
-  resource_group_name = "compute-rg"
-  location            = "eastus"
-
-  os_type             = "Linux"
-  sku                 = "Standard_D2s_v5"
-  instances           = 5
-  ssh_public_key      = var.ssh_public_key
-
-  # Existing spoke network
-  vnet_name                = "spoke-vnet-dev"
-  vnet_resource_group_name = "network-rg"
-  subnet_name              = "compute-subnet"
-
-  enable_spot_instances = true
-  spot_eviction_policy  = "Deallocate"
-  spot_max_bid_price    = -1
-
-  enable_load_balancer  = false
-
-  tags = {
-    Environment = "Development"
-    CostCenter  = "Engineering"
-  }
-}
-```
-
-### Integration with Spoke Network Module
-
-```hcl
-# First, create the spoke network
-module "spoke_network" {
-  source = "./modules/azure/spoke-network"
-
-  vnet_name           = "spoke-vnet-prod"
-  resource_group_name = "network-rg"
-  location            = "eastus"
-  address_space       = ["10.1.0.0/16"]
-
-  subnets = {
-    "web-tier-subnet" = {
-      address_prefixes = ["10.1.1.0/24"]
-    }
-    "app-tier-subnet" = {
-      address_prefixes = ["10.1.2.0/24"]
-    }
-  }
-}
-
-# Then deploy VMSS using the spoke network
-module "web_vmss" {
-  source = "./modules/azure/vmss/buildingblock"
-
-  vmss_name           = "web-app-vmss"
-  resource_group_name = "web-rg"
-  location            = "eastus"
-
-  os_type        = "Linux"
-  sku            = "Standard_D2s_v5"
-  instances      = 2
-  ssh_public_key = var.ssh_public_key
-
-  # Reference outputs from spoke network
-  vnet_name                = module.spoke_network.vnet_name
-  vnet_resource_group_name = module.spoke_network.resource_group_name
-  subnet_name              = "web-tier-subnet"
-
-  enable_load_balancer = true
-  enable_public_ip     = true
-  frontend_port        = 80
-  backend_port         = 80
-
-  tags = {
-    Environment = "Production"
-  }
-}
-```
+For a Windows scale set, set `os_type = "Windows"`, `admin_password` and a Windows image (`image_publisher`, `image_offer`, `image_sku`). `ssh_public_key` is still required, but Windows ignores it.
 
 ## Best Practices
 
