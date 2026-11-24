@@ -9,6 +9,7 @@ variable "region" {
   description = "The region of the subaccount."
 }
 
+# tflint-ignore: terraform_unused_declarations
 variable "workspace_identifier" {
   type        = string
   description = "The meshStack workspace identifier."

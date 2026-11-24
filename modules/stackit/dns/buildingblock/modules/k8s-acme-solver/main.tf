@@ -66,6 +66,7 @@ resource "time_sleep" "solver_api" {
 }
 
 # cert-manager reaches the solver through this APIService.
+# tflint-ignore: terraform_unused_declarations
 data "kubernetes_resource" "solver_api" {
   api_version = "apiregistration.k8s.io/v1"
   kind        = "APIService"

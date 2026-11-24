@@ -76,6 +76,7 @@ resource "meshstack_building_block" "this" {
 # script GETs the URL over TLS (verified against the system trust store) and retries while
 # cert-manager issues the cert; the test asserts each returns 200. Referencing the BB outputs makes
 # these data sources read after the building block completes.
+# tflint-ignore: terraform_unused_declarations
 data "external" "app_probe" {
   for_each = toset(["dev", "prod"])
   program  = ["python3", "${path.module}/probe_endpoint.py"]

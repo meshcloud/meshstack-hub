@@ -147,6 +147,7 @@ variable "subnet_address_prefix" {
   }
 }
 
+# tflint-ignore: terraform_unused_declarations
 variable "hub_subscription_id" {
   type        = string
   description = "Subscription ID of the hub network. Required when private_endpoint_enabled is true and connecting to a hub."

@@ -16,6 +16,7 @@ variable "test_context" {
 
 # Unused: the root pipes one argument list to both modes, and neither argument can change a
 # definition that is already published.
+# tflint-ignore: terraform_unused_declarations
 variable "ttl_optional" {
   type = any
 }

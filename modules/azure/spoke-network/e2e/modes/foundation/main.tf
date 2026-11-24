@@ -14,6 +14,7 @@ variable "test_context" {
   nullable = false
 }
 
+# tflint-ignore: terraform_unused_declarations
 variable "ipam" {
   type        = any
   description = "Unused: the foundation decided whether its definition draws from a pool. Declared because both modes share one module block."

@@ -3,6 +3,7 @@ variable "application_name" {
   nullable = false
 }
 
+# tflint-ignore: terraform_unused_declarations
 variable "location" {
   type        = string
   nullable    = false

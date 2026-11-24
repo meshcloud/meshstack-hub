@@ -1,3 +1,4 @@
+# tflint-ignore: terraform_unused_declarations
 variable "subscription_id" {
   type        = string
   description = "The Azure subscription ID where the resource group will be created."

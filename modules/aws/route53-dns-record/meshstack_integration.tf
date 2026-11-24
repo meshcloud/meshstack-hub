@@ -26,6 +26,7 @@ variable "record_types" {
   description = "List of DNS record types offered in the record type selector."
 }
 
+# tflint-ignore: terraform_unused_declarations
 variable "aws_oidc_provider_arn" {
   type        = string
   default     = null

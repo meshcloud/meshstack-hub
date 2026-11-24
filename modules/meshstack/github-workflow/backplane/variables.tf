@@ -3,6 +3,7 @@ variable "github_owner" {
   description = "GitHub organization or user that owns the repository."
 }
 
+# tflint-ignore: terraform_unused_declarations
 variable "github_base_url" {
   type        = string
   default     = "https://github.com"

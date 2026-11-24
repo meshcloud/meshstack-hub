@@ -15,6 +15,7 @@ variable "group_name" {
   default     = "DCD-Managers"
 }
 
+# tflint-ignore: terraform_unused_declarations
 variable "ionos_token" {
   description = "IONOS API token for authentication"
   type        = string

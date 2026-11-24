@@ -3,6 +3,7 @@ variable "aws_region" {
   description = "AWS region where the S3 bucket will be created (e.g. 'eu-central-1')."
 }
 
+# tflint-ignore: terraform_unused_declarations
 variable "aws_oidc_provider_arn" {
   type        = string
   default     = null

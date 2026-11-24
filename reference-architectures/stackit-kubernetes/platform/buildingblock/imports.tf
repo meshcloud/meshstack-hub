@@ -29,6 +29,7 @@ data "meshstack_platforms" "adopted" {
   platform_type_identifier = "KUBERNETES"
 }
 
+# tflint-ignore: terraform_unused_declarations
 data "meshstack_landingzones" "adopted" {
   lifecycle {
     enabled = length(local.adopted_landingzone_names) > 0
