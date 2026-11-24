@@ -48,6 +48,12 @@ def make_app_jwt(app_id: str, pem: str) -> str:
     return f"{header}.{payload}.{b64url(signature)}"
 
 
+def as_str(value: object, name: str) -> str:
+    if not isinstance(value, str):
+        raise TypeError(f"expected {name} to be a string, got {type(value).__name__}")
+    return value
+
+
 def github_request(token: str, method: str, url: str, payload: dict[str, Any] | None = None) -> tuple[int, Any]:
     body = None if payload is None else json.dumps(payload).encode()
     req = urllib.request.Request(  # noqa: S310
@@ -74,7 +80,7 @@ def get_installation_token(app_id: str, installation_id: str, pem: str) -> str:
         "POST",
         f"https://api.github.com/app/installations/{installation_id}/access_tokens",
     )
-    return data["token"]
+    return as_str(data["token"], "the installation token")
 
 
 def main() -> None:

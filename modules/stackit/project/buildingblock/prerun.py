@@ -3,6 +3,7 @@
 
 from __future__ import annotations
 
+import http.client
 import json
 import os
 import sys
@@ -56,6 +57,8 @@ def request(
     try:
         req = urllib.request.Request(url, data=data, headers=headers, method=method)  # noqa: S310
         with urllib.request.urlopen(req, timeout=30) as response:  # noqa: S310
+            if not isinstance(response, http.client.HTTPResponse):
+                raise TypeError(f"expected an HTTP response from {url}")
             return response.status, response.read().decode("utf-8", errors="replace")
     except urllib.error.HTTPError as error:
         return error.code, error.read().decode("utf-8", errors="replace")
@@ -91,9 +94,10 @@ def get_access_token() -> str:
         warn(f"token exchange returned HTTP {code}: {body[:500]}")
         return ""
 
-    token = json.loads(body).get("access_token", "")
-    if not token:
+    token = json.loads(body).get("access_token")
+    if not isinstance(token, str) or not token:
         warn("token exchange response did not contain an access_token")
+        return ""
     return token
 
 

@@ -4,6 +4,7 @@
 Usage: ci/terraform_docs_pr_comment.py <stat file> <diff file>
 """
 
+import http.client
 import json
 import os
 import sys
@@ -52,6 +53,8 @@ class GitHub:
             },
         )
         with urllib.request.urlopen(request, timeout=30) as response:  # noqa: S310
+            if not isinstance(response, http.client.HTTPResponse):
+                raise TypeError(f"expected an HTTP response from {request.full_url}")
             return response.read()
 
     def find_comment(self, issue_number: int) -> dict[str, Any] | None:

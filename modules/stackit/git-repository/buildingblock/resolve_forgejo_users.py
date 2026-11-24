@@ -23,6 +23,12 @@ def request(url: str, headers: dict[str, str], data: bytes | None = None) -> dic
         return json.loads(resp.read().decode("utf-8"))
 
 
+def as_str(value: object, name: str) -> str:
+    if not isinstance(value, str):
+        raise TypeError(f"expected {name} to be a string, got {type(value).__name__}")
+    return value
+
+
 def stackit_access_token() -> str:
     token_file = Path(
         os.environ.get("STACKIT_FEDERATED_TOKEN_FILE", "/var/run/secrets/stackit.cloud/serviceaccount/token")
@@ -38,16 +44,20 @@ def stackit_access_token() -> str:
         }
     ).encode()
     endpoint = os.environ.get("STACKIT_IDP_TOKEN_ENDPOINT", "https://accounts.stackit.cloud/oauth/v2/token")
-    return request(endpoint, {"Content-Type": "application/x-www-form-urlencoded"}, form)["access_token"]
+    token = request(endpoint, {"Content-Type": "application/x-www-form-urlencoded"}, form)["access_token"]
+    return as_str(token, "the access token")
 
 
 def stackit_users(project_id: str, instance_id: str) -> dict[str, str]:
     api_host = os.environ.get("STACKIT_GIT_API_HOST", "https://git.api.stackit.cloud")
     headers = {"Authorization": f"Bearer {stackit_access_token()}"}
-    users, page, total_pages = {}, 1, 1
+    users: dict[str, str] = {}
+    page, total_pages = 1, 1
     while page <= total_pages:
         body = request(f"{api_host}/v1beta/projects/{project_id}/instances/{instance_id}/users?page={page}", headers)
-        users.update({u["email"].lower(): u["username"] for u in body["users"]})
+        users.update(
+            {as_str(u["email"], "a user email").lower(): as_str(u["username"], "a username") for u in body["users"]}
+        )
         total_pages = body.get("totalPages", 1)
         page += 1
     return users

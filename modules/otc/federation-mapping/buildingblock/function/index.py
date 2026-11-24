@@ -17,6 +17,7 @@ from __future__ import annotations
 import base64
 import hashlib
 import hmac
+import http.client
 import json
 import os
 import urllib.error
@@ -40,6 +41,8 @@ def send(req: urllib.request.Request) -> tuple[bytes, Message]:
     # The status alone does not say why a call was refused; OBS and IAM explain it in the body.
     try:
         with urllib.request.urlopen(req, timeout=30) as resp:  # noqa: S310
+            if not isinstance(resp, http.client.HTTPResponse):
+                raise TypeError(f"expected an HTTP response from {req.full_url}")
             return resp.read(), resp.headers
     except urllib.error.HTTPError as e:
         raise RuntimeError(
@@ -136,7 +139,10 @@ def domain_token(token: str) -> str:
             }
         },
     )
-    return headers["X-Subject-Token"]
+    domain_scoped = headers.get("X-Subject-Token")
+    if domain_scoped is None:
+        raise RuntimeError("IAM answered the domain token request without an X-Subject-Token header")
+    return domain_scoped
 
 
 def rules(records: list[dict[str, Any]], email_attribute: str, base_group: str) -> list[dict[str, Any]]:
