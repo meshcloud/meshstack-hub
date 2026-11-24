@@ -1,19 +1,7 @@
-variable "resource_group_name" {
-  type        = string
-  description = "Name of the resource group to create for the AKS cluster"
-  default     = "aks-prod-rg"
-}
-
-variable "location" {
-  type        = string
-  description = "Azure region where resources will be deployed"
-  default     = "Germany West Central"
-}
-
 variable "aks_cluster_name" {
   type        = string
+  nullable    = false
   description = "Name of the AKS cluster"
-  default     = "prod-aks"
 
   validation {
     condition     = length(var.aks_cluster_name) >= 1 && length(var.aks_cluster_name) <= 63
@@ -21,10 +9,16 @@ variable "aks_cluster_name" {
   }
 }
 
+variable "resource_group_name" {
+  type        = string
+  nullable    = false
+  description = "Name of the resource group to create for the AKS cluster"
+}
+
 variable "dns_prefix" {
   type        = string
+  nullable    = false
   description = "DNS prefix for the AKS cluster"
-  default     = "prodaks"
 
   validation {
     condition     = can(regex("^[a-z0-9][a-z0-9-]{0,53}[a-z0-9]$", var.dns_prefix))
@@ -32,15 +26,90 @@ variable "dns_prefix" {
   }
 }
 
+variable "node_count" {
+  type        = number
+  nullable    = false
+  description = "Initial number of nodes in the default node pool"
+
+  validation {
+    condition     = var.node_count >= 1 && var.node_count <= 1000
+    error_message = "Node count must be between 1 and 1000."
+  }
+}
+
+variable "vm_size" {
+  type        = string
+  nullable    = false
+  description = "Size of the virtual machines for the default node pool"
+}
+
+variable "kubernetes_version" {
+  type        = string
+  description = "Kubernetes version for the AKS cluster. Null lets AKS choose the version it recommends today, 1.34 takes the latest patch in that minor, 1.34.2 pins one. A pinned version needs maintenance: AKS moves a minor to LTS-only when its community support ends, and creating a cluster on it then fails."
+  default     = null
+
+  validation {
+    condition     = var.kubernetes_version == null || can(regex("^[0-9]+\\.[0-9]+(\\.[0-9]+)?$", var.kubernetes_version))
+    error_message = "Kubernetes version must be X.Y or X.Y.Z (e.g. 1.34 or 1.34.2)."
+  }
+}
+
+variable "private_cluster_enabled" {
+  type        = bool
+  nullable    = false
+  description = "Enable private cluster (API server only accessible via private endpoint)"
+}
+
 variable "vnet_address_space" {
   type        = string
+  nullable    = false
   description = "Address space for the AKS virtual network (only used if vnet_name is not provided)"
-  default     = "10.240.0.0/16"
 
   validation {
     condition     = can(cidrhost(var.vnet_address_space, 0))
     error_message = "VNet address space must be a valid CIDR block."
   }
+}
+
+variable "subnet_address_prefix" {
+  type        = string
+  nullable    = false
+  description = "Address prefix for the AKS subnet (only used if subnet_name is not provided)"
+
+  validation {
+    condition     = can(cidrhost(var.subnet_address_prefix, 0))
+    error_message = "Subnet address prefix must be a valid CIDR block."
+  }
+}
+
+variable "subscription_id" {
+  type        = string
+  nullable    = false
+  description = "The Azure subscription the cluster is created in, the tenant's landing zone."
+}
+
+variable "location" {
+  type        = string
+  nullable    = false
+  description = "Azure region where resources will be deployed"
+}
+
+variable "hub_subscription_id" {
+  type        = string
+  description = "Subscription ID of the hub network. Required when private_cluster_enabled is true and connecting to a hub."
+  default     = null
+}
+
+variable "hub_resource_group_name" {
+  type        = string
+  description = "Resource group name of the hub virtual network. Required when private_cluster_enabled is true and connecting to a hub."
+  default     = null
+}
+
+variable "hub_vnet_name" {
+  type        = string
+  description = "Name of the hub virtual network to peer with. Required when private_cluster_enabled is true and connecting to a hub."
+  default     = null
 }
 
 variable "vnet_name" {
@@ -53,17 +122,6 @@ variable "existing_vnet_resource_group_name" {
   type        = string
   description = "Resource group name of the existing VNet. Only used when vnet_name is provided. Defaults to the AKS resource group if not specified."
   default     = null
-}
-
-variable "subnet_address_prefix" {
-  type        = string
-  description = "Address prefix for the AKS subnet (only used if subnet_name is not provided)"
-  default     = "10.240.0.0/20"
-
-  validation {
-    condition     = can(cidrhost(var.subnet_address_prefix, 0))
-    error_message = "Subnet address prefix must be a valid CIDR block."
-  }
 }
 
 variable "subnet_name" {
@@ -94,17 +152,6 @@ variable "dns_service_ip" {
   }
 }
 
-variable "node_count" {
-  type        = number
-  description = "Initial number of nodes in the default node pool"
-  default     = 3
-
-  validation {
-    condition     = var.node_count >= 1 && var.node_count <= 1000
-    error_message = "Node count must be between 1 and 1000."
-  }
-}
-
 variable "min_node_count" {
   type        = number
   description = "Minimum number of nodes for auto-scaling (set to enable auto-scaling)"
@@ -117,12 +164,6 @@ variable "max_node_count" {
   default     = null
 }
 
-variable "vm_size" {
-  type        = string
-  description = "Size of the virtual machines for the default node pool"
-  default     = "Standard_A2_v2"
-}
-
 variable "os_disk_size_gb" {
   type        = number
   description = "OS disk size in GB for the node pool"
@@ -131,17 +172,6 @@ variable "os_disk_size_gb" {
   validation {
     condition     = var.os_disk_size_gb >= 30 && var.os_disk_size_gb <= 2048
     error_message = "OS disk size must be between 30 and 2048 GB."
-  }
-}
-
-variable "kubernetes_version" {
-  type        = string
-  description = "Kubernetes version for the AKS cluster. Null lets AKS choose the version it recommends today, 1.34 takes the latest patch in that minor, 1.34.2 pins one. A pinned version needs maintenance: AKS moves a minor to LTS-only when its community support ends, and creating a cluster on it then fails."
-  default     = null
-
-  validation {
-    condition     = var.kubernetes_version == null || can(regex("^[0-9]+\\.[0-9]+(\\.[0-9]+)?$", var.kubernetes_version))
-    error_message = "Kubernetes version must be X.Y or X.Y.Z (e.g. 1.34 or 1.34.2)."
   }
 }
 
@@ -207,12 +237,6 @@ variable "tags" {
   default     = {}
 }
 
-variable "private_cluster_enabled" {
-  type        = bool
-  description = "Enable private cluster (API server only accessible via private endpoint)"
-  default     = false
-}
-
 variable "private_dns_zone_id" {
   type        = string
   description = "Private DNS Zone ID for private cluster. Use 'System' for Azure-managed zone, or provide custom zone ID. Only used when private_cluster_enabled is true."
@@ -223,18 +247,6 @@ variable "private_cluster_public_fqdn_enabled" {
   type        = bool
   description = "Enable public FQDN for private cluster (allows public DNS resolution but API server remains private)"
   default     = false
-}
-
-variable "hub_resource_group_name" {
-  type        = string
-  description = "Resource group name of the hub virtual network. Required when private_cluster_enabled is true and connecting to a hub."
-  default     = null
-}
-
-variable "hub_vnet_name" {
-  type        = string
-  description = "Name of the hub virtual network to peer with. Required when private_cluster_enabled is true and connecting to a hub."
-  default     = null
 }
 
 variable "allow_gateway_transit_from_hub" {

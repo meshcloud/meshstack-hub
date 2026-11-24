@@ -1,156 +1,85 @@
-data "azurerm_subscription" "current" {}
-
-resource "azuread_application" "buildingblock_deploy" {
-  count = var.create_service_principal_name != null ? 1 : 0
-
-  display_name = "${var.name}-${var.create_service_principal_name}"
+resource "azurerm_resource_group" "backplane" {
+  name     = var.name
+  location = var.location
 }
 
-resource "azuread_service_principal" "buildingblock_deploy" {
-  count = var.create_service_principal_name != null ? 1 : 0
-
-  client_id                    = azuread_application.buildingblock_deploy[0].client_id
-  app_role_assignment_required = false
+resource "azurerm_user_assigned_identity" "backplane" {
+  name                = var.name
+  location            = var.location
+  resource_group_name = azurerm_resource_group.backplane.name
 }
 
-resource "azuread_application_federated_identity_credential" "buildingblock_deploy" {
-  count = var.create_service_principal_name != null && var.workload_identity_federation != null ? 1 : 0
+resource "azurerm_federated_identity_credential" "backplane" {
+  for_each = { for i, s in var.workload_identity_federation.subjects : tostring(i) => s }
 
-  application_id = azuread_application.buildingblock_deploy[0].id
-  display_name   = var.create_service_principal_name
-  audiences      = ["api://AzureADTokenExchange"]
-  issuer         = var.workload_identity_federation.issuer
-  subject        = var.workload_identity_federation.subject
+  name                      = "subject-${each.key}"
+  user_assigned_identity_id = azurerm_user_assigned_identity.backplane.id
+  audience                  = [var.workload_identity_federation.audience]
+  issuer                    = var.workload_identity_federation.issuer
+  subject                   = each.value
 }
 
-resource "azuread_application_password" "buildingblock_deploy" {
-  count = var.create_service_principal_name != null && var.workload_identity_federation == null ? 1 : 0
+resource "azurerm_federated_identity_credential" "trusted_runner" {
+  for_each = { for identity in var.trusted_runner_identities : identity.runner_uuid => identity }
 
-  application_id = azuread_application.buildingblock_deploy[0].id
-  display_name   = "${var.create_service_principal_name}-password"
+  depends_on = [azurerm_federated_identity_credential.backplane]
+
+  lifecycle {
+    precondition {
+      condition     = each.value.subject != null
+      error_message = "No version of the building block definition uses the trusted runner ${each.key}. So the subject of its tokens is unknown. Remove the runner from meshstack.additional_trusted_runner_refs for this definition. Either the definition has only a draft version, whose runner meshStack changes in place. Or other modules get the same list, and this definition never used the runner."
+    }
+  }
+
+  name                      = "trusted-runner-${each.key}"
+  user_assigned_identity_id = azurerm_user_assigned_identity.backplane.id
+  audience                  = [each.value.audience]
+  issuer                    = each.value.issuer
+  subject                   = each.value.subject
 }
 
-resource "azuread_application" "buildingblock_deploy_hub" {
-  count = var.create_hub_service_principal_name != null ? 1 : 0
-
-  display_name = "${var.name}-${var.create_hub_service_principal_name}"
-}
-
-resource "azuread_service_principal" "buildingblock_deploy_hub" {
-  count = var.create_hub_service_principal_name != null ? 1 : 0
-
-  client_id                    = azuread_application.buildingblock_deploy_hub[0].client_id
-  app_role_assignment_required = false
-}
-
-resource "azuread_application_federated_identity_credential" "buildingblock_deploy_hub" {
-  count = var.create_hub_service_principal_name != null && var.hub_workload_identity_federation != null ? 1 : 0
-
-  application_id = azuread_application.buildingblock_deploy_hub[0].id
-  display_name   = var.create_hub_service_principal_name
-  audiences      = ["api://AzureADTokenExchange"]
-  issuer         = var.hub_workload_identity_federation.issuer
-  subject        = var.hub_workload_identity_federation.subject
-}
-
-resource "azuread_application_password" "buildingblock_deploy_hub" {
-  count = var.create_hub_service_principal_name != null && var.hub_workload_identity_federation == null ? 1 : 0
-
-  application_id = azuread_application.buildingblock_deploy_hub[0].id
-  display_name   = "${var.create_hub_service_principal_name}-password"
-}
-
-resource "azurerm_role_definition" "buildingblock_deploy" {
+resource "azurerm_role_definition" "backplane" {
   name        = "${var.name}-deploy"
+  description = "Enables deployment of the ${var.name} building block to landing zone subscriptions"
   scope       = var.scope
-  description = "Enables deployment of the ${var.name} building block to subscriptions"
 
   permissions {
     actions = [
       # Register resource providers in Azure Resource Manager
       "*/register/action",
-
-      "Microsoft.ContainerService/managedClusters/read",
-      "Microsoft.ContainerService/managedClusters/write",
-      "Microsoft.ContainerService/managedClusters/delete",
-      "Microsoft.ContainerService/managedClusters/listClusterAdminCredential/action",
-      "Microsoft.ContainerService/managedClusters/listClusterUserCredential/action",
-      "Microsoft.ContainerService/managedClusters/listClusterMonitoringUserCredential/action",
-      "Microsoft.ContainerService/managedClusters/accessProfiles/listCredential/action",
-      "Microsoft.ContainerService/managedClusters/accessProfiles/read",
-      "Microsoft.ContainerService/managedClusters/agentPools/read",
-      "Microsoft.ContainerService/managedClusters/agentPools/write",
-      "Microsoft.ContainerService/managedClusters/agentPools/delete",
-      "Microsoft.Network/virtualNetworks/read",
-      "Microsoft.Network/virtualNetworks/write",
-      "Microsoft.Network/virtualNetworks/delete",
-      "Microsoft.Network/virtualNetworks/subnets/read",
-      "Microsoft.Network/virtualNetworks/subnets/write",
-      "Microsoft.Network/virtualNetworks/subnets/delete",
-      "Microsoft.Network/virtualNetworks/subnets/join/action",
-      "Microsoft.Network/virtualNetworks/join/action",
-      "Microsoft.Network/virtualNetworks/virtualNetworkPeerings/read",
-      "Microsoft.Network/virtualNetworks/virtualNetworkPeerings/write",
-      "Microsoft.Network/virtualNetworks/virtualNetworkPeerings/delete",
-      "Microsoft.Network/virtualNetworks/peer/action",
-      "Microsoft.Network/networkInterfaces/read",
-      "Microsoft.Network/networkSecurityGroups/read",
-      "Microsoft.Network/networkSecurityGroups/write",
-      "Microsoft.Network/networkSecurityGroups/delete",
-      "Microsoft.Network/publicIPAddresses/read",
-      "Microsoft.Network/publicIPAddresses/write",
-      "Microsoft.Network/publicIPAddresses/delete",
-      "Microsoft.Network/loadBalancers/read",
-      "Microsoft.Network/loadBalancers/write",
-      "Microsoft.Network/loadBalancers/delete",
-      "Microsoft.Network/routeTables/read",
-      "Microsoft.Network/routeTables/write",
-      "Microsoft.Network/routeTables/delete",
-      "Microsoft.Network/routeTables/join/action",
-      "Microsoft.Network/privateDnsZones/read",
-      "Microsoft.Network/privateDnsZones/write",
-      "Microsoft.Network/privateDnsZones/delete",
-      "Microsoft.Network/privateDnsZones/virtualNetworkLinks/read",
-      "Microsoft.Network/privateDnsZones/virtualNetworkLinks/write",
-      "Microsoft.Network/privateDnsZones/virtualNetworkLinks/delete",
-      "Microsoft.Resources/deployments/read",
-      "Microsoft.Resources/deployments/write",
-      "Microsoft.Resources/deployments/delete",
-      "Microsoft.Resources/subscriptions/resourceGroups/read",
-      "Microsoft.Resources/subscriptions/resourceGroups/write",
-      "Microsoft.Resources/subscriptions/resourceGroups/delete",
       "Microsoft.Resources/subscriptions/providers/read",
-      "Microsoft.OperationalInsights/workspaces/read",
-      "Microsoft.OperationalInsights/workspaces/write",
-      "Microsoft.OperationalInsights/workspaces/delete",
-      "Microsoft.OperationalInsights/workspaces/sharedKeys/action",
-      "Microsoft.Insights/diagnosticSettings/read",
-      "Microsoft.Insights/diagnosticSettings/write",
-      "Microsoft.Insights/diagnosticSettings/delete",
-      "Microsoft.Authorization/roleAssignments/read"
+
+      "Microsoft.Resources/subscriptions/resourceGroups/*",
+      "Microsoft.Resources/deployments/*",
+
+      "Microsoft.ContainerService/managedClusters/*",
+
+      # Virtual network, subnet, route table and the landing zone side of the hub peering
+      "Microsoft.Network/virtualNetworks/*",
+      "Microsoft.Network/routeTables/*",
+
+      # Optional Log Analytics workspace and the cluster's diagnostic setting
+      "Microsoft.OperationalInsights/workspaces/*",
+      "Microsoft.Insights/diagnosticSettings/*",
     ]
   }
 }
 
-resource "azurerm_role_assignment" "existing_principals" {
-  for_each = var.existing_principal_ids
-
-  role_definition_id = azurerm_role_definition.buildingblock_deploy.role_definition_resource_id
-  principal_id       = each.value
+resource "azurerm_role_assignment" "backplane" {
   scope              = var.scope
+  role_definition_id = azurerm_role_definition.backplane.role_definition_resource_id
+  principal_id       = azurerm_user_assigned_identity.backplane.principal_id
 }
 
-resource "azurerm_role_assignment" "created_principal" {
-  count = var.create_service_principal_name != null ? 1 : 0
+# A peering needs `peer/action` on both vnets, so the same identity holds it at the landing zone
+# scope (above) and here, which spares the cross-scope `LinkedAuthorizationFailed` of a split identity.
+resource "azurerm_role_definition" "backplane_hub" {
+  lifecycle {
+    enabled = var.hub_scope != null
+  }
 
-  role_definition_id = azurerm_role_definition.buildingblock_deploy.role_definition_resource_id
-  principal_id       = azuread_service_principal.buildingblock_deploy[0].object_id
-  scope              = var.scope
-}
-
-resource "azurerm_role_definition" "buildingblock_deploy_hub" {
   name        = "${var.name}-deploy-hub"
-  description = "Enables deployment of the ${var.name} building block to the hub (for private cluster peering)"
+  description = "Enables the ${var.name} building block to peer private cluster vnets into the hub vnet"
   scope       = var.hub_scope
 
   permissions {
@@ -165,79 +94,12 @@ resource "azurerm_role_definition" "buildingblock_deploy_hub" {
   }
 }
 
-resource "azurerm_role_definition" "buildingblock_hub_to_landingzone" {
-  name        = "${var.name}-hub-to-landingzone"
-  description = "Allows hub service principal to peer back to landing zone vnets"
-  scope       = var.scope
-
-  permissions {
-    actions = [
-      "Microsoft.Network/virtualNetworks/read",
-      "Microsoft.Network/virtualNetworks/peer/action",
-    ]
+resource "azurerm_role_assignment" "backplane_hub" {
+  lifecycle {
+    enabled = var.hub_scope != null
   }
-}
 
-resource "azurerm_role_definition" "buildingblock_landingzone_to_hub" {
-  name        = "${var.name}-landingzone-to-hub"
-  description = "Allows landing zone service principal to peer to hub vnets"
-  scope       = var.hub_scope
-
-  permissions {
-    actions = [
-      "Microsoft.Resources/subscriptions/resourceGroups/read",
-      "Microsoft.Network/virtualNetworks/read",
-      "Microsoft.Network/virtualNetworks/peer/action",
-    ]
-  }
-}
-
-resource "azurerm_role_assignment" "existing_principals_hub" {
-  for_each = var.existing_hub_principal_ids
-
-  role_definition_id = azurerm_role_definition.buildingblock_deploy_hub.role_definition_resource_id
-  description        = azurerm_role_definition.buildingblock_deploy_hub.description
-  principal_id       = each.value
   scope              = var.hub_scope
-}
-
-resource "azurerm_role_assignment" "created_principal_hub" {
-  count = var.create_hub_service_principal_name != null ? 1 : 0
-
-  role_definition_id = azurerm_role_definition.buildingblock_deploy_hub.role_definition_resource_id
-  description        = azurerm_role_definition.buildingblock_deploy_hub.description
-  principal_id       = azuread_service_principal.buildingblock_deploy_hub[0].object_id
-  scope              = var.hub_scope
-}
-
-resource "azurerm_role_assignment" "existing_principals_hub_to_landingzone" {
-  for_each = var.existing_hub_principal_ids
-
-  role_definition_id = azurerm_role_definition.buildingblock_hub_to_landingzone.role_definition_resource_id
-  principal_id       = each.value
-  scope              = var.scope
-}
-
-resource "azurerm_role_assignment" "created_principal_hub_to_landingzone" {
-  count = var.create_hub_service_principal_name != null ? 1 : 0
-
-  role_definition_id = azurerm_role_definition.buildingblock_hub_to_landingzone.role_definition_resource_id
-  principal_id       = azuread_service_principal.buildingblock_deploy_hub[0].object_id
-  scope              = var.scope
-}
-
-resource "azurerm_role_assignment" "existing_principals_landingzone_to_hub" {
-  for_each = var.existing_principal_ids
-
-  role_definition_id = azurerm_role_definition.buildingblock_landingzone_to_hub.role_definition_resource_id
-  principal_id       = each.value
-  scope              = var.hub_scope
-}
-
-resource "azurerm_role_assignment" "created_principal_landingzone_to_hub" {
-  count = var.create_service_principal_name != null ? 1 : 0
-
-  role_definition_id = azurerm_role_definition.buildingblock_landingzone_to_hub.role_definition_resource_id
-  principal_id       = azuread_service_principal.buildingblock_deploy[0].object_id
-  scope              = var.hub_scope
+  role_definition_id = azurerm_role_definition.backplane_hub.role_definition_resource_id
+  principal_id       = azurerm_user_assigned_identity.backplane.principal_id
 }
