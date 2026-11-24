@@ -110,7 +110,7 @@ module "vm_starterkit" {
   }
 
   vm_os_type         = "Linux"
-  vm_size            = "Standard_B2s"
+  vm_size            = "Standard_B2ls_v2"
   vm_location        = "westeurope"
   vm_ssh_public_key  = file("~/.ssh/id_rsa.pub")
   vm_enable_public_ip = true
@@ -139,7 +139,7 @@ module "vm_starterkit" {
   }
 
   vm_os_type         = "Windows"
-  vm_size            = "Standard_D2s_v3"
+  vm_size            = "Standard_D2s_v5"
   vm_location        = "northeurope"
   vm_admin_password  = var.windows_admin_password
   vm_enable_public_ip = true

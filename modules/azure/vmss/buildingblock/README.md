@@ -41,7 +41,7 @@ module "vmss" {
   resource_group_name = "my-resource-group"
   location            = "eastus"
   os_type             = "Linux"
-  sku                 = "Standard_B2s"
+  sku                 = "Standard_B2ls_v2"
   instances           = 3
   ssh_public_key      = file("~/.ssh/id_rsa.pub")
 
@@ -68,7 +68,7 @@ module "web_vmss" {
   location            = "westeurope"
 
   os_type             = "Linux"
-  sku                 = "Standard_D2s_v3"
+  sku                 = "Standard_D2s_v5"
   instances           = 2
   ssh_public_key      = var.ssh_public_key
 
@@ -121,7 +121,7 @@ module "windows_vmss" {
   location            = "eastus"
 
   os_type             = "Windows"
-  sku                 = "Standard_D2s_v3"
+  sku                 = "Standard_D2s_v5"
   instances           = 2
   admin_username      = "azureadmin"
   admin_password      = var.admin_password
@@ -160,7 +160,7 @@ module "spot_vmss" {
   location            = "eastus"
 
   os_type             = "Linux"
-  sku                 = "Standard_D2s_v3"
+  sku                 = "Standard_D2s_v5"
   instances           = 5
   ssh_public_key      = var.ssh_public_key
 
@@ -213,7 +213,7 @@ module "web_vmss" {
   location            = "eastus"
 
   os_type        = "Linux"
-  sku            = "Standard_D2s_v3"
+  sku            = "Standard_D2s_v5"
   instances      = 2
   ssh_public_key = var.ssh_public_key
 

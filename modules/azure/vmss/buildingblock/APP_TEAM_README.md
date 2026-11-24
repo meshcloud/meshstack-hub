@@ -46,12 +46,12 @@ Before deploying a VMSS, your Platform Team must have:
 **Recommended Approaches**:
 
 **Development/Testing**:
-- Start with `Standard_B2s` or `Standard_B2ms` (burstable, cost-effective)
+- Start with `Standard_B2ls_v2` or `Standard_B2s_v2` (burstable, cost-effective)
 - 1-2 instances for dev, disable autoscaling
 - Consider spot instances (70-90% cost savings)
 
 **Production Workloads**:
-- Use `Standard_D2s_v3` or higher for consistent performance
+- Use `Standard_D2s_v5` or higher for consistent performance
 - Minimum 2 instances across availability zones
 - Enable autoscaling with appropriate thresholds
 - Use regular (non-spot) instances for reliability

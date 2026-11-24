@@ -55,7 +55,7 @@ module "linux_vm" {
   resource_group_name = "my-rg"
   location            = "West Europe"
   os_type             = "Linux"
-  vm_size             = "Standard_B2s"
+  vm_size             = "Standard_B2ls_v2"
   admin_username      = "azureuser"
   ssh_public_key      = file("~/.ssh/id_rsa.pub")
   enable_public_ip    = false
@@ -81,7 +81,7 @@ module "windows_vm" {
   resource_group_name = "my-rg"
   location            = "West Europe"
   os_type             = "Windows"
-  vm_size             = "Standard_D2s_v3"
+  vm_size             = "Standard_D2s_v5"
   admin_username      = "adminuser"
   admin_password      = "P@ssw0rd123!"
   enable_public_ip    = true
@@ -223,10 +223,10 @@ No modules.
 | Size | vCPUs | RAM (GB) | Use Case |
 |------|-------|----------|----------|
 | Standard_B2ts_v2 | 2 | 1 | Very small workloads |
-| Standard_B2s | 2 | 4 | Development/testing |
-| Standard_D2s_v3 | 2 | 8 | General purpose |
-| Standard_D4s_v3 | 4 | 16 | General purpose |
-| Standard_E4s_v3 | 4 | 32 | Memory-intensive |
+| Standard_B2ls_v2 | 2 | 4 | Development/testing |
+| Standard_D2s_v5 | 2 | 8 | General purpose |
+| Standard_D4s_v5 | 4 | 16 | General purpose |
+| Standard_E4s_v5 | 4 | 32 | Memory-intensive |
 
 ## Spot Instances
 
