@@ -3,7 +3,6 @@ on:
   push:
     branches: [main]
   pull_request:
-    branches: [main]
 
 concurrency:
   group: sonar-${{ github.ref }}
@@ -29,4 +28,7 @@ jobs:
         uses: SonarSource/sonarqube-scan-action@4d1dc0c91ee400dcf8a6dddf2f705ac36542e304 # v8.4.0
         with:
           # Keeps a properties file on a branch from sending the token to another host.
-          args: -Dsonar.host.url=https://sonarcloud.io
+          # SonarQube Cloud has no analysis of feature branches, so a stacked PR compares to main.
+          args: >-
+            -Dsonar.host.url=https://sonarcloud.io
+            ${{ github.event_name == 'pull_request' && format('-Dsonar.pullrequest.key={0} -Dsonar.pullrequest.branch={1} -Dsonar.pullrequest.base=main', github.event.pull_request.number, github.head_ref) || '' }}

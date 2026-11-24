@@ -1,7 +1,6 @@
 name: tofu-validate
 on:
   pull_request:
-    branches: [main]
   merge_group:
 
 # A rebase can combine two green PRs into a broken tree, so this looks at the
