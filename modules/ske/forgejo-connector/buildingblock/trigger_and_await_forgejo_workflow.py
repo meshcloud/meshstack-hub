@@ -207,7 +207,7 @@ def evaluate_run(
     return "success", ""
 
 
-def dispatch_and_await(  # noqa: PLR0913
+def dispatch_and_await(  # noqa: PLR0913, PLR0917
     host: str, token: str, owner: str, repo_name: str, workflow_name: str, branch: str, expected_jobs: set[str]
 ) -> str | None:
     """Return None when the run succeeds, else the failure message."""

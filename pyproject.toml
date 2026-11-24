@@ -31,6 +31,8 @@ ignore = [
     "EM",
     "TRY003",
     "PLR2004",
+    # The repository LICENSE covers every file.
+    "CPY001",
 ]
 
 [tool.ruff.lint.pydocstyle]
@@ -41,3 +43,6 @@ python-version = "3.12"
 
 [tool.ty.rules]
 all = "error"
+# json.loads and urlopen return Any, and narrowing every value from them adds casts that check nothing.
+unsound-assignment = "ignore"
+unsound-return-statement = "ignore"
