@@ -1,5 +1,6 @@
 variable "vmss_name" {
   type        = string
+  nullable    = false
   description = "The name of the Virtual Machine Scale Set"
   validation {
     condition     = can(regex("^[a-z0-9-]{1,64}$", var.vmss_name))
@@ -9,27 +10,110 @@ variable "vmss_name" {
 
 variable "resource_group_name" {
   type        = string
+  nullable    = false
   description = "The name of the resource group where resources will be created"
-}
-
-variable "location" {
-  type        = string
-  description = "The Azure region where resources will be deployed"
-}
-
-variable "vnet_name" {
-  type        = string
-  description = "The name of the existing virtual network (spoke VNet)"
 }
 
 variable "vnet_resource_group_name" {
   type        = string
+  nullable    = false
   description = "The name of the resource group containing the virtual network"
+}
+
+variable "vnet_name" {
+  type        = string
+  nullable    = false
+  description = "The name of the existing virtual network (spoke VNet)"
 }
 
 variable "subnet_name" {
   type        = string
+  nullable    = false
   description = "The name of the existing subnet where VMSS will be deployed"
+}
+
+variable "ssh_public_key" {
+  type        = string
+  nullable    = false
+  description = "SSH public key for Linux VM authentication. Windows scale sets ignore it."
+}
+
+variable "sku" {
+  type        = string
+  nullable    = false
+  description = "The SKU of the Virtual Machine Scale Set (instance size)"
+}
+
+variable "instances" {
+  type        = number
+  nullable    = false
+  description = "The initial number of instances in the scale set"
+  validation {
+    condition     = var.instances >= 0 && var.instances <= 1000
+    error_message = "instances must be between 0 and 1000"
+  }
+}
+
+variable "enable_autoscaling" {
+  type        = bool
+  nullable    = false
+  description = "Enable autoscaling based on CPU metrics"
+}
+
+variable "min_instances" {
+  type        = number
+  description = "Minimum number of instances. Required when autoscaling is enabled"
+  default     = null
+  validation {
+    condition     = var.min_instances == null || (var.min_instances >= 1 && var.min_instances <= 1000)
+    error_message = "min_instances must be between 1 and 1000"
+  }
+}
+
+variable "max_instances" {
+  type        = number
+  description = "Maximum number of instances. Required when autoscaling is enabled"
+  default     = null
+  validation {
+    condition     = var.max_instances == null || (var.max_instances >= 1 && var.max_instances <= 1000)
+    error_message = "max_instances must be between 1 and 1000"
+  }
+}
+
+variable "enable_load_balancer" {
+  type        = bool
+  nullable    = false
+  description = "Enable Azure Load Balancer for the scale set"
+}
+
+variable "enable_public_ip" {
+  type        = bool
+  nullable    = false
+  description = "Enable public IP for the load balancer"
+}
+
+variable "enable_ssh_access" {
+  type        = bool
+  nullable    = false
+  description = "Enable SSH access (port 22) through NSG for Linux VMs"
+}
+
+variable "custom_data" {
+  type        = string
+  description = "Custom data script to run on VM initialization (cloud-init for Linux, PowerShell for Windows)"
+  default     = null
+}
+
+variable "subscription_id" {
+  type        = string
+  nullable    = false
+  description = "The Azure subscription where the resources are created."
+}
+
+variable "location" {
+  type        = string
+  nullable    = false
+  description = "The Azure region where resources will be deployed"
 }
 
 variable "os_type" {
@@ -39,22 +123,6 @@ variable "os_type" {
   validation {
     condition     = contains(["Linux", "Windows"], var.os_type)
     error_message = "os_type must be either 'Linux' or 'Windows'"
-  }
-}
-
-variable "sku" {
-  type        = string
-  description = "The SKU of the Virtual Machine Scale Set (instance size)"
-  default     = "Standard_B2ls_v2"
-}
-
-variable "instances" {
-  type        = number
-  description = "The initial number of instances in the scale set"
-  default     = 2
-  validation {
-    condition     = var.instances >= 0 && var.instances <= 1000
-    error_message = "instances must be between 0 and 1000"
   }
 }
 
@@ -69,38 +137,6 @@ variable "admin_password" {
   description = "The admin password for Windows VM instances (required for Windows)"
   default     = null
   sensitive   = true
-}
-
-variable "ssh_public_key" {
-  type        = string
-  description = "SSH public key for Linux VM authentication (required for Linux)"
-  default     = null
-}
-
-variable "enable_autoscaling" {
-  type        = bool
-  description = "Enable autoscaling based on CPU metrics"
-  default     = false
-}
-
-variable "min_instances" {
-  type        = number
-  description = "Minimum number of instances when autoscaling is enabled"
-  default     = 2
-  validation {
-    condition     = var.min_instances >= 1 && var.min_instances <= 1000
-    error_message = "min_instances must be between 1 and 1000"
-  }
-}
-
-variable "max_instances" {
-  type        = number
-  description = "Maximum number of instances when autoscaling is enabled"
-  default     = 10
-  validation {
-    condition     = var.max_instances >= 1 && var.max_instances <= 1000
-    error_message = "max_instances must be between 1 and 1000"
-  }
 }
 
 variable "scale_out_cpu_threshold" {
@@ -203,12 +239,6 @@ variable "health_probe_request_path" {
   default     = "/"
 }
 
-variable "enable_load_balancer" {
-  type        = bool
-  description = "Enable Azure Load Balancer for the scale set"
-  default     = true
-}
-
 variable "load_balancer_sku" {
   type        = string
   description = "SKU of the Load Balancer (Basic or Standard)"
@@ -217,12 +247,6 @@ variable "load_balancer_sku" {
     condition     = contains(["Basic", "Standard"], var.load_balancer_sku)
     error_message = "load_balancer_sku must be either 'Basic' or 'Standard'"
   }
-}
-
-variable "enable_public_ip" {
-  type        = bool
-  description = "Enable public IP for the load balancer"
-  default     = false
 }
 
 variable "backend_port" {
@@ -245,22 +269,10 @@ variable "frontend_port" {
   }
 }
 
-variable "enable_ssh_access" {
-  type        = bool
-  description = "Enable SSH access (port 22) through NSG for Linux VMs"
-  default     = false
-}
-
 variable "enable_rdp_access" {
   type        = bool
   description = "Enable RDP access (port 3389) through NSG for Windows VMs"
   default     = false
-}
-
-variable "custom_data" {
-  type        = string
-  description = "Custom data script to run on VM initialization (cloud-init for Linux, PowerShell for Windows)"
-  default     = null
 }
 
 variable "enable_boot_diagnostics" {
