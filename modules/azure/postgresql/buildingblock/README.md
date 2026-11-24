@@ -1,17 +1,24 @@
 ---
-name: Azure PostgreSQL Deployment
+name: Azure PostgreSQL
 supportedPlatforms:
   - azure
-description: |
-  Provides a managed Azure PostgreSQL database with scalability, security, and high availability.
+description: Provides an Azure Database for PostgreSQL Flexible Server in a new resource group of the tenant's subscription.
 ---
 
-# Azure PostgreSQL Deployment
+# Azure PostgreSQL
 
-This Terraform project deploys a cost-effective Azure PostgreSQL database with minimal resources and security-conscious configuration.
+This module creates an Azure Database for PostgreSQL Flexible Server in a new resource group. It
+defaults to the cheapest setup: the Burstable SKU `B_Standard_B1ms`, 32 GB storage, PostgreSQL 17
+and no public network access.
 
-## 🛠 Configuration
+Earlier versions of this module created a Single Server (`azurerm_postgresql_server`). Azure retired
+Single Server on 28 March 2025, and azurerm 5.0 removed the resource. Upgrading a building block
+created with an earlier version deletes its Single Server and creates an empty Flexible Server. Move
+the data to a Flexible Server with the Azure migration service before the upgrade.
 
+The module generates the administrator password at run time and keeps it out of the state and the
+outputs. To connect, the application team sets a new password with **Reset password** in the Azure
+Portal.
 
 <!-- BEGIN_TF_DOCS -->
 ## Requirements
