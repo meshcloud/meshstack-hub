@@ -222,7 +222,7 @@ No modules.
 
 | Size | vCPUs | RAM (GB) | Use Case |
 |------|-------|----------|----------|
-| Standard_B1s | 1 | 1 | Very small workloads |
+| Standard_B2ts_v2 | 2 | 1 | Very small workloads |
 | Standard_B2s | 2 | 4 | Development/testing |
 | Standard_D2s_v3 | 2 | 8 | General purpose |
 | Standard_D4s_v3 | 4 | 16 | General purpose |

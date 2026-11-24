@@ -54,7 +54,7 @@ Choose the appropriate VM size based on your workload requirements:
 
 | VM Series | Use Case | Example Sizes |
 |-----------|----------|---------------|
-| **B-Series** | Burstable, cost-effective for low CPU utilization | B1s, B2s, B2ms |
+| **B-Series** | Burstable, cost-effective for low CPU utilization | B2ts_v2, B2s, B2ms |
 | **D-Series** | General purpose, balanced CPU-to-memory | D2s_v3, D4s_v3, D8s_v3 |
 | **E-Series** | Memory-optimized, high memory-to-CPU ratio | E4s_v3, E8s_v3, E16s_v3 |
 | **F-Series** | Compute-optimized, high CPU-to-memory ratio | F4s_v2, F8s_v2, F16s_v2 |

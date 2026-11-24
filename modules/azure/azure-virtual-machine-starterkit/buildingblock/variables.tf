@@ -76,7 +76,7 @@ variable "vm_os_type" {
 variable "vm_size" {
   type        = string
   description = "The size of the virtual machine."
-  default     = "Standard_B1s"
+  default     = "Standard_B2ts_v2"
 }
 
 variable "vm_admin_username" {
