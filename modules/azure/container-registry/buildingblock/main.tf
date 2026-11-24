@@ -1,3 +1,5 @@
+data "azurerm_client_config" "current" {}
+
 resource "random_string" "suffix" {
   length  = 4
   special = false
@@ -92,6 +94,10 @@ resource "azurerm_container_registry" "acr" {
   )
 
   depends_on = [azurerm_resource_group.acr]
+}
+
+locals {
+  portal_url = "https://portal.azure.com/#@${data.azurerm_client_config.current.tenant_id}/resource${azurerm_container_registry.acr.id}"
 }
 
 resource "azurerm_private_endpoint" "acr_pe" {

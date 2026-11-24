@@ -1,29 +1,24 @@
-variable "resource_group_name" {
-  type        = string
-  description = "Name of the resource group to create for the ACR"
-  default     = "acr-rg"
-}
-
-variable "location" {
-  type        = string
-  description = "Azure region where resources will be deployed"
-  default     = "Germany West Central"
-}
-
 variable "acr_name" {
   type        = string
-  description = "Name of the Azure Container Registry (must be globally unique, alphanumeric only)"
+  nullable    = false
+  description = "Name prefix of the Azure Container Registry, alphanumeric only. A random 4-character suffix is appended for global uniqueness."
 
   validation {
-    condition     = can(regex("^[a-zA-Z0-9]{5,50}$", var.acr_name))
-    error_message = "ACR name must be 5-50 characters, alphanumeric only (no hyphens or special characters)."
+    condition     = can(regex("^[a-zA-Z0-9]{5,46}$", var.acr_name))
+    error_message = "ACR name must be 5-46 characters, alphanumeric only (no hyphens or special characters)."
   }
+}
+
+variable "resource_group_name" {
+  type        = string
+  nullable    = false
+  description = "Name of the resource group to create for the ACR. It is deleted with the building block."
 }
 
 variable "sku" {
   type        = string
+  nullable    = false
   description = "SKU tier for the ACR (Basic, Standard, Premium). Premium required for private endpoints."
-  default     = "Premium"
 
   validation {
     condition     = contains(["Basic", "Standard", "Premium"], var.sku)
@@ -31,9 +26,67 @@ variable "sku" {
   }
 }
 
+variable "private_endpoint_enabled" {
+  type        = bool
+  nullable    = false
+  description = "Enable private endpoint for ACR (Premium SKU required)"
+}
+
+variable "vnet_address_space" {
+  type        = string
+  description = "Address space for the VNet (only used if vnet_name is not provided)"
+  default     = "10.250.0.0/16"
+
+  validation {
+    condition     = can(cidrhost(var.vnet_address_space, 0))
+    error_message = "VNet address space must be a valid CIDR block."
+  }
+}
+
+variable "subnet_address_prefix" {
+  type        = string
+  description = "Address prefix for the private endpoint subnet (only used if subnet_name is not provided)"
+  default     = "10.250.1.0/24"
+
+  validation {
+    condition     = can(cidrhost(var.subnet_address_prefix, 0))
+    error_message = "Subnet address prefix must be a valid CIDR block."
+  }
+}
+
+variable "subscription_id" {
+  type        = string
+  nullable    = false
+  description = "The Azure subscription the ACR is created in, the tenant's landing zone."
+}
+
+variable "location" {
+  type        = string
+  nullable    = false
+  description = "Azure region where resources will be deployed"
+}
+
+variable "hub_subscription_id" {
+  type        = string
+  description = "Subscription ID of the hub network. Required when private_endpoint_enabled is true and connecting to a hub."
+  default     = null
+}
+
+variable "hub_resource_group_name" {
+  type        = string
+  description = "Resource group name of the hub virtual network. Required when private_endpoint_enabled is true and connecting to a hub."
+  default     = null
+}
+
+variable "hub_vnet_name" {
+  type        = string
+  description = "Name of the hub virtual network to peer with. Required when private_endpoint_enabled is true and connecting to a hub."
+  default     = null
+}
+
 variable "admin_enabled" {
   type        = bool
-  description = "Enable admin user for basic authentication (not recommended for production)"
+  description = "Enable the admin user for basic authentication (not recommended for production). Read its credentials with `az acr credential show`."
   default     = false
 }
 
@@ -95,12 +148,6 @@ variable "trust_policy_enabled" {
   default     = false
 }
 
-variable "private_endpoint_enabled" {
-  type        = bool
-  description = "Enable private endpoint for ACR (Premium SKU required)"
-  default     = false
-}
-
 variable "private_dns_zone_id" {
   type        = string
   description = "Private DNS Zone ID for private endpoint. Use 'System' for Azure-managed zone, or provide custom zone ID. Only used when private_endpoint_enabled is true."
@@ -119,43 +166,9 @@ variable "existing_vnet_resource_group_name" {
   default     = null
 }
 
-variable "vnet_address_space" {
-  type        = string
-  description = "Address space for the VNet (only used if vnet_name is not provided)"
-  default     = "10.250.0.0/16"
-
-  validation {
-    condition     = can(cidrhost(var.vnet_address_space, 0))
-    error_message = "VNet address space must be a valid CIDR block."
-  }
-}
-
 variable "subnet_name" {
   type        = string
   description = "Name of the subnet for private endpoint. If not provided, a new subnet will be created."
-  default     = null
-}
-
-variable "subnet_address_prefix" {
-  type        = string
-  description = "Address prefix for the private endpoint subnet (only used if subnet_name is not provided)"
-  default     = "10.250.1.0/24"
-
-  validation {
-    condition     = can(cidrhost(var.subnet_address_prefix, 0))
-    error_message = "Subnet address prefix must be a valid CIDR block."
-  }
-}
-
-variable "hub_resource_group_name" {
-  type        = string
-  description = "Resource group name of the hub virtual network. Required when private_endpoint_enabled is true and connecting to a hub."
-  default     = null
-}
-
-variable "hub_vnet_name" {
-  type        = string
-  description = "Name of the hub virtual network to peer with. Required when private_endpoint_enabled is true and connecting to a hub."
   default     = null
 }
 
