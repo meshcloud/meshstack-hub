@@ -45,7 +45,7 @@ variable "os_type" {
 variable "sku" {
   type        = string
   description = "The SKU of the Virtual Machine Scale Set (instance size)"
-  default     = "Standard_B2s"
+  default     = "Standard_B2ls_v2"
 }
 
 variable "instances" {
