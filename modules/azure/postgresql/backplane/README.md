@@ -1,15 +1,21 @@
 # Azure PostgreSQL Building Block — Backplane
 
-This documentation is intended as a reference for platform engineers deploying the PostgreSQL Building Block backplane.
+This documentation is for platform engineers who deploy the backplane of the Azure PostgreSQL building block.
 
 ## Overview
 
-The backplane provisions the automation identity and permissions required to deploy Azure Database for PostgreSQL on behalf of application teams.
+The backplane creates what the building block runs need to deploy Azure Database for PostgreSQL Flexible Server into landing zone subscriptions:
+
+- a resource group that holds the backplane identity
+- a user-assigned managed identity that the building block runs log in as
+- one federated identity credential for the current building block runner, and one for each trusted runner
+- a custom role, assigned to the identity at `scope`
 
 ## Permissions
 
-This is a simple building block backplane that grants the automation principal access to PostgreSQL
-across all subscriptions underneath a management group (typically the top-level management group for landing zones).
+The custom role allows the identity to manage resource groups and PostgreSQL Flexible Servers in all
+subscriptions under `scope`, typically the management group that holds all landing zones. It also
+allows the identity to register resource providers.
 
 <!-- BEGIN_TF_DOCS -->
 ## Requirements
