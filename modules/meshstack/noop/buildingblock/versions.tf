@@ -1,4 +1,6 @@
 terraform {
+  required_version = ">= 1.12.0"
+
   required_providers {
     # external is used to capture the AWS CLI version at apply time.
     external = {

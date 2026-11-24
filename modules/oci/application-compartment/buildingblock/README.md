@@ -161,6 +161,7 @@ The module automatically:
 
 | Name | Version |
 |------|---------|
+| <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.3.0 |
 | <a name="requirement_meshstack"></a> [meshstack](#requirement\_meshstack) | >= 0.21.0 |
 | <a name="requirement_oci"></a> [oci](#requirement\_oci) | >= 7.32.0, < 8.0.0 |
 
