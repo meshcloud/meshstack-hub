@@ -1,7 +1,8 @@
 variable "name" {
   type        = string
   nullable    = false
-  description = "name of the building block, used for naming resources"
+  default     = "azure-virtual-machine"
+  description = "Name for the building block identity, its resource group and the role definition."
   validation {
     condition     = can(regex("^[-a-z0-9]+$", var.name))
     error_message = "Only alphanumeric lowercase characters and dashes are allowed"
@@ -11,31 +12,33 @@ variable "name" {
 variable "scope" {
   type        = string
   nullable    = false
-  description = "Scope where the building block should be deployable, typically the parent of all Landing Zones."
+  description = "Scope where the building block can be deployed (management group or subscription ID), typically the parent of all landing zones."
 }
 
-variable "existing_principal_ids" {
-  type        = set(string)
-  default     = []
-  description = "set of existing principal ids that will be granted permissions to deploy the building block"
-}
-
-variable "create_service_principal_name" {
+variable "location" {
   type        = string
-  default     = null
-  description = "name of a service principal to create and grant permissions to deploy the building block"
-
-  validation {
-    condition     = var.create_service_principal_name == null ? true : can(regex("^[-a-zA-Z0-9_]+$", var.create_service_principal_name))
-    error_message = "Service principal name can only contain alphanumeric characters, hyphens, and underscores"
-  }
+  nullable    = false
+  description = "Azure region for the UAMI resource."
 }
 
 variable "workload_identity_federation" {
   type = object({
-    issuer  = string
-    subject = string
+    issuer   = string
+    audience = optional(string, "api://AzureADTokenExchange")
+    subjects = list(string)
   })
-  default     = null
-  description = "Configuration for workload identity federation. If not provided, an application password will be created instead."
+  nullable    = false
+  description = "WIF issuer, audience and subjects for federated authentication. The audience defaults to the one meshStack runners use for Azure tokens."
+}
+
+variable "trusted_runner_identities" {
+  type = list(object({
+    runner_uuid = string
+    issuer      = string
+    audience    = string
+    subject     = string
+  }))
+  default     = []
+  nullable    = false
+  description = "One entry per trusted runner, with the issuer, audience and subject of its tokens. The backplane creates one federated credential for each. Pass `trusted_identities` of the [runner-identity module](../../../meshstack/runner-identity). The plan fails for a runner that no version uses. If the same apply changes the runner, the apply fails instead."
 }

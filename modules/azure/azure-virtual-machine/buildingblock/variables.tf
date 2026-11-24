@@ -1,17 +1,37 @@
 variable "vm_name" {
   type        = string
+  nullable    = false
   description = "The name of the virtual machine"
+}
+
+variable "vm_size" {
+  type        = string
+  nullable    = false
+  description = "The size of the virtual machine, e.g. Standard_B2ts_v2"
+}
+
+variable "ssh_public_key" {
+  type        = string
+  description = "SSH public key for Linux VM authentication (required for Linux)"
+  default     = null
+}
+
+variable "subscription_id" {
+  type        = string
+  nullable    = false
+  description = "The Azure subscription ID where the virtual machine will be created."
+}
+
+variable "location" {
+  type        = string
+  nullable    = false
+  description = "The Azure region where resources will be deployed"
 }
 
 variable "resource_group_name" {
   type        = string
   description = "The name or full resource ID of the resource group (e.g., '/subscriptions/.../resourceGroups/my-rg'). If not provided, a new resource group will be created."
   default     = null
-}
-
-variable "location" {
-  type        = string
-  description = "The Azure region where resources will be deployed"
 }
 
 variable "vnet_address_space" {
@@ -36,12 +56,6 @@ variable "os_type" {
   }
 }
 
-variable "vm_size" {
-  type        = string
-  description = "The size of the virtual machine"
-  default     = "Standard_B2ts_v2"
-}
-
 variable "admin_username" {
   type        = string
   description = "The admin username for the VM"
@@ -53,12 +67,6 @@ variable "admin_password" {
   description = "The admin password for Windows VM (required for Windows)"
   default     = null
   sensitive   = true
-}
-
-variable "ssh_public_key" {
-  type        = string
-  description = "SSH public key for Linux VM authentication (required for Linux)"
-  default     = null
 }
 
 variable "enable_public_ip" {

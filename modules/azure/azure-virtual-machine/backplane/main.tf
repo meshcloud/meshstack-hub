@@ -1,44 +1,54 @@
-# Service Principal Creation
-resource "azuread_application" "buildingblock_deploy" {
-  count = var.create_service_principal_name != null ? 1 : 0
-
-  display_name = "${var.name}-${var.create_service_principal_name}"
+resource "azurerm_resource_group" "backplane" {
+  name     = var.name
+  location = var.location
 }
 
-resource "azuread_service_principal" "buildingblock_deploy" {
-  count = var.create_service_principal_name != null ? 1 : 0
-
-  client_id                    = azuread_application.buildingblock_deploy[0].client_id
-  app_role_assignment_required = false
+resource "azurerm_user_assigned_identity" "backplane" {
+  name                = var.name
+  location            = var.location
+  resource_group_name = azurerm_resource_group.backplane.name
 }
 
+resource "azurerm_federated_identity_credential" "backplane" {
+  for_each = { for i, s in var.workload_identity_federation.subjects : tostring(i) => s }
 
-# Create federated identity credentials
-resource "azuread_application_federated_identity_credential" "buildingblock_deploy" {
-  count = var.create_service_principal_name != null && var.workload_identity_federation != null ? 1 : 0
-
-  application_id = azuread_application.buildingblock_deploy[0].id
-  display_name   = var.create_service_principal_name
-  audiences      = ["api://AzureADTokenExchange"]
-  issuer         = var.workload_identity_federation.issuer
-  subject        = var.workload_identity_federation.subject
+  name                      = "subject-${each.key}"
+  user_assigned_identity_id = azurerm_user_assigned_identity.backplane.id
+  audience                  = [var.workload_identity_federation.audience]
+  issuer                    = var.workload_identity_federation.issuer
+  subject                   = each.value
 }
 
-# Create application password (when not using workload identity federation)
-resource "azuread_application_password" "buildingblock_deploy" {
-  count = var.create_service_principal_name != null && var.workload_identity_federation == null ? 1 : 0
+resource "azurerm_federated_identity_credential" "trusted_runner" {
+  for_each = { for identity in var.trusted_runner_identities : identity.runner_uuid => identity }
 
-  application_id = azuread_application.buildingblock_deploy[0].id
-  display_name   = "${var.create_service_principal_name}-password"
+  depends_on = [azurerm_federated_identity_credential.backplane]
+
+  lifecycle {
+    precondition {
+      condition     = each.value.subject != null
+      error_message = "No version of the building block definition uses the trusted runner ${each.key}. So the subject of its tokens is unknown. Remove the runner from meshstack.additional_trusted_runner_refs for this definition. Either the definition has only a draft version, whose runner meshStack changes in place. Or other modules get the same list, and this definition never used the runner."
+    }
+  }
+
+  name                      = "trusted-runner-${each.key}"
+  user_assigned_identity_id = azurerm_user_assigned_identity.backplane.id
+  audience                  = [each.value.audience]
+  issuer                    = each.value.issuer
+  subject                   = each.value.subject
 }
 
-# Role Definition
-resource "azurerm_role_definition" "buildingblock_deploy" {
+resource "azurerm_role_definition" "backplane" {
   name        = "${var.name}-deploy"
-  description = "Enables deployment of the ${var.name} building block to subscriptions"
+  description = "Enables deployment of the ${var.name} building block to landing zone subscriptions"
   scope       = var.scope
+
   permissions {
     actions = [
+      # Register resource providers in Azure Resource Manager
+      "*/register/action",
+      "Microsoft.Resources/subscriptions/providers/read",
+
       # Virtual Machines
       "Microsoft.Compute/virtualMachines/read",
       "Microsoft.Compute/virtualMachines/write",
@@ -64,8 +74,6 @@ resource "azurerm_role_definition" "buildingblock_deploy" {
       "Microsoft.Network/networkSecurityGroups/write",
       "Microsoft.Network/networkSecurityGroups/delete",
       "Microsoft.Network/networkSecurityGroups/join/action",
-
-      # Network Security Rules
       "Microsoft.Network/networkSecurityGroups/securityRules/read",
       "Microsoft.Network/networkSecurityGroups/securityRules/write",
       "Microsoft.Network/networkSecurityGroups/securityRules/delete",
@@ -80,33 +88,15 @@ resource "azurerm_role_definition" "buildingblock_deploy" {
       "Microsoft.Network/virtualNetworks/subnets/join/action",
 
       # Resource Groups
-      "Microsoft.Resources/subscriptions/resourcegroups/read",
-      "Microsoft.Resources/subscriptions/resourcegroups/write",
-      "Microsoft.Resources/subscriptions/resourcegroups/delete",
-
-      # Managed Identities (for system-assigned identity)
-      "Microsoft.ManagedIdentity/userAssignedIdentities/assign/action",
-
-      # Permission we need to activate/register required Resource Providers
-      "*/register/action"
+      "Microsoft.Resources/subscriptions/resourceGroups/read",
+      "Microsoft.Resources/subscriptions/resourceGroups/write",
+      "Microsoft.Resources/subscriptions/resourceGroups/delete",
     ]
   }
 }
 
-# Role Assignments for existing principals
-resource "azurerm_role_assignment" "existing_principals" {
-  for_each = var.existing_principal_ids
-
-  role_definition_id = azurerm_role_definition.buildingblock_deploy.role_definition_resource_id
-  principal_id       = each.value
+resource "azurerm_role_assignment" "backplane" {
   scope              = var.scope
-}
-
-# Role Assignment for created service principal
-resource "azurerm_role_assignment" "created_principal" {
-  count = var.create_service_principal_name != null ? 1 : 0
-
-  role_definition_id = azurerm_role_definition.buildingblock_deploy.role_definition_resource_id
-  principal_id       = azuread_service_principal.buildingblock_deploy[0].object_id
-  scope              = var.scope
+  role_definition_id = azurerm_role_definition.backplane.role_definition_resource_id
+  principal_id       = azurerm_user_assigned_identity.backplane.principal_id
 }
