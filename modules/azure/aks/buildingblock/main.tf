@@ -149,6 +149,12 @@ resource "azurerm_kubernetes_cluster" "aks" {
   }
 }
 
+data "azurerm_client_config" "current" {}
+
+locals {
+  portal_url = "https://portal.azure.com/#@${data.azurerm_client_config.current.tenant_id}/resource${azurerm_kubernetes_cluster.aks.id}"
+}
+
 resource "azurerm_monitor_diagnostic_setting" "aks_monitoring" {
   count                      = var.log_analytics_workspace_name != null ? 1 : 0
   name                       = "${azurerm_kubernetes_cluster.aks.name}-diag"

@@ -3,190 +3,43 @@ name: AKS Cluster
 supportedPlatforms:
  - azure
 description: |
-  Provision a production-grade Azure Kubernetes Service (AKS) cluster with Azure AD, OIDC, Workload Identity, Log Analytics and custom VNet using Terraform.
+  Provision an Azure Kubernetes Service (AKS) cluster with its own vnet, OIDC issuer, workload identity, and an optional private API server peered into a hub vnet.
 ---
 
 # AKS Building Block
 
-This Terraform module provisions a production-ready [Azure Kubernetes Service (AKS)](https://learn.microsoft.com/en-us/azure/aks/) cluster including:
+This module creates an [Azure Kubernetes Service (AKS)](https://learn.microsoft.com/en-us/azure/aks/) cluster in the subscription of a meshStack tenant:
 
-- Azure AD-based authentication
-- Workload Identity & OIDC issuer enabled
-- Flexible networking: Create new or use existing VNet/subnet
-- Optional hub VNet peering for private clusters
-- Log Analytics integration (Monitoring)
-- Auto-scaling node pool (optional)
-- System-assigned managed identity
+- a resource group with a new vnet and subnet, or an existing vnet and subnet
+- the cluster with a system-assigned identity, Azure RBAC, an OIDC issuer and workload identity
+- optional: a private API server, with a two-way peering into a hub vnet
+- optional: a Log Analytics workspace that receives the control plane logs
+- optional: auto-scaling of the default node pool
 
-## 🚀 Features
+`meshstack_integration.tf` registers it as a building block definition. Application teams choose
+the cluster name, resource group, DNS prefix, node count and size, Kubernetes version, whether the
+cluster is private, and the address ranges. The other variables keep their defaults there.
 
-- ✅ Production-grade configuration
-- 🔐 Integrated Azure AD admin group
-- ☁️ Log Analytics Workspace (LAW) with comprehensive diagnostics
-- 🧠 OIDC issuer & Workload Identity support
-- 🌐 Flexible virtual network configuration (new or existing)
-- 🔗 Optional bi-directional hub VNet peering for private clusters
-- 📈 Optional auto-scaling for system node pool
-- 🔧 Configurable network plugins (Azure CNI, Kubenet) and policies (Azure, Calico, Cilium)
+## Provider configuration
 
-## Deployment Scenarios
-### Scenario 1: New VNet with Hub Peering (Private AKS with On-Premises Connectivity)
+The module configures two `azurerm` providers. Both authenticate through the `ARM_*` environment
+variables the building block definition sets. The default provider works in `subscription_id`, the
+tenant's subscription. The `hub` provider works in `hub_subscription_id` and falls back to
+`subscription_id` when no hub is set.
 
-**Use Case:** Private AKS cluster with connectivity to on-premises networks via hub VNet
+## Network scenarios
 
-```hcl
-provider "azurerm" {
-  alias           = "hub"
-  subscription_id = "hub-subscription-id"
-  # hub credentials
-}
+| Scenario | Variables |
+|---|---|
+| Public cluster, new vnet (default) | `private_cluster_enabled = false` |
+| Private cluster, new vnet, no hub | `private_cluster_enabled = true` |
+| Private cluster, new vnet peered into the hub | `private_cluster_enabled = true`, `hub_subscription_id`, `hub_resource_group_name`, `hub_vnet_name` |
+| Existing vnet and subnet | `vnet_name`, `subnet_name`, `existing_vnet_resource_group_name` |
 
-module "aks" {
-  source = "./buildingblock"
-
-  providers = {
-    azurerm     = azurerm
-    azurerm.hub = azurerm.hub
-  }
-
-  aks_cluster_name             = "my-private-aks"
-  resource_group_name          = "aks-rg"
-  location                     = "West Europe"
-
-  # Private cluster settings
-  private_cluster_enabled             = true
-  private_dns_zone_id                 = "System"
-  private_cluster_public_fqdn_enabled = false
-
-  # New VNet will be created automatically
-  vnet_address_space    = "10.240.0.0/16"
-  subnet_address_prefix = "10.240.0.0/20"
-
-  # Hub connectivity (creates bi-directional peering)
-  hub_resource_group_name        = "hub-network-rg"
-  hub_vnet_name                  = "hub-vnet"
-  allow_gateway_transit_from_hub = true
-
-  # Azure AD and monitoring
-  aks_admin_group_object_id    = "12345678-1234-1234-1234-123456789012"
-  log_analytics_workspace_name = "my-law"
-}
-```
-
-**Key Points:**
-- ✅ Module creates new VNet and subnet automatically
-- ✅ Bi-directional VNet peering established with hub
-- ✅ Private API server accessible via hub network
-- ✅ Gateway transit enabled for on-premises connectivity
-
----
-
-### Scenario 2: Existing Shared VNet (Reuse Platform Networking)
-
-**Use Case:** Deploy AKS into existing VNet managed by platform team
-
-```hcl
-module "aks" {
-  source = "./buildingblock"
-
-  aks_cluster_name    = "my-shared-aks"
-  resource_group_name = "aks-rg"
-  location            = "West Europe"
-
-  # Use existing VNet and subnet
-  vnet_name                         = "platform-shared-vnet"
-  existing_vnet_resource_group_name = "networking-rg"
-  subnet_name                       = "aks-subnet"
-
-  # Private cluster settings
-  private_cluster_enabled           = true
-  private_dns_zone_id               = "System"
-  private_cluster_public_fqdn_enabled = false
-
-  # No hub peering - existing VNet owner manages peering
-  hub_vnet_name = null
-
-  # Azure AD and monitoring
-  aks_admin_group_object_id    = "12345678-1234-1234-1234-123456789012"
-  log_analytics_workspace_name = "my-law"
-}
-```
-
-**Key Points:**
-- ✅ No VNet or subnet created (uses existing)
-- ✅ No peering created by this module
-- ✅ Platform/networking team controls VNet peering centrally
-- ✅ Requires pre-existing subnet with adequate address space
-
----
-
-### Scenario 3: Private Isolated (No Hub Connectivity)
-
-**Use Case:** Standalone private AKS cluster without external connectivity
-
-```hcl
-module "aks" {
-  source = "./buildingblock"
-
-  aks_cluster_name    = "my-isolated-aks"
-  resource_group_name = "aks-rg"
-  location            = "West Europe"
-
-  # Private cluster settings
-  private_cluster_enabled             = true
-  private_dns_zone_id                 = "System"
-  private_cluster_public_fqdn_enabled = false
-
-  # New VNet will be created automatically
-  vnet_address_space    = "10.250.0.0/16"
-  subnet_address_prefix = "10.250.0.0/20"
-
-  # No hub connectivity
-  hub_vnet_name           = null
-  hub_resource_group_name = null
-
-  # Azure AD and monitoring
-  aks_admin_group_object_id    = "12345678-1234-1234-1234-123456789012"
-  log_analytics_workspace_name = "my-law"
-}
-```
-
-**Key Points:**
-- ✅ Module creates new VNet and subnet
-- ✅ No VNet peering created
-- ✅ Fully isolated environment
-- ✅ Suitable for dev/test environments
-
----
-
-### Scenario 4: Public Cluster (Default)
-
-**Use Case:** Public AKS cluster for non-sensitive workloads
-
-```hcl
-module "aks" {
-  source = "./buildingblock"
-
-  aks_cluster_name             = "my-public-aks"
-  resource_group_name          = "aks-rg"
-  location                     = "West Europe"
-  aks_admin_group_object_id    = "12345678-1234-1234-1234-123456789012"
-  log_analytics_workspace_name = "my-law"
-
-  # Public cluster (default settings)
-  private_cluster_enabled = false
-
-  # New VNet will be created automatically
-  vnet_address_space    = "10.240.0.0/16"
-  subnet_address_prefix = "10.240.0.0/20"
-}
-```
-
-**Key Points:**
-- ✅ API server publicly accessible
-- ✅ Module creates new VNet and subnet
-- ✅ No hub connectivity required
-- ✅ Simplest deployment option
+A private cluster that peers into the hub sends its outbound traffic through a route table
+(`outbound_type = "userDefinedRouting"`). The module creates the route table without routes, so the
+hub must provide the default route, for example through a firewall. With an existing vnet, the
+module creates no peering; the owner of the vnet manages it.
 
 <!-- BEGIN_TF_DOCS -->
 ## Requirements

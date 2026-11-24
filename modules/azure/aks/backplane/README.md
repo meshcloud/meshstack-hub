@@ -1,11 +1,31 @@
-# AKS Cluster
+# AKS Cluster — Backplane
 
-This documentation is intended as a reference documentation for cloud foundation or platform engineers using this module.
+Sets up the identity the AKS building block runs with.
 
-## Permissions
+## What it provisions
 
-This is a very simple building block, which means we let the SPN have access to AKS Clusters
-across all subscriptions underneath a management group (typically the top-level management group for landing zones).
+- A resource group named after `var.name`, holding a **user-assigned managed identity**.
+- A **federated identity credential** per building block runner subject, so runs authenticate
+  through workload identity federation. No client secret exists.
+- A custom **deploy role** on `scope`, typically the management group above all landing zones:
+  AKS cluster, vnet, route table, Log Analytics, diagnostic setting and resource group permissions
+  in the tenant subscription.
+- When `hub_scope` is set, a **hub peering role** on it, so private clusters can peer their vnet
+  into the hub vnet. The same identity peers both sides.
+
+## Required permissions to deploy
+
+- `Managed Identity Contributor` on the subscription the identity lives in.
+- `User Access Administrator` (or `Owner`) on `scope` and, if set, `hub_scope`, to create the role
+  definitions and assignments.
+
+## Migrating from the service principal backplane
+
+Earlier versions created Entra applications and service principals with a client secret or a
+federated credential, or granted the role to existing principals. This version replaces them with
+one managed identity. Applying it destroys the service principals and their role assignments, and
+the building block definition must switch its `ARM_CLIENT_ID` to the new identity —
+`meshstack_integration.tf` does that for you.
 
 <!-- BEGIN_TF_DOCS -->
 ## Requirements

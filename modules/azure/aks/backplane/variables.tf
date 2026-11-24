@@ -1,8 +1,8 @@
 variable "name" {
   type        = string
   nullable    = false
-  description = "name of the building block, used for naming resources"
   default     = "aks"
+  description = "Name for the building block identity, its resource group and the role definitions."
   validation {
     condition     = can(regex("^[-a-z0-9]+$", var.name))
     error_message = "Only alphanumeric lowercase characters and dashes are allowed"
@@ -12,63 +12,39 @@ variable "name" {
 variable "scope" {
   type        = string
   nullable    = false
-  description = "Scope where the building block should be deployable (management group or subscription), typically the parent of all Landing Zones."
+  description = "Scope where the building block can be deployed (management group or subscription ID), typically the parent of all landing zones."
 }
 
 variable "hub_scope" {
   type        = string
+  default     = null
+  description = "Scope holding the hub vnet that private clusters peer into (management group or subscription ID). Null grants no hub permissions, so the building block cannot peer."
+}
+
+variable "location" {
+  type        = string
   nullable    = false
-  description = "Scope for hub VNet peering permissions (management group or subscription). Typically a hub subscription, but can be a management group containing hub resources."
-}
-
-variable "existing_principal_ids" {
-  type        = set(string)
-  default     = []
-  description = "set of existing principal ids that will be granted permissions to deploy the building block"
-}
-
-variable "existing_hub_principal_ids" {
-  type        = set(string)
-  default     = []
-  description = "set of existing principal ids that will be granted permissions to peer with the hub VNet"
-}
-
-variable "create_service_principal_name" {
-  type        = string
-  default     = null
-  description = "name of a service principal to create and grant permissions to deploy the building block"
-
-  validation {
-    condition     = var.create_service_principal_name == null ? true : can(regex("^[-a-zA-Z0-9_]+$", var.create_service_principal_name))
-    error_message = "Service principal name can only contain alphanumeric characters, hyphens, and underscores"
-  }
-}
-
-variable "create_hub_service_principal_name" {
-  type        = string
-  default     = null
-  description = "name of a separate service principal to create for hub VNet peering (least privilege)"
-
-  validation {
-    condition     = var.create_hub_service_principal_name == null ? true : can(regex("^[-a-zA-Z0-9_]+$", var.create_hub_service_principal_name))
-    error_message = "Service principal name can only contain alphanumeric characters, hyphens, and underscores"
-  }
+  description = "Azure region for the UAMI resource."
 }
 
 variable "workload_identity_federation" {
   type = object({
-    issuer  = string
-    subject = string
+    issuer   = string
+    audience = optional(string, "api://AzureADTokenExchange")
+    subjects = list(string)
   })
-  default     = null
-  description = "Configuration for workload identity federation. If not provided, an application password will be created instead."
+  nullable    = false
+  description = "WIF issuer, audience and subjects for federated authentication. The audience defaults to the one meshStack runners use for Azure tokens."
 }
 
-variable "hub_workload_identity_federation" {
-  type = object({
-    issuer  = string
-    subject = string
-  })
-  default     = null
-  description = "Configuration for workload identity federation for hub service principal. If not provided, an application password will be created instead."
+variable "trusted_runner_identities" {
+  type = list(object({
+    runner_uuid = string
+    issuer      = string
+    audience    = string
+    subject     = string
+  }))
+  default     = []
+  nullable    = false
+  description = "One entry per trusted runner, with the issuer, audience and subject of its tokens. The backplane creates one federated credential for each. Pass `trusted_identities` of the [runner-identity module](../../../meshstack/runner-identity). The plan fails for a runner that no version uses. If the same apply changes the runner, the apply fails instead."
 }
