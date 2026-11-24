@@ -30,6 +30,8 @@ jobs:
           nix_on_tmpfs: true
 
       - run: task lint
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
 
   zizmor:
     name: Workflow Security Check

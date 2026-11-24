@@ -15,6 +15,11 @@ tasks:
     cmds:
       - node tools/diagrams/render-diagrams.mjs --check
 
+  tflint:
+    desc: Run tflint over every module root, with uncommitted changes
+    cmds:
+      - bash ci/tflint.sh
+
   scorecard:pr:
     desc: "Run the scorecard on modules and reference architectures changed vs BASE_REF (default: origin/main), or with the scorecard arguments given after --. Usage: task scorecard:pr, task scorecard:pr BASE_REF=origin/my-branch, task scorecard:pr -- --module=aws/budget-alert, task scorecard:pr -- --ref-archs"
     cmds:
@@ -26,7 +31,7 @@ tasks:
       - ci/terraform_docs.sh
 
   lint:
-    desc: Run shellcheck, ruff, ty and actionlint on the tracked shell scripts, python scripts and workflows. CI also runs zizmor on the workflows.
+    desc: Run shellcheck, ruff, ty, actionlint and tflint on the tracked shell scripts, python scripts, workflows and Terraform roots. CI also runs zizmor on the workflows.
     vars:
       OUTPUT_FORMAT: '{{if eq .GITHUB_ACTIONS "true"}}github{{else}}full{{end}}'
       SHELL_SCRIPTS:
@@ -43,3 +48,4 @@ tasks:
       - ruff check --output-format {{.OUTPUT_FORMAT}} {{.PYTHON_SCRIPTS | catLines}}
       - ruff format --check {{.PYTHON_SCRIPTS | catLines}}
       - ty check --output-format {{.OUTPUT_FORMAT}} {{.PYTHON_SCRIPTS | catLines}}
+      - task: tflint
