@@ -16,6 +16,9 @@ jobs:
   regenerate:
     if: github.event_name == 'push'
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        shell: nix develop .#github_actions --command bash -euo pipefail {0}
     environment: main
     permissions:
       contents: read
@@ -30,10 +33,6 @@ jobs:
       - uses: nixbuild/nix-quick-install-action@2c9db80fb984ceb1bcaa77cdda3fdf8cfba92035 # v34
         with:
           nix_on_tmpfs: true
-
-      - uses: rrbutani/use-nix-shell-action@59a52b2b9bbfe3cc0e7deb8f9059abe37a439edf # v1.1.0
-        with:
-          devShell: .#github_actions
 
       - name: Regenerate and push
         run: |
@@ -60,6 +59,9 @@ jobs:
   preview:
     if: github.event_name == 'pull_request'
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        shell: nix develop .#github_actions --command bash -euo pipefail {0}
     permissions:
       contents: read
       pull-requests: write
@@ -69,10 +71,6 @@ jobs:
       - uses: nixbuild/nix-quick-install-action@2c9db80fb984ceb1bcaa77cdda3fdf8cfba92035 # v34
         with:
           nix_on_tmpfs: true
-
-      - uses: rrbutani/use-nix-shell-action@59a52b2b9bbfe3cc0e7deb8f9059abe37a439edf # v1.1.0
-        with:
-          devShell: .#github_actions
 
       - name: Regenerate
         run: |

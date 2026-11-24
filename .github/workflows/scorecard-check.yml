@@ -15,6 +15,9 @@ permissions:
 jobs:
   scorecard:
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        shell: nix develop .#github_actions --command bash -euo pipefail {0}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -23,10 +26,6 @@ jobs:
       - uses: nixbuild/nix-quick-install-action@2c9db80fb984ceb1bcaa77cdda3fdf8cfba92035 # v34
         with:
           nix_on_tmpfs: true
-
-      - uses: rrbutani/use-nix-shell-action@59a52b2b9bbfe3cc0e7deb8f9059abe37a439edf # v1.1.0
-        with:
-          devShell: .#github_actions
 
       - name: Run scorecard on changed modules and reference architectures
         run: |
