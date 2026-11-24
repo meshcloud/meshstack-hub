@@ -21,8 +21,8 @@ re-implements its logic. meshcloud maintains two public ones:
   foundation behind shared meshStack trials
 
 **CI in this repo never runs `plan` or `apply`.** It runs `pre-commit run --all-files` (`terraform fmt`,
-trailing whitespace, shellcheck, `ci/validate_modules.sh`) and the scorecard, a report in a PR
-comment. Only an
+trailing whitespace, shellcheck, `ci/validate_modules.sh`), `task lint` and the scorecard, a report
+in a PR comment. Only an
 [e2e run](.agents/skills/e2e-test/SKILL.md#verify-before-merging) shows a module works.
 
 **CI owns the `BEGIN_TF_DOCS` sections of module READMEs.** After a merge, it runs
@@ -104,4 +104,6 @@ the docs.
   (`../../../meshstack-hub/modules/<provider>/<service>/buildingblock`). Never commit that — switch
   back to the hub GitHub URL first.
 - No trailing whitespace.
-- `task lint` runs the local linters inside `nix develop`: shellcheck, ruff, ty and actionlint.
+- Run `task lint` inside `nix develop` before you push a change to a shell script, a Python script or
+  a workflow. It runs shellcheck, ruff, ty and actionlint on every shell and Python script and every
+  workflow in the repo, module scripts included. CI runs it on every PR.

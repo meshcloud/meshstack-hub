@@ -28,6 +28,7 @@ tasks:
   lint:
     desc: Run shellcheck, ruff, ty and actionlint on the tracked shell scripts, python scripts and workflows.
     vars:
+      OUTPUT_FORMAT: '{{if eq .GITHUB_ACTIONS "true"}}github{{else}}full{{end}}'
       SHELL_SCRIPTS:
         sh: >-
           git ls-files | while read -r file; do [ -f "$file" ] && printf '%s\n' "$file"; done |
@@ -39,6 +40,6 @@ tasks:
     cmds:
       - shellcheck {{.SHELL_SCRIPTS | catLines}}
       - actionlint
-      - ruff check {{.PYTHON_SCRIPTS | catLines}}
+      - ruff check --output-format {{.OUTPUT_FORMAT}} {{.PYTHON_SCRIPTS | catLines}}
       - ruff format --check {{.PYTHON_SCRIPTS | catLines}}
-      - ty check {{.PYTHON_SCRIPTS | catLines}}
+      - ty check --output-format {{.OUTPUT_FORMAT}} {{.PYTHON_SCRIPTS | catLines}}
