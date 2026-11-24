@@ -31,7 +31,7 @@ variable "security_contact" {
   default     = null
 }
 
-// env vars
+# env vars
 
 variable "account_id" {
   type        = string

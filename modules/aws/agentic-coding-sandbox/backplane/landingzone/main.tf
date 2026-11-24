@@ -10,23 +10,23 @@ resource "aws_organizations_organizational_unit" "bedrock" {
 locals {
   # see https://docs.aws.amazon.com/bedrock/latest/userguide/model-access-product-ids.html
   allowed_models = [
-    "prod-4dlfvry4v5hbi", // Anthropic Claude 3.7 Sonnet
-    "prod-m5ilt4siql27k", // Anthropic Claude 3.5 Sonnet
-    "prod-4pmewlybdftbs", // Anthropic Claude 4.0 Sonnet
-    "prod-5ukwuglpt66kg", // Anthropic Claude 4.6 Sonnet
-    "prod-xdkflymybwmvi", // Anthropic Claude 4.5 Haiku
+    "prod-4dlfvry4v5hbi", # Anthropic Claude 3.7 Sonnet
+    "prod-m5ilt4siql27k", # Anthropic Claude 3.5 Sonnet
+    "prod-4pmewlybdftbs", # Anthropic Claude 4.0 Sonnet
+    "prod-5ukwuglpt66kg", # Anthropic Claude 4.6 Sonnet
+    "prod-xdkflymybwmvi", # Anthropic Claude 4.5 Haiku
   ]
 
   # EU regions where Bedrock is allowed
   allowed_eu_regions = [
-    "eu-west-1",    // Ireland
-    "eu-west-2",    // London
-    "eu-west-3",    // Paris
-    "eu-central-1", // Frankfurt
-    "eu-north-1",   // Stockholm
-    "eu-south-1",   // Milan
-    "eu-south-2",   // Spain
-    "eu-central-2", // Zurich
+    "eu-west-1",    # Ireland
+    "eu-west-2",    # London
+    "eu-west-3",    # Paris
+    "eu-central-1", # Frankfurt
+    "eu-north-1",   # Stockholm
+    "eu-south-1",   # Milan
+    "eu-south-2",   # Spain
+    "eu-central-2", # Zurich
   ]
 }
 
@@ -71,13 +71,13 @@ data "aws_iam_policy_document" "only_bedrock" {
     sid    = "DenyAllExceptBedrockRelated"
     effect = "Deny"
     not_actions = [
-      "bedrock:*",         // Allow all Bedrock actions
-      "aws-marketplace:*", // Required for marketplace subscriptions that enable model access
-      "logs:*",            // Required for logging
-      "iam:*",             // Make no restriction on AWS IAM functionality which is basic for AWS functioning
-      "ce:*",              // For Cost Explorer
-      "budgets:*",         // For Budgets
-      "cloudformation:*",  // Required to enable stacksets deployed from the organization
+      "bedrock:*",         # Allow all Bedrock actions
+      "aws-marketplace:*", # Required for marketplace subscriptions that enable model access
+      "logs:*",            # Required for logging
+      "iam:*",             # Make no restriction on AWS IAM functionality which is basic for AWS functioning
+      "ce:*",              # For Cost Explorer
+      "budgets:*",         # For Budgets
+      "cloudformation:*",  # Required to enable stacksets deployed from the organization
     ]
     resources = ["*"]
   }

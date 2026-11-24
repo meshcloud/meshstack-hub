@@ -37,7 +37,7 @@ variable "forecasted_threshold_percent" {
   default     = 100
 }
 
-// env vars
+# env vars
 
 variable "account_id" {
   description = "target account id where the budget alert should be created"

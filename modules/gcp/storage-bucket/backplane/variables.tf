@@ -18,8 +18,8 @@ variable "iam_propagation_delay_seconds" {
 variable "workload_identity_federation" {
   description = "Workload identity federation settings describing the building block runner."
   type = object({
-    workload_identity_pool_identifier = string // Identifier for the workload identity pool
-    subject_token_file_path           = string // Path to the file containing the OIDC token
+    workload_identity_pool_identifier = string # Identifier for the workload identity pool
+    subject_token_file_path           = string # Path to the file containing the OIDC token
     runner_uuid                       = optional(string)
     original_runner_uuid              = optional(string)
   })

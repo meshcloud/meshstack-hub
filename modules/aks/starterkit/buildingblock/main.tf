@@ -14,7 +14,7 @@ locals {
 
 # Generate a random suffix for the repository name to ensure uniqueness
 resource "random_id" "repo_suffix" {
-  byte_length = 4 // 8 hex characters
+  byte_length = 4 # 8 hex characters
 }
 
 resource "meshstack_project" "this" {

@@ -1,4 +1,4 @@
-// Platform engineer configuration
+# Platform engineer configuration
 
 variable "composition_config_yaml" {
   type        = string
@@ -59,7 +59,7 @@ EOF
   }
 }
 
-// meshStack auto-configuration
+# meshStack auto-configuration
 
 variable "workspace_identifier" {
   description = "Identifier for the owning workspace"
@@ -67,7 +67,7 @@ variable "workspace_identifier" {
 }
 
 
-// End-user configuration
+# End-user configuration
 
 variable "username" {
   description = "meshStack username of the project contact. This should be an email."
