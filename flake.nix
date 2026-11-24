@@ -64,7 +64,7 @@
         };
         unstable_pkgs = import unstable { inherit system; };
       in {
-        default = pkgs.mkShell {
+        default = pkgs.mkShellNoCC {
           name = "meshstack-hub";
           packages = (github_actions_preinstalled pkgs) ++ (core_packages pkgs unstable_pkgs) ++ (dev_packages pkgs);
         };
@@ -94,7 +94,7 @@
             pkgs = import nixpkgs { system = "x86_64-linux"; };
             unstable_pkgs = import unstable { system = "x86_64-linux"; };
           in
-          pkgs.mkShell {
+          pkgs.mkShellNoCC {
             name = "meshstack-hub-ghactions";
             packages = (core_packages pkgs unstable_pkgs);
           };
