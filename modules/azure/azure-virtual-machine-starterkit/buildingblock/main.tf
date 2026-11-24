@@ -39,15 +39,25 @@ resource "meshstack_project_user_binding" "creator_admin" {
   }
 }
 
-resource "meshstack_tenant_v4" "vm_tenant" {
+data "meshstack_platforms" "vm" {
+  identifier = var.full_platform_identifier
+}
+
+data "meshstack_landingzone" "vm" {
+  metadata = {
+    name = var.landing_zone_identifier
+  }
+}
+
+resource "meshstack_tenant" "vm_tenant" {
   metadata = {
     owned_by_workspace = var.workspace_identifier
     owned_by_project   = meshstack_project.vm_project.metadata.name
   }
 
   spec = {
-    platform_identifier     = var.full_platform_identifier
-    landing_zone_identifier = var.landing_zone_identifier
+    platform_ref     = one(data.meshstack_platforms.vm.platforms).ref
+    landing_zone_ref = data.meshstack_landingzone.vm.ref
   }
 }
 
@@ -58,7 +68,7 @@ resource "meshstack_building_block" "azure_vm" {
     }
     target_ref = {
       kind = "meshTenant"
-      uuid = meshstack_tenant_v4.vm_tenant.metadata.uuid
+      uuid = meshstack_tenant.vm_tenant.metadata.uuid
     }
     display_name = "Azure Virtual Machine"
     inputs = merge(

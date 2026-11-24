@@ -6,7 +6,6 @@ modules/aks/github-connector/buildingblock           # local.acr never declared
 modules/aks/postgresql/buildingblock                 # local.resource_group_name, .location, .subnet_id, .private_dns_zone_id never declared
 modules/aws/agentic-coding-sandbox/buildingblock     # attribute value of the wrong type
 modules/azure/aks/buildingblock                      # resources point at a provider configuration the module does not declare
-modules/azure/azure-virtual-machine-starterkit/buildingblock # resource type the provider does not have
 modules/azure/container-registry/buildingblock       # resources point at a provider configuration the module does not declare
 modules/gcp                                          # terraform-gcp-meshplatform has no tag 0.3.0
 modules/ionos/dcd/backplane                          # required arguments missing, plus arguments the provider rejects

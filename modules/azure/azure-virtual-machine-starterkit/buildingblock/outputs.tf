@@ -5,7 +5,7 @@ output "project_name" {
 
 output "tenant_uuid" {
   description = "UUID of the created Azure tenant"
-  value       = meshstack_tenant_v4.vm_tenant.metadata.uuid
+  value       = meshstack_tenant.vm_tenant.metadata.uuid
 }
 
 output "vm_building_block_uuid" {
@@ -23,7 +23,7 @@ output "summary" {
 This starter kit has set up the following resources in workspace `${var.workspace_identifier}`:
 
 @project[${meshstack_project.vm_project.metadata.owned_by_workspace}.${meshstack_project.vm_project.metadata.name}]\
-&nbsp;&nbsp;&nbsp;&nbsp;@tenant[${meshstack_tenant_v4.vm_tenant.metadata.uuid}]\
+&nbsp;&nbsp;&nbsp;&nbsp;@tenant[${meshstack_tenant.vm_tenant.metadata.uuid}]\
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;@buildingblock[${meshstack_building_block.azure_vm.metadata.uuid}]
 
 ---
