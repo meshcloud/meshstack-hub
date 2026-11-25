@@ -30,18 +30,20 @@ resource "meshstack_building_block_definition" "this" {
 expects. A hand-built object usually omits the `kind`, so a reference to the wrong kind of object is
 caught only when meshStack rejects the apply.
 
-Ten resources expose `ref`: `meshstack_building_block`, `meshstack_building_block_definition`,
+Twelve resources expose `ref`: `meshstack_building_block`, `meshstack_building_block_definition`,
 `meshstack_building_block_runner`, `meshstack_integration`, `meshstack_landingzone`,
-`meshstack_location`, `meshstack_platform`, `meshstack_platform_type`, `meshstack_tenant` and
-`meshstack_workspace`. An object this configuration does not manage arrives as a ref-typed variable
-whenever its ref holds a `uuid`, because nobody types a uuid. A ref by name may be built from a
-variable or a literal anywhere, such as a location or workspace name, because a building block input
-from meshStack is a plain string. For the same reason a building block may build
-`{ kind = "meshTenant", uuid = var.tenant_uuid }` for its own tenant, which only reaches it as a
-`MESHSTACK_TENANT_UUID` input. The user and group bindings keep their literals: their `role_ref`
-and `target_ref` take an identifier with no `kind`. A building block is ordered against a
-definition *version*, which `ref` does not identify — that one takes `version_latest` or
-`version_latest_release`.
+`meshstack_location`, `meshstack_payment_method`, `meshstack_platform`, `meshstack_platform_type`,
+`meshstack_project` (provider v0.29.0), `meshstack_tenant` and `meshstack_workspace`. An object this
+configuration does not manage arrives as a ref-typed variable whenever its ref holds a `uuid`,
+because nobody types a uuid. A ref by name may be built from a variable or a literal anywhere, such
+as a location or workspace name, because a building block input from meshStack is a plain string.
+For the same reason a building block may build `{ kind = "meshTenant", uuid = var.tenant_uuid }` for
+its own tenant, which only reaches it as a `MESHSTACK_TENANT_UUID` input. A project binding's
+`target_ref` takes the project's `ref`; the other binding refs, `role_ref` and a workspace binding's
+`target_ref`, keep their literals, which take an identifier with no `kind`. A project takes its
+payment method as `payment_method_ref`, never as the deprecated `payment_method_identifier`. A
+building block is ordered against a definition *version*, which `ref` does not identify — that one
+takes `version_latest` or `version_latest_release`.
 
 <!-- scorecard-checks: platform_lifecycle_ignore_availability -->
 ## `meshstack_platform` Lifecycle
