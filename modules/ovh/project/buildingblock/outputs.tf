@@ -18,7 +18,7 @@ locals {
   # stripping, which indents these lines into a code block.
   summary_role_rows = join("\n", [
     for role in sort(keys(var.role_mapping)) :
-    "| ${role} | ${length(local.role_identities[role])} | ${contains(keys(local.role_policies), role) ? "`${local.project_description}-${role}`" : "–"} |"
+    "| ${role} | ${length(local.role_identities[role])} | ${contains(keys(local.role_policies), role) ? "`${local.policy_name_prefix}-${role}`" : "–"} |"
   ])
 
   summary_unknown_members = length(local.unknown_members) == 0 ? "Every project member has an OVHcloud user." : join(" ", [

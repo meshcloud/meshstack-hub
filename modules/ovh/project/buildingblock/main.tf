@@ -11,6 +11,9 @@ data "ovh_me_identity_user" "all" {
 locals {
   project_description = "${var.workspace_identifier}-${var.project_identifier}"
 
+  # OVHcloud reserves policy names starting with `ovh-`, which a workspace like `ovh-platform` hits.
+  policy_name_prefix = "meshstack-${local.project_description}"
+
   # Users are not created. A member's OVHcloud identity is the existing local user in the `DEFAULT`
   # group named like the part of their email before the `@`; members without one get no access.
   local_user_urns = {
@@ -59,7 +62,7 @@ resource "ovh_cloud_project" "this" {
 resource "ovh_iam_policy" "role" {
   for_each = local.role_policies
 
-  name        = "${local.project_description}-${each.key}"
+  name        = "${local.policy_name_prefix}-${each.key}"
   description = "meshStack role ${each.key} on Public Cloud project ${local.project_description}"
   identities  = each.value
   resources   = [ovh_cloud_project.this.urn]
