@@ -99,7 +99,7 @@ resource "meshstack_tag_definition" "landing_zone" {
     key          = local.landing_zone_tag_key
     display_name = "${var.test_context.run_id} NoOp Landing Zone Tag"
     description  = "Smoke test tag read by the tenant-level NoOp building block."
-    value_type   = { string = {} }
+    value_type   = { multi_select = { options = ["lz-a", "lz-b", "lz-c"] } }
     mandatory    = false
     immutable    = false
     restricted   = false
