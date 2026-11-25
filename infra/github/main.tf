@@ -60,9 +60,6 @@ resource "github_repository_ruleset" "protect_default_branch" {
   }
   rules {
     creation                      = false
-    deletion                      = true
-    non_fast_forward              = true
-    required_linear_history       = true
     required_signatures           = false
     update                        = false
     update_allows_fetch_and_merge = false
@@ -74,5 +71,26 @@ resource "github_repository_ruleset" "protect_default_branch" {
       required_approving_review_count   = 1
       required_review_thread_resolution = true
     }
+  }
+}
+
+# A bypass actor skips every rule of a ruleset, so the rules that bind everyone have their own.
+resource "github_repository_ruleset" "linear_default_branch" {
+  repository  = local.github_repository_name
+  name        = "Linear Default"
+  target      = "branch"
+  enforcement = "active"
+
+  conditions {
+    ref_name {
+      include = ["~DEFAULT_BRANCH"]
+      exclude = []
+    }
+  }
+
+  rules {
+    deletion                = true
+    non_fast_forward        = true
+    required_linear_history = true
   }
 }
