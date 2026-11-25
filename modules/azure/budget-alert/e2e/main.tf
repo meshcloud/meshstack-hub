@@ -44,10 +44,11 @@ module "budget_alert" {
   backplane_name = "hub-e2e-budget-${var.test_context.name_suffix}"
 }
 
+# The Consumption API honours a new custom role assignment minutes later than ARM does.
 resource "time_sleep" "role_assignment_propagation" {
   depends_on = [module.budget_alert]
 
-  create_duration = "5m"
+  create_duration = "10m"
 }
 
 resource "meshstack_building_block" "this" {
