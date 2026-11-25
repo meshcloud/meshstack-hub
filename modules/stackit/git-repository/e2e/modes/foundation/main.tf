@@ -14,7 +14,7 @@ variable "test_context" {
 }
 
 data "meshstack_building_block_definitions" "published" {
-  workspace_identifier = coalesce(var.test_context.definition_workspace, var.test_context.workspace)
+  owned_by_workspace = coalesce(var.test_context.definition_workspace, var.test_context.workspace)
 }
 
 locals {
@@ -38,7 +38,7 @@ output "version_ref" {
 
   precondition {
     condition     = local.definition != null
-    error_message = "No building block definition named '${local.display_name}' owned by workspace '${data.meshstack_building_block_definitions.published.workspace_identifier}'. Deploy it before smoke testing it."
+    error_message = "No building block definition named '${local.display_name}' owned by workspace '${data.meshstack_building_block_definitions.published.owned_by_workspace}'. Deploy it before smoke testing it."
   }
 
   precondition {

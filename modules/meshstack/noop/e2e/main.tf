@@ -30,13 +30,9 @@ resource "meshstack_tag_definition" "noop_e2e" {
 }
 
 resource "meshstack_workspace_tag" "noop_e2e" {
-  metadata = {
-    workspace_identifier = var.test_context.workspace
-    key                  = meshstack_tag_definition.noop_e2e.spec.key
-  }
-  spec = {
-    values = ["e2e-tag-value"]
-  }
+  workspace = var.test_context.workspace
+  key       = meshstack_tag_definition.noop_e2e.spec.key
+  values    = ["e2e-tag-value"]
 }
 
 # A PAYMENT_METHOD input takes one of the ordering workspace's own Payment Methods, so the test

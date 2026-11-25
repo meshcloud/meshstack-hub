@@ -193,7 +193,7 @@ returns the version ref to order against:
 
 ```hcl
 data "meshstack_building_block_definitions" "published" {
-  workspace_identifier = coalesce(var.test_context.definition_workspace, var.test_context.workspace)
+  owned_by_workspace = coalesce(var.test_context.definition_workspace, var.test_context.workspace)
 }
 
 locals {
