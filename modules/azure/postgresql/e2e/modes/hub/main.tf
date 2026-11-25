@@ -40,6 +40,9 @@ module "postgresql" {
   azure_tenant_id = var.test_context.fixtures.azure.entra_tenant_id
   azure_scope     = "/subscriptions/${var.test_context.fixtures.azure.subscription_uuid}"
   backplane_name  = "${var.test_context.run_id}-psql-bp"
+
+  # westeurope is capacity-constrained and refused B_Standard_B1ms with SkuNotAvailable.
+  azure_location = "swedencentral"
 }
 
 output "version_ref" {
