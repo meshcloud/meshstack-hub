@@ -36,6 +36,16 @@ run "meshstack_run_controller" {
   }
 
   assert {
+    condition     = meshstack_building_block.gitlab_pipeline.status.succeeded
+    error_message = "gitlab pipeline building block expected SUCCEEDED, got health status ${meshstack_building_block.gitlab_pipeline.status.health_status}, action ${meshstack_building_block.gitlab_pipeline.status.action}"
+  }
+
+  assert {
+    condition     = meshstack_building_block.azure_devops_pipeline.status.succeeded
+    error_message = "azure devops pipeline building block expected SUCCEEDED, got health status ${meshstack_building_block.azure_devops_pipeline.status.health_status}, action ${meshstack_building_block.azure_devops_pipeline.status.action}"
+  }
+
+  assert {
     condition     = meshstack_building_block.manual.status.succeeded
     error_message = "manual building block expected SUCCEEDED, got health status ${meshstack_building_block.manual.status.health_status}, action ${meshstack_building_block.manual.status.action}"
   }

@@ -14,6 +14,10 @@ terraform {
       source  = "integrations/github"
       version = ">= 6.0.0, < 7.0.0"
     }
+    azuredevops = {
+      source  = "microsoft/azuredevops"
+      version = ">= 1.1.1, < 2.0.0"
+    }
     vault = {
       source  = "hashicorp/vault"
       version = ">= 5.12.0, < 6.0.0"
@@ -46,4 +50,9 @@ provider "github" {
     installation_id = var.github_app_installation_id
     pem_file        = var.github_app_private_key
   }
+}
+
+provider "azuredevops" {
+  org_service_url       = "https://dev.azure.com/${var.test_context.fixtures.azuredevops.organization}"
+  personal_access_token = var.azuredevops_personal_access_token
 }

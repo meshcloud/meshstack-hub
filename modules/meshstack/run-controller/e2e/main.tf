@@ -20,6 +20,17 @@ variable "test_context" {
         repository = string
         branch     = optional(string, "main")
       })
+      gitlab = object({
+        project_id = string
+        branch     = optional(string, "main")
+      })
+      azuredevops = object({
+        organization  = string
+        project       = string
+        repository_id = string
+        pipeline_id   = string
+        branch        = optional(string, "refs/heads/main")
+      })
       stackit = object({
         secrets_manager_instance_id = string
         secrets_path_prefix         = string
@@ -57,6 +68,18 @@ variable "github_app_private_key" {
 variable "github_app_installation_id" {
   type     = string
   nullable = false
+}
+
+variable "gitlab_pipeline_trigger_token" {
+  type      = string
+  sensitive = true
+  nullable  = false
+}
+
+variable "azuredevops_personal_access_token" {
+  type      = string
+  sensitive = true
+  nullable  = false
 }
 
 variable "run_controller_image" {
@@ -284,6 +307,115 @@ resource "meshstack_building_block" "github_workflow" {
     building_block_definition_version_ref = module.github_workflow.building_block_definition.version_ref
 
     display_name = "${var.test_context.run_id}-run-controller-github-workflow"
+    target_ref = {
+      kind = "meshWorkspace"
+      name = var.test_context.workspace
+    }
+
+    inputs = {
+      environment = { value = jsonencode("dev") }
+    }
+  }
+
+  lifecycle {
+    postcondition {
+      condition     = self.status.succeeded
+      error_message = "Building block ${self.metadata.uuid} did not succeed (health status ${self.status.health_status}, action ${self.status.action}). See its run in meshPanel."
+    }
+  }
+}
+
+module "gitlab_pipeline" {
+  source = "../../gitlab-pipeline"
+
+  bbd_display_name         = "${var.test_context.run_id} Run Controller GitLab Pipeline"
+  integration_display_name = "${var.test_context.run_id} Run Controller GitLab Integration"
+
+  gitlab_pipeline_trigger_token = var.gitlab_pipeline_trigger_token
+  gitlab_project_id             = var.test_context.fixtures.gitlab.project_id
+  gitlab_branch                 = var.test_context.fixtures.gitlab.branch
+
+  meshstack = {
+    owning_workspace_identifier = var.test_context.workspace
+    runner_ref                  = local.runner_ref
+  }
+  hub = {
+    git_ref   = var.test_context.hub_git_ref
+    bbd_draft = true
+  }
+}
+
+resource "meshstack_building_block" "gitlab_pipeline" {
+  depends_on          = [module.gitlab_pipeline]
+  wait_for_completion = true
+
+  spec = {
+    building_block_definition_version_ref = module.gitlab_pipeline.building_block_definition.version_ref
+
+    display_name = "${var.test_context.run_id}-run-controller-gitlab-pipeline"
+    target_ref = {
+      kind = "meshWorkspace"
+      name = var.test_context.workspace
+    }
+
+    inputs = {
+      text           = { value = jsonencode("Hello, World!") }
+      num            = { value = jsonencode(1) }
+      flag           = { value = jsonencode(true) }
+      single_select  = { value = jsonencode("single1") }
+      multi_select   = { value = jsonencode(["multi1", "multi2"]) }
+      json_form      = { value = jsonencode(jsonencode({ region = "eu-central-1", replicas = 2 })) }
+      sensitive_text = { sensitive = { secret_value = "Hidden value" } }
+      operator_text  = { value = jsonencode("Set by the platform operator") }
+    }
+  }
+
+  lifecycle {
+    postcondition {
+      condition     = self.status.succeeded
+      error_message = "Building block ${self.metadata.uuid} did not succeed (health status ${self.status.health_status}, action ${self.status.action}). See its run in meshPanel."
+    }
+  }
+}
+
+resource "azuredevops_git_repository_branch" "ephemeral" {
+  repository_id = var.test_context.fixtures.azuredevops.repository_id
+  name          = "${var.test_context.run_id}/run-controller-azure-devops-pipeline"
+  ref_branch    = var.test_context.fixtures.azuredevops.branch
+}
+
+module "azure_devops_pipeline" {
+  source = "../../azure-devops-pipeline"
+
+  bbd_display_name         = "${var.test_context.run_id} Run Controller Azure DevOps Pipeline"
+  integration_display_name = "${var.test_context.run_id} Run Controller Azure DevOps Integration"
+
+  azuredevops_organization          = var.test_context.fixtures.azuredevops.organization
+  azuredevops_project               = var.test_context.fixtures.azuredevops.project
+  azuredevops_personal_access_token = var.azuredevops_personal_access_token
+  azuredevops_repository_id         = var.test_context.fixtures.azuredevops.repository_id
+  azuredevops_pipeline_id           = var.test_context.fixtures.azuredevops.pipeline_id
+  azuredevops_ref_name              = "refs/heads/${azuredevops_git_repository_branch.ephemeral.name}"
+
+  meshstack = {
+    owning_workspace_identifier = var.test_context.workspace
+    runner_ref                  = local.runner_ref
+  }
+  hub = {
+    git_ref   = var.test_context.hub_git_ref
+    bbd_draft = true
+  }
+}
+
+resource "meshstack_building_block" "azure_devops_pipeline" {
+  # The delete run queues the pipeline, whose file lives on the ephemeral branch.
+  depends_on          = [module.azure_devops_pipeline, azuredevops_git_repository_branch.ephemeral]
+  wait_for_completion = true
+
+  spec = {
+    building_block_definition_version_ref = module.azure_devops_pipeline.building_block_definition.version_ref
+
+    display_name = "${var.test_context.run_id}-run-controller-azure-devops-pipeline"
     target_ref = {
       kind = "meshWorkspace"
       name = var.test_context.workspace
