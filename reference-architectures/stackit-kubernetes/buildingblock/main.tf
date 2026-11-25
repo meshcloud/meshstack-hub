@@ -123,9 +123,9 @@ module "project" {
   }
 
   spec = {
-    display_name              = local.project_display_name
-    payment_method_identifier = var.payment_method.name
-    tags                      = merge(local.tag_maps.project, local.owner_tags)
+    display_name       = local.project_display_name
+    payment_method_ref = var.payment_method
+    tags               = merge(local.tag_maps.project, local.owner_tags)
   }
 }
 
@@ -144,10 +144,7 @@ moved {
 module "project_admin_bindings" {
   source = "./modules/project-admin-bindings"
 
-  project = {
-    owned_by_workspace = var.workspace
-    name               = module.project.project.metadata.name
-  }
+  project = module.project.project.ref
 
   bindings = {
     for username, name in local.admin_binding_names : username => {

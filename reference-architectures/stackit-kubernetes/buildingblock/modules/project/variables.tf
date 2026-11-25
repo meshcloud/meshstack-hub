@@ -14,9 +14,12 @@ variable "metadata" {
 
 variable "spec" {
   type = object({
-    display_name              = string
-    payment_method_identifier = string
-    tags                      = map(list(string))
+    display_name = string
+    payment_method_ref = object({
+      kind = string
+      name = string
+    })
+    tags = map(list(string))
   })
   nullable = false
 }

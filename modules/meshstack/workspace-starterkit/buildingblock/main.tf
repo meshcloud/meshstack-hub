@@ -68,9 +68,9 @@ resource "meshstack_project" "this" {
   }
 
   spec = {
-    display_name              = var.project_display_name
-    payment_method_identifier = meshstack_payment_method.this.metadata.name
-    tags                      = var.tags.project
+    display_name       = var.project_display_name
+    payment_method_ref = meshstack_payment_method.this.ref
+    tags               = var.tags.project
   }
 }
 
@@ -174,10 +174,7 @@ resource "meshstack_project_user_binding" "admin" {
     name = var.project_role_name
   }
 
-  target_ref = {
-    owned_by_workspace = meshstack_workspace.this.metadata.name
-    name               = meshstack_project.this.metadata.name
-  }
+  target_ref = meshstack_project.this.ref
 
   subject = {
     name = var.workspace_owner_username

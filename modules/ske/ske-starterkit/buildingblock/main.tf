@@ -54,8 +54,8 @@ resource "meshstack_project" "this" {
     owned_by_workspace = var.workspace_identifier
   }
   spec = {
-    display_name              = "${var.name} ${title(each.key)}"
-    payment_method_identifier = var.payment_method.name
+    display_name       = "${var.name} ${title(each.key)}"
+    payment_method_ref = var.payment_method
     tags = merge(
       lookup(var.project_tags.stages, each.key, {}),
       var.project_tags.owner_tag_key == null ? {} : {
@@ -79,10 +79,7 @@ resource "meshstack_project_user_binding" "creator_to_admin" {
     name = "Project Admin"
   }
 
-  target_ref = {
-    owned_by_workspace = var.workspace_identifier
-    name               = meshstack_project.this[each.key].metadata.name
-  }
+  target_ref = meshstack_project.this[each.key].ref
 
   subject = {
     name = var.creator.username

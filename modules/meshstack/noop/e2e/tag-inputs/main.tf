@@ -58,8 +58,8 @@ locals {
   substitute_pm_tag_values = ["pm-substitute"]
 
   payment_methods = {
-    primary    = meshstack_payment_method.primary.metadata.name
-    substitute = meshstack_payment_method.substitute.metadata.name
+    primary    = meshstack_payment_method.primary.ref
+    substitute = meshstack_payment_method.substitute.ref
   }
 }
 
@@ -257,8 +257,8 @@ resource "meshstack_project" "this" {
   }
 
   spec = {
-    display_name              = "${var.test_context.run_id} NoOp Tag Inputs"
-    payment_method_identifier = local.payment_methods[local.scenario.funding]
+    display_name       = "${var.test_context.run_id} NoOp Tag Inputs"
+    payment_method_ref = local.payment_methods[local.scenario.funding]
     tags = merge(var.test_context.meshstack.tag_schema.mandatory.project, {
       (meshstack_tag_definition.project.spec.key) = local.scenario.project_tag_values
     })

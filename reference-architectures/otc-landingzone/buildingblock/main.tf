@@ -106,9 +106,9 @@ resource "meshstack_project" "management" {
   }
 
   spec = {
-    display_name              = "T Cloud Public Management: ${local.platform_identifier}"
-    payment_method_identifier = var.payment_method_identifier
-    tags                      = merge(local.tags.project, local.owner_tags)
+    display_name       = "T Cloud Public Management: ${local.platform_identifier}"
+    payment_method_ref = var.payment_method_identifier != null ? { name = var.payment_method_identifier } : null
+    tags               = merge(local.tags.project, local.owner_tags)
   }
 }
 
@@ -129,10 +129,7 @@ resource "meshstack_project_user_binding" "management_admin" {
     name = "Project Admin"
   }
 
-  target_ref = {
-    owned_by_workspace = var.workspace
-    name               = meshstack_project.management.metadata.name
-  }
+  target_ref = meshstack_project.management.ref
 
   subject = {
     name = each.value

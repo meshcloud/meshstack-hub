@@ -84,10 +84,7 @@ resource "meshstack_project_user_binding" "creator_to_admin" {
     name = "Project Admin"
   }
 
-  target_ref = {
-    owned_by_workspace = var.workspace_identifier
-    name               = meshstack_project.this[each.key].metadata.name
-  }
+  target_ref = meshstack_project.this[each.key].ref
 
   subject = {
     name = var.creator.username

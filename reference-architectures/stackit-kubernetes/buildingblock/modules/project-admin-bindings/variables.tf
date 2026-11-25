@@ -1,5 +1,6 @@
 variable "project" {
   type = object({
+    kind               = string
     name               = string
     owned_by_workspace = string
   })
