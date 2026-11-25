@@ -41,8 +41,8 @@ module "postgresql" {
   azure_scope     = "/subscriptions/${var.test_context.fixtures.azure.subscription_uuid}"
   backplane_name  = "${var.test_context.run_id}-psql-bp"
 
-  # westeurope is capacity-constrained and refused B_Standard_B1ms with SkuNotAvailable.
-  azure_location = "swedencentral"
+  # westeurope refused B_Standard_B1ms with SkuNotAvailable; the foundation policy allows only EU regions for resource groups.
+  azure_location = "northeurope"
 }
 
 output "version_ref" {
