@@ -4,6 +4,10 @@ locals {
   # The provider reads a ref without a uuid as unknown, not as the shared runner.
   runner_ref = var.runner_ref.uuid == null ? null : var.runner_ref
 
+  # The identifier is unique across the whole meshStack instance and lands in every landing zone
+  # name, so a playground deployment suffixes it and leaves the plain name free.
+  platform_identifier = var.playground_mode ? "${var.platform_identifier}-${random_string.playground_suffix.result}" : var.platform_identifier
+
   # The platform contract has a target per region and network area, all in one of these two folders.
   # Its keys are only known after apply, and a meshStack landing zone needs only the folder.
   landing_zone_folders = {
@@ -18,6 +22,30 @@ locals {
       parent_container_id = module.accelerator.governance_folder_ids[lz.folder]
     } if contains(keys(local.accelerator_inputs.rm_folders), lz.folder)
   }
+}
+
+# Flipping the flag on an existing platform would rename the platform and every landing zone.
+resource "terraform_data" "playground_mode" {
+  input = var.playground_mode
+
+  lifecycle {
+    ignore_changes = [input]
+
+    postcondition {
+      condition     = self.output == var.playground_mode
+      error_message = "playground_mode cannot change after the order."
+    }
+  }
+}
+
+resource "random_string" "playground_suffix" {
+  lifecycle {
+    enabled = var.playground_mode
+  }
+
+  length  = 6
+  special = false
+  upper   = false
 }
 
 # An argument set to null replaces the accelerator's default, so an input the export leaves out
@@ -59,11 +87,12 @@ module "stackit_integration" {
   stackit_parent_container_id = local.accelerator_inputs.organization_id
   stackit_landing_zones       = local.landing_zones
 
-  hub = var.hub
+  bbd_display_name = var.playground_mode ? "STACKIT Project (${local.platform_identifier})" : null
+  hub              = var.hub
 
   meshstack = {
     owning_workspace_identifier = var.workspace
     runner_ref                  = local.runner_ref
-    platform_identifier         = var.platform_identifier
+    platform_identifier         = local.platform_identifier
   }
 }

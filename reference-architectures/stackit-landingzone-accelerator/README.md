@@ -34,6 +34,21 @@ project in that folder.
 
 ![STACKIT Landing Zone Accelerator](stackit-landingzone-accelerator.svg)
 
+### Playground Mode
+
+**Playground Mode** deploys a throwaway platform for the deploying workspace. It is off by default
+and cannot change after the order.
+
+| | `playground_mode = true` | `playground_mode = false` |
+|---|---|---|
+| Platform identifier | random suffix appended | taken exactly as given |
+| Name of the STACKIT Project definition | ` (<platform identifier>)` appended | the module's name |
+
+A platform identifier is unique across the meshStack instance, so the suffix keeps a playground
+from occupying the real name, and the block can be ordered more than once. The export is applied
+unchanged in both modes, so STACKIT names come from the export alone. Publish a playground or its
+definition only to test that path, and delete it afterwards.
+
 ## How It Works
 
 1. The run decodes the pasted export and calls the accelerator's `src/` at the commit given as

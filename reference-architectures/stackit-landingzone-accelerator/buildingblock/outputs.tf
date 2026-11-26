@@ -21,9 +21,10 @@ output "summary" {
     management_project_id  = module.accelerator.management_project_id
     management_project_url = "https://portal.stackit.cloud/dashboard?project=${module.accelerator.management_project_id}"
     service_account_email  = module.stackit_integration.service_account_email
-    platform_identifier    = var.platform_identifier
+    platform_identifier    = local.platform_identifier
+    playground_mode        = var.playground_mode
     landing_zones = {
-      for key, lz in local.landing_zones : "${var.platform_identifier}-${key}" => lz.parent_container_id
+      for key, lz in local.landing_zones : "${local.platform_identifier}-${key}" => lz.parent_container_id
     }
   })
 }

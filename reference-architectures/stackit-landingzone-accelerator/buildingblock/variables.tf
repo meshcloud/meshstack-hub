@@ -9,6 +9,12 @@ variable "platform_identifier" {
   }
 }
 
+variable "playground_mode" {
+  type        = bool
+  nullable    = false
+  description = "Deploy a throwaway platform: the platform identifier gets a random suffix so it does not occupy a name for good, and the STACKIT Project definition gets the platform identifier appended to its name. Cannot change after the first run. Publish a playground platform or its definition only to test, and delete the playground afterwards."
+}
+
 variable "landing_zone_tfvars" {
   type        = string
   nullable    = false

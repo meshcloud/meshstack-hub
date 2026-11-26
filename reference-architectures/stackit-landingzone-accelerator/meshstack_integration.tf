@@ -187,6 +187,15 @@ resource "meshstack_building_block_definition" "this" {
         display_order                  = 10
       }
 
+      playground_mode = {
+        display_name    = "Playground Mode"
+        description     = "Throwaway deployment: the identifier gets a random suffix and the registered definition is named after it, so the block can be ordered more than once in one meshStack. Publish such a platform or its definition only to test. Cannot be changed after the order."
+        type            = "BOOLEAN"
+        assignment_type = "USER_INPUT"
+        default_value   = jsonencode(false)
+        display_order   = 15
+      }
+
       landing_zone_tfvars = {
         display_name           = "Landing Zone tfvars"
         description            = "The tfvars file the STACKIT Landing Zone Configurator exports, pasted unchanged."
