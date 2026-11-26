@@ -14,11 +14,15 @@
 
 ## Landing Zones
 
+%{ if length(landing_zones) == 0 ~}
+The export has no landing zones, so the platform has none either.
+%{ else ~}
 | Landing Zone | Folder |
 |--------------|--------|
 %{ for name, folder in landing_zones ~}
 | `${name}` | `${folder}` |
 %{ endfor ~}
+%{ endif ~}
 
 Application teams add **STACKIT Project** from the marketplace to a tenant on one of these landing
 zones. The project is created in the landing zone's folder.

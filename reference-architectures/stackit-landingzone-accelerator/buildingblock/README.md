@@ -2,7 +2,7 @@
 name: STACKIT Landing Zone Accelerator
 supportedPlatforms:
   - stackit
-description: Applies the STACKIT Landing Zone Accelerator with a STACKIT Landing Zone Configurator export, and registers a STACKIT platform whose landing zones create projects in the accelerator's landing zone folders.
+description: Applies the STACKIT Landing Zone Accelerator with a STACKIT Landing Zone Configurator export, and registers a STACKIT platform with one landing zone per landing zone of the export.
 ---
 
 This building block decodes the pasted Configurator export with
@@ -13,9 +13,11 @@ An input the export leaves out keeps the accelerator's default. The export may
 only set the inputs `main.tf` passes on; firewall credentials and `bucket_naming` are rejected.
 
 It then sources [`modules/stackit`](../../../modules/stackit) with `stackit_landing_zones`: one
-landing zone for each of the folders `landing_zones_public` and `landing_zones_corporate` that the
-export declares. The STACKIT Project definition creates a tenant's project in the folder of its
-landing zone. Its service account lives in the accelerator's management project.
+landing zone per entry of the export's `landing_zones`, keyed by the entry key lowercased with each
+run of other characters than letters and digits turned into a dash. Its folder is the accelerator's
+corporate folder when the entry's `corporate` is true or unset, and the public folder otherwise.
+The STACKIT Project definition creates a tenant's project in the folder of its landing zone. An
+export without landing zones gives a platform without landing zones. Its service account lives in the accelerator's management project.
 
 Every STACKIT provider of the run, the accelerator's own included, authenticates with the
 `STACKIT_SERVICE_ACCOUNT_KEY` environment variable. meshStack sets it from the input of that name.

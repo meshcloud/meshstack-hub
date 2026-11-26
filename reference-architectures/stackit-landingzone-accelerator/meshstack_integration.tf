@@ -90,7 +90,7 @@ resource "meshstack_building_block_definition" "this" {
     display_name          = coalesce(var.bbd_display_name, "STACKIT Landing Zone Accelerator Reference Architecture")
     display_name_template = "STACKIT Landing Zone Accelerator {{platform_identifier}}"
     symbol                = "https://raw.githubusercontent.com/meshcloud/meshstack-hub/${var.hub.git_ref}/reference-architectures/stackit-landingzone-accelerator/buildingblock/logo.png"
-    description           = coalesce(var.bbd_description, "Applies the STACKIT Landing Zone Accelerator with the tfvars file the STACKIT Landing Zone Configurator exports, and registers a STACKIT platform whose landing zones create projects in the accelerator's landing zone folders.")
+    description           = coalesce(var.bbd_description, "Applies the STACKIT Landing Zone Accelerator with the tfvars file the STACKIT Landing Zone Configurator exports, and registers a STACKIT platform with one landing zone per landing zone of the export.")
     support_url           = "https://github.com/stackitcloud/stackit-landing-zone"
     target_type           = "WORKSPACE_LEVEL"
     run_transparency      = true
@@ -101,9 +101,9 @@ resource "meshstack_building_block_definition" "this" {
     [STACKIT Landing Zone Accelerator](https://github.com/stackitcloud/stackit-landing-zone) and
     turns it into a meshStack platform. You paste the tfvars file the STACKIT Landing Zone
     Configurator exports, and the run applies the accelerator's `src/` with exactly these values.
-    It then registers a STACKIT platform with one landing zone per landing zone folder of the
-    accelerator, and the **STACKIT Project** building block that creates a tenant's project in its
-    landing zone's folder.
+    It then registers a STACKIT platform with one landing zone per entry of the export's
+    `landing_zones`, and the **STACKIT Project** building block. It creates a tenant's project in the
+    accelerator's corporate or public folder, as the entry's `corporate` flag says.
 
     ## 🎯 When to use it
 
@@ -121,7 +121,8 @@ resource "meshstack_building_block_definition" "this" {
 
     **Example 2: Offer projects in the accelerator's folders**
     After the run, application teams add **STACKIT Project** from the marketplace to a tenant on
-    the `public` or `corporate` landing zone. The project is created in that folder.
+    one of the new landing zones, for example `<platform identifier>-corp-exmpl` for the export's
+    entry `corp-exmpl`. The project is created in that landing zone's folder.
 
     ## 🔑 Authentication
 

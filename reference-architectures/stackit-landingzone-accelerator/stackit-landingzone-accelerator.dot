@@ -25,17 +25,12 @@ digraph stackit_landingzone_accelerator {
 
     REFARCH [label="📦 STACKIT Landing Zone Accelerator\nConfigurator tfvars"]
     PLAT    [label="🛰️ STACKIT Platform"]
-    PUBLZ   [label="🛬 Public Landing Zone"]
-    CORPLZ  [label="🛬 Corporate Landing Zone"]
+    LZ      [label="🛬 Landing Zone ×N\none per entry of landing_zones"]
     PRJBBD  [label="📦 STACKIT Project\nmarketplace · one per tenant"]
 
-    { rank=same; PUBLZ -> CORPLZ [style=invis] }
-
     REFARCH -> PLAT [xlabel="registers"]
-    PLAT    -> PUBLZ
-    PLAT    -> CORPLZ
-    PUBLZ   -> PRJBBD [xlabel="offers"]
-    CORPLZ  -> PRJBBD
+    PLAT    -> LZ
+    LZ      -> PRJBBD [xlabel="offers"]
   }
 
   subgraph cluster_stackit {
@@ -48,8 +43,8 @@ digraph stackit_landingzone_accelerator {
     node [fillcolor="#fdf1e3" color="#e0b37c"]
 
     MGMT    [label="🔑 Management Project\nproject-creation service account"]
-    PUBF    [label="📁 Landing Zones - Public"]
-    CORPF   [label="📁 Landing Zones - Corporate"]
+    PUBF    [label="📁 Public Folder\ncorporate = false"]
+    CORPF   [label="📁 Corporate Folder\ncorporate = true or unset"]
     PRJ     [label="🗂️ STACKIT Project ×N" fillcolor="#e5f2ea" color="#85bfa0"]
 
     { rank=same; MGMT -> PUBF -> CORPF [style=invis] }

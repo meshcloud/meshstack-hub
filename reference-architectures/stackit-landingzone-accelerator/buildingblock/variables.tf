@@ -26,6 +26,13 @@ variable "landing_zone_tfvars" {
   }
 
   validation {
+    condition = !can(provider::terraform::decode_tfvars(var.landing_zone_tfvars)) || alltrue([
+      for id, keys in { for key in keys(lookup(provider::terraform::decode_tfvars(var.landing_zone_tfvars), "landing_zones", {})) : trim(replace(lower(key), "/[^a-z0-9]+/", "-"), "-") => key... } : id != "" && length(keys) == 1
+    ])
+    error_message = "Every key of landing_zones must keep a letter or digit and stay distinct once lowercased with each run of other characters turned into a dash, because it becomes a meshStack landing zone identifier."
+  }
+
+  validation {
     condition = !can(provider::terraform::decode_tfvars(var.landing_zone_tfvars)) || length(setsubtract(keys(provider::terraform::decode_tfvars(var.landing_zone_tfvars)), [
       "audit_logs", "company_code", "company_name", "connectivity", "connectivity_regions", "devops", "federated_identity_providers",
       "firewall_config", "labels", "landing_zone_namespace_services", "landing_zones", "observability", "organization_auditors",

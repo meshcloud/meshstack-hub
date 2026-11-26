@@ -8,19 +8,13 @@ locals {
   # name, so a playground deployment suffixes it and leaves the plain name free.
   platform_identifier = var.playground_mode ? "${var.platform_identifier}-${random_string.playground_suffix.result}" : var.platform_identifier
 
-  # The platform contract has a target per region and network area, all in one of these two folders.
-  # Its keys are only known after apply, and a meshStack landing zone needs only the folder.
-  landing_zone_folders = {
-    public    = { folder = "landing_zones_public", description = "STACKIT projects in the public landing zone folder of the STACKIT Landing Zone Accelerator." }
-    corporate = { folder = "landing_zones_corporate", description = "STACKIT projects in the corporate landing zone folder of the STACKIT Landing Zone Accelerator. They are not attached to its network area." }
-  }
-
+  # meshStack landing zone identifiers are lowercase alphanumerics joined by single dashes.
   landing_zones = {
-    for key, lz in local.landing_zone_folders : key => {
-      display_name        = "STACKIT ${title(key)}"
-      description         = lz.description
-      parent_container_id = module.accelerator.governance_folder_ids[lz.folder]
-    } if contains(keys(local.accelerator_inputs.rm_folders), lz.folder)
+    for key, lz in lookup(local.accelerator_inputs, "landing_zones", {}) : trim(replace(lower(key), "/[^a-z0-9]+/", "-"), "-") => {
+      display_name        = "${lz.project_name} (${lookup(lz, "corporate", true) ? "corporate" : "public"})"
+      description         = lookup(lz, "corporate", true) ? "STACKIT projects in the corporate landing zone folder of the STACKIT Landing Zone Accelerator. They are not attached to its network area." : "STACKIT projects in the public landing zone folder of the STACKIT Landing Zone Accelerator."
+      parent_container_id = module.accelerator.governance_folder_ids[lookup(lz, "corporate", true) ? "landing_zones_corporate" : "landing_zones_public"]
+    }
   }
 }
 

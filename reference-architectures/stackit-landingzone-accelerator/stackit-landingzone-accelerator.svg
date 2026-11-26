@@ -1,139 +1,123 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN"
  "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
-<svg width="1048pt" height="519pt"
- viewBox="0.00 0.00 1048.00 519.00" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
-<g id="graph0" class="graph" transform="scale(1 1) rotate(0) translate(4 514.88)">
+<svg width="849pt" height="525pt"
+ viewBox="0.00 0.00 849.00 525.00" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+<g id="graph0" class="graph" transform="scale(1 1) rotate(0) translate(4 521.12)">
 <title>stackit_landingzone_accelerator</title>
-<polygon fill="white" stroke="none" points="-4,4 -4,-514.88 1044,-514.88 1044,4 -4,4"/>
+<polygon fill="white" stroke="none" points="-4,4 -4,-521.12 845,-521.12 845,4 -4,4"/>
 <g id="clust1" class="cluster">
 <title>cluster_mesh</title>
-<path fill="white" stroke="#d5dae0" d="M20,-105C20,-105 380,-105 380,-105 386,-105 392,-111 392,-117 392,-117 392,-490.88 392,-490.88 392,-496.88 386,-502.88 380,-502.88 380,-502.88 20,-502.88 20,-502.88 14,-502.88 8,-496.88 8,-490.88 8,-490.88 8,-117 8,-117 8,-111 14,-105 20,-105"/>
-<text xml:space="preserve" text-anchor="middle" x="49.01" y="-488.08" font-family="Helvetica,sans-Serif" font-size="12.00" fill="#697180"> &#160;meshStack</text>
+<path fill="white" stroke="#d5dae0" d="M20,-105C20,-105 252,-105 252,-105 258,-105 264,-111 264,-117 264,-117 264,-497.12 264,-497.12 264,-503.12 258,-509.12 252,-509.12 252,-509.12 20,-509.12 20,-509.12 14,-509.12 8,-503.12 8,-497.12 8,-497.12 8,-117 8,-117 8,-111 14,-105 20,-105"/>
+<text xml:space="preserve" text-anchor="middle" x="49.01" y="-494.32" font-family="Helvetica,sans-Serif" font-size="12.00" fill="#697180"> &#160;meshStack</text>
 </g>
-<g id="clust3" class="cluster">
+<g id="clust2" class="cluster">
 <title>cluster_stackit</title>
-<path fill="white" stroke="#d5dae0" d="M412,-8C412,-8 1020,-8 1020,-8 1026,-8 1032,-14 1032,-20 1032,-20 1032,-193.64 1032,-193.64 1032,-199.64 1026,-205.64 1020,-205.64 1020,-205.64 412,-205.64 412,-205.64 406,-205.64 400,-199.64 400,-193.64 400,-193.64 400,-20 400,-20 400,-14 406,-8 412,-8"/>
-<text xml:space="preserve" text-anchor="middle" x="436.67" y="-190.84" font-family="Helvetica,sans-Serif" font-size="12.00" fill="#697180"> &#160;STACKIT</text>
+<path fill="white" stroke="#d5dae0" d="M284,-8C284,-8 821,-8 821,-8 827,-8 833,-14 833,-20 833,-20 833,-193.64 833,-193.64 833,-199.64 827,-205.64 821,-205.64 821,-205.64 284,-205.64 284,-205.64 278,-205.64 272,-199.64 272,-193.64 272,-193.64 272,-20 272,-20 272,-14 278,-8 284,-8"/>
+<text xml:space="preserve" text-anchor="middle" x="308.67" y="-190.84" font-family="Helvetica,sans-Serif" font-size="12.00" fill="#697180"> &#160;STACKIT</text>
 </g>
 <!-- REFARCH -->
 <g id="node1" class="node">
 <title>REFARCH</title>
-<path fill="#ecedfb" stroke="#9aa2e6" stroke-width="1.1" d="M297.78,-462.48C297.78,-462.48 102.22,-462.48 102.22,-462.48 96.22,-462.48 90.22,-456.48 90.22,-450.48 90.22,-450.48 90.22,-432.24 90.22,-432.24 90.22,-426.24 96.22,-420.24 102.22,-420.24 102.22,-420.24 297.78,-420.24 297.78,-420.24 303.78,-420.24 309.78,-426.24 309.78,-432.24 309.78,-432.24 309.78,-450.48 309.78,-450.48 309.78,-456.48 303.78,-462.48 297.78,-462.48"/>
-<text xml:space="preserve" text-anchor="middle" x="200" y="-444.66" font-family="Helvetica,sans-Serif" font-size="11.00">📦 STACKIT Landing Zone Accelerator</text>
-<text xml:space="preserve" text-anchor="middle" x="200" y="-431.46" font-family="Helvetica,sans-Serif" font-size="11.00">Configurator tfvars</text>
+<path fill="#ecedfb" stroke="#9aa2e6" stroke-width="1.1" d="M233.78,-468.72C233.78,-468.72 38.22,-468.72 38.22,-468.72 32.22,-468.72 26.22,-462.72 26.22,-456.72 26.22,-456.72 26.22,-438.48 26.22,-438.48 26.22,-432.48 32.22,-426.48 38.22,-426.48 38.22,-426.48 233.78,-426.48 233.78,-426.48 239.78,-426.48 245.78,-432.48 245.78,-438.48 245.78,-438.48 245.78,-456.72 245.78,-456.72 245.78,-462.72 239.78,-468.72 233.78,-468.72"/>
+<text xml:space="preserve" text-anchor="middle" x="136" y="-450.9" font-family="Helvetica,sans-Serif" font-size="11.00">📦 STACKIT Landing Zone Accelerator</text>
+<text xml:space="preserve" text-anchor="middle" x="136" y="-437.7" font-family="Helvetica,sans-Serif" font-size="11.00">Configurator tfvars</text>
 </g>
 <!-- PLAT -->
 <g id="node2" class="node">
 <title>PLAT</title>
-<path fill="#ecedfb" stroke="#9aa2e6" stroke-width="1.1" d="M259.85,-359.24C259.85,-359.24 140.15,-359.24 140.15,-359.24 134.15,-359.24 128.15,-353.24 128.15,-347.24 128.15,-347.24 128.15,-335.24 128.15,-335.24 128.15,-329.24 134.15,-323.24 140.15,-323.24 140.15,-323.24 259.85,-323.24 259.85,-323.24 265.85,-323.24 271.85,-329.24 271.85,-335.24 271.85,-335.24 271.85,-347.24 271.85,-347.24 271.85,-353.24 265.85,-359.24 259.85,-359.24"/>
-<text xml:space="preserve" text-anchor="middle" x="200" y="-337.94" font-family="Helvetica,sans-Serif" font-size="11.00">🛰️ STACKIT Platform</text>
+<path fill="#ecedfb" stroke="#9aa2e6" stroke-width="1.1" d="M198.85,-365.48C198.85,-365.48 79.15,-365.48 79.15,-365.48 73.15,-365.48 67.15,-359.48 67.15,-353.48 67.15,-353.48 67.15,-341.48 67.15,-341.48 67.15,-335.48 73.15,-329.48 79.15,-329.48 79.15,-329.48 198.85,-329.48 198.85,-329.48 204.85,-329.48 210.85,-335.48 210.85,-341.48 210.85,-341.48 210.85,-353.48 210.85,-353.48 210.85,-359.48 204.85,-365.48 198.85,-365.48"/>
+<text xml:space="preserve" text-anchor="middle" x="139" y="-344.18" font-family="Helvetica,sans-Serif" font-size="11.00">🛰️ STACKIT Platform</text>
 </g>
 <!-- REFARCH&#45;&gt;PLAT -->
-<g id="edge2" class="edge">
+<g id="edge1" class="edge">
 <title>REFARCH&#45;&gt;PLAT</title>
-<path fill="none" stroke="#8b95a3" d="M200,-420.13C200,-420.13 200,-368.26 200,-368.26"/>
-<polygon fill="#8b95a3" stroke="#8b95a3" points="202.45,-368.26 200,-361.26 197.55,-368.26 202.45,-368.26"/>
-<text xml:space="preserve" text-anchor="middle" x="182.74" y="-396.9" font-family="Helvetica,sans-Serif" font-size="9.00" fill="#697180">registers</text>
+<path fill="none" stroke="#8b95a3" d="M139,-426.37C139,-426.37 139,-374.5 139,-374.5"/>
+<polygon fill="#8b95a3" stroke="#8b95a3" points="141.45,-374.5 139,-367.5 136.55,-374.5 141.45,-374.5"/>
+<text xml:space="preserve" text-anchor="middle" x="121.74" y="-403.14" font-family="Helvetica,sans-Serif" font-size="9.00" fill="#697180">registers</text>
 </g>
 <!-- MGMT -->
-<g id="node6" class="node">
+<g id="node5" class="node">
 <title>MGMT</title>
-<path fill="#fdf1e3" stroke="#e0b37c" stroke-width="1.1" d="M590.05,-165.24C590.05,-165.24 429.95,-165.24 429.95,-165.24 423.95,-165.24 417.95,-159.24 417.95,-153.24 417.95,-153.24 417.95,-135 417.95,-135 417.95,-129 423.95,-123 429.95,-123 429.95,-123 590.05,-123 590.05,-123 596.05,-123 602.05,-129 602.05,-135 602.05,-135 602.05,-153.24 602.05,-153.24 602.05,-159.24 596.05,-165.24 590.05,-165.24"/>
-<text xml:space="preserve" text-anchor="middle" x="510" y="-147.42" font-family="Helvetica,sans-Serif" font-size="11.00">🔑 Management Project</text>
-<text xml:space="preserve" text-anchor="middle" x="510" y="-134.22" font-family="Helvetica,sans-Serif" font-size="11.00">project&#45;creation service account</text>
+<path fill="#fdf1e3" stroke="#e0b37c" stroke-width="1.1" d="M462.05,-165.24C462.05,-165.24 301.95,-165.24 301.95,-165.24 295.95,-165.24 289.95,-159.24 289.95,-153.24 289.95,-153.24 289.95,-135 289.95,-135 289.95,-129 295.95,-123 301.95,-123 301.95,-123 462.05,-123 462.05,-123 468.05,-123 474.05,-129 474.05,-135 474.05,-135 474.05,-153.24 474.05,-153.24 474.05,-159.24 468.05,-165.24 462.05,-165.24"/>
+<text xml:space="preserve" text-anchor="middle" x="382" y="-147.42" font-family="Helvetica,sans-Serif" font-size="11.00">🔑 Management Project</text>
+<text xml:space="preserve" text-anchor="middle" x="382" y="-134.22" font-family="Helvetica,sans-Serif" font-size="11.00">project&#45;creation service account</text>
 </g>
 <!-- REFARCH&#45;&gt;MGMT -->
-<g id="edge11" class="edge">
+<g id="edge8" class="edge">
 <title>REFARCH&#45;&gt;MGMT</title>
-<path fill="none" stroke="#8b95a3" stroke-dasharray="1,5" d="M310.17,-441C399.27,-441 510,-441 510,-441 510,-441 510,-173.98 510,-173.98"/>
-<polygon fill="#8b95a3" stroke="#8b95a3" points="512.45,-173.98 510,-166.98 507.55,-173.98 512.45,-173.98"/>
-<text xml:space="preserve" text-anchor="middle" x="472.23" y="-410.11" font-family="Helvetica,sans-Serif" font-size="9.00" fill="#697180">applies accelerator</text>
+<path fill="none" stroke="#8b95a3" stroke-dasharray="1,5" d="M246.05,-448C311.55,-448 382,-448 382,-448 382,-448 382,-174 382,-174"/>
+<polygon fill="#8b95a3" stroke="#8b95a3" points="384.45,-174 382,-167 379.55,-174 384.45,-174"/>
+<text xml:space="preserve" text-anchor="middle" x="344.23" y="-381.68" font-family="Helvetica,sans-Serif" font-size="9.00" fill="#697180">applies accelerator</text>
 </g>
-<!-- PUBLZ -->
+<!-- LZ -->
 <g id="node3" class="node">
-<title>PUBLZ</title>
-<path fill="#ecedfb" stroke="#9aa2e6" stroke-width="1.1" d="M158.19,-262.24C158.19,-262.24 37.81,-262.24 37.81,-262.24 31.81,-262.24 25.81,-256.24 25.81,-250.24 25.81,-250.24 25.81,-238.24 25.81,-238.24 25.81,-232.24 31.81,-226.24 37.81,-226.24 37.81,-226.24 158.19,-226.24 158.19,-226.24 164.19,-226.24 170.19,-232.24 170.19,-238.24 170.19,-238.24 170.19,-250.24 170.19,-250.24 170.19,-256.24 164.19,-262.24 158.19,-262.24"/>
-<text xml:space="preserve" text-anchor="middle" x="98" y="-240.94" font-family="Helvetica,sans-Serif" font-size="11.00">🛬 Public Landing Zone</text>
+<title>LZ</title>
+<path fill="#ecedfb" stroke="#9aa2e6" stroke-width="1.1" d="M226.93,-268.48C226.93,-268.48 71.07,-268.48 71.07,-268.48 65.07,-268.48 59.07,-262.48 59.07,-256.48 59.07,-256.48 59.07,-238.24 59.07,-238.24 59.07,-232.24 65.07,-226.24 71.07,-226.24 71.07,-226.24 226.93,-226.24 226.93,-226.24 232.93,-226.24 238.93,-232.24 238.93,-238.24 238.93,-238.24 238.93,-256.48 238.93,-256.48 238.93,-262.48 232.93,-268.48 226.93,-268.48"/>
+<text xml:space="preserve" text-anchor="middle" x="149" y="-250.66" font-family="Helvetica,sans-Serif" font-size="11.00">🛬 Landing Zone ×N</text>
+<text xml:space="preserve" text-anchor="middle" x="149" y="-237.46" font-family="Helvetica,sans-Serif" font-size="11.00">one per entry of landing_zones</text>
 </g>
-<!-- PLAT&#45;&gt;PUBLZ -->
-<g id="edge3" class="edge">
-<title>PLAT&#45;&gt;PUBLZ</title>
-<path fill="none" stroke="#8b95a3" d="M149.17,-323C149.17,-323 149.17,-271.25 149.17,-271.25"/>
-<polygon fill="#8b95a3" stroke="#8b95a3" points="151.62,-271.25 149.17,-264.25 146.72,-271.25 151.62,-271.25"/>
+<!-- PLAT&#45;&gt;LZ -->
+<g id="edge2" class="edge">
+<title>PLAT&#45;&gt;LZ</title>
+<path fill="none" stroke="#8b95a3" d="M139,-329.12C139,-329.12 139,-277.25 139,-277.25"/>
+<polygon fill="#8b95a3" stroke="#8b95a3" points="141.45,-277.25 139,-270.25 136.55,-277.25 141.45,-277.25"/>
 </g>
-<!-- CORPLZ -->
-<g id="node4" class="node">
-<title>CORPLZ</title>
-<path fill="#ecedfb" stroke="#9aa2e6" stroke-width="1.1" d="M361.66,-262.24C361.66,-262.24 222.34,-262.24 222.34,-262.24 216.34,-262.24 210.34,-256.24 210.34,-250.24 210.34,-250.24 210.34,-238.24 210.34,-238.24 210.34,-232.24 216.34,-226.24 222.34,-226.24 222.34,-226.24 361.66,-226.24 361.66,-226.24 367.66,-226.24 373.66,-232.24 373.66,-238.24 373.66,-238.24 373.66,-250.24 373.66,-250.24 373.66,-256.24 367.66,-262.24 361.66,-262.24"/>
-<text xml:space="preserve" text-anchor="middle" x="292" y="-240.94" font-family="Helvetica,sans-Serif" font-size="11.00">🛬 Corporate Landing Zone</text>
-</g>
-<!-- PLAT&#45;&gt;CORPLZ -->
-<g id="edge4" class="edge">
-<title>PLAT&#45;&gt;CORPLZ</title>
-<path fill="none" stroke="#8b95a3" d="M241.09,-323C241.09,-323 241.09,-271.25 241.09,-271.25"/>
-<polygon fill="#8b95a3" stroke="#8b95a3" points="243.54,-271.25 241.09,-264.25 238.64,-271.25 243.54,-271.25"/>
-</g>
-<!-- PUBLZ&#45;&gt;CORPLZ -->
 <!-- PRJBBD -->
-<g id="node5" class="node">
+<g id="node4" class="node">
 <title>PRJBBD</title>
-<path fill="#ecedfb" stroke="#9aa2e6" stroke-width="1.1" d="M361.94,-165.24C361.94,-165.24 214.06,-165.24 214.06,-165.24 208.06,-165.24 202.06,-159.24 202.06,-153.24 202.06,-153.24 202.06,-135 202.06,-135 202.06,-129 208.06,-123 214.06,-123 214.06,-123 361.94,-123 361.94,-123 367.94,-123 373.94,-129 373.94,-135 373.94,-135 373.94,-153.24 373.94,-153.24 373.94,-159.24 367.94,-165.24 361.94,-165.24"/>
-<text xml:space="preserve" text-anchor="middle" x="288" y="-147.42" font-family="Helvetica,sans-Serif" font-size="11.00">📦 STACKIT Project</text>
-<text xml:space="preserve" text-anchor="middle" x="288" y="-134.22" font-family="Helvetica,sans-Serif" font-size="11.00">marketplace · one per tenant</text>
+<path fill="#ecedfb" stroke="#9aa2e6" stroke-width="1.1" d="M229.94,-165.24C229.94,-165.24 82.06,-165.24 82.06,-165.24 76.06,-165.24 70.06,-159.24 70.06,-153.24 70.06,-153.24 70.06,-135 70.06,-135 70.06,-129 76.06,-123 82.06,-123 82.06,-123 229.94,-123 229.94,-123 235.94,-123 241.94,-129 241.94,-135 241.94,-135 241.94,-153.24 241.94,-153.24 241.94,-159.24 235.94,-165.24 229.94,-165.24"/>
+<text xml:space="preserve" text-anchor="middle" x="156" y="-147.42" font-family="Helvetica,sans-Serif" font-size="11.00">📦 STACKIT Project</text>
+<text xml:space="preserve" text-anchor="middle" x="156" y="-134.22" font-family="Helvetica,sans-Serif" font-size="11.00">marketplace · one per tenant</text>
 </g>
-<!-- PUBLZ&#45;&gt;PRJBBD -->
-<g id="edge5" class="edge">
-<title>PUBLZ&#45;&gt;PRJBBD</title>
-<path fill="none" stroke="#8b95a3" d="M170.47,-238C190.18,-238 206.2,-238 206.2,-238 206.2,-238 206.2,-173.94 206.2,-173.94"/>
-<polygon fill="#8b95a3" stroke="#8b95a3" points="208.65,-173.94 206.2,-166.94 203.75,-173.94 208.65,-173.94"/>
-<text xml:space="preserve" text-anchor="middle" x="194.94" y="-226.53" font-family="Helvetica,sans-Serif" font-size="9.00" fill="#697180">offers</text>
-</g>
-<!-- CORPLZ&#45;&gt;PRJBBD -->
-<g id="edge6" class="edge">
-<title>CORPLZ&#45;&gt;PRJBBD</title>
-<path fill="none" stroke="#8b95a3" d="M292,-225.88C292,-225.88 292,-174.01 292,-174.01"/>
-<polygon fill="#8b95a3" stroke="#8b95a3" points="294.45,-174.01 292,-167.01 289.55,-174.01 294.45,-174.01"/>
+<!-- LZ&#45;&gt;PRJBBD -->
+<g id="edge3" class="edge">
+<title>LZ&#45;&gt;PRJBBD</title>
+<path fill="none" stroke="#8b95a3" d="M154.49,-225.97C154.49,-225.97 154.49,-174 154.49,-174"/>
+<polygon fill="#8b95a3" stroke="#8b95a3" points="156.94,-174 154.49,-167 152.04,-174 156.94,-174"/>
+<text xml:space="preserve" text-anchor="middle" x="143.24" y="-202.68" font-family="Helvetica,sans-Serif" font-size="9.00" fill="#697180">offers</text>
 </g>
 <!-- PRJ -->
-<g id="node9" class="node">
+<g id="node8" class="node">
 <title>PRJ</title>
-<path fill="#e5f2ea" stroke="#85bfa0" stroke-width="1.1" d="M785.05,-62C785.05,-62 654.95,-62 654.95,-62 648.95,-62 642.95,-56 642.95,-50 642.95,-50 642.95,-38 642.95,-38 642.95,-32 648.95,-26 654.95,-26 654.95,-26 785.05,-26 785.05,-26 791.05,-26 797.05,-32 797.05,-38 797.05,-38 797.05,-50 797.05,-50 797.05,-56 791.05,-62 785.05,-62"/>
-<text xml:space="preserve" text-anchor="middle" x="720" y="-40.7" font-family="Helvetica,sans-Serif" font-size="11.00">🗂️ STACKIT Project ×N</text>
+<path fill="#e5f2ea" stroke="#85bfa0" stroke-width="1.1" d="M635.05,-62C635.05,-62 504.95,-62 504.95,-62 498.95,-62 492.95,-56 492.95,-50 492.95,-50 492.95,-38 492.95,-38 492.95,-32 498.95,-26 504.95,-26 504.95,-26 635.05,-26 635.05,-26 641.05,-26 647.05,-32 647.05,-38 647.05,-38 647.05,-50 647.05,-50 647.05,-56 641.05,-62 635.05,-62"/>
+<text xml:space="preserve" text-anchor="middle" x="570" y="-40.7" font-family="Helvetica,sans-Serif" font-size="11.00">🗂️ STACKIT Project ×N</text>
 </g>
 <!-- PRJBBD&#45;&gt;PRJ -->
-<g id="edge12" class="edge">
+<g id="edge9" class="edge">
 <title>PRJBBD&#45;&gt;PRJ</title>
-<path fill="none" stroke="#8b95a3" stroke-dasharray="1,5" d="M288,-122.89C288,-93.5 288,-44 288,-44 288,-44 634,-44 634,-44"/>
-<polygon fill="#8b95a3" stroke="#8b95a3" points="634,-46.45 641,-44 634,-41.55 634,-46.45"/>
-<text xml:space="preserve" text-anchor="middle" x="406.8" y="-46.7" font-family="Helvetica,sans-Serif" font-size="9.00" fill="#697180">creates</text>
+<path fill="none" stroke="#8b95a3" stroke-dasharray="1,5" d="M156,-122.89C156,-93.5 156,-44 156,-44 156,-44 484.1,-44 484.1,-44"/>
+<polygon fill="#8b95a3" stroke="#8b95a3" points="484.1,-46.45 491.1,-44 484.1,-41.55 484.1,-46.45"/>
+<text xml:space="preserve" text-anchor="middle" x="265.85" y="-46.7" font-family="Helvetica,sans-Serif" font-size="9.00" fill="#697180">creates</text>
 </g>
 <!-- PUBF -->
-<g id="node7" class="node">
+<g id="node6" class="node">
 <title>PUBF</title>
-<path fill="#fdf1e3" stroke="#e0b37c" stroke-width="1.1" d="M786.3,-162.12C786.3,-162.12 653.7,-162.12 653.7,-162.12 647.7,-162.12 641.7,-156.12 641.7,-150.12 641.7,-150.12 641.7,-138.12 641.7,-138.12 641.7,-132.12 647.7,-126.12 653.7,-126.12 653.7,-126.12 786.3,-126.12 786.3,-126.12 792.3,-126.12 798.3,-132.12 798.3,-138.12 798.3,-138.12 798.3,-150.12 798.3,-150.12 798.3,-156.12 792.3,-162.12 786.3,-162.12"/>
-<text xml:space="preserve" text-anchor="middle" x="720" y="-140.82" font-family="Helvetica,sans-Serif" font-size="11.00">📁 Landing Zones &#45; Public</text>
+<path fill="#fdf1e3" stroke="#e0b37c" stroke-width="1.1" d="M613.52,-165.24C613.52,-165.24 526.48,-165.24 526.48,-165.24 520.48,-165.24 514.48,-159.24 514.48,-153.24 514.48,-153.24 514.48,-135 514.48,-135 514.48,-129 520.48,-123 526.48,-123 526.48,-123 613.52,-123 613.52,-123 619.52,-123 625.52,-129 625.52,-135 625.52,-135 625.52,-153.24 625.52,-153.24 625.52,-159.24 619.52,-165.24 613.52,-165.24"/>
+<text xml:space="preserve" text-anchor="middle" x="570" y="-147.42" font-family="Helvetica,sans-Serif" font-size="11.00">📁 Public Folder</text>
+<text xml:space="preserve" text-anchor="middle" x="570" y="-134.22" font-family="Helvetica,sans-Serif" font-size="11.00">corporate = false</text>
 </g>
 <!-- MGMT&#45;&gt;PUBF -->
 <!-- CORPF -->
-<g id="node8" class="node">
+<g id="node7" class="node">
 <title>CORPF</title>
-<path fill="#fdf1e3" stroke="#e0b37c" stroke-width="1.1" d="M1001.77,-162.12C1001.77,-162.12 850.23,-162.12 850.23,-162.12 844.23,-162.12 838.23,-156.12 838.23,-150.12 838.23,-150.12 838.23,-138.12 838.23,-138.12 838.23,-132.12 844.23,-126.12 850.23,-126.12 850.23,-126.12 1001.77,-126.12 1001.77,-126.12 1007.77,-126.12 1013.77,-132.12 1013.77,-138.12 1013.77,-138.12 1013.77,-150.12 1013.77,-150.12 1013.77,-156.12 1007.77,-162.12 1001.77,-162.12"/>
-<text xml:space="preserve" text-anchor="middle" x="926" y="-140.82" font-family="Helvetica,sans-Serif" font-size="11.00">📁 Landing Zones &#45; Corporate</text>
+<path fill="#fdf1e3" stroke="#e0b37c" stroke-width="1.1" d="M802.78,-165.24C802.78,-165.24 677.22,-165.24 677.22,-165.24 671.22,-165.24 665.22,-159.24 665.22,-153.24 665.22,-153.24 665.22,-135 665.22,-135 665.22,-129 671.22,-123 677.22,-123 677.22,-123 802.78,-123 802.78,-123 808.78,-123 814.78,-129 814.78,-135 814.78,-135 814.78,-153.24 814.78,-153.24 814.78,-159.24 808.78,-165.24 802.78,-165.24"/>
+<text xml:space="preserve" text-anchor="middle" x="740" y="-147.42" font-family="Helvetica,sans-Serif" font-size="11.00">📁 Corporate Folder</text>
+<text xml:space="preserve" text-anchor="middle" x="740" y="-134.22" font-family="Helvetica,sans-Serif" font-size="11.00">corporate = true or unset</text>
 </g>
 <!-- PUBF&#45;&gt;CORPF -->
 <!-- PUBF&#45;&gt;PRJ -->
-<g id="edge9" class="edge">
+<g id="edge6" class="edge">
 <title>PUBF&#45;&gt;PRJ</title>
-<path fill="none" stroke="#8b95a3" d="M720,-125.76C720,-125.76 720,-70.76 720,-70.76"/>
-<polygon fill="#8b95a3" stroke="#8b95a3" points="722.45,-70.76 720,-63.76 717.55,-70.76 722.45,-70.76"/>
-<text xml:space="preserve" text-anchor="middle" x="709.24" y="-100.96" font-family="Helvetica,sans-Serif" font-size="9.00" fill="#697180">holds</text>
+<path fill="none" stroke="#8b95a3" d="M570,-122.89C570,-122.89 570,-71.02 570,-71.02"/>
+<polygon fill="#8b95a3" stroke="#8b95a3" points="572.45,-71.02 570,-64.02 567.55,-71.02 572.45,-71.02"/>
+<text xml:space="preserve" text-anchor="middle" x="559.24" y="-99.66" font-family="Helvetica,sans-Serif" font-size="9.00" fill="#697180">holds</text>
 </g>
 <!-- CORPF&#45;&gt;PRJ -->
-<g id="edge10" class="edge">
+<g id="edge7" class="edge">
 <title>CORPF&#45;&gt;PRJ</title>
-<path fill="none" stroke="#8b95a3" d="M926,-125.76C926,-96.85 926,-44 926,-44 926,-44 806.1,-44 806.1,-44"/>
-<polygon fill="#8b95a3" stroke="#8b95a3" points="806.1,-41.55 799.1,-44 806.1,-46.45 806.1,-41.55"/>
+<path fill="none" stroke="#8b95a3" d="M664.9,-137C648.68,-137 636.29,-137 636.29,-137 636.29,-137 636.29,-70.89 636.29,-70.89"/>
+<polygon fill="#8b95a3" stroke="#8b95a3" points="638.74,-70.89 636.29,-63.89 633.84,-70.89 638.74,-70.89"/>
 </g>
 </g>
 </svg>

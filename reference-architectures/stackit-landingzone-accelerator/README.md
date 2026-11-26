@@ -2,7 +2,7 @@
 name: STACKIT Landing Zone Accelerator
 description: >
   Deploys the STACKIT Landing Zone Accelerator from a STACKIT Landing Zone Configurator export in
-  one meshStack run, and turns its landing zone folders into a meshStack platform whose STACKIT
+  one meshStack run, and turns each of its landing zones into a meshStack landing zone whose STACKIT
   Project building block application teams add from the marketplace.
 cloudProviders:
   - stackit
@@ -22,15 +22,18 @@ accelerator's `src/` root.
 
 This reference architecture takes that export as a building block input and applies the
 accelerator with exactly these values. On top of the foundation it registers a STACKIT platform in
-meshStack with these landing zones:
+meshStack with one landing zone per entry of the export's `landing_zones`:
 
-- **Public** (`<platform identifier>-public`), when the export declares the folder
-  `landing_zones_public`.
-- **Corporate** (`<platform identifier>-corporate`), when the export declares the folder
-  `landing_zones_corporate`.
+- Its identifier is `<platform identifier>-<entry key>`, with the key lowercased and every run of
+  characters other than letters and digits turned into a dash. For example, the entry `corp-exmpl`
+  of platform `web` becomes `web-corp-exmpl`.
+- Tenant projects go into the accelerator's corporate folder when the entry's `corporate` is true or
+  unset, which is the accelerator's default, and into its public folder when it is false.
+- Its display name is the entry's `project_name` with `(corporate)` or `(public)` appended.
 
-Application teams add **STACKIT Project** from the marketplace to a tenant on one of them, and get a
-project in that folder.
+An export without landing zones gives a platform without landing zones. Application teams add
+**STACKIT Project** from the marketplace to a tenant on one of them, and get a project in that
+landing zone's folder.
 
 ![STACKIT Landing Zone Accelerator](stackit-landingzone-accelerator.svg)
 
@@ -70,11 +73,10 @@ access to it like a secret.
 
 ## Limitations
 
-- Projects on the corporate landing zone are created in the corporate folder, but they are not
+- Projects on a corporate landing zone are created in the corporate folder, but they are not
   attached to the accelerator's network area.
-- The platform has one landing zone per folder, not one per target of the accelerator's
-  `platform_contract`. The contract has a public target per region, and all targets of one kind
-  share a folder.
+- A meshStack landing zone takes only the folder from its entry. The entry's own project, network,
+  roles and services are created once by the accelerator and do not apply to tenant projects.
 - The export may not set firewall credentials, `vpn_pre_shared_keys` or `bucket_naming`. A firewall
   needs a second apply after its bootstrap, which this building block does not run.
 - Deleting the building block destroys the whole foundation. Delete the tenant projects first.
