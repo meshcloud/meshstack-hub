@@ -189,7 +189,7 @@ resource "meshstack_building_block_definition" "this" {
 
       playground_mode = {
         display_name    = "Playground Mode"
-        description     = "Throwaway deployment: the identifier gets a random suffix and the registered definition is named after it, so the block can be ordered more than once in one meshStack. Publish such a platform or its definition only to test. Cannot be changed after the order."
+        description     = "Throwaway deployment: the identifier gets a random suffix and the definition is named after it, so the block can be ordered more than once in one meshStack. Publish such a platform only to test. Cannot change after the order."
         type            = "BOOLEAN"
         assignment_type = "USER_INPUT"
         default_value   = jsonencode(false)
