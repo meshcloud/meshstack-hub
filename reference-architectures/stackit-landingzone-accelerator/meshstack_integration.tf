@@ -80,6 +80,32 @@ output "building_block_definition" {
   }
 }
 
+# meshPanel has no form widget for a map of free-form keys, so each tag map is a growable list of
+# {key, values} entries; buildingblock/ folds them back into maps.
+locals {
+  tag_list_schema = {
+    type = "array"
+    items = {
+      type     = "object"
+      required = ["key", "values"]
+      properties = {
+        key    = { type = "string", title = "Tag Key" }
+        values = { type = "array", title = "Values", minItems = 1, items = { type = "string" } }
+      }
+    }
+  }
+
+  tags_json_schema = {
+    "$schema" = "http://json-schema.org/draft-07/schema#"
+    type      = "object"
+    required  = ["landingzone", "building_block"]
+    properties = {
+      landingzone    = merge(local.tag_list_schema, { title = "Landing Zone Tags" })
+      building_block = merge(local.tag_list_schema, { title = "Building Block Tags" })
+    }
+  }
+}
+
 resource "meshstack_building_block_definition" "this" {
   metadata = {
     owned_by_workspace = var.meshstack.owning_workspace_identifier
@@ -225,6 +251,17 @@ resource "meshstack_building_block_definition" "this" {
         updateable_by_consumer = true
         sensitive              = {}
         display_order          = 40
+      }
+
+      tags = {
+        display_name           = "Tags"
+        description            = "Tags forwarded to the nested integration. Build them in the form: add {key, values} entries for landing zones and building blocks."
+        type                   = "JSON"
+        assignment_type        = "USER_INPUT"
+        updateable_by_consumer = true
+        display_order          = 100
+
+        json_schema = jsonencode(local.tags_json_schema)
       }
 
       runner_ref = {

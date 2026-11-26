@@ -94,7 +94,9 @@ access to it like a secret.
    workspace that will own the platform.
 2. Order it in that workspace. Paste the export into **Landing Zone tfvars**, set **Accelerator
    Version** to a release whose variables fit the export, or to the commit in its `Accelerator
-   source` line, paste the service account key and choose a platform identifier.
+   source` line, paste the service account key and choose a platform identifier. Set the tags
+   your meshStack requires on landing zones and building block definitions in **Tags**, as
+   `landingzone = [{ key = "...", values = ["..."] }]` and `building_block = [...]`.
 3. Once the run succeeds, application teams add **STACKIT Project** to their tenants on the new
    landing zones.
 

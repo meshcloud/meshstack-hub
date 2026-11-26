@@ -50,6 +50,19 @@ variable "accelerator_ref" {
   description = "Git ref of github.com/stackitcloud/stackit-landing-zone whose `src/` the run applies: a tag such as `v2.3.0`, a branch or a commit. The export's `Accelerator source` header names the commit it was made for; another ref works when the export's variables fit that version. `const` so it can be interpolated into the module source at init time."
 }
 
+variable "tags" {
+  type = object({
+    landingzone    = list(object({ key = string, values = list(string) }))
+    building_block = list(object({ key = string, values = list(string) }))
+  })
+  nullable    = false
+  description = <<-EOT
+  Tags forwarded to the nested STACKIT integration, each map built in the meshPanel form as a list of {key, values} entries.
+  `landingzone` tags are applied to the created landing zones.
+  `building_block` tags are applied to the STACKIT Project definition.
+  EOT
+}
+
 variable "runner_ref" {
   type = object({
     kind = optional(string)

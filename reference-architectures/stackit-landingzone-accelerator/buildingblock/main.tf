@@ -8,6 +8,12 @@ locals {
   # name, so a playground deployment suffixes it and leaves the plain name free.
   platform_identifier = var.playground_mode ? "${var.platform_identifier}-${random_string.playground_suffix.result}" : var.platform_identifier
 
+  # The meshPanel Tags form sends each tag map as a list of {key, values} entries.
+  tags = {
+    landingzone    = { for e in var.tags.landingzone : e.key => e.values }
+    building_block = { for e in var.tags.building_block : e.key => e.values }
+  }
+
   # meshStack landing zone identifiers are lowercase alphanumerics joined by single dashes.
   landing_zones = {
     for key, lz in lookup(local.accelerator_inputs, "landing_zones", {}) : trim(replace(lower(key), "/[^a-z0-9]+/", "-"), "-") => {
@@ -88,5 +94,6 @@ module "stackit_integration" {
     owning_workspace_identifier = var.workspace
     runner_ref                  = local.runner_ref
     platform_identifier         = local.platform_identifier
+    tags                        = local.tags
   }
 }
