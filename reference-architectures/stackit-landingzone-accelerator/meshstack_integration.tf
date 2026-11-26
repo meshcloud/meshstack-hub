@@ -267,7 +267,7 @@ resource "meshstack_building_block_definition" "this" {
         description            = "Tags forwarded to the nested integration. Build them in the form: add {key, values} entries for landing zones and building blocks."
         type                   = "JSON"
         assignment_type        = "USER_INPUT"
-        default_value          = var.tags == null ? null : jsonencode(var.tags)
+        default_value          = var.tags == null ? null : jsonencode(jsonencode(var.tags))
         updateable_by_consumer = true
         display_order          = 100
 
