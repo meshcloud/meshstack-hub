@@ -96,7 +96,8 @@ access to it like a secret.
    Version** to a release whose variables fit the export, or to the commit in its `Accelerator
    source` line, paste the service account key and choose a platform identifier. Set the tags
    your meshStack requires on landing zones and building block definitions in **Tags**, as
-   `landingzone = [{ key = "...", values = ["..."] }]` and `building_block = [...]`.
+   `landingzone = [{ key = "...", values = ["..."] }]` and `building_block = [...]`. The variable
+   `tags` of `meshstack_integration.tf` pre-fills this input with the same shape.
 3. Once the run succeeds, application teams add **STACKIT Project** to their tenants on the new
    landing zones.
 
