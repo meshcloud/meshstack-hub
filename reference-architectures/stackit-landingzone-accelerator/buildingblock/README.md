@@ -9,7 +9,9 @@ This building block decodes the pasted Configurator export with
 `provider::terraform::decode_tfvars` and passes its values to the accelerator's `src/` at
 `accelerator_ref`, any git ref of the accelerator. The export's `Accelerator source` header names
 the commit the export was made for; another ref works when the export's variables fit that version.
-An input the export leaves out keeps the accelerator's default. The export may
+An input the export leaves out keeps the accelerator's default. The block creates one root folder,
+`<platform identifier>` or `playground-<platform identifier>`, in the export's `rm_folder_parent_id`
+or the organization, and passes it to the accelerator as `rm_folder_parent_id`. The export may
 only set the inputs `main.tf` passes on; firewall credentials and `bucket_naming` are rejected.
 
 It then sources [`modules/stackit`](../../../modules/stackit) with `stackit_landing_zones`: one

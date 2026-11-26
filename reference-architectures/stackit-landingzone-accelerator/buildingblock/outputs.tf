@@ -1,3 +1,8 @@
+output "root_folder_container_id" {
+  value       = stackit_resourcemanager_folder.root.container_id
+  description = "Container ID of the root folder that holds every folder of the accelerator."
+}
+
 output "management_project_id" {
   value       = module.accelerator.management_project_id
   description = "Project ID of the accelerator's management project, which also holds the service account of the STACKIT Project definition."
@@ -18,6 +23,9 @@ output "summary" {
   value = templatefile("${path.module}/SUMMARY.md.tftpl", {
     organization_id        = local.accelerator_inputs.organization_id
     organization_url       = "https://portal.stackit.cloud/dashboard?organization=${local.accelerator_inputs.organization_id}"
+    root_folder_name       = stackit_resourcemanager_folder.root.name
+    root_folder_id         = stackit_resourcemanager_folder.root.container_id
+    root_folder_url        = "https://portal.stackit.cloud/dashboard?organization=${local.accelerator_inputs.organization_id}&folder=${stackit_resourcemanager_folder.root.folder_id}"
     management_project_id  = module.accelerator.management_project_id
     management_project_url = "https://portal.stackit.cloud/dashboard?project=${module.accelerator.management_project_id}"
     service_account_email  = module.stackit_integration.service_account_email

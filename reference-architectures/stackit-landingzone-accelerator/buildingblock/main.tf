@@ -48,6 +48,13 @@ resource "random_string" "playground_suffix" {
   upper   = false
 }
 
+# Holds every folder of the accelerator, whose folder names must be unique in their parent.
+resource "stackit_resourcemanager_folder" "root" {
+  name                = var.playground_mode ? "playground-${local.platform_identifier}" : local.platform_identifier
+  owner_email         = local.accelerator_inputs.owner_email
+  parent_container_id = coalesce(lookup(local.accelerator_inputs, "rm_folder_parent_id", null), local.accelerator_inputs.organization_id)
+}
+
 # An argument set to null replaces the accelerator's default, so an input the export leaves out
 # gets that default spelled out: null or an empty collection.
 module "accelerator" {
@@ -60,6 +67,8 @@ module "accelerator" {
   region          = local.accelerator_inputs.region
   rm_folders      = local.accelerator_inputs.rm_folders
 
+  rm_folder_parent_id = stackit_resourcemanager_folder.root.container_id
+
   audit_logs                      = lookup(local.accelerator_inputs, "audit_logs", null)
   connectivity                    = lookup(local.accelerator_inputs, "connectivity", null)
   connectivity_regions            = lookup(local.accelerator_inputs, "connectivity_regions", null)
@@ -67,7 +76,6 @@ module "accelerator" {
   firewall_config                 = lookup(local.accelerator_inputs, "firewall_config", null)
   observability                   = lookup(local.accelerator_inputs, "observability", null)
   platform_contract_namespace     = lookup(local.accelerator_inputs, "platform_contract_namespace", null)
-  rm_folder_parent_id             = lookup(local.accelerator_inputs, "rm_folder_parent_id", null)
   federated_identity_providers    = lookup(local.accelerator_inputs, "federated_identity_providers", [])
   labels                          = lookup(local.accelerator_inputs, "labels", {})
   landing_zone_namespace_services = lookup(local.accelerator_inputs, "landing_zone_namespace_services", {})

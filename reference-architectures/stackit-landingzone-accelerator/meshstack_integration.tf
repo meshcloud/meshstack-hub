@@ -136,6 +136,7 @@ resource "meshstack_building_block_definition" "this" {
     [STACKIT Landing Zone Accelerator](https://github.com/stackitcloud/stackit-landing-zone) and
     turns it into a meshStack platform. You paste the tfvars file the STACKIT Landing Zone
     Configurator exports, and the run applies the accelerator's `src/` with exactly these values.
+    Every folder of the accelerator goes into one root folder named after the platform identifier.
     It then registers a STACKIT platform with one landing zone per entry of the export's
     `landing_zones`, and the **STACKIT Project** building block. It creates a tenant's project in the
     accelerator's corporate or public folder, as the entry's `corporate` flag says.
@@ -302,6 +303,12 @@ resource "meshstack_building_block_definition" "this" {
     }
 
     outputs = {
+      root_folder_container_id = {
+        display_name    = "Root Folder Container ID"
+        type            = "STRING"
+        assignment_type = "NONE"
+      }
+
       management_project_id = {
         display_name    = "Management Project ID"
         type            = "STRING"

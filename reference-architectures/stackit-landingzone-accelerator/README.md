@@ -21,7 +21,10 @@ projects. The STACKIT Landing Zone Configurator designs it and exports a tfvars 
 accelerator's `src/` root.
 
 This reference architecture takes that export as a building block input and applies the
-accelerator with exactly these values. On top of the foundation it registers a STACKIT platform in
+accelerator with exactly these values, except that every folder of the accelerator goes into one
+root folder the block creates. The root folder sits where the export's `rm_folder_parent_id` points,
+or at the organization root without it, so the export's folder names only need to be unique inside
+it. On top of the foundation it registers a STACKIT platform in
 meshStack with one landing zone per entry of the export's `landing_zones`:
 
 - Its identifier is `<platform identifier>-<entry key>`, with the key lowercased and every run of
@@ -45,11 +48,12 @@ and cannot change after the order.
 | | `playground_mode = true` | `playground_mode = false` |
 |---|---|---|
 | Platform identifier | random suffix appended | taken exactly as given |
+| Root folder | `playground-<platform identifier>` | `<platform identifier>` |
 | Name of the STACKIT Project definition | ` (<platform identifier>)` appended | the module's name |
 
 A platform identifier is unique across the meshStack instance, so the suffix keeps a playground
 from occupying the real name, and the block can be ordered more than once. The export is applied
-unchanged in both modes, so STACKIT names come from the export alone. Publish a playground or its
+unchanged in both modes, so the other STACKIT names come from the export. Publish a playground or its
 definition only to test that path, and delete it afterwards.
 
 ## How It Works
@@ -58,7 +62,9 @@ definition only to test that path, and delete it afterwards.
    **Accelerator Version**, such as a release tag. The export's `Accelerator source` header names
    the commit the export was made for. Another ref works when the export's variables fit that
    version.
-2. The accelerator creates its resources in the organization the export names.
+2. The run creates the root folder, owned by the export's `owner_email`, and the accelerator
+   creates its resources in the organization the export names, with its folders in the root
+   folder.
 3. The run sources `modules/stackit`. It creates the project-creation service account in the
    accelerator's management project, grants it `resource-manager.admin` and `iam.member-admin` on
    the organization, and registers the platform, its landing zones and the STACKIT Project

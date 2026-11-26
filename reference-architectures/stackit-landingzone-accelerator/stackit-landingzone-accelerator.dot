@@ -42,6 +42,7 @@ digraph stackit_landingzone_accelerator {
 
     node [fillcolor="#fdf1e3" color="#e0b37c"]
 
+    ROOT    [label="📁 Root Folder\n<platform identifier>"]
     MGMT    [label="🔑 Management Project\nproject-creation service account"]
     PUBF    [label="📁 Public Folder\ncorporate = false"]
     CORPF   [label="📁 Corporate Folder\ncorporate = true or unset"]
@@ -49,10 +50,13 @@ digraph stackit_landingzone_accelerator {
 
     { rank=same; MGMT -> PUBF -> CORPF [style=invis] }
 
+    ROOT  -> MGMT [xlabel="holds"]
+    ROOT  -> PUBF
+    ROOT  -> CORPF
     PUBF  -> PRJ [xlabel="holds"]
     CORPF -> PRJ
   }
 
-  REFARCH -> MGMT [xlabel="applies accelerator" style=dotted constraint=false]
+  REFARCH -> ROOT [xlabel="applies accelerator" style=dotted constraint=false]
   PRJBBD  -> PRJ  [xlabel="creates" style=dotted]
 }
