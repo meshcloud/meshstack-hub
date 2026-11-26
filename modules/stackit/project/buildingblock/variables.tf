@@ -20,6 +20,13 @@ variable "parent_container_ids" {
   description = "Parent container IDs for different environments. If environment is set, the corresponding container ID will be used."
 }
 
+variable "landing_zone_parent_container_ids" {
+  type        = map(string)
+  default     = {}
+  nullable    = false
+  description = "Parent container ID per landing zone identifier. A project in one of these landing zones is created there, and `parent_container_id` applies to the others."
+}
+
 variable "project_name" {
   type        = string
   nullable    = false

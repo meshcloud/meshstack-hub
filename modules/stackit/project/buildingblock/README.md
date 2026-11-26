@@ -73,9 +73,11 @@ project user to the organization with `stackit_organization_member_role` (defaul
 
 Turn it off where organization membership is managed outside meshStack.
 
-## Parent container per environment
+## Parent container per landing zone or environment
 
-The integration always creates projects in `parent_container_id`. Using the module directly, you
+The integration creates projects in `parent_container_id`. With `stackit_landing_zones` it also
+sets `landing_zone_parent_container_ids`, and a project in one of those landing zones goes to that
+landing zone's container. This mapping wins over `environment`. Using the module directly, you
 can set `environment` and `parent_container_ids` instead: the project goes to the container of
 that environment, or to `parent_container_id` when the environment has none.
 

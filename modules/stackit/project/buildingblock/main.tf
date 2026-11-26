@@ -1,6 +1,6 @@
 locals {
-  # Determine the parent container ID based on environment
-  selected_parent_container_id = var.environment != null ? lookup(var.parent_container_ids, var.environment, var.parent_container_id) : var.parent_container_id
+  environment_parent_container_id = var.environment != null ? lookup(var.parent_container_ids, var.environment, var.parent_container_id) : var.parent_container_id
+  selected_parent_container_id    = lookup(var.landing_zone_parent_container_ids, var.landing_zone, local.environment_parent_container_id)
 
   users_with_stackit_roles = [
     for user in var.users : {
