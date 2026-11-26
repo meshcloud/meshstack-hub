@@ -51,9 +51,10 @@ definition only to test that path, and delete it afterwards.
 
 ## How It Works
 
-1. The run decodes the pasted export and calls the accelerator's `src/` at the commit given as
-   **Accelerator Commit**. The run fails when the export's `Accelerator source` header names
-   another commit.
+1. The run decodes the pasted export and calls the accelerator's `src/` at the git ref given as
+   **Accelerator Version**, such as a release tag. The export's `Accelerator source` header names
+   the commit the export was made for. Another ref works when the export's variables fit that
+   version.
 2. The accelerator creates its resources in the organization the export names.
 3. The run sources `modules/stackit`. It creates the project-creation service account in the
    accelerator's management project, grants it `resource-manager.admin` and `iam.member-admin` on
@@ -90,8 +91,8 @@ access to it like a secret.
 1. Register the definition from [`meshstack_integration.tf`](meshstack_integration.tf) in the
    workspace that will own the platform.
 2. Order it in that workspace. Paste the export into **Landing Zone tfvars**, set **Accelerator
-   Commit** to the commit in its `Accelerator source` line, paste the service account key and
-   choose a platform identifier.
+   Version** to a release whose variables fit the export, or to the commit in its `Accelerator
+   source` line, paste the service account key and choose a platform identifier.
 3. Once the run succeeds, application teams add **STACKIT Project** to their tenants on the new
    landing zones.
 

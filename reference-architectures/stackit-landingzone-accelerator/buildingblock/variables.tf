@@ -34,18 +34,13 @@ variable "landing_zone_tfvars" {
     ])) == 0
     error_message = "landing_zone_tfvars sets an accelerator input this building block does not pass on, such as a firewall credential or bucket_naming."
   }
-
-  validation {
-    condition     = alltrue([for ref in regexall("Accelerator source: ([0-9a-f]+)", var.landing_zone_tfvars) : ref[0] == var.accelerator_ref])
-    error_message = "landing_zone_tfvars names another accelerator commit in its header than accelerator_ref."
-  }
 }
 
 variable "accelerator_ref" {
   type        = string
   nullable    = false
   const       = true
-  description = "Commit of github.com/stackitcloud/stackit-landing-zone whose `src/` the run applies, the one the export names in its `Accelerator source` header. `const` so it can be interpolated into the module source at init time."
+  description = "Git ref of github.com/stackitcloud/stackit-landing-zone whose `src/` the run applies: a tag such as `v2.3.0`, a branch or a commit. The export's `Accelerator source` header names the commit it was made for; another ref works when the export's variables fit that version. `const` so it can be interpolated into the module source at init time."
 }
 
 variable "runner_ref" {

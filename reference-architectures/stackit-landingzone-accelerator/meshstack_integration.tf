@@ -1,8 +1,8 @@
 variable "accelerator_ref" {
   type        = string
-  default     = "0158273593f9c99ec7bc34b46b85facf3e1f7f21"
+  default     = "v2.3.0"
   nullable    = false
-  description = "Accelerator commit the order form suggests. Each order can set its own, the one its export names."
+  description = "Accelerator git ref the order form suggests. Each order can set its own."
 }
 
 variable "bbd_display_name" {
@@ -206,8 +206,8 @@ resource "meshstack_building_block_definition" "this" {
       }
 
       accelerator_ref = {
-        display_name           = "Accelerator Commit"
-        description            = "Commit of the STACKIT Landing Zone Accelerator to apply. Use the one in the `Accelerator source` line of the export."
+        display_name           = "Accelerator Version"
+        description            = "Git ref of the STACKIT Landing Zone Accelerator to apply, such as a tag. The export's `Accelerator source` line names the commit it was made for; another ref works when the export's variables fit that version."
         type                   = "STRING"
         assignment_type        = "USER_INPUT"
         default_value          = jsonencode(var.accelerator_ref)
