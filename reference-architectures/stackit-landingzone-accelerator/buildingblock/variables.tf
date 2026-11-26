@@ -1,0 +1,72 @@
+variable "platform_identifier" {
+  type        = string
+  nullable    = false
+  description = "Identifier of the STACKIT platform created in meshStack, and prefix of its landing zones (letters, digits and dashes only)."
+
+  validation {
+    condition     = can(regex("^[a-zA-Z0-9-]+$", var.platform_identifier))
+    error_message = "platform_identifier must only contain letters, digits, and dashes."
+  }
+}
+
+variable "landing_zone_tfvars" {
+  type        = string
+  nullable    = false
+  description = "The tfvars file the STACKIT Landing Zone Configurator exports, unchanged. Its values are the accelerator's inputs."
+
+  validation {
+    condition     = can(provider::terraform::decode_tfvars(var.landing_zone_tfvars))
+    error_message = "landing_zone_tfvars must be a tfvars file with literal values only."
+  }
+
+  validation {
+    condition = !can(provider::terraform::decode_tfvars(var.landing_zone_tfvars)) || length(setsubtract(keys(provider::terraform::decode_tfvars(var.landing_zone_tfvars)), [
+      "audit_logs", "company_code", "company_name", "connectivity", "connectivity_regions", "devops", "federated_identity_providers",
+      "firewall_config", "labels", "landing_zone_namespace_services", "landing_zones", "observability", "organization_auditors",
+      "organization_id", "organization_owners", "owner_email", "platform_contract_namespace", "platform_kubernetes", "region",
+      "rm_folder_parent_id", "rm_folders", "sandboxes",
+    ])) == 0
+    error_message = "landing_zone_tfvars sets an accelerator input this building block does not pass on, such as a firewall credential or bucket_naming."
+  }
+
+  validation {
+    condition     = alltrue([for ref in regexall("Accelerator source: ([0-9a-f]+)", var.landing_zone_tfvars) : ref[0] == var.accelerator_ref])
+    error_message = "landing_zone_tfvars names another accelerator commit in its header than accelerator_ref."
+  }
+}
+
+variable "accelerator_ref" {
+  type        = string
+  nullable    = false
+  const       = true
+  description = "Commit of github.com/stackitcloud/stackit-landing-zone whose `src/` the run applies, the one the export names in its `Accelerator source` header. `const` so it can be interpolated into the module source at init time."
+}
+
+variable "runner_ref" {
+  type = object({
+    kind = optional(string)
+    uuid = optional(string)
+  })
+  nullable    = false
+  description = "Runner of the STACKIT Project definition. Set to `{}` to use the default shared runner."
+}
+
+variable "workspace" {
+  type        = string
+  nullable    = false
+  description = "Identifier of the meshStack workspace that owns the created platform, landing zones and STACKIT Project definition."
+}
+
+variable "hub" {
+  type = object({
+    git_ref   = optional(string, "main")
+    bbd_draft = optional(bool, true)
+  })
+  const   = true
+  default = { git_ref = "main", bbd_draft = true }
+
+  description = <<-EOT
+  `git_ref`: meshstack-hub reference used to source the nested STACKIT integration. `const` so it can be interpolated into the module source at init time.
+  `bbd_draft`: Draft state of the STACKIT Project definition.
+  EOT
+}

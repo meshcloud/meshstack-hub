@@ -1,0 +1,29 @@
+output "management_project_id" {
+  value       = module.accelerator.management_project_id
+  description = "Project ID of the accelerator's management project, which also holds the service account of the STACKIT Project definition."
+}
+
+output "management_project_url" {
+  value       = "https://portal.stackit.cloud/dashboard?project=${module.accelerator.management_project_id}"
+  description = "Deep link to the management project in the STACKIT portal."
+}
+
+output "platform_contract" {
+  value       = jsonencode(module.accelerator.platform_contract)
+  description = "The accelerator's platform contract as JSON: one target per landing zone of the meshStack platform."
+}
+
+output "summary" {
+  description = "Summary of the foundation and the meshStack platform this reference architecture created."
+  value = templatefile("${path.module}/SUMMARY.md.tftpl", {
+    organization_id        = local.accelerator_inputs.organization_id
+    organization_url       = "https://portal.stackit.cloud/dashboard?organization=${local.accelerator_inputs.organization_id}"
+    management_project_id  = module.accelerator.management_project_id
+    management_project_url = "https://portal.stackit.cloud/dashboard?project=${module.accelerator.management_project_id}"
+    service_account_email  = module.stackit_integration.service_account_email
+    platform_identifier    = var.platform_identifier
+    landing_zones = {
+      for key, lz in local.landing_zones : "${var.platform_identifier}-${key}" => lz.parent_container_id
+    }
+  })
+}

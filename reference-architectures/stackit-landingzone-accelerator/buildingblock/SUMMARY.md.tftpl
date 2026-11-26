@@ -1,0 +1,18 @@
+# STACKIT Landing Zone Accelerator: **${platform_identifier}**
+
+| Property | Value |
+|----------|-------|
+| **Organization** | [Open in STACKIT Portal](${organization_url}) (`${organization_id}`) |
+| **Management Project** | [Open in STACKIT Portal](${management_project_url}) (`${management_project_id}`) |
+| **STACKIT Project Service Account** | `${service_account_email}` |
+
+## Landing Zones
+
+| Landing Zone | Folder |
+|--------------|--------|
+%{ for name, folder in landing_zones ~}
+| `${name}` | `${folder}` |
+%{ endfor ~}
+
+Application teams add **STACKIT Project** from the marketplace to a tenant on one of these landing
+zones. The project is created in the landing zone's folder.
