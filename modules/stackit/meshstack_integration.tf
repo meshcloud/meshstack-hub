@@ -50,12 +50,7 @@ variable "stackit_landing_zones" {
     parent_container_id = string
   }))
   default     = null
-  description = "Landing zones by key, each creating its projects in its own parent container. They replace the `default` landing zone. Null offers the `default` landing zone in `stackit_parent_container_id`."
-
-  validation {
-    condition     = var.stackit_landing_zones == null ? true : length(var.stackit_landing_zones) > 0
-    error_message = "stackit_landing_zones must name at least one landing zone, or be null."
-  }
+  description = "Landing zones by key, each creating its projects in its own parent container. They replace the `default` landing zone, and an empty map offers none. Null offers the `default` landing zone in `stackit_parent_container_id`."
 }
 
 variable "stackit_service_account_name" {
@@ -351,8 +346,11 @@ resource "meshstack_building_block_definition" "this" {
     use_in_landing_zones_only = false
 
     # Every STACKIT platform of a meshStack would otherwise offer every STACKIT Project definition.
-    supported_platforms = coalesce(var.meshstack.supported_platforms, [
+    # A platform without landing zones is named itself, because a tenant-level definition needs one.
+    supported_platforms = coalesce(var.meshstack.supported_platforms, length(local.landing_zones) > 0 ? [
       for lz in meshstack_landingzone.this : { kind = lz.ref.kind, name = lz.ref.name, uuid = null }
+      ] : [
+      { kind = meshstack_platform.this.ref.kind, name = null, uuid = meshstack_platform.this.ref.uuid }
     ])
 
     readme = coalesce(var.bbd_readme, chomp(<<-EOT
