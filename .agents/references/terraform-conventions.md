@@ -101,13 +101,17 @@ The comment sits directly above the `try`, or above the attribute that owns the 
 Every building block with an integration has a `summary` output, declared in the BBD with
 `assignment_type = "SUMMARY"`, so meshPanel shows the result of a run.
 
-meshPanel shows the summary in a small *Summary* card on the building block overview. The card
-renders a markdown heading at body size in semibold, the same as its own title, so bold text looks
-like one more heading and deep heading levels look alike. Write every summary in this style:
+meshPanel shows the summary in a small *Summary* card on the building block overview, below the
+building block's display name as its title. The card renders a markdown heading at body size in
+semibold, the same as that title, so bold text looks like one more heading and heading levels look
+alike. Write every summary in this style:
 
 - Short and to the point: what was created and how to reach it.
-- A small summary needs no heading. A summary with several distinct parts may use a title line (`#`)
-  and a few `##` sections, such as *Network Areas* or *Landing Zones*. Never nest deeper than `##`.
+- No title line. The card already shows the display name as the title, so a title line repeats it.
+- A simple building block has no sections: one table or a few lines. A summary with several distinct
+  parts, mostly that of a reference architecture that creates several kinds of things, may use a few
+  sections. A section heading is a single `#`, with nothing nested below it: no `##` or deeper. The
+  content before the first section, usually the main table, stands without a heading.
 - Tables are fine, and links to the created resources are wanted: the portal or console page, the
   repository, the URL of the created thing. In a table, put the value first and the link after it
   in parentheses: `` `${id}` ([Open in STACKIT Portal](${url})) ``.
@@ -128,7 +132,8 @@ output "summary" {
 }
 ```
 
-The scorecard flags `**` and a heading deeper than `##` in a summary heredoc or `SUMMARY.md.tftpl`.
+The scorecard flags a title line, a `##` or deeper heading and `**` in a summary heredoc or
+`SUMMARY.md.tftpl`.
 
 ## Output Content: Inline Heredoc Over a Template File
 

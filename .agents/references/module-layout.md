@@ -144,7 +144,7 @@ the runner host, use it, and update this section and the `prerun_no_global_insta
 - [ ] `meshstack_platform` resources include `lifecycle { ignore_changes = [spec.availability] }`
 - [ ] Every child `meshstack_building_block` carries the run-status `postcondition` — see [Ordering Child Building Blocks](meshstack-resources.md#ordering-child-building-blocks)
 - [ ] Every `*_ref` on a meshStack resource takes the target's `ref` output — see [Referencing meshStack Objects](meshstack-resources.md#referencing-meshstack-objects)
-- [ ] The `summary` output is short, has no bold and no heading deeper than `##` — see [Summary Output](terraform-conventions.md#summary-output)
+- [ ] The `summary` output is short, with no title line, no bold and no heading below `#` — see [Summary Output](terraform-conventions.md#summary-output)
 - [ ] Every `try` carries a comment saying what it swallows — see [Guarding Expressions with `try`](terraform-conventions.md#guarding-expressions-with-try)
 - [ ] A pre-run script installs nothing on the runner host; Terraform takes its tools from a flake in `buildingblock/nix/` — see [Pre-run Scripts](#pre-run-scripts)
 - [ ] No trailing whitespace

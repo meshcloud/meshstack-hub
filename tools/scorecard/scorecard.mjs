@@ -764,8 +764,9 @@ const detectors = [
       if (body === null) missing.push('output "summary" in buildingblock/');
       if (missing.length > 0) return { pass: false, detail: `add ${missing.join(" and ")}` };
       const template = join(mod.path, "buildingblock", "SUMMARY.md.tftpl");
-      const markdown = [...body.matchAll(HEREDOC_BODY)].map((m) => m[2]).join("\n") + (existsSync(template) ? readFileSync(template, "utf-8") : "");
-      const style = summaryStyleViolations(markdown);
+      const chunks = [...body.matchAll(HEREDOC_BODY)].map((m) => m[2]);
+      if (existsSync(template)) chunks.push(readFileSync(template, "utf-8"));
+      const style = [...new Set(chunks.flatMap(summaryStyleViolations))];
       if (style.length === 0) return { pass: true };
       return { pass: false, detail: `the summary has ${style.join(" and ")}; see terraform-conventions.md § Summary Output` };
     },
@@ -1993,7 +1994,9 @@ const HEREDOC_BODY = /<<-?\s*([A-Za-z_]\w*)\r?\n([\s\S]*?)^\s*\1\s*$/gm;
 export function summaryStyleViolations(markdown) {
   const prose = markdown.replace(/^[ \t>]*```[\s\S]*?^[ \t>]*```/gm, "");
   const violations = [];
-  if (/^[ \t>]*#{3,6}[ \t]/m.test(prose)) violations.push("a heading deeper than ##");
+  const firstLine = prose.split("\n").map((line) => line.trim()).find((line) => line && !line.startsWith("%{"));
+  if (/^#[ \t]/.test(firstLine ?? "")) violations.push("a title line");
+  if (/^[ \t>]*#{2,6}[ \t]/m.test(prose)) violations.push("a heading below #");
   if (prose.includes("**")) violations.push("bold text");
   return violations;
 }

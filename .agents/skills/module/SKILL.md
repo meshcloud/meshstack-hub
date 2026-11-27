@@ -29,7 +29,7 @@ conventions, see the reference files in `.agents/references/`.
    ```
 
 3. **Implement `buildingblock/`** — `main.tf`, `variables.tf`, `outputs.tf`, `versions.tf`, `provider.tf`, `README.md` (with YAML front-matter), `logo.png` or `logo.svg`
-   - `outputs.tf` has a `summary` output: short, with no bold and no heading deeper than `##` (see [Summary Output](../../references/terraform-conventions.md#summary-output))
+   - `outputs.tf` has a `summary` output: short, with no title line, no bold and no heading below `#` (see [Summary Output](../../references/terraform-conventions.md#summary-output))
 
 4. **Implement `backplane/`** (if needed) — read the provider-specific reference:
    - AWS → `.agents/references/aws-backplane.md`
