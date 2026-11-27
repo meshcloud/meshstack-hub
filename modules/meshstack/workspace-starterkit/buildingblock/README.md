@@ -42,7 +42,9 @@ The backplane's key then also gets `ADM_BUILDINGBLOCK_LIST`, `_SAVE` and `_DELET
 needed: the block lives in the workspace the run creates, and meshStack lets only an admin key or
 that workspace's own key create a building block there. `MANAGED_BUILDINGBLOCK_SAVE` only updates
 existing blocks of the key's own definitions. With admin scope, the definition may be a draft or
-unpublished definition of another workspace.
+unpublished definition of another workspace. If the definition declares permissions for its runs,
+add the `ADM_` variant of each through `additional_api_key_permissions`. meshStack refuses to
+create the block for a key that does not hold them.
 
 ## Self-destructs after its TTL
 

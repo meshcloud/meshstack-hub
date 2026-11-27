@@ -66,6 +66,8 @@ module "workspace_starterkit" {
     definition_version_ref = data.meshstack_building_block_definition.stackit_project.version_latest_release
     display_name           = "STACKIT Project"
   }
+  # STACKIT Project declares BUILDINGBLOCKRUN_LIST for its runs, and meshStack lets only a key that holds it order the block.
+  additional_api_key_permissions = ["ADM_BUILDINGBLOCKRUN_LIST"]
 
   # The module's default `expiry` only works on an instance whose tag schema defines it.
   workspace_expiry_tag_key = var.test_context.meshstack.tag_schema.expiry_key
