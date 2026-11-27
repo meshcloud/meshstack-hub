@@ -16,7 +16,7 @@ run "building_block_gcp_storage_bucket_hub" {
 
   # GCS reports bucket locations in upper case (EUROPE-WEST1), so compare case-insensitively.
   assert {
-    condition     = strcontains(lower(jsondecode(meshstack_building_block.this.status.outputs["summary"].value)), "**location**: europe-west1")
+    condition     = strcontains(lower(jsondecode(meshstack_building_block.this.status.outputs["summary"].value)), "*location*: europe-west1")
     error_message = "gcp storage-bucket hub building block expected summary to report the requested location, got ${jsondecode(meshstack_building_block.this.status.outputs["summary"].value)}"
   }
 

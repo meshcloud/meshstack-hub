@@ -1,25 +1,16 @@
-# T Cloud Public Landing Zone: **${platform_identifier}**
-
-%{ if playground_mode ~}
-> **Playground mode.** The platform identifier carries a random suffix so this deployment does not
-> occupy a name for good. Do not publish this platform or the building block definition it
-> registered to other workspaces. Redeploy with `playground_mode` set to false for a platform that
-> is actually used.
-
-%{ endif ~}
-## Details
+The T Cloud Public landing zone `${platform_identifier}` is ready.
 
 | Property | Value |
 |----------|-------|
-| **Domain** | `${domain_name}` |
-| **Region** | `${region}` |
-| **Landing Zone** | `${landingzone_name}` |
-| **Backplane IAM user** | `${backplane_user_name}` |
-| **Management project** | `${management_project}` (T Cloud Public `${region}_${management_project}`) |
+| Domain | `${domain_name}` |
+| Region | `${region}` |
+| Landing Zone | `${landingzone_name}` |
+| Backplane IAM user | `${backplane_user_name}` |
+| Management project | `${management_project}` (T Cloud Public `${region}_${management_project}`) |
 
 %{ if !federation_enabled ~}
 > [!WARNING]
-> ## No identity provider connected: users sign in with their own T Cloud Public user
+> # No identity provider connected: users sign in with their own T Cloud Public user
 
 meshStack still decides who is in which project: each project's `admin`, `user` and `reader` groups
 get the project's members. But meshStack does not create users. Each member needs an IAM user in
@@ -27,7 +18,7 @@ the [T Cloud Public IAM console](https://console.otc.t-systems.com/iam/), named 
 their meshStack email before the `@`: `jane.doe@example.com` signs in as `jane.doe`. A project run
 fails, naming the user, while one of its members has no such IAM user.
 
-**To connect your identity provider:**
+*To connect your identity provider:*
 
 1. Register T Cloud Public as an application in your identity provider. These guides cover it:
 
@@ -43,14 +34,14 @@ fails, naming the user, while one of its members has no such IAM user.
    skip the guides' mapping rules, this landing zone writes its own.
 2. Make sure the identity provider sends each user's email address, and that it is exactly the one
    meshStack knows for them. Users are matched to projects by email.
-3. **Update this building block** and fill in the **Identity Provider** input: the issuer URL
+3. *Update this building block* and fill in the *Identity Provider* input: the issuer URL
    and client ID for OIDC, or the metadata URL for SAML.
 
 The next run federates the identity provider and deploys the function that maps meshStack's
 project members into the project groups. Nothing already provisioned is touched.
 %{ else ~}
 > [!TIP]
-> ## Sign-in is federated through `${identity_provider_name}` (${identity_provider_protocol})
+> # Sign-in is federated through `${identity_provider_name}` (${identity_provider_protocol})
 
 meshStack's project members sign in at [${login_link}](${login_link}) with their company account, and receive
 their project roles from their next sign-in. They are matched by the `${email_attribute}` claim or
@@ -60,7 +51,7 @@ The mapping is kept in step by @buildingblock[${federation_mapping_bb_uuid}] in 
 project.
 %{ endif ~}
 
-## What application teams get
+# What application teams get
 
 Application teams create meshStack projects in the `${landingzone_name}` landing zone. Each one
 becomes a T Cloud Public project `${region}_PROJECT`, PROJECT being the meshStack project name,
@@ -71,4 +62,10 @@ In those projects they can order these service building blocks: ${join(", ", ser
 %{ if contains(services, "RDS") || contains(services, "CCE") ~}
 RDS and CCE run inside a network building block, so a team orders that one first.
 %{ endif ~}
+%{ endif ~}
+%{ if playground_mode ~}
+
+*Playground mode:* the platform identifier carries a random suffix, so do not publish this platform or the
+building block definition it registered to other workspaces. Redeploy with `playground_mode` set to
+false for a platform that is actually used.
 %{ endif ~}

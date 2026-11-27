@@ -6,7 +6,7 @@ output "expires_at" {
 output "summary" {
   description = "Markdown summary shown in meshPanel after the run."
   value = local.is_active ? (<<-EOT
-    # Access to `${var.namespace}` until ${local.expires_at}
+    Access to `${var.namespace}` lasts until ${local.expires_at}.
 
     `${local.developer_email}` can use the `${var.cluster_role}` role in namespace `${var.namespace}`
     of cluster `${var.cluster_name}`. Sign in to `gcloud` with that account, then run:
@@ -19,7 +19,7 @@ output "summary" {
     The temporary IAM grant expires at the time shown above. Other access you already have is unaffected.
     EOT
     ) : (<<-EOT
-    # Access to `${var.namespace}` expired at ${local.expires_at}
+    Access to `${var.namespace}` expired at ${local.expires_at}.
 
     The grants have been removed. Order a new building block to request access again.
     EOT

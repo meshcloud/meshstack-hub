@@ -75,7 +75,8 @@ the docs.
   lifecycle, run-status postcondition on every child building block →
   [meshstack-resources.md](.agents/references/meshstack-resources.md)
 - Any `.tf` — OpenTofu-only toolchain, `lifecycle.enabled` over `count`, `snake_case`, provider
-  versions floating inside one major, commenting what a `try` swallows →
+  versions floating inside one major, commenting what a `try` swallows, the style of the `summary`
+  output →
   [terraform-conventions.md](.agents/references/terraform-conventions.md)
 - The app-team readme — the BBD `readme` field, or `**/buildingblock/APP_TEAM_README.md` →
   [bbd-readme.md](.agents/references/bbd-readme.md)

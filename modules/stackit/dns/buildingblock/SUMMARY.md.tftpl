@@ -1,12 +1,9 @@
-# DNS Zone: **${zone_name}**
-
 | Property | Value |
 |----------|-------|
-| **Zone** | [Open in STACKIT Portal](${zone_url}) |
-| **Domain** | `${zone_name}` |
-| **Default TTL** | `${default_ttl}` seconds |
+| Domain | `${zone_name}` ([Open in STACKIT Portal](${zone_url})) |
+| Default TTL | `${default_ttl}` seconds |
 %{ if wildcard_target_ip != null ~}
-| **Wildcard record** | `*.${zone_name}` → `${wildcard_target_ip}` |
+| Wildcard record | `*.${zone_name}` → `${wildcard_target_ip}` |
 %{ endif ~}
 
 %{ if wildcard_target_ip != null ~}
@@ -16,8 +13,6 @@ own hostname and it works without anyone provisioning a record for it.
 The zone is empty. Records are created by whoever needs them.
 %{ endif ~}
 %{ if dns01_solver != null ~}
-
-## ACME DNS-01 solver
 
 A ClusterIssuer solves DNS-01 challenges in this zone with this solver.
 

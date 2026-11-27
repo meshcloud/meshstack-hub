@@ -32,16 +32,16 @@ output "wildcard_certificate_domain" {
 output "summary" {
   description = "Markdown summary shown on the building block."
   value       = <<-EOT
-    # Kubernetes Ingress Controller
+    The Kubernetes ingress controller is ready.
 
     | Property | Value |
     |----------|-------|
-    | **Load Balancer IP** | `${data.kubernetes_service_v1.haproxy_controller.status[0].load_balancer[0].ingress[0].ip}` |
-    | **IngressClass** | `${local.ingress_class_name}` |
-    | **ClusterIssuer** | `${local.cluster_issuer_name}`, registered at `${local.acme_server}` |
-    | **Certificates** | ${var.wildcard_certs == null ? "one per Ingress, over HTTP-01" : "`*.${var.wildcard_certs.domain}` over DNS-01 (${local.wildcard_certificate_ready ? "ready" : "not ready yet"}), served to every Ingress"} |
-    | **HAProxy** | chart `${module.haproxy.chart_version}`, ${var.haproxy_replica_count} replicas in `${module.haproxy_namespace.name}` |
-    | **cert-manager** | chart `${module.cert_manager.chart_version}` in `${module.cert_manager_namespace.name}` |
+    | Load Balancer IP | `${data.kubernetes_service_v1.haproxy_controller.status[0].load_balancer[0].ingress[0].ip}` |
+    | IngressClass | `${local.ingress_class_name}` |
+    | ClusterIssuer | `${local.cluster_issuer_name}`, registered at `${local.acme_server}` |
+    | Certificates | ${var.wildcard_certs == null ? "one per Ingress, over HTTP-01" : "`*.${var.wildcard_certs.domain}` over DNS-01 (${local.wildcard_certificate_ready ? "ready" : "not ready yet"}), served to every Ingress"} |
+    | HAProxy | chart `${module.haproxy.chart_version}`, ${var.haproxy_replica_count} replicas in `${module.haproxy_namespace.name}` |
+    | cert-manager | chart `${module.cert_manager.chart_version}` in `${module.cert_manager_namespace.name}` |
 
     Point the DNS records of your hostnames at the load balancer IP. An Ingress served by this
     controller over HTTPS:

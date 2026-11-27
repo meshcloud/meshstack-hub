@@ -16,11 +16,11 @@ output "notification_channel_id" {
 output "summary" {
   description = "Markdown summary of the created budget"
   value       = <<-EOT
-    ## Budget Alert: ${var.budget_name}
+    Budget alert `${var.budget_name}` is set up.
 
-    - **Project**: ${var.project_id}
-    - **Monthly budget**: ${var.monthly_budget_amount} ${var.budget_currency}
-    - **Alerts to**: ${var.contact_email}
+    - *Project*: ${var.project_id}
+    - *Monthly budget*: ${var.monthly_budget_amount} ${var.budget_currency}
+    - *Alerts to*: ${var.contact_email}
 
     | Threshold | Basis |
     |---|---|

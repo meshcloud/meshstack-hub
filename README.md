@@ -143,6 +143,7 @@ This prepares the environment with `opentofu`, `terraform-docs`, `pre-commit`, a
 - Add your module under the correct provider folder (e.g. `aws/`, `azure/`, `gcp/`).
 - Include:
   - `main.tf`, `variables.tf`, `outputs.tf`, `versions.tf`, `providers.tf`, `APP_TEAM_README.md`
+  - A `summary` output written in the [summary style](.agents/references/terraform-conventions.md#summary-output).
   - A `README.md` describing the module’s purpose and usage.
 
 ---

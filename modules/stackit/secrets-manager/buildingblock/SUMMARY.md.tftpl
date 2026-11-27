@@ -1,10 +1,8 @@
-# Secrets Manager: **${instance_name}**
-
 | Property | Value |
 |----------|-------|
-| **Portal** | [Open in STACKIT Portal](${instance_url}) |
-| **API URL** | ${api_url} |
-| **KV Mount** | `${kv_mount}` |
+| Instance | `${instance_name}` ([Open in STACKIT Portal](${instance_url})) |
+| API URL | ${api_url} |
+| KV Mount | `${kv_mount}` |
 
 Project members with a Secrets Manager role log in with their STACKIT access token:
 
@@ -24,7 +22,7 @@ vault kv get -mount=${kv_mount} my-app/db
 ```
 %{ if length(unknown_users) > 0 ~}
 
-### ⚠️ Users Not Found
+# ⚠️ Users Not Found
 
 STACKIT does not know these users, so they did not get their Secrets Manager roles:
 
@@ -32,12 +30,12 @@ STACKIT does not know these users, so they did not get their Secrets Manager rol
 - `${email}`
 %{ endfor ~}
 
-**To resolve this**, each user must sign in to the [STACKIT Portal](https://portal.stackit.cloud)
+To resolve this, each user must sign in to the [STACKIT Portal](https://portal.stackit.cloud)
 at least once. After they have signed in, re-run this building block and they will get their roles.
 %{ endif ~}
 %{ if length(covered_roles) > 0 ~}
 
-### Roles Skipped
+# Roles Skipped
 
 These users already hold project roles that include all permissions of the role, so it was not granted again:
 

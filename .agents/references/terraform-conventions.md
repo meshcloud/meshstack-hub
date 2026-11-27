@@ -101,22 +101,46 @@ The comment sits directly above the `try`, or above the attribute that owns the 
 Every building block with an integration has a `summary` output, declared in the BBD with
 `assignment_type = "SUMMARY"`, so meshPanel shows the result of a run.
 
-## Output Content: Inline Heredoc Over a Template File
+meshPanel shows the summary in a small *Summary* card on the building block overview, below the
+building block's display name as its title. The card renders a markdown heading at body size in
+semibold, the same as that title, so bold text looks like one more heading and heading levels look
+alike. Write every summary in this style:
 
-Write a markdown output's content — the `summary` output most of all — **inline with a `<<-EOT`
-heredoc** in `outputs.tf`, interpolating values directly. Most summaries are a handful of lines, and
-a heredoc keeps the text next to the values it renders, with no second file to open:
+- Short and to the point: what was created and how to reach it.
+- No title line. The card already shows the display name as the title, so a title line repeats it.
+- A simple building block has no sections: one table or a few lines. A summary with several distinct
+  parts, mostly that of a reference architecture that creates several kinds of things, may use a few
+  sections. A section heading is a single `#`, with nothing nested below it: no `##` or deeper. The
+  content before the first section, usually the main table, stands without a heading.
+- Tables are fine, and links to the created resources are wanted: the portal or console page, the
+  repository, the URL of the created thing. In a table, put the value first and the link after it
+  in parentheses: `` `${id}` ([Open in STACKIT Portal](${url})) ``.
+- No bold. Where a label needs a marker, use italic (`*Label*`). Values are plain text or code.
+- Notes, such as the playground-mode notice, go at the end in one or two sentences.
 
 ```hcl
 output "summary" {
   description = "Markdown summary shown in meshPanel after the run."
   value       = <<-EOT
-    # VM `${var.name}`
+    VM `${var.name}` is running at `${stackit_public_ip.this.ip}`.
 
-    Reachable at **`${stackit_public_ip.this.ip}`**.
+    | | |
+    |---|---|
+    | Server | `${stackit_server.this.server_id}` ([Open in STACKIT Portal](${local.server_url})) |
+    | SSH | `ssh ${var.ssh_username}@${stackit_public_ip.this.ip}` |
   EOT
 }
 ```
+
+The scorecard flags a title line, a `##` or deeper heading and `**` in a summary heredoc or
+`SUMMARY.md.tftpl`.
+
+## Output Content: Inline Heredoc Over a Template File
+
+Write a markdown output's content — the `summary` output most of all — **inline with a `<<-EOT`
+heredoc** in `outputs.tf`, interpolating values directly, as in the example above. Most summaries
+are a handful of lines, and a heredoc keeps the text next to the values it renders, with no second
+file to open.
 
 Reach for `templatefile("${path.module}/SUMMARY.md.tftpl", { … })` only when the content earns its
 own file: it is long, it is reused, or it needs template directives (`%{ for … }`, `%{ if … }`) that

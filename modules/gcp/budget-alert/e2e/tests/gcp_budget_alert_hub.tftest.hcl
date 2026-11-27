@@ -22,12 +22,12 @@ run "building_block_gcp_budget_alert_hub" {
   }
 
   assert {
-    condition     = strcontains(jsondecode(meshstack_building_block.this.status.outputs["summary"].value), "## Budget Alert: ${var.test_context.run_id}-budget")
+    condition     = strcontains(jsondecode(meshstack_building_block.this.status.outputs["summary"].value), "Budget alert `${var.test_context.run_id}-budget`")
     error_message = "gcp budget-alert hub building block expected summary to name the requested budget, got ${jsondecode(meshstack_building_block.this.status.outputs["summary"].value)}"
   }
 
   assert {
-    condition     = strcontains(jsondecode(meshstack_building_block.this.status.outputs["summary"].value), "**Monthly budget**: 100000 EUR")
+    condition     = strcontains(jsondecode(meshstack_building_block.this.status.outputs["summary"].value), "*Monthly budget*: 100000 EUR")
     error_message = "gcp budget-alert hub building block expected summary to report the requested budget amount, got ${jsondecode(meshstack_building_block.this.status.outputs["summary"].value)}"
   }
 
