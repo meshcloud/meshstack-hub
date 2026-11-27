@@ -1,13 +1,13 @@
-# STACKIT Landing Zone Accelerator: **${platform_identifier}**
+# STACKIT Landing Zone Accelerator: `${platform_identifier}`
 
 | Property | Value |
 |----------|-------|
-| **Organization** | `${organization_id}` ([Open in STACKIT Portal](${organization_url})) |
-| **Root Folder** | `${root_folder_name}`, `${root_folder_id}` ([Open in STACKIT Portal](${root_folder_url})) |
-| **Management Project** | `${management_project_id}` ([Open in STACKIT Portal](${management_project_url})) |
-| **meshStack Platform** | ${display_name} (`${platform_identifier}`) |
-| **Building Block Definition** | ${display_name} |
-| **STACKIT Project Service Account** | `${service_account_email}` |
+| *Organization* | `${organization_id}` ([Open in STACKIT Portal](${organization_url})) |
+| *Root Folder* | `${root_folder_name}`, `${root_folder_id}` ([Open in STACKIT Portal](${root_folder_url})) |
+| *Management Project* | `${management_project_id}` ([Open in STACKIT Portal](${management_project_url})) |
+| *meshStack Platform* | ${display_name} (`${platform_identifier}`) |
+| *Building Block Definition* | ${display_name} |
+| *STACKIT Project Service Account* | `${service_account_email}` |
 
 ## Network Areas
 
@@ -39,9 +39,9 @@ The export has no landing zones, so the platform has none either.
 
 Create an environment (a project with one tenant) and pick:
 
-1. **Platform:** ${display_name}
-2. **Landing zone:** one from the table above. The project is created in its folder.
-3. **Building block:** ${display_name}. It asks for no inputs.
+1. *Platform:* ${display_name}
+2. *Landing zone:* one from the table above. The project is created in its folder.
+3. *Building block:* ${display_name}. It asks for no inputs.
 
 %{ if length(landing_zone_tags) > 0 ~}
 The landing zones carry the tags below. meshStack offers a landing zone only when the project's
@@ -55,6 +55,6 @@ tags fit its tag policies, so choose project tag values from this list:
 %{ endif ~}
 
 %{ if playground_mode }
-> **Playground mode.** The platform identifier carries a random suffix so this deployment does not
+> *Playground mode.* The platform identifier carries a random suffix so this deployment does not
 > occupy a name for good. This is not intended to be a published platform.
 %{ endif ~}
