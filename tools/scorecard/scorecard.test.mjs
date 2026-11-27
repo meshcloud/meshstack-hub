@@ -8,6 +8,7 @@ import {
   issuerFromPinnedRunner,
   meshstackVariableViolation,
   summaryOutputBody,
+  summaryStyleViolations,
   supportedPlatformsViolations,
   uuidRefLiterals,
 } from "./scorecard.mjs";
@@ -73,6 +74,13 @@ output "after" {
   assert.match(body, /^output "summary"/);
   assert.match(body, /EOT\n}$/);
   assert.equal(summaryOutputBody(`output "other" {\n  value = 1\n}\n`), null);
+});
+
+test("a summary with bold text or a heading deeper than ## breaks the style", () => {
+  assert.deepEqual(summaryStyleViolations("# VM\n\n## Access\n\n| | |\n|---|---|\n| *Host* | `h` |\n"), []);
+  assert.deepEqual(summaryStyleViolations("```sh\n### a shell comment\n```\n"), []);
+  assert.deepEqual(summaryStyleViolations("### VM\n\nReachable at **h**.\n"), ["a heading deeper than ##", "bold text"]);
+  assert.deepEqual(summaryStyleViolations("> [!TIP]\n> ### Next\n"), ["a heading deeper than ##"]);
 });
 
 test("a SUMMARY assignment in the integration is detected", () => {
