@@ -2,11 +2,11 @@
 
 | Property | Value |
 |----------|-------|
-| **Organization** | [Open in STACKIT Portal](${organization_url}) (`${organization_id}`) |
-| **Root Folder** | [Open in STACKIT Portal](${root_folder_url}) (`${root_folder_name}`, `${root_folder_id}`) |
-| **Management Project** | [Open in STACKIT Portal](${management_project_url}) (`${management_project_id}`) |
-| **meshStack Platform** | **${display_name}** (`${platform_identifier}`) |
-| **Building Block Definition** | **${display_name}** |
+| **Organization** | `${organization_id}` ([Open in STACKIT Portal](${organization_url})) |
+| **Root Folder** | `${root_folder_name}`, `${root_folder_id}` ([Open in STACKIT Portal](${root_folder_url})) |
+| **Management Project** | `${management_project_id}` ([Open in STACKIT Portal](${management_project_url})) |
+| **meshStack Platform** | ${display_name} (`${platform_identifier}`) |
+| **Building Block Definition** | ${display_name} |
 | **STACKIT Project Service Account** | `${service_account_email}` |
 
 ## Network Areas
@@ -19,7 +19,7 @@ The run created the hub and spoke networking of the export.
 | Area | Network Area |
 |------|--------------|
 %{ for area, id in network_areas ~}
-| `${area}` | [Open in STACKIT Portal](https://portal.stackit.cloud/network-area/network-areas/${id}/overview?organization=${organization_id}) (`${id}`) |
+| `${area}` | `${id}` ([Open in STACKIT Portal](https://portal.stackit.cloud/network-area/network-areas/${id}/overview?organization=${organization_id})) |
 %{ endfor ~}
 %{ endif ~}
 
@@ -31,7 +31,7 @@ The export has no landing zones, so the platform has none either.
 | Landing Zone | Identifier | Folder |
 |--------------|------------|--------|
 %{ for name, lz in landing_zones ~}
-| **${lz.display_name}** | `${name}` | `${lz.folder}` |
+| ${lz.display_name} | `${name}` | `${lz.folder}` |
 %{ endfor ~}
 %{ endif ~}
 
