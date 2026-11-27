@@ -1,10 +1,9 @@
-# Service Account: **${service_account_name}**
+# Service Account: ${service_account_name}
 
 ## Details
 
 | Property | Value |
 |----------|-------|
-| **Email** | `${service_account_email}` |
-| **Project** | `${project_id}` |
-| **Roles** | ${join(", ", roles)} |
-| **Portal** | [Open service account](https://portal.stackit.cloud/service-accounts/${service_account_email}/overview?project=${project_id}) |
+| Email | `${service_account_email}` ([Open service account](https://portal.stackit.cloud/service-accounts/${service_account_email}/overview?project=${project_id})) |
+| Project | `${project_id}` |
+| Roles | ${join(", ", roles)} |

@@ -27,7 +27,7 @@ run "building_block_gcp_budget_alert_hub" {
   }
 
   assert {
-    condition     = strcontains(jsondecode(meshstack_building_block.this.status.outputs["summary"].value), "**Monthly budget**: 100000 EUR")
+    condition     = strcontains(jsondecode(meshstack_building_block.this.status.outputs["summary"].value), "*Monthly budget*: 100000 EUR")
     error_message = "gcp budget-alert hub building block expected summary to report the requested budget amount, got ${jsondecode(meshstack_building_block.this.status.outputs["summary"].value)}"
   }
 

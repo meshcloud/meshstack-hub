@@ -36,7 +36,7 @@ output "summary" {
 
     ## Connect
 
-    Copy the **Kubeconfig** output of this building block into a file and point kubectl at it:
+    Copy the *Kubeconfig* output of this building block into a file and point kubectl at it:
 
     ```sh
     export KUBECONFIG=./kubeconfig.yaml

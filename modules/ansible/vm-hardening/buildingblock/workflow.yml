@@ -225,20 +225,20 @@ jobs:
             printf '%s\n' \
               "# 🛡️ Hardened VM \`$PUBLIC_IP\`" \
               "" \
-              "**Open the landing page:** $intro" \
+              "*Open the landing page:* $intro" \
               "" \
               '```sh' \
               "$commands" \
               '```' \
               "" \
-              "**What Ansible hardened** ([devsec.hardening](https://github.com/dev-sec/ansible-collection-hardening)), also listed on the landing page:" \
+              "*What Ansible hardened* ([devsec.hardening](https://github.com/dev-sec/ansible-collection-hardening)), also listed on the landing page:" \
               "" \
-              "- 🔑 **SSH**: key-only login, no root or password login, two attempts per connection, only local port forwarding." \
-              "- 👤 **Accounts**: strong password rules, a password expires after 60 days, an account locks for 10 minutes after 5 failed logins." \
-              "- 🧠 **Kernel and network**: full ASLR, no IP forwarding, ICMP redirects and source routing ignored, SYN flood protection." \
-              "- 📁 **Files and processes**: no core dumps, tight permissions on password files, SUID/SGID bits removed where not needed." \
-              "- ✂️ **Attack surface**: unused filesystems and rare network protocols blocked, telnet, rsh and inetd removed." \
-              "- 📝 **Audit**: auditd records security-relevant events." \
+              "- 🔑 *SSH*: key-only login, no root or password login, two attempts per connection, only local port forwarding." \
+              "- 👤 *Accounts*: strong password rules, a password expires after 60 days, an account locks for 10 minutes after 5 failed logins." \
+              "- 🧠 *Kernel and network*: full ASLR, no IP forwarding, ICMP redirects and source routing ignored, SYN flood protection." \
+              "- 📁 *Files and processes*: no core dumps, tight permissions on password files, SUID/SGID bits removed where not needed." \
+              "- ✂️ *Attack surface*: unused filesystems and rare network protocols blocked, telnet, rsh and inetd removed." \
+              "- 📝 *Audit*: auditd records security-relevant events." \
               "" \
               "| Check | Result |" \
               "|---|---|" \

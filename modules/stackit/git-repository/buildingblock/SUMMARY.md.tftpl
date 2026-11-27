@@ -1,28 +1,28 @@
 # ✅ Git Repository Created
 
-**${name}** is ready on STACKIT Git Forgejo.
+`${name}` is ready on STACKIT Git Forgejo.
 
 ## Repository Details
 
-- **Name**: ${name}
-- **Owner**: ${owner}
-- **URL**: ${repo_html_url}
-- **Clone URL**: `${repo_clone_url}`
+- *Name*: ${name}
+- *Owner*: ${owner}
+- *URL*: ${repo_html_url}
+- *Clone URL*: `${repo_clone_url}`
 %{ if clone_addr != "" ~}
-- **Initialized from**: `${clone_addr}`
+- *Initialized from*: `${clone_addr}`
 %{ endif ~}
 
 ## Next Steps
 
-1. **Clone your repository**:
+1. *Clone your repository*:
    ```bash
    git clone ${repo_clone_url}
    cd ${name}
    ```
 
-2. **Start developing**: Edit application files and push your changes.
+2. *Start developing*: Edit application files and push your changes.
 
-3. **Push your changes**:
+3. *Push your changes*:
    ```bash
    git add .
    git commit -m "Initial commit"
@@ -47,25 +47,25 @@
 %{ endfor ~}
 
 %{ if length(team_names) > 0 ~}
-### Forgejo Teams
+## Forgejo Teams
 
 %{ for type, name in team_names ~}
-- **${type}**: `${name}`
+- *${type}*: `${name}`
 %{ endfor ~}
 %{ endif ~}
 
 %{ if length([for m in members : m if m.resolve_error != ""]) > 0 ~}
-### ⚠️ Members Not Found
+## ⚠️ Members Not Found
 
 The following workspace members could not be added to their teams:
 
 %{ for m in members ~}
 %{ if m.resolve_error != "" ~}
-- `${m.email}` → **${m.team_type}**: ${m.resolve_error}
+- `${m.email}` → `${m.team_type}`: ${m.resolve_error}
 %{ endif ~}
 %{ endfor ~}
 
-**To resolve this**, each member must sign in to [${forgejo_host}](${forgejo_host})
+To resolve this, each member must sign in to [${forgejo_host}](${forgejo_host})
 at least once (e.g. via SSO). After they have signed in, re-run this building
 block and they will be automatically added to their team.
 %{ endif ~}

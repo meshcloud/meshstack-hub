@@ -6,10 +6,10 @@ output "runner_ref" {
 output "summary" {
   description = "Markdown summary shown on the building block."
   value       = <<-EOT
-    # Building Block Run Controller: **${local.display_name}**
+    # Building Block Run Controller: ${local.display_name}
 
     The runner `${meshstack_building_block_runner.this.metadata.uuid}` runs building blocks as Kubernetes Jobs in the namespace `${var.namespace}`.
 
-    To run a building block definition of your workspace here, set its `version_spec.runner_ref` to the output **Runner Reference**.
+    To run a building block definition of your workspace here, set its `version_spec.runner_ref` to the output *Runner Reference*.
   EOT
 }

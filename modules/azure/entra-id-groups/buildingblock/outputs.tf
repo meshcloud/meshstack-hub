@@ -41,7 +41,7 @@ locals {
       "",
       "## ⚠️ Unresolved members",
       "",
-      "The following ${length(local.unresolved_user_euids)} member(s) have no object in this directory and were **not** added to any group:",
+      "The following ${length(local.unresolved_user_euids)} member(s) have no object in this directory and were *not* added to any group:",
       "",
     ],
     [for euid in local.unresolved_user_euids : "- `${euid}`"],

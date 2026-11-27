@@ -1,36 +1,28 @@
-# STACKIT Landing Zone: **${platform_identifier}**
+# STACKIT Landing Zone: ${platform_identifier}
 
-%{ if playground_mode ~}
-> **Playground mode.** The platform identifier carries a random suffix so this deployment does not
-> occupy a name for good, and nothing here is protected against deletion. Publish this platform
-> or the building block definitions it registered to other workspaces only to test that path, and
-> delete the playground afterwards. Redeploy with `playground_mode` set to false for a platform
-> that is actually used.
-
-%{ endif ~}
 ## Details
 
 | Property | Value |
 |----------|-------|
-| **Organization** | [Open in STACKIT Portal](${organization_url}) (`${organization_id}`) |
+| Organization | `${organization_id}` ([Open in STACKIT Portal](${organization_url})) |
 %{ if root_folder_name != "" ~}
-| **Root Folder** | [Open in STACKIT Portal](${root_folder_url}) (`${root_folder_name}`) |
+| Root Folder | `${root_folder_name}` ([Open in STACKIT Portal](${root_folder_url})) |
 %{ endif ~}
-| **Landing Zone Folder** | [Open in STACKIT Portal](${lz_folder_url}) (`${lz_folder_container_id}`) |
-| **Foundation Project** | [Open in STACKIT Portal](${foundation_project_url}) (`${foundation_project_id}`) |
-| **Foundation Project Service Account** | [Open in STACKIT Portal](${service_account_url}) (`${service_account_email}`) |
+| Landing Zone Folder | `${lz_folder_container_id}` ([Open in STACKIT Portal](${lz_folder_url})) |
+| Foundation Project | `${foundation_project_id}` ([Open in STACKIT Portal](${foundation_project_url})) |
+| Foundation Project Service Account | `${service_account_email}` ([Open in STACKIT Portal](${service_account_url})) |
 %{ if network_enabled ~}
-| **Hub Network Area** | [Open in STACKIT Portal](${network_area_url}) (`${network_area_id}`) |
-| **Hub Network Area Building Block** | @buildingblock[${network_area_hub_uuid}] |
-| **Spoke Landing Zone** | `${spoke_landingzone_name}` |
+| Hub Network Area | `${network_area_id}` ([Open in STACKIT Portal](${network_area_url})) |
+| Hub Network Area Building Block | @buildingblock[${network_area_hub_uuid}] |
+| Spoke Landing Zone | `${spoke_landingzone_name}` |
 %{ endif ~}
 
 %{ if network_enabled ~}
-Hub&spoke networking is enabled. Application teams can now add **STACKIT Project** from the
+Hub&spoke networking is enabled. Application teams can now add *STACKIT Project* from the
 marketplace to their tenants. On the `${spoke_landingzone_name}` landing zone it also orders a
-spoke **STACKIT Network**, drawn from the hub's address plan.
+spoke *STACKIT Network*, drawn from the hub's address plan.
 %{ else ~}
-Application teams can now add **STACKIT Project** from the marketplace to their tenants on the
+Application teams can now add *STACKIT Project* from the marketplace to their tenants on the
 `${platform_identifier}-default` landing zone. Add `hub&spoke` to the topology to also enable
 hub&spoke networking.
 %{ endif ~}
@@ -40,7 +32,7 @@ hub&spoke networking.
 >
 > The [STACKIT Kubernetes Platform](https://hub.meshcloud.io/reference-architectures/stackit-kubernetes)
 > reference architecture runs a full SKE developer platform on top of this landing zone. It takes one
-> value from this landing zone. Paste this block into its **STACKIT Landing Zone** input:
+> value from this landing zone. Paste this block into its *STACKIT Landing Zone* input:
 >
 > ```hcl
 > {
@@ -57,16 +49,22 @@ hub&spoke networking.
 > ```
 %{ if network_enabled ~}
 >
-> Set its **Landing Zone Variant** to `spoke` to run the cluster inside the hub&spoke network.
-> Otherwise keep the default `default`, which puts the cluster in a **STACKIT Sandbox** project with
+> Set its *Landing Zone Variant* to `spoke` to run the cluster inside the hub&spoke network.
+> Otherwise keep the default `default`, which puts the cluster in a *STACKIT Sandbox* project with
 > STACKIT's default flat networking.
 %{ endif ~}
 %{ if !composed_definitions_released ~}
 
 > [!NOTE]
-> Not all latest versions of the **STACKIT Project**, **STACKIT Service Account** and **STACKIT
-> Service Account Federation** definitions are released, so only this workspace can order them. To
+> Not all latest versions of the *STACKIT Project*, *STACKIT Service Account* and *STACKIT
+> Service Account Federation* definitions are released, so only this workspace can order them. To
 > order them from another workspace, deploy this landing zone with `hub.bbd_draft = false` and
 > `release_service_account_bbds = true`, publish the three definitions to the marketplace, then run
 > this building block again.
+%{ endif ~}
+%{ if playground_mode ~}
+
+*Playground mode:* the platform identifier carries a random suffix and nothing here is protected
+against deletion, so publish this platform or its building block definitions only to test that path.
+Redeploy with `playground_mode` set to false for a platform that is actually used.
 %{ endif ~}

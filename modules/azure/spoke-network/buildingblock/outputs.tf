@@ -21,7 +21,7 @@ output "ipam_pool_portal_url" {
 output "summary" {
   description = "Markdown summary of the created spoke network and its hub peering."
   value       = <<-EOT
-    # Spoke Network: **${azurerm_virtual_network.spoke_vnet.name}**
+    # Spoke Network: ${azurerm_virtual_network.spoke_vnet.name}
 
     Your spoke VNet has been created and peered into the central network hub.
 
@@ -29,13 +29,12 @@ output "summary" {
 
     | Property | Value |
     |----------|-------|
-    | **VNet Name** | `${azurerm_virtual_network.spoke_vnet.name}` |
-    | **Address Space** | `${local.address_space}` |
-    | **Resource Group** | `${azurerm_resource_group.spoke_rg.name}` |
-    | **Location** | `${azurerm_resource_group.spoke_rg.location}` |
-    | **VNet ID** | `${azurerm_virtual_network.spoke_vnet.id}` |
-    | **Portal** | [Open VNet in Azure Portal](${local.vnet_portal_url}) |%{if local.ipam_pool_portal_url != null}
-    | **IPAM Pool** | [Open IPAM Pool in Azure Portal](${local.ipam_pool_portal_url}) |%{endif}
+    | VNet Name | `${azurerm_virtual_network.spoke_vnet.name}` ([Open VNet in Azure Portal](${local.vnet_portal_url})) |
+    | Address Space | `${local.address_space}` |
+    | Resource Group | `${azurerm_resource_group.spoke_rg.name}` |
+    | Location | `${azurerm_resource_group.spoke_rg.location}` |
+    | VNet ID | `${azurerm_virtual_network.spoke_vnet.id}` |%{if local.ipam_pool_portal_url != null}
+    | IPAM Pool | [Open IPAM Pool in Azure Portal](${local.ipam_pool_portal_url}) |%{endif}
 
     ## Hub Peering
 

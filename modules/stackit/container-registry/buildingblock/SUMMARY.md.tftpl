@@ -4,10 +4,10 @@ A STACKIT container registry is ready in project `${stackit_project_id}`.
 
 | Field | Value |
 |-------|-------|
-| **Harbor** | [Repositories](${registry_url}) · [Robot accounts](${registry_robot_url}) |
-| **STACKIT Portal** | [Open in STACKIT Portal](${portal_url}) |
-| **Host** | `${registry_host}` |
-| **Pull path** | `${registry_host}/${registry_name}/<image>:<tag>` |
+| Harbor | [Repositories](${registry_url}) · [Robot accounts](${registry_robot_url}) |
+| Registry | `${registry_name}` ([Open in STACKIT Portal](${portal_url})) |
+| Host | `${registry_host}` |
+| Pull path | `${registry_host}/${registry_name}/<image>:<tag>` |
 
 ## Who can open it
 
@@ -27,7 +27,7 @@ account is created on first sign-in.
 %{ endif ~}
 %{ if length(unknown_users) > 0 ~}
 
-### ⚠️ Users Not Found
+## ⚠️ Users Not Found
 
 STACKIT does not know these users, so they did not get their registry roles:
 
@@ -35,12 +35,12 @@ STACKIT does not know these users, so they did not get their registry roles:
 - `${email}`
 %{ endfor ~}
 
-**To resolve this**, each user must sign in to the [STACKIT Portal](https://portal.stackit.cloud)
+To resolve this, each user must sign in to the [STACKIT Portal](https://portal.stackit.cloud)
 at least once. After they have signed in, re-run this building block and they will get their roles.
 %{ endif ~}
 %{ if length(owner_users) > 0 ~}
 
-### ⚠️ Project Owners
+## ⚠️ Project Owners
 
 These users own the STACKIT project, so they did not get a registry role. Owners lack the Harbor
 permission `container-registry.project.permission.administer` and can grant it to themselves with
@@ -65,13 +65,13 @@ that first link.
 
 1. Open the registry's Robot Accounts at ${registry_robot_url} and sign in with your STACKIT
    account.
-2. Create a robot account named `bootstrap` with expiration **Never**.
+2. Create a robot account named `bootstrap` with expiration *Never*.
 3. Link it to the STACKIT service account. Both fields are required:
 
    | Field | Value |
    |-------|-------|
-   | **Service account email** | `${stackit_service_account_email}` |
-   | **Service account ID** | `${stackit_service_account_id != "" ? stackit_service_account_id : "see the service account in its STACKIT project"}` |
+   | Service account email | `${stackit_service_account_email}` |
+   | Service account ID | `${stackit_service_account_id != "" ? stackit_service_account_id : "see the service account in its STACKIT project"}` |
 
 4. Grant exactly these 6 permissions. Harbor lets the robot mint only robots whose permissions it
    holds itself.

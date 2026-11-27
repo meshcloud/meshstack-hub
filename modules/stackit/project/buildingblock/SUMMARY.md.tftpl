@@ -1,21 +1,20 @@
-# Project: **${project_name}**
+# Project: ${project_name}
 
 ## Details
 
 | Property | Value |
 |----------|-------|
-| **Project ID** | `${project_id}` |
-| **Container ID** | `${container_id}` |
-| **Portal** | [Open in STACKIT Portal](${project_url}) |
-| **Landing Zone** | `${landing_zone}` |
+| Project ID | `${project_id}` ([Open in STACKIT Portal](${project_url})) |
+| Container ID | `${container_id}` |
+| Landing Zone | `${landing_zone}` |
 %{ if network_ordered ~}
-| **Network** | Ordered as the **Network ${project_name}** building block of this tenant |
+| Network | Ordered as the *Network ${project_name}* building block of this tenant |
 %{ endif ~}
 
 ${membership_summary}
 %{ if length(unknown_users) > 0 ~}
 
-### ⚠️ Users Not Found
+## ⚠️ Users Not Found
 
 STACKIT does not know these project users, so they did not get their project roles other than `owner`:
 
@@ -23,6 +22,6 @@ STACKIT does not know these project users, so they did not get their project rol
 - `${email}`
 %{ endfor ~}
 
-**To resolve this**, each user must sign in to the [STACKIT Portal](https://portal.stackit.cloud)
+To resolve this, each user must sign in to the [STACKIT Portal](https://portal.stackit.cloud)
 at least once. After they have signed in, re-run this building block and they will get their roles.
 %{ endif ~}

@@ -18,17 +18,15 @@ output "summary" {
   value       = <<-EOT
 # Route53 DNS Alias Record Created
 
-✅ **Your DNS alias record is ready!**
-
 ## Record Details
 
 | Property | Value |
 |----------|-------|
-| **DNS Name** | `${aws_route53_record.record.name}` |
-| **Type** | `${var.type}` |
-| **Alias Target** | `${var.alias_name}` |
-| **Health Check** | ${var.alias_evaluate_target_health ? "✅ Enabled" : "⚠️ Disabled"} |
-| **Zone** | `${var.zone_name}` |
+| DNS Name | `${aws_route53_record.record.name}` |
+| Type | `${var.type}` |
+| Alias Target | `${var.alias_name}` |
+| Health Check | ${var.alias_evaluate_target_health ? "✅ Enabled" : "⚠️ Disabled"} |
+| Zone | `${var.zone_name}` |
 
 ---
 
@@ -38,6 +36,6 @@ output "summary" {
 ${aws_route53_record.record.name}  →  ${var.alias_name}
 ```
 
-${var.private_zone ? "⚠️ **Note:** This is a private hosted zone record, only resolvable within your VPC." : "🌐 **Note:** This is a public DNS record, resolvable globally."}
+${var.private_zone ? "⚠️ *Note:* This is a private hosted zone record, only resolvable within your VPC." : "🌐 *Note:* This is a public DNS record, resolvable globally."}
 EOT
 }

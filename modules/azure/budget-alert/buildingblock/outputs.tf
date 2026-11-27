@@ -7,8 +7,8 @@ output "summary" {
   value       = <<-EOT
     ## Budget Alert: ${var.budget_name}
 
-    - **Subscription**: ${var.subscription_id}
-    - **Monthly budget**: ${azurerm_consumption_budget_subscription.subscription_budget.amount}
+    - *Subscription*: ${var.subscription_id}
+    - *Monthly budget*: ${azurerm_consumption_budget_subscription.subscription_budget.amount}
 
     | Threshold | Basis |
     |---|---|

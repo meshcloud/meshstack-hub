@@ -32,7 +32,7 @@ output "summary" {
 
     ## Next steps
 
-    Enter **${var.name}** as the network name when you order a database (RDS) or a Kubernetes
+    Enter `${var.name}` as the network name when you order a database (RDS) or a Kubernetes
     cluster (CCE) building block in this project. They place their servers in this subnet.
   EOT
 }

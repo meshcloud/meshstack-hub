@@ -18,9 +18,9 @@ output "summary" {
   value       = <<-EOT
     ## Budget Alert: ${var.budget_name}
 
-    - **Project**: ${var.project_id}
-    - **Monthly budget**: ${var.monthly_budget_amount} ${var.budget_currency}
-    - **Alerts to**: ${var.contact_email}
+    - *Project*: ${var.project_id}
+    - *Monthly budget*: ${var.monthly_budget_amount} ${var.budget_currency}
+    - *Alerts to*: ${var.contact_email}
 
     | Threshold | Basis |
     |---|---|

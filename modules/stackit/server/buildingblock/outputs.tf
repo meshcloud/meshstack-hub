@@ -38,10 +38,10 @@ output "summary" {
   value       = <<-EOT
     # STACKIT VM `${var.name}`
 
-    Your `${var.machine_type}` VM is up at **`${stackit_public_ip.this.ip}`**
+    Your `${var.machine_type}` VM is up at `${stackit_public_ip.this.ip}`
     ([Open in STACKIT Portal](${local.server_url})).
 
-    Log in with the generated key (from the **SSH Private Key** output):
+    Log in with the generated key (from the *SSH Private Key* output):
 
     ```sh
     # save the SSH Private Key output to a file first

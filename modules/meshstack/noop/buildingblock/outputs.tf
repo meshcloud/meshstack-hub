@@ -103,7 +103,7 @@ output "summary" {
   value = <<-MARKDOWN
 # NoOp Building Block — Deployment Summary
 
-This building block was successfully deployed. It is a **reference implementation**
+This building block was successfully deployed. It is a *reference implementation*
 demonstrating meshStack's complete Terraform interface — it provisions _no real
 infrastructure_.
 
@@ -129,7 +129,7 @@ other: value
 
 ## Example: Callout blocks
 
-> **Note**: Use quote blocks to create callouts for important information.
+> *Note*: Use quote blocks to create callouts for important information.
 MARKDOWN
 }
 

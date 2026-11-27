@@ -30,7 +30,7 @@ output "summary" {
 
     ## Access
 
-    The outputs **Access Key** and **Secret Key** belong to a user that may use only this bucket and
+    The outputs *Access Key* and *Secret Key* belong to a user that may use only this bucket and
     its key. Give them to your application as its S3 credentials, together with the endpoint above.
     With the AWS CLI, for example:
 
@@ -41,6 +41,6 @@ output "summary" {
     The members of the project open the bucket in the [OBS console](https://console.otc.t-systems.com/obs/)
     after their next sign-in: ${join(", ", [for role, access in var.group_access : "${role}s ${access == "write" ? "read and write" : "read"}"])} its objects.
 
-    ${var.force_destroy ? "Deleting this building block deletes the bucket **with all its objects**." : "Empty the bucket before deleting this building block; a bucket with objects in it is kept."}
+    ${var.force_destroy ? "Deleting this building block deletes the bucket *with all its objects*." : "Empty the bucket before deleting this building block; a bucket with objects in it is kept."}
   EOT
 }
