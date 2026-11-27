@@ -22,11 +22,40 @@ variable "azure_user_lookup_attribute" {
 variable "target_type" {
   type        = string
   default     = "TENANT_LEVEL"
-  description = "'TENANT_LEVEL' creates one group per project role for an Azure tenant. 'WORKSPACE_LEVEL' creates one group per workspace holding every workspace member, whatever their workspace role."
+  description = "'TENANT_LEVEL' creates one group per project role for an Azure tenant. 'WORKSPACE_LEVEL' creates one group per workspace holding every workspace member, whatever their workspace role. Set `groups` to create other groups instead."
 
   validation {
     condition     = contains(["TENANT_LEVEL", "WORKSPACE_LEVEL"], var.target_type)
     error_message = "Must be 'TENANT_LEVEL' or 'WORKSPACE_LEVEL'."
+  }
+}
+
+variable "groups" {
+  type = map(object({
+    name  = string
+    roles = optional(list(string))
+  }))
+  default     = null
+  description = <<-EOT
+  The groups each building block creates, keyed by a stable key. Null keeps the default layout described for `target_type`.
+  `name`: Group display name. `{workspace}` and `{project}` are replaced by the identifiers of the building block's workspace and project, e.g. '{workspace}.cldy-finops.admin'.
+  `roles`: Only members holding one of these roles join the group. Workspace roles are 'Workspace Owner', 'Workspace Manager' and 'Workspace Member'; project roles are role identifiers such as 'admin'. Null adds every member.
+  Changing a key deletes the group and creates a new one with another object ID, so keep keys stable and change `name` to rename a group.
+  EOT
+
+  validation {
+    condition     = var.groups == null || alltrue([for group in values(var.groups) : strcontains(group.name, "{workspace}")])
+    error_message = "Every group name must contain '{workspace}', otherwise the building blocks of all workspaces create groups with the same name."
+  }
+
+  validation {
+    condition     = var.groups == null || length(distinct([for group in values(var.groups) : group.name])) == length(var.groups)
+    error_message = "Every group needs its own name."
+  }
+
+  validation {
+    condition     = var.groups == null || alltrue([for group in values(var.groups) : group.roles == null || length(group.roles) > 0])
+    error_message = "Set roles to null to add every member. An empty list would leave the group empty."
   }
 }
 
@@ -132,11 +161,57 @@ module "backplane" {
 }
 
 locals {
-  workspace_level = var.target_type == "WORKSPACE_LEVEL"
+  workspace_level   = var.target_type == "WORKSPACE_LEVEL"
+  custom_groups     = var.groups != null
+  configured_groups = var.groups == null ? {} : var.groups
+  scope             = local.workspace_level ? "workspace" : "project"
+  workspace_roles   = ["Workspace Owner", "Workspace Manager", "Workspace Member"]
+
+  offers_input = {
+    prefix             = !local.custom_groups
+    groups             = local.custom_groups
+    project_identifier = !local.workspace_level
+    project_roles      = !local.workspace_level && !local.custom_groups
+  }
+
+  display_name = local.workspace_level ? (local.custom_groups ? "Azure Entra ID Workspace Groups" : "Azure Entra ID Workspace Group") : "Azure Entra ID Groups"
+  description = (
+    local.custom_groups ? "Creates the Entra security groups your platform team defined for a meshStack ${local.scope}, each holding the members with the roles it names." :
+    local.workspace_level ? "Creates an Entra security group holding every member of a meshStack workspace, with optional Administrative Unit membership." :
+    "Creates Entra security groups for meshStack project roles, with optional Administrative Unit membership."
+  )
+
+  custom_groups_readme = {
+    intro = "Automatically provision the Entra ID security groups your platform team defined for a meshStack ${local.scope}, and keep each group in sync with the ${local.scope} members that hold its roles."
+    use_cases = join("\n", [
+      "- Give each purpose its own group, such as FinOps or service administration, so access granted to it in Azure follows the ${local.scope} roles in meshStack.",
+      "- Keep that access in sync with meshStack: when someone joins, leaves or changes their role in the ${local.scope}, the groups follow on the next run.",
+      "- Optionally scope the groups inside a dedicated Entra Administrative Unit to isolate them from the rest of the directory.",
+    ])
+    examples = join("\n", concat(
+      [
+        "**Groups your platform team defined:**",
+        "",
+        local.workspace_level ? "Workspace `my-workspace` gets these groups:" : "Project `my-project` in workspace `my-workspace` gets these groups:",
+        "",
+        "| Entra group | Members |",
+        "|---|---|",
+      ],
+      [
+        for group in values(local.configured_groups) :
+        "| `${replace(replace(group.name, "{workspace}", "my-workspace"), "{project}", "my-project")}` | ${group.roles == null ? "Every ${local.scope} member" : join(", ", group.roles)} |"
+      ]
+    ))
+    responsibilities = join("\n", [
+      "| Choose which groups exist and which roles join them | ✅ | ❌ |",
+      "| Add users to the generated groups (automated via ${local.scope} membership) | ✅ | ❌ |",
+      "| Manage who holds which ${local.scope} role | ❌ | ✅ |",
+    ])
+  }
 
   # Lines joined rather than %{if} directives in the readme heredoc: a directive line keeps its
   # source indentation and leaves blank lines behind, which breaks the lists and the table.
-  readme_variant = local.workspace_level ? {
+  readme_variant = local.custom_groups ? local.custom_groups_readme : local.workspace_level ? {
     intro = "Automatically provision one Entra ID security group for a meshStack workspace and keep every workspace member in it. The group is named after the workspace identifier with an optional prefix, so access granted to it in Azure follows workspace membership in meshStack."
     use_cases = join("\n", [
       "- Grant a whole team access to Azure resources, such as a subscription or a shared service, through one group instead of user by user.",
@@ -189,8 +264,8 @@ resource "meshstack_building_block_definition" "this" {
   }
 
   spec = {
-    display_name             = coalesce(var.bbd_display_name, local.workspace_level ? "Azure Entra ID Workspace Group" : "Azure Entra ID Groups")
-    description              = coalesce(var.bbd_description, local.workspace_level ? "Creates an Entra security group holding every member of a meshStack workspace, with optional Administrative Unit membership." : "Creates Entra security groups for meshStack project roles, with optional Administrative Unit membership.")
+    display_name             = coalesce(var.bbd_display_name, local.display_name)
+    description              = coalesce(var.bbd_description, local.description)
     support_url              = "mailto:support@meshcloud.io"
     documentation_url        = "https://hub.meshcloud.io/platforms/azure/definitions/azure-entra-id-groups"
     notification_subscribers = var.notification_subscribers
@@ -225,7 +300,7 @@ resource "meshstack_building_block_definition" "this" {
       | Responsibility | Platform Team | Application Team |
       |---|:---:|:---:|
       | Deploy and configure the backplane identity | ✅ | ❌ |
-      | Define the group naming prefix | ✅ | ❌ |
+      | Define the group naming convention | ✅ | ❌ |
       | Create and delete Entra groups | ✅ | ❌ |
       | Add the Administrative Unit (optional) | ✅ | ❌ |
       ${local.readme_variant.responsibilities}
@@ -283,13 +358,6 @@ resource "meshstack_building_block_definition" "this" {
         is_environment  = true
         argument        = jsonencode(module.runner.token_path)
       }
-      prefix = {
-        type            = "STRING"
-        display_name    = "Group Name Prefix"
-        description     = "Optional prefix prepended to all group display names (e.g. 'plat'). Leave empty to omit."
-        assignment_type = "USER_INPUT"
-        is_optional     = true
-      }
       workspace_identifier = {
         type            = "STRING"
         display_name    = "Workspace Identifier"
@@ -317,6 +385,20 @@ resource "meshstack_building_block_definition" "this" {
         assignment_type = "USER_PERMISSIONS"
       }
       }, { for k, v in {
+        prefix = {
+          type            = "STRING"
+          display_name    = "Group Name Prefix"
+          description     = "Optional prefix prepended to all group display names (e.g. 'plat'). Leave empty to omit."
+          assignment_type = "USER_INPUT"
+          is_optional     = true
+        }
+        groups = {
+          type            = "CODE"
+          display_name    = "Groups"
+          description     = "The groups to create and the roles whose members join each of them, as defined by the platform team."
+          assignment_type = "STATIC"
+          argument        = jsonencode(jsonencode(var.groups))
+        }
         project_identifier = {
           type            = "STRING"
           display_name    = "Project Identifier"
@@ -330,19 +412,19 @@ resource "meshstack_building_block_definition" "this" {
           assignment_type = "USER_INPUT"
           default_value   = jsonencode("admin,user,reader")
         }
-    } : k => v if !local.workspace_level })
+    } : k => v if local.offers_input[k] })
 
     outputs = {
       group_object_ids = {
         type            = "STRING"
         display_name    = "Group Object IDs"
-        description     = "JSON map of project role name to Entra group object ID."
+        description     = "JSON map of group key to Entra group object ID. Without configured groups, the key is the project role name."
         assignment_type = "NONE"
       }
       group_display_names = {
         type            = "STRING"
         display_name    = "Group Display Names"
-        description     = "JSON map of project role name to Entra group display name."
+        description     = "JSON map of group key to Entra group display name. Without configured groups, the key is the project role name."
         assignment_type = "NONE"
       }
       unresolved_users = {
@@ -357,6 +439,22 @@ resource "meshstack_building_block_definition" "this" {
         description     = "Markdown summary of the created groups, and a warning naming any members that could not be resolved."
         assignment_type = "SUMMARY"
       }
+    }
+  }
+
+  lifecycle {
+    precondition {
+      condition = alltrue([
+        for group in values(local.configured_groups) : strcontains(group.name, "{project}") == !local.workspace_level
+      ])
+      error_message = "With target_type TENANT_LEVEL every group name must contain '{project}'. With WORKSPACE_LEVEL no group name may contain it, because a workspace building block has no project."
+    }
+
+    precondition {
+      condition = !local.workspace_level || alltrue([
+        for group in values(local.configured_groups) : group.roles == null || length(setsubtract(group.roles, local.workspace_roles)) == 0
+      ])
+      error_message = "With target_type WORKSPACE_LEVEL, group roles must be among ${join(", ", local.workspace_roles)}."
     }
   }
 }
