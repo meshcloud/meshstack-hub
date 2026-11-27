@@ -47,6 +47,7 @@ variable "accelerator_ref" {
   type        = string
   nullable    = false
   const       = true
+  default     = "v2.3.0"
   description = "Git ref of github.com/stackitcloud/stackit-landing-zone whose `src/` the run applies: a tag such as `v2.3.0`, a branch or a commit. The export's `Accelerator source` header names the commit it was made for; another ref works when the export's variables fit that version. `const` so it can be interpolated into the module source at init time."
 }
 
