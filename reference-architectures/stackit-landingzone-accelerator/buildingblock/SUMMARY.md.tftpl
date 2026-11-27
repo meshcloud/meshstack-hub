@@ -13,6 +13,21 @@
 | **Management Project** | [Open in STACKIT Portal](${management_project_url}) (`${management_project_id}`) |
 | **STACKIT Project Service Account** | `${service_account_email}` |
 
+## Network Areas
+
+%{ if length(network_areas) == 0 ~}
+The export has no connectivity, so the run created no network area.
+%{ else ~}
+The run created the hub and spoke networking of the export.
+[Open the network areas in STACKIT Portal](${network_areas_url})
+
+| Area | Network Area ID |
+|------|-----------------|
+%{ for area, id in network_areas ~}
+| `${area}` | `${id}` |
+%{ endfor ~}
+%{ endif ~}
+
 ## Landing Zones
 
 %{ if length(landing_zones) == 0 ~}
