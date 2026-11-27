@@ -14,3 +14,27 @@ variable "workload_identity_federation" {
   nullable    = false
   description = "Identity the building block's runs present: the meshStack issuer, the definition's subject, and the audience of the token the pre-run script exchanges."
 }
+
+variable "runner_uuid" {
+  type        = string
+  default     = null
+  description = "The uuid of the runner that `workload_identity_federation` describes. If it differs from `original_runner_uuid`, the identity provider name ends with the first 8 characters of this uuid."
+}
+
+variable "original_runner_uuid" {
+  type        = string
+  default     = null
+  description = "The uuid of the runner in `meshstack.original_runner_ref`. The identity provider for this runner gets the name `name` without a suffix. Null means the runner in `runner_uuid`."
+}
+
+variable "trusted_runner_identities" {
+  type = list(object({
+    runner_uuid = string
+    issuer      = string
+    audience    = string
+    subject     = string
+  }))
+  default     = []
+  nullable    = false
+  description = "One entry per trusted runner, with the issuer, audience and subject of its tokens. The backplane creates one identity provider for each. Pass `trusted_identities` of the [runner-identity module](../../../meshstack/runner-identity). The plan fails for a runner that no version uses. If the same apply changes the runner, the apply fails instead."
+}
