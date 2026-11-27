@@ -1,25 +1,60 @@
+# STACKIT Landing Zone Accelerator: `${platform_identifier}`
+
 | Property | Value |
 |----------|-------|
 | *Organization* | `${organization_id}` ([Open in STACKIT Portal](${organization_url})) |
 | *Root Folder* | `${root_folder_name}`, `${root_folder_id}` ([Open in STACKIT Portal](${root_folder_url})) |
 | *Management Project* | `${management_project_id}` ([Open in STACKIT Portal](${management_project_url})) |
-%{ for area, id in network_areas ~}
-| *Network Area* `${area}` | `${id}` ([Open in STACKIT Portal](https://portal.stackit.cloud/network-area/network-areas/${id}/overview?organization=${organization_id})) |
-%{ endfor ~}
 | *meshStack Platform* | ${display_name} (`${platform_identifier}`) |
 | *Building Block Definition* | ${display_name} |
-%{ for name, lz in landing_zones ~}
-| *Landing Zone* ${lz.display_name} | `${name}`, folder `${lz.folder}` |
-%{ endfor ~}
-%{ for tag in landing_zone_tags ~}
-| *Landing Zone Tag* `${tag.key}` | ${join(", ", [for v in tag.values : "`${v}`"])} |
-%{ endfor ~}
 | *STACKIT Project Service Account* | `${service_account_email}` |
 
-To get a STACKIT project, create an environment on the platform ${display_name}, choose one of
-its landing zones and add the building block ${display_name}. The project's tags have to fit the
-landing zone tags.
+## Network Areas
+
+%{ if length(network_areas) == 0 ~}
+The export has no connectivity, so the run created no network area.
+%{ else ~}
+The run created the hub and spoke networking of the export.
+
+| Area | Network Area |
+|------|--------------|
+%{ for area, id in network_areas ~}
+| `${area}` | `${id}` ([Open in STACKIT Portal](https://portal.stackit.cloud/network-area/network-areas/${id}/overview?organization=${organization_id})) |
+%{ endfor ~}
+%{ endif ~}
+
+## Landing Zones
+
+%{ if length(landing_zones) == 0 ~}
+The export has no landing zones, so the platform has none either.
+%{ else ~}
+| Landing Zone | Identifier | Folder |
+|--------------|------------|--------|
+%{ for name, lz in landing_zones ~}
+| ${lz.display_name} | `${name}` | `${lz.folder}` |
+%{ endfor ~}
+%{ endif ~}
+
+## Order a STACKIT Project
+
+Create an environment (a project with one tenant) and pick:
+
+1. *Platform:* ${display_name}
+2. *Landing zone:* one from the table above. The project is created in its folder.
+3. *Building block:* ${display_name}. It asks for no inputs.
+
+%{ if length(landing_zone_tags) > 0 ~}
+The landing zones carry the tags below. meshStack offers a landing zone only when the project's
+tags fit its tag policies, so choose project tag values from this list:
+
+| Landing Zone Tag | Values |
+|------------------|--------|
+%{ for tag in landing_zone_tags ~}
+| `${tag.key}` | ${join(", ", [for v in tag.values : "`${v}`"])} |
+%{ endfor ~}
+%{ endif ~}
+
 %{ if playground_mode }
-*Playground mode:* the platform identifier carries a random suffix, and this is not intended to be a
-published platform.
+> *Playground mode.* The platform identifier carries a random suffix so this deployment does not
+> occupy a name for good. This is not intended to be a published platform.
 %{ endif ~}
