@@ -7,6 +7,3 @@ modules/aks/postgresql/buildingblock                 # local.resource_group_name
 modules/gcp                                          # terraform-gcp-meshplatform has no tag 0.3.0
 modules/ionos/dcd/backplane                          # required arguments missing, plus arguments the provider rejects
 modules/otc/project                                  # logo.png, which the platform type icon reads, does not exist
-
-# Waiting for a merge. The module is sourced from main, which gets the new argument with this PR.
-reference-architectures/stackit-landingzone-accelerator/buildingblock  # modules/stackit on main has no stackit_landing_zones yet
