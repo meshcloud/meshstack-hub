@@ -40,9 +40,7 @@ output "summary" {
 
 locals {
   instance_summary = !local.create_instance ? null : <<-EOT
-    # PostgreSQL instance `${var.instance_name}`
-
-    PostgreSQL ${var.postgres_version} on ${var.replicas == 3 ? "3 nodes" : "a single node"} of flavor `${var.flavor}` with ${var.storage_size} GB `${var.storage_class}` storage.
+    PostgreSQL instance `${var.instance_name}` runs PostgreSQL ${var.postgres_version} on ${var.replicas == 3 ? "3 nodes" : "a single node"} of flavor `${var.flavor}` with ${var.storage_size} GB `${var.storage_class}` storage.
 
     | | |
     |---|---|
@@ -55,9 +53,7 @@ locals {
   EOT
 
   database_summary = local.create_instance ? null : <<-EOT
-    # PostgreSQL database `${module.database.database}`
-
-    On the shared instance `${module.database.instance_name}`.
+    PostgreSQL database `${module.database.database}` is on the shared instance `${module.database.instance_name}`.
 
     | | |
     |---|---|

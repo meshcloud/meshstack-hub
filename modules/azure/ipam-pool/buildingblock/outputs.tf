@@ -16,9 +16,7 @@ output "address_prefix" {
 output "summary" {
   description = "Markdown summary of the created IPAM pool."
   value       = <<-EOT
-    # IPAM Pool: ${azurerm_network_manager_ipam_pool.this.name}
-
-    The pool hands out non-overlapping address ranges from `${var.address_prefix}` to virtual networks in `${var.network_manager_scope}`.
+    The IPAM pool `${azurerm_network_manager_ipam_pool.this.name}` hands out non-overlapping address ranges from `${var.address_prefix}` to virtual networks in `${var.network_manager_scope}`.
 
     | Property | Value |
     |----------|-------|

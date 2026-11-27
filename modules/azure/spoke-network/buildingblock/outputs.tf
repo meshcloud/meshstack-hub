@@ -21,11 +21,7 @@ output "ipam_pool_portal_url" {
 output "summary" {
   description = "Markdown summary of the created spoke network and its hub peering."
   value       = <<-EOT
-    # Spoke Network: ${azurerm_virtual_network.spoke_vnet.name}
-
-    Your spoke VNet has been created and peered into the central network hub.
-
-    ## Details
+    Your spoke VNet `${azurerm_virtual_network.spoke_vnet.name}` has been created and peered into the central network hub.
 
     | Property | Value |
     |----------|-------|
@@ -35,8 +31,6 @@ output "summary" {
     | Location | `${azurerm_resource_group.spoke_rg.location}` |
     | VNet ID | `${azurerm_virtual_network.spoke_vnet.id}` |%{if local.ipam_pool_portal_url != null}
     | IPAM Pool | [Open IPAM Pool in Azure Portal](${local.ipam_pool_portal_url}) |%{endif}
-
-    ## Hub Peering
 
     The spoke is peered bidirectionally with the central hub `${data.azurerm_virtual_network.hub_vnet.name}` (resource group `${data.azurerm_resource_group.hub_rg.name}`).
 

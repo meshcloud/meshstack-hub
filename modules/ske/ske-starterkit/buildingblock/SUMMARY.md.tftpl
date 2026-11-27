@@ -1,5 +1,3 @@
-# SKE Starter Kit
-
 ✅ Your application `${app_name}` is set up and deployed in workspace `${workspace_identifier}`.
 
 @buildingblock[${git_repository_uuid}]
@@ -12,7 +10,7 @@
 
 ---
 
-## What you have
+# What you have
 
 - *Git repository* [${repo_name}](${repo_html_url}) on STACKIT Git (Forgejo), initialized from
   `${repo_clone_addr}`.
@@ -26,7 +24,7 @@
 | ${title(stage.name)} | `${stage.project_name}` | [${stage.app_hostname}](https://${stage.app_hostname}) | [`pipeline.yaml`](${pipeline_url}) |
 %{ endfor ~}
 
-## How deployment works
+# How deployment works
 
 Each stage deploys from the branch of the same name. A push to a branch runs the pipeline, which
 builds the `${app_name}` image and deploys it to the namespace of that stage:
@@ -37,7 +35,7 @@ builds the `${app_name}` image and deploys it to the namespace of that stage:
 
 The pipeline already ran once per stage, so the application is live.
 
-## Git access
+# Git access
 
 Your access to the repository follows your role in the workspace:
 
@@ -56,7 +54,7 @@ Your access to the repository follows your role in the workspace:
    git clone ${repo_ssh_url}
    ```
 
-## Manage access
+# Manage access
 
 Invite team members in meshStack:
 %{ for stage in stages ~}

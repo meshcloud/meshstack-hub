@@ -8,8 +8,6 @@ resource "terraform_data" "link" {
 
 locals {
   default_summary = chomp(<<-EOT
-    # ${var.title}
-
     [Open ${var.title}](${var.url})
   EOT
   )

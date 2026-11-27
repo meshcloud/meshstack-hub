@@ -1,8 +1,4 @@
-# ✅ Git Repository Created
-
 `${name}` is ready on STACKIT Git Forgejo.
-
-## Repository Details
 
 - *Name*: ${name}
 - *Owner*: ${owner}
@@ -12,7 +8,7 @@
 - *Initialized from*: `${clone_addr}`
 %{ endif ~}
 
-## Next Steps
+# Next Steps
 
 1. *Clone your repository*:
    ```bash
@@ -29,12 +25,12 @@
    git push origin ${default_branch}
    ```
 
-## Resources
+# Resources
 
 - [Open repository in STACKIT Git](${repo_html_url})
 
 %{ if length(members) > 0 ~}
-## Workspace Member Access
+# Workspace Member Access
 
 | workspace member | role | team | status |
 |------------------|------|------|--------|
@@ -47,7 +43,7 @@
 %{ endfor ~}
 
 %{ if length(team_names) > 0 ~}
-## Forgejo Teams
+# Forgejo Teams
 
 %{ for type, name in team_names ~}
 - *${type}*: `${name}`
@@ -55,7 +51,7 @@
 %{ endif ~}
 
 %{ if length([for m in members : m if m.resolve_error != ""]) > 0 ~}
-## ⚠️ Members Not Found
+# ⚠️ Members Not Found
 
 The following workspace members could not be added to their teams:
 

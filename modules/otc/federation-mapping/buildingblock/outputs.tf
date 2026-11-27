@@ -6,8 +6,6 @@ output "function_urn" {
 output "summary" {
   description = "Markdown summary shown in meshPanel after the run."
   value       = <<-EOT
-    # Federation mapping
-
     The function `${opentelekomcloud_fgs_function_v2.this.name}` rebuilds the mapping of the identity
     provider `${var.identity_provider_name}` whenever a project records or removes its membership in
     the bucket `${var.mapping_bucket}`, and every run of `${var.resync_schedule}` regardless.

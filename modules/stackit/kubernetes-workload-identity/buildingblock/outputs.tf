@@ -6,8 +6,6 @@ output "service_account_email" {
 output "summary" {
   description = "Markdown summary shown in meshPanel after the run."
   value       = <<-EOT
-    # STACKIT workload identity for `${var.kubernetes_service_account_name}`
-
     Tokens of the Kubernetes service account `${local.subject}` with audience `${var.audience}` act as the STACKIT
     service account `${var.workload_service_account_email}`. There is no STACKIT key.
 

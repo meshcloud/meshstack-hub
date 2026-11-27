@@ -32,7 +32,7 @@ output "wildcard_certificate_domain" {
 output "summary" {
   description = "Markdown summary shown on the building block."
   value       = <<-EOT
-    # Kubernetes Ingress Controller
+    The Kubernetes ingress controller is ready.
 
     | Property | Value |
     |----------|-------|

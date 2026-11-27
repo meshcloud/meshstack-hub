@@ -1,6 +1,4 @@
-# Container Registry `${registry_name}`
-
-A STACKIT container registry is ready in project `${stackit_project_id}`.
+Container registry `${registry_name}` is ready in STACKIT project `${stackit_project_id}`.
 
 | Field | Value |
 |-------|-------|
@@ -9,7 +7,7 @@ A STACKIT container registry is ready in project `${stackit_project_id}`.
 | Host | `${registry_host}` |
 | Pull path | `${registry_host}/${registry_name}/<image>:<tag>` |
 
-## Who can open it
+# Who can open it
 
 %{ if length(user_assignments) == 0 ~}
 This project has no meshStack users yet, so only the platform's service account can reach the
@@ -27,7 +25,7 @@ account is created on first sign-in.
 %{ endif ~}
 %{ if length(unknown_users) > 0 ~}
 
-## ⚠️ Users Not Found
+# ⚠️ Users Not Found
 
 STACKIT does not know these users, so they did not get their registry roles:
 
@@ -40,7 +38,7 @@ at least once. After they have signed in, re-run this building block and they wi
 %{ endif ~}
 %{ if length(owner_users) > 0 ~}
 
-## ⚠️ Project Owners
+# ⚠️ Project Owners
 
 These users own the STACKIT project, so they did not get a registry role. Owners lack the Harbor
 permission `container-registry.project.permission.administer` and can grant it to themselves with
@@ -52,12 +50,12 @@ the role `container-registry.artifactory.admin`.
 %{ endif ~}
 
 %{ if robots_minted ~}
-## Robots
+# Robots
 
 A robot is linked to the platform's STACKIT service account, so this building block minted a push
 robot and a pull robot for pipelines and workloads.
 %{ else ~}
-## One manual step, once per registry
+# One manual step, once per registry
 
 STACKIT grants no IAM role that opens the Harbor API to an identity Harbor does not know. Access
 comes from linking a robot account to a STACKIT service account, and only the portal can create

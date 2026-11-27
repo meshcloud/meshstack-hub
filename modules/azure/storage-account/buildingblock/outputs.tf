@@ -34,9 +34,7 @@ output "blob_soft_delete_retention_days" {
 output "summary" {
   description = "Markdown summary output of the building block"
   value       = <<-EOT
-    # Azure Storage Account
-
-    ## Details
+    Azure storage account `${azurerm_storage_account.storage_account.name}` is ready.
 
     - *Name*: ${azurerm_storage_account.storage_account.name}
     - *Resource group*: ${azurerm_resource_group.storage_account_rg.name}

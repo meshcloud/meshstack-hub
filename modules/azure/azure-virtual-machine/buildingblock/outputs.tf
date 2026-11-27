@@ -56,10 +56,6 @@ output "azure_portal_url" {
 output "summary" {
   description = "Markdown summary output of the building block with connection instructions"
   value       = <<EOT
-# Azure Virtual Machine
-
-## VM Details
-
 - *Name*: ${var.vm_name}
 - *Resource Group*: ${local.rg_name}
 - *Location*: ${local.rg_location}
@@ -67,20 +63,17 @@ output "summary" {
 - *VM Size*: ${var.vm_size}
 - *Private IP*: ${azurerm_network_interface.vm_nic.private_ip_address}${var.enable_public_ip ? "\n- *Public IP*: ${azurerm_public_ip.vm_public_ip[0].ip_address}" : ""}
 - *Spot Instance*: ${var.enable_spot_instance ? "Yes (cost-optimized)" : "No"}
-
-## Network Configuration
+- *Managed identity principal ID*: ${var.os_type == "Linux" ? azurerm_linux_virtual_machine.vm[0].identity[0].principal_id : azurerm_windows_virtual_machine.vm[0].identity[0].principal_id}
 
 - *Virtual Network*: ${azurerm_virtual_network.vm_vnet.name}
 - *VNet Address Space*: ${var.vnet_address_space}
 - *Subnet*: ${azurerm_subnet.vm_subnet.name}
 - *Subnet Prefix*: ${var.subnet_address_prefix}
 
-## Storage Configuration
-
 - *OS Disk Size*: ${var.os_disk_size_gb} GB
 - *OS Disk Type*: ${var.os_disk_storage_type}${var.data_disk_size_gb > 0 ? "\n- *Data Disk Size*: ${var.data_disk_size_gb} GB\n- *Data Disk Type*: ${var.data_disk_storage_type}" : ""}
 
-## Connection Instructions
+# Connection Instructions
 
 ${var.os_type == "Linux" ? "Connect to your Linux VM using SSH:" : "Connect to your Windows VM using Remote Desktop Protocol (RDP):"}
 
@@ -90,16 +83,9 @@ ${!var.enable_public_ip ? "*Note*: This VM does not have a public IP. Use Azure 
 
 ${var.os_type == "Linux" ? "This VM is configured with SSH key authentication. Ensure you have the private key corresponding to the public key used during provisioning." : "Use the admin username and password configured during provisioning."}
 
-## Managed Identity
+${var.enable_spot_instance ? "# Spot Instance Notice\n\n⚠️ This VM is running as a spot instance to reduce costs. Be aware that:\n- The VM can be evicted when Azure needs capacity\n- This is suitable for dev/test and non-critical workloads\n- Consider implementing checkpointing or state persistence for long-running tasks\n" : ""}
 
-This VM has a system-assigned managed identity enabled:
-- *Principal ID*: ${var.os_type == "Linux" ? azurerm_linux_virtual_machine.vm[0].identity[0].principal_id : azurerm_windows_virtual_machine.vm[0].identity[0].principal_id}
-
-Use this identity to grant the VM access to other Azure resources without storing credentials.
-
-${var.enable_spot_instance ? "## Spot Instance Notice\n\n⚠️ This VM is running as a spot instance to reduce costs. Be aware that:\n- The VM can be evicted when Azure needs capacity\n- This is suitable for dev/test and non-critical workloads\n- Consider implementing checkpointing or state persistence for long-running tasks\n" : ""}
-
-## Resources Created
+# Resources Created
 
 - Resource Group: `${local.rg_name}`
 - Virtual Network: `${azurerm_virtual_network.vm_vnet.name}`

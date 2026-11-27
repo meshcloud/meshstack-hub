@@ -55,8 +55,6 @@ output "vault_secret" {
 output "summary" {
   description = "Markdown summary shown on the building block."
   value       = <<-EOT
-    # Kubernetes Service Account: ${kubernetes_service_account.this.metadata[0].name}
-
     | Property | Value |
     |----------|-------|
     | Service Account | `${var.namespace}/${kubernetes_service_account.this.metadata[0].name}` |

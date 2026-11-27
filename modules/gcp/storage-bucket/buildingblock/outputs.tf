@@ -9,9 +9,7 @@ output "bucket_url" {
 output "summary" {
   description = "Markdown summary output of the building block"
   value       = <<EOT
-# GCP Storage Bucket
-
-## Details
+GCP storage bucket `${google_storage_bucket.main.name}` is ready.
 
 - *Name*: ${google_storage_bucket.main.name}
 - *Project*: ${google_storage_bucket.main.project}

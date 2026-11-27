@@ -30,8 +30,6 @@ locals {
 output "summary" {
   description = "Summary with next steps and insights into created resources."
   value       = <<-EOT
-    # OpenShift Starter Kit
-
     This starter kit has set up the following resources in workspace `${var.workspace_identifier}`:
 
     @buildingblock[${meshstack_building_block.repo.metadata.uuid}]
@@ -40,7 +38,7 @@ output "summary" {
 
     ---
 
-    ## Deployments
+    # Deployments
 
     Each stage has its own GitHub environment, named after the stage, and deploys from its own branch:
 
@@ -50,7 +48,7 @@ output "summary" {
 
     Follow the runs in the [Actions tab](${local.repo_html_url}/actions).
 
-    ## Next Steps
+    # Next Steps
 
     - Clone [the repository](${local.repo_html_url}) and push to `main` to deploy.
     ${local.summary_promotion}- Invite your team in meshStack:

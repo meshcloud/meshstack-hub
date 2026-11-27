@@ -16,9 +16,7 @@ output "record_value" {
 output "summary" {
   description = "Summary of the created DNS record"
   value       = <<-EOT
-# Route53 DNS Record Created
-
-## Record Details
+Route53 DNS record `${aws_route53_record.record.name}` points to `${var.record}`.
 
 | Property | Value |
 |----------|-------|
@@ -27,14 +25,6 @@ output "summary" {
 | Value | `${var.record}` |
 | TTL | `${var.ttl}` seconds |
 | Zone | `${var.zone_name}` |
-
----
-
-## Resolution
-
-```
-${aws_route53_record.record.name}  →  ${var.record}
-```
 
 ${var.private_zone ? "⚠️ *Note:* This is a private hosted zone record, only resolvable within your VPC." : "🌐 *Note:* This is a public DNS record, resolvable globally."}
 

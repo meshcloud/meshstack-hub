@@ -36,8 +36,6 @@ output "portal_url" {
 output "summary" {
   description = "Markdown summary shown in meshPanel after the run."
   value       = <<-EOT
-    # Azure AI LLM
-
     `${var.model_name}` (${local.model.version}) is deployed as `${azurerm_cognitive_deployment.this.name}` with ${var.capacity}k tokens per minute (${var.deployment_sku}).
 
     - *Endpoint*: `${azurerm_cognitive_account.this.custom_subdomain_name}.openai.azure.com`

@@ -23,12 +23,8 @@ output "secret_key" {
 output "summary" {
   description = "Markdown summary shown in meshPanel after the run."
   value       = <<-EOT
-    # OBS bucket
-
     The bucket `${module.bucket.bucket_name}` is ready at `https://obs.${var.region}.otc.t-systems.com`.
     It is private, encrypted with its own KMS key${var.enable_versioning ? ", and keeps previous object versions" : ""}.
-
-    ## Access
 
     The outputs *Access Key* and *Secret Key* belong to a user that may use only this bucket and
     its key. Give them to your application as its S3 credentials, together with the endpoint above.

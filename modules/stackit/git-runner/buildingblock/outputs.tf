@@ -25,9 +25,7 @@ output "runners_url" {
 output "summary" {
   description = "Markdown summary shown on the building block."
   value       = <<-EOT
-    # Git Runner: ${var.name}
-
-    The runner serves the STACKIT Git organization [`${var.git_organization}`](${var.git_base_url}/${var.git_organization}).
+    The runner `${var.name}` serves the STACKIT Git organization [`${var.git_organization}`](${var.git_base_url}/${var.git_organization}).
     A workflow picks it with `runs-on` set to one of its labels.
 
     | Property | Value |

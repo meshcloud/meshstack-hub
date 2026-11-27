@@ -12,7 +12,7 @@ run "stackit_kubernetes" {
   }
 
   assert {
-    condition     = strcontains(try(jsondecode(meshstack_building_block.this.status.outputs["summary"].value), ""), "# STACKIT Kubernetes Platform: ${var.test_context.run_id}-")
+    condition     = strcontains(try(jsondecode(meshstack_building_block.this.status.outputs["summary"].value), ""), "The STACKIT Kubernetes platform `${var.test_context.run_id}-")
     error_message = "Expected the summary to name the platform after the run id."
   }
 

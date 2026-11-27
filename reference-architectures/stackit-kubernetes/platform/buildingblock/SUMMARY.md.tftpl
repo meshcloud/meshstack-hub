@@ -1,6 +1,4 @@
-# STACKIT Kubernetes Platform: ${platform_identifier}
-
-## Details
+The STACKIT Kubernetes platform `${platform_identifier}` is ready.
 
 | Property | Value |
 |----------|-------|
@@ -20,7 +18,7 @@
 
 %{ if !phase2_completed ~}
 > [!WARNING]
-> ## One step left: create the Harbor robot account
+> # One step left: create the Harbor robot account
 
 The registry `${registry_name}` exists and every member of this project can open it, but it has no
 robot account yet. Until it has one, none of the three definitions application teams order is
@@ -50,13 +48,13 @@ Only the portal can create the first robot. Do this once:
 The run fails while no robot is linked. Nothing already provisioned is touched.
 %{ else ~}
 > [!TIP]
-> ## Image push and pull are wired up
+> # Image push and pull are wired up
 
 The Harbor robot for `${registry_name}` is linked, so the three definitions application teams order
 are registered, and their pipelines push and their workloads pull private images.
 %{ endif ~}
 
-## What application teams get
+# What application teams get
 
 The `${platform_identifier}` platform is published with one landing zone per stage: ${stage_names}.
 Application teams request a Kubernetes namespace on SKE by ordering a tenant in one of them from the

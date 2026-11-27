@@ -17,8 +17,8 @@ run "ske_starterkit" {
   }
 
   assert {
-    condition     = can(regex("^# SKE Starter Kit", jsondecode(meshstack_building_block.this.status.outputs["summary"].value)))
-    error_message = "ske-starterkit building block expected a summary output starting with '# SKE Starter Kit'"
+    condition     = can(regex("is set up and deployed in workspace", jsondecode(meshstack_building_block.this.status.outputs["summary"].value)))
+    error_message = "ske-starterkit building block expected a summary output that says the application is set up"
   }
 
   # The app must actually serve traffic over a valid (cert-manager-issued) TLS certificate.

@@ -172,7 +172,7 @@ def markdown_cell(value: str) -> str:
 
 def write_summary(organization_id: str, role: str, rows: list[dict[str, str]]) -> None:
     lines = [
-        "## STACKIT Organization Membership",
+        "# STACKIT Organization Membership",
         "",
         "The pre-run script adds all meshStack users assigned to this project to the STACKIT organization with the required organization role, then checks the resulting membership status before project-level role assignments are applied.",
         "",

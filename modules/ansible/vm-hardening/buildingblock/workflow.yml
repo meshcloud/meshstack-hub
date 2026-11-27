@@ -223,7 +223,7 @@ jobs:
           render() {
             local intro="$1" commands="$2"
             printf '%s\n' \
-              "# 🛡️ Hardened VM \`$PUBLIC_IP\`" \
+              "🛡️ The VM \`$PUBLIC_IP\` is hardened." \
               "" \
               "*Open the landing page:* $intro" \
               "" \

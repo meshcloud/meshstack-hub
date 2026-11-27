@@ -17,8 +17,6 @@ output "actions_url" {
 output "summary" {
   description = "Markdown summary shown on the building block."
   value       = <<-EOT
-    # Forgejo Connector: ${var.stage}
-
     The `${var.stage}` branch of [${var.repository_owner}/${var.repository_name}](${local.repository_url}) deploys
     to the namespace `${var.namespace}`.
 
@@ -28,7 +26,7 @@ output "summary" {
     | Pipeline | [`pipeline.yaml` in Forgejo Actions](${local.actions_url}) |
     | Service Account | `${kubernetes_service_account.forgejo_actions.metadata[0].name}`, `edit` on the namespace |
 
-    ## Forgejo Actions secrets and variables
+    # Forgejo Actions secrets and variables
 
     Set in the [repository settings](${local.repository_url}/settings/actions/secrets):
 
@@ -38,7 +36,7 @@ output "summary" {
     | `K8S_NAMESPACE_${upper(var.stage)}` | variable | `${var.namespace}` |
     | `APP_HOSTNAME_${upper(var.stage)}` | variable | `${var.app_hostname}` |
 
-    ## Kubernetes secrets in the namespace
+    # Kubernetes secrets in the namespace
 
     | Secret | Filled from the Vault secret |
     |--------|------------------------------|

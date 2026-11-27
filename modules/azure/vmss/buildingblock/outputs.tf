@@ -71,10 +71,6 @@ output "instance_size" {
 output "summary" {
   description = "Markdown summary output of the building block"
   value       = <<EOT
-# Azure Virtual Machine Scale Set
-
-## Scale Set Details
-
 - *Name*: ${var.vmss_name}
 - *Resource Group*: ${azurerm_resource_group.vmss_rg.name}
 - *Location*: ${azurerm_resource_group.vmss_rg.location}
@@ -84,15 +80,9 @@ output "summary" {
 - *Upgrade Mode*: ${var.upgrade_mode}
 - *Spot Instances*: ${var.enable_spot_instances ? "Yes (cost-optimized)" : "No"}
 
-## Scaling Configuration
-
 ${var.enable_autoscaling ? "Autoscaling is enabled ✅\n\n- *Min Instances*: ${var.min_instances}\n- *Max Instances*: ${var.max_instances}\n- *Scale Out Threshold*: ${var.scale_out_cpu_threshold}% CPU\n- *Scale In Threshold*: ${var.scale_in_cpu_threshold}% CPU\n\nThe scale set will automatically adjust the number of instances based on CPU utilization." : "Autoscaling is disabled. To scale manually:\n\n```bash\naz vmss scale --resource-group ${azurerm_resource_group.vmss_rg.name} --name ${var.vmss_name} --new-capacity <number>\n```"}
 
-## Load Balancer
-
 ${var.enable_load_balancer ? "The load balancer is enabled ✅\n\n- *SKU*: ${var.load_balancer_sku}\n- *Frontend IP*: ${var.enable_public_ip ? azurerm_public_ip.lb_public_ip[0].ip_address : azurerm_lb.vmss_lb[0].frontend_ip_configuration[0].private_ip_address} ${var.enable_public_ip ? "(Public)" : "(Private)"}\n- *Frontend Port*: ${var.frontend_port}\n- *Backend Port*: ${var.backend_port}\n- *Health Probe*: ${var.health_probe_protocol}:${var.health_probe_port}${var.health_probe_protocol != "Tcp" ? var.health_probe_request_path : ""}\n\nTraffic is distributed across all healthy instances." : "No load balancer configured. Consider enabling for production workloads."}
-
-## Network Configuration
 
 - *Virtual Network*: ${data.azurerm_virtual_network.spoke_vnet.name}
 - *VNet Address Space*: ${join(", ", data.azurerm_virtual_network.spoke_vnet.address_space)}
@@ -106,26 +96,20 @@ ${var.os_type == "Linux" && var.enable_ssh_access ? "- ✅ SSH (port 22) - ENABL
 ${var.os_type == "Windows" && var.enable_rdp_access ? "- ✅ RDP (port 3389) - ENABLED" : ""}${var.os_type == "Windows" && !var.enable_rdp_access ? "- ❌ RDP (port 3389) - DISABLED (use Azure Bastion for secure access)" : ""}
 ${var.enable_load_balancer ? "- ✅ Application Port (${var.backend_port}) - ENABLED" : ""}
 
-## High Availability
-
 ${length(var.zones) > 0 ? "Availability zones are used ✅\n\n- *Zones*: ${join(", ", var.zones)}\n- *Zone Balancing*: Enabled\n\nInstances are distributed across multiple availability zones for maximum resiliency." : "The scale set runs in a single zone. Consider using availability zones for production workloads to achieve 99.99% SLA."}
-
-## Storage Configuration
 
 - *OS Disk Size*: ${var.os_disk_size_gb} GB
 - *OS Disk Type*: ${var.os_disk_storage_type}
 - *Boot Diagnostics*: ${var.enable_boot_diagnostics ? "Enabled" : "Disabled"}
-
-## Managed Identity
 
 This scale set has a system-assigned managed identity enabled:
 - *Principal ID*: ${var.os_type == "Linux" ? azurerm_linux_virtual_machine_scale_set.vmss[0].identity[0].principal_id : azurerm_windows_virtual_machine_scale_set.vmss[0].identity[0].principal_id}
 
 Use this identity to grant VM instances access to other Azure resources without storing credentials.
 
-${var.enable_spot_instances ? "## Spot Instances Notice ⚠️\n\nThis scale set uses spot instances to reduce costs:\n- VMs can be evicted when Azure needs capacity\n- Suitable for fault-tolerant, stateless workloads\n- Not recommended for production databases or stateful applications\n- Eviction policy: ${var.spot_eviction_policy}\n" : ""}
+${var.enable_spot_instances ? "# Spot Instances Notice ⚠️\n\nThis scale set uses spot instances to reduce costs:\n- VMs can be evicted when Azure needs capacity\n- Suitable for fault-tolerant, stateless workloads\n- Not recommended for production databases or stateful applications\n- Eviction policy: ${var.spot_eviction_policy}\n" : ""}
 
-## Connection & Management
+# Connection & Management
 
 View the scale set status:
 
@@ -158,7 +142,7 @@ ${var.os_type == "Linux" && var.enable_ssh_access ? "SSH to a specific instance:
 
 ${!var.enable_ssh_access && !var.enable_rdp_access ? "Direct SSH/RDP access is disabled. Use Azure Bastion or configure a jump host for secure access to instances." : ""}
 
-## Resources Created
+# Resources Created
 
 - Resource Group: \`${azurerm_resource_group.vmss_rg.name}\`
 - VM Scale Set: \`${var.vmss_name}\`
@@ -166,7 +150,7 @@ ${!var.enable_ssh_access && !var.enable_rdp_access ? "Direct SSH/RDP access is d
 
 *Note*: Uses existing spoke VNet \`${data.azurerm_virtual_network.spoke_vnet.name}\` and subnet \`${data.azurerm_subnet.vmss_subnet.name}\`
 
-## Performance Optimization Tips
+# Performance Optimization Tips
 
 ${var.upgrade_mode == "Manual" ? "- Consider using *Rolling* or *Automatic* upgrade mode for easier updates" : ""}
 ${!var.enable_autoscaling ? "- Enable *autoscaling* to automatically handle traffic spikes" : ""}

@@ -46,8 +46,6 @@ output "private_dns_zone_id" {
 output "summary" {
   description = "Markdown summary shown in meshPanel after the run."
   value       = <<-EOT
-    # Azure Container Registry
-
     Registry `${azurerm_container_registry.acr.name}` (${var.sku}) is ready.
 
     - *Login server*: `${azurerm_container_registry.acr.login_server}`

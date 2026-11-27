@@ -46,7 +46,7 @@ output "subnet_id" {
 output "summary" {
   description = "Markdown summary shown in meshPanel after the run."
   value       = <<-EOT
-    # AKS cluster `${azurerm_kubernetes_cluster.aks.name}`
+    AKS cluster `${azurerm_kubernetes_cluster.aks.name}` is ready.
 
     - *Resource group*: ${azurerm_resource_group.aks.name}
     - *Location*: ${azurerm_kubernetes_cluster.aks.location}
