@@ -1,0 +1,149 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN"
+ "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd">
+<svg width="849pt" height="525pt"
+ viewBox="0.00 0.00 849.00 525.00" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+<g id="graph0" class="graph" transform="scale(1 1) rotate(0) translate(4 521.12)">
+<title>stackit_landingzone_accelerator</title>
+<polygon fill="white" stroke="none" points="-4,4 -4,-521.12 845,-521.12 845,4 -4,4"/>
+<g id="clust1" class="cluster">
+<title>cluster_mesh</title>
+<path fill="white" stroke="#d5dae0" d="M20,-105C20,-105 252,-105 252,-105 258,-105 264,-111 264,-117 264,-117 264,-497.12 264,-497.12 264,-503.12 258,-509.12 252,-509.12 252,-509.12 20,-509.12 20,-509.12 14,-509.12 8,-503.12 8,-497.12 8,-497.12 8,-117 8,-117 8,-111 14,-105 20,-105"/>
+<text xml:space="preserve" text-anchor="middle" x="49.01" y="-494.32" font-family="Helvetica,sans-Serif" font-size="12.00" fill="#697180"> &#160;meshStack</text>
+</g>
+<g id="clust2" class="cluster">
+<title>cluster_stackit</title>
+<path fill="white" stroke="#d5dae0" d="M284,-8C284,-8 821,-8 821,-8 827,-8 833,-14 833,-20 833,-20 833,-296.88 833,-296.88 833,-302.88 827,-308.88 821,-308.88 821,-308.88 284,-308.88 284,-308.88 278,-308.88 272,-302.88 272,-296.88 272,-296.88 272,-20 272,-20 272,-14 278,-8 284,-8"/>
+<text xml:space="preserve" text-anchor="middle" x="308.67" y="-294.08" font-family="Helvetica,sans-Serif" font-size="12.00" fill="#697180"> &#160;STACKIT</text>
+</g>
+<!-- REFARCH -->
+<g id="node1" class="node">
+<title>REFARCH</title>
+<path fill="#ecedfb" stroke="#9aa2e6" stroke-width="1.1" d="M233.78,-468.72C233.78,-468.72 38.22,-468.72 38.22,-468.72 32.22,-468.72 26.22,-462.72 26.22,-456.72 26.22,-456.72 26.22,-438.48 26.22,-438.48 26.22,-432.48 32.22,-426.48 38.22,-426.48 38.22,-426.48 233.78,-426.48 233.78,-426.48 239.78,-426.48 245.78,-432.48 245.78,-438.48 245.78,-438.48 245.78,-456.72 245.78,-456.72 245.78,-462.72 239.78,-468.72 233.78,-468.72"/>
+<text xml:space="preserve" text-anchor="middle" x="136" y="-450.9" font-family="Helvetica,sans-Serif" font-size="11.00">📦 STACKIT Landing Zone Accelerator</text>
+<text xml:space="preserve" text-anchor="middle" x="136" y="-437.7" font-family="Helvetica,sans-Serif" font-size="11.00">Configurator tfvars</text>
+</g>
+<!-- PLAT -->
+<g id="node2" class="node">
+<title>PLAT</title>
+<path fill="#ecedfb" stroke="#9aa2e6" stroke-width="1.1" d="M200.85,-365.48C200.85,-365.48 81.15,-365.48 81.15,-365.48 75.15,-365.48 69.15,-359.48 69.15,-353.48 69.15,-353.48 69.15,-341.48 69.15,-341.48 69.15,-335.48 75.15,-329.48 81.15,-329.48 81.15,-329.48 200.85,-329.48 200.85,-329.48 206.85,-329.48 212.85,-335.48 212.85,-341.48 212.85,-341.48 212.85,-353.48 212.85,-353.48 212.85,-359.48 206.85,-365.48 200.85,-365.48"/>
+<text xml:space="preserve" text-anchor="middle" x="141" y="-344.18" font-family="Helvetica,sans-Serif" font-size="11.00">🛰️ STACKIT Platform</text>
+</g>
+<!-- REFARCH&#45;&gt;PLAT -->
+<g id="edge1" class="edge">
+<title>REFARCH&#45;&gt;PLAT</title>
+<path fill="none" stroke="#8b95a3" d="M141,-426.37C141,-426.37 141,-374.5 141,-374.5"/>
+<polygon fill="#8b95a3" stroke="#8b95a3" points="143.45,-374.5 141,-367.5 138.55,-374.5 143.45,-374.5"/>
+<text xml:space="preserve" text-anchor="middle" x="123.74" y="-403.14" font-family="Helvetica,sans-Serif" font-size="9.00" fill="#697180">registers</text>
+</g>
+<!-- ROOT -->
+<g id="node5" class="node">
+<title>ROOT</title>
+<path fill="#fdf1e3" stroke="#e0b37c" stroke-width="1.1" d="M621.01,-268.48C621.01,-268.48 518.99,-268.48 518.99,-268.48 512.99,-268.48 506.99,-262.48 506.99,-256.48 506.99,-256.48 506.99,-238.24 506.99,-238.24 506.99,-232.24 512.99,-226.24 518.99,-226.24 518.99,-226.24 621.01,-226.24 621.01,-226.24 627.01,-226.24 633.01,-232.24 633.01,-238.24 633.01,-238.24 633.01,-256.48 633.01,-256.48 633.01,-262.48 627.01,-268.48 621.01,-268.48"/>
+<text xml:space="preserve" text-anchor="middle" x="570" y="-250.66" font-family="Helvetica,sans-Serif" font-size="11.00">📁 Root Folder</text>
+<text xml:space="preserve" text-anchor="middle" x="570" y="-237.46" font-family="Helvetica,sans-Serif" font-size="11.00">&lt;platform identifier&gt;</text>
+</g>
+<!-- REFARCH&#45;&gt;ROOT -->
+<g id="edge11" class="edge">
+<title>REFARCH&#45;&gt;ROOT</title>
+<path fill="none" stroke="#8b95a3" stroke-dasharray="1,5" d="M246.08,-448C374.65,-448 570,-448 570,-448 570,-448 570,-277.35 570,-277.35"/>
+<polygon fill="#8b95a3" stroke="#8b95a3" points="572.45,-277.35 570,-270.35 567.55,-277.35 572.45,-277.35"/>
+<text xml:space="preserve" text-anchor="middle" x="455.6" y="-450.7" font-family="Helvetica,sans-Serif" font-size="9.00" fill="#697180">applies accelerator</text>
+</g>
+<!-- LZ -->
+<g id="node3" class="node">
+<title>LZ</title>
+<path fill="#ecedfb" stroke="#9aa2e6" stroke-width="1.1" d="M228.93,-268.48C228.93,-268.48 73.07,-268.48 73.07,-268.48 67.07,-268.48 61.07,-262.48 61.07,-256.48 61.07,-256.48 61.07,-238.24 61.07,-238.24 61.07,-232.24 67.07,-226.24 73.07,-226.24 73.07,-226.24 228.93,-226.24 228.93,-226.24 234.93,-226.24 240.93,-232.24 240.93,-238.24 240.93,-238.24 240.93,-256.48 240.93,-256.48 240.93,-262.48 234.93,-268.48 228.93,-268.48"/>
+<text xml:space="preserve" text-anchor="middle" x="151" y="-250.66" font-family="Helvetica,sans-Serif" font-size="11.00">🛬 Landing Zone ×N</text>
+<text xml:space="preserve" text-anchor="middle" x="151" y="-237.46" font-family="Helvetica,sans-Serif" font-size="11.00">one per entry of landing_zones</text>
+</g>
+<!-- PLAT&#45;&gt;LZ -->
+<g id="edge2" class="edge">
+<title>PLAT&#45;&gt;LZ</title>
+<path fill="none" stroke="#8b95a3" d="M141,-329.12C141,-329.12 141,-277.25 141,-277.25"/>
+<polygon fill="#8b95a3" stroke="#8b95a3" points="143.45,-277.25 141,-270.25 138.55,-277.25 143.45,-277.25"/>
+</g>
+<!-- PRJBBD -->
+<g id="node4" class="node">
+<title>PRJBBD</title>
+<path fill="#ecedfb" stroke="#9aa2e6" stroke-width="1.1" d="M228.94,-165.24C228.94,-165.24 81.06,-165.24 81.06,-165.24 75.06,-165.24 69.06,-159.24 69.06,-153.24 69.06,-153.24 69.06,-135 69.06,-135 69.06,-129 75.06,-123 81.06,-123 81.06,-123 228.94,-123 228.94,-123 234.94,-123 240.94,-129 240.94,-135 240.94,-135 240.94,-153.24 240.94,-153.24 240.94,-159.24 234.94,-165.24 228.94,-165.24"/>
+<text xml:space="preserve" text-anchor="middle" x="155" y="-147.42" font-family="Helvetica,sans-Serif" font-size="11.00">📦 STACKIT Project</text>
+<text xml:space="preserve" text-anchor="middle" x="155" y="-134.22" font-family="Helvetica,sans-Serif" font-size="11.00">marketplace · one per tenant</text>
+</g>
+<!-- LZ&#45;&gt;PRJBBD -->
+<g id="edge3" class="edge">
+<title>LZ&#45;&gt;PRJBBD</title>
+<path fill="none" stroke="#8b95a3" d="M154.99,-225.97C154.99,-225.97 154.99,-174 154.99,-174"/>
+<polygon fill="#8b95a3" stroke="#8b95a3" points="157.44,-174 154.99,-167 152.54,-174 157.44,-174"/>
+<text xml:space="preserve" text-anchor="middle" x="143.74" y="-202.68" font-family="Helvetica,sans-Serif" font-size="9.00" fill="#697180">offers</text>
+</g>
+<!-- PRJ -->
+<g id="node9" class="node">
+<title>PRJ</title>
+<path fill="#e5f2ea" stroke="#85bfa0" stroke-width="1.1" d="M635.05,-62C635.05,-62 504.95,-62 504.95,-62 498.95,-62 492.95,-56 492.95,-50 492.95,-50 492.95,-38 492.95,-38 492.95,-32 498.95,-26 504.95,-26 504.95,-26 635.05,-26 635.05,-26 641.05,-26 647.05,-32 647.05,-38 647.05,-38 647.05,-50 647.05,-50 647.05,-56 641.05,-62 635.05,-62"/>
+<text xml:space="preserve" text-anchor="middle" x="570" y="-40.7" font-family="Helvetica,sans-Serif" font-size="11.00">🗂️ STACKIT Project ×N</text>
+</g>
+<!-- PRJBBD&#45;&gt;PRJ -->
+<g id="edge12" class="edge">
+<title>PRJBBD&#45;&gt;PRJ</title>
+<path fill="none" stroke="#8b95a3" stroke-dasharray="1,5" d="M155,-122.89C155,-93.5 155,-44 155,-44 155,-44 483.91,-44 483.91,-44"/>
+<polygon fill="#8b95a3" stroke="#8b95a3" points="483.91,-46.45 490.91,-44 483.91,-41.55 483.91,-46.45"/>
+<text xml:space="preserve" text-anchor="middle" x="265.26" y="-46.7" font-family="Helvetica,sans-Serif" font-size="9.00" fill="#697180">creates</text>
+</g>
+<!-- MGMT -->
+<g id="node6" class="node">
+<title>MGMT</title>
+<path fill="#fdf1e3" stroke="#e0b37c" stroke-width="1.1" d="M462.05,-165.24C462.05,-165.24 301.95,-165.24 301.95,-165.24 295.95,-165.24 289.95,-159.24 289.95,-153.24 289.95,-153.24 289.95,-135 289.95,-135 289.95,-129 295.95,-123 301.95,-123 301.95,-123 462.05,-123 462.05,-123 468.05,-123 474.05,-129 474.05,-135 474.05,-135 474.05,-153.24 474.05,-153.24 474.05,-159.24 468.05,-165.24 462.05,-165.24"/>
+<text xml:space="preserve" text-anchor="middle" x="382" y="-147.42" font-family="Helvetica,sans-Serif" font-size="11.00">🔑 Management Project</text>
+<text xml:space="preserve" text-anchor="middle" x="382" y="-134.22" font-family="Helvetica,sans-Serif" font-size="11.00">project&#45;creation service account</text>
+</g>
+<!-- ROOT&#45;&gt;MGMT -->
+<g id="edge6" class="edge">
+<title>ROOT&#45;&gt;MGMT</title>
+<path fill="none" stroke="#8b95a3" d="M510.74,-225.97C510.74,-197.59 510.74,-151 510.74,-151 510.74,-151 483.05,-151 483.05,-151"/>
+<polygon fill="#8b95a3" stroke="#8b95a3" points="483.05,-148.55 476.05,-151 483.05,-153.45 483.05,-148.55"/>
+<text xml:space="preserve" text-anchor="middle" x="499.98" y="-177.34" font-family="Helvetica,sans-Serif" font-size="9.00" fill="#697180">holds</text>
+</g>
+<!-- PUBF -->
+<g id="node7" class="node">
+<title>PUBF</title>
+<path fill="#fdf1e3" stroke="#e0b37c" stroke-width="1.1" d="M613.52,-165.24C613.52,-165.24 526.48,-165.24 526.48,-165.24 520.48,-165.24 514.48,-159.24 514.48,-153.24 514.48,-153.24 514.48,-135 514.48,-135 514.48,-129 520.48,-123 526.48,-123 526.48,-123 613.52,-123 613.52,-123 619.52,-123 625.52,-129 625.52,-135 625.52,-135 625.52,-153.24 625.52,-153.24 625.52,-159.24 619.52,-165.24 613.52,-165.24"/>
+<text xml:space="preserve" text-anchor="middle" x="570" y="-147.42" font-family="Helvetica,sans-Serif" font-size="11.00">📁 Public Folder</text>
+<text xml:space="preserve" text-anchor="middle" x="570" y="-134.22" font-family="Helvetica,sans-Serif" font-size="11.00">corporate = false</text>
+</g>
+<!-- ROOT&#45;&gt;PUBF -->
+<g id="edge7" class="edge">
+<title>ROOT&#45;&gt;PUBF</title>
+<path fill="none" stroke="#8b95a3" d="M570,-225.97C570,-225.97 570,-174 570,-174"/>
+<polygon fill="#8b95a3" stroke="#8b95a3" points="572.45,-174 570,-167 567.55,-174 572.45,-174"/>
+</g>
+<!-- CORPF -->
+<g id="node8" class="node">
+<title>CORPF</title>
+<path fill="#fdf1e3" stroke="#e0b37c" stroke-width="1.1" d="M802.78,-165.24C802.78,-165.24 677.22,-165.24 677.22,-165.24 671.22,-165.24 665.22,-159.24 665.22,-153.24 665.22,-153.24 665.22,-135 665.22,-135 665.22,-129 671.22,-123 677.22,-123 677.22,-123 802.78,-123 802.78,-123 808.78,-123 814.78,-129 814.78,-135 814.78,-135 814.78,-153.24 814.78,-153.24 814.78,-159.24 808.78,-165.24 802.78,-165.24"/>
+<text xml:space="preserve" text-anchor="middle" x="740" y="-147.42" font-family="Helvetica,sans-Serif" font-size="11.00">📁 Corporate Folder</text>
+<text xml:space="preserve" text-anchor="middle" x="740" y="-134.22" font-family="Helvetica,sans-Serif" font-size="11.00">corporate = true or unset</text>
+</g>
+<!-- ROOT&#45;&gt;CORPF -->
+<g id="edge8" class="edge">
+<title>ROOT&#45;&gt;CORPF</title>
+<path fill="none" stroke="#8b95a3" d="M629.26,-225.94C629.26,-198.65 629.26,-155 629.26,-155 629.26,-155 656.4,-155 656.4,-155"/>
+<polygon fill="#8b95a3" stroke="#8b95a3" points="656.4,-157.45 663.4,-155 656.4,-152.55 656.4,-157.45"/>
+</g>
+<!-- MGMT&#45;&gt;PUBF -->
+<!-- PUBF&#45;&gt;CORPF -->
+<!-- PUBF&#45;&gt;PRJ -->
+<g id="edge9" class="edge">
+<title>PUBF&#45;&gt;PRJ</title>
+<path fill="none" stroke="#8b95a3" d="M570,-122.89C570,-122.89 570,-71.02 570,-71.02"/>
+<polygon fill="#8b95a3" stroke="#8b95a3" points="572.45,-71.02 570,-64.02 567.55,-71.02 572.45,-71.02"/>
+<text xml:space="preserve" text-anchor="middle" x="559.24" y="-99.66" font-family="Helvetica,sans-Serif" font-size="9.00" fill="#697180">holds</text>
+</g>
+<!-- CORPF&#45;&gt;PRJ -->
+<g id="edge10" class="edge">
+<title>CORPF&#45;&gt;PRJ</title>
+<path fill="none" stroke="#8b95a3" d="M664.74,-134C650.54,-134 640.03,-134 640.03,-134 640.03,-134 640.03,-70.73 640.03,-70.73"/>
+<polygon fill="#8b95a3" stroke="#8b95a3" points="642.48,-70.73 640.03,-63.73 637.58,-70.73 642.48,-70.73"/>
+</g>
+</g>
+</svg>

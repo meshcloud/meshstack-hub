@@ -1,0 +1,62 @@
+/*
+ * STACKIT Landing Zone Accelerator reference architecture.
+ * Conventions: .agents/references/diagrams.md — render with: task diagrams
+ */
+digraph stackit_landingzone_accelerator {
+  rankdir=TB
+  splines=ortho
+  forcelabels=true
+  bgcolor="white"
+  nodesep=0.55
+  ranksep=0.85
+
+  node [shape=box style="rounded,filled" fontname="Helvetica" fontsize=11
+        fillcolor="#ffffff" color="#a2abb8" penwidth=1.1 margin="0.20,0.11"]
+  edge [fontname="Helvetica" fontsize=9 fontcolor="#697180" color="#8b95a3" arrowsize=0.7]
+
+  subgraph cluster_mesh {
+    label="  meshStack"
+    labeljust=l
+    fontname="Helvetica" fontsize=12 fontcolor="#697180"
+    style="rounded" color="#d5dae0"
+    margin=18
+
+    node [fillcolor="#ecedfb" color="#9aa2e6"]
+
+    REFARCH [label="📦 STACKIT Landing Zone Accelerator\nConfigurator tfvars"]
+    PLAT    [label="🛰️ STACKIT Platform"]
+    LZ      [label="🛬 Landing Zone ×N\none per entry of landing_zones"]
+    PRJBBD  [label="📦 STACKIT Project\nmarketplace · one per tenant"]
+
+    REFARCH -> PLAT [xlabel="registers"]
+    PLAT    -> LZ
+    LZ      -> PRJBBD [xlabel="offers"]
+  }
+
+  subgraph cluster_stackit {
+    label="  STACKIT"
+    labeljust=l
+    fontname="Helvetica" fontsize=12 fontcolor="#697180"
+    style="rounded" color="#d5dae0"
+    margin=18
+
+    node [fillcolor="#fdf1e3" color="#e0b37c"]
+
+    ROOT    [label="📁 Root Folder\n<platform identifier>"]
+    MGMT    [label="🔑 Management Project\nproject-creation service account"]
+    PUBF    [label="📁 Public Folder\ncorporate = false"]
+    CORPF   [label="📁 Corporate Folder\ncorporate = true or unset"]
+    PRJ     [label="🗂️ STACKIT Project ×N" fillcolor="#e5f2ea" color="#85bfa0"]
+
+    { rank=same; MGMT -> PUBF -> CORPF [style=invis] }
+
+    ROOT  -> MGMT [xlabel="holds"]
+    ROOT  -> PUBF
+    ROOT  -> CORPF
+    PUBF  -> PRJ [xlabel="holds"]
+    CORPF -> PRJ
+  }
+
+  REFARCH -> ROOT [xlabel="applies accelerator" style=dotted constraint=false]
+  PRJBBD  -> PRJ  [xlabel="creates" style=dotted]
+}

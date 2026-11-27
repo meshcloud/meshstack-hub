@@ -43,6 +43,16 @@ variable "stackit_parent_container_id" {
   description = "Default parent container ID (organization or folder) for project creation."
 }
 
+variable "stackit_landing_zones" {
+  type = map(object({
+    display_name        = string
+    description         = string
+    parent_container_id = string
+  }))
+  default     = null
+  description = "Landing zones by key, each creating its projects in its own parent container. They replace the `default` landing zone, and an empty map offers none. Null offers the `default` landing zone in `stackit_parent_container_id`."
+}
+
 variable "stackit_service_account_name" {
   type        = string
   default     = null
@@ -107,6 +117,12 @@ variable "stackit_network_definition_version_ref" {
     condition     = var.stackit_network == null || var.stackit_network_definition_version_ref != null
     error_message = "stackit_network_definition_version_ref is required when stackit_network is set."
   }
+}
+
+variable "platform_display_name" {
+  type        = string
+  default     = null
+  description = "Overrides the name of the platform application teams see when they add a tenant."
 }
 
 variable "bbd_display_name" {
@@ -208,7 +224,7 @@ output "platform_ref" {
 }
 
 output "landingzone_refs" {
-  description = "References to the created landing zones, keyed `default`, and `spoke` when `stackit_network` is set."
+  description = "References to the created landing zones, keyed `default` or by `stackit_landing_zones`, and `spoke` when `stackit_network` is set."
   value = {
     for key, lz in meshstack_landingzone.this : key => lz.ref
   }
@@ -216,7 +232,7 @@ output "landingzone_refs" {
 
 locals {
   landing_zones = merge(
-    {
+    var.stackit_landing_zones != null ? { for key, lz in var.stackit_landing_zones : key => { display_name = lz.display_name, description = lz.description } } : {
       default = {
         display_name = "STACKIT Sandbox"
         description  = "STACKIT projects with STACKIT's default flat networking, and project roles mapped from meshStack project roles."
@@ -232,6 +248,8 @@ locals {
 
   # Built from the name rather than read from meshstack_landingzone.this, which depends on the definition.
   network_area_ids = var.stackit_network != null ? { "${var.meshstack.platform_identifier}-spoke" = var.stackit_network.network_area_id } : {}
+
+  landing_zone_parent_container_ids = var.stackit_landing_zones == null ? {} : { for key, lz in var.stackit_landing_zones : "${var.meshstack.platform_identifier}-${key}" => lz.parent_container_id }
 
   # Pre-filled subnet size, so that an order on the spoke landing zone needs no input.
   default_network_prefix_length = 25
@@ -253,7 +271,7 @@ resource "meshstack_platform" "this" {
   }
 
   spec = {
-    display_name = "STACKIT Project"
+    display_name = coalesce(var.platform_display_name, "STACKIT Project")
     description  = "Create a STACKIT project with configurable role-based access control."
     endpoint     = "https://portal.stackit.cloud"
 
@@ -334,8 +352,11 @@ resource "meshstack_building_block_definition" "this" {
     use_in_landing_zones_only = false
 
     # Every STACKIT platform of a meshStack would otherwise offer every STACKIT Project definition.
-    supported_platforms = coalesce(var.meshstack.supported_platforms, [
+    # A platform without landing zones is named itself, because a tenant-level definition needs one.
+    supported_platforms = coalesce(var.meshstack.supported_platforms, length(local.landing_zones) > 0 ? [
       for lz in meshstack_landingzone.this : { kind = lz.ref.kind, name = lz.ref.name, uuid = null }
+      ] : [
+      { kind = meshstack_platform.this.ref.kind, name = null, uuid = meshstack_platform.this.ref.uuid }
     ])
 
     readme = coalesce(var.bbd_readme, chomp(<<-EOT
@@ -513,6 +534,15 @@ resource "meshstack_building_block_definition" "this" {
         argument        = jsonencode(jsonencode(local.network_area_ids))
       }
       },
+      var.stackit_landing_zones != null ? {
+        landing_zone_parent_container_ids = {
+          display_name    = "Landing Zone Parent Container IDs"
+          description     = "HCL object mapping each landing zone identifier to the parent container its projects are created in."
+          type            = "CODE"
+          assignment_type = "STATIC"
+          argument        = jsonencode(jsonencode(local.landing_zone_parent_container_ids))
+        }
+      } : {},
       # Declared unconditionally, these would be a field the application team fills in and nothing
       # reads, and a definition version nothing orders.
       var.stackit_network != null ? {

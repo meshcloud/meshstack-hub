@@ -32,6 +32,7 @@ while IFS= read -r file; do
 		s/\\$\\{[[:space:]]*var\\.hub\\.git_ref[[:space:]]*\\}/$ref/g
 		s/\\$\\{[[:space:]]*var\\.hub_git_ref[[:space:]]*\\}/$ref/g
 		s/\\$\\{[[:space:]]*local\\.mode[[:space:]]*\\}/hub/g
+		s/\\$\\{[[:space:]]*var\\.accelerator_ref[[:space:]]*\\}/accelerator-ref/g
 	}" "$file"
 done < <(grep -rlE --include='*.tf' "$source_line.*\\$\\{" "$workdir")
 
