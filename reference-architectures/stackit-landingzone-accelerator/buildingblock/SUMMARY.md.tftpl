@@ -11,6 +11,8 @@
 | **Organization** | [Open in STACKIT Portal](${organization_url}) (`${organization_id}`) |
 | **Root Folder** | [Open in STACKIT Portal](${root_folder_url}) (`${root_folder_name}`, `${root_folder_id}`) |
 | **Management Project** | [Open in STACKIT Portal](${management_project_url}) (`${management_project_id}`) |
+| **meshStack Platform** | **${display_name}** (`${platform_identifier}`) |
+| **Building Block Definition** | **${display_name}** |
 | **STACKIT Project Service Account** | `${service_account_email}` |
 
 ## Network Areas
@@ -32,12 +34,28 @@ The run created the hub and spoke networking of the export.
 %{ if length(landing_zones) == 0 ~}
 The export has no landing zones, so the platform has none either.
 %{ else ~}
-| Landing Zone | Folder |
-|--------------|--------|
-%{ for name, folder in landing_zones ~}
-| `${name}` | `${folder}` |
+| Landing Zone | Identifier | Folder |
+|--------------|------------|--------|
+%{ for name, lz in landing_zones ~}
+| **${lz.display_name}** | `${name}` | `${lz.folder}` |
 %{ endfor ~}
 %{ endif ~}
 
-Application teams add **STACKIT Project** from the marketplace to a tenant on one of these landing
-zones. The project is created in the landing zone's folder.
+## Order a STACKIT Project
+
+Create an environment (a project with one tenant) and pick:
+
+1. **Platform:** ${display_name}
+2. **Landing zone:** one from the table above. The project is created in its folder.
+3. **Building block:** ${display_name}. It asks for no inputs.
+
+%{ if length(landing_zone_tags) > 0 ~}
+The landing zones carry the tags below. meshStack offers a landing zone only when the project's
+tags fit its tag policies, so choose project tag values from this list:
+
+| Landing Zone Tag | Values |
+|------------------|--------|
+%{ for tag in landing_zone_tags ~}
+| `${tag.key}` | ${join(", ", [for v in tag.values : "`${v}`"])} |
+%{ endfor ~}
+%{ endif ~}

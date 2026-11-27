@@ -7,6 +7,7 @@ locals {
   # The identifier is unique across the whole meshStack instance and lands in every landing zone
   # name, so a playground deployment suffixes it and leaves the plain name free.
   platform_identifier = var.playground_mode ? "${var.platform_identifier}-${random_string.playground_suffix.result}" : var.platform_identifier
+  display_name        = var.playground_mode ? "STACKIT Project (${local.platform_identifier})" : "STACKIT Project"
 
   # The meshPanel Tags form sends each tag map as a list of {key, values} entries.
   tags = {
@@ -95,8 +96,8 @@ module "stackit_integration" {
   stackit_parent_container_id = local.accelerator_inputs.organization_id
   stackit_landing_zones       = local.landing_zones
 
-  platform_display_name = var.playground_mode ? "STACKIT Project (${local.platform_identifier})" : null
-  bbd_display_name      = var.playground_mode ? "STACKIT Project (${local.platform_identifier})" : null
+  platform_display_name = local.display_name
+  bbd_display_name      = local.display_name
   hub                   = var.hub
 
   meshstack = {

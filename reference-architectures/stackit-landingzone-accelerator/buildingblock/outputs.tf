@@ -36,8 +36,13 @@ output "summary" {
       module.accelerator.connectivity_network_area_ids_by_region.eu01,
       module.accelerator.connectivity_network_area_ids_by_region.eu02,
     )
+    display_name      = local.display_name
+    landing_zone_tags = var.tags.landingzone
     landing_zones = {
-      for key, lz in local.landing_zones : "${local.platform_identifier}-${key}" => lz.parent_container_id
+      for key, lz in local.landing_zones : "${local.platform_identifier}-${key}" => {
+        display_name = lz.display_name
+        folder       = lz.parent_container_id
+      }
     }
   })
 }
