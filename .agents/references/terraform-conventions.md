@@ -115,6 +115,8 @@ alike. Write every summary in this style:
 - Tables are fine, and links to the created resources are wanted: the portal or console page, the
   repository, the URL of the created thing. In a table, put the value first and the link after it
   in parentheses: `` `${id}` ([Open in STACKIT Portal](${url})) ``.
+- Keep a table value short. Where a cell holds two values, such as a name and an ID, separate them
+  with an explicit `<br>` so the card breaks the line there and not in the middle of a value.
 - No bold. Where a label needs a marker, use italic (`*Label*`). Values are plain text or code.
 - Notes, such as the playground-mode notice, go at the end in one or two sentences.
 
