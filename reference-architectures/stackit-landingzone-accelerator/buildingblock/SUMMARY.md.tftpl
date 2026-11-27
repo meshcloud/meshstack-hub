@@ -19,12 +19,11 @@
 The export has no connectivity, so the run created no network area.
 %{ else ~}
 The run created the hub and spoke networking of the export.
-[Open the network areas in STACKIT Portal](${network_areas_url})
 
-| Area | Network Area ID |
-|------|-----------------|
+| Area | Network Area |
+|------|--------------|
 %{ for area, id in network_areas ~}
-| `${area}` | `${id}` |
+| `${area}` | [Open in STACKIT Portal](https://portal.stackit.cloud/network-area/network-areas/${id}/overview?organization=${organization_id}) (`${id}`) |
 %{ endfor ~}
 %{ endif ~}
 

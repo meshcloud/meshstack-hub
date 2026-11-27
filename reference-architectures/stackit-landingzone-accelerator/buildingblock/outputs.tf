@@ -31,7 +31,6 @@ output "summary" {
     service_account_email  = module.stackit_integration.service_account_email
     platform_identifier    = local.platform_identifier
     playground_mode        = var.playground_mode
-    network_areas_url      = "https://portal.stackit.cloud/network-area/network-areas?organization=${local.accelerator_inputs.organization_id}"
     network_areas = merge(
       module.accelerator.connectivity_network_area_ids_by_area,
       module.accelerator.connectivity_network_area_ids_by_region.eu01,
