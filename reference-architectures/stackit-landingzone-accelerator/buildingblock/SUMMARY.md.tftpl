@@ -1,5 +1,3 @@
-# STACKIT Landing Zone Accelerator: `${platform_identifier}`
-
 | Property | Value |
 |----------|-------|
 | *Organization* | `${organization_id}` ([Open in STACKIT Portal](${organization_url})) |
@@ -9,7 +7,7 @@
 | *Building Block Definition* | ${display_name} |
 | *STACKIT Project Service Account* | `${service_account_email}` |
 
-## Network Areas
+# Network Areas
 
 %{ if length(network_areas) == 0 ~}
 The export has no connectivity, so the run created no network area.
@@ -23,7 +21,7 @@ The run created the hub and spoke networking of the export.
 %{ endfor ~}
 %{ endif ~}
 
-## Landing Zones
+# Landing Zones
 
 %{ if length(landing_zones) == 0 ~}
 The export has no landing zones, so the platform has none either.
@@ -35,7 +33,7 @@ The export has no landing zones, so the platform has none either.
 %{ endfor ~}
 %{ endif ~}
 
-## Order a STACKIT Project
+# Order a STACKIT Project
 
 Create an environment (a project with one tenant) and pick:
 
