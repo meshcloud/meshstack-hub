@@ -119,6 +119,12 @@ variable "stackit_network_definition_version_ref" {
   }
 }
 
+variable "platform_display_name" {
+  type        = string
+  default     = null
+  description = "Overrides the name of the platform application teams see when they add a tenant."
+}
+
 variable "bbd_display_name" {
   type        = string
   default     = null
@@ -265,7 +271,7 @@ resource "meshstack_platform" "this" {
   }
 
   spec = {
-    display_name = "STACKIT Project"
+    display_name = coalesce(var.platform_display_name, "STACKIT Project")
     description  = "Create a STACKIT project with configurable role-based access control."
     endpoint     = "https://portal.stackit.cloud"
 

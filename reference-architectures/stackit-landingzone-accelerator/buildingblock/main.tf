@@ -95,8 +95,9 @@ module "stackit_integration" {
   stackit_parent_container_id = local.accelerator_inputs.organization_id
   stackit_landing_zones       = local.landing_zones
 
-  bbd_display_name = var.playground_mode ? "STACKIT Project (${local.platform_identifier})" : null
-  hub              = var.hub
+  platform_display_name = var.playground_mode ? "STACKIT Project (${local.platform_identifier})" : null
+  bbd_display_name      = var.playground_mode ? "STACKIT Project (${local.platform_identifier})" : null
+  hub                   = var.hub
 
   meshstack = {
     owning_workspace_identifier = var.workspace

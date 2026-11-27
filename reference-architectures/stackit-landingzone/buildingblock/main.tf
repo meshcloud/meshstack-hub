@@ -159,8 +159,9 @@ module "stackit_integration" {
   } : null
   stackit_network_definition_version_ref = local.network_enabled ? module.network_integration.building_block_definition.version_ref : null
 
-  bbd_display_name = local.playground_suffix == "" ? null : "STACKIT Project${local.playground_suffix}"
-  hub              = var.hub
+  platform_display_name = local.playground_suffix == "" ? null : "STACKIT Project${local.playground_suffix}"
+  bbd_display_name      = local.playground_suffix == "" ? null : "STACKIT Project${local.playground_suffix}"
+  hub                   = var.hub
 
   meshstack = {
     owning_workspace_identifier = var.workspace
