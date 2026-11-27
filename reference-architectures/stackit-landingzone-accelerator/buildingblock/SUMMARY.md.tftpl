@@ -1,11 +1,5 @@
 # STACKIT Landing Zone Accelerator: **${platform_identifier}**
 
-%{ if playground_mode ~}
-> **Playground mode.** The platform identifier carries a random suffix so this deployment does not
-> occupy a name for good. Publish this platform or the STACKIT Project definition to other
-> workspaces only to test that path, and delete the playground afterwards.
-
-%{ endif ~}
 | Property | Value |
 |----------|-------|
 | **Organization** | [Open in STACKIT Portal](${organization_url}) (`${organization_id}`) |
@@ -58,4 +52,10 @@ tags fit its tag policies, so choose project tag values from this list:
 %{ for tag in landing_zone_tags ~}
 | `${tag.key}` | ${join(", ", [for v in tag.values : "`${v}`"])} |
 %{ endfor ~}
+%{ endif ~}
+
+%{ if playground_mode }
+> **Playground mode.** The platform identifier carries a random suffix so this deployment does not
+> occupy a name for good. Publish this platform or the STACKIT Project definition to other
+> workspaces only to test that path, and delete the playground afterwards.
 %{ endif ~}
