@@ -1,7 +1,3 @@
-# AKS Starter Kit
-
-✅ **Your environment is ready!**
-
 This starter kit has set up the following resources in workspace `${workspace_identifier}`:
 
 @buildingblock[${repo_uuid}]
@@ -16,7 +12,7 @@ This starter kit has set up the following resources in workspace `${workspace_id
 
 ---
 
-## What's Included
+# What's Included
 
 Your GitHub repository contains:
 
@@ -27,33 +23,23 @@ Your GitHub repository contains:
 
 ---
 
-## Deployments
+# Deployments
 
 Trigger a deployment by:
-- Pushing to the **main** branch (deploys to **dev**)
-- Merging **main** into **release** via PR (deploys to **prod**)
+- Pushing to the `main` branch (deploys to dev)
+- Merging `main` into `release` via PR (deploys to prod)
 
 View deployment status: [GitHub Actions](${repo_html_url}/actions/workflows/k8s-deploy.yml)
 
-- **Dev**: [${identifier}-dev.${apps_base_domain}](https://${identifier}-dev.${apps_base_domain})
-- **Prod**: [${identifier}.${apps_base_domain}](https://${identifier}.${apps_base_domain})
+- *Dev*: [${identifier}-dev.${apps_base_domain}](https://${identifier}-dev.${apps_base_domain})
+- *Prod*: [${identifier}.${apps_base_domain}](https://${identifier}.${apps_base_domain})
 
 ---
 
-## Next Steps
+# Next Steps
 
-### 1. Develop
-- Push changes to **main** → deploys to **dev**
-- Merge PR from **main → release** → deploys to **prod**
-
-### 2. Monitor
-- Check workflow status in the [Actions tab](<${repo_html_url}/actions>)
-
-### 3. Manage Access
-- Invite team members via meshStack:
-  - [Dev Access](#/w/${workspace_identifier}/p/${stages.dev.project_name}/access-management/role-mapping)
-  - [Prod Access](#/w/${workspace_identifier}/p/${stages.prod.project_name}/access-management/role-mapping)
-
----
-
-🎉 Happy coding!
+1. Develop: push changes to `main` to deploy to dev, and merge a PR from `main` into `release` to deploy to prod.
+2. Monitor: check the workflow status in the [Actions tab](<${repo_html_url}/actions>).
+3. Manage access: invite team members via meshStack:
+   - [Dev Access](#/w/${workspace_identifier}/p/${stages.dev.project_name}/access-management/role-mapping)
+   - [Prod Access](#/w/${workspace_identifier}/p/${stages.prod.project_name}/access-management/role-mapping)

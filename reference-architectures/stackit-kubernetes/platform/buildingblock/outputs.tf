@@ -22,7 +22,7 @@ output "summary" {
     forgejo_instance_url = local.forgejo_instance_url
     forgejo_organization = local.forgejo_organization
 
-    stage_names                    = join(", ", [for stage in sort(keys(var.stages)) : "**${stage}**"])
+    stage_names                    = join(", ", [for stage in sort(keys(var.stages)) : "`${stage}`"])
     dns_zone_name                  = local.dns_zone_name
     dns_bb_uuid                    = meshstack_building_block.dns.metadata.uuid
     ai_bb_uuid                     = var.ai_model == null ? null : meshstack_building_block.ai_llm.metadata.uuid

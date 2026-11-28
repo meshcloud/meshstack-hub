@@ -35,9 +35,7 @@ locals {
 output "summary" {
   description = "Markdown summary shown in meshPanel after the run."
   value       = <<-EOT
-    # T Cloud Public project `${opentelekomcloud_identity_project_v3.this.name}`
-
-    Project ID: `${opentelekomcloud_identity_project_v3.this.id}` in region `${var.region}`.
+    T Cloud Public project `${opentelekomcloud_identity_project_v3.this.name}` (ID `${opentelekomcloud_identity_project_v3.this.id}`) is ready in region `${var.region}`.
 
     | meshStack role | IAM group | T Cloud Public roles |
     |---|---|---|

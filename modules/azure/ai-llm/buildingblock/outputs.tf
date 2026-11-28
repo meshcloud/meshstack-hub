@@ -36,14 +36,12 @@ output "portal_url" {
 output "summary" {
   description = "Markdown summary shown in meshPanel after the run."
   value       = <<-EOT
-    # Azure AI LLM
+    `${var.model_name}` (${local.model.version}) is deployed as `${azurerm_cognitive_deployment.this.name}` with ${var.capacity}k tokens per minute (${var.deployment_sku}).
 
-    **${var.model_name}** (${local.model.version}) is deployed as `${azurerm_cognitive_deployment.this.name}` with ${var.capacity}k tokens per minute (${var.deployment_sku}).
-
-    - **Endpoint**: `${azurerm_cognitive_account.this.custom_subdomain_name}.openai.azure.com`
-    - **Resource group**: ${azurerm_resource_group.this.name}
-    - **Network access**: ${var.public_network_access_enabled ? "public, protected by Entra ID" : "private endpoints only"}
-    - **Access**: ${var.app_principal_id != null ? "`${var.app_principal_id}` holds `Cognitive Services OpenAI User`" : "no identity granted yet, assign `Cognitive Services OpenAI User` on the account"}
+    - *Endpoint*: `${azurerm_cognitive_account.this.custom_subdomain_name}.openai.azure.com`
+    - *Resource group*: ${azurerm_resource_group.this.name}
+    - *Network access*: ${var.public_network_access_enabled ? "public, protected by Entra ID" : "private endpoints only"}
+    - *Access*: ${var.app_principal_id != null ? "`${var.app_principal_id}` holds `Cognitive Services OpenAI User`" : "no identity granted yet, assign `Cognitive Services OpenAI User` on the account"}
     - [Open in Azure Portal](${local.portal_url})
 
     API keys are disabled. Authenticate with an Entra ID token, for example with `DefaultAzureCredential`:

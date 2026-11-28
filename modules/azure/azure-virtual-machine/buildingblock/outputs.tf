@@ -56,62 +56,36 @@ output "azure_portal_url" {
 output "summary" {
   description = "Markdown summary output of the building block with connection instructions"
   value       = <<EOT
-# Azure Virtual Machine
+- *Name*: ${var.vm_name}
+- *Resource Group*: ${local.rg_name}
+- *Location*: ${local.rg_location}
+- *Operating System*: ${var.os_type}
+- *VM Size*: ${var.vm_size}
+- *Private IP*: ${azurerm_network_interface.vm_nic.private_ip_address}${var.enable_public_ip ? "\n- *Public IP*: ${azurerm_public_ip.vm_public_ip[0].ip_address}" : ""}
+- *Spot Instance*: ${var.enable_spot_instance ? "Yes (cost-optimized)" : "No"}
+- *Managed identity principal ID*: ${var.os_type == "Linux" ? azurerm_linux_virtual_machine.vm[0].identity[0].principal_id : azurerm_windows_virtual_machine.vm[0].identity[0].principal_id}
 
-Your Azure Virtual Machine was successfully created!
+- *Virtual Network*: ${azurerm_virtual_network.vm_vnet.name}
+- *VNet Address Space*: ${var.vnet_address_space}
+- *Subnet*: ${azurerm_subnet.vm_subnet.name}
+- *Subnet Prefix*: ${var.subnet_address_prefix}
 
-## VM Details
+- *OS Disk Size*: ${var.os_disk_size_gb} GB
+- *OS Disk Type*: ${var.os_disk_storage_type}${var.data_disk_size_gb > 0 ? "\n- *Data Disk Size*: ${var.data_disk_size_gb} GB\n- *Data Disk Type*: ${var.data_disk_storage_type}" : ""}
 
-- **Name**: ${var.vm_name}
-- **Resource Group**: ${local.rg_name}
-- **Location**: ${local.rg_location}
-- **Operating System**: ${var.os_type}
-- **VM Size**: ${var.vm_size}
-- **Private IP**: ${azurerm_network_interface.vm_nic.private_ip_address}${var.enable_public_ip ? "\n- **Public IP**: ${azurerm_public_ip.vm_public_ip[0].ip_address}" : ""}
-- **Spot Instance**: ${var.enable_spot_instance ? "Yes (cost-optimized)" : "No"}
-
-## Network Configuration
-
-- **Virtual Network**: ${azurerm_virtual_network.vm_vnet.name}
-- **VNet Address Space**: ${var.vnet_address_space}
-- **Subnet**: ${azurerm_subnet.vm_subnet.name}
-- **Subnet Prefix**: ${var.subnet_address_prefix}
-
-## Storage Configuration
-
-- **OS Disk Size**: ${var.os_disk_size_gb} GB
-- **OS Disk Type**: ${var.os_disk_storage_type}${var.data_disk_size_gb > 0 ? "\n- **Data Disk Size**: ${var.data_disk_size_gb} GB\n- **Data Disk Type**: ${var.data_disk_storage_type}" : ""}
-
-## Connection Instructions
-
-### ${var.os_type == "Linux" ? "For Linux VM (SSH)" : "For Windows VM (RDP)"}
+# Connection Instructions
 
 ${var.os_type == "Linux" ? "Connect to your Linux VM using SSH:" : "Connect to your Windows VM using Remote Desktop Protocol (RDP):"}
 
 ${var.os_type == "Linux" ? "```bash\n# If using Azure Bastion or VPN (recommended):\nssh ${var.admin_username}@${azurerm_network_interface.vm_nic.private_ip_address}\n${var.enable_public_ip ? "\n# If public IP is enabled (less secure):\nssh ${var.admin_username}@${azurerm_public_ip.vm_public_ip[0].ip_address}\n" : ""}```" : "```powershell\n# If using Azure Bastion (recommended):\n# Use Azure Portal to connect via Bastion\n${var.enable_public_ip ? "\n# If public IP is enabled:\nmstsc /v:${azurerm_public_ip.vm_public_ip[0].ip_address}\n# Username: ${var.admin_username}\n" : ""}\n```"}
 
-${!var.enable_public_ip ? "**Note**: This VM does not have a public IP. Use Azure Bastion, VPN, or a jump host to connect." : "**Security Warning**: This VM has a public IP. Consider using Azure Bastion for more secure access."}
+${!var.enable_public_ip ? "*Note*: This VM does not have a public IP. Use Azure Bastion, VPN, or a jump host to connect." : "*Security Warning*: This VM has a public IP. Consider using Azure Bastion for more secure access."}
 
-${var.os_type == "Linux" ? "### SSH Key Authentication\n\nThis VM is configured with SSH key authentication. Ensure you have the private key corresponding to the public key used during provisioning." : "### Windows Authentication\n\nUse the admin username and password configured during provisioning."}
+${var.os_type == "Linux" ? "This VM is configured with SSH key authentication. Ensure you have the private key corresponding to the public key used during provisioning." : "Use the admin username and password configured during provisioning."}
 
-## Managed Identity
+${var.enable_spot_instance ? "# Spot Instance Notice\n\n⚠️ This VM is running as a spot instance to reduce costs. Be aware that:\n- The VM can be evicted when Azure needs capacity\n- This is suitable for dev/test and non-critical workloads\n- Consider implementing checkpointing or state persistence for long-running tasks\n" : ""}
 
-This VM has a system-assigned managed identity enabled:
-- **Principal ID**: ${var.os_type == "Linux" ? azurerm_linux_virtual_machine.vm[0].identity[0].principal_id : azurerm_windows_virtual_machine.vm[0].identity[0].principal_id}
-
-Use this identity to grant the VM access to other Azure resources without storing credentials.
-
-${var.enable_spot_instance ? "## Spot Instance Notice\n\n⚠️ This VM is running as a spot instance to reduce costs. Be aware that:\n- The VM can be evicted when Azure needs capacity\n- This is suitable for dev/test and non-critical workloads\n- Consider implementing checkpointing or state persistence for long-running tasks\n" : ""}
-
-## Next Steps
-
-1. Connect to your VM using the instructions above
-2. Install required software and configure your applications
-3. Set up backup policies if needed
-4. Configure monitoring and alerts
-5. Review network security group rules for your use case
-
-## Resources Created
+# Resources Created
 
 - Resource Group: `${local.rg_name}`
 - Virtual Network: `${azurerm_virtual_network.vm_vnet.name}`

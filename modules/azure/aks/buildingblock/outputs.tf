@@ -46,12 +46,12 @@ output "subnet_id" {
 output "summary" {
   description = "Markdown summary shown in meshPanel after the run."
   value       = <<-EOT
-    # AKS cluster `${azurerm_kubernetes_cluster.aks.name}`
+    AKS cluster `${azurerm_kubernetes_cluster.aks.name}` is ready.
 
-    - **Resource group**: ${azurerm_resource_group.aks.name}
-    - **Location**: ${azurerm_kubernetes_cluster.aks.location}
-    - **Kubernetes version**: ${azurerm_kubernetes_cluster.aks.current_kubernetes_version}
-    - **API server**: `${var.private_cluster_enabled ? azurerm_kubernetes_cluster.aks.private_fqdn : azurerm_kubernetes_cluster.aks.fqdn}`${var.private_cluster_enabled ? " (private)" : ""}
+    - *Resource group*: ${azurerm_resource_group.aks.name}
+    - *Location*: ${azurerm_kubernetes_cluster.aks.location}
+    - *Kubernetes version*: ${azurerm_kubernetes_cluster.aks.current_kubernetes_version}
+    - *API server*: `${var.private_cluster_enabled ? azurerm_kubernetes_cluster.aks.private_fqdn : azurerm_kubernetes_cluster.aks.fqdn}`${var.private_cluster_enabled ? " (private)" : ""}
     - [Open in Azure Portal](${local.portal_url})
 
     Get credentials with `az aks get-credentials --resource-group ${azurerm_resource_group.aks.name} --name ${azurerm_kubernetes_cluster.aks.name}`.

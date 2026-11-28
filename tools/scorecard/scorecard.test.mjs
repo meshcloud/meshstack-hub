@@ -8,6 +8,7 @@ import {
   issuerFromPinnedRunner,
   meshstackVariableViolation,
   summaryOutputBody,
+  summaryStyleViolations,
   supportedPlatformsViolations,
   uuidRefLiterals,
 } from "./scorecard.mjs";
@@ -73,6 +74,14 @@ output "after" {
   assert.match(body, /^output "summary"/);
   assert.match(body, /EOT\n}$/);
   assert.equal(summaryOutputBody(`output "other" {\n  value = 1\n}\n`), null);
+});
+
+test("a summary with a title line, a heading below # or bold text breaks the style", () => {
+  assert.deepEqual(summaryStyleViolations("VM `a` is running.\n\n| | |\n|---|---|\n| *Host* | `h` |\n\n# Access\n\nUse SSH.\n"), []);
+  assert.deepEqual(summaryStyleViolations("Ready.\n\n```sh\n# a shell comment\n```\n"), []);
+  assert.deepEqual(summaryStyleViolations("%{ if x ~}\n# VM\n%{ endif ~}\n"), ["a title line"]);
+  assert.deepEqual(summaryStyleViolations("Ready.\n\n## Access\n\nReachable at **h**.\n"), ["a heading below #", "bold text"]);
+  assert.deepEqual(summaryStyleViolations("Ready.\n\n> [!TIP]\n> ## Next\n"), ["a heading below #"]);
 });
 
 test("a SUMMARY assignment in the integration is detected", () => {

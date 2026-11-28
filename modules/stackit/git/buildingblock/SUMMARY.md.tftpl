@@ -1,20 +1,18 @@
-# STACKIT Git: **${instance_name}**
-
 | Property | Value |
 |----------|-------|
-| **Forgejo** | [${instance_url}](${instance_url}) |
-| **STACKIT Portal** | [Open in STACKIT Portal](${portal_url}) |
+| Forgejo | [${instance_url}](${instance_url}) |
+| Instance | `${instance_name}` ([Open in STACKIT Portal](${portal_url})) |
 %{ if forgejo_organization != null ~}
-| **Organization** | [`${forgejo_organization}`](${organization_url}) |
+| Organization | [`${forgejo_organization}`](${organization_url}) |
 %{ endif ~}
-| **Technical User** | `${local_user_username}` |
-| **Shared Runner** | ${length(shared_runner_labels) > 0 ? "`${join("`, `", shared_runner_labels)}`" : "none"} |
+| Technical User | `${local_user_username}` |
+| Shared Runner | ${length(shared_runner_labels) > 0 ? "`${join("`, `", shared_runner_labels)}`" : "none"} |
 %{ if vault_secret_path != null ~}
-| **API Token** | key `forgejo-api-token` of the Vault secret `${vault_secret_path}` on mount `${vault_mount}` |
+| API Token | key `forgejo-api-token` of the Vault secret `${vault_secret_path}` on mount `${vault_mount}` |
 %{ endif ~}
 %{ if length(members) > 0 ~}
 
-## Organization members
+# Organization members
 
 | Member | Role | Forgejo user |
 |--------|------|--------------|

@@ -1,6 +1,4 @@
-# SKE Starter Kit
-
-✅ **Your application `${app_name}` is set up and deployed in workspace `${workspace_identifier}`.**
+✅ Your application `${app_name}` is set up and deployed in workspace `${workspace_identifier}`.
 
 @buildingblock[${git_repository_uuid}]
 %{ for stage in stages ~}
@@ -12,32 +10,32 @@
 
 ---
 
-## What you have
+# What you have
 
-- **Git repository** [${repo_name}](${repo_html_url}) on STACKIT Git (Forgejo), initialized from
+- *Git repository* [${repo_name}](${repo_html_url}) on STACKIT Git (Forgejo), initialized from
   `${repo_clone_addr}`.
-- **One project per stage**, each with one namespace on the SKE cluster.
-- **One Forgejo Connector per stage**. It gives the repository's pipeline access to that stage's
-  namespace and shows the links **Application** and **Pipeline**.
+- *One project per stage*, each with one namespace on the SKE cluster.
+- *One Forgejo Connector per stage*. It gives the repository's pipeline access to that stage's
+  namespace and shows the links *Application* and *Pipeline*.
 
 | Stage | Project | Application | Pipeline |
 |-------|---------|-------------|----------|
 %{ for stage in stages ~}
-| **${title(stage.name)}** | `${stage.project_name}` | [${stage.app_hostname}](https://${stage.app_hostname}) | [`pipeline.yaml`](${pipeline_url}) |
+| ${title(stage.name)} | `${stage.project_name}` | [${stage.app_hostname}](https://${stage.app_hostname}) | [`pipeline.yaml`](${pipeline_url}) |
 %{ endfor ~}
 
-## How deployment works
+# How deployment works
 
 Each stage deploys from the branch of the same name. A push to a branch runs the pipeline, which
 builds the `${app_name}` image and deploys it to the namespace of that stage:
 
 %{ for stage in stages ~}
-- Push to **${stage.name}** → deploys to **${title(stage.name)}**
+- Push to `${stage.name}` → deploys to ${title(stage.name)}
 %{ endfor ~}
 
 The pipeline already ran once per stage, so the application is live.
 
-## Git access
+# Git access
 
 Your access to the repository follows your role in the workspace:
 
@@ -47,16 +45,16 @@ Your access to the repository follows your role in the workspace:
 | Workspace Manager | write |
 | Other members | read |
 
-1. **Sign in once** to [STACKIT Git](${forgejo_host}) with SSO. The next run of the
+1. *Sign in once* to [STACKIT Git](${forgejo_host}) with SSO. The next run of the
    @buildingblock[${git_repository_uuid}] building block adds you to your team. Its summary
    lists who has access.
-2. **Add your SSH public key once** in [your Forgejo settings](${forgejo_host}/user/settings/keys).
-3. **Clone** the repository:
+2. *Add your SSH public key once* in [your Forgejo settings](${forgejo_host}/user/settings/keys).
+3. *Clone* the repository:
    ```bash
    git clone ${repo_ssh_url}
    ```
 
-## Manage access
+# Manage access
 
 Invite team members in meshStack:
 %{ for stage in stages ~}

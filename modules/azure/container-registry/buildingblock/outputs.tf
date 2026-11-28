@@ -46,13 +46,11 @@ output "private_dns_zone_id" {
 output "summary" {
   description = "Markdown summary shown in meshPanel after the run."
   value       = <<-EOT
-    # Azure Container Registry
+    Registry `${azurerm_container_registry.acr.name}` (${var.sku}) is ready.
 
-    Registry **${azurerm_container_registry.acr.name}** (${var.sku}) is ready.
-
-    - **Login server**: `${azurerm_container_registry.acr.login_server}`
-    - **Resource group**: ${azurerm_resource_group.acr.name}
-    - **Network access**: ${var.private_endpoint_enabled && var.sku == "Premium" ? "private endpoint" : "public"}
+    - *Login server*: `${azurerm_container_registry.acr.login_server}`
+    - *Resource group*: ${azurerm_resource_group.acr.name}
+    - *Network access*: ${var.private_endpoint_enabled && var.sku == "Premium" ? "private endpoint" : "public"}
     - [Open in Azure Portal](${local.portal_url})
 
     Log in with your Entra ID account and push an image:

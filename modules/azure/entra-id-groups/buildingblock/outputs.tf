@@ -25,7 +25,7 @@ locals {
   summary_member_section = length(azuread_group_member.project_role) == 0 ? [] : concat(
     [
       "",
-      "## Members added",
+      "# Members added",
       "",
       "| Member | Account | Entra group |",
       "|---|---|---|",
@@ -39,9 +39,9 @@ locals {
   summary_unresolved_section = length(local.unresolved_user_euids) == 0 ? [] : concat(
     [
       "",
-      "## ⚠️ Unresolved members",
+      "# ⚠️ Unresolved members",
       "",
-      "The following ${length(local.unresolved_user_euids)} member(s) have no object in this directory and were **not** added to any group:",
+      "The following ${length(local.unresolved_user_euids)} member(s) have no object in this directory and were *not* added to any group:",
       "",
     ],
     [for euid in local.unresolved_user_euids : "- `${euid}`"],
@@ -56,8 +56,6 @@ output "summary" {
   description = "Markdown summary of the created groups, the members added to them, and any members that could not be resolved."
   value = join("\n", concat(
     [
-      "# Entra ID Groups",
-      "",
       var.project_identifier == "" ? "${length(local.group_display_names)} security group(s) for workspace `${var.workspace_identifier}`." : "${length(local.group_display_names)} security group(s) for project `${var.project_identifier}` in workspace `${var.workspace_identifier}`.",
       "",
       "| Role | Entra group |",

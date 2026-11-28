@@ -1,6 +1,4 @@
-# Federation of `${service_account_email}`
-
-Runs of these building block definitions act as the service account through workload identity federation:
+Runs of these building block definitions act as the service account `${service_account_email}` through workload identity federation:
 
 %{ for uuid in definitions ~}
 - `${uuid}`

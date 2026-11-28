@@ -27,16 +27,12 @@ output "kubeconfig" {
 output "summary" {
   description = "Markdown summary shown in meshPanel after the run."
   value       = <<-EOT
-    # CCE cluster ${module.cce.cluster_name}
-
-    The cluster runs ${var.node_count} worker node(s) of flavor `${var.node_flavor}` in each of
+    The CCE cluster `${module.cce.cluster_name}` runs ${var.node_count} worker node(s) of flavor `${var.node_flavor}` in each of
     ${join(", ", var.availability_zones)}, in the project's network.
 
     Its Kubernetes API is at `${local.api_endpoint}`${var.public_api ? "" : ", reachable only from inside the VPC"}.
 
-    ## Connect
-
-    Copy the **Kubeconfig** output of this building block into a file and point kubectl at it:
+    Copy the *Kubeconfig* output of this building block into a file and point kubectl at it:
 
     ```sh
     export KUBECONFIG=./kubeconfig.yaml

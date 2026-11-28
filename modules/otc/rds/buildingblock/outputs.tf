@@ -27,9 +27,7 @@ output "admin_password" {
 output "summary" {
   description = "Markdown summary shown in meshPanel after the run."
   value       = <<-EOT
-    # ${var.name}
-
-    A ${var.high_availability ? "highly available (primary and standby)" : "single-node"} ${var.db_type} ${local.db_version} database in the project's network.
+    `${var.name}` is a ${var.high_availability ? "highly available (primary and standby)" : "single-node"} ${var.db_type} ${local.db_version} database in the project's network.
 
     | | |
     |---|---|

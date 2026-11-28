@@ -46,7 +46,7 @@ run "azure_entra_id_groups_hub" {
   # creates the groups but leaves every one of them empty.
   assert {
     condition = alltrue([
-      can(regex("Entra ID Groups", meshstack_building_block.this.status.outputs["summary"].value)),
+      can(regex("security group\\(s\\) for", meshstack_building_block.this.status.outputs["summary"].value)),
       !can(regex("Unresolved members", meshstack_building_block.this.status.outputs["summary"].value)),
       can(regex("[1-9][0-9]* group membership", meshstack_building_block.this.status.outputs["summary"].value)),
     ])

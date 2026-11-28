@@ -5,10 +5,10 @@ output "budget_amount" {
 output "summary" {
   description = "Markdown summary of the created budget"
   value       = <<-EOT
-    ## Budget Alert: ${var.budget_name}
+    Budget alert `${var.budget_name}` is set up.
 
-    - **Subscription**: ${var.subscription_id}
-    - **Monthly budget**: ${azurerm_consumption_budget_subscription.subscription_budget.amount}
+    - *Subscription*: ${var.subscription_id}
+    - *Monthly budget*: ${azurerm_consumption_budget_subscription.subscription_budget.amount}
 
     | Threshold | Basis |
     |---|---|

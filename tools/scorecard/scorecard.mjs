@@ -760,9 +760,15 @@ const detectors = [
       if (!runsTerraform(mod)) return { pass: null, detail: "not applicable — non-terraform implementation" };
       const missing = [];
       if (!declaresSummaryOutput(content)) missing.push('a BBD output with assignment_type = "SUMMARY"');
-      if (summaryOutputBody(readAllBuildingBlockTf(mod) ?? "") === null) missing.push('output "summary" in buildingblock/');
-      if (missing.length === 0) return { pass: true };
-      return { pass: false, detail: `add ${missing.join(" and ")}` };
+      const body = summaryOutputBody(readAllBuildingBlockTf(mod) ?? "");
+      if (body === null) missing.push('output "summary" in buildingblock/');
+      if (missing.length > 0) return { pass: false, detail: `add ${missing.join(" and ")}` };
+      const template = join(mod.path, "buildingblock", "SUMMARY.md.tftpl");
+      const chunks = [...body.matchAll(HEREDOC_BODY)].map((m) => m[2]);
+      if (existsSync(template)) chunks.push(readFileSync(template, "utf-8"));
+      const style = [...new Set(chunks.flatMap(summaryStyleViolations))];
+      if (style.length === 0) return { pass: true };
+      return { pass: false, detail: `the summary has ${style.join(" and ")}; see terraform-conventions.md § Summary Output` };
     },
   },
   {
@@ -1980,6 +1986,19 @@ export function identitiesFromVersions(content) {
 
 export function declaresSummaryOutput(integrationContent) {
   return /assignment_type\s*=\s*"SUMMARY"/.test(integrationContent);
+}
+
+const HEREDOC_BODY = /<<-?\s*([A-Za-z_]\w*)\r?\n([\s\S]*?)^\s*\1\s*$/gm;
+
+// A fenced code block may hold shell comments, which are no headings.
+export function summaryStyleViolations(markdown) {
+  const prose = markdown.replace(/^[ \t>]*```[\s\S]*?^[ \t>]*```/gm, "");
+  const violations = [];
+  const firstLine = prose.split("\n").map((line) => line.trim()).find((line) => line && !line.startsWith("%{"));
+  if (/^#[ \t]/.test(firstLine ?? "")) violations.push("a title line");
+  if (/^[ \t>]*#{2,6}[ \t]/m.test(prose)) violations.push("a heading below #");
+  if (prose.includes("**")) violations.push("bold text");
+  return violations;
 }
 
 // Heredoc bodies are masked while matching braces, because Markdown in them may hold an unpaired

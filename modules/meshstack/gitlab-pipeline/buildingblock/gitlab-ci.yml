@@ -149,7 +149,7 @@ echo-inputs:
       fi
 
       SUMMARY=$(printf '%s\n' \
-        "## meshStack GitLab Pipeline NoOp" \
+        "The meshStack GitLab Pipeline NoOp echoed its inputs." \
         "" \
         "| Fact | Value |" \
         "| --- | --- |" \

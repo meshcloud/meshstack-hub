@@ -23,16 +23,12 @@ output "snat_ip" {
 output "summary" {
   description = "Markdown summary shown in meshPanel after the run."
   value       = <<-EOT
-    # Network ${var.name}
-
     The VPC `${var.name}` (`${var.cidr_block}`) and its subnet `${var.name}` (`${local.subnet.cidr}`)
     are ready in this project.
 
     ${var.snat_enabled ? "Outbound internet traffic from the subnet leaves through the NAT gateway's public IP `${module.snat.nat_ip}`. Allow-list that IP where an external service restricts callers." : "The subnet has no NAT gateway, so servers in it reach the internet only through public IPs of their own."}
 
-    ## Next steps
-
-    Enter **${var.name}** as the network name when you order a database (RDS) or a Kubernetes
+    Enter `${var.name}` as the network name when you order a database (RDS) or a Kubernetes
     cluster (CCE) building block in this project. They place their servers in this subnet.
   EOT
 }

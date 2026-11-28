@@ -34,18 +34,14 @@ output "blob_soft_delete_retention_days" {
 output "summary" {
   description = "Markdown summary output of the building block"
   value       = <<-EOT
-    # Azure Storage Account
+    Azure storage account `${azurerm_storage_account.storage_account.name}` is ready.
 
-    Your Azure Storage Account was successfully created!
-
-    ## Details
-
-    - **Name**: ${azurerm_storage_account.storage_account.name}
-    - **Resource group**: ${azurerm_resource_group.storage_account_rg.name}
-    - **Location**: ${azurerm_storage_account.storage_account.location}
-    - **Primary blob endpoint**: `${azurerm_storage_account.storage_account.primary_blob_endpoint}`
-    - **Blob soft delete retention**: ${var.blob_soft_delete_retention_days != null ? "${var.blob_soft_delete_retention_days} days" : "Disabled"}
-    - **Network access**: ${try(azurerm_storage_account.storage_account.network_rules[0].default_action, "Allow") == "Deny" ? "Restricted" : "Allowed from any network"}
+    - *Name*: ${azurerm_storage_account.storage_account.name}
+    - *Resource group*: ${azurerm_resource_group.storage_account_rg.name}
+    - *Location*: ${azurerm_storage_account.storage_account.location}
+    - *Primary blob endpoint*: `${azurerm_storage_account.storage_account.primary_blob_endpoint}`
+    - *Blob soft delete retention*: ${var.blob_soft_delete_retention_days != null ? "${var.blob_soft_delete_retention_days} days" : "Disabled"}
+    - *Network access*: ${try(azurerm_storage_account.storage_account.network_rules[0].default_action, "Allow") == "Deny" ? "Restricted" : "Allowed from any network"}
     - [Open in Azure Portal](${local.portal_url})
   EOT
 }

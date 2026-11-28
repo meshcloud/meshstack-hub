@@ -176,8 +176,8 @@ def write_summary(organization_id: str, role: str, rows: list[dict[str, str]]) -
         "",
         "The pre-run script adds all meshStack users assigned to this project to the STACKIT organization with the required organization role, then checks the resulting membership status before project-level role assignments are applied.",
         "",
-        f"- **Organization ID**: `{organization_id}`",
-        f"- **Required organization role**: `{role}`",
+        f"- *Organization ID*: `{organization_id}`",
+        f"- *Required organization role*: `{role}`",
         "",
         "| User | Status |",
         "|------|--------|",
@@ -195,7 +195,7 @@ def write_summary(organization_id: str, role: str, rows: list[dict[str, str]]) -
     if has_problem:
         lines += [
             "",
-            "## How to fix missing access",
+            "How to fix missing access:",
             "",
             "- If the add request failed, verify that the building block service account has the STACKIT organization role `iam.member-admin` and that Workload Identity Federation is configured correctly. Then re-run this building block.",
             f"- If the required role is missing, ask a STACKIT organization administrator to add the user to organization `{organization_id}` with role `{role}`, then re-run this building block.",
